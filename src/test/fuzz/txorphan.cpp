@@ -217,9 +217,8 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 [&] {
                     // test mocktime and expiry
                     SetMockTime(ConsumeTime(fuzzed_data_provider));
-                    auto limit = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
-                    orphanage.LimitOrphans(limit, orphanage_rng);
-                    Assert(orphanage.Size() <= limit);
+                    orphanage.LimitOrphans(orphanage_rng);
+                    Assert(orphanage.Size() <= node::DEFAULT_MAX_ORPHAN_TRANSACTIONS);
                 });
 
         }

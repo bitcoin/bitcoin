@@ -181,34 +181,23 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
 
     // Test LimitOrphanTxSize() function, nothing should timeout:
     FastRandomContext rng{/*fDeterministic=*/true};
-    orphanage.LimitOrphans(/*max_orphans=*/expected_num_orphans, rng);
+    orphanage.LimitOrphans(rng);
     BOOST_CHECK_EQUAL(orphanage.Size(), expected_num_orphans);
-    expected_num_orphans -= 1;
-    orphanage.LimitOrphans(/*max_orphans=*/expected_num_orphans, rng);
-    BOOST_CHECK_EQUAL(orphanage.Size(), expected_num_orphans);
-    assert(expected_num_orphans > 40);
-    orphanage.LimitOrphans(40, rng);
-    BOOST_CHECK_EQUAL(orphanage.Size(), 40);
-    orphanage.LimitOrphans(10, rng);
-    BOOST_CHECK_EQUAL(orphanage.Size(), 10);
-    orphanage.LimitOrphans(0, rng);
-    BOOST_CHECK_EQUAL(orphanage.Size(), 0);
 
     // Add one more orphan, check timeout logic
     auto timeout_tx = MakeTransactionSpending(/*outpoints=*/{}, rng);
     orphanage.AddTx(timeout_tx, 0);
-    orphanage.LimitOrphans(1, rng);
-    BOOST_CHECK_EQUAL(orphanage.Size(), 1);
+    expected_num_orphans += 1;
+    BOOST_CHECK_EQUAL(orphanage.Size(), expected_num_orphans);
 
     // One second shy of expiration
     SetMockTime(now + node::ORPHAN_TX_EXPIRE_TIME - 1s);
-    orphanage.LimitOrphans(1, rng);
-    BOOST_CHECK_EQUAL(orphanage.Size(), 1);
+    orphanage.LimitOrphans(rng);
+    BOOST_CHECK_EQUAL(orphanage.Size(), expected_num_orphans);
 
     // Jump one more second, orphan should be timed out on limiting
     SetMockTime(now + node::ORPHAN_TX_EXPIRE_TIME);
-    BOOST_CHECK_EQUAL(orphanage.Size(), 1);
-    orphanage.LimitOrphans(1, rng);
+    orphanage.LimitOrphans(rng);
     BOOST_CHECK_EQUAL(orphanage.Size(), 0);
 }
 
