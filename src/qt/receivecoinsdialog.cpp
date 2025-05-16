@@ -177,7 +177,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
         break;
     case AddressTableModel::EditStatus::KEY_GENERATION_FAILURE:
         QMessageBox::critical(this, windowTitle(),
-            tr("Could not generate new %1 address").arg(QString::fromStdString(FormatOutputType(address_type))),
+            tr("Could not generate new %1 address").arg(QString::fromStdString(std::string(FormatOutputType(address_type)))),
             QMessageBox::Ok, QMessageBox::Ok);
         break;
     // These aren't valid return values for our action
