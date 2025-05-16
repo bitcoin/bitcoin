@@ -62,8 +62,8 @@ public:
     /** Erase all orphans included in or invalidated by a new block */
     void EraseForBlock(const CBlock& block);
 
-    /** Limit the orphanage to the given maximum */
-    void LimitOrphans(unsigned int max_orphans, FastRandomContext& rng);
+    /** Limit the orphanage to DEFAULT_MAX_ORPHAN_TRANSACTIONS. */
+    void LimitOrphans(FastRandomContext& rng);
 
     /** Add any orphans that list a particular tx as a parent into the from peer's work set */
     void AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng);
