@@ -20,6 +20,8 @@ namespace node{
 static constexpr auto ORPHAN_TX_EXPIRE_TIME{20min};
 /** Minimum time between orphan transactions expire time checks */
 static constexpr auto ORPHAN_TX_EXPIRE_INTERVAL{5min};
+/** Default maximum number of orphan transactions kept in memory */
+static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
 
 /** A class to track orphan transactions (failed on TX_MISSING_INPUTS)
  * Since we cannot distinguish orphans from bad transactions with
