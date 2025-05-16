@@ -30,7 +30,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
     m_impl->EraseForPeer(peer);
 }
 
-void TxOrphanage::LimitOrphans(FastRandomContext& rng)
+void TxOrphanage::LimitOrphans()
 {
     m_impl->LimitOrphans();
 }
