@@ -5573,13 +5573,20 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
     }
 
     const int64_t nNow{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
+    // The block time is picked by a miner and may not be accurate. The exact
+    // value does not matter anyway in relation to the full chain age. Thus it
+    // is fine to add a random offset, because some users really want to see a
+    // verificationprogress of exactly "1.0" once they are close to the tip.
+    // The progress is clamped before returning to at most "1.0", even if the
+    // miner set a timestamp off from the real time.
+    const auto block_time{pindex->GetBlockTime() + Ticks<std::chrono::seconds>(2h)};
 
     double fTxTotal;
 
     if (pindex->m_chain_tx_count <= data.tx_count) {
         fTxTotal = data.tx_count + (nNow - data.nTime) * data.dTxRate;
     } else {
-        fTxTotal = pindex->m_chain_tx_count + (nNow - pindex->GetBlockTime()) * data.dTxRate;
+        fTxTotal = pindex->m_chain_tx_count + (nNow - block_time) * data.dTxRate;
     }
 
     return std::min<double>(pindex->m_chain_tx_count / fTxTotal, 1.0);

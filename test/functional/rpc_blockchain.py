@@ -286,8 +286,9 @@ class BlockchainTest(BitcoinTestFramework):
         future = 2 * 60 * 60
         self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future + 1)
         assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
+        self.log.info("Check that verificationprogress is exactly 1 for a recent block tip")
         self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future)
-        assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
+        assert_equal(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
 
     def _test_y2106(self):
         self.log.info("Check that block timestamps work until year 2106")
