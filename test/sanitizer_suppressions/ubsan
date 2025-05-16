@@ -5,9 +5,9 @@
 
 # -fsanitize=integer suppressions
 # ===============================
-# Dependencies
-# ------------
 # Suppressions in dependencies that are developed outside this repository.
+# ------------
+
 unsigned-integer-overflow:*/include/c++/
 unsigned-integer-overflow:FuzzedDataProvider::ConsumeIntegralInRange
 unsigned-integer-overflow:leveldb/
@@ -34,12 +34,15 @@ shift-base:leveldb/
 shift-base:minisketch/
 shift-base:secp256k1/
 shift-base:test/fuzz/crypto_diff_fuzz_chacha20.cpp
+
+# Suppressions in code developed inside this repository.
+# ------------
 # Unsigned integer overflow occurs when the result of an unsigned integer
 # computation cannot be represented in its type. Unlike signed integer overflow,
 # this is not undefined behavior, but it is often unintentional. The list below
 # contains files in which we expect unsigned integer overflows to occur. The
-# list is used to suppress -fsanitize=integer warnings when running our CI UBSan
-# job.
+# list is used to suppress -fsanitize=integer warnings when running UBSan
+# locally or in CI.
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:CBloomFilter::Hash
 unsigned-integer-overflow:CRollingBloomFilter::insert
@@ -61,7 +64,6 @@ implicit-integer-sign-change:SetStdinEcho
 implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
 implicit-integer-sign-change:TxConfirmStats::removeTx
-implicit-integer-sign-change:verify_flags
 implicit-integer-sign-change:EvalScript
 implicit-signed-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:crypto/
