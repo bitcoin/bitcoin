@@ -388,7 +388,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             continue;
         }
 
-        bool tx_from_me = CachedTxIsFromMe(wallet, wtx, ISMINE_ALL);
+        bool tx_from_me = CachedTxIsFromMe(wallet, wtx);
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             const CTxOut& output = wtx.tx->vout[i];
@@ -407,9 +407,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (wallet.IsSpent(outpoint))
                 continue;
 
-            isminetype mine = wallet.IsMine(output);
-
-            if (mine == ISMINE_NO) {
+            if (!wallet.IsMine(output)) {
                 continue;
             }
 
