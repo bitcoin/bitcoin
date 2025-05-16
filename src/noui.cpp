@@ -29,7 +29,8 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& 
     case CClientUIInterface::MSG_ERROR:
         strCaption = "Error: ";
         if (!fSecure) LogError("%s\n", message.original);
-        break;
+        tfm::format(std::cerr, "%s%s\n", strCaption, message.original);
+        return false;
     case CClientUIInterface::MSG_WARNING:
         strCaption = "Warning: ";
         if (!fSecure) LogWarning("%s\n", message.original);
@@ -43,7 +44,8 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& 
         if (!fSecure) LogInfo("%s%s\n", strCaption, message.original);
     }
 
-    tfm::format(std::cerr, "%s%s\n", strCaption, message.original);
+    tfm::format(std::cout, "%s%s\n", strCaption, message.original);
+    std::cout.flush(); // Unlike std::cerr, std::cout requires flushing the buffer.
     return false;
 }
 
