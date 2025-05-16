@@ -205,7 +205,7 @@ class LogTest {
 
       return Status::OK();
     }
-    std::string GetName() const { return ""; }
+    std::string GetName() const override { return ""; }
 
     Slice contents_;
     bool force_error_;
