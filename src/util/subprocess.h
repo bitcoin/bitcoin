@@ -36,7 +36,6 @@ Documentation for C++ subprocessing library.
 #ifndef BITCOIN_UTIL_SUBPROCESS_H
 #define BITCOIN_UTIL_SUBPROCESS_H
 
-#include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
 
@@ -71,6 +70,7 @@ extern "C" {
   #include <io.h>
   #include <cwchar>
 #else
+  #include <dirent.h>
   #include <sys/wait.h>
   #include <unistd.h>
 #endif
@@ -1345,20 +1345,30 @@ namespace detail {
         // available.
 #ifdef __linux__
         // For Linux, enumerate /proc/<pid>/fd.
-        try {
-          std::vector<int> fds_to_close;
-          for (const auto& it : fs::directory_iterator(strprintf("/proc/%d/fd", getpid()))) {
-            auto fd{ToIntegral<uint64_t>(it.path().filename().native())};
+        std::vector<int> fds_to_close;
+        std::string fd_path{strprintf("/proc/%d/fd", getpid())};
+        DIR *dir = opendir(fd_path.c_str());
+        if (dir != nullptr) {
+          errno = 0; // "To distinguish end of stream from an error, set errno to zero before calling readdir() and then check the value of errno if NULL is returned."
+          while (struct dirent *ent = readdir(dir)) {
+            auto fd{ToIntegral<uint64_t>(ent->d_name)};
             if (!fd || *fd > std::numeric_limits<int>::max()) continue;
             if (*fd <= 2) continue;  // leave std{in,out,err} alone
             if (*fd == static_cast<uint64_t>(err_wr_pipe_)) continue;
             fds_to_close.push_back(*fd);
           }
-          for (const int fd : fds_to_close) {
-            close(fd);
+          int saved_errno = errno; // Save error from readdir (if any) during cleanup to report it later.
+          if (closedir(dir) != 0) {
+              throw OSError(fd_path + " closedir failed", errno);
           }
-        } catch (const fs::filesystem_error &e) {
-          throw OSError("/proc/<pid>/fd iteration failed", e.code().value());
+          if (saved_errno != 0) {
+              throw OSError(fd_path + " readdir failed", saved_errno);
+          }
+        } else {
+          throw OSError(fd_path + " opendir failed", errno);
+        }
+        for (const int fd : fds_to_close) {
+          close(fd);
         }
 #else
         // On other operating systems, iterate over all file descriptor slots
