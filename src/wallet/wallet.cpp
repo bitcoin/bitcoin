@@ -1569,45 +1569,45 @@ void CWallet::BlockUntilSyncedToCurrentChain() const {
 }
 
 // Note that this function doesn't distinguish between a 0-valued input,
-// and a not-"is mine" (according to the filter) input.
-CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
+// and a not-"is mine" input.
+CAmount CWallet::GetDebit(const CTxIn &txin) const
 {
     LOCK(cs_wallet);
     auto txo = GetTXO(txin.prevout);
-    if (txo && (txo->GetIsMine() & filter)) {
+    if (txo) {
         return txo->GetTxOut().nValue;
     }
     return 0;
 }
 
-isminetype CWallet::IsMine(const CTxOut& txout) const
+bool CWallet::IsMine(const CTxOut& txout) const
 {
     AssertLockHeld(cs_wallet);
     return IsMine(txout.scriptPubKey);
 }
 
-isminetype CWallet::IsMine(const CTxDestination& dest) const
+bool CWallet::IsMine(const CTxDestination& dest) const
 {
     AssertLockHeld(cs_wallet);
     return IsMine(GetScriptForDestination(dest));
 }
 
-isminetype CWallet::IsMine(const CScript& script) const
+bool CWallet::IsMine(const CScript& script) const
 {
     AssertLockHeld(cs_wallet);
 
     // Search the cache so that IsMine is called only on the relevant SPKMs instead of on everything in m_spk_managers
     const auto& it = m_cached_spks.find(script);
     if (it != m_cached_spks.end()) {
-        isminetype res = ISMINE_NO;
+        bool res = false;
         for (const auto& spkm : it->second) {
-            res = std::max(res, spkm->IsMine(script));
+            res = res || spkm->IsMine(script);
         }
-        Assume(res == ISMINE_SPENDABLE);
+        Assume(res);
         return res;
     }
 
-    return ISMINE_NO;
+    return false;
 }
 
 bool CWallet::IsMine(const CTransaction& tx) const
@@ -1619,30 +1619,30 @@ bool CWallet::IsMine(const CTransaction& tx) const
     return false;
 }
 
-isminetype CWallet::IsMine(const COutPoint& outpoint) const
+bool CWallet::IsMine(const COutPoint& outpoint) const
 {
     AssertLockHeld(cs_wallet);
     auto wtx = GetWalletTx(outpoint.hash);
     if (!wtx) {
-        return ISMINE_NO;
+        return false;
     }
     if (outpoint.n >= wtx->tx->vout.size()) {
-        return ISMINE_NO;
+        return false;
     }
     return IsMine(wtx->tx->vout[outpoint.n]);
 }
 
 bool CWallet::IsFromMe(const CTransaction& tx) const
 {
-    return (GetDebit(tx, ISMINE_ALL) > 0);
+    return (GetDebit(tx) > 0);
 }
 
-CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) const
+CAmount CWallet::GetDebit(const CTransaction& tx) const
 {
     CAmount nDebit = 0;
     for (const CTxIn& txin : tx.vin)
     {
-        nDebit += GetDebit(txin, filter);
+        nDebit += GetDebit(txin);
         if (!MoneyRange(nDebit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
@@ -2377,7 +2377,7 @@ bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& add
 
         CAddressBookData& record = mi != m_address_book.end() ? mi->second : m_address_book[address];
         record.SetLabel(strName);
-        is_mine = IsMine(address) != ISMINE_NO;
+        is_mine = IsMine(address);
         if (new_purpose) { /* update purpose only if requested */
             record.purpose = new_purpose;
         }
@@ -4444,15 +4444,11 @@ void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
     AssertLockHeld(cs_wallet);
     for (uint32_t i = 0; i < wtx.tx->vout.size(); ++i) {
         const CTxOut& txout = wtx.tx->vout.at(i);
-        isminetype ismine = IsMine(txout);
-        if (ismine == ISMINE_NO) {
-            continue;
-        }
+        if (!IsMine(txout)) continue;
         COutPoint outpoint(wtx.GetHash(), i);
         if (m_txos.contains(outpoint)) {
-            m_txos.at(outpoint).SetIsMine(ismine);
         } else {
-            m_txos.emplace(outpoint, WalletTXO{wtx, txout, ismine});
+            m_txos.emplace(outpoint, WalletTXO{wtx, txout});
         }
     }
 }

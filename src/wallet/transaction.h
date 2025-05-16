@@ -388,13 +388,11 @@ class WalletTXO
 private:
     const CWalletTx& m_wtx;
     const CTxOut& m_output;
-    isminetype m_ismine;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output)
     : m_wtx(wtx),
-    m_output(output),
-    m_ismine(ismine)
+    m_output(output)
     {
         Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
     }
@@ -402,9 +400,6 @@ public:
     const CWalletTx& GetWalletTx() const { return m_wtx; }
 
     const CTxOut& GetTxOut() const { return m_output; }
-
-    isminetype GetIsMine() const { return m_ismine; }
-    void SetIsMine(isminetype ismine) { m_ismine = ismine; }
 };
 } // namespace wallet
 

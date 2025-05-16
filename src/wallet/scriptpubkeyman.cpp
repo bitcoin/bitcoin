@@ -197,15 +197,15 @@ IsMineResult LegacyWalletIsMineInnerDONOTUSE(const LegacyDataSPKM& keystore, con
 
 } // namespace
 
-isminetype LegacyDataSPKM::IsMine(const CScript& script) const
+bool LegacyDataSPKM::IsMine(const CScript& script) const
 {
     switch (LegacyWalletIsMineInnerDONOTUSE(*this, script, IsMineSigVersion::TOP)) {
     case IsMineResult::INVALID:
     case IsMineResult::NO:
-        return ISMINE_NO;
+        return false;
     case IsMineResult::WATCH_ONLY:
     case IsMineResult::SPENDABLE:
-        return ISMINE_SPENDABLE;
+        return true;
     }
     assert(false);
 }
@@ -506,12 +506,12 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetCandidateScriptP
 
 std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetScriptPubKeys() const
 {
-    // Run IsMine() on each candidate output script. Any script that is not ISMINE_NO is an output
+    // Run IsMine() on each candidate output script. Any script that IsMine is an output
     // script to return.
     // This both filters out things that are not watched by the wallet, and things that are invalid.
     std::unordered_set<CScript, SaltedSipHasher> spks;
     for (const CScript& script : GetCandidateScriptPubKeys()) {
-        if (IsMine(script) != ISMINE_NO) {
+        if (IsMine(script)) {
             spks.insert(script);
         }
     }
@@ -524,7 +524,7 @@ std::unordered_set<CScript, SaltedSipHasher> LegacyDataSPKM::GetNotMineScriptPub
     LOCK(cs_KeyStore);
     std::unordered_set<CScript, SaltedSipHasher> spks;
     for (const CScript& script : setWatchOnly) {
-        if (IsMine(script) == ISMINE_NO) spks.insert(script);
+        if (!IsMine(script)) spks.insert(script);
     }
     return spks;
 }
@@ -612,7 +612,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         for (const CScript& spk : desc_spks) {
             size_t erased = spks.erase(spk);
             assert(erased == 1);
-            assert(IsMine(spk) == ISMINE_SPENDABLE);
+            assert(IsMine(spk));
         }
 
         out.desc_spkms.push_back(std::move(desc_spk_man));
@@ -661,7 +661,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             for (const CScript& spk : desc_spks) {
                 size_t erased = spks.erase(spk);
                 assert(erased == 1);
-                assert(IsMine(spk) == ISMINE_SPENDABLE);
+                assert(IsMine(spk));
             }
 
             out.desc_spkms.push_back(std::move(desc_spk_man));
@@ -748,7 +748,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         for (const CScript& desc_spk : desc_spks) {
             auto del_it = spks.find(desc_spk);
             assert(del_it != spks.end());
-            assert(IsMine(desc_spk) != ISMINE_NO);
+            assert(IsMine(desc_spk));
             it = spks.erase(del_it);
         }
     }
@@ -762,14 +762,14 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
     // Legacy wallets can also contain scripts whose P2SH, P2WSH, or P2SH-P2WSH it is not watching for
     // but can provide script data to a PSBT spending them. These "solvable" output scripts will need to
     // be put into the separate "solvables" wallet.
-    // These can be detected by going through the entire candidate output scripts, finding the ISMINE_NO scripts,
+    // These can be detected by going through the entire candidate output scripts, finding the not IsMine scripts,
     // and checking CanProvide() which will dummy sign.
     for (const CScript& script : GetCandidateScriptPubKeys()) {
         // Since we only care about P2SH, P2WSH, and P2SH-P2WSH, filter out any scripts that are not those
         if (!script.IsPayToScriptHash() && !script.IsPayToWitnessScriptHash()) {
             continue;
         }
-        if (IsMine(script) != ISMINE_NO) {
+        if (IsMine(script)) {
             continue;
         }
         SignatureData dummy_sigdata;
@@ -861,13 +861,10 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
     }
 }
 
-isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
+bool DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
 {
     LOCK(cs_desc_man);
-    if (m_map_script_pub_keys.count(script) > 0) {
-        return ISMINE_SPENDABLE;
-    }
-    return ISMINE_NO;
+    return m_map_script_pub_keys.contains(script);
 }
 
 bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key)

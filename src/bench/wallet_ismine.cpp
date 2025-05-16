@@ -14,7 +14,6 @@
 #include <wallet/context.h>
 #include <wallet/db.h>
 #include <wallet/test/util.h>
-#include <wallet/types.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -58,8 +57,8 @@ static void WalletIsMine(benchmark::Bench& bench, int num_combo = 0)
 
     bench.run([&] {
         LOCK(wallet->cs_wallet);
-        isminetype mine = wallet->IsMine(script);
-        assert(mine == ISMINE_NO);
+        bool mine = wallet->IsMine(script);
+        assert(!mine);
     });
 
     TestUnloadWallet(std::move(wallet));

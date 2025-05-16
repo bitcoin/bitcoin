@@ -437,14 +437,11 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (wallet.IsSpent(outpoint))
             continue;
 
-        isminetype mine = wallet.IsMine(output);
-        assert(mine != ISMINE_NO);
-
         if (!allow_used_addresses && wallet.IsSpentKey(output.scriptPubKey)) {
             continue;
         }
 
-        bool tx_from_me = CachedTxIsFromMe(wallet, wtx, ISMINE_ALL);
+        bool tx_from_me = CachedTxIsFromMe(wallet, wtx);
 
         std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
