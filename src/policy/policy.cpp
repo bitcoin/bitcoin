@@ -183,6 +183,8 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
  *    as potential new upgrade hooks.
  *
  * Note that only the non-witness portion of the transaction is checked here.
+ *
+ * We also check the total number of sigops across the whole transaction.
  */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
@@ -190,8 +192,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         return true; // Coinbases don't use vin normally
     }
 
+    unsigned int sigops{0};
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
+
+        sigops += tx.vin[i].scriptSig.GetSigOpCount(true);
+        sigops += prev.scriptPubKey.GetSigOpCount(true);
 
         std::vector<std::vector<unsigned char> > vSolutions;
         TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
@@ -209,9 +215,15 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             if (stack.empty())
                 return false;
             CScript subscript(stack.back().begin(), stack.back().end());
-            if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
+            const auto p2sh_sigops{subscript.GetSigOpCount(true)};
+            if (p2sh_sigops > MAX_P2SH_SIGOPS) {
                 return false;
             }
+            sigops += p2sh_sigops;
+        }
+
+        if (sigops > MAX_LEGACY_SIGOPS) {
+            return false;
         }
     }
 
