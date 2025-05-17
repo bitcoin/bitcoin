@@ -388,9 +388,10 @@ static RPCHelpMan generateblock()
         block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
         RegenerateCommitments(block, chainman);
 
-        BlockValidationState state;
-        if (!TestBlockValidity(state, chainman.GetParams(), chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/false)) {
-            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s", state.ToString()));
+        std::string reason;
+        std::string debug;
+        if (!miner.checkBlock(block, {.check_merkle_root = false, .check_pow = false}, reason, debug)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, strprintf("TestBlockValidity failed: %s - %s", reason, debug));
         }
     }
 
@@ -745,13 +746,12 @@ static RPCHelpMan getblocktemplate()
                 return "duplicate-inconclusive";
             }
 
-            // TestBlockValidity only supports blocks built on the current Tip
-            if (block.hashPrevBlock != tip) {
-                return "inconclusive-not-best-prevblk";
-            }
-            BlockValidationState state;
-            TestBlockValidity(state, chainman.GetParams(), chainman.ActiveChainstate(), block, chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock), /*fCheckPOW=*/false, /*fCheckMerkleRoot=*/true);
-            return BIP22ValidationResult(state);
+            std::string reason;
+            std::string debug;
+            bool res{miner.checkBlock(block, {.check_pow = false}, reason, debug)};
+            if (res) return UniValue::VNULL;
+            LogDebug(BCLog::RPC, "Invalid block: %s", debug);
+            return UniValue{reason};
         }
 
         const UniValue& aClientRules = oparam.find_value("rules");
