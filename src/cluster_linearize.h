@@ -848,6 +848,9 @@ public:
             auto& chunk_data = m_tx_data[chunk];
             // If this is not a chunk representative, skip.
             if (chunk_data.chunk_rep != chunk) continue;
+            // Remember the best dependency seen so far, together with its gain.
+            DepIdx best = DepIdx(-1);
+            FeeFrac::MulType best_gain = FeeFrac::MUL_ZERO;
             // Iterate over all transactions.
             for (auto tx : chunk_data.chunk_setinfo.transactions) {
                 const auto& tx_data = m_tx_data[tx];
@@ -856,13 +859,22 @@ public:
                 for (DepIdx dep_idx : children) {
                     const auto& dep_data = m_dep_data[dep_idx];
                     if (!dep_data.active) continue;
-                    // Skip if this dependency is ineligible (the top chunk that would be created
-                    // does not have higher feerate than the chunk it is currently part of).
-                    if (!(dep_data.top_setinfo.feerate >> chunk_data.chunk_setinfo.feerate)) continue;
-                    // Activate it otherwise.
-                    Improve(dep_idx);
-                    return true;
+                    // Skip if this dependency is ineligible (below best gain).
+                    auto gain = FeeFrac::ScaledDifference(dep_data.top_setinfo.feerate, chunk_data.chunk_setinfo.feerate);
+                    if (gain < best_gain) continue;
+                    // Remember this as our best solution if it has higher gain than our best so
+                    // far.
+                    if (gain > best_gain) {
+                        best = dep_idx;
+                        best_gain = gain;
+                    }
                 }
+            }
+            // If the remembered dependency has positive gain, activate it.
+            if (best_gain > FeeFrac::MUL_ZERO) {
+                Assume(best != DepIdx(-1));
+                Improve(best);
+                return true;
             }
         }
         // No improvable chunk was found, we are done.
