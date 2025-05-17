@@ -400,7 +400,7 @@ inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
     // (without randomization of its steps) run forever before finding an optimal result. This is
     // just a conservative overestimate based on observed cases, but if it is exceeded, the
     // numbers can safely be adjusted to account for that.
-    return cluster_count * cluster_count + 1;
+    return 50 + 100 * cluster_count + uint64_t{100} * cluster_count * cluster_count;
 }
 
 } // namespace
