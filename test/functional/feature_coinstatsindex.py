@@ -191,7 +191,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # has two outputs
         cb = create_coinbase(109, nValue=35)
         cb.vout.append(CTxOut(5 * COIN, CScript([OP_FALSE])))
-        cb.rehash()
 
         # Generate a block that includes previous coinbase
         tip = self.nodes[0].getbestblockhash()

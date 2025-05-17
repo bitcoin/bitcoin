@@ -93,7 +93,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
 
         block2_dup = copy.deepcopy(block2_orig)
         block2_dup.vtx[2].vin.append(block2_dup.vtx[2].vin[0])
-        block2_dup.vtx[2].rehash()
         block2_dup.hashMerkleRoot = block2_dup.calc_merkle_root()
         block2_dup.solve()
         peer.send_blocks_and_test([block2_dup], node, success=False, reject_reason='bad-txns-inputs-duplicate')
@@ -122,7 +121,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Create a block that spends the output of a tx in a previous block.
         tx3 = create_tx_with_script(tx2, 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
         tx3.vin.append(tx3.vin[0])  # Duplicates input
-        tx3.rehash()
         block4 = create_block(tip, create_coinbase(height), block_time, txlist=[tx3])
         block4.solve()
         self.log.info("Test inflation by duplicating input")
