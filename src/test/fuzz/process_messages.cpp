@@ -60,7 +60,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
 
         FillNode(fuzzed_data_provider, connman, p2p_node);
 
-        connman.AddTestNode(p2p_node);
+        connman.AddTestNode(p2p_node, std::make_unique<FuzzedSock>(fuzzed_data_provider));
     }
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 30)
