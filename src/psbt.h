@@ -777,7 +777,7 @@ struct PSBTInput
                 {
                     if (!key_lookup.emplace(key).second) {
                         throw std::ios_base::failure("Duplicate Key, input musig2 pubnonce already provided");
-                    } else if (key.size() != 2 * CPubKey::COMPRESSED_SIZE + 1 && key.size() != 2 * CPubKey::COMPRESSED_SIZE + CSHA256::OUTPUT_SIZE + 1) {
+                    } else if (key.size() != (2 * CPubKey::COMPRESSED_SIZE + 1) && key.size() != (2 * CPubKey::COMPRESSED_SIZE + CSHA256::OUTPUT_SIZE + 1)) {
                         throw std::ios_base::failure("Input musig2 pubnonce key is not expected size of 67 or 99 bytes");
                     }
                     CPubKey agg_pub, part_pub;
@@ -797,7 +797,7 @@ struct PSBTInput
                 {
                     if (!key_lookup.emplace(key).second) {
                         throw std::ios_base::failure("Duplicate Key, input musig2 partial sig already provided");
-                    } else if (key.size() != 2 * CPubKey::COMPRESSED_SIZE + 1 && key.size() != 2 * CPubKey::COMPRESSED_SIZE + CSHA256::OUTPUT_SIZE + 1) {
+                    } else if (key.size() != (2 * CPubKey::COMPRESSED_SIZE + 1) && key.size() != (2 * CPubKey::COMPRESSED_SIZE + CSHA256::OUTPUT_SIZE + 1)) {
                         throw std::ios_base::failure("Input musig2 partial sig key is not expected size of 67 or 99 bytes");
                     }
                     CPubKey agg_pub, part_pub;
