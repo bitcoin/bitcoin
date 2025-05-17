@@ -146,9 +146,6 @@ static void PreventOutdatedOptions(const UniValue& options)
     if (options.exists("changePosition")) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position instead of changePosition");
     }
-    if (options.exists("includeWatching")) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching instead of includeWatching");
-    }
     if (options.exists("lockUnspents")) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents instead of lockUnspents");
     }
@@ -515,12 +512,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
 
     std::optional<unsigned int> change_position;
     bool lockUnspents = false;
-    if (!options.isNull()) {
-      if (options.type() == UniValue::VBOOL) {
-        // backward compatibility bool only fallback
-        coinControl.fAllowWatchOnly = options.get_bool();
-      }
-      else {
+    if (!options.isNull() && options.isObject()) {
         RPCTypeCheckObj(options,
             {
                 {"add_inputs", UniValueType(UniValue::VBOOL)},
@@ -531,8 +523,6 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 {"changePosition", UniValueType(UniValue::VNUM)},
                 {"change_position", UniValueType(UniValue::VNUM)},
                 {"change_type", UniValueType(UniValue::VSTR)},
-                {"includeWatching", UniValueType(UniValue::VBOOL)},
-                {"include_watching", UniValueType(UniValue::VBOOL)},
                 {"inputs", UniValueType(UniValue::VARR)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
                 {"lock_unspents", UniValueType(UniValue::VBOOL)},
@@ -587,9 +577,6 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
             }
         }
 
-        const UniValue include_watching_option = options.exists("include_watching") ? options["include_watching"] : options["includeWatching"];
-        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(include_watching_option, wallet);
-
         if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
             lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
         }
@@ -632,10 +619,6 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
             }
         }
         SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
-      }
-    } else {
-        // if options is null and not a bool
-        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(NullUniValue, wallet);
     }
 
     if (options.exists("solving_data")) {
@@ -756,11 +739,10 @@ RPCHelpMan fundrawtransaction()
                 "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n"
                 "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
                 "in the wallet using importdescriptors (to calculate fees).\n"
-                "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
-                "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n",
+                "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
-                    {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "For backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}",
+                    {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         Cat<std::vector<RPCArg>>(
                         {
                             {"add_inputs", RPCArg::Type::BOOL, RPCArg::Default{true}, "For a transaction with existing inputs, automatically include more if they are not enough."},
@@ -772,9 +754,6 @@ RPCHelpMan fundrawtransaction()
                             {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"automatic"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
-                            {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
-                                                          "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                                          "e.g. with 'importdescriptors'."},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
@@ -1075,7 +1054,6 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
     CCoinControl coin_control;
-    coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
     coin_control.m_signal_bip125_rbf = true;
     std::vector<CTxOut> outputs;
@@ -1234,9 +1212,6 @@ RPCHelpMan send()
                     {"change_position", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                     {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if change_address is not specified. Options are \"legacy\", \"p2sh-segwit\", \"bech32\" and \"bech32m\"."},
                     {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
-                    {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
-                                          "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                          "e.g. with 'importdescriptors'."},
                     {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Specify inputs instead of adding them automatically.",
                         {
                           {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "", {
@@ -1354,9 +1329,6 @@ RPCHelpMan sendall()
                     {
                         {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns the serialized transaction without broadcasting or adding it to the wallet"},
                         {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
-                        {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch-only.\n"
-                                              "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                              "e.g. with 'importdescriptors'."},
                         {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Use exactly the specified inputs to build the transaction. Specifying inputs is incompatible with the send_max, minconf, and maxconf options.",
                             {
                                 {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -1437,8 +1409,6 @@ RPCHelpMan sendall()
 
             SetFeeEstimateMode(*pwallet, coin_control, options["conf_target"], options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
 
-            coin_control.fAllowWatchOnly = ParseIncludeWatchonly(options["include_watching"], *pwallet);
-
             if (options.exists("minconf")) {
                 if (options["minconf"].getInt<int>() < 0)
                 {
@@ -1485,7 +1455,7 @@ RPCHelpMan sendall()
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not available. UTXO (%s:%d) was already spent.", input.prevout.hash.ToString(), input.prevout.n));
                     }
                     const CWalletTx* tx{pwallet->GetWalletTx(input.prevout.hash)};
-                    if (!tx || input.prevout.n >= tx->tx->vout.size() || !(pwallet->IsMine(tx->tx->vout[input.prevout.n]) & (coin_control.fAllowWatchOnly ? ISMINE_ALL : ISMINE_SPENDABLE))) {
+                    if (!tx || input.prevout.n >= tx->tx->vout.size() || !pwallet->IsMine(tx->tx->vout[input.prevout.n])) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not found. UTXO (%s:%d) is not part of wallet.", input.prevout.hash.ToString(), input.prevout.n));
                     }
                     total_input_value += tx->tx->vout[input.prevout.n].nValue;
@@ -1714,7 +1684,6 @@ RPCHelpMan walletcreatefundedpsbt()
                             {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"automatic"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
-                            {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only"},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},

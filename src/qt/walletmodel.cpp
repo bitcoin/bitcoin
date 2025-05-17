@@ -267,7 +267,7 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
                 // Check if we have a new address or an updated label
                 std::string name;
                 if (!m_wallet->getAddress(
-                     dest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr))
+                     dest, &name, /*purpose=*/nullptr))
                 {
                     m_wallet->setAddressBook(dest, strLabel, wallet::AddressPurpose::SEND);
                 }
@@ -601,13 +601,7 @@ CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
     // No selected coins, return the cached balance
     if (!control || !control->HasSelected()) {
         const interfaces::WalletBalances& balances = getCachedBalance();
-        CAmount available_balance = balances.balance;
-        // if wallet private keys are disabled, this is a watch-only wallet
-        // so, let's include the watch-only balance.
-        if (balances.have_watch_only && m_wallet->privateKeysDisabled()) {
-            available_balance += balances.watch_only_balance;
-        }
-        return available_balance;
+        return balances.balance;
     }
     // Fetch balance from the wallet, taking into account the selected coins
     return wallet().getAvailableBalance(*control);
