@@ -25,13 +25,13 @@
  *   <<---: The right side is implemented using the left side.
  *
  *   +-----------------------+
- *   | SearchCandidateFinder | <<---------------------\
- *   +-----------------------+                        |
+ *   | SearchCandidateFinder |
+ *   +-----------------------+
  *     |                                            +-----------+
  *     |                                            | Linearize |
  *     |                                            +-----------+
- *     |        +-------------------------+           |  |
- *     |        | AncestorCandidateFinder | <<--------/  |
+ *     |        +-------------------------+              |
+ *     |        | AncestorCandidateFinder |              |
  *     |        +-------------------------+              |
  *     |          |                     ^                |        ^^  PRODUCTION CODE
  *     |          |                     |                |        ||
@@ -1166,23 +1166,13 @@ FUZZ_TARGET(clusterlin_linearize)
     }
 
     // If the iteration count is sufficiently high, an optimal linearization must be found.
-    // Each linearization step can use up to 2^(k-1) iterations, with steps k=1..n. That sum is
-    // 2^n - 1.
+    // Note that these are not absolute bounds, as the linearization algorithm can in theory
+    // (without randomization of its steps) run forever before finding an optimal result. This is
+    // just a conservative overestimate based on observed cases, but if it is exceeded, the
+    // numbers can safely be adjusted to account for that.
     const uint64_t n = depgraph.TxCount();
-    if (n <= 19 && iter_count > (uint64_t{1} << n)) {
+    if (iter_count >= n * n + 1) {
         assert(optimal);
-    }
-    // Additionally, if the assumption of sqrt(2^k)+1 iterations per step holds, plus ceil(k/4)
-    // start-up cost per step, plus ceil(n^2/64) start-up cost overall, we can compute the upper
-    // bound for a whole linearization (summing for k=1..n) using the Python expression
-    // [sum((k+3)//4 + int(math.sqrt(2**k)) + 1 for k in range(1, n + 1)) + (n**2 + 63) // 64 for n in range(0, 35)]:
-    static constexpr uint64_t MAX_OPTIMAL_ITERS[] = {
-        0, 4, 8, 12, 18, 26, 37, 51, 70, 97, 133, 182, 251, 346, 480, 666, 927, 1296, 1815, 2545,
-        3576, 5031, 7087, 9991, 14094, 19895, 28096, 39690, 56083, 79263, 112041, 158391, 223936,
-        316629, 447712
-    };
-    if (n < std::size(MAX_OPTIMAL_ITERS) && iter_count >= MAX_OPTIMAL_ITERS[n]) {
-        Assume(optimal);
     }
 
     // If Linearize claims optimal result, run quality tests.
@@ -1196,9 +1186,13 @@ FUZZ_TARGET(clusterlin_linearize)
         // If SimpleLinearize finds the optimal result too, they must be equal (if not,
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
-        // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
-        // chunking is claimed to be optimal, which implies minimal chunks).
-        if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
+
+        // Temporarily disabled, as Linearize() currently does not guarantee minimal chunks, even
+        // when it reports an optimal result. This will be re-introduced in a later commit.
+        //
+        // // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
+        // // chunking is claimed to be optimal, which implies minimal chunks).
+        // if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
