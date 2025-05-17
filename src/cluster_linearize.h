@@ -569,14 +569,20 @@ private:
     struct TxData {
         /** The position in the original linearization. Immutable after construction. */
         DepGraphIndex original_pos;
-        /** The dependencies involving this transaction as child. Immutable after construction. */
+        /** The dependencies involving this transaction as child. All active ones (see
+         *  parent_deps_active) appear first. */
         std::array<DepIdx, SetType::Size() - 1> parent_deps;
         /** The total number of dependencies involving this transaction as child. Immutable after construction. */
         TxIdx parent_deps_total{0};
-        /** The dependencies involving this transaction as parent. Immutable after construction. */
+        /** The number of active dependencies involving this transaction as child. */
+        TxIdx parent_deps_active{0};
+        /** The dependencies involving this transaction as parent. All active ones (see
+         *  parent_deps_active) appear first. */
         std::array<DepIdx, SetType::Size() - 1> child_deps;
         /** The total number of dependencies involving this transaction as parent. Immutable after construction. */
         TxIdx child_deps_total{0};
+        /** The number of active dependencies involving this transaction as parent. */
+        TxIdx child_deps_active{0};
         /** The set of parent transactions of this transaction. Immutable after construction. */
         SetType parents;
         /** The set of child transactions of this transaction. Immutable after construction. */
@@ -598,6 +604,10 @@ private:
         bool active;
         /** What the parent and child transactions are. Immutable after construction. */
         TxIdx parent, child;
+        /** Index into the parent's TxData::parent_deps where this dependency appears. */
+        DepIdx parent_pos;
+        /** Index into the child's TxData::child_deps where this dependency appears. */
+        DepIdx child_pos;
         /** (Only if this dependency is active). The top chunk that would be formed if this
          *  dependency were deactivated. */
         SetInfo<SetType> top_setinfo;
@@ -632,11 +642,11 @@ private:
                 todo |= tx_data.active_parents;
                 todo -= done;
                 // Iterate over all its active child dependencies.
-                auto child_deps = std::span{tx_data.child_deps}.first(tx_data.child_deps_total);
+                auto child_deps = std::span{tx_data.child_deps}.first(tx_data.child_deps_active);
                 for (auto dep_idx : child_deps) {
                     auto& dep_entry = m_dep_data[dep_idx];
                     Assume(dep_entry.parent == tx_idx);
-                    if (!dep_entry.active) continue;
+                    Assume(dep_entry.active);
                     // If this is the first time reaching the child, mark it as todo, and invoke
                     // the downward dependency visitor for it. We do not need to check if it isn't
                     // already in todo here, because there cannot be multiple dependencies that
@@ -652,15 +662,37 @@ private:
         } while (todo.Any());
     }
 
+    /** Swap two dependencies in a given transaction's implied list of parent deps. */
+    void SwapParentDeps(TxData& tx_data, DepIdx pos1, DepIdx pos2) noexcept
+    {
+        if (pos1 == pos2) return;
+        std::swap(tx_data.parent_deps[pos1], tx_data.parent_deps[pos2]);
+        m_dep_data[tx_data.parent_deps[pos1]].parent_pos = pos1;
+        m_dep_data[tx_data.parent_deps[pos2]].parent_pos = pos2;
+    }
+
+    /** Swap two dependencies in a given transaction's implied list of child deps. */
+    void SwapChildDeps(TxData& tx_data, DepIdx pos1, DepIdx pos2) noexcept
+    {
+        if (pos1 == pos2) return;
+        std::swap(tx_data.child_deps[pos1], tx_data.child_deps[pos2]);
+        m_dep_data[tx_data.child_deps[pos1]].child_pos = pos1;
+        m_dep_data[tx_data.child_deps[pos2]].child_pos = pos2;
+    }
+
     /** Make a specified inactive dependency active. */
     void Activate(DepIdx dep_idx) noexcept
     {
         auto& dep_data = m_dep_data[dep_idx];
         Assume(!dep_data.active);
+        // Make dep_idx the first inactive dependency in the child's list of parent deps.
+        auto& child_tx_data = m_tx_data[dep_data.child];
+        SwapParentDeps(child_tx_data, dep_data.parent_pos, child_tx_data.parent_deps_active);
+        // Make dep_idx the first inactive dependency in the parent's list of child deps.
+        auto& parent_tx_data = m_tx_data[dep_data.parent];
+        SwapChildDeps(parent_tx_data, dep_data.child_pos, parent_tx_data.child_deps_active);
 
         // Gather information about the parent and child chunks.
-        auto& child_tx_data = m_tx_data[dep_data.child];
-        auto& parent_tx_data = m_tx_data[dep_data.parent];
         Assume(parent_tx_data.chunk_rep != child_tx_data.chunk_rep);
         auto& par_chunk_data = m_tx_data[parent_tx_data.chunk_rep];
         auto& chl_chunk_data = m_tx_data[child_tx_data.chunk_rep];
@@ -680,7 +712,11 @@ private:
         // Make active.
         dep_data.active = true;
         dep_data.top_setinfo = top_part;
+        child_tx_data.parent_deps_active += 1;
         child_tx_data.active_parents.Set(dep_data.parent);
+        Assume(child_tx_data.parent_deps_active <= child_tx_data.parent_deps_total);
+        parent_tx_data.child_deps_active += 1;
+        Assume(parent_tx_data.child_deps_active <= parent_tx_data.child_deps_total);
         ++m_operations;
     }
 
@@ -689,11 +725,19 @@ private:
     {
         auto& dep_data = m_dep_data[dep_idx];
         Assume(dep_data.active);
-        // Make inactive.
+        // Make dep_idx the last active dependency in the child's list of parent deps.
         auto& child_tx_data = m_tx_data[dep_data.child];
+        Assume(child_tx_data.parent_deps_active >= 1);
+        SwapParentDeps(child_tx_data, dep_data.parent_pos, child_tx_data.parent_deps_active - 1);
+        // Make dep_idx the last active dependency in the parent's list of child deps.
         auto& parent_tx_data = m_tx_data[dep_data.parent];
+        Assume(parent_tx_data.child_deps_active >= 1);
+        SwapChildDeps(parent_tx_data, dep_data.child_pos, parent_tx_data.child_deps_active - 1);
+        // Make inactive.
         dep_data.active = false;
+        child_tx_data.parent_deps_active -= 1;
         child_tx_data.active_parents.Reset(dep_data.parent);
+        parent_tx_data.child_deps_active -= 1;
         // Update representatives.
         auto& chunk_data = m_tx_data[parent_tx_data.chunk_rep];
         auto top_part = dep_data.top_setinfo;
@@ -762,9 +806,9 @@ private:
             for (auto tx : chunk_txn) {
                 auto& tx_data = m_tx_data[tx];
                 if ((DownWard ? tx_data.children : tx_data.parents).Overlaps(other_chunk.chunk_setinfo.transactions)) {
-                    auto deps = DownWard ? std::span{tx_data.child_deps}.first(tx_data.child_deps_total)
-                                         : std::span{tx_data.parent_deps}.first(tx_data.parent_deps_total);
-                    for (auto dep : deps) {
+                    auto inactive = DownWard ? std::span{tx_data.child_deps}.first(tx_data.child_deps_total).subspan(tx_data.child_deps_active)
+                                             : std::span{tx_data.parent_deps}.first(tx_data.parent_deps_total).subspan(tx_data.parent_deps_active);
+                    for (auto dep : inactive) {
                         auto& dep_data = m_dep_data[dep];
                         if (other_chunk.chunk_setinfo.transactions[DownWard ? dep_data.child : dep_data.parent]) {
                             Assume(!dep_data.active);
@@ -834,9 +878,11 @@ public:
                 dep.parent = par;
                 dep.child = tx;
                 // Add it as parent of the child.
+                dep.parent_pos = tx_data.parent_deps_total;
                 tx_data.parent_deps[tx_data.parent_deps_total++] = dep_idx;
                 tx_data.parents.Set(par);
                 // Add it as child of the parent.
+                dep.child_pos = par_tx_data.child_deps_total;
                 par_tx_data.child_deps[par_tx_data.child_deps_total++] = dep_idx;
                 par_tx_data.children.Set(tx);
             }
@@ -860,10 +906,10 @@ public:
             for (auto tx : chunk_data.chunk_setinfo.transactions) {
                 const auto& tx_data = m_tx_data[tx];
                 // Iterate over all active child dependencies of that transactions.
-                const auto children = std::span{tx_data.child_deps}.first(tx_data.child_deps_total);
-                for (DepIdx dep_idx : children) {
+                const auto active_children = std::span{tx_data.child_deps}.first(tx_data.child_deps_active);
+                for (DepIdx dep_idx : active_children) {
                     const auto& dep_data = m_dep_data[dep_idx];
-                    if (!dep_data.active) continue;
+                    Assume(dep_data.active);
                     // Skip if this dependency is ineligible (below best gain).
                     auto gain = FeeFrac::ScaledDifference(dep_data.top_setinfo.feerate, chunk_data.chunk_setinfo.feerate);
                     if (gain < best_gain) continue;
