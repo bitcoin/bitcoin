@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 
 #include <consensus/amount.h>
 #include <serialize.h>
+#include <util/feefrac.h>
 
 
 #include <cstdint>
@@ -27,52 +28,59 @@ enum class FeeEstimateMode {
 };
 
 /**
- * Fee rate in satoshis per kilovirtualbyte: CAmount / kvB
+ * Fee rate in satoshis per virtualbyte: CAmount / vB
+ * the feerate is represented internally as FeeFrac
  */
 class CFeeRate
 {
 private:
-    /** Fee rate in sat/kvB (satoshis per 1000 virtualbytes) */
-    CAmount nSatoshisPerK;
+    /** Fee rate in sats/vB (satoshis per N virtualbytes) */
+    FeePerVSize m_feerate;
 
 public:
-    /** Fee rate of 0 satoshis per kvB */
-    CFeeRate() : nSatoshisPerK(0) { }
+    /** Fee rate of 0 satoshis per 0 vB */
+    CFeeRate() = default;
     template<std::integral I> // Disallow silent float -> int conversion
-    explicit CFeeRate(const I _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) {
-    }
+    explicit CFeeRate(const I m_feerate_kvb) : m_feerate(FeePerVSize(m_feerate_kvb, 1000)) {}
 
     /**
      * Construct a fee rate from a fee in satoshis and a vsize in vB.
      *
      * param@[in]   nFeePaid    The fee paid by a transaction, in satoshis
-     * param@[in]   num_bytes   The vsize of a transaction, in vbytes
+     * param@[in]   virtual_bytes   The vsize of a transaction, in vbytes
+     *
+     * Passing any virtual_bytes less than or equal to 0 will result in 0 fee rate per 0 size.
      */
-    CFeeRate(const CAmount& nFeePaid, uint32_t num_bytes);
+    CFeeRate(const CAmount& nFeePaid, int32_t virtual_bytes);
 
     /**
      * Return the fee in satoshis for the given vsize in vbytes.
      * If the calculated fee would have fractional satoshis, then the
      * returned fee will always be rounded up to the nearest satoshi.
      */
-    CAmount GetFee(uint32_t num_bytes) const;
+    CAmount GetFee(int32_t virtual_bytes) const;
 
     /**
      * Return the fee in satoshis for a vsize of 1000 vbytes
      */
-    CAmount GetFeePerK() const { return nSatoshisPerK; }
-    friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
-    friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
-    friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
-    friend bool operator<=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK <= b.nSatoshisPerK; }
-    friend bool operator>=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK >= b.nSatoshisPerK; }
-    friend bool operator!=(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK != b.nSatoshisPerK; }
-    CFeeRate& operator+=(const CFeeRate& a) { nSatoshisPerK += a.nSatoshisPerK; return *this; }
+    CAmount GetFeePerK() const { return CAmount(m_feerate.EvaluateFeeDown(1000)); }
+    friend std::weak_ordering operator<=>(const CFeeRate& a, const CFeeRate& b) noexcept
+    {
+        return FeeRateCompare(a.m_feerate, b.m_feerate);
+    }
+    friend bool operator==(const CFeeRate& a, const CFeeRate& b) noexcept
+    {
+        return FeeRateCompare(a.m_feerate, b.m_feerate) == std::weak_ordering::equivalent;
+    }
+    CFeeRate& operator+=(const CFeeRate& a) {
+        m_feerate = FeePerVSize(GetFeePerK() + a.GetFeePerK(), 1000);
+        return *this;
+    }
     std::string ToString(const FeeEstimateMode& fee_estimate_mode = FeeEstimateMode::BTC_KVB) const;
-    friend CFeeRate operator*(const CFeeRate& f, int a) { return CFeeRate(a * f.nSatoshisPerK); }
-    friend CFeeRate operator*(int a, const CFeeRate& f) { return CFeeRate(a * f.nSatoshisPerK); }
+    friend CFeeRate operator*(const CFeeRate& f, int a) { return CFeeRate(a * f.m_feerate.fee, f.m_feerate.size); }
+    friend CFeeRate operator*(int a, const CFeeRate& f) { return CFeeRate(a * f.m_feerate.fee, f.m_feerate.size); }
 
-    SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
+    SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.m_feerate.fee, obj.m_feerate.size); }
 };
 
 #endif // BITCOIN_POLICY_FEERATE_H
