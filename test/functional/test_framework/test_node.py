@@ -107,7 +107,7 @@ class TestNode():
         # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
         # This means that starting a bitcoind using the temp dir to debug a failed test won't
         # spam debug.log.
-        self.args = self.binaries.daemon_argv() + [
+        self.args = self.binaries.node_argv() + [
             f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
