@@ -207,6 +207,17 @@ musig_example_LDFLAGS += -lbcrypt
 endif
 TESTS += musig_example
 endif
+if ENABLE_MODULE_SILENTPAYMENTS
+noinst_PROGRAMS += silentpayments_example
+silentpayments_example_SOURCES = examples/silentpayments.c
+silentpayments_example_CPPFLAGS = -I$(top_srcdir)/include -DSECP256K1_STATIC
+silentpayments_example_LDADD = libsecp256k1.la
+silentpayments_example_LDFLAGS = -static
+if BUILD_WINDOWS
+silentpayments_example_LDFLAGS += -lbcrypt
+endif
+TESTS += silentpayments_example
+endif
 endif
 
 ### Precomputed tables
@@ -249,18 +260,15 @@ maintainer-clean-local: clean-precomp
 ### Pregenerated test vectors
 ### (see the comments in the previous section for detailed rationale)
 TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
-
-if ENABLE_MODULE_ECDH
-TESTVECTORS += src/wycheproof/ecdh_secp256k1_test.h
-endif
+TESTVECTORS += src/modules/silentpayments/vectors.h
 
 src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h:
 	mkdir -p $(@D)
-	python3 $(top_srcdir)/tools/tests_wycheproof_generate_ecdsa.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+	python3 $(top_srcdir)/tools/tests_wycheproof_generate.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
 
-src/wycheproof/ecdh_secp256k1_test.h:
+src/modules/silentpayments/vectors.h:
 	mkdir -p $(@D)
-	python3 $(top_srcdir)/tools/tests_wycheproof_generate_ecdh.py $(top_srcdir)/src/wycheproof/ecdh_secp256k1_test.json > $@
+	python3 $(top_srcdir)/tools/tests_silentpayments_generate.py $(top_srcdir)/src/modules/silentpayments/bip352_send_and_receive_test_vectors.json > $@
 
 testvectors: $(TESTVECTORS)
 
@@ -284,9 +292,7 @@ EXTRA_DIST += sage/secp256k1_params.sage
 EXTRA_DIST += sage/weierstrass_prover.sage
 EXTRA_DIST += src/wycheproof/WYCHEPROOF_COPYING
 EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json
-EXTRA_DIST += src/wycheproof/ecdh_secp256k1_test.json
-EXTRA_DIST += tools/tests_wycheproof_generate_ecdsa.py
-EXTRA_DIST += tools/tests_wycheproof_generate_ecdh.py
+EXTRA_DIST += tools/tests_wycheproof_generate.py
 
 if ENABLE_MODULE_ECDH
 include src/modules/ecdh/Makefile.am.include
@@ -310,4 +316,8 @@ endif
 
 if ENABLE_MODULE_ELLSWIFT
 include src/modules/ellswift/Makefile.am.include
+endif
+
+if ENABLE_MODULE_SILENTPAYMENTS
+include src/modules/silentpayments/Makefile.am.include
 endif
