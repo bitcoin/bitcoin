@@ -647,17 +647,19 @@ public:
  * - How to decide what dependency to deactivate (when splitting chunks):
  *   - Define the gain of an active dependency as
  *     (feerate(top) - feerate(bottom)) * size(top) * size(bottom).
- *   - The first encountered dependency within a chunk among those with maximal gain is
- *     deactivated, if that gain is strictly positive.
+ *   - A uniformly random dependency within a chunk among those with maximal gain is deactivated,
+ *     if any with strictly positive gain eixst.
  *
  * - How to decide what dependency to activate (when merging chunks):
- *   - Currently, the first encountered dependency between the two maximum-feerate-difference chunks
- *     is activated. This will be changed in a future commit.
+ *   - A uniformly random dependency between the two maximum-feerate-difference chunks is activated.
  */
 template<typename SetType>
 class SpanningForestState
 {
 private:
+    /** Internal RNG. */
+    InsecureRandomContext m_rng;
+
     /** Data type to represent indexing into m_tx_data. */
     using TxIdx = uint32_t;
     /** Data type to represent indexing into m_dep_data. */
@@ -846,20 +848,33 @@ private:
         Assume(top_chunk.chunk_rep == top_rep);
         auto& bottom_chunk = m_tx_data[bottom_rep];
         Assume(bottom_chunk.chunk_rep == bottom_rep);
-        // Activate the first dependency between bottom_chunk and top_chunk.
+        // Count the number of dependencies between bottom_chunk and top_chunk.
+        TxIdx num_deps{0};
         for (auto tx : top_chunk.chunk_setinfo.transactions) {
             auto& tx_data = m_tx_data[tx];
-            if (tx_data.children.Overlaps(bottom_chunk.chunk_setinfo.transactions)) {
+            num_deps += (tx_data.children & bottom_chunk.chunk_setinfo.transactions).Count();
+        }
+        // Uniformly randomly pick one of them and activate it.
+        TxIdx pick = m_rng.randrange(num_deps);
+        for (auto tx : top_chunk.chunk_setinfo.transactions) {
+            auto& tx_data = m_tx_data[tx];
+            auto intersect = tx_data.children & bottom_chunk.chunk_setinfo.transactions;
+            auto count = intersect.Count();
+            if (pick < count) {
                 for (auto dep : std::span{tx_data.child_deps}.first(tx_data.child_deps_total)
                                                              .subspan(tx_data.child_deps_active)) {
                     auto& dep_data = m_dep_data[dep];
                     if (bottom_chunk.chunk_setinfo.transactions[dep_data.child]) {
-                        Assume(!dep_data.active);
-                        return Activate(dep);
+                        if (pick == 0) {
+                            Assume(!dep_data.active);
+                            return Activate(dep);
+                        }
+                        --pick;
                     }
                 }
                 break;
             }
+            pick -= count;
         }
         Assume(false);
         return TxIdx(-1);
@@ -877,11 +892,12 @@ private:
             // Iterate over all transactions in the chunk, figuring out which other chunk each
             // depends on, but only testing each other chunk once. For those depended-on chunks,
             // remember the highest-feerate (if DownWard) or lowest-feerate (if !DownWard) one.
-            // If multiple equal-feerate candidate chunks to merge with exist, pick the first one
-            // among them.
+            // If multiple equal-feerate candidate chunks to merge with exist, pick a uniformly
+            // random one among them (using random tiebreaker).
             SetType explored = chunk_txn;
             FeeFrac best_other_chunk_feerate;
             TxIdx best_other_chunk_rep = TxIdx(-1);
+            uint64_t best_other_chunk_tiebreak{0};
             for (auto tx : chunk_txn) {
                 auto& tx_data = m_tx_data[tx];
                 auto unreached = (DownWard ? tx_data.children : tx_data.parents) - explored;
@@ -893,8 +909,10 @@ private:
                     auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached.feerate)
                                         : FeeRateCompare(reached.feerate, best_other_chunk_feerate);
                     if (cmp > 0) continue;
-                    if (cmp < 0 || best_other_chunk_rep == TxIdx(-1)) {
+                    uint64_t tiebreak = m_rng.rand64();
+                    if ((cmp < 0) || (tiebreak >= best_other_chunk_tiebreak)) {
                         best_other_chunk_feerate = reached.feerate;
+                        best_other_chunk_tiebreak = tiebreak;
                         best_other_chunk_rep = chunk_rep;
                     }
                 }
@@ -938,15 +956,16 @@ private:
 public:
     /** Construct an initial topological spanning forest for the given DepGraph, and optionally an
      *  existing linearization for it. */
-    explicit SpanningForestState(const DepGraph<SetType>& depgraph, std::span<const DepGraphIndex> old_linearization = {}) noexcept
+    explicit SpanningForestState(const DepGraph<SetType>& depgraph, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept : m_rng(rng_seed)
     {
         m_transactions = depgraph.Positions();
         auto num_transactions = m_transactions.Count();
-        // If no existing linearization is provided, construct an initial topological ordering.
+        // If no existing linearization is provided, construct a randomized topological ordering.
         std::vector<DepGraphIndex> load_order;
         if (old_linearization.empty()) {
             load_order.reserve(m_transactions.Count());
             for (auto i : m_transactions) load_order.push_back(i);
+            std::shuffle(load_order.begin(), load_order.end(), m_rng);
             std::sort(load_order.begin(), load_order.end(), [&](TxIdx a, TxIdx b) noexcept { return depgraph.Ancestors(a).Count() < depgraph.Ancestors(b).Count(); });
             old_linearization = std::span{load_order};
         }
@@ -981,6 +1000,11 @@ public:
             // Start a merge sequence on the new transaction to make the graph topological.
             MergeSequence<false>(tx);
         }
+        // Randomize the initial order of suboptimal chunks in the queue.
+        for (TxIdx i = 0; i < m_suboptimal_chunks.size(); ++i) {
+            TxIdx j = i + m_rng.randrange<TxIdx>(m_suboptimal_chunks.size() - i);
+            if (i != j) std::swap(m_suboptimal_chunks[i], m_suboptimal_chunks[j]);
+        }
     }
 
     /** Try to improve the forest. Returns false if it is optimal, true otherwise. */
@@ -998,9 +1022,11 @@ public:
             // happen when a split chunk merges in Improve() with one or more existing chunks that
             // are themselves on the suboptimal queue.
             if (chunk_data.chunk_rep != chunk) continue;
-            // Remember the best dependency seen so far, together with its gain.
+            // Remember the best dependency seen so far, together with its gain, and a tiebreak
+            // value to randomize between equal-gain dependencies.
             DepIdx best = DepIdx(-1);
             FeeFrac::MulType best_gain = FeeFrac::MUL_ZERO;
+            uint64_t best_tiebreak{0};
             // Iterate over all transactions.
             for (auto tx : chunk_data.chunk_setinfo.transactions) {
                 const auto& tx_data = m_tx_data[tx];
@@ -1009,12 +1035,17 @@ public:
                 for (DepIdx dep_idx : active_children) {
                     const auto& dep_data = m_dep_data[dep_idx];
                     Assume(dep_data.active);
-                    // Skip if this dependency is ineligible (not best gain).
+                    // Skip if this dependency is ineligible (below best gain).
                     auto gain = FeeFrac::ScaledDifference(dep_data.top_setinfo.feerate, chunk_data.chunk_setinfo.feerate);
-                    if (gain <= best_gain) continue;
-                    // Remember this as our best solution so far.
-                    best = dep_idx;
-                    best_gain = gain;
+                    if (gain < best_gain) continue;
+                    // Remember this as our best solution if it has higher gain than our best so
+                    // far, or if its tiebreak is better.
+                    uint64_t tiebreak = m_rng.rand64();
+                    if (tiebreak >= best_tiebreak || gain > best_gain) {
+                        best_tiebreak = tiebreak;
+                        best = dep_idx;
+                        best_gain = gain;
+                    }
                 }
             }
             // If the remembered dependency has positive gain, activate it.
@@ -1126,9 +1157,8 @@ public:
 template<typename SetType>
 std::pair<std::vector<DepGraphIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept
 {
-    (void)rng_seed; // Unused for now.
     /** Initialize a spanning forest data structure for this cluster. */
-    SpanningForestState forest(depgraph, old_linearization);
+    SpanningForestState forest(depgraph, rng_seed, old_linearization);
     // Make improvement steps to it until we hit the max_iterations limit, or an optimal result
     // is found.
     while (true) {
