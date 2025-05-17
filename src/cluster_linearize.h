@@ -645,8 +645,10 @@ public:
  * What remains to be specified are two heuristics:
  *
  * - How to decide what dependency to deactivate (when splitting chunks):
- *   - Currently, the first encountered dependency whose would-be top chunk has higher feerate than
- *     its would-be bottom chunk is deactivated. This will be changed in a future commit.
+ *   - Define the gain of an active dependency as
+ *     (feerate(top) - feerate(bottom)) * size(top) * size(bottom).
+ *   - The first encountered dependency within a chunk among those with maximal gain is
+ *     deactivated, if that gain is strictly positive.
  *
  * - How to decide what dependency to activate (when merging chunks):
  *   - Currently, the first encountered dependency between the two maximum-feerate-difference chunks
@@ -955,7 +957,10 @@ public:
             auto& chunk_data = m_tx_data[chunk];
             // If this is not a chunk representative, skip.
             if (chunk_data.chunk_rep != chunk) continue;
-            // Iterate over all transactions of the chunk.
+            // Remember the best dependency seen so far, together with its gain.
+            DepIdx best = DepIdx(-1);
+            FeeFrac::MulType best_gain = FeeFrac::MUL_ZERO;
+            // Iterate over all transactions.
             for (auto tx : chunk_data.chunk_setinfo.transactions) {
                 const auto& tx_data = m_tx_data[tx];
                 // Iterate over all active child dependencies of the transaction.
@@ -963,13 +968,19 @@ public:
                 for (DepIdx dep_idx : children) {
                     const auto& dep_data = m_dep_data[dep_idx];
                     if (!dep_data.active) continue;
-                    // Skip if this dependency is ineligible (the top chunk that would be created
-                    // does not have higher feerate than the chunk it is currently part of).
-                    if (!(dep_data.top_setinfo.feerate >> chunk_data.chunk_setinfo.feerate)) continue;
-                    // Activate it otherwise.
-                    Improve(dep_idx);
-                    return true;
+                    // Skip if this dependency is ineligible (not best gain).
+                    auto gain = FeeFrac::ScaledDifference(dep_data.top_setinfo.feerate, chunk_data.chunk_setinfo.feerate);
+                    if (gain <= best_gain) continue;
+                    // Remember this as our best solution so far.
+                    best = dep_idx;
+                    best_gain = gain;
                 }
+            }
+            // If the remembered dependency has positive gain, activate it.
+            if (best_gain > FeeFrac::MUL_ZERO) {
+                Assume(best != DepIdx(-1));
+                Improve(best);
+                return true;
             }
         }
         // No improvable chunk was found, we are done.
