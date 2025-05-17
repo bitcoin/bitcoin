@@ -134,6 +134,9 @@ $(package)_config_opts_darwin := -no-dbus
 $(package)_config_opts_darwin += -no-feature-printsupport
 $(package)_config_opts_darwin += -no-freetype
 $(package)_config_opts_darwin += -no-pkg-config
+ifneq ($(LTO),)
+$(package)_config_opts_darwin += -ltcg
+endif
 
 $(package)_config_opts_linux := -dbus-runtime
 $(package)_config_opts_linux += -fontconfig
@@ -150,9 +153,6 @@ endif
 $(package)_config_opts_mingw32 := -no-dbus
 $(package)_config_opts_mingw32 += -no-freetype
 $(package)_config_opts_mingw32 += -no-pkg-config
-ifneq ($(LTO),)
-$(package)_config_opts_mingw32 += -ltcg
-endif
 
 # CMake build options.
 $(package)_config_env := CC="$$($(package)_cc)"
