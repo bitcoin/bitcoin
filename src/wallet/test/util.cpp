@@ -35,8 +35,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
         assert(descs.size() == 1);
         auto& desc = descs.at(0);
         WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-        auto spk_manager = *Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
-        assert(spk_manager);
+        Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
@@ -194,7 +193,7 @@ MockableDatabase& GetMockableDatabase(CWallet& wallet)
     return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
 }
 
-wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
+std::optional<std::reference_wrapper<wallet::DescriptorScriptPubKeyMan>> CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
 {
     keystore.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
 
@@ -202,7 +201,7 @@ wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& 
     std::string error;
     auto parsed_descs = Parse(desc_str, keys, error, false);
     Assert(success == (!parsed_descs.empty()));
-    if (!success) return nullptr;
+    if (!success) return std::nullopt;
     auto& desc = parsed_descs.at(0);
 
     const int64_t range_start = 0, range_end = 1, next_index = 0, timestamp = 1;

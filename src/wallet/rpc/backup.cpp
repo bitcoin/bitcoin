@@ -264,25 +264,21 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             auto spk_manager_res = wallet.AddWalletDescriptor(w_desc, keys, label, desc_internal);
 
             if (!spk_manager_res) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, util::ErrorString(spk_manager_res).original);
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s': %s", descriptor, util::ErrorString(spk_manager_res).original));
             }
 
-            auto spk_manager = spk_manager_res.value();
-
-            if (spk_manager == nullptr) {
-                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s'", descriptor));
-            }
+            auto& spk_manager = spk_manager_res.value().get();
 
             // Set descriptor as active if necessary
             if (active) {
                 if (!w_desc.descriptor->GetOutputType()) {
                     warnings.push_back("Unknown output type, cannot set descriptor to active.");
                 } else {
-                    wallet.AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
+                    wallet.AddActiveScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
                 }
             } else {
                 if (w_desc.descriptor->GetOutputType()) {
-                    wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
+                    wallet.DeactivateScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
                 }
             }
         }
@@ -507,40 +503,11 @@ RPCHelpMan listdescriptors()
     }
 
     LOCK(wallet->cs_wallet);
-
-    const auto active_spk_mans = wallet->GetActiveScriptPubKeyMans();
-
-    struct WalletDescInfo {
-        std::string descriptor;
-        uint64_t creation_time;
-        bool active;
-        std::optional<bool> internal;
-        std::optional<std::pair<int64_t,int64_t>> range;
-        int64_t next_index;
-    };
-
-    std::vector<WalletDescInfo> wallet_descriptors;
-    for (const auto& spk_man : wallet->GetAllScriptPubKeyMans()) {
-        const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
-        if (!desc_spk_man) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Unexpected ScriptPubKey manager type.");
-        }
-        LOCK(desc_spk_man->cs_desc_man);
-        const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
-        std::string descriptor;
-        if (!desc_spk_man->GetDescriptorString(descriptor, priv)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Can't get descriptor string.");
-        }
-        const bool is_range = wallet_descriptor.descriptor->IsRange();
-        wallet_descriptors.push_back({
-            descriptor,
-            wallet_descriptor.creation_time,
-            active_spk_mans.count(desc_spk_man) != 0,
-            wallet->IsInternalScriptPubKeyMan(desc_spk_man),
-            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
-            wallet_descriptor.next_index
-        });
+    util::Result<std::vector<WalletDescInfo>> exported = wallet->ExportDescriptors(priv);
+    if (!exported) {
+        throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(exported).original);
     }
+    std::vector<WalletDescInfo> wallet_descriptors = *exported;
 
     std::sort(wallet_descriptors.begin(), wallet_descriptors.end(), [](const auto& a, const auto& b) {
         return a.descriptor < b.descriptor;

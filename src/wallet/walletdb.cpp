@@ -1071,7 +1071,7 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, std::vecto
         uint32_t n;
         key >> hash;
         key >> n;
-        pwallet->LockCoin(COutPoint(hash, n));
+        pwallet->LoadLockedCoin(COutPoint(hash, n), /*persistent=*/true);
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, locked_utxo_res.m_result);
@@ -1193,9 +1193,15 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
         // Load decryption keys
         result = std::max(LoadDecryptionKeys(pwallet, *m_batch), result);
-    } catch (...) {
+    } catch (std::runtime_error& e) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.
+        // Catch std::runtime_error specifically as many functions throw these and they at least have some message that
+        // we can log
+        pwallet->WalletLogPrintf("%s\n", e.what());
+        result = DBErrors::CORRUPT;
+    } catch (...) {
+        // All other exceptions are still problematic, but we can't log them
         result = DBErrors::CORRUPT;
     }
 
