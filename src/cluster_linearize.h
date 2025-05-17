@@ -689,6 +689,8 @@ private:
         /** (Only if this transaction is the representative for the chunk it is in) the total
          *  chunk set and feerate. */
         SetInfo<SetType> chunk_setinfo;
+        /** Whether this transaction appears in m_suboptimal_chunks. */
+        bool suboptimal{false};
     };
 
     /** Structure with information about a single dependency. */
@@ -706,6 +708,8 @@ private:
 
     /** The set of all transactions in the cluster. */
     SetType m_transactions;
+    /** A FIFO of chunk representatives of chunks that may be improved still. */
+    VecDeque<TxIdx> m_suboptimal_chunks;
     /** Information about each transaction (and chunks). Indexed by TxIdx. */
     std::vector<TxData> m_tx_data;
     /** Information about each dependency. Indexed by DepIdx. */
@@ -908,6 +912,12 @@ private:
                 chunk_rep = MergeChunks(best_other_chunk_rep, chunk_rep);
             }
         }
+        // Add the chunk to the queue of improvable chunks, if it wasn't already there.
+        auto& chunk_data = m_tx_data[chunk_rep];
+        if (!chunk_data.suboptimal) {
+            chunk_data.suboptimal = true;
+            m_suboptimal_chunks.push_back(chunk_rep);
+        }
     }
 
     /** Split a chunk, and then merge the resulting two chunks to make the graph topological
@@ -977,10 +987,17 @@ public:
     /** Try to improve the forest. Returns false if it is optimal, true otherwise. */
     bool Step() noexcept
     {
-        // Iterate over all transactions (only processing those which are chunk representatives).
-        for (auto chunk : m_transactions) {
+        while (true) {
+            // If the queue of potentially-suboptimal chunks is empty, we are done.
+            if (m_suboptimal_chunks.empty()) return false;
+            // Pop an entry from the potentially-suboptimal chunk queue.
+            TxIdx chunk = m_suboptimal_chunks.front();
+            m_suboptimal_chunks.pop_front();
             auto& chunk_data = m_tx_data[chunk];
-            // If this is not a chunk representative, skip.
+            chunk_data.suboptimal = false;
+            // If what was popped is not currently a chunk representative, continue. This may
+            // happen when a split chunk merges in Improve() with one or more existing chunks that
+            // are themselves on the suboptimal queue.
             if (chunk_data.chunk_rep != chunk) continue;
             // Remember the best dependency seen so far, together with its top feerate.
             DepIdx candidate_dep = DepIdx(-1);
@@ -1019,13 +1036,11 @@ public:
                 }
             }
             // If a candidate with positive gain was found, activate it.
-            if (have_candidate) {
-                Improve(candidate_dep);
-                return true;
-            }
+            if (have_candidate) Improve(candidate_dep);
+            // Stop processing for now, even if nothing was activated, as the loop above may have
+            // had a nontrivial cost.
+            return true;
         }
-        // No improvable chunk was found, we are done.
-        return false;
     }
 
     /** Construct a topologically-valid linearization from the current forest state. */
