@@ -20,6 +20,7 @@ from test_framework.script import (
     OP_CHECKSIGADD,
     OP_NUMEQUAL,
     taproot_construct,
+    LEAF_VERSION_TAPSCRIPT
 )
 from test_framework.segwit_addr import encode_segwit_address
 
@@ -179,7 +180,7 @@ def multi_a(k, hex_keys, sort=False):
 
 def compute_taproot_address(pubkey, scripts):
     """Compute the address for a taproot output with given inner key and scripts."""
-    return output_key_to_p2tr(taproot_construct(pubkey, scripts).output_pubkey)
+    return output_key_to_p2tr(taproot_construct(pubkey, LEAF_VERSION_TAPSCRIPT, scripts).output_pubkey)
 
 def compute_raw_taproot_address(pubkey):
     return encode_segwit_address("bcrt", 1, pubkey)
