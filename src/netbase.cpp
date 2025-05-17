@@ -829,10 +829,9 @@ CSubNet LookupSubNet(const std::string& subnet_str)
         addr = static_cast<CNetAddr>(MaybeFlipIPv6toCJDNS(CService{addr.value(), /*port=*/0}));
         if (slash_pos != subnet_str.npos) {
             const std::string netmask_str{subnet_str.substr(slash_pos + 1)};
-            uint8_t netmask;
-            if (ParseUInt8(netmask_str, &netmask)) {
+            if (const auto netmask{ToIntegral<uint8_t>(netmask_str)}) {
                 // Valid number; assume CIDR variable-length subnet masking.
-                subnet = CSubNet{addr.value(), netmask};
+                subnet = CSubNet{addr.value(), *netmask};
             } else {
                 // Invalid number; try full netmask syntax. Never allow lookup for netmask.
                 const std::optional<CNetAddr> full_netmask{LookupHost(netmask_str, /*fAllowLookup=*/false)};

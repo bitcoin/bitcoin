@@ -1151,8 +1151,8 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         "-rpcport",
     }) {
         if (const auto port{args.GetArg(port_option)}) {
-            uint16_t n;
-            if (!ParseUInt16(*port, &n) || n == 0) {
+            const auto n{ToIntegral<uint16_t>(*port)};
+            if (!n || *n == 0) {
                 return InitError(InvalidPortErrMsg(port_option, *port));
             }
         }
