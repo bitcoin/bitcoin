@@ -1,3 +1,7 @@
+// Copyright (c) The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit.
+
 #ifndef BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
 #define BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
 
