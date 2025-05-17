@@ -112,7 +112,7 @@ static void ProcessPCP()
         // distribution in the range 1/2 to 5/8 of expiration time.
         std::chrono::seconds sleep_time_min(actual_lifetime / 2);
         std::chrono::seconds sleep_time_max(actual_lifetime * 5 / 8);
-        sleep_time = sleep_time_min + FastRandomContext().randrange<std::chrono::milliseconds>(sleep_time_max - sleep_time_min);
+        sleep_time = FastRandomContext().randrange<std::chrono::milliseconds>(sleep_time_min, sleep_time_max);
     } while (ret && g_mapport_interrupt.sleep_for(sleep_time));
 
     // We don't delete the mappings when the thread is interrupted because this would add additional complexity, so

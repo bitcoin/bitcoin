@@ -94,8 +94,8 @@ static constexpr size_t WARN_FLUSH_COINS_SIZE = 1 << 30; // 1 GiB
  *  Randomize writing time inside the window to prevent a situation where the
  *  network over time settles into a few cohorts of synchronized writers.
 */
-static constexpr auto DATABASE_WRITE_INTERVAL_MIN{50min};
-static constexpr auto DATABASE_WRITE_INTERVAL_MAX{70min};
+static constexpr auto DB_WRITE_INTERVAL_MIN{50min};
+static constexpr auto DB_WRITE_INTERVAL_MAX{70min};
 /** Maximum age of our tip for us to be considered current for fee estimation */
 static constexpr std::chrono::hours MAX_FEE_ESTIMATION_TIP_AGE{3};
 const std::vector<std::string> CHECKLEVEL_DOC {
@@ -2808,7 +2808,7 @@ bool Chainstate::FlushStateToDisk(
 
     try {
     {
-        bool fFlushForPrune = false;
+        bool flush_for_prune = false;
 
         CoinsCacheSizeState cache_state = GetCoinsCacheSizeState();
         LOCK(m_blockman.cs_LastBlockFile);
@@ -2846,7 +2846,7 @@ bool Chainstate::FlushStateToDisk(
                 m_blockman.m_check_for_pruning = false;
             }
             if (!setFilesToPrune.empty()) {
-                fFlushForPrune = true;
+                flush_for_prune = true;
                 if (!m_blockman.m_have_pruned) {
                     m_blockman.m_block_tree_db->WriteFlag("prunedblockfiles", true);
                     m_blockman.m_have_pruned = true;
@@ -2855,15 +2855,18 @@ bool Chainstate::FlushStateToDisk(
         }
         const auto nNow{NodeClock::now()};
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
-        bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
+        const bool cache_large{mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE};
         // The cache is over the limit, we have to write now.
-        bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL;
+        const bool cache_critical{mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL};
         // It's been a while since we wrote the block index and chain state to disk. Do this frequently, so we don't need to redownload or reindex after a crash.
-        bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow >= m_next_write;
+        const bool periodic_write{mode == FlushStateMode::PERIODIC && nNow >= m_next_write};
         // Combine all conditions that result in a write to disk.
-        bool should_write = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicWrite || fFlushForPrune;
+        const bool should_write{mode == FlushStateMode::ALWAYS || cache_large || cache_critical || periodic_write || flush_for_prune};
         // Write blocks, block index and best chain related state to disk.
         if (should_write) {
+            LogDebug(BCLog::COINDB, "FlushStateToDisk write: flush mode=%s, prune=%d, cache_large=%d, cache_critical=%d, periodic=%d",
+                FlushStateModeNames[size_t(mode)], flush_for_prune, cache_large, cache_critical, periodic_write);
+
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
@@ -2888,7 +2891,7 @@ bool Chainstate::FlushStateToDisk(
                 }
             }
             // Finally remove any pruned files
-            if (fFlushForPrune) {
+            if (flush_for_prune) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("unlink pruned files", BCLog::BENCH);
 
                 m_blockman.UnlinkPrunedFiles(setFilesToPrune);
@@ -2908,7 +2911,7 @@ bool Chainstate::FlushStateToDisk(
                     return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
                 }
                 // Flush the chainstate (which may refer to block index entries).
-                const auto empty_cache{(mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical};
+                const auto empty_cache{mode == FlushStateMode::ALWAYS || cache_large || cache_critical};
                 if (empty_cache ? !CoinsTip().Flush() : !CoinsTip().Sync()) {
                     return FatalError(m_chainman.GetNotifications(), state, _("Failed to write to coin database."));
                 }
@@ -2918,13 +2921,14 @@ bool Chainstate::FlushStateToDisk(
                     (uint32_t)mode,
                     (uint64_t)coins_count,
                     (uint64_t)coins_mem_usage,
-                    (bool)fFlushForPrune);
+                    (bool)flush_for_prune);
             }
         }
 
-        if (should_write || m_next_write == NodeClock::time_point::max()) {
-            constexpr auto range{DATABASE_WRITE_INTERVAL_MAX - DATABASE_WRITE_INTERVAL_MIN};
-            m_next_write = FastRandomContext().rand_uniform_delay(NodeClock::now() + DATABASE_WRITE_INTERVAL_MIN, range);
+        const bool first_flush{m_next_write == NodeClock::time_point::max()};
+        if (first_flush || should_write) {
+            m_next_write = NodeClock::now() +
+                           FastRandomContext().randrange<std::chrono::minutes>(DB_WRITE_INTERVAL_MIN, DB_WRITE_INTERVAL_MAX);
         }
     }
     if (full_flush_completed && m_chainman.m_options.signals) {

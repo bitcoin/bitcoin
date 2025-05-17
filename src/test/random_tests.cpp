@@ -76,6 +76,11 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests_deterministic)
         // Check with time-point type
         BOOST_CHECK_EQUAL(2782, ctx.rand_uniform_duration<SteadySeconds>(9h).count());
     }
+
+    {
+        FastRandomContext ctx{true};
+        BOOST_CHECK_EQUAL(114, ctx.randrange<std::chrono::seconds>(2s, 2min).count());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(fastrandom_tests_nondeterministic)
@@ -109,6 +114,12 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests_nondeterministic)
     {
         FastRandomContext ctx3, ctx4;
         BOOST_CHECK(ctx3.randbytes(7) != ctx4.randbytes(7));
+    }
+
+    {
+        FastRandomContext ctx3, ctx4;
+        constexpr auto min{5ms}, max{10000ms};
+        BOOST_CHECK(ctx3.randrange<std::chrono::milliseconds>(min, max) != ctx4.randrange<std::chrono::milliseconds>(min, max));
     }
 }
 
