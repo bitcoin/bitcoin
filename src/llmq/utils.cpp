@@ -171,12 +171,13 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
         }
 
         auto q = ComputeQuorumMembersByQuarterRotation(llmq_params, dmnman, qsnapman, pCycleQuorumBaseBlockIndex);
+        quorumMembers = q[quorumIndex];
+
         LOCK(cs_indexed_members);
         for (const size_t i : irange::range(q.size())) {
-            mapIndexedQuorumMembers[llmqType].insert(std::make_pair(pCycleQuorumBaseBlockIndex->GetBlockHash(), i), q[i]);
+            mapIndexedQuorumMembers[llmqType].emplace(std::make_pair(pCycleQuorumBaseBlockIndex->GetBlockHash(), i),
+                                                      std::move(q[i]));
         }
-
-        quorumMembers = q[quorumIndex];
     } else {
         quorumMembers = ComputeQuorumMembers(llmqType, dmnman, pQuorumBaseBlockIndex);
     }
