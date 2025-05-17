@@ -334,6 +334,15 @@ public:
         return true;
     }
 
+    unsigned CountDependencies() const noexcept
+    {
+        unsigned ret = 0;
+        for (auto i : Positions()) {
+            ret += GetReducedParents(i).Count();
+        }
+        return ret;
+    }
+
     /** Reduce memory usage if possible. No observable effect. */
     void Compact() noexcept
     {
