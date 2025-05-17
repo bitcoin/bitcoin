@@ -56,9 +56,12 @@ struct SimTxGraph
     /** Which transactions have been modified in the graph since creation, either directly or by
      *  being in a cluster which includes modifications. Only relevant for the staging graph. */
     SetType modified;
+    /** The configured maximum total size of transactions per cluster. */
+    uint64_t max_cluster_size;
 
     /** Construct a new SimTxGraph with the specified maximum cluster count. */
-    explicit SimTxGraph(DepGraphIndex max_cluster) : max_cluster_count(max_cluster) {}
+    explicit SimTxGraph(DepGraphIndex max_cluster, uint64_t max_size) :
+        max_cluster_count(max_cluster), max_cluster_size(max_size) {}
 
     // Permit copying and moving.
     SimTxGraph(const SimTxGraph&) noexcept = default;
@@ -78,6 +81,9 @@ struct SimTxGraph
             while (todo.Any()) {
                 auto component = graph.FindConnectedComponent(todo);
                 if (component.Count() > max_cluster_count) oversized = true;
+                uint64_t component_size{0};
+                for (auto i : component) component_size += graph.FeeRate(i).size;
+                if (component_size > max_cluster_size) oversized = true;
                 todo -= component;
             }
         }
@@ -128,6 +134,8 @@ struct SimTxGraph
         simmap[simpos] = std::make_shared<TxGraph::Ref>();
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
+        // This may invalidate our cached oversized value.
+        if (oversized.has_value() && !*oversized) oversized = std::nullopt;
         return ptr;
     }
 
@@ -262,12 +270,14 @@ FUZZ_TARGET(txgraph)
 
     // Decide the maximum number of transactions per cluster we will use in this simulation.
     auto max_count = provider.ConsumeIntegralInRange<DepGraphIndex>(1, MAX_CLUSTER_COUNT_LIMIT);
+    // And the maximum combined size of transactions per cluster.
+    auto max_size = provider.ConsumeIntegralInRange<uint64_t>(1, 0x3fffff * MAX_CLUSTER_COUNT_LIMIT);
 
     // Construct a real graph, and a vector of simulated graphs (main, and possibly staging).
-    auto real = MakeTxGraph(max_count);
+    auto real = MakeTxGraph(max_count, max_size);
     std::vector<SimTxGraph> sims;
     sims.reserve(2);
-    sims.emplace_back(max_count);
+    sims.emplace_back(max_count, max_size);
 
     /** Struct encapsulating information about a BlockBuilder that's currently live. */
     struct BlockBuilderData
@@ -396,7 +406,7 @@ FUZZ_TARGET(txgraph)
                     // Otherwise, use smaller range which consume fewer fuzz input bytes, as just
                     // these are likely sufficient to trigger all interesting code paths already.
                     fee = provider.ConsumeIntegral<uint8_t>();
-                    size = provider.ConsumeIntegral<uint8_t>() + 1;
+                    size = provider.ConsumeIntegralInRange<uint32_t>(1, 0xff);
                 }
                 FeePerWeight feerate{fee, size};
                 // Create a real TxGraph::Ref.
@@ -570,13 +580,17 @@ FUZZ_TARGET(txgraph)
                 assert(result.size() <= max_count);
                 // Require the result to be topologically valid and not contain duplicates.
                 auto left = sel_sim.graph.Positions();
+                uint64_t total_size{0};
                 for (auto refptr : result) {
                     auto simpos = sel_sim.Find(refptr);
+                    total_size += sel_sim.graph.FeeRate(simpos).size;
                     assert(simpos != SimTxGraph::MISSING);
                     assert(left[simpos]);
                     left.Reset(simpos);
                     assert(!sel_sim.graph.Ancestors(simpos).Overlaps(left));
                 }
+                // Check cluster size limit.
+                assert(total_size <= max_size);
                 // Require the set to be connected.
                 auto result_set = sel_sim.MakeSet(result);
                 assert(sel_sim.graph.IsConnected(result_set));
@@ -774,6 +788,27 @@ FUZZ_TARGET(txgraph)
                     assert(sum == worst_chunk_feerate);
                 }
                 break;
+            } else if ((block_builders.empty() || sims.size() > 1) && command-- == 0) {
+                // Trim.
+                bool was_oversized = top_sim.IsOversized();
+                auto removed = real->Trim();
+                if (!was_oversized) {
+                    assert(removed.empty());
+                    break;
+                }
+                auto removed_set = top_sim.MakeSet(removed);
+                // The removed set must contain all its own descendants.
+                for (auto simpos : removed_set) {
+                    assert(top_sim.graph.Descendants(simpos).IsSubsetOf(removed_set));
+                }
+                // Apply all removals to the simulation, and verify the result is no longer
+                // oversized. Don't query the real graph for oversizedness; it is compared
+                // against the simulation anyway later.
+                for (auto simpos : removed_set) {
+                    top_sim.RemoveTransaction(top_sim.GetRef(simpos));
+                }
+                assert(!top_sim.IsOversized());
+                break;
             }
         }
     }
@@ -956,13 +991,17 @@ FUZZ_TARGET(txgraph)
                     // linearization).
                     std::vector<DepGraphIndex> simlin;
                     SimTxGraph::SetType done;
+                    uint64_t total_size{0};
                     for (TxGraph::Ref* ptr : cluster) {
                         auto simpos = sim.Find(ptr);
                         assert(sim.graph.Descendants(simpos).IsSubsetOf(component - done));
                         done.Set(simpos);
                         assert(sim.graph.Ancestors(simpos).IsSubsetOf(done));
                         simlin.push_back(simpos);
+                        total_size += sim.graph.FeeRate(simpos).size;
                     }
+                    // Check cluster size.
+                    assert(total_size <= max_size);
                     // Construct a chunking object for the simulated graph, using the reported cluster
                     // linearization as ordering, and compare it against the reported chunk feerates.
                     if (sims.size() == 1 || main_only) {
