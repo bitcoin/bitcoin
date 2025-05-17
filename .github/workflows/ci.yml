@@ -185,11 +185,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure Developer Command Prompt for Microsoft Visual C++
-        # Using microsoft/setup-msbuild is not enough.
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+      - name: Locate MSBuild and add to PATH
+        shell: pwsh
+        run: |
+          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $msbuildPath = & "$vswherePath" -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+          if (-not $msbuildPath) {
+            throw "MSBuild not found"
+          }
+          $msbuildDir = Split-Path $msbuildPath -Parent
+          Write-Host "MSBuild found at $msbuildPath"
+          "$msbuildDir" | Out-File -FilePath $env:GITHUB_PATH -Append
 
       - name: Get tool information
         shell: pwsh
