@@ -48,8 +48,10 @@ See [dependencies.md](dependencies.md) for a complete overview.
 To install, run the following from your terminal:
 
 ``` bash
-brew install cmake boost pkgconf libevent
+brew install cmake boost pkgconf libevent capnp
 ```
+
+It's possible to omit `capnp`, see [below](#IPC-dependencies).
 
 ### 4. Clone Bitcoin repository
 
@@ -119,12 +121,8 @@ For more information on ZMQ, see: [zmq.md](zmq.md)
 
 ### IPC Dependencies
 
-Compiling IPC-enabled binaries with `-DENABLE_IPC=ON` requires the following dependency.
-Skip if you do not need IPC functionality.
-
-```bash
-brew install capnp
-```
+The dependency on `capnp` can be avoided by compiling without IPC-enabled binaries
+using `-DENABLE_IPC=OFF`.
 
 For more information on IPC, see: [multiprocess.md](multiprocess.md).
 

@@ -172,7 +172,7 @@ public:
     void addClient(std::unique_lock<std::mutex>& lock);
     bool removeClient(std::unique_lock<std::mutex>& lock);
     //! Check if loop should exit.
-    bool done(std::unique_lock<std::mutex>& lock);
+    bool done(std::unique_lock<std::mutex>& lock) const;
 
     Logger log()
     {
@@ -249,7 +249,7 @@ struct Waiter
     {
         const std::unique_lock<std::mutex> lock(m_mutex);
         assert(!m_fn);
-        m_fn = std::move(fn);
+        m_fn = std::forward<Fn>(fn);
         m_cv.notify_all();
     }
 
@@ -333,7 +333,7 @@ public:
         // to the EventLoop TaskSet to avoid "Promise callback destroyed itself"
         // error in cases where f deletes this Connection object.
         m_on_disconnect.add(m_network.onDisconnect().then(
-            [f = std::move(f), this]() mutable { m_loop.m_task_set->add(kj::evalLater(kj::mv(f))); }));
+            [f = std::forward<F>(f), this]() mutable { m_loop.m_task_set->add(kj::evalLater(kj::mv(f))); }));
     }
 
     EventLoop& m_loop;
@@ -634,7 +634,10 @@ void ListenConnections(EventLoop& loop, int fd, InitImpl& init)
     });
 }
 
-extern thread_local ThreadContext g_thread_context;
+extern thread_local ThreadContext g_thread_context; // NOLINT(bitcoin-nontrivial-threadlocal)
+// Silence nonstandard bitcoin tidy error "Variable with non-trivial destructor
+// cannot be thread_local" which should not be a problem on modern platforms, and
+// could lead to a small memory leak at worst on older ones.
 
 } // namespace mp
 
