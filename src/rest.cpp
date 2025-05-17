@@ -964,7 +964,7 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
 
     const auto blockheight{ToIntegral<int32_t>(height_str)};
     if (!blockheight || *blockheight < 0) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str));
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str, SAFE_CHARS_URI));
     }
 
     CBlockIndex* pblockindex = nullptr;
