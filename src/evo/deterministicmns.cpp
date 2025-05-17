@@ -1205,12 +1205,19 @@ template <typename ProTx>
 static bool CheckService(const ProTx& proTx, TxValidationState& state)
 {
     switch (proTx.netInfo.Validate()) {
-    case NetInfoStatus::BadInput:
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo");
+    case NetInfoStatus::BadAddress:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr");
     case NetInfoStatus::BadPort:
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-port");
+    case NetInfoStatus::BadType:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr-type");
+    case NetInfoStatus::NotRoutable:
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr-unroutable");
     case NetInfoStatus::Success:
         return true;
+    // Shouldn't be possible during self-checks
+    case NetInfoStatus::BadInput:
+        assert(false);
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

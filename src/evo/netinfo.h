@@ -11,18 +11,31 @@
 class CService;
 
 enum class NetInfoStatus : uint8_t {
+    // Managing entries
     BadInput,
+
+    // Validation
+    BadAddress,
     BadPort,
+    BadType,
+    NotRoutable,
+
     Success
 };
 
 constexpr std::string_view NISToString(const NetInfoStatus code)
 {
     switch (code) {
-    case NetInfoStatus::BadInput:
+    case NetInfoStatus::BadAddress:
         return "invalid address";
+    case NetInfoStatus::BadInput:
+        return "invalid input";
     case NetInfoStatus::BadPort:
         return "invalid port";
+    case NetInfoStatus::BadType:
+        return "invalid address type";
+    case NetInfoStatus::NotRoutable:
+        return "unroutable address";
     case NetInfoStatus::Success:
         return "success";
     } // no default case, so the compiler can warn about missing cases

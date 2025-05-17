@@ -27,13 +27,13 @@ const CChainParams& MainParams()
 NetInfoStatus MnNetInfo::ValidateService(const CService& service)
 {
     if (!service.IsValid()) {
-        return NetInfoStatus::BadInput;
+        return NetInfoStatus::BadAddress;
     }
     if (!service.IsIPv4()) {
-        return NetInfoStatus::BadInput;
+        return NetInfoStatus::BadType;
     }
     if (Params().RequireRoutableExternalIP() && !service.IsRoutable()) {
-        return NetInfoStatus::BadInput;
+        return NetInfoStatus::NotRoutable;
     }
 
     if (IsNodeOnMainnet() != (service.GetPort() == MainParams().GetDefaultPort())) {

@@ -21,13 +21,13 @@ const std::vector<std::pair</*input=*/std::string, /*expected_ret=*/NetInfoStatu
     // Non-mainnet port on mainnet
     {"1.1.1.1:9998", NetInfoStatus::BadPort},
     // Internal addresses not allowed on mainnet
-    {"127.0.0.1:9999", NetInfoStatus::BadInput},
+    {"127.0.0.1:9999", NetInfoStatus::NotRoutable},
     // Valid IPv4 formatting but invalid IPv4 address
-    {"0.0.0.0:9999", NetInfoStatus::BadInput},
+    {"0.0.0.0:9999", NetInfoStatus::BadAddress},
     // Port greater than uint16_t max
     {"1.1.1.1:99999", NetInfoStatus::BadInput},
     // Only IPv4 allowed
-    {"[2606:4700:4700::1111]:9999", NetInfoStatus::BadInput},
+    {"[2606:4700:4700::1111]:9999", NetInfoStatus::BadType},
     // Domains are not allowed
     {"example.com:9999", NetInfoStatus::BadInput},
     // Incorrect IPv4 address
