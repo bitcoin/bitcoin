@@ -77,15 +77,12 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
     return std::make_pair(w_desc, keys);
 }
 
-static DescriptorScriptPubKeyMan* CreateDescriptor(WalletDescriptor& wallet_desc, FlatSigningProvider& keys, CWallet& keystore)
+static std::optional<std::reference_wrapper<DescriptorScriptPubKeyMan>> CreateDescriptor(WalletDescriptor& wallet_desc, FlatSigningProvider& keys, CWallet& keystore)
 {
     LOCK(keystore.cs_wallet);
-    DescriptorScriptPubKeyMan* descriptor_spk_manager = nullptr;
-    auto spk_manager = *Assert(keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false));
-    if (spk_manager) {
-        descriptor_spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_manager);
-    }
-    return descriptor_spk_manager;
+    auto spk_manager_res = keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false);
+    if (!spk_manager_res) return std::nullopt;
+    return spk_manager_res.value();
 };
 
 FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
@@ -106,8 +103,9 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
 
     auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
     if (!wallet_desc.has_value()) return;
-    auto spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
-    if (spk_manager == nullptr) return;
+    auto spk_manager_res{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
+    if (spk_manager_res == std::nullopt) return;
+    auto spk_manager = &spk_manager_res->get();
 
     if (fuzzed_data_provider.ConsumeBool()) {
         auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
@@ -117,7 +115,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
         std::string error;
         if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
             auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
-            if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
+            if (new_spk_manager != std::nullopt) spk_manager = &new_spk_manager->get();
         }
     }
 

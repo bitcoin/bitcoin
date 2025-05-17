@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
         scriptPubKey = GetScriptForRawPubKey(pubkeys[0]);
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
         scriptPubKey = GetScriptForRawPubKey(uncompressedPubkey);
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
         scriptPubKey = GetScriptForDestination(PKHash(pubkeys[0]));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
         scriptPubKey = GetScriptForDestination(PKHash(uncompressedPubkey));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         CScript redeemScript = GetScriptForDestination(PKHash(pubkeys[0]));
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         std::string desc_str = "sh(sh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
-        BOOST_CHECK_EQUAL(spk_manager, nullptr);
+        BOOST_CHECK(!spk_manager.has_value());
     }
 
     // (P2PKH inside) P2SH inside P2WSH (invalid) - Descriptor
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         std::string desc_str = "wsh(sh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
-        BOOST_CHECK_EQUAL(spk_manager, nullptr);
+        BOOST_CHECK(!spk_manager.has_value());
     }
 
     // P2WPKH inside P2WSH (invalid) - Descriptor
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         std::string desc_str = "wsh(wpkh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
-        BOOST_CHECK_EQUAL(spk_manager, nullptr);
+        BOOST_CHECK(!spk_manager.has_value());
     }
 
     // (P2PKH inside) P2WSH inside P2WSH (invalid) - Descriptor
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         std::string desc_str = "wsh(wsh(" + EncodeSecret(keys[0]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
-        BOOST_CHECK_EQUAL(spk_manager, nullptr);
+        BOOST_CHECK(!spk_manager.has_value());
     }
 
     // P2WPKH compressed - Descriptor
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
         scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         std::string desc_str = "wpkh(" + EncodeSecret(uncompressedKey) + ")";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
-        BOOST_CHECK_EQUAL(spk_manager, nullptr);
+        BOOST_CHECK(!spk_manager.has_value());
     }
 
     // scriptPubKey multisig - Descriptor
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
         scriptPubKey = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         CScript redeemScript = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
         CScript redeemScript = GetScriptForMultisig(2, {pubkeys[0], pubkeys[1]});
         scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(redeemScript));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         std::string desc_str = "wsh(multi(2," + EncodeSecret(uncompressedKey) + "," + EncodeSecret(keys[1]) + "))";
 
         auto spk_manager = CreateDescriptor(keystore, desc_str, false);
-        BOOST_CHECK_EQUAL(spk_manager, nullptr);
+        BOOST_CHECK(!spk_manager.has_value());
     }
 
     // P2WSH multisig wrapped in P2SH - Descriptor
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         CScript witnessScript = GetScriptForMultisig(2, {pubkeys[0], pubkeys[1]});
         CScript redeemScript = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 
@@ -228,28 +228,28 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         auto spk_manager = CreateDescriptor(keystore, desc_str, true);
 
         // Test P2PK
-        result = spk_manager->IsMine(GetScriptForRawPubKey(pubkeys[0]));
+        result = spk_manager->get().IsMine(GetScriptForRawPubKey(pubkeys[0]));
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
 
         // Test P2PKH
-        result = spk_manager->IsMine(GetScriptForDestination(PKHash(pubkeys[0])));
+        result = spk_manager->get().IsMine(GetScriptForDestination(PKHash(pubkeys[0])));
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
 
         // Test P2SH (combo descriptor does not describe P2SH)
         CScript redeemScript = GetScriptForDestination(PKHash(pubkeys[0]));
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
 
         // Test P2WPKH
         scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
 
         // P2SH-P2WPKH output
         redeemScript = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
         scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
 
         // Test P2TR (combo descriptor does not describe P2TR)
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         builder.Finalize(xpk);
         WitnessV1Taproot output = builder.GetOutput();
         scriptPubKey = GetScriptForDestination(output);
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
     }
 
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         builder.Finalize(xpk);
         WitnessV1Taproot output = builder.GetOutput();
         scriptPubKey = GetScriptForDestination(output);
-        result = spk_manager->IsMine(scriptPubKey);
+        result = spk_manager->get().IsMine(scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
     }
 }
