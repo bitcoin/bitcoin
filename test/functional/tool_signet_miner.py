@@ -14,7 +14,10 @@ from test_framework.blocktools import DIFF_1_N_BITS
 from test_framework.key import ECKey
 from test_framework.script_util import key_to_p2wpkh_script
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    wallet_importprivkey,
+)
 from test_framework.wallet_util import bytes_to_wif
 
 
@@ -42,7 +45,7 @@ class SignetMinerTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         # import private key needed for signing block
-        node.importprivkey(bytes_to_wif(CHALLENGE_PRIVATE_KEY))
+        wallet_importprivkey(node, bytes_to_wif(CHALLENGE_PRIVATE_KEY), "now")
 
         # generate block with signet miner tool
         base_dir = self.config["environment"]["SRCDIR"]

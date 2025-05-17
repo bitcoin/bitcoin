@@ -260,9 +260,11 @@ class AddressTypeTest(BitcoinTestFramework):
                     else:
                         address = self.nodes[to_node].getnewaddress(address_type=address_type)
                 else:
-                    addr1 = self.nodes[to_node].getnewaddress()
-                    addr2 = self.nodes[to_node].getnewaddress()
-                    address = self.nodes[to_node].addmultisigaddress(2, [addr1, addr2])['address']
+                    pubkey1 = self.nodes[to_node].getaddressinfo(self.nodes[to_node].getnewaddress())["pubkey"]
+                    pubkey2 = self.nodes[to_node].getaddressinfo(self.nodes[to_node].getnewaddress())["pubkey"]
+                    ms = self.nodes[to_node].createmultisig(2, [pubkey1, pubkey2])
+                    import_res = self.nodes[to_node].importdescriptors([{"desc": ms["descriptor"], "timestamp": 0}])
+                    assert_equal(import_res[0]["success"], True)
 
                 # Do some sanity checking on the created address
                 if address_type is not None:
@@ -344,7 +346,7 @@ class AddressTypeTest(BitcoinTestFramework):
         self.test_address(3, self.nodes[3].getrawchangeaddress(), multisig=False, typ='bech32')
 
         self.log.info('test invalid address type arguments')
-        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].addmultisigaddress, 2, [compressed_1, compressed_2], address_type="")
+        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].createmultisig, 2, [compressed_1, compressed_2], address_type="")
         assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getnewaddress, None, '')
         assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getrawchangeaddress, '')
         assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].getrawchangeaddress, 'bech23')
