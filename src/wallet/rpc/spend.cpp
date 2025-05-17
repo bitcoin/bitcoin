@@ -226,8 +226,9 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
 
 RPCHelpMan sendtoaddress()
 {
-    return RPCHelpMan{"sendtoaddress",
-                "\nSend an amount to a given address." +
+    return RPCHelpMan{
+        "sendtoaddress",
+        "Send an amount to a given address." +
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to send to."},
@@ -417,8 +418,9 @@ RPCHelpMan sendmany()
 
 RPCHelpMan settxfee()
 {
-    return RPCHelpMan{"settxfee",
-                "\n(DEPRECATED) Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
+    return RPCHelpMan{
+        "settxfee",
+        "(DEPRECATED) Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
                 "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
                 {
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_UNIT + "/kvB"},
@@ -742,8 +744,9 @@ static void SetOptionsInputWeights(const UniValue& inputs, UniValue& options)
 
 RPCHelpMan fundrawtransaction()
 {
-    return RPCHelpMan{"fundrawtransaction",
-                "\nIf the transaction has no inputs, they will be automatically selected to meet its out value.\n"
+    return RPCHelpMan{
+        "fundrawtransaction",
+        "If the transaction has no inputs, they will be automatically selected to meet its out value.\n"
                 "It will add at most one change output to the outputs.\n"
                 "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
                 "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
@@ -876,8 +879,9 @@ RPCHelpMan fundrawtransaction()
 
 RPCHelpMan signrawtransactionwithwallet()
 {
-    return RPCHelpMan{"signrawtransactionwithwallet",
-                "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
+    return RPCHelpMan{
+        "signrawtransactionwithwallet",
+        "Sign inputs for raw transaction (serialized, hex-encoded).\n"
                 "The second optional argument (may be null) is an array of previous transaction outputs that\n"
                 "this transaction depends on but may not yet be in the block chain." +
         HELP_REQUIRING_PASSPHRASE,
@@ -1201,8 +1205,9 @@ RPCHelpMan psbtbumpfee() { return bumpfee_helper("psbtbumpfee"); }
 
 RPCHelpMan send()
 {
-    return RPCHelpMan{"send",
-        "\nEXPERIMENTAL warning: this call may be changed in future releases.\n"
+    return RPCHelpMan{
+        "send",
+        "EXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs specified as key-value pairs.\n"
@@ -1582,8 +1587,9 @@ RPCHelpMan sendall()
 
 RPCHelpMan walletprocesspsbt()
 {
-    return RPCHelpMan{"walletprocesspsbt",
-                "\nUpdate a PSBT with input information from our wallet and then sign inputs\n"
+    return RPCHelpMan{
+        "walletprocesspsbt",
+        "Update a PSBT with input information from our wallet and then sign inputs\n"
                 "that we can sign for." +
         HELP_REQUIRING_PASSPHRASE,
                 {
@@ -1665,8 +1671,9 @@ RPCHelpMan walletprocesspsbt()
 
 RPCHelpMan walletcreatefundedpsbt()
 {
-    return RPCHelpMan{"walletcreatefundedpsbt",
-                "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
+    return RPCHelpMan{
+        "walletcreatefundedpsbt",
+        "Creates and funds a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator and Updater roles.\n"
                 "All existing inputs must either have their previous output transaction be in the wallet\n"
                 "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n",

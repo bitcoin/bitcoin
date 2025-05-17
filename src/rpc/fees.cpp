@@ -29,8 +29,9 @@ using node::NodeContext;
 
 static RPCHelpMan estimatesmartfee()
 {
-    return RPCHelpMan{"estimatesmartfee",
-        "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+    return RPCHelpMan{
+        "estimatesmartfee",
+        "Estimates the approximate fee per kilobyte needed for a transaction to begin\n"
         "confirmation within conf_target blocks if possible and return the number of blocks\n"
         "for which the estimate is valid. Uses virtual transaction size as defined\n"
         "in BIP 141 (witness data is discounted).\n",
@@ -96,8 +97,9 @@ static RPCHelpMan estimatesmartfee()
 
 static RPCHelpMan estimaterawfee()
 {
-    return RPCHelpMan{"estimaterawfee",
-        "\nWARNING: This interface is unstable and may disappear or change!\n"
+    return RPCHelpMan{
+        "estimaterawfee",
+        "WARNING: This interface is unstable and may disappear or change!\n"
         "\nWARNING: This is an advanced API call that is tightly coupled to the specific\n"
         "implementation of fee estimation. The parameters it can be called with\n"
         "and the results it returns will change if the internal implementation changes.\n"

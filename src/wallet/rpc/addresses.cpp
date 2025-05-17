@@ -20,8 +20,9 @@
 namespace wallet {
 RPCHelpMan getnewaddress()
 {
-    return RPCHelpMan{"getnewaddress",
-                "\nReturns a new Bitcoin address for receiving payments.\n"
+    return RPCHelpMan{
+        "getnewaddress",
+        "Returns a new Bitcoin address for receiving payments.\n"
                 "If 'label' is specified, it is added to the address book \n"
                 "so payments received with the address will be associated with 'label'.\n",
                 {
@@ -70,8 +71,9 @@ RPCHelpMan getnewaddress()
 
 RPCHelpMan getrawchangeaddress()
 {
-    return RPCHelpMan{"getrawchangeaddress",
-                "\nReturns a new Bitcoin address, for receiving change.\n"
+    return RPCHelpMan{
+        "getrawchangeaddress",
+        "Returns a new Bitcoin address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
                     {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
@@ -115,8 +117,9 @@ RPCHelpMan getrawchangeaddress()
 
 RPCHelpMan setlabel()
 {
-    return RPCHelpMan{"setlabel",
-                "\nSets the label associated with the given address.\n",
+    return RPCHelpMan{
+        "setlabel",
+        "Sets the label associated with the given address.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to be associated with a label."},
                     {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label to assign to the address."},
@@ -153,8 +156,9 @@ RPCHelpMan setlabel()
 
 RPCHelpMan listaddressgroupings()
 {
-    return RPCHelpMan{"listaddressgroupings",
-                "\nLists groups of addresses which have had their common ownership\n"
+    return RPCHelpMan{
+        "listaddressgroupings",
+        "Lists groups of addresses which have had their common ownership\n"
                 "made public by common use as inputs or as the resulting change\n"
                 "in past transactions\n",
                 {},
@@ -362,8 +366,9 @@ static UniValue DescribeWalletAddress(const CWallet& wallet, const CTxDestinatio
 
 RPCHelpMan getaddressinfo()
 {
-    return RPCHelpMan{"getaddressinfo",
-                "\nReturn information about the given bitcoin address.\n"
+    return RPCHelpMan{
+        "getaddressinfo",
+        "Return information about the given bitcoin address.\n"
                 "Some of the information will only be present if the address is in the active wallet.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address for which to get information."},
@@ -508,8 +513,9 @@ RPCHelpMan getaddressinfo()
 
 RPCHelpMan getaddressesbylabel()
 {
-    return RPCHelpMan{"getaddressesbylabel",
-                "\nReturns the list of addresses assigned the specified label.\n",
+    return RPCHelpMan{
+        "getaddressesbylabel",
+        "Returns the list of addresses assigned the specified label.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label."},
                 },
@@ -568,8 +574,9 @@ RPCHelpMan getaddressesbylabel()
 
 RPCHelpMan listlabels()
 {
-    return RPCHelpMan{"listlabels",
-                "\nReturns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n",
+    return RPCHelpMan{
+        "listlabels",
+        "Returns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n",
                 {
                     {"purpose", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument."},
                 },

@@ -79,8 +79,9 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
 
 RPCHelpMan getreceivedbyaddress()
 {
-    return RPCHelpMan{"getreceivedbyaddress",
-                "\nReturns the total amount received by the given address in transactions with at least minconf confirmations.\n",
+    return RPCHelpMan{
+        "getreceivedbyaddress",
+        "Returns the total amount received by the given address in transactions with at least minconf confirmations.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address for transactions."},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "Only include transactions confirmed at least this many times."},
@@ -120,8 +121,9 @@ RPCHelpMan getreceivedbyaddress()
 
 RPCHelpMan getreceivedbylabel()
 {
-    return RPCHelpMan{"getreceivedbylabel",
-                "\nReturns the total amount received by addresses with <label> in transactions with at least [minconf] confirmations.\n",
+    return RPCHelpMan{
+        "getreceivedbylabel",
+        "Returns the total amount received by addresses with <label> in transactions with at least [minconf] confirmations.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The selected label, may be the default label using \"\"."},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "Only include transactions confirmed at least this many times."},
@@ -161,8 +163,9 @@ RPCHelpMan getreceivedbylabel()
 
 RPCHelpMan getbalance()
 {
-    return RPCHelpMan{"getbalance",
-                "\nReturns the total available balance.\n"
+    return RPCHelpMan{
+        "getbalance",
+        "Returns the total available balance.\n"
                 "The available balance is what the wallet considers currently spendable, and is\n"
                 "thus affected by options which limit spendability such as -spendzeroconfchange.\n",
                 {
@@ -236,8 +239,9 @@ RPCHelpMan getunconfirmedbalance()
 
 RPCHelpMan lockunspent()
 {
-    return RPCHelpMan{"lockunspent",
-                "\nUpdates list of temporarily unspendable outputs.\n"
+    return RPCHelpMan{
+        "lockunspent",
+        "Updates list of temporarily unspendable outputs.\n"
                 "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
                 "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
                 "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
@@ -372,8 +376,9 @@ RPCHelpMan lockunspent()
 
 RPCHelpMan listlockunspent()
 {
-    return RPCHelpMan{"listlockunspent",
-                "\nReturns list of temporarily unspendable outputs.\n"
+    return RPCHelpMan{
+        "listlockunspent",
+        "Returns list of temporarily unspendable outputs.\n"
                 "See the lockunspent call to lock and unlock transactions for spending.\n",
                 {},
                 RPCResult{
@@ -481,8 +486,8 @@ RPCHelpMan getbalances()
 RPCHelpMan listunspent()
 {
     return RPCHelpMan{
-                "listunspent",
-                "\nReturns array of unspent transaction outputs\n"
+        "listunspent",
+        "Returns array of unspent transaction outputs\n"
                 "with between minconf and maxconf (inclusive) confirmations.\n"
                 "Optionally filter to only include txouts paid to specified addresses.\n",
                 {
