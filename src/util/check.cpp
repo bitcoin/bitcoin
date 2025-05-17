@@ -6,7 +6,6 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
-#include <clientversion.h>
 #include <tinyformat.h>
 
 #include <cstdio>
@@ -18,10 +17,8 @@
 std::string StrFormatInternalBug(std::string_view msg, const std::source_location& loc)
 {
     return strprintf("Internal bug detected: %s\n%s:%d (%s)\n"
-                     "%s %s\n"
                      "Please report this issue here: %s\n",
-                     msg, loc.file_name(), loc.line(), loc.function_name(),
-                     CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
+                     msg, loc.file_name(), loc.line(), loc.function_name(), CLIENT_BUGREPORT);
 }
 
 NonFatalCheckError::NonFatalCheckError(std::string_view msg, const std::source_location& loc)
