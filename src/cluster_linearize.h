@@ -645,8 +645,11 @@ public:
  * What remains to be specified are two heuristics:
  *
  * - How to decide what dependency to deactivate (when splitting chunks):
- *   - Currently, the first encountered dependency whose would-be top chunk has higher feerate than
- *     its would-be bottom chunk is deactivated. This will be changed in a future commit.
+ *   - Define the gain of an active dependency as
+ *     (feerate(top) - feerate(chunk)) * size(top) * size(chunk), also equal to:
+ *     fee(top) * size(chunk) - fee(chunk) * size(top).
+ *   - The first encountered dependency within a chunk among those with maximal gain is
+ *     deactivated, if that gain is strictly positive.
  *
  * - How to decide what dependency to activate (when merging chunks):
  *   - Currently, the first encountered dependency between the two maximum-feerate-difference chunks
@@ -955,7 +958,10 @@ public:
             auto& chunk_data = m_tx_data[chunk];
             // If this is not a chunk representative, skip.
             if (chunk_data.chunk_rep != chunk) continue;
-            // Iterate over all transactions of the chunk.
+            // Remember the best dependency seen so far, together with its top feerate.
+            DepIdx candidate_dep = DepIdx(-1);
+            FeeFrac candidate_top_feerate;
+            // Iterate over all transactions.
             for (auto tx : chunk_data.chunk_setinfo.transactions) {
                 const auto& tx_data = m_tx_data[tx];
                 // Iterate over all active child dependencies of the transaction.
@@ -963,13 +969,34 @@ public:
                 for (DepIdx dep_idx : children) {
                     const auto& dep_data = m_dep_data[dep_idx];
                     if (!dep_data.active) continue;
-                    // Skip if this dependency is ineligible (the top chunk that would be created
-                    // does not have higher feerate than the chunk it is currently part of).
-                    if (!(dep_data.top_setinfo.feerate >> chunk_data.chunk_setinfo.feerate)) continue;
-                    // Activate it otherwise.
-                    Improve(dep_idx);
-                    return true;
+                    // Define gain(top) = fee(top)*size(chunk) - fee(chunk)*size(top).
+                    //                  = (feerate(top) - feerate(chunk)) * size(top) * size(chunk).
+                    // Thus:
+                    //
+                    //     gain(top1) > gain(top2)
+                    // <=>   fee(top1)*size(chunk) - fee(chunk)*size(top1)
+                    //     > fee(top2)*size(chunk) - fee(chunk)*size(top2)
+                    // <=> (fee(top1)-fee(top2))*size(chunk) > fee(chunk)*(size(top1)-size(top2))
+                    //
+                    // If size(top1)>size(top2), this corresponds to feerate(top1-top2) > feerate(chunk),
+                    // so we can use FeeRateCompare to discover if dep_data.top_setinfo has better
+                    // gain than best_top_feerate. As FeeRateCompare() is actually implemented by
+                    // checking the sign of the cross-product, it even works when
+                    // size(top1) <= size(top2). When no candidate exists so far, this is equal
+                    // to comparing the feerate with the chunk directly (= the sign of gain(top)).
+                    auto cmp = FeeRateCompare(dep_data.top_setinfo.feerate - candidate_top_feerate,
+                                              chunk_data.chunk_setinfo.feerate);
+                    if (cmp <= 0) continue;
+                    // Remember this as our (new) candidate dependency.
+                    candidate_dep = dep_idx;
+                    candidate_top_feerate = dep_data.top_setinfo.feerate;
                 }
+            }
+            // If a candidate with positive gain was found, activate it.
+            if (candidate_dep != DepIdx(-1)) {
+                Assume(candidate_dep != DepIdx(-1));
+                Improve(candidate_dep);
+                return true;
             }
         }
         // No improvable chunk was found, we are done.
