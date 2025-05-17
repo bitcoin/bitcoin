@@ -727,8 +727,8 @@ private:
     /** Information about each dependency. Indexed by DepIdx. */
     std::vector<DepData> m_dep_data;
 
-    /** The number of activations/deactivations performed. */
-    uint64_t m_operations{0};
+    /** A metric for predicting the runtime of the algorithm. Corresponds to ~2ns on Ryzen 7995WX. */
+    uint64_t m_cost{0};
 
     /** Walk a chunk, starting from transaction start. visit_tx(idx) is called for each encountered
      *  transaction. visit_dep_down(dep) is called for each encountered dependency that is traversed
@@ -794,6 +794,8 @@ private:
         auto bottom_part = chl_chunk_data.chunk_setinfo;
         // Update the parent chunk to also contain the child.
         par_chunk_data.chunk_setinfo |= bottom_part;
+        int ntx = par_chunk_data.chunk_setinfo.transactions.Count();
+        m_cost += ntx * 4 - 3;
         // Add bottom component to top transactions.
         Walk(dep_data.parent,
              [](TxData&) noexcept {},
@@ -807,7 +809,6 @@ private:
         child_tx_data.active_parents.Set(dep_data.parent);
         parent_tx_data.child_deps_active += 1;
         Assume(parent_tx_data.child_deps_active <= parent_tx_data.child_deps_total);
-        ++m_operations;
         return top_rep;
     }
 
@@ -824,6 +825,8 @@ private:
         parent_tx_data.child_deps_active -= 1;
         // Update representatives.
         auto& chunk_data = m_tx_data[parent_tx_data.chunk_rep];
+        int ntx = chunk_data.chunk_setinfo.transactions.Count();
+        m_cost += ntx * 4 + 2;
         auto top_part = dep_data.top_setinfo;
         auto bottom_part = chunk_data.chunk_setinfo - top_part;
         chunk_data.chunk_setinfo = top_part;
@@ -843,7 +846,6 @@ private:
         Walk(dep_data.child,
              [&](TxData& txdata) noexcept { txdata.chunk_rep = bottom_rep; },
              [&](DepData& depdata) noexcept { depdata.top_setinfo -= top_part; });
-        ++m_operations;
     }
 
     /** Activate a dependency from the chunk represented by bottom_rep to the chunk represented by
@@ -859,6 +861,7 @@ private:
         for (auto tx : top_chunk.chunk_setinfo.transactions) {
             auto& tx_data = m_tx_data[tx];
             num_deps += (tx_data.children & bottom_chunk.chunk_setinfo.transactions).Count();
+            m_cost += 1;
         }
         // Uniformly randomly pick one of them and activate it.
         TxIdx pick = m_rng.randrange(num_deps);
@@ -866,9 +869,11 @@ private:
             auto& tx_data = m_tx_data[tx];
             auto intersect = tx_data.children & bottom_chunk.chunk_setinfo.transactions;
             auto count = intersect.Count();
+            m_cost += 1;
             if (pick < count) {
                 for (auto dep : std::span{tx_data.child_deps}.first(tx_data.child_deps_total)
                                                              .subspan(tx_data.child_deps_active)) {
+                    m_cost += 1;
                     auto& dep_data = m_dep_data[dep];
                     if (bottom_chunk.chunk_setinfo.transactions[dep_data.child]) {
                         if (pick == 0) return Activate(dep);
@@ -906,6 +911,7 @@ private:
                 auto& tx_data = m_tx_data[tx];
                 auto unreached = (DownWard ? tx_data.children : tx_data.parents) - explored;
                 while (unreached.Any()) {
+                    m_cost += 3;
                     auto chunk_rep = m_tx_data[unreached.First()].chunk_rep;
                     auto& reached = m_tx_data[m_tx_data[unreached.First()].chunk_rep].chunk_setinfo;
                     explored |= reached.transactions;
@@ -975,6 +981,7 @@ public:
     explicit SpanningForestState(const DepGraph<SetType>& depgraph, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept : m_rng(rng_seed)
     {
         m_transactions = depgraph.Positions();
+        m_cost = 10;
         auto num_transactions = m_transactions.Count();
         // If no existing linearization is provided, construct a randomized topological ordering.
         std::vector<DepGraphIndex> load_order;
@@ -984,6 +991,7 @@ public:
             std::shuffle(load_order.begin(), load_order.end(), m_rng);
             std::sort(load_order.begin(), load_order.end(), [&](TxIdx a, TxIdx b) noexcept { return depgraph.Ancestors(a).Count() < depgraph.Ancestors(b).Count(); });
             old_linearization = std::span{load_order};
+            m_cost += 4 + 16 * load_order.size();
         }
         // Add transactions one by one, in order of existing linearization.
         m_tx_data.resize(depgraph.PositionRange());
@@ -1012,6 +1020,7 @@ public:
                 dep.child_pos = par_tx_data.child_deps_total;
                 par_tx_data.child_deps[par_tx_data.child_deps_total++] = dep_idx;
                 par_tx_data.children.Set(tx);
+                m_cost += 2;
             }
             // Start a merge sequence on the new transaction to make the graph topological.
             MergeSequence<false>(tx);
@@ -1020,7 +1029,10 @@ public:
         for (TxIdx i = 0; i < m_suboptimal_chunks.size(); ++i) {
             TxIdx j = i + m_rng.randrange<TxIdx>(m_suboptimal_chunks.size() - i);
             if (i != j) std::swap(m_suboptimal_chunks[i], m_suboptimal_chunks[j]);
+            m_cost += 3;
         }
+        // Account for the cost of producing linearization.
+        m_cost += 2 * m_dep_data.size() + 27 * num_transactions;
     }
 
     /** Try to improve the forest. Returns false if it is optimal, true otherwise. */
@@ -1053,6 +1065,7 @@ public:
                 // Iterate over all active child dependencies of the transaction.
                 const auto active_children = std::span{tx_data.child_deps}.first(tx_data.child_deps_active);
                 for (DepIdx dep_idx : active_children) {
+                    m_cost += 3;
                     const auto& dep_data = m_dep_data[dep_idx];
                     // Define gain(top) = fee(top)*size(chunk) - fee(chunk)*size(top).
                     //                  = (feerate(top) - feerate(chunk)) * size(top) * size(chunk).
@@ -1175,7 +1188,7 @@ public:
     }
 
     /** Determine how much work was performed so far. */
-    uint64_t GetOperations() const noexcept { return m_operations; }
+    uint64_t GetCost() const noexcept { return m_cost; }
 };
 
 /** Find or improve a linearization for a cluster.
@@ -1201,7 +1214,7 @@ std::pair<std::vector<DepGraphIndex>, bool> Linearize(const DepGraph<SetType>& d
     // Make improvement steps to it until we hit the max_iterations limit, or an optimal result
     // is found.
     while (true) {
-        if (forest.GetOperations() >= max_iterations) return {forest.GetLinearization(), false};
+        if (forest.GetCost() >= max_iterations) return {forest.GetLinearization(), false};
         if (!forest.Step()) break;
     }
     return {forest.GetLinearization(), true};
@@ -1485,3 +1498,4 @@ void FixLinearization(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex
 } // namespace cluster_linearize
 
 #endif // BITCOIN_CLUSTER_LINEARIZE_H
+
