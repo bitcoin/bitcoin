@@ -647,8 +647,18 @@ public:
  * - How to decide what dependency to deactivate (when splitting chunks):
  *   - Define the gain of an active dependency as
  *     (feerate(top) - feerate(bottom)) * size(top) * size(bottom).
- *   - A uniformly random dependency within a chunk among those with maximal gain is deactivated,
- *     if any with strictly positive gain eixst.
+ *   - After every split, it is possible that the top and the bottom chunk merge with each other
+ *     again in the merge sequence (through a top->bottom dependency, not through the deactivated
+ *     one, which was bottom->top). Call this a self-merge. If a self-merge does not occur after
+ *     a split, the resulting linearization is strictly improved (the area under the fee-size
+ *     diagram increases by at least gain/2), while self-merges do not change it.
+ *   - Keep track of how many consecutive self-merges a chunk undergoes: incremented upon
+ *     self-merge, and reset to 0 in both top and bottom otherwise.
+ *   - If the number of consecutive self-merges is 2 mod 3 (i.e., it is 2, 5, 8, 11, ...), a
+ *     uniformly random dependency in the chunk among those with strictly positive gain is
+ *     deactivated.
+ *   - Otherwise (self-merges so far is not 2 mod 3), a uniformly random dependency within a chunk
+ *     among those with maximal gain is deactivated, if any with strictly positive gain exist.
  *
  * - How to decide what dependency to activate (when merging chunks):
  *   - A uniformly random dependency between the two maximum-feerate-difference chunks is activated.
@@ -692,6 +702,8 @@ private:
         SetInfo<SetType> chunk_setinfo;
         /** Whether this transaction appears in m_suboptimal_chunks. */
         bool suboptimal{false};
+        /** Number of consecutive self-merges this chunk has experienced. */
+        uint32_t self_merges;
     };
 
     /** Structure with information about a single dependency. */
@@ -880,9 +892,10 @@ private:
         return TxIdx(-1);
     }
 
-    /** Perform an upward or downward merge sequence on the specified transaction. */
+    /** Perform an upward or downward merge sequence on the specified transaction. Returns the
+     *  representative of the merged chunk. */
     template<bool DownWard>
-    void MergeSequence(TxIdx tx_idx) noexcept
+    TxIdx MergeSequence(TxIdx tx_idx) noexcept
     {
         auto chunk_rep = m_tx_data[tx_idx].chunk_rep;
         while (true) {
@@ -935,6 +948,7 @@ private:
             chunk_data.suboptimal = true;
             m_suboptimal_chunks.push_back(chunk_rep);
         }
+        return chunk_rep;
     }
 
     /** Split a chunk, and then merge the resulting two chunks to make the graph topological
@@ -943,14 +957,26 @@ private:
     {
         auto& dep_data = m_dep_data[dep_idx];
         Assume(dep_data.active);
+        // Remember the number of self-merges this chunk underwent so far.
+        auto self_merges = m_tx_data[m_tx_data[dep_data.parent].chunk_rep].self_merges;
         // Deactivate the specified dependency, splitting it into two new chunks: a top containing
         // the parent, and a bottom containing the child. The top should have a higher feerate.
         Deactivate(dep_idx);
         // Merge the top chunk with lower-feerate chunks it depends on (which may be the bottom it
         // was just split from, or other pre-existing chunks).
-        MergeSequence<false>(dep_data.parent);
+        auto new_par_chunk_rep = MergeSequence<false>(dep_data.parent);
         // Merge the bottom chunk with higher-feerate chunks that depend on it.
-        MergeSequence<true>(dep_data.child);
+        auto new_chl_chunk_rep = MergeSequence<true>(dep_data.child);
+        // If the parent and child end up in the same chunk, a self-merge happened.
+        if (new_par_chunk_rep == new_chl_chunk_rep) {
+            // If so, increment the self_merges counter for this chunk.
+            m_tx_data[new_par_chunk_rep].self_merges = self_merges + 1;
+        } else {
+            // Otherwise, set the counters for both chunks (incl. whatever they merged with) to
+            // zero.
+            m_tx_data[new_par_chunk_rep].self_merges = 0;
+            m_tx_data[new_chl_chunk_rep].self_merges = 0;
+        }
     }
 
 public:
@@ -980,6 +1006,7 @@ public:
             tx_data.chunk_rep = tx;
             tx_data.chunk_setinfo.transactions = SetType::Singleton(tx);
             tx_data.chunk_setinfo.feerate = depgraph.FeeRate(tx);
+            tx_data.self_merges = 0;
             // Add its dependencies.
             SetType parents = depgraph.GetReducedParents(tx);
             for (auto par : parents) {
@@ -1022,8 +1049,14 @@ public:
             // happen when a split chunk merges in Improve() with one or more existing chunks that
             // are themselves on the suboptimal queue.
             if (chunk_data.chunk_rep != chunk) continue;
+            // Determine whether to use max-gain strategy or random strategy. Generally max-gain is
+            // used, but out of an abundance of caution that max-gain might in
+            // adversarially-contructed clusters reliably make bad choices, every 3rd attempt to
+            // split the same cluster uses the random strategy.
+            const bool use_max_gain = (chunk_data.self_merges % 3) != 2;
             // Remember the best dependency seen so far, together with its gain, and a tiebreak
-            // value to randomize between equal-gain dependencies.
+            // value to randomize (between equal-gain dependencies in case of max-gain, and between
+            // all positive-gain dependencies otherwise).
             DepIdx best = DepIdx(-1);
             FeeFrac::MulType best_gain = FeeFrac::MUL_ZERO;
             uint64_t best_tiebreak{0};
@@ -1035,13 +1068,18 @@ public:
                 for (DepIdx dep_idx : active_children) {
                     const auto& dep_data = m_dep_data[dep_idx];
                     Assume(dep_data.active);
-                    // Skip if this dependency is ineligible (below best gain).
+                    // Skip if this dependency is ineligible (non-positive gain for random
+                    // strategy, non-highest gain for max-gain strategy).
                     auto gain = FeeFrac::ScaledDifference(dep_data.top_setinfo.feerate, chunk_data.chunk_setinfo.feerate);
-                    if (gain < best_gain) continue;
-                    // Remember this as our best solution if it has higher gain than our best so
-                    // far, or if its tiebreak is better.
+                    if (use_max_gain) {
+                        if (gain < best_gain) continue;
+                    } else {
+                        if (gain <= FeeFrac::MUL_ZERO) continue;
+                    }
+                    // Remember this as our best solution if (in case of max-gain) it has higher
+                    // gain than our best so far, or if its tiebreak is better.
                     uint64_t tiebreak = m_rng.rand64();
-                    if (tiebreak >= best_tiebreak || gain > best_gain) {
+                    if (tiebreak >= best_tiebreak || (use_max_gain && gain > best_gain)) {
                         best_tiebreak = tiebreak;
                         best = dep_idx;
                         best_gain = gain;
