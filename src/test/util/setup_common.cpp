@@ -28,7 +28,7 @@
 #include <node/peerman_args.h>
 #include <node/warnings.h>
 #include <noui.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <pow.h>
 #include <random.h>
 #include <rpc/blockchain.h>
@@ -288,7 +288,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.netgroupman.reset();
     m_node.args = nullptr;
     m_node.mempool.reset();
-    Assert(!m_node.fee_estimator); // Each test must create a local object, if they wish to use the fee_estimator
+    Assert(!m_node.forecasterman); // Each test must create a local object, if they wish to use the forecasterman
     m_node.chainman.reset();
     m_node.validation_signals.reset();
     m_node.scheduler.reset();
