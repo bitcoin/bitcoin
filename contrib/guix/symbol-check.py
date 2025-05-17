@@ -11,6 +11,7 @@ Example usage:
     find ../path/to/guix/binaries -type f -executable | xargs python3 contrib/guix/symbol-check.py
 '''
 import sys
+import xml.etree.ElementTree as ET
 
 import lief
 
@@ -284,7 +285,16 @@ def check_PE_application_manifest(binary) -> bool:
         return False
 
     rm = binary.resources_manager
-    return rm.has_manifest
+    if not rm.has_manifest:
+        # No manifest at all.
+        return False
+
+    root = ET.fromstring(rm.manifest)
+
+    supported_os = root.findall('.//{urn:schemas-microsoft-com:compatibility.v1}supportedOS')
+    if len(supported_os) == 1 and supported_os[0].get('Id') == '{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}':
+        return True
+    return False
 
 def check_ELF_interpreter(binary) -> bool:
     expected_interpreter = ELF_INTERPRETER_NAMES[binary.header.machine_type][binary.abstract.header.endianness]
