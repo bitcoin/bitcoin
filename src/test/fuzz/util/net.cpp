@@ -312,6 +312,33 @@ std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) co
         SetFuzzedErrNo(m_fuzzed_data_provider, accept_errnos);
         return std::unique_ptr<FuzzedSock>();
     }
+    if (addr != nullptr) {
+        // Set a fuzzed address in the output argument addr.
+        memset(addr, 0x00, *addr_len);
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            // IPv4
+            const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in));
+            if (*addr_len >= write_len) {
+                *addr_len = write_len;
+                auto addr4 = reinterpret_cast<sockaddr_in*>(addr);
+                addr4->sin_family = AF_INET;
+                const auto sin_addr_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(sizeof(addr4->sin_addr));
+                memcpy(&addr4->sin_addr, sin_addr_bytes.data(), sin_addr_bytes.size());
+                addr4->sin_port = m_fuzzed_data_provider.ConsumeIntegralInRange<uint16_t>(1, 65535);
+            }
+        } else {
+            // IPv6
+            const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in6));
+            if (*addr_len >= write_len) {
+                *addr_len = write_len;
+                auto addr6 = reinterpret_cast<sockaddr_in6*>(addr);
+                addr6->sin6_family = AF_INET6;
+                const auto sin_addr_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(sizeof(addr6->sin6_addr));
+                memcpy(&addr6->sin6_addr, sin_addr_bytes.data(), sin_addr_bytes.size());
+                addr6->sin6_port = m_fuzzed_data_provider.ConsumeIntegralInRange<uint16_t>(1, 65535);
+            }
+        }
+    }
     return std::make_unique<FuzzedSock>(m_fuzzed_data_provider);
 }
 
