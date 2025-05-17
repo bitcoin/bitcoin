@@ -36,15 +36,11 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
     # Launches a child test process that runs this same file, but instantiates
     # a child test. Verifies that it raises only the expected exception, once.
     def _verify_startup_failure(self, test, internal_args, expected_exception):
-        # Inherit args from parent, only modifying tmpdir so children don't fail
-        # as a cause of colliding with the parent dir.
-        parent_args = sys.argv.copy()
+        # Inherit sys.argv from parent, only overriding tmpdir to a subdirectory
+        # so children don't fail due to colliding with the parent dir.
         assert self.options.tmpdir, "Framework should always set tmpdir."
-        i, path = next(((i, m[1]) for i, arg in enumerate(parent_args) if (m := re.match(r'--tm(?:p(?:d(?:ir?)?)?)?=(.+)', arg))),
-                       (len(parent_args), self.options.tmpdir))
         subdir = md5(expected_exception.encode('utf-8')).hexdigest()[:8]
-        parent_args[i:i + 1] = [f"--tmpdir={path}/{subdir}"]
-        args = [sys.executable] + parent_args + [f"--internal_test={test.__name__}"] + internal_args
+        args = [sys.executable] + sys.argv + [f"--tmpdir={self.options.tmpdir}/{subdir}", f"--internal_test={test.__name__}"] + internal_args
 
         try:
             # The subprocess encoding argument gives different results for e.output
@@ -73,10 +69,10 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         self.log.info("Verifying _verify_startup_failure() functionality (self-check).")
         assert_raises_message(
             AssertionError,
-            ("Child test didn't contain (only) expected errors:\n" +
-             linesep.join(["Found 0/1 tracebacks - expecting exactly one with no knock-on exceptions.",
-                           "Found 0/1 occurrences of the specific exception: NonExistentError",
-                           "Found 0/1 test failure output messages."])).encode("unicode_escape").decode("utf-8"),
+            ( "Child test didn't contain (only) expected errors:\n"
+             f"Found 0/1 tracebacks - expecting exactly one with no knock-on exceptions.{linesep}"
+             f"Found 0/1 occurrences of the specific exception: NonExistentError{linesep}"
+              "Found 0/1 test failure output messages."),
             self._verify_startup_failure,
             TestSuccess, [],
             "NonExistentError",
@@ -93,7 +89,7 @@ class FeatureFrameworkStartupFailures(BitcoinTestFramework):
         self.log.info("Verifying inability to connect to bitcoind's RPC interface due to wrong port results in one exception containing at least one OSError.")
         self._verify_startup_failure(
             TestWrongRpcPortStartupFailure, [f"--internal_node_start_duration={node_start_duration}"],
-            r"AssertionError: \[node 0\] Unable to connect to bitcoind after \d+s \(ignored errors: {[^}]*'OSError \w+'?: \d+[^}]*}, latest error: \w+\([^)]+\)\)"
+            r"AssertionError: \[node 0\] Unable to connect to bitcoind after \d+s \(ignored errors: {[^}]*'OSError \w+'?: \d+[^}]*}, latest: '[\w ]+'/\w+\([^)]+\)\)"
         )
 
         self.log.info("Verifying startup failure due to invalid arg results in only one exception.")
