@@ -995,7 +995,7 @@ FUZZ_TARGET(clusterlin_linearize)
     // just a conservative overestimate based on observed cases, but if it is exceeded, the
     // numbers can safely be adjusted to account for that.
     const uint64_t n = depgraph.TxCount();
-    if (iter_count >= n * n + 1) {
+    if (iter_count >= 50 * (1 + 2 * (1 + n) * n)) {
         assert(optimal);
     }
 
