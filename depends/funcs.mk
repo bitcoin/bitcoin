@@ -207,31 +207,43 @@ ifneq ($($(1)_ldflags),)
 $(1)_autoconf += LDFLAGS="$$($(1)_ldflags)"
 endif
 
+$(1)_cmake = env CFLAGS="$$($(1)_cppflags) $$($(1)_cflags)" \
+                 CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
+                 LDFLAGS="$$($(1)_ldflags)"
+ifeq ($(host_os),android)
+    # For Android, we use the toolchain file provided by the Android SDK.
+    # See: https://developer.android.com/ndk/guides/cmake
+    $(1)_cmake += cmake \
+                    -DANDROID_ABI=$(android_abi) \
+                    -DANDROID_PLATFORM=android-$(android_cmake_system_version) \
+                    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=$(ANDROID_NDK)/build/cmake/android.toolchain.cmake
+else
+    $(1)_cmake += CC="$$($(1)_cc)" \
+                  CXX="$$($(1)_cxx)"
+    $(1)_cmake += cmake \
+                    -DCMAKE_AR=`which $$($(1)_ar)` \
+                    -DCMAKE_NM=`which $$($FILEPATH(1)_nm)` \
+                    -DCMAKE_RANLIB=`which $$($(1)_ranlib)`
+endif
+$(1)_cmake += -G "Unix Makefiles" \
+              -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
+              -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+              -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(V) \
+              $$($(1)_config_opts)
 # We hardcode the library install path to "lib" to match the PKG_CONFIG_PATH
 # setting in depends/toolchain.cmake.in, which also hardcodes "lib".
 # Without this setting, CMake by default would use the OS library
 # directory, which might be "lib64" or something else, not "lib", on multiarch systems.
-$(1)_cmake=env CC="$$($(1)_cc)" \
-               CFLAGS="$$($(1)_cppflags) $$($(1)_cflags)" \
-               CXX="$$($(1)_cxx)" \
-               CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
-               LDFLAGS="$$($(1)_ldflags)" \
-               cmake -G "Unix Makefiles" \
-               -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)" \
-               -DCMAKE_AR=`which $$($(1)_ar)` \
-               -DCMAKE_NM=`which $$($(1)_nm)` \
-               -DCMAKE_RANLIB=`which $$($(1)_ranlib)` \
-               -DCMAKE_INSTALL_LIBDIR=lib/ \
-               -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-               -DCMAKE_VERBOSE_MAKEFILE:BOOL=$(V) \
-               $$($(1)_config_opts)
+$(1)_cmake += -DCMAKE_INSTALL_LIBDIR=lib/
 ifeq ($($(1)_type),build)
 $(1)_cmake += -DCMAKE_INSTALL_RPATH:PATH="$$($($(1)_type)_prefix)/lib"
 else
 ifneq ($(host),$(build))
+ifneq ($(host_os),android)
 $(1)_cmake += -DCMAKE_SYSTEM_NAME=$($(host_os)_cmake_system_name)
 $(1)_cmake += -DCMAKE_C_COMPILER_TARGET=$(host)
 $(1)_cmake += -DCMAKE_CXX_COMPILER_TARGET=$(host)
+endif
 endif
 endif
 endef
