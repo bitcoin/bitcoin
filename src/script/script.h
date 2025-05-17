@@ -9,6 +9,7 @@
 #include <attributes.h>
 #include <crypto/common.h>
 #include <prevector.h> // IWYU pragma: export
+#include <pubkey.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
@@ -529,6 +530,12 @@ public:
         return (opcodetype)(OP_1+n-1);
     }
 
+    /** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
+    static constexpr bool IsSmallInteger(opcodetype opcode)
+    {
+        return opcode >= OP_1 && opcode <= OP_16;
+    }
+
     /**
      * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
      * as 20 sigops. With pay-to-script-hash, that changed:
@@ -536,7 +543,7 @@ public:
      * counted more accurately, assuming they are of the form
      *  ... OP_N CHECKMULTISIG ...
      */
-    unsigned int GetSigOpCount(bool fAccurate) const;
+    unsigned int GetLegacySigOpCount(bool fAccurate) const;
 
     /**
      * Accurately count sigOps, including sigOps in
@@ -552,8 +559,59 @@ public:
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
-    bool IsPayToScriptHash() const;
-    bool IsPayToWitnessScriptHash() const;
+    bool IsPayToPubKeyHash() const noexcept
+    {
+        return size() == 25 &&
+               front() == OP_DUP &&
+               (*this)[1] == OP_HASH160 &&
+               (*this)[2] == 0x14 &&
+               (*this)[23] == OP_EQUALVERIFY &&
+               back() == OP_CHECKSIG;
+    }
+
+    bool IsPayToScriptHash() const noexcept
+    {
+        return size() == 23 &&
+               front() == OP_HASH160 &&
+               (*this)[1] == 0x14 &&
+               back() == OP_EQUAL;
+    }
+
+    bool IsPayToWitnessPubKeyHash() const noexcept
+    {
+        return size() == 22 &&
+               front() == OP_0 &&
+               (*this)[1] == 0x14;
+    }
+
+    bool IsPayToTaproot() const noexcept
+    {
+        return size() == 34 &&
+               front() == OP_1 &&
+               (*this)[1] == 0x20;
+    }
+
+    bool IsPayToWitnessScriptHash() const noexcept
+    {
+        return size() == 34 &&
+               front() == OP_0 &&
+               (*this)[1] == 0x20;
+    }
+
+    bool IsCompressedPayToPubKey() const noexcept
+    {
+        return size() == CPubKey::COMPRESSED_SIZE + 2 &&
+               front() == CPubKey::COMPRESSED_SIZE &&
+               back() == OP_CHECKSIG;
+    }
+
+    bool IsUncompressedPayToPubKey() const noexcept
+    {
+        return size() == CPubKey::SIZE + 2 &&
+               front() == CPubKey::SIZE &&
+               back() == OP_CHECKSIG;
+    }
+
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
