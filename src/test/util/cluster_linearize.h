@@ -331,7 +331,7 @@ void SanityCheck(const DepGraph<SetType>& depgraph)
         VectorWriter writer(ser, 0);
         writer << Using<DepGraphFormatter>(depgraph);
         SpanReader reader(ser);
-        DepGraph<TestBitSet> decoded_depgraph;
+        DepGraph<SetType> decoded_depgraph;
         reader >> Using<DepGraphFormatter>(decoded_depgraph);
         assert(depgraph == decoded_depgraph);
         assert(reader.empty());
@@ -384,12 +384,12 @@ void SanityCheck(const DepGraph<SetType>& depgraph, std::span<const DepGraphInde
 {
     // Check completeness.
     assert(linearization.size() == depgraph.TxCount());
-    TestBitSet done;
+    SetType done;
     for (auto i : linearization) {
         // Check transaction position is in range.
         assert(depgraph.Positions()[i]);
         // Check topology and lack of duplicates.
-        assert((depgraph.Ancestors(i) - done) == TestBitSet::Singleton(i));
+        assert((depgraph.Ancestors(i) - done) == SetType::Singleton(i));
         done.Set(i);
     }
 }
