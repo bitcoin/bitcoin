@@ -79,7 +79,7 @@ struct FuzzedWallet {
         // The fee of "tx" is 0, so this is the total input and output amount
         const CAmount total_amt{
             std::accumulate(tx.vout.begin(), tx.vout.end(), CAmount{}, [](CAmount t, const CTxOut& out) { return t + out.nValue; })};
-        const uint32_t tx_size(GetVirtualTransactionSize(CTransaction{tx}));
+        const int32_t tx_size(GetVirtualTransactionSize(CTransaction{tx}));
         std::set<int> subtract_fee_from_outputs;
         if (fuzzed_data_provider.ConsumeBool()) {
             for (size_t i{}; i < tx.vout.size(); ++i) {
