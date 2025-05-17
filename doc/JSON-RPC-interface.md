@@ -122,6 +122,18 @@ RPC interface will be abused.
   security-sensitive operations on a computer whose other programs you
   trust.
 
+- **RPC Credentials Security Boundary:** Any client with valid RPC credentials
+  should be considered to have full administrative control of the Bitcoin Core
+  node and any filesystem resources the bitcoind process can access. For example,
+  clients can load wallet files from arbitrary paths that the bitcoind process
+  has permission to access, specify custom file paths for operations, and perform
+  any action available through the RPC interface. For these reasons, providing RPC
+  credentials to untrusted clients is equivalent to giving them full control of
+  the node and the same system privileges as the operating system user account running bitcoind. When
+  using multiple wallets or sharing access with different users, use proper system-level
+  isolation (containers, virtualization, separate user accounts with restricted permissions)
+  rather than relying solely on RPC access controls.
+
 - **Securing remote network access:** You may optionally allow other
   computers to remotely control Bitcoin Core by setting the `rpcallowip`
   and `rpcbind` configuration parameters.  These settings are only meant
