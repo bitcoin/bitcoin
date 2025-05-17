@@ -265,58 +265,6 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
     return result;
 }
 
-std::vector<CDeterministicMNCPtr> CDeterministicMNList::CalculateQuorum(size_t maxSize, const uint256& modifier, const bool onlyEvoNodes) const
-{
-    auto scores = CalculateScores(modifier, onlyEvoNodes);
-
-    // sort is descending order
-    std::sort(scores.rbegin(), scores.rend(), [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a, const std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
-        if (a.first == b.first) {
-            // this should actually never happen, but we should stay compatible with how the non-deterministic MNs did the sorting
-            return a.second->collateralOutpoint < b.second->collateralOutpoint;
-        }
-        return a.first < b.first;
-    });
-
-    // take top maxSize entries and return it
-    std::vector<CDeterministicMNCPtr> result;
-    result.resize(std::min(maxSize, scores.size()));
-    for (size_t i = 0; i < result.size(); i++) {
-        result[i] = std::move(scores[i].second);
-    }
-    return result;
-}
-
-std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CDeterministicMNList::CalculateScores(const uint256& modifier, const bool onlyEvoNodes) const
-{
-    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
-    scores.reserve(GetAllMNsCount());
-    ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
-        if (dmn->pdmnState->confirmedHash.IsNull()) {
-            // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
-            // future quorums
-            return;
-        }
-        if (onlyEvoNodes) {
-            if (dmn->nType != MnType::Evo)
-                return;
-        }
-        // calculate sha256(sha256(proTxHash, confirmedHash), modifier) per MN
-        // Please note that this is not a double-sha256 but a single-sha256
-        // The first part is already precalculated (confirmedHashWithProRegTxHash)
-        // TODO When https://github.com/bitcoin/bitcoin/pull/13191 gets backported, implement something that is similar but for single-sha256
-        uint256 h;
-        CSHA256 sha256;
-        sha256.Write(dmn->pdmnState->confirmedHashWithProRegTxHash.begin(), dmn->pdmnState->confirmedHashWithProRegTxHash.size());
-        sha256.Write(modifier.begin(), modifier.size());
-        sha256.Finalize(h.begin());
-
-        scores.emplace_back(UintToArith256(h), dmn);
-    });
-
-    return scores;
-}
-
 int CDeterministicMNList::CalcMaxPoSePenalty() const
 {
     // Maximum PoSe penalty is dynamic and equals the number of registered MNs

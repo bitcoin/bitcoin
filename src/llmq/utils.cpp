@@ -108,6 +108,98 @@ static uint256 GetHashModifier(const Consensus::LLMQParams& llmqParams, gsl::not
     return ::SerializeHash(std::make_pair(llmqParams.type, pCycleQuorumBaseBlockIndex->GetBlockHash()));
 }
 
+static arith_uint256 calculateQuorumScore(const CDeterministicMNCPtr& dmn, const uint256& modifier)
+{
+    // calculate sha256(sha256(proTxHash, confirmedHash), modifier) per MN
+    // Please note that this is not a double-sha256 but a single-sha256
+    // The first part is already precalculated (confirmedHashWithProRegTxHash)
+    // TODO When https://github.com/bitcoin/bitcoin/pull/13191 gets backported, implement something that is similar but for single-sha256
+    uint256 h;
+    CSHA256 sha256;
+    sha256.Write(dmn->pdmnState->confirmedHashWithProRegTxHash.begin(),
+                 dmn->pdmnState->confirmedHashWithProRegTxHash.size());
+    sha256.Write(modifier.begin(), modifier.size());
+    sha256.Finalize(h.begin());
+    return UintToArith256(h);
+}
+
+static std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScoresForQuorum(
+    const std::vector<CDeterministicMNCPtr>& dmns, const uint256& modifier, const bool onlyEvoNodes)
+{
+    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
+    scores.reserve(dmns.size());
+
+    for (auto& dmn : dmns) {
+        if (dmn->pdmnState->IsBanned()) continue;
+        if (dmn->pdmnState->confirmedHash.IsNull()) {
+            // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
+            // future quorums
+            continue;
+        }
+        if (onlyEvoNodes && dmn->nType != MnType::Evo) {
+            continue;
+        }
+        scores.emplace_back(calculateQuorumScore(dmn, modifier), std::move(dmn));
+    };
+    return scores;
+}
+
+static std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScoresForQuorum(
+    const CDeterministicMNList& mn_list, const uint256& modifier, const bool onlyEvoNodes)
+{
+    std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
+    scores.reserve(mn_list.GetAllMNsCount());
+
+    mn_list.ForEachMNShared(true, [&](const CDeterministicMNCPtr& dmn) {
+        if (dmn->pdmnState->confirmedHash.IsNull()) {
+            // we only take confirmed MNs into account to avoid hash grinding on the ProRegTxHash to sneak MNs into a
+            // future quorums
+            return;
+        }
+        if (onlyEvoNodes && dmn->nType != MnType::Evo) {
+            return;
+        }
+
+        scores.emplace_back(calculateQuorumScore(dmn, modifier), dmn);
+    });
+    return scores;
+}
+
+
+/**
+ * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
+ */
+template <typename List>
+static std::vector<CDeterministicMNCPtr> CalculateQuorum(const List& mn_list, size_t maxSize, const uint256& modifier,
+                                                         const bool onlyEvoNodes)
+{
+    auto scores = CalculateScoresForQuorum(mn_list, modifier, onlyEvoNodes);
+
+    // sort is descending order
+    std::sort(scores.rbegin(), scores.rend(),
+              [](const std::pair<arith_uint256, CDeterministicMNCPtr>& a,
+                 const std::pair<arith_uint256, CDeterministicMNCPtr>& b) {
+                  if (a.first == b.first) {
+                      // this should actually never happen, but we should stay compatible with how the non-deterministic MNs did the sorting
+                      // TODO - add assert ?
+                      return a.second->collateralOutpoint < b.second->collateralOutpoint;
+                  }
+                  return a.first < b.first;
+              });
+
+    // take top maxSize entries and return it
+    if (scores.size() > maxSize) {
+        scores.resize(maxSize);
+    }
+
+    std::vector<CDeterministicMNCPtr> result;
+    result.reserve(scores.size());
+    for (auto& score : scores) {
+        result.emplace_back(std::move(score.second));
+    }
+    return result;
+}
+
 std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqType, CDeterministicMNManager& dmnman,
                                                       CQuorumSnapshotManager& qsnapman,
                                                       gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
@@ -203,7 +295,7 @@ std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqT
             pQuorumBaseBlockIndex;
     const auto modifier = GetHashModifier(llmq_params_opt.value(), pQuorumBaseBlockIndex);
     auto allMns = dmnman.GetListForBlock(pWorkBlockIndex);
-    return allMns.CalculateQuorum(llmq_params_opt->size, modifier, EvoOnly);
+    return CalculateQuorum(allMns, llmq_params_opt->size, modifier, EvoOnly);
 }
 
 std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(
@@ -346,7 +438,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
     }
 
     auto MnsUsedAtH = CDeterministicMNList();
-    auto MnsNotUsedAtH = CDeterministicMNList();
+    std::vector<CDeterministicMNCPtr> MnsNotUsedAtH;
     std::vector<CDeterministicMNList> MnsUsedAtHIndexed{nQuorums};
 
     bool skipRemovedMNs = IsV19Active(pCycleQuorumBaseBlockIndex) || (Params().NetworkIDString() == CBaseChainParams::TESTNET);
@@ -405,16 +497,13 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
     allMns.ForEachMNShared(false, [&MnsUsedAtH, &MnsNotUsedAtH](const CDeterministicMNCPtr& dmn) {
         if (!MnsUsedAtH.HasMN(dmn->proTxHash)) {
             if (!dmn->pdmnState->IsBanned()) {
-                try {
-                    MnsNotUsedAtH.AddMN(dmn);
-                } catch (const std::runtime_error& e) {
-                }
+                MnsNotUsedAtH.push_back(dmn);
             }
         }
     });
 
-    auto sortedMnsUsedAtHM = MnsUsedAtH.CalculateQuorum(MnsUsedAtH.GetAllMNsCount(), modifier);
-    auto sortedMnsNotUsedAtH = MnsNotUsedAtH.CalculateQuorum(MnsNotUsedAtH.GetAllMNsCount(), modifier);
+    auto sortedMnsUsedAtHM = CalculateQuorum(MnsUsedAtH, MnsUsedAtH.GetAllMNsCount(), modifier, false);
+    auto sortedMnsNotUsedAtH = CalculateQuorum(MnsNotUsedAtH, MnsNotUsedAtH.size(), modifier, false);
     auto sortedCombinedMnsList = std::move(sortedMnsNotUsedAtH);
     for (auto& m : sortedMnsUsedAtHM) {
         sortedCombinedMnsList.push_back(std::move(m));
@@ -494,7 +583,7 @@ void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const CDetermi
 
     quorumSnapshot.activeQuorumMembers.resize(allMns.GetAllMNsCount());
     const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
-    auto sortedAllMns = allMns.CalculateQuorum(allMns.GetAllMNsCount(), modifier);
+    auto sortedAllMns = CalculateQuorum(allMns, allMns.GetAllMNsCount(), modifier, false);
 
     LogPrint(BCLog::LLMQ, "BuildQuorumSnapshot h[%d] numMns[%d]\n", pCycleQuorumBaseBlockIndex->nHeight, allMns.GetAllMNsCount());
 
@@ -532,10 +621,10 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
         const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
         const auto [MnsUsedAtH, MnsNotUsedAtH] = GetMNUsageBySnapshot(llmqParams, dmnman, pCycleQuorumBaseBlockIndex, snapshot, nHeight);
         // the list begins with all the unused MNs
-        auto sortedMnsNotUsedAtH = MnsNotUsedAtH.CalculateQuorum(MnsNotUsedAtH.GetAllMNsCount(), modifier);
+        auto sortedMnsNotUsedAtH = CalculateQuorum(MnsNotUsedAtH, MnsNotUsedAtH.GetAllMNsCount(), modifier, false);
         sortedCombinedMns = std::move(sortedMnsNotUsedAtH);
         // Now add the already used MNs to the end of the list
-        auto sortedMnsUsedAtH = MnsUsedAtH.CalculateQuorum(MnsUsedAtH.GetAllMNsCount(), modifier);
+        auto sortedMnsUsedAtH = CalculateQuorum(MnsUsedAtH, MnsUsedAtH.GetAllMNsCount(), modifier, false);
         std::move(sortedMnsUsedAtH.begin(), sortedMnsUsedAtH.end(), std::back_inserter(sortedCombinedMns));
     }
 
@@ -630,7 +719,7 @@ std::pair<CDeterministicMNList, CDeterministicMNList> GetMNUsageBySnapshot(const
     const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
 
     auto allMns = dmnman.GetListForBlock(pWorkBlockIndex);
-    auto sortedAllMns = allMns.CalculateQuorum(allMns.GetAllMNsCount(), modifier);
+    auto sortedAllMns = CalculateQuorum(allMns, allMns.GetAllMNsCount(), modifier, false);
 
     size_t i{0};
     for (const auto& dmn : sortedAllMns) {
