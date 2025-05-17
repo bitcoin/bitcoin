@@ -64,7 +64,7 @@ static constexpr std::array NETWORKS{"not_publicly_routable", "ipv4", "ipv6", "o
 static constexpr std::array NETWORK_SHORT_NAMES{"npr", "ipv4", "ipv6", "onion", "i2p", "cjdns", "int"};
 static constexpr std::array UNREACHABLE_NETWORK_IDS{/*not_publicly_routable*/0, /*internal*/6};
 
-/** Default number of blocks to generate for RPC generatetoaddress. */
+/** Default number of blocks to generate for RPC generatetoaddress and generatetomany. */
 static const std::string DEFAULT_NBLOCKS = "1";
 
 /** Default -color setting. */
