@@ -25,13 +25,13 @@
  *   <<---: The right side is implemented using the left side.
  *
  *   +-----------------------+
- *   | SearchCandidateFinder | <<---------------------\
- *   +-----------------------+                        |
+ *   | SearchCandidateFinder |
+ *   +-----------------------+
  *     |                                            +-----------+
  *     |                                            | Linearize |
  *     |                                            +-----------+
- *     |        +-------------------------+           |  |
- *     |        | AncestorCandidateFinder | <<--------/  |
+ *     |        +-------------------------+              |
+ *     |        | AncestorCandidateFinder |              |
  *     |        +-------------------------+              |
  *     |          |                     ^                |        ^^  PRODUCTION CODE
  *     |          |                     |                |        ||
@@ -1146,7 +1146,7 @@ FUZZ_TARGET(clusterlin_linearize)
     } catch (const std::ios_base::failure&) {}
     // The most complicated graphs are connected ones (other ones just split up). Optionally force
     // the graph to be connected.
-    if (make_connected) MakeConnected(depgraph);
+    if (make_connected & 1) MakeConnected(depgraph);
 
     // Optionally construct an old linearization for it.
     std::vector<DepGraphIndex> old_linearization;
@@ -1164,7 +1164,6 @@ FUZZ_TARGET(clusterlin_linearize)
     // Invoke Linearize().
     iter_count &= 0x7ffff;
     auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization);
-    assert(cost <= iter_count);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
@@ -1191,9 +1190,13 @@ FUZZ_TARGET(clusterlin_linearize)
         // If SimpleLinearize finds the optimal result too, they must be equal (if not,
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
-        // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
-        // chunking is claimed to be optimal, which implies minimal chunks).
-        if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
+
+        // Temporarily disabled, as Linearize() currently does not guarantee minimal chunks, even
+        // when it reports an optimal result. This will be re-introduced in a later commit.
+        //
+        // // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
+        // // chunking is claimed to be optimal, which implies minimal chunks).
+        // if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
