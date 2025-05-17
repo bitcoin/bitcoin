@@ -28,10 +28,6 @@ bool LoadWallets(WalletContext& context);
 //! Complete startup of wallets.
 void StartWallets(WalletContext& context);
 
-//! Stop all wallets. Wallets will be flushed first.
-void StopWallets(WalletContext& context);
-
-//! Close all wallets.
 void UnloadWallets(WalletContext& context);
 } // namespace wallet
 
