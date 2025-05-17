@@ -30,7 +30,11 @@ from test_framework.messages import (
     MAX_MONEY,
     SEQUENCE_FINAL,
 )
-from test_framework.blocktools import create_tx_with_script, MAX_BLOCK_SIGOPS
+from test_framework.blocktools import (
+    create_tx_with_script,
+    MAX_BLOCK_SIGOPS,
+    MAX_STANDARD_TX_SIGOPS,
+)
 from test_framework.script import (
     CScript,
     OP_0,
@@ -233,7 +237,7 @@ class InvalidOPIFConstruction(BadTxTemplate):
             amount=(self.spend_avail // 2))
 
 
-class TooManySigops(BadTxTemplate):
+class TooManySigopsPerBlock(BadTxTemplate):
     reject_reason = "bad-txns-too-many-sigops"
     block_reject_reason = "bad-blk-sigops, out-of-bounds SigOpCount"
     expect_disconnect = False
@@ -244,6 +248,20 @@ class TooManySigops(BadTxTemplate):
             self.spend_tx, 0,
             output_script=lotsa_checksigs,
             amount=1)
+
+
+class TooManySigopsPerTransaction(BadTxTemplate):
+    reject_reason = "bad-txns-too-many-sigops"
+    expect_disconnect = False
+    valid_in_block = True
+
+    def get_tx(self):
+        lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_STANDARD_TX_SIGOPS + 1))
+        return create_tx_with_script(
+            self.spend_tx, 0,
+            output_script=lotsa_checksigs,
+            amount=1)
+
 
 def getDisabledOpcodeTemplate(opcode):
     """ Creates disabled opcode tx template class"""
