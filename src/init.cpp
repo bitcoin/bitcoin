@@ -1201,7 +1201,7 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         }
     }
 
-    for ([[maybe_unused]] const auto& [param_name, unix, suffix_allowed] : std::vector<std::tuple<std::string, bool, bool>>{
+    for ([[maybe_unused]] const auto& [arg, unix, suffix_allowed] : std::vector<std::tuple<std::string, bool, bool>>{
         // arg name          UNIX socket support  =suffix allowed
         {"-i2psam",          false,               false},
         {"-onion",           true,                false},
@@ -1216,19 +1216,19 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         {"-zmqpubrawtx",     true,                false},
         {"-zmqpubsequence",  true,                false},
     }) {
-        for (const std::string& param_value : args.GetArgs(param_name)) {
+        for (const std::string& socket_addr : args.GetArgs(arg)) {
             const std::string param_value_hostport{
-                suffix_allowed ? param_value.substr(0, param_value.rfind('=')) : param_value};
+                suffix_allowed ? socket_addr.substr(0, socket_addr.rfind('=')) : socket_addr};
             std::string host_out;
             uint16_t port_out{0};
             if (!SplitHostPort(param_value_hostport, port_out, host_out)) {
 #ifdef HAVE_SOCKADDR_UN
                 // Allow unix domain sockets for some options e.g. unix:/some/file/path
-                if (!unix || !param_value.starts_with(ADDR_PREFIX_UNIX)) {
-                    return InitError(InvalidPortErrMsg(param_name, param_value));
+                if (!unix || !socket_addr.starts_with(ADDR_PREFIX_UNIX)) {
+                    return InitError(InvalidPortErrMsg(arg, socket_addr));
                 }
 #else
-                return InitError(InvalidPortErrMsg(param_name, param_value));
+                return InitError(InvalidPortErrMsg(arg, socket_addr));
 #endif
             }
         }
@@ -1584,17 +1584,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // Check for host lookup allowed before parsing any network related parameters
     fNameLookup = args.GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
+    Proxy onion_proxy;
+
     bool proxyRandomize = args.GetBoolArg("-proxyrandomize", DEFAULT_PROXYRANDOMIZE);
     // -proxy sets a proxy for outgoing network traffic, possibly per network.
     // -noproxy, -proxy=0 or -proxy="" can be used to remove the proxy setting, this is the default
     Proxy ipv4_proxy;
     Proxy ipv6_proxy;
-    Proxy onion_proxy;
     Proxy name_proxy;
     Proxy cjdns_proxy;
     for (const std::string& param_value : args.GetArgs("-proxy")) {
         const auto eq_pos{param_value.rfind('=')};
-        const std::string proxy_str{param_value.substr(0, eq_pos)}; // e.g. 127.0.0.1:9050=ipv4 -> 127.0.0.1:9050
+        const std::string proxyArg{param_value.substr(0, eq_pos)}; // e.g. 127.0.0.1:9050=ipv4 -> 127.0.0.1:9050
         std::string net_str;
         if (eq_pos != std::string::npos) {
             if (eq_pos + 1 == param_value.length()) {
@@ -1603,32 +1604,33 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             net_str = ToLower(param_value.substr(eq_pos + 1)); // e.g. 127.0.0.1:9050=ipv4 -> ipv4
         }
 
-        Proxy proxy;
-        if (!proxy_str.empty() && proxy_str != "0") {
-            if (IsUnixSocketPath(proxy_str)) {
-                proxy = Proxy{proxy_str, /*tor_stream_isolation=*/proxyRandomize};
-            } else {
-                const std::optional<CService> addr{Lookup(proxy_str, DEFAULT_TOR_SOCKS_PORT, fNameLookup)};
-                if (!addr.has_value()) {
-                    return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxy_str));
-                }
-                proxy = Proxy{addr.value(), /*tor_stream_isolation=*/proxyRandomize};
+        Proxy addrProxy;
+      if (!proxyArg.empty() && proxyArg != "0") {
+        if (IsUnixSocketPath(proxyArg)) {
+            addrProxy = Proxy(proxyArg, proxyRandomize);
+        } else {
+            const std::optional<CService> proxyAddr{Lookup(proxyArg, 9050, fNameLookup)};
+            if (!proxyAddr.has_value()) {
+                return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
             }
-            if (!proxy.IsValid()) {
-                return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxy_str));
-            }
+
+            addrProxy = Proxy(proxyAddr.value(), proxyRandomize);
         }
 
+        if (!addrProxy.IsValid())
+            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+      }
+
         if (net_str.empty()) { // For all networks.
-            ipv4_proxy = ipv6_proxy = name_proxy = cjdns_proxy = onion_proxy = proxy;
+            ipv4_proxy = ipv6_proxy = name_proxy = cjdns_proxy = onion_proxy = addrProxy;
         } else if (net_str == "ipv4") {
-            ipv4_proxy = name_proxy = proxy;
+            ipv4_proxy = name_proxy = addrProxy;
         } else if (net_str == "ipv6") {
-            ipv6_proxy = name_proxy = proxy;
+            ipv6_proxy = name_proxy = addrProxy;
         } else if (net_str == "tor" || net_str == "onion") {
-            onion_proxy = proxy;
+            onion_proxy = addrProxy;
         } else if (net_str == "cjdns") {
-            cjdns_proxy = proxy;
+            cjdns_proxy = addrProxy;
         } else {
             return InitError(strprintf(_("Unrecognized network in -proxy='%s': '%s'"), param_value, net_str));
         }
@@ -1664,7 +1666,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             if (IsUnixSocketPath(onionArg)) {
                 onion_proxy = Proxy(onionArg, proxyRandomize);
             } else {
-                const std::optional<CService> addr{Lookup(onionArg, DEFAULT_TOR_SOCKS_PORT, fNameLookup)};
+                const std::optional<CService> addr{Lookup(onionArg, 9050, fNameLookup)};
                 if (!addr.has_value() || !addr->IsValid()) {
                     return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
                 }
