@@ -272,7 +272,6 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         aux = bytes(32)
 
     assert len(key) == 32
-    assert len(msg) == 32
     assert len(aux) == 32
 
     sec = int.from_bytes(key, 'big')
