@@ -38,9 +38,6 @@
 /* Define if external signer support is enabled */
 #cmakedefine ENABLE_EXTERNAL_SIGNER 1
 
-/* Define this symbol to build code that uses SSE4.1 intrinsics */
-#cmakedefine ENABLE_SSE41 1
-
 /* Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing
    */
 #cmakedefine ENABLE_TRACING 1

@@ -170,7 +170,6 @@ if(NOT MSVC)
     " HAVE_SSE41
     CXXFLAGS ${SSE41_CXXFLAGS}
   )
-  set(ENABLE_SSE41 ${HAVE_SSE41})
 
   # Check for AVX2 intrinsics.
   set(AVX2_CXXFLAGS -mavx -mavx2)

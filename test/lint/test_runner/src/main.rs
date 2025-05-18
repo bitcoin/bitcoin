@@ -620,7 +620,6 @@ fn lint_includes_build_config() -> LintResult {
                     // these cppflags manually.
                     ":(exclude)src/crypto/sha256_arm_shani.cpp",
                     ":(exclude)src/crypto/sha256_avx2.cpp",
-                    ":(exclude)src/crypto/sha256_sse41.cpp",
                     ":(exclude)src/crypto/sha256_x86_shani.cpp",
                 ]),
         )
