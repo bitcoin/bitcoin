@@ -1635,4 +1635,212 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
 
     return true;
 }
+
+SilentPaymentDescriptorScriptPubKeyMan::SilentPaymentDescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
+    : DescriptorScriptPubKeyMan(storage, descriptor, 0)
+{
+    PopulateLabelTweaks();
+}
+
+void SilentPaymentDescriptorScriptPubKeyMan::PopulateLabelTweaks()
+{
+    LOCK(cs_desc_man);
+    if (m_wallet_descriptor.descriptor->GetOutputType() != OutputType::SILENT_PAYMENTS) {
+        throw std::runtime_error(std::string(__func__) + ": descriptor is not a Silent Payment Descriptor");
+    }
+    const auto provider{GetSPProvider()};
+
+    // Populate m_map_label_tweaks
+    auto change_label_data = bip352::CreateLabelTweak(provider.sp_keys.first, 0);
+    m_map_label_tweaks.insert(change_label_data);
+    for (int i = 1; i < m_wallet_descriptor.next_index; i++) {
+        // Add the other generated labelled destinations
+        m_map_label_tweaks.insert(bip352::CreateLabelTweak(provider.sp_keys.first, i));
+    }
+}
+
+bool SilentPaymentDescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
+{
+    if (!DescriptorScriptPubKeyMan::SetupDescriptorGeneration(batch, master_key, addr_type, internal)) return false;
+    PopulateLabelTweaks();
+    return true;
+}
+
+util::Result<CTxDestination> SilentPaymentDescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
+{
+    LOCK(cs_desc_man);
+    if (type != OutputType::SILENT_PAYMENTS) {
+        throw std::runtime_error(std::string(__func__) + ": Types are inconsistent. Requested Type is not Silent Payment");
+    }
+    const auto provider{GetSPProvider()};
+    V0SilentPaymentDestination main_dest;
+    main_dest.m_scan_pubkey = provider.sp_keys.first.GetPubKey();
+    main_dest.m_spend_pubkey = provider.sp_keys.second;
+    CTxDestination dest{main_dest};
+    return dest;
+}
+
+V0SilentPaymentDestination SilentPaymentDescriptorScriptPubKeyMan::GetLabeledDestination(uint64_t index)
+{
+    AssertLockHeld(cs_desc_man);
+
+    const auto provider{GetSPProvider()};
+    V0SilentPaymentDestination main_dest;
+    main_dest.m_scan_pubkey = provider.sp_keys.first.GetPubKey();
+    main_dest.m_spend_pubkey = provider.sp_keys.second;
+    // Generate label tweak
+    auto label_data = bip352::CreateLabelTweak(provider.sp_keys.first, index);
+    m_map_label_tweaks.insert(label_data);
+    V0SilentPaymentDestination label_dest = bip352::GenerateSilentPaymentLabeledAddress(main_dest, label_data.second);
+    return label_dest;
+}
+
+util::Result<CTxDestination> SilentPaymentDescriptorScriptPubKeyMan::GetNewLabeledDestination(uint64_t& index)
+{
+    LOCK(cs_desc_man);
+    auto dest = GetLabeledDestination(m_wallet_descriptor.next_index);
+    index = m_wallet_descriptor.next_index; // Return the index for this destination
+    m_wallet_descriptor.next_index++;
+    WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+    return CTxDestination{dest};
+}
+
+isminetype SilentPaymentDescriptorScriptPubKeyMan::IsMine(const CScript& script) const
+{
+    LOCK(cs_desc_man);
+
+    if (m_map_spk_tweaks.count(script) > 0) {
+        return ISMINE_SPENDABLE;
+    }
+    return ISMINE_NO;
+}
+
+isminetype SilentPaymentDescriptorScriptPubKeyMan::IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data)
+{
+    LOCK(cs_desc_man);
+    if (m_wallet_descriptor.descriptor->GetOutputType() != OutputType::SILENT_PAYMENTS) {
+        return ISMINE_NO;
+    }
+
+    const auto provider{GetSPProvider()};
+    auto tweaks{bip352::ScanForSilentPaymentOutputs(
+        provider.sp_keys.first, public_data, provider.sp_keys.second, output_keys, m_map_label_tweaks)};
+    if (!tweaks.has_value()) {
+        return ISMINE_NO;
+    }
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.TxnBegin()) {
+        throw std::runtime_error(strprintf("Error during descriptors tweak top up. Cannot start db transaction wallet %s", m_storage.GetDisplayName()));
+    }
+    for (const auto& tweak : *tweaks) {
+        if (!TopUpWithDB(batch, tweak.tweak)) {
+            throw std::runtime_error(std::string(__func__) + ": writing tweak failed");
+        }
+    }
+    if (!batch.TxnCommit()) {
+        throw std::runtime_error(strprintf("Error during descriptors tweak top up. Cannot commit changes for wallet %s", m_storage.GetDisplayName()));
+    }
+    return ISMINE_SPENDABLE;
+}
+
+util::Result<CTxDestination> SilentPaymentDescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index)
+{
+    LOCK(cs_desc_man);
+    // Destination at index 0 is the change destination
+    auto op_dest = GetLabeledDestination(0);
+    return CTxDestination{op_dest};
+}
+
+bool SilentPaymentDescriptorScriptPubKeyMan::TopUp(const uint256& tweak)
+{
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!batch.TxnBegin()) return false;
+    bool res = TopUpWithDB(batch, tweak);
+    if (!batch.TxnCommit()) throw std::runtime_error(strprintf("Error during descriptors tweak top up. Cannot commit changes for wallet %s", m_storage.GetDisplayName()));
+    return res;
+}
+
+bool SilentPaymentDescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, const uint256& tweak)
+{
+    LOCK(cs_desc_man);
+    assert(m_wallet_descriptor.descriptor->GetOutputType() == OutputType::SILENT_PAYMENTS); // Should only ever be called on silent payment descriptorspkman
+
+    const auto provider{GetSPProvider()};
+    CPubKey tweaked_pub{provider.sp_keys.second};
+    tweaked_pub.TweakAdd(tweak.data());
+    const auto spk = GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{tweaked_pub}});
+    m_map_spk_tweaks.emplace(spk, tweak);
+    m_storage.TopUpCallback({spk}, this);
+    return batch.WriteSilentPaymentsTweak(GetID(), tweak);
+}
+
+FlatSigningProvider SilentPaymentDescriptorScriptPubKeyMan::GetSPProvider() const
+{
+    AssertLockHeld(cs_desc_man);
+    FlatSigningProvider provider;
+    provider.keys = GetKeys();
+    FlatSigningProvider tmp;
+    m_wallet_descriptor.descriptor->ExpandPrivate(0, provider, tmp);
+    return tmp;
+}
+
+std::unique_ptr<FlatSigningProvider> SilentPaymentDescriptorScriptPubKeyMan::GetSigningProvider(const CScript& script, bool include_private) const
+{
+    LOCK(cs_desc_man);
+
+    std::unique_ptr<FlatSigningProvider> out_keys = std::make_unique<FlatSigningProvider>();
+    if (m_map_spk_tweaks.count(script) == 0) {
+        return out_keys;
+    }
+
+    const auto provider{GetSPProvider()};
+    const uint256& tweak{m_map_spk_tweaks.at(script)};
+    CPubKey tweaked_pubkey{provider.sp_keys.second};
+    tweaked_pubkey.TweakAdd(tweak.data());
+    out_keys->pubkeys.emplace(tweaked_pubkey.GetID(), tweaked_pubkey);
+
+    if (include_private) {
+        auto it{provider.keys.find(provider.sp_keys.second.GetID())};
+        if (it == provider.keys.end()) {
+            // We don't have spend private key
+            return out_keys;
+        }
+
+        auto spend_key{it->second};
+        spend_key.TweakAdd(tweak.data());
+        if (spend_key.IsValid()) {
+            assert(spend_key.GetPubKey() == tweaked_pubkey);
+            out_keys->keys.emplace(tweaked_pubkey.GetID(), spend_key);
+        }
+    }
+
+    return out_keys;
+}
+
+void SilentPaymentDescriptorScriptPubKeyMan::AddTweak(const uint256& tweak)
+{
+    LOCK(cs_desc_man);
+    const auto provider{GetSPProvider()};
+    CPubKey tweaked_pub{provider.sp_keys.second};
+    tweaked_pub.TweakAdd(tweak.data());
+    const auto spk = GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{tweaked_pub}});
+    m_map_spk_tweaks.emplace(spk, tweak);
+    m_storage.TopUpCallback({spk}, this);
+}
+
+std::vector<WalletDestination> SilentPaymentDescriptorScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
+{
+    // The wallet normally maintains a cache of unused destinations/addresses
+    // MarkUnusedAddresses is supposed to return the destinations for the given scriptPubKey
+    // so the wallet can mark these destinations as used in it's AddresBook
+    // This concept does not apply Silent Payments as there is no cache of unused destinations/addresses
+    // Still, we must subclass this because the original method tries to expand the descriptor which will result in an error for SP descriptors
+    return {};
+}
+
+unsigned int SilentPaymentDescriptorScriptPubKeyMan::GetKeyPoolSize() const
+{
+    return 0;
+}
+
 } // namespace wallet

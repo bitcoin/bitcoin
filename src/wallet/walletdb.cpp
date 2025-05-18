@@ -51,6 +51,7 @@ const std::string ORDERPOSNEXT{"orderposnext"};
 const std::string POOL{"pool"};
 const std::string PURPOSE{"purpose"};
 const std::string SETTINGS{"settings"};
+const std::string SPTWEAK{"sptweak"};
 const std::string TX{"tx"};
 const std::string VERSION{"version"};
 const std::string WALLETDESCRIPTOR{"walletdescriptor"};
@@ -87,6 +88,11 @@ bool WalletBatch::WritePurpose(const std::string& strAddress, const std::string&
 bool WalletBatch::ErasePurpose(const std::string& strAddress)
 {
     return EraseIC(std::make_pair(DBKeys::PURPOSE, strAddress));
+}
+
+bool WalletBatch::WriteSilentPaymentsTweak(const uint256& id, const uint256& tweak)
+{
+    return WriteIC(std::make_pair(DBKeys::SPTWEAK, std::make_pair(id, Hash(tweak))), tweak);
 }
 
 bool WalletBatch::WriteTx(const CWalletTx& wtx)
@@ -931,6 +937,25 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         });
         result = std::max(result, ckey_res.m_result);
         num_ckeys = ckey_res.m_records;
+
+        // Load silent payments tweaks
+        SilentPaymentDescriptorScriptPubKeyMan* sp_spk_man = dynamic_cast<SilentPaymentDescriptorScriptPubKeyMan*>(spk_man);
+        prefix = PrefixStream(DBKeys::SPTWEAK, id);
+        LoadResult tweaks_res = LoadRecords(pwallet, batch, DBKeys::SPTWEAK, prefix,
+            [&id, &sp_spk_man](CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+            uint256 spkm_id;
+            key >> spkm_id;
+            assert(spkm_id == id);
+
+            uint256 tweak;
+            value >> tweak;
+
+            assert(sp_spk_man != nullptr); // Only SP DescriptorScriptPubKeyMan should have tweaks stored
+            sp_spk_man->AddTweak(tweak);
+
+            return DBErrors::LOAD_OK;
+        });
+        result = std::max(result, tweaks_res.m_result);
 
         return result;
     });
