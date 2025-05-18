@@ -767,6 +767,11 @@ public:
     void ForEachAddrBookEntry(const ListAddrBookFunc& func) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
+     * Determines if a destination is in the active spkm (not imported and not dumped for a new keypool)
+     */
+    [[nodiscard]] bool IsDestinationActive(const CTxDestination& dest) const;
+
+    /**
      * Marks all outputs in each one of the destinations dirty, so their cache is
      * reset and does not return outdated information.
      */
