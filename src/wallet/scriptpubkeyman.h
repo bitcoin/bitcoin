@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
 #include <addresstype.h>
+#include <common/bip352.h>
 #include <common/messages.h>
 #include <common/signmessage.h>
 #include <common/types.h>
@@ -311,20 +312,20 @@ private:
 
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
-    KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
-
     // Cached FlatSigningProviders to avoid regenerating them each time they are needed.
     mutable std::map<int32_t, FlatSigningProvider> m_map_signing_providers;
     // Fetch the SigningProvider for the given script and optionally include private keys
-    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CScript& script, bool include_private = false) const;
+    virtual std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CScript& script, bool include_private = false) const;
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
 protected:
     WalletDescriptor m_wallet_descriptor GUARDED_BY(cs_desc_man);
 
+    KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
     //! Same as 'TopUp' but designed for use within a batch transaction context
-    bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
+    virtual bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0);
 
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
@@ -359,7 +360,7 @@ public:
     bool IsHDEnabled() const override;
 
     //! Setup descriptors based on the given CExtkey
-    bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
+    virtual bool SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
 
     bool HavePrivateKeys() const override;
     bool HasPrivKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -409,6 +410,48 @@ public:
     [[nodiscard]] bool GetDescriptorString(std::string& out, const bool priv) const;
 
     void UpgradeDescriptorCache();
+};
+
+class SilentPaymentDescriptorScriptPubKeyMan : public DescriptorScriptPubKeyMan
+{
+private:
+    using TweakMap = std::unordered_map<CScript, uint256, SaltedSipHasher>;
+    using ChangeLabelTweak = std::pair<CPubKey, uint256>;
+
+    TweakMap m_map_spk_tweaks GUARDED_BY(cs_desc_man);
+    ChangeLabelTweak m_change_label_tweak GUARDED_BY(cs_desc_man);
+    CKey m_scan_key GUARDED_BY(cs_desc_man);
+    CPubKey m_spend_pubkey GUARDED_BY(cs_desc_man);
+
+    // Adds a tweak to m_map_spk_tweaks and writes to provided batch
+    bool AddOutputWithDB(WalletBatch& batch, const bip352::SilentPaymentOutput& output);
+
+    std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CScript& script, bool include_private = false) const override;
+
+public:
+    SilentPaymentDescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
+        : DescriptorScriptPubKeyMan(storage, descriptor, 0)
+    {}
+
+    SilentPaymentDescriptorScriptPubKeyMan(WalletStorage& storage)
+        : DescriptorScriptPubKeyMan(storage, 0)
+    {}
+
+    util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
+    util::Result<CTxDestination> GetReservedDestination(const OutputType type, bool internal, int64_t& index) override;
+    bool CanGetAddresses(bool internal) const override { return true; }
+
+    bool IsMine(const CScript& script) const override;
+    bool IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PrevoutsSummary& prevouts_summary);
+
+    bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0) override;
+
+    //! Add tweak into m_map_spk_tweaks without saving to DB
+    void LoadOutput(const bip352::SilentPaymentOutput& output);
+
+    std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
+
+    unsigned int GetKeyPoolSize() const override;
 };
 
 /** struct containing information needed for migrating legacy wallets to descriptor wallets */
