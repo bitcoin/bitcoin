@@ -46,13 +46,15 @@ WalletFeature GetClosestWalletFeature(int version)
     return static_cast<WalletFeature>(0);
 }
 
-WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& addr_type, bool internal)
+WalletDescriptor GenerateWalletDescriptor(const CExtKey& master_key, const OutputType& addr_type, bool internal, std::vector<CKey>& out_keys)
 {
     int64_t creation_time = GetTime();
 
-    std::string xpub = EncodeExtPubKey(master_key);
+    std::string xpriv = EncodeExtKey(master_key);
+    std::string xpub = EncodeExtPubKey(master_key.Neuter());
 
     // Build descriptor string
+    std::string desc_str;
     std::string desc_prefix;
     std::string desc_suffix = "/*)";
     switch (addr_type) {
@@ -73,28 +75,41 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
         desc_prefix = "tr(" + xpub + "/86h";
         break;
     }
+    case OutputType::SILENT_PAYMENTS: {
+        // The actual scan and spend keys will be derived from these XPRIVs
+        // The actual XPRIV and the spend key will not be retained in the descriptor,
+        // but the scan key will be.
+        desc_str = "sp(" + xpriv + "/352h/0h/0h/1h/0," + xpriv + "/352h/0h/0h/0h/0)";
+        break;
+    }
     case OutputType::UNKNOWN: {
         // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
         // so if we get to this point something is wrong
         assert(false);
     }
     } // no default case, so the compiler can warn about missing cases
-    assert(!desc_prefix.empty());
+    assert(!desc_str.empty() || !desc_prefix.empty());
 
-    // Mainnet derives at 0', testnet and regtest derive at 1'
-    if (Params().IsTestChain()) {
-        desc_prefix += "/1h";
-    } else {
-        desc_prefix += "/0h";
+    if (desc_str.empty()) {
+        // Mainnet derives at 0', testnet and regtest derive at 1'
+        if (Params().IsTestChain()) {
+            desc_prefix += "/1h";
+        } else {
+            desc_prefix += "/0h";
+        }
+
+        std::string internal_path = internal ? "/1" : "/0";
+        desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
     }
-
-    std::string internal_path = internal ? "/1" : "/0";
-    std::string desc_str = desc_prefix + "/0h" + internal_path + desc_suffix;
 
     // Make the descriptor
     FlatSigningProvider keys;
     std::string error;
     std::vector<std::unique_ptr<Descriptor>> desc = Parse(desc_str, keys, error, false);
+    for (auto& key : keys.keys) {
+        out_keys.push_back(std::move(key.second));
+    }
+    assert(addr_type != OutputType::SILENT_PAYMENTS || out_keys.size() == 1);
     WalletDescriptor w_desc(std::move(desc.at(0)), creation_time, 0, 0, 0);
     return w_desc;
 }
