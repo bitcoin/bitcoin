@@ -901,8 +901,8 @@ static UniValue TemplateToJSON(const Consensus::Params& consensusParams, const C
 
     UniValue transactions(UniValue::VARR);
     std::map<uint256, int64_t> setTxIndex;
-    std::vector<CAmount> tx_fees{block_template->getTxFees()};
-    std::vector<CAmount> tx_sigops{block_template->getTxSigops()};
+    const std::vector<CAmount>& tx_fees{block_template->getTxFees()};
+    const std::vector<CAmount>& tx_sigops{block_template->getTxSigops()};
 
     int i = 0;
     for (const auto& it : block.vtx) {
