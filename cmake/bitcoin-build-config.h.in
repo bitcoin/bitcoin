@@ -29,9 +29,6 @@
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
-/* Define this symbol to build code that uses ARMv8 SHA-NI intrinsics */
-#cmakedefine ENABLE_ARM_SHANI 1
-
 /* Define if external signer support is enabled */
 #cmakedefine ENABLE_EXTERNAL_SIGNER 1
 
