@@ -166,7 +166,8 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, 'descriptors argument must be set to "true"; it is no longer possible to create a legacy wallet.', self.nodes[0].createwallet, wallet_name="legacy", descriptors=False)
 
         self.log.info("Check that the version number is being logged correctly")
-        node.createwallet("version_check")
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Last client version = ", "Wallet file version = "]):
+            node.createwallet("version_check")
         wallet = node.get_wallet_rpc("version_check")
         wallet_version = wallet.getwalletinfo()["walletversion"]
         client_version = node.getnetworkinfo()["version"]
