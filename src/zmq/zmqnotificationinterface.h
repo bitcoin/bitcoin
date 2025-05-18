@@ -1,9 +1,9 @@
-// Copyright (c) 2015-present The Bitcoin Core developers
+// Copyright (c) 2015-present The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
-#define BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
+#ifndef TORTOISECOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
+#define TORTOISECOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 
 #include <primitives/transaction.h>
 #include <validationinterface.h>
@@ -48,4 +48,4 @@ private:
 
 extern std::unique_ptr<CZMQNotificationInterface> g_zmq_notification_interface;
 
-#endif // BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
+#endif // TORTOISECOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H

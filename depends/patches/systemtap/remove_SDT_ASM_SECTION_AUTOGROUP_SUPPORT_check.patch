@@ -3,7 +3,7 @@ Remove _SDT_ASM_SECTION_AUTOGROUP_SUPPORT check
 We assume that the assembler supports "?" in .pushsection directives.
 This enables us to skip configure and make.
 
-See https://github.com/bitcoin/bitcoin/issues/23297.
+See https://github.com/tortoisecoin/tortoisecoin/issues/23297.
 
 diff --git a/includes/sys/sdt.h b/includes/sys/sdt.h
 index ca0162b..f96e0ee 100644

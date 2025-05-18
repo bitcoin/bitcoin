@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
@@ -17,7 +17,7 @@ from test_framework.address import (
 from test_framework.bdb import BTREE_MAGIC
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.messages import COIN, CTransaction, CTxOut
 from test_framework.script_util import key_to_p2pkh_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
@@ -30,7 +30,7 @@ from test_framework.wallet_util import (
 )
 
 
-class WalletMigrationTest(BitcoinTestFramework):
+class WalletMigrationTest(TortoisecoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

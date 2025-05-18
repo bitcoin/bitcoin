@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -24,7 +24,7 @@ from test_framework.p2p import (
     P2PInterface,
     p2p_lock,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -56,7 +56,7 @@ NUM_INBOUND = 10
 MAX_GETDATA_INBOUND_WAIT = GETDATA_TX_INTERVAL + INBOUND_PEER_TX_DELAY + TXID_RELAY_DELAY
 
 
-class TxDownloadTest(BitcoinTestFramework):
+class TxDownloadTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args= [['-datacarriersize=100000', '-maxmempool=5', '-persistmempool=0']] * self.num_nodes
@@ -284,7 +284,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.test_large_inv_batch()
         self.test_spurious_notfound()
 
-        # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when
+        # Run each test against new tortoisecoind instances, as setting mocktimes has long-term effects on when
         # the next trickle relay event happens.
         for test, with_inbounds in [
             (self.test_in_flight_max, True),

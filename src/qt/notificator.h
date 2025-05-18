@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_NOTIFICATOR_H
-#define BITCOIN_QT_NOTIFICATOR_H
+#ifndef TORTOISECOIN_QT_NOTIFICATOR_H
+#define TORTOISECOIN_QT_NOTIFICATOR_H
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/tortoisecoin-config.h> // IWYU pragma: keep
 
 #include <QIcon>
 #include <QObject>
@@ -72,4 +72,4 @@ private:
 #endif
 };
 
-#endif // BITCOIN_QT_NOTIFICATOR_H
+#endif // TORTOISECOIN_QT_NOTIFICATOR_H

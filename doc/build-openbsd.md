@@ -2,7 +2,7 @@
 
 **Updated for OpenBSD [7.5](https://www.openbsd.org/75.html)**
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on OpenBSD.
+This guide describes how to build tortoisecoind, command-line utilities, and GUI on OpenBSD.
 
 ## Preparation
 
@@ -17,17 +17,17 @@ pkg_add autoconf automake python
 
 See [dependencies.md](dependencies.md) for a complete overview.
 
-### 2. Clone Bitcoin Repo
-Clone the Bitcoin Core repository to a directory. All build scripts and commands will run from this directory.
+### 2. Clone Tortoisecoin Repo
+Clone the Tortoisecoin Core repository to a directory. All build scripts and commands will run from this directory.
 ``` bash
-git clone https://github.com/bitcoin/bitcoin.git
+git clone https://github.com/tortoisecoin/tortoisecoin.git
 ```
 
 ### 3. Install Optional Dependencies
 
 #### Wallet Dependencies
 
-It is not necessary to build wallet functionality to run either `bitcoind` or `bitcoin-qt`.
+It is not necessary to build wallet functionality to run either `tortoisecoind` or `tortoisecoin-qt`.
 
 ###### Descriptor Wallet Support
 
@@ -48,19 +48,19 @@ Refer to [depends/README.md](/depends/README.md) for detailed instructions.
 ```bash
 gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_NATPMP=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
 ...
-to: /path/to/bitcoin/depends/x86_64-unknown-openbsd
+to: /path/to/tortoisecoin/depends/x86_64-unknown-openbsd
 ```
 
 Then set `BDB_PREFIX`:
 
 ```bash
-export BDB_PREFIX="/path/to/bitcoin/depends/x86_64-unknown-openbsd"
+export BDB_PREFIX="/path/to/tortoisecoin/depends/x86_64-unknown-openbsd"
 ```
 
 #### GUI Dependencies
 ###### Qt5
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, Qt 5 is required.
+Tortoisecoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, Qt 5 is required.
 
 ```bash
 pkg_add qtbase qttools
@@ -77,12 +77,12 @@ pkg_add libqrencode
 #### Notifications
 ###### ZeroMQ
 
-Bitcoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
+Tortoisecoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
 ```bash
 pkg_add zeromq
 ```
 
-## Building Bitcoin Core
+## Building Tortoisecoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error).
 
@@ -98,7 +98,7 @@ export AUTOMAKE_VERSION=1.16
 
 ### 1. Configuration
 
-There are many ways to configure Bitcoin Core, here are a few common examples:
+There are many ways to configure Tortoisecoin Core, here are a few common examples:
 
 ##### Descriptor Wallet and GUI:
 This enables the GUI and descriptor wallet support, assuming `sqlite` and `qt5` are installed.
@@ -136,7 +136,7 @@ data(kbytes)         1572864
 ```
 
 This is, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
-(see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
+(see issue [#6658](https://github.com/tortoisecoin/tortoisecoin/issues/6658)).
 If your user is in the `staff` group the limit can be raised with:
 ```bash
 ulimit -d 3000000

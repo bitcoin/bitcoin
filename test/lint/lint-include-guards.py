@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,10 +15,10 @@ from subprocess import check_output
 from lint_ignore_dirs import SHARED_EXCLUDED_SUBTREES
 
 
-HEADER_ID_PREFIX = 'BITCOIN_'
+HEADER_ID_PREFIX = 'TORTOISECOIN_'
 HEADER_ID_SUFFIX = '_H'
 
-EXCLUDE_FILES_WITH_PREFIX = ['contrib/devtools/bitcoin-tidy',
+EXCLUDE_FILES_WITH_PREFIX = ['contrib/devtools/tortoisecoin-tidy',
                              'src/crypto/ctaes',
                              'src/tinyformat.h',
                              'src/bench/nanobench.h',
@@ -44,7 +44,7 @@ def _get_header_id(header_file: str) -> str:
     """ Helper function to get the header id from a header file
         string.
 
-        eg: 'src/wallet/walletdb.h' -> 'BITCOIN_WALLET_WALLETDB_H'
+        eg: 'src/wallet/walletdb.h' -> 'TORTOISECOIN_WALLET_WALLETDB_H'
 
     Args:
         header_file: Filepath to header file.

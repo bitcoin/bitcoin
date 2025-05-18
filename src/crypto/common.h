@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2020 The Bitcoin Core developers
+// Copyright (c) 2014-2020 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_COMMON_H
-#define BITCOIN_CRYPTO_COMMON_H
+#ifndef TORTOISECOIN_CRYPTO_COMMON_H
+#define TORTOISECOIN_CRYPTO_COMMON_H
 
 #include <compat/endian.h>
 
@@ -82,4 +82,4 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
     memcpy(ptr, &v, 8);
 }
 
-#endif // BITCOIN_CRYPTO_COMMON_H
+#endif // TORTOISECOIN_CRYPTO_COMMON_H

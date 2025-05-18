@@ -1,28 +1,28 @@
-Bitcoin Core version 0.13.2 is now available from:
+Tortoisecoin Core version 0.13.2 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.13.2/>
+  <https://tortoisecoin.org/bin/tortoisecoin-core-0.13.2/>
 
 This is a new minor version release, including various bugfixes and
 performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tortoisecoin/tortoisecoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://tortoisecoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
 
 Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
 an OS initially released in 2001. This means that not even critical security
-updates will be released anymore. Without security updates, using a bitcoin
+updates will be released anymore. Without security updates, using a tortoisecoin
 wallet on a XP machine is irresponsible at least.
 
-In addition to that, with 0.12.x there have been varied reports of Bitcoin Core
-randomly crashing on Windows XP. It is [not clear](https://github.com/bitcoin/bitcoin/issues/7681#issuecomment-217439891)
+In addition to that, with 0.12.x there have been varied reports of Tortoisecoin Core
+randomly crashing on Windows XP. It is [not clear](https://github.com/tortoisecoin/tortoisecoin/issues/7681#issuecomment-217439891)
 what the source of these crashes is, but it is likely that upstream
 libraries such as Qt are no longer being tested on XP.
 
@@ -111,7 +111,7 @@ git merge commit are mentioned.
 - #8972 `6f86b53` Make warnings label selectable (jonasschnelli) (MarcoFalke)
 - #9185 `6d70a73` Fix coincontrol sort issue (jonasschnelli)
 - #9094 `5f3a12c` Use correct conversion function for boost::path datadir (laanwj)
-- #8908 `4a974b2` Update bitcoin-qt.desktop (s-matthew-english)
+- #8908 `4a974b2` Update tortoisecoin-qt.desktop (s-matthew-english)
 - #9190 `dc46b10` Plug many memory leaks (laanwj)
 
 ### Wallet
@@ -134,7 +134,7 @@ git merge commit are mentioned.
 - #8838 `094848b` Calculate size and weight of block correctly in CreateNewBlock() (jnewbery)
 - #8920 `40169dc` Set minimum required Boost to 1.47.0 (fanquake)
 - #9251 `a710a43` Improvement of documentation of command line parameter 'whitelist' (wodry)
-- #8932 `106da69` Allow bitcoin-tx to create v2 transactions (btcdrak)
+- #8932 `106da69` Allow tortoisecoin-tx to create v2 transactions (btcdrak)
 - #8929 `12428b4` add software-properties-common (sigwo)
 - #9120 `08d1c90` bug: Missed one "return false" in recent refactoring in #9067 (UdjinM6)
 - #9067 `f85ee01` Fix exit codes (UdjinM6)
@@ -175,4 +175,4 @@ Thanks to everyone who directly contributed to this release:
 - Wladimir J. van der Laan
 - wodry
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/tortoisecoin/).

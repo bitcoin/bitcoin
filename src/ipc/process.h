@@ -1,9 +1,9 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_IPC_PROCESS_H
-#define BITCOIN_IPC_PROCESS_H
+#ifndef TORTOISECOIN_IPC_PROCESS_H
+#define TORTOISECOIN_IPC_PROCESS_H
 
 #include <util/fs.h>
 
@@ -13,7 +13,7 @@
 namespace ipc {
 class Protocol;
 
-//! IPC process interface for spawning bitcoin processes and serving requests
+//! IPC process interface for spawning tortoisecoin processes and serving requests
 //! in processes that have been spawned.
 //!
 //! There will be different implementations of this interface depending on the
@@ -41,4 +41,4 @@ public:
 std::unique_ptr<Process> MakeProcess();
 } // namespace ipc
 
-#endif // BITCOIN_IPC_PROCESS_H
+#endif // TORTOISECOIN_IPC_PROCESS_H

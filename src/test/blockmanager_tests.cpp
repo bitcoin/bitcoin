@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
     // now simulate what happens after reindex for the first new block processed
     // the actual block contents don't matter, just that it's a block.
     // verify that the write position is at offset 0x12d.
-    // this is a check to make sure that https://github.com/bitcoin/bitcoin/issues/21379 does not recur
+    // this is a check to make sure that https://github.com/tortoisecoin/tortoisecoin/issues/21379 does not recur
     // 8 bytes (for serialization header) + 285 (for serialized genesis block) = 293
     // add another 8 bytes for the second block's serialization header and we get 293 + 8 = 301
     FlatFilePos actual{blockman.SaveBlockToDisk(params->GenesisBlock(), 1)};

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test datacarrier functionality"""
@@ -11,7 +11,7 @@ from test_framework.script import (
     CScript,
     OP_RETURN,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.test_node import TestNode
 from test_framework.util import assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
@@ -19,7 +19,7 @@ from test_framework.wallet import MiniWallet
 from random import randbytes
 
 
-class DataCarrierTest(BitcoinTestFramework):
+class DataCarrierTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.extra_args = [

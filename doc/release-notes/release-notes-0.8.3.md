@@ -1,11 +1,11 @@
-Bitcoin-Qt version 0.8.3 is now available from:
-  http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.8.3/
+Tortoisecoin-Qt version 0.8.3 is now available from:
+  http://sourceforge.net/projects/tortoisecoin/files/Tortoisecoin/tortoisecoin-0.8.3/
 
 This is a maintenance release to fix a denial-of-service attack that
 can cause nodes to crash.
 
 Please report bugs using the issue tracker at github:
-  https://github.com/bitcoin/bitcoin/issues
+  https://github.com/tortoisecoin/tortoisecoin/issues
 
 0.8.3 Release notes
 

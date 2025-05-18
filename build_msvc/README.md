@@ -1,13 +1,13 @@
-Building Bitcoin Core with Visual Studio
+Building Tortoisecoin Core with Visual Studio
 ========================================
 
 Introduction
 ---------------------
-Visual Studio 2022 is minimum required to build Bitcoin Core.
+Visual Studio 2022 is minimum required to build Tortoisecoin Core.
 
 Solution and project files to build with `msbuild` or Visual Studio can be found in the `build_msvc` directory.
 
-To build Bitcoin Core from the command-line, it is sufficient to only install the [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) component.
+To build Tortoisecoin Core from the command-line, it is sufficient to only install the [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) component.
 
 The "Desktop development with C++" workload must be installed as well.
 
@@ -30,7 +30,7 @@ Add-Content -Path "vcpkg\triplets\x64-windows-static.cmake" -Value "set(VCPKG_BU
 
 Qt
 ---------------------
-To build Bitcoin Core with the GUI, a static build of Qt is required.
+To build Tortoisecoin Core with the GUI, a static build of Qt is required.
 
 1. Download a single ZIP archive of Qt source code from https://download.qt.io/official_releases/qt/ (e.g., [`qt-everywhere-opensource-src-5.15.11.zip`](https://download.qt.io/official_releases/qt/5.15/5.15.11/single/qt-everywhere-opensource-src-5.15.11.zip)), and expand it into a dedicated folder. The following instructions assume that this folder is `C:\dev\qt-source`.
 
@@ -48,7 +48,7 @@ nmake install
 
 One could speed up building with [`jom`](https://wiki.qt.io/Jom), a replacement for `nmake` which makes use of all CPU cores.
 
-To build Bitcoin Core without Qt, unload or disable the `bitcoin-qt`, `libbitcoin_qt` and `test_bitcoin-qt` projects.
+To build Tortoisecoin Core without Qt, unload or disable the `tortoisecoin-qt`, `libtortoisecoin_qt` and `test_tortoisecoin-qt` projects.
 
 
 Building
@@ -64,19 +64,19 @@ python build_msvc\msvc-autogen.py
 3. To build from the command-line with the Visual Studio toolchain use:
 
 ```cmd
-msbuild build_msvc\bitcoin.sln -property:Configuration=Release -maxCpuCount -verbosity:minimal
+msbuild build_msvc\tortoisecoin.sln -property:Configuration=Release -maxCpuCount -verbosity:minimal
 ```
 
-Alternatively, open the `build_msvc/bitcoin.sln` file in Visual Studio.
+Alternatively, open the `build_msvc/tortoisecoin.sln` file in Visual Studio.
 
 Security
 ---------------------
-[Base address randomization](https://learn.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization) is used to make Bitcoin Core more secure. When building Bitcoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
+[Base address randomization](https://learn.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization) is used to make Tortoisecoin Core more secure. When building Tortoisecoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
 
-To check if `bitcoind` has `RandomizedBaseAddress` enabled or disabled run
+To check if `tortoisecoind` has `RandomizedBaseAddress` enabled or disabled run
 
 ```
-.\dumpbin.exe /headers src/bitcoind.exe
+.\dumpbin.exe /headers src/tortoisecoind.exe
 ```
 
 If is it enabled then in the output `Dynamic base` will be listed in the `DLL characteristics` under `OPTIONAL HEADER VALUES` as shown below

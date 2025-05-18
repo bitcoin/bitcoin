@@ -1,22 +1,22 @@
-Bitcoin Core version 0.14.0 is now available from:
+Tortoisecoin Core version 0.14.0 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.14.0/>
+  <https://tortoisecoin.org/bin/tortoisecoin-core-0.14.0/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tortoisecoin/tortoisecoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://tortoisecoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+Tortoisecoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later.
 
 Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
@@ -24,7 +24,7 @@ No attempt is made to prevent installing or running the software on Windows XP, 
 can still do so at your own risk but be aware that there are known instabilities and issues.
 Please do not report issues about Windows XP to the issue tracker.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+Tortoisecoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes
@@ -55,7 +55,7 @@ improved, leading to much shorter sync and initial block download times.
 Manual Pruning
 --------------
 
-Bitcoin Core has supported automatically pruning the blockchain since 0.11. Pruning
+Tortoisecoin Core has supported automatically pruning the blockchain since 0.11. Pruning
 the blockchain allows for significant storage space savings as the vast majority of
 the downloaded data can be discarded after processing so very little of it remains
 on the disk.
@@ -96,7 +96,7 @@ ZMQ On Windows
 
 Previously the ZeroMQ notification system was unavailable on Windows
 due to various issues with ZMQ. These have been fixed upstream and
-now ZMQ can be used on Windows. Please see [this document](https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md) for
+now ZMQ can be used on Windows. Please see [this document](https://github.com/tortoisecoin/tortoisecoin/blob/master/doc/zmq.md) for
 help with using ZMQ in general.
 
 Nested RPC Commands in Debug Console
@@ -129,7 +129,7 @@ the same thing as the GUI icon. The command takes one boolean parameter,
 Out-of-sync Modal Info Layer
 ----------------------------
 
-When Bitcoin Core is out-of-sync on startup, a semi-transparent information
+When Tortoisecoin Core is out-of-sync on startup, a semi-transparent information
 layer will be shown over top of the normal display. This layer contains
 details about the current sync progress and estimates the amount of time
 remaining to finish syncing. This layer can also be hidden and subsequently
@@ -138,19 +138,19 @@ unhidden by clicking on the progress bar at the bottom of the window.
 Support for JSON-RPC Named Arguments
 ------------------------------------
 
-Commands sent over the JSON-RPC interface and through the `bitcoin-cli` binary
+Commands sent over the JSON-RPC interface and through the `tortoisecoin-cli` binary
 can now use named arguments. This follows the [JSON-RPC specification](http://www.jsonrpc.org/specification)
 for passing parameters by-name with an object.
 
-`bitcoin-cli` has been updated to support this by parsing `name=value` arguments
+`tortoisecoin-cli` has been updated to support this by parsing `name=value` arguments
 when the `-named` option is given.
 
 Some examples:
 
-    src/bitcoin-cli -named help command="help"
-    src/bitcoin-cli -named getblockhash height=0
-    src/bitcoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
-    src/bitcoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
+    src/tortoisecoin-cli -named help command="help"
+    src/tortoisecoin-cli -named getblockhash height=0
+    src/tortoisecoin-cli -named getblock blockhash=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+    src/tortoisecoin-cli -named sendtoaddress address="(snip)" amount="1.0" subtractfeefromamount=true
 
 The order of arguments doesn't matter in this case. Named arguments are also
 useful to leave out arguments that should stay at their default value. The
@@ -189,7 +189,7 @@ commands such as `prioritisetransaction` so that those changes will not be lost.
 Final Alert
 -----------
 
-The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Bitcoin Core 0.12.1 and removed in 0.13.0. 
+The Alert System was [disabled and deprecated](https://tortoisecoin.org/en/alert/2016-11-01-alert-retirement) in Tortoisecoin Core 0.12.1 and removed in 0.13.0. 
 The Alert System was retired with a maximum sequence final alert which causes any nodes
 supporting the Alert System to display a static hard-coded "Alert Key Compromised" message which also
 prevents any other alerts from overriding it. This final alert is hard-coded into this release
@@ -241,8 +241,8 @@ Low-level RPC changes
    the mempool or if `txindex` is enabled.
 
  - A new RPC command `getmemoryinfo` has been added which will return information
-   about the memory usage of Bitcoin Core. This was added in conjunction with
-   optimizations to memory management. See [Pull #8753](https://github.com/bitcoin/bitcoin/pull/8753)
+   about the memory usage of Tortoisecoin Core. This was added in conjunction with
+   optimizations to memory management. See [Pull #8753](https://github.com/tortoisecoin/tortoisecoin/pull/8753)
    for more information.
 
  - A new RPC command `bumpfee` has been added which allows replacing an
@@ -367,7 +367,7 @@ and git merge commit are mentioned.
 - #8421 `b77bb95` httpserver: drop boost dependency (theuni)
 - #8638 `f061415` rest.cpp: change `HTTP_INTERNAL_SERVER_ERROR` to `HTTP_BAD_REQUEST` (djpnewton)
 - #8272 `91990ee` Make the dummy argument to getaddednodeinfo optional (sipa)
-- #8722 `bb843ad` bitcoin-cli: More detailed error reporting (laanwj)
+- #8722 `bb843ad` tortoisecoin-cli: More detailed error reporting (laanwj)
 - #6996 `7f71a3c` Add preciousblock RPC (sipa)
 - #8788 `97c7f73` Give RPC commands more information about the RPC request (jonasschnelli)
 - #7948 `5d2c8e5` Augment getblockchaininfo bip9\_softforks data (mruddy)
@@ -626,14 +626,14 @@ and git merge commit are mentioned.
 - #8680 `666eaf0` Address Travis spurious failures (theuni)
 - #8789 `e31a43c` pull-tester: Only print output when failed (MarcoFalke)
 - #8810 `14e8f99` tests: Add exception error message for JSONRPCException (laanwj)
-- #8830 `ef0801b` test: Add option to run bitcoin-util-test.py manually (jnewbery)
-- #8881 `e66cc1d` Add some verbose logging to bitcoin-util-test.py (jnewbery)
+- #8830 `ef0801b` test: Add option to run tortoisecoin-util-test.py manually (jnewbery)
+- #8881 `e66cc1d` Add some verbose logging to tortoisecoin-util-test.py (jnewbery)
 - #8922 `0329511` Send segwit-encoded blocktxn messages in p2p-compactblocks (TheBlueMatt)
 - #8873 `74dc388` Add microbenchmarks to profile more code paths (ryanofsky)
 - #9032 `6a8be7b` test: Add format-dependent comparison to bctest (laanwj)
-- #9023 `774db92` Add logging to bitcoin-util-test.py (jnewbery)
+- #9023 `774db92` Add logging to tortoisecoin-util-test.py (jnewbery)
 - #9065 `c9bdf9a` Merge `doc/unit-tests.md` into `src/test/README.md` (laanwj)
-- #9069 `ed64bce` Clean up bctest.py and bitcoin-util-test.py (jnewbery)
+- #9069 `ed64bce` Clean up bctest.py and tortoisecoin-util-test.py (jnewbery)
 - #9095 `b8f43e3` test: Fix test\_random includes (MarcoFalke)
 - #8894 `faec09b` Testing: Include fRelay in mininode version messages (jnewbery)
 - #9097 `e536499` Rework `sync_*` and preciousblock.py (MarcoFalke)
@@ -665,7 +665,7 @@ and git merge commit are mentioned.
 - #9628 `f895023` Increase a sync\_blocks timeout in pruning.py (sdaftuar)
 - #9638 `a7ea2f8` Actually test assertions in pruning.py (MarcoFalke)
 - #9647 `e99f0d7` Skip RAII event tests if libevent is built without `event_set_mem_functions` (luke-jr)
-- #9691 `fc67cd2` Init ECC context for `test_bitcoin_fuzzy` (gmaxwell)
+- #9691 `fc67cd2` Init ECC context for `test_tortoisecoin_fuzzy` (gmaxwell)
 - #9712 `d304fef` bench: Fix initialization order in registration (laanwj)
 - #9707 `b860915` Fix RPC failure testing (jnewbery)
 - #9269 `43e8150` Align struct COrphan definition (sipa)
@@ -711,25 +711,25 @@ and git merge commit are mentioned.
 - #8965 `23e03f8` Mention that PPA doesn't support Debian (anduck)
 - #9115 `bfc7aad` Mention reporting security issues responsibly (paveljanik)
 - #9840 `08e0690` Update sendfrom RPC help to correct coin selection misconception (ryanofsky)
-- #9865 `289204f` Change bitcoin address in RPC help message (marijnfs)
+- #9865 `289204f` Change tortoisecoin address in RPC help message (marijnfs)
 
 ### Miscellaneous
 - #8274 `7a2d402` util: Update tinyformat (laanwj)
 - #8291 `5cac8b1` util: CopyrightHolders: Check for untranslated substitution (MarcoFalke)
 - #8557 `44691f3` contrib: Rework verifybinaries (MarcoFalke)
 - #8621 `e8ed6eb` contrib: python: Don't use shell=True (MarcoFalke)
-- #8813 `fb24d7e` bitcoind: Daemonize using daemon(3) (laanwj)
+- #8813 `fb24d7e` tortoisecoind: Daemonize using daemon(3) (laanwj)
 - #9004 `67728a3` Clarify `listenonion` (unsystemizer)
 - #8674 `bae81b8` tools for analyzing, updating and adding copyright headers in source files (isle2983)
 - #8976 `8c6218a` libconsensus: Add input validation of flags (laanwj)
 - #9112 `46027e8` Avoid ugly exception in log on unknown inv type (laanwj)
-- #8837 `2108911` Allow bitcoin-tx to parse partial transactions (jnewbery)
+- #8837 `2108911` Allow tortoisecoin-tx to parse partial transactions (jnewbery)
 - #9204 `74ced54` Clarify CreateTransaction error messages (instagibbs)
-- #9265 `31bcc66` bitcoin-cli: Make error message less confusing (laanwj)
+- #9265 `31bcc66` tortoisecoin-cli: Make error message less confusing (laanwj)
 - #9303 `72bf1b3` Update comments in ctaes (sipa)
 - #9417 `c4b7d4f` Do not evaluate hidden LogPrint arguments (sipa)
 - #9506 `593a00c` RFC: Improve style for if indentation (sipa)
-- #8883 `d5d4ad8` Add all standard TXO types to bitcoin-tx (jnewbery)
+- #8883 `d5d4ad8` Add all standard TXO types to tortoisecoin-tx (jnewbery)
 - #9531 `23281a4` Release notes for estimation changes  (morcos)
 - #9486 `f62bc10` Make peer=%d log prints consistent (TheBlueMatt)
 - #9552 `41cb05c` Add IPv6 support to qos.sh (jamesmacwhite)
@@ -870,4 +870,4 @@ Thanks to everyone who directly contributed to this release:
 - wodry
 - Zak Wilcox
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/tortoisecoin/).

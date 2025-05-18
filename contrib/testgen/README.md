@@ -1,6 +1,6 @@
 ### TestGen ###
 
-Utilities to generate test vectors for the data-driven Bitcoin tests.
+Utilities to generate test vectors for the data-driven Tortoisecoin tests.
 
 To use inside a scripted-diff (or just execute directly):
 

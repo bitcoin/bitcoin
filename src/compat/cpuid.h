@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPAT_CPUID_H
-#define BITCOIN_COMPAT_CPUID_H
+#ifndef TORTOISECOIN_COMPAT_CPUID_H
+#define TORTOISECOIN_COMPAT_CPUID_H
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
 #define HAVE_GETCPUID
@@ -23,4 +23,4 @@ void static inline GetCPUID(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32
 }
 
 #endif // defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
-#endif // BITCOIN_COMPAT_CPUID_H
+#endif // TORTOISECOIN_COMPAT_CPUID_H

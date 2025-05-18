@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test UTXO set hash value calculation in gettxoutsetinfo."""
@@ -10,11 +10,11 @@ from test_framework.messages import (
     from_hex,
 )
 from test_framework.crypto.muhash import MuHash3072
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
-class UTXOSetHashTest(BitcoinTestFramework):
+class UTXOSetHashTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

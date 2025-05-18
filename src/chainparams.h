@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHAINPARAMS_H
-#define BITCOIN_CHAINPARAMS_H
+#ifndef TORTOISECOIN_CHAINPARAMS_H
+#define TORTOISECOIN_CHAINPARAMS_H
 
 #include <kernel/chainparams.h> // IWYU pragma: export
 
@@ -28,4 +28,4 @@ const CChainParams &Params();
  */
 void SelectParams(const ChainType chain);
 
-#endif // BITCOIN_CHAINPARAMS_H
+#endif // TORTOISECOIN_CHAINPARAMS_H

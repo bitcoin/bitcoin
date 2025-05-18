@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@ from enum import Enum
 
 from test_framework.messages import MAGIC_BYTES
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import random_bitflip
 from test_framework.v2_p2p import (
     EncryptedP2PState,
@@ -124,7 +124,7 @@ class MisbehavingV2Peer(P2PInterface):
             super().data_received(t)
 
 
-class EncryptedP2PMisbehaving(BitcoinTestFramework):
+class EncryptedP2PMisbehaving(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-v2transport=1", "-peertimeout=3"]]

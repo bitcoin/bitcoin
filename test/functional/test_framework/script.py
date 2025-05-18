@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Functionality to build scripts, as well as signature hash functions.
 
-This file is modified from python-bitcoinlib.
+This file is modified from python-tortoisecoinlib.
 """
 
 from collections import namedtuple
@@ -35,7 +35,7 @@ def hash160(s):
     return ripemd160(sha256(s))
 
 def bn2vch(v):
-    """Convert number to bitcoin-specific little endian format."""
+    """Convert number to tortoisecoin-specific little endian format."""
     # We need v.bit_length() bits, plus a sign bit for every nonzero number.
     n_bits = v.bit_length() + (v != 0)
     # The number of bytes for that is:

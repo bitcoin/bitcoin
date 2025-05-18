@@ -279,7 +279,7 @@
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
          </property>
          <property name="toolTip">
-          <string>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</string>
+          <string>Network addresses that your Tortoisecoin node is currently using to communicate with other nodes.</string>
          </property>
         </widget>
        </item>
@@ -513,7 +513,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../tortoisecoin.qrc">
              <normaloff>:/icons/fontsmaller</normaloff>:/icons/fontsmaller</iconset>
            </property>
            <property name="iconSize">
@@ -533,7 +533,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../tortoisecoin.qrc">
              <normaloff>:/icons/fontbigger</normaloff>:/icons/fontbigger</iconset>
            </property>
            <property name="iconSize">
@@ -556,7 +556,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../tortoisecoin.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="iconSize">
@@ -611,7 +611,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../tortoisecoin.qrc">
              <normaloff>:/icons/prompticon</normaloff>
              <disabledoff>:/icons/prompticon</disabledoff>:/icons/prompticon</iconset>
            </property>
@@ -1111,7 +1111,7 @@
                         <string />
                       </property>
                       <property name="icon">
-                        <iconset resource="../bitcoin.qrc">
+                        <iconset resource="../tortoisecoin.qrc">
                           <normaloff>:/icons/remove</normaloff>
                           :/icons/remove
                         </iconset>
@@ -1870,7 +1870,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../tortoisecoin.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2021 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_WALLETUTIL_H
-#define BITCOIN_WALLET_WALLETUTIL_H
+#ifndef TORTOISECOIN_WALLET_WALLETUTIL_H
+#define TORTOISECOIN_WALLET_WALLETUTIL_H
 
 #include <script/descriptor.h>
 #include <util/fs.h>
@@ -66,7 +66,7 @@ enum WalletFlags : uint64_t {
     //! imported.
     //!
     //! This flag is also a mandatory flag to prevent previous versions of
-    //! bitcoin from opening the wallet, thinking it was newly created, and
+    //! tortoisecoin from opening the wallet, thinking it was newly created, and
     //! then improperly reinitializing it.
     WALLET_FLAG_BLANK_WALLET = (1ULL << 33),
 
@@ -118,4 +118,4 @@ public:
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_WALLETUTIL_H
+#endif // TORTOISECOIN_WALLET_WALLETUTIL_H

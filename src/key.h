@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEY_H
-#define BITCOIN_KEY_H
+#ifndef TORTOISECOIN_KEY_H
+#define TORTOISECOIN_KEY_H
 
 #include <pubkey.h>
 #include <serialize.h>
@@ -325,4 +325,4 @@ public:
     ~ECC_Context();
 };
 
-#endif // BITCOIN_KEY_H
+#endif // TORTOISECOIN_KEY_H

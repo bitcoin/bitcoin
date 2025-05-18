@@ -1,9 +1,9 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_CONTEXT_H
-#define BITCOIN_WALLET_CONTEXT_H
+#ifndef TORTOISECOIN_WALLET_CONTEXT_H
+#define TORTOISECOIN_WALLET_CONTEXT_H
 
 #include <sync.h>
 
@@ -51,4 +51,4 @@ struct WalletContext {
 };
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_CONTEXT_H
+#endif // TORTOISECOIN_WALLET_CONTEXT_H

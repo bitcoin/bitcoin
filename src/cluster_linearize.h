@@ -1,9 +1,9 @@
-// Copyright (c) The Bitcoin Core developers
+// Copyright (c) The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CLUSTER_LINEARIZE_H
-#define BITCOIN_CLUSTER_LINEARIZE_H
+#ifndef TORTOISECOIN_CLUSTER_LINEARIZE_H
+#define TORTOISECOIN_CLUSTER_LINEARIZE_H
 
 #include <algorithm>
 #include <numeric>
@@ -402,7 +402,7 @@ public:
      * a feerate not below GetChunk(0)'s, then moving IntersectPrefixes(subset) to the front of
      * (what remains of) the linearization is guaranteed not to make it worse at any point.
      *
-     * See https://delvingbitcoin.org/t/introduction-to-cluster-linearization/1032 for background.
+     * See https://delvingtortoisecoin.org/t/introduction-to-cluster-linearization/1032 for background.
      */
     SetInfo<SetType> IntersectPrefixes(const SetInfo<SetType>& subset) const noexcept
     {
@@ -1049,4 +1049,4 @@ std::vector<ClusterIndex> MergeLinearizations(const DepGraph<SetType>& depgraph,
 
 } // namespace cluster_linearize
 
-#endif // BITCOIN_CLUSTER_LINEARIZE_H
+#endif // TORTOISECOIN_CLUSTER_LINEARIZE_H

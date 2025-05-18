@@ -407,7 +407,7 @@ in the Guix Reference Manual for more details.
 
 ## Optional setup
 
-At this point, you are set up to [use Guix to build Bitcoin
+At this point, you are set up to [use Guix to build Tortoisecoin
 Core](./README.md#usage). However, if you want to polish your setup a bit and
 make it "what Guix intended", then read the next few subsections.
 

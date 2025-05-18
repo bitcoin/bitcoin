@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -82,7 +82,7 @@ def main():
 
         matching_files_filtered = []
         for matching_file in matching_files:
-            if not re.search('^src/(leveldb|secp256k1|minisketch|tinyformat|test/fuzz/strprintf.cpp)|contrib/devtools/bitcoin-tidy/example_logprintf.cpp', matching_file):
+            if not re.search('^src/(leveldb|secp256k1|minisketch|tinyformat|test/fuzz/strprintf.cpp)|contrib/devtools/tortoisecoin-tidy/example_logprintf.cpp', matching_file):
                 matching_files_filtered.append(matching_file)
         matching_files_filtered.sort()
 

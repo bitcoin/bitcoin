@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2023 The Bitcoin Core developers
+// Copyright (c) 2009-2023 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_FS_HELPERS_H
-#define BITCOIN_UTIL_FS_HELPERS_H
+#ifndef TORTOISECOIN_UTIL_FS_HELPERS_H
+#define TORTOISECOIN_UTIL_FS_HELPERS_H
 
 #include <util/fs.h>
 
@@ -80,4 +80,4 @@ std::optional<fs::perms> InterpretPermString(const std::string& s);
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
 
-#endif // BITCOIN_UTIL_FS_HELPERS_H
+#endif // TORTOISECOIN_UTIL_FS_HELPERS_H

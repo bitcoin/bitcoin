@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LOGGING_H
-#define BITCOIN_LOGGING_H
+#ifndef TORTOISECOIN_LOGGING_H
+#define TORTOISECOIN_LOGGING_H
 
 #include <threadsafety.h>
 #include <tinyformat.h>
@@ -181,7 +181,7 @@ namespace BCLog {
         /** Disable logging
          * This offers a slight speedup and slightly smaller memory usage
          * compared to leaving the logging system in its default state.
-         * Mostly intended for libbitcoin-kernel apps that don't want any logging.
+         * Mostly intended for libtortoisecoin-kernel apps that don't want any logging.
          * Should be used instead of StartLogging().
          */
         void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
@@ -292,4 +292,4 @@ static inline void LogPrintf_(std::string_view logging_function, std::string_vie
 // Deprecated conditional logging
 #define LogPrint(category, ...)  LogDebug(category, __VA_ARGS__)
 
-#endif // BITCOIN_LOGGING_H
+#endif // TORTOISECOIN_LOGGING_H

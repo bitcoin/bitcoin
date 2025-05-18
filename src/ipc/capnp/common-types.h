@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_IPC_CAPNP_COMMON_TYPES_H
-#define BITCOIN_IPC_CAPNP_COMMON_TYPES_H
+#ifndef TORTOISECOIN_IPC_CAPNP_COMMON_TYPES_H
+#define TORTOISECOIN_IPC_CAPNP_COMMON_TYPES_H
 
 #include <clientversion.h>
 #include <streams.h>
@@ -46,7 +46,7 @@ public:
 } // namespace capnp
 } // namespace ipc
 
-//! Functions to serialize / deserialize common bitcoin types.
+//! Functions to serialize / deserialize common tortoisecoin types.
 namespace mp {
 //! Overload multiprocess library's CustomBuildField hook to allow any
 //! serializable object to be stored in a capnproto Data field or passed to a
@@ -105,4 +105,4 @@ decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& i
 }
 } // namespace mp
 
-#endif // BITCOIN_IPC_CAPNP_COMMON_TYPES_H
+#endif // TORTOISECOIN_IPC_CAPNP_COMMON_TYPES_H

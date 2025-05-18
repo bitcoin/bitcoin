@@ -12,7 +12,7 @@
 # completes.
 #
 # The shellcheck rule SC2086 (quoted variables) disablements are necessary
-# since this rule needs to be violated in order to get bitcoind to pick up on
+# since this rule needs to be violated in order to get tortoisecoind to pick up on
 # $EARLY_IBD_FLAGS for the script to work.
 
 export LC_ALL=C
@@ -26,7 +26,7 @@ SERVER_DATADIR="$(pwd)/utxodemo-data-server-$BASE_HEIGHT"
 CLIENT_DATADIR="$(pwd)/utxodemo-data-client-$BASE_HEIGHT"
 UTXO_DAT_FILE="$(pwd)/utxo.$BASE_HEIGHT.dat"
 
-# Chosen to try to not interfere with any running bitcoind processes.
+# Chosen to try to not interfere with any running tortoisecoind processes.
 SERVER_PORT=8633
 SERVER_RPC_PORT=8632
 
@@ -64,10 +64,10 @@ trap finish EXIT
 EARLY_IBD_FLAGS="-maxtipage=9223372036854775207 -minimumchainwork=0x00"
 
 server_rpc() {
-  ./src/bitcoin-cli -rpcport=$SERVER_RPC_PORT -datadir="$SERVER_DATADIR" "$@"
+  ./src/tortoisecoin-cli -rpcport=$SERVER_RPC_PORT -datadir="$SERVER_DATADIR" "$@"
 }
 client_rpc() {
-  ./src/bitcoin-cli -rpcport=$CLIENT_RPC_PORT -datadir="$CLIENT_DATADIR" "$@"
+  ./src/tortoisecoin-cli -rpcport=$CLIENT_RPC_PORT -datadir="$CLIENT_DATADIR" "$@"
 }
 server_sleep_til_boot() {
   while ! server_rpc ping >/dev/null 2>&1; do sleep 0.1; done
@@ -111,14 +111,14 @@ read -p "Press [enter] to continue" _
 echo
 echo "-- IBDing the blocks (height=$BASE_HEIGHT) required to the server node..."
 # shellcheck disable=SC2086
-./src/bitcoind -logthreadnames=1 $SERVER_PORTS \
+./src/tortoisecoind -logthreadnames=1 $SERVER_PORTS \
     -datadir="$SERVER_DATADIR" $EARLY_IBD_FLAGS -stopatheight="$BASE_HEIGHT" >/dev/null
 
 echo
 echo "-- Creating snapshot at ~ height $BASE_HEIGHT ($UTXO_DAT_FILE)..."
 server_sleep_til_shutdown # wait for stopatheight to be hit
 # shellcheck disable=SC2086
-./src/bitcoind -logthreadnames=1 $SERVER_PORTS \
+./src/tortoisecoind -logthreadnames=1 $SERVER_PORTS \
     -datadir="$SERVER_DATADIR" $EARLY_IBD_FLAGS -connect=0 -listen=0 >/dev/null &
 SERVER_PID="$!"
 
@@ -143,13 +143,13 @@ echo
 echo
 echo "-- IBDing more blocks to the server node (height=$FINAL_HEIGHT) so there is a diff between snapshot and tip..."
 # shellcheck disable=SC2086
-./src/bitcoind $SERVER_PORTS -logthreadnames=1 -datadir="$SERVER_DATADIR" \
+./src/tortoisecoind $SERVER_PORTS -logthreadnames=1 -datadir="$SERVER_DATADIR" \
     $EARLY_IBD_FLAGS -stopatheight="$FINAL_HEIGHT" >/dev/null
 
 echo
 echo "-- Starting the server node to provide blocks to the client node..."
 # shellcheck disable=SC2086
-./src/bitcoind $SERVER_PORTS -logthreadnames=1 -debug=net -datadir="$SERVER_DATADIR" \
+./src/tortoisecoind $SERVER_PORTS -logthreadnames=1 -debug=net -datadir="$SERVER_DATADIR" \
     $EARLY_IBD_FLAGS -connect=0 -listen=1 >/dev/null &
 SERVER_PID="$!"
 server_sleep_til_boot
@@ -173,7 +173,7 @@ read -p "When you're ready for all this, hit [enter]" _
 echo
 echo "-- Starting the client node to get headers from the server, then load the snapshot..."
 # shellcheck disable=SC2086
-./src/bitcoind $CLIENT_PORTS $ALL_INDEXES -logthreadnames=1 -datadir="$CLIENT_DATADIR" \
+./src/tortoisecoind $CLIENT_PORTS $ALL_INDEXES -logthreadnames=1 -datadir="$CLIENT_DATADIR" \
     -connect=0 -addnode=127.0.0.1:$SERVER_PORT -debug=net $EARLY_IBD_FLAGS >/dev/null &
 CLIENT_PID="$!"
 client_sleep_til_boot
@@ -186,7 +186,7 @@ echo
 echo "-- Loading UTXO snapshot into client. Calling RPC in a loop..."
 while ! client_rpc loadtxoutset "$UTXO_DAT_FILE" ; do sleep 10; done
 
-watch -n 0.3 "( tail -n 14 $CLIENT_DATADIR/debug.log ; echo ; ./src/bitcoin-cli -rpcport=$CLIENT_RPC_PORT -datadir=$CLIENT_DATADIR getchainstates) | cat"
+watch -n 0.3 "( tail -n 14 $CLIENT_DATADIR/debug.log ; echo ; ./src/tortoisecoin-cli -rpcport=$CLIENT_RPC_PORT -datadir=$CLIENT_DATADIR getchainstates) | cat"
 
 echo
 echo "-- Okay, now I'm going to restart the client to make sure that the snapshot chain reloads "
@@ -198,12 +198,12 @@ read -p "Press [enter] to continue"
 
 client_sleep_til_boot
 # shellcheck disable=SC2086
-./src/bitcoind $CLIENT_PORTS $ALL_INDEXES -logthreadnames=1 -datadir="$CLIENT_DATADIR" -connect=0 \
+./src/tortoisecoind $CLIENT_PORTS $ALL_INDEXES -logthreadnames=1 -datadir="$CLIENT_DATADIR" -connect=0 \
     -addnode=127.0.0.1:$SERVER_PORT "$EARLY_IBD_FLAGS" >/dev/null &
 CLIENT_PID="$!"
 client_sleep_til_boot
 
-watch -n 0.3 "( tail -n 14 $CLIENT_DATADIR/debug.log ; echo ; ./src/bitcoin-cli -rpcport=$CLIENT_RPC_PORT -datadir=$CLIENT_DATADIR getchainstates) | cat"
+watch -n 0.3 "( tail -n 14 $CLIENT_DATADIR/debug.log ; echo ; ./src/tortoisecoin-cli -rpcport=$CLIENT_RPC_PORT -datadir=$CLIENT_DATADIR getchainstates) | cat"
 
 echo
 echo "-- Done!"

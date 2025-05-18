@@ -1,0 +1,33 @@
+# /etc/conf.d/tortoisecoind: config file for /etc/init.d/tortoisecoind
+
+# Config file location
+#TORTOISECOIND_CONFIGFILE="/etc/tortoisecoin/tortoisecoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $TORTOISECOIND_USER)
+#TORTOISECOIND_PIDDIR="/var/run/tortoisecoind"
+
+# What filename to give the pidfile
+#TORTOISECOIND_PIDFILE="${TORTOISECOIND_PIDDIR}/tortoisecoind.pid"
+
+# Where to write tortoisecoind data (be mindful that the blockchain is large)
+#TORTOISECOIND_DATADIR="/var/lib/tortoisecoind"
+
+# User and group to own tortoisecoind process
+#TORTOISECOIND_USER="tortoisecoin"
+#TORTOISECOIND_GROUP="tortoisecoin"
+
+# Path to tortoisecoind executable
+#TORTOISECOIND_BIN="/usr/bin/tortoisecoind"
+
+# Nice value to run tortoisecoind under
+#TORTOISECOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#TORTOISECOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for tortoisecoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+TORTOISECOIND_SIGTERM_TIMEOUT=600

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 """Test output type mixing during coin selection
@@ -28,7 +28,7 @@ but still know when to expect mixing due to the wallet being close to empty.
 """
 
 import random
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.blocktools import COINBASE_MATURITY
 
 ADDRESS_TYPES = [
@@ -105,7 +105,7 @@ def generate_payment_values(n, m):
     return [a - b for a, b in zip(dividers + [m], [0] + dividers)]
 
 
-class AddressInputTypeGrouping(BitcoinTestFramework):
+class AddressInputTypeGrouping(TortoisecoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser, legacy=False)
 

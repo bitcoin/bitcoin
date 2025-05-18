@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -63,7 +63,7 @@ class BadTxTemplate:
     """Allows simple construction of a certain kind of invalid tx. Base class to be subclassed."""
     __metaclass__ = abc.ABCMeta
 
-    # The expected error code given by bitcoind upon submission of the tx.
+    # The expected error code given by tortoisecoind upon submission of the tx.
     reject_reason: Optional[str] = ""
 
     # Only specified if it differs from mempool acceptance error.

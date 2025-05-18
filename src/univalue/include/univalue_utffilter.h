@@ -1,8 +1,8 @@
 // Copyright 2016 Wladimir J. van der Laan
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
-#define BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
+#ifndef TORTOISECOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
+#define TORTOISECOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
 
 #include <string>
 
@@ -116,4 +116,4 @@ private:
     }
 };
 
-#endif // BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
+#endif // TORTOISECOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_RPC_UTIL_H
-#define BITCOIN_WALLET_RPC_UTIL_H
+#ifndef TORTOISECOIN_WALLET_RPC_UTIL_H
+#define TORTOISECOIN_WALLET_RPC_UTIL_H
 
 #include <rpc/util.h>
 #include <script/script.h>
@@ -55,4 +55,4 @@ int64_t ParseISO8601DateTime(const std::string& str);
 void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } //  namespace wallet
 
-#endif // BITCOIN_WALLET_RPC_UTIL_H
+#endif // TORTOISECOIN_WALLET_RPC_UTIL_H

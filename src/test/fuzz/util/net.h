@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_FUZZ_UTIL_NET_H
-#define BITCOIN_TEST_FUZZ_UTIL_NET_H
+#ifndef TORTOISECOIN_TEST_FUZZ_UTIL_NET_H
+#define TORTOISECOIN_TEST_FUZZ_UTIL_NET_H
 
 #include <net.h>
 #include <net_permissions.h>
@@ -146,4 +146,4 @@ inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, co
 
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex);
 
-#endif // BITCOIN_TEST_FUZZ_UTIL_NET_H
+#endif // TORTOISECOIN_TEST_FUZZ_UTIL_NET_H

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblockfilter RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal, assert_is_hex_string, assert_raises_rpc_error,
     )
 
 FILTER_TYPES = ["basic"]
 
-class GetBlockFilterTest(BitcoinTestFramework):
+class GetBlockFilterTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

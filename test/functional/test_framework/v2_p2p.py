@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for v2 P2P protocol (see BIP 324)"""
@@ -226,7 +226,7 @@ class EncryptedP2PState:
     def initialize_v2_transport(self, ecdh_secret):
         """Sets the peer object with various BIP324 derived keys and ciphers."""
         peer = {}
-        salt = b'bitcoin_v2_shared_secret' + MAGIC_BYTES[self.net]
+        salt = b'tortoisecoin_v2_shared_secret' + MAGIC_BYTES[self.net]
         for name in ('initiator_L', 'initiator_P', 'responder_L', 'responder_P', 'garbage_terminators', 'session_id'):
             peer[name] = hkdf_sha256(salt=salt, ikm=ecdh_secret, info=name.encode('utf-8'), length=32)
         if self.initiating:

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CONSENSUS_CONSENSUS_H
-#define BITCOIN_CONSENSUS_CONSENSUS_H
+#ifndef TORTOISECOIN_CONSENSUS_CONSENSUS_H
+#define TORTOISECOIN_CONSENSUS_CONSENSUS_H
 
 #include <cstdlib>
 #include <stdint.h>
@@ -34,4 +34,4 @@ static constexpr unsigned int LOCKTIME_VERIFY_SEQUENCE = (1 << 0);
  */
 static constexpr int64_t MAX_TIMEWARP = 600;
 
-#endif // BITCOIN_CONSENSUS_CONSENSUS_H
+#endif // TORTOISECOIN_CONSENSUS_CONSENSUS_H

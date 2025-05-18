@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test per-peer message capture capability.
@@ -12,7 +12,7 @@ from io import BytesIO
 import os
 
 from test_framework.p2p import P2PDataStore, MESSAGEMAP
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import assert_equal
 
 TIME_SIZE = 8
@@ -51,7 +51,7 @@ def mini_parser(dat_file: str) -> None:
 
 
 
-class MessageCaptureTest(BitcoinTestFramework):
+class MessageCaptureTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-capturemessages"]]

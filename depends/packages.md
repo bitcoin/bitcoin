@@ -5,7 +5,7 @@ The package "mylib" will be used here as an example
 
 General tips:
 - mylib_foo is written as $(package)_foo in order to make recipes more similar.
-- Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
+- Secondary dependency packages relative to the tortoisecoin binaries/libraries (i.e.
   those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
   need to be shared and should be built statically whenever possible. See
   [below](#secondary-dependencies) for more details.
@@ -167,7 +167,7 @@ the Autotools `--with-pic` flag, or `CMAKE_POSITION_INDEPENDENT_CODE` with CMake
 
 ## Secondary dependencies:
 
-Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
+Secondary dependency packages relative to the tortoisecoin binaries/libraries (i.e.
 those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
 need to be shared and should be built statically whenever possible. This
 improves general build reliability as illustrated by the following example:

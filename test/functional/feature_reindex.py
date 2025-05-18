@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-2021 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test running bitcoind with -reindex and -reindex-chainstate options.
+"""Test running tortoisecoind with -reindex and -reindex-chainstate options.
 
 - Start a single node and generate 3 blocks.
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
@@ -10,7 +10,7 @@
 - Verify that out-of-order blocks are correctly processed, see LoadExternalBlockFile()
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.messages import MAGIC_BYTES
 from test_framework.util import (
     assert_equal,
@@ -18,7 +18,7 @@ from test_framework.util import (
 )
 
 
-class ReindexTest(BitcoinTestFramework):
+class ReindexTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

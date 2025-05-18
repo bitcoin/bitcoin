@@ -1,9 +1,9 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_VALIDATION_H
-#define BITCOIN_TEST_UTIL_VALIDATION_H
+#ifndef TORTOISECOIN_TEST_UTIL_VALIDATION_H
+#define TORTOISECOIN_TEST_UTIL_VALIDATION_H
 
 #include <validation.h>
 
@@ -26,4 +26,4 @@ public:
         const CBlockIndex* pindex);
 };
 
-#endif // BITCOIN_TEST_UTIL_VALIDATION_H
+#endif // TORTOISECOIN_TEST_UTIL_VALIDATION_H

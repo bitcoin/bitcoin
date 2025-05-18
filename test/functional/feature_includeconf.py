@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-2021 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests the includeconf argument
@@ -14,10 +14,10 @@ Verify that:
 4. multiple includeconf arguments can be specified in the main config
    file.
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 
 
-class IncludeConfTest(BitcoinTestFramework):
+class IncludeConfTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -29,7 +29,7 @@ class IncludeConfTest(BitcoinTestFramework):
         # - tmpdir/node0/relative2.conf
         with open(self.nodes[0].datadir_path / "relative2.conf", "w", encoding="utf8") as f:
             f.write("uacomment=relative2\n")
-        with open(self.nodes[0].datadir_path / "bitcoin.conf", "a", encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / "tortoisecoin.conf", "a", encoding="utf8") as f:
             f.write("uacomment=main\nincludeconf=relative.conf\n")
         self.restart_node(0)
 
@@ -74,7 +74,7 @@ class IncludeConfTest(BitcoinTestFramework):
             # Restore initial file contents
             f.write("uacomment=relative\n")
 
-        with open(self.nodes[0].datadir_path / "bitcoin.conf", "a", encoding="utf8") as f:
+        with open(self.nodes[0].datadir_path / "tortoisecoin.conf", "a", encoding="utf8") as f:
             f.write("includeconf=relative2.conf\n")
 
         self.start_node(0)

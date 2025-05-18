@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importprunedfunds and removeprunedfunds RPCs."""
@@ -11,7 +11,7 @@ from test_framework.messages import (
     CMerkleBlock,
     from_hex,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -19,7 +19,7 @@ from test_framework.util import (
 from test_framework.wallet_util import generate_keypair
 
 
-class ImportPrunedFundsTest(BitcoinTestFramework):
+class ImportPrunedFundsTest(TortoisecoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

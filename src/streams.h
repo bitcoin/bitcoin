@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_STREAMS_H
-#define BITCOIN_STREAMS_H
+#ifndef TORTOISECOIN_STREAMS_H
+#define TORTOISECOIN_STREAMS_H
 
 #include <serialize.h>
 #include <span.h>
@@ -606,4 +606,4 @@ public:
     }
 };
 
-#endif // BITCOIN_STREAMS_H
+#endif // TORTOISECOIN_STREAMS_H

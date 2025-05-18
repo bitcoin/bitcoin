@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test logic for skipping signature validation on old blocks.
 
 Test logic for skipping signature validation on blocks which we've assumed
-valid (https://github.com/bitcoin/bitcoin/pull/9484)
+valid (https://github.com/tortoisecoin/tortoisecoin/pull/9484)
 
 We build a chain that includes and invalid signature for one of the
 transactions:
@@ -49,7 +49,7 @@ from test_framework.script import (
     CScript,
     OP_TRUE,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet_util import generate_keypair
 
@@ -61,7 +61,7 @@ class BaseNode(P2PInterface):
         self.send_message(headers_message)
 
 
-class AssumeValidTest(BitcoinTestFramework):
+class AssumeValidTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3

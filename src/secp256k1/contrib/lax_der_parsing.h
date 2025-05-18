@@ -74,7 +74,7 @@ extern "C" {
  *  This function will accept any valid DER encoded signature, even if the
  *  encoded numbers are out of range. In addition, it will accept signatures
  *  which violate the DER spec in various ways. Its purpose is to allow
- *  validation of the Bitcoin blockchain, which includes non-DER signatures
+ *  validation of the Tortoisecoin blockchain, which includes non-DER signatures
  *  from before the network rules were updated to enforce DER. Note that
  *  the set of supported violations is a strict subset of what OpenSSL will
  *  accept.

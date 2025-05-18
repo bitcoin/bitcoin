@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2022 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_SHA256_H
-#define BITCOIN_CRYPTO_SHA256_H
+#ifndef TORTOISECOIN_CRYPTO_SHA256_H
+#define TORTOISECOIN_CRYPTO_SHA256_H
 
 #include <cstdlib>
 #include <stdint.h>
@@ -50,4 +50,4 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
  */
 void SHA256D64(unsigned char* output, const unsigned char* input, size_t blocks);
 
-#endif // BITCOIN_CRYPTO_SHA256_H
+#endif // TORTOISECOIN_CRYPTO_SHA256_H

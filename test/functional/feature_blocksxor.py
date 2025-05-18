@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024 The Bitcoin Core developers
+# Copyright (c) 2024 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test support for XORed block data and undo files (`-blocksxor` option)."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.test_node import (
     ErrorMatch,
     NULL_BLK_XOR_KEY,
@@ -17,7 +17,7 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 
-class BlocksXORTest(BitcoinTestFramework):
+class BlocksXORTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-present The Bitcoin Core developers
+# Copyright (c) 2020-present The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test generate* RPCs."""
 
 from concurrent.futures import ThreadPoolExecutor
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.wallet import MiniWallet
 from test_framework.util import (
     assert_equal,
@@ -14,7 +14,7 @@ from test_framework.util import (
 )
 
 
-class RPCGenerateTest(BitcoinTestFramework):
+class RPCGenerateTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

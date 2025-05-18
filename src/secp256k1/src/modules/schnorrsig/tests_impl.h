@@ -202,7 +202,7 @@ static void test_schnorrsig_bip_vectors_check_verify(const unsigned char *pk_ser
 }
 
 /* Test vectors according to BIP-340 ("Schnorr Signatures for secp256k1"). See
- * https://github.com/bitcoin/bips/blob/master/bip-0340/test-vectors.csv. */
+ * https://github.com/tortoisecoin/bips/blob/master/bip-0340/test-vectors.csv. */
 static void test_schnorrsig_bip_vectors(void) {
     {
         /* Test vector 0 */

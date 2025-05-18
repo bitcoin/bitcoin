@@ -1,6 +1,6 @@
 Facilitate guix building with CROSS_LIBRARY_PATH
 
-See discussion in https://github.com/bitcoin/bitcoin/pull/15277.
+See discussion in https://github.com/tortoisecoin/tortoisecoin/pull/15277.
 
 --- a/qtbase/mkspecs/features/toolchain.prf
 +++ b/qtbase/mkspecs/features/toolchain.prf

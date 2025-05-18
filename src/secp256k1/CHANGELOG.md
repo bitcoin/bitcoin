@@ -87,7 +87,7 @@ We strongly recommend updating to 0.3.1 if you use or plan to use Clang >=14 to 
  - Fix "constant-timeness" issue with Clang >=14 that could leave applications using libsecp256k1 vulnerable to a timing side-channel attack. The fix avoids secret-dependent control flow and secret-dependent memory accesses in conditional moves of memory objects when libsecp256k1 is compiled with Clang >=14.
 
 #### Added
-  - Added tests against [Project Wycheproof's](https://github.com/google/wycheproof/) set of ECDSA test vectors (Bitcoin "low-S" variant), a fixed set of test cases designed to trigger various edge cases.
+  - Added tests against [Project Wycheproof's](https://github.com/google/wycheproof/) set of ECDSA test vectors (Tortoisecoin "low-S" variant), a fixed set of test cases designed to trigger various edge cases.
 
 #### Changed
  - Increased minimum required CMake version to 3.13. CMake builds remain experimental.
@@ -141,12 +141,12 @@ This version was in fact never released.
 The number was given by the build system since the introduction of autotools in Jan 2014 (ea0fe5a5bf0c04f9cc955b2966b614f5f378c6f6).
 Therefore, this version number does not uniquely identify a set of source files.
 
-[0.5.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.4.1...v0.5.0
-[0.4.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.3.2...v0.4.0
-[0.3.2]: https://github.com/bitcoin-core/secp256k1/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/bitcoin-core/secp256k1/compare/423b6d19d373f1224fd671a982584d7e7900bc93..v0.2.0
-[0.1.0]: https://github.com/bitcoin-core/secp256k1/commit/423b6d19d373f1224fd671a982584d7e7900bc93
+[0.5.1]: https://github.com/tortoisecoin-core/secp256k1/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/tortoisecoin-core/secp256k1/compare/v0.4.1...v0.5.0
+[0.4.1]: https://github.com/tortoisecoin-core/secp256k1/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/tortoisecoin-core/secp256k1/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/tortoisecoin-core/secp256k1/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/tortoisecoin-core/secp256k1/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/tortoisecoin-core/secp256k1/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/tortoisecoin-core/secp256k1/compare/423b6d19d373f1224fd671a982584d7e7900bc93..v0.2.0
+[0.1.0]: https://github.com/tortoisecoin-core/secp256k1/commit/423b6d19d373f1224fd671a982584d7e7900bc93

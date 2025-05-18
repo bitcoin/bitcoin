@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) The Bitcoin Core developers
+# Copyright (c) The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,7 @@ from test_framework.messages import (
     msg_blocktxn,
     HeaderAndShortIDs,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.blocktools import (
     COINBASE_MATURITY,
     create_block,
@@ -27,7 +27,7 @@ from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 import copy
 
-class MutatedBlocksTest(BitcoinTestFramework):
+class MutatedBlocksTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_THREADNAMES_H
-#define BITCOIN_UTIL_THREADNAMES_H
+#ifndef TORTOISECOIN_UTIL_THREADNAMES_H
+#define TORTOISECOIN_UTIL_THREADNAMES_H
 
 #include <string>
 
@@ -23,4 +23,4 @@ std::string ThreadGetInternalName();
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_THREADNAMES_H
+#endif // TORTOISECOIN_UTIL_THREADNAMES_H

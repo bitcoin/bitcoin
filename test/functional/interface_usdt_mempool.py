@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022-present The Bitcoin Core developers
+# Copyright (c) 2022-present The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 """  Tests the mempool:* tracepoint API interface.
-     See https://github.com/bitcoin/bitcoin/blob/master/doc/tracing.md#context-mempool
+     See https://github.com/tortoisecoin/tortoisecoin/blob/master/doc/tracing.md#context-mempool
 """
 
 from decimal import Decimal
@@ -18,7 +18,7 @@ except ImportError:
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import COIN, DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
     bpf_cflags,
@@ -126,14 +126,14 @@ int trace_replaced(struct pt_regs *ctx) {
 """
 
 
-class MempoolTracepointTest(BitcoinTestFramework):
+class MempoolTracepointTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_tortoisecoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 
@@ -301,7 +301,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         assert_equal(bytes(event.hash)[::-1].hex(), tx["tx"].hash)
         # The next test is already known to fail, so disable it to avoid
         # wasting CPU time and developer time. See
-        # https://github.com/bitcoin/bitcoin/issues/27380
+        # https://github.com/tortoisecoin/tortoisecoin/issues/27380
         #assert_equal(event.reason.decode("UTF-8"), "min relay fee not met")
 
         bpf.cleanup()

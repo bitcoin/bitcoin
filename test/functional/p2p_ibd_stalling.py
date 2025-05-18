@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022- The Bitcoin Core developers
+# Copyright (c) 2022- The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -22,7 +22,7 @@ from test_framework.p2p import (
         msg_headers,
         P2PDataStore,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
         assert_equal,
 )
@@ -44,7 +44,7 @@ class P2PStaller(P2PDataStore):
         pass
 
 
-class P2PIBDStallingTest(BitcoinTestFramework):
+class P2PIBDStallingTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

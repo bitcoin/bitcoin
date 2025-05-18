@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_TRANSACTION_H
-#define BITCOIN_NODE_TRANSACTION_H
+#ifndef TORTOISECOIN_NODE_TRANSACTION_H
+#define TORTOISECOIN_NODE_TRANSACTION_H
 
 #include <common/messages.h>
 #include <policy/feerate.h>
@@ -66,4 +66,4 @@ static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, uint256& hashBlock, const BlockManager& blockman);
 } // namespace node
 
-#endif // BITCOIN_NODE_TRANSACTION_H
+#endif // TORTOISECOIN_NODE_TRANSACTION_H

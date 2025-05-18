@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
  * Utilities for converting data from/to strings.
  */
-#ifndef BITCOIN_UTIL_STRENCODINGS_H
-#define BITCOIN_UTIL_STRENCODINGS_H
+#ifndef TORTOISECOIN_UTIL_STRENCODINGS_H
+#define TORTOISECOIN_UTIL_STRENCODINGS_H
 
 #include <crypto/hex_base.h> // IWYU pragma: export
 #include <span.h>
@@ -369,4 +369,4 @@ std::string Capitalize(std::string str);
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // TORTOISECOIN_UTIL_STRENCODINGS_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_PARSING_H
-#define BITCOIN_SCRIPT_PARSING_H
+#ifndef TORTOISECOIN_SCRIPT_PARSING_H
+#define TORTOISECOIN_SCRIPT_PARSING_H
 
 #include <span.h>
 
@@ -37,4 +37,4 @@ Span<const char> Expr(Span<const char>& sp);
 
 } // namespace script
 
-#endif // BITCOIN_SCRIPT_PARSING_H
+#endif // TORTOISECOIN_SCRIPT_PARSING_H

@@ -576,7 +576,7 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
  *                      msghash32 value directly. Otherwise, it would be easy to
  *                      create a "valid" signature without knowledge of the
  *                      secret key. See also
- *                      https://bitcoin.stackexchange.com/a/81116/35586 for more
+ *                      https://tortoisecoin.stackexchange.com/a/81116/35586 for more
  *                      background on this topic.
  *           pubkey:    pointer to an initialized public key to verify with.
  *

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LOGGING_TIMER_H
-#define BITCOIN_LOGGING_TIMER_H
+#ifndef TORTOISECOIN_LOGGING_TIMER_H
+#define TORTOISECOIN_LOGGING_TIMER_H
 
 #include <logging.h>
 #include <util/macros.h>
@@ -108,4 +108,4 @@ private:
     BCLog::Timer<std::chrono::seconds> UNIQUE_NAME(logging_timer)(__func__, end_msg)
 
 
-#endif // BITCOIN_LOGGING_TIMER_H
+#endif // TORTOISECOIN_LOGGING_TIMER_H

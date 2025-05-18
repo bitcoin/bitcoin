@@ -1,44 +1,44 @@
-Bitcoin Core version 28.0 is now available from:
+Tortoisecoin Core version 28.0 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.0/>
+  <https://tortoisecoincore.org/bin/tortoisecoin-core-28.0/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tortoisecoin/tortoisecoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://tortoisecoincore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/Tortoisecoin-Qt` (on macOS)
+or `tortoisecoind`/`tortoisecoin-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of Tortoisecoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of Tortoisecoin Core are generally supported.
 
-Running Bitcoin Core binaries on macOS requires self signing.
+Running Tortoisecoin Core binaries on macOS requires self signing.
 ```
-cd /path/to/bitcoin-28.0/bin
-xattr -d com.apple.quarantine bitcoin-cli bitcoin-qt bitcoin-tx bitcoin-util bitcoin-wallet bitcoind test_bitcoin
-codesign -s - bitcoin-cli bitcoin-qt bitcoin-tx bitcoin-util bitcoin-wallet bitcoind test_bitcoin
+cd /path/to/tortoisecoin-28.0/bin
+xattr -d com.apple.quarantine tortoisecoin-cli tortoisecoin-qt tortoisecoin-tx tortoisecoin-util tortoisecoin-wallet tortoisecoind test_tortoisecoin
+codesign -s - tortoisecoin-cli tortoisecoin-qt tortoisecoin-tx tortoisecoin-util tortoisecoin-wallet tortoisecoind test_tortoisecoin
 ```
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems
-using the Linux Kernel 3.17+, macOS 11.0+, and Windows 7 and newer. Bitcoin
+Tortoisecoin Core is supported and extensively tested on operating systems
+using the Linux Kernel 3.17+, macOS 11.0+, and Windows 7 and newer. Tortoisecoin
 Core should also work on most other UNIX-like systems but is not as
-frequently tested on them. It is not recommended to use Bitcoin Core on
+frequently tested on them. It is not recommended to use Tortoisecoin Core on
 unsupported systems.
 
 Notable changes
@@ -47,7 +47,7 @@ Notable changes
 Testnet4/BIP94 support
 -----
 
-Support for Testnet4 as specified in [BIP94](https://github.com/bitcoin/bips/blob/master/bip-0094.mediawiki)
+Support for Testnet4 as specified in [BIP94](https://github.com/tortoisecoin/bips/blob/master/bip-0094.mediawiki)
 has been added. The network can be selected with the `-testnet4` option and
 the section header is also named `[testnet4]`.
 
@@ -58,8 +58,8 @@ release. (#29775)
 Windows Data Directory
 ----------------------
 
-The default data directory on Windows has been moved from `C:\Users\Username\AppData\Roaming\Bitcoin`
-to `C:\Users\Username\AppData\Local\Bitcoin`. Bitcoin Core will check the existence
+The default data directory on Windows has been moved from `C:\Users\Username\AppData\Roaming\Tortoisecoin`
+to `C:\Users\Username\AppData\Local\Tortoisecoin`. Tortoisecoin Core will check the existence
 of the old directory first and continue to use that directory for backwards
 compatibility if it is present. (#27064)
 
@@ -68,20 +68,20 @@ JSON-RPC 2.0 Support
 
 The JSON-RPC server now recognizes JSON-RPC 2.0 requests and responds with
 strict adherence to the [specification](https://www.jsonrpc.org/specification).
-See [JSON-RPC-interface.md](https://github.com/bitcoin/bitcoin/blob/master/doc/JSON-RPC-interface.md#json-rpc-11-vs-20) for details. (#27101)
+See [JSON-RPC-interface.md](https://github.com/tortoisecoin/tortoisecoin/blob/master/doc/JSON-RPC-interface.md#json-rpc-11-vs-20) for details. (#27101)
 
 JSON-RPC clients may need to be updated to be compatible with the JSON-RPC server.
 Please open an issue on GitHub if any compatibility issues are found.
 
-libbitcoinconsensus Removal
+libtortoisecoinconsensus Removal
 ---------------------------
 
-The libbitcoin-consensus library was deprecated in 27.0 and is now completely removed. (#29648)
+The libtortoisecoin-consensus library was deprecated in 27.0 and is now completely removed. (#29648)
 
 P2P and Network Changes
 -----------------------
 
-- Previously if Bitcoin Core was listening for P2P connections, either using
+- Previously if Tortoisecoin Core was listening for P2P connections, either using
   default settings or via `bind=addr:port` it would always also bind to
   `127.0.0.1:8334` to listen for Tor connections. It was not possible to switch
   this off, even if the node didn't use Tor. This has been changed and now
@@ -93,7 +93,7 @@ P2P and Network Changes
   `127.0.0.1:8334`, you need to now make this explicit by using
   `bind=... bind=127.0.0.1:8334=onion`. (#22729)
 
-- Bitcoin Core will now fail to start up if any of its P2P binds fail, rather
+- Tortoisecoin Core will now fail to start up if any of its P2P binds fail, rather
   than the previous behaviour where it would only abort startup if all P2P
   binds had failed. (#22729)
 
@@ -122,7 +122,7 @@ Mempool Policy Changes
 
 - Transactions with version number set to 3 are now treated as standard on all networks (#29496),
   subject to opt-in Topologically Restricted Until Confirmation (TRUC) transaction policy as
-  described in [BIP 431](https://github.com/bitcoin/bips/blob/master/bip-0431.mediawiki).  The
+  described in [BIP 431](https://github.com/tortoisecoin/bips/blob/master/bip-0431.mediawiki).  The
   policy includes limits on spending unconfirmed outputs (#28948), eviction of a previous descendant
   if a more incentive-compatible one is submitted (#29306), and a maximum transaction size of 10,000vB
   (#29873). These restrictions simplify the assessment of incentive compatibility of accepting or
@@ -160,7 +160,7 @@ Updated RPCs
 - The `warnings` field in `getblockchaininfo`, `getmininginfo` and
   `getnetworkinfo` now returns all the active node warnings as an array
   of strings, instead of a single warning. The current behaviour
-  can be temporarily restored by running Bitcoin Core with the configuration
+  can be temporarily restored by running Tortoisecoin Core with the configuration
   option `-deprecatedrpc=warnings`. (#29845)
 
 - Previously when using the `sendrawtransaction` RPC and specifying outputs
@@ -193,9 +193,9 @@ Build System
 ------------
 
 - GCC 11.1 or later, or Clang 16.0 or later,
-are now required to compile Bitcoin Core. (#29091, #30263)
+are now required to compile Tortoisecoin Core. (#29091, #30263)
 
-- The minimum required glibc to run Bitcoin Core is now
+- The minimum required glibc to run Tortoisecoin Core is now
 2.31. This means that RHEL 8 and Ubuntu 18.04 (Bionic)
 are no-longer supported. (#29987)
 
@@ -260,14 +260,14 @@ Tests
 
 - The BIP94 timewarp attack mitigation is now active on the `regtest` network. (#30681)
 
-- A new `-testdatadir` option has been added to `test_bitcoin` to allow specifying the
+- A new `-testdatadir` option has been added to `test_tortoisecoin` to allow specifying the
   location of unit test data directories. (#26564)
 
 Blockstorage
 ------------
 
 - Block files are now XOR'd by default with a key stored in the blocksdir.
-Previous releases of Bitcoin Core or previous external software will not be able to read the blocksdir with a non-zero XOR-key.
+Previous releases of Tortoisecoin Core or previous external software will not be able to read the blocksdir with a non-zero XOR-key.
 Refer to the `-blocksxor` help for more details. (#28052)
 
 Chainstate
@@ -368,4 +368,4 @@ Thanks to everyone who directly contributed to this release:
 - willcl-ark
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+[Transifex](https://www.transifex.com/tortoisecoin/tortoisecoin/).

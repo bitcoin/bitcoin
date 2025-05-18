@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-present The Bitcoin Core developers
+# Copyright (c) 2019-present The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Run fuzz test targets.
@@ -109,7 +109,7 @@ def main():
         logging.error("Must have fuzz executable built")
         sys.exit(1)
 
-    fuzz_bin=os.getenv("BITCOINFUZZ", default=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'))
+    fuzz_bin=os.getenv("TORTOISECOINFUZZ", default=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'))
 
     # Build list of tests
     test_list_all = parse_test_list(
@@ -153,7 +153,7 @@ def main():
                     " ".join(test_list_missing_corpus)
                 )
             )
-            logging.info("Please consider adding a fuzz corpus at https://github.com/bitcoin-core/qa-assets")
+            logging.info("Please consider adding a fuzz corpus at https://github.com/tortoisecoin-core/qa-assets")
 
     try:
         help_output = subprocess.run(
@@ -301,14 +301,14 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, merge_dirs)
             # set_cover_merge is used instead of -merge=1 to reduce the overall
             # size of the qa-assets git repository a bit, but more importantly,
             # to cut the runtime to iterate over all fuzz inputs [0].
-            # [0] https://github.com/bitcoin-core/qa-assets/issues/130#issuecomment-1761760866
+            # [0] https://github.com/tortoisecoin-core/qa-assets/issues/130#issuecomment-1761760866
             '-shuffle=0',
             '-prefer_small=1',
             '-use_value_profile=0',
             # use_value_profile is enabled by oss-fuzz [0], but disabled for
             # now to avoid bloating the qa-assets git repository [1].
             # [0] https://github.com/google/oss-fuzz/issues/1406#issuecomment-387790487
-            # [1] https://github.com/bitcoin-core/qa-assets/issues/130#issuecomment-1749075891
+            # [1] https://github.com/tortoisecoin-core/qa-assets/issues/130#issuecomment-1749075891
             os.path.join(corpus, t),
         ] + [str(m_dir / t) for m_dir in merge_dirs]
         os.makedirs(os.path.join(corpus, t), exist_ok=True)

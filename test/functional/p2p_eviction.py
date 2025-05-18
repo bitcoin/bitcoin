@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ from test_framework.p2p import (
     P2PDataStore,
     P2PInterface,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
@@ -43,7 +43,7 @@ class SlowP2PInterface(P2PInterface):
         self.send_message(msg_pong(message.nonce))
 
 
-class P2PEvict(BitcoinTestFramework):
+class P2PEvict(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # The choice of maxconnections=32 results in a maximum of 21 inbound connections

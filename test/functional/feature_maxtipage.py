@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test logic for setting -maxtipage on command line.
@@ -10,14 +10,14 @@ their best known block header time is more than -maxtipage in the past.
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import assert_equal
 
 
 DEFAULT_MAX_TIP_AGE = 24 * 60 * 60
 
 
-class MaxTipAgeTest(BitcoinTestFramework):
+class MaxTipAgeTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

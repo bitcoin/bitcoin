@@ -1,10 +1,10 @@
-* The file `ecdsa_secp256k1_sha256_bitcoin_test.json` in this directory
+* The file `ecdsa_secp256k1_sha256_tortoisecoin_test.json` in this directory
   comes from Google's project Wycheproof with git commit
   `b063b4aedae951c69df014cd25fa6d69ae9e8cb9`, see
-  https://github.com/google/wycheproof/blob/b063b4aedae951c69df014cd25fa6d69ae9e8cb9/testvectors_v1/ecdsa_secp256k1_sha256_bitcoin_test.json
+  https://github.com/google/wycheproof/blob/b063b4aedae951c69df014cd25fa6d69ae9e8cb9/testvectors_v1/ecdsa_secp256k1_sha256_tortoisecoin_test.json
 
-* The file `ecdsa_secp256k1_sha256_bitcoin_test.h` is generated from
-  `ecdsa_secp256k1_sha256_bitcoin_test.json` using the script
+* The file `ecdsa_secp256k1_sha256_tortoisecoin_test.h` is generated from
+  `ecdsa_secp256k1_sha256_tortoisecoin_test.json` using the script
   `tests_wycheproof_generate.py`.
 
 -------------------------------------------------------------------------------

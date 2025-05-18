@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#ifndef TORTOISECOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#define TORTOISECOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
@@ -24,5 +24,5 @@ struct InitWalletDirTestingSetup: public BasicTestingSetup {
     std::unique_ptr<interfaces::WalletLoader> m_wallet_loader;
 };
 
-#endif // BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#endif // TORTOISECOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 } // namespace wallet

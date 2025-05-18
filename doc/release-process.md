@@ -6,8 +6,8 @@ Release Process
 ### Before every release candidate
 
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`).
-* Update manpages (after rebuilding the binaries), see [gen-manpages.py](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagespy).
-* Update bitcoin.conf and commit changes if they exist, see [gen-bitcoin-conf.sh](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-bitcoin-confsh).
+* Update manpages (after rebuilding the binaries), see [gen-manpages.py](https://github.com/tortoisecoin/tortoisecoin/blob/master/contrib/devtools/README.md#gen-manpagespy).
+* Update tortoisecoin.conf and commit changes if they exist, see [gen-tortoisecoin-conf.sh](https://github.com/tortoisecoin/tortoisecoin/blob/master/contrib/devtools/README.md#gen-tortoisecoin-confsh).
 
 ### Before every major and minor release
 
@@ -21,15 +21,15 @@ Release Process
 
 * On both the master branch and the new release branch:
   - update `CLIENT_VERSION_MAJOR` in [`configure.ac`](../configure.ac)
-* On the new release branch in [`configure.ac`](../configure.ac)(see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd)):
+* On the new release branch in [`configure.ac`](../configure.ac)(see [this commit](https://github.com/tortoisecoin/tortoisecoin/commit/742f7dd)):
   - set `CLIENT_VERSION_MINOR` to `0`
   - set `CLIENT_VERSION_BUILD` to `0`
   - set `CLIENT_VERSION_IS_RELEASE` to `true`
 
 #### Before branch-off
 
-* Update translations see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/27488) for an example.
+* Update translations see [translation_process.md](https://github.com/tortoisecoin/tortoisecoin/blob/master/doc/translation_process.md#synchronising-translations).
+* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/tortoisecoin/tortoisecoin/pull/27488) for an example.
 * Update the following variables in [`src/kernel/chainparams.cpp`](/src/kernel/chainparams.cpp) for mainnet, testnet, and signet:
   - `m_assumed_blockchain_size` and `m_assumed_chain_state_size` with the current size plus some overhead (see
     [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
@@ -37,7 +37,7 @@ Release Process
     that causes rejection of blocks in the past history.
   - `chainTxData` with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC with an
     `nBlocks` of 4096 (28 days) and a `bestblockhash` of RPC `getbestblockhash`; see
-    [this pull request](https://github.com/bitcoin/bitcoin/pull/28591) for an example. Reviewers can verify the results by running
+    [this pull request](https://github.com/tortoisecoin/tortoisecoin/pull/28591) for an example. Reviewers can verify the results by running
     `getchaintxstats <window_block_count> <window_final_block_hash>` with the `window_block_count` and `window_final_block_hash` from your output.
   - `defaultAssumeValid` with the output of RPC `getblockhash` using the `height` of `window_final_block_height` above
     (and update the block height comment with that height), taking into account the following:
@@ -55,35 +55,35 @@ Release Process
 - Clear the release notes and move them to the wiki (see "Write the release notes" below).
 - Translations on Transifex:
     - Pull translations from Transifex into the master branch.
-    - Create [a new resource](https://www.transifex.com/bitcoin/bitcoin/content/) named after the major version with the slug `qt-translation-<RRR>x`, where `RRR` is the major branch number padded with zeros. Use `src/qt/locale/bitcoin_en.xlf` to create it.
+    - Create [a new resource](https://www.transifex.com/tortoisecoin/tortoisecoin/content/) named after the major version with the slug `qt-translation-<RRR>x`, where `RRR` is the major branch number padded with zeros. Use `src/qt/locale/tortoisecoin_en.xlf` to create it.
     - In the project workflow settings, ensure that [Translation Memory Fill-up](https://help.transifex.com/en/articles/6224817-setting-up-translation-memory-fill-up) is enabled and that [Translation Memory Context Matching](https://help.transifex.com/en/articles/6224753-translation-memory-with-context) is disabled.
     - Update the Transifex slug in [`.tx/config`](/.tx/config) to the slug of the resource created in the first step. This identifies which resource the translations will be synchronized from.
-    - Make an announcement that translators can start translating for the new version. You can use one of the [previous announcements](https://www.transifex.com/bitcoin/communication/) as a template.
-    - Change the auto-update URL for the resource to `master`, e.g. `https://raw.githubusercontent.com/bitcoin/bitcoin/master/src/qt/locale/bitcoin_en.xlf`. (Do this only after the previous steps, to prevent an auto-update from interfering.)
+    - Make an announcement that translators can start translating for the new version. You can use one of the [previous announcements](https://www.transifex.com/tortoisecoin/communication/) as a template.
+    - Change the auto-update URL for the resource to `master`, e.g. `https://raw.githubusercontent.com/tortoisecoin/tortoisecoin/master/src/qt/locale/tortoisecoin_en.xlf`. (Do this only after the previous steps, to prevent an auto-update from interfering.)
 
 #### After branch-off (on the major release branch)
 
 - Update the versions.
-- Create the draft, named "*version* Release Notes Draft", as a [collaborative wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/_new).
+- Create the draft, named "*version* Release Notes Draft", as a [collaborative wiki](https://github.com/tortoisecoin-core/tortoisecoin-devwiki/wiki/_new).
 - Clear the release notes: `cp doc/release-notes-empty-template.md doc/release-notes.md`
-- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/27621) for an example) and provide a link to it in the release announcements where useful.
+- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/tortoisecoin/tortoisecoin/issues/27621) for an example) and provide a link to it in the release announcements where useful.
 - Translations on Transifex
-    - Change the auto-update URL for the new major version's resource away from `master` and to the branch, e.g. `https://raw.githubusercontent.com/bitcoin/bitcoin/<branch>/src/qt/locale/bitcoin_en.xlf`. Do not forget this or it will keep tracking the translations on master instead, drifting away from the specific major release.
+    - Change the auto-update URL for the new major version's resource away from `master` and to the branch, e.g. `https://raw.githubusercontent.com/tortoisecoin/tortoisecoin/<branch>/src/qt/locale/tortoisecoin_en.xlf`. Do not forget this or it will keep tracking the translations on master instead, drifting away from the specific major release.
 - Prune inputs from the qa-assets repo (See [pruning
-  inputs](https://github.com/bitcoin-core/qa-assets#pruning-inputs)).
+  inputs](https://github.com/tortoisecoin-core/qa-assets#pruning-inputs)).
 
 #### Before final release
 
-- Merge the release notes from [the wiki](https://github.com/bitcoin-core/bitcoin-devwiki/wiki/) into the branch.
+- Merge the release notes from [the wiki](https://github.com/tortoisecoin-core/tortoisecoin-devwiki/wiki/) into the branch.
 - Ensure the "Needs release note" label is removed from all relevant pull
   requests and issues:
-  https://github.com/bitcoin/bitcoin/issues?q=label%3A%22Needs+release+note%22
+  https://github.com/tortoisecoin/tortoisecoin/issues?q=label%3A%22Needs+release+note%22
 
 #### Tagging a release (candidate)
 
-To tag the version (or release candidate) in git, use the `make-tag.py` script from [bitcoin-maintainer-tools](https://github.com/bitcoin-core/bitcoin-maintainer-tools). From the root of the repository run:
+To tag the version (or release candidate) in git, use the `make-tag.py` script from [tortoisecoin-maintainer-tools](https://github.com/tortoisecoin-core/tortoisecoin-maintainer-tools). From the root of the repository run:
 
-    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 25.0)
+    ../tortoisecoin-maintainer-tools/make-tag.py v(new version, e.g. 25.0)
 
 This will perform a few last-minute consistency checks in the build system files, and if they pass, create a signed tag.
 
@@ -97,13 +97,13 @@ Install Guix using one of the installation methods detailed in
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
-    git clone https://github.com/bitcoin-core/guix.sigs.git
-    git clone https://github.com/bitcoin-core/bitcoin-detached-sigs.git
-    git clone https://github.com/bitcoin/bitcoin.git
+    git clone https://github.com/tortoisecoin-core/guix.sigs.git
+    git clone https://github.com/tortoisecoin-core/tortoisecoin-detached-sigs.git
+    git clone https://github.com/tortoisecoin/tortoisecoin.git
 
 ### Write the release notes
 
-Open a draft of the release notes for collaborative editing at https://github.com/bitcoin-core/bitcoin-devwiki/wiki.
+Open a draft of the release notes for collaborative editing at https://github.com/tortoisecoin-core/tortoisecoin-devwiki/wiki.
 
 For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until `-final`.
 
@@ -113,10 +113,10 @@ Generate list of authors:
 
 ### Setup and perform Guix builds
 
-Checkout the Bitcoin Core version you'd like to build:
+Checkout the Tortoisecoin Core version you'd like to build:
 
 ```sh
-pushd ./bitcoin
+pushd ./tortoisecoin
 SIGNER='(your builder key, ie bluematt, sipa, etc)'
 VERSION='(new version without v-prefix, e.g. 25.0)'
 git fetch origin "v${VERSION}"
@@ -156,7 +156,7 @@ git commit -m "Add attestations by ${SIGNER} for ${VERSION} non-codesigned"
 popd
 ```
 
-Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoin-core/guix.sigs).
+Then open a Pull Request to the [guix.sigs repository](https://github.com/tortoisecoin-core/guix.sigs).
 
 ## Codesigning
 
@@ -164,7 +164,7 @@ Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoi
 
 In the `guix-build-${VERSION}/output/x86_64-apple-darwin` and `guix-build-${VERSION}/output/arm64-apple-darwin` directories:
 
-    tar xf bitcoin-osx-unsigned.tar.gz
+    tar xf tortoisecoin-osx-unsigned.tar.gz
     ./detached-sig-create.sh /path/to/codesign.p12
     Enter the keychain password and authorize the signature
     signature-osx.tar.gz will be created
@@ -173,19 +173,19 @@ In the `guix-build-${VERSION}/output/x86_64-apple-darwin` and `guix-build-${VERS
 
 In the `guix-build-${VERSION}/output/x86_64-w64-mingw32` directory:
 
-    tar xf bitcoin-win-unsigned.tar.gz
+    tar xf tortoisecoin-win-unsigned.tar.gz
     ./detached-sig-create.sh -key /path/to/codesign.key
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
 ### Windows and macOS codesigners only: test code signatures
 It is advised to test that the code signature attaches properly prior to tagging by performing the `guix-codesign` step.
-However if this is done, once the release has been tagged in the bitcoin-detached-sigs repo, the `guix-codesign` step must be performed again in order for the guix attestation to be valid when compared against the attestations of non-codesigner builds. The directories created by `guix-codesign` will need to be cleared prior to running `guix-codesign` again.
+However if this is done, once the release has been tagged in the tortoisecoin-detached-sigs repo, the `guix-codesign` step must be performed again in order for the guix attestation to be valid when compared against the attestations of non-codesigner builds. The directories created by `guix-codesign` will need to be cleared prior to running `guix-codesign` again.
 
 ### Windows and macOS codesigners only: Commit the detached codesign payloads
 
 ```sh
-pushd ./bitcoin-detached-sigs
+pushd ./tortoisecoin-detached-sigs
 # checkout or create the appropriate branch for this release series
 git checkout --orphan <branch>
 # if you are the macOS codesigner
@@ -204,7 +204,7 @@ popd
 ### Non-codesigners: wait for Windows and macOS detached signatures
 
 - Once the Windows and macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
-- Detached signatures will then be committed to the [bitcoin-detached-sigs](https://github.com/bitcoin-core/bitcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
+- Detached signatures will then be committed to the [tortoisecoin-detached-sigs](https://github.com/tortoisecoin-core/tortoisecoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
 ### Create the codesigned build outputs
 
@@ -223,7 +223,7 @@ git commit -m "Add attestations by ${SIGNER} for ${VERSION} codesigned"
 popd
 ```
 
-Then open a Pull Request to the [guix.sigs repository](https://github.com/bitcoin-core/guix.sigs).
+Then open a Pull Request to the [guix.sigs repository](https://github.com/tortoisecoin-core/guix.sigs).
 
 ## After 6 or more people have guix-built and their results match
 
@@ -234,8 +234,8 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 ```
 
 
-- Upload to the bitcoincore.org server:
-    1. The contents of each `./bitcoin/guix-build-${VERSION}/output/${HOST}/` directory.
+- Upload to the tortoisecoincore.org server:
+    1. The contents of each `./tortoisecoin/guix-build-${VERSION}/output/${HOST}/` directory.
 
        Guix will output all of the results into host subdirectories, but the SHA256SUMS
        file does not include these subdirectories. In order for downloads via torrent
@@ -248,8 +248,8 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 
     3. The `SHA256SUMS.asc` combined signature file you just created.
 
-- After uploading release candidate binaries, notify the bitcoin-core-dev mailing list and
-  bitcoin-dev group that a release candidate is available for testing. Include a link to the release
+- After uploading release candidate binaries, notify the tortoisecoin-core-dev mailing list and
+  tortoisecoin-dev group that a release candidate is available for testing. Include a link to the release
   notes draft.
 
 - The server will automatically create an OpenTimestamps file and torrent of the directory.
@@ -261,45 +261,45 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
   ```
 
   Insert the magnet URI into the announcement sent to mailing lists. This permits
-  people without access to `bitcoincore.org` to download the binary distribution.
+  people without access to `tortoisecoincore.org` to download the binary distribution.
   Also put it into the `optional_magnetlink:` slot in the YAML file for
-  bitcoincore.org.
+  tortoisecoincore.org.
 
 - Archive the release notes for the new version to `doc/release-notes/release-notes-${VERSION}.md`
   (branch `master` and branch of the release).
 
-- Update the bitcoincore.org website
+- Update the tortoisecoincore.org website
 
   - blog post
 
-  - maintained versions [table](https://github.com/bitcoin-core/bitcoincore.org/commits/master/_includes/posts/maintenance-table.md)
+  - maintained versions [table](https://github.com/tortoisecoin-core/tortoisecoincore.org/commits/master/_includes/posts/maintenance-table.md)
 
   - RPC documentation update
 
-      - See https://github.com/bitcoin-core/bitcoincore.org/blob/master/contrib/doc-gen/
+      - See https://github.com/tortoisecoin-core/tortoisecoincore.org/blob/master/contrib/doc-gen/
 
 
 - Update repositories
 
-  - Delete post-EOL [release branches](https://github.com/bitcoin/bitcoin/branches/all) and create a tag `v${branch_name}-final`.
+  - Delete post-EOL [release branches](https://github.com/tortoisecoin/tortoisecoin/branches/all) and create a tag `v${branch_name}-final`.
 
-  - Delete ["Needs backport" labels](https://github.com/bitcoin/bitcoin/labels?q=backport) for non-existing branches.
+  - Delete ["Needs backport" labels](https://github.com/tortoisecoin/tortoisecoin/labels?q=backport) for non-existing branches.
 
   - Update packaging repo
 
-      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2
+      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.tortoisecoincore.tortoisecoin-qt/pull/2
 
-      - Push the snap, see https://github.com/bitcoin-core/packaging/blob/main/snap/local/build.md
+      - Push the snap, see https://github.com/tortoisecoin-core/packaging/blob/main/snap/local/build.md
 
-  - Create a [new GitHub release](https://github.com/bitcoin/bitcoin/releases/new) with a link to the archived release notes
+  - Create a [new GitHub release](https://github.com/tortoisecoin/tortoisecoin/releases/new) with a link to the archived release notes
 
 - Announce the release:
 
-  - bitcoin-dev and bitcoin-core-dev mailing list
+  - tortoisecoin-dev and tortoisecoin-core-dev mailing list
 
-  - Bitcoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
+  - Tortoisecoin Core announcements list https://tortoisecoincore.org/en/list/announcements/join/
 
-  - Bitcoin Core Twitter https://twitter.com/bitcoincoreorg
+  - Tortoisecoin Core Twitter https://twitter.com/tortoisecoincoreorg
 
   - Celebrate
 

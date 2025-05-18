@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Open bitcoin URI</string>
+   <string>Open tortoisecoin URI</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -26,7 +26,7 @@
      <item>
       <widget class="QValidatedLineEdit" name="uriEdit">
        <property name="placeholderText">
-        <string notr="true">bitcoin:</string>
+        <string notr="true">tortoisecoin:</string>
        </property>
       </widget>
      </item>
@@ -39,7 +39,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../tortoisecoin.qrc">
          <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste
         </iconset>
        </property>

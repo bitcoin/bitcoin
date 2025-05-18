@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/tortoisecoin-config.h> // IWYU pragma: keep
 
 #include <wallet/walletdb.h>
 
@@ -624,7 +624,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
         if (keyMeta.nVersion >= CKeyMetadata::VERSION_WITH_HDDATA && !keyMeta.hd_seed_id.IsNull() && keyMeta.hdKeypath.size() > 0) {
             // Get the path from the key origin or from the path string
             // Not applicable when path is "s" or "m" as those indicate a seed
-            // See https://github.com/bitcoin/bitcoin/pull/12924
+            // See https://github.com/tortoisecoin/tortoisecoin/pull/12924
             bool internal = false;
             uint32_t index = 0;
             if (keyMeta.hdKeypath != "s" && keyMeta.hdKeypath != "m") {

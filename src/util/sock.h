@@ -1,9 +1,9 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SOCK_H
-#define BITCOIN_UTIL_SOCK_H
+#ifndef TORTOISECOIN_UTIL_SOCK_H
+#define TORTOISECOIN_UTIL_SOCK_H
 
 #include <compat/compat.h>
 #include <util/threadinterrupt.h>
@@ -284,4 +284,4 @@ private:
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
 
-#endif // BITCOIN_UTIL_SOCK_H
+#endif // TORTOISECOIN_UTIL_SOCK_H

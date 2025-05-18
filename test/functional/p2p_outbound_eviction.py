@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-2021 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,14 +21,14 @@ from test_framework.messages import (
     CBlockHeader,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 
 # Timeouts (in seconds)
 CHAIN_SYNC_TIMEOUT = 20 * 60
 HEADERS_RESPONSE_TIME = 2 * 60
 
 
-class P2POutEvict(BitcoinTestFramework):
+class P2POutEvict(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

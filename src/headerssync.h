@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_HEADERSSYNC_H
-#define BITCOIN_HEADERSSYNC_H
+#ifndef TORTOISECOIN_HEADERSSYNC_H
+#define TORTOISECOIN_HEADERSSYNC_H
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -56,7 +56,7 @@ struct CompressedHeader {
  *
  * We wish to download a peer's headers chain in a DoS-resistant way.
  *
- * The Bitcoin protocol does not offer an easy way to determine the work on a
+ * The Tortoisecoin protocol does not offer an easy way to determine the work on a
  * peer's chain. Currently, we can query a peer's headers by using a GETHEADERS
  * message, and our peer can return a set of up to 2000 headers that connect to
  * something we know. If a peer's chain has more than 2000 blocks, then we need
@@ -275,4 +275,4 @@ private:
     State m_download_state{State::PRESYNC};
 };
 
-#endif // BITCOIN_HEADERSSYNC_H
+#endif // TORTOISECOIN_HEADERSSYNC_H

@@ -6,7 +6,7 @@ body:
   id: acknowledgement
   attributes:
     label: Issues, reports or feature requests related to the GUI should be opened directly on the GUI repo
-    description: https://github.com/bitcoin-core/gui/issues/
+    description: https://github.com/tortoisecoin-core/gui/issues/
     options:
       - label: I still think this issue should be opened here
         required: true

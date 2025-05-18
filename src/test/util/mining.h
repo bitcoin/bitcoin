@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_MINING_H
-#define BITCOIN_TEST_UTIL_MINING_H
+#ifndef TORTOISECOIN_TEST_UTIL_MINING_H
+#define TORTOISECOIN_TEST_UTIL_MINING_H
 
 #include <node/miner.h>
 
@@ -39,4 +39,4 @@ std::shared_ptr<CBlock> PrepareBlock(const node::NodeContext& node, const CScrip
 /** RPC-like helper function, returns the generated coin */
 COutPoint generatetoaddress(const node::NodeContext&, const std::string& address);
 
-#endif // BITCOIN_TEST_UTIL_MINING_H
+#endif // TORTOISECOIN_TEST_UTIL_MINING_H

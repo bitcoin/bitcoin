@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2022 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPAT_ENDIAN_H
-#define BITCOIN_COMPAT_ENDIAN_H
+#ifndef TORTOISECOIN_COMPAT_ENDIAN_H
+#define TORTOISECOIN_COMPAT_ENDIAN_H
 
 #include <compat/byteswap.h>
 
@@ -71,4 +71,4 @@ inline BSWAP_CONSTEXPR uint64_t le64toh_internal(uint64_t little_endian_64bits)
         else return little_endian_64bits;
 }
 
-#endif // BITCOIN_COMPAT_ENDIAN_H
+#endif // TORTOISECOIN_COMPAT_ENDIAN_H

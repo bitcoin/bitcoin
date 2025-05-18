@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-present The Bitcoin Core developers
+// Copyright (c) 2009-present The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMMON_SYSTEM_H
-#define BITCOIN_COMMON_SYSTEM_H
+#ifndef TORTOISECOIN_COMMON_SYSTEM_H
+#define TORTOISECOIN_COMMON_SYSTEM_H
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/tortoisecoin-config.h> // IWYU pragma: keep
 
 #include <cstdint>
 #include <string>
@@ -29,4 +29,4 @@ void runCommand(const std::string& strCommand);
  */
 int GetNumCores();
 
-#endif // BITCOIN_COMMON_SYSTEM_H
+#endif // TORTOISECOIN_COMMON_SYSTEM_H

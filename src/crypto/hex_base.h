@@ -1,9 +1,9 @@
-// Copyright (c) 2009-present The Bitcoin Core developers
+// Copyright (c) 2009-present The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_HEX_BASE_H
-#define BITCOIN_CRYPTO_HEX_BASE_H
+#ifndef TORTOISECOIN_CRYPTO_HEX_BASE_H
+#define TORTOISECOIN_CRYPTO_HEX_BASE_H
 
 #include <span.h>
 
@@ -20,4 +20,4 @@ inline std::string HexStr(const Span<const std::byte> s) { return HexStr(MakeUCh
 
 signed char HexDigit(char c);
 
-#endif // BITCOIN_CRYPTO_HEX_BASE_H
+#endif // TORTOISECOIN_CRYPTO_HEX_BASE_H

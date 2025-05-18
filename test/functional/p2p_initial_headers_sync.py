@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test initial headers download
@@ -9,7 +9,7 @@ is close to caught up), and that each block announcement results in only one
 additional peer receiving a getheaders message.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.messages import (
     CInv,
     MSG_BLOCK,
@@ -25,7 +25,7 @@ from test_framework.util import (
 )
 import random
 
-class HeadersSyncTest(BitcoinTestFramework):
+class HeadersSyncTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

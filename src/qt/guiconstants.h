@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_GUICONSTANTS_H
-#define BITCOIN_QT_GUICONSTANTS_H
+#ifndef TORTOISECOIN_QT_GUICONSTANTS_H
+#define TORTOISECOIN_QT_GUICONSTANTS_H
 
 #include <chrono>
 #include <cstdint>
@@ -19,7 +19,7 @@ static constexpr auto SHUTDOWN_POLLING_DELAY{200ms};
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
 
-/* BitcoinGUI -- Size of icons in status bar */
+/* TortoisecoinGUI -- Size of icons in status bar */
 static const int STATUSBAR_ICONSIZE = 16;
 
 static const bool DEFAULT_SPLASHSCREEN = true;
@@ -46,13 +46,13 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 36
 
-#define QAPP_ORG_NAME "Bitcoin"
-#define QAPP_ORG_DOMAIN "bitcoin.org"
-#define QAPP_APP_NAME_DEFAULT "Bitcoin-Qt"
-#define QAPP_APP_NAME_TESTNET "Bitcoin-Qt-testnet"
-#define QAPP_APP_NAME_TESTNET4 "Bitcoin-Qt-testnet4"
-#define QAPP_APP_NAME_SIGNET "Bitcoin-Qt-signet"
-#define QAPP_APP_NAME_REGTEST "Bitcoin-Qt-regtest"
+#define QAPP_ORG_NAME "Tortoisecoin"
+#define QAPP_ORG_DOMAIN "tortoisecoin.org"
+#define QAPP_APP_NAME_DEFAULT "Tortoisecoin-Qt"
+#define QAPP_APP_NAME_TESTNET "Tortoisecoin-Qt-testnet"
+#define QAPP_APP_NAME_TESTNET4 "Tortoisecoin-Qt-testnet4"
+#define QAPP_APP_NAME_SIGNET "Tortoisecoin-Qt-signet"
+#define QAPP_APP_NAME_REGTEST "Tortoisecoin-Qt-regtest"
 
 /* One gigabyte (GB) in bytes */
 static constexpr uint64_t GB_BYTES{1000000000};
@@ -60,4 +60,4 @@ static constexpr uint64_t GB_BYTES{1000000000};
 // Default prune target displayed in GUI.
 static constexpr int DEFAULT_PRUNE_TARGET_GB{2};
 
-#endif // BITCOIN_QT_GUICONSTANTS_H
+#endif // TORTOISECOIN_QT_GUICONSTANTS_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SIGNALINTERRUPT_H
-#define BITCOIN_UTIL_SIGNALINTERRUPT_H
+#ifndef TORTOISECOIN_UTIL_SIGNALINTERRUPT_H
+#define TORTOISECOIN_UTIL_SIGNALINTERRUPT_H
 
 #ifdef WIN32
 #include <condition_variable>
@@ -49,4 +49,4 @@ private:
 };
 } // namespace util
 
-#endif // BITCOIN_UTIL_SIGNALINTERRUPT_H
+#endif // TORTOISECOIN_UTIL_SIGNALINTERRUPT_H

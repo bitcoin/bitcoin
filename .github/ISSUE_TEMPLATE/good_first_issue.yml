@@ -28,9 +28,9 @@ body:
     id: useful-skills
     attributes:
       label: Useful Skills
-      description: For example, “`std::thread`”, “Qt5 GUI and async GUI design” or “basic understanding of Bitcoin mining and the Bitcoin Core RPC interface”.
+      description: For example, “`std::thread`”, “Qt5 GUI and async GUI design” or “basic understanding of Tortoisecoin mining and the Tortoisecoin Core RPC interface”.
       value: |
-        * Compiling Bitcoin Core from source
+        * Compiling Tortoisecoin Core from source
         * Running the C++ unit tests and the Python functional tests
         * ...
   - type: textarea
@@ -40,5 +40,5 @@ body:
       value: |
         Want to work on this issue?
 
-        For guidance on contributing, please read [CONTRIBUTING.md](https://github.com/bitcoin/bitcoin/blob/master/CONTRIBUTING.md) before opening your pull request.
+        For guidance on contributing, please read [CONTRIBUTING.md](https://github.com/tortoisecoin/tortoisecoin/blob/master/CONTRIBUTING.md) before opening your pull request.
 

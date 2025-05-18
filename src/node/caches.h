@@ -1,9 +1,9 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_CACHES_H
-#define BITCOIN_NODE_CACHES_H
+#ifndef TORTOISECOIN_NODE_CACHES_H
+#define TORTOISECOIN_NODE_CACHES_H
 
 #include <cstddef>
 #include <cstdint>
@@ -21,4 +21,4 @@ struct CacheSizes {
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);
 } // namespace node
 
-#endif // BITCOIN_NODE_CACHES_H
+#endif // TORTOISECOIN_NODE_CACHES_H

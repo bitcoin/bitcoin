@@ -2,7 +2,7 @@
 
 **Updated for MacOS [11.2](https://www.apple.com/macos/big-sur/)**
 
-This guide describes how to build bitcoind, command-line utilities, and GUI on macOS
+This guide describes how to build tortoisecoind, command-line utilities, and GUI on macOS
 
 ## Preparation
 
@@ -16,7 +16,7 @@ macOS comes with a built-in Terminal located in:
 ### 1. Xcode Command Line Tools
 
 The Xcode Command Line Tools are a collection of build tools for macOS.
-These tools must be installed in order to build Bitcoin Core from source.
+These tools must be installed in order to build Tortoisecoin Core from source.
 
 To install, run the following command from your terminal:
 
@@ -65,21 +65,21 @@ CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
 
 Try `llvm@17` if compilation fails with the default version of llvm.
 
-### 4. Clone Bitcoin repository
+### 4. Clone Tortoisecoin repository
 
 `git` should already be installed by default on your system.
-Now that all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory.
+Now that all the required dependencies are installed, let's clone the Tortoisecoin Core repository to a directory.
 All build scripts and commands will run from this directory.
 
 ``` bash
-git clone https://github.com/bitcoin/bitcoin.git
+git clone https://github.com/tortoisecoin/tortoisecoin.git
 ```
 
 ### 5. Install Optional Dependencies
 
 #### Wallet Dependencies
 
-It is not necessary to build wallet functionality to run `bitcoind` or  `bitcoin-qt`.
+It is not necessary to build wallet functionality to run `tortoisecoind` or  `tortoisecoin-qt`.
 
 ###### Descriptor Wallet Support
 
@@ -102,7 +102,7 @@ brew install berkeley-db@4
 
 ###### Qt
 
-Bitcoin Core includes a GUI built with the cross-platform Qt Framework.
+Tortoisecoin Core includes a GUI built with the cross-platform Qt Framework.
 To compile the GUI, we need to install `qt@5`.
 Skip if you don't intend to use the GUI.
 
@@ -111,7 +111,7 @@ brew install qt@5
 ```
 
 Note: Building with Qt binaries downloaded from the Qt website is not officially supported.
-See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).
+See the notes in [#7714](https://github.com/tortoisecoin/tortoisecoin/issues/7714).
 
 ###### qrencode
 
@@ -177,14 +177,14 @@ brew install python
 
 #### Deploy Dependencies
 
-You can deploy a `.zip` containing the Bitcoin Core application using `make deploy`.
+You can deploy a `.zip` containing the Tortoisecoin Core application using `make deploy`.
 It is required that you have `python` installed.
 
-## Building Bitcoin Core
+## Building Tortoisecoin Core
 
 ### 1. Configuration
 
-There are many ways to configure Bitcoin Core, here are a few common examples:
+There are many ways to configure Tortoisecoin Core, here are a few common examples:
 
 ##### Wallet (BDB + SQlite) Support, No GUI:
 
@@ -228,7 +228,7 @@ Examine the output of the following command for a full list of configuration opt
 ### 2. Compile
 
 After configuration, you are ready to compile.
-Run the following in your terminal to compile Bitcoin Core:
+Run the following in your terminal to compile Tortoisecoin Core:
 
 ``` bash
 make        # use "-j N" here for N parallel jobs
@@ -243,41 +243,41 @@ You can also create a  `.zip` containing the `.app` bundle by running the follow
 make deploy
 ```
 
-## Running Bitcoin Core
+## Running Tortoisecoin Core
 
-Bitcoin Core should now be available at `./src/bitcoind`.
-If you compiled support for the GUI, it should be available at `./src/qt/bitcoin-qt`.
+Tortoisecoin Core should now be available at `./src/tortoisecoind`.
+If you compiled support for the GUI, it should be available at `./src/qt/tortoisecoin-qt`.
 
-The first time you run `bitcoind` or `bitcoin-qt`, it will start downloading the blockchain.
+The first time you run `tortoisecoind` or `tortoisecoin-qt`, it will start downloading the blockchain.
 This process could take many hours, or even days on slower than average systems.
 
 By default, blockchain and wallet data files will be stored in:
 
 ``` bash
-/Users/${USER}/Library/Application Support/Bitcoin/
+/Users/${USER}/Library/Application Support/Tortoisecoin/
 ```
 
 Before running, you may create an empty configuration file:
 
 ```shell
-mkdir -p "/Users/${USER}/Library/Application Support/Bitcoin"
+mkdir -p "/Users/${USER}/Library/Application Support/Tortoisecoin"
 
-touch "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+touch "/Users/${USER}/Library/Application Support/Tortoisecoin/tortoisecoin.conf"
 
-chmod 600 "/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf"
+chmod 600 "/Users/${USER}/Library/Application Support/Tortoisecoin/tortoisecoin.conf"
 ```
 
 You can monitor the download process by looking at the debug.log file:
 
 ```shell
-tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+tail -f $HOME/Library/Application\ Support/Tortoisecoin/debug.log
 ```
 
 ## Other commands:
 
 ```shell
-./src/bitcoind -daemon      # Starts the bitcoin daemon.
-./src/bitcoin-cli --help    # Outputs a list of command-line options.
-./src/bitcoin-cli help      # Outputs a list of RPC commands when the daemon is running.
-./src/qt/bitcoin-qt -server # Starts the bitcoin-qt server mode, allows bitcoin-cli control
+./src/tortoisecoind -daemon      # Starts the tortoisecoin daemon.
+./src/tortoisecoin-cli --help    # Outputs a list of command-line options.
+./src/tortoisecoin-cli help      # Outputs a list of RPC commands when the daemon is running.
+./src/qt/tortoisecoin-qt -server # Starts the tortoisecoin-qt server mode, allows tortoisecoin-cli control
 ```

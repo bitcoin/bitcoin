@@ -12,7 +12,7 @@ It is best if the maintainers are present during the release, so they can help e
 
 This process also assumes that there will be no minor releases for old major releases.
 
-We aim to cut a regular release every 3-4 months, approximately twice as frequent as major Bitcoin Core releases. Every second release should be published one month before the feature freeze of the next major Bitcoin Core release, allowing sufficient time to update the library in Core.
+We aim to cut a regular release every 3-4 months, approximately twice as frequent as major Tortoisecoin Core releases. Every second release should be published one month before the feature freeze of the next major Tortoisecoin Core release, allowing sufficient time to update the library in Core.
 
 ## Sanity checks
 Perform these checks when reviewing the release PR (see below):
@@ -56,7 +56,7 @@ Perform these checks when reviewing the release PR (see below):
    ```
    RELEASE_COMMIT=<merge commit of step 1>
    git tag -s v$MAJOR.$MINOR.$PATCH -m "libsecp256k1 $MAJOR.$MINOR.$PATCH" $RELEASE_COMMIT
-   git push git@github.com:bitcoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
+   git push git@github.com:tortoisecoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
    ```
 4. Open a PR to the master branch with a commit (using message `"release cleanup: bump version after $MAJOR.$MINOR.$PATCH"`, for example) that
    * sets `_PKG_VERSION_IS_RELEASE` to `false` and increments `_PKG_VERSION_PATCH` and `_LIB_VERSION_REVISION` in `configure.ac`,
@@ -65,7 +65,7 @@ Perform these checks when reviewing the release PR (see below):
 
    If other maintainers are not present to approve the PR, it can be merged without ACKs.
 5. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
-6. Send an announcement email to the bitcoin-dev mailing list.
+6. Send an announcement email to the tortoisecoin-dev mailing list.
 
 ## Maintenance release
 
@@ -74,7 +74,7 @@ Note that bug fixes need to be backported only to releases for which no compatib
 1. If there's no maintenance branch `$MAJOR.$MINOR`, create one:
    ```
    git checkout -b $MAJOR.$MINOR v$MAJOR.$MINOR.$((PATCH - 1))
-   git push git@github.com:bitcoin-core/secp256k1.git $MAJOR.$MINOR
+   git push git@github.com:tortoisecoin-core/secp256k1.git $MAJOR.$MINOR
    ```
 2. Open a pull request to the `$MAJOR.$MINOR` branch that
    * includes the bug fixes,
@@ -87,8 +87,8 @@ Note that bug fixes need to be backported only to releases for which no compatib
    ```
    git checkout $MAJOR.$MINOR && git pull
    git tag -s v$MAJOR.$MINOR.$PATCH -m "libsecp256k1 $MAJOR.$MINOR.$PATCH"
-   git push git@github.com:bitcoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
+   git push git@github.com:tortoisecoin-core/secp256k1.git v$MAJOR.$MINOR.$PATCH
    ```
 6. Create a new GitHub release with a link to the corresponding entry in [CHANGELOG.md](../CHANGELOG.md).
-7. Send an announcement email to the bitcoin-dev mailing list.
+7. Send an announcement email to the tortoisecoin-dev mailing list.
 8. Open PR to the master branch that includes a commit (with commit message `"release notes: add $MAJOR.$MINOR.$PATCH"`, for example) that adds release notes to [CHANGELOG.md](../CHANGELOG.md).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the bumpfee RPC.
@@ -21,7 +21,7 @@ from test_framework.blocktools import (
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
@@ -48,7 +48,7 @@ def get_change_address(tx, node):
     txout_addresses = [txout['scriptPubKey']['address'] for txout in tx_details["vout"]]
     return [address for address in txout_addresses if node.getaddressinfo(address)["ischange"]]
 
-class BumpFeeTest(BitcoinTestFramework):
+class BumpFeeTest(TortoisecoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -513,7 +513,7 @@ def test_dust_to_fee(self, rbf_node, dest_address):
     self.log.info('Test that bumped output that is dust is dropped to fee')
     rbfid = spend_one_input(rbf_node, dest_address)
     fulltx = rbf_node.getrawtransaction(rbfid, 1)
-    # The DER formatting used by Bitcoin to serialize ECDSA signatures means that signatures can have a
+    # The DER formatting used by Tortoisecoin to serialize ECDSA signatures means that signatures can have a
     # variable size of 70-72 bytes (or possibly even less), with most being 71 or 72 bytes. The signature
     # in the witness is divided by 4 for the vsize, so this variance can take the weight across a 4-byte
     # boundary. Thus expected transaction size (p2wpkh, 1 input, 2 outputs) is 140-141 vbytes, usually 141.

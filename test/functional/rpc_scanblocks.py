@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021-2022 The Bitcoin Core developers
+# Copyright (c) 2021-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scanblocks RPC call."""
@@ -9,7 +9,7 @@ from test_framework.blockfilter import (
     bip158_relevant_scriptpubkeys,
 )
 from test_framework.messages import COIN
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -20,7 +20,7 @@ from test_framework.wallet import (
 )
 
 
-class ScanblocksTest(BitcoinTestFramework):
+class ScanblocksTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-blockfilterindex=1"], []]

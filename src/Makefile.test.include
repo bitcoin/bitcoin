@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2013-2016 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,11 @@ noinst_PROGRAMS += test/fuzz/fuzz
 endif
 
 if ENABLE_TESTS
-bin_PROGRAMS += test/test_bitcoin
+bin_PROGRAMS += test/test_tortoisecoin
 endif
 
 TEST_SRCDIR = test
-TEST_BINARY=test/test_bitcoin$(EXEEXT)
+TEST_BINARY=test/test_tortoisecoin$(EXEEXT)
 FUZZ_BINARY=test/fuzz/fuzz$(EXEEXT)
 
 JSON_TEST_FILES = \
@@ -31,20 +31,20 @@ RAW_TEST_FILES = \
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
-BITCOIN_TEST_SUITE = \
+TORTOISECOIN_TEST_SUITE = \
   test/main.cpp \
   $(TEST_UTIL_H)
 
 FUZZ_SUITE_LD_COMMON = \
  $(LIBTEST_UTIL) \
  $(LIBTEST_FUZZ) \
- $(LIBBITCOIN_NODE) \
- $(LIBBITCOIN_WALLET) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CLI) \
+ $(LIBTORTOISECOIN_NODE) \
+ $(LIBTORTOISECOIN_WALLET) \
+ $(LIBTORTOISECOIN_COMMON) \
+ $(LIBTORTOISECOIN_UTIL) \
+ $(LIBTORTOISECOIN_CONSENSUS) \
+ $(LIBTORTOISECOIN_CRYPTO) \
+ $(LIBTORTOISECOIN_CLI) \
  $(LIBUNIVALUE) \
  $(LIBLEVELDB) \
  $(LIBMEMENV) \
@@ -61,8 +61,8 @@ if USE_NATPMP
 FUZZ_SUITE_LD_COMMON += $(NATPMP_LIBS)
 endif
 
-# test_bitcoin binary #
-BITCOIN_TESTS =\
+# test_tortoisecoin binary #
+TORTOISECOIN_TESTS =\
   test/addrman_tests.cpp \
   test/allocator_tests.cpp \
   test/amount_tests.cpp \
@@ -178,7 +178,7 @@ BITCOIN_TESTS =\
   test/versionbits_tests.cpp
 
 if ENABLE_WALLET
-BITCOIN_TESTS += \
+TORTOISECOIN_TESTS += \
   wallet/test/feebumper_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/spend_tests.cpp \
@@ -199,7 +199,7 @@ FUZZ_SUITE_LD_COMMON +=\
  $(BDB_LIBS)
 
 if USE_BDB
-BITCOIN_TESTS += wallet/test/db_tests.cpp
+TORTOISECOIN_TESTS += wallet/test/db_tests.cpp
 endif
 
 FUZZ_WALLET_SRC = \
@@ -216,7 +216,7 @@ FUZZ_WALLET_SRC += \
  wallet/test/fuzz/scriptpubkeyman.cpp
 endif # USE_SQLITE
 
-BITCOIN_TEST_SUITE += \
+TORTOISECOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \
@@ -224,23 +224,23 @@ BITCOIN_TEST_SUITE += \
 endif # ENABLE_WALLET
 
 if BUILD_MULTIPROCESS
-# Add boost ipc_tests definition to BITCOIN_TESTS
-BITCOIN_TESTS += test/ipc_tests.cpp
+# Add boost ipc_tests definition to TORTOISECOIN_TESTS
+TORTOISECOIN_TESTS += test/ipc_tests.cpp
 
 # Build ipc_test code in a separate library so it can be compiled with custom
 # LIBMULTIPROCESS_CFLAGS without those flags affecting other tests
-LIBBITCOIN_IPC_TEST=libbitcoin_ipc_test.a
-EXTRA_LIBRARIES += $(LIBBITCOIN_IPC_TEST)
-libbitcoin_ipc_test_a_SOURCES = \
+LIBTORTOISECOIN_IPC_TEST=libtortoisecoin_ipc_test.a
+EXTRA_LIBRARIES += $(LIBTORTOISECOIN_IPC_TEST)
+libtortoisecoin_ipc_test_a_SOURCES = \
   test/ipc_test.cpp \
   test/ipc_test.h
-libbitcoin_ipc_test_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libbitcoin_ipc_test_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(LIBMULTIPROCESS_CFLAGS)
+libtortoisecoin_ipc_test_a_CPPFLAGS = $(AM_CPPFLAGS) $(TORTOISECOIN_INCLUDES)
+libtortoisecoin_ipc_test_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(LIBMULTIPROCESS_CFLAGS)
 
 # Generate various .c++/.h files from the ipc_test.capnp file
 include $(MPGEN_PREFIX)/include/mpgen.mk
 EXTRA_DIST += test/ipc_test.capnp
-libbitcoin_ipc_test_mpgen_output = \
+libtortoisecoin_ipc_test_mpgen_output = \
   test/ipc_test.capnp.c++ \
   test/ipc_test.capnp.h \
   test/ipc_test.capnp.proxy-client.c++ \
@@ -248,39 +248,39 @@ libbitcoin_ipc_test_mpgen_output = \
   test/ipc_test.capnp.proxy-types.c++ \
   test/ipc_test.capnp.proxy-types.h \
   test/ipc_test.capnp.proxy.h
-nodist_libbitcoin_ipc_test_a_SOURCES = $(libbitcoin_ipc_test_mpgen_output)
-CLEANFILES += $(libbitcoin_ipc_test_mpgen_output)
+nodist_libtortoisecoin_ipc_test_a_SOURCES = $(libtortoisecoin_ipc_test_mpgen_output)
+CLEANFILES += $(libtortoisecoin_ipc_test_mpgen_output)
 endif
 
 # Explicitly list dependencies on generated headers as described in
 # https://www.gnu.org/software/automake/manual/html_node/Built-Sources-Example.html#Recording-Dependencies-manually
-test/libbitcoin_ipc_test_a-ipc_test.$(OBJEXT): test/ipc_test.capnp.h
+test/libtortoisecoin_ipc_test_a-ipc_test.$(OBJEXT): test/ipc_test.capnp.h
 
-test_test_bitcoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
-test_test_bitcoin_LDADD = $(LIBTEST_UTIL)
+test_test_tortoisecoin_SOURCES = $(TORTOISECOIN_TEST_SUITE) $(TORTOISECOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_tortoisecoin_CPPFLAGS = $(AM_CPPFLAGS) $(TORTOISECOIN_INCLUDES) $(TESTDEFS) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
+test_test_tortoisecoin_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
-test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
-test_test_bitcoin_CPPFLAGS += $(BDB_CPPFLAGS)
+test_test_tortoisecoin_LDADD += $(LIBTORTOISECOIN_WALLET)
+test_test_tortoisecoin_CPPFLAGS += $(BDB_CPPFLAGS)
 endif
 if BUILD_MULTIPROCESS
-test_test_bitcoin_LDADD += $(LIBBITCOIN_IPC_TEST) $(LIBMULTIPROCESS_LIBS)
+test_test_tortoisecoin_LDADD += $(LIBTORTOISECOIN_IPC_TEST) $(LIBMULTIPROCESS_LIBS)
 endif
 
-test_test_bitcoin_LDADD += $(LIBBITCOIN_NODE) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
+test_test_tortoisecoin_LDADD += $(LIBTORTOISECOIN_NODE) $(LIBTORTOISECOIN_CLI) $(LIBTORTOISECOIN_COMMON) $(LIBTORTOISECOIN_UTIL) $(LIBTORTOISECOIN_CONSENSUS) $(LIBTORTOISECOIN_CRYPTO) $(LIBUNIVALUE) \
   $(LIBLEVELDB) $(LIBMEMENV) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS) $(MINISKETCH_LIBS)
-test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_tortoisecoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_bitcoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS)
-test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
+test_test_tortoisecoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS)
+test_test_tortoisecoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
 
 if ENABLE_ZMQ
-test_test_bitcoin_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
-FUZZ_SUITE_LD_COMMON += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+test_test_tortoisecoin_LDADD += $(LIBTORTOISECOIN_ZMQ) $(ZMQ_LIBS)
+FUZZ_SUITE_LD_COMMON += $(LIBTORTOISECOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_FUZZ_BINARY
-test_fuzz_fuzz_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
+test_fuzz_fuzz_CPPFLAGS = $(AM_CPPFLAGS) $(TORTOISECOIN_INCLUDES) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS)
 test_fuzz_fuzz_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fuzz_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_fuzz_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
@@ -409,34 +409,34 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/versionbits.cpp
 endif # ENABLE_FUZZ_BINARY
 
-nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+nodist_test_test_tortoisecoin_SOURCES = $(GENERATED_TEST_FILES)
 
-$(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
+$(TORTOISECOIN_TESTS): $(GENERATED_TEST_FILES)
 
-CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(addsuffix .log,$(basename $(BITCOIN_TESTS)))
+CLEAN_TORTOISECOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(addsuffix .log,$(basename $(TORTOISECOIN_TESTS)))
 
-CLEANFILES += $(CLEAN_BITCOIN_TEST)
+CLEANFILES += $(CLEAN_TORTOISECOIN_TEST)
 
 if TARGET_WINDOWS
-bitcoin_test: $(TEST_BINARY)
+tortoisecoin_test: $(TEST_BINARY)
 else
 if ENABLE_BENCH
-bitcoin_test: $(TEST_BINARY) $(BENCH_BINARY)
+tortoisecoin_test: $(TEST_BINARY) $(BENCH_BINARY)
 else
-bitcoin_test: $(TEST_BINARY)
+tortoisecoin_test: $(TEST_BINARY)
 endif
 endif
 
-bitcoin_test_check: $(TEST_BINARY) FORCE
+tortoisecoin_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-bitcoin_test_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+tortoisecoin_test_clean : FORCE
+	rm -f $(CLEAN_TORTOISECOIN_TEST) $(test_test_tortoisecoin_OBJECTS) $(TEST_BINARY)
 
-check-unit: $(BITCOIN_TESTS:.cpp=.cpp.test)
+check-unit: $(TORTOISECOIN_TESTS:.cpp=.cpp.test)
 
 check-local: check-unit
-if BUILD_BITCOIN_TX
+if BUILD_TORTOISECOIN_TX
 	@echo "Running test/util/test_runner.py..."
 	$(PYTHON) $(top_builddir)/test/util/test_runner.py
 endif
@@ -445,7 +445,7 @@ endif
 if TARGET_WINDOWS
 else
 if ENABLE_BENCH
-	@echo "Running bench/bench_bitcoin (one iteration sanity check, only high priority)..."
+	@echo "Running bench/bench_tortoisecoin (one iteration sanity check, only high priority)..."
 	$(BENCH_BINARY) -sanity-check -priority-level=high
 endif
 endif

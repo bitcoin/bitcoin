@@ -12,15 +12,15 @@ Gavin Andresen:
 * Clean shutdown on SIGTERM on Linux.
 
 Download:
-http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.3.13/
+http://sourceforge.net/projects/tortoisecoin/files/Tortoisecoin/tortoisecoin-0.3.13/
 
 (Thanks Laszlo for the Mac OSX build!)
 
 Note:
 The SSE2 auto-detect in the Linux 64-bit version doesn't work with AMD in 64-bit mode.  Please try this instead and let me know if it gets it right:
-http://www.bitcoin.org/download/bitcoin-0.3.13.1-specialbuild-linux64.tar.gz
+http://www.tortoisecoin.org/download/tortoisecoin-0.3.13.1-specialbuild-linux64.tar.gz
 
 You can still control the SSE2 use manually with -4way and -4way=0.
 
 Version 0.3.13.2 (SVN rev 161) has improvements for the case where you already had 0/unconfirmed transactions that you might have already spent.  Here's a Windows build of it:
-http://www.bitcoin.org/download/bitcoin-0.3.13.2-win32-setup.exe
+http://www.tortoisecoin.org/download/tortoisecoin-0.3.13.2-win32-setup.exe

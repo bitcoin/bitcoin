@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ void BIP324Cipher::Initialize(const EllSwiftPubKey& their_pubkey, bool initiator
 {
     // Determine salt (fixed string + network magic bytes)
     const auto& message_header = Params().MessageStart();
-    std::string salt = std::string{"bitcoin_v2_shared_secret"} + std::string(std::begin(message_header), std::end(message_header));
+    std::string salt = std::string{"tortoisecoin_v2_shared_secret"} + std::string(std::begin(message_header), std::end(message_header));
 
     // Perform ECDH to derive shared secret.
     ECDHSecret ecdh_secret = m_key.ComputeBIP324ECDHSecret(their_pubkey, m_our_pubkey, initiator);

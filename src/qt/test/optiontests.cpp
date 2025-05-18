@@ -1,12 +1,12 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/tortoisecoin-config.h> // IWYU pragma: keep
 
 #include <common/args.h>
 #include <init.h>
-#include <qt/bitcoin.h>
+#include <qt/tortoisecoin.h>
 #include <qt/guiutil.h>
 #include <qt/test/optiontests.h>
 #include <test/util/setup_common.h>
@@ -90,7 +90,7 @@ void OptionTests::migrateSettings()
 
 void OptionTests::integerGetArgBug()
 {
-    // Test regression https://github.com/bitcoin/bitcoin/issues/24457. Ensure
+    // Test regression https://github.com/tortoisecoin/tortoisecoin/issues/24457. Ensure
     // that setting integer prune value doesn't cause an exception to be thrown
     // in the OptionsModel constructor
     gArgs.LockSettings([&](common::Settings& settings) {
@@ -108,10 +108,10 @@ void OptionTests::integerGetArgBug()
 
 void OptionTests::parametersInteraction()
 {
-    // Test that the bug https://github.com/bitcoin-core/gui/issues/567 does not resurface.
-    // It was fixed via https://github.com/bitcoin-core/gui/pull/568.
-    // With fListen=false in ~/.config/Bitcoin/Bitcoin-Qt.conf and all else left as default,
-    // bitcoin-qt should set both -listen and -listenonion to false and start successfully.
+    // Test that the bug https://github.com/tortoisecoin-core/gui/issues/567 does not resurface.
+    // It was fixed via https://github.com/tortoisecoin-core/gui/pull/568.
+    // With fListen=false in ~/.config/Tortoisecoin/Tortoisecoin-Qt.conf and all else left as default,
+    // tortoisecoin-qt should set both -listen and -listenonion to false and start successfully.
     gArgs.LockSettings([&](common::Settings& s) {
         s.forced_settings.erase("listen");
         s.forced_settings.erase("listenonion");

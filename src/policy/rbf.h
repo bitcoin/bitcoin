@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_RBF_H
-#define BITCOIN_POLICY_RBF_H
+#ifndef TORTOISECOIN_POLICY_RBF_H
+#define TORTOISECOIN_POLICY_RBF_H
 
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
@@ -132,4 +132,4 @@ std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(
                                                 int64_t replacement_vsize)
                                                 EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
-#endif // BITCOIN_POLICY_RBF_H
+#endif // TORTOISECOIN_POLICY_RBF_H

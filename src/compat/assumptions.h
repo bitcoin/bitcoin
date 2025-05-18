@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2021 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 // Compile-time verification of assumptions we make.
 
-#ifndef BITCOIN_COMPAT_ASSUMPTIONS_H
-#define BITCOIN_COMPAT_ASSUMPTIONS_H
+#ifndef TORTOISECOIN_COMPAT_ASSUMPTIONS_H
+#define TORTOISECOIN_COMPAT_ASSUMPTIONS_H
 
 #include <cstddef>
 #include <limits>
@@ -41,4 +41,4 @@ static_assert(sizeof(size_t) == sizeof(void*), "Sizes of size_t and void* assume
 // * We are NOT assuming a specific value for std::locale("").name().
 // * We are NOT assuming a specific value for std::numeric_limits<char>::is_signed.
 
-#endif // BITCOIN_COMPAT_ASSUMPTIONS_H
+#endif // TORTOISECOIN_COMPAT_ASSUMPTIONS_H

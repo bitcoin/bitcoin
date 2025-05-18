@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021-2022 The Bitcoin Core developers
+# Copyright (c) 2021-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """RPCs that handle raw transaction packages."""
@@ -16,7 +16,7 @@ from test_framework.messages import (
     tx_from_hex,
 )
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
@@ -32,7 +32,7 @@ from test_framework.wallet import (
 MAX_PACKAGE_COUNT = 25
 
 
-class RPCPackagesTest(BitcoinTestFramework):
+class RPCPackagesTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

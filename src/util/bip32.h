@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_BIP32_H
-#define BITCOIN_UTIL_BIP32_H
+#ifndef TORTOISECOIN_UTIL_BIP32_H
+#define TORTOISECOIN_UTIL_BIP32_H
 
 #include <cstdint>
 #include <string>
@@ -16,4 +16,4 @@
 std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe = false);
 std::string FormatHDKeypath(const std::vector<uint32_t>& path, bool apostrophe = false);
 
-#endif // BITCOIN_UTIL_BIP32_H
+#endif // TORTOISECOIN_UTIL_BIP32_H

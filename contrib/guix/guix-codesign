@@ -3,7 +3,7 @@ export LC_ALL=C
 set -e -o pipefail
 
 # Source the common prelude, which:
-#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   1. Checks if we're at the top directory of the Tortoisecoin Core repository
 #   2. Defines a few common functions and variables
 #
 # shellcheck source=libexec/prelude.bash
@@ -28,7 +28,7 @@ cmd_usage() {
     cat <<EOF
 Synopsis:
 
-    env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> \\
+    env DETACHED_SIGS_REPO=<path/to/tortoisecoin-detached-sigs> \\
       ./contrib/guix/guix-codesign
 
 EOF
@@ -256,7 +256,7 @@ output directory.
 EOF
 }
 
-# Deterministically build Bitcoin Core
+# Deterministically build Tortoisecoin Core
 # shellcheck disable=SC2153
 for host in $HOSTS; do
 
@@ -273,7 +273,7 @@ cat << EOF
 INFO: Codesigning ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
       ...from worktree directory: '${PWD}'
-          ...bind-mounted in container to: '/bitcoin'
+          ...bind-mounted in container to: '/tortoisecoin'
       ...in build directory: '$(distsrc_for_host "$HOST")'
           ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
       ...outputting in: '$(outdir_for_host "$HOST" codesigned)'
@@ -302,24 +302,24 @@ EOF
         #
         #     When --container is specified, the default behavior is to share
         #     the current working directory with the isolated container at the
-        #     same exact path (e.g. mapping '/home/satoshi/bitcoin/' to
-        #     '/home/satoshi/bitcoin/'). This means that the $PWD inside the
+        #     same exact path (e.g. mapping '/home/satoshi/tortoisecoin/' to
+        #     '/home/satoshi/tortoisecoin/'). This means that the $PWD inside the
         #     container becomes a source of irreproducibility. --no-cwd disables
         #     this behaviour.
         #
         #   --share=SPEC       for containers, share writable host file system
         #                      according to SPEC
         #
-        #   --share="$PWD"=/bitcoin
+        #   --share="$PWD"=/tortoisecoin
         #
-        #                     maps our current working directory to /bitcoin
+        #                     maps our current working directory to /tortoisecoin
         #                     inside the isolated container, which we later cd
         #                     into.
         #
         #     While we don't want to map our current working directory to the
         #     same exact path (as this introduces irreproducibility), we do want
         #     it to be at a _fixed_ path _somewhere_ inside the isolated
-        #     container so that we have something to build. '/bitcoin' was
+        #     container so that we have something to build. '/tortoisecoin' was
         #     chosen arbitrarily.
         #
         #   ${SOURCES_PATH:+--share="$SOURCES_PATH"}
@@ -347,7 +347,7 @@ EOF
                                  --container \
                                  --pure \
                                  --no-cwd \
-                                 --share="$PWD"=/bitcoin \
+                                 --share="$PWD"=/tortoisecoin \
                                  --share="$DISTSRC_BASE"=/distsrc-base \
                                  --share="$OUTDIR_BASE"=/outdir-base \
                                  --share="$DETACHED_SIGS_REPO"=/detached-sigs \
@@ -372,7 +372,7 @@ EOF
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                         DETACHED_SIGS_REPO=/detached-sigs \
                                         UNSIGNED_TARBALL="$(OUTDIR_BASE=/outdir-base && unsigned_tarball_for_host "$HOST")" \
-                                      bash -c "cd /bitcoin && bash contrib/guix/libexec/codesign.sh"
+                                      bash -c "cd /tortoisecoin && bash contrib/guix/libexec/codesign.sh"
     )
 
 done

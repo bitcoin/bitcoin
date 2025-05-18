@@ -1,9 +1,9 @@
-// Copyright (c) The Bitcoin Core developers
+// Copyright (c) The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_FEEFRAC_H
-#define BITCOIN_UTIL_FEEFRAC_H
+#ifndef TORTOISECOIN_UTIL_FEEFRAC_H
+#define TORTOISECOIN_UTIL_FEEFRAC_H
 
 #include <stdint.h>
 #include <compare>
@@ -156,4 +156,4 @@ struct FeeFrac
  */
 std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeFrac> chunks1);
 
-#endif // BITCOIN_UTIL_FEEFRAC_H
+#endif // TORTOISECOIN_UTIL_FEEFRAC_H

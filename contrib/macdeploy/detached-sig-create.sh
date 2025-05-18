@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,8 +7,8 @@ export LC_ALL=C
 set -e
 
 ROOTDIR=dist
-BUNDLE="${ROOTDIR}/Bitcoin-Qt.app"
-BINARY="${BUNDLE}/Contents/MacOS/Bitcoin-Qt"
+BUNDLE="${ROOTDIR}/Tortoisecoin-Qt.app"
+BINARY="${BUNDLE}/Contents/MacOS/Tortoisecoin-Qt"
 SIGNAPPLE=signapple
 TEMPDIR=sign.temp
 ARCH=$(${SIGNAPPLE} info ${BINARY} | head -n 1 | cut -d " " -f 1)

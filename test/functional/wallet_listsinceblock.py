@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listsinceblock RPC."""
@@ -7,7 +7,7 @@
 from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
     assert_array_result,
@@ -18,7 +18,7 @@ from test_framework.wallet_util import generate_keypair
 
 from decimal import Decimal
 
-class ListSinceBlockTest(BitcoinTestFramework):
+class ListSinceBlockTest(TortoisecoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 

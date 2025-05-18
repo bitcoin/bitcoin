@@ -1,6 +1,6 @@
-Bitcoin Core version 0.13.1 is now available from:
+Tortoisecoin Core version 0.13.1 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.13.1/>
+  <https://tortoisecoin.org/bin/tortoisecoin-core-0.13.1/>
 
 This is a new minor version release, including activation parameters for the
 segwit softfork, various bugfixes and performance improvements, as well as
@@ -8,22 +8,22 @@ updated translations.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tortoisecoin/tortoisecoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://tortoisecoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
 
 Microsoft ended support for Windows XP on [April 8th, 2014](https://www.microsoft.com/en-us/WindowsForBusiness/end-of-xp-support),
 an OS initially released in 2001. This means that not even critical security
-updates will be released anymore. Without security updates, using a bitcoin
+updates will be released anymore. Without security updates, using a tortoisecoin
 wallet on a XP machine is irresponsible at least.
 
-In addition to that, with 0.12.x there have been varied reports of Bitcoin Core
-randomly crashing on Windows XP. It is [not clear](https://github.com/bitcoin/bitcoin/issues/7681#issuecomment-217439891)
+In addition to that, with 0.12.x there have been varied reports of Tortoisecoin Core
+randomly crashing on Windows XP. It is [not clear](https://github.com/tortoisecoin/tortoisecoin/issues/7681#issuecomment-217439891)
 what the source of these crashes is, but it is likely that upstream
 libraries such as Qt are no longer being tested on XP.
 
@@ -56,9 +56,9 @@ covered by the txid. This provides several immediate benefits:
   identifier (txid) of transactions without referencing the witness, which can
   sometimes be changed by third-parties (such as miners) or by co-signers in a
   multisig spend. This solves all known cases of unwanted transaction
-  malleability, which is a problem that makes programming Bitcoin wallet
+  malleability, which is a problem that makes programming Tortoisecoin wallet
   software more difficult and which seriously complicates the design of smart
-  contracts for Bitcoin.
+  contracts for Tortoisecoin.
 
 - **Capacity increase:** Segwit transactions contain new fields that are not
   part of the data currently used to calculate the size of a block, which
@@ -72,7 +72,7 @@ covered by the txid. This provides several immediate benefits:
   following section for details).
 
 - **Weighting data based on how it affects node performance:** Some parts of
-  each Bitcoin block need to be stored by nodes in order to validate future
+  each Tortoisecoin block need to be stored by nodes in order to validate future
   blocks; other parts of a block can be immediately forgotten (pruned) or used
   only for helping other nodes sync their copy of the block chain.  One large
   part of the immediately prunable data are transaction signatures (witnesses),
@@ -89,8 +89,8 @@ covered by the txid. This provides several immediate benefits:
   (such as hardware wallets), reduces the amount of data the signature
   generator needs to download, and allows the signature generator to operate
   more quickly.  This is made possible by having the generator sign the amount
-  of bitcoins they think they are spending, and by having full nodes refuse to
-  accept those signatures unless the amount of bitcoins being spent is exactly
+  of tortoisecoins they think they are spending, and by having full nodes refuse to
+  accept those signatures unless the amount of tortoisecoins being spent is exactly
   the same as was signed.  For non-segwit transactions, wallets instead had to
   download the complete previous transactions being spent for every payment
   they made, which could be a slow operation on hardware wallets and in other
@@ -105,7 +105,7 @@ covered by the txid. This provides several immediate benefits:
   different signature method that doesn't suffer from this problem and doesn't
   have any unwanted side-effects.
 
-- **Increased security for multisig:** Bitcoin addresses (both P2PKH addresses
+- **Increased security for multisig:** Tortoisecoin addresses (both P2PKH addresses
   that start with a '1' and P2SH addresses that start with a '3') use a hash
   function known as RIPEMD-160.  For P2PKH addresses, this provides about 160
   bits of security---which is beyond what cryptographers believe can be broken
@@ -115,15 +115,15 @@ covered by the txid. This provides several immediate benefits:
   Segwit allows advanced transactions to use the SHA256 hash function instead,
   which provides about 128 bits of security  (that is 281 trillion times as
   much security as 80 bits and is equivalent to the maximum bits of security
-  believed to be provided by Bitcoin's choice of parameters for its Elliptic
+  believed to be provided by Tortoisecoin's choice of parameters for its Elliptic
   Curve Digital Security Algorithm [ECDSA].)
 
 - **More efficient almost-full-node security** Satoshi Nakamoto's original
-  Bitcoin paper describes a method for allowing newly-started full nodes to
+  Tortoisecoin paper describes a method for allowing newly-started full nodes to
   skip downloading and validating some data from historic blocks that are
   protected by large amounts of proof of work.  Unfortunately, Nakamoto's
   method can't guarantee that a newly-started node using this method will
-  produce an accurate copy of Bitcoin's current ledger (called the UTXO set),
+  produce an accurate copy of Tortoisecoin's current ledger (called the UTXO set),
   making the node vulnerable to falling out of consensus with other nodes.
   Although the problems with Nakamoto's method can't be fixed in a soft fork,
   Segwit accomplishes something similar to his original proposal: it makes it
@@ -131,18 +131,18 @@ covered by the txid. This provides several immediate benefits:
   (specifically, the segregated witnesses) while still ensuring that the node
   can build an accurate copy of the UTXO set for the block chain with the most
   proof of work.  Segwit enables this capability at the consensus layer, but
-  note that Bitcoin Core does not provide an option to use this capability as
+  note that Tortoisecoin Core does not provide an option to use this capability as
   of this 0.13.1 release.
 
 - **Script versioning:** Segwit makes it easy for future soft forks to allow
-  Bitcoin users to individually opt-in to almost any change in the Bitcoin
+  Tortoisecoin users to individually opt-in to almost any change in the Tortoisecoin
   Script language when those users receive new transactions.  Features
-  currently being researched by Bitcoin Core contributors that may use this
+  currently being researched by Tortoisecoin Core contributors that may use this
   capability include support for Schnorr signatures, which can improve the
   privacy and efficiency of multisig transactions (or transactions with
   multiple inputs), and Merklized Abstract Syntax Trees (MAST), which can
   improve the privacy and efficiency of scripts with two or more conditions.
-  Other Bitcoin community members are studying several other improvements
+  Other Tortoisecoin community members are studying several other improvements
   that can be made using script versioning.
 
 Activation for the segwit soft fork is being managed using BIP9
@@ -159,13 +159,13 @@ For more information about segwit, please see the [segwit FAQ][], the
 operator, please see the [versionbits FAQ][] for information about
 signaling support for a soft fork.
 
-[Segwit FAQ]: https://bitcoincore.org/en/2016/01/26/segwit-benefits/
-[segwit wallet developers guide]: https://bitcoincore.org/en/segwit_wallet_dev/
-[BIP141]: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
-[BIP143]: https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
-[BIP144]: https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki
-[BIP145]: https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki
-[versionbits FAQ]: https://bitcoincore.org/en/2016/06/08/version-bits-miners-faq/
+[Segwit FAQ]: https://tortoisecoincore.org/en/2016/01/26/segwit-benefits/
+[segwit wallet developers guide]: https://tortoisecoincore.org/en/segwit_wallet_dev/
+[BIP141]: https://github.com/tortoisecoin/bips/blob/master/bip-0141.mediawiki
+[BIP143]: https://github.com/tortoisecoin/bips/blob/master/bip-0143.mediawiki
+[BIP144]: https://github.com/tortoisecoin/bips/blob/master/bip-0144.mediawiki
+[BIP145]: https://github.com/tortoisecoin/bips/blob/master/bip-0145.mediawiki
+[versionbits FAQ]: https://tortoisecoincore.org/en/2016/06/08/version-bits-miners-faq/
 
 
 Null dummy soft fork
@@ -183,7 +183,7 @@ a third-party to insert data into other people's transactions, changing
 the transaction's txid (called transaction malleability) and possibly
 causing other problems.
 
-Since Bitcoin Core 0.10.0, nodes have defaulted to only relaying and
+Since Tortoisecoin Core 0.10.0, nodes have defaulted to only relaying and
 mining transactions whose dummy element was a null value (0x00, also
 called OP_0).  The null dummy soft fork turns this relay rule into a
 consensus rule both for non-segwit transactions and segwit transactions,
@@ -196,7 +196,7 @@ as segwit.
 
 For more information, please see [BIP147][].
 
-[BIP147]: https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki
+[BIP147]: https://github.com/tortoisecoin/bips/blob/master/bip-0147.mediawiki
 
 Low-level RPC changes
 ---------------------
@@ -215,9 +215,9 @@ is provided below.
 
 The following extra files can be found in the download directory or torrent:
 
-- `bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz`: Linux binaries targeting
+- `tortoisecoin-${VERSION}-arm-linux-gnueabihf.tar.gz`: Linux binaries targeting
   the 32-bit ARMv7-A architecture.
-- `bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz`: Linux binaries targeting
+- `tortoisecoin-${VERSION}-aarch64-linux-gnu.tar.gz`: Linux binaries targeting
   the 64-bit ARMv8-A architecture.
 
 ARM builds are still experimental. If you have problems on a certain device or
@@ -243,7 +243,7 @@ git merge commit are mentioned.
 
 ### Consensus
 - #8636 `9dfa0c8` Implement NULLDUMMY softfork (BIP147) (jl2012)
-- #8848 `7a34a46` Add NULLDUMMY verify flag in bitcoinconsensus.h (jl2012)
+- #8848 `7a34a46` Add NULLDUMMY verify flag in tortoisecoinconsensus.h (jl2012)
 - #8937 `8b66659` Define start and end time for segwit deployment (sipa)
 
 ### RPC and other APIs
@@ -275,13 +275,13 @@ git merge commit are mentioned.
 - #8612 `2215c22` Check for compatibility with download in FindNextBlocksToDownload (sipa)
 - #8606 `bbf379b` Fix some locks (sipa)
 - #8594 `ab295bb` Do not add random inbound peers to addrman (gmaxwell)
-- #8940 `5b4192b` Add x9 service bit support to dnsseed.bluematt.me, seed.bitcoinstats.com (TheBlueMatt, cdecker)
+- #8940 `5b4192b` Add x9 service bit support to dnsseed.bluematt.me, seed.tortoisecoinstats.com (TheBlueMatt, cdecker)
 - #8944 `685e4c7` Remove bogus assert on number of oubound connections. (TheBlueMatt)
 - #8949 `0dbc48a` Be more agressive in getting connections to peers with relevant services (gmaxwell)
 
 ### Build system
-- #8293 `fa5b249` Allow building libbitcoinconsensus without any univalue (luke-jr)
-- #8492 `8b0bdd3` Allow building bench_bitcoin by itself (luke-jr)
+- #8293 `fa5b249` Allow building libtortoisecoinconsensus without any univalue (luke-jr)
+- #8492 `8b0bdd3` Allow building bench_tortoisecoin by itself (luke-jr)
 - #8563 `147003c` Add configure check for -latomic (ajtowns)
 - #8626 `ea51b0f` Berkeley DB v6 compatibility fix (netsafe)
 - #8520 `75f2065` Remove check for `openssl/ec.h` (laanwj)
@@ -320,16 +320,16 @@ git merge commit are mentioned.
 - #8418 `ff893aa` Add tests for compact blocks (sdaftuar)
 - #8803 `375437c` Ping regularly in p2p-segwit.py to keep connection alive (jl2012)
 - #8827 `9bbe66e` Split up slow RPC calls to avoid pruning test timeouts (sdaftuar)
-- #8829 `2a8bca4` Add bitcoin-tx JSON tests (jnewbery)
+- #8829 `2a8bca4` Add tortoisecoin-tx JSON tests (jnewbery)
 - #8834 `1dd1783` blockstore: Switch to dumb dbm (MarcoFalke)
 - #8835 `d87227d` nulldummy.py: Don't run unused code (MarcoFalke)
-- #8836 `eb18cc1` bitcoin-util-test.py should fail if the output file is empty (jnewbery)
+- #8836 `eb18cc1` tortoisecoin-util-test.py should fail if the output file is empty (jnewbery)
 - #8839 `31ab2f8` Avoid ConnectionResetErrors during RPC tests (laanwj)
 - #8840 `cbc3fe5` Explicitly set encoding to utf8 when opening text files (laanwj)
 - #8841 `3e4abb5` Fix nulldummy test (jl2012)
 - #8854 `624a007` Fix race condition in p2p-compactblocks test (sdaftuar)
 - #8857 `1f60d45` mininode: Only allow named args in wait_until (MarcoFalke)
-- #8860 `0bee740` util: Move wait_bitcoinds() into stop_nodes() (MarcoFalke)
+- #8860 `0bee740` util: Move wait_tortoisecoinds() into stop_nodes() (MarcoFalke)
 - #8882 `b73f065` Fix race conditions in p2p-compactblocks.py and sendheaders.py (sdaftuar)
 - #8904 `cc6f551` Fix compact block shortids for a test case (dagurval)
 
@@ -337,7 +337,7 @@ git merge commit are mentioned.
 - #8754 `0e2c6bd` Target protobuf 2.6 in OS X build notes. (fanquake)
 - #8461 `b17a3f9` Document return value of networkhashps for getmininginfo RPC endpoint (jlopp)
 - #8512 `156e305` Corrected JSON typo on setban of net.cpp (sevastos)
-- #8683 `8a7d7ff` Fix incorrect file name bitcoin.qrc  (bitcoinsSG)
+- #8683 `8a7d7ff` Fix incorrect file name tortoisecoin.qrc  (tortoisecoinsSG)
 - #8891 `5e0dd9e` Update bips.md for Segregated Witness (fanquake)
 - #8545 `863ae74` Update git-subtree-check.sh README (MarcoFalke)
 - #8607 `486650a` Fix doxygen off-by-one comments, fix typos (MarcoFalke)
@@ -352,7 +352,7 @@ git merge commit are mentioned.
 - #8742 `d31ac72` Specify Protobuf version 2 in paymentrequest.proto (fanquake)
 - #8414,#8558,#8676,#8700,#8701,#8702 Add missing copyright headers (isle2983, kazcw)
 - #8899 `4ed2627` Fix wake from sleep issue with Boost 1.59.0 (fanquake)
-- #8817 `bcf3806` update bitcoin-tx to output witness data (jnewbery)
+- #8817 `bcf3806` update tortoisecoin-tx to output witness data (jnewbery)
 - #8513 `4e5fc31` Fix a type error that would not compile on OSX. (JeremyRubin)
 - #8392 `30eac2d` Fix several node initialization issues (sipa)
 - #8548 `305d8ac` Use `__func__` to get function name for output printing (MarcoFalke)
@@ -407,4 +407,4 @@ Thanks to everyone who directly contributed to this release:
 - whythat
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/tortoisecoin/).

@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_THREADINTERRUPT_H
-#define BITCOIN_UTIL_THREADINTERRUPT_H
+#ifndef TORTOISECOIN_UTIL_THREADINTERRUPT_H
+#define TORTOISECOIN_UTIL_THREADINTERRUPT_H
 
 #include <sync.h>
 #include <threadsafety.h>
@@ -39,4 +39,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif // BITCOIN_UTIL_THREADINTERRUPT_H
+#endif // TORTOISECOIN_UTIL_THREADINTERRUPT_H

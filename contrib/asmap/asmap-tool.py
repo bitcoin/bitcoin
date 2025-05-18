@@ -126,7 +126,7 @@ def main():
     parser_diff_addrs.add_argument("addrs_file", type=argparse.FileType("r"),
                                    help="address file containing getnodeaddresses output to use in the comparison "
                                    "(make sure to set the count parameter to zero to get all node addresses, "
-                                   "e.g. 'bitcoin-cli getnodeaddresses 0 > addrs.json')")
+                                   "e.g. 'tortoisecoin-cli getnodeaddresses 0 > addrs.json')")
     args = parser.parse_args()
     if args.subcommand is None:
         parser.print_help()

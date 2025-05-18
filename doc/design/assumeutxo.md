@@ -1,6 +1,6 @@
 # assumeutxo
 
-Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
+Assumeutxo is a feature that allows fast bootstrapping of a validating tortoisecoind
 instance.
 
 ## Loading a snapshot
@@ -46,8 +46,8 @@ The utility script
 ## General background
 
 - [assumeutxo proposal](https://github.com/jamesob/assumeutxo-docs/tree/2019-04-proposal/proposal)
-- [Github issue](https://github.com/bitcoin/bitcoin/issues/15605)
-- [draft PR](https://github.com/bitcoin/bitcoin/pull/15606)
+- [Github issue](https://github.com/tortoisecoin/tortoisecoin/issues/15605)
+- [draft PR](https://github.com/tortoisecoin/tortoisecoin/pull/15606)
 
 ## Design notes
 
@@ -80,7 +80,7 @@ data.
 
 `ChainstateManager` manages a single Chainstate object, for which
 `m_snapshot_blockhash` is null. This chainstate is (maybe obviously)
-considered active. This is the "traditional" mode of operation for bitcoind.
+considered active. This is the "traditional" mode of operation for tortoisecoind.
 
 |    |    |
 | ---------- | ----------- |
@@ -150,7 +150,7 @@ background chainstate's UTXO set contents and ensure it matches the compiled val
 
 The background chainstate data lingers on disk until the program is restarted.
 
-### Bitcoind restarts sometime after snapshot validation has completed
+### Tortoisecoind restarts sometime after snapshot validation has completed
 
 After a shutdown and subsequent restart, `LoadChainstate()` cleans up the background
 chainstate with `ValidatedSnapshotCleanup()`, which renames the `chainstate_snapshot`

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022-present The Bitcoin Core developers
+# Copyright (c) 2022-present The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 """  Tests the net:* tracepoint API interface.
-     See https://github.com/bitcoin/bitcoin/blob/master/doc/tracing.md#context-net
+     See https://github.com/tortoisecoin/tortoisecoin/blob/master/doc/tracing.md#context-net
 """
 
 import ctypes
@@ -16,7 +16,7 @@ except ImportError:
     pass
 from test_framework.messages import msg_version
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
     bpf_cflags,
@@ -84,19 +84,19 @@ int trace_outbound_message(struct pt_regs *ctx) {
 """
 
 
-class NetTracepointTest(BitcoinTestFramework):
+class NetTracepointTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_linux()
-        self.skip_if_no_bitcoind_tracepoints()
+        self.skip_if_no_tortoisecoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
 
     def run_test(self):
         # Tests the net:inbound_message and net:outbound_message tracepoints
-        # See https://github.com/bitcoin/bitcoin/blob/master/doc/tracing.md#context-net
+        # See https://github.com/tortoisecoin/tortoisecoin/blob/master/doc/tracing.md#context-net
 
         class P2PMessage(ctypes.Structure):
             _fields_ = [
@@ -153,7 +153,7 @@ class NetTracepointTest(BitcoinTestFramework):
         bpf["inbound_messages"].open_perf_buffer(handle_inbound)
         bpf["outbound_messages"].open_perf_buffer(handle_outbound)
 
-        self.log.info("connect a P2P test node to our bitcoind node")
+        self.log.info("connect a P2P test node to our tortoisecoind node")
         test_node = P2PInterface()
         self.nodes[0].add_p2p_connection(test_node)
         bpf.perf_buffer_poll(timeout=200)

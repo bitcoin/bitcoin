@@ -1,4 +1,4 @@
-# Copyright (c) The Bitcoin Core developers
+# Copyright (c) The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
@@ -21,5 +21,5 @@ RUN /install.sh && \
   rm -rf /var/lib/apt/lists/*
 
 
-WORKDIR /bitcoin
+WORKDIR /tortoisecoin
 ENTRYPOINT ["/entrypoint.sh"]

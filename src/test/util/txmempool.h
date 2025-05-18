@@ -1,9 +1,9 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_TXMEMPOOL_H
-#define BITCOIN_TEST_UTIL_TXMEMPOOL_H
+#ifndef TORTOISECOIN_TEST_UTIL_TXMEMPOOL_H
+#define TORTOISECOIN_TEST_UTIL_TXMEMPOOL_H
 
 #include <policy/packages.h>
 #include <txmempool.h>
@@ -56,4 +56,4 @@ std::optional<std::string>  CheckPackageMempoolAcceptResult(const Package& txns,
  *   */
 void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool);
 
-#endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H
+#endif // TORTOISECOIN_TEST_UTIL_TXMEMPOOL_H

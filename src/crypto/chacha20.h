@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_CHACHA20_H
-#define BITCOIN_CRYPTO_CHACHA20_H
+#ifndef TORTOISECOIN_CRYPTO_CHACHA20_H
+#define TORTOISECOIN_CRYPTO_CHACHA20_H
 
 #include <span.h>
 
@@ -156,4 +156,4 @@ public:
     void Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept;
 };
 
-#endif // BITCOIN_CRYPTO_CHACHA20_H
+#endif // TORTOISECOIN_CRYPTO_CHACHA20_H

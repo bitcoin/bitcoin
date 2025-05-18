@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019-present The Bitcoin Core developers
+# Copyright (c) 2019-present The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@ export HOST=x86_64-apple-darwin
 # Therefore, `--break-system-packages` is needed.
 export PIP_PACKAGES="--break-system-packages zmq"
 export GOAL="install"
-export BITCOIN_CONFIG="--with-gui --with-miniupnpc --with-natpmp --enable-reduce-exports"
+export TORTOISECOIN_CONFIG="--with-gui --with-miniupnpc --with-natpmp --enable-reduce-exports"
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""

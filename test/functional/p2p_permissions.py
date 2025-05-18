@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test p2p permission message.
@@ -12,7 +12,7 @@ from test_framework.messages import (
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_node import ErrorMatch
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
@@ -20,7 +20,7 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 
-class P2PPermissionsTests(BitcoinTestFramework):
+class P2PPermissionsTests(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 

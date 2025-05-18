@@ -1,0 +1,88 @@
+# It is not recommended to modify this file in-place, because it will
+# be overwritten during package upgrades. If you want to add further
+# options or overwrite existing ones then use
+# $ systemctl edit tortoisecoind.service
+# See "man systemd.service" for details.
+
+# Note that almost all daemon options could be specified in
+# /etc/tortoisecoin/tortoisecoin.conf, but keep in mind those explicitly
+# specified as arguments in ExecStart= will override those in the
+# config file.
+
+[Unit]
+Description=Tortoisecoin daemon
+Documentation=https://github.com/tortoisecoin/tortoisecoin/blob/master/doc/init.md
+
+# https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/tortoisecoind -pid=/run/tortoisecoind/tortoisecoind.pid \
+                            -conf=/etc/tortoisecoin/tortoisecoin.conf \
+                            -datadir=/var/lib/tortoisecoind \
+                            -startupnotify='systemd-notify --ready' \
+                            -shutdownnotify='systemd-notify --stopping'
+
+# Make sure the config directory is readable by the service user
+PermissionsStartOnly=true
+ExecStartPre=/bin/chgrp tortoisecoin /etc/tortoisecoin
+
+# Process management
+####################
+
+Type=notify
+NotifyAccess=all
+PIDFile=/run/tortoisecoind/tortoisecoind.pid
+
+Restart=on-failure
+TimeoutStartSec=infinity
+TimeoutStopSec=600
+
+# Directory creation and permissions
+####################################
+
+# Run as tortoisecoin:tortoisecoin
+User=tortoisecoin
+Group=tortoisecoin
+
+# /run/tortoisecoind
+RuntimeDirectory=tortoisecoind
+RuntimeDirectoryMode=0710
+
+# /etc/tortoisecoin
+ConfigurationDirectory=tortoisecoin
+ConfigurationDirectoryMode=0710
+
+# /var/lib/tortoisecoind
+StateDirectory=tortoisecoind
+StateDirectoryMode=0710
+
+# Hardening measures
+####################
+
+# Provide a private /tmp and /var/tmp.
+PrivateTmp=true
+
+# Mount /usr, /boot/ and /etc read-only for the process.
+ProtectSystem=full
+
+# Deny access to /home, /root and /run/user
+ProtectHome=true
+
+# Disallow the process and all of its children to gain
+# new privileges through execve().
+NoNewPrivileges=true
+
+# Use a new /dev namespace only populated with API pseudo devices
+# such as /dev/null, /dev/zero and /dev/random.
+PrivateDevices=true
+
+# Deny the creation of writable and executable memory mappings.
+MemoryDenyWriteExecute=true
+
+# Restrict ABIs to help ensure MemoryDenyWriteExecute is enforced
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

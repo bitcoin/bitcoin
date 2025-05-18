@@ -6,7 +6,7 @@ The `macdeployqtplus` script should not be run manually. Instead, after building
 make deploy
 ```
 
-When complete, it will have produced `Bitcoin-Core.zip`.
+When complete, it will have produced `Tortoisecoin-Core.zip`.
 
 ## SDK Extraction
 
@@ -29,7 +29,7 @@ To extract the `.xip` on Linux:
 ```bash
 # Install/clone tools needed for extracting Xcode.app
 apt install cpio
-git clone https://github.com/bitcoin-core/apple-sdk-tools.git
+git clone https://github.com/tortoisecoin-core/apple-sdk-tools.git
 
 # Unpack the .xip and place the resulting Xcode.app in your current
 # working directory
@@ -72,6 +72,6 @@ for the build process to remain somewhat deterministic. Here's how it works:
   users may choose to bless, self-codesign, and run. It also outputs an unsigned app structure
   in the form of a tarball.
 - The Apple keyholder uses this unsigned app to create a detached signature, using the
-  included script. Detached signatures are available from this [repository](https://github.com/bitcoin-core/bitcoin-detached-sigs).
+  included script. Detached signatures are available from this [repository](https://github.com/tortoisecoin-core/tortoisecoin-detached-sigs).
 - Builders feed the unsigned app + detached signature back into Guix, which combines the
   pieces into a deterministic ZIP.

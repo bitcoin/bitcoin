@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
+#ifndef TORTOISECOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
+#define TORTOISECOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
 
 #include <test/util/setup_common.h>
 
@@ -29,4 +29,4 @@ struct WalletTestingSetup : public TestingSetup {
 };
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
+#endif // TORTOISECOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H

@@ -5,14 +5,14 @@ set -Eeuo pipefail
 
 # Declare paths to libraries
 declare -A LIBS
-LIBS[cli]="libbitcoin_cli.a"
-LIBS[common]="libbitcoin_common.a"
-LIBS[consensus]="libbitcoin_consensus.a"
-LIBS[crypto]="crypto/.libs/libbitcoin_crypto_base.a crypto/.libs/libbitcoin_crypto_x86_shani.a crypto/.libs/libbitcoin_crypto_sse41.a crypto/.libs/libbitcoin_crypto_avx2.a"
-LIBS[node]="libbitcoin_node.a"
-LIBS[util]="libbitcoin_util.a"
-LIBS[wallet]="libbitcoin_wallet.a"
-LIBS[wallet_tool]="libbitcoin_wallet_tool.a"
+LIBS[cli]="libtortoisecoin_cli.a"
+LIBS[common]="libtortoisecoin_common.a"
+LIBS[consensus]="libtortoisecoin_consensus.a"
+LIBS[crypto]="crypto/.libs/libtortoisecoin_crypto_base.a crypto/.libs/libtortoisecoin_crypto_x86_shani.a crypto/.libs/libtortoisecoin_crypto_sse41.a crypto/.libs/libtortoisecoin_crypto_avx2.a"
+LIBS[node]="libtortoisecoin_node.a"
+LIBS[util]="libtortoisecoin_util.a"
+LIBS[wallet]="libtortoisecoin_wallet.a"
+LIBS[wallet_tool]="libtortoisecoin_wallet_tool.a"
 
 # Declare allowed dependencies "X Y" where X is allowed to depend on Y. This
 # list is taken from doc/design/libraries.md.
@@ -48,16 +48,16 @@ ALLOWED_DEPENDENCIES+=(
 declare -A SUPPRESS
 # init.cpp file currently calls Berkeley DB sanity check function on startup, so
 # there is an undocumented dependency of the node library on the wallet library.
-SUPPRESS["libbitcoin_node_a-init.o libbitcoin_wallet_a-bdb.o _ZN6wallet27BerkeleyDatabaseSanityCheckEv"]=1
+SUPPRESS["libtortoisecoin_node_a-init.o libtortoisecoin_wallet_a-bdb.o _ZN6wallet27BerkeleyDatabaseSanityCheckEv"]=1
 # init/common.cpp file calls InitError and InitWarning from interface_ui which
 # is currently part of the node library. interface_ui should just be part of the
 # common library instead, and is moved in
-# https://github.com/bitcoin/bitcoin/issues/10102
-SUPPRESS["libbitcoin_common_a-common.o libbitcoin_node_a-interface_ui.o _Z11InitWarningRK13bilingual_str"]=1
-SUPPRESS["libbitcoin_common_a-common.o libbitcoin_node_a-interface_ui.o _Z9InitErrorRK13bilingual_str"]=1
+# https://github.com/tortoisecoin/tortoisecoin/issues/10102
+SUPPRESS["libtortoisecoin_common_a-common.o libtortoisecoin_node_a-interface_ui.o _Z11InitWarningRK13bilingual_str"]=1
+SUPPRESS["libtortoisecoin_common_a-common.o libtortoisecoin_node_a-interface_ui.o _Z9InitErrorRK13bilingual_str"]=1
 # rpc/external_signer.cpp adds defines node RPC methods but is built as part of the
 # common library. It should be moved to the node library instead.
-SUPPRESS["libbitcoin_common_a-external_signer.o libbitcoin_node_a-server.o _ZN9CRPCTable13appendCommandERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPK11CRPCCommand"]=1
+SUPPRESS["libtortoisecoin_common_a-external_signer.o libtortoisecoin_node_a-server.o _ZN9CRPCTable13appendCommandERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPK11CRPCCommand"]=1
 
 usage() {
    echo "Usage: $(basename "${BASH_SOURCE[0]}") [BUILD_DIR]"

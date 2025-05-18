@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
@@ -8,7 +8,7 @@ import platform
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.descriptors import descsum_create
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -24,7 +24,7 @@ def notify_outputname(walletname, txid):
     return txid if platform.system() == 'Windows' else f'{walletname}_{txid}'
 
 
-class NotificationsTest(BitcoinTestFramework):
+class NotificationsTest(TortoisecoinTestFramework):
     def add_options(self, parser):
         self.add_wallet_options(parser)
 
@@ -127,7 +127,7 @@ class NotificationsTest(BitcoinTestFramework):
 
             # Generate bump transaction, sync mempools, and check for bump1
             # notification. In the future, per
-            # https://github.com/bitcoin/bitcoin/pull/9371, it might be better
+            # https://github.com/tortoisecoin/tortoisecoin/pull/9371, it might be better
             # to have notifications for both tx1 and bump1.
             bump1 = self.nodes[0].bumpfee(tx1)["txid"]
             assert_equal(bump1 in self.nodes[0].getrawmempool(), True)

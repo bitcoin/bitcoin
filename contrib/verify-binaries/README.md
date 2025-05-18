@@ -2,15 +2,15 @@
 
 #### Preparation
 
-As of Bitcoin Core v22.0, releases are signed by a number of public keys on the basis
-of the [guix.sigs repository](https://github.com/bitcoin-core/guix.sigs/). When
+As of Tortoisecoin Core v22.0, releases are signed by a number of public keys on the basis
+of the [guix.sigs repository](https://github.com/tortoisecoin-core/guix.sigs/). When
 verifying binary downloads, you (the end user) decide which of these public keys you
 trust and then use that trust model to evaluate the signature on a file that contains
 hashes of the release binaries. The downloaded binaries are then hashed and compared to
 the signed checksum file.
 
 First, you have to figure out which public keys to recognize. Browse the [list of frequent
-builder-keys](https://github.com/bitcoin-core/guix.sigs/tree/main/builder-keys) and
+builder-keys](https://github.com/tortoisecoin-core/guix.sigs/tree/main/builder-keys) and
 decide which of these keys you would like to trust. For each key you want to trust, you
 must obtain that key for your local GPG installation.
 
@@ -23,7 +23,7 @@ You can obtain these keys by
 #### Usage
 
 This script attempts to download the checksum file (`SHA256SUMS`) and corresponding
-signature file `SHA256SUMS.asc` from https://bitcoincore.org and https://bitcoin.org.
+signature file `SHA256SUMS.asc` from https://tortoisecoincore.org and https://tortoisecoin.org.
 
 It first checks if the checksum file is valid based upon a plurality of signatures, and
 then downloads the release files specified in the checksum file, and checks if the
@@ -85,6 +85,6 @@ Verify only a subset of the files listed in a local checksum file
 
 ```sh
 ./contrib/verify-binaries/verify.py bin ~/Downloads/SHA256SUMS \
-    ~/Downloads/bitcoin-24.0.1-x86_64-linux-gnu.tar.gz \
-    ~/Downloads/bitcoin-24.0.1-arm-linux-gnueabihf.tar.gz
+    ~/Downloads/tortoisecoin-24.0.1-x86_64-linux-gnu.tar.gz \
+    ~/Downloads/tortoisecoin-24.0.1-arm-linux-gnueabihf.tar.gz
 ```

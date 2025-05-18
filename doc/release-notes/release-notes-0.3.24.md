@@ -1,7 +1,7 @@
-Bitcoin v0.3.24 is now available for download at
-https://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.3.24/
+Tortoisecoin v0.3.24 is now available for download at
+https://sourceforge.net/projects/tortoisecoin/files/Tortoisecoin/tortoisecoin-0.3.24/
 
-This is another bug fix release.  We had hoped to have wallet encryption ready for release, but more urgent fixes for existing clients were needed -- most notably block download problems were getting severe.  Wallet encryption is ready for testing at https://github.com/bitcoin/bitcoin/pull/352 for the git-savvy, and hopefully will follow shortly in the next release, v0.4.
+This is another bug fix release.  We had hoped to have wallet encryption ready for release, but more urgent fixes for existing clients were needed -- most notably block download problems were getting severe.  Wallet encryption is ready for testing at https://github.com/tortoisecoin/tortoisecoin/pull/352 for the git-savvy, and hopefully will follow shortly in the next release, v0.4.
 
 Notable fixes in v0.3.24, and the main reasons for this release:
 
@@ -13,8 +13,8 @@ Notable changes in v0.3.24:
 
 C1) DNS seeding enabled by default.
 
-C2) UPNP enabled by default in the GUI client.  The percentage of bitcoin clients that accept incoming connections is quite small, and that is a problem.  This should help.  bitcoind, and unofficial builds, are unchanged (though we encourage use of "-upnp" to help the network!)
+C2) UPNP enabled by default in the GUI client.  The percentage of tortoisecoin clients that accept incoming connections is quite small, and that is a problem.  This should help.  tortoisecoind, and unofficial builds, are unchanged (though we encourage use of "-upnp" to help the network!)
 
-C3) Initial unit testing framework.  Bitcoin sorely needs automated tests, and this is a beginning.  Contributions welcome.
+C3) Initial unit testing framework.  Tortoisecoin sorely needs automated tests, and this is a beginning.  Contributions welcome.
 
 C4) Internal wallet code cleanup.  While invisible to an end user, this change provides the basis for v0.4's wallet encryption.

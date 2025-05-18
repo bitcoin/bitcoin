@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2022 The Bitcoin Core developers
+// Copyright (c) 2014-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_SHA512_H
-#define BITCOIN_CRYPTO_SHA512_H
+#ifndef TORTOISECOIN_CRYPTO_SHA512_H
+#define TORTOISECOIN_CRYPTO_SHA512_H
 
 #include <cstdlib>
 #include <stdint.h>
@@ -26,4 +26,4 @@ public:
     uint64_t Size() const { return bytes; }
 };
 
-#endif // BITCOIN_CRYPTO_SHA512_H
+#endif // TORTOISECOIN_CRYPTO_SHA512_H

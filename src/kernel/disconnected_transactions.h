@@ -1,9 +1,9 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
-#define BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
+#ifndef TORTOISECOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
+#define TORTOISECOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
 
 #include <primitives/transaction.h>
 #include <util/hasher.h>
@@ -73,4 +73,4 @@ public:
     /** Clear all data structures and return the list of transactions. */
     std::list<CTransactionRef> take();
 };
-#endif // BITCOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H
+#endif // TORTOISECOIN_KERNEL_DISCONNECTED_TRANSACTIONS_H

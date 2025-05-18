@@ -1,12 +1,12 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <config/bitcoin-config.h> // IWYU pragma: keep
+#include <config/tortoisecoin-config.h> // IWYU pragma: keep
 
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <qt/bitcoin.h>
+#include <qt/tortoisecoin.h>
 #include <qt/guiconstants.h>
 #include <qt/test/apptests.h>
 #include <qt/test/optiontests.h>
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     int num_test_failures{0};
 
     {
-        BitcoinApplication app;
+        TortoisecoinApplication app;
         app.createNode(*init);
 
         AppTests app_tests(app);

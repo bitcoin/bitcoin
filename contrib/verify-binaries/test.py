@@ -25,7 +25,7 @@ def main():
     v = result['verified_binaries']
     assert result['good_trusted_sigs']
     assert len(v) == 1
-    assert v['bitcoin-22.0-x86_64-linux-gnu.tar.gz'] == '59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16'
+    assert v['tortoisecoin-22.0-x86_64-linux-gnu.tar.gz'] == '59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16'
 
     print("- testing verification (22.0)", flush=True)
     _220 = run_verify("--json", "pub", "22.0")
@@ -39,9 +39,9 @@ def main():
     expect_code(_220, 0, "22.0 should succeed")
     v = result['verified_binaries']
     assert result['good_trusted_sigs']
-    assert v['bitcoin-22.0-aarch64-linux-gnu.tar.gz'] == 'ac718fed08570a81b3587587872ad85a25173afa5f9fbbd0c03ba4d1714cfa3e'
-    assert v['bitcoin-22.0-osx64.tar.gz'] == '2744d199c3343b2d94faffdfb2c94d75a630ba27301a70e47b0ad30a7e0155e9'
-    assert v['bitcoin-22.0-x86_64-linux-gnu.tar.gz'] == '59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16'
+    assert v['tortoisecoin-22.0-aarch64-linux-gnu.tar.gz'] == 'ac718fed08570a81b3587587872ad85a25173afa5f9fbbd0c03ba4d1714cfa3e'
+    assert v['tortoisecoin-22.0-osx64.tar.gz'] == '2744d199c3343b2d94faffdfb2c94d75a630ba27301a70e47b0ad30a7e0155e9'
+    assert v['tortoisecoin-22.0-x86_64-linux-gnu.tar.gz'] == '59ebd25dd82a51638b7a6bb914586201e67db67b919b2a1ff08925a7936d1b16'
 
 
 def run_verify(global_args: str, command: str, command_args: str) -> subprocess.CompletedProcess:

@@ -63,7 +63,7 @@ noinst_HEADERS += src/hash_impl.h
 noinst_HEADERS += src/field.h
 noinst_HEADERS += src/field_impl.h
 noinst_HEADERS += src/bench.h
-noinst_HEADERS += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
+noinst_HEADERS += src/wycheproof/ecdsa_secp256k1_sha256_tortoisecoin_test.h
 noinst_HEADERS += src/hsort.h
 noinst_HEADERS += src/hsort_impl.h
 noinst_HEADERS += contrib/lax_der_parsing.h
@@ -236,11 +236,11 @@ maintainer-clean-local: clean-precomp
 
 ### Pregenerated test vectors
 ### (see the comments in the previous section for detailed rationale)
-TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h
+TESTVECTORS = src/wycheproof/ecdsa_secp256k1_sha256_tortoisecoin_test.h
 
-src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.h:
+src/wycheproof/ecdsa_secp256k1_sha256_tortoisecoin_test.h:
 	mkdir -p $(@D)
-	python3 $(top_srcdir)/tools/tests_wycheproof_generate.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json > $@
+	python3 $(top_srcdir)/tools/tests_wycheproof_generate.py $(top_srcdir)/src/wycheproof/ecdsa_secp256k1_sha256_tortoisecoin_test.json > $@
 
 testvectors: $(TESTVECTORS)
 
@@ -262,7 +262,7 @@ EXTRA_DIST += sage/prove_group_implementations.sage
 EXTRA_DIST += sage/secp256k1_params.sage
 EXTRA_DIST += sage/weierstrass_prover.sage
 EXTRA_DIST += src/wycheproof/WYCHEPROOF_COPYING
-EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_bitcoin_test.json
+EXTRA_DIST += src/wycheproof/ecdsa_secp256k1_sha256_tortoisecoin_test.json
 EXTRA_DIST += tools/tests_wycheproof_generate.py
 
 if ENABLE_MODULE_ECDH

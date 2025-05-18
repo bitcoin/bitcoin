@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test dust limit mempool policy (`-dustrelayfee` parameter)"""
@@ -24,7 +24,7 @@ from test_framework.script_util import (
     script_to_p2sh_script,
     script_to_p2wsh_script,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.test_node import TestNode
 from test_framework.util import (
     assert_equal,
@@ -37,7 +37,7 @@ from test_framework.wallet_util import generate_keypair
 DUST_RELAY_TX_FEE = 3000  # default setting [sat/kvB]
 
 
-class DustRelayFeeTest(BitcoinTestFramework):
+class DustRelayFeeTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [['-permitbaremultisig']]

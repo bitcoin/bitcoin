@@ -1,9 +1,9 @@
-// Copyright (c) 2024-present The Bitcoin Core developers
+// Copyright (c) 2024-present The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KERNEL_WARNING_H
-#define BITCOIN_KERNEL_WARNING_H
+#ifndef TORTOISECOIN_KERNEL_WARNING_H
+#define TORTOISECOIN_KERNEL_WARNING_H
 
 namespace kernel {
 enum class Warning {
@@ -11,4 +11,4 @@ enum class Warning {
     LARGE_WORK_INVALID_CHAIN,
 };
 } // namespace kernel
-#endif // BITCOIN_KERNEL_WARNING_H
+#endif // TORTOISECOIN_KERNEL_WARNING_H

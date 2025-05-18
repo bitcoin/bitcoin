@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-2021 The Tortoisecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test asmap config argument for ASN-based IP bucketing.
 
-Verify node behaviour and debug log when launching bitcoind in these cases:
+Verify node behaviour and debug log when launching tortoisecoind in these cases:
 
-1. `bitcoind` with no -asmap arg, using /16 prefix for IP bucketing
+1. `tortoisecoind` with no -asmap arg, using /16 prefix for IP bucketing
 
-2. `bitcoind -asmap=<absolute path>`, using the unit test skeleton asmap
+2. `tortoisecoind -asmap=<absolute path>`, using the unit test skeleton asmap
 
-3. `bitcoind -asmap=<relative path>`, using the unit test skeleton asmap
+3. `tortoisecoind -asmap=<relative path>`, using the unit test skeleton asmap
 
-4. `bitcoind -asmap/-asmap=` with no file specified, using the default asmap
+4. `tortoisecoind -asmap/-asmap=` with no file specified, using the default asmap
 
-5. `bitcoind -asmap` restart with an addrman containing new and tried entries
+5. `tortoisecoind -asmap` restart with an addrman containing new and tried entries
 
-6. `bitcoind -asmap` with no file specified and a missing default asmap file
+6. `tortoisecoind -asmap` with no file specified and a missing default asmap file
 
-7. `bitcoind -asmap` with an empty (unparsable) default asmap file
+7. `tortoisecoind -asmap` with an empty (unparsable) default asmap file
 
 The tests are order-independent.
 
@@ -26,7 +26,7 @@ The tests are order-independent.
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import TortoisecoinTestFramework
 from test_framework.util import assert_equal
 
 DEFAULT_ASMAP_FILENAME = 'ip_asn.map' # defined in src/init.cpp
@@ -37,7 +37,7 @@ def expected_messages(filename):
     return [f'Opened asmap file "{filename}" (59 bytes) from disk',
             f'Using asmap version {VERSION} for IP bucketing']
 
-class AsmapTest(BitcoinTestFramework):
+class AsmapTest(TortoisecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # Do addrman checks on all operations and use deterministic addrman
@@ -49,13 +49,13 @@ class AsmapTest(BitcoinTestFramework):
             self.nodes[node_id].addpeeraddress(address=f"101.{addr}.0.0", tried=tried, port=8333)
 
     def test_without_asmap_arg(self):
-        self.log.info('Test bitcoind with no -asmap arg passed')
+        self.log.info('Test tortoisecoind with no -asmap arg passed')
         self.stop_node(0)
         with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
             self.start_node(0)
 
     def test_asmap_with_absolute_path(self):
-        self.log.info('Test bitcoind -asmap=<absolute path>')
+        self.log.info('Test tortoisecoind -asmap=<absolute path>')
         self.stop_node(0)
         filename = os.path.join(self.datadir, 'my-map-file.map')
         shutil.copyfile(self.asmap_raw, filename)
@@ -64,7 +64,7 @@ class AsmapTest(BitcoinTestFramework):
         os.remove(filename)
 
     def test_asmap_with_relative_path(self):
-        self.log.info('Test bitcoind -asmap=<relative path>')
+        self.log.info('Test tortoisecoind -asmap=<relative path>')
         self.stop_node(0)
         name = 'ASN_map'
         filename = os.path.join(self.datadir, name)
@@ -76,14 +76,14 @@ class AsmapTest(BitcoinTestFramework):
     def test_default_asmap(self):
         shutil.copyfile(self.asmap_raw, self.default_asmap)
         for arg in ['-asmap', '-asmap=']:
-            self.log.info(f'Test bitcoind {arg} (using default map file)')
+            self.log.info(f'Test tortoisecoind {arg} (using default map file)')
             self.stop_node(0)
             with self.node.assert_debug_log(expected_messages(self.default_asmap)):
                 self.start_node(0, [arg])
         os.remove(self.default_asmap)
 
     def test_asmap_interaction_with_addrman_containing_entries(self):
-        self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
+        self.log.info("Test tortoisecoind -asmap restart with addrman containing new and tried entries")
         self.stop_node(0)
         shutil.copyfile(self.asmap_raw, self.default_asmap)
         self.start_node(0, ["-asmap", "-checkaddrman=1", "-test=addrman"])
@@ -99,13 +99,13 @@ class AsmapTest(BitcoinTestFramework):
         os.remove(self.default_asmap)
 
     def test_default_asmap_with_missing_file(self):
-        self.log.info('Test bitcoind -asmap with missing default map file')
+        self.log.info('Test tortoisecoind -asmap with missing default map file')
         self.stop_node(0)
         msg = f"Error: Could not find asmap file \"{self.default_asmap}\""
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
 
     def test_empty_asmap(self):
-        self.log.info('Test bitcoind -asmap with empty map file')
+        self.log.info('Test tortoisecoind -asmap with empty map file')
         self.stop_node(0)
         with open(self.default_asmap, "w", encoding="utf-8") as f:
             f.write("")
@@ -114,7 +114,7 @@ class AsmapTest(BitcoinTestFramework):
         os.remove(self.default_asmap)
 
     def test_asmap_health_check(self):
-        self.log.info('Test bitcoind -asmap logs ASMap Health Check with basic stats')
+        self.log.info('Test tortoisecoind -asmap logs ASMap Health Check with basic stats')
         shutil.copyfile(self.asmap_raw, self.default_asmap)
         msg = "ASMap Health Check: 4 clearnet peers are mapped to 3 ASNs with 0 peers being unmapped"
         with self.node.assert_debug_log(expected_msgs=[msg]):

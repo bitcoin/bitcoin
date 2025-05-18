@@ -12,7 +12,7 @@ For example:
 
     make HOST=x86_64-w64-mingw32 -j4
 
-**Bitcoin Core's `configure` script by default will ignore the depends output.** In
+**Tortoisecoin Core's `configure` script by default will ignore the depends output.** In
 order for it to pick up libraries, tools, and settings from the depends build,
 you must set the `CONFIG_SITE` environment variable to point to a `config.site` settings file.
 Make sure that `CONFIG_SITE` is an absolute path.
@@ -126,7 +126,7 @@ The following can be set when running make: `make FOO=bar`
 - `NO_HARDEN=1`: Don't use hardening options when building packages
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
-options will be passed to bitcoin's configure. In this case, `--disable-wallet`.
+options will be passed to tortoisecoin's configure. In this case, `--disable-wallet`.
 
 ### Additional targets
 

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-2022 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_RANDOM_H
-#define BITCOIN_RANDOM_H
+#ifndef TORTOISECOIN_RANDOM_H
+#define TORTOISECOIN_RANDOM_H
 
 #include <crypto/chacha20.h>
 #include <crypto/common.h>
@@ -465,4 +465,4 @@ inline uint256 GetRandHash() noexcept
  */
 bool Random_SanityCheck();
 
-#endif // BITCOIN_RANDOM_H
+#endif // TORTOISECOIN_RANDOM_H

@@ -1,23 +1,23 @@
 Benchmarking
 ============
 
-Bitcoin Core has an internal benchmarking framework, with benchmarks
+Tortoisecoin Core has an internal benchmarking framework, with benchmarks
 for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filter, coins selection,
 thread queue, wallet balance.
 
 Running
 ---------------------
 
-For benchmarking, you only need to compile `bitcoin_bench`.  The bench runner
+For benchmarking, you only need to compile `tortoisecoin_bench`.  The bench runner
 warns if you configure with `--enable-debug`, but consider if building without
 it will impact the benchmark(s) you are interested in by unlatching log printers
 and lock analysis.
 
-    make -C src bitcoin_bench
+    make -C src tortoisecoin_bench
 
-After compiling bitcoin-core, the benchmarks can be run with:
+After compiling tortoisecoin-core, the benchmarks can be run with:
 
-    src/bench/bench_bitcoin
+    src/bench/bench_tortoisecoin
 
 The output will look similar to:
 ```
@@ -39,7 +39,7 @@ The output will look similar to:
 Help
 ---------------------
 
-    src/bench/bench_bitcoin -?
+    src/bench/bench_tortoisecoin -?
 
 To print the various options, like listing the benchmarks without running them
 or using a regex filter to only run certain benchmarks.
@@ -56,6 +56,6 @@ More benchmarks are needed for, in no particular order:
 Going Further
 --------------------
 
-To monitor Bitcoin Core performance more in depth (like reindex or IBD): https://github.com/chaincodelabs/bitcoinperf
+To monitor Tortoisecoin Core performance more in depth (like reindex or IBD): https://github.com/chaincodelabs/tortoisecoinperf
 
-To generate Flame Graphs for Bitcoin Core: https://github.com/eklitzke/bitcoin/blob/flamegraphs/doc/flamegraphs.md
+To generate Flame Graphs for Tortoisecoin Core: https://github.com/eklitzke/tortoisecoin/blob/flamegraphs/doc/flamegraphs.md

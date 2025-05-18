@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,8 @@
 //! messages, and are called in different parts of the codebase across
 //! node/wallet/gui boundaries.
 
-#ifndef BITCOIN_COMMON_MESSAGES_H
-#define BITCOIN_COMMON_MESSAGES_H
+#ifndef TORTOISECOIN_COMMON_MESSAGES_H
+#define TORTOISECOIN_COMMON_MESSAGES_H
 
 #include <string>
 
@@ -37,4 +37,4 @@ bilingual_str AmountHighWarn(const std::string& optname);
 bilingual_str AmountErrMsg(const std::string& optname, const std::string& strValue);
 } // namespace common
 
-#endif // BITCOIN_COMMON_MESSAGES_H
+#endif // TORTOISECOIN_COMMON_MESSAGES_H

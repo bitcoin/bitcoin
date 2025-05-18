@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Tortoisecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SUPPORT_LOCKEDPOOL_H
-#define BITCOIN_SUPPORT_LOCKEDPOOL_H
+#ifndef TORTOISECOIN_SUPPORT_LOCKEDPOOL_H
+#define TORTOISECOIN_SUPPORT_LOCKEDPOOL_H
 
 #include <cstddef>
 #include <list>
@@ -237,4 +237,4 @@ private:
     static LockedPoolManager* _instance;
 };
 
-#endif // BITCOIN_SUPPORT_LOCKEDPOOL_H
+#endif // TORTOISECOIN_SUPPORT_LOCKEDPOOL_H
