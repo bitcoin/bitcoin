@@ -42,9 +42,6 @@
 /* Define to 1 to enable wallet functions. */
 #cmakedefine ENABLE_WALLET 1
 
-/* Define this symbol to build code that uses x86 SHA-NI intrinsics */
-#cmakedefine ENABLE_X86_SHANI 1
-
 /* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
    */
 #cmakedefine01 HAVE_DECL_FORK

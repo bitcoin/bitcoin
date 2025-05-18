@@ -200,7 +200,6 @@ if(NOT MSVC)
     " HAVE_X86_SHANI
     CXXFLAGS ${X86_SHANI_CXXFLAGS}
   )
-  set(ENABLE_X86_SHANI ${HAVE_X86_SHANI})
 
   # Check for ARMv8 SHA-NI intrinsics.
   set(ARM_SHANI_CXXFLAGS -march=armv8-a+crypto)
