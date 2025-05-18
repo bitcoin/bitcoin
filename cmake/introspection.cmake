@@ -184,7 +184,6 @@ if(NOT MSVC)
     " HAVE_AVX2
     CXXFLAGS ${AVX2_CXXFLAGS}
   )
-  set(ENABLE_AVX2 ${HAVE_AVX2})
 
   # Check for x86 SHA-NI intrinsics.
   set(X86_SHANI_CXXFLAGS -msse4 -msha)
