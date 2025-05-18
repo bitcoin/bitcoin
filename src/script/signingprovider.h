@@ -213,6 +213,7 @@ struct FlatSigningProvider final : public SigningProvider
     std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> origins;
     std::map<CKeyID, CKey> keys;
     std::map<XOnlyPubKey, TaprootBuilder> tr_trees; /** Map from output key to Taproot tree (which can then make the TaprootSpendData */
+    std::pair<CKey, CPubKey> sp_keys;
 
     bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
     bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
