@@ -447,6 +447,7 @@ static DBErrors LoadMinVersion(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE
     AssertLockHeld(pwallet->cs_wallet);
     int nMinVersion = 0;
     if (batch.Read(DBKeys::MINVERSION, nMinVersion)) {
+        pwallet->WalletLogPrintf("Wallet file version = %d\n", nMinVersion);
         if (nMinVersion > FEATURE_LATEST)
             return DBErrors::TOO_NEW;
         pwallet->LoadMinVersion(nMinVersion);
@@ -1156,7 +1157,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // Last client version to open this wallet
     int last_client = CLIENT_VERSION;
     bool has_last_client = m_batch->Read(DBKeys::VERSION, last_client);
-    pwallet->WalletLogPrintf("Wallet file version = %d, last client version = %d\n", pwallet->GetVersion(), last_client);
+    if (has_last_client) pwallet->WalletLogPrintf("Last client version = %d\n", last_client);
 
     try {
         if ((result = LoadMinVersion(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
