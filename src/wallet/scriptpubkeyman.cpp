@@ -1143,9 +1143,16 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, co
         return false;
     }
 
-    m_wallet_descriptor = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
+    std::vector<CKey> keys;
+    m_wallet_descriptor = GenerateWalletDescriptor(master_key, addr_type, internal, keys);
 
-    // Store the master private key, and descriptor
+    // Store the private keys, and descriptor
+    for (const auto& key : keys) {
+        assert(key.IsValid());
+        if (!AddDescriptorKeyWithDB(batch, key, key.GetPubKey())) {
+            throw std::runtime_error(std::string(__func__) + ": writing descriptor private key failed");
+        }
+    }
     if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
         throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
     }
