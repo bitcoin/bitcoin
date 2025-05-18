@@ -624,6 +624,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
             UniValue objMN(UniValue::VOBJ);
             objMN.pushKV("proTxHash", dmn.proTxHash.ToString());
             objMN.pushKV("address", dmn.pdmnState->netInfo->GetPrimary().ToStringAddrPort());
+            objMN.pushKV("addresses", dmn.pdmnState->netInfo->ToJson());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
             objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));

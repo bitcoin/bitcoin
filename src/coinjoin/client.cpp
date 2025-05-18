@@ -1884,6 +1884,7 @@ void CCoinJoinClientSession::GetJsonInfo(UniValue& obj) const
         obj.pushKV("protxhash", mixingMasternode->proTxHash.ToString());
         obj.pushKV("outpoint", mixingMasternode->collateralOutpoint.ToStringShort());
         obj.pushKV("service", mixingMasternode->pdmnState->netInfo->GetPrimary().ToStringAddrPort());
+        obj.pushKV("addresses", mixingMasternode->pdmnState->netInfo->ToJson());
     }
     obj.pushKV("denomination", ValueFromAmount(CoinJoin::DenominationToAmount(nSessionDenom)));
     obj.pushKV("state", GetStateString());

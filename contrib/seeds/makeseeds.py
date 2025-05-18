@@ -164,7 +164,7 @@ def main():
     mns = filtermulticollateraladdress(mns)
     mns = filtermultipayoutaddress(mns)
     # Extract IPs
-    ips = [parseip(mn['state']['service']) for mn in mns]
+    ips = [parseip(mn['state']['addresses'][0]) for mn in mns]
     for onion in onions:
         parsed = parseip(onion)
         if parsed is not None:

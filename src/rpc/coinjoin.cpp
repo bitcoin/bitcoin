@@ -436,6 +436,12 @@ static RPCHelpMan getcoinjoininfo()
                                     {RPCResult::Type::STR_HEX, "protxhash", "The ProTxHash of the masternode"},
                                     {RPCResult::Type::STR_HEX, "outpoint", "The outpoint of the masternode"},
                                     {RPCResult::Type::STR, "service", "The IP address and port of the masternode"},
+                                    {RPCResult::Type::ARR, "addresses", "Network addresses of the masternode",
+                                    {
+                                        {
+                                            {RPCResult::Type::STR, "address", ""},
+                                        }
+                                    }},
                                     {RPCResult::Type::NUM, "denomination", "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
                                     {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
                                     {RPCResult::Type::NUM, "entries_count", "The number of entries in the mixing session"},
