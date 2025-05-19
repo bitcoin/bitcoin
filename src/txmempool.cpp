@@ -155,7 +155,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
         // This txid may have been removed already in a prior call to removeRecursive.
         // Therefore we ensure it is not yet removed already.
         if (const std::optional<txiter> txiter = GetIter(txid)) {
-            removeRecursive((*txiter)->GetTx(), MemPoolRemovalReason::SIZELIMIT);
+            removeRecursive((*txiter)->GetTx(), SizeLimitReason{});
         }
     }
 }
@@ -435,7 +435,15 @@ void CTxMemPool::AddTransactionsUpdated(unsigned int n)
 void CTxMemPool::Apply(ChangeSet* changeset)
 {
     AssertLockHeld(cs);
-    RemoveStaged(changeset->m_to_remove, false, MemPoolRemovalReason::REPLACED);
+    if (!changeset->m_entry_vec.empty()) {
+        // The replacement_tx is the transaction added in this changeset or,
+        // in the case of packages, the last child in the package added in this changeset
+        const auto replacement_tx = changeset->m_entry_vec[changeset->m_entry_vec.size() - 1]->GetSharedTx();
+        RemoveStaged(changeset->m_to_remove, false, ReplacedReason(replacement_tx));
+    } else {
+        Assume(false);
+        RemoveStaged(changeset->m_to_remove, false, ReplacedReason(std::nullopt));
+    }
 
     for (size_t i=0; i<changeset->m_entry_vec.size(); ++i) {
         auto tx_entry = changeset->m_entry_vec[i];
@@ -517,13 +525,13 @@ void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit, CTxMemPool::setEntr
     );
 }
 
-void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
+void CTxMemPool::removeUnchecked(txiter it, const MemPoolRemovalReason& reason)
 {
     // We increment mempool sequence value no matter removal reason
     // even if not directly reported below.
     uint64_t mempool_sequence = GetAndIncrementSequence();
 
-    if (reason != MemPoolRemovalReason::BLOCK && m_opts.signals) {
+    if (!IsReason<BlockReason>(reason) && m_opts.signals) {
         // Notify clients that a transaction has been removed from the mempool
         // for any reason except being included in a block. Clients interested
         // in transactions included in blocks can subscribe to the BlockConnected
@@ -592,7 +600,7 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants
     }
 }
 
-void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
+void CTxMemPool::removeRecursive(const CTransaction& origTx, const MemPoolRemovalReason& reason)
 {
     // Remove transaction from memory pool
     AssertLockHeld(cs);
@@ -638,13 +646,13 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     for (txiter it : txToRemove) {
         CalculateDescendants(it, setAllRemoves);
     }
-    RemoveStaged(setAllRemoves, false, MemPoolRemovalReason::REORG);
+    RemoveStaged(setAllRemoves, false, ReorgReason{});
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
 }
 
-void CTxMemPool::removeConflicts(const CTransaction &tx)
+void CTxMemPool::removeConflicts(const CTransaction& tx, const uint256& blockHash, unsigned int nBlockHeight)
 {
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
@@ -655,7 +663,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
             if (txConflict != tx)
             {
                 ClearPrioritisation(txConflict.GetHash());
-                removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                removeRecursive(txConflict, ConflictReason(blockHash, nBlockHeight));
             }
         }
     }
@@ -664,7 +672,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 /**
  * Called when a block is connected. Removes from mempool.
  */
-void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
+void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, const uint256& blockHash, unsigned int nBlockHeight)
 {
     AssertLockHeld(cs);
     Assume(!m_have_changeset);
@@ -677,9 +685,9 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             setEntries stage;
             stage.insert(it);
             txs_removed_for_block.emplace_back(*it);
-            RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+            RemoveStaged(stage, true, BlockReason{});
         }
-        removeConflicts(*tx);
+        removeConflicts(*tx, blockHash, nBlockHeight);
         ClearPrioritisation(tx->GetHash());
     }
     if (m_opts.signals) {
@@ -1075,7 +1083,8 @@ void CTxMemPool::RemoveUnbroadcastTx(const uint256& txid, const bool unchecked) 
     }
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(setEntries& stage, bool updateDescendants, const MemPoolRemovalReason& reason)
+{
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage, updateDescendants);
     for (txiter it : stage) {
@@ -1097,7 +1106,7 @@ int CTxMemPool::Expire(std::chrono::seconds time)
     for (txiter removeit : toremove) {
         CalculateDescendants(removeit, stage);
     }
-    RemoveStaged(stage, false, MemPoolRemovalReason::EXPIRY);
+    RemoveStaged(stage, false, ExpiryReason{});
     return stage.size();
 }
 
@@ -1183,7 +1192,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
             for (txiter iter : stage)
                 txn.push_back(iter->GetTx());
         }
-        RemoveStaged(stage, false, MemPoolRemovalReason::SIZELIMIT);
+        RemoveStaged(stage, false, SizeLimitReason{});
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
