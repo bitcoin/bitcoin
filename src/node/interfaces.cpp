@@ -33,9 +33,9 @@
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
-#include <node/mini_miner.h>
-#include <node/miner.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
+#include <node/mini_miner.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
@@ -53,6 +53,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <undo.h>
 #include <univalue.h>
 #include <util/check.h>
 #include <util/result.h>
@@ -444,6 +445,10 @@ bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<Rec
         REVERSE_LOCK(lock, cs_main);
         if (!blockman.ReadBlock(*block.m_data, *index)) block.m_data->SetNull();
     }
+    if (block.m_undo) {
+        REVERSE_LOCK(lock, cs_main);
+        if (!blockman.ReadBlockUndo(*block.m_undo, *index)) block.m_undo->vtxundo.clear();
+    }
     block.found = true;
     return true;
 }
@@ -454,9 +459,9 @@ public:
     explicit NotificationsProxy(std::shared_ptr<Chain::Notifications> notifications)
         : m_notifications(std::move(notifications)) {}
     virtual ~NotificationsProxy() = default;
-    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) override
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence, const std::map<COutPoint, Coin>& spent_coins) override
     {
-        m_notifications->transactionAddedToMempool(tx.info.m_tx);
+        m_notifications->transactionAddedToMempool(tx.info.m_tx, spent_coins);
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {
@@ -854,7 +859,12 @@ public:
         if (!m_node.mempool) return;
         LOCK2(::cs_main, m_node.mempool->cs);
         for (const CTxMemPoolEntry& entry : m_node.mempool->entryAll()) {
-            notifications.transactionAddedToMempool(entry.GetSharedTx());
+            std::map<COutPoint, Coin> spent_coins;
+            for (const CTxIn& txin : entry.GetTx().vin) {
+                spent_coins[txin.prevout];
+            }
+            findCoins(spent_coins);
+            notifications.transactionAddedToMempool(entry.GetSharedTx(), spent_coins);
         }
     }
     bool hasAssumedValidChain() override
