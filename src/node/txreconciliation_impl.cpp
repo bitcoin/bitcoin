@@ -399,7 +399,13 @@ private:
     }
 
 public:
-    explicit TxReconciliationTrackerImpl(uint32_t recon_version) : m_recon_version(recon_version) {}
+    explicit TxReconciliationTrackerImpl(uint32_t recon_version, double inbound_fanout_destinations_fraction, uint32_t outbound_fanout_threshold) : m_recon_version(recon_version), m_inbound_fanout_destinations_fraction(inbound_fanout_destinations_fraction), m_outbound_fanout_threshold(outbound_fanout_threshold) {}
+
+    //! Percentage of inbound peers to fanout to.
+    double m_inbound_fanout_destinations_fraction;
+
+    //! Number of outbound peers to fanout to.
+    uint32_t m_outbound_fanout_threshold;
 
     uint64_t PreRegisterPeer(NodeId peer_id, uint64_t local_salt) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
@@ -449,7 +455,7 @@ public:
             ++m_inbounds_count;
 
             // Scale up fanout targets as we get more connections. Targets will be rotated periodically via RotateInboundFanoutTargets
-            if (FastRandomContext().randrange(10) < INBOUND_FANOUT_DESTINATIONS_FRACTION * 10) {
+            if (FastRandomContext().randrange(10) < m_inbound_fanout_destinations_fraction * 10) {
                 m_inbound_fanout_targets.insert(peer_id);
             }
         }
@@ -794,7 +800,7 @@ public:
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
 
-        auto targets_size = std::floor(m_inbounds_count * INBOUND_FANOUT_DESTINATIONS_FRACTION);
+        auto targets_size = std::floor(m_inbounds_count * m_inbound_fanout_destinations_fraction);
         if (targets_size == 0) {
             return;
         }
@@ -817,9 +823,15 @@ public:
         m_inbound_fanout_targets.reserve(targets_size);
         m_inbound_fanout_targets.insert(inbound_recon_peers.begin(), inbound_recon_peers.begin() + targets_size);
     }
+
+    uint32_t GetOutboundFanoutThreshold() {
+        return m_outbound_fanout_threshold;
+    }
 };
 
-TxReconciliationTracker::TxReconciliationTracker(uint32_t recon_version) : m_impl{std::make_unique<TxReconciliationTrackerImpl>(recon_version)} {}
+TxReconciliationTracker::TxReconciliationTracker(uint32_t recon_version, double inbound_fanout_destinations_fraction, uint32_t outbound_fanout_threshold) : m_impl{std::make_unique<TxReconciliationTrackerImpl>(recon_version, inbound_fanout_destinations_fraction, outbound_fanout_threshold)} {
+    LogDebug(BCLog::TXRECONCILIATION, "Initializing TxReconciliationTracker with in_fanout: %f, out_fanout: %d", m_impl->m_inbound_fanout_destinations_fraction, m_impl->m_outbound_fanout_threshold);
+}
 
 TxReconciliationTracker::~TxReconciliationTracker() = default;
 
@@ -922,5 +934,10 @@ void TxReconciliationTracker::SetNextInboundPeerRotationTime(std::chrono::micros
 void TxReconciliationTracker::RotateInboundFanoutTargets()
 {
     return m_impl->RotateInboundFanoutTargets();
+}
+
+uint32_t TxReconciliationTracker::GetOutboundFanoutThreshold()
+{
+    return m_impl->GetOutboundFanoutThreshold();
 }
 } // namespace node
