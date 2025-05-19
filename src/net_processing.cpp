@@ -2195,7 +2195,13 @@ bool PeerManagerImpl::ShouldFanoutTo(const PeerRef peer, bool consider_fanout)
     // and the transaction was NOT received via set reconciliation. For the latter group, further filtering
     // will be applied at relay time.
     if (m_txreconciliation && m_txreconciliation->IsPeerRegistered(peer->m_id)) {
-        return peer->m_is_inbound ? m_txreconciliation->IsInboundFanoutTarget(peer->m_id) : consider_fanout;
+        // Shortcut for full reconciliation. Otherwise we may send things to the to_be_announced queue to just add them to
+        // reconciliation at trickle, which slows down the process.
+        if ((m_txreconciliation->GetOutboundFanoutThreshold() + m_txreconciliation->GetInboundFanoutTargetCount()) == 0) {
+            return false;
+        } else {
+            return peer->m_is_inbound ? m_txreconciliation->IsInboundFanoutTarget(peer->m_id) : consider_fanout;
+        }
     } else {
         // For non-Erlay peers we always fanout (same applies if we do not support Erlay)
         return true;
