@@ -18,7 +18,7 @@
 
 namespace wallet{
 
-static void WalletMigration(benchmark::Bench& bench)
+static void BM_WalletMigration(benchmark::Bench& bench)
 {
     const auto test_setup{MakeNoLogFileContext<TestingSetup>()};
     const auto loader{MakeWalletLoader(*test_setup->m_node.chain, test_setup->m_args)};
