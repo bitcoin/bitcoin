@@ -19,6 +19,8 @@
 #include <util/check.h>
 #include <util/time.h>
 
+#include <bitset>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <set>
@@ -233,4 +235,171 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
         Assert(have_tx == get_tx_nonnull);
     }
     orphanage->SanityCheck();
+}
+
+FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
+{
+    SeedRandomStateForTest(SeedRand::ZEROS);
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    FastRandomContext orphanage_rng{ConsumeUInt256(fuzzed_data_provider)};
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
+
+    // We have num_peers peers. Some subset of them will never exceed their reserved weight or announcement count, and
+    // should therefore never have any orphans evicted.
+    const unsigned int MAX_PEERS = 125;
+    const unsigned int num_peers = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, MAX_PEERS);
+    // Generate a vector of bools for whether each peer is protected from eviction
+    std::bitset<MAX_PEERS> protected_peers;
+    for (unsigned int i = 0; i < num_peers; i++) {
+        protected_peers.set(i, fuzzed_data_provider.ConsumeBool());
+    }
+
+    // Params for orphanage.
+    const unsigned int global_latency_score_limit = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(num_peers, 6'000);
+    const int64_t per_peer_weight_reservation = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(1, 4'040'000);
+    auto orphanage = node::MakeTxOrphanage(global_latency_score_limit, per_peer_weight_reservation);
+
+    // The actual limit, MaxPeerLatencyScore(), may be higher, since TxOrphanage only counts peers
+    // that have announced an orphan. The honest peer will not experience evictions if it never
+    // exceeds this.
+    const unsigned int honest_latency_limit = global_latency_score_limit / num_peers;
+    // Honest peer will not experience evictions if it never exceeds this.
+    const int64_t honest_mem_limit = per_peer_weight_reservation;
+
+    std::vector<COutPoint> outpoints; // Duplicates are tolerated
+    outpoints.reserve(400);
+
+    // initial outpoints used to construct transactions later
+    for (uint8_t i = 0; i < 4; i++) {
+        outpoints.emplace_back(Txid::FromUint256(uint256{i}), 0);
+    }
+
+    // These are honest peer's live announcements. We expect them to be protected from eviction.
+    std::set<Wtxid> protected_wtxids;
+
+    LIMITED_WHILE(outpoints.size() < 400 && fuzzed_data_provider.ConsumeBool(), 1000)
+    {
+        // construct transaction
+        const CTransactionRef tx = [&] {
+            CMutableTransaction tx_mut;
+            const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, outpoints.size());
+            const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(1, 256);
+            // pick outpoints from outpoints as input. We allow input duplicates on purpose, given we are not
+            // running any transaction validation logic before adding transactions to the orphanage
+            tx_mut.vin.reserve(num_in);
+            for (uint32_t i = 0; i < num_in; i++) {
+                auto& prevout = PickValue(fuzzed_data_provider, outpoints);
+                // try making transactions unique by setting a random nSequence, but allow duplicate transactions if they happen
+                tx_mut.vin.emplace_back(prevout, CScript{}, fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, CTxIn::SEQUENCE_FINAL));
+            }
+            // output amount or spendability will not affect txorphanage
+            tx_mut.vout.reserve(num_out);
+            for (uint32_t i = 0; i < num_out; i++) {
+                const auto payload_size = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 100000);
+                if (payload_size) {
+                    tx_mut.vout.emplace_back(0, CScript() << OP_RETURN << std::vector<unsigned char>(payload_size));
+                } else {
+                    tx_mut.vout.emplace_back(0, CScript{});
+                }
+            }
+            auto new_tx = MakeTransactionRef(tx_mut);
+            // add newly constructed outpoints to the coin pool
+            for (uint32_t i = 0; i < num_out; i++) {
+                outpoints.emplace_back(new_tx->GetHash(), i);
+            }
+            return new_tx;
+        }();
+
+        const auto wtxid{tx->GetWitnessHash()};
+
+        // orphanage functions
+        LIMITED_WHILE(fuzzed_data_provider.remaining_bytes(), 10 * global_latency_score_limit)
+        {
+            NodeId peer_id = fuzzed_data_provider.ConsumeIntegralInRange<NodeId>(0, num_peers - 1);
+            const auto tx_weight{GetTransactionWeight(*tx)};
+
+            // This protected peer will never send orphans that would
+            // exceed their own personal allotment, so is never evicted.
+            const bool peer_is_protected{protected_peers[peer_id]};
+
+            CallOneOf(
+                fuzzed_data_provider,
+                [&] { // AddTx
+                    bool have_tx_and_peer = orphanage->HaveTxFromPeer(wtxid, peer_id);
+                    if (peer_is_protected && !have_tx_and_peer &&
+                        (orphanage->UsageByPeer(peer_id) + tx_weight > honest_mem_limit ||
+                        orphanage->LatencyScoreFromPeer(peer_id) + (tx->vin.size() / 10) + 1 > honest_latency_limit)) {
+                        // We never want our protected peer oversized or over-announced
+                    } else {
+                        orphanage->AddTx(tx, peer_id);
+                        if (peer_is_protected && orphanage->HaveTxFromPeer(wtxid, peer_id)) {
+                            protected_wtxids.insert(wtxid);
+                        }
+                    }
+                },
+                [&] { // AddAnnouncer
+                    bool have_tx_and_peer = orphanage->HaveTxFromPeer(tx->GetWitnessHash(), peer_id);
+                    // AddAnnouncer should return false if tx doesn't exist or we already HaveTxFromPeer.
+                    {
+                        if (peer_is_protected && !have_tx_and_peer &&
+                            (orphanage->UsageByPeer(peer_id) + tx_weight > honest_mem_limit ||
+                            orphanage->LatencyScoreFromPeer(peer_id) + (tx->vin.size()) + 1 > honest_latency_limit)) {
+                            // We never want our protected peer oversized
+                        } else {
+                            orphanage->AddAnnouncer(tx->GetWitnessHash(), peer_id);
+                            if (peer_is_protected && orphanage->HaveTxFromPeer(wtxid, peer_id)) {
+                                protected_wtxids.insert(wtxid);
+                            }
+                        }
+                    }
+                },
+                [&] { // EraseTx
+                    if (protected_wtxids.count(tx->GetWitnessHash())) {
+                        protected_wtxids.erase(wtxid);
+                    }
+                    orphanage->EraseTx(wtxid);
+                    Assert(!orphanage->HaveTx(wtxid));
+                },
+                [&] { // EraseForPeer
+                    if (!protected_peers[peer_id]) {
+                        orphanage->EraseForPeer(peer_id);
+                        Assert(orphanage->UsageByPeer(peer_id) == 0);
+                        Assert(orphanage->LatencyScoreFromPeer(peer_id) == 0);
+                        Assert(orphanage->AnnouncementsFromPeer(peer_id) == 0);
+                    }
+                },
+                [&] { // LimitOrphans
+                    // Assert that protected peers are never affected by LimitOrphans.
+                    unsigned int protected_count = 0;
+                    unsigned int protected_bytes = 0;
+                    for (unsigned int peer = 0; peer < num_peers; ++peer) {
+                        if (protected_peers[peer]) {
+                            protected_count += orphanage->LatencyScoreFromPeer(peer);
+                            protected_bytes += orphanage->UsageByPeer(peer);
+                        }
+                    }
+                    orphanage->LimitOrphans();
+                    Assert(orphanage->TotalLatencyScore() <= global_latency_score_limit);
+                    Assert(orphanage->TotalOrphanUsage() <= per_peer_weight_reservation * num_peers);
+
+                    // Number of announcements and usage should never differ before and after since
+                    // we've never exceeded the per-peer reservations.
+                    for (unsigned int peer = 0; peer < num_peers; ++peer) {
+                        if (protected_peers[peer]) {
+                            protected_count -= orphanage->LatencyScoreFromPeer(peer);
+                            protected_bytes -= orphanage->UsageByPeer(peer);
+                        }
+                    }
+                    Assert(protected_count == 0);
+                    Assert(protected_bytes == 0);
+                });
+
+        }
+    }
+
+    orphanage->SanityCheck();
+    // All of the honest peer's announcements are still present.
+    for (const auto& wtxid : protected_wtxids) {
+        Assert(orphanage->HaveTx(wtxid));
+    }
 }
