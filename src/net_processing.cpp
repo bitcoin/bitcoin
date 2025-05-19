@@ -1949,7 +1949,9 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
     if (opts.reconcile_txs) {
-        m_txreconciliation = std::make_unique<TxReconciliationTracker>(TXRECONCILIATION_VERSION);
+        LogDebug(BCLog::NET, "Initializing TxReconciliationTracker with params: inbound_fanout_destinations_fraction(%f), outbound_fanout_threshold(%d)",
+            opts.inbound_fanout_destinations_fraction, opts.outbound_fanout_threshold);
+        m_txreconciliation = std::make_unique<TxReconciliationTracker>(TXRECONCILIATION_VERSION, opts.inbound_fanout_destinations_fraction, opts.outbound_fanout_threshold);
     }
 }
 
@@ -6046,7 +6048,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // and how many announcements of this transactions have we sent and receivedx
                     // TODO: If we are the transaction source, we should reduce the threshold by 1, since this the only case
                     // where we are not accounting for at least one reception
-                    should_fanout = out_fanout_count <= OUTBOUND_FANOUT_THRESHOLD;
+                    should_fanout = out_fanout_count < m_txreconciliation->GetOutboundFanoutThreshold();
                 }
 
                 CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
