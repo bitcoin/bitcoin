@@ -40,7 +40,7 @@ class WalletSignerTest(BitcoinTestFramework):
         ]
 
     def skip_test_if_missing_module(self):
-        self.skip_if_no_external_signer()
+        self.skip_if_no_subprocess()
         self.skip_if_no_wallet()
 
     def set_mock_result(self, node, res):

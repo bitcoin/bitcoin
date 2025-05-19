@@ -1012,9 +1012,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     self.options.previous_releases_path))
         return self.options.prev_releases
 
-    def skip_if_no_external_signer(self):
+    def skip_if_no_subprocess(self):
         """Skip the running test if external signer support has not been compiled."""
-        if not self.is_external_signer_compiled():
+        if not self.is_subprocess_compiled():
             raise SkipTest("external signer support has not been compiled.")
 
     def skip_if_running_under_valgrind(self):
@@ -1026,7 +1026,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether bitcoin-cli was compiled."""
         return self.config["components"].getboolean("ENABLE_CLI")
 
-    def is_external_signer_compiled(self):
+    def is_subprocess_compiled(self):
         """Checks whether external signer support was compiled."""
         return self.config["components"].getboolean("ENABLE_SUBPROCESS")
 
