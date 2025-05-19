@@ -8,14 +8,12 @@
 #include <common/system.h>
 
 #include <logging.h>
-#include <util/string.h>
 #include <util/time.h>
 
 #ifndef WIN32
 #include <sys/stat.h>
 #else
 #include <compat/compat.h>
-#include <codecvt>
 #endif
 
 #ifdef HAVE_MALLOPT_ARENA_MAX
@@ -28,33 +26,8 @@
 #include <string>
 #include <thread>
 
-using util::ReplaceAll;
-
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
-
-#ifndef WIN32
-std::string ShellEscape(const std::string& arg)
-{
-    std::string escaped = arg;
-    ReplaceAll(escaped, "'", "'\"'\"'");
-    return "'" + escaped + "'";
-}
-#endif
-
-#if HAVE_SYSTEM
-void runCommand(const std::string& strCommand)
-{
-    if (strCommand.empty()) return;
-#ifndef WIN32
-    int nErr = ::system(strCommand.c_str());
-#else
-    int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
-#endif
-    if (nErr)
-        LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
-}
-#endif
 
 void SetupEnvironment()
 {

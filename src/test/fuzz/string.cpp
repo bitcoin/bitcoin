@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <common/messages.h>
 #include <common/settings.h>
+#include <common/run_command.h>
 #include <common/system.h>
 #include <common/url.h>
 #include <netbase.h>

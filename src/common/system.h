@@ -6,8 +6,6 @@
 #ifndef BITCOIN_COMMON_SYSTEM_H
 #define BITCOIN_COMMON_SYSTEM_H
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <cstdint>
 #include <string>
 
@@ -16,12 +14,6 @@ int64_t GetStartupTime();
 
 void SetupEnvironment();
 [[nodiscard]] bool SetupNetworking();
-#ifndef WIN32
-std::string ShellEscape(const std::string& arg);
-#endif
-#if HAVE_SYSTEM
-void runCommand(const std::string& strCommand);
-#endif
 
 /**
  * Return the number of cores available on the current system.
