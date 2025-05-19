@@ -20,6 +20,6 @@ export BITCOIN_CONFIG="\
  -DCMAKE_C_FLAGS='-funsigned-char' \
  -DCMAKE_C_FLAGS_DEBUG='-g2 -O2' \
  -DCMAKE_CXX_FLAGS='-funsigned-char' \
- -DCMAKE_CXX_FLAGS_DEBUG='-g2 -O2 -Wno-error=array-bounds' \
+ -DCMAKE_CXX_FLAGS_DEBUG='-g2 -O2 -Wno-error=array-bounds -D_GLIBCXX_ASSERTIONS' \
  -DAPPEND_CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE' \
 "
