@@ -25,13 +25,6 @@ Upgrading directly from a version of Bitcoin Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
 wallet versions of Bitcoin Core are generally supported.
 
-Running Bitcoin Core binaries on macOS requires self signing.
-```
-cd /path/to/bitcoin-28.x/bin
-xattr -d com.apple.quarantine bitcoin-cli bitcoin-qt bitcoin-tx bitcoin-util bitcoin-wallet bitcoind test_bitcoin
-codesign -s - bitcoin-cli bitcoin-qt bitcoin-tx bitcoin-util bitcoin-wallet bitcoind test_bitcoin
-```
-
 Compatibility
 ==============
 
@@ -46,8 +39,9 @@ Notable changes
 
 ### Build
 
-- #31627 depends: Fix spacing issue
+- #31407 guix: Notarize MacOS app bundle and codesign all MacOS and Windows binaries
 - #31500 depends: Fix compiling libevent package on NetBSD
+- #31627 depends: Fix spacing issue
 - #32070 build: use make < 3.82 syntax for define directive
 
 ### Test
@@ -68,6 +62,7 @@ Credits
 =======
 
 - 0xB10C
+- achow101
 - Brandon Odiwuor
 - Hennadii Stepanov
 - kehiy
