@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <net_processing.h>
 #include <node/minisketchwrapper.h>
 #include <node/txreconciliation.h>
 #include <node/txreconciliation_impl.h>
@@ -24,7 +25,7 @@ uint32_t ComputeShortIDHelper(const Wtxid& wtxid, uint256 salt)
 
 BOOST_AUTO_TEST_CASE(RegisterPeerTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     const uint64_t salt = 0;
 
     // Prepare a peer for reconciliation.
@@ -60,7 +61,7 @@ BOOST_AUTO_TEST_CASE(RegisterPeerTest)
 
 BOOST_AUTO_TEST_CASE(IsPeerRegisteredTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
 
     // Non-registered of simply pre-registered peers not count a registered.
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(IsPeerRegisteredTest)
 
 BOOST_AUTO_TEST_CASE(IsPeerNextToReconcileWithTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
 
     // If the peer is not fully registered, the method will return false, doesn't matter the current time
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(IsPeerNextToReconcileWithTest)
 
 BOOST_AUTO_TEST_CASE(ForgetPeerTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
 
     // Removing peer after pre-registering works and does not let to register the peer.
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(ForgetPeerTest)
 
 BOOST_AUTO_TEST_CASE(AddToSetTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
 
@@ -243,7 +244,7 @@ BOOST_AUTO_TEST_CASE(AddToSetTest)
 
 BOOST_AUTO_TEST_CASE(AddToSetCollisionTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
 
     // Precompute collision
@@ -264,7 +265,7 @@ BOOST_AUTO_TEST_CASE(AddToSetCollisionTest)
 
 BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
 
@@ -302,7 +303,7 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
 
 BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
 
@@ -347,7 +348,7 @@ BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestTest)
 
 BOOST_AUTO_TEST_CASE(HandleReconciliationRequestTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
 
     // A reconciliation request cannot be initiated with a non-fully registered peer
@@ -377,7 +378,7 @@ BOOST_AUTO_TEST_CASE(HandleReconciliationRequestTest)
 
 BOOST_AUTO_TEST_CASE(ShouldRespondToReconciliationRequestTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
     std::vector<uint8_t> skdata{};
@@ -449,7 +450,7 @@ BOOST_AUTO_TEST_CASE(ShouldRespondToReconciliationRequestTest)
 
 BOOST_AUTO_TEST_CASE(HandleSketchBasicFlowTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
 
     std::vector<uint8_t> skdata{};
@@ -478,7 +479,7 @@ BOOST_AUTO_TEST_CASE(HandleSketchBasicFlowTest)
 
 BOOST_AUTO_TEST_CASE(HandleSketchTest)
 {
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, INBOUND_FANOUT_DESTINATIONS_FRACTION, OUTBOUND_FANOUT_THRESHOLD);
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
 
