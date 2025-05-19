@@ -212,6 +212,7 @@ static RPCHelpMan getrawtransaction()
                                     {RPCResult::Type::OBJ, "scriptPubKey", "",
                                     {
                                         {RPCResult::Type::STR, "asm", "the asm"},
+                                        {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
                                         {RPCResult::Type::STR, "hex", "the hex"},
                                         {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                         {RPCResult::Type::STR, "address", /* optional */ true, "The Dash address (only if a well-defined address exists)"},
@@ -764,6 +765,7 @@ static RPCHelpMan decoderawtransaction()
                                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                                 {
                                     {RPCResult::Type::STR, "asm", "the asm"},
+                                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
                                     {RPCResult::Type::STR_HEX, "hex", "the hex"},
                                     {RPCResult::Type::STR, "type", "The type, eg 'pubkeyhash'"},
                                     {RPCResult::Type::STR, "address", /* optional */ true, "The Dash address (only if a well-defined address exists)"},
@@ -807,6 +809,7 @@ static RPCHelpMan decodescript()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::STR, "asm", "Script public key"},
+                {RPCResult::Type::STR, "desc", "Inferred descriptor for the script"},
                 {RPCResult::Type::STR, "type", "The output type (e.g. " + GetAllOutputTypes() + ")"},
                 {RPCResult::Type::STR, "address", /* optional */ true, "The Dash address (only if a well-defined address exists)"},
             },

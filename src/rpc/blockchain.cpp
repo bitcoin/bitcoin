@@ -473,17 +473,15 @@ static RPCHelpMan getblockfrompeer()
 {
     return RPCHelpMan{
         "getblockfrompeer",
-        "\nAttempt to fetch block from a given peer.\n"
+        "Attempt to fetch block from a given peer.\n"
         "\nWe must have the header for this block, e.g. using submitheader.\n"
-        "\nReturns {} if a block-request was successfully scheduled\n",
+        "Subsequent calls for the same block and a new peer will cause the response from the previous peer to be ignored.\n"
+        "\nReturns an empty JSON object if the request was successfully scheduled.",
         {
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash to try to fetch"},
             {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer to fetch it from (see getpeerinfo for peer IDs)"},
         },
-        RPCResult{RPCResult::Type::OBJ, "", "",
-        {
-            {RPCResult::Type::STR, "warnings", /*optional=*/true, "any warnings"},
-        }},
+        RPCResult{RPCResult::Type::OBJ, "", /*optional=*/false, "", {}},
         RPCExamples{
             HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
             + HelpExampleRpc("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
@@ -508,15 +506,14 @@ static RPCHelpMan getblockfrompeer()
         throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
     }
 
-    UniValue result = UniValue::VOBJ;
-
     const bool block_has_data = WITH_LOCK(::cs_main, return index->nStatus & BLOCK_HAVE_DATA);
     if (block_has_data) {
-        result.pushKV("warnings", "Block already downloaded");
-    } else if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block already downloaded");
+    }
+    if (const auto err{peerman.FetchBlock(peer_id, *index)}) {
         throw JSONRPCError(RPC_MISC_ERROR, err.value());
     }
-    return result;
+    return UniValue::VOBJ;
 },
     };
 }
@@ -1253,6 +1250,7 @@ static RPCHelpMan gettxout()
                 {RPCResult::Type::OBJ, "scriptPubKey", "",
                     {
                         {RPCResult::Type::STR, "asm", ""},
+                        {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
                         {RPCResult::Type::STR_HEX, "hex", ""},
                         {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
                         {RPCResult::Type::STR, "address", /* optional */ true, "Dash address (only if a well-defined address exists)"},

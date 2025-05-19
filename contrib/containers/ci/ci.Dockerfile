@@ -33,11 +33,6 @@ RUN set -ex; \
     zip \
     && rm -rf /var/lib/apt/lists/*
 
-# Make sure std::thread and friends are available
-RUN update-alternatives --set x86_64-w64-mingw32-gcc  /usr/bin/x86_64-w64-mingw32-gcc-posix; \
-    update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix; \
-    exit 0
-
 # Install Clang + LLVM and set it as default
 RUN set -ex; \
     apt-get update && apt-get install ${APT_ARGS} \
