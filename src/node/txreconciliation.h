@@ -224,6 +224,11 @@ public:
     uint32_t GetOutboundFanoutThreshold();
 
     /**
+    * Get the target number of fanout inbound peers
+    */
+    uint32_t GetInboundFanoutTargetCount();
+
+    /**
      * Get the next time the inbound peer subset should be rotated.
      */
     std::chrono::microseconds GetNextInboundPeerRotationTime();

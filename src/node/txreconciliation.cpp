@@ -1017,6 +1017,10 @@ public:
         return m_outbound_fanout_threshold;
     }
 
+    uint32_t GetInboundFanoutTargetCount() {
+        return static_cast<uint32_t>(m_inbound_fanout_destinations_fraction * 100);
+    }
+
     std::chrono::microseconds GetNextInboundPeerRotationTime() EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex) {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
@@ -1178,6 +1182,10 @@ bool TxReconciliationTracker::IsInboundFanoutTarget(NodeId peer_id)
 
 uint32_t TxReconciliationTracker::GetOutboundFanoutThreshold() {
     return m_impl->GetOutboundFanoutThreshold();
+}
+
+uint32_t TxReconciliationTracker::GetInboundFanoutTargetCount() {
+    return m_impl->GetInboundFanoutTargetCount();
 }
 
 std::chrono::microseconds TxReconciliationTracker::GetNextInboundPeerRotationTime(){
