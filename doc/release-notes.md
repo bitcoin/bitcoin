@@ -39,8 +39,9 @@ Notable changes
 
 ### Build
 
-- #31627 depends: Fix spacing issue
+- #31407 guix: Notarize MacOS app bundle and codesign all MacOS and Windows binaries
 - #31500 depends: Fix compiling libevent package on NetBSD
+- #31627 depends: Fix spacing issue
 - #32070 build: use make < 3.82 syntax for define directive
 
 ### Test
@@ -61,6 +62,7 @@ Credits
 =======
 
 - 0xB10C
+- achow101
 - Brandon Odiwuor
 - Hennadii Stepanov
 - kehiy
