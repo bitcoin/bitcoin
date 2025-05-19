@@ -606,7 +606,7 @@ class WalletTest(BitcoinTestFramework):
         # Prevent race of listunspent with outstanding TxAddedToMempool notifications
         self.nodes[0].syncwithvalidationinterfacequeue()
         # Now import the descriptors, make sure we can identify on which descriptor each coin was received.
-        self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
+        self.nodes[0].createwallet(wallet_name="wo", disable_private_keys=True)
         wo_wallet = self.nodes[0].get_wallet_rpc("wo")
         wo_wallet.importdescriptors([
             {
