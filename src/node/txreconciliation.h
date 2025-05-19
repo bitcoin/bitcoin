@@ -22,13 +22,6 @@ static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 constexpr size_t MAX_RECONSET_SIZE = 3000;
 
 /**
- * Announce transactions via full wtxid to a limited number of inbound and outbound peers.
- * Justification for these values are provided here:
- * TODO: ADD link to justification based on simulation results */
-constexpr double INBOUND_FANOUT_DESTINATIONS_FRACTION = 0.1;
-constexpr size_t OUTBOUND_FANOUT_THRESHOLD = 4;
-
-/**
  * Interval for inbound peer fanout selection. The subset is rotated on a timer.
  */
 static constexpr auto INBOUND_FANOUT_ROTATION_INTERVAL{10min};
@@ -100,7 +93,7 @@ private:
     const std::unique_ptr<Impl> m_impl;
 
 public:
-    explicit TxReconciliationTracker(uint32_t recon_version);
+    explicit TxReconciliationTracker(uint32_t recon_version, double inbound_fanout_destinations_fraction, uint32_t outbound_fanout_threshold);
     ~TxReconciliationTracker();
 
     /**
@@ -231,6 +224,11 @@ public:
      * Whether a given peer is currently flagged for fanout.
     */
     bool IsInboundFanoutTarget(NodeId peer_id);
+
+    /**
+    * Get the threshold of fanout outbound peers
+    */
+    uint32_t GetOutboundFanoutThreshold();
 
     /**
      * Get the next time the inbound peer subset should be rotated.

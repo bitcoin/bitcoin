@@ -47,6 +47,13 @@ static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
 
+/**
+ * Announce transactions via full wtxid to a limited number of inbound and outbound peers.
+ * Justification for these values are provided here:
+ * TODO: ADD link to justification based on simulation results */
+constexpr double INBOUND_FANOUT_DESTINATIONS_FRACTION = 0.1;
+constexpr uint32_t OUTBOUND_FANOUT_THRESHOLD = 4;
+
 struct CNodeStateStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
@@ -87,6 +94,10 @@ public:
         //! Number of headers sent in one getheaders message result (this is
         //! a test-only option).
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
+        //! Percentage of inbound peers to fanout to.
+        double inbound_fanout_destinations_fraction{INBOUND_FANOUT_DESTINATIONS_FRACTION};
+        //! Number of outbound peers to fanout to.
+        uint32_t outbound_fanout_threshold{OUTBOUND_FANOUT_THRESHOLD};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
