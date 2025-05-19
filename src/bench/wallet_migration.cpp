@@ -18,13 +18,13 @@
 
 namespace wallet{
 
-static void WalletMigration(benchmark::Bench& bench)
+static void BM_WalletMigration(benchmark::Bench& bench)
 {
     const auto test_setup{MakeNoLogFileContext<TestingSetup>()};
     const auto loader{MakeWalletLoader(*test_setup->m_node.chain, test_setup->m_args)};
 
     // Number of imported watch only addresses
-    int NUM_WATCH_ONLY_ADDR = 20;
+    constexpr int NUM_WATCH_ONLY_ADDR = 20;
 
     // Setup legacy wallet
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase());
@@ -46,8 +46,8 @@ static void WalletMigration(benchmark::Bench& bench)
 
     // Generate transactions and local addresses
     for (int j = 0; j < 500; ++j) {
-        CKey key = GenerateRandomKey();
-        CPubKey pubkey = key.GetPubKey();
+        const CKey key = GenerateRandomKey();
+        const CPubKey pubkey = key.GetPubKey();
         // Load key, scripts and create address book record
         Assert(legacy_spkm->LoadKey(key, pubkey));
         CTxDestination dest{PKHash(pubkey)};
@@ -64,9 +64,9 @@ static void WalletMigration(benchmark::Bench& bench)
     bench.epochs(/*numEpochs=*/1).epochIterations(/*numIters=*/1) // run the migration exactly once
          .run([&] {
              auto res{MigrateLegacyToDescriptor(std::move(wallet), /*passphrase=*/"", *loader->context(), /*was_loaded=*/false)};
-             assert(res);
-             assert(res->wallet);
-             assert(res->watchonly_wallet);
+             Assert(res);
+             Assert(res->wallet);
+             Assert(res->watchonly_wallet);
          });
 }
 
