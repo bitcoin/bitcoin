@@ -29,7 +29,7 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         // Disable the disable_privkeys_checkbox and external_signer_checkbox when isEncryptWalletChecked is
         // set to true, enable it when isEncryptWalletChecked is false.
         ui->disable_privkeys_checkbox->setEnabled(!checked);
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
         ui->external_signer_checkbox->setEnabled(m_has_signers && !checked);
 #endif
         // When the disable_privkeys_checkbox is disabled, uncheck it.
@@ -83,7 +83,7 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         }
     });
 
-#ifndef ENABLE_EXTERNAL_SIGNER
+#ifndef ENABLE_SUBPROCESS
         //: "External signing" means using devices such as hardware wallets.
         ui->external_signer_checkbox->setToolTip(tr("Compiled without external signing support (required for external signing)"));
         ui->external_signer_checkbox->setEnabled(false);

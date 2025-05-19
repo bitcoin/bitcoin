@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
 
 static RPCHelpMan enumeratesigners()
 {
@@ -75,4 +75,4 @@ void RegisterSignerRPCCommands(CRPCTable& t)
     }
 }
 
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS

@@ -9,13 +9,13 @@
 #include <tinyformat.h>
 #include <univalue.h>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
 #include <util/subprocess.h>
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS
 
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
     namespace sp = subprocess;
 
     UniValue result_json;
@@ -43,6 +43,6 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 
     return result_json;
 #else
-    throw std::runtime_error("Compiled without external signing support (required for external signing).");
-#endif // ENABLE_EXTERNAL_SIGNER
+    throw std::runtime_error("Compiled without subprocess support (required for external signing).");
+#endif // ENABLE_SUBPROCESS
 }

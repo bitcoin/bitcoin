@@ -389,7 +389,7 @@ static RPCHelpMan createwallet()
         throw JSONRPCError(RPC_WALLET_ERROR, "descriptors argument must be set to \"true\"; it is no longer possible to create a legacy wallet.");
     }
     if (!request.params[7].isNull() && request.params[7].get_bool()) {
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
 #else
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
@@ -943,9 +943,9 @@ RPCHelpMan listaddressgroupings();
 RPCHelpMan keypoolrefill();
 RPCHelpMan getaddressesbylabel();
 RPCHelpMan listlabels();
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
 RPCHelpMan walletdisplayaddress();
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS
 
 // backup
 RPCHelpMan importprunedfunds();
@@ -1054,9 +1054,9 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
         {"wallet", &walletdisplayaddress},
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS
         {"wallet", &walletlock},
         {"wallet", &walletpassphrase},
         {"wallet", &walletpassphrasechange},

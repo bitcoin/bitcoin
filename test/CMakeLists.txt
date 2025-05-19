@@ -23,7 +23,7 @@ function(create_test_config)
   set_configure_variable(BUILD_DAEMON BUILD_BITCOIND)
   set_configure_variable(BUILD_FUZZ_BINARY ENABLE_FUZZ_BINARY)
   set_configure_variable(WITH_ZMQ ENABLE_ZMQ)
-  set_configure_variable(ENABLE_EXTERNAL_SIGNER ENABLE_EXTERNAL_SIGNER)
+  set_configure_variable(ENABLE_SUBPROCESS ENABLE_SUBPROCESS)
   set_configure_variable(WITH_USDT ENABLE_USDT_TRACEPOINTS)
 
   configure_file(config.ini.in config.ini USE_SOURCE_PERMISSIONS @ONLY)
