@@ -105,8 +105,7 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 
 // LocaleIndependentAtoi is provided for backwards compatibility reasons.
 //
-// New code should use ToIntegral or the ParseInt* functions
-// which provide parse error feedback.
+// New code should use ToIntegral.
 //
 // The goal of LocaleIndependentAtoi is to replicate the defined behaviour of
 // std::atoi as it behaves under the "C" locale, and remove some undefined
