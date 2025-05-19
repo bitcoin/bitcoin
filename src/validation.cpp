@@ -2421,7 +2421,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     uint256 block_hash{block.GetHash()};
     assert(*pindex->phashBlock == block_hash);
-    const bool parallel_script_checks{m_chainman.GetCheckQueue().HasThreads()};
 
     const auto time_start{SteadyClock::now()};
     const CChainParams& params{m_chainman.GetParams()};
@@ -2612,7 +2611,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // doesn't invalidate pointers into the vector, and keep txsdata in scope
     // for as long as `control`.
     std::optional<CCheckQueueControl<CScriptCheck>> control;
-    if (fScriptChecks && parallel_script_checks) control.emplace(m_chainman.GetCheckQueue());
+    if (auto& queue = m_chainman.GetCheckQueue(); queue.HasThreads() && fScriptChecks) control.emplace(queue);
 
     std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
 
@@ -2671,18 +2670,26 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             break;
         }
 
-        if (!tx.IsCoinBase())
+        if (!tx.IsCoinBase() && fScriptChecks)
         {
-            std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
+            bool tx_ok;
             TxValidationState tx_state;
-            if (fScriptChecks && !CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, parallel_script_checks ? &vChecks : nullptr)) {
+            // If CheckInputScripts is called with a pointer to a checks vector, the resulting checks are appended to it. In that case
+            // they need to be added to control which runs them asynchronously. Otherwise, CheckInputScripts runs the checks before returning.
+            if (control) {
+                std::vector<CScriptCheck> vChecks;
+                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, &vChecks);
+                if (tx_ok) control->Add(std::move(vChecks));
+            } else {
+                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache);
+            }
+            if (!tx_ok) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(), tx_state.GetDebugMessage());
                 break;
             }
-            if (control) control->Add(std::move(vChecks));
         }
 
         CTxUndo undoDummy;
