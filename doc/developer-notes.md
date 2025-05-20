@@ -879,11 +879,6 @@ Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
 careful to avoid side-effects in those expressions.
 
-Wallet
--------
-
-- Make sure that no crashes happen with run-time option `-disablewallet`.
-
 General C++
 -------------
 
