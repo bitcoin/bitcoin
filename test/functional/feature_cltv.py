@@ -88,10 +88,11 @@ class BIP65Test(BitcoinTestFramework):
         self.extra_args = [[
             f'-testactivationheight=cltv@{CLTV_HEIGHT}',
             '-whitelist=noban@127.0.0.1',
-            '-dip3params=9000:9000',
-            '-testactivationheight=v20@9000', # disabled for this test
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
+            '-dip3params=9000:9000',
+            '-testactivationheight=v20@9000', # disabled for this test
+            '-testactivationheight=mn_rr@9000', # disabled for this test
         ]]
         self.setup_clean_chain = True
         self.rpc_timeout = 480

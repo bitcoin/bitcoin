@@ -90,11 +90,12 @@ class FullBlockTest(BitcoinTestFramework):
         # which causes RPC to hang, so we need to increase RPC timeouts
         self.rpc_timeout = 180
         self.extra_args = [[
-            '-dip3params=2000:2000', # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
             '-acceptnonstdtxn=1',  # This is a consensus block test, we don't care about tx policy
             '-testactivationheight=bip34@2',
+            '-dip3params=2000:2000', # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
             '-testactivationheight=dip0001@2000',
             '-testactivationheight=v20@2000',
+            '-testactivationheight=mn_rr@2000',
         ]]
 
     def setup_nodes(self):

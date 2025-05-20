@@ -99,10 +99,11 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.extra_args = [[
             '-peertimeout=999999',  # bump because mocktime might cause a disconnect otherwise
             '-whitelist=noban@127.0.0.1',
-            '-dip3params=2000:2000',
-            '-testactivationheight=v20@2000',
             f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
+            '-dip3params=2000:2000',
+            '-testactivationheight=v20@2000',
+            '-testactivationheight=mn_rr@2000',
         ]]
         self.supports_cli = False
 

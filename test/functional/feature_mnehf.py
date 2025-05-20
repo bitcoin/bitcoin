@@ -121,9 +121,6 @@ class MnehfTest(DashTestFramework):
         node = self.nodes[0]
 
         self.set_sporks()
-        self.log.info("Consensus rules assume there're no EHF signal before V20")
-        self.activate_v20()
-
         self.log.info("Mine a quorum...")
         self.mine_quorum()
         self.check_fork('defined')
