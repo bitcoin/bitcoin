@@ -492,6 +492,30 @@ void BCLog::Logger::ShrinkDebugFile()
         fclose(file);
 }
 
+void BCLog::LogRateLimiter::MaybeReset()
+{
+    const auto now{NodeClock::now()};
+    if ((now - m_last_reset) >= WINDOW_SIZE) {
+        m_available_bytes = WINDOW_MAX_BYTES;
+        m_last_reset = now;
+        m_dropped_bytes = 0;
+    }
+}
+
+bool BCLog::LogRateLimiter::Consume(uint64_t bytes)
+{
+    MaybeReset();
+
+    if (bytes > m_available_bytes) {
+        m_dropped_bytes += bytes;
+        m_available_bytes = 0;
+        return false;
+    }
+
+    m_available_bytes -= bytes;
+    return true;
+}
+
 bool BCLog::Logger::SetLogLevel(std::string_view level_str)
 {
     const auto level = GetLogLevel(level_str);

@@ -83,6 +83,43 @@ namespace BCLog {
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
 
+    //! Fixed window rate limiter for logging.
+    class LogRateLimiter
+    {
+    private:
+        //! Timestamp of the last window reset.
+        std::chrono::time_point<NodeClock> m_last_reset;
+        //! Remaining bytes in the current window interval.
+        uint64_t m_available_bytes{WINDOW_MAX_BYTES};
+        //! Number of bytes that were not consumed within the current window.
+        uint64_t m_dropped_bytes{0};
+        //! Reset the window if the window interval has passed since the last reset.
+        void MaybeReset();
+
+    public:
+        //! Interval after which the window is reset.
+        static constexpr std::chrono::hours WINDOW_SIZE{1};
+        //! The maximum number of bytes that can be logged within one window.
+        static constexpr uint64_t WINDOW_MAX_BYTES{1024 * 1024};
+
+        LogRateLimiter() : m_last_reset{NodeClock::now()} {}
+
+        //! Consume bytes from the window if enough bytes are available.
+        //!
+        //! Returns whether or not enough bytes were available.
+        bool Consume(uint64_t bytes);
+
+        uint64_t GetAvailableBytes() const
+        {
+            return m_available_bytes;
+        }
+
+        uint64_t GetDroppedBytes() const
+        {
+            return m_dropped_bytes;
+        }
+    };
+
     class Logger
     {
     public:

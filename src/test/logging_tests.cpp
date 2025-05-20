@@ -276,4 +276,36 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     }
 }
 
+BOOST_AUTO_TEST_CASE(logging_ratelimit_window)
+{
+    SetMockTime(std::chrono::hours{1});
+    BCLog::LogRateLimiter window;
+
+    // Check that window gets initialized correctly.
+    BOOST_CHECK_EQUAL(window.GetAvailableBytes(), BCLog::LogRateLimiter::WINDOW_MAX_BYTES);
+    BOOST_CHECK_EQUAL(window.GetDroppedBytes(), 0ull);
+
+    const uint64_t MESSAGE_SIZE{512 * 1024};
+    BOOST_CHECK(window.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(window.GetAvailableBytes(), BCLog::LogRateLimiter::WINDOW_MAX_BYTES - MESSAGE_SIZE);
+    BOOST_CHECK_EQUAL(window.GetDroppedBytes(), 0ull);
+
+    BOOST_CHECK(window.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(window.GetAvailableBytes(), BCLog::LogRateLimiter::WINDOW_MAX_BYTES - MESSAGE_SIZE * 2);
+    BOOST_CHECK_EQUAL(window.GetDroppedBytes(), 0ull);
+
+    // Consuming more bytes after already having consumed 1MB should fail.
+    BOOST_CHECK(!window.Consume(500));
+    BOOST_CHECK_EQUAL(window.GetAvailableBytes(), 0ull);
+    BOOST_CHECK_EQUAL(window.GetDroppedBytes(), 500ull);
+
+    // Advance time by one hour. This should trigger a window reset.
+    SetMockTime(std::chrono::hours{2});
+
+    // Check that the window resets as expected when new bytes are consumed.
+    BOOST_CHECK(window.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(window.GetAvailableBytes(), BCLog::LogRateLimiter::WINDOW_MAX_BYTES - MESSAGE_SIZE);
+    BOOST_CHECK_EQUAL(window.GetDroppedBytes(), 0ull);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
