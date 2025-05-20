@@ -1028,7 +1028,7 @@ Strings and formatting
   - In cases where you do call `.c_str()`, you might want to additionally check that the string does not contain embedded '\0' characters, because
     it will (necessarily) truncate the string. This might be used to hide parts of the string from logging or to circumvent
     checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first
-    and reject it if there are any (see `ParsePrechecks` in `strencodings.cpp` for an example).
+    and reject it if there are any.
 
 Shadowing
 --------------
