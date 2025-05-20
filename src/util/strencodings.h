@@ -105,8 +105,7 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
 
 // LocaleIndependentAtoi is provided for backwards compatibility reasons.
 //
-// New code should use ToIntegral or the ParseInt* functions
-// which provide parse error feedback.
+// New code should use ToIntegral.
 //
 // The goal of LocaleIndependentAtoi is to replicate the defined behaviour of
 // std::atoi as it behaves under the "C" locale, and remove some undefined
@@ -186,48 +185,6 @@ std::optional<T> ToIntegral(std::string_view str)
     }
     return result;
 }
-
-/**
- * Convert string to signed 32-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseInt32(std::string_view str, int32_t *out);
-
-/**
- * Convert string to signed 64-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseInt64(std::string_view str, int64_t *out);
-
-/**
- * Convert decimal string to unsigned 8-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt8(std::string_view str, uint8_t *out);
-
-/**
- * Convert decimal string to unsigned 16-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if the entire string could not be parsed or if overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt16(std::string_view str, uint16_t* out);
-
-/**
- * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt32(std::string_view str, uint32_t *out);
-
-/**
- * Convert decimal string to unsigned 64-bit integer with strict parse error feedback.
- * @returns true if the entire string could be parsed as valid integer,
- *   false if not the entire string could be parsed or when overflow or underflow occurred.
- */
-[[nodiscard]] bool ParseUInt64(std::string_view str, uint64_t *out);
 
 /**
  * Format a paragraph of text to a fixed width, adding spaces for
