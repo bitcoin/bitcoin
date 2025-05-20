@@ -972,7 +972,7 @@ Strings and formatting
     buffer overflows, and surprises with `\0` characters. Also, some C string manipulations
     tend to act differently depending on platform, or even the user locale.
 
-- For `strprintf`, `LogInfo`, `LogDebug`, etc formatting characters don't need size specifiers.
+- For `strprintf`, `LogInfo`, `LogDebug`, etc formatting characters don't need size specifiers (hh, h, l, ll, j, z, t, L) for arithmetic types.
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
 
