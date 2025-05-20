@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2023 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,8 +37,8 @@
 #include <sys/resource.h>
 #include <unistd.h>
 #else
-#include <io.h> /* For _get_osfhandle, _chsize */
-#include <shlobj.h> /* For SHGetSpecialFolderPathW */
+#include <io.h>
+#include <shlobj.h>
 #endif // WIN32
 
 /** Mutex to protect dir_locks. */

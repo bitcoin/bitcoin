@@ -11,11 +11,16 @@
 #include <wallet/sqlite.h>
 #include <wallet/migrate.h>
 #include <wallet/test/util.h>
-#include <wallet/walletutil.h> // for WALLET_FLAG_DESCRIPTORS
+#include <wallet/walletutil.h>
 
+#include <cstddef>
 #include <fstream>
 #include <memory>
+#include <span>
 #include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 inline std::ostream& operator<<(std::ostream& os, const std::pair<const SerializeData, SerializeData>& kv)
 {

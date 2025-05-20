@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -93,6 +93,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <condition_variable>
 #include <cstdint>
 #include <cstdio>
@@ -104,7 +105,6 @@
 #include <vector>
 
 #ifndef WIN32
-#include <cerrno>
 #include <signal.h>
 #include <sys/stat.h>
 #endif

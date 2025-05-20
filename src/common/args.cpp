@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,9 +19,9 @@
 #include <util/string.h>
 
 #ifdef WIN32
-#include <codecvt>    /* for codecvt_utf8_utf16 */
-#include <shellapi.h> /* for CommandLineToArgvW */
-#include <shlobj.h>   /* for CSIDL_APPDATA */
+#include <codecvt>
+#include <shellapi.h>
+#include <shlobj.h>
 #endif
 
 #include <algorithm>
