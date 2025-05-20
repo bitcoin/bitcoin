@@ -1123,27 +1123,7 @@ TRY_LOCK(cs_vNodes, lockNodes);
 Scripts
 --------------------------
 
-Write scripts in Python rather than bash, when possible.
-
-### Shebang
-
-- Use `#!/usr/bin/env bash` instead of obsolete `#!/bin/bash`.
-
-  - [*Rationale*](https://github.com/dylanaraps/pure-bash-bible#shebang):
-
-    `#!/bin/bash` assumes it is always installed to /bin/ which can cause issues;
-
-    `#!/usr/bin/env bash` searches the user's PATH to find the bash binary.
-
-  OK:
-```bash
-#!/usr/bin/env bash
-```
-
-  Wrong:
-```bash
-#!/bin/bash
-```
+Write scripts in Python or Rust rather than bash, when possible.
 
 Source code organization
 --------------------------
