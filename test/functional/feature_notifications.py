@@ -115,10 +115,15 @@ class NotificationsTest(DashTestFramework):
 
         self.log.info("Mine single block, wait for chainlock")
         self.bump_mocktime(1)
+        pre_tip = self.nodes[0].getbestblockhash()
         tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[-1]
         self.wait_for_chainlocked_block_all_nodes(tip)
         # directory content should equal the chainlocked block hash
-        assert_equal([tip], sorted(os.listdir(self.chainlocknotify_dir)))
+        cl_hashes = sorted(os.listdir(self.chainlocknotify_dir))
+        if len(cl_hashes) <= 1:
+            assert_equal([tip], cl_hashes)
+        else:
+            assert_equal(sorted([tip, pre_tip]), cl_hashes)
 
         if self.is_wallet_compiled():
             self.log.info("test -instantsendnotify")
