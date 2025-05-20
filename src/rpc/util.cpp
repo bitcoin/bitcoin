@@ -650,7 +650,7 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
     UniValue arg_mismatch{UniValue::VOBJ};
     for (size_t i{0}; i < m_args.size(); ++i) {
         const auto& arg{m_args.at(i)};
-        UniValue match{arg.MatchesType(request.params[i])};
+        UniValue match{arg.MatchesType(request.params[i], i < request.param_names.size() ? request.param_names[i] : std::nullopt)};
         if (!match.isTrue()) {
             arg_mismatch.pushKV(strprintf("Position %s (%s)", i + 1, arg.m_names), std::move(match));
         }
@@ -850,9 +850,15 @@ UniValue RPCHelpMan::GetArgMap() const
     for (int i{0}; i < int(m_args.size()); ++i) {
         const auto& arg = m_args.at(i);
         std::vector<std::string> arg_names = SplitString(arg.m_names, '|');
+        RPCArg::Type argtype = arg.m_type;
+        size_t arg_num = 0;
         for (const auto& arg_name : arg_names) {
-            push_back_arg_info(m_name, i, arg_name, arg.m_type);
-            if (arg.m_type == RPCArg::Type::OBJ_NAMED_PARAMS) {
+            if (!arg.m_type_per_name.empty()) {
+                argtype = arg.m_type_per_name.at(arg_num++);
+            }
+
+            push_back_arg_info(m_name, i, arg_name, argtype);
+            if (argtype == RPCArg::Type::OBJ_NAMED_PARAMS) {
                 for (const auto& inner : arg.m_inner) {
                     std::vector<std::string> inner_names = SplitString(inner.m_names, '|');
                     for (const std::string& inner_name : inner_names) {
@@ -899,17 +905,25 @@ static std::optional<UniValue::VType> ExpectedType(RPCArg::Type type)
     NONFATAL_UNREACHABLE();
 }
 
-UniValue RPCArg::MatchesType(const UniValue& request) const
+UniValue RPCArg::MatchesType(const UniValue& request, const std::optional<std::string>& param_name) const
 {
     if (m_opts.skip_type_check) return true;
     if (IsOptional() && request.isNull()) return true;
-    const auto exp_type{ExpectedType(m_type)};
-    if (!exp_type) return true; // nothing to check
-
-    if (*exp_type != request.getType()) {
-        return strprintf("JSON value of type %s is not of expected type %s", uvTypeName(request.getType()), uvTypeName(*exp_type));
-    }
-    return true;
+    const auto names = SplitString(m_names, '|');
+    size_t i = 0;
+    do {
+        // If parameter was passed by name, only allow the specified type for
+        // that name. Otherwise allow any of the specified types.
+        if (param_name && i < names.size() && *param_name != names[i]) {
+            continue;
+        }
+        const auto exp_type{ExpectedType(i < m_type_per_name.size() ? m_type_per_name[i] : m_type)};
+        if (!exp_type) return true; // nothing to check
+        if (*exp_type == request.getType()) {
+            return true;
+        }
+    } while (++i < names.size());
+    return strprintf("JSON value of type %s is not of expected type %s", uvTypeName(request.getType()), uvTypeName(*ExpectedType(m_type)));
 }
 
 std::string RPCArg::GetFirstName() const
