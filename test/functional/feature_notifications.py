@@ -103,7 +103,13 @@ class NotificationsTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
         self.wait_for_sporks_same()
+        self.log.info("Mine quorum for InstantSend")
         (quorum_info_i_0, quorum_info_i_1) = self.mine_cycle_quorum()
+        self.log.info("Mine quorum for ChainLocks")
+        if len(self.nodes[0].quorum('list')['llmq_test']) == 0:
+            self.mine_quorum(llmq_type_name='llmq_test', llmq_type=104)
+        else:
+            self.log.info("Quorum `llmq_test` already exist")
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
 

@@ -1652,6 +1652,7 @@ class DashTestFramework(BitcoinTestFramework):
                 return node.getrawtransaction(txid, True)["instantlock"]
             except:
                 return False
+        self.log.info(f"Expecting InstantLock for {txid}")
         if self.wait_until(check_instantlock, timeout=timeout, sleep=1, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
@@ -1662,6 +1663,7 @@ class DashTestFramework(BitcoinTestFramework):
                 return block["confirmations"] > 0 and block["chainlock"]
             except:
                 return False
+        self.log.info(f"Expecting ChainLock for {block_hash}")
         if self.wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
