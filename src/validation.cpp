@@ -2119,6 +2119,32 @@ ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, cons
               approx_size_bytes >> 20, script_execution_cache_bytes >> 20, num_elems);
 }
 
+uint256 GetHashCacheEntry(ValidationCache& validation_cache, const CTransaction& tx, script_verify_flags flags)
+{
+    uint256 hashCacheEntry;
+    CSHA256 hasher = validation_cache.ScriptExecutionCacheHasher();
+    hasher.Write(UCharCast(tx.GetWitnessHash().begin()), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
+    return hashCacheEntry;
+}
+
+/**
+ * Check if script executions have been cached with the same
+ * flags. Note that this assumes that the inputs provided are
+ * correct (ie that the transaction hash which is in tx's prevouts
+ * properly commits to the scriptPubKey in the inputs view of that
+ * transaction).
+ */
+bool IsScriptCached(ValidationCache& validation_cache, bool cacheFullScriptStore, uint256 hashCacheEntry)
+                    EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
+    if (validation_cache.m_script_execution_cache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+        return true;
+    }
+    return false;
+}
+
+
 /**
  * Check whether all of this transaction's input scripts succeed.
  *
@@ -2150,16 +2176,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         pvChecks->reserve(tx.vin.size());
     }
 
-    // First check if script executions have been cached with the same
-    // flags. Note that this assumes that the inputs provided are
-    // correct (ie that the transaction hash which is in tx's prevouts
-    // properly commits to the scriptPubKey in the inputs view of that
-    // transaction).
-    uint256 hashCacheEntry;
-    CSHA256 hasher = validation_cache.ScriptExecutionCacheHasher();
-    hasher.Write(UCharCast(tx.GetWitnessHash().begin()), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
-    AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
-    if (validation_cache.m_script_execution_cache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+    uint256 hashCacheEntry = GetHashCacheEntry(validation_cache, tx, flags);
+    if (IsScriptCached(validation_cache, cacheFullScriptStore, hashCacheEntry)) {
         return true;
     }
 
