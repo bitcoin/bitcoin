@@ -1429,17 +1429,6 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     until the wallet is caught up to the chainstate as of the RPC call's entry.
     This also makes the API much easier for RPC clients to reason about.
 
-- Be aware of RPC method aliases and generally avoid registering the same
-  callback function pointer for different RPCs.
-
-  - *Rationale*: RPC methods registered with the same function pointer will be
-    considered aliases and only the first method name will show up in the
-    `help` RPC command list.
-
-  - *Exception*: Using RPC method aliases may be appropriate in cases where a
-    new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
-    showing up in the command list.
-
 - Use *invalid* bech32 addresses (e.g. in the constant array `EXAMPLE_ADDRESS`) for
   `RPCExamples` help documentation.
 
