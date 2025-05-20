@@ -138,11 +138,15 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
     return m_chain.Genesis();
 }
 
+std::vector<CScriptCheck> PrepareInputScriptChecks(const CTransaction& tx,
+                       const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
-                       ValidationCache& validation_cache,
-                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       ValidationCache& validation_cache)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx)
@@ -2186,14 +2190,44 @@ void EnsureTxData(const CTransaction& tx, const CCoinsViewCache& inputs, Precomp
 }
 
 /**
+ * Turn all of this transaction's input scripts into script checks and return them as a vector.
+ * Any script checks which are not necessary (eg due to script execution cache hits) are excluded.
+ *
+ * Setting cacheSigStore/cacheFullScriptStore to false will remove elements from the corresponding cache
+ * which are matched. This is useful for checking blocks where we will likely never need the cache
+ * entry again.
+ *
+ * Non-static (and redeclared) in src/test/txvalidationcache_tests.cpp
+ */
+std::vector<CScriptCheck> PrepareInputScriptChecks(const CTransaction& tx,
+                       const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    if (tx.IsCoinBase()) return {};
+
+    uint256 hashCacheEntry = GetHashCacheEntry(validation_cache, tx, flags);
+    if (IsScriptCached(validation_cache, cacheFullScriptStore, hashCacheEntry)) {
+        return {};
+    }
+
+    EnsureTxData(tx, inputs, txdata);
+
+    std::vector<CScriptCheck> pvChecks{};
+    pvChecks.reserve(tx.vin.size());
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        CScriptCheck check(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i, flags, cacheSigStore, &txdata);
+        pvChecks.emplace_back(std::move(check));
+    }
+
+    return pvChecks;
+}
+
+/**
  * Check whether all of this transaction's input scripts succeed.
  *
  * This involves ECDSA signature checks so can be computationally intensive. This function should
  * only be called after the cheap sanity checks in CheckTxInputs passed.
- *
- * If pvChecks is not nullptr, script checks are pushed onto it instead of being performed inline. Any
- * script checks which are not necessary (eg due to script execution cache hits) are, obviously,
- * not pushed onto pvChecks/run.
  *
  * Setting cacheSigStore/cacheFullScriptStore to false will remove elements from the corresponding cache
  * which are matched. This is useful for checking blocks where we will likely never need the cache
@@ -2207,14 +2241,9 @@ void EnsureTxData(const CTransaction& tx, const CCoinsViewCache& inputs, Precomp
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, unsigned int flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
-                       ValidationCache& validation_cache,
-                       std::vector<CScriptCheck>* pvChecks)
+                       ValidationCache& validation_cache)
 {
     if (tx.IsCoinBase()) return true;
-
-    if (pvChecks) {
-        pvChecks->reserve(tx.vin.size());
-    }
 
     uint256 hashCacheEntry = GetHashCacheEntry(validation_cache, tx, flags);
     if (IsScriptCached(validation_cache, cacheFullScriptStore, hashCacheEntry)) {
@@ -2233,9 +2262,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
 
         // Verify signature
         CScriptCheck check(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i, flags, cacheSigStore, &txdata);
-        if (pvChecks) {
-            pvChecks->emplace_back(std::move(check));
-        } else if (auto result = check(); result.has_value()) {
+        if (auto result = check(); result.has_value()) {
             if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                 // Check whether the failure was caused by a
                 // non-mandatory script verification check, such as
@@ -2267,7 +2294,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         }
     }
 
-    if (cacheFullScriptStore && !pvChecks) {
+    if (cacheFullScriptStore) {
         // We executed all of the provided scripts, and were told to
         // cache the result. Do so now.
         validation_cache.m_script_execution_cache.insert(hashCacheEntry);
@@ -2695,22 +2722,20 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         if (!tx.IsCoinBase() && fScriptChecks)
         {
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            bool tx_ok;
             TxValidationState tx_state;
-            // If CheckInputScripts is called with a pointer to a checks vector, the resulting checks are appended to it. In that case
-            // they need to be added to control which runs them asynchronously. Otherwise, CheckInputScripts runs the checks before returning.
+            // If parallel script checking is possible (worker threads are available) the checks are appended to a
+            // vector without running them. The vector is then added to control which runs the checks asynchronously.
+            // Otherwise, CheckInputScripts runs the checks on a single thread before returning.
             if (control) {
-                std::vector<CScriptCheck> vChecks;
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, &vChecks);
-                if (tx_ok) control->Add(std::move(vChecks));
+                std::vector<CScriptCheck> vChecks = PrepareInputScriptChecks(tx, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache);
+                control->Add(std::move(vChecks));
             } else {
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache);
-            }
-            if (!tx_ok) {
-                // Any transaction validation failure in ConnectBlock is a block consensus failure
-                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-                              tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                break;
+                if (!CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache)) {
+                    // Any transaction validation failure in ConnectBlock is a block consensus failure
+                    state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                  tx_state.GetRejectReason(), tx_state.GetDebugMessage());
+                    break;
+                }
             }
         }
 
