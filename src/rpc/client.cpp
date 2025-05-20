@@ -39,6 +39,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "generatetomany", 0, "nblocks" },
     { "generatetomany", 1, "addresses" },
     { "generatetomany", 2, "maxtries" },
+    { "generateblock", 0, "outputs"},
     { "generateblock", 1, "transactions" },
     { "generateblock", 2, "submit" },
     { "getnetworkhashps", 0, "nblocks" },
