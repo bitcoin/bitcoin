@@ -1398,10 +1398,6 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   - *Rationale*: Integer verbosity allows for multiple values. Undocumented boolean verbosity is deprecated
     and new RPC methods should prevent its use.
 
-- Don't forget to fill in the argument names correctly in the RPC command table.
-
-  - *Rationale*: If not, the call cannot be used with name-based arguments.
-
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
 
   - *Rationale*: `bitcoin-cli` and the GUI debug console use this table to determine how to
