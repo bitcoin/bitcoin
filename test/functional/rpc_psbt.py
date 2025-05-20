@@ -48,6 +48,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     find_vout_for_address,
+    wallet_importprivkey,
 )
 from test_framework.wallet_util import (
     calculate_input_weight,
@@ -115,7 +116,8 @@ class PSBTTest(BitcoinTestFramework):
         # Mine a transaction that credits the offline address
         offline_addr = offline_node.getnewaddress(address_type="bech32m")
         online_addr = w2.getnewaddress(address_type="bech32m")
-        wonline.importaddress(offline_addr, label="", rescan=False)
+        import_res = wonline.importdescriptors([{"desc": offline_node.getaddressinfo(offline_addr)["desc"], "timestamp": "now"}])
+        assert_equal(import_res[0]["success"], True)
         mining_wallet = mining_node.get_wallet_rpc(self.default_wallet_name)
         mining_wallet.sendtoaddress(address=offline_addr, amount=1.0)
         self.generate(mining_node, nblocks=1, sync_fun=lambda: self.sync_all([online_node, mining_node]))
@@ -385,9 +387,19 @@ class PSBTTest(BitcoinTestFramework):
         wmulti = self.nodes[2].get_wallet_rpc('wmulti')
 
         # Create all the addresses
-        p2sh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], label="", address_type="legacy")["address"]
-        p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], label="", address_type="bech32")["address"]
-        p2sh_p2wsh = wmulti.addmultisigaddress(2, [pubkey0, pubkey1, pubkey2], label="", address_type="p2sh-segwit")["address"]
+        p2sh_ms = wmulti.createmultisig(2, [pubkey0, pubkey1, pubkey2], address_type="legacy")
+        p2sh = p2sh_ms["address"]
+        p2wsh_ms = wmulti.createmultisig(2, [pubkey0, pubkey1, pubkey2], address_type="bech32")
+        p2wsh = p2wsh_ms["address"]
+        p2sh_p2wsh_ms = wmulti.createmultisig(2, [pubkey0, pubkey1, pubkey2], address_type="p2sh-segwit")
+        p2sh_p2wsh = p2sh_p2wsh_ms["address"]
+        import_res = wmulti.importdescriptors(
+            [
+                {"desc": p2sh_ms["descriptor"], "timestamp": "now"},
+                {"desc": p2wsh_ms["descriptor"], "timestamp": "now"},
+                {"desc": p2sh_p2wsh_ms["descriptor"], "timestamp": "now"},
+            ])
+        assert_equal(all([r["success"] for r in import_res]), True)
         p2wpkh = self.nodes[1].getnewaddress("", "bech32")
         p2pkh = self.nodes[1].getnewaddress("", "legacy")
         p2sh_p2wpkh = self.nodes[1].getnewaddress("", "p2sh-segwit")
@@ -695,7 +707,7 @@ class PSBTTest(BitcoinTestFramework):
             self.nodes[2].createwallet(wallet_name="wallet{}".format(i))
             wrpc = self.nodes[2].get_wallet_rpc("wallet{}".format(i))
             for key in signer['privkeys']:
-                wrpc.importprivkey(key)
+                wallet_importprivkey(wrpc, key, "now")
             signed_tx = wrpc.walletprocesspsbt(signer['psbt'], True, "ALL")['psbt']
             assert_equal(signed_tx, signer['result'])
 
@@ -951,7 +963,7 @@ class PSBTTest(BitcoinTestFramework):
         addr = self.nodes[0].deriveaddresses(desc)[0]
         self.nodes[0].sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 1)
-        self.nodes[0].importprivkey(privkey)
+        wallet_importprivkey(self.nodes[0], privkey, "now")
 
         psbt = watchonly.sendall([wallet.getnewaddress()])["psbt"]
         signed_tx = self.nodes[0].walletprocesspsbt(psbt)

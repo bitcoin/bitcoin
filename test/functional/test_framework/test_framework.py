@@ -35,6 +35,7 @@ from .util import (
     initialize_datadir,
     p2p_port,
     wait_until_helper_internal,
+    wallet_importprivkey,
 )
 
 
@@ -485,7 +486,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             n = self.nodes[node]
             if wallet_name is not None:
                 n.createwallet(wallet_name=wallet_name, load_on_startup=True)
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase', rescan=True)
+            wallet_importprivkey(n.get_wallet_rpc(wallet_name), n.get_deterministic_priv_key().key, 0, label="coinbase")
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -1015,6 +1016,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if external signer support has not been compiled."""
         if not self.is_external_signer_compiled():
             raise SkipTest("external signer support has not been compiled.")
+
+    def skip_if_running_under_valgrind(self):
+        """Skip the running test if Valgrind is being used."""
+        if self.options.valgrind:
+            raise SkipTest("This test is not compatible with Valgrind.")
 
     def is_cli_compiled(self):
         """Checks whether bitcoin-cli was compiled."""

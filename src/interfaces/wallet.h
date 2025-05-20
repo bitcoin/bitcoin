@@ -14,6 +14,7 @@
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 #include <util/result.h>
+#include <util/transaction_identifier.h>
 #include <util/ui_change_type.h>
 
 #include <cstdint>
@@ -156,16 +157,16 @@ public:
         WalletOrderForm order_form) = 0;
 
     //! Return whether transaction can be abandoned.
-    virtual bool transactionCanBeAbandoned(const uint256& txid) = 0;
+    virtual bool transactionCanBeAbandoned(const Txid& txid) = 0;
 
     //! Abandon transaction.
-    virtual bool abandonTransaction(const uint256& txid) = 0;
+    virtual bool abandonTransaction(const Txid& txid) = 0;
 
     //! Return whether transaction can be bumped.
-    virtual bool transactionCanBeBumped(const uint256& txid) = 0;
+    virtual bool transactionCanBeBumped(const Txid& txid) = 0;
 
     //! Create bump transaction.
-    virtual bool createBumpTransaction(const uint256& txid,
+    virtual bool createBumpTransaction(const Txid& txid,
         const wallet::CCoinControl& coin_control,
         std::vector<bilingual_str>& errors,
         CAmount& old_fee,
@@ -176,28 +177,28 @@ public:
     virtual bool signBumpTransaction(CMutableTransaction& mtx) = 0;
 
     //! Commit bump transaction.
-    virtual bool commitBumpTransaction(const uint256& txid,
+    virtual bool commitBumpTransaction(const Txid& txid,
         CMutableTransaction&& mtx,
         std::vector<bilingual_str>& errors,
-        uint256& bumped_txid) = 0;
+        Txid& bumped_txid) = 0;
 
     //! Get a transaction.
-    virtual CTransactionRef getTx(const uint256& txid) = 0;
+    virtual CTransactionRef getTx(const Txid& txid) = 0;
 
     //! Get transaction information.
-    virtual WalletTx getWalletTx(const uint256& txid) = 0;
+    virtual WalletTx getWalletTx(const Txid& txid) = 0;
 
     //! Get list of all wallet transactions.
     virtual std::set<WalletTx> getWalletTxs() = 0;
 
     //! Try to get updated status for a particular transaction, if possible without blocking.
-    virtual bool tryGetTxStatus(const uint256& txid,
+    virtual bool tryGetTxStatus(const Txid& txid,
         WalletTxStatus& tx_status,
         int& num_blocks,
         int64_t& block_time) = 0;
 
     //! Get transaction details.
-    virtual WalletTx getWalletTxDetails(const uint256& txid,
+    virtual WalletTx getWalletTxDetails(const Txid& txid,
         WalletTxStatus& tx_status,
         WalletOrderForm& order_form,
         bool& in_mempool,
@@ -300,7 +301,7 @@ public:
     virtual std::unique_ptr<Handler> handleAddressBookChanged(AddressBookChangedFn fn) = 0;
 
     //! Register handler for transaction changed messages.
-    using TransactionChangedFn = std::function<void(const uint256& txid, ChangeType status)>;
+    using TransactionChangedFn = std::function<void(const Txid& txid, ChangeType status)>;
     virtual std::unique_ptr<Handler> handleTransactionChanged(TransactionChangedFn fn) = 0;
 
     //! Register handler for keypool changed messages.

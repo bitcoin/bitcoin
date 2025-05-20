@@ -726,7 +726,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         send_to_script(script=script_sh_pkh, amount=2)
 
         # Import script and check balance
-        wallet.rpc.importaddress(address=script_pkh.hex(), label="raw_spk", rescan=True, p2sh=True)
+        wallet.importaddress(address=script_pkh.hex(), label="raw_spk", rescan=True, p2sh=True)
         assert_equal(wallet.getbalances()['watchonly']['trusted'], 2)
 
         # Craft wsh(pkh(key)) and send coins to it
@@ -735,7 +735,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         send_to_script(script=script_wsh_pkh, amount=3)
 
         # Import script and check balance
-        wallet.rpc.importaddress(address=script_wsh_pkh.hex(), label="raw_spk2", rescan=True, p2sh=False)
+        wallet.importaddress(address=script_wsh_pkh.hex(), label="raw_spk2", rescan=True, p2sh=False)
         assert_equal(wallet.getbalances()['watchonly']['trusted'], 5)
 
         # Import sh(pkh()) script, by using importaddress(), with the p2sh flag enabled.
@@ -751,7 +751,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Note: 'importaddress()' will add two scripts, a valid one sh(pkh()) and an invalid one 'sh(sh(pkh()))'.
         #       Both of them will be stored with the same addressbook label. And only the latter one should
         #       be discarded during migration. The first one must be migrated.
-        wallet.rpc.importaddress(address=script_sh_pkh.hex(), label=label_sh_pkh, rescan=False, p2sh=True)
+        wallet.importaddress(address=script_sh_pkh.hex(), label=label_sh_pkh, rescan=False, p2sh=True)
 
         # Migrate wallet and re-check balance
         info_migration, wallet = self.migrate_and_get_rpc("raw_p2sh")

@@ -1,22 +1,22 @@
-// Copyright (c) 2024 The Bitcoin Core developers
+// Copyright (c) 2024-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_INTERFACES_MINING_H
 #define BITCOIN_INTERFACES_MINING_H
 
-#include <consensus/amount.h>       // for CAmount
-#include <interfaces/types.h>       // for BlockRef
-#include <node/types.h>             // for BlockCreateOptions, BlockWaitOptions
-#include <primitives/block.h>       // for CBlock, CBlockHeader
-#include <primitives/transaction.h> // for CTransactionRef
-#include <stdint.h>                 // for int64_t
-#include <uint256.h>                // for uint256
-#include <util/time.h>              // for MillisecondsDouble
+#include <consensus/amount.h>
+#include <interfaces/types.h>
+#include <node/types.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <uint256.h>
+#include <util/time.h>
 
-#include <memory>   // for unique_ptr, shared_ptr
-#include <optional> // for optional
-#include <vector>   // for vector
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace node {
 struct NodeContext;

@@ -60,7 +60,6 @@ class MempoolPersistTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             self.nodes[2].createwallet(
                 wallet_name="watch",
-                descriptors=True,
                 disable_private_keys=True,
                 load_on_startup=False,
             )

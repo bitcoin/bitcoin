@@ -21,6 +21,7 @@
 #include <util/rbf.h>
 #include <util/trace.h>
 #include <util/translation.h>
+#include <util/transaction_identifier.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/receive.h>
@@ -328,10 +329,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
-    std::set<uint256> trusted_parents;
+    std::set<Txid> trusted_parents;
     for (const auto& entry : wallet.mapWallet)
     {
-        const uint256& txid = entry.first;
+        const Txid& txid = entry.first;
         const CWalletTx& wtx = entry.second;
 
         if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
@@ -391,7 +392,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             const CTxOut& output = wtx.tx->vout[i];
-            const COutPoint outpoint(Txid::FromUint256(txid), i);
+            const COutPoint outpoint(txid, i);
 
             if (output.nValue < params.min_amount || output.nValue > params.max_amount)
                 continue;

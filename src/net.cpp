@@ -37,12 +37,9 @@
 #include <util/translation.h>
 #include <util/vector.h>
 
-#ifdef WIN32
-#include <string.h>
-#endif
-
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <cmath>
 #include <cstdint>
 #include <functional>

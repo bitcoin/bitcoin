@@ -142,6 +142,8 @@ target_raw_data_sources(test_bitcoin NAMESPACE test::data
   data/asmap.raw
 )
 
+add_windows_application_manifest(test_bitcoin)
+
 target_link_libraries(test_bitcoin
   core_interface
   test_util

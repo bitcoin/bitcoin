@@ -110,8 +110,9 @@ static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_ch
 
 static RPCHelpMan getnetworkhashps()
 {
-    return RPCHelpMan{"getnetworkhashps",
-                "\nReturns the estimated network hashes per second based on the last n blocks.\n"
+    return RPCHelpMan{
+        "getnetworkhashps",
+        "Returns the estimated network hashes per second based on the last n blocks.\n"
                 "Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.\n"
                 "Pass in [height] to estimate the network speed at the time when a certain block was found.\n",
                 {
@@ -414,8 +415,9 @@ static RPCHelpMan generateblock()
 
 static RPCHelpMan getmininginfo()
 {
-    return RPCHelpMan{"getmininginfo",
-                "\nReturns a json object containing mining-related information.",
+    return RPCHelpMan{
+        "getmininginfo",
+        "Returns a json object containing mining-related information.",
                 {},
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -608,8 +610,9 @@ static std::string gbt_rule_value(const std::string& name, bool gbt_optional_rul
 
 static RPCHelpMan getblocktemplate()
 {
-    return RPCHelpMan{"getblocktemplate",
-        "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
+    return RPCHelpMan{
+        "getblocktemplate",
+        "If the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
         "It returns data needed to construct a block to work on.\n"
         "For full specification, see BIPs 22, 23, 9, and 145:\n"
         "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
@@ -1045,8 +1048,9 @@ protected:
 static RPCHelpMan submitblock()
 {
     // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
-    return RPCHelpMan{"submitblock",
-        "\nAttempts to submit new block to network.\n"
+    return RPCHelpMan{
+        "submitblock",
+        "Attempts to submit new block to network.\n"
         "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
         {
             {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
@@ -1095,8 +1099,9 @@ static RPCHelpMan submitblock()
 
 static RPCHelpMan submitheader()
 {
-    return RPCHelpMan{"submitheader",
-                "\nDecode the given hexdata as a header and submit it as a candidate chain tip if valid."
+    return RPCHelpMan{
+        "submitheader",
+        "Decode the given hexdata as a header and submit it as a candidate chain tip if valid."
                 "\nThrows when the header is invalid.\n",
                 {
                     {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block header data"},

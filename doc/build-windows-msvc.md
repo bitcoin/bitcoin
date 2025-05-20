@@ -10,7 +10,7 @@ For cross-compiling options, please see [`build-windows.md`](./build-windows.md)
 
 This guide relies on using CMake and vcpkg package manager provided with the Visual Studio installation.
 Here are requirements for the Visual Studio installation:
-1. Minimum required version: Visual Studio 2022 version 17.6.
+1. Minimum required version: Visual Studio 2022 version 17.13.
 2. Installed components:
 - The "Desktop development with C++" workload.
 
