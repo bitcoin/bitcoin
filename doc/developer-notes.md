@@ -805,9 +805,6 @@ General Bitcoin Core
      on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in
      confusion and mayhem.
 
-  - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first.
-
 Logging
 -------
 
