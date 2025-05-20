@@ -161,8 +161,7 @@ ZMQ dependencies (provides ZMQ API):
 
     apk add zeromq-dev
 
-User-Space, Statically Defined Tracing (USDT) is not directly compatible on
-Alpine as it uses libc functionality not available on musl.
+User-Space, Statically Defined Tracing (USDT) is not supported or tested on Alpine Linux at this time.
 
 GUI dependencies:
 
