@@ -1160,14 +1160,6 @@ namespace {
 
   - *Rationale*: Avoids confusion about the namespace context.
 
-- Use `#include <primitives/transaction.h>` bracket syntax instead of
-  `#include "primitives/transactions.h"` quote syntax.
-
-  - *Rationale*: Bracket syntax is less ambiguous because the preprocessor
-    searches a fixed list of include directories without taking location of the
-    source file into account. This allows quoted includes to stand out more when
-    the location of the source file actually is relevant.
-
 - Use include guards to avoid the problem of double inclusion. The header file
   `foo/bar.h` should use the include guard identifier `BITCOIN_FOO_BAR_H`, e.g.
 
