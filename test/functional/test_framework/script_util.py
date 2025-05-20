@@ -22,8 +22,8 @@ from test_framework.script import (
     sha256,
 )
 
-# To prevent a "tx-size-small" policy rule error, a transaction has to have a
-# non-witness size of at least 65 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
+# To prevent a "tx-bad-nonwit-size" policy rule error, a transaction may not have a
+# non-witness size of 64 bytes (NONSTANDARD_TX_NONWITNESS_SIZE in
 # src/policy/policy.h). Considering a Tx with the smallest possible single
 # input (blank, empty scriptSig), and with an output omitting the scriptPubKey,
 # we get to a minimum size of 60 bytes:
@@ -32,16 +32,15 @@ from test_framework.script import (
 # Blank Input: 32 [PrevTxHash] + 4 [Index] + 1 [scriptSigLen] + 4 [SeqNo] = 41 bytes
 # Output:      8 [Amount] + 1 [scriptPubKeyLen] = 9 bytes
 #
-# Hence, the scriptPubKey of the single output has to have a size of at
-# least 5 bytes.
-MIN_STANDARD_TX_NONWITNESS_SIZE = 65
-MIN_PADDING = MIN_STANDARD_TX_NONWITNESS_SIZE - 10 - 41 - 9
-assert MIN_PADDING == 5
+# Hence, the scriptPubKey of the single output MUST NOT have a size of 4.
+NONSTANDARD_TX_NONWITNESS_SIZE = 64
+INVALID_SPK_LEN = NONSTANDARD_TX_NONWITNESS_SIZE - 10 - 41 - 9
+assert INVALID_SPK_LEN == 4
 
 # This script cannot be spent, allowing dust output values under
 # standardness checks
-DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
-assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
+NONSTANDARD_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (INVALID_SPK_LEN - 1)))
+assert len(NONSTANDARD_OP_RETURN_SCRIPT) == INVALID_SPK_LEN
 
 PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
 
