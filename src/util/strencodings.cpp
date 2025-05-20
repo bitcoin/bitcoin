@@ -251,6 +251,24 @@ bool ParseUInt64(std::string_view str, uint64_t* out)
     return ParseIntegral<uint64_t>(str, out);
 }
 
+bool ParseUInt64Hex(std::string_view str, uint64_t* out)
+{
+    if (str.size() > 8) return false;
+    if (str.size() < 1) return false;
+    uint64_t total{0};
+    auto it = str.begin();
+    while (it != str.end()) {
+        auto v = HexDigit(*(it++));
+        if (v < 0) return false;
+        total <<= 4;
+        total |= v;
+    }
+    if (out != nullptr) {
+        *out = total;
+    }
+    return true;
+}
+
 std::string FormatParagraph(std::string_view in, size_t width, size_t indent)
 {
     assert(width >= indent);
@@ -478,4 +496,10 @@ std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_mu
         return std::nullopt;
     }
     return *parsed_num * unit_amount;
+}
+
+std::vector<std::byte> StringToBuffer(const std::string& str)
+{
+    auto span = std::as_bytes(std::span(str));
+    return {span.begin(), span.end()};
 }
