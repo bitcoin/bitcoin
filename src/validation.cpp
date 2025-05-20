@@ -2144,6 +2144,22 @@ bool IsScriptCached(ValidationCache& validation_cache, bool cacheFullScriptStore
     return false;
 }
 
+void EnsureTxData(const CTransaction& tx, const CCoinsViewCache& inputs, PrecomputedTransactionData& txdata)
+{
+    if (!txdata.m_spent_outputs_ready) {
+        std::vector<CTxOut> spent_outputs;
+        spent_outputs.reserve(tx.vin.size());
+
+        for (const auto& txin : tx.vin) {
+            const COutPoint& prevout = txin.prevout;
+            const Coin& coin = inputs.AccessCoin(prevout);
+            assert(!coin.IsSpent());
+            spent_outputs.emplace_back(coin.out);
+        }
+        txdata.Init(tx, std::move(spent_outputs));
+    }
+    assert(txdata.m_spent_outputs.size() == tx.vin.size());
+}
 
 /**
  * Check whether all of this transaction's input scripts succeed.
@@ -2181,19 +2197,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         return true;
     }
 
-    if (!txdata.m_spent_outputs_ready) {
-        std::vector<CTxOut> spent_outputs;
-        spent_outputs.reserve(tx.vin.size());
-
-        for (const auto& txin : tx.vin) {
-            const COutPoint& prevout = txin.prevout;
-            const Coin& coin = inputs.AccessCoin(prevout);
-            assert(!coin.IsSpent());
-            spent_outputs.emplace_back(coin.out);
-        }
-        txdata.Init(tx, std::move(spent_outputs));
-    }
-    assert(txdata.m_spent_outputs.size() == tx.vin.size());
+    EnsureTxData(tx, inputs, txdata);
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
