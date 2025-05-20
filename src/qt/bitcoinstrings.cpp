@@ -65,13 +65,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: Address book data in wallet cannot be identified to belong to "
 "migrated wallets"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: Dumpfile format record is incorrect. Got \"%s\", expected \"format\"."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: Dumpfile identifier record is incorrect. Got \"%s\", expected \"%s\"."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Error: Dumpfile version is not supported. This version of bitcoin-wallet "
-"only supports version 1 dumpfiles. Got dumpfile with version %s"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: Duplicate descriptors created during migration. Your wallet may be "
 "corrupted."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -123,14 +116,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "More than one onion bind address is provided. Using %s for the automatically "
 "created Tor onion service."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"No dump file provided. To use createfromdump, -dumpfile=<filename> must be "
-"provided."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"No dump file provided. To use dump, -dumpfile=<filename> must be provided."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"No wallet file format provided. To use createfromdump, -format=<format> must "
-"be provided."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Option '-upnp' is set but UPnP support was dropped in version 29.0. Consider "
 "using '-natpmp' instead."),
@@ -252,9 +237,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "future. Legacy wallets can be migrated to a descriptor wallet with "
 "migratewallet."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Warning: Dumpfile wallet format \"%s\" does not match command line specified "
-"format \"%s\"."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Private keys detected in wallet {%s} with disabled private keys"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: We do not appear to fully agree with our peers! You may need to "
@@ -300,7 +282,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Could not parse asmap file %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Disk space is too low!"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do you want to rebuild the databases now?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Dump file %s does not exist."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Elliptic curve cryptography sanity check failure. %s is shutting down."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error creating %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error initializing block database"),
@@ -321,7 +302,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error: Could not add watchonly tx %s to watch
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Could not delete watchonly transactions. "),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Couldn't create cursor into database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is low for %s"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error: Dumpfile checksum does not match. Computed %s, expected %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Failed to create new watchonly wallet"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Got key that was not hex: %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Got value that was not hex: %s"),

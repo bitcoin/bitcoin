@@ -10,7 +10,6 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
-#include <wallet/dump.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -108,10 +107,6 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
-        tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
-        return false;
-    }
     if (command == "create" && !args.IsArgSet("-wallet")) {
         tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
         return false;
@@ -139,41 +134,6 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Close();
-    } else if (command == "dump") {
-        DatabaseOptions options;
-        ReadDatabaseArgs(args, options);
-        options.require_existing = true;
-        DatabaseStatus status;
-
-        if (IsBDBFile(BDBDataFile(path))) {
-            options.require_format = DatabaseFormat::BERKELEY_RO;
-        }
-
-        bilingual_str error;
-        std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
-        if (!database) {
-            tfm::format(std::cerr, "%s\n", error.original);
-            return false;
-        }
-
-        bool ret = DumpWallet(args, *database, error);
-        if (!ret && !error.empty()) {
-            tfm::format(std::cerr, "%s\n", error.original);
-            return ret;
-        }
-        tfm::format(std::cout, "The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n");
-        return ret;
-    } else if (command == "createfromdump") {
-        bilingual_str error;
-        std::vector<bilingual_str> warnings;
-        bool ret = CreateFromDump(args, name, path, error, warnings);
-        for (const auto& warning : warnings) {
-            tfm::format(std::cout, "%s\n", warning.original);
-        }
-        if (!ret && !error.empty()) {
-            tfm::format(std::cerr, "%s\n", error.original);
-        }
-        return ret;
     } else {
         tfm::format(std::cerr, "Invalid command: %s\n", command);
         return false;
