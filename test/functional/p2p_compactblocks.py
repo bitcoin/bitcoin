@@ -8,7 +8,6 @@ import random
 from test_framework.blocktools import (
     COINBASE_MATURITY,
     NORMAL_GBT_REQUEST_PARAMS,
-    add_witness_commitment,
     create_block,
 )
 from test_framework.messages import (
@@ -714,7 +713,7 @@ class CompactBlocksTest(BitcoinTestFramework):
                 assert_equal(l.last_message["cmpctblock"].header_and_shortids.header.sha256, block.sha256)
 
     # Test that we don't get disconnected if we relay a compact block with valid header,
-    # but invalid transactions.
+    # but invalid transactions that have missing inputs.
     def test_invalid_tx_in_compactblock(self, test_node):
         node = self.nodes[0]
         assert len(self.utxos)
@@ -723,9 +722,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_with_transactions(node, utxo, 5)
         del block.vtx[3]
         block.hashMerkleRoot = block.calc_merkle_root()
-        # Drop the coinbase witness but include the witness commitment.
-        add_witness_commitment(block)
-        block.vtx[0].wit.vtxinwit = []
         block.solve()
 
         # Now send the compact block with all transactions prefilled, and
@@ -747,7 +743,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         peer.get_headers(locator=[int(tip, 16)], hashstop=0)
         peer.send_and_ping(msg_sendcmpct(announce=True, version=2))
 
-    def test_compactblock_reconstruction_stalling_peer(self, stalling_peer, delivery_peer):
+    def test_compactblock_reconstruction_stalling_peer(self, stalling_peer):
         node = self.nodes[0]
         assert len(self.utxos)
 
@@ -762,6 +758,18 @@ class CompactBlocksTest(BitcoinTestFramework):
             with p2p_lock:
                 assert "getblocktxn" in peer.last_message
             return block, cmpct_block
+
+        # This peer is going to get disconnected for mutated witness
+        delivery_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+
+        self.log.info("Setting delivery_peer as high bandwidth peer")
+        block, cmpct_block = announce_cmpct_block(node, delivery_peer)
+        msg = msg_blocktxn()
+        msg.block_transactions.blockhash = block.sha256
+        msg.block_transactions.transactions = block.vtx[1:]
+        delivery_peer.send_and_ping(msg)
+        assert_equal(int(node.getbestblockhash(), 16), block.sha256)
+        delivery_peer.clear_getblocktxn()
 
         block, cmpct_block = announce_cmpct_block(node, stalling_peer)
 
@@ -778,7 +786,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
 
         # Now test that delivering an invalid compact block won't break relay
-
         block, cmpct_block = announce_cmpct_block(node, stalling_peer)
         for tx in block.vtx[1:]:
             delivery_peer.send_without_ping(msg_tx(tx))
@@ -787,8 +794,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         cmpct_block.prefilled_txn[0].tx.wit.vtxinwit = [CTxInWitness()]
         cmpct_block.prefilled_txn[0].tx.wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(0)]
 
+        # delivery_peer disconnected for bad witness data
         cmpct_block.use_witness = True
-        delivery_peer.send_and_ping(msg_cmpctblock(cmpct_block.to_p2p()))
+        delivery_peer.send_await_disconnect(msg_cmpctblock(cmpct_block.to_p2p()))
         assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
 
         msg = msg_no_witness_blocktxn()
@@ -938,7 +946,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.test_incorrect_blocktxn_response(self.segwit_node)
 
         self.log.info("Testing reconstructing compact blocks with a stalling peer...")
-        self.test_compactblock_reconstruction_stalling_peer(self.segwit_node, self.additional_segwit_node)
+        self.test_compactblock_reconstruction_stalling_peer(self.segwit_node)
 
         self.log.info("Testing reconstructing compact blocks from multiple peers...")
         self.test_compactblock_reconstruction_parallel_reconstruction(stalling_peer=self.segwit_node, inbound_peer=self.onemore_inbound_node, delivery_peer=self.additional_segwit_node, outbound_peer=self.outbound_node)
