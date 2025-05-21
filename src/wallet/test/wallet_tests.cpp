@@ -365,6 +365,9 @@ public:
     {
         CTransactionRef tx;
         CCoinControl dummy;
+        if (std::holds_alternative<V0SilentPaymentDestination>(recipient.dest)) {
+            dummy.m_silent_payment = true;
+        }
         {
             auto res = CreateTransaction(*wallet, {recipient}, /*change_pos=*/std::nullopt, dummy);
             BOOST_CHECK(res);
@@ -481,10 +484,28 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     //   2. One UTXO from the change, due to payment address matching logic
 
     for (const auto& out_type : OUTPUT_TYPES) {
-        if (out_type == OutputType::UNKNOWN || out_type == OutputType::SILENT_PAYMENTS) continue;
+        if (out_type == OutputType::UNKNOWN) continue;
+        if (out_type == OutputType::SILENT_PAYMENTS) continue;
         expected_coins_sizes[out_type] = 2U;
         TestCoinsResult(*this, out_type, 1 * COIN, expected_coins_sizes);
     }
+
+    // Add a taproot UTXO to be used for creating a silent payment
+    util::Result<CTxDestination> dest = Assert(wallet->GetNewDestination(OutputType::BECH32M, ""));
+    AddTx(CRecipient{*dest, 1 * COIN, /*fSubtractFeeFromAmount=*/true});
+    CoinFilterParams filter;
+    filter.skip_locked = true;
+    available_coins = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet, nullptr, std::nullopt, filter));
+    BOOST_CHECK_EQUAL(available_coins.coins[OutputType::BECH32M].size(), 2U);
+    // Expect 3 OutputType::BECH32M UTXOs
+    // 1. One UTXO as the recipient because Silent Payments produce taproot scriptPubKeys
+    // 3. Two locked UTXOs from previous OutputType::BECH32M test
+    expected_coins_sizes[OutputType::BECH32M] = 3U;
+    // Expect 2 OutputType::UNKNOWN UTXOs
+    // 1. One UTXO from mining the previous block
+    // 1. One UTXO from mining the block used in the test
+    expected_coins_sizes[OutputType::UNKNOWN] = 2U;
+    TestCoinsResult(*this, OutputType::SILENT_PAYMENTS, 1 * COIN, expected_coins_sizes);
 }
 
 BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
