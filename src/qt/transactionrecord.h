@@ -115,9 +115,6 @@ public:
     /** Status: can change with block chain update */
     TransactionStatus status;
 
-    /** Whether the transaction was sent/received with a watch-only address */
-    bool involvesWatchAddress;
-
     /** Return the unique identifier for this transaction (part) */
     QString getTxHash() const;
 
