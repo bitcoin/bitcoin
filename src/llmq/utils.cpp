@@ -170,8 +170,8 @@ static std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScor
  * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
  */
 template <typename List>
-static std::vector<CDeterministicMNCPtr> CalculateQuorum(const List& mn_list, size_t maxSize, const uint256& modifier,
-                                                         const bool onlyEvoNodes)
+static std::vector<CDeterministicMNCPtr> CalculateQuorum(const List& mn_list, const uint256& modifier,
+                                                         size_t maxSize = 0, const bool onlyEvoNodes = false)
 {
     auto scores = CalculateScoresForQuorum(mn_list, modifier, onlyEvoNodes);
 
@@ -187,8 +187,8 @@ static std::vector<CDeterministicMNCPtr> CalculateQuorum(const List& mn_list, si
                   return a.first < b.first;
               });
 
-    // take top maxSize entries and return it
-    if (scores.size() > maxSize) {
+    // return top maxSize entries only (if specified)
+    if (maxSize > 0 && scores.size() > maxSize) {
         scores.resize(maxSize);
     }
 
@@ -295,7 +295,7 @@ std::vector<CDeterministicMNCPtr> ComputeQuorumMembers(Consensus::LLMQType llmqT
             pQuorumBaseBlockIndex;
     const auto modifier = GetHashModifier(llmq_params_opt.value(), pQuorumBaseBlockIndex);
     auto allMns = dmnman.GetListForBlock(pWorkBlockIndex);
-    return CalculateQuorum(allMns, llmq_params_opt->size, modifier, EvoOnly);
+    return CalculateQuorum(allMns, modifier, llmq_params_opt->size, EvoOnly);
 }
 
 std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRotation(
@@ -502,8 +502,8 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
         }
     });
 
-    auto sortedMnsUsedAtHM = CalculateQuorum(MnsUsedAtH, MnsUsedAtH.GetAllMNsCount(), modifier, false);
-    auto sortedCombinedMnsList = CalculateQuorum(MnsNotUsedAtH, MnsNotUsedAtH.size(), modifier, false);
+    auto sortedMnsUsedAtHM = CalculateQuorum(MnsUsedAtH, modifier);
+    auto sortedCombinedMnsList = CalculateQuorum(MnsNotUsedAtH, modifier);
     for (auto& m : sortedMnsUsedAtHM) {
         sortedCombinedMnsList.push_back(std::move(m));
     }
@@ -582,7 +582,7 @@ void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const CDetermi
 
     quorumSnapshot.activeQuorumMembers.resize(allMns.GetAllMNsCount());
     const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
-    auto sortedAllMns = CalculateQuorum(allMns, allMns.GetAllMNsCount(), modifier, false);
+    auto sortedAllMns = CalculateQuorum(allMns, modifier);
 
     LogPrint(BCLog::LLMQ, "BuildQuorumSnapshot h[%d] numMns[%d]\n", pCycleQuorumBaseBlockIndex->nHeight, allMns.GetAllMNsCount());
 
@@ -620,9 +620,9 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
         const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
         const auto [MnsUsedAtH, MnsNotUsedAtH] = GetMNUsageBySnapshot(llmqParams, dmnman, pCycleQuorumBaseBlockIndex, snapshot, nHeight);
         // the list begins with all the unused MNs
-        sortedCombinedMns = CalculateQuorum(MnsNotUsedAtH, MnsNotUsedAtH.size(), modifier, false);
+        sortedCombinedMns = CalculateQuorum(MnsNotUsedAtH, modifier);
         // Now add the already used MNs to the end of the list
-        auto sortedMnsUsedAtH = CalculateQuorum(MnsUsedAtH, MnsUsedAtH.size(), modifier, false);
+        auto sortedMnsUsedAtH = CalculateQuorum(MnsUsedAtH, modifier);
         std::move(sortedMnsUsedAtH.begin(), sortedMnsUsedAtH.end(), std::back_inserter(sortedCombinedMns));
     }
 
@@ -715,7 +715,7 @@ static std::pair<std::vector<CDeterministicMNCPtr>, std::vector<CDeterministicMN
     const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
 
     auto allMns = dmnman.GetListForBlock(pWorkBlockIndex);
-    auto sortedAllMns = CalculateQuorum(allMns, allMns.GetAllMNsCount(), modifier, false);
+    auto sortedAllMns = CalculateQuorum(allMns, modifier);
 
     size_t i{0};
     for (const auto& dmn : sortedAllMns) {
