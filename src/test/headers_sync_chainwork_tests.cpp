@@ -140,6 +140,7 @@ static void HappyPath(const CBlockIndex* chain_start,
 {
     // This time we feed the first chain twice.
     HeadersSyncState hss{0, Params().GetConsensus(), chain_start, CHAIN_WORK};
+    const auto genesis_hash{Params().GenesisBlock().GetHash()};
     {
         auto result{hss.ProcessNextHeaders(first_chain, true)};
         // Switched from PRESYNC to REDOWNLOAD after reaching sufficient work:
@@ -148,17 +149,45 @@ static void HappyPath(const CBlockIndex* chain_start,
         BOOST_CHECK(result.request_more);
         BOOST_CHECK_EQUAL(result.pow_validated_headers.size(), 0);
         // The locator should reset to genesis.
-        BOOST_CHECK_EQUAL(hss.NextHeadersRequestLocator().vHave.front(), Params().GenesisBlock().GetHash());
+        BOOST_CHECK_EQUAL(hss.NextHeadersRequestLocator().vHave.front(), genesis_hash);
     }
 
     {
-        auto result{hss.ProcessNextHeaders(first_chain, true)};
+        // Process only so that the internal threshold isn't met, meaning validated
+        // headers shouldn't be returned yet:
+        auto result{hss.ProcessNextHeaders(std::span{first_chain.begin(), REDOWNLOAD_BUFFER_SIZE}, true)};
+        // Not done:
+        BOOST_REQUIRE_EQUAL(hss.GetState(), HeadersSyncState::State::REDOWNLOAD);
+        BOOST_CHECK(result.success);
+        BOOST_CHECK(result.request_more);
+        BOOST_CHECK_EQUAL(result.pow_validated_headers.size(), 0);
+        BOOST_CHECK_EQUAL(hss.NextHeadersRequestLocator().vHave.front(), first_chain[REDOWNLOAD_BUFFER_SIZE - 1].GetHash());
+    }
+
+    CBlockHeader first_after_genesis;
+    {
+        // Next header should make us exceed the threshold, but still not be done:
+        auto result{hss.ProcessNextHeaders(std::span{first_chain.begin() + REDOWNLOAD_BUFFER_SIZE, 1}, true)};
+        BOOST_REQUIRE_EQUAL(hss.GetState(), HeadersSyncState::State::REDOWNLOAD);
+        BOOST_CHECK(result.success);
+        BOOST_CHECK(result.request_more);
+        BOOST_REQUIRE_EQUAL(result.pow_validated_headers.size(), 1);
+        BOOST_CHECK_EQUAL(hss.NextHeadersRequestLocator().vHave.front(), first_chain[REDOWNLOAD_BUFFER_SIZE].GetHash());
+        first_after_genesis = result.pow_validated_headers.front();
+        BOOST_CHECK_EQUAL(first_after_genesis.hashPrevBlock, genesis_hash);
+    }
+
+    {
+        // Feed in remaining headers, meeting the work threshold again and
+        // completing the REDOWNLOAD phase.
+        auto result{hss.ProcessNextHeaders(std::span{first_chain.begin() + REDOWNLOAD_BUFFER_SIZE + 1, first_chain.end()}, true)};
         // Nothing left for the sync logic to do:
         BOOST_REQUIRE_EQUAL(hss.GetState(), HeadersSyncState::State::FINAL);
         BOOST_CHECK(result.success);
         BOOST_CHECK(!result.request_more);
-        // All headers should be ready for acceptance:
-        BOOST_CHECK_EQUAL(result.pow_validated_headers.size(), first_chain.size());
+        // All headers except the one already returned above:
+        BOOST_REQUIRE_EQUAL(result.pow_validated_headers.size(), first_chain.size() - 1);
+        BOOST_CHECK_EQUAL(result.pow_validated_headers.front().hashPrevBlock, first_after_genesis.GetHash());
     }
 }
 
