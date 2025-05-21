@@ -353,17 +353,33 @@ BOOST_AUTO_TEST_CASE(rate_limiting)
 
     SetMockTime(std::chrono::hours{1});
 
+    size_t log_file_size = std::filesystem::file_size(LogInstance().m_file_path);
+
     // Logging 1 MiB should be allowed.
     for (int i = 0; i < 1024; ++i) {
         LogFromLocation(0, log_message);
     }
+    BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "should be able to log 1 MiB from location 0");
+
+    log_file_size = std::filesystem::file_size(LogInstance().m_file_path);
 
     BOOST_CHECK_NO_THROW(LogFromLocationAndExpect(0, log_message, "Excessive logging detected"));
+    BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "the start of the suppression period should be logged");
+
+    log_file_size = std::filesystem::file_size(LogInstance().m_file_path);
+    for (int i = 0; i < 1024; ++i) {
+        LogFromLocation(0, log_message);
+    }
+    BOOST_CHECK_MESSAGE(log_file_size == std::filesystem::file_size(LogInstance().m_file_path), "all further logs from location 0 should be dropped");
+
     BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Excessive logging detected"), std::runtime_error);
+    BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "location 1 should be unaffected by other locations");
 
     SetMockTime(std::chrono::hours{2});
 
     BOOST_CHECK_NO_THROW(LogFromLocationAndExpect(0, log_message, "Restarting logging"));
+    BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "the end of the suppression period should be logged");
+
     BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Restarting logging"), std::runtime_error);
 
     LogInstance().m_log_timestamps = prev_log_timestamps;
