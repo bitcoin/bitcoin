@@ -465,7 +465,7 @@ static void RelayInvToParticipants(const CDKGSession& session, const CConnman& c
     logger.Flush();
 }
 
-template <typename Message, int MessageType>
+template <typename Message>
 bool ProcessPendingMessageBatch(const CConnman& connman, CDKGSession& session, CDKGPendingMessages& pendingMessages,
                                 PeerManager& peerman, size_t maxCount)
 {
@@ -573,8 +573,7 @@ void CDKGSessionHandler::HandleDKGRound(CConnman& connman, PeerManager& peerman)
     // Contribute
     auto fContributeStart = [this, &peerman]() { curSession->Contribute(pendingContributions, peerman); };
     auto fContributeWait = [this, &connman, &peerman] {
-        return ProcessPendingMessageBatch<CDKGContribution, MSG_QUORUM_CONTRIB>(connman, *curSession,
-                                                                                pendingContributions, peerman, 8);
+        return ProcessPendingMessageBatch<CDKGContribution>(connman, *curSession, pendingContributions, peerman, 8);
     };
     HandlePhase(QuorumPhase::Contribute, QuorumPhase::Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
@@ -583,24 +582,22 @@ void CDKGSessionHandler::HandleDKGRound(CConnman& connman, PeerManager& peerman)
         curSession->VerifyAndComplain(connman, pendingComplaints, peerman);
     };
     auto fComplainWait = [this, &connman, &peerman] {
-        return ProcessPendingMessageBatch<CDKGComplaint, MSG_QUORUM_COMPLAINT>(connman, *curSession, pendingComplaints,
-                                                                               peerman, 8);
+        return ProcessPendingMessageBatch<CDKGComplaint>(connman, *curSession, pendingComplaints, peerman, 8);
     };
     HandlePhase(QuorumPhase::Complain, QuorumPhase::Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
     // Justify
     auto fJustifyStart = [this, &peerman]() { curSession->VerifyAndJustify(pendingJustifications, peerman); };
     auto fJustifyWait = [this, &connman, &peerman] {
-        return ProcessPendingMessageBatch<CDKGJustification, MSG_QUORUM_JUSTIFICATION>(connman, *curSession,
-                                                                                       pendingJustifications, peerman, 8);
+        return ProcessPendingMessageBatch<CDKGJustification>(connman, *curSession, pendingJustifications, peerman, 8);
     };
     HandlePhase(QuorumPhase::Justify, QuorumPhase::Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
     // Commit
     auto fCommitStart = [this, &peerman]() { curSession->VerifyAndCommit(pendingPrematureCommitments, peerman); };
     auto fCommitWait = [this, &connman, &peerman] {
-        return ProcessPendingMessageBatch<CDKGPrematureCommitment, MSG_QUORUM_PREMATURE_COMMITMENT>(
-            connman, *curSession, pendingPrematureCommitments, peerman, 8);
+        return ProcessPendingMessageBatch<CDKGPrematureCommitment>(connman, *curSession, pendingPrematureCommitments,
+                                                                   peerman, 8);
     };
     HandlePhase(QuorumPhase::Commit, QuorumPhase::Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
 
