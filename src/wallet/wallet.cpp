@@ -3892,7 +3892,12 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
             return util::Error{util::ErrorString(spkm_res)};
         }
     } else {
-        auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
+        std::unique_ptr<DescriptorScriptPubKeyMan> new_spk_man;
+        if (desc.descriptor->GetOutputType() == OutputType::SILENT_PAYMENTS) {
+            new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new SilentPaymentDescriptorScriptPubKeyMan(*this, desc));
+        } else {
+            new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc, m_keypool_size));
+        }
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory
@@ -3913,7 +3918,7 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
 
     // Apply the label if necessary
     // Note: we disable labels for descriptors that are ranged or that don't produce output scripts (i.e. unused())
-    if (!desc.descriptor->IsRange() && desc.descriptor->HasScripts()) {
+    if (!desc.descriptor->IsRange() && desc.descriptor->HasScripts() && desc.descriptor->GetOutputType() != OutputType::SILENT_PAYMENTS) {
         auto script_pub_keys = spk_man->GetScriptPubKeys();
         if (script_pub_keys.empty()) {
             return util::Error{_("Could not generate scriptPubKeys (cache is empty)")};
