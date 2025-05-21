@@ -3103,11 +3103,9 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
 
     const std::optional<int> tip_height = chain.getHeight();
     if (tip_height) {
-        walletInstance->m_last_block_processed = chain.getBlockHash(*tip_height);
-        walletInstance->m_last_block_processed_height = *tip_height;
+        walletInstance->SetLastBlockProcessedInMem(*tip_height, chain.getBlockHash(*tip_height));
     } else {
-        walletInstance->m_last_block_processed.SetNull();
-        walletInstance->m_last_block_processed_height = -1;
+        walletInstance->SetLastBlockProcessedInMem(-1, uint256());
     }
 
     if (tip_height && *tip_height != rescan_height)
@@ -3172,7 +3170,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
                 return false;
             }
             // Set and update the best block record
-            // Set last block scanned as the last block processed as it may be different in case the case of a reorg.
+            // Set last block scanned as the last block processed as it may be different in case of a reorg.
             // Also save the best block locator because rescanning only updates it intermittently.
             walletInstance->SetLastBlockProcessed(*scan_res.last_scanned_height, scan_res.last_scanned_block);
         }
@@ -4427,8 +4425,10 @@ void CWallet::WriteBestBlock() const
         CBlockLocator loc;
         chain().findBlock(m_last_block_processed, FoundBlock().locator(loc));
 
-        WalletBatch batch(GetDatabase());
-        batch.WriteBestBlock(loc);
+        if (!loc.IsNull()) {
+            WalletBatch batch(GetDatabase());
+            batch.WriteBestBlock(loc);
+        }
     }
 }
 
