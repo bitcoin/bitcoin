@@ -192,7 +192,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         }
 
         // Active descriptors must be ranged
-        if (active && !parsed_descs.at(0)->IsRange()) {
+        if (active && !parsed_descs.at(0)->IsRange() && parsed_descs.at(0)->GetOutputType() != OutputType::SILENT_PAYMENTS) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Active descriptors must be ranged");
         }
 
@@ -223,6 +223,11 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 
         for (size_t j = 0; j < parsed_descs.size(); ++j) {
             auto parsed_desc = std::move(parsed_descs[j]);
+
+            if (parsed_desc->GetOutputType() == OutputType::SILENT_PAYMENTS && !wallet.IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import silent payment descriptor into a wallet with silent-payments disabled");
+            }
+
             bool desc_internal = internal.has_value() && internal.value();
             if (parsed_descs.size() == 2) {
                 desc_internal = j == 1;
