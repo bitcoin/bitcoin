@@ -27,6 +27,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     {
         LOCK(wallet->cs_wallet);
         wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        wallet->SetWalletFlag(WALLET_FLAG_SILENT_PAYMENTS);
         wallet->SetupDescriptorScriptPubKeyMans();
 
         FlatSigningProvider provider;
