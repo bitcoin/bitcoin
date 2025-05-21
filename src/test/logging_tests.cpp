@@ -5,6 +5,7 @@
 #include <init/common.h>
 #include <logging.h>
 #include <logging/timer.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <util/string.h>
 
@@ -317,6 +318,58 @@ BOOST_AUTO_TEST_CASE(logging_ratelimit_window)
     BOOST_CHECK(window.Consume(MESSAGE_SIZE));
     BOOST_CHECK_EQUAL(window.GetAvailableBytes(), BCLog::LogRateLimiter::WINDOW_MAX_BYTES - MESSAGE_SIZE);
     BOOST_CHECK_EQUAL(window.GetDroppedBytes(), 0ull);
+}
+
+void LogFromLocation(int location, std::string message)
+{
+    switch (location) {
+    case 0:
+        LogInfo("%s\n", message);
+        break;
+
+    case 1:
+        LogInfo("%s\n", message);
+        break;
+    }
+}
+
+void LogFromLocationAndExpect(int location, std::string message, std::string expect)
+{
+    ASSERT_DEBUG_LOG(expect);
+    LogFromLocation(location, message);
+}
+
+BOOST_AUTO_TEST_CASE(rate_limiting)
+{
+    bool prev_log_timestamps = LogInstance().m_log_timestamps;
+    LogInstance().m_log_timestamps = false;
+    bool prev_log_sourcelocations = LogInstance().m_log_sourcelocations;
+    LogInstance().m_log_sourcelocations = false;
+    bool prev_log_threadnames = LogInstance().m_log_threadnames;
+    LogInstance().m_log_threadnames = false;
+
+    // Log 1024-character lines (1023 plus newline) to make the math simple.
+    std::string log_message(1023, 'a');
+
+    SetMockTime(std::chrono::hours{1});
+
+    // Logging 1 MiB should be allowed.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromLocation(0, log_message);
+    }
+
+    BOOST_CHECK_NO_THROW(LogFromLocationAndExpect(0, log_message, "Excessive logging detected"));
+    BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Excessive logging detected"), std::runtime_error);
+
+    SetMockTime(std::chrono::hours{2});
+
+    BOOST_CHECK_NO_THROW(LogFromLocationAndExpect(0, log_message, "Restarting logging"));
+    BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Restarting logging"), std::runtime_error);
+
+    LogInstance().m_log_timestamps = prev_log_timestamps;
+    LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
+    LogInstance().m_log_threadnames = prev_log_threadnames;
+    SetMockTime(std::chrono::seconds{0});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
