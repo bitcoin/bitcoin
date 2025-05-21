@@ -124,7 +124,7 @@ static arith_uint256 calculateQuorumScore(const CDeterministicMNCPtr& dmn, const
 }
 
 static std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScoresForQuorum(
-    const std::vector<CDeterministicMNCPtr>& dmns, const uint256& modifier, const bool onlyEvoNodes)
+    std::vector<CDeterministicMNCPtr>&& dmns, const uint256& modifier, const bool onlyEvoNodes)
 {
     std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> scores;
     scores.reserve(dmns.size());
@@ -170,10 +170,10 @@ static std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScor
  * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
  */
 template <typename List>
-static std::vector<CDeterministicMNCPtr> CalculateQuorum(const List& mn_list, const uint256& modifier,
-                                                         size_t maxSize = 0, const bool onlyEvoNodes = false)
+static std::vector<CDeterministicMNCPtr> CalculateQuorum(List&& mn_list, const uint256& modifier, size_t maxSize = 0,
+                                                         const bool onlyEvoNodes = false)
 {
-    auto scores = CalculateScoresForQuorum(mn_list, modifier, onlyEvoNodes);
+    auto scores = CalculateScoresForQuorum(std::forward<List>(mn_list), modifier, onlyEvoNodes);
 
     // sort is descending order
     std::sort(scores.rbegin(), scores.rend(),
@@ -438,7 +438,6 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
     }
 
     auto MnsUsedAtH = CDeterministicMNList();
-    std::vector<CDeterministicMNCPtr> MnsNotUsedAtH;
     std::vector<CDeterministicMNList> MnsUsedAtHIndexed{nQuorums};
 
     bool skipRemovedMNs = IsV19Active(pCycleQuorumBaseBlockIndex) || (Params().NetworkIDString() == CBaseChainParams::TESTNET);
@@ -494,6 +493,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
         }
     }
 
+    std::vector<CDeterministicMNCPtr> MnsNotUsedAtH;
     allMns.ForEachMNShared(false, [&MnsUsedAtH, &MnsNotUsedAtH](const CDeterministicMNCPtr& dmn) {
         if (!MnsUsedAtH.HasMN(dmn->proTxHash)) {
             if (!dmn->pdmnState->IsBanned()) {
@@ -503,7 +503,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
     });
 
     auto sortedMnsUsedAtHM = CalculateQuorum(MnsUsedAtH, modifier);
-    auto sortedCombinedMnsList = CalculateQuorum(MnsNotUsedAtH, modifier);
+    auto sortedCombinedMnsList = CalculateQuorum(std::move(MnsNotUsedAtH), modifier);
     for (auto& m : sortedMnsUsedAtHM) {
         sortedCombinedMnsList.push_back(std::move(m));
     }
@@ -618,11 +618,12 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
     std::vector<CDeterministicMNCPtr> sortedCombinedMns;
     {
         const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
-        const auto [MnsUsedAtH, MnsNotUsedAtH] = GetMNUsageBySnapshot(llmqParams, dmnman, pCycleQuorumBaseBlockIndex, snapshot, nHeight);
+        auto [MnsUsedAtH, MnsNotUsedAtH] = GetMNUsageBySnapshot(llmqParams, dmnman, pCycleQuorumBaseBlockIndex,
+                                                                snapshot, nHeight);
         // the list begins with all the unused MNs
-        sortedCombinedMns = CalculateQuorum(MnsNotUsedAtH, modifier);
+        sortedCombinedMns = CalculateQuorum(std::move(MnsNotUsedAtH), modifier);
         // Now add the already used MNs to the end of the list
-        auto sortedMnsUsedAtH = CalculateQuorum(MnsUsedAtH, modifier);
+        auto sortedMnsUsedAtH = CalculateQuorum(std::move(MnsUsedAtH), modifier);
         std::move(sortedMnsUsedAtH.begin(), sortedMnsUsedAtH.end(), std::back_inserter(sortedCombinedMns));
     }
 
@@ -729,7 +730,7 @@ static std::pair<std::vector<CDeterministicMNCPtr>, std::vector<CDeterministicMN
         i++;
     }
 
-    return std::make_pair(usedMNs, nonUsedMNs);
+    return std::make_pair(std::move(usedMNs), std::move(nonUsedMNs));
 }
 
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
