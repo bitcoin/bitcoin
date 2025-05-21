@@ -231,9 +231,6 @@ private:
         std::vector<GroupEntry> m_groups;
         /** Which clusters are to be merged. GroupEntry::m_cluster_offset indexes into this. */
         std::vector<Cluster*> m_group_clusters;
-        /** Whether at least one of the groups cannot be applied because it would result in a
-         *  Cluster that violates the max cluster count or size limit. */
-        bool m_group_oversized;
     };
 
     /** The collection of all Clusters in main or staged. */
@@ -257,9 +254,7 @@ private:
         GraphIndex m_txcount{0};
         /** Total number of individually oversized transactions in the graph. */
         GraphIndex m_txcount_oversized{0};
-        /** Whether this graph is oversized (if known). This roughly matches
-         *  m_group_data->m_group_oversized || (m_txcount_oversized > 0), but may be known even if
-         *  m_group_data is not. */
+        /** Whether this graph is oversized (if known). */
         std::optional<bool> m_oversized{false};
 
         ClusterSet() noexcept = default;
@@ -1463,9 +1458,9 @@ void TxGraphImpl::GroupClusters(int level) noexcept
     // back to m_deps_to_add.
     clusterset.m_group_data = GroupData{};
     clusterset.m_group_data->m_group_clusters.reserve(an_clusters.size());
-    clusterset.m_group_data->m_group_oversized = false;
     clusterset.m_deps_to_add.clear();
     clusterset.m_deps_to_add.reserve(an_deps.size());
+    clusterset.m_oversized = false;
     auto an_deps_it = an_deps.begin();
     auto an_clusters_it = an_clusters.begin();
     while (an_clusters_it != an_clusters.end()) {
@@ -1495,12 +1490,11 @@ void TxGraphImpl::GroupClusters(int level) noexcept
         }
         // Detect oversizedness.
         if (total_count > m_max_cluster_count || total_size > m_max_cluster_size) {
-            clusterset.m_group_data->m_group_oversized = true;
+            clusterset.m_oversized = true;
         }
     }
     Assume(an_deps_it == an_deps.end());
     Assume(an_clusters_it == an_clusters.end());
-    clusterset.m_oversized = clusterset.m_group_data->m_group_oversized;
     Compact();
 }
 
@@ -2365,13 +2359,6 @@ void TxGraphImpl::SanityCheck() const
         if (!clusterset.m_deps_to_add.empty()) compact_possible = false;
         if (!clusterset.m_to_remove.empty()) compact_possible = false;
         if (!clusterset.m_removed.empty()) compact_possible = false;
-
-        // If m_group_data exists, and no outstanding removals remain, m_group_oversized must match
-        // m_group_oversized || (m_txcount_oversized > 0).
-        if (clusterset.m_group_data.has_value() && clusterset.m_to_remove.empty()) {
-            assert(clusterset.m_oversized ==
-                   (clusterset.m_group_data->m_group_oversized || (clusterset.m_txcount_oversized > 0)));
-        }
 
         // For non-top levels, m_oversized must be known (as it cannot change until the level
         // on top is gone).
