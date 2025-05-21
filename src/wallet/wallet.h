@@ -662,7 +662,7 @@ public:
      */
     std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbtx,
                   bool& complete,
-                  int sighash_type = SIGHASH_DEFAULT,
+                  std::optional<int> sighash_type = std::nullopt,
                   bool sign = true,
                   bool bip32derivs = true,
                   size_t* n_signed = nullptr,
