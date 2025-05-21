@@ -80,12 +80,9 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
 static DescriptorScriptPubKeyMan* CreateDescriptor(WalletDescriptor& wallet_desc, FlatSigningProvider& keys, CWallet& keystore)
 {
     LOCK(keystore.cs_wallet);
-    DescriptorScriptPubKeyMan* descriptor_spk_manager = nullptr;
-    auto spk_manager = *Assert(keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false));
-    if (spk_manager) {
-        descriptor_spk_manager = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_manager);
-    }
-    return descriptor_spk_manager;
+    auto spk_manager_res = keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false);
+    if (!spk_manager_res) return nullptr;
+    return &spk_manager_res.value().get();
 };
 
 FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)

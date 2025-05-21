@@ -116,7 +116,7 @@ public:
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records = {});
 MockableDatabase& GetMockableDatabase(CWallet& wallet);
 
-ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success);
+DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_TEST_UTIL_H
