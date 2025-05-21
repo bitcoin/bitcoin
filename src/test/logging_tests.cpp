@@ -326,9 +326,14 @@ void LogFromLocation(int location, std::string message)
     case 0:
         LogInfo("%s\n", message);
         break;
-
     case 1:
         LogInfo("%s\n", message);
+        break;
+    case 2:
+        LogPrintLevel(BCLog::LogFlags::UNCONDITIONAL_ALWAYS, BCLog::Level::Info, "%s\n", message);
+        break;
+    case 3:
+        LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Info, "%s\n", message);
         break;
     }
 }
@@ -381,6 +386,18 @@ BOOST_AUTO_TEST_CASE(rate_limiting)
     BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "the end of the suppression period should be logged");
 
     BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Restarting logging"), std::runtime_error);
+
+    // Attempt to log 2 MiB to disk.
+    // The exempt locations 2 and 3 should be allowed to log without limit.
+    for (int i = 0; i < 2048; ++i) {
+        log_file_size = std::filesystem::file_size(LogInstance().m_file_path);
+        BOOST_CHECK_THROW(LogFromLocationAndExpect(2, log_message, "Excessive logging detected"), std::runtime_error);
+        BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "location 2 should be exempt from rate limiting");
+
+        log_file_size = std::filesystem::file_size(LogInstance().m_file_path);
+        BOOST_CHECK_THROW(LogFromLocationAndExpect(3, log_message, "Excessive logging detected"), std::runtime_error);
+        BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "location 3 should be exempt from rate limiting");
+    }
 
     LogInstance().m_log_timestamps = prev_log_timestamps;
     LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
