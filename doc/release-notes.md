@@ -47,6 +47,7 @@ Notable changes
 - #32312 test: Fix feature_pruning test after nTime typo fix
 - #32336 test: Suppress upstream -Wduplicate-decl-specifier in bpfcc
 - #32483 test: fix two intermittent failures in wallet_basic.py
+- #32630 test: fix sync function in rpc_psbt.py
 
 ### Util
 
@@ -57,6 +58,9 @@ Notable changes
 - #32356 cmake: Respect user-provided configuration-specific flags
 - #32437 crypto: disable ASan for sha256_sse4 with Clang
 - #32469 cmake: Allow WITH_DBUS on all Unix-like systems
+- #32439 guix: accomodate migration to codeberg
+- #32551 cmake: Add missed SSE41_CXXFLAGS
+- #32568 depends: use "mkdir -p" when installing xproto
 
 ### Gui
 
@@ -65,6 +69,7 @@ Notable changes
 
 ### Doc
 
+- #32333 doc: Add missing top-level description to pruneblockchain RPC
 - #32353 doc: Fix fuzz test_runner.py path
 - #32389 doc: Fix test_bitcoin path
 
@@ -93,6 +98,7 @@ Thanks to everyone who directly contributed to this release:
 - MarcoFalke
 - Martin Zumsande
 - monlovesmango
+- nervana21
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
