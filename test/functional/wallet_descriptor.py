@@ -9,6 +9,8 @@ try:
 except ImportError:
     pass
 
+import re
+
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -28,6 +30,61 @@ class WalletDescriptorTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
         self.skip_if_no_py_sqlite3()
+
+    def test_parent_descriptors(self):
+        self.log.info("Check that parent_descs is the same for all RPCs and is normalized")
+        self.nodes[0].createwallet(wallet_name="parent_descs")
+        wallet = self.nodes[0].get_wallet_rpc("parent_descs")
+        default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        addr = wallet.getnewaddress()
+        parent_desc = wallet.getaddressinfo(addr)["parent_desc"]
+
+        # Verify that the parent descriptor is normalized
+        # First remove the checksum
+        desc_verify = parent_desc.split("#")[0]
+        # Next extract the xpub
+        desc_verify = re.sub(r"tpub\w+?(?=/)", "", desc_verify)
+
+        # Walk the remaining descriptor backwards looking for the hardened indicator.
+        # It should not be found until after a ']' is found, and before a '['
+        found_origin_end = False
+        found_hardened_in_origin = False
+        found_hardened_after_origin = False
+        for c in desc_verify[::-1]:
+            if c == "]":
+                found_origin_end = True
+            elif c == "[":
+                break
+            elif c == "h" or c == "'":
+                if found_origin_end:
+                    found_hardened_in_origin = True
+                else:
+                    found_hardened_after_origin = True
+        assert_equal(found_hardened_in_origin, True)
+        assert_equal(found_hardened_after_origin, False)
+
+        # Send some coins so we can check listunspent, listtransactions, listunspent, and gettransaction
+        since_block = self.nodes[0].getbestblockhash()
+        txid = default_wallet.sendtoaddress(addr, 1)
+        self.generate(self.nodes[0], 1)
+
+        unspent = wallet.listunspent()
+        assert_equal(len(unspent), 1)
+        assert_equal(unspent[0]["parent_descs"], [parent_desc])
+
+        txs = wallet.listtransactions()
+        assert_equal(len(txs), 1)
+        assert_equal(txs[0]["parent_descs"], [parent_desc])
+
+        txs = wallet.listsinceblock(since_block)["transactions"]
+        assert_equal(len(txs), 1)
+        assert_equal(txs[0]["parent_descs"], [parent_desc])
+
+        tx = wallet.gettransaction(txid=txid, verbose=True)
+        assert_equal(tx["details"][0]["parent_descs"], [parent_desc])
+
+        wallet.unloadwallet()
 
     def run_test(self):
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
@@ -218,6 +275,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         conn.close()
         assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
 
+        self.test_parent_descriptors()
 
 if __name__ == '__main__':
     WalletDescriptorTest(__file__).main()
