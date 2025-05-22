@@ -37,9 +37,12 @@ const std::vector<std::pair</*input=*/std::string, /*expected_ret=*/NetInfoStatu
     {":9999", NetInfoStatus::BadInput},
 };
 
-void ValidateGetEntries(const CServiceList& entries, const size_t expected_size)
+void ValidateGetEntries(const NetInfoList& entries, const size_t expected_size)
 {
     BOOST_CHECK_EQUAL(entries.size(), expected_size);
+    for (const NetInfoEntry& entry : entries) {
+        BOOST_CHECK(entry.IsTriviallyValid());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(mnnetinfo_rules)
