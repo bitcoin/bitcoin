@@ -225,7 +225,6 @@ class CreateSumTooLarge(BadTxTemplate):
 class InvalidOPIFConstruction(BadTxTemplate):
     reject_reason = "mandatory-script-verify-flag-failed (Invalid OP_IF construction)"
     expect_disconnect = True
-    valid_in_block = True
 
     def get_tx(self):
         return create_tx_with_script(
@@ -260,7 +259,7 @@ def getDisabledOpcodeTemplate(opcode):
         'reject_reason': "disabled opcode",
         'expect_disconnect': True,
         'get_tx': get_tx,
-        'valid_in_block' : True
+        'valid_in_block' : False
         })
 
 class NonStandardAndInvalid(BadTxTemplate):
