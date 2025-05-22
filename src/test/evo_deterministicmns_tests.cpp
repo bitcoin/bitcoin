@@ -369,9 +369,10 @@ void FuncV19Activation(TestChainSetup& setup)
 
     // check mn list/diff
     CDeterministicMNListDiff dummy_diff = base_list.BuildDiff(tip_list);
-    CDeterministicMNList dummmy_list = base_list.ApplyDiff(chainman.ActiveChain().Tip(), dummy_diff);
+    CDeterministicMNList dummy_list{base_list};
+    dummy_list.ApplyDiff(chainman.ActiveChain().Tip(), dummy_diff);
     // Lists should match
-    BOOST_REQUIRE(dummmy_list == tip_list);
+    BOOST_REQUIRE(dummy_list == tip_list);
 
     // mine 10 more blocks
     for (int i = 0; i < 10; ++i)
@@ -392,20 +393,22 @@ void FuncV19Activation(TestChainSetup& setup)
     const CBlockIndex* v19_index = chainman.ActiveChain().Tip()->GetAncestor(Params().GetConsensus().V19Height);
     auto v19_list = dmnman.GetListForBlock(v19_index);
     dummy_diff = v19_list.BuildDiff(tip_list);
-    dummmy_list = v19_list.ApplyDiff(chainman.ActiveChain().Tip(), dummy_diff);
-    BOOST_REQUIRE(dummmy_list == tip_list);
+    dummy_list = v19_list;
+    dummy_list.ApplyDiff(chainman.ActiveChain().Tip(), dummy_diff);
+    BOOST_REQUIRE(dummy_list == tip_list);
 
     // NOTE: this fails on v19/v19.1 with errors like:
     // "RemoveMN: Can't delete a masternode ... with a pubKeyOperator=..."
     dummy_diff = base_list.BuildDiff(tip_list);
-    dummmy_list = base_list.ApplyDiff(chainman.ActiveChain().Tip(), dummy_diff);
-    BOOST_REQUIRE(dummmy_list == tip_list);
+    dummy_list = base_list;
+    dummy_list.ApplyDiff(chainman.ActiveChain().Tip(), dummy_diff);
+    BOOST_REQUIRE(dummy_list == tip_list);
 
-    dummmy_list = base_list;
+    dummy_list = base_list;
     for (const auto& diff : diffs) {
-        dummmy_list = dummmy_list.ApplyDiff(chainman.ActiveChain().Tip(), diff);
+        dummy_list.ApplyDiff(chainman.ActiveChain().Tip(), diff);
     }
-    BOOST_REQUIRE(dummmy_list == tip_list);
+    BOOST_REQUIRE(dummy_list == tip_list);
 };
 
 void FuncDIP3Protx(TestChainSetup& setup)
