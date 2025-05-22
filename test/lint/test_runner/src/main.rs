@@ -614,15 +614,7 @@ fn lint_includes_build_config() -> LintResult {
                     "*.cpp",
                     "*.h",
                 ])
-                .args(get_pathspecs_default_excludes())
-                .args([
-                    // These are exceptions which don't use bitcoin-build-config.h, rather CMakeLists.txt adds
-                    // these cppflags manually.
-                    ":(exclude)src/crypto/sha256_arm_shani.cpp",
-                    ":(exclude)src/crypto/sha256_avx2.cpp",
-                    ":(exclude)src/crypto/sha256_sse41.cpp",
-                    ":(exclude)src/crypto/sha256_x86_shani.cpp",
-                ]),
+                .args(get_pathspecs_default_excludes()),
         )
         .expect("grep failed");
         git()

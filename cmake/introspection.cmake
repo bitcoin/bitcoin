@@ -170,7 +170,6 @@ if(NOT MSVC)
     " HAVE_SSE41
     CXXFLAGS ${SSE41_CXXFLAGS}
   )
-  set(ENABLE_SSE41 ${HAVE_SSE41})
 
   # Check for AVX2 intrinsics.
   set(AVX2_CXXFLAGS -mavx -mavx2)
@@ -185,7 +184,6 @@ if(NOT MSVC)
     " HAVE_AVX2
     CXXFLAGS ${AVX2_CXXFLAGS}
   )
-  set(ENABLE_AVX2 ${HAVE_AVX2})
 
   # Check for x86 SHA-NI intrinsics.
   set(X86_SHANI_CXXFLAGS -msse4 -msha)
@@ -202,7 +200,6 @@ if(NOT MSVC)
     " HAVE_X86_SHANI
     CXXFLAGS ${X86_SHANI_CXXFLAGS}
   )
-  set(ENABLE_X86_SHANI ${HAVE_X86_SHANI})
 
   # Check for ARMv8 SHA-NI intrinsics.
   set(ARM_SHANI_CXXFLAGS -march=armv8-a+crypto)
@@ -220,5 +217,4 @@ if(NOT MSVC)
     " HAVE_ARM_SHANI
     CXXFLAGS ${ARM_SHANI_CXXFLAGS}
   )
-  set(ENABLE_ARM_SHANI ${HAVE_ARM_SHANI})
 endif()
