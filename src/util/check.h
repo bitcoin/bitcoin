@@ -60,11 +60,17 @@ public:
     NonFatalCheckError(std::string_view msg, std::string_view file, int line, std::string_view func);
 };
 
+/** Internal helper */
+void assertion_fail(std::string_view file, int line, std::string_view func, std::string_view assertion);
+
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
 T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, const char* func, const char* assertion)
 {
     if (!val) {
+        if constexpr (G_ABORT_ON_FAILED_ASSUME) {
+            assertion_fail(file, line, func, assertion);
+        }
         throw NonFatalCheckError{assertion, file, line, func};
     }
     return std::forward<T>(val);
@@ -73,9 +79,6 @@ T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, co
 #if defined(NDEBUG)
 #error "Cannot compile without assertions!"
 #endif
-
-/** Helper for Assert() */
-void assertion_fail(std::string_view file, int line, std::string_view func, std::string_view assertion);
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
