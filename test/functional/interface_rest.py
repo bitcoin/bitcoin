@@ -432,15 +432,27 @@ class RESTTest (BitcoinTestFramework):
         for height in range(0, block_count + 1):
             blockhash = self.nodes[0].getblockhash(height)
             spent_bin = self.test_rest_request(f"/spenttxouts/{blockhash}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
+            spent_hex = self.test_rest_request(f"/spenttxouts/{blockhash}", req_type=ReqType.HEX, ret_type=RetType.BYTES)
+            spent_json = self.test_rest_request(f"/spenttxouts/{blockhash}", req_type=ReqType.JSON, ret_type=RetType.JSON)
+
+            assert_equal(bytes.fromhex(spent_hex.decode()), spent_bin)
+
             spent = deser_block_spent_outputs(BytesIO(spent_bin))
             block = self.nodes[0].getblock(blockhash, 3)  # return prevout for each input
             assert_equal(len(spent), len(block["tx"]))
+            assert_equal(len(spent_json), len(block["tx"]))
+
             for i, tx in enumerate(block["tx"]):
-                actual = [(txout.scriptPubKey.hex(), Decimal(txout.nValue) / COIN) for txout in spent[i]]
-                # compare with `getblock` output (coinbase tx has no prevouts)
                 prevouts = [txin["prevout"] for txin in tx["vin"] if "coinbase" not in txin]
+                # compare with `getblock` JSON output (coinbase tx has no prevouts)
+                actual = [(txout.scriptPubKey.hex(), Decimal(txout.nValue) / COIN) for txout in spent[i]]
                 expected = [(p["scriptPubKey"]["hex"], p["value"]) for p in prevouts]
                 assert_equal(expected, actual)
+                # also compare JSON format
+                actual = [(prevout["scriptPubKey"], prevout["value"]) for prevout in spent_json[i]]
+                expected = [(p["scriptPubKey"], p["value"]) for p in prevouts]
+                assert_equal(expected, actual)
+
 
         self.log.info("Test the /deploymentinfo URI")
 
