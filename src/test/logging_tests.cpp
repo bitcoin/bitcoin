@@ -399,6 +399,18 @@ BOOST_AUTO_TEST_CASE(rate_limiting)
         BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "location 3 should be exempt from rate limiting");
     }
 
+    SetMockTime(std::chrono::hours{3});
+
+    // Disable rate limiting.
+    // Source locations should now be able to log without limit.
+    LogInstance().m_ratelimit = false;
+    for (int i = 0; i < 2048; ++i) {
+        log_file_size = std::filesystem::file_size(LogInstance().m_file_path);
+        BOOST_CHECK_THROW(LogFromLocationAndExpect(0, log_message, "Excessive logging detected"), std::runtime_error);
+        BOOST_CHECK_MESSAGE(log_file_size < std::filesystem::file_size(LogInstance().m_file_path), "location 0 should be able to log to disk, when rate limiting is disabled");
+    }
+    LogInstance().m_ratelimit = true;
+
     LogInstance().m_log_timestamps = prev_log_timestamps;
     LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
     LogInstance().m_log_threadnames = prev_log_threadnames;
