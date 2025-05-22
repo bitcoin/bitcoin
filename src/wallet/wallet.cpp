@@ -2506,20 +2506,6 @@ util::Result<CTxDestination> CWallet::GetNewChangeDestination(const OutputType t
     return op_dest;
 }
 
-std::optional<int64_t> CWallet::GetOldestKeyPoolTime() const
-{
-    LOCK(cs_wallet);
-    if (m_spk_managers.empty()) {
-        return std::nullopt;
-    }
-
-    std::optional<int64_t> oldest_key{std::numeric_limits<int64_t>::max()};
-    for (const auto& spk_man_pair : m_spk_managers) {
-        oldest_key = std::min(oldest_key, spk_man_pair.second->GetOldestKeyPoolTime());
-    }
-    return oldest_key;
-}
-
 void CWallet::MarkDestinationsDirty(const std::set<CTxDestination>& destinations) {
     for (auto& entry : mapWallet) {
         CWalletTx& wtx = entry.second;

@@ -733,8 +733,6 @@ public:
     size_t KeypoolCountExternalKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool TopUpKeyPool(unsigned int kpSize = 0);
 
-    std::optional<int64_t> GetOldestKeyPoolTime() const;
-
     // Filter struct for 'ListAddrBookAddresses'
     struct AddrBookFilter {
         // Fetch addresses with the provided label
