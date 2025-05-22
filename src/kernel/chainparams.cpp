@@ -118,6 +118,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1815; // 90%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
 
+        // Deployment of OP_CHECKCONTRACTVERIFY
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].min_activation_height = 0;
+
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000b1f3b93b65b16d035a82be84"};
         consensus.defaultAssumeValid = uint256{"00000000000000000001b658dd1120e82e66d2790811f89ede9742ada3ed6d77"}; // 886157
 
@@ -232,6 +238,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1512; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
 
+        // Deployment of OP_CHECKCONTRACTVERIFY
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].min_activation_height = 0;
+
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000015f5e0c9f13455b0eb17"};
         consensus.defaultAssumeValid = uint256{"00000000000003fc7967410ba2d0a8a8d50daedc318d43e8baf1a9782c236a57"}; // 3974606
 
@@ -327,6 +339,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1512; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
+
+        // Deployment of OP_CHECKCONTRACTVERIFY
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].min_activation_height = 0;
 
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000001d6dce8651b6094e4c1"};
         consensus.defaultAssumeValid = uint256{"0000000000003ed4f08dbdf6f7d6b271a6bcffce25675cb40aa9fa43179a89f3"}; // 72600
@@ -462,6 +480,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1815; // 90%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
 
+        // Deployment of OP_CHECKCONTRACTVERIFY
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].min_activation_height = 0;
+
         // message start is defined as the first 4 bytes of the sha256d of the block script
         HashWriter h{};
         h << consensus.signet_challenge;
@@ -538,6 +562,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 108; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 144;
+
+        // Deployment of OP_CHECKCONTRACTVERIFY
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CHECKCONTRACTVERIFY].min_activation_height = 0;
 
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
