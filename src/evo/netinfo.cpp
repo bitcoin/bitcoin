@@ -15,6 +15,8 @@ static std::unique_ptr<const CChainParams> g_main_params{nullptr};
 static std::once_flag g_main_params_flag;
 static const CService empty_service{};
 
+static constexpr std::string_view SAFE_CHARS_IPV4{"1234567890."};
+
 bool IsNodeOnMainnet() { return Params().NetworkIDString() == CBaseChainParams::MAIN; }
 const CChainParams& MainParams()
 {
@@ -22,6 +24,11 @@ const CChainParams& MainParams()
     std::call_once(g_main_params_flag,
                    [&]() { g_main_params = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN); });
     return *Assert(g_main_params);
+}
+
+bool MatchCharsFilter(std::string_view input, std::string_view filter)
+{
+    return std::all_of(input.begin(), input.end(), [&filter](char c) { return filter.find(c) != std::string_view::npos; });
 }
 } // anonymous namespace
 
@@ -166,7 +173,16 @@ NetInfoStatus MnNetInfo::AddEntry(const std::string& input)
     if (!IsEmpty()) {
         return NetInfoStatus::MaxLimit;
     }
-    if (auto service_opt{Lookup(input, /*portDefault=*/Params().GetDefaultPort(), /*fAllowLookup=*/false)}) {
+
+    std::string addr;
+    uint16_t port{Params().GetDefaultPort()};
+    SplitHostPort(input, port, addr);
+    // Contains invalid characters, unlikely to pass Lookup(), fast-fail
+    if (!MatchCharsFilter(addr, SAFE_CHARS_IPV4)) {
+        return NetInfoStatus::BadInput;
+    }
+
+    if (auto service_opt{Lookup(addr, /*portDefault=*/port, /*fAllowLookup=*/false)}) {
         const auto ret{ValidateService(*service_opt)};
         if (ret == NetInfoStatus::Success) {
             m_addr = NetInfoEntry{*service_opt};

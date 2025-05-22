@@ -28,7 +28,7 @@ const std::vector<std::pair</*input=*/std::string, /*expected_ret=*/NetInfoStatu
     // Port greater than uint16_t max
     {"1.1.1.1:99999", NetInfoStatus::BadInput},
     // Only IPv4 allowed
-    {"[2606:4700:4700::1111]:9999", NetInfoStatus::BadType},
+    {"[2606:4700:4700::1111]:9999", NetInfoStatus::BadInput},
     // Domains are not allowed
     {"example.com:9999", NetInfoStatus::BadInput},
     // Incorrect IPv4 address
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(cservice_compatible)
     // Validation failure (non-IPv4 not allowed), MnNetInfo should remain empty if ValidateService() failed
     service = CService();
     netInfo.Clear();
-    BOOST_CHECK_EQUAL(netInfo.AddEntry("[2606:4700:4700::1111]:9999"), NetInfoStatus::BadType);
+    BOOST_CHECK_EQUAL(netInfo.AddEntry("[2606:4700:4700::1111]:9999"), NetInfoStatus::BadInput);
     BOOST_CHECK(CheckIfSerSame(service, netInfo));
 }
 
