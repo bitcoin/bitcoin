@@ -23,6 +23,7 @@
 #include <netbase.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <rpc/evo_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -228,11 +229,6 @@ static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
     }
     return pubKey;
-}
-
-static bool ValidatePlatformPort(const int32_t port)
-{
-    return port >= 1 && port <= std::numeric_limits<uint16_t>::max();
 }
 
 template <typename SpecialTxPayload>
@@ -713,11 +709,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         paramIdx += 2;
     }
 
-    if (!request.params[paramIdx].get_str().empty()) {
-        if (auto entryRet = ptx.netInfo->AddEntry(request.params[paramIdx].get_str()); entryRet != NetInfoStatus::Success) {
-            throw std::runtime_error(strprintf("%s (%s)", NISToString(entryRet), request.params[paramIdx].get_str()));
-        }
-    }
+    ProcessNetInfoCore(ptx, request.params[paramIdx], /*optional=*/true);
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
     ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", use_legacy), use_legacy);
@@ -749,17 +741,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         }
         ptx.platformNodeID.SetHex(request.params[paramIdx + 6].get_str());
 
-        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 7], "platformP2PPort");
-        if (!ValidatePlatformPort(requestedPlatformP2PPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformP2PPort must be a valid port [1-65535]");
-        }
-        ptx.platformP2PPort = static_cast<uint16_t>(requestedPlatformP2PPort);
-
-        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 8], "platformHTTPPort");
-        if (!ValidatePlatformPort(requestedPlatformHTTPPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformHTTPPort must be a valid port [1-65535]");
-        }
-        ptx.platformHTTPPort = static_cast<uint16_t>(requestedPlatformHTTPPort);
+        ProcessNetInfoPlatform(ptx, request.params[paramIdx + 7], request.params[paramIdx + 8]);
 
         paramIdx += 3;
     }
@@ -1018,9 +1000,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
                                                                     /*is_basic_override=*/dmn->pdmnState->nVersion > ProTxVersion::LegacyBLS);
     ptx.netInfo = NetInfoInterface::MakeNetInfo(ptx.nVersion);
 
-    if (auto entryRet = ptx.netInfo->AddEntry(request.params[1].get_str()); entryRet != NetInfoStatus::Success) {
-        throw std::runtime_error(strprintf("%s (%s)", NISToString(entryRet), request.params[1].get_str()));
-    }
+    ProcessNetInfoCore(ptx, request.params[1], /*optional=*/false);
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
 
@@ -1031,17 +1011,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         }
         ptx.platformNodeID.SetHex(request.params[paramIdx].get_str());
 
-        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 1], "platformP2PPort");
-        if (!ValidatePlatformPort(requestedPlatformP2PPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformP2PPort must be a valid port [1-65535]");
-        }
-        ptx.platformP2PPort = static_cast<uint16_t>(requestedPlatformP2PPort);
-
-        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 2], "platformHTTPPort");
-        if (!ValidatePlatformPort(requestedPlatformHTTPPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformHTTPPort must be a valid port [1-65535]");
-        }
-        ptx.platformHTTPPort = static_cast<uint16_t>(requestedPlatformHTTPPort);
+        ProcessNetInfoPlatform(ptx, request.params[paramIdx + 1], request.params[paramIdx + 2]);
 
         paramIdx += 3;
     }
