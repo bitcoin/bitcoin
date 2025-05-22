@@ -317,6 +317,13 @@ def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_fact
     raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
 
 
+def bpf_cflags():
+    return [
+        "-Wno-error=implicit-function-declaration",
+        "-Wno-duplicate-decl-specifier",  # https://github.com/bitcoin/bitcoin/issues/32322
+    ]
+
+
 def sha256sum_file(filename):
     h = hashlib.sha256()
     with open(filename, 'rb') as f:

@@ -188,6 +188,19 @@ class CreateWalletTest(BitcoinTestFramework):
                 "warnings": [EMPTY_PASSPHRASE_MSG, LEGACY_WALLET_MSG],
             })
 
+        self.log.info("Check that the version number is being logged correctly")
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Last client version = ", "Wallet file version = "]):
+            node.createwallet("version_check")
+        wallet = node.get_wallet_rpc("version_check")
+        wallet_version = wallet.getwalletinfo()["walletversion"]
+        client_version = node.getnetworkinfo()["version"]
+        wallet.unloadwallet()
+        with node.assert_debug_log(
+            expected_msgs=[f"Last client version = {client_version}", f"Wallet file version = {wallet_version}"],
+            unexpected_msgs=["Wallet file version = 10500"]
+        ):
+            node.loadwallet("version_check")
+
 
 if __name__ == '__main__':
     CreateWalletTest(__file__).main()
