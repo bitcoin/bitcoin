@@ -18,6 +18,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <fstream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -69,8 +70,6 @@ private:
 };
 
 
-/* Pre-base64-encoded authentication token */
-static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
 /* List of -rpcauth values */
@@ -145,11 +144,6 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     if (strUserPass.find(':') != std::string::npos)
         strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
 
-    // Check if authorized under single-user field.
-    // (strRPCUserColonPass is empty when -norpccookiefile is specified).
-    if (!strRPCUserColonPass.empty() && TimingResistantEqual(strUserPass, strRPCUserColonPass)) {
-        return true;
-    }
     return multiUserAuthorized(strUserPass);
 }
 
@@ -291,6 +285,8 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
 static bool InitRPCAuthentication()
 {
+    std::string strRPCUserColonPass;
+
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
         std::optional<fs::perms> cookie_perms{std::nullopt};
@@ -304,7 +300,6 @@ static bool InitRPCAuthentication()
             cookie_perms = *perm_opt;
         }
 
-        assert(strRPCUserColonPass.empty()); // Only support initializing once
         if (!GenerateAuthCookie(&strRPCUserColonPass, cookie_perms)) {
             return false;
         }
@@ -314,13 +309,38 @@ static bool InitRPCAuthentication()
             LogInfo("Using random cookie authentication.");
         }
     } else {
-        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
+        LogInfo("Using rpcuser/rpcpassword authentication.");
+        LogWarning("The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.");
         strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
 
-    if (!gArgs.GetArgs("-rpcauth").empty()) {
+    // If there is a plaintext credential, hash it with a random salt before storage.
+    if (!strRPCUserColonPass.empty()) {
+        std::vector<std::string> fields{SplitString(strRPCUserColonPass, ':')};
+        if (fields.size() != 2) {
+            LogError("Unable to parse RPC credentials. The configured rpcuser or rpcpassword cannot contain a \":\".");
+            return false;
+        }
+        const std::string& user = fields[0];
+        const std::string& pass = fields[1];
+
+        // Generate a random 16 byte hex salt.
+        std::array<unsigned char, 16> raw_salt;
+        GetStrongRandBytes(raw_salt);
+        std::string salt = HexStr(raw_salt);
+
+        // Compute HMAC.
+        std::array<unsigned char, CHMAC_SHA256::OUTPUT_SIZE> out;
+        CHMAC_SHA256(UCharCast(salt.data()), salt.size()).Write(UCharCast(pass.data()), pass.size()).Finalize(out.data());
+        std::string hash = HexStr(out);
+
+        g_rpcauth.push_back({user, salt, hash});
+    }
+
+    if (!(gArgs.IsArgNegated("-rpcauth") || (gArgs.GetArgs("-rpcauth").empty() && gArgs.GetArgs("-rpcauthfile").empty()))) {
         LogInfo("Using rpcauth authentication.\n");
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+            if (rpcauth.empty()) continue;
             std::vector<std::string> fields{SplitString(rpcauth, ':')};
             const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
             if (fields.size() == 2 && salt_hmac.size() == 2) {
@@ -330,6 +350,21 @@ static bool InitRPCAuthentication()
             } else {
                 LogPrintf("Invalid -rpcauth argument.\n");
                 return false;
+            }
+        }
+        for (const std::string& path : gArgs.GetArgs("-rpcauthfile")) {
+            std::ifstream file;
+            file.open(path);
+            if (!file.is_open()) continue;
+            std::string rpcauth;
+            while (std::getline(file, rpcauth)) {
+                std::vector<std::string> fields{SplitString(rpcauth, ':')};
+                const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
+                if (fields.size() == 2 && salt_hmac.size() == 2) {
+                    fields.pop_back();
+                    fields.insert(fields.end(), salt_hmac.begin(), salt_hmac.end());
+                    g_rpcauth.push_back(fields);
+                }
             }
         }
     }
