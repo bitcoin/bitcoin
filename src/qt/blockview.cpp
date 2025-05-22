@@ -49,7 +49,7 @@ void ScalingGraphicsView::mouseMoveEvent(QMouseEvent * const event)
     auto * const gi = itemAt(event->pos());
     const auto tx = gi ? gi->data(0).value<CTransactionRef>() : CTransactionRef();
     if (!tx) {
-        QToolTip::showText(event->globalPos(), QStringLiteral(""), nullptr, {}, 0);
+        QToolTip::showText(QPoint{}, QStringLiteral(""), nullptr, {}, 0);
         return;
     }
 
@@ -73,7 +73,12 @@ void ScalingGraphicsView::mouseMoveEvent(QMouseEvent * const event)
         tx_info_str += tr("#%1: %2 to %3").arg(i).arg(amount_str).arg(address);
     }
     tx_info_str += "</div></qt>";
-    QToolTip::showText(event->globalPos(), tx_info_str, this, {}, std::numeric_limits<int>::max());
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    const QPoint event_global_pos = event->globalPosition().toPoint();
+#else
+    const QPoint event_global_pos = event->globalPos();
+#endif
+    QToolTip::showText(event_global_pos, tx_info_str, this, {}, std::numeric_limits<int>::max());
 }
 
 void ScalingGraphicsView::resizeEvent(QResizeEvent * const event)
