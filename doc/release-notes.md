@@ -57,6 +57,7 @@ Notable changes
 - #32356 cmake: Respect user-provided configuration-specific flags
 - #32437 crypto: disable ASan for sha256_sse4 with Clang
 - #32469 cmake: Allow WITH_DBUS on all Unix-like systems
+- #32551 cmake: Add missed SSE41_CXXFLAGS
 
 ### Gui
 
