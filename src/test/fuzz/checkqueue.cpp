@@ -49,7 +49,7 @@ FUZZ_TARGET(checkqueue)
         (void)check_queue_1.Complete();
     }
 
-    CCheckQueueControl<DumbCheck> check_queue_control{&check_queue_2};
+    CCheckQueueControl<DumbCheck> check_queue_control{check_queue_2};
     if (fuzzed_data_provider.ConsumeBool()) {
         check_queue_control.Add(std::move(checks_2));
     }
