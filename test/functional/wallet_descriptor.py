@@ -24,20 +24,22 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [['-keypool=100']]
-        self.wallet_names = []
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
         self.skip_if_no_py_sqlite3()
 
     def run_test(self):
+        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
         self.nodes[0].createwallet(wallet_name="desc1")
+        wallet = self.nodes[0].get_wallet_rpc("desc1")
 
         # A descriptor wallet should have 100 addresses * 4 types = 400 keys
         self.log.info("Checking wallet info")
-        wallet_info = self.nodes[0].getwalletinfo()
+        wallet_info = wallet.getwalletinfo()
         assert_equal(wallet_info['format'], 'sqlite')
         assert_equal(wallet_info['keypoolsize'], 400)
         assert_equal(wallet_info['keypoolsize_hd_internal'], 400)
@@ -45,44 +47,44 @@ class WalletDescriptorTest(BitcoinTestFramework):
 
         # Check that getnewaddress works
         self.log.info("Test that getnewaddress and getrawchangeaddress work")
-        addr = self.nodes[0].getnewaddress("", "legacy")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "legacy")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44h/1h/0h/0/0')
 
-        addr = self.nodes[0].getnewaddress("", "p2sh-segwit")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "p2sh-segwit")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('sh(wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/49h/1h/0h/0/0')
 
-        addr = self.nodes[0].getnewaddress("", "bech32")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "bech32")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/84h/1h/0h/0/0')
 
-        addr = self.nodes[0].getnewaddress("", "bech32m")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getnewaddress("", "bech32m")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('tr(')
         assert_equal(addr_info['hdkeypath'], 'm/86h/1h/0h/0/0')
 
         # Check that getrawchangeaddress works
-        addr = self.nodes[0].getrawchangeaddress("legacy")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("legacy")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44h/1h/0h/1/0')
 
-        addr = self.nodes[0].getrawchangeaddress("p2sh-segwit")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("p2sh-segwit")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('sh(wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/49h/1h/0h/1/0')
 
-        addr = self.nodes[0].getrawchangeaddress("bech32")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("bech32")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('wpkh(')
         assert_equal(addr_info['hdkeypath'], 'm/84h/1h/0h/1/0')
 
-        addr = self.nodes[0].getrawchangeaddress("bech32m")
-        addr_info = self.nodes[0].getaddressinfo(addr)
+        addr = wallet.getrawchangeaddress("bech32m")
+        addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('tr(')
         assert_equal(addr_info['hdkeypath'], 'm/86h/1h/0h/1/0')
 
