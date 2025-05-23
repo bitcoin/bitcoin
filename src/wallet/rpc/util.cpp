@@ -109,7 +109,10 @@ void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, 
 {
     UniValue parent_descs(UniValue::VARR);
     for (const auto& desc: wallet.GetWalletDescriptors(script_pubkey)) {
-        parent_descs.push_back(desc.descriptor->ToString());
+        std::string desc_str;
+        FlatSigningProvider provider;
+        if (!CHECK_NONFATAL(desc.descriptor->ToNormalizedString(provider, desc_str, &desc.cache))) continue;
+        parent_descs.push_back(desc_str);
     }
     entry.pushKV("parent_descs", std::move(parent_descs));
 }
