@@ -22,6 +22,7 @@
 #include <source_location>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -167,6 +168,11 @@ namespace BCLog {
         size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
         size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
 
+        //! Fixed window rate limiters for each source location that has attempted to log something.
+        std::unordered_map<std::source_location, LogRateLimiter, SourceLocationHasher, SourceLocationEqual> m_ratelimiters GUARDED_BY(m_cs);
+        //! Set of source file locations that were dropped on the last log attempt.
+        std::unordered_set<std::source_location, SourceLocationHasher, SourceLocationEqual> m_suppressed_locations GUARDED_BY(m_cs);
+
         //! Category-specific log level. Overrides `m_log_level`.
         std::unordered_map<LogFlags, Level> m_category_log_levels GUARDED_BY(m_cs);
 
@@ -177,7 +183,7 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{DEFAULT_LOG_FLAGS};
 
-        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, const std::source_location& source_loc, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+        bool FormatLogStrAndRateLimit(std::string& str, LogFlags category, Level level, const std::source_location& source_loc, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
