@@ -17,6 +17,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/run_command.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -248,22 +249,19 @@ bool ShutdownRequested(node::NodeContext& node)
     return bool{*Assert(node.shutdown_signal)};
 }
 
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
 static void ShutdownNotify(const ArgsManager& args)
 {
     std::vector<std::thread> threads;
     for (const auto& cmd : args.GetArgs("-shutdownnotify")) {
-        threads.emplace_back(runCommand, cmd);
-    }
-    for (auto& t : threads) {
-        t.join();
+        RunShell(cmd);
     }
 }
 #endif
 
 void Interrupt(NodeContext& node)
 {
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     ShutdownNotify(*node.args);
 #endif
     InterruptHTTPServer();
@@ -463,7 +461,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
         "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-splash", "-uiplatform"};
 
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     argsman.AddArg("-alertnotify=<cmd>", "Execute command when an alert is raised (%s in cmd is replaced by message)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
     argsman.AddArg("-assumevalid=<hex>", strprintf("If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet3: %s, testnet4: %s, signet: %s)", defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnetChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnet4ChainParams->GetConsensus().defaultAssumeValid.GetHex(), signetChainParams->GetConsensus().defaultAssumeValid.GetHex()), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -476,7 +474,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                              kernel::DEFAULT_XOR_BLOCKSDIR),
                    ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-fastprune", "Use smaller block files and lower minimum prune height for testing purposes", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     argsman.AddArg("-blocknotify=<cmd>", "Execute command when the best block changes (%s in cmd is replaced by block hash)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
     argsman.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -508,7 +506,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     argsman.AddArg("-startupnotify=<cmd>", "Execute command on startup.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-shutdownnotify=<cmd>", "Execute command immediately before beginning shutdown. The need for shutdown may be urgent, so be careful not to delay it long (if the command doesn't require interaction with the server, consider having it fork into the background).", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
@@ -681,13 +679,12 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddHiddenArgs(hidden_args);
 }
 
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
 static void StartupNotify(const ArgsManager& args)
 {
     std::string cmd = args.GetArg("-startupnotify", "");
     if (!cmd.empty()) {
-        std::thread t(runCommand, cmd);
-        t.detach(); // thread runs free
+        RunShellInThread(cmd);
     }
 }
 #endif
@@ -1784,15 +1781,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     const std::string block_notify = args.GetArg("-blocknotify", "");
     if (!block_notify.empty()) {
         uiInterface.NotifyBlockTip_connect([block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
             if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex) return;
             std::string command = block_notify;
             ReplaceAll(command, "%s", pBlockIndex->GetBlockHash().GetHex());
-            std::thread t(runCommand, command);
-            t.detach(); // thread runs free
+            RunShellInThread(command);
         });
     }
 #endif
@@ -2049,7 +2045,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     if (node.peerman) node.peerman->StartScheduledTasks(scheduler);
 
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     StartupNotify(args);
 #endif
 

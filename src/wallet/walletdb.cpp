@@ -1166,7 +1166,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         // The FLAGS key is absent during wallet creation.
         if ((result = LoadWalletFlags(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
 
-#ifndef ENABLE_EXTERNAL_SIGNER
+#ifndef ENABLE_SUBPROCESS
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
             pwallet->WalletLogPrintf("Error: External signer wallet being loaded without external signer support compiled\n");
             return DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED;

@@ -89,7 +89,7 @@ namespace node {
 // All members of the classes in this namespace are intentionally public, as the
 // classes themselves are private.
 namespace {
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
 class ExternalSignerImpl : public interfaces::ExternalSigner
 {
 public:
@@ -262,7 +262,7 @@ public:
     }
     std::vector<std::unique_ptr<interfaces::ExternalSigner>> listExternalSigners() override
     {
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
         std::vector<ExternalSigner> signers = {};
         const std::string command = args().GetArg("-signer", "");
         if (command == "") return {};
@@ -281,7 +281,7 @@ public:
         // (or something that also includes error messages) if this distinction
         // becomes important.
         return {};
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS
     }
     int64_t getTotalBytesRecv() override { return m_context->connman ? m_context->connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return m_context->connman ? m_context->connman->GetTotalBytesSent() : 0; }

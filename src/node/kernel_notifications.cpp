@@ -8,6 +8,7 @@
 
 #include <chain.h>
 #include <common/args.h>
+#include <common/run_command.h>
 #include <common/system.h>
 #include <kernel/context.h>
 #include <kernel/warning.h>
@@ -29,7 +30,7 @@ using util::ReplaceAll;
 
 static void AlertNotify(const std::string& strMessage)
 {
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     std::string strCmd = gArgs.GetArg("-alertnotify", "");
     if (strCmd.empty()) return;
 
@@ -41,8 +42,7 @@ static void AlertNotify(const std::string& strMessage)
     safeStatus = singleQuote+safeStatus+singleQuote;
     ReplaceAll(strCmd, "%s", safeStatus);
 
-    std::thread t(runCommand, strCmd);
-    t.detach(); // thread runs free
+    RunShellInThread(strCmd);
 #endif
 }
 

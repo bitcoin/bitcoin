@@ -30,7 +30,7 @@
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
 /* Define if external signer support is enabled */
-#cmakedefine ENABLE_EXTERNAL_SIGNER 1
+#cmakedefine ENABLE_SUBPROCESS 1
 
 /* Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing
    */
@@ -87,9 +87,6 @@
 
 /* Define this symbol if the BSD sysctl(KERN_ARND) is available */
 #cmakedefine HAVE_SYSCTL_ARND 1
-
-/* Define to 1 if std::system or ::wsystem is available. */
-#cmakedefine HAVE_SYSTEM 1
 
 /* Define to the address where bug reports for this package should be sent. */
 #define CLIENT_BUGREPORT "@CLIENT_BUGREPORT@"

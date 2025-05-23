@@ -106,7 +106,7 @@ class HelpRpcTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             components.append('Wallet')
 
-        if self.is_external_signer_compiled():
+        if self.is_subprocess_compiled():
             components.append('Signer')
 
         if self.is_zmq_compiled():

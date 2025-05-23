@@ -8,15 +8,15 @@
 #include <common/run_command.h>
 #include <univalue.h>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
 #include <util/subprocess.h>
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
 
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
 
 BOOST_AUTO_TEST_CASE(run_command)
 {
@@ -92,6 +92,6 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
 #endif
 }
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS
 
 BOOST_AUTO_TEST_SUITE_END()

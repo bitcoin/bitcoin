@@ -12,6 +12,7 @@
 #include <coins.h>
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/run_command.h>
 #include <common/settings.h>
 #include <common/signmessage.h>
 #include <common/system.h>
@@ -1125,7 +1126,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(hash, fInsertedNew ? CT_NEW : CT_UPDATED);
 
-#if HAVE_SYSTEM
+#ifdef ENABLE_SUBPROCESS
     // notify an external script when a wallet transaction comes in or is updated
     std::string strCmd = m_notify_tx_changed_script;
 
@@ -1148,8 +1149,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
         ReplaceAll(strCmd, "%w", ShellEscape(GetName()));
 #endif
-        std::thread t(runCommand, strCmd);
-        t.detach(); // thread runs free
+        RunShellInThread(strCmd);
     }
 #endif
 

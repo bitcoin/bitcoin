@@ -34,7 +34,7 @@ class RPCSignerTest(BitcoinTestFramework):
         ]
 
     def skip_test_if_missing_module(self):
-        self.skip_if_no_external_signer()
+        self.skip_if_no_subprocess()
 
     def set_mock_result(self, node, res):
         with open(os.path.join(node.cwd, "mock_result"), "w", encoding="utf8") as f:

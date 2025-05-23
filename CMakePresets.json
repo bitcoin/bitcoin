@@ -76,7 +76,7 @@
         "BUILD_UTIL": "ON",
         "BUILD_UTIL_CHAINSTATE": "ON",
         "BUILD_WALLET_TOOL": "ON",
-        "ENABLE_EXTERNAL_SIGNER": "ON",
+        "ENABLE_SUBPROCESS": "ON",
         "ENABLE_WALLET": "ON",
         "ENABLE_IPC": "ON",
         "WITH_QRENCODE": "ON",
