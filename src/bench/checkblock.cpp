@@ -25,7 +25,7 @@
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
-static void DeserializeBlockTest(benchmark::Bench& bench)
+static void DeserializeBlockBench(benchmark::Bench& bench)
 {
     DataStream stream(benchmark::data::block413567);
     std::byte a{0};
@@ -39,26 +39,45 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
     });
 }
 
-static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
+static void CheckBlockBench(benchmark::Bench& bench)
 {
-    DataStream stream(benchmark::data::block413567);
-    std::byte a{0};
-    stream.write({&a, 1}); // Prevent compaction
-
-    ArgsManager bench_args;
-    const auto chainParams = CreateChainParams(bench_args, ChainType::MAIN);
-
+    CBlock block;
+    DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
+    const auto chainParams = CreateChainParams(ArgsManager{}, ChainType::MAIN);
     bench.unit("block").run([&] {
-        CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
-        stream >> TX_WITH_WITNESS(block);
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
-        assert(rewound);
-
+        block.fChecked = block.m_checked_witness_commitment = block.m_checked_merkle_root = false; // Reset the cached state
         BlockValidationState validationState;
-        bool checked = CheckBlock(block, validationState, chainParams->GetConsensus());
-        assert(checked);
+        bool checked = CheckBlock(block, validationState, chainParams->GetConsensus(), /*fCheckPOW=*/true, /*fCheckMerkleRoot=*/true);
+        assert(checked && validationState.IsValid());
     });
 }
 
-BENCHMARK(DeserializeBlockTest, benchmark::PriorityLevel::HIGH);
-BENCHMARK(DeserializeAndCheckBlockTest, benchmark::PriorityLevel::HIGH);
+static void SigOpsBlockBench(benchmark::Bench& bench)
+{
+    CBlock block;
+    DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
+
+    auto GetLegacySigOpCount{[](const CTransaction& tx) {
+        unsigned int nSigOps{0};
+        for (const auto& txin : tx.vin) {
+            nSigOps += txin.scriptSig.GetLegacySigOpCount(/*fAccurate=*/false);
+        }
+        for (const auto& txout : tx.vout) {
+            nSigOps += txout.scriptPubKey.GetLegacySigOpCount(/*fAccurate=*/false);
+        }
+        return nSigOps;
+    }};
+
+    auto expected_sigops{0};
+    for (const auto& tx : block.vtx) expected_sigops += GetLegacySigOpCount(*tx);
+
+    bench.batch(expected_sigops).unit("sigops").run([&] {
+        auto nSigOps{0};
+        for (const auto& tx : block.vtx) nSigOps += GetLegacySigOpCount(*tx);
+        assert(nSigOps == expected_sigops);
+    });
+}
+
+BENCHMARK(DeserializeBlockBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CheckBlockBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SigOpsBlockBench, benchmark::PriorityLevel::HIGH);
