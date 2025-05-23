@@ -798,6 +798,7 @@ public:
     CAmount GetDebit(const CTransaction& tx) const;
 
     DBErrors PopulateWalletFromDB();
+    DBErrors PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings);
 
     /** Erases the provided transactions from the wallet. */
     util::Result<void> RemoveTxs(std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
