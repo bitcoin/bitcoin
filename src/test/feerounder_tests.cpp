@@ -3,13 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <set>
 
-BOOST_AUTO_TEST_SUITE(policy_fee_tests)
+BOOST_AUTO_TEST_SUITE(fee_rounder_tests)
 
 BOOST_AUTO_TEST_CASE(FeeRounder)
 {
