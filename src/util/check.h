@@ -46,6 +46,12 @@ inline bool EnableFuzzDeterminism()
     }
 }
 
+extern bool g_detail_test_only_CheckFailuresAreExceptionsNotAborts;
+struct test_only_CheckFailuresAreExceptionsNotAborts {
+    test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = true; };
+    ~test_only_CheckFailuresAreExceptionsNotAborts() { g_detail_test_only_CheckFailuresAreExceptionsNotAborts = false; };
+};
+
 std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
 class NonFatalCheckError : public std::runtime_error

@@ -534,8 +534,8 @@ BOOST_AUTO_TEST_CASE(check_dup_param_names)
     make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED}});
     make_rpc({{"p1", NAMED_ONLY}, {"p2", NAMED_ONLY}});
 
-    // Can only detect the errors when they do not lead to an abort
-    if constexpr (!G_ABORT_ON_FAILED_ASSUME) {
+    {
+        test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
         // Error if parameters names are duplicates, unless one parameter is
         // positional and the other is named and .also_positional is true.
         BOOST_CHECK_THROW(make_rpc({{"p1", POSITIONAL}, {"p1", POSITIONAL}}), NonFatalCheckError);
