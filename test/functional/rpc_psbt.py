@@ -828,7 +828,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Test that psbts with p2pkh outputs are created properly
         p2pkh = self.nodes[0].getnewaddress(address_type='legacy')
-        psbt = self.nodes[1].walletcreatefundedpsbt([], [{p2pkh : 1}], 0, {"includeWatching" : True}, True)
+        psbt = self.nodes[1].walletcreatefundedpsbt(inputs=[], outputs=[{p2pkh : 1}], bip32derivs=True)
         self.nodes[0].decodepsbt(psbt['psbt'])
 
         # Test decoding error: invalid base64
