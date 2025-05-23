@@ -178,10 +178,11 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
     std::vector<std::string> expected;
     for (const auto& [category, name] : expected_category_names) {
         LogDebug(category, "foo: %s\n", "bar");
-        std::string expected_log = "[";
-        expected_log += name;
-        expected_log += "] foo: bar";
-        expected.push_back(expected_log);
+        if (category == BCLog::UNCONDITIONAL_ALWAYS || category == BCLog::UNCONDITIONAL_RATE_LIMITED) {
+            expected.push_back("[debug] foo: bar");
+        } else {
+            expected.push_back("[" + name + "] foo: bar");
+        }
     }
 
     std::ifstream file{tmp_log_path};
