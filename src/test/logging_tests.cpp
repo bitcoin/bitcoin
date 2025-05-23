@@ -11,6 +11,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <source_location>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -86,24 +87,33 @@ BOOST_AUTO_TEST_CASE(logging_timer)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
-    LogInstance().LogPrintStr("foo1: bar1", "fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo2: bar2", "fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo3: bar3", "fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo4: bar4", "fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo5: bar5", "fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo6: bar6", "fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info);
+    std::vector<std::source_location> source_locs = {
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+    };
+    LogInstance().LogPrintStr("foo1: bar1", "fn1", source_locs[0], BCLog::LogFlags::NET, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo2: bar2", "fn2", source_locs[1], BCLog::LogFlags::NET, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo3: bar3", "fn3", source_locs[2], BCLog::LogFlags::ALL, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo4: bar4", "fn4", source_locs[3], BCLog::LogFlags::ALL, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo5: bar5", "fn5", source_locs[4], BCLog::LogFlags::NONE, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo6: bar6", "fn6", source_locs[5], BCLog::LogFlags::NONE, BCLog::Level::Info);
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
         log_lines.push_back(log);
     }
+    std::string file_name = source_locs[0].file_name();
     std::vector<std::string> expected = {
-        "[src1:1] [fn1] [net] foo1: bar1",
-        "[src2:2] [fn2] [net:info] foo2: bar2",
-        "[src3:3] [fn3] [debug] foo3: bar3",
-        "[src4:4] [fn4] foo4: bar4",
-        "[src5:5] [fn5] [debug] foo5: bar5",
-        "[src6:6] [fn6] foo6: bar6",
+        "[" + file_name + ":" + std::to_string(source_locs[0].line()) + "] [fn1] [net] foo1: bar1",
+        "[" + file_name + ":" + std::to_string(source_locs[1].line()) + "] [fn2] [net:info] foo2: bar2",
+        "[" + file_name + ":" + std::to_string(source_locs[2].line()) + "] [fn3] [debug] foo3: bar3",
+        "[" + file_name + ":" + std::to_string(source_locs[3].line()) + "] [fn4] foo4: bar4",
+        "[" + file_name + ":" + std::to_string(source_locs[4].line()) + "] [fn5] [debug] foo5: bar5",
+        "[" + file_name + ":" + std::to_string(source_locs[5].line()) + "] [fn6] foo6: bar6",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }

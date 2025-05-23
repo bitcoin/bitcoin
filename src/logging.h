@@ -6,6 +6,7 @@
 #ifndef BITCOIN_LOGGING_H
 #define BITCOIN_LOGGING_H
 
+#include <crypto/siphash.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <util/fs.h>
@@ -14,9 +15,11 @@
 
 #include <atomic>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <list>
 #include <mutex>
+#include <source_location>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -30,6 +33,24 @@ static constexpr bool DEFAULT_LOGLEVELALWAYS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
+
+struct SourceLocationEqual {
+    bool operator()(const std::source_location& lhs, const std::source_location& rhs) const noexcept
+    {
+        return strcmp(lhs.file_name(), rhs.file_name()) == 0 && lhs.line() == rhs.line();
+    }
+};
+
+struct SourceLocationHasher {
+    size_t operator()(const std::source_location& s) const noexcept
+    {
+        // Use CSipHasher(0, 0) as a simple way to get uniform distribution.
+        return static_cast<size_t>(CSipHasher(0, 0)
+                                       .Write(std::hash<std::string>{}(s.file_name()))
+                                       .Write(std::hash<int>{}(s.line()))
+                                       .Finalize());
+    }
+};
 
 struct LogCategory {
     std::string category;
@@ -126,8 +147,8 @@ namespace BCLog {
         struct BufferedLog {
             SystemClock::time_point now;
             std::chrono::seconds mocktime;
-            std::string str, logging_function, source_file, threadname;
-            int source_line;
+            std::string str, logging_function, threadname;
+            std::source_location source_loc;
             LogFlags category;
             Level level;
         };
@@ -152,7 +173,7 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{BCLog::NONE};
 
-        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, const std::source_location& source_loc, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
@@ -160,7 +181,7 @@ namespace BCLog {
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
 
         /** Send a string to the log output (internal) */
-        void LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+        void LogPrintStr_(std::string_view str, std::string_view logging_function, const std::source_location& source_loc, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
@@ -179,7 +200,7 @@ namespace BCLog {
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+        void LogPrintStr(std::string_view str, std::string_view logging_function, const std::source_location& source_loc, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
@@ -276,7 +297,7 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 template <typename... Args>
-inline void LogPrintFormatInternal(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogPrintFormatInternal(std::string_view logging_function, const std::source_location& source_loc, const BCLog::LogFlags flag, const BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;
@@ -285,11 +306,11 @@ inline void LogPrintFormatInternal(std::string_view logging_function, std::strin
         } catch (tinyformat::format_error& fmterr) {
             log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
         }
-        LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
+        LogInstance().LogPrintStr(log_msg, logging_function, source_loc, flag, level);
     }
 }
 
-#define LogPrintLevel_(category, level, ...) LogPrintFormatInternal(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
+#define LogPrintLevel_(category, level, ...) LogPrintFormatInternal(__func__, std::source_location::current(), category, level, __VA_ARGS__)
 
 // Log unconditionally.
 // Be conservative when using functions that unconditionally log to debug.log!
