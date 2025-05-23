@@ -868,10 +868,10 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_equal(node.getbestblockhash(), block.hash_hex)
 
     # assert the RPC getpeerinfo boolean fields `bip152_hb_{to, from}`
-    # match the given parameters for the last peer of a given node
+    # match the given parameters for the peer at idx of a given node
     @staticmethod
-    def assert_highbandwidth_states(node, hb_to, hb_from):
-        peerinfo = node.getpeerinfo()[-1]
+    def assert_highbandwidth_states(node, idx, hb_to, hb_from):
+        peerinfo = node.getpeerinfo()[idx]
         assert_equal(peerinfo['bip152_hb_to'], hb_to)
         assert_equal(peerinfo['bip152_hb_from'], hb_from)
 
@@ -879,22 +879,25 @@ class CompactBlocksTest(BitcoinTestFramework):
         # create new p2p connection for a fresh state w/o any prior sendcmpct messages sent
         hb_test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
 
+        # Newly created hb_test_node is the last connection.
+        hb_test_node_idx = -1
+
         # initially, neither node has selected the other peer as high-bandwidth yet
-        self.assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=False)
+        self.assert_highbandwidth_states(self.nodes[0], hb_test_node_idx, hb_to=False, hb_from=False)
 
         # peer requests high-bandwidth mode by sending sendcmpct(1)
         hb_test_node.send_and_ping(msg_sendcmpct(announce=True, version=2))
-        self.assert_highbandwidth_states(self.nodes[0], hb_to=False, hb_from=True)
+        self.assert_highbandwidth_states(self.nodes[0], hb_test_node_idx, hb_to=False, hb_from=True)
 
         # peer generates a block and sends it to node, which should
         # select the peer as high-bandwidth (up to 3 peers according to BIP 152)
         block = self.build_block_on_tip(self.nodes[0])
         hb_test_node.send_and_ping(msg_block(block))
-        self.assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=True)
+        self.assert_highbandwidth_states(self.nodes[0], hb_test_node_idx, hb_to=True, hb_from=True)
 
         # peer requests low-bandwidth mode by sending sendcmpct(0)
         hb_test_node.send_and_ping(msg_sendcmpct(announce=False, version=2))
-        self.assert_highbandwidth_states(self.nodes[0], hb_to=True, hb_from=False)
+        self.assert_highbandwidth_states(self.nodes[0], hb_test_node_idx, hb_to=True, hb_from=False)
 
     def test_compactblock_reconstruction_parallel_reconstruction(self, stalling_peer, delivery_peer, inbound_peer, outbound_peer):
         """ All p2p connections are inbound except outbound_peer. We test that ultimate parallel slot
@@ -967,6 +970,56 @@ class CompactBlocksTest(BitcoinTestFramework):
             inbound_peer.clear_getblocktxn()
             outbound_peer.clear_getblocktxn()
 
+    def test_unsolicited_compact_blocks_ignored(self):
+        node = self.nodes[0]
+        # create new p2p connection for a fresh state w/o any prior sendcmpct messages sent
+        unsolicited_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+
+        def build_compact_block():
+            # generate a compact block to send
+            assert len(self.utxos)
+            utxo = self.utxos.pop(0)
+            block = self.build_block_with_transactions(node, utxo, 10)
+            cmpct_block = HeaderAndShortIDs()
+            cmpct_block.initialize_from_block(block)
+            msg = msg_cmpctblock(cmpct_block.to_p2p())
+            return block, msg
+
+        self.assert_highbandwidth_states(node, idx=-1, hb_to=False, hb_from=False)
+
+        # The node won't request transactions from a block which it has not
+        # requested from a non-high-bandwidth peer
+        _, msg = build_compact_block()
+        unsolicited_peer.send_and_ping(msg)
+        with p2p_lock:
+            assert "getblocktxn" not in unsolicited_peer.last_message
+
+        # The node will ask for transactions from a compact block which it has
+        # requested from a non-hb peer
+
+        # peer is still not selected as high-bandwidth
+        self.assert_highbandwidth_states(node, idx=-1, hb_to=False, hb_from=False)
+
+        block, msg = build_compact_block()
+        unsolicited_peer.send_without_ping(msg_headers([block]))
+        unsolicited_peer.wait_for_getdata([block.hash_int], timeout=30)
+        unsolicited_peer.send_and_ping(msg)
+        with p2p_lock:
+            assert "getblocktxn" in unsolicited_peer.last_message
+        unsolicited_peer.clear_getblocktxn()
+
+        # The node will ask for transactions from an unsolicited compact block
+        # it receives from a high bandwidth peer, we need to use one set up earlier,
+        # since all the slots are full.
+        hb_peer_idx = -2
+        self.assert_highbandwidth_states(node, idx=hb_peer_idx, hb_to=True, hb_from=False)
+        hb_peer = self.nodes[0].p2ps[hb_peer_idx]
+        hb_peer.clear_getblocktxn()
+
+        _, msg = build_compact_block()
+        hb_peer.send_and_ping(msg)
+        with p2p_lock:
+            assert "getblocktxn" in hb_peer.last_message
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -1041,6 +1094,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing high-bandwidth mode states via getpeerinfo...")
         self.test_highbandwidth_mode_states_via_getpeerinfo()
+
+        self.log.info("Testing that unsolicited cmpctblock messages are ignored...")
+        self.test_unsolicited_compact_blocks_ignored()
 
 
 if __name__ == '__main__':
