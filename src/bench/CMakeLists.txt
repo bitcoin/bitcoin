@@ -5,6 +5,7 @@
 add_executable(bench_bitcoin
   bench_bitcoin.cpp
   bench.cpp
+  block_generator.cpp
   nanobench.cpp
 # Benchmarks:
   addrman.cpp
