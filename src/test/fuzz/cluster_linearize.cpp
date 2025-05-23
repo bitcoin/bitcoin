@@ -827,7 +827,8 @@ FUZZ_TARGET(clusterlin_linearize)
     // just a conservative overestimate based on observed cases, but if it is exceeded, the
     // numbers can safely be adjusted to account for that.
     const uint64_t n = depgraph.TxCount();
-    if (iter_count >= 50 * (1 + 2 * (1 + n) * n)) {
+    const uint64_t max_iters = 50 * (1 + 2 * (1 + n) * n);
+    if (iter_count >= max_iters) {
         assert(optimal);
     }
 
@@ -839,9 +840,26 @@ FUZZ_TARGET(clusterlin_linearize)
         auto simple_chunking = ChunkLinearization(depgraph, simple_linearization);
         auto cmp = CompareChunks(chunking, simple_chunking);
         assert(cmp >= 0);
-        // If SimpleLinearize finds the optimal result too, they must be equal (if not,
-        // SimpleLinearize is broken).
-        if (simple_optimal) assert(cmp == 0);
+        if (simple_optimal) {
+            // If SimpleLinearize finds the optimal result too, they must be equal (if not,
+            // SimpleLinearize is broken).
+            assert(cmp == 0);
+            // If both linearizations are optimal, they must have the same number of chunks.
+            // If chunking has fewer, it is a bug in Linearize().
+            assert(chunking.size() >= simple_chunking.size());
+            // If simple_chunking has fewer, it is a bug in SimpleLinearize().
+            assert(simple_chunking.size() >= chunking.size());
+        }
+
+        // Redo with a different RNG seed, to verify determinism of the optimal chunk order.
+        auto [lin2, opt2] = Linearize(depgraph, max_iters, rng_seed ^ 1, old_linearization);
+        assert(opt2);
+        LinearizationChunking linchunk1(depgraph, linearization);
+        LinearizationChunking linchunk2(depgraph, lin2);
+        assert(linchunk1.NumChunksLeft() == linchunk2.NumChunksLeft());
+        for (size_t i = 0; i < linchunk1.NumChunksLeft(); ++i) {
+            assert(linchunk1.GetChunk(i) == linchunk2.GetChunk(i));
+        }
 
         // Only for very small clusters, test every topologically-valid permutation.
         if (depgraph.TxCount() <= 7) {

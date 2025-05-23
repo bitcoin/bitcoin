@@ -86,6 +86,8 @@ void TestOptimalLinearization(const std::vector<uint8_t>& enc, const std::vector
             SanityCheck(depgraph, lin);
             auto chunking = ChunkLinearization(depgraph, lin);
             BOOST_CHECK(std::is_eq(CompareChunks(chunking, diagram)));
+            // Verify that the chunks are minimal.
+            BOOST_CHECK(chunking.size() == diagram.size());
         }
         tx_count = depgraph.PositionRange();
     };
