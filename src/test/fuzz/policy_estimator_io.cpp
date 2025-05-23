@@ -32,4 +32,5 @@ FUZZ_TARGET(policy_estimator_io, .init = initialize_policy_estimator_io)
     if (block_policy_estimator.Read(fuzzed_auto_file)) {
         block_policy_estimator.Write(fuzzed_auto_file);
     }
+    (void)fuzzed_auto_file.fclose();
 }
