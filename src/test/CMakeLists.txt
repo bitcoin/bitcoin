@@ -125,6 +125,9 @@ add_executable(test_bitcoin
   validationinterface_tests.cpp
   versionbits_tests.cpp
 )
+set_property(SOURCE system_tests.cpp PROPERTY
+  COMPILE_DEFINITIONS PRINT_ERR_AND_FAIL_SCRIPT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/print_err_and_fail.sh"
+)
 
 include(TargetDataSources)
 target_json_data_sources(test_bitcoin
