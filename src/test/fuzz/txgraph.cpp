@@ -56,9 +56,12 @@ struct SimTxGraph
     /** Which transactions have been modified in the graph since creation, either directly or by
      *  being in a cluster which includes modifications. Only relevant for the staging graph. */
     SetType modified;
+    /** The configured maximum total size of transactions per cluster. */
+    uint64_t max_cluster_size;
 
-    /** Construct a new SimTxGraph with the specified maximum cluster count. */
-    explicit SimTxGraph(DepGraphIndex max_cluster) : max_cluster_count(max_cluster) {}
+    /** Construct a new SimTxGraph with the specified maximum cluster count and size. */
+    explicit SimTxGraph(DepGraphIndex cluster_count, uint64_t cluster_size) :
+        max_cluster_count(cluster_count), max_cluster_size(cluster_size) {}
 
     // Permit copying and moving.
     SimTxGraph(const SimTxGraph&) noexcept = default;
@@ -78,6 +81,9 @@ struct SimTxGraph
             while (todo.Any()) {
                 auto component = graph.FindConnectedComponent(todo);
                 if (component.Count() > max_cluster_count) oversized = true;
+                uint64_t component_size{0};
+                for (auto i : component) component_size += graph.FeeRate(i).size;
+                if (component_size > max_cluster_size) oversized = true;
                 todo -= component;
             }
         }
@@ -128,6 +134,8 @@ struct SimTxGraph
         simmap[simpos] = std::make_shared<TxGraph::Ref>();
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
+        // This may invalidate our cached oversized value.
+        if (oversized.has_value() && !*oversized) oversized = std::nullopt;
         return ptr;
     }
 
@@ -239,6 +247,31 @@ struct SimTxGraph
             }
         }
     }
+
+
+    /** Verify that set contains transactions from every oversized cluster, and nothing from
+     *  non-oversized ones. */
+    bool MatchesOversizedClusters(const SetType& set)
+    {
+        if (set.Any() && !IsOversized()) return false;
+
+        auto todo = graph.Positions();
+        if (!set.IsSubsetOf(todo)) return false;
+
+        // Walk all clusters, and make sure all of set doesn't come from non-oversized clusters
+        while (todo.Any()) {
+            auto component = graph.FindConnectedComponent(todo);
+            // Determine whether component is oversized, due to either the size or count limit.
+            bool is_oversized = component.Count() > max_cluster_count;
+            uint64_t component_size{0};
+            for (auto i : component) component_size += graph.FeeRate(i).size;
+            is_oversized |= component_size > max_cluster_size;
+            // Check whether overlap with set matches is_oversized.
+            if (is_oversized != set.Overlaps(component)) return false;
+            todo -= component;
+        }
+        return true;
+    }
 };
 
 } // namespace
@@ -260,14 +293,17 @@ FUZZ_TARGET(txgraph)
     /** Variable used whenever an empty TxGraph::Ref is needed. */
     TxGraph::Ref empty_ref;
 
-    // Decide the maximum number of transactions per cluster we will use in this simulation.
-    auto max_count = provider.ConsumeIntegralInRange<DepGraphIndex>(1, MAX_CLUSTER_COUNT_LIMIT);
+    /** The maximum number of transactions per (non-oversized) cluster we will use in this
+     *  simulation. */
+    auto max_cluster_count = provider.ConsumeIntegralInRange<DepGraphIndex>(1, MAX_CLUSTER_COUNT_LIMIT);
+    /** The maximum total size of transactions in a (non-oversized) cluster. */
+    auto max_cluster_size = provider.ConsumeIntegralInRange<uint64_t>(1, 0x3fffff * MAX_CLUSTER_COUNT_LIMIT);
 
     // Construct a real graph, and a vector of simulated graphs (main, and possibly staging).
-    auto real = MakeTxGraph(max_count);
+    auto real = MakeTxGraph(max_cluster_count, max_cluster_size);
     std::vector<SimTxGraph> sims;
     sims.reserve(2);
-    sims.emplace_back(max_count);
+    sims.emplace_back(max_cluster_count, max_cluster_size);
 
     /** Struct encapsulating information about a BlockBuilder that's currently live. */
     struct BlockBuilderData
@@ -396,7 +432,7 @@ FUZZ_TARGET(txgraph)
                     // Otherwise, use smaller range which consume fewer fuzz input bytes, as just
                     // these are likely sufficient to trigger all interesting code paths already.
                     fee = provider.ConsumeIntegral<uint8_t>();
-                    size = provider.ConsumeIntegral<uint8_t>() + 1;
+                    size = provider.ConsumeIntegralInRange<uint32_t>(1, 0xff);
                 }
                 FeePerWeight feerate{fee, size};
                 // Create a real TxGraph::Ref.
@@ -534,7 +570,7 @@ FUZZ_TARGET(txgraph)
                 auto ref = pick_fn();
                 auto result = alt ? real->GetDescendants(*ref, use_main)
                                   : real->GetAncestors(*ref, use_main);
-                assert(result.size() <= max_count);
+                assert(result.size() <= max_cluster_count);
                 auto result_set = sel_sim.MakeSet(result);
                 assert(result.size() == result_set.Count());
                 auto expect_set = sel_sim.GetAncDesc(ref, alt);
@@ -567,16 +603,20 @@ FUZZ_TARGET(txgraph)
                 auto ref = pick_fn();
                 auto result = real->GetCluster(*ref, use_main);
                 // Check cluster count limit.
-                assert(result.size() <= max_count);
+                assert(result.size() <= max_cluster_count);
                 // Require the result to be topologically valid and not contain duplicates.
                 auto left = sel_sim.graph.Positions();
+                uint64_t total_size{0};
                 for (auto refptr : result) {
                     auto simpos = sel_sim.Find(refptr);
+                    total_size += sel_sim.graph.FeeRate(simpos).size;
                     assert(simpos != SimTxGraph::MISSING);
                     assert(left[simpos]);
                     left.Reset(simpos);
                     assert(!sel_sim.graph.Ancestors(simpos).Overlaps(left));
                 }
+                // Check cluster size limit.
+                assert(total_size <= max_cluster_size);
                 // Require the set to be connected.
                 auto result_set = sel_sim.MakeSet(result);
                 assert(sel_sim.graph.IsConnected(result_set));
@@ -774,6 +814,30 @@ FUZZ_TARGET(txgraph)
                     assert(sum == worst_chunk_feerate);
                 }
                 break;
+            } else if ((block_builders.empty() || sims.size() > 1) && command-- == 0) {
+                // Trim.
+                bool was_oversized = top_sim.IsOversized();
+                auto removed = real->Trim();
+                // Verify that something was removed if and only if there was an oversized cluster.
+                assert(was_oversized == !removed.empty());
+                if (!was_oversized) break;
+                auto removed_set = top_sim.MakeSet(removed);
+                // The removed set must contain all its own descendants.
+                for (auto simpos : removed_set) {
+                    assert(top_sim.graph.Descendants(simpos).IsSubsetOf(removed_set));
+                }
+                // Something from every oversized cluster should have been removed, and nothing
+                // else.
+                assert(top_sim.MatchesOversizedClusters(removed_set));
+
+                // Apply all removals to the simulation, and verify the result is no longer
+                // oversized. Don't query the real graph for oversizedness; it is compared
+                // against the simulation anyway later.
+                for (auto simpos : removed_set) {
+                    top_sim.RemoveTransaction(top_sim.GetRef(simpos));
+                }
+                assert(!top_sim.IsOversized());
+                break;
             }
         }
     }
@@ -941,28 +1005,32 @@ FUZZ_TARGET(txgraph)
                     // Check its ancestors against simulation.
                     auto expect_anc = sim.graph.Ancestors(i);
                     auto anc = sim.MakeSet(real->GetAncestors(*sim.GetRef(i), main_only));
-                    assert(anc.Count() <= max_count);
+                    assert(anc.Count() <= max_cluster_count);
                     assert(anc == expect_anc);
                     // Check its descendants against simulation.
                     auto expect_desc = sim.graph.Descendants(i);
                     auto desc = sim.MakeSet(real->GetDescendants(*sim.GetRef(i), main_only));
-                    assert(desc.Count() <= max_count);
+                    assert(desc.Count() <= max_cluster_count);
                     assert(desc == expect_desc);
                     // Check the cluster the transaction is part of.
                     auto cluster = real->GetCluster(*sim.GetRef(i), main_only);
-                    assert(cluster.size() <= max_count);
+                    assert(cluster.size() <= max_cluster_count);
                     assert(sim.MakeSet(cluster) == component);
                     // Check that the cluster is reported in a valid topological order (its
                     // linearization).
                     std::vector<DepGraphIndex> simlin;
                     SimTxGraph::SetType done;
+                    uint64_t total_size{0};
                     for (TxGraph::Ref* ptr : cluster) {
                         auto simpos = sim.Find(ptr);
                         assert(sim.graph.Descendants(simpos).IsSubsetOf(component - done));
                         done.Set(simpos);
                         assert(sim.graph.Ancestors(simpos).IsSubsetOf(done));
                         simlin.push_back(simpos);
+                        total_size += sim.graph.FeeRate(simpos).size;
                     }
+                    // Check cluster size.
+                    assert(total_size <= max_cluster_size);
                     // Construct a chunking object for the simulated graph, using the reported cluster
                     // linearization as ordering, and compare it against the reported chunk feerates.
                     if (sims.size() == 1 || main_only) {
