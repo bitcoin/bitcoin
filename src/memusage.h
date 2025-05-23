@@ -24,9 +24,6 @@
 namespace memusage
 {
 
-/** Compute the total memory used by allocating alloc bytes. */
-static size_t MallocUsage(size_t alloc);
-
 /** Dynamic memory usage for built-in types is zero. */
 static inline size_t DynamicUsage(const int8_t& v) { return 0; }
 static inline size_t DynamicUsage(const uint8_t& v) { return 0; }
@@ -48,19 +45,21 @@ template<typename X> static inline size_t DynamicUsage(const X * const &v) { ret
  *  application data structures require more accurate inner accounting, they should
  *  iterate themselves, or use more efficient caching + updating on modification.
  */
-
-static inline size_t MallocUsage(size_t alloc)
+static constexpr size_t MallocUsage(size_t alloc)
 {
-    // Measured on libc6 2.19 on Linux.
-    if (alloc == 0) {
-        return 0;
-    } else if (sizeof(void*) == 8) {
-        return ((alloc + 31) >> 4) << 4;
-    } else if (sizeof(void*) == 4) {
-        return ((alloc + 15) >> 3) << 3;
-    } else {
-        assert(0);
-    }
+    if (alloc == 0) return 0;
+
+#if defined(__arm__) || SIZE_MAX == UINT64_MAX
+    constexpr size_t min_alloc{9};
+#else
+    constexpr size_t min_alloc{0};
+#endif
+    constexpr size_t overhead{sizeof(size_t)};
+    constexpr size_t step{alignof(std::max_align_t)};
+    // step should be a nonzero power of 2 (exactly one bit set)
+    static_assert(step > 0 && (step & (step - 1)) == 0);
+
+    return (std::max(min_alloc, alloc) + overhead + (step - 1)) & ~(step - 1);
 }
 
 // STL data structures
@@ -177,23 +176,33 @@ static inline size_t DynamicUsage(const std::list<X>& l)
     return MallocUsage(sizeof(list_node<X>)) * l.size();
 }
 
+// Empirically, an std::unordered_map node has two pointers (likely
+// forward and backward pointers) on some platforms (Windows and macOS),
+// so be conservative in estimating memory usage by assuming this is
+// the case for all platforms.
 template<typename X>
 struct unordered_node : private X
 {
 private:
     void* ptr;
+    void* ptr2;
 };
 
+// The memory used by an unordered_set or unordered map is the sum of the
+// sizes of the individual nodes (which are separately allocated) plus
+// the size of the bucket array (which is a single allocation).
+// Empirically, each element of the bucket array consists of two pointers
+// on some platforms (Windows and macOS), so be conservative.
 template<typename X, typename Y>
 static inline size_t DynamicUsage(const std::unordered_set<X, Y>& s)
 {
-    return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(sizeof(void*) * s.bucket_count());
+    return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(2 * sizeof(void*) * s.bucket_count());
 }
 
 template<typename X, typename Y, typename Z>
 static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
 {
-    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(sizeof(void*) * m.bucket_count());
+    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(2 * sizeof(void*) * m.bucket_count());
 }
 
 template <class Key, class T, class Hash, class Pred, std::size_t MAX_BLOCK_SIZE_BYTES, std::size_t ALIGN_BYTES>
@@ -212,7 +221,9 @@ static inline size_t DynamicUsage(const std::unordered_map<Key,
     size_t estimated_list_node_size = MallocUsage(sizeof(void*) * 3);
     size_t usage_resource = estimated_list_node_size * pool_resource->NumAllocatedChunks();
     size_t usage_chunks = MallocUsage(pool_resource->ChunkSizeBytes()) * pool_resource->NumAllocatedChunks();
-    return usage_resource + usage_chunks + MallocUsage(sizeof(void*) * m.bucket_count());
+    // Empirically, each element of the bucket array has two pointers on some platforms (Windows and macOS).
+    size_t usage_bucket_array = MallocUsage(2 * sizeof(void*) * m.bucket_count());
+    return usage_resource + usage_chunks + usage_bucket_array;
 }
 
 } // namespace memusage
