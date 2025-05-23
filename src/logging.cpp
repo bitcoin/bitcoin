@@ -12,6 +12,7 @@
 #include <util/time.h>
 
 #include <array>
+#include <cstring>
 #include <map>
 #include <optional>
 
@@ -73,15 +74,16 @@ bool BCLog::Logger::StartLogging()
     // dump buffered messages from before we opened the log
     m_buffering = false;
     if (m_buffer_lines_discarded > 0) {
-        LogPrintStr_(strprintf("Early logging buffer overflowed, %d log lines discarded.\n", m_buffer_lines_discarded), __func__, __FILE__, __LINE__, BCLog::ALL, Level::Info);
+        const auto source_loc{std::source_location::current()};
+        LogPrintStr_(strprintf("Early logging buffer overflowed, %d log lines discarded.\n", m_buffer_lines_discarded), __func__, source_loc, BCLog::ALL, Level::Info);
     }
     while (!m_msgs_before_open.empty()) {
         const auto& buflog = m_msgs_before_open.front();
         std::string s{buflog.str};
-        FormatLogStrInPlace(s, buflog.category, buflog.level, buflog.source_file, buflog.source_line, buflog.logging_function, buflog.threadname, buflog.now, buflog.mocktime);
+        bool ratelimit = FormatLogStrAndRateLimit(s, buflog.category, buflog.level, buflog.source_loc, buflog.logging_function, buflog.threadname, buflog.now, buflog.mocktime);
         m_msgs_before_open.pop_front();
 
-        if (m_print_to_file) FileWriteStr(s, m_fileout);
+        if (m_print_to_file && !ratelimit) FileWriteStr(s, m_fileout);
         if (m_print_to_console) fwrite(s.data(), 1, s.size(), stdout);
         for (const auto& cb : m_print_callbacks) {
             cb(s);
@@ -164,7 +166,7 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return m_categories == BCLog::NONE;
+    return m_categories == DEFAULT_LOG_FLAGS;
 }
 
 static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
@@ -199,6 +201,8 @@ static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_
     {"txreconciliation", BCLog::TXRECONCILIATION},
     {"scan", BCLog::SCAN},
     {"txpackages", BCLog::TXPACKAGES},
+    {"uncond_rate_limited", BCLog::UNCONDITIONAL_RATE_LIMITED},
+    {"uncond_always", BCLog::UNCONDITIONAL_ALWAYS},
 };
 
 static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_FLAG{
@@ -340,7 +344,7 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 {
     if (category == LogFlags::NONE) category = LogFlags::ALL;
 
-    const bool has_category{m_always_print_category_level || category != LogFlags::ALL};
+    const bool has_category{m_always_print_category_level || (category != LogFlags::ALL && category != LogFlags::UNCONDITIONAL_RATE_LIMITED && category != LogFlags::UNCONDITIONAL_ALWAYS)};
 
     // If there is no category, Info is implied
     if (!has_category && level == Level::Info) return {};
@@ -364,33 +368,71 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 
 static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
 {
-    return buflog.str.size() + buflog.logging_function.size() + buflog.source_file.size() + buflog.threadname.size() + memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
+    return buflog.str.size() + buflog.logging_function.size() + strlen(buflog.source_loc.file_name()) + buflog.threadname.size() + memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
 }
 
-void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags category, BCLog::Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const
+bool BCLog::Logger::FormatLogStrAndRateLimit(std::string& str, BCLog::LogFlags category, BCLog::Level level, const std::source_location& source_loc, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime)
 {
     if (!str.ends_with('\n')) str.push_back('\n');
 
     str.insert(0, GetLogPrefix(category, level));
 
     if (m_log_sourcelocations) {
-        str.insert(0, strprintf("[%s:%d] [%s] ", RemovePrefixView(source_file, "./"), source_line, logging_function));
+        str.insert(0, strprintf("[%s:%d] [%s] ", RemovePrefixView(source_loc.file_name(), "./"), source_loc.line(), logging_function));
     }
 
     if (m_log_threadnames) {
         str.insert(0, strprintf("[%s] ", (threadname.empty() ? "unknown" : threadname)));
     }
 
+    // Whether or not logging to disk was/is ratelimited for this source location.
+    bool was_ratelimited{false};
+    bool is_ratelimited{false};
+
+    if (category == UNCONDITIONAL_RATE_LIMITED && m_ratelimit) {
+        was_ratelimited = m_suppressed_locations.find(source_loc) != m_suppressed_locations.end();
+        is_ratelimited = !m_ratelimiters[source_loc].Consume(str.size());
+
+        if (!is_ratelimited && was_ratelimited) {
+            // Logging will restart for this source location.
+            m_suppressed_locations.erase(source_loc);
+
+            uint64_t dropped_bytes = m_ratelimiters[source_loc].GetDroppedBytes();
+
+            str.insert(0, strprintf("Restarting logging from %s:%d (%s): "
+                                    "(%d MiB) were dropped during the last hour.\n",
+                                    source_loc.file_name(), source_loc.line(), logging_function,
+                                    dropped_bytes / (1024 * 1024)));
+        } else if (is_ratelimited && !was_ratelimited) {
+            // Logging from this source location will be suppressed until the current window resets.
+            m_suppressed_locations.insert(source_loc);
+
+            str.insert(0, strprintf("Excessive logging detected from %s:%d (%s): >%d MiB logged during the last hour."
+                                    "Suppressing logging to disk from this source location for up to one hour. "
+                                    "Console logging unaffected. Last log entry.",
+                                    source_loc.file_name(), source_loc.line(), logging_function,
+                                    LogRateLimiter::WINDOW_MAX_BYTES / (1024 * 1024)));
+        }
+    }
+
     str.insert(0, LogTimestampStr(now, mocktime));
+
+    // To avoid confusion caused by dropped log messages when debugging an issue,
+    // we prefix log lines with "[*]" when there are any suppressed source locations.
+    if (m_suppressed_locations.size() > 0) {
+        str.insert(0, "[*] ");
+    }
+
+    return was_ratelimited && is_ratelimited;
 }
 
-void BCLog::Logger::LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+void BCLog::Logger::LogPrintStr(std::string_view str, std::string_view logging_function, const std::source_location& source_loc, BCLog::LogFlags category, BCLog::Level level)
 {
     StdLockGuard scoped_lock(m_cs);
-    return LogPrintStr_(str, logging_function, source_file, source_line, category, level);
+    return LogPrintStr_(str, logging_function, source_loc, category, level);
 }
 
-void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_function, const std::source_location& source_loc, BCLog::LogFlags category, BCLog::Level level)
 {
     std::string str_prefixed = LogEscapeMessage(str);
 
@@ -401,9 +443,8 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_
                 .mocktime=GetMockTime(),
                 .str=str_prefixed,
                 .logging_function=std::string(logging_function),
-                .source_file=std::string(source_file),
                 .threadname=util::ThreadGetInternalName(),
-                .source_line=source_line,
+                .source_loc=source_loc,
                 .category=category,
                 .level=level,
             };
@@ -424,7 +465,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_
         return;
     }
 
-    FormatLogStrInPlace(str_prefixed, category, level, source_file, source_line, logging_function, util::ThreadGetInternalName(), SystemClock::now(), GetMockTime());
+    bool ratelimit = FormatLogStrAndRateLimit(str_prefixed, category, level, source_loc, logging_function, util::ThreadGetInternalName(), SystemClock::now(), GetMockTime());
 
     if (m_print_to_console) {
         // print to console
@@ -434,7 +475,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::string_view logging_
     for (const auto& cb : m_print_callbacks) {
         cb(str_prefixed);
     }
-    if (m_print_to_file) {
+    if (m_print_to_file && !ratelimit) {
         assert(m_fileout != nullptr);
 
         // reopen the log file, if requested
@@ -490,6 +531,30 @@ void BCLog::Logger::ShrinkDebugFile()
     }
     else if (file != nullptr)
         fclose(file);
+}
+
+void BCLog::LogRateLimiter::MaybeReset()
+{
+    const auto now{NodeClock::now()};
+    if ((now - m_last_reset) >= WINDOW_SIZE) {
+        m_available_bytes = WINDOW_MAX_BYTES;
+        m_last_reset = now;
+        m_dropped_bytes = 0;
+    }
+}
+
+bool BCLog::LogRateLimiter::Consume(uint64_t bytes)
+{
+    MaybeReset();
+
+    if (bytes > m_available_bytes) {
+        m_dropped_bytes += bytes;
+        m_available_bytes = 0;
+        return false;
+    }
+
+    m_available_bytes -= bytes;
+    return true;
 }
 
 bool BCLog::Logger::SetLogLevel(std::string_view level_str)
