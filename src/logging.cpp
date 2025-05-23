@@ -166,7 +166,7 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return m_categories == BCLog::NONE;
+    return m_categories == DEFAULT_LOG_FLAGS;
 }
 
 static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
@@ -201,6 +201,8 @@ static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_
     {"txreconciliation", BCLog::TXRECONCILIATION},
     {"scan", BCLog::SCAN},
     {"txpackages", BCLog::TXPACKAGES},
+    {"uncond_rate_limited", BCLog::UNCONDITIONAL_RATE_LIMITED},
+    {"uncond_always", BCLog::UNCONDITIONAL_ALWAYS},
 };
 
 static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_FLAG{
@@ -342,7 +344,7 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 {
     if (category == LogFlags::NONE) category = LogFlags::ALL;
 
-    const bool has_category{m_always_print_category_level || category != LogFlags::ALL};
+    const bool has_category{m_always_print_category_level || (category != LogFlags::ALL && category != LogFlags::UNCONDITIONAL_RATE_LIMITED && category != LogFlags::UNCONDITIONAL_ALWAYS)};
 
     // If there is no category, Info is implied
     if (!has_category && level == Level::Info) return {};
