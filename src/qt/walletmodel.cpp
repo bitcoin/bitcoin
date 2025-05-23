@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
 
-#include <common/args.h> // for GetBoolArg
+#include <common/args.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>
@@ -23,10 +23,12 @@
 #include <psbt.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
-#include <wallet/wallet.h> // for CRecipient
+#include <wallet/wallet.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <functional>
+#include <memory>
+#include <vector>
 
 #include <QDebug>
 #include <QMessageBox>
@@ -519,7 +521,7 @@ bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
         // "Create Unsigned" clicked
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const auto err{wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete)};
+        const auto err{wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, nullptr, psbtx, complete)};
         if (err || complete) {
             QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Can't draft transaction."));
             return false;
@@ -601,13 +603,7 @@ CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
     // No selected coins, return the cached balance
     if (!control || !control->HasSelected()) {
         const interfaces::WalletBalances& balances = getCachedBalance();
-        CAmount available_balance = balances.balance;
-        // if wallet private keys are disabled, this is a watch-only wallet
-        // so, let's include the watch-only balance.
-        if (balances.have_watch_only && m_wallet->privateKeysDisabled()) {
-            available_balance += balances.watch_only_balance;
-        }
-        return available_balance;
+        return balances.balance;
     }
     // Fetch balance from the wallet, taking into account the selected coins
     return wallet().getAvailableBalance(*control);

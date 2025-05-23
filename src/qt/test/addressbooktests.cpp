@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -85,8 +85,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     }
 
     auto build_address{[]() {
-        CKey key = GenerateRandomKey();
-        const PKHash dest{key.GetPubKey()};
+        const WitnessV0KeyHash dest{GenerateRandomKey().GetPubKey()};
         return std::make_pair(dest, QString::fromStdString(EncodeDestination(dest)));
     }};
 

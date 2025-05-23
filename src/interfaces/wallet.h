@@ -205,7 +205,7 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual std::optional<common::PSBTError> fillPSBT(int sighash_type,
+    virtual std::optional<common::PSBTError> fillPSBT(std::optional<int> sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,
@@ -372,17 +372,11 @@ struct WalletBalances
     CAmount balance = 0;
     CAmount unconfirmed_balance = 0;
     CAmount immature_balance = 0;
-    bool have_watch_only = false;
-    CAmount watch_only_balance = 0;
-    CAmount unconfirmed_watch_only_balance = 0;
-    CAmount immature_watch_only_balance = 0;
 
     bool balanceChanged(const WalletBalances& prev) const
     {
         return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
-               immature_balance != prev.immature_balance || watch_only_balance != prev.watch_only_balance ||
-               unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
-               immature_watch_only_balance != prev.immature_watch_only_balance;
+               immature_balance != prev.immature_balance;
     }
 };
 

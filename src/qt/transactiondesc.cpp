@@ -26,7 +26,6 @@
 
 using wallet::ISMINE_ALL;
 using wallet::ISMINE_SPENDABLE;
-using wallet::ISMINE_WATCH_ONLY;
 using wallet::isminetype;
 
 QString TransactionDesc::FormatTxStatus(const interfaces::WalletTxStatus& status, bool inMempool)
@@ -150,7 +149,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                     strHTML += "<b>" + tr("From") + ":</b> " + tr("unknown") + "<br>";
                     strHTML += "<b>" + tr("To") + ":</b> ";
                     strHTML += GUIUtil::HtmlEscape(rec->address);
-                    QString addressOwned = ismine == ISMINE_SPENDABLE ? tr("own address") : tr("watch-only");
+                    QString addressOwned = tr("own address");
                     if (!name.empty())
                         strHTML += " (" + addressOwned + ", " + tr("label") + ": " + GUIUtil::HtmlEscape(name) + ")";
                     else
@@ -218,10 +217,6 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
 
         if (fAllFromMe)
         {
-            if(fAllFromMe & ISMINE_WATCH_ONLY)
-                strHTML += "<b>" + tr("From") + ":</b> " + tr("watch-only") + "<br>";
-
-            //
             // Debit
             //
             auto mine = wtx.txout_is_mine.begin();
@@ -246,8 +241,6 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                         strHTML += GUIUtil::HtmlEscape(EncodeDestination(address));
                         if(toSelf == ISMINE_SPENDABLE)
                             strHTML += " (" + tr("own address") + ")";
-                        else if(toSelf & ISMINE_WATCH_ONLY)
-                            strHTML += " (" + tr("watch-only") + ")";
                         strHTML += "<br>";
                     }
                 }
@@ -370,7 +363,6 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                     }
                     strHTML = strHTML + " " + tr("Amount") + "=" + BitcoinUnits::formatHtmlWithUnit(unit, vout.nValue);
                     strHTML = strHTML + " IsMine=" + (wallet.txoutIsMine(vout) & ISMINE_SPENDABLE ? tr("true") : tr("false")) + "</li>";
-                    strHTML = strHTML + " IsWatchOnly=" + (wallet.txoutIsMine(vout) & ISMINE_WATCH_ONLY ? tr("true") : tr("false")) + "</li>";
                 }
             }
         }

@@ -264,25 +264,21 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             auto spk_manager_res = wallet.AddWalletDescriptor(w_desc, keys, label, desc_internal);
 
             if (!spk_manager_res) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, util::ErrorString(spk_manager_res).original);
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s': %s", descriptor, util::ErrorString(spk_manager_res).original));
             }
 
-            auto spk_manager = spk_manager_res.value();
-
-            if (spk_manager == nullptr) {
-                throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Could not add descriptor '%s'", descriptor));
-            }
+            auto& spk_manager = spk_manager_res.value().get();
 
             // Set descriptor as active if necessary
             if (active) {
                 if (!w_desc.descriptor->GetOutputType()) {
                     warnings.push_back("Unknown output type, cannot set descriptor to active.");
                 } else {
-                    wallet.AddActiveScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
+                    wallet.AddActiveScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
                 }
             } else {
                 if (w_desc.descriptor->GetOutputType()) {
-                    wallet.DeactivateScriptPubKeyMan(spk_manager->GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
+                    wallet.DeactivateScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
                 }
             }
         }
@@ -615,8 +611,8 @@ RPCHelpMan restorewallet()
     return RPCHelpMan{
         "restorewallet",
         "Restores and loads a wallet from backup.\n"
-        "\nThe rescan is significantly faster if a descriptor wallet is restored"
-        "\nand block filters are available (using startup option \"-blockfilterindex=1\").\n",
+        "\nThe rescan is significantly faster if block filters are available"
+        "\n(using startup option \"-blockfilterindex=1\").\n",
         {
             {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name that will be applied to the restored wallet"},
             {"backup_file", RPCArg::Type::STR, RPCArg::Optional::NO, "The backup file that will be used to restore the wallet."},

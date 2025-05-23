@@ -1009,10 +1009,6 @@ Strings and formatting
     buffer overflows, and surprises with `\0` characters. Also, some C string manipulations
     tend to act differently depending on platform, or even the user locale.
 
-- Use `ToIntegral` from [`strencodings.h`](/src/util/strencodings.h) for number parsing. In legacy code you might also find `ParseInt*` family of functions, `ParseDouble` or `LocaleIndependentAtoi`.
-
-  - *Rationale*: These functions do overflow checking and avoid pesky locale issues.
-
 - For `strprintf`, `LogInfo`, `LogDebug`, etc formatting characters don't need size specifiers.
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.

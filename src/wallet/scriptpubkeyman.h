@@ -133,8 +133,6 @@ public:
     //! The action to do when the DB needs rewrite
     virtual void RewriteDB() {}
 
-    virtual std::optional<int64_t> GetOldestKeyPoolTime() const { return GetTime(); }
-
     virtual unsigned int GetKeyPoolSize() const { return 0; }
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
@@ -153,7 +151,7 @@ public:
     /** Sign a message with the given script */
     virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
-    virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = SIGHASH_DEFAULT, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const { return common::PSBTError::UNSUPPORTED; }
+    virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type = std::nullopt, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const { return common::PSBTError::UNSUPPORTED; }
 
     virtual uint256 GetID() const { return uint256(); }
 
@@ -364,7 +362,6 @@ public:
     std::optional<CKey> GetKey(const CKeyID& keyid) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     bool HaveCryptedKeys() const override;
 
-    std::optional<int64_t> GetOldestKeyPoolTime() const override;
     unsigned int GetKeyPoolSize() const override;
 
     int64_t GetTimeFirstKey() const override;
@@ -382,7 +379,7 @@ public:
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
-    std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, int sighash_type = SIGHASH_DEFAULT, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
+    std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type = std::nullopt, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
 
     uint256 GetID() const override;
 

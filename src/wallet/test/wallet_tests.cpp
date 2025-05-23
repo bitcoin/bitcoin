@@ -66,8 +66,26 @@ static void AddKey(CWallet& wallet, const CKey& key)
     assert(descs.size() == 1);
     auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-    auto spk_manager = *Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
-    assert(spk_manager);
+    Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+}
+
+BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
+{
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        auto key{GenerateRandomKey()};
+        auto desc_str{"combo(" + EncodeSecret(key) + ")"};
+        FlatSigningProvider provider;
+        std::string error;
+        auto descs{Parse(desc_str, provider, error, /* require_checksum=*/ false)};
+        auto& desc{descs.at(0)};
+        WalletDescriptor w_desc{std::move(desc), 0, 0, 0, 0};
+        BOOST_CHECK(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+        // Wallet should update the non-range descriptor successfully
+        BOOST_CHECK(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
@@ -106,7 +124,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
             LOCK(wallet.cs_wallet);
             LOCK(Assert(m_node.chainman)->GetMutex());
             wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-            wallet.SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
+            wallet.SetLastBlockProcessed(newTip->nHeight, newTip->GetBlockHash());
         }
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);
@@ -116,8 +134,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
         {
             CBlockLocator locator;
-            BOOST_CHECK(!WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(locator.IsNull());
+            BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
+            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
         }
 
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/true);
@@ -130,7 +148,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         {
             CBlockLocator locator;
             BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(!locator.IsNull());
+            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
         }
     }
 

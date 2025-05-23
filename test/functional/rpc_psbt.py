@@ -27,6 +27,7 @@ from test_framework.psbt import (
     PSBT_GLOBAL_UNSIGNED_TX,
     PSBT_IN_RIPEMD160,
     PSBT_IN_SHA256,
+    PSBT_IN_SIGHASH_TYPE,
     PSBT_IN_HASH160,
     PSBT_IN_HASH256,
     PSBT_IN_MUSIG2_PARTIAL_SIG,
@@ -37,7 +38,7 @@ from test_framework.psbt import (
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
     PSBT_OUT_TAP_TREE,
 )
-from test_framework.script import CScript, OP_TRUE
+from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -273,6 +274,93 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(out_participant_pks["aggregate_pubkey"], out_fake_agg_pubkey.hex())
         assert "participant_pubkeys" in out_participant_pks
         assert_equal(out_participant_pks["participant_pubkeys"], [out_pubkey1.hex(), out_pubkey2.hex()])
+
+    def test_sighash_mismatch(self):
+        self.log.info("Test sighash type mismatches")
+        self.nodes[0].createwallet("sighash_mismatch")
+        wallet = self.nodes[0].get_wallet_rpc("sighash_mismatch")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        addr = wallet.getnewaddress(address_type="bech32")
+        def_wallet.sendtoaddress(addr, 5)
+        self.generate(self.nodes[0], 6)
+
+        # Retrieve the descriptors so we can do all of the tests with descriptorprocesspsbt as well
+        descs = wallet.listdescriptors(True)["descriptors"]
+
+        # Make a PSBT
+        psbt = wallet.walletcreatefundedpsbt([], [{def_wallet.getnewaddress(): 1}])["psbt"]
+
+        # Modify the PSBT and insert a sighash field for ALL|ANYONECANPAY on input 0
+        mod_psbt = PSBT.from_base64(psbt)
+        mod_psbt.i[0].map[PSBT_IN_SIGHASH_TYPE] = (SIGHASH_ALL | SIGHASH_ANYONECANPAY).to_bytes(4, byteorder="little")
+        psbt = mod_psbt.to_base64()
+
+        # Mismatching sighash type fails, including when no type is specified
+        for sighash in ["DEFAULT", "ALL", "NONE", "SINGLE", "NONE|ANYONECANPAY", "SINGLE|ANYONECANPAY", None]:
+            assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", wallet.walletprocesspsbt, psbt, True, sighash)
+
+        # Matching sighash type succeeds
+        proc = wallet.walletprocesspsbt(psbt, True, "ALL|ANYONECANPAY")
+        assert_equal(proc["complete"], True)
+
+        # Repeat with descriptorprocesspsbt
+        # Mismatching sighash type fails, including when no type is specified
+        for sighash in ["DEFAULT", "ALL", "NONE", "SINGLE", "NONE|ANYONECANPAY", "SINGLE|ANYONECANPAY", None]:
+            assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", self.nodes[0].descriptorprocesspsbt, psbt, descs, sighash)
+
+        # Matching sighash type succeeds
+        proc = self.nodes[0].descriptorprocesspsbt(psbt, descs, "ALL|ANYONECANPAY")
+        assert_equal(proc["complete"], True)
+
+        wallet.unloadwallet()
+
+    def test_sighash_adding(self):
+        self.log.info("Test adding of sighash type field")
+        self.nodes[0].createwallet("sighash_adding")
+        wallet = self.nodes[0].get_wallet_rpc("sighash_adding")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        outputs = [{wallet.getnewaddress(address_type="bech32"): 1}]
+        outputs.append({wallet.getnewaddress(address_type="bech32m"): 1})
+        descs = wallet.listdescriptors(True)["descriptors"]
+        def_wallet.send(outputs)
+        self.generate(self.nodes[0], 6)
+        utxos = wallet.listunspent()
+
+        # Make a PSBT
+        psbt = wallet.walletcreatefundedpsbt(utxos, [{def_wallet.getnewaddress(): 0.5}])["psbt"]
+
+        # Process the PSBT with the wallet
+        wallet_psbt = wallet.walletprocesspsbt(psbt=psbt, sighashtype="ALL|ANYONECANPAY", finalize=False)["psbt"]
+
+        # Separately process the PSBT with descriptors
+        desc_psbt = self.nodes[0].descriptorprocesspsbt(psbt=psbt, descriptors=descs, sighashtype="ALL|ANYONECANPAY", finalize=False)["psbt"]
+
+        for psbt in [wallet_psbt, desc_psbt]:
+            # Check that the PSBT has a sighash field on all inputs
+            dec_psbt = self.nodes[0].decodepsbt(psbt)
+            for input in dec_psbt["inputs"]:
+                assert_equal(input["sighash"], "ALL|ANYONECANPAY")
+
+            # Make sure we can still finalize the transaction
+            fin_res = self.nodes[0].finalizepsbt(psbt)
+            assert_equal(fin_res["complete"], True)
+            fin_hex = fin_res["hex"]
+            assert_equal(self.nodes[0].testmempoolaccept([fin_hex])[0]["allowed"], True)
+
+            # Change the sighash field to a different value and make sure we can no longer finalize
+            mod_psbt = PSBT.from_base64(psbt)
+            mod_psbt.i[0].map[PSBT_IN_SIGHASH_TYPE] = (SIGHASH_ALL).to_bytes(4, byteorder="little")
+            mod_psbt.i[1].map[PSBT_IN_SIGHASH_TYPE] = (SIGHASH_ALL).to_bytes(4, byteorder="little")
+            psbt = mod_psbt.to_base64()
+            fin_res = self.nodes[0].finalizepsbt(psbt)
+            assert_equal(fin_res["complete"], False)
+
+        self.nodes[0].sendrawtransaction(fin_hex)
+        self.generate(self.nodes[0], 1)
+
+        wallet.unloadwallet()
 
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
@@ -1121,6 +1209,8 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test descriptorprocesspsbt raises if an invalid sighashtype is passed")
         assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt, [descriptor], sighashtype="all")
 
+        self.test_sighash_mismatch()
+        self.test_sighash_adding()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()

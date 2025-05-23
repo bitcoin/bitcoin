@@ -46,7 +46,6 @@ static RPCHelpMan getwalletinfo()
                         {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
                         {RPCResult::Type::STR_AMOUNT, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
                         {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
-                        {RPCResult::Type::NUM_TIME, "keypoololdest", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only."},
                         {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
                         {RPCResult::Type::NUM, "keypoolsize_hd_internal", /*optional=*/true, "how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used)"},
                         {RPCResult::Type::NUM_TIME, "unlocked_until", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
@@ -91,10 +90,6 @@ static RPCHelpMan getwalletinfo()
     obj.pushKV("unconfirmed_balance", ValueFromAmount(bal.m_mine_untrusted_pending));
     obj.pushKV("immature_balance", ValueFromAmount(bal.m_mine_immature));
     obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
-    const auto kp_oldest = pwallet->GetOldestKeyPoolTime();
-    if (kp_oldest.has_value()) {
-        obj.pushKV("keypoololdest", kp_oldest.value());
-    }
     obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
 
     if (pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
@@ -356,8 +351,8 @@ static RPCHelpMan createwallet()
         RPCExamples{
             HelpExampleCli("createwallet", "\"testwallet\"")
             + HelpExampleRpc("createwallet", "\"testwallet\"")
-            + HelpExampleCliNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}})
-            + HelpExampleRpcNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}})
+            + HelpExampleCliNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"load_on_startup", true}})
+            + HelpExampleRpcNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"load_on_startup", true}})
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

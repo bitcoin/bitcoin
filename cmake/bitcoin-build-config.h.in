@@ -29,17 +29,8 @@
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
-/* Define this symbol to build code that uses ARMv8 SHA-NI intrinsics */
-#cmakedefine ENABLE_ARM_SHANI 1
-
-/* Define this symbol to build code that uses AVX2 intrinsics */
-#cmakedefine ENABLE_AVX2 1
-
 /* Define if external signer support is enabled */
 #cmakedefine ENABLE_EXTERNAL_SIGNER 1
-
-/* Define this symbol to build code that uses SSE4.1 intrinsics */
-#cmakedefine ENABLE_SSE41 1
 
 /* Define to 1 to enable tracepoints for Userspace, Statically Defined Tracing
    */
@@ -47,9 +38,6 @@
 
 /* Define to 1 to enable wallet functions. */
 #cmakedefine ENABLE_WALLET 1
-
-/* Define this symbol to build code that uses x86 SHA-NI intrinsics */
-#cmakedefine ENABLE_X86_SHANI 1
 
 /* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
    */

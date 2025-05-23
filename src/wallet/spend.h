@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,13 +6,18 @@
 #define BITCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
-#include <policy/fees.h> // for FeeCalculation
+#include <policy/fees.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <map>
+#include <memory>
 #include <optional>
+#include <set>
+#include <unordered_set>
+#include <vector>
 
 namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction.

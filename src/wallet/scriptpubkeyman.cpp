@@ -1189,13 +1189,6 @@ bool DescriptorScriptPubKeyMan::HaveCryptedKeys() const
     return !m_map_crypted_keys.empty();
 }
 
-std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
-{
-    // This is only used for getwalletinfo output and isn't relevant to descriptor wallets.
-    return std::nullopt;
-}
-
-
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
     LOCK(cs_desc_man);
@@ -1311,7 +1304,7 @@ SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message,
     return SigningResult::OK;
 }
 
-std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, int sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -1322,11 +1315,6 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
 
         if (PSBTInputSigned(input)) {
             continue;
-        }
-
-        // Get the Sighash type
-        if (sign && input.sighash_type != std::nullopt && *input.sighash_type != sighash_type) {
-            return PSBTError::SIGHASH_MISMATCH;
         }
 
         // Get the scriptPubKey to know which SigningProvider to use
@@ -1386,7 +1374,10 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
             }
         }
 
-        SignPSBTInput(HidingSigningProvider(keys.get(), /*hide_secret=*/!sign, /*hide_origin=*/!bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
+        PSBTError res = SignPSBTInput(HidingSigningProvider(keys.get(), /*hide_secret=*/!sign, /*hide_origin=*/!bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
+        if (res != PSBTError::OK && res != PSBTError::INCOMPLETE) {
+            return res;
+        }
 
         bool signed_one = PSBTInputSigned(input);
         if (n_signed && (signed_one || !sign)) {
@@ -1596,6 +1587,11 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
     if (!HasWalletDescriptor(descriptor)) {
         error = "can only update matching descriptor";
         return false;
+    }
+
+    if (!descriptor.descriptor->IsRange()) {
+        // Skip range check for non-range descriptors
+        return true;
     }
 
     if (descriptor.range_start > m_wallet_descriptor.range_start ||
