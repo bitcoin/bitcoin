@@ -1196,6 +1196,21 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
 {
     ImportingNow imp{chainman.m_blockman.m_importing};
 
+    auto update_all_chainstate = [&]() {
+        // scan for better chains in the block chain database, that are not yet connected in the active best chain
+
+        // We can't hold cs_main during ActivateBestChain even though we're accessing
+        // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
+        // the relevant pointers before the ABC call.
+        for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
+            BlockValidationState state;
+            if (!chainstate->ActivateBestChain(state, nullptr)) {
+                chainman.GetNotifications().fatalError(strprintf(_("Failed to connect best block (%s)."), state.ToString()));
+                return;
+            }
+        }
+    };
+
     // -reindex
     if (!chainman.m_blockman.m_blockfiles_indexed) {
         int nFile = 0;
@@ -1219,6 +1234,11 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
             }
             nFile++;
         }
+
+        // Call ActivateBestChain here so we can skip script verification
+        // during reindex if assumevalid is enabled
+        update_all_chainstate();
+
         WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
         chainman.m_blockman.m_blockfiles_indexed = true;
         LogPrintf("Reindexing finished\n");
@@ -1241,18 +1261,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
         }
     }
 
-    // scan for better chains in the block chain database, that are not yet connected in the active best chain
-
-    // We can't hold cs_main during ActivateBestChain even though we're accessing
-    // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
-    // the relevant pointers before the ABC call.
-    for (Chainstate* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-        BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, nullptr)) {
-            chainman.GetNotifications().fatalError(strprintf(_("Failed to connect best block (%s)."), state.ToString()));
-            return;
-        }
-    }
+    update_all_chainstate();
     // End scope of ImportingNow
 }
 
