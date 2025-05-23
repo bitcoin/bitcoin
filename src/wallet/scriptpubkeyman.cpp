@@ -1189,13 +1189,6 @@ bool DescriptorScriptPubKeyMan::HaveCryptedKeys() const
     return !m_map_crypted_keys.empty();
 }
 
-std::optional<int64_t> DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
-{
-    // This is only used for getwalletinfo output and isn't relevant to descriptor wallets.
-    return std::nullopt;
-}
-
-
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
     LOCK(cs_desc_man);

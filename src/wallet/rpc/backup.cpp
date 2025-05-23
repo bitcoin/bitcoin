@@ -611,8 +611,8 @@ RPCHelpMan restorewallet()
     return RPCHelpMan{
         "restorewallet",
         "Restores and loads a wallet from backup.\n"
-        "\nThe rescan is significantly faster if a descriptor wallet is restored"
-        "\nand block filters are available (using startup option \"-blockfilterindex=1\").\n",
+        "\nThe rescan is significantly faster if block filters are available"
+        "\n(using startup option \"-blockfilterindex=1\").\n",
         {
             {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name that will be applied to the restored wallet"},
             {"backup_file", RPCArg::Type::STR, RPCArg::Optional::NO, "The backup file that will be used to restore the wallet."},
