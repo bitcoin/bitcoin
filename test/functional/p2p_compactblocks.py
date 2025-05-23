@@ -267,8 +267,12 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     # This test actually causes bitcoind to (reasonably!) disconnect us, so do this last.
     def test_invalid_cmpctblock_message(self):
+        self.make_peer_hb_to_candidate(self.nodes[0], self.segwit_node)
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         block = self.build_block_on_tip(self.nodes[0])
+
+        self.segwit_node.send_header_for_blocks([block])
+        self.segwit_node.wait_for_getdata([block.sha256], timeout=30)
 
         cmpct_block = P2PHeaderAndShortIDs()
         cmpct_block.header = CBlockHeader(block)
@@ -739,6 +743,12 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_not_equal(int(node.getbestblockhash(), 16), block.sha256)
         test_node.sync_with_ping()
 
+    # peer generates a block and sends it to node, which makes the peer a
+    # candidate for high-bandwidth 'to' (up to 3 peers according to BIP 152)
+    def make_peer_hb_to_candidate(self, node, peer):
+        block = self.build_block_on_tip(node)
+        peer.send_and_ping(msg_block(block))
+
     # Helper for enabling cb announcements
     # Send the sendcmpct request and sync headers
     def request_cb_announcements(self, peer):
@@ -751,6 +761,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         node = self.nodes[0]
         assert len(self.utxos)
 
+        self.make_peer_hb_to_candidate(node, stalling_peer)
+        self.make_peer_hb_to_candidate(node, delivery_peer)
+
         def announce_cmpct_block(node, peer):
             utxo = self.utxos.pop(0)
             block = self.build_block_with_transactions(node, utxo, 5)
@@ -762,6 +775,7 @@ class CompactBlocksTest(BitcoinTestFramework):
             with p2p_lock:
                 assert "getblocktxn" in peer.last_message
             return block, cmpct_block
+
 
         block, cmpct_block = announce_cmpct_block(node, stalling_peer)
 
@@ -846,6 +860,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         for name, peer in [("delivery", delivery_peer), ("inbound", inbound_peer), ("outbound", outbound_peer)]:
             self.log.info(f"Setting {name} as high bandwidth peer")
+            self.make_peer_hb_to_candidate(node, peer)
             block, cmpct_block = announce_cmpct_block(node, peer, 1)
             msg = msg_blocktxn()
             msg.block_transactions.blockhash = block.sha256
