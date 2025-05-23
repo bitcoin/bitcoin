@@ -2290,7 +2290,7 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     }
 }
 
-DBErrors CWallet::PopulateWalletFromDB()
+DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     LOCK(cs_wallet);
 
@@ -2312,6 +2312,36 @@ DBErrors CWallet::PopulateWalletFromDB()
         assert(m_internal_spk_managers.empty());
     }
 
+    if (nLoadWalletRet != DBErrors::LOAD_OK) {
+        const auto wallet_file = m_database->Filename();
+        if (nLoadWalletRet == DBErrors::CORRUPT) {
+            error = strprintf(_("Error loading %s: Wallet corrupted"), wallet_file);
+        } else if (nLoadWalletRet == DBErrors::NONCRITICAL_ERROR) {
+            warnings.push_back(strprintf(_("Error reading %s! All keys read correctly, but transaction data"
+                                           " or address metadata may be missing or incorrect."),
+                wallet_file));
+        } else if (nLoadWalletRet == DBErrors::TOO_NEW) {
+            error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), wallet_file, CLIENT_NAME);
+        } else if (nLoadWalletRet == DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED) {
+            error = strprintf(_("Error loading %s: External signer wallet being loaded without external signer support compiled"), wallet_file);
+        } else if (nLoadWalletRet == DBErrors::NEED_REWRITE) {
+            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), CLIENT_NAME);
+        } else if (nLoadWalletRet == DBErrors::NEED_RESCAN) {
+            warnings.push_back(strprintf(_("Error reading %s! Transaction data may be missing or incorrect."
+                                           " Rescanning wallet."), wallet_file));
+        } else if (nLoadWalletRet == DBErrors::UNKNOWN_DESCRIPTOR) {
+            error = strprintf(_("Unrecognized descriptor found. Loading wallet %s\n\n"
+                                "The wallet might have been created on a newer version.\n"
+                                "Please try running the latest software version.\n"), wallet_file);
+        } else if (nLoadWalletRet == DBErrors::UNEXPECTED_LEGACY_ENTRY) {
+            error = strprintf(_("Unexpected legacy entry in descriptor wallet found. Loading wallet %s\n\n"
+                                "The wallet might have been tampered with or created with malicious intent.\n"), wallet_file);
+        } else if (nLoadWalletRet == DBErrors::LEGACY_WALLET) {
+            error = strprintf(_("Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC)."), wallet_file);
+        } else {
+            error = strprintf(_("Error loading %s"), wallet_file);
+        }
+    }
     return nLoadWalletRet;
 }
 
@@ -2854,51 +2884,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     walletInstance->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
 
     // Load wallet
-    bool rescan_required = false;
-    DBErrors nLoadWalletRet = walletInstance->PopulateWalletFromDB();
-    if (nLoadWalletRet != DBErrors::LOAD_OK) {
-        if (nLoadWalletRet == DBErrors::CORRUPT) {
-            error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
-            return nullptr;
-        }
-        else if (nLoadWalletRet == DBErrors::NONCRITICAL_ERROR)
-        {
-            warnings.push_back(strprintf(_("Error reading %s! All keys read correctly, but transaction data"
-                                           " or address metadata may be missing or incorrect."),
-                walletFile));
-        }
-        else if (nLoadWalletRet == DBErrors::TOO_NEW) {
-            error = strprintf(_("Error loading %s: Wallet requires newer version of %s"), walletFile, CLIENT_NAME);
-            return nullptr;
-        }
-        else if (nLoadWalletRet == DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED) {
-            error = strprintf(_("Error loading %s: External signer wallet being loaded without external signer support compiled"), walletFile);
-            return nullptr;
-        }
-        else if (nLoadWalletRet == DBErrors::NEED_REWRITE)
-        {
-            error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), CLIENT_NAME);
-            return nullptr;
-        } else if (nLoadWalletRet == DBErrors::NEED_RESCAN) {
-            warnings.push_back(strprintf(_("Error reading %s! Transaction data may be missing or incorrect."
-                                           " Rescanning wallet."), walletFile));
-            rescan_required = true;
-        } else if (nLoadWalletRet == DBErrors::UNKNOWN_DESCRIPTOR) {
-            error = strprintf(_("Unrecognized descriptor found. Loading wallet %s\n\n"
-                                "The wallet might have been created on a newer version.\n"
-                                "Please try running the latest software version.\n"), walletFile);
-            return nullptr;
-        } else if (nLoadWalletRet == DBErrors::UNEXPECTED_LEGACY_ENTRY) {
-            error = strprintf(_("Unexpected legacy entry in descriptor wallet found. Loading wallet %s\n\n"
-                                "The wallet might have been tampered with or created with malicious intent.\n"), walletFile);
-            return nullptr;
-        } else if (nLoadWalletRet == DBErrors::LEGACY_WALLET) {
-            error = strprintf(_("Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC)."), walletFile);
-            return nullptr;
-        } else {
-            error = strprintf(_("Error loading %s"), walletFile);
-            return nullptr;
-        }
+    auto nLoadWalletRet = walletInstance->PopulateWalletFromDB(error, warnings);
+    bool rescan_required = nLoadWalletRet == DBErrors::NEED_RESCAN;
+    if (nLoadWalletRet != DBErrors::LOAD_OK && nLoadWalletRet != DBErrors::NONCRITICAL_ERROR && !rescan_required) {
+        return nullptr;
     }
 
     // This wallet is in its first run if there are no ScriptPubKeyMans and it isn't blank or no privkeys
