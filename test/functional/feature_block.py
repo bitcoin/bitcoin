@@ -153,8 +153,15 @@ class FullBlockTest(BitcoinTestFramework):
         for TxTemplate in invalid_txs.iter_all_templates():
             template = TxTemplate(spend_tx=attempt_spend_tx)
 
+            # belt-and-suspenders checking we won't pass up validating something
+            # we expect a disconnect from
+            if template.expect_disconnect:
+                assert not template.valid_in_block
+
             if template.valid_in_block:
                 continue
+
+            assert template.block_reject_reason or template.reject_reason
 
             self.log.info(f"Reject block with invalid tx: {TxTemplate.__name__}")
             blockname = f"for_invalid.{TxTemplate.__name__}"
