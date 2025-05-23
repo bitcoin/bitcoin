@@ -67,6 +67,8 @@ public:
         return int(std::count(validMembers.begin(), validMembers.end(), true));
     }
 
+    bool VerifySignature(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                         gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex) const;
     bool Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
                 gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const;
     bool VerifyNull() const;

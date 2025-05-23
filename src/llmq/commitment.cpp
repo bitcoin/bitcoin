@@ -27,6 +27,57 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 {
 }
 
+bool CFinalCommitment::VerifySignature(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+                                       gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex) const
+{
+    auto members = utils::GetAllQuorumMembers(llmqType, dmnman, qsnapman, pQuorumBaseBlockIndex);
+    const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
+    if (!llmq_params_opt.has_value()) {
+        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid llmqType=%d\n", quorumHash.ToString(),
+                 ToUnderlying(llmqType));
+        return false;
+    }
+    const auto& llmq_params = llmq_params_opt.value();
+
+    uint256 commitmentHash = BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey,
+                                                 quorumVvecHash);
+    if (LogAcceptDebug(BCLog::LLMQ)) {
+        std::stringstream ss3;
+        for (const auto& mn : members) {
+            ss3 << mn->proTxHash.ToString().substr(0, 4) << " | ";
+        }
+        LogPrint(BCLog::LLMQ, "CFinalCommitment::%s members[%s] quorumPublicKey[%s] commitmentHash[%s]\n", __func__,
+                 ss3.str(), quorumPublicKey.ToString(), commitmentHash.ToString());
+    }
+    if (llmq_params.size == 1) {
+        LogPrintf("pubkey operator: %s\n", members[0]->pdmnState->pubKeyOperator.Get().ToString());
+        if (!membersSig.VerifyInsecure(members[0]->pdmnState->pubKeyOperator.Get(), commitmentHash)) {
+            LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid member signature\n", quorumHash.ToString());
+            return false;
+        }
+    } else {
+        std::vector<CBLSPublicKey> memberPubKeys;
+        for (const auto i : irange::range(members.size())) {
+            if (!signers[i]) {
+                continue;
+            }
+            memberPubKeys.emplace_back(members[i]->pdmnState->pubKeyOperator.Get());
+        }
+
+        if (!membersSig.VerifySecureAggregated(memberPubKeys, commitmentHash)) {
+            LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid aggregated members signature\n",
+                     quorumHash.ToString());
+            return false;
+        }
+    }
+    if (!quorumSig.VerifyInsecure(quorumPublicKey, commitmentHash)) {
+        LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid quorum signature\n", quorumHash.ToString());
+        return false;
+    }
+    return true;
+}
+
+
 bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
                               gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool checkSigs) const
 {
@@ -106,38 +157,7 @@ bool CFinalCommitment::Verify(CDeterministicMNManager& dmnman, CQuorumSnapshotMa
 
     // sigs are only checked when the block is processed
     if (checkSigs) {
-        uint256 commitmentHash = BuildCommitmentHash(llmq_params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
-        if (LogAcceptDebug(BCLog::LLMQ)) {
-            std::stringstream ss3;
-            for (const auto &mn: members) {
-                ss3 << mn->proTxHash.ToString().substr(0, 4) << " | ";
-            }
-            LogPrint(BCLog::LLMQ, "CFinalCommitment::%s members[%s] quorumPublicKey[%s] commitmentHash[%s]\n",
-                                     __func__, ss3.str(), quorumPublicKey.ToString(), commitmentHash.ToString());
-        }
-        if (llmq_params.size == 1) {
-            LogPrintf("pubkey operator: %s\n", members[0]->pdmnState->pubKeyOperator.Get().ToString());
-            if (!membersSig.VerifyInsecure(members[0]->pdmnState->pubKeyOperator.Get(), commitmentHash)) {
-                LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid member signature\n", quorumHash.ToString());
-                return false;
-            }
-        } else {
-            std::vector<CBLSPublicKey> memberPubKeys;
-            for (const auto i : irange::range(members.size())) {
-                if (!signers[i]) {
-                    continue;
-                }
-                memberPubKeys.emplace_back(members[i]->pdmnState->pubKeyOperator.Get());
-            }
-
-            if (!membersSig.VerifySecureAggregated(memberPubKeys, commitmentHash)) {
-                LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid aggregated members signature\n",
-                         quorumHash.ToString());
-                return false;
-            }
-        }
-        if (!quorumSig.VerifyInsecure(quorumPublicKey, commitmentHash)) {
-            LogPrint(BCLog::LLMQ, "CFinalCommitment -- q[%s] invalid quorum signature\n", quorumHash.ToString());
+        if (!VerifySignature(dmnman, qsnapman, pQuorumBaseBlockIndex)) {
             return false;
         }
     }

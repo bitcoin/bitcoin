@@ -196,8 +196,21 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
         }
     }
 
+    if (fBLSChecks) {
+        for (const auto& [_, qc] : qcs) {
+            if (qc.IsNull()) continue;
+            const auto* pQuorumBaseBlockIndex = m_chainstate.m_blockman.LookupBlockIndex(qc.quorumHash);
+            if (!qc.VerifySignature(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex)) {
+                LogPrintf("[ProcessBlock] failed h[%d] llmqType[%d] version[%d] quorumIndex[%d] quorumHash[%s]\n",
+                          pindex->nHeight, ToUnderlying(qc.llmqType), qc.nVersion, qc.quorumIndex,
+                          qc.quorumHash.ToString());
+                return false;
+            }
+        }
+    }
+
     for (const auto& [_, qc] : qcs) {
-        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck, fBLSChecks)) {
+        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck, false)) {
             LogPrintf("[ProcessBlock] failed h[%d] llmqType[%d] version[%d] quorumIndex[%d] quorumHash[%s]\n", pindex->nHeight, ToUnderlying(qc.llmqType), qc.nVersion, qc.quorumIndex, qc.quorumHash.ToString());
             return false;
         }
