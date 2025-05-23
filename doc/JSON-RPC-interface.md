@@ -62,6 +62,8 @@ bitcoin-cli -named createwallet wallet_name=mywallet load_on_startup=true
 bitcoin-cli -named createwallet mywallet load_on_startup=true
 ```
 
+`bitcoin rpc` can also be substituted for `bitcoin-cli -named`, and is a newer alternative.
+
 ## Versioning
 
 The RPC interface might change from one major version of Bitcoin Core to the

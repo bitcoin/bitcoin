@@ -13,6 +13,7 @@ import platform
 import pdb
 import random
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -73,33 +74,37 @@ class Binaries:
         self.paths = paths
         self.bin_dir = bin_dir
 
-    def daemon_argv(self):
+    def node_argv(self):
         "Return argv array that should be used to invoke bitcoind"
-        return self._argv(self.paths.bitcoind)
+        return self._argv("node", self.paths.bitcoind)
 
     def rpc_argv(self):
         "Return argv array that should be used to invoke bitcoin-cli"
-        return self._argv(self.paths.bitcoincli)
+        # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
+        return self._argv("rpc", self.paths.bitcoincli) + ["-nonamed"]
 
     def util_argv(self):
         "Return argv array that should be used to invoke bitcoin-util"
-        return self._argv(self.paths.bitcoinutil)
+        return self._argv("util", self.paths.bitcoinutil)
 
     def wallet_argv(self):
         "Return argv array that should be used to invoke bitcoin-wallet"
-        return self._argv(self.paths.bitcoinwallet)
+        return self._argv("wallet", self.paths.bitcoinwallet)
 
     def chainstate_argv(self):
         "Return argv array that should be used to invoke bitcoin-chainstate"
-        return self._argv(self.paths.bitcoinchainstate)
+        return self._argv("chainstate", self.paths.bitcoinchainstate)
 
-    def _argv(self, bin_path):
-        """Return argv array that should be used to invoke the command.
-        Normally this will return binary paths directly from the paths object,
-        but when bin_dir is set (by tests calling binaries from previous
-        releases) it will return paths relative to bin_dir instead."""
+    def _argv(self, command, bin_path):
+        """Return argv array that should be used to invoke the command. It
+        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set), or
+        the direct binary path (bitcoind, etc). When bin_dir is set (by tests
+        calling binaries from previous releases) it always uses the direct
+        path."""
         if self.bin_dir is not None:
             return [os.path.join(self.bin_dir, os.path.basename(bin_path))]
+        elif self.paths.bitcoin_cmd is not None:
+            return self.paths.bitcoin_cmd + [command]
         else:
             return [bin_path]
 
@@ -293,6 +298,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 binary + self.config["environment"]["EXEEXT"],
             )
             setattr(paths, attribute_name, os.getenv(env_variable_name, default=default_filename))
+        # BITCOIN_CMD environment variable can be specified to invoke bitcoin
+        # wrapper binary instead of other executables.
+        paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
         return paths
 
     def get_binaries(self, bin_dir=None):
@@ -538,7 +546,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         bins_missing = False
         for bin_path in (argv[0] for bin_dir in bin_dirs
                                  for binaries in (self.get_binaries(bin_dir),)
-                                 for argv in (binaries.daemon_argv(), binaries.rpc_argv())):
+                                 for argv in (binaries.node_argv(), binaries.rpc_argv())):
             if shutil.which(bin_path) is None:
                 self.log.error(f"Binary not found: {bin_path}")
                 bins_missing = True

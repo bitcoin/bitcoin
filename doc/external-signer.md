@@ -14,6 +14,8 @@ Start Bitcoin Core:
 $ bitcoind -signer=../HWI/hwi.py
 ```
 
+`bitcoin node` can also be substituted for `bitcoind`.
+
 ### Device setup
 
 Follow the hardware manufacturers instructions for the initial device setup, as well as their instructions for creating a backup. Alternatively, for some devices, you can use the `setup`, `restore` and `backup` commands provided by [HWI](https://github.com/bitcoin-core/HWI).
@@ -39,6 +41,8 @@ Create a wallet, this automatically imports the public keys:
 ```sh
 $ bitcoin-cli createwallet "hww" true true "" true true true
 ```
+
+`bitcoin rpc` can also be substituted for `bitcoin-cli`.
 
 ### Verify an address
 
