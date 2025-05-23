@@ -30,6 +30,7 @@ static const bool DEFAULT_LOGTIMESTAMPS = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
 static const bool DEFAULT_LOGSOURCELOCATIONS = false;
 static constexpr bool DEFAULT_LOGLEVELALWAYS = false;
+static constexpr bool DEFAULT_RATELIMITLOGGING{true};
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
@@ -195,6 +196,7 @@ namespace BCLog {
         bool m_log_threadnames = DEFAULT_LOGTHREADNAMES;
         bool m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
         bool m_always_print_category_level = DEFAULT_LOGLEVELALWAYS;
+        bool m_ratelimit{DEFAULT_RATELIMITLOGGING};
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
