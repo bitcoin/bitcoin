@@ -4,7 +4,11 @@
 
 #include <crypto/siphash.h>
 
+#include <uint256.h>
+
 #include <bit>
+#include <cassert>
+#include <span>
 
 #define SIPROUND do { \
     v0 += v1; v1 = std::rotl(v1, 13); v1 ^= v0; \

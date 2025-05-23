@@ -8,7 +8,6 @@
 #include <crypto/sha256.h>
 
 #include <cstdlib>
-#include <stdint.h>
 
 /** A hasher class for HMAC-SHA-256. */
 class CHMAC_SHA256
