@@ -40,7 +40,7 @@ static RPCHelpMan getwalletinfo()
                     {
                         {
                         {RPCResult::Type::STR, "walletname", "the wallet name"},
-                        {RPCResult::Type::NUM, "walletversion", "the wallet version"},
+                        {RPCResult::Type::NUM, "walletversion", "the current wallet format (the oldest client version guaranteed to understand this wallet)"},
                         {RPCResult::Type::STR, "format", "the database format (only sqlite)"},
                         {RPCResult::Type::STR_AMOUNT, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
                         {RPCResult::Type::STR_AMOUNT, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
