@@ -2282,7 +2282,7 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     }
 }
 
-DBErrors CWallet::LoadWallet()
+DBErrors CWallet::PopulateWalletFromDB()
 {
     LOCK(cs_wallet);
 
@@ -2833,7 +2833,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
     // Load wallet
     bool rescan_required = false;
-    DBErrors nLoadWalletRet = walletInstance->LoadWallet();
+    DBErrors nLoadWalletRet = walletInstance->PopulateWalletFromDB();
     if (nLoadWalletRet != DBErrors::LOAD_OK) {
         if (nLoadWalletRet == DBErrors::CORRUPT) {
             error = strprintf(_("Error loading %s: Wallet corrupted"), walletFile);
