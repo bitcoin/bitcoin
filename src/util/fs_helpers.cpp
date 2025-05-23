@@ -22,17 +22,6 @@
 #include <utility>
 
 #ifndef WIN32
-// for posix_fallocate, in cmake/introspection.cmake we check if it is present after this
-#ifdef __linux__
-
-#ifdef _POSIX_C_SOURCE
-#undef _POSIX_C_SOURCE
-#endif
-
-#define _POSIX_C_SOURCE 200112L
-
-#endif // __linux__
-
 #include <fcntl.h>
 #include <sys/resource.h>
 #include <unistd.h>
