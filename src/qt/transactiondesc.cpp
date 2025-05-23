@@ -27,34 +27,32 @@
 
 #include <QLatin1String>
 
-QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks)
+QString TransactionDesc::FormatTxStatus(const interfaces::WalletTxStatus& status, bool inMempool)
 {
-    {
-        int nDepth = status.depth_in_main_chain;
-        if (nDepth < 0) return tr("conflicted");
+    int depth = status.depth_in_main_chain;
+    if (depth < 0) return tr("conflicted");
 
-        QString strTxStatus;
-        bool fChainLocked = status.is_chainlocked;
+    QString strTxStatus;
+    bool fChainLocked = status.is_chainlocked;
 
-        if (nDepth == 0) {
-            const QString abandoned{status.is_abandoned ? QLatin1String(", ") + tr("abandoned") : QString()};
-            strTxStatus = tr("0/unconfirmed, %1").arg((inMempool ? tr("in memory pool") : tr("not in memory pool"))) + abandoned;
-        } else if (!fChainLocked && nDepth < 6) {
-            strTxStatus = tr("%1/unconfirmed").arg(nDepth);
-        } else {
-            strTxStatus = tr("%1 confirmations").arg(nDepth);
-            if (fChainLocked) {
-                strTxStatus += QLatin1String(", ") + tr("locked via ChainLocks");
-                return strTxStatus;
-            }
+    if (depth == 0) {
+        const QString abandoned{status.is_abandoned ? QLatin1String(", ") + tr("abandoned") : QString()};
+        strTxStatus = tr("0/unconfirmed, %1").arg((inMempool ? tr("in memory pool") : tr("not in memory pool"))) + abandoned;
+    } else if (!fChainLocked && depth < 6) {
+        strTxStatus = tr("%1/unconfirmed").arg(depth);
+    } else {
+        strTxStatus = tr("%1 confirmations").arg(depth);
+        if (fChainLocked) {
+            strTxStatus += QLatin1String(", ") + tr("locked via ChainLocks");
+            return strTxStatus;
         }
-
-        if (status.is_islocked) {
-            strTxStatus += QLatin1String(", ") + tr("verified via InstantSend");
-        }
-
-        return strTxStatus;
     }
+
+    if (status.is_islocked) {
+        strTxStatus += QLatin1String(", ") + tr("verified via InstantSend");
+    }
+
+    return strTxStatus;
 }
 
 QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
@@ -75,7 +73,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
 
-    strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx, status, inMempool, numBlocks);
+    strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(status, inMempool);
     strHTML += "<br>";
 
     strHTML += "<b>" + tr("Date") + ":</b> " + (nTime ? GUIUtil::dateTimeStr(nTime) : "") + "<br>";

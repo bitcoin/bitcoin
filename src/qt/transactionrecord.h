@@ -21,15 +21,7 @@ struct WalletTxStatus;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
-class TransactionStatus
-{
-public:
-    TransactionStatus():
-        countsForBalance(false), lockedByInstantSend(false), lockedByChainLocks(false), sortKey(""),
-        matures_in(0), status(Unconfirmed), depth(0), open_for(0),
-        cachedChainLockHeight(-1), needsUpdate(false)
-    { }
-
+struct TransactionStatus {
     enum Status {
         Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
         /// Normal (sent/received) transactions
@@ -43,35 +35,32 @@ public:
     };
 
     /// Transaction counts towards available balance
-    bool countsForBalance;
+    bool countsForBalance{false};
     /// Transaction was locked via InstantSend
-    bool lockedByInstantSend;
+    bool lockedByInstantSend{false};
     /// Transaction was locked via ChainLocks
-    bool lockedByChainLocks;
+    bool lockedByChainLocks{false};
     /// Sorting key based on status
     std::string sortKey;
 
     /** @name Generated (mined) transactions
        @{*/
-    int matures_in;
+    int matures_in{0};
     /**@}*/
 
     /** @name Reported status
        @{*/
-    Status status;
-    qint64 depth;
-    qint64 open_for; /**< Timestamp if status==OpenUntilDate, otherwise number
-                      of additional blocks that need to be mined before
-                      finalization */
+    Status status{Unconfirmed};
+    qint64 depth{0};
     /**@}*/
 
     /** Current block hash (to know whether cached status is still valid) */
     uint256 m_cur_block_hash{};
 
     //** Know when to update transaction for chainlocks **/
-    int cachedChainLockHeight;
+    int cachedChainLockHeight{-1};
 
-    bool needsUpdate;
+    bool needsUpdate{false};
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
