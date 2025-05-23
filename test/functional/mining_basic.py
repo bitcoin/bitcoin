@@ -187,6 +187,9 @@ class MiningTest(BitcoinTestFramework):
             assert tx_below_min_feerate['txid'] not in block_template_txids
             assert tx_below_min_feerate['txid'] not in block_txids
 
+            # Restart node to clear mempool for the next test
+            self.restart_node(0)
+
     def test_timewarp(self):
         self.log.info("Test timewarp attack mitigation (BIP94)")
         node = self.nodes[0]
@@ -280,11 +283,9 @@ class MiningTest(BitcoinTestFramework):
     def test_block_max_weight(self):
         self.log.info("Testing default and custom -blockmaxweight startup options.")
 
-        # Restart the node to allow large transactions
         LARGE_TXS_COUNT = 10
         LARGE_VSIZE = int(((MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT) / WITNESS_SCALE_FACTOR) / LARGE_TXS_COUNT)
         HIGH_FEERATE = Decimal("0.0003")
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}"])
 
         # Ensure the mempool is empty
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
@@ -312,7 +313,7 @@ class MiningTest(BitcoinTestFramework):
         # Test block template creation with custom -blockmaxweight
         custom_block_weight = MAX_BLOCK_WEIGHT - 2000
         # Reducing the weight by 2000 units will prevent 1 large transaction from fitting into the block.
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}", f"-blockmaxweight={custom_block_weight}"])
+        self.restart_node(0, extra_args=[f"-blockmaxweight={custom_block_weight}"])
 
         self.log.info("Testing the block template with custom -blockmaxweight to include 9 large and 2 normal transactions.")
         self.verify_block_template(
@@ -322,7 +323,7 @@ class MiningTest(BitcoinTestFramework):
 
         # Ensure the block weight does not exceed the maximum
         self.log.info(f"Testing that the block weight will never exceed {MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT}.")
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}", f"-blockmaxweight={MAX_BLOCK_WEIGHT}"])
+        self.restart_node(0, extra_args=[f"-blockmaxweight={MAX_BLOCK_WEIGHT}"])
         self.log.info("Sending 2 additional normal transactions to fill the mempool to the maximum block weight.")
         self.send_transactions(utxos[LARGE_TXS_COUNT + 2:], NORMAL_FEERATE, NORMAL_VSIZE)
         self.log.info(f"Testing that the mempool's weight matches the maximum block weight: {MAX_BLOCK_WEIGHT}.")
@@ -336,7 +337,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("Test -blockreservedweight startup option.")
         # Lowering the -blockreservedweight by 4000 will allow for two more transactions.
-        self.restart_node(0, extra_args=[f"-datacarriersize={LARGE_VSIZE}", "-blockreservedweight=4000"])
+        self.restart_node(0, extra_args=["-blockreservedweight=4000"])
         self.verify_block_template(
             expected_tx_count=12,
             expected_weight=MAX_BLOCK_WEIGHT - 4000,
