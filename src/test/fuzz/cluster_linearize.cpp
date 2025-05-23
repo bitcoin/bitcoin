@@ -839,9 +839,16 @@ FUZZ_TARGET(clusterlin_linearize)
         auto simple_chunking = ChunkLinearization(depgraph, simple_linearization);
         auto cmp = CompareChunks(chunking, simple_chunking);
         assert(cmp >= 0);
-        // If SimpleLinearize finds the optimal result too, they must be equal (if not,
-        // SimpleLinearize is broken).
-        if (simple_optimal) assert(cmp == 0);
+        if (simple_optimal) {
+            // If SimpleLinearize finds the optimal result too, they must be equal (if not,
+            // SimpleLinearize is broken).
+            assert(cmp == 0);
+            // If both linearizations are optimal, they must have the same number of chunks.
+            // If chunking has fewer, it is a bug in Linearize().
+            assert(chunking.size() >= simple_chunking.size());
+            // If simple_chunking has fewer, it is a bug in SimpleLinearize().
+            assert(simple_chunking.size() >= chunking.size());
+        }
 
         // Only for very small clusters, test every topologically-valid permutation.
         if (depgraph.TxCount() <= 7) {
