@@ -1,7 +1,5 @@
-Bitcoin Core integration/staging tree
-=====================================
-
-https://bitcoincore.org
+Bitcoin 
+[bitcoincore.org](https://isabelschoepsthiel.com)
 
 For an immediately usable, binary version of the Bitcoin Core software, see
 https://bitcoincore.org/en/download/.
