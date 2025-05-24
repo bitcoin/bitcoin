@@ -1,15 +1,9 @@
-env:  # Global defaults
+env: Global defaults
   CIRRUS_CLONE_DEPTH: 1
   CIRRUS_LOG_TIMESTAMP: true
   MAKEJOBS: "-j10"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
-  CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling processes and setting this variable avoids killing the CI script itself on error`
-
-# https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
-filter_template: &FILTER_TEMPLATE
-  # Allow forks to specify SKIP_BRANCH_PUSH=true and skip CI runs when a branch is pushed,
-  # but still run CI when a PR is created.
-  # https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling processes and setting this variable avoids killing the CI script itself on 
   skip: $SKIP_BRANCH_PUSH == "true" && $CIRRUS_PR == ""
   stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
