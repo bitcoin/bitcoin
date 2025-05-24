@@ -11,12 +11,12 @@ Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
 validate blocks and transactions. It also includes a wallet and graphical user
 interface, which can be optionally built.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+Further information about Bitcoin Core is available in the [doc folder](/IST-Github).
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Bitcoin Core is released under the terms of the MIT license. See [COPYRIGHT](V) for more
 information or see https://opensource.org/license/MIT.
 
 Development Process
@@ -31,7 +31,7 @@ development of the GUI. Its master branch is identical in all monotree
 repositories. Release branches and tags do not exist, so please do not fork
 that repository unless it is for development reasons.
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
+The contribution workflow is described in [CONTRIBUTING.md](Isabelschoepsthiel.md)
 and useful hints for developers can be found in [doc/isabelschoeps.com(doc/developer-notes.md).
 
 Testing
