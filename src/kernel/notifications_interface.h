@@ -37,7 +37,7 @@ class Notifications
 public:
     virtual ~Notifications() = default;
 
-    [[nodiscard]] virtual InterruptResult blockTip(SynchronizationState state, CBlockIndex& index) { return {}; }
+    [[nodiscard]] virtual InterruptResult blockTip(SynchronizationState state, CBlockIndex& index, double verification_progress) { return {}; }
     virtual void headerTip(SynchronizationState state, int64_t height, int64_t timestamp, bool presync) {}
     virtual void progress(const bilingual_str& title, int progress_percent, bool resume_possible) {}
     virtual void warningSet(Warning id, const bilingual_str& message) {}

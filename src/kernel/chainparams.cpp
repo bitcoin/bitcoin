@@ -613,9 +613,9 @@ public:
         };
 
         chainTxData = ChainTxData{
-            0,
-            0,
-            0
+            .nTime = 0,
+            .tx_count = 0,
+            .dTxRate = 0.001, // Set a non-zero rate to make it testable
         };
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
