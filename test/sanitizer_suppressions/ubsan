@@ -55,6 +55,7 @@ unsigned-integer-overflow:CCoinsViewCache::Uncache
 unsigned-integer-overflow:CompressAmount
 unsigned-integer-overflow:DecompressAmount
 unsigned-integer-overflow:crypto/
+unsigned-integer-overflow:FeeFrac::ScaledDifferenceFallback
 unsigned-integer-overflow:MurmurHash3
 unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
 unsigned-integer-overflow:InsecureRandomContext::rand64

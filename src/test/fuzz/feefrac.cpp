@@ -19,6 +19,9 @@ namespace {
 /** The maximum absolute value of an int64_t, as an arith_uint256 (2^63). */
 const auto MAX_ABS_INT64 = arith_uint256{1} << 63;
 
+/** The number 2^255 as arith_uint256. */
+const auto TWO_POW_255 = arith_uint256{1} << 255;
+
 /** Construct an arith_uint256 whose value equals abs(x). */
 arith_uint256 Abs256(int64_t x)
 {
@@ -46,23 +49,29 @@ arith_uint256 Abs256(std::pair<int64_t, uint32_t> x)
     }
 }
 
-std::strong_ordering MulCompare(int64_t a1, int64_t a2, int64_t b1, int64_t b2)
+/** Compute a1*a2 - b1*b2 + 2^255. */
+arith_uint256 ScaledDifference(int64_t a1, int64_t a2, int64_t b1, int64_t b2)
 {
-    // Compute and compare signs.
+    // Compute signs.
     int sign_a = (a1 == 0 ? 0 : a1 < 0 ? -1 : 1) * (a2 == 0 ? 0 : a2 < 0 ? -1 : 1);
     int sign_b = (b1 == 0 ? 0 : b1 < 0 ? -1 : 1) * (b2 == 0 ? 0 : b2 < 0 ? -1 : 1);
-    if (sign_a != sign_b) return sign_a <=> sign_b;
 
-    // Compute absolute values of products.
-    auto mul_abs_a = Abs256(a1) * Abs256(a2), mul_abs_b = Abs256(b1) * Abs256(b2);
+    // Compute products.
+    auto mul_a = Abs256(a1) * Abs256(a2), mul_b = Abs256(b1) * Abs256(b2);
+    if (sign_a < 0) mul_a = -mul_a;
+    if (sign_b < 0) mul_b = -mul_b;
 
-    // Compute products of absolute values.
-    if (sign_a < 0) {
-        return mul_abs_b <=> mul_abs_a;
-    } else {
-        return mul_abs_a <=> mul_abs_b;
-    }
+    // Return offset difference (so that negative differences are below positive differences).
+    return mul_a - mul_b + TWO_POW_255;
 }
+
+/** Compute a1*a2 <=> b1*b2. */
+std::strong_ordering MulCompare(int64_t a1, int64_t a2, int64_t b1, int64_t b2)
+{
+    auto scaled_diff = ScaledDifference(a1, a2, b1, b2);
+    return scaled_diff <=> TWO_POW_255;
+}
+
 
 } // namespace
 
@@ -96,6 +105,10 @@ FUZZ_TARGET(feefrac)
     auto cmp_fallback = FeeFrac::MulFallback(f1, s2) <=> FeeFrac::MulFallback(f2, s1);
     assert(cmp_fallback == cmp_feerate);
 
+    // Same, but using FeeFrac::ScaledDifferenceFallback.
+    auto diff_fallback = FeeFrac::ScaledDifferenceFallback(fr1, fr2);
+    assert((diff_fallback <=> std::pair<int64_t, uint32_t>{0, 0}) == cmp_feerate);
+
     // Total order comparisons
     auto cmp_total = std::is_eq(cmp_feerate) ? (s2 <=> s1) : cmp_feerate;
     assert((fr1 <=> fr2) == cmp_total);
@@ -105,6 +118,45 @@ FUZZ_TARGET(feefrac)
     assert((fr1 >= fr2) == std::is_gteq(cmp_total));
     assert((fr1 == fr2) == std::is_eq(cmp_total));
     assert((fr1 != fr2) == std::is_neq(cmp_total));
+}
+
+FUZZ_TARGET(feefrac_scaled_difference)
+{
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+
+    // Construct 4 FeeFracs.
+    int64_t f1 = provider.ConsumeIntegral<int64_t>();
+    int32_t s1 = provider.ConsumeIntegral<int32_t>();
+    if (s1 == 0) f1 = 0;
+    FeeFrac fr1(f1, s1);
+    int64_t f2 = provider.ConsumeIntegral<int64_t>();
+    int32_t s2 = provider.ConsumeIntegral<int32_t>();
+    if (s2 == 0) f2 = 0;
+    FeeFrac fr2(f2, s2);
+    int64_t f3 = provider.ConsumeIntegral<int64_t>();
+    int32_t s3 = provider.ConsumeIntegral<int32_t>();
+    if (s3 == 0) f3 = 0;
+    FeeFrac fr3(f3, s3);
+    int64_t f4 = provider.ConsumeIntegral<int64_t>();
+    int32_t s4 = provider.ConsumeIntegral<int32_t>();
+    if (s4 == 0) f4 = 0;
+    FeeFrac fr4(f4, s4);
+
+    // Compute the scaled difference between fr1 and fr2, and between fr3 and fr4 using
+    // arith_uint256 logic.
+    auto sim12 = ScaledDifference(f1, s2, f2, s1);
+    auto sim34 = ScaledDifference(f3, s4, f4, s3);
+    // Compute the scaled difference between fr1 and fr2, and between fr3 and fr4, using
+    // FeeFrac::ScaledDifference.
+    auto diff12 = FeeFrac::ScaledDifference(fr1, fr2);
+    auto diff34 = FeeFrac::ScaledDifference(fr3, fr4);
+    // Compare the results of comparing them.
+    assert((diff12 <=> diff34) == (sim12 <=> sim34));
+
+    // Do the same, but with ScaledDifferenceFallback instead.
+    auto diff12_fallback = FeeFrac::ScaledDifferenceFallback(fr1, fr2);
+    auto diff34_fallback = FeeFrac::ScaledDifferenceFallback(fr3, fr4);
+    assert((diff12_fallback <=> diff34_fallback) == (sim12 <=> sim34));
 }
 
 FUZZ_TARGET(feefrac_div_fallback)
