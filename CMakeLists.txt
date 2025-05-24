@@ -93,7 +93,7 @@ include(CMakeDependentOption)
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
-option(BUILD_BITCOINCONSENSUS_LIB "Build libbitcoinconsensus library." ON)
+option(BUILD_BITCOINCONSENSUS_LIB "Build libbitcoinconsensus library." OFF)
 
 option(BUILD_TESTS "Build test_bitcoin executable." ON)
 option(BUILD_TX "Build bitcoin-tx executable." ${BUILD_TESTS})
