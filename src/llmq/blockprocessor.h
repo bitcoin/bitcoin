@@ -7,7 +7,10 @@
 
 #include <unordered_lru_cache.h>
 
+#include <bls/bls.h>
+#include <checkqueue.h>
 #include <llmq/params.h>
+#include <llmq/utils.h>
 #include <protocol.h>
 #include <saltedhasher.h>
 #include <sync.h>
@@ -19,6 +22,7 @@
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
+class CBLSSignature;
 class CChain;
 class CChainState;
 class CDataStream;
@@ -41,6 +45,8 @@ private:
     CEvoDB& m_evoDb;
     CQuorumSnapshotManager& m_qsnapman;
 
+    CCheckQueue<utils::BlsCheck> m_bls_queue{4};
+
     mutable Mutex minableCommitmentsCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
     std::map<uint256, CFinalCommitment> minableCommitments GUARDED_BY(minableCommitmentsCs);
@@ -50,6 +56,7 @@ private:
 public:
     explicit CQuorumBlockProcessor(CChainState& chainstate, CDeterministicMNManager& dmnman, CEvoDB& evoDb,
                                    CQuorumSnapshotManager& qsnapman);
+    ~CQuorumBlockProcessor();
 
     [[nodiscard]] MessageProcessingResult ProcessMessage(const CNode& peer, std::string_view msg_type, CDataStream& vRecv);
 

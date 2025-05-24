@@ -12,6 +12,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <checkqueue.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
@@ -52,7 +53,24 @@ CQuorumBlockProcessor::CQuorumBlockProcessor(CChainState& chainstate, CDetermini
     m_qsnapman(qsnapman)
 {
     utils::InitQuorumsCache(mapHasMinedCommitmentCache);
+
+    int bls_threads = gArgs.GetIntArg("-parbls", DEFAULT_BLSCHECK_THREADS);
+    if (bls_threads <= 0) {
+        // -parbls=0 means autodetect (number of cores - 1 validator threads)
+        // -parbls=-n means "leave n cores free" (number of cores - n - 1 validator threads)
+        bls_threads += GetNumCores();
+    }
+    // Subtract 1 because the main thread counts towards the par threads
+    bls_threads = std::max(bls_threads - 1, 0);
+
+    // Number of script-checking threads <= MAX_BLSCHECK_THREADS
+    bls_threads = std::min(bls_threads, MAX_BLSCHECK_THREADS);
+
+    LogPrintf("Bls verification uses %d additional threads\n", bls_threads);
+    m_bls_queue.StartWorkerThreads(bls_threads);
 }
+
+CQuorumBlockProcessor::~CQuorumBlockProcessor() { m_bls_queue.StopWorkerThreads(); }
 
 MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer, std::string_view msg_type,
                                                               CDataStream& vRecv)
@@ -197,18 +215,18 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
     }
 
     if (fBLSChecks) {
+        CCheckQueueControl<utils::BlsCheck> queue_control(&m_bls_queue);
         for (const auto& [_, qc] : qcs) {
             if (qc.IsNull()) continue;
             const auto* pQuorumBaseBlockIndex = m_chainstate.m_blockman.LookupBlockIndex(qc.quorumHash);
-            if (!qc.VerifySignature(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex)) {
-                LogPrintf("[ProcessBlock] failed h[%d] llmqType[%d] version[%d] quorumIndex[%d] quorumHash[%s]\n",
-                          pindex->nHeight, ToUnderlying(qc.llmqType), qc.nVersion, qc.quorumIndex,
-                          qc.quorumHash.ToString());
-                return false;
-            }
+            qc.VerifySignatureAsync(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex, &queue_control);
+        }
+
+        if (!queue_control.Wait()) {
+            // at least one check failed
+            return false;
         }
     }
-
     for (const auto& [_, qc] : qcs) {
         if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck, false)) {
             LogPrintf("[ProcessBlock] failed h[%d] llmqType[%d] version[%d] quorumIndex[%d] quorumHash[%s]\n", pindex->nHeight, ToUnderlying(qc.llmqType), qc.nVersion, qc.quorumIndex, qc.quorumHash.ToString());

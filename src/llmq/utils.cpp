@@ -940,6 +940,25 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
     }
 }
 
+bool BlsCheck::operator()()
+{
+    if (m_pubkeys.size() > 1) {
+        if (!m_sig.VerifySecureAggregated(m_pubkeys, m_msg_hash)) {
+            LogPrint(BCLog::LLMQ, "%s\n", m_id_string);
+            return false;
+        }
+    } else if (m_pubkeys.size() == 1) {
+        if (!m_sig.VerifyInsecure(m_pubkeys.back(), m_msg_hash)) {
+            LogPrint(BCLog::LLMQ, "%s\n", m_id_string);
+            return false;
+        }
+    } else {
+        // It is supposed to be at least one public key!
+        return false;
+    }
+    return true;
+}
+
 template <typename CacheType>
 void InitQuorumsCache(CacheType& cache, bool limit_by_connections)
 {
