@@ -98,8 +98,6 @@ struct CoinSelectionParams {
     CAmount m_min_change_target{0};
     /** Cost of creating the change output. */
     CAmount m_change_fee{0};
-    /** The pre-determined minimum value to target when funding a change output. */
-    CAmount m_change_target{0};
     /** Cost of creating the change output + cost of spending the change output in the future. */
     CAmount m_cost_of_change{0};
     /** The fee to spend these UTXOs at the long term feerate. */

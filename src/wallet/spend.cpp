@@ -685,7 +685,7 @@ static bool CreateTransactionInternal(
             coin_selection_params.m_subtract_fee_outputs = true;
         }
     }
-    coin_selection_params.m_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), rng_fast);
+    coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), rng_fast);
 
     // Create change script that will be used if we need change
     CScript scriptChange;
