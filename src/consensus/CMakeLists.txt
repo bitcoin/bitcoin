@@ -6,6 +6,7 @@ include(GNUInstallDirs)
 
 add_library(bitcoinconsensus
   ../script/bitcoinconsensus.cpp
+  ../util/strencodings.cpp
 )
 target_compile_definitions(bitcoinconsensus
   PRIVATE
