@@ -3,62 +3,7 @@ env:  # Global defaults
   CIRRUS_LOG_TIMESTAMP: true
   MAKEJOBS: "-j10"
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
-  CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling processes and setting this variable avoids killing the CI script itself on error
-
-# A self-hosted machine(s) can be used via Cirrus CI. It can be configured with
-# multiple users to run tasks in parallel. No sudo permission is required.
-#
-# https://cirrus-ci.org/guide/persistent-workers/
-#
-# Generally, a persistent worker must run Ubuntu 23.04+ or Debian 12+.
-#
-# The following specific types should exist, with the following requirements:
-# - small: For an x86_64 machine, with at least 2 vCPUs and 8 GB of memory.
-# - medium: For an x86_64 machine, with at least 4 vCPUs and 16 GB of memory.
-# - arm64: For an aarch64 machine, with at least 2 vCPUs and 8 GB of memory.
-#
-# CI jobs for the latter configuration can be run on x86_64 hardware
-# by installing qemu-user-static, which works out of the box with
-# podman or docker. Background: https://stackoverflow.com/a/72890225/313633
-#
-# The above machine types are matched to each task by their label. Refer to the
-# Cirrus CI docs for more details.
-#
-# When a contributor maintains a fork of the repo, any pull request they make
-# to their own fork, or to the main repository, will trigger two CI runs:
-# one for the branch push and one for the pull request.
-# This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
-# in Cirrus repository settings, accessible from
-# https://cirrus-ci.com/github/my-organization/my-repository
-#
-# On machines that are persisted between CI jobs, RESTART_CI_DOCKER_BEFORE_RUN=1
-# ensures that previous containers and artifacts are cleared before each run.
-# This requires installing Podman instead of Docker.
-#
-# Futhermore:
-# - podman-docker-4.1+ is required due to the bugfix in 4.1
-#   (https://github.com/bitcoin/bitcoin/pull/21652#issuecomment-1657098200)
-# - The ./ci/ dependencies (with cirrus-cli) should be installed. One-liner example
-#   for a single user setup with sudo permission:
-#
-#   ```
-#   apt update && apt install git screen python3 bash podman-docker uidmap slirp4netns curl -y && curl -L -o cirrus "https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-$(dpkg --print-architecture)" && mv cirrus /usr/local/bin/cirrus && chmod +x /usr/local/bin/cirrus
-#   ```
-#
-# - There are no strict requirements on the hardware. Having fewer CPU threads
-#   than recommended merely causes the CI script to run slower.
-#   To avoid rare and intermittent OOM due to short memory usage spikes,
-#   it is recommended to add (and persist) swap:
-#
-#   ```
-#   fallocate -l 16G /swapfile_ci && chmod 600 /swapfile_ci && mkswap /swapfile_ci && swapon /swapfile_ci && ( echo '/swapfile_ci none swap sw 0 0' | tee -a /etc/fstab )
-#   ```
-#
-# - To register the persistent worker, open a `screen` session and run:
-#
-#   ```
-#   RESTART_CI_DOCKER_BEFORE_RUN=1 screen cirrus worker run --labels type=todo_fill_in_type --token todo_fill_in_token
-#   ```
+  CI_FAILFAST_TEST_LEAVE_DANGLING: "1"  # Cirrus CI does not care about dangling processes and setting this variable avoids killing the CI script itself on error`
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 filter_template: &FILTER_TEMPLATE
