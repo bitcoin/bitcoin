@@ -195,11 +195,24 @@ std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& ut
     return std::nullopt;
 }
 
-static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups, const CAmount& nTotalLower, const CAmount& nTargetValue,
+/** Find a subset of the OutputGroups that is at least as large as, but as close as possible to, the
+ * target amount; solve subset sum.
+ * param@[in]   groups          OutputGroups to choose from, sorted by value in descending order.
+ * param@[in]   nTotalLower     Total (effective) value of the UTXOs in groups.
+ * param@[in]   nTargetValue    Subset sum target, not including change.
+ * param@[out]  vfBest          Boolean vector representing the subset chosen that is closest to
+ *                              nTargetValue, with indices corresponding to groups. If the ith
+ *                              entry is true, that means the ith group in groups was selected.
+ * param@[out]  nBest           Total amount of subset chosen that is closest to nTargetValue.
+ * param@[in]   iterations      Maximum number of tries.
+ */
+static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups,
+                                  const CAmount& nTotalLower, const CAmount& nTargetValue,
                                   std::vector<char>& vfBest, CAmount& nBest, int iterations = 1000)
 {
     std::vector<char> vfIncluded;
 
+    // Worst case "best" approximation is just all of the groups.
     vfBest.assign(groups.size(), true);
     nBest = nTotalLower;
     int nBestInputCount = 0;
@@ -228,6 +241,8 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
                     if (nTotal >= nTargetValue)
                     {
                         fReachedTarget = true;
+                        // If the total is between nTargetValue and nBest, it's our new best
+                        // approximation.
                         if (nTotal < nBest || (nTotal == nBest && nTotalInputCount < nBestInputCount))
                         {
                             nBest = nTotal;
@@ -266,7 +281,8 @@ bool less_then_denom (const OutputGroup& group1, const OutputGroup& group2)
     return (!found1 && found2);
 }
 
-std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue, FastRandomContext& rng, bool fFullyMixedOnly, CAmount maxTxFee)
+std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
+                                              CAmount change_target, FastRandomContext& rng, bool fFullyMixedOnly, CAmount maxTxFee)
 {
     if (groups.empty()) return std::nullopt;
 
@@ -274,13 +290,14 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
 
     // List of values less than target
     std::optional<OutputGroup> lowest_larger;
+    // Groups with selection amount smaller than the target and any change we might produce.
+    // Don't include groups larger than this, because they will only cause us to overshoot.
     std::vector<OutputGroup> applicable_groups;
     CAmount nTotalLower = 0;
 
     Shuffle(groups.begin(), groups.end(), rng);
 
     int tryDenomStart = 0;
-    CAmount nMinChange = MIN_CHANGE;
 
     if (fFullyMixedOnly) {
         // larger denoms first
@@ -288,7 +305,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
         // we actually want denoms only, so let's skip "non-denom only" step
         tryDenomStart = 1;
         // no change is allowed
-        nMinChange = 0;
+        change_target = 0;
     } else {
         // move denoms down on the list
         // try not to use denominated coins when not needed, save denoms for coinjoin
@@ -307,7 +324,7 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
             if (group.GetSelectionAmount() == nTargetValue) {
                 result.AddInput(group);
                 return result;
-            } else if (group.GetSelectionAmount() < nTargetValue + nMinChange) {
+            } else if (group.GetSelectionAmount() < nTargetValue + change_target) {
                 applicable_groups.push_back(group);
                 nTotalLower += group.GetSelectionAmount();
             } else if (!lowest_larger || group.GetSelectionAmount() < lowest_larger->GetSelectionAmount()) {
@@ -350,14 +367,14 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
     CAmount nBest;
 
     ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue, vfBest, nBest);
-    if (nBest != nTargetValue && nMinChange != 0 && nTotalLower >= nTargetValue + nMinChange) {
-        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + nMinChange, vfBest, nBest);
+    if (nBest != nTargetValue && change_target != 0 && nTotalLower >= nTargetValue + change_target) {
+        ApproximateBestSubset(rng, applicable_groups, nTotalLower, nTargetValue + change_target, vfBest, nBest);
     }
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
     if (lowest_larger &&
-        ((nBest != nTargetValue && nBest < nTargetValue + nMinChange) || lowest_larger->GetSelectionAmount() <= nBest)) {
+        ((nBest != nTargetValue && nBest < nTargetValue + change_target) || lowest_larger->GetSelectionAmount() <= nBest)) {
         result.AddInput(*lowest_larger);
     } else {
         std::string log_message{"Coin selection best subset: "};
@@ -453,6 +470,17 @@ CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, 
     }
 
     return waste;
+}
+
+CAmount GenerateChangeTarget(CAmount payment_value, FastRandomContext& rng)
+{
+    if (payment_value <= CHANGE_LOWER / 2) {
+        return CHANGE_LOWER;
+    } else {
+        // random value between 50ksat and min (payment_value * 2, 1milsat)
+        const auto upper_bound = std::min(payment_value * 2, CHANGE_UPPER);
+        return rng.randrange(upper_bound - CHANGE_LOWER) + CHANGE_LOWER;
+    }
 }
 
 void SelectionResult::ComputeAndSetWaste(CAmount change_cost)

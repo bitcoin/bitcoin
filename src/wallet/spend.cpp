@@ -19,6 +19,8 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <cmath>
+
 using interfaces::FoundBlock;
 
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
@@ -385,14 +387,18 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     if (!coin_selection_params.m_subtract_fee_outputs && nCoinType != CoinType::ONLY_FULLY_MIXED) {
         target_with_change += coin_selection_params.m_change_fee;
     }
-    if (auto knapsack_result{KnapsackSolver(all_groups, target_with_change, coin_selection_params.rng_fast, nCoinType == CoinType::ONLY_FULLY_MIXED, wallet.m_default_max_tx_fee)}) {
+    if (auto knapsack_result{KnapsackSolver(all_groups, target_with_change, coin_selection_params.m_min_change_target,
+                                            coin_selection_params.rng_fast, nCoinType == CoinType::ONLY_FULLY_MIXED,
+                                            wallet.m_default_max_tx_fee)}) {
         knapsack_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*knapsack_result);
     }
 
-    // We include the minimum final change for SRD as we do want to avoid making really small change.
-    // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
-    const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE;
+    // Include change for SRD as we want to avoid making really small change if the selection just
+    // barely meets the target. Just use the lower bound change target instead of the randomly
+    // generated one, since SRD will result in a random change amount anyway; avoid making the
+    // target needlessly large.
+    const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + CHANGE_LOWER;
     if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target, coin_selection_params.rng_fast)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*srd_result);
@@ -673,6 +679,7 @@ static bool CreateTransactionInternal(
             coin_selection_params.m_subtract_fee_outputs = true;
         }
     }
+    coin_selection_params.m_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), rng_fast);
 
     // Create change script that will be used if we need change
     CScript scriptChange;
