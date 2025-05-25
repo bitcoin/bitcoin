@@ -5,48 +5,34 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <consensus/amount.h>
 #include <core_io.h>
 #include <httpserver.h>
-#include <interfaces/chain.h>
-#include <node/context.h>
-#include <policy/feerate.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <rpc/blockchain.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
-#include <script/descriptor.h>
 #include <util/bip32.h>
 #include <util/fees.h>
-#include <util/string.h>
-#include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
 #include <util/vector.h>
-#include <wallet/coincontrol.h>
 #include <wallet/context.h>
-#include <wallet/load.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
-#include <wallet/walletdb.h>
-#include <wallet/walletutil.h>
 #include <key_io.h>
 
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 #include <llmq/chainlocks.h>
 
-#include <stdint.h>
+#include <optional>
 
 #include <univalue.h>
-
-#include <optional>
 
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
 bool HaveKey(const SigningProvider& wallet, const CKey& key)
@@ -920,7 +906,19 @@ static RPCHelpMan upgradewallet()
     };
 }
 
-RPCHelpMan abortrescan();
+// addresses
+RPCHelpMan getaddressinfo();
+RPCHelpMan getnewaddress();
+RPCHelpMan getrawchangeaddress();
+RPCHelpMan setlabel();
+RPCHelpMan listaddressgroupings();
+RPCHelpMan addmultisigaddress();
+RPCHelpMan keypoolrefill();
+RPCHelpMan newkeypool();
+RPCHelpMan getaddressesbylabel();
+RPCHelpMan listlabels();
+
+// backup
 RPCHelpMan dumpprivkey();
 RPCHelpMan importprivkey();
 RPCHelpMan importaddress();
@@ -932,22 +930,10 @@ RPCHelpMan removeprunedfunds();
 RPCHelpMan importmulti();
 RPCHelpMan importdescriptors();
 RPCHelpMan listdescriptors();
-RPCHelpMan signmessage();
 RPCHelpMan backupwallet();
 RPCHelpMan restorewallet();
 RPCHelpMan dumphdinfo();
 RPCHelpMan importelectrumwallet();
-
-// addresses
-RPCHelpMan getnewaddress();
-RPCHelpMan getrawchangeaddress();
-RPCHelpMan setlabel();
-RPCHelpMan listaddressgroupings();
-RPCHelpMan addmultisigaddress();
-RPCHelpMan keypoolrefill();
-RPCHelpMan newkeypool();
-RPCHelpMan getaddressesbylabel();
-RPCHelpMan listlabels();
 
 // coins
 RPCHelpMan getreceivedbyaddress();
@@ -973,6 +959,10 @@ RPCHelpMan fundrawtransaction();
 RPCHelpMan send();
 RPCHelpMan walletprocesspsbt();
 RPCHelpMan walletcreatefundedpsbt();
+RPCHelpMan signrawtransactionwithwallet();
+
+// signmessage
+RPCHelpMan signmessage();
 
 // transactions
 RPCHelpMan listreceivedbyaddress();
@@ -982,6 +972,7 @@ RPCHelpMan listsinceblock();
 RPCHelpMan gettransaction();
 RPCHelpMan abandontransaction();
 RPCHelpMan rescanblockchain();
+RPCHelpMan abortrescan();
 
 Span<const CRPCCommand> GetWalletRPCCommands()
 {

@@ -35,13 +35,12 @@
 
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
-#include <wallet/rpcwallet.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 #endif//ENABLE_WALLET
 
 #ifdef ENABLE_WALLET
-extern RPCHelpMan signrawtransaction();
+extern RPCHelpMan signrawtransactionwithwallet();
 extern RPCHelpMan sendrawtransaction();
 #else
 class CWallet;
