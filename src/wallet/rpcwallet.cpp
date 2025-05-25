@@ -1713,40 +1713,6 @@ static RPCHelpMan abandontransaction()
 }
 
 
-static RPCHelpMan backupwallet()
-{
-    return RPCHelpMan{"backupwallet",
-        "\nSafely copies current wallet file to destination, which can be a directory or a path with filename.\n",
-        {
-            {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "The destination directory or file"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("backupwallet", "\"backup.dat\"")
-    + HelpExampleRpc("backupwallet", "\"backup.dat\"")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
-
-    LOCK(pwallet->cs_wallet);
-
-    std::string strDest = request.params[0].get_str();
-    if (!pwallet->BackupWallet(strDest)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
-    }
-
-    return NullUniValue;
-},
-    };
-}
-
-
 static RPCHelpMan keypoolrefill()
 {
     return RPCHelpMan{"keypoolrefill",
@@ -1823,259 +1789,6 @@ static RPCHelpMan newkeypool()
     };
 }
 
-
-static RPCHelpMan walletpassphrase()
-{
-    return RPCHelpMan{"walletpassphrase",
-        "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-        "This is needed prior to performing transactions related to private keys such as sending Dash\n"
-        "\nNote:\n"
-        "Issuing the walletpassphrase command while the wallet is already unlocked will set a new unlock\n"
-        "time that overrides the old one.\n",
-        {
-            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet passphrase"},
-            {"timeout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The time to keep the decryption key in seconds; capped at 100000000 (~3 years)."},
-            {"mixingonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "If is true sending functions are disabled."},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-    "\nUnlock the wallet for 60 seconds\n"
-    + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
-    "\nUnlock the wallet for 60 seconds but allow CoinJoin only\n"
-    + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60 true") +
-    "\nLock the wallet again (before 60 seconds)\n"
-    + HelpExampleCli("walletlock", "") +
-    "\nAs a JSON-RPC call\n"
-    + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
-    int64_t nSleepTime;
-    int64_t relock_time;
-    // Prevent concurrent calls to walletpassphrase with the same wallet.
-    LOCK(pwallet->m_unlock_mutex);
-    {
-        LOCK(pwallet->cs_wallet);
-
-        if (!pwallet->IsCrypted()) {
-            throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
-        }
-
-        // Note that the walletpassphrase is stored in request.params[0] which is not mlock()ed
-        SecureString strWalletPass;
-        strWalletPass.reserve(100);
-        // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-        // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-        strWalletPass = request.params[0].get_str().c_str();
-
-        // Get the timeout
-        nSleepTime = request.params[1].get_int64();
-        // Timeout cannot be negative, otherwise it will relock immediately
-        if (nSleepTime < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
-        }
-        // Clamp timeout
-        constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
-        if (nSleepTime > MAX_SLEEP_TIME) {
-            nSleepTime = MAX_SLEEP_TIME;
-        }
-
-        bool fForMixingOnly = false;
-        if (!request.params[2].isNull())
-            fForMixingOnly = request.params[2].get_bool();
-
-        if (fForMixingOnly && !pwallet->IsLocked()) {
-            // Downgrading from "fuly unlocked" mode to "mixing only" one is not supported.
-            // Updating unlock time when current unlock mode is not changed or when it is upgraded
-            // from "mixing only" to "fuly unlocked" is ok.
-            throw JSONRPCError(RPC_WALLET_ALREADY_UNLOCKED, "Error: Wallet is already fully unlocked.");
-        }
-
-        if (strWalletPass.empty()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
-        }
-
-        if (!pwallet->Unlock(strWalletPass, fForMixingOnly)) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
-        }
-
-        pwallet->TopUpKeyPool();
-
-        pwallet->nRelockTime = GetTime() + nSleepTime;
-        relock_time = pwallet->nRelockTime;
-    }
-    // rpcRunLater must be called without cs_wallet held otherwise a deadlock
-    // can occur. The deadlock would happen when RPCRunLater removes the
-    // previous timer (and waits for the callback to finish if already running)
-    // and the callback locks cs_wallet.
-    AssertLockNotHeld(wallet->cs_wallet);
-    // Keep a weak pointer to the wallet so that it is possible to unload the
-    // wallet before the following callback is called. If a valid shared pointer
-    // is acquired in the callback then the wallet is still loaded.
-    std::weak_ptr<CWallet> weak_wallet = wallet;
-    pwallet->chain().rpcRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet, relock_time] {
-        if (auto shared_wallet = weak_wallet.lock()) {
-            LOCK(shared_wallet->cs_wallet);
-            // Skip if this is not the most recent rpcRunLater callback.
-            if (shared_wallet->nRelockTime != relock_time) return;
-            shared_wallet->Lock();
-            shared_wallet->nRelockTime = 0;
-        }
-    }, nSleepTime);
-
-    return NullUniValue;
-},
-    };
-}
-
-
-static RPCHelpMan walletpassphrasechange()
-{
-    return RPCHelpMan{"walletpassphrasechange",
-        "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n",
-        {
-            {"oldpassphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The current passphrase"},
-            {"newpassphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The new passphrase"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
-    + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    LOCK(pwallet->cs_wallet);
-
-    if (!pwallet->IsCrypted()) {
-        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
-    }
-
-    // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-    SecureString strOldWalletPass;
-    strOldWalletPass.reserve(100);
-    strOldWalletPass = request.params[0].get_str().c_str();
-
-    SecureString strNewWalletPass;
-    strNewWalletPass.reserve(100);
-    strNewWalletPass = request.params[1].get_str().c_str();
-
-    if (strOldWalletPass.empty() || strNewWalletPass.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
-    }
-
-    if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
-        throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
-    }
-
-    return NullUniValue;
-},
-    };
-}
-
-
-static RPCHelpMan walletlock()
-{
-    return RPCHelpMan{"walletlock",
-        "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
-        "After calling this method, you will need to call walletpassphrase again\n"
-        "before being able to call any methods which require the wallet to be unlocked.\n",
-        {},
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-    "\nSet the passphrase for 2 minutes to perform a transaction\n"
-    + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
-    "\nPerform a send (requires passphrase set)\n"
-    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 1.0") +
-    "\nClear the passphrase since we are done before 2 minutes is up\n"
-    + HelpExampleCli("walletlock", "") +
-    "\nAs a JSON-RPC call\n"
-    + HelpExampleRpc("walletlock", "")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    LOCK(pwallet->cs_wallet);
-
-    if (!pwallet->IsCrypted()) {
-        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
-    }
-
-    pwallet->Lock();
-    pwallet->nRelockTime = 0;
-
-    return NullUniValue;
-},
-    };
-}
-
-
-static RPCHelpMan encryptwallet()
-{
-    return RPCHelpMan{"encryptwallet",
-        "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
-        "After this, any calls that interact with private keys such as sending or signing \n"
-        "will require the passphrase to be set prior the making these calls.\n"
-        "Use the walletpassphrase call for this, and then walletlock call.\n"
-        "If the wallet is already encrypted, use the walletpassphrasechange call.\n",
-        {
-            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long."},
-        },
-        RPCResult{RPCResult::Type::STR, "", "A string with further instructions"},
-        RPCExamples{
-    "\nEncrypt your wallet\n"
-    + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-    "\nNow set the passphrase to use the wallet, such as for signing or sending Dash\n"
-    + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
-    "\nNow we can do something like sign\n"
-    + HelpExampleCli("signmessage", "\"address\" \"test message\"") +
-    "\nNow lock the wallet again by removing the passphrase\n"
-    + HelpExampleCli("walletlock", "") +
-    "\nAs a JSON-RPC call\n"
-    + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    LOCK(pwallet->cs_wallet);
-
-    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: wallet does not contain private keys, nothing to encrypt.");
-    }
-
-    if (pwallet->IsCrypted()) {
-        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
-    }
-
-    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-    SecureString strWalletPass;
-    strWalletPass.reserve(100);
-    strWalletPass = request.params[0].get_str().c_str();
-
-    if (strWalletPass.empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
-    }
-
-    if (!pwallet->EncryptWallet(strWalletPass)) {
-        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
-    }
-
-    return "wallet encrypted; The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
-},
-    };
-}
 
 static RPCHelpMan lockunspent()
 {
@@ -2628,33 +2341,6 @@ static RPCHelpMan listwallets()
     };
 }
 
-void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
-{
-    if (!wallet) {
-        // Map bad format to not found, since bad format is returned when the
-        // wallet directory exists, but doesn't contain a data file.
-        RPCErrorCode code = RPC_WALLET_ERROR;
-        switch (status) {
-            case DatabaseStatus::FAILED_NOT_FOUND:
-            case DatabaseStatus::FAILED_BAD_FORMAT:
-                code = RPC_WALLET_NOT_FOUND;
-                break;
-            case DatabaseStatus::FAILED_ALREADY_LOADED:
-                code = RPC_WALLET_ALREADY_LOADED;
-                break;
-            case DatabaseStatus::FAILED_ALREADY_EXISTS:
-                code = RPC_WALLET_ALREADY_EXISTS;
-                break;
-            case DatabaseStatus::FAILED_INVALID_BACKUP_FILE:
-                code = RPC_INVALID_PARAMETER;
-                break;
-            default: // RPC_WALLET_ERROR is returned for all other cases.
-                break;
-        }
-        throw JSONRPCError(code, error.original);
-    }
-}
-
 static RPCHelpMan upgradetohd()
 {
     return RPCHelpMan{"upgradetohd",
@@ -2954,58 +2640,6 @@ static RPCHelpMan createwallet()
     obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
 
     return obj;
-},
-    };
-}
-
-static RPCHelpMan restorewallet()
-{
-    return RPCHelpMan{
-        "restorewallet",
-        "\nRestore and loads a wallet from backup.\n",
-        {
-            {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name that will be applied to the restored wallet"},
-            {"backup_file", RPCArg::Type::STR, RPCArg::Optional::NO, "The backup file that will be used to restore the wallet."},
-            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "name", "The wallet name if restored successfully."},
-                {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("restorewallet", "\"testwallet\" \"home\\backups\\backup-file.bak\"")
-            + HelpExampleRpc("restorewallet", "\"testwallet\" \"home\\backups\\backup-file.bak\"")
-            + HelpExampleCliNamed("restorewallet", {{"wallet_name", "testwallet"}, {"backup_file", "home\\backups\\backup-file.bak\""}, {"load_on_startup", true}})
-            + HelpExampleRpcNamed("restorewallet", {{"wallet_name", "testwallet"}, {"backup_file", "home\\backups\\backup-file.bak\""}, {"load_on_startup", true}})
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-
-    WalletContext& context = EnsureWalletContext(request.context);
-
-    auto backup_file = fs::u8path(request.params[1].get_str());
-
-    std::string wallet_name = request.params[0].get_str();
-
-    std::optional<bool> load_on_start = request.params[2].isNull() ? std::nullopt : std::optional<bool>(request.params[2].get_bool());
-
-    DatabaseStatus status;
-    bilingual_str error;
-    std::vector<bilingual_str> warnings;
-
-    const std::shared_ptr<CWallet> wallet = RestoreWallet(context, backup_file, wallet_name, load_on_start, status, error, warnings);
-
-    HandleWalletError(wallet, status, error);
-
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("name", wallet->GetName());
-    obj.pushKV("warning", Join(warnings, Untranslated("\n")).original);
-
-    return obj;
-
 },
     };
 }
@@ -4612,8 +4246,16 @@ RPCHelpMan importmulti();
 RPCHelpMan importdescriptors();
 RPCHelpMan listdescriptors();
 RPCHelpMan signmessage();
+RPCHelpMan backupwallet();
+RPCHelpMan restorewallet();
 RPCHelpMan dumphdinfo();
 RPCHelpMan importelectrumwallet();
+
+// encryption
+RPCHelpMan walletpassphrase();
+RPCHelpMan walletpassphrasechange();
+RPCHelpMan walletlock();
+RPCHelpMan encryptwallet();
 
 Span<const CRPCCommand> GetWalletRPCCommands()
 {

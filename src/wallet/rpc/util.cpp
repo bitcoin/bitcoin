@@ -5,6 +5,7 @@
 #include <wallet/rpc/util.h>
 
 #include <rpc/util.h>
+#include <util/translation.h>
 #include <util/url.h>
 #include <wallet/context.h>
 #include <wallet/wallet.h>
@@ -119,4 +120,31 @@ std::string LabelFromValue(const UniValue& value)
     if (label == "*")
         throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, "Invalid label name");
     return label;
+}
+
+void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error)
+{
+    if (!wallet) {
+        // Map bad format to not found, since bad format is returned when the
+        // wallet directory exists, but doesn't contain a data file.
+        RPCErrorCode code = RPC_WALLET_ERROR;
+        switch (status) {
+            case DatabaseStatus::FAILED_NOT_FOUND:
+            case DatabaseStatus::FAILED_BAD_FORMAT:
+                code = RPC_WALLET_NOT_FOUND;
+                break;
+            case DatabaseStatus::FAILED_ALREADY_LOADED:
+                code = RPC_WALLET_ALREADY_LOADED;
+                break;
+            case DatabaseStatus::FAILED_ALREADY_EXISTS:
+                code = RPC_WALLET_ALREADY_EXISTS;
+                break;
+            case DatabaseStatus::FAILED_INVALID_BACKUP_FILE:
+                code = RPC_INVALID_PARAMETER;
+                break;
+            default: // RPC_WALLET_ERROR is returned for all other cases.
+                break;
+        }
+        throw JSONRPCError(code, error.original);
+    }
 }
