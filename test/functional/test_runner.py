@@ -195,6 +195,7 @@ BASE_SCRIPTS = [
     'wallet_watchonly.py --usecli --legacy-wallet',
     'interface_http.py',
     'interface_rpc.py',
+    'interface_usdt_coinselection.py',
     'interface_usdt_net.py',
     'interface_usdt_utxocache.py',
     'interface_usdt_validation.py',
