@@ -27,6 +27,7 @@ class CBlockIndex;
 class CDeterministicMNList;
 class CFeeRate;
 class CGovernanceObject;
+class CGovernanceVote;
 class CNodeStats;
 class Coin;
 class RPCTimerInterface;
@@ -70,6 +71,7 @@ public:
     virtual int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) = 0;
     virtual bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) = 0;
     virtual bool isEnabled() = 0;
+    virtual bool processVoteAndRelay(const CGovernanceVote& vote, std::string& error) = 0;
     virtual void setContext(node::NodeContext* context) {}
 };
 

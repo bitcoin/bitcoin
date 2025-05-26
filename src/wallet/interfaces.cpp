@@ -193,6 +193,10 @@ public:
     {
         return m_wallet->SignMessage(message, pkhash, str_sig);
     }
+    bool signSpecialTxPayload(const uint256& hash, const CKeyID& keyid, std::vector<unsigned char>& vchSig) override
+    {
+        return m_wallet->SignSpecialTxPayload(hash, keyid, vchSig);
+    }
     bool isSpendable(const CScript& script) override
     {
         LOCK(m_wallet->cs_wallet);
