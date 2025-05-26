@@ -221,7 +221,7 @@ public:
 
     [[nodiscard]] size_t GetValidMNsCount() const
     {
-        return ranges::count_if(mnMap, [](const auto& p) { return IsMNValid(*p.second); });
+        return ranges::count_if(mnMap, [](const auto& p) { return !p.second->pdmnState->IsBanned(); });
     }
 
     [[nodiscard]] size_t GetAllEvoCount() const
@@ -231,14 +231,15 @@ public:
 
     [[nodiscard]] size_t GetValidEvoCount() const
     {
-        return ranges::count_if(mnMap,
-                                [](const auto& p) { return p.second->nType == MnType::Evo && IsMNValid(*p.second); });
+        return ranges::count_if(mnMap, [](const auto& p) {
+            return p.second->nType == MnType::Evo && !p.second->pdmnState->IsBanned();
+        });
     }
 
     [[nodiscard]] size_t GetValidWeightedMNsCount() const
     {
         return std::accumulate(mnMap.begin(), mnMap.end(), 0, [](auto res, const auto& p) {
-            if (!IsMNValid(*p.second)) return res;
+            if (p.second->pdmnState->IsBanned()) return res;
             return res + GetMnType(p.second->nType).voting_weight;
         });
     }
@@ -253,7 +254,7 @@ public:
     void ForEachMN(bool onlyValid, Callback&& cb) const
     {
         for (const auto& p : mnMap) {
-            if (!onlyValid || IsMNValid(*p.second)) {
+            if (!onlyValid || !p.second->pdmnState->IsBanned()) {
                 cb(*p.second);
             }
         }
@@ -270,7 +271,7 @@ public:
     void ForEachMNShared(bool onlyValid, Callback&& cb) const
     {
         for (const auto& p : mnMap) {
-            if (!onlyValid || IsMNValid(*p.second)) {
+            if (!onlyValid || !p.second->pdmnState->IsBanned()) {
                 cb(p.second);
             }
         }
@@ -301,8 +302,6 @@ public:
 
     [[nodiscard]] bool IsMNValid(const uint256& proTxHash) const;
     [[nodiscard]] bool IsMNPoSeBanned(const uint256& proTxHash) const;
-    static bool IsMNValid(const CDeterministicMN& dmn);
-    static bool IsMNPoSeBanned(const CDeterministicMN& dmn);
 
     [[nodiscard]] bool HasMN(const uint256& proTxHash) const
     {
