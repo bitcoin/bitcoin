@@ -195,6 +195,7 @@ Q_SIGNALS:
 private:
     QString m_success_message;
 
+    void do_migrate(const std::string& name);
     void finish();
 };
 

@@ -439,22 +439,8 @@ void RestoreWalletActivity::finish()
     Q_EMIT finished();
 }
 
-void MigrateWalletActivity::migrate(const std::string& name)
+void MigrateWalletActivity::do_migrate(const std::string& name)
 {
-    // Warn the user about migration
-    QMessageBox box(m_parent_widget);
-    box.setWindowTitle(tr("Migrate wallet"));
-    box.setText(tr("Are you sure you wish to migrate the wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(name))));
-    box.setInformativeText(tr("Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.\n"
-                "If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.\n"
-                "If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.\n\n"
-                "The migration process will create a backup of the wallet before migrating. This backup file will be named "
-                "<wallet name>-<timestamp>.legacy.bak and can be found in the directory for this wallet. In the event of "
-                "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality."));
-    box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
-    box.setDefaultButton(QMessageBox::Yes);
-    if (box.exec() != QMessageBox::Yes) return;
-
     SecureString passphrase;
     if (node().walletLoader().isEncrypted(name)) {
         // Get the passphrase for the wallet
@@ -482,6 +468,25 @@ void MigrateWalletActivity::migrate(const std::string& name)
 
         QTimer::singleShot(0, this, &MigrateWalletActivity::finish);
     });
+}
+
+void MigrateWalletActivity::migrate(const std::string& name)
+{
+    // Warn the user about migration
+    QMessageBox box(m_parent_widget);
+    box.setWindowTitle(tr("Migrate wallet"));
+    box.setText(tr("Are you sure you wish to migrate the wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(name))));
+    box.setInformativeText(tr("Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.\n"
+                "If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.\n"
+                "If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.\n\n"
+                "The migration process will create a backup of the wallet before migrating. This backup file will be named "
+                "<wallet name>-<timestamp>.legacy.bak and can be found in the directory for this wallet. In the event of "
+                "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality."));
+    box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() != QMessageBox::Yes) return;
+
+    do_migrate(name);
 }
 
 void MigrateWalletActivity::finish()
