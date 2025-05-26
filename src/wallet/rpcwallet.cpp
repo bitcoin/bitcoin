@@ -422,24 +422,6 @@ static RPCHelpMan sendtoaddress()
     };
 }
 
-// DEPRECATED
-static RPCHelpMan instantsendtoaddress()
-{
-    return RPCHelpMan{"instantsendtoaddress",
-        "instantsendtoaddress is deprecated and sendtoaddress should be used instead",
-        {},
-        RPCResult{
-            RPCResult::Type::STR_HEX, "txid", "The transaction id."
-        },
-        RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    LogPrintf("WARNING: Used deprecated RPC method 'instantsendtoaddress'! Please use 'sendtoaddress' instead\n");
-    return sendtoaddress().HandleRequest(request);
-},
-    };
-}
-
 static RPCHelpMan listaddressgroupings()
 {
     return RPCHelpMan{"listaddressgroupings",
@@ -4639,7 +4621,6 @@ Span<const CRPCCommand> GetWalletRPCCommands()
 static const CRPCCommand commands[] =
 { //  category              actor (function)
   //  ------------------    ------------------------
-    { "hidden",             &instantsendtoaddress,           },
     { "rawtransactions",    &fundrawtransaction,             },
     { "wallet",             &abandontransaction,             },
     { "wallet",             &abortrescan,                    },
