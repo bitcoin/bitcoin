@@ -12,14 +12,14 @@
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <governance/vote.h>
+#include <interfaces/node.h>
+#include <interfaces/wallet.h>
 #include <key_io.h>
 #include <netbase.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/walletmodel.h>
-#include <interfaces/node.h>
-#include <interfaces/wallet.h>
 #include <script/standard.h>
 #include <util/message.h>
 #include <util/strencodings.h>
@@ -312,7 +312,8 @@ GovernanceList::GovernanceList(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_count_2, ui->countLabel, ui->label_mn_count, ui->mnCountLabel}, GUIUtil::FontWeight::Bold, 14);
+    GUIUtil::setFont({ui->label_count_2, ui->countLabel, ui->label_mn_count, ui->mnCountLabel},
+                     GUIUtil::FontWeight::Bold, 14);
     GUIUtil::setFont({ui->label_filter_2}, GUIUtil::FontWeight::Normal, 15);
 
     proposalModelProxy->setSourceModel(proposalModel);
@@ -360,7 +361,7 @@ void GovernanceList::setClientModel(ClientModel* model)
     updateProposalList();
     if (model != nullptr) {
         connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
-        
+
         // Update voting capability if we now have both client and wallet models
         if (walletModel) {
             updateVotingCapability();
@@ -437,7 +438,7 @@ void GovernanceList::showProposalContextMenu(const QPoint& pos)
 
     proposalContextMenu->clear();
     proposalContextMenu->addAction(proposal_url, proposal, &Proposal::openUrl);
-    
+
     // Add voting options if wallet is available and has voting capability
     if (walletModel && canVote()) {
         proposalContextMenu->addSeparator();
@@ -445,7 +446,7 @@ void GovernanceList::showProposalContextMenu(const QPoint& pos)
         proposalContextMenu->addAction(tr("Vote No"), this, &GovernanceList::voteNo);
         proposalContextMenu->addAction(tr("Vote Abstain"), this, &GovernanceList::voteAbstain);
     }
-    
+
     proposalContextMenu->exec(QCursor::pos());
 }
 
@@ -469,11 +470,11 @@ void GovernanceList::showAdditionalInfo(const QModelIndex& index)
 void GovernanceList::updateVotingCapability()
 {
     if (!walletModel || !clientModel) return;
-    
+
     votableMasternodes.clear();
     auto [mnList, pindex] = clientModel->getMasternodeList();
     if (!pindex) return;
-    
+
     mnList.ForEachMN(true, [&](const auto& dmn) {
         // Check if wallet owns the voting key using the same logic as RPC
         const CScript script = GetScriptForDestination(PKHash(dmn.pdmnState->keyIDVoting));
@@ -481,7 +482,7 @@ void GovernanceList::updateVotingCapability()
             votableMasternodes[dmn.proTxHash] = dmn.pdmnState->keyIDVoting;
         }
     });
-    
+
     // Update masternode count display
     updateMasternodeCount();
 }
@@ -493,70 +494,56 @@ void GovernanceList::updateMasternodeCount() const
     }
 }
 
-void GovernanceList::voteYes()
-{
-    voteForProposal(VOTE_OUTCOME_YES);
-}
+void GovernanceList::voteYes() { voteForProposal(VOTE_OUTCOME_YES); }
 
-void GovernanceList::voteNo()
-{
-    voteForProposal(VOTE_OUTCOME_NO);
-}
+void GovernanceList::voteNo() { voteForProposal(VOTE_OUTCOME_NO); }
 
-void GovernanceList::voteAbstain()
-{
-    voteForProposal(VOTE_OUTCOME_ABSTAIN);
-}
+void GovernanceList::voteAbstain() { voteForProposal(VOTE_OUTCOME_ABSTAIN); }
 
 void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
 {
     if (!walletModel) {
-        QMessageBox::warning(this, tr("Voting Failed"), 
-                           tr("No wallet available."));
+        QMessageBox::warning(this, tr("Voting Failed"), tr("No wallet available."));
         return;
     }
-    
+
     if (votableMasternodes.empty()) {
-        QMessageBox::warning(this, tr("Voting Failed"), 
-                           tr("No masternode voting keys found in wallet."));
+        QMessageBox::warning(this, tr("Voting Failed"), tr("No masternode voting keys found in wallet."));
         return;
     }
-    
+
     // Get the selected proposal
     const auto selection = ui->govTableView->selectionModel()->selectedRows();
     if (selection.isEmpty()) {
-        QMessageBox::warning(this, tr("Voting Failed"), 
-                           tr("Please select a proposal to vote on."));
+        QMessageBox::warning(this, tr("Voting Failed"), tr("Please select a proposal to vote on."));
         return;
     }
-    
+
     const auto index = selection.first();
     const auto proposal = proposalModel->getProposalAt(proposalModelProxy->mapToSource(index));
     if (proposal == nullptr) return;
-    
+
     const uint256 proposalHash(uint256S(proposal->hash().toStdString()));
-    
+
     // Request unlock if needed and keep context alive for the voting operation
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if (!ctx.isValid()) {
         // Unlock cancelled or failed
-        QMessageBox::warning(this, tr("Voting Failed"),
-                   tr("Unable to unlock wallet."));
+        QMessageBox::warning(this, tr("Voting Failed"), tr("Unable to unlock wallet."));
         return;
     }
-    
+
     int nSuccessful = 0;
     int nFailed = 0;
     QStringList failedMessages;
-    
+
     // Get masternode list once before the loop
     auto [mnList, pindex] = clientModel->getMasternodeList();
     if (!pindex) {
-        QMessageBox::warning(this, tr("Voting Failed"), 
-                           tr("Unable to get masternode list. Please try again later."));
+        QMessageBox::warning(this, tr("Voting Failed"), tr("Unable to get masternode list. Please try again later."));
         return;
     }
-    
+
     // Vote with each masternode
     for (const auto& [proTxHash, votingKeyID] : votableMasternodes) {
         // Find the masternode
@@ -566,13 +553,13 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
             failedMessages.append(tr("Masternode %1 not found").arg(QString::fromStdString(proTxHash.ToString())));
             continue;
         }
-        
+
         // Create vote
         CGovernanceVote vote(dmn->collateralOutpoint, proposalHash, VOTE_SIGNAL_FUNDING, outcome);
-        
+
         // Sign vote
         bool signSuccess = false;
-        
+
         // Special implementation for testnet (same as RPC SignVote)
         if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
             // Testnet uses SignSpecialTxPayload
@@ -594,25 +581,25 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
                 }
             }
         }
-        
+
         if (!signSuccess) {
             nFailed++;
-            failedMessages.append(tr("Failed to sign vote for masternode %1").arg(QString::fromStdString(proTxHash.ToString())));
+            failedMessages.append(
+                tr("Failed to sign vote for masternode %1").arg(QString::fromStdString(proTxHash.ToString())));
             continue;
         }
-        
+
         // Submit vote
         std::string strError;
         if (clientModel->node().gov().processVoteAndRelay(vote, strError)) {
             nSuccessful++;
         } else {
             nFailed++;
-            failedMessages.append(tr("Masternode %1: %2").arg(
-                QString::fromStdString(proTxHash.ToString()),
-                QString::fromStdString(strError)));
+            failedMessages.append(
+                tr("Masternode %1: %2").arg(QString::fromStdString(proTxHash.ToString()), QString::fromStdString(strError)));
         }
     }
-    
+
     // Show results
     QString message;
     if (nSuccessful > 0 && nFailed == 0) {
@@ -628,9 +615,9 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
             message += tr("\n\nErrors:\n%1").arg(failedMessages.join("\n"));
         }
     }
-    
+
     QMessageBox::information(this, tr("Voting Results"), message);
-    
+
     // Update proposal list to show new vote counts
     updateProposalList();
 }

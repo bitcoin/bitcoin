@@ -56,7 +56,7 @@ private:
 
     // Voting-related members
     std::map<uint256, CKeyID> votableMasternodes; // proTxHash -> voting keyID
-    
+
     void updateVotingCapability();
     bool canVote() const { return !votableMasternodes.empty(); }
     void voteForProposal(vote_outcome_enum_t outcome);
@@ -68,7 +68,7 @@ private Q_SLOTS:
     void updateMasternodeCount() const;
     void showProposalContextMenu(const QPoint& pos);
     void showAdditionalInfo(const QModelIndex& index);
-    
+
     // Voting slots
     void voteYes();
     void voteNo();
