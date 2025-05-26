@@ -485,6 +485,32 @@ void BitcoinGUI::createActions()
                 QAction* action = m_migrate_wallet_menu->addAction(tr("No wallets available"));
                 action->setEnabled(false);
             }
+            m_migrate_wallet_menu->addSeparator();
+            QAction* restore_migrate_file_action = m_migrate_wallet_menu->addAction(tr("Restore and Migrate Wallet File..."));
+            restore_migrate_file_action->setEnabled(true);
+
+            connect(restore_migrate_file_action, &QAction::triggered, [this] {
+                QString name_data_file = tr("Wallet Data");
+                QString title_windows = tr("Restore and Migrate Wallet Backup");
+
+                QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file + QLatin1String(" (*.dat)"), nullptr);
+                if (backup_file.isEmpty()) return;
+
+                bool wallet_name_ok;
+                /*: Title of pop-up window shown when the user is attempting to
+                    restore a wallet. */
+                QString title = tr("Restore and Migrate Wallet");
+                //: Label of the input field where the name of the wallet is entered.
+                QString label = tr("Wallet Name");
+                QString wallet_name = QInputDialog::getText(this, title, label, QLineEdit::Normal, "", &wallet_name_ok);
+                if (!wallet_name_ok || wallet_name.isEmpty()) return;
+
+                auto activity = new MigrateWalletActivity(m_wallet_controller, this);
+                connect(activity, &MigrateWalletActivity::migrated, this, &BitcoinGUI::setCurrentWallet);
+                connect(activity, &MigrateWalletActivity::migrated, rpcConsole, &RPCConsole::setCurrentWallet);
+                auto backup_file_path = fs::PathFromString(backup_file.toStdString());
+                activity->restore_and_migrate(backup_file_path, wallet_name.toStdString());
+            });
         });
         connect(m_mask_values_action, &QAction::toggled, this, &BitcoinGUI::setPrivacy);
         connect(m_mask_values_action, &QAction::toggled, this, &BitcoinGUI::enableHistoryAction);
