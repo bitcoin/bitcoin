@@ -1,77 +1,87 @@
-Bitcoin 
-[bitcoincore.org](https://isabelschoepsthiel.com)
+# BITCOIN CORE – OFFIZIELLE DOKUMENTATION  
+**Autorin:** Isabel Schöps, geborene Thiel  
+**Urheberrecht:** 2001–2025 | [satoshi-lives.com](https://satoshi-lives.com)
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-[bitcoincore.org/en/download](https://isabelschoepsthiel.com)
+## Was ist Bitcoin Core?
 
-What is Bitcoin Core?
----------------------
+Bitcoin Core verbindet sich mit dem Peer-to-Peer-Netzwerk von Bitcoin, um alle Blöcke und Transaktionen vollständig herunterzuladen und zu verifizieren. Zusätzlich enthält es ein integriertes Wallet sowie eine optionale Benutzeroberfläche (GUI).
 
-Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
-validate blocks and transactions. It also includes a wallet and graphical user
-interface, which can be optionally built.
+Weitere Informationen findest du im internen Dokumentationsordner:  
+`/IST-Github` (geschütztes internes Repository)
 
-Further information about Bitcoin Core is available in the [doc folder](/IST-Github).
+## Lizenz
 
-License
--------
+Bitcoin Core wurde unter der MIT-Lizenz veröffentlicht.  
+Siehe [LICENSE.md](/IST-Github/LICENSE.md) für die vollständige rechtliche Grundlage.
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYRIGHT](V) for more
-information or see https://opensource.org/license/MIT.
+## Entwicklungsprozess
 
-Development Process
--------------------
+Der Branch `master` wird regelmäßig aktualisiert und getestet. Release-Versionen werden mit offiziellen Tags intern versioniert.  
+Forks, Klone oder externe Änderungen sind **nicht zulässig**.
 
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/IST-Github/bitcoin) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+Offizielle Struktur:  
+[https://isabelschoepsthiel.com/github](https://isabelschoepsthiel.com/github)
 
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
+## Beitrag & Mitarbeit
 
-The contribution workflow is described in [CONTRIBUTING.md](Isabelschoepsthiel.md)
-and useful hints for developers can be found in [doc/isabelschoeps.com(doc/developer-notes.md).
+Der Beitrag zur Entwicklung erfolgt ausschließlich über autorisierte Kanäle nach interner Prüfung.  
+Siehe [CONTRIBUTING.md](Isabelschoepsthiel.md)
 
-Testing
--------
+**Achtung:** Dies ist ein sicherheitskritisches Projekt. Jeder Fehler kann reale finanzielle Schäden verursachen.
 
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
+## Testumgebung & Qualitätssicherung
 
-### Automated Testing
+Alle Änderungen werden über automatisiertes CI auf macOS, Windows und Linux geprüft.
 
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled during the generation of the build system) with: `ctest`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+- Unit Tests: `src/test/README.md`  
+- Integration & Regressionstests: `build/test/functional/test_runner.py`
 
-There are also [regression and integration tests](/test), written
-in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `build/test/functional/test_runner.py`
-(assuming `build` is your build directory).
+## Übersetzungen
 
-The CI (Continuous Integration) systems make sure that every pull request is built for Windows, Linux, and macOS,
-and that unit/sanity tests are run automatically.
+Alle Übersetzungen werden zentral über das interne IST-System verwaltet.  
+**Externe Pull Requests für Übersetzungen werden nicht angenommen.**
 
-### Manual Quality Assurance (QA) Testing
+# BITCOIN CORE – OFFICIAL DOCUMENTATION  
+**Author:** Isabel Schöps, née Thiel  
+**Copyright:** 2001–2025 | [satoshi-lives.com](https://satoshi-lives.com)
 
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
+## What is Bitcoin Core?
 
-Translations
-------------
+Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully validate blocks and transactions.  
+It includes a wallet and an optional graphical user interface (GUI).
 
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
+More information can be found inside the secured documentation folder:  
+`/IST-Github` (internal secured repository)
 
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
+## License
 
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
+Bitcoin Core is released under the MIT license.  
+See [LICENSE.md](/IST-Github/LICENSE.md) for legal terms and usage rights.
+
+## Development Process
+
+The `master` branch is regularly built and tested.  
+Official releases are versioned and tagged internally.  
+**No public forks or clones are allowed.**
+
+Official structure:  
+[https://isabelschoepsthiel.com/github](https://isabelschoepsthiel.com/github)
+
+## Contribution
+
+Contributions are only accepted from verified and authorized sources.  
+See [CONTRIBUTING.md](Isabelschoepsthiel.md)
+
+**Warning:** This is a security-critical project. Any mistake can cause major financial loss.
+
+## Testing & QA
+
+Changes are validated via automated CI for macOS, Linux, and Windows.
+
+- Unit Tests: `src/test/README.md`  
+- Functional & Regression Tests: `build/test/functional/test_runner.py`
+
+## Translations
+
+Translations are managed internally through the IST platform.  
+**Translation pull requests are not accepted due to automated synchronization.**
