@@ -152,6 +152,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_feerate_rounding()
         self.test_input_confs_control()
         self.test_duplicate_outputs()
+        self.test_watchonly_cannot_grind_r()
 
     def test_duplicate_outputs(self):
         self.log.info("Test deserializing and funding a transaction with duplicate outputs")
@@ -1515,6 +1516,29 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert txid2 in mempool
 
         wallet.unloadwallet()
+
+    def test_watchonly_cannot_grind_r(self):
+        self.log.info("Test that a watchonly wallet will estimate higher fees for a tx than the wallet with private keys")
+        self.nodes[0].createwallet("grind")
+        wallet = self.nodes[0].get_wallet_rpc("grind")
+        default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        self.nodes[0].createwallet(wallet_name="grind_watchonly", disable_private_keys=True)
+        watchonly = self.nodes[0].get_wallet_rpc("grind_watchonly")
+        assert_equal(watchonly.importdescriptors(wallet.listdescriptors()["descriptors"])[0]["success"], True)
+
+        # Send to legacy address type so that we will have an ecdsa signature with a measurable effect on the feerate
+        default_wallet.sendtoaddress(wallet.getnewaddress(address_type="legacy"), 10)
+        self.generate(self.nodes[0], 1)
+
+        assert_equal(wallet.listunspent(), watchonly.listunspent())
+
+        ret_addr = default_wallet.getnewaddress()
+        tx = wallet.createrawtransaction([], [{ret_addr: 5}])
+        funded = wallet.fundrawtransaction(hexstring=tx, fee_rate=10)
+
+        watchonly_funded = watchonly.fundrawtransaction(hexstring=tx, fee_rate=10)
+        assert_greater_than(watchonly_funded["fee"], funded["fee"])
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()
