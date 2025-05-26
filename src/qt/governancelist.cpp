@@ -536,17 +536,14 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
     
     const uint256 proposalHash(uint256S(proposal->hash().toStdString()));
     
-    // Check if wallet is locked and unlock if needed
-    WalletModel::EncryptionStatus encStatus = walletModel->getEncryptionStatus();
-    if (encStatus == WalletModel::Locked || encStatus == WalletModel::UnlockedForMixingOnly) {
-        WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-        if (!ctx.isValid()) {
-            // Unlock cancelled
-            return;
-        }
-        // Recursively call the function now that wallet is unlocked
-        return voteForProposal(outcome);
-    } // UnlockContext goes out of scope here, but we've already made the recursive call
+    // Request unlock if needed and keep context alive for the voting operation
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if (!ctx.isValid()) {
+        // Unlock cancelled or failed
+        QMessageBox::warning(this, tr("Voting Failed"),
+                   tr("Unable to unlock wallet."));
+        return;
+    }
     
     int nSuccessful = 0;
     int nFailed = 0;
