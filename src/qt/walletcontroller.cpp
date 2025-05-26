@@ -409,7 +409,7 @@ void RestoreWalletActivity::restore(const fs::path& backup_file, const std::stri
         tr("Restoring Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, backup_file, wallet_name] {
-        auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, m_warning_message)};
+        auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, m_warning_message, /*load_after_restore=*/true)};
 
         if (wallet) {
             m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
