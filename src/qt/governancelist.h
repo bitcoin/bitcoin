@@ -65,6 +65,7 @@ private Q_SLOTS:
     void updateDisplayUnit();
     void updateProposalList();
     void updateProposalCount() const;
+    void updateMasternodeCount() const;
     void showProposalContextMenu(const QPoint& pos);
     void showAdditionalInfo(const QModelIndex& index);
     

@@ -312,7 +312,7 @@ GovernanceList::GovernanceList(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_count_2, ui->countLabel}, GUIUtil::FontWeight::Bold, 14);
+    GUIUtil::setFont({ui->label_count_2, ui->countLabel, ui->label_mn_count, ui->mnCountLabel}, GUIUtil::FontWeight::Bold, 14);
     GUIUtil::setFont({ui->label_filter_2}, GUIUtil::FontWeight::Normal, 15);
 
     proposalModelProxy->setSourceModel(proposalModel);
@@ -345,6 +345,9 @@ GovernanceList::GovernanceList(QWidget* parent) :
     connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
 
     connect(timer, &QTimer::timeout, this, &GovernanceList::updateProposalList);
+
+    // Initialize masternode count to 0
+    ui->mnCountLabel->setText("0");
 
     GUIUtil::updateFonts();
 }
@@ -478,6 +481,16 @@ void GovernanceList::updateVotingCapability()
             votableMasternodes[dmn.proTxHash] = dmn.pdmnState->keyIDVoting;
         }
     });
+    
+    // Update masternode count display
+    updateMasternodeCount();
+}
+
+void GovernanceList::updateMasternodeCount() const
+{
+    if (ui && ui->mnCountLabel) {
+        ui->mnCountLabel->setText(QString::number(votableMasternodes.size()));
+    }
 }
 
 void GovernanceList::voteYes()
