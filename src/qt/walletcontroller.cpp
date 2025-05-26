@@ -489,6 +489,45 @@ void MigrateWalletActivity::migrate(const std::string& name)
     do_migrate(name);
 }
 
+void MigrateWalletActivity::restore_and_migrate(const fs::path& path, const std::string& wallet_name)
+{
+    // Warn the user about migration
+    QMessageBox box(m_parent_widget);
+    box.setWindowTitle(tr("Restore and Migrate wallet"));
+    box.setText(tr("Are you sure you wish to restore the wallet file <i>%1</i> to <i>%2</i> and migrate it?").arg(GUIUtil::HtmlEscape(fs::PathToString(path)), GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(wallet_name))));
+    box.setInformativeText(tr("Restoring the wallet will copy the backup file to the wallets directory and place it in the standard "
+                "wallet directory layout. The original file will not be modified.\n\n"
+                "Migrating the wallet will convert the restored wallet to one or more descriptor wallets. A new wallet backup will need to be made.\n"
+                "If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.\n"
+                "If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.\n\n"
+                "The migration process will create a backup of the wallet before migrating. This backup file will be named "
+                "<wallet name>-<timestamp>.legacy.bak and can be found in the directory for this wallet. In the event of "
+                "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality."));
+    box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() != QMessageBox::Yes) return;
+
+    showProgressDialog(
+        //: Title of progress window which is displayed when wallets are being restored.
+        tr("Restore Wallet"),
+        /*: Descriptive text of the restore wallets progress window which indicates to
+            the user that wallets are currently being restored.*/
+        tr("Restoring Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(wallet_name))));
+
+    QTimer::singleShot(0, worker(), [this, path, wallet_name] {
+        auto res{node().walletLoader().restoreWallet(path, wallet_name, m_warning_message, /*load_after_restore=*/false)};
+
+        if (!res) {
+            m_error_message = util::ErrorString(res);
+            QTimer::singleShot(0, this, &MigrateWalletActivity::finish);
+            return;
+        }
+        QTimer::singleShot(0, this, [this, wallet_name] {
+            do_migrate(wallet_name);
+        });
+    });
+}
+
 void MigrateWalletActivity::finish()
 {
     if (!m_error_message.empty()) {
