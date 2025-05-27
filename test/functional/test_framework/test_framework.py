@@ -267,7 +267,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1")
         self.options = parser.parse_args()
         if self.options.timeout_factor == 0:
-            self.options.timeout_factor = 99999
+            self.options.timeout_factor = 999
         self.options.timeout_factor = self.options.timeout_factor or (4 if self.options.valgrind else 1)
         self.options.previous_releases_path = previous_releases_path
 
