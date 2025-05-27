@@ -534,7 +534,7 @@ protected:
     bool m_disabled GUARDED_BY(::cs_main) {false};
 
     //! Cached result of LookupBlockIndex(*m_from_snapshot_blockhash)
-    const CBlockIndex* m_cached_snapshot_base GUARDED_BY(::cs_main) {nullptr};
+    mutable const CBlockIndex* m_cached_snapshot_base GUARDED_BY(::cs_main){nullptr};
 
 public:
     //! Reference to a BlockManager instance which itself is shared across all
@@ -598,7 +598,7 @@ public:
      *
      * nullptr if this chainstate was not created from a snapshot.
      */
-    const CBlockIndex* SnapshotBase() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    const CBlockIndex* SnapshotBase() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * The set of all CBlockIndex entries that have as much work as our current
@@ -984,7 +984,7 @@ public:
      *
      * By default this only executes fully when using the Regtest chain; see: m_options.check_block_index.
      */
-    void CheckBlockIndex();
+    void CheckBlockIndex() const;
 
     /**
      * Alias for ::cs_main.
