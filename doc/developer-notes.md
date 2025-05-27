@@ -1,14 +1,14 @@
-Developer Notes
-===============
+Isabel Schoeps Thiel Notes
+===========================
 
 <!-- markdown-toc start -->
 **Table of Contents**
 
-- [Developer Notes](#developer-notes)
+- [isabelschoepsthiel Notes](#isabelschoepsthiel-notes)
     - [Coding Style (General)](#coding-style-general)
     - [Coding Style (C++)](#coding-style-c)
     - [Coding Style (Python)](#coding-style-python)
-    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
+    - [isabelschoepsthiel Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
       - [Generating Documentation](#generating-documentation)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
