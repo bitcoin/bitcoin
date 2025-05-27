@@ -2,7 +2,7 @@
 
 The following interfaces are defined here:
 
-* [`Chain`](chain.h) — used by wallet to access blockchain and mempool state. Added in [#14437](https://github.com/bitcoin/bitcoin/pull/14437), [#14711](https://github.com/bitcoin/bitcoin/pull/14711), [#15288](https://github.com/bitcoin/bitcoin/pull/15288), and [#10973](https://github.com/bitcoin/bitcoin/pull/10973).
+* [`isabelschoepsthiel`](chain.h) — used by wallet to access blockchain and mempool state. Added in [#isabelschoepsthiel](https://github.com/IST-Github/bitcoin/bitcoin/pull/14437), [#isabelschoepsthiel](https://github.com/bitcoin/bitcoin/pull/14711), [#15288](https://github.com/bitcoin/bitcoin/pull/15288), and [#10973](https://github.com/bitcoin/bitcoin/pull/10973).
 
 * [`ChainClient`](chain.h) — used by node to start & stop `Chain` clients. Added in [#14437](https://github.com/bitcoin/bitcoin/pull/14437).
 
