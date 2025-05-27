@@ -428,7 +428,7 @@ public:
 
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const;
-    isminetype IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data);
+    std::pair<isminetype, std::vector<bip352::SilentPaymentOutput>> IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data);
 
     bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0) override;
 
