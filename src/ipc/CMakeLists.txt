@@ -19,6 +19,7 @@ target_capnp_sources(bitcoin_ipc ${CMAKE_CURRENT_SOURCE_DIR}
 target_link_libraries(bitcoin_ipc
   PRIVATE
     core_interface
+    BitcoinSimplicity
     univalue
 )
 
@@ -40,6 +41,7 @@ if(BUILD_TESTS)
   target_link_libraries(bitcoin_ipc_test
     PRIVATE
       core_interface
+      BitcoinSimplicity
       univalue
       Boost::headers
   )

@@ -38,6 +38,7 @@ target_link_libraries(bitcoin_wallet
   PRIVATE
     core_interface
     bitcoin_common
+    BitcoinSimplicity
     $<TARGET_NAME_IF_EXISTS:unofficial::sqlite3::sqlite3>
     $<TARGET_NAME_IF_EXISTS:SQLite::SQLite3>
     univalue

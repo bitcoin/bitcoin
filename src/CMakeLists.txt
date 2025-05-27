@@ -19,6 +19,7 @@ include(../cmake/crc32c.cmake)
 include(../cmake/leveldb.cmake)
 include(../cmake/minisketch.cmake)
 add_subdirectory(univalue)
+add_subdirectory(simplicity)
 if (ENABLE_IPC AND NOT WITH_EXTERNAL_LIBMULTIPROCESS)
   include(../cmake/libmultiprocess.cmake)
   add_libmultiprocess(ipc/libmultiprocess)
@@ -49,6 +50,7 @@ add_library(bitcoin_clientversion STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_clientversion
   PRIVATE
     core_interface
+    BitcoinSimplicity
 )
 add_dependencies(bitcoin_clientversion generate_build_info)
 
@@ -76,6 +78,7 @@ target_link_libraries(bitcoin_consensus
     core_interface
     bitcoin_crypto
     secp256k1
+    BitcoinSimplicity
 )
 
 if(WITH_ZMQ)
@@ -144,6 +147,7 @@ target_link_libraries(bitcoin_common
     bitcoin_util
     univalue
     secp256k1
+    BitcoinSimplicity
     Boost::headers
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
     $<$<PLATFORM_ID:Windows>:ws2_32>
@@ -164,6 +168,7 @@ if(ENABLE_WALLET)
     add_windows_application_manifest(bitcoin-wallet)
     target_link_libraries(bitcoin-wallet
       core_interface
+      BitcoinSimplicity
       bitcoin_wallet
       bitcoin_common
       bitcoin_util
@@ -275,6 +280,7 @@ target_link_libraries(bitcoin_node
   PRIVATE
     core_interface
     bitcoin_common
+    BitcoinSimplicity
     bitcoin_util
     $<TARGET_NAME_IF_EXISTS:bitcoin_zmq>
     leveldb
@@ -306,6 +312,7 @@ if(BUILD_DAEMON)
   add_windows_application_manifest(bitcoind)
   target_link_libraries(bitcoind
     core_interface
+    BitcoinSimplicity
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
@@ -318,6 +325,7 @@ if(ENABLE_IPC AND BUILD_DAEMON)
   )
   target_link_libraries(bitcoin-node
     core_interface
+    BitcoinSimplicity
     bitcoin_node
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
@@ -333,6 +341,7 @@ add_library(bitcoin_cli STATIC EXCLUDE_FROM_ALL
 target_link_libraries(bitcoin_cli
   PUBLIC
     core_interface
+    BitcoinSimplicity
     univalue
 )
 
@@ -344,6 +353,7 @@ if(BUILD_CLI)
   add_windows_application_manifest(bitcoin-cli)
   target_link_libraries(bitcoin-cli
     core_interface
+    BitcoinSimplicity
     bitcoin_cli
     bitcoin_common
     bitcoin_util
@@ -360,6 +370,7 @@ if(BUILD_TX)
   add_windows_application_manifest(bitcoin-tx)
   target_link_libraries(bitcoin-tx
     core_interface
+    BitcoinSimplicity
     bitcoin_common
     bitcoin_util
     univalue
@@ -374,6 +385,7 @@ if(BUILD_UTIL)
   add_windows_application_manifest(bitcoin-util)
   target_link_libraries(bitcoin-util
     core_interface
+    BitcoinSimplicity
     bitcoin_common
     bitcoin_util
   )
@@ -399,6 +411,7 @@ if(BUILD_KERNEL_LIB)
     target_link_libraries(bitcoin-chainstate
       PRIVATE
         core_interface
+        BitcoinSimplicity
         bitcoinkernel
     )
     install_binary_component(bitcoin-chainstate INTERNAL)

@@ -104,6 +104,23 @@ function(remove_cxx_flag_from_all_configs flag)
   endforeach()
 endfunction()
 
+function(remove_c_flag_from_all_configs flag)
+  get_all_configs(all_configs)
+  foreach(config IN LISTS all_configs)
+    string(TOUPPER "${config}" config_uppercase)
+    set(flags "${CMAKE_C_FLAGS_${config_uppercase}}")
+    separate_arguments(flags)
+    list(FILTER flags EXCLUDE REGEX "${flag}")
+    list(JOIN flags " " new_flags)
+    set(CMAKE_C_FLAGS_${config_uppercase} "${new_flags}" PARENT_SCOPE)
+    set(CMAKE_C_FLAGS_${config_uppercase} "${new_flags}"
+      CACHE STRING
+      "Flags used by the C compiler during ${config_uppercase} builds."
+      FORCE
+    )
+  endforeach()
+endfunction()
+
 function(replace_cxx_flag_in_config config old_flag new_flag)
   string(TOUPPER "CMAKE_CXX_FLAGS_${config}" var_name)
   if("${var_name}" IN_LIST precious_variables)
@@ -121,8 +138,10 @@ include(TryAppendCXXFlags)
 # We leave assertions on.
 if(MSVC)
   remove_cxx_flag_from_all_configs(/DNDEBUG)
+  remove_c_flag_from_all_configs(/DNDEBUG)
 else()
   remove_cxx_flag_from_all_configs(-DNDEBUG)
+  remove_c_flag_from_all_configs(-DNDEBUG)
 
   # Adjust flags used by the CXX compiler during RELEASE builds.
   # Prefer -O2 optimization level. (-O3 is CMake's default for Release for many compilers.)
