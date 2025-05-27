@@ -3016,6 +3016,9 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     wallet->m_confirm_target = args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
     wallet->m_spend_zero_conf_change = args.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     wallet->m_signal_rbf = args.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
+
+    wallet->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
+    wallet->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
     wallet->SetBroadcastTransactions(args.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
     return true;
@@ -3024,15 +3027,16 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
 std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     interfaces::Chain* chain = context.chain;
-    ArgsManager& args = *Assert(context.args);
     const std::string& walletFile = database->Filename();
 
     const auto start{SteadyClock::now()};
     // TODO: Can't use std::make_shared because we need a custom deleter but
     // should be possible to use std::allocate_shared.
     std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), FlushAndDeleteWallet);
-    walletInstance->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
-    walletInstance->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
+
+    if (!LoadWalletArgs(walletInstance, context, error, warnings)) {
+        return nullptr;
+    }
 
     // Load wallet
     auto nLoadWalletRet = walletInstance->PopulateWalletFromDB(error, warnings);
@@ -3077,10 +3081,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                 break;
             }
         }
-    }
-
-    if (!LoadWalletArgs(walletInstance, context, error, warnings)) {
-        return nullptr;
     }
 
     walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
