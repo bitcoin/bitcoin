@@ -138,6 +138,8 @@ class BadInputOutpointIndex(BadTxTemplate):
     # Won't be rejected - nonexistent outpoint index is treated as an orphan since the coins
     # database can't distinguish between spent outpoints and outpoints which never existed.
     reject_reason = None
+    # But fails in block
+    block_reject_reason = "bad-txns-inputs-missingorspent"
     expect_disconnect = False
 
     def get_tx(self):
@@ -180,6 +182,8 @@ class PrevoutNullInput(BadTxTemplate):
 class NonexistentInput(BadTxTemplate):
     reject_reason = None  # Added as an orphan tx.
     expect_disconnect = False
+    # But fails in block
+    block_reject_reason = "bad-txns-inputs-missingorspent"
 
     def get_tx(self):
         tx = CTransaction()
@@ -229,7 +233,6 @@ class CreateSumTooLarge(BadTxTemplate):
 class InvalidOPIFConstruction(BadTxTemplate):
     reject_reason = "mandatory-script-verify-flag-failed (Invalid OP_IF construction)"
     expect_disconnect = True
-    valid_in_block = True
 
     def get_tx(self):
         return create_tx_with_script(
@@ -278,7 +281,7 @@ def getDisabledOpcodeTemplate(opcode):
         'reject_reason': "disabled opcode",
         'expect_disconnect': True,
         'get_tx': get_tx,
-        'valid_in_block' : True
+        'valid_in_block' : False
         })
 
 class NonStandardAndInvalid(BadTxTemplate):
