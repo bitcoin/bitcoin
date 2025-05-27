@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 set -o errexit -o pipefail -o xtrace
 
 
-echo "Running test-one-commit on $( git log -1 )"
+echo "Running action-one-commit on $( git log -1 )"
 
 # Use clang++, because it is a bit faster and uses less memory than g++
 CC=clang CXX=clang++ cmake -B build -DWERROR=ON -DWITH_ZMQ=ON -DBUILD_GUI=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON -DWITH_USDT=ON -DCMAKE_CXX_FLAGS='-Wno-error=unused-member-function'
