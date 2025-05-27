@@ -116,6 +116,7 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     return dResult;
 }
 
+#ifndef BUILDING_FOR_LIBBITCOINKERNEL
 // We want to sort transactions by coin age priority
 typedef std::pair<double, CTxMemPool::txiter> TxCoinAgePriority;
 
@@ -259,3 +260,4 @@ void BlockAssembler::addPriorityTxs(const CTxMemPool& mempool, int &nPackagesSel
     }
     fNeedSizeAccounting = fSizeAccounting;
 }
+#endif
