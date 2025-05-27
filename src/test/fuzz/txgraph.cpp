@@ -69,6 +69,20 @@ struct SimTxGraph
     SimTxGraph(SimTxGraph&&) noexcept = default;
     SimTxGraph& operator=(SimTxGraph&&) noexcept = default;
 
+    /** Get the connected components within this simulated transaction graph. */
+    std::vector<SetType> GetComponents()
+    {
+        auto todo = graph.Positions();
+        std::vector<SetType> ret;
+        // Iterate over all connected components of the graph.
+        while (todo.Any()) {
+            auto component = graph.FindConnectedComponent(todo);
+            ret.push_back(component);
+            todo -= component;
+        }
+        return ret;
+    }
+
     /** Check whether this graph is oversized (contains a connected component whose number of
      *  transactions exceeds max_cluster_count. */
     bool IsOversized()
@@ -76,15 +90,11 @@ struct SimTxGraph
         if (!oversized.has_value()) {
             // Only recompute when oversized isn't already known.
             oversized = false;
-            auto todo = graph.Positions();
-            // Iterate over all connected components of the graph.
-            while (todo.Any()) {
-                auto component = graph.FindConnectedComponent(todo);
+            for (auto component : GetComponents()) {
                 if (component.Count() > max_cluster_count) oversized = true;
                 uint64_t component_size{0};
                 for (auto i : component) component_size += graph.FeeRate(i).size;
                 if (component_size > max_cluster_size) oversized = true;
-                todo -= component;
             }
         }
         return *oversized;
@@ -287,8 +297,9 @@ FUZZ_TARGET(txgraph)
     FuzzedDataProvider provider(buffer.data(), buffer.size());
 
     /** Internal test RNG, used only for decisions which would require significant amount of data
-     *  to be read from the provider, without realistically impacting test sensitivity. */
-    InsecureRandomContext rng(0xdecade2009added + buffer.size());
+     *  to be read from the provider, without realistically impacting test sensitivity, and for
+     *  specialized test cases that are hard to perform more generically. */
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
 
     /** Variable used whenever an empty TxGraph::Ref is needed. */
     TxGraph::Ref empty_ref;
@@ -823,6 +834,122 @@ FUZZ_TARGET(txgraph)
                 if (!was_oversized) break;
                 auto removed_set = top_sim.MakeSet(removed);
                 // The removed set must contain all its own descendants.
+                for (auto simpos : removed_set) {
+                    assert(top_sim.graph.Descendants(simpos).IsSubsetOf(removed_set));
+                }
+                // Something from every oversized cluster should have been removed, and nothing
+                // else.
+                assert(top_sim.MatchesOversizedClusters(removed_set));
+
+                // Apply all removals to the simulation, and verify the result is no longer
+                // oversized. Don't query the real graph for oversizedness; it is compared
+                // against the simulation anyway later.
+                for (auto simpos : removed_set) {
+                    top_sim.RemoveTransaction(top_sim.GetRef(simpos));
+                }
+                assert(!top_sim.IsOversized());
+                break;
+            } else if ((block_builders.empty() || sims.size() > 1) &&
+                       top_sim.GetTransactionCount() > max_cluster_count && !top_sim.IsOversized() && command-- == 0) {
+                // Trim (special case which avoids apparent cycles in the implicit approximate
+                // dependency graph constructed inside the Trim() implementation). This is worth
+                // testing separately, because such cycles cannot occur in realistic scenarios,
+                // but this is hard to replicate in general in this fuzz test.
+
+                // First, we need to have dependencies applied and linearizations fixed to avoid
+                // circular dependencies in implied graph; trigger it via whatever means.
+                real->CountDistinctClusters({}, false);
+
+                // Gather the current clusters.
+                auto clusters = top_sim.GetComponents();
+
+                // Merge clusters randomly until at least one oversized one appears.
+                bool made_oversized = false;
+                auto merges_left = clusters.size() - 1;
+                while (merges_left > 0) {
+                    --merges_left;
+                    // Find positions of clusters in the clusters vector to merge together.
+                    auto par_cl = rng.randrange(clusters.size());
+                    auto chl_cl = rng.randrange(clusters.size() - 1);
+                    chl_cl += (chl_cl >= par_cl);
+                    Assume(chl_cl != par_cl);
+                    // Add between 1 and 3 dependencies between them. As all are in the same
+                    // direction (from the child cluster to parent cluster), no cycles are possible,
+                    // regardless of what internal topology Trim() uses as approximation within the
+                    // clusters.
+                    int num_deps = rng.randrange(3) + 1;
+                    for (int i = 0; i < num_deps; ++i) {
+                        // Find a parent transaction in the parent cluster.
+                        auto par_idx = rng.randrange(clusters[par_cl].Count());
+                        SimTxGraph::Pos par_pos = 0;
+                        for (auto j : clusters[par_cl]) {
+                            if (par_idx == 0) {
+                                par_pos = j;
+                                break;
+                            }
+                            --par_idx;
+                        }
+                        // Find a child transaction in the child cluster.
+                        auto chl_idx = rng.randrange(clusters[chl_cl].Count());
+                        SimTxGraph::Pos chl_pos = 0;
+                        for (auto j : clusters[chl_cl]) {
+                            if (chl_idx == 0) {
+                                chl_pos = j;
+                                break;
+                            }
+                            --chl_idx;
+                        }
+                        // Add dependency to both simulation and real TxGraph.
+                        auto par_ref = top_sim.GetRef(par_pos);
+                        auto chl_ref = top_sim.GetRef(chl_pos);
+                        top_sim.AddDependency(par_ref, chl_ref);
+                        real->AddDependency(*par_ref, *chl_ref);
+                    }
+                    // Compute the combined cluster.
+                    auto par_cluster = clusters[par_cl];
+                    auto chl_cluster = clusters[chl_cl];
+                    auto new_cluster = par_cluster | chl_cluster;
+                    // Remove the parent and child cluster from clusters.
+                    std::erase_if(clusters, [&](const auto& cl) noexcept { return cl == par_cluster || cl == chl_cluster; });
+                    // Add the combined cluster.
+                    clusters.push_back(new_cluster);
+                    // If this is the first merge that causes an oversized cluster to appear, pick
+                    // a random number of further merges to appear.
+                    if (!made_oversized) {
+                        made_oversized = new_cluster.Count() > max_cluster_count;
+                        if (!made_oversized) {
+                            FeeFrac total;
+                            for (auto i : new_cluster) total += top_sim.graph.FeeRate(i);
+                            if (uint32_t(total.size) > max_cluster_size) made_oversized = true;
+                        }
+                        if (made_oversized) merges_left = rng.randrange(clusters.size());
+                    }
+                }
+
+                // Determine an upper bound on how many transactions are removed.
+                uint32_t max_removed = 0;
+                for (auto& cluster : clusters) {
+                    // Gather all transaction sizes in the to-be-combined cluster.
+                    std::vector<uint32_t> sizes;
+                    for (auto i : cluster) sizes.push_back(top_sim.graph.FeeRate(i).size);
+                    auto sum_sizes = std::accumulate(sizes.begin(), sizes.end(), uint64_t{0});
+                    // Sort from large to small.
+                    std::sort(sizes.begin(), sizes.end(), std::greater{});
+                    // In the worst case, only the smallest transactions are removed.
+                    while (sizes.size() > max_cluster_count || sum_sizes > max_cluster_size) {
+                        sum_sizes -= sizes.back();
+                        sizes.pop_back();
+                        ++max_removed;
+                    }
+                }
+
+                // Invoke Trim now on the definitely-oversized txgraph.
+                auto removed = real->Trim();
+                // Verify that the number of removals is within range.
+                assert(removed.size() >= 1);
+                assert(removed.size() <= max_removed);
+                // The removed set must contain all its own descendants.
+                auto removed_set = top_sim.MakeSet(removed);
                 for (auto simpos : removed_set) {
                     assert(top_sim.graph.Descendants(simpos).IsSubsetOf(removed_set));
                 }
