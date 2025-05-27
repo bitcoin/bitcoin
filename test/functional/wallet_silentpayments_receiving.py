@@ -100,9 +100,33 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
         wallet.gettransaction(txid)
 
         self.log.info("Test self-transfer")
-        txid = wallet.send({addr: 5, change_addr: 5})
+        txid = wallet.send({addr: 5})['txid']
         self.generate(self.nodes[0], 1)
         assert_approx(wallet.getbalance(), 15, 0.0001)
+        assert(wallet.gettransaction(txid))
+        self.log.info("Check that self-transfer is detected by listtransactions")
+        assert(any(tx["txid"] == txid for tx in wallet.listtransactions()))
+
+        self.log.info("Test self-transfer")
+        txid = wallet.send({change_addr: 5})['txid']
+        self.generate(self.nodes[0], 1)
+        assert_approx(wallet.getbalance(), 15, 0.0001)
+        assert(wallet.gettransaction(txid))
+        self.log.info("Check that self-transfer to change address is not detected by listtransactions")
+        assert(any(tx["txid"] == txid for tx in wallet.listtransactions()) == False)
+
+        self.log.info("Test silent payment transactions are included under the correct label")
+        addr = wallet.getnewaddress("test", address_type="silent-payments")
+        info = wallet.getaddressinfo(addr)
+        assert_equal(info["labels"], ["test"])
+        txid = self.def_wallet.sendtoaddress(addr, 10)
+        self.generate(self.nodes[0], 1)
+        assert_approx(wallet.getbalance(), 25, 0.0001)
+        tx = wallet.gettransaction(txid)
+        assert_equal(tx["details"][0]["label"], "test")
+        txs = wallet.listtransactions(label="test")
+        assert_equal(len(txs), 1)
+        assert_equal(txs[0]["txid"], txid)
 
         wallet.sendall([self.def_wallet.getnewaddress()])
         self.generate(self.nodes[0], 1)
