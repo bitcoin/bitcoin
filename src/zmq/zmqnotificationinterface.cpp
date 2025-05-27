@@ -5,7 +5,7 @@
 #include <zmq/zmqnotificationinterface.h>
 
 #include <netbase.h>
-#include <validation.h>
+#include <primitives/block.h>
 #include <util/system.h>
 #include <zmq/zmqpublishnotifier.h>
 #include <zmq/zmqutil.h>
