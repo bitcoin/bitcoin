@@ -1660,8 +1660,35 @@ bool CWallet::IsMine(const CTransaction& tx, const std::map<COutPoint, Coin>& sp
         if (sp_data.has_value()) {
             bool found{false};
             for (SilentPaymentDescriptorScriptPubKeyMan* sp_spkm : GetSilentPaymentsSPKMs()) {
-                // Allow all SPKMs to check if any of the outputs are theirs
-                if (sp_spkm->IsMine(sp_data->first, sp_data->second)) {
+                // Because we have (likely) never seen these outputs before, they are not in our address book.
+                // We have IsMine also return the found outputs here so we can update the address book
+                // with anything paying to us. For the current change logic in the wallet to work, we skip
+                // adding the change output to the address book.
+                //
+                // TODO: explicitly check for the change label, rather than assuming any label == change
+                // TODO: refactor change matching logic to something more comprehensive that accounts multisig,
+                // silent payments, etc
+                auto result = sp_spkm->IsMine(sp_data->first, sp_data->second);
+                if (result.first) {
+                    for (auto found_output : result.second) {
+                        if (found_output.label.has_value()) continue;
+
+                        auto tr_dest{WitnessV1Taproot{found_output.output}};
+                        auto sp_dest{sp_spkm->GetNewDestination(OutputType::SILENT_PAYMENTS)};
+                        assert(sp_dest.has_value());
+                        // If the sp destination is in the address book, add the found output
+                        // to the address book under the same label as the sp destination,
+                        // for proper transaction accounting
+                        auto entry{FindAddressBookEntry(sp_dest.value(), /* allow_change= */ false)};
+                        if (!entry) {
+                            // If the sp destination is not in the address book yet,
+                            // add both destinations under the default label
+                            SetAddressBook(sp_dest.value(), "", AddressPurpose::RECEIVE);
+                            SetAddressBook(tr_dest, "", AddressPurpose::RECEIVE);
+                        } else {
+                            SetAddressBook(tr_dest, entry->label ? entry->label.value() : "", AddressPurpose::RECEIVE);
+                        }
+                    }
                     found = true;
                 }
             }

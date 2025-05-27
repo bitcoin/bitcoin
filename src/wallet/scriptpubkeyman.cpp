@@ -1683,33 +1683,33 @@ bool SilentPaymentDescriptorScriptPubKeyMan::IsMine(const CTxDestination& dest) 
     return false;
 }
 
-bool SilentPaymentDescriptorScriptPubKeyMan::IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PrevoutsSummary& prevouts_summary)
+std::pair<bool, std::vector<bip352::SilentPaymentOutput>> SilentPaymentDescriptorScriptPubKeyMan::IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PrevoutsSummary& prevouts_summary)
 {
     LOCK(cs_desc_man);
     if (m_wallet_descriptor.descriptor->GetOutputType() != OutputType::SILENT_PAYMENTS) {
-        return false;
+        return {false, {}};
     }
 
     assert(m_scan_key.IsValid());
     assert(m_spend_pubkey.IsFullyValid());
-    auto tweaks{bip352::ScanForSilentPaymentOutputs(
+    auto found_outputs{bip352::ScanForSilentPaymentOutputs(
         m_scan_key, prevouts_summary, m_spend_pubkey, output_keys, {m_change_label_tweak})};
-    if (!tweaks.has_value()) {
-        return false;
+    if (!found_outputs.has_value()) {
+        return {false, {}};
     }
     WalletBatch batch(m_storage.GetDatabase());
     if (!batch.TxnBegin()) {
         throw std::runtime_error(strprintf("Error adding tweak. Cannot start db transaction wallet %s", m_storage.LogName()));
     }
-    for (const auto& tweak : *tweaks) {
-        if (!AddOutputWithDB(batch, tweak)) {
+    for (const auto& output : *found_outputs) {
+        if (!AddOutputWithDB(batch, output)) {
             throw std::runtime_error(std::string(__func__) + ": writing tweak failed");
         }
     }
     if (!batch.TxnCommit()) {
         throw std::runtime_error(strprintf("Error adding tweak. Cannot commit changes for wallet %s", m_storage.LogName()));
     }
-    return true;
+    return {true, *found_outputs};
 }
 
 bool SilentPaymentDescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int)

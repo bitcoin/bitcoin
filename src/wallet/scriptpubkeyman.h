@@ -443,7 +443,7 @@ public:
 
     bool IsMine(const CScript& script) const override;
     bool IsMine(const CTxDestination& dest) const;
-    bool IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PrevoutsSummary& prevouts_summary);
+    std::pair<bool, std::vector<bip352::SilentPaymentOutput>> IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PrevoutsSummary& prevouts_summary);
 
     bool TopUpWithDB(WalletBatch& batch, unsigned int size = 0) override;
 
