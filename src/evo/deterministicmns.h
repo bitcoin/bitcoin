@@ -366,7 +366,12 @@ public:
     void PoSeDecrease(const CDeterministicMN& dmn);
 
     [[nodiscard]] CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
-    [[nodiscard]] CDeterministicMNList ApplyDiff(gsl::not_null<const CBlockIndex*> pindex, const CDeterministicMNListDiff& diff) const;
+    /**
+     * Apply Diff modifies current object.
+     * It is more efficient than creating a copy due to heavy copy constructor.
+     * Calculating for old block may require up to {DISK_SNAPSHOT_PERIOD} object copy & destroy.
+     */
+    void ApplyDiff(gsl::not_null<const CBlockIndex*> pindex, const CDeterministicMNListDiff& diff);
 
     void AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTotalCount = true);
     void UpdateMN(const CDeterministicMN& oldDmn, const std::shared_ptr<const CDeterministicMNState>& pdmnState);
