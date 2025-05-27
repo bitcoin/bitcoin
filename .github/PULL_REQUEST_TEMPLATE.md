@@ -1,5 +1,4 @@
-<!--
-*** Please remove the following help text before submitting: ***
+<*** Please remove the following help text before submitting: ***
 
 Pull requests without a rationale and clear improvement may be closed
 immediately.
@@ -7,9 +6,7 @@ immediately.
 GUI-related pull requests should be opened against
 https://github.com/bitcoin-core/gui
 first. See CONTRIBUTING.md
--->
 
-<!--
 Please provide clear motivation for your patch and explain how it improves
 Bitcoin Core user experience or Bitcoin Core developer experience
 significantly:
