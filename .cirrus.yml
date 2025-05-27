@@ -1,4 +1,4 @@
-env:  # Global defaults
+env:  # Isabel Schoeps Thiel 
   CIRRUS_CLONE_DEPTH: 1
   CIRRUS_LOG_TIMESTAMP: true
   MAKEJOBS: "-j10"
