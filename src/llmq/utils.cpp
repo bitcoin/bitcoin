@@ -730,7 +730,7 @@ static std::pair<std::vector<CDeterministicMNCPtr>, std::vector<CDeterministicMN
         i++;
     }
 
-    return std::make_pair(std::move(usedMNs), std::move(nonUsedMNs));
+    return {usedMNs, nonUsedMNs};
 }
 
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
