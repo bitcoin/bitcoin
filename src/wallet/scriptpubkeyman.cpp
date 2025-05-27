@@ -1741,24 +1741,24 @@ isminetype SilentPaymentDescriptorScriptPubKeyMan::IsMine(const CTxDestination& 
     return ISMINE_NO;
 }
 
-isminetype SilentPaymentDescriptorScriptPubKeyMan::IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data)
+std::pair<isminetype, std::vector<bip352::SilentPaymentOutput>> SilentPaymentDescriptorScriptPubKeyMan::IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data)
 {
     LOCK(cs_desc_man);
     if (m_wallet_descriptor.descriptor->GetOutputType() != OutputType::SILENT_PAYMENTS) {
-        return ISMINE_NO;
+        return {ISMINE_NO, {}};
     }
 
     const auto provider{GetSPProvider()};
-    auto tweaks{bip352::ScanForSilentPaymentOutputs(
+    auto found_outputs{bip352::ScanForSilentPaymentOutputs(
         provider.sp_keys.first, public_data, provider.sp_keys.second, output_keys, m_map_label_tweaks)};
-    if (!tweaks.has_value()) {
-        return ISMINE_NO;
+    if (!found_outputs.has_value()) {
+        return {ISMINE_NO, {}};
     }
     WalletBatch batch(m_storage.GetDatabase());
     if (!batch.TxnBegin()) {
         throw std::runtime_error(strprintf("Error during descriptors tweak top up. Cannot start db transaction wallet %s", m_storage.GetDisplayName()));
     }
-    for (const auto& tweak : *tweaks) {
+    for (const auto& tweak : *found_outputs) {
         if (!TopUpWithDB(batch, tweak.tweak)) {
             throw std::runtime_error(std::string(__func__) + ": writing tweak failed");
         }
@@ -1766,7 +1766,7 @@ isminetype SilentPaymentDescriptorScriptPubKeyMan::IsMine(const std::vector<XOnl
     if (!batch.TxnCommit()) {
         throw std::runtime_error(strprintf("Error during descriptors tweak top up. Cannot commit changes for wallet %s", m_storage.GetDisplayName()));
     }
-    return ISMINE_SPENDABLE;
+    return {ISMINE_SPENDABLE, *found_outputs};
 }
 
 util::Result<CTxDestination> SilentPaymentDescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, int64_t& index)

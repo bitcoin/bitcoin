@@ -429,11 +429,12 @@ public:
     util::Result<CTxDestination> GetNewLabeledDestination(uint64_t& index);
     V0SilentPaymentDestination GetLabeledDestination(uint64_t index) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
     util::Result<CTxDestination> GetReservedDestination(const OutputType type, bool internal, int64_t& index) override;
+
     bool CanGetAddresses(bool internal) const override { return true; }
 
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const;
-    isminetype IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data);
+    std::pair<isminetype, std::vector<bip352::SilentPaymentOutput>> IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data);
 
     bool TopUp(unsigned int size = 0) override { return true; }
 
