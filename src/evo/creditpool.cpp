@@ -95,7 +95,7 @@ static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::n
         TxValidationState tx_state;
         uint64_t index{0};
         if (!GetDataFromUnlockTx(*tx, unlocked, index, tx_state)) {
-            throw std::runtime_error(strprintf("%s: GetDataFromUnlockTxfailed: %s", __func__, tx_state.ToString()));
+            throw std::runtime_error(strprintf("%s: GetDataFromUnlockTx failed: %s", __func__, tx_state.ToString()));
         }
         blockData.unlocked += unlocked;
         blockData.indexes.insert(index);
