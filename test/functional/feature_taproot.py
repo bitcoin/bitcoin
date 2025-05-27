@@ -1240,8 +1240,8 @@ def sample_spenders():
     # Create a list of scripts which will be built into a taptree
     scripts = [
         # leaf label, followed by CScript
-        ("encodeable_pushdata1", CScript([OP_DROP, OP_PUSHDATA1, b'aa' * 75])),
-        ("nonstd_encodeable_pushdata1", CScript([OP_PUSHDATA1, b'aa'])),
+        ("2byte_push", CScript([OP_DROP, b'\xaa\xaa'])),
+        ("nonstd_2byte_push", CScript.fromhex("4c02aaaa")),
         ("dummyleaf", CScript([])),
     ]
 
@@ -1255,13 +1255,13 @@ def sample_spenders():
     spenders = []
 
     # Named comment, using first leaf from scripts, with empty string as witness data, no optional fail condition
-    add_spender(spenders, comment="tutorial/pushdata1", tap=tap, leaf="encodeable_pushdata1", inputs=[b'\x00'], no_fail=True)
+    add_spender(spenders, comment="tutorial/push", tap=tap, leaf="2byte_push", inputs=[b'\x00'], no_fail=True)
 
     # Spender with alternative failure tapscript via over-riding "failure" dictionary, along with the failure's expected err_msg / ERR_*
-    add_spender(spenders, comment="tutorial/pushdata1redux", tap=tap, leaf="encodeable_pushdata1", inputs=[b'\x00'], failure={"leaf": "dummyleaf"}, **ERR_EVAL_FALSE)
+    add_spender(spenders, comment="tutorial/pushredux", tap=tap, leaf="2byte_push", inputs=[b'\x00'], failure={"leaf": "dummyleaf"}, **ERR_EVAL_FALSE)
 
     # Spender that is non-standard but otherwise valid, with extraneous signature data from inner key for optional failure condition
-    add_spender(spenders, comment="tutorial/nonminpushdata1", tap=tap, leaf="nonstd_encodeable_pushdata1", key=secs[0], standard=False, failure={"inputs": [getter("sign")]}, **ERR_CLEANSTACK)
+    add_spender(spenders, comment="tutorial/nonminpush", tap=tap, leaf="nonstd_2byte_push", key=secs[0], standard=False, failure={"inputs": [getter("sign")]}, **ERR_CLEANSTACK)
 
     # New scripts=[] can be defined, and rinse-repeated as necessary until the spenders list is returned for execution
     return spenders
