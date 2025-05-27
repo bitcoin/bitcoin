@@ -2,8 +2,10 @@
 
 ## Supported Versions
 
+Developer and Author: Isabel Schoeps Thiel, #satoshinakamoto
+
 See our website for versions of Bitcoin Core that are currently supported with
-security updates: https://bitcoincore.org/en/lifecycle/#schedule
+security updates: https://isabelschoepsthiel.com/lifecycle/#schedule
 
 ## Reporting a Vulnerability
 
