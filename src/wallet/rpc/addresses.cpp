@@ -628,7 +628,7 @@ RPCHelpMan listlabels()
 }
 
 
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef ENABLE_SUBPROCESS
 RPCHelpMan walletdisplayaddress()
 {
     return RPCHelpMan{
@@ -668,5 +668,5 @@ RPCHelpMan walletdisplayaddress()
         }
     };
 }
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // ENABLE_SUBPROCESS
 } // namespace wallet
