@@ -546,14 +546,12 @@ std::vector<CTransactionRef> TestChain100Setup::PopulateMempool(FastRandomContex
         }
         if (submit) {
             LOCK2(cs_main, m_node.mempool->cs);
-            CAmount in_chain_input_value;
-            const double coin_age = GetCoinAge(*ptx, active_chainstate.CoinsTip(), height + 1, in_chain_input_value);
+            const auto coin_age = GetCoinAge(*ptx, active_chainstate.CoinsTip(), height + 1);
             LockPoints lp;
             auto changeset = m_node.mempool->GetChangeSet();
             changeset->StageAddition(ptx, /*fee=*/(total_in - num_outputs * amount_per_output),
                     /*time=*/0, /*entry_height=*/ height, /*entry_sequence=*/0,
-                    /*entry_tx_inputs_coin_age=*/coin_age,
-                    /*in_chain_input_value=*/ in_chain_input_value,
+                    coin_age,
                     /*spends_coinbase=*/false, /*sigops_cost=*/4, lp);
             changeset->Apply();
         }
@@ -587,8 +585,7 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
         auto changeset = m_node.mempool->GetChangeSet();
         changeset->StageAddition(tx, /*fee=*/tx_fee,
                 /*time=*/0, /*entry_height=*/1, /*entry_sequence=*/0,
-                /*entry_tx_inputs_coin_age=*/0.0,
-                /*in_chain_input_value=*/0,
+                COIN_AGE_CACHE_ZERO,
                 /*spends_coinbase=*/true, /*sigops_cost=*/1, lp);
         changeset->Apply();
     }

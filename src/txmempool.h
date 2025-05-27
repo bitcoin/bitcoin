@@ -837,7 +837,7 @@ public:
 
         using TxHandle = CTxMemPool::txiter;
 
-        TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, double entry_tx_inputs_coin_age, CAmount in_chain_input_value, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
+        TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, CoinAgeCache coin_age_cache, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
         void StageRemoval(CTxMemPool::txiter it) { m_to_remove.insert(it); }
 
         const CTxMemPool::setEntries& GetRemovals() const { return m_to_remove; }

@@ -115,8 +115,7 @@ private:
 public:
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
                     int64_t time, unsigned int entry_height, uint64_t entry_sequence,
-                    double entry_tx_inputs_coin_age,
-                    CAmount in_chain_input_value,
+                    CoinAgeCache coin_age_cache,
                     bool spends_coinbase,
                     int64_t sigops_cost, LockPoints lp)
         : tx{tx},
@@ -127,12 +126,12 @@ public:
           entry_sequence{entry_sequence},
           sigOpCost{sigops_cost},
           nModSize{CalculateModifiedSize(*tx, GetTxSize())},
-          entryPriority{ComputePriority2(entry_tx_inputs_coin_age, nModSize)},
+          entryPriority{ComputePriority2(coin_age_cache.inputs_coin_age, nModSize)},
           entryHeight{entry_height},
           cachedPriority{entryPriority},
           // Since entries arrive *after* the tip's height, their entry priority is for the height+1
           cachedHeight{entry_height + 1},
-          inChainInputValue{in_chain_input_value},
+          inChainInputValue{coin_age_cache.in_chain_input_value},
           spendsCoinbase{spends_coinbase},
           m_modified_fee{nFee},
           lockPoints{lp},
@@ -155,7 +154,12 @@ public:
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
     double GetStartingPriority() const {return entryPriority; }
-    std::pair<double, CAmount> GetInternalCoinAgePriorityCache2() const { return {ReversePriority2(cachedPriority, nModSize), inChainInputValue}; }
+    CoinAgeCache GetInternalCoinAgeCache() const {
+        return {
+            .inputs_coin_age = ReversePriority2(cachedPriority, nModSize),
+            .in_chain_input_value = inChainInputValue,
+        };
+    }
     /**
      * Fast calculation of priority as update from cached value, but only valid if
      * currentHeight is greater than last height it was recalculated.

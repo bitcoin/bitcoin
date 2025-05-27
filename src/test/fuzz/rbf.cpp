@@ -185,7 +185,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     }
 
     CAmount replacement_fees = ConsumeMoney(fuzzed_data_provider);
-    const auto replacement_entry_coin_age_priority_info = replacement_entry.GetInternalCoinAgePriorityCache2();
+    const auto replacement_entry_coin_age_cache = replacement_entry.GetInternalCoinAgeCache();
     auto changeset = pool.GetChangeSet();
     for (auto& txiter : all_conflicts) {
         changeset->StageRemoval(txiter);
@@ -193,8 +193,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     changeset->StageAddition(replacement_entry.GetSharedTx(), replacement_fees,
             replacement_entry.GetTime().count(), replacement_entry.GetHeight(),
             replacement_entry.GetSequence(),
-            /*entry_tx_inputs_coin_age=*/replacement_entry_coin_age_priority_info.first,
-            /*in_chain_input_value=*/replacement_entry_coin_age_priority_info.second,
+            replacement_entry_coin_age_cache,
             replacement_entry.GetSpendsCoinbase(),
             replacement_entry.GetSigOpCost(), replacement_entry.GetLockPoints());
     // Calculate the chunks for a replacement.

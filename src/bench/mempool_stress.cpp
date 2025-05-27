@@ -30,7 +30,10 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    AddToMempool(pool, CTxMemPoolEntry(tx, 1000, nTime, nHeight, sequence, /*entry_tx_inputs_coin_age=*/coin_age, tx->GetValueOut(), spendsCoinbase, sigOpCost, lp));
+    AddToMempool(pool, CTxMemPoolEntry(tx, 1000, nTime, nHeight, sequence, {
+        .inputs_coin_age = coin_age,
+        .in_chain_input_value = tx->GetValueOut(),
+    }, spendsCoinbase, sigOpCost, lp));
 }
 
 struct Available {

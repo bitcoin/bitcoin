@@ -45,12 +45,12 @@ double ReversePriority2(const double coin_age_priority, const unsigned int mod_v
     return coin_age_priority * mod_vsize;
 }
 
-double GetCoinAge(const CTransaction &tx, const CCoinsViewCache& view, int nHeight, CAmount &inChainInputValue)
+CoinAgeCache GetCoinAge(const CTransaction &tx, const CCoinsViewCache& view, int nHeight)
 {
-    inChainInputValue = 0;
-    if (tx.IsCoinBase())
-        return 0.0;
-    double dResult = 0.0;
+    CoinAgeCache r{COIN_AGE_CACHE_ZERO};
+    if (tx.IsCoinBase()) {
+        return r;
+    }
     for (const CTxIn& txin : tx.vin)
     {
         const Coin& coin = view.AccessCoin(txin.prevout);
@@ -58,11 +58,11 @@ double GetCoinAge(const CTransaction &tx, const CCoinsViewCache& view, int nHeig
             continue;
         }
         if (coin.nHeight <= nHeight) {
-            dResult += (double)(coin.out.nValue) * (nHeight - coin.nHeight);
-            inChainInputValue += coin.out.nValue;
+            r.inputs_coin_age += (double)(coin.out.nValue) * (nHeight - coin.nHeight);
+            r.in_chain_input_value += coin.out.nValue;
         }
     }
-    return dResult;
+    return r;
 }
 
 void CTxMemPoolEntry::UpdateCachedPriority(unsigned int currentHeight, CAmount valueInCurrentBlock)

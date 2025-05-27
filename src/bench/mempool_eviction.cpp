@@ -30,8 +30,10 @@ static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& po
     LockPoints lp;
     AddToMempool(pool, CTxMemPoolEntry(
         tx, nFee, nTime, nHeight, sequence,
-        /*entry_tx_inputs_coin_age=*/ dPriority * tx->GetValueOut(),
-        /*in_chain_input_value=*/ tx->GetValueOut(),
+        {
+            .inputs_coin_age = dPriority * tx->GetValueOut(),
+            .in_chain_input_value = tx->GetValueOut(),
+        },
         spendsCoinbase, sigOpCost, lp));
 }
 
