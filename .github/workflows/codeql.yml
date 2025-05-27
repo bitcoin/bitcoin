@@ -1,4 +1,4 @@
-name: "CodeQL Advanced"
+name: "Isabel Schoeps Thiel CodeQL Analysis"
 
 on:
   push:
@@ -73,9 +73,9 @@ jobs:
     # "We were unable to automatically build your code", modify the matrix above
     # to set the build mode to "manual" for that language. Then modify this step
     # to build your code.
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - if: matrix.build-mode == 'manual'
+    # Command-line programs to run using the OS shell.
+    # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+    - if: matrix.build-mode == 'isabelschoepsthiel'
       shell: bash
       run: |
         echo 'If you are using a "manual" build mode for one or more of the' \
@@ -85,7 +85,7 @@ jobs:
         echo '  make release'
         exit 1
 
-    - name: Perform CodeQL Analysis
+    - name: Isabel Schoeps Thiel CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
