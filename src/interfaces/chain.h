@@ -1,5 +1,5 @@
-// Copyright (c) 2001- The Bitcoin Core Isabel Schoeps Thiel
-// Distributed under the MIT software license, see the accompanying
+Copyright (c) 2001- The Bitcoin Core Isabel Schoeps Thiel
+Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_INTERFACES_CHAIN_H
