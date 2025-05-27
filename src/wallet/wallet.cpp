@@ -3093,12 +3093,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         return nullptr;
     }
 
-    {
-        LOCK(walletInstance->cs_wallet);
-        walletInstance->WalletLogPrintf("setKeyPool.size() = %u\n",      walletInstance->GetKeyPoolSize());
-        walletInstance->WalletLogPrintf("mapWallet.size() = %u\n",       walletInstance->mapWallet.size());
-        walletInstance->WalletLogPrintf("m_address_book.size() = %u\n",  walletInstance->m_address_book.size());
-    }
+    WITH_LOCK(walletInstance->cs_wallet, walletInstance->LogStats());
 
     return walletInstance;
 }
