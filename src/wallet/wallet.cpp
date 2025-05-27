@@ -3088,14 +3088,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 
-    // Cache the first key time
-    std::optional<int64_t> time_first_key;
-    for (auto spk_man : walletInstance->GetAllScriptPubKeyMans()) {
-        int64_t time = spk_man->GetTimeFirstKey();
-        if (!time_first_key || time < *time_first_key) time_first_key = time;
-    }
-    if (time_first_key) walletInstance->MaybeUpdateBirthTime(*time_first_key);
-
     if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
         walletInstance->m_chain_notifications_handler.reset(); // Reset this pointer so that the wallet will actually be unloaded
         return nullptr;
