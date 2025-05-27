@@ -5,6 +5,7 @@
 #include <test/util/setup_common.h>
 
 #include <chainparams.h>
+#include <clientversion.h>
 #include <evo/netinfo.h>
 #include <netbase.h>
 #include <streams.h>
@@ -53,6 +54,88 @@ BOOST_AUTO_TEST_CASE(mnnetinfo_rules)
             ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(netinfo_ser)
+{
+    {
+        // An empty object should only store one byte to denote it is invalid
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        NetInfoEntry entry{};
+        ds << entry;
+        BOOST_CHECK_EQUAL(ds.size(), sizeof(uint8_t));
+    }
+
+    {
+        // Reading a nonsense byte should return an empty object
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        NetInfoEntry entry{};
+        ds << 0xfe;
+        ds >> entry;
+        BOOST_CHECK(entry.IsEmpty() && !entry.IsTriviallyValid());
+    }
+
+    {
+        // Reading an invalid CService should fail trivial validation and return an empty object
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        NetInfoEntry entry{};
+        ds << NetInfoEntry::NetInfoType::Service << CService{};
+        ds >> entry;
+        BOOST_CHECK(entry.IsEmpty() && !entry.IsTriviallyValid());
+    }
+
+    {
+        // Reading an unrecognized type should fail trivial validation and return an empty object
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        NetInfoEntry entry{};
+        ds << NetInfoEntry::NetInfoType::Service << uint256{};
+        ds >> entry;
+        BOOST_CHECK(entry.IsEmpty() && !entry.IsTriviallyValid());
+    }
+
+    {
+        // A valid CService should be constructable, readable and pass validation
+        CDataStream ds(SER_DISK, CLIENT_VERSION);
+        CService service{LookupNumeric("1.1.1.1", Params().GetDefaultPort())};
+        BOOST_CHECK(service.IsValid());
+        NetInfoEntry entry{service}, entry2{};
+        ds << NetInfoEntry::NetInfoType::Service << service;
+        ds >> entry2;
+        BOOST_CHECK(entry == entry2);
+        BOOST_CHECK(!entry.IsEmpty() && entry.IsTriviallyValid());
+        BOOST_CHECK(entry.GetAddrPort().value() == service);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(netinfo_retvals)
+{
+    uint16_t p2p_port{Params().GetDefaultPort()};
+    CService service{LookupNumeric("1.1.1.1", p2p_port)}, service2{LookupNumeric("1.1.1.2", p2p_port)};
+    NetInfoEntry entry{service}, entry2{service2}, entry_empty{};
+
+    // Check that values are correctly recorded and pass trivial validation
+    BOOST_CHECK(service.IsValid());
+    BOOST_CHECK(!entry.IsEmpty() && entry.IsTriviallyValid());
+    BOOST_CHECK(entry.GetAddrPort().value() == service);
+    BOOST_CHECK(!entry2.IsEmpty() && entry2.IsTriviallyValid());
+    BOOST_CHECK(entry2.GetAddrPort().value() == service2);
+
+    // Check that dispatch returns the expected values
+    BOOST_CHECK_EQUAL(entry.GetPort(), service.GetPort());
+    BOOST_CHECK_EQUAL(entry.ToString(), strprintf("CService(addr=%s, port=%u)", service.ToStringAddr(), service.GetPort()));
+    BOOST_CHECK_EQUAL(entry.ToStringAddr(), service.ToStringAddr());
+    BOOST_CHECK_EQUAL(entry.ToStringAddrPort(), service.ToStringAddrPort());
+    BOOST_CHECK_EQUAL(service < service2, entry < entry2);
+
+    // Check that empty/invalid entries return error messages
+    BOOST_CHECK_EQUAL(entry_empty.GetPort(), 0);
+    BOOST_CHECK_EQUAL(entry_empty.ToString(), "[invalid entry]");
+    BOOST_CHECK_EQUAL(entry_empty.ToStringAddr(), "[invalid entry]");
+    BOOST_CHECK_EQUAL(entry_empty.ToStringAddrPort(), "[invalid entry]");
+
+    // The invalid entry type code is 0xff (highest possible value) and therefore will return as greater
+    // in comparison to any valid entry
+    BOOST_CHECK(entry < entry_empty);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

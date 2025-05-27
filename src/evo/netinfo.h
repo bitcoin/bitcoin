@@ -8,6 +8,8 @@
 #include <netaddress.h>
 #include <serialize.h>
 
+#include <variant>
+
 class CService;
 
 enum class NetInfoStatus : uint8_t {
@@ -41,6 +43,75 @@ constexpr std::string_view NISToString(const NetInfoStatus code)
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
+
+class NetInfoEntry
+{
+public:
+    enum NetInfoType : uint8_t {
+        Service = 0x01,
+        Invalid = 0xff
+    };
+
+private:
+    uint8_t m_type{NetInfoType::Invalid};
+    std::variant<std::monostate, CService> m_data{std::monostate{}};
+
+public:
+    NetInfoEntry() = default;
+    NetInfoEntry(const CService& service)
+    {
+        if (!service.IsValid()) return;
+        m_type = NetInfoType::Service;
+        m_data = service;
+    }
+
+    ~NetInfoEntry() = default;
+
+    bool operator<(const NetInfoEntry& rhs) const;
+    bool operator==(const NetInfoEntry& rhs) const;
+    bool operator!=(const NetInfoEntry& rhs) const { return !(*this == rhs); }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        if (const auto* data_ptr{std::get_if<CService>(&m_data)};
+            m_type == NetInfoType::Service && data_ptr && data_ptr->IsValid()) {
+            s << m_type << *data_ptr;
+        } else {
+            s << NetInfoType::Invalid;
+        }
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_type;
+        if (m_type == NetInfoType::Service) {
+            m_data = CService{};
+            try {
+                CService& service{std::get<CService>(m_data)};
+                s >> service;
+                if (!service.IsValid()) { Clear(); } // Invalid CService, mark as invalid
+            } catch (const std::ios_base::failure&) { Clear(); } // Deser failed, mark as invalid
+        } else { Clear(); } // Invalid type code, mark as invalid
+    }
+
+    void Clear()
+    {
+        m_type = NetInfoType::Invalid;
+        m_data = std::monostate{};
+    }
+
+    std::optional<std::reference_wrapper<const CService>> GetAddrPort() const;
+    uint16_t GetPort() const;
+    bool IsEmpty() const { return *this == NetInfoEntry{}; }
+    bool IsTriviallyValid() const;
+    std::string ToString() const;
+    std::string ToStringAddr() const;
+    std::string ToStringAddrPort() const;
+};
+
+template<> struct is_serializable_enum<NetInfoEntry::NetInfoType> : std::true_type {};
 
 using CServiceList = std::vector<std::reference_wrapper<const CService>>;
 
