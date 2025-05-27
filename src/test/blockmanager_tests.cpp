@@ -137,6 +137,16 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
 }
 
+BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
+{
+    CBlockIndex* fake_index{WITH_LOCK(m_node.chainman->GetMutex(), return m_node.chainman->ActiveChain().Tip())};
+    fake_index->phashBlock = &uint256::ONE; // invalid block hash
+
+    ASSERT_DEBUG_LOG("GetHash() doesn't match index");
+    CBlock dummy;
+    BOOST_CHECK(!m_node.chainman->m_blockman.ReadBlock(dummy, *fake_index));
+}
+
 BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
 {
     KernelNotifications notifications{Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings)};
