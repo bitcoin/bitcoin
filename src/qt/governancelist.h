@@ -94,7 +94,7 @@ class ProposalModel : public QAbstractTableModel
 private:
     QList<const Proposal*> m_data;
     int nAbsVoteReq = 0;
-    int m_display_unit{BitcoinUnits::DASH};
+    BitcoinUnit m_display_unit{BitcoinUnit::DASH};
 
 public:
     explicit ProposalModel(QObject* parent = nullptr) :
@@ -123,7 +123,7 @@ public:
 
     const Proposal* getProposalAt(const QModelIndex& index) const;
 
-    void setDisplayUnit(int display_unit);
+    void setDisplayUnit(BitcoinUnit display_unit);
 };
 
 #endif // BITCOIN_QT_GOVERNANCELIST_H

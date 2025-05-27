@@ -468,8 +468,7 @@ public:
     {
         return m_context->mn_activeman != nullptr;
     }
-    bool getReindex() override { return ::fReindex; }
-    bool getImporting() override { return ::fImporting; }
+    bool isLoadingBlocks() override { return ::fReindex || ::fImporting; }
     void setNetworkActive(bool active) override
     {
         if (m_context->connman) {

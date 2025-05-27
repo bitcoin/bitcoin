@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
+#include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/optionsmodel.h>
 #include <qt/qvalidatedlineedit.h>
@@ -152,7 +153,7 @@ void TestGUI(interfaces::Node& node)
         // Check balance in send dialog
         QLabel* balanceLabel = sendCoinsDialog.findChild<QLabel*>("labelBalance");
         QString balanceText = balanceLabel->text();
-        int unit = walletModel.getOptionsModel()->getDisplayUnit();
+        BitcoinUnit unit = walletModel.getOptionsModel()->getDisplayUnit();
         CAmount balance = walletModel.wallet().getBalance();
         QString balanceComparison = BitcoinUnits::formatWithUnit(unit, balance, false /*, BitcoinUnits::SeparatorStyle::ALWAYS*/);
         QCOMPARE(balanceText, balanceComparison);
@@ -175,7 +176,7 @@ void TestGUI(interfaces::Node& node)
     overviewPage.setWalletModel(&walletModel);
     QLabel* balanceLabel = overviewPage.findChild<QLabel*>("labelBalance");
     QString balanceText = balanceLabel->text().trimmed();
-    int unit = walletModel.getOptionsModel()->getDisplayUnit();
+    BitcoinUnit unit = walletModel.getOptionsModel()->getDisplayUnit();
     CAmount balance = walletModel.wallet().getBalance();
     QString balanceComparison = BitcoinUnits::floorHtmlWithPrivacy(unit, balance, BitcoinUnits::SeparatorStyle::ALWAYS, false);
     QCOMPARE(balanceText, balanceComparison);

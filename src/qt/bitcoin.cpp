@@ -97,6 +97,8 @@ static void RegisterMetaTypes()
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
     qRegisterMetaType<QMessageBox::Icon>("QMessageBox::Icon");
     qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
+
+    qRegisterMetaTypeStreamOperators<BitcoinUnit>("BitcoinUnit");
 }
 
 static QString GetLangTerritory()
@@ -346,6 +348,11 @@ void BitcoinApplication::requestShutdown()
     // Request node shutdown, which can interrupt long operations, like
     // rescanning a wallet.
     node().startShutdown();
+    // Prior to unsetting the client model, stop listening backend signals
+    if (clientModel) {
+        clientModel->stop();
+    }
+
     // Unsetting the client model can cause the current thread to wait for node
     // to complete an operation, like wait for a RPC execution to complete.
     window->setClientModel(nullptr);
@@ -564,29 +571,30 @@ int GuiMain(int argc, char* argv[])
     // Gracefully exit if the user cancels
     if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data directory and parse dash.conf
-    /// - Do not call gArgs.GetDataDirNet() before this step finishes
+    /// 6a. Determine availability of data directory
     if (!CheckDataDirOption()) {
         InitError(strprintf(Untranslated("Specified data directory \"%s\" does not exist.\n"), gArgs.GetArg("-datadir", "")));
         QMessageBox::critical(nullptr, PACKAGE_NAME,
             QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(gArgs.GetArg("-datadir", ""))));
         return EXIT_FAILURE;
     }
-    if (!gArgs.ReadConfigFiles(error, true)) {
-        InitError(strprintf(Untranslated("Error reading configuration file: %s\n"), error));
-        QMessageBox::critical(nullptr, PACKAGE_NAME,
-            QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
-        return EXIT_FAILURE;
-    }
-
-    /// 7. Determine network (and switch to network specific options)
-    // - Do not call Params() before this step
-    // - Do this after parsing the configuration file, as the network can be switched there
-    // - QSettings() will use the new application name after this, resulting in network-specific settings
-    // - Needs to be done before createOptionsModel
-
-    // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
+        /// 6b. Parse dash.conf
+        /// - Do not call gArgs.GetDataDirNet() before this step finishes
+        if (!gArgs.ReadConfigFiles(error, true)) {
+            InitError(strprintf(Untranslated("Error reading configuration file: %s\n"), error));
+            QMessageBox::critical(nullptr, PACKAGE_NAME,
+                QObject::tr("Error: Cannot parse configuration file: %1.").arg(QString::fromStdString(error)));
+            return EXIT_FAILURE;
+        }
+
+        /// 7. Determine network (and switch to network specific options)
+        // - Do not call Params() before this step
+        // - Do this after parsing the configuration file, as the network can be switched there
+        // - QSettings() will use the new application name after this, resulting in network-specific settings
+        // - Needs to be done before createOptionsModel
+
+        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
         SelectParams(gArgs.GetChainName());
     } catch(std::exception &e) {
         InitError(Untranslated(strprintf("%s\n", e.what())));

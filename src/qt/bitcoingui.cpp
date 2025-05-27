@@ -263,7 +263,6 @@ BitcoinGUI::~BitcoinGUI()
         trayIcon->hide();
 #ifdef Q_OS_MAC
     delete m_app_nap_inhibitor;
-    delete appMenuBar;
     MacDockIconHandler::cleanup();
 #endif
 
@@ -592,13 +591,7 @@ void BitcoinGUI::createActions()
 
 void BitcoinGUI::createMenuBar()
 {
-#ifdef Q_OS_MAC
-    // Create a decoupled menu bar on Mac which stays even if the window is closed
-    appMenuBar = new QMenuBar();
-#else
-    // Get the main window's menu bar on other platforms
     appMenuBar = menuBar();
-#endif
 
     // Configure the menus
     QMenu *file = appMenuBar->addMenu(tr("&File"));
@@ -843,6 +836,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
 
             MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
             connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, [this] {
+                if (m_node.shutdownRequested()) return; // nothing to show, node is shutting down.
                 showNormalIfMinimized();
                 activateWindow();
             });
@@ -1124,6 +1118,8 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         // See https://bugreports.qt.io/browse/QTBUG-91697
         pmenu, &QMenu::aboutToShow,
         [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action, repair_action, backups_action, info_action, graph_action, peer_action, conf_action] {
+            if (m_node.shutdownRequested()) return; // nothing to do, node is shutting down.
+
             if (show_hide_action) show_hide_action->setText(
                 (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this)) ?
                     tr("&Hide") :
@@ -1309,10 +1305,7 @@ void BitcoinGUI::gotoLoadPSBT(bool from_clipboard)
 
 void BitcoinGUI::updateNetworkState()
 {
-    if (clientModel == nullptr) {
-        return;
-    }
-
+    if (!clientModel) return;
     static int nCountPrev{0};
     static bool fNetworkActivePrev{false};
     int count = clientModel->getNumConnections();
@@ -1529,7 +1522,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
     statusBar()->clearMessage();
 
     // Acquire current block source
-    enum BlockSource blockSource = clientModel->getBlockSource();
+    BlockSource blockSource{clientModel->getBlockSource()};
     switch (blockSource) {
         case BlockSource::NETWORK:
             if (header) {
@@ -1545,9 +1538,6 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
             } else {
                 progressBarLabel->setText(tr("Processing blocks on disk…"));
             }
-            break;
-        case BlockSource::REINDEX:
-            progressBarLabel->setText(tr("Reindexing blocks on disk…"));
             break;
         case BlockSource::NONE:
             if (header) {
@@ -1801,7 +1791,7 @@ void BitcoinGUI::showEvent(QShowEvent *event)
 }
 
 #ifdef ENABLE_WALLET
-void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
+void BitcoinGUI::incomingTransaction(const QString& date, BitcoinUnit unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
 {
     IncomingTransactionMessage itx = {
             date, unit, amount, type, address, label, walletName
@@ -1855,7 +1845,7 @@ void BitcoinGUI::showIncomingTransactions()
         }
 
         // Use display unit of last entry
-        int unit = txs.back().unit;
+        BitcoinUnit unit = txs.back().unit;
 
         QString msg;
         if (sentCount > 0) {
@@ -2152,11 +2142,10 @@ UnitDisplayStatusBarControl::UnitDisplayStatusBarControl() :
 {
     createContextMenu();
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));
-    QList<BitcoinUnits::Unit> units = BitcoinUnits::availableUnits();
+    QList<BitcoinUnit> units = BitcoinUnits::availableUnits();
     int max_width = 0;
     const QFontMetrics fm(GUIUtil::getFontNormal());
-    for (const BitcoinUnits::Unit unit : units)
-    {
+    for (const BitcoinUnit unit : units) {
         max_width = qMax(max_width, GUIUtil::TextWidth(fm, BitcoinUnits::name(unit)));
     }
     setMinimumSize(max_width, 0);
@@ -2173,8 +2162,8 @@ void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 void UnitDisplayStatusBarControl::createContextMenu()
 {
     menu = new QMenu(this);
-    for (const BitcoinUnits::Unit u : BitcoinUnits::availableUnits()) {
-        menu->addAction(BitcoinUnits::name(u))->setData(QVariant(u));
+    for (const BitcoinUnit u : BitcoinUnits::availableUnits()) {
+        menu->addAction(BitcoinUnits::name(u))->setData(QVariant::fromValue(u));
     }
     connect(menu, &QMenu::triggered, this, &UnitDisplayStatusBarControl::onMenuSelection);
 }
@@ -2195,7 +2184,7 @@ void UnitDisplayStatusBarControl::setOptionsModel(OptionsModel *_optionsModel)
 }
 
 /** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
-void UnitDisplayStatusBarControl::updateDisplayUnit(int newUnits)
+void UnitDisplayStatusBarControl::updateDisplayUnit(BitcoinUnit newUnits)
 {
     setText(BitcoinUnits::name(newUnits));
 }

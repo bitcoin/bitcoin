@@ -286,7 +286,7 @@ const Proposal* ProposalModel::getProposalAt(const QModelIndex& index) const
     return m_data[index.row()];
 }
 
-void ProposalModel::setDisplayUnit(int display_unit) { this->m_display_unit = display_unit; }
+void ProposalModel::setDisplayUnit(BitcoinUnit display_unit) { this->m_display_unit = display_unit; }
 
 //
 // Governance Tab main widget.

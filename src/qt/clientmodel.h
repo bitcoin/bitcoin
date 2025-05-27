@@ -23,15 +23,18 @@ class PeerTableModel;
 class PeerTableSortProxy;
 enum class SynchronizationState;
 
+namespace interfaces {
+struct BlockTip;
+}
+
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
 enum class BlockSource {
     NONE,
-    REINDEX,
     DISK,
-    NETWORK
+    NETWORK,
 };
 
 enum NumConnections {
@@ -54,6 +57,8 @@ public:
     explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
     ~ClientModel();
 
+    void stop();
+
     interfaces::Node& node() const { return m_node; }
     interfaces::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
     interfaces::CoinJoin::Options& coinJoinOptions() const { return m_node.coinJoinOptions(); }
@@ -75,8 +80,8 @@ public:
 
     void getAllGovernanceObjects(std::vector<CGovernanceObject> &obj);
 
-    //! Returns enum BlockSource of the current importing/syncing state
-    enum BlockSource getBlockSource() const;
+    //! Returns the block source of the current importing/syncing state
+    BlockSource getBlockSource() const;
     //! Return warnings to be displayed in status bar
     QString getStatusBarWarnings() const;
 
@@ -99,16 +104,7 @@ public:
 
 private:
     interfaces::Node& m_node;
-    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_num_connections_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_network_active_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_chainlock;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_masternodelist_changed;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_additional_data_sync_progess_changed;
+    std::vector<std::unique_ptr<interfaces::Handler>> m_event_handlers;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
@@ -124,6 +120,7 @@ private:
     CDeterministicMNListPtr mnListCached;
     const CBlockIndex* mnListTip{nullptr};
 
+    void TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header);
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
@@ -143,12 +140,6 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
-
-public Q_SLOTS:
-    void updateNumConnections(int numConnections);
-    void updateNetworkActive(bool networkActive);
-    void updateAlert();
-    void updateBanlist();
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H

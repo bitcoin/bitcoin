@@ -235,11 +235,8 @@ public:
     //! Is masternode.
     virtual bool isMasternode() = 0;
 
-    //! Get reindex.
-    virtual bool getReindex() = 0;
-
-    //! Get importing.
-    virtual bool getImporting() = 0;
+    //! Is loading blocks.
+    virtual bool isLoadingBlocks() = 0;
 
     //! Set network active.
     virtual void setNetworkActive(bool active) = 0;

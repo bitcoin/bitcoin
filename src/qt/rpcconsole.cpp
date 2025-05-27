@@ -14,7 +14,6 @@
 
 #include <chainparams.h>
 #include <interfaces/node.h>
-#include <netbase.h>
 #include <node/connection_types.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
@@ -1034,6 +1033,7 @@ void RPCConsole::message(int category, const QString &message, bool html)
 
 void RPCConsole::updateNetworkState()
 {
+    if (!clientModel) return;
     QString connections = QString::number(clientModel->getNumConnections()) + " (";
     connections += tr("In:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_IN)) + " / ";
     connections += tr("Out:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_OUT)) + ")";
@@ -1304,8 +1304,12 @@ void RPCConsole::updateDetailWidget()
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.m_last_ping_time));
     ui->peerMinPing->setText(GUIUtil::formatPingTime(stats->nodeStats.m_min_ping_time));
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
-    ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
-    ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
+    if (stats->nodeStats.nVersion) {
+        ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
+    }
+    if (!stats->nodeStats.cleanSubVer.empty()) {
+        ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
+    }
     ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type, /* prepend_direction */ true));
     ui->peerTransportType->setText(QString::fromStdString(TransportTypeAsString(stats->nodeStats.m_transport_type)));
     if (stats->nodeStats.m_transport_type == TransportProtocolType::V2) {
@@ -1488,15 +1492,13 @@ void RPCConsole::unbanSelectedNode()
 
     // Get selected ban addresses
     QList<QModelIndex> nodes = GUIUtil::getEntryData(ui->banlistWidget, BanTableModel::Address);
-    for(int i = 0; i < nodes.count(); i++)
-    {
-        // Get currently selected ban address
-        QString strNode = nodes.at(i).data().toString();
-        CSubNet possibleSubnet{LookupSubNet(strNode.toStdString())};
-        if (possibleSubnet.IsValid() && m_node.unban(possibleSubnet))
-        {
-            clientModel->getBanTableModel()->refresh();
-        }
+    BanTableModel* ban_table_model{clientModel->getBanTableModel()};
+    bool unbanned{false};
+    for (const auto& node_index : nodes) {
+        unbanned |= ban_table_model->unban(node_index);
+    }
+    if (unbanned) {
+        ban_table_model->refresh();
     }
 }
 

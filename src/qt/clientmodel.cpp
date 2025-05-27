@@ -25,9 +25,9 @@
 #include <validation.h>
 
 #include <stdint.h>
-#include <functional>
 
 #include <QDebug>
+#include <QMetaObject>
 #include <QThread>
 #include <QTimer>
 
@@ -72,12 +72,17 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     subscribeToCoreSignals();
 }
 
-ClientModel::~ClientModel()
+void ClientModel::stop()
 {
     unsubscribeFromCoreSignals();
 
     m_thread->quit();
     m_thread->wait();
+}
+
+ClientModel::~ClientModel()
+{
+    stop();
 }
 
 int ClientModel::getNumConnections(unsigned int flags) const
@@ -183,30 +188,10 @@ uint256 ClientModel::getBestBlockHash()
     return m_cached_tip_blocks;
 }
 
-void ClientModel::updateNumConnections(int numConnections)
+BlockSource ClientModel::getBlockSource() const
 {
-    Q_EMIT numConnectionsChanged(numConnections);
-}
-
-void ClientModel::updateNetworkActive(bool networkActive)
-{
-    Q_EMIT networkActiveChanged(networkActive);
-}
-
-void ClientModel::updateAlert()
-{
-    Q_EMIT alertsChanged(getStatusBarWarnings());
-}
-
-enum BlockSource ClientModel::getBlockSource() const
-{
-    if (m_node.getReindex())
-        return BlockSource::REINDEX;
-    else if (m_node.getImporting())
-        return BlockSource::DISK;
-    else if (getNumConnections() > 0)
-        return BlockSource::NETWORK;
-
+    if (m_node.isLoadingBlocks()) return BlockSource::DISK;
+    if (getNumConnections() > 0) return BlockSource::NETWORK;
     return BlockSource::NONE;
 }
 
@@ -265,129 +250,78 @@ QString ClientModel::blocksDir() const
     return GUIUtil::PathToQString(gArgs.GetBlocksDirPath());
 }
 
-void ClientModel::updateBanlist()
+void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header)
 {
-    banTableModel->refresh();
-}
-
-// Handlers for core signals
-static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
-{
-    // emits signal "showProgress"
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(title)),
-                              Q_ARG(int, nProgress));
-    assert(invoked);
-}
-
-static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
-{
-    // Too noisy: qDebug() << "NotifyNumConnectionsChanged: " + QString::number(newNumConnections);
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNumConnections", Qt::QueuedConnection,
-                              Q_ARG(int, newNumConnections));
-    assert(invoked);
-}
-
-static void NotifyNetworkActiveChanged(ClientModel *clientmodel, bool networkActive)
-{
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateNetworkActive", Qt::QueuedConnection,
-                              Q_ARG(bool, networkActive));
-    assert(invoked);
-}
-
-static void NotifyAlertChanged(ClientModel *clientmodel)
-{
-    qDebug() << "NotifyAlertChanged";
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateAlert", Qt::QueuedConnection);
-    assert(invoked);
-}
-
-static void BannedListChanged(ClientModel *clientmodel)
-{
-    qDebug() << QString("%1: Requesting update for peer banlist").arg(__func__);
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
-    assert(invoked);
-}
-
-static void BlockTipChanged(ClientModel* clientmodel, SynchronizationState sync_state, interfaces::BlockTip tip, double verificationProgress, bool fHeader)
-{
-    if (fHeader) {
+    if (header) {
         // cache best headers time and height to reduce future cs_main locks
-        clientmodel->cachedBestHeaderHeight = tip.block_height;
-        clientmodel->cachedBestHeaderTime = tip.block_time;
+        cachedBestHeaderHeight = tip.block_height;
+        cachedBestHeaderTime = tip.block_time;
     } else {
-        clientmodel->m_cached_num_blocks = tip.block_height;
-        WITH_LOCK(clientmodel->m_cached_tip_mutex, clientmodel->m_cached_tip_blocks = tip.block_hash;);
+        m_cached_num_blocks = tip.block_height;
+        WITH_LOCK(m_cached_tip_mutex, m_cached_tip_blocks = tip.block_hash;);
     }
 
     // Throttle GUI notifications about (a) blocks during initial sync, and (b) both blocks and headers during reindex.
-    const bool throttle = (sync_state != SynchronizationState::POST_INIT && !fHeader) || sync_state == SynchronizationState::INIT_REINDEX;
+    const bool throttle = (sync_state != SynchronizationState::POST_INIT && !header) || sync_state == SynchronizationState::INIT_REINDEX;
     const int64_t now = throttle ? GetTimeMillis() : 0;
-    int64_t& nLastUpdateNotification = fHeader ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
+    int64_t& nLastUpdateNotification = header ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
     if (throttle && now < nLastUpdateNotification + count_milliseconds(MODEL_UPDATE_DELAY)) {
         return;
     }
 
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
-        Q_ARG(int, tip.block_height),
-        Q_ARG(QDateTime, QDateTime::fromSecsSinceEpoch(tip.block_time)),
-        Q_ARG(QString, QString::fromStdString(tip.block_hash.ToString())),
-        Q_ARG(double, verificationProgress),
-        Q_ARG(bool, fHeader),
-        Q_ARG(SynchronizationState, sync_state));
-    assert(invoked);
+    Q_EMIT numBlocksChanged(tip.block_height, QDateTime::fromSecsSinceEpoch(tip.block_time), QString::fromStdString(tip.block_hash.ToString()), verification_progress, header, sync_state);
     nLastUpdateNotification = now;
-}
-
-static void NotifyChainLock(ClientModel *clientmodel, const std::string& bestChainLockHash, int bestChainLockHeight)
-{
-    // emits signal "chainlockChanged"
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "chainLockChanged", Qt::QueuedConnection,
-                              Q_ARG(QString, QString::fromStdString(bestChainLockHash)),
-                              Q_ARG(int, bestChainLockHeight));
-    assert(invoked);
-}
-
-static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList, const CBlockIndex* pindex)
-{
-    clientmodel->setMasternodeList(newList, pindex);
-}
-
-static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)
-{
-    bool invoked = QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
-                              Q_ARG(double, nSyncProgress));
-    assert(invoked);
 }
 
 void ClientModel::subscribeToCoreSignals()
 {
-    // Connect signals to client
-    m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(std::bind(NotifyNumConnectionsChanged, this, std::placeholders::_1));
-    m_handler_notify_network_active_changed = m_node.handleNotifyNetworkActiveChanged(std::bind(NotifyNetworkActiveChanged, this, std::placeholders::_1));
-    m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(std::bind(NotifyAlertChanged, this));
-    m_handler_banned_list_changed = m_node.handleBannedListChanged(std::bind(BannedListChanged, this));
-    m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, false));
-    m_handler_notify_chainlock = m_node.handleNotifyChainLock(std::bind(NotifyChainLock, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_notify_header_tip = m_node.handleNotifyHeaderTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, true));
-    m_handler_notify_masternodelist_changed = m_node.handleNotifyMasternodeListChanged(std::bind(NotifyMasternodeListChanged, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_notify_additional_data_sync_progess_changed = m_node.handleNotifyAdditionalDataSyncProgressChanged(std::bind(NotifyAdditionalDataSyncProgressChanged, this, std::placeholders::_1));
+    m_event_handlers.emplace_back(m_node.handleShowProgress(
+        [this](const std::string& title, int progress, [[maybe_unused]] bool resume_possible) {
+            Q_EMIT showProgress(QString::fromStdString(title), progress);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyNumConnectionsChanged(
+        [this](int new_num_connections) {
+            Q_EMIT numConnectionsChanged(new_num_connections);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyNetworkActiveChanged(
+        [this](bool network_active) {
+            Q_EMIT networkActiveChanged(network_active);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyAlertChanged(
+        [this]() {
+            qDebug() << "ClientModel: NotifyAlertChanged";
+            Q_EMIT alertsChanged(getStatusBarWarnings());
+        }));
+    m_event_handlers.emplace_back(m_node.handleBannedListChanged(
+        [this]() {
+            qDebug() << "ClienModel: Requesting update for peer banlist";
+            QMetaObject::invokeMethod(banTableModel, [this] { banTableModel->refresh(); });
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyBlockTip(
+        [this](SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress) {
+            TipChanged(sync_state, tip, verification_progress, /*header=*/false);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyHeaderTip(
+        [this](SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress) {
+            TipChanged(sync_state, tip, verification_progress, /*header=*/true);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyAdditionalDataSyncProgressChanged(
+        [this](double nSyncProgress) {
+            Q_EMIT additionalDataSyncProgressChanged(nSyncProgress);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyChainLock(
+        [this](const std::string& best_hash, int best_height) {
+            Q_EMIT chainLockChanged(QString::fromStdString(best_hash), best_height);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyMasternodeListChanged(
+        [this](const CDeterministicMNList& newList, const CBlockIndex* pindex) {
+            setMasternodeList(newList, pindex);
+        }));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
 {
-    // Disconnect signals from client
-    m_handler_show_progress->disconnect();
-    m_handler_notify_num_connections_changed->disconnect();
-    m_handler_notify_network_active_changed->disconnect();
-    m_handler_notify_alert_changed->disconnect();
-    m_handler_banned_list_changed->disconnect();
-    m_handler_notify_block_tip->disconnect();
-    m_handler_notify_chainlock->disconnect();
-    m_handler_notify_header_tip->disconnect();
-    m_handler_notify_masternodelist_changed->disconnect();
-    m_handler_notify_additional_data_sync_progess_changed->disconnect();
+    m_event_handlers.clear();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const

@@ -185,7 +185,7 @@ void WalletModel::updateWatchOnlyFlag(bool fHaveWatchonly)
     Q_EMIT notifyWatchonlyChanged(fHaveWatchonly);
 }
 
-bool WalletModel::validateAddress(const QString &address)
+bool WalletModel::validateAddress(const QString& address) const
 {
     return IsValidDestinationString(address.toStdString());
 }
@@ -277,7 +277,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     return SendCoinsReturn(OK);
 }
 
-WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &transaction, bool fIsCoinJoin)
+void WalletModel::sendCoins(WalletModelTransaction& transaction, bool fIsCoinJoin)
 {
     QByteArray transaction_array; /* store serialized transaction */
 
@@ -328,26 +328,24 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
     }
 
     checkBalanceChanged(m_wallet->getBalances()); // update balance immediately, otherwise there could be a short noticeable delay until pollBalanceChanged hits
-
-    return SendCoinsReturn(OK);
 }
 
-OptionsModel *WalletModel::getOptionsModel()
+OptionsModel* WalletModel::getOptionsModel() const
 {
     return optionsModel;
 }
 
-AddressTableModel *WalletModel::getAddressTableModel()
+AddressTableModel* WalletModel::getAddressTableModel() const
 {
     return addressTableModel;
 }
 
-TransactionTableModel *WalletModel::getTransactionTableModel()
+TransactionTableModel* WalletModel::getTransactionTableModel() const
 {
     return transactionTableModel;
 }
 
-RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel()
+RecentRequestsTableModel* WalletModel::getRecentRequestsTableModel() const
 {
     return recentRequestsTableModel;
 }
@@ -524,6 +522,14 @@ void WalletModel::unsubscribeFromCoreSignals()
 // WalletModel::UnlockContext implementation
 WalletModel::UnlockContext WalletModel::requestUnlock(bool fForMixingOnly)
 {
+    // Bugs in earlier versions may have resulted in wallets with private keys disabled to become "encrypted"
+    // (encryption keys are present, but not actually doing anything).
+    // To avoid issues with such wallets, check if the wallet has private keys disabled, and if so, return a context
+    // that indicates the wallet is not encrypted.
+    if (m_wallet->privateKeysDisabled()) {
+        return UnlockContext(this, /*valid=*/true, /*was_locked=*/false, /*was_mixing=*/false);
+    }
+
     EncryptionStatus encStatusOld = getEncryptionStatus();
 
     // Wallet was completely locked
@@ -592,7 +598,7 @@ QString WalletModel::getDisplayName() const
     return name.isEmpty() ? "["+tr("default wallet")+"]" : name;
 }
 
-bool WalletModel::isMultiwallet()
+bool WalletModel::isMultiwallet() const
 {
     return m_node.walletLoader().getWallets().size() > 1;
 }

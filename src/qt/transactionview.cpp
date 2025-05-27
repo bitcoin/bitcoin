@@ -562,7 +562,7 @@ void TransactionView::showAddressQRCode()
 void TransactionView::computeSum()
 {
     qint64 amount = 0;
-    int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
+    BitcoinUnit nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
     if(!transactionView->selectionModel())
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
