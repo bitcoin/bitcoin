@@ -23,6 +23,10 @@ class PeerTableModel;
 class PeerTableSortProxy;
 enum class SynchronizationState;
 
+namespace interfaces {
+struct BlockTip;
+}
+
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
@@ -105,10 +109,10 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_alert_changed;
     std::unique_ptr<interfaces::Handler> m_handler_banned_list_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_block_tip;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_chainlock;
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
-    std::unique_ptr<interfaces::Handler> m_handler_notify_masternodelist_changed;
     std::unique_ptr<interfaces::Handler> m_handler_notify_additional_data_sync_progess_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_chainlock;
+    std::unique_ptr<interfaces::Handler> m_handler_notify_masternodelist_changed;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
     PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
@@ -124,6 +128,7 @@ private:
     CDeterministicMNListPtr mnListCached;
     const CBlockIndex* mnListTip{nullptr};
 
+    void TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header);
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
@@ -143,12 +148,6 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
-
-public Q_SLOTS:
-    void updateNumConnections(int numConnections);
-    void updateNetworkActive(bool networkActive);
-    void updateAlert();
-    void updateBanlist();
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H
