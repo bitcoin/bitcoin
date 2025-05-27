@@ -283,22 +283,7 @@ static bool rest_headers(const std::any& context,
 }
 
 /**
- * Serialize spent outputs as a list of per-transaction CTxOut lists using binary format.
- */
-static void SerializeBlockUndo(DataStream& stream, const CBlockUndo& block_undo)
-{
-    WriteCompactSize(stream, block_undo.vtxundo.size() + 1);
-    WriteCompactSize(stream, 0); // block_undo.vtxundo doesn't contain coinbase tx
-    for (const CTxUndo& tx_undo : block_undo.vtxundo) {
-        WriteCompactSize(stream, tx_undo.vprevout.size());
-        for (const Coin& coin : tx_undo.vprevout) {
-            coin.out.Serialize(stream);
-        }
-    }
-}
-
-/**
- * Serialize spent outputs as a list of per-transaction CTxOut lists using JSON format.
+ * Serialize spent outputs as a list of non-coinbase transaction CTxOut lists using JSON format.
  */
 static void BlockUndoToJSON(const CBlockUndo& block_undo, UniValue& result)
 {
@@ -308,6 +293,8 @@ static void BlockUndoToJSON(const CBlockUndo& block_undo, UniValue& result)
         for (const Coin& coin : tx_undo.vprevout) {
             UniValue prevout(UniValue::VOBJ);
             prevout.pushKV("value", ValueFromAmount(coin.out.nValue));
+            prevout.pushKV("height", coin.nHeight);
+            prevout.pushKV("coinbase", coin.fCoinBase != 0);
 
             UniValue script_pub_key(UniValue::VOBJ);
             ScriptToUniv(coin.out.scriptPubKey, /*out=*/script_pub_key, /*include_hex=*/true, /*include_address=*/true);
@@ -351,24 +338,22 @@ static bool rest_spent_txouts(const std::any& context, HTTPRequest* req, const s
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
-    CBlockUndo block_undo;
-    if (pblockindex->nHeight > 0 && !chainman->m_blockman.ReadBlockUndo(block_undo, *pblockindex)) {
+    std::vector<uint8_t> undo_bytes;
+    const FlatFilePos undo_pos{WITH_LOCK(cs_main, return pblockindex->GetUndoPos())};
+    const bool is_genesis_block = pblockindex->nHeight == 0;
+    if (!is_genesis_block && !chainman->m_blockman.ReadRawBlockUndo(undo_bytes, undo_pos)) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " undo not available");
     }
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
-        DataStream ssSpentResponse{};
-        SerializeBlockUndo(ssSpentResponse, block_undo);
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, std::as_bytes(std::span{ssSpentResponse}));
+        req->WriteReply(HTTP_OK, MakeByteSpan(undo_bytes));
         return true;
     }
 
     case RESTResponseFormat::HEX: {
-        DataStream ssSpentResponse{};
-        SerializeBlockUndo(ssSpentResponse, block_undo);
-        const std::string strHex{HexStr(ssSpentResponse) + "\n"};
+        const std::string strHex{HexStr(undo_bytes) + "\n"};
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
         return true;
@@ -376,6 +361,10 @@ static bool rest_spent_txouts(const std::any& context, HTTPRequest* req, const s
 
     case RESTResponseFormat::JSON: {
         UniValue result(UniValue::VARR);
+        CBlockUndo block_undo;
+        if (!is_genesis_block) {
+            SpanReader{undo_bytes} >> block_undo;
+        }
         BlockUndoToJSON(block_undo, result);
         std::string strJSON = result.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");

@@ -172,6 +172,14 @@ private:
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
+    enum class FileType {
+        BlockFile,
+        UndoFile,
+    };
+
+    AutoFile OpenForRawRead(const FlatFilePos& pos, FileType file_type) const;
+    bool ReadRawData(std::vector<uint8_t>& result, FlatFilePos pos, FileType file_type) const;
+
     /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
     void FindFilesToPruneManual(
         std::set<int>& setFilesToPrune,
@@ -416,6 +424,7 @@ public:
     bool ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const;
 
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;
+    bool ReadRawBlockUndo(std::vector<uint8_t>& block_undo, const FlatFilePos& pos) const;
 
     void CleanupBlockRevFiles() const;
 };

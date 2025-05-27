@@ -28,6 +28,7 @@ import socket
 import time
 import unittest
 
+from test_framework import compressor
 from test_framework.crypto.siphash import siphash256
 from test_framework.util import assert_equal
 
@@ -140,6 +141,40 @@ def deser_varint(f):
         else:
             return n
 
+def deser_compressed_script(f):
+    """Equivalent of `DecompressScript()` (see compressor module)."""
+    size = deser_varint(f)  # sizes 0-5 encode compressed script types
+    if size == 0:  # P2PKH
+        return bytes([0x76, 0xa9, 20]) + f.read(20) + bytes([0x88, 0xac])
+    elif size == 1:  # P2SH
+        return bytes([0xa9, 20]) + f.read(20) + bytes([0x87])
+    elif size in (2, 3):  # P2PK (compressed)
+        return bytes([33, size]) + f.read(32) + bytes([0xac])
+    elif size in (4, 5):  # P2PK (uncompressed)
+        compressed_pubkey = bytes([size - 2]) + f.read(32)
+        return bytes([65]) + decompress_pubkey(compressed_pubkey) + bytes([0xac])
+    else:  # others (bare multisig, segwit etc.)
+        size -= 6
+        assert size <= 10000, f"too long script with size {size}"
+        return f.read(size)
+
+
+def decompress_pubkey(compressed_pubkey):
+    """Decompress pubkey by calculating y = sqrt(x^3 + 7) % p
+       (see functions `secp256k1_eckey_pubkey_parse` and `secp256k1_ge_set_xo_var`).
+    """
+    P = 2**256 - 2**32 - 977  # secp256k1 field size
+    assert len(compressed_pubkey) == 33 and compressed_pubkey[0] in (2, 3)
+    x = int.from_bytes(compressed_pubkey[1:], 'big')
+    rhs = (x**3 + 7) % P
+    y = pow(rhs, (P + 1)//4, P)  # get sqrt using Tonelli-Shanks algorithm (for p % 4 = 3)
+    assert pow(y, 2, P) == rhs, f"pubkey is not on curve ({compressed_pubkey.hex()})"
+    tag_is_odd = compressed_pubkey[0] == 3
+    y_is_odd = (y & 1) == 1
+    if tag_is_odd != y_is_odd:  # fix parity (even/odd) if necessary
+        y = P - y
+    return bytes([4]) + x.to_bytes(32, 'big') + y.to_bytes(32, 'big')
+
 
 def deser_string(f):
     nit = deser_compact_size(f)
@@ -228,9 +263,9 @@ def ser_string_vector(l):
     return r
 
 
-def deser_block_spent_outputs(f):
+def deser_block_undo(f):
     nit = deser_compact_size(f)
-    return [deser_vector(f, CTxOut) for _ in range(nit)]
+    return [[]] + [deser_vector(f, TxInUndo) for _ in range(nit)]
 
 
 def from_hex(obj, hex_string):
@@ -519,6 +554,29 @@ class CTxOut:
         return "CTxOut(nValue=%i.%08i scriptPubKey=%s)" \
             % (self.nValue // COIN, self.nValue % COIN,
                self.scriptPubKey.hex())
+
+
+class TxInUndo:
+    __slots__ = ("nValue", "scriptPubKey", "fCoinbase", "nHeight")
+
+    def __init__(self, nValue=0, scriptPubKey=b"", fCoinbase=0, nHeight=0):
+        self.nValue = nValue
+        self.scriptPubKey = scriptPubKey
+        self.fCoinbase = fCoinbase
+        self.nHeight = nHeight
+
+    def deserialize(self, f):
+        code = deser_varint(f)
+        self.fCoinbase = code & 1
+        self.nHeight = code >> 1
+        _dummy = f.read(1)  # skip 1 byte (used to store tx version)
+        self.nValue = compressor.decompress_amount(deser_varint(f))
+        self.scriptPubKey = deser_compressed_script(f)
+
+    def __repr__(self):
+        return "TxInUndo(nValue=%i.%08i scriptPubKey=%s, coinbase=%s, height=%d)" \
+            % (self.nValue // COIN, self.nValue % COIN,
+               self.scriptPubKey.hex(), self.coinbase, self.height)
 
 
 class CScriptWitness:

@@ -16,7 +16,7 @@ import urllib.parse
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
     COIN,
-    deser_block_spent_outputs,
+    deser_block_undo,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -437,7 +437,7 @@ class RESTTest (BitcoinTestFramework):
 
             assert_equal(bytes.fromhex(spent_hex.decode()), spent_bin)
 
-            spent = deser_block_spent_outputs(BytesIO(spent_bin))
+            spent = deser_block_undo(BytesIO(spent_bin))
             block = self.nodes[0].getblock(blockhash, 3)  # return prevout for each input
             assert_equal(len(spent), len(block["tx"]))
             assert_equal(len(spent_json), len(block["tx"]))
@@ -445,8 +445,8 @@ class RESTTest (BitcoinTestFramework):
             for i, tx in enumerate(block["tx"]):
                 prevouts = [txin["prevout"] for txin in tx["vin"] if "coinbase" not in txin]
                 # compare with `getblock` JSON output (coinbase tx has no prevouts)
-                actual = [(txout.scriptPubKey.hex(), Decimal(txout.nValue) / COIN) for txout in spent[i]]
-                expected = [(p["scriptPubKey"]["hex"], p["value"]) for p in prevouts]
+                actual = [(coin.scriptPubKey.hex(), Decimal(coin.nValue) / COIN, coin.nHeight, coin.fCoinbase) for coin in spent[i]]
+                expected = [(p["scriptPubKey"]["hex"], p["value"], p["height"], p["generated"]) for p in prevouts]
                 assert_equal(expected, actual)
                 # also compare JSON format
                 actual = [(prevout["scriptPubKey"], prevout["value"]) for prevout in spent_json[i]]
