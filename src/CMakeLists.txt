@@ -336,6 +336,7 @@ target_link_libraries(bitcoin_node
 if(BUILD_BITCOIN_BIN)
   add_executable(bitcoin bitcoin.cpp)
   add_windows_resources(bitcoin bitcoin-res.rc)
+  add_windows_application_manifest(bitcoin)
   target_link_libraries(bitcoin core_interface bitcoin_util)
   install_binary_component(bitcoin)
 endif()
