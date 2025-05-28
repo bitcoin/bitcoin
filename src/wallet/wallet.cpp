@@ -4314,21 +4314,20 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     std::set<fs::path> wallet_dirs;
     if (success) {
         // Migration successful, unload all wallets locally, then reload them.
-        // Reload the main wallet
-        wallet_dirs.insert(fs::PathFromString(local_wallet->GetDatabase().Filename()).parent_path());
-        success = reload_wallet(local_wallet);
+        // Note: We use a pointer to the shared_ptr to avoid increasing its reference count,
+        // as 'reload_wallet' expects to be the sole owner (use_count == 1).
+        for (std::shared_ptr<CWallet>* wallet_ptr : {&local_wallet, &res.watchonly_wallet, &res.solvables_wallet}) {
+            if (success && *wallet_ptr) {
+                std::shared_ptr<CWallet>& wallet = *wallet_ptr;
+                // Save db path and reload wallet
+                wallet_dirs.insert(fs::PathFromString(wallet->GetDatabase().Filename()).parent_path());
+                success = reload_wallet(wallet);
+            }
+        }
+
+        // Set main wallet
         res.wallet = local_wallet;
         res.wallet_name = wallet_name;
-        if (success && res.watchonly_wallet) {
-            // Reload watchonly
-            wallet_dirs.insert(fs::PathFromString(res.watchonly_wallet->GetDatabase().Filename()).parent_path());
-            success = reload_wallet(res.watchonly_wallet);
-        }
-        if (success && res.solvables_wallet) {
-            // Reload solvables
-            wallet_dirs.insert(fs::PathFromString(res.solvables_wallet->GetDatabase().Filename()).parent_path());
-            success = reload_wallet(res.solvables_wallet);
-        }
     }
     if (!success) {
         // Migration failed, cleanup
