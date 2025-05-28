@@ -3021,11 +3021,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         return nullptr;
     }
 
-    // This wallet is in its first run if there are no ScriptPubKeyMans and it isn't blank or no privkeys
-    const bool fFirstRun = walletInstance->m_spk_managers.empty() &&
-                     !walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) &&
-                     !walletInstance->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
-    if (fFirstRun)
     {
         LOCK(walletInstance->cs_wallet);
 
@@ -3056,17 +3051,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             std::optional<int> tip_height = chain->getHeight();
             if (tip_height) {
                 walletInstance->SetLastBlockProcessed(*tip_height, chain->getBlockHash(*tip_height));
-            }
-        }
-    } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
-        // Make it impossible to disable private keys after creation
-        error = strprintf(_("Error loading %s: Private keys can only be disabled during creation"), walletFile);
-        return nullptr;
-    } else if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        for (auto spk_man : walletInstance->GetActiveScriptPubKeyMans()) {
-            if (spk_man->HavePrivateKeys()) {
-                warnings.push_back(strprintf(_("Warning: Private keys detected in wallet {%s} with disabled private keys"), walletFile));
-                break;
             }
         }
     }
