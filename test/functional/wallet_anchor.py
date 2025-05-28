@@ -102,7 +102,7 @@ class WalletAnchorTest(BitcoinTestFramework):
         assert_equal(utxos[0]["address"], ANCHOR_ADDRESS)
         assert_equal(utxos[0]["amount"], 1)
 
-        assert_raises_rpc_error(-4, "Missing solving data for estimating transaction size", wallet.send, [{self.default_wallet.getnewaddress(): 0.9999}])
+        assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it.", wallet.send, [{self.default_wallet.getnewaddress(): 0.9999}])
         assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", wallet.sendtoaddress, self.default_wallet.getnewaddress(), 0.9999)
         assert_raises_rpc_error(-4, "Unable to determine the size of the transaction, the wallet contains unsolvable descriptors", wallet.sendall, recipients=[self.default_wallet.getnewaddress()], inputs=utxos)
         assert_raises_rpc_error(-4, "Unable to determine the size of the transaction, the wallet contains unsolvable descriptors", wallet.sendall, recipients=[self.default_wallet.getnewaddress()])
