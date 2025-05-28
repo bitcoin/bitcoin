@@ -42,10 +42,12 @@ static void ReadBlockBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const auto pos{blockman.WriteBlock(CreateTestBlock(), 413'567)};
-    CBlock block;
+    const auto& test_block{CreateTestBlock()};
+    const auto& expected_hash{test_block.GetHash()};
+    const auto& pos{blockman.WriteBlock(test_block, 413'567)};
     bench.run([&] {
-        const auto success{blockman.ReadBlock(block, pos)};
+        CBlock block;
+        const auto success{blockman.ReadBlock(block, pos, expected_hash)};
         assert(success);
     });
 }
