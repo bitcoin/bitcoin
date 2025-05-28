@@ -18,7 +18,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
     tx.nLockTime = nextLockTime++; // so all transactions get different hashes
     tx.vout.resize(1);
     tx.vout[0].nValue = nValue;
-    wtxs.push_back(std::make_unique<CWalletTx>(MakeTransactionRef(std::move(tx))));
+    wtxs.push_back(std::make_unique<CWalletTx>(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
 }
 
 // Simple benchmark for wallet coin selection. Note that it maybe be necessary
@@ -45,19 +45,20 @@ static void CoinSelection(benchmark::Bench& bench)
     // Create coins
     std::vector<COutput> coins;
     for (const auto& wtx : wtxs) {
-        coins.emplace_back(COutPoint(wtx->GetHash(), 0), wtx->tx->vout.at(0), /*depth=*/ 6 * 24, GetTxSpendSize(wallet, *wtx, 0), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx->GetTxTime(), /*from_me=*/ true);
+        coins.emplace_back(COutPoint(wtx->GetHash(), 0), wtx->tx->vout.at(0), /*depth=*/6 * 24, GetTxSpendSize(wallet, *wtx, 0), /*spendable=*/true, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true);
     }
     const CoinEligibilityFilter filter_standard(1, 6, 0);
     FastRandomContext rand{};
     const CoinSelectionParams coin_selection_params{
         rand,
-        /* change_output_size= */ 34,
-        /* change_spend_size= */ 148,
-        /* effective_feerate= */ CFeeRate(0),
-        /* long_term_feerate= */ CFeeRate(0),
-        /* discard_feerate= */ CFeeRate(0),
-        /* tx_noinputs_size= */ 0,
-        /* avoid_partial= */ false,
+        /*change_output_size=*/ 34,
+        /*change_spend_size=*/ 148,
+        /*min_change_target=*/ CHANGE_LOWER,
+        /*effective_feerate=*/ CFeeRate(0),
+        /*long_term_feerate=*/ CFeeRate(0),
+        /*discard_feerate=*/ CFeeRate(0),
+        /*tx_noinputs_size=*/ 0,
+        /*avoid_partial=*/ false,
     };
     bench.run([&] {
         auto result = AttemptSelection(wallet, 1003 * COIN, filter_standard, coins, coin_selection_params);

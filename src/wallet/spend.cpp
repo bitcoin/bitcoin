@@ -11,6 +11,7 @@
 #include <util/check.h>
 #include <util/fees.h>
 #include <util/moneystr.h>
+#include <util/trace.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
@@ -18,6 +19,8 @@
 #include <wallet/spend.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
+
+#include <cmath>
 
 using interfaces::FoundBlock;
 
@@ -373,7 +376,6 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     std::vector<OutputGroup> positive_groups = GroupOutputs(wallet, coins, coin_selection_params, eligibility_filter, true /* positive_only */);
     positive_groups.clear(); // Cleared to skip BnB and SRD as they're unaware of mixed coins
     if (auto bnb_result{SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change)}) {
-        bnb_result->ComputeAndSetWaste(CAmount(0));
         results.push_back(*bnb_result);
     }
 
@@ -386,14 +388,18 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     if (!coin_selection_params.m_subtract_fee_outputs && nCoinType != CoinType::ONLY_FULLY_MIXED) {
         target_with_change += coin_selection_params.m_change_fee;
     }
-    if (auto knapsack_result{KnapsackSolver(all_groups, target_with_change, coin_selection_params.rng_fast, nCoinType == CoinType::ONLY_FULLY_MIXED, wallet.m_default_max_tx_fee)}) {
+    if (auto knapsack_result{KnapsackSolver(all_groups, target_with_change, coin_selection_params.m_min_change_target,
+                                            coin_selection_params.rng_fast, nCoinType == CoinType::ONLY_FULLY_MIXED,
+                                            wallet.m_default_max_tx_fee)}) {
         knapsack_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*knapsack_result);
     }
 
-    // We include the minimum final change for SRD as we do want to avoid making really small change.
-    // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
-    const CAmount srd_target = nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE;
+    // Include change for SRD as we want to avoid making really small change if the selection just
+    // barely meets the target. Just use the lower bound change target instead of the randomly
+    // generated one, since SRD will result in a random change amount anyway; avoid making the
+    // target needlessly large.
+    const CAmount srd_target = target_with_change + CHANGE_LOWER;
     if (auto srd_result{SelectCoinsSRD(positive_groups, srd_target, coin_selection_params.rng_fast)}) {
         srd_result->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         results.push_back(*srd_result);
@@ -423,7 +429,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
     {
-        SelectionResult result(nTargetValue);
+        SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         for (const COutput& out : vCoins) {
             if (!out.spendable) continue;
             /* Set ancestors and descendants to 0 as these don't matter for preset inputs as no actual selection is being done.
@@ -433,10 +439,12 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             result.AddInput(preset_inputs);
             if (!coin_control.fRequireAllInputs && result.GetSelectedValue() >= nTargetValue) {
                 // stop when we added at least one input and enough inputs to have at least nTargetValue funds
+                result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
                 return result;
             }
         }
         if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
+        result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
         return result;
     }
 
@@ -509,7 +517,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     // permissive CoinEligibilityFilter.
     std::optional<SelectionResult> res = [&] {
         // Pre-selected inputs already cover the target amount.
-        if (value_to_select <= 0) return std::make_optional(SelectionResult(nTargetValue));
+        if (value_to_select <= 0) return std::make_optional(SelectionResult(nTargetValue, SelectionAlgorithm::MANUAL));
 
         // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
         // confirmations on outputs received from other wallets and only spend confirmed change.
@@ -563,6 +571,9 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
 
     // Add preset inputs to result
     res->AddInput(preset_inputs);
+    if (res->m_algo == SelectionAlgorithm::MANUAL) {
+        res->ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
+    }
 
     return res;
 }
@@ -674,6 +685,7 @@ static bool CreateTransactionInternal(
             coin_selection_params.m_subtract_fee_outputs = true;
         }
     }
+    coin_selection_params.m_min_change_target = GenerateChangeTarget(std::floor(recipients_sum / vecSend.size()), rng_fast);
 
     // Create change script that will be used if we need change
     CScript scriptChange;
@@ -783,6 +795,7 @@ static bool CreateTransactionInternal(
         }
         return false;
     }
+    TRACE5(coin_selection, selected_coins, wallet.GetName().c_str(), GetAlgorithmName(result->m_algo).c_str(), result->m_target, result->GetWaste(), result->GetSelectedValue());
 
     // Always make a change output
     // We will reduce the fee from this change output later, and remove the output if it is too small.
@@ -991,8 +1004,10 @@ bool CreateTransaction(
     int nChangePosIn = nChangePosInOut;
     Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
     bool res = CreateTransactionInternal(wallet, vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign, nExtraPayloadSize);
+    TRACE4(coin_selection, normal_create_tx_internal, wallet.GetName().c_str(), res, nFeeRet, nChangePosInOut);
     // try with avoidpartialspends unless it's enabled already
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && wallet.m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
+        TRACE1(coin_selection, attempting_aps_create_tx, wallet.GetName().c_str());
         CCoinControl tmp_cc = coin_control;
         tmp_cc.m_avoid_partial_spends = true;
 
@@ -1010,6 +1025,7 @@ bool CreateTransaction(
             // if fee of this alternative one is within the range of the max fee, we use this one
             const bool use_aps = nFeeRet2 <= nFeeRet + wallet.m_max_aps_fee;
             wallet.WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");
+            TRACE5(coin_selection, aps_create_tx_internal, wallet.GetName().c_str(), use_aps, res, nFeeRet2, nChangePosInOut2);
             if (use_aps) {
                 tx = tx2;
                 nFeeRet = nFeeRet2;

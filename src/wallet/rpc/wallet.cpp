@@ -738,7 +738,7 @@ static RPCHelpMan wipewallettxes()
 
         for (auto& [txid, wtx] : pwallet->mapWallet) {
             if (progress < STEPS - 1 && ++count > BATCH_SIZE) break;
-            if (keep_confirmed && wtx.m_confirm.status == CWalletTx::CONFIRMED) continue;
+            if (keep_confirmed && wtx.isConfirmed()) continue;
             vHashIn.push_back(txid);
         }
 
