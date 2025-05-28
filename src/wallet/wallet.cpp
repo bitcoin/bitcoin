@@ -2249,13 +2249,16 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         return OutputType::LEGACY;
     }
 
+    bool any_sp{false};
     bool any_tr{false};
     bool any_wpkh{false};
     bool any_sh{false};
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
-        if (std::get_if<WitnessV1Taproot>(&recipient.dest) || std::get_if<V0SilentPaymentDestination>(&recipient.dest)) {
+        if (std::get_if<V0SilentPaymentDestination>(&recipient.dest)) {
+            any_sp = true;
+        } else if (std::get_if<WitnessV1Taproot>(&recipient.dest)) {
             any_tr = true;
         } else if (std::get_if<WitnessV0KeyHash>(&recipient.dest)) {
             any_wpkh = true;
@@ -2266,6 +2269,10 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         }
     }
 
+    const bool has_sp_spkman(GetScriptPubKeyMan(OutputType::SILENT_PAYMENTS, /*internal=*/true));
+    if (has_sp_spkman && (any_sp || any_tr)) {
+        return OutputType::SILENT_PAYMENTS;
+    }
     const bool has_bech32m_spkman(GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/true));
     if (has_bech32m_spkman && any_tr) {
         // Currently tr is the only type supported by the BECH32M spkman
