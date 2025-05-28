@@ -282,7 +282,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
         }
 
         context.chain->initMessage(_("Loading wallet…"));
-        std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
+        std::shared_ptr<CWallet> wallet = CWallet::LoadExisting(context, name, std::move(database), error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
             status = DatabaseStatus::FAILED_LOAD;
@@ -4257,7 +4257,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
 
     // Make the local wallet
-    std::shared_ptr<CWallet> local_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+    std::shared_ptr<CWallet> local_wallet = CWallet::LoadExisting(empty_context, wallet_name, std::move(database), error, warnings);
     if (!local_wallet) {
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
