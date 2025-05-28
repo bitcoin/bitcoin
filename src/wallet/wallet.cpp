@@ -3098,6 +3098,50 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     return walletInstance;
 }
 
+std::shared_ptr<CWallet> CWallet::LoadExisting(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, bilingual_str& error, std::vector<bilingual_str>& warnings)
+{
+    interfaces::Chain* chain = context.chain;
+    const std::string& walletFile = database->Filename();
+
+    const auto start{SteadyClock::now()};
+    std::shared_ptr<CWallet> walletInstance(new CWallet(chain, name, std::move(database)), FlushAndDeleteWallet);
+
+    if (!LoadWalletArgs(walletInstance, context, error, warnings)) {
+        return nullptr;
+    }
+
+    // Load wallet
+    auto nLoadWalletRet = walletInstance->PopulateWalletFromDB(error, warnings);
+    bool rescan_required = nLoadWalletRet == DBErrors::NEED_RESCAN;
+    if (nLoadWalletRet != DBErrors::LOAD_OK && nLoadWalletRet != DBErrors::NONCRITICAL_ERROR && !rescan_required) {
+        return nullptr;
+    }
+
+    if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        for (auto spk_man : walletInstance->GetActiveScriptPubKeyMans()) {
+            if (spk_man->HavePrivateKeys()) {
+                warnings.push_back(strprintf(_("Warning: Private keys detected in wallet {%s} with disabled private keys"), walletFile));
+                break;
+            }
+        }
+    }
+
+    walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+
+    // Try to top up keypool. No-op if the wallet is locked.
+    walletInstance->TopUpKeyPool();
+
+    if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
+        walletInstance->m_chain_notifications_handler.reset(); // Reset this pointer so that the wallet will actually be unloaded
+        return nullptr;
+    }
+
+    WITH_LOCK(walletInstance->cs_wallet, walletInstance->LogStats());
+
+    return walletInstance;
+}
+
+
 bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interfaces::Chain& chain, const bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     LOCK(walletInstance->cs_wallet);
