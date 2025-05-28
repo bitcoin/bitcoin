@@ -1185,12 +1185,12 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     // Create change script that will be used if we need change
-    CScript scriptChange;
+    CTxDestination change_dest;
     bilingual_str error; // possible error str
 
     // coin control: send change to custom address
     if (!std::get_if<CNoDestination>(&coin_control.destChange)) {
-        scriptChange = GetScriptForDestination(coin_control.destChange);
+        change_dest = coin_control.destChange;
     } else { // no coin control: send change to newly generated address
         // Note: We use a new key here to keep it from being obvious which side is the change.
         //  The drawback is that by not reusing a previous key, the change may be lost if a
@@ -1201,20 +1201,18 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
         // Reserve a new key pair from key pool. If it fails, provide a dummy
         // destination in case we don't need change.
-        CTxDestination dest;
         auto op_dest = reservedest.GetReservedDestination(true);
         if (!op_dest) {
             error = _("Transaction needs a change address, but we can't generate it.") + Untranslated(" ") + util::ErrorString(op_dest);
         } else {
-            dest = *op_dest;
-            scriptChange = GetScriptForDestination(dest);
+            change_dest = *op_dest;
         }
-        // A valid destination implies a change script (and
-        // vice-versa). An empty change script will abort later, if the
-        // change keypool ran out, but change is required.
-        CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
     }
-    CTxOut change_prototype_txout(0, scriptChange);
+    CScript change_prototype_script = GetScriptForDestination(change_dest);
+    if (std::get_if<V0SilentPaymentDestination>(&change_dest)) {
+        change_prototype_script = GetScriptForDestination(WitnessV1Taproot());
+    }
+    CTxOut change_prototype_txout(0, change_prototype_script);
     coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
     // Get size of spending the change output
@@ -1311,25 +1309,40 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
                 sp_dests[i] = *sp;
             }
         }
+        if (const auto* change_sp = std::get_if<V0SilentPaymentDestination>(&change_dest)) {
+            // Generate output for change too
+            sp_dests[mutableVecSend.size()] = *change_sp;
+        }
         const auto& silent_payment_tr_spks = CreateSilentPaymentOutputs(wallet, sp_dests, result.GetInputSet(), error);
         if (!silent_payment_tr_spks.has_value()) {
             return util::Error{error};
         }
         for (const auto& [out_idx, tr_dest] : *silent_payment_tr_spks) {
+            if (out_idx == mutableVecSend.size()) {
+                change_dest = tr_dest;
+                continue;
+            }
+
             assert(out_idx < mutableVecSend.size());
             mutableVecSend[out_idx].dest = tr_dest;
         }
-
     }
     // vouts to the payees
     txNew.vout.reserve(vecSend.size() + 1); // + 1 because of possible later insert
-    for (const auto& recipient : mutableVecSend)
-    {
+    for (const auto& recipient : mutableVecSend) {
         txNew.vout.emplace_back(recipient.nAmount, GetScriptForDestination(recipient.dest));
     }
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
-        CTxOut newTxOut(change_amount, scriptChange);
+        // Give up if change keypool ran out as change is required
+        if (!IsValidDestination(change_dest)) {
+            return util::Error{error};
+        }
+
+        CScript change_script = GetScriptForDestination(change_dest);
+        Assert(!change_script.empty());
+
+        CTxOut newTxOut(change_amount, change_script);
         if (!change_pos) {
             // Insert change txn at random position:
             change_pos = rng_fast.randrange(txNew.vout.size() + 1);
@@ -1470,11 +1483,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         return util::Error{Untranslated(STR_INTERNAL_BUG("Fee needed > fee paid"))};
     }
 
-    // Give up if change keypool ran out and change is required
-    if (scriptChange.empty() && change_pos) {
-        return util::Error{error};
-    }
-
     if (sign && !wallet.SignTransaction(txNew)) {
         return util::Error{_("Signing transaction failed")};
     }
@@ -1533,7 +1541,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         if (wallet.IsMine(*tx, spent_coins))
             wallet.WalletLogPrintf("Detected Silent Payments self-transfer: %s", tx->GetHash().ToString());
     }
-    return CreatedTransactionResult(tx, current_fee, change_pos, feeCalc);
+    LogPrintf("change_type: %s", FormatOutputType(change_type));
+    return CreatedTransactionResult(tx, current_fee, change_pos, change_type, feeCalc);
 }
 
 util::Result<CreatedTransactionResult> CreateTransaction(
@@ -1568,7 +1577,9 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         tmp_cc.m_avoid_partial_spends = true;
 
         // Reuse the change destination from the first creation attempt to avoid skipping BIP44 indexes
-        if (txr_ungrouped.change_pos) {
+        // Do not reuse the change dest if it came from a silent payments destination
+        // silent payments change dest must be generated with the other silent payment outputs
+        if (txr_ungrouped.change_pos && txr_ungrouped.change_type != OutputType::SILENT_PAYMENTS) {
             ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, tmp_cc.destChange);
         }
 
