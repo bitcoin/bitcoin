@@ -181,7 +181,8 @@ struct ProxyServerCustom : public ProxyServerBase<Interface, Impl>
 //!
 //! Params   - TypeList of C++ ClassName::methodName parameter types
 //! Result   - Return type of ClassName::method
-//! Param<N> - helper to access individual parameters by index number.
+//! Param<N> - helper to access individual parameter types by index number.
+//! Fwd<N>   - helper to forward arguments by index number.
 //! Fields   - helper alias that appends Result type to the Params typelist if
 //!            it not void.
 template <class Fn>
@@ -199,6 +200,16 @@ struct FunctionTraits<_Result (_Class::*const)(_Params...)>
     using Param = typename std::tuple_element<N, std::tuple<_Params...>>::type;
     using Fields =
         std::conditional_t<std::is_same_v<void, Result>, Params, TypeList<_Params..., _Result>>;
+
+    //! Enable perfect forwarding for clientInvoke calls. If parameter is a
+    //! value type or rvalue reference type, pass it as an rvalue-reference to
+    //! MakeClientParam and BuildField calls so it can be moved from, and if it
+    //! is an lvalue reference, pass it an lvalue reference so it won't be moved
+    //! from. This method does the same thing as std::forward except it takes a
+    //! parameter number instead of a type as a template argument, so generated
+    //! code calling this can be less repetitive and verbose.
+    template <size_t N>
+    static decltype(auto) Fwd(Param<N>& arg) { return static_cast<Param<N>&&>(arg); }
 };
 
 //! Traits class for a proxy method, providing the same
