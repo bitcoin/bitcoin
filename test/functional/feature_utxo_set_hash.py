@@ -55,7 +55,7 @@ class UTXOSetHashTest(BitcoinTestFramework):
                     if (coinbase and n > 0):
                         continue
 
-                    data = COutPoint(int(tx.rehash(), 16), n).serialize()
+                    data = COutPoint(tx.txid_int, n).serialize()
                     data += (height * 2 + coinbase).to_bytes(4, "little")
                     data += tx_out.serialize()
 
