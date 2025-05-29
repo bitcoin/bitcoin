@@ -194,7 +194,7 @@ You can do:
 git range-diff master previously-reviewed-head new-head
 ```
 
-Note that `git range-diff` also work for rebases:
+Note that `git range-diff` also works for rebases:
 
 ```
        P1--P2--P3--P4--P5   <-- previously-reviewed-head

@@ -211,7 +211,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         # Last tx fits now
         self.nodes[0].sendrawtransaction(chain[-1]["hex"])
 
-        # Finally, reorg to empty chain kick everything back into mempool
+        # Finally, reorg to empty chain to kick everything back into mempool
         # at normal chain limits
         for block in fork_blocks:
             self.nodes[0].submitblock(block.serialize().hex())

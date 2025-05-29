@@ -1042,7 +1042,7 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
             const CPubKey& pubkey = pk_pair.second;
             if (m_map_pubkeys.count(pubkey) != 0) {
                 // We don't need to give an error here.
-                // It doesn't matter which of many valid indexes the pubkey has, we just need an index where we can derive it and it's private key
+                // It doesn't matter which of many valid indexes the pubkey has, we just need an index where we can derive it and its private key
                 continue;
             }
             m_map_pubkeys[pubkey] = i;
@@ -1447,7 +1447,7 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
             const CPubKey& pubkey = pk_pair.second;
             if (m_map_pubkeys.count(pubkey) != 0) {
                 // We don't need to give an error here.
-                // It doesn't matter which of many valid indexes the pubkey has, we just need an index where we can derive it and it's private key
+                // It doesn't matter which of many valid indexes the pubkey has, we just need an index where we can derive it and its private key
                 continue;
             }
             m_map_pubkeys[pubkey] = i;
