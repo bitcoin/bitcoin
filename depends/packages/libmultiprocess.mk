@@ -12,7 +12,7 @@ endif
 # setting in depends/config.site.in, which also hardcodes "lib".
 # Without this setting, cmake by default would use the OS library
 # directory, which might be "lib64" or something else, not "lib", on multiarch systems.
-define $(package)_set_vars :=
+define $(package)_set_vars
 $(package)_config_opts += -DCMAKE_INSTALL_LIBDIR=lib/
 $(package)_config_opts += -DCMAKE_POSITION_INDEPENDENT_CODE=ON
 ifneq ($(host),$(build))
