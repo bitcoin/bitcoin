@@ -307,6 +307,11 @@ public:
          return false;
     }
 
+    virtual bool CheckSimplicity(const std::vector<unsigned char>& witness, const std::vector<unsigned char>& program, const rawBitcoinTapEnv& simplicityRawTap, int64_t minCost, int64_t budget, ScriptError* serror) const
+    {
+        return false;
+    }
+
     virtual ~BaseSignatureChecker() = default;
 };
 
@@ -344,6 +349,7 @@ public:
     bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool CheckSimplicity(const std::vector<unsigned char>& program, const std::vector<unsigned char>& witness, const rawBitcoinTapEnv& simplicityRawTap, int64_t minCost, int64_t budget, ScriptError* serror) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;

@@ -13,6 +13,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 extern "C" {
+#include <simplicity/bitcoin/exec.h>
 #include <simplicity/errorCodes.h>
 }
 
@@ -1864,6 +1865,52 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
         return false;
 
     return true;
+}
+
+template <class T>
+bool GenericTransactionSignatureChecker<T>::CheckSimplicity(const valtype& program, const valtype& witness, const rawBitcoinTapEnv& simplicityRawTap, int64_t minCost, int64_t budget, ScriptError* serror) const
+{
+    simplicity_err error;
+    bitcoinTapEnv* simplicityTapEnv = simplicity_bitcoin_mallocTapEnv(&simplicityRawTap);
+
+    assert(txdata->m_simplicity_tx_data);
+    assert(simplicityTapEnv);
+    if (!simplicity_bitcoin_execSimplicity(&error, 0, txdata->m_simplicity_tx_data.get(), nIn, simplicityTapEnv, minCost, budget, 0, program.data(), program.size(), witness.data(), witness.size())) {
+        assert(!"simplicity_elements_execSimplicity internal error");
+    }
+    simplicity_bitcoin_freeTapEnv(simplicityTapEnv);
+    switch (error) {
+    case SIMPLICITY_NO_ERROR: return set_success(serror);
+    case SIMPLICITY_ERR_MALLOC:
+    case SIMPLICITY_ERR_NOT_YET_IMPLEMENTED:
+        assert(!"simplicity_elements_execSimplicity internal error");
+        break;
+    case SIMPLICITY_ERR_DATA_OUT_OF_RANGE: return set_error(serror, SCRIPT_ERR_SIMPLICITY_DATA_OUT_OF_RANGE);
+    case SIMPLICITY_ERR_DATA_OUT_OF_ORDER: return set_error(serror, SCRIPT_ERR_SIMPLICITY_DATA_OUT_OF_ORDER);
+    case SIMPLICITY_ERR_FAIL_CODE: return set_error(serror, SCRIPT_ERR_SIMPLICITY_FAIL_CODE);
+    case SIMPLICITY_ERR_RESERVED_CODE: return set_error(serror, SCRIPT_ERR_SIMPLICITY_RESERVED_CODE);
+    case SIMPLICITY_ERR_HIDDEN: return set_error(serror, SCRIPT_ERR_SIMPLICITY_HIDDEN);
+    case SIMPLICITY_ERR_BITSTREAM_EOF: return set_error(serror, SCRIPT_ERR_SIMPLICITY_BITSTREAM_EOF);
+    case SIMPLICITY_ERR_BITSTREAM_TRAILING_BYTES: return set_error(serror, SCRIPT_ERR_SIMPLICITY_BITSTREAM_TRAILING_BYTES);
+    case SIMPLICITY_ERR_BITSTREAM_ILLEGAL_PADDING: return set_error(serror, SCRIPT_ERR_SIMPLICITY_BITSTREAM_ILLEGAL_PADDING);
+    case SIMPLICITY_ERR_TYPE_INFERENCE_UNIFICATION: return set_error(serror, SCRIPT_ERR_SIMPLICITY_TYPE_INFERENCE_UNIFICATION);
+    case SIMPLICITY_ERR_TYPE_INFERENCE_OCCURS_CHECK: return set_error(serror, SCRIPT_ERR_SIMPLICITY_TYPE_INFERENCE_OCCURS_CHECK);
+    case SIMPLICITY_ERR_TYPE_INFERENCE_NOT_PROGRAM: return set_error(serror, SCRIPT_ERR_SIMPLICITY_TYPE_INFERENCE_NOT_PROGRAM);
+    case SIMPLICITY_ERR_WITNESS_EOF: return set_error(serror, SCRIPT_ERR_SIMPLICITY_WITNESS_EOF);
+    case SIMPLICITY_ERR_WITNESS_TRAILING_BYTES: return set_error(serror, SCRIPT_ERR_SIMPLICITY_WITNESS_TRAILING_BYTES);
+    case SIMPLICITY_ERR_WITNESS_ILLEGAL_PADDING: return set_error(serror, SCRIPT_ERR_SIMPLICITY_WITNESS_ILLEGAL_PADDING);
+    case SIMPLICITY_ERR_UNSHARED_SUBEXPRESSION: return set_error(serror, SCRIPT_ERR_SIMPLICITY_UNSHARED_SUBEXPRESSION);
+    case SIMPLICITY_ERR_CMR: return set_error(serror, SCRIPT_ERR_SIMPLICITY_CMR);
+    case SIMPLICITY_ERR_EXEC_BUDGET: return set_error(serror, SCRIPT_ERR_SIMPLICITY_EXEC_BUDGET);
+    case SIMPLICITY_ERR_EXEC_MEMORY: return set_error(serror, SCRIPT_ERR_SIMPLICITY_EXEC_MEMORY);
+    case SIMPLICITY_ERR_EXEC_JET: return set_error(serror, SCRIPT_ERR_SIMPLICITY_EXEC_JET);
+    case SIMPLICITY_ERR_EXEC_ASSERT: return set_error(serror, SCRIPT_ERR_SIMPLICITY_EXEC_ASSERT);
+    case SIMPLICITY_ERR_ANTIDOS: return set_error(serror, SCRIPT_ERR_SIMPLICITY_ANTIDOS);
+    case SIMPLICITY_ERR_HIDDEN_ROOT: return set_error(serror, SCRIPT_ERR_SIMPLICITY_HIDDEN_ROOT);
+    case SIMPLICITY_ERR_AMR: return set_error(serror, SCRIPT_ERR_SIMPLICITY_AMR);
+    case SIMPLICITY_ERR_OVERWEIGHT: return set_error(serror, SCRIPT_ERR_SIMPLICITY_OVERWEIGHT);
+    default: return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
+    }
 }
 
 // explicit instantiation
