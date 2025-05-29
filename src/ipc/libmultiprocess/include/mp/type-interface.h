@@ -44,7 +44,7 @@ void CustomBuildField(TypeList<std::shared_ptr<Impl>>,
 {
     if (value) {
         using Interface = typename decltype(output.get())::Calls;
-        output.set(CustomMakeProxyServer<Interface, Impl>(invoke_context, std::move(value)));
+        output.set(CustomMakeProxyServer<Interface, Impl>(invoke_context, std::forward<Value>(value)));
     }
 }
 
