@@ -127,7 +127,7 @@ serialized transaction.
 
 Notifies about all transactions, both when they are added to mempool or when a new block
 arrives. This means a transaction could be published multiple times: first when it enters
-mempool and then again in each block that includes it. The body part of the mesage is the
+mempool and then again in each block that includes it. The body part of the message is the
 32-byte transaction hash in reversed byte order.
 
 #### rawblock

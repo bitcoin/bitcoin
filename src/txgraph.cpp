@@ -324,7 +324,7 @@ private:
     ChunkIndex m_main_chunkindex;
     /** Number of index-observing objects in existence (BlockBuilderImpls). */
     size_t m_main_chunkindex_observers{0};
-    /** Cache of discarded ChunkIndex node handles to re-use, avoiding additional allocation. */
+    /** Cache of discarded ChunkIndex node handles to reuse, avoiding additional allocation. */
     std::vector<ChunkIndex::node_type> m_main_chunkindex_discarded;
 
     /** A Locator that describes whether, where, and in which Cluster an Entry appears.
