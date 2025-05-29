@@ -1514,6 +1514,25 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
               feeCalc.est.fail.start, feeCalc.est.fail.end,
               (feeCalc.est.fail.totalConfirmed + feeCalc.est.fail.inMempool + feeCalc.est.fail.leftMempool) > 0.0 ? 100 * feeCalc.est.fail.withinTarget / (feeCalc.est.fail.totalConfirmed + feeCalc.est.fail.inMempool + feeCalc.est.fail.leftMempool) : 0.0,
               feeCalc.est.fail.withinTarget, feeCalc.est.fail.totalConfirmed, feeCalc.est.fail.inMempool, feeCalc.est.fail.leftMempool);
+
+    // If a transaction has a change output, it adds the transaction to the wallet without actually
+    // checking each of the outputs. The assumption is the receiving address would already be known
+    // to the wallet (i.e., in the address book). For silent payments, the receiving address is created
+    // when the transaction is created, we call IsMine here to detect a self transfer and update our
+    // AddressBook with the newly created receiving address.
+    //
+    // TODO: this feels a bit hacky, but given the current way we handle change and receiving addresses,
+    // I think this is good enough. Ultimately, improving our change detection and how we handle the address
+    // seems like a better time to revisit this.
+    if (coin_control.m_silent_payment && wallet.IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+        // If our wallet supports receiving silent payments, check if this transaction is a self transfer
+        std::map<COutPoint, Coin> spent_coins;
+        for (const auto& utxo : result.GetInputSet()) {
+            spent_coins[utxo->outpoint] = Coin{utxo->txout, 0, tx->IsCoinBase()};
+        }
+        if (wallet.IsMine(*tx, spent_coins))
+            wallet.WalletLogPrintf("Detected Silent Payments self-transfer: %s", tx->GetHash().ToString());
+    }
     return CreatedTransactionResult(tx, current_fee, change_pos, feeCalc);
 }
 
