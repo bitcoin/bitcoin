@@ -794,7 +794,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(innerUsage == cachedInnerUsage);
 }
 
-bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid)
+bool CTxMemPool::CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb)
 {
     /* Return `true` if hasha should be considered sooner than hashb. Namely when:
      *   a is not in the mempool, but b is
@@ -802,10 +802,18 @@ bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb
      *   both are in the mempool and a has a higher score than b
      */
     LOCK(cs);
-    indexed_transaction_set::const_iterator j = wtxid ? get_iter_from_wtxid(hashb) : mapTx.find(hashb);
+    indexed_transaction_set::const_iterator j = std::visit(util::Overloaded{
+        [this](const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return get_iter_from_wtxid(wtxid); },
+        [this](const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return mapTx.find(txid); }
+    }, hashb);
     if (j == mapTx.end()) return false;
-    indexed_transaction_set::const_iterator i = wtxid ? get_iter_from_wtxid(hasha) : mapTx.find(hasha);
+
+    indexed_transaction_set::const_iterator i = std::visit(util::Overloaded{
+        [this](const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return get_iter_from_wtxid(wtxid); },
+        [this](const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return mapTx.find(txid); }
+    }, hasha);
     if (i == mapTx.end()) return true;
+
     uint64_t counta = i->GetCountWithAncestors();
     uint64_t countb = j->GetCountWithAncestors();
     if (counta == countb) {
@@ -893,7 +901,11 @@ CTransactionRef CTxMemPool::get(const uint256& hash) const
 TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 {
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
+    indexed_transaction_set::const_iterator i = std::visit(util::Overloaded{
+        [this](const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return get_iter_from_wtxid(wtxid); },
+        [this](const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return mapTx.find(txid); }
+    }, gtxid);
+
     if (i == mapTx.end())
         return TxMempoolInfo();
     return GetInfo(i);
@@ -902,7 +914,11 @@ TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const
 {
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
+    indexed_transaction_set::const_iterator i = std::visit(util::Overloaded{
+        [this](const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return get_iter_from_wtxid(wtxid); },
+        [this](const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs) { return mapTx.find(txid); }
+    }, gtxid);
+
     if (i != mapTx.end() && i->GetSequence() < last_sequence) {
         return GetInfo(i);
     } else {
@@ -1017,7 +1033,7 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (exists(GenTxid::Txid(tx.vin[i].prevout.hash)))
+        if (exists(tx.vin[i].prevout.hash))
             return false;
     return true;
 }
@@ -1187,7 +1203,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
-                    if (exists(GenTxid::Txid(txin.prevout.hash))) continue;
+                    if (exists(txin.prevout.hash)) continue;
                     pvNoSpendsRemaining->push_back(txin.prevout);
                 }
             }
