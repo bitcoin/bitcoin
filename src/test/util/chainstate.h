@@ -47,8 +47,11 @@ CreateAndActivateUTXOSnapshot(
     FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
     AutoFile auto_outfile{outfile};
 
-    UniValue result = CreateUTXOSnapshot(
-        node, node.chainman->ActiveChainstate(), auto_outfile, snapshot_path, snapshot_path);
+    UniValue result = CreateUTXOSnapshot(node,
+                                         node.chainman->ActiveChainstate(),
+                                         std::move(auto_outfile), // Will close auto_outfile.
+                                         snapshot_path,
+                                         snapshot_path);
     LogPrintf(
         "Wrote UTXO snapshot to %s: %s\n", fs::PathToString(snapshot_path.make_preferred()), result.write());
 
