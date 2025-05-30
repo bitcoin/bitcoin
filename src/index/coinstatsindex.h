@@ -5,11 +5,20 @@
 #ifndef BITCOIN_INDEX_COINSTATSINDEX_H
 #define BITCOIN_INDEX_COINSTATSINDEX_H
 
+#include <consensus/amount.h>
 #include <crypto/muhash.h>
 #include <index/base.h>
+#include <primitives/block.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
 
 class CBlockIndex;
-class CDBBatch;
+namespace interfaces {
+class Chain;
+}
 namespace kernel {
 struct CCoinsStats;
 }
