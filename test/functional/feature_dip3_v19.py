@@ -47,6 +47,7 @@ class DIP3V19Test(DashTestFramework):
             '-testactivationheight=v19@200',
         ]] * 6
         self.set_dash_test_params(6, 5, evo_count=2, extra_args=self.extra_args)
+        self.delay_v20_and_mn_rr(height=260)
 
 
     def run_test(self):
@@ -104,6 +105,11 @@ class DIP3V19Test(DashTestFramework):
             new_mn = self.dynamically_add_masternode(evo=False, rnd=(10 + i))
             assert new_mn is not None
 
+        self.log.info("Chainlocks in CbTx can be only in Basic scheme. Wait one...")
+        self.wait_until(lambda: self.nodes[0].getbestchainlock()['height'] > 200)
+        self.log.info(f"block {self.nodes[0].getbestchainlock()['height']} is chainlocked after v19 activation")
+
+        self.activate_by_name('v20', expected_activation_height=260)
         # mine more quorums and make sure everything still works
         prev_quorum = None
         for _ in range(5):
