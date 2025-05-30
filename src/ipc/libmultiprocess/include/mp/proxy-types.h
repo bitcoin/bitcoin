@@ -37,20 +37,45 @@ struct StructField
     }
     Struct& m_struct;
 
-    // clang-format off
-    template<typename A = Accessor> auto get() const -> decltype(A::get(this->m_struct)) { return A::get(this->m_struct); }
-    template<typename A = Accessor> auto has() const -> std::enable_if_t<A::optional, bool> { return A::getHas(m_struct); }
-    template<typename A = Accessor> auto has() const -> std::enable_if_t<!A::optional && A::boxed, bool> { return A::has(m_struct); }
-    template<typename A = Accessor> auto has() const -> std::enable_if_t<!A::optional && !A::boxed, bool> { return true; }
-    template<typename A = Accessor> auto want() const -> std::enable_if_t<A::requested, bool> { return A::getWant(m_struct); }
-    template<typename A = Accessor> auto want() const -> std::enable_if_t<!A::requested, bool> { return true; }
-    template<typename A = Accessor, typename... Args> decltype(auto) set(Args&&... args) const { return A::set(this->m_struct, std::forward<Args>(args)...); }
-    template<typename A = Accessor, typename... Args> decltype(auto) init(Args&&... args) const { return A::init(this->m_struct, std::forward<Args>(args)...); }
-    template<typename A = Accessor> auto setHas() const -> std::enable_if_t<A::optional> { return A::setHas(m_struct); }
-    template<typename A = Accessor> auto setHas() const -> std::enable_if_t<!A::optional> { }
-    template<typename A = Accessor> auto setWant() const -> std::enable_if_t<A::requested> { return A::setWant(m_struct); }
-    template<typename A = Accessor> auto setWant() const -> std::enable_if_t<!A::requested> { }
-    // clang-format on
+    decltype(auto) get() const { return Accessor::get(this->m_struct); }
+
+    bool has() const {
+      if constexpr (Accessor::optional) {
+        return Accessor::getHas(m_struct);
+      } else if constexpr (Accessor::boxed) {
+        return Accessor::has(m_struct);
+      } else {
+        return true;
+      }
+    }
+
+    bool want() const {
+      if constexpr (Accessor::requested) {
+        return Accessor::getWant(m_struct);
+      } else {
+        return true;
+      }
+    }
+
+    template <typename... Args> decltype(auto) set(Args &&...args) const {
+      return Accessor::set(this->m_struct, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args> decltype(auto) init(Args &&...args) const {
+      return Accessor::init(this->m_struct, std::forward<Args>(args)...);
+    }
+
+    void setHas() const {
+      if constexpr (Accessor::optional) {
+        Accessor::setHas(m_struct);
+      }
+    }
+
+    void setWant() const {
+      if constexpr (Accessor::requested) {
+        Accessor::setWant(m_struct);
+      }
+    }
 };
 
 
@@ -360,34 +385,28 @@ struct ClientException
 template <typename Accessor, typename... Types>
 struct ClientParam
 {
-    ClientParam(Types&&... values) : m_values(values...) {}
+    ClientParam(Types&&... values) : m_values{std::forward<Types>(values)...} {}
 
     struct BuildParams : IterateFieldsHelper<BuildParams, sizeof...(Types)>
     {
-        template <typename... Args>
-        void handleField(Args&&... args)
+        template <typename Params, typename ParamList>
+        void handleField(ClientInvokeContext& invoke_context, Params& params, ParamList)
         {
-            callBuild<0>(std::forward<Args>(args)...);
-        }
+            auto const fun = [&]<typename... Values>(Values&&... values) {
+                MaybeBuildField(std::integral_constant<bool, Accessor::in>(), ParamList(), invoke_context,
+                    Make<StructField, Accessor>(params), std::forward<Values>(values)...);
+                MaybeSetWant(
+                    ParamList(), Priority<1>(), std::forward<Values>(values)..., Make<StructField, Accessor>(params));
+            };
 
-        // TODO Possible optimization to speed up compile time:
-        // https://stackoverflow.com/a/7858971 Using enable_if below to check
-        // position when unpacking tuple might be slower than pattern matching
-        // approach in the stack overflow solution
-        template <size_t I, typename... Args>
-        auto callBuild(Args&&... args) -> std::enable_if_t<(I < sizeof...(Types))>
-        {
-            callBuild<I + 1>(std::forward<Args>(args)..., std::get<I>(m_client_param->m_values));
-        }
-
-        template <size_t I, typename Params, typename ParamList, typename... Values>
-        auto callBuild(ClientInvokeContext& invoke_context, Params& params, ParamList, Values&&... values) ->
-            std::enable_if_t<(I == sizeof...(Types))>
-        {
-            MaybeBuildField(std::integral_constant<bool, Accessor::in>(), ParamList(), invoke_context,
-                Make<StructField, Accessor>(params), std::forward<Values>(values)...);
-            MaybeSetWant(
-                ParamList(), Priority<1>(), std::forward<Values>(values)..., Make<StructField, Accessor>(params));
+            // Note: The m_values tuple just consists of lvalue and rvalue
+            // references, so calling std::move doesn't change the tuple, it
+            // just causes std::apply to call the std::get overload that returns
+            // && instead of &, so rvalue references are preserved and not
+            // turned into lvalue references. This allows the BuildField call to
+            // move from the argument if it is an rvalue reference or was passed
+            // by value.
+            std::apply(fun, std::move(m_client_param->m_values));
         }
 
         BuildParams(ClientParam* client_param) : m_client_param(client_param) {}
@@ -396,24 +415,15 @@ struct ClientParam
 
     struct ReadResults : IterateFieldsHelper<ReadResults, sizeof...(Types)>
     {
-        template <typename... Args>
-        void handleField(Args&&... args)
+        template <typename Results, typename... Params>
+        void handleField(ClientInvokeContext& invoke_context, Results& results, TypeList<Params...>)
         {
-            callRead<0>(std::forward<Args>(args)...);
-        }
+            auto const fun = [&]<typename... Values>(Values&&... values) {
+                MaybeReadField(std::integral_constant<bool, Accessor::out>(), TypeList<Decay<Params>...>(), invoke_context,
+                    Make<StructField, Accessor>(results), ReadDestUpdate(values)...);
+            };
 
-        template <int I, typename... Args>
-        auto callRead(Args&&... args) -> std::enable_if_t<(I < sizeof...(Types))>
-        {
-            callRead<I + 1>(std::forward<Args>(args)..., std::get<I>(m_client_param->m_values));
-        }
-
-        template <int I, typename Results, typename... Params, typename... Values>
-        auto callRead(ClientInvokeContext& invoke_context, Results& results, TypeList<Params...>, Values&&... values)
-            -> std::enable_if_t<I == sizeof...(Types)>
-        {
-            MaybeReadField(std::integral_constant<bool, Accessor::out>(), TypeList<Decay<Params>...>(), invoke_context,
-                Make<StructField, Accessor>(results), ReadDestUpdate(values)...);
+            std::apply(fun, m_client_param->m_values);
         }
 
         ReadResults(ClientParam* client_param) : m_client_param(client_param) {}
@@ -574,7 +584,7 @@ void serverDestroy(Server& server)
 //!
 //! ProxyClient<ClassName>::M0::Result ProxyClient<ClassName>::methodName(M0::Param<0> arg0, M0::Param<1> arg1) {
 //!     typename M0::Result result;
-//!     clientInvoke(*this, &InterfaceName::Client::methodNameRequest, MakeClientParam<...>(arg0), MakeClientParam<...>(arg1), MakeClientParam<...>(result));
+//!     clientInvoke(*this, &InterfaceName::Client::methodNameRequest, MakeClientParam<...>(M0::Fwd<0>(arg0)), MakeClientParam<...>(M0::Fwd<1>(arg1)), MakeClientParam<...>(result));
 //!     return result;
 //! }
 //!
@@ -650,19 +660,14 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
 //! return value with value of `ret()`. This is useful for avoiding code
 //! duplication and branching in generic code that forwards calls to functions.
 template <typename Fn, typename Ret>
-auto ReplaceVoid(Fn&& fn, Ret&& ret) ->
-    std::enable_if_t<std::is_same_v<void, decltype(fn())>, decltype(ret())>
+auto ReplaceVoid(Fn&& fn, Ret&& ret)
 {
-    fn();
-    return ret();
-}
-
-//! Overload of above for non-void `fn()` case.
-template <typename Fn, typename Ret>
-auto ReplaceVoid(Fn&& fn, Ret&& ret) ->
-    std::enable_if_t<!std::is_same_v<void, decltype(fn())>, decltype(fn())>
-{
-    return fn();
+    if constexpr (std::is_same_v<decltype(fn()), void>) {
+        fn();
+        return ret();
+    } else {
+        return fn();
+    }
 }
 
 extern std::atomic<int> server_reqs;
