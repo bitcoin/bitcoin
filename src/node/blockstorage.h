@@ -18,6 +18,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/hasher.h>
 
 #include <array>
@@ -127,7 +128,6 @@ struct BlockfileCursor {
 
 std::ostream& operator<<(std::ostream& os, const BlockfileCursor& cursor);
 
-
 /**
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
  * to determine where the most-work tip is.
@@ -141,6 +141,7 @@ class BlockManager
     friend ChainstateManager;
 
 private:
+    DirectoryLock m_blocks_dir_lock;
     const CChainParams& GetParams() const { return m_opts.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_opts.chainparams.GetConsensus(); }
     /**
