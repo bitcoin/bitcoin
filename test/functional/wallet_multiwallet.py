@@ -72,7 +72,7 @@ class MultiWalletTest(BitcoinTestFramework):
                 return wallet_dir(name, "wallet.dat")
             return wallet_dir(name)
 
-        assert_equal(self.nodes[0].listwalletdir(), {'wallets': [{'name': self.default_wallet_name}]})
+        assert_equal(self.nodes[0].listwalletdir(), {'wallets': [{'name': self.default_wallet_name, "warnings": []}]})
 
         # check wallet.dat is created
         self.stop_nodes()
