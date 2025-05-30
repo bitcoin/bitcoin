@@ -264,7 +264,7 @@ CHECKS = {
         lief.Header.ARCHITECTURES.ARM: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
         lief.Header.ARCHITECTURES.ARM64: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
         lief.Header.ARCHITECTURES.PPC64: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
-        lief.Header.ARCHITECTURES.RISCV: BASE_ELF, # Skip FORTIFY. See https://github.com/lief-project/LIEF/issues/1082.
+        lief.Header.ARCHITECTURES.RISCV: BASE_ELF + [('FORTIFY', check_ELF_FORTIFY)],
     },
     lief.Binary.FORMATS.PE: {
         lief.Header.ARCHITECTURES.X86_64: BASE_PE,
