@@ -402,7 +402,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         # but is consensus-legal
-        self.generateblock(node, [self.wallet.get_address()], [anchor_nonempty_wit_spend.serialize().hex()])
+        self.generateblock(node, self.wallet.get_address(), [anchor_nonempty_wit_spend.serialize().hex()])
 
         # Without witness elements it is standard
         create_anchor_tx = self.wallet.send_to(from_node=node, scriptPubKey=PAY_TO_ANCHOR, amount=anchor_value)
@@ -425,7 +425,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         nested_anchor_tx = self.wallet.create_self_transfer(sequence=SEQUENCE_FINAL)['tx']
         nested_anchor_tx.vout[0].scriptPubKey = script_to_p2sh_script(PAY_TO_ANCHOR)
         nested_anchor_tx.rehash()
-        self.generateblock(node, [self.wallet.get_address()], [nested_anchor_tx.serialize().hex()])
+        self.generateblock(node, self.wallet.get_address(), [nested_anchor_tx.serialize().hex()])
 
         nested_anchor_spend = CTransaction()
         nested_anchor_spend.vin.append(CTxIn(COutPoint(nested_anchor_tx.sha256, 0), b""))
@@ -439,7 +439,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             maxfeerate=0,
         )
         # but is consensus-legal
-        self.generateblock(node, [self.wallet.get_address()], [nested_anchor_spend.serialize().hex()])
+        self.generateblock(node, self.wallet.get_address(), [nested_anchor_spend.serialize().hex()])
 
         self.log.info('Spending a confirmed bare multisig is okay')
         address = self.wallet.get_address()
@@ -447,7 +447,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         privkey, pubkey = generate_keypair()
         tx.vout[0].scriptPubKey = keys_to_multisig_script([pubkey] * 3, k=1)  # Some bare multisig script (1-of-3)
         tx.rehash()
-        self.generateblock(node, [address], [tx.serialize().hex()])
+        self.generateblock(node, address, [tx.serialize().hex()])
         tx_spend = CTransaction()
         tx_spend.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
         tx_spend.vout.append(CTxOut(tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
