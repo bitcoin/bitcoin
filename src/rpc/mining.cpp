@@ -308,10 +308,12 @@ static RPCHelpMan generateblock()
         "Mine a set of ordered transactions to a specified address or descriptor and return the block hash.",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The addresses or descriptors to split, in equal parts, the coinbase reward among.\n"
-                "If no outputs are provided the coinbase transaction will burn the coins into an OP_RETURN output.",
+                "If no outputs are provided the coinbase transaction will burn the coins into an OP_RETURN output.\n"
+                "If only one output is desired a simple address or descriptor can be provided without using JSON format",
                 {
                     {"output", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A valid address or descriptor"},
                 },
+                RPCArgOptions{.skip_type_check = true},
             },
             {"transactions", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of hex strings which are either txids or raw transactions.\n"
                 "Txids must reference transactions currently in the mempool.\n"
@@ -334,10 +336,22 @@ static RPCHelpMan generateblock()
         RPCExamples{
             "\nGenerate a block to myaddress, with txs rawtx and mempool_txid\n"
             + HelpExampleCli("generateblock", R"("myaddress" '["rawtx", "mempool_txid"]')")
+            + HelpExampleCli("generateblock", R"('["myaddress1", "myaddress2"]')")
+            + HelpExampleCli("generateblock", R"("myaddress1" [])")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const auto address_or_descriptor = request.params[0].isNull() ? UniValue(UniValue::VARR) : request.params[0].get_array();
+    UniValue address_or_descriptor = UniValue(UniValue::VARR);
+    UniValue parsed;
+    if (!request.params[0].isNull() && parsed.read(request.params[0].get_str())) {
+        if (!parsed.isArray()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address or descriptor");
+        }
+        address_or_descriptor = parsed.get_array();
+    } else if (!request.params[0].isNull()) {
+        address_or_descriptor.push_back(request.params[0]);
+    }
+
     CScript coinbase_output_script;
     std::string error;
     std::vector<CScript> coinbase_outputs_scripts;
