@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,8 @@
 
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
+#include <util/string.h>
 #include <util/threadinterrupt.h>
 #include <validationinterface.h>
 
@@ -78,13 +80,6 @@ private:
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
-    /// Sync the index with the block index starting from the current best block.
-    /// Intended to be run in its own thread, m_thread_sync, and can be
-    /// interrupted with m_interrupt. Once the index gets in sync, the m_synced
-    /// flag is set and the BlockConnected ValidationInterface callback takes
-    /// over and the sync thread exits.
-    void ThreadSync();
-
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
     /// Recommendations for error handling:
@@ -101,7 +96,7 @@ private:
     virtual bool AllowPrune() const = 0;
 
     template <typename... Args>
-    void FatalErrorf(const char* fmt, const Args&... args);
+    void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args);
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
@@ -113,7 +108,7 @@ protected:
     void ChainStateFlushed(ChainstateRole role, const CBlockLocator& locator) override;
 
     /// Initialize internal state from the database and block index.
-    [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockKey>& block) { return true; }
+    [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
 
     /// Write update index entries for a newly connected block.
     [[nodiscard]] virtual bool CustomAppend(const interfaces::BlockInfo& block) { return true; }
@@ -124,7 +119,7 @@ protected:
 
     /// Rewind index to an earlier chain tip during a chain reorg. The tip must
     /// be an ancestor of the current best block.
-    [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) { return true; }
+    [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip) { return true; }
 
     virtual DB& GetDB() const = 0;
 
@@ -152,8 +147,15 @@ public:
     /// validation interface so that it stays in sync with blockchain updates.
     [[nodiscard]] bool Init();
 
-    /// Starts the initial sync process.
+    /// Starts the initial sync process on a background thread.
     [[nodiscard]] bool StartBackgroundSync();
+
+    /// Sync the index with the block index starting from the current best block.
+    /// Intended to be run in its own thread, m_thread_sync, and can be
+    /// interrupted with m_interrupt. Once the index gets in sync, the m_synced
+    /// flag is set and the BlockConnected ValidationInterface callback takes
+    /// over and the sync thread exits.
+    void Sync();
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();

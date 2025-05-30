@@ -24,4 +24,14 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
  */
 uint256 BlockWitnessMerkleRoot(const CBlock& block, bool* mutated = nullptr);
 
+/**
+ * Compute merkle path to the specified transaction
+ *
+ * @param[in] block the block
+ * @param[in] position transaction for which to calculate the merkle path (0 is the coinbase)
+ *
+ * @return merkle path ordered from the deepest
+ */
+std::vector<uint256> TransactionMerklePath(const CBlock& block, uint32_t position);
+
 #endif // BITCOIN_CONSENSUS_MERKLE_H

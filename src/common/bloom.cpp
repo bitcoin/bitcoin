@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,13 +40,13 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
 {
 }
 
-inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, Span<const unsigned char> vDataToHash) const
+inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, std::span<const unsigned char> vDataToHash) const
 {
     // 0xFBA4C795 chosen as it guarantees a reasonable bit difference between nHashNum values.
     return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash) % (vData.size() * 8);
 }
 
-void CBloomFilter::insert(Span<const unsigned char> vKey)
+void CBloomFilter::insert(std::span<const unsigned char> vKey)
 {
     if (vData.empty()) // Avoid divide-by-zero (CVE-2013-5700)
         return;
@@ -65,7 +65,7 @@ void CBloomFilter::insert(const COutPoint& outpoint)
     insert(MakeUCharSpan(stream));
 }
 
-bool CBloomFilter::contains(Span<const unsigned char> vKey) const
+bool CBloomFilter::contains(std::span<const unsigned char> vKey) const
 {
     if (vData.empty()) // Avoid divide-by-zero (CVE-2013-5700)
         return true;
@@ -187,12 +187,12 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
 }
 
 /* Similar to CBloomFilter::Hash */
-static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, Span<const unsigned char> vDataToHash)
+static inline uint32_t RollingBloomHash(unsigned int nHashNum, uint32_t nTweak, std::span<const unsigned char> vDataToHash)
 {
     return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash);
 }
 
-void CRollingBloomFilter::insert(Span<const unsigned char> vKey)
+void CRollingBloomFilter::insert(std::span<const unsigned char> vKey)
 {
     if (nEntriesThisGeneration == nEntriesPerGeneration) {
         nEntriesThisGeneration = 0;
@@ -223,7 +223,7 @@ void CRollingBloomFilter::insert(Span<const unsigned char> vKey)
     }
 }
 
-bool CRollingBloomFilter::contains(Span<const unsigned char> vKey) const
+bool CRollingBloomFilter::contains(std::span<const unsigned char> vKey) const
 {
     for (int n = 0; n < nHashFuncs; n++) {
         uint32_t h = RollingBloomHash(n, nTweak, vKey);
@@ -239,7 +239,7 @@ bool CRollingBloomFilter::contains(Span<const unsigned char> vKey) const
 
 void CRollingBloomFilter::reset()
 {
-    nTweak = GetRand<unsigned int>();
+    nTweak = FastRandomContext().rand<unsigned int>();
     nEntriesThisGeneration = 0;
     nGeneration = 1;
     std::fill(data.begin(), data.end(), 0);

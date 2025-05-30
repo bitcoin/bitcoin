@@ -33,7 +33,6 @@
 #include <optional>
 #include <stdexcept>
 #include <stdint.h>
-#include <unistd.h>
 
 using node::SnapshotMetadata;
 
@@ -264,7 +263,7 @@ FUZZ_TARGET(service_deserialize, .init = initialize_deserialize)
 FUZZ_TARGET_DESERIALIZE(messageheader_deserialize, {
     CMessageHeader mh;
     DeserializeFromFuzzingInput(buffer, mh);
-    (void)mh.IsCommandValid();
+    (void)mh.IsMessageTypeValid();
 })
 FUZZ_TARGET(address_deserialize, .init = initialize_deserialize)
 {
@@ -317,7 +316,8 @@ FUZZ_TARGET_DESERIALIZE(blocktransactionsrequest_deserialize, {
     DeserializeFromFuzzingInput(buffer, btr);
 })
 FUZZ_TARGET_DESERIALIZE(snapshotmetadata_deserialize, {
-    SnapshotMetadata snapshot_metadata;
+    auto msg_start = Params().MessageStart();
+    SnapshotMetadata snapshot_metadata{msg_start};
     DeserializeFromFuzzingInput(buffer, snapshot_metadata);
 })
 FUZZ_TARGET_DESERIALIZE(uint160_deserialize, {

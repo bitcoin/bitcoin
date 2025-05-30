@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,15 @@
 
 #include <blockfilter.h>
 #include <common/settings.h>
-#include <primitives/transaction.h> // For CTransactionRef
+#include <primitives/transaction.h>
 #include <util/result.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -40,12 +41,6 @@ namespace interfaces {
 
 class Handler;
 class Wallet;
-
-//! Hash/height pair to help track and identify blocks.
-struct BlockKey {
-    uint256 hash;
-    int height = -1;
-};
 
 //! Helper for findBlock to selectively return pieces of block data. If block is
 //! found, data will be returned by setting specified output variables. If block
@@ -96,6 +91,17 @@ struct BlockInfo {
     BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
 
+//! The action to be taken after updating a settings value.
+//! WRITE indicates that the updated value must be written to disk,
+//! while SKIP_WRITE indicates that the change will be kept in memory-only
+//! without persisting it.
+enum class SettingsAction {
+    WRITE,
+    SKIP_WRITE
+};
+
+using SettingsUpdate = std::function<std::optional<interfaces::SettingsAction>(common::SettingsValue&)>;
+
 //! Interface giving clients (wallet processes, maybe other analysis tools in
 //! the future) ability to access to the chain state, receive notifications,
 //! estimate fees, and submit transactions.
@@ -123,7 +129,7 @@ struct BlockInfo {
 class Chain
 {
 public:
-    virtual ~Chain() {}
+    virtual ~Chain() = default;
 
     //! Get current chain height, not including genesis block (returns 0 if
     //! chain only contains genesis block, nullopt if chain does not contain
@@ -284,6 +290,9 @@ public:
     //! Check if any block has been pruned.
     virtual bool havePruned() = 0;
 
+    //! Get the current prune height.
+    virtual std::optional<int> getPruneHeight() = 0;
+
     //! Check if the node is ready to broadcast transactions.
     virtual bool isReadyToBroadcast() = 0;
 
@@ -309,7 +318,7 @@ public:
     class Notifications
     {
     public:
-        virtual ~Notifications() {}
+        virtual ~Notifications() = default;
         virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
         virtual void blockConnected(ChainstateRole role, const BlockInfo& block) {}
@@ -344,9 +353,23 @@ public:
     //! Return <datadir>/settings.json setting value.
     virtual common::SettingsValue getRwSetting(const std::string& name) = 0;
 
-    //! Write a setting to <datadir>/settings.json. Optionally just update the
-    //! setting in memory and do not write the file.
-    virtual bool updateRwSetting(const std::string& name, const common::SettingsValue& value, bool write=true) = 0;
+    //! Updates a setting in <datadir>/settings.json.
+    //! Null can be passed to erase the setting. There is intentionally no
+    //! support for writing null values to settings.json.
+    //! Depending on the action returned by the update function, this will either
+    //! update the setting in memory or write the updated settings to disk.
+    virtual bool updateRwSetting(const std::string& name, const SettingsUpdate& update_function) = 0;
+
+    //! Replace a setting in <datadir>/settings.json with a new value.
+    //! Null can be passed to erase the setting.
+    //! This method provides a simpler alternative to updateRwSetting when
+    //! atomically reading and updating the setting is not required.
+    virtual bool overwriteRwSetting(const std::string& name, common::SettingsValue value, SettingsAction action = SettingsAction::WRITE) = 0;
+
+    //! Delete a given setting in <datadir>/settings.json.
+    //! This method provides a simpler alternative to overwriteRwSetting when
+    //! erasing a setting, for ease of use and readability.
+    virtual bool deleteRwSettings(const std::string& name, SettingsAction action = SettingsAction::WRITE) = 0;
 
     //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
@@ -371,7 +394,7 @@ public:
 class ChainClient
 {
 public:
-    virtual ~ChainClient() {}
+    virtual ~ChainClient() = default;
 
     //! Register rpcs.
     virtual void registerRpcs() = 0;
@@ -384,9 +407,6 @@ public:
 
     //! Start client execution and provide a scheduler.
     virtual void start(CScheduler& scheduler) = 0;
-
-    //! Save state to disk.
-    virtual void flush() = 0;
 
     //! Shut down client.
     virtual void stop() = 0;

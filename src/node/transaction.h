@@ -5,9 +5,9 @@
 #ifndef BITCOIN_NODE_TRANSACTION_H
 #define BITCOIN_NODE_TRANSACTION_H
 
+#include <common/messages.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
-#include <util/error.h>
 
 class CBlockIndex;
 class CTxMemPool;
@@ -25,6 +25,12 @@ struct NodeContext;
  * by these RPCs and the GUI. This can be overridden with the maxfeerate argument.
  */
 static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
+
+/** Maximum burn value for sendrawtransaction, submitpackage, and testmempoolaccept RPC calls.
+ * By default, a transaction with a burn value higher than this will be rejected
+ * by these RPCs and the GUI. This can be overridden with the maxburnamount argument.
+ */
+static const CAmount DEFAULT_MAX_BURN_AMOUNT{0};
 
 /**
  * Submit a transaction to the mempool and (optionally) relay it to all P2P peers.

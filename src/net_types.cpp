@@ -43,7 +43,7 @@ UniValue BanMapToJson(const banmap_t& bans)
         const auto& ban_entry = it.second;
         UniValue j = ban_entry.ToJson();
         j.pushKV(BANMAN_JSON_ADDR_KEY, address.ToString());
-        bans_json.push_back(j);
+        bans_json.push_back(std::move(j));
     }
     return bans_json;
 }

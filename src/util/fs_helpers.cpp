@@ -1,13 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2023 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/fs_helpers.h>
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <logging.h>
 #include <sync.h>
@@ -18,28 +16,18 @@
 #include <fstream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <utility>
 
 #ifndef WIN32
-// for posix_fallocate, in configure.ac we check if it is present after this
-#ifdef __linux__
-
-#ifdef _POSIX_C_SOURCE
-#undef _POSIX_C_SOURCE
-#endif
-
-#define _POSIX_C_SOURCE 200112L
-
-#endif // __linux__
-
 #include <fcntl.h>
 #include <sys/resource.h>
 #include <unistd.h>
 #else
-#include <io.h> /* For _get_osfhandle, _chsize */
-#include <shlobj.h> /* For SHGetSpecialFolderPathW */
+#include <io.h>
+#include <shlobj.h>
 #endif // WIN32
 
 /** Mutex to protect dir_locks. */
@@ -69,7 +57,7 @@ LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_nam
     }
     auto lock = std::make_unique<fsbridge::FileLock>(pathLockFile);
     if (!lock->TryLock()) {
-        error("Error while attempting to lock directory %s: %s", fs::PathToString(directory), lock->GetReason());
+        LogError("Error while attempting to lock directory %s: %s\n", fs::PathToString(directory), lock->GetReason());
         return LockResult::ErrorLock;
     }
     if (!probe_only) {
@@ -118,7 +106,7 @@ bool FileCommit(FILE* file)
         LogPrintf("FlushFileBuffers failed: %s\n", Win32ErrorString(GetLastError()));
         return false;
     }
-#elif defined(MAC_OSX) && defined(F_FULLFSYNC)
+#elif defined(__APPLE__) && defined(F_FULLFSYNC)
     if (fcntl(fileno(file), F_FULLFSYNC, 0) == -1) { // Manpage says "value other than -1" is returned on success
         LogPrintf("fcntl F_FULLFSYNC failed: %s\n", SysErrorString(errno));
         return false;
@@ -196,7 +184,7 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
     nFileSize.u.HighPart = nEndPos >> 32;
     SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
     SetEndOfFile(hFile);
-#elif defined(MAC_OSX)
+#elif defined(__APPLE__)
     // OSX specific version
     // NOTE: Contrary to other OS versions, the OSX version assumes that
     // NOTE: offset is the size of the file.
@@ -249,20 +237,9 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 
 bool RenameOver(fs::path src, fs::path dest)
 {
-#ifdef __MINGW64__
-    // This is a workaround for a bug in libstdc++ which
-    // implements fs::rename with _wrename function.
-    // This bug has been fixed in upstream:
-    //  - GCC 10.3: 8dd1c1085587c9f8a21bb5e588dfe1e8cdbba79e
-    //  - GCC 11.1: 1dfd95f0a0ca1d9e6cbc00e6cbfd1fa20a98f312
-    // For more details see the commits mentioned above.
-    return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),
-                       MOVEFILE_REPLACE_EXISTING) != 0;
-#else
     std::error_code error;
     fs::rename(src, dest, error);
     return !error;
-#endif
 }
 
 /**
@@ -281,4 +258,43 @@ bool TryCreateDirectories(const fs::path& p)
 
     // create_directories didn't create the directory, it had to have existed already
     return false;
+}
+
+std::string PermsToSymbolicString(fs::perms p)
+{
+    std::string perm_str(9, '-');
+
+    auto set_perm = [&](size_t pos, fs::perms required_perm, char letter) {
+        if ((p & required_perm) != fs::perms::none) {
+            perm_str[pos] = letter;
+        }
+    };
+
+    set_perm(0, fs::perms::owner_read,   'r');
+    set_perm(1, fs::perms::owner_write,  'w');
+    set_perm(2, fs::perms::owner_exec,   'x');
+    set_perm(3, fs::perms::group_read,   'r');
+    set_perm(4, fs::perms::group_write,  'w');
+    set_perm(5, fs::perms::group_exec,   'x');
+    set_perm(6, fs::perms::others_read,  'r');
+    set_perm(7, fs::perms::others_write, 'w');
+    set_perm(8, fs::perms::others_exec,  'x');
+
+    return perm_str;
+}
+
+std::optional<fs::perms> InterpretPermString(const std::string& s)
+{
+    if (s == "owner") {
+        return fs::perms::owner_read | fs::perms::owner_write;
+    } else if (s == "group") {
+        return fs::perms::owner_read | fs::perms::owner_write |
+               fs::perms::group_read;
+    } else if (s == "all") {
+        return fs::perms::owner_read | fs::perms::owner_write |
+               fs::perms::group_read |
+               fs::perms::others_read;
+    } else {
+        return std::nullopt;
+    }
 }

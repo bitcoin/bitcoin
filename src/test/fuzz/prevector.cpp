@@ -2,16 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <prevector.h>
+#include <serialize.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 
-#include <prevector.h>
+#include <ranges>
 #include <vector>
-
-#include <reverse_iterator.h>
-#include <serialize.h>
-#include <streams.h>
-
 namespace {
 
 template <unsigned int N, typename T>
@@ -47,7 +45,7 @@ public:
             assert(v == real_vector[pos]);
             ++pos;
         }
-        for (const T& v : reverse_iterate(pre_vector)) {
+        for (const T& v : pre_vector | std::views::reverse) {
             --pos;
             assert(v == real_vector[pos]);
         }
@@ -55,7 +53,7 @@ public:
             assert(v == real_vector[pos]);
             ++pos;
         }
-        for (const T& v : reverse_iterate(const_pre_vector)) {
+        for (const T& v : const_pre_vector | std::views::reverse) {
             --pos;
             assert(v == real_vector[pos]);
         }
@@ -212,15 +210,20 @@ FUZZ_TARGET(prevector)
     LIMITED_WHILE(prov.remaining_bytes(), 3000)
     {
         switch (prov.ConsumeIntegralInRange<int>(0, 13 + 3 * (test.size() > 0))) {
-        case 0:
-            test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), prov.ConsumeIntegral<int>());
-            break;
+        case 0: {
+            auto position = prov.ConsumeIntegralInRange<size_t>(0, test.size());
+            auto value = prov.ConsumeIntegral<int>();
+            test.insert(position, value);
+        } break;
         case 1:
             test.resize(std::max(0, std::min(30, (int)test.size() + prov.ConsumeIntegralInRange<int>(0, 4) - 2)));
             break;
-        case 2:
-            test.insert(prov.ConsumeIntegralInRange<size_t>(0, test.size()), 1 + prov.ConsumeBool(), prov.ConsumeIntegral<int>());
-            break;
+        case 2: {
+            auto position = prov.ConsumeIntegralInRange<size_t>(0, test.size());
+            auto count = 1 + prov.ConsumeBool();
+            auto value = prov.ConsumeIntegral<int>();
+            test.insert(position, count, value);
+        } break;
         case 3: {
             int del = prov.ConsumeIntegralInRange<int>(0, test.size());
             int beg = prov.ConsumeIntegralInRange<int>(0, test.size() - del);
@@ -257,9 +260,11 @@ FUZZ_TARGET(prevector)
         case 9:
             test.clear();
             break;
-        case 10:
-            test.assign(prov.ConsumeIntegralInRange<size_t>(0, 32767), prov.ConsumeIntegral<int>());
-            break;
+        case 10: {
+            auto n = prov.ConsumeIntegralInRange<size_t>(0, 32767);
+            auto value = prov.ConsumeIntegral<int>();
+            test.assign(n, value);
+        } break;
         case 11:
             test.swap();
             break;
@@ -269,9 +274,11 @@ FUZZ_TARGET(prevector)
         case 13:
             test.move();
             break;
-        case 14:
-            test.update(prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1), prov.ConsumeIntegral<int>());
-            break;
+        case 14: {
+            auto pos = prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1);
+            auto value = prov.ConsumeIntegral<int>();
+            test.update(pos, value);
+        } break;
         case 15:
             test.erase(prov.ConsumeIntegralInRange<size_t>(0, test.size() - 1));
             break;

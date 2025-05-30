@@ -16,12 +16,11 @@ from test_framework.util import (
 
 
 class WalletGroupTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 5
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [
             [],
             [],
@@ -31,7 +30,6 @@ class WalletGroupTest(BitcoinTestFramework):
         ]
 
         for args in self.extra_args:
-            args.append("-whitelist=noban@127.0.0.1")   # whitelist peers to speed up tx relay / mempool sync
             args.append(f"-paytxfee={20 * 1e3 / 1e8}")  # apply feerate of 20 sats/vB across all nodes
 
         self.rpc_timeout = 480
@@ -41,11 +39,6 @@ class WalletGroupTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Setting up")
-        # To take full use of immediate tx relay, all nodes need to be reachable
-        # via inbound peers, i.e. connect first to last to close the circle
-        # (the default test network topology looks like this:
-        #  node0 <-- node1 <-- node2 <-- node3 <-- node4 <-- node5)
-        self.connect_nodes(0, self.num_nodes - 1)
         # Mine some coins
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
@@ -186,4 +179,4 @@ class WalletGroupTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    WalletGroupTest().main()
+    WalletGroupTest(__file__).main()

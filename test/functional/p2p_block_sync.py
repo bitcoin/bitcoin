@@ -22,7 +22,7 @@ class BlockSyncTest(BitcoinTestFramework):
         # node0 -> node1 -> node2
         # So node1 has both an inbound and outbound peer.
         # In our test, we will mine a block on node0, and ensure that it makes
-        # to to both node1 and node2.
+        # to both node1 and node2.
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 2)
 
@@ -34,4 +34,4 @@ class BlockSyncTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    BlockSyncTest().main()
+    BlockSyncTest(__file__).main()

@@ -66,7 +66,7 @@ public:
         READWRITE(VARINT(obj.nTimeLast));
     }
 
-    CBlockFileInfo() {}
+    CBlockFileInfo() = default;
 
     std::string ToString() const;
 
@@ -92,22 +92,26 @@ enum BlockStatus : uint32_t {
     //! Reserved (was BLOCK_VALID_HEADER).
     BLOCK_VALID_RESERVED     =    1,
 
-    //! All parent headers found, difficulty matches, timestamp >= median previous, checkpoint. Implies all parents
+    //! All parent headers found, difficulty matches, timestamp >= median previous. Implies all parents
     //! are also at least TREE.
     BLOCK_VALID_TREE         =    2,
 
     /**
      * Only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids,
-     * sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS. When all
-     * parent blocks also have TRANSACTIONS, CBlockIndex::nChainTx will be set.
+     * sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS.
+     *
+     * If a block's validity is at least VALID_TRANSACTIONS, CBlockIndex::nTx will be set. If a block and all previous
+     * blocks back to the genesis block or an assumeutxo snapshot block are at least VALID_TRANSACTIONS,
+     * CBlockIndex::m_chain_tx_count will be set.
      */
     BLOCK_VALID_TRANSACTIONS =    3,
 
     //! Outputs do not overspend inputs, no double spends, coinbase output ok, no immature coinbase spends, BIP30.
-    //! Implies all parents are either at least VALID_CHAIN, or are ASSUMED_VALID
+    //! Implies all previous blocks back to the genesis block or an assumeutxo snapshot block are at least VALID_CHAIN.
     BLOCK_VALID_CHAIN        =    4,
 
-    //! Scripts & signatures ok. Implies all parents are either at least VALID_SCRIPTS, or are ASSUMED_VALID.
+    //! Scripts & signatures ok. Implies all previous blocks back to the genesis block or an assumeutxo snapshot block
+    //! are at least VALID_SCRIPTS.
     BLOCK_VALID_SCRIPTS      =    5,
 
     //! All validity bits.
@@ -124,21 +128,8 @@ enum BlockStatus : uint32_t {
 
     BLOCK_OPT_WITNESS        =   128, //!< block data in blk*.dat was received with a witness-enforcing client
 
-    /**
-     * If ASSUMED_VALID is set, it means that this block has not been validated
-     * and has validity status less than VALID_SCRIPTS. Also that it may have
-     * descendant blocks with VALID_SCRIPTS set, because they can be validated
-     * based on an assumeutxo snapshot.
-     *
-     * When an assumeutxo snapshot is loaded, the ASSUMED_VALID flag is added to
-     * unvalidated blocks at the snapshot height and below. Then, as the background
-     * validation progresses, and these blocks are validated, the ASSUMED_VALID
-     * flags are removed. See `doc/design/assumeutxo.md` for details.
-     *
-     * This flag is only used to implement checks in CheckBlockIndex() and
-     * should not be used elsewhere.
-     */
-    BLOCK_ASSUMED_VALID      =   256,
+    BLOCK_STATUS_RESERVED    =   256, //!< Unused flag that was previously set on assumeutxo snapshot blocks and their
+                                      //!< ancestors before they were validated, and unset when they were validated.
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -173,27 +164,21 @@ public:
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
 
-    //! Number of transactions in this block.
+    //! Number of transactions in this block. This will be nonzero if the block
+    //! reached the VALID_TRANSACTIONS level, and zero otherwise.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
-    //! Note: this value is faked during UTXO snapshot load to ensure that
-    //! LoadBlockIndex() will load index entries for blocks that we lack data for.
-    //! @sa ActivateSnapshot
     unsigned int nTx{0};
 
     //! (memory only) Number of transactions in the chain up to and including this block.
-    //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
-    //! Change to 64-bit type before 2024 (assuming worst case of 60 byte transactions).
-    //!
-    //! Note: this value is faked during use of a UTXO snapshot because we don't
-    //! have the underlying block data available during snapshot load.
-    //! @sa AssumeutxoData
-    //! @sa ActivateSnapshot
-    unsigned int nChainTx{0};
+    //! This value will be non-zero if this block and all previous blocks back
+    //! to the genesis block or an assumeutxo snapshot block have reached the
+    //! VALID_TRANSACTIONS level.
+    uint64_t m_chain_tx_count{0};
 
     //! Verification status of this block. See enum BlockStatus
     //!
     //! Note: this value is modified to show BLOCK_OPT_WITNESS during UTXO snapshot
-    //! load to avoid the block index being spuriously rewound.
+    //! load to avoid a spurious startup failure requiring -reindex.
     //! @sa NeedsRedownload
     //! @sa ActivateSnapshot
     uint32_t nStatus GUARDED_BY(::cs_main){0};
@@ -262,17 +247,16 @@ public:
     }
 
     /**
-     * Check whether this block's and all previous blocks' transactions have been
-     * downloaded (and stored to disk) at some point.
+     * Check whether this block and all previous blocks back to the genesis block or an assumeutxo snapshot block have
+     * reached VALID_TRANSACTIONS and had transactions downloaded (and stored to disk) at some point.
      *
      * Does not imply the transactions are consensus-valid (ConnectTip might fail)
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
      *
-     * Note that this will be true for the snapshot base block, if one is loaded (and
-     * all subsequent assumed-valid blocks) since its nChainTx value will have been set
-     * manually based on the related AssumeutxoData entry.
+     * Note that this will be true for the snapshot base block, if one is loaded, since its m_chain_tx_count value will have
+     * been set manually based on the related AssumeutxoData entry.
      */
-    bool HaveNumChainTxs() const { return nChainTx != 0; }
+    bool HaveNumChainTxs() const { return m_chain_tx_count != 0; }
 
     NodeSeconds Time() const
     {
@@ -318,14 +302,6 @@ public:
         return ((nStatus & BLOCK_VALID_MASK) >= nUpTo);
     }
 
-    //! @returns true if the block is assumed-valid; this means it is queued to be
-    //!   validated by a background chainstate.
-    bool IsAssumedValid() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        AssertLockHeld(::cs_main);
-        return nStatus & BLOCK_ASSUMED_VALID;
-    }
-
     //! Raise the validity level of this block index entry.
     //! Returns true if the validity was changed.
     bool RaiseValidity(enum BlockStatus nUpTo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
@@ -335,12 +311,6 @@ public:
         if (nStatus & BLOCK_FAILED_MASK) return false;
 
         if ((nStatus & BLOCK_VALID_MASK) < nUpTo) {
-            // If this block had been marked assumed-valid and we're raising
-            // its validity to a certain point, there is no longer an assumption.
-            if (nStatus & BLOCK_ASSUMED_VALID && nUpTo >= BLOCK_VALID_SCRIPTS) {
-                nStatus &= ~BLOCK_ASSUMED_VALID;
-            }
-
             nStatus = (nStatus & ~BLOCK_VALID_MASK) | nUpTo;
             return true;
         }

@@ -7,11 +7,44 @@
 
 #include <attributes.h>
 
+#include <atomic>
 #include <cassert> // IWYU pragma: export
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
+
+constexpr bool G_FUZZING_BUILD{
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    true
+#else
+    false
+#endif
+};
+constexpr bool G_ABORT_ON_FAILED_ASSUME{
+#ifdef ABORT_ON_FAILED_ASSUME
+    true
+#else
+    false
+#endif
+};
+
+extern std::atomic<bool> g_enable_dynamic_fuzz_determinism;
+
+inline bool EnableFuzzDeterminism()
+{
+    if constexpr (G_FUZZING_BUILD) {
+        return true;
+    } else if constexpr (!G_ABORT_ON_FAILED_ASSUME) {
+        // Running fuzz tests is always disabled if Assume() doesn't abort
+        // (ie, non-fuzz non-debug builds), as otherwise tests which
+        // should fail due to a failing Assume may still pass. As such,
+        // we also statically disable fuzz determinism in that case.
+        return false;
+    } else {
+        return g_enable_dynamic_fuzz_determinism;
+    }
+}
 
 std::string StrFormatInternalBug(std::string_view msg, std::string_view file, int line, std::string_view func);
 
@@ -40,13 +73,9 @@ void assertion_fail(std::string_view file, int line, std::string_view func, std:
 
 /** Helper for Assert()/Assume() */
 template <bool IS_ASSERT, typename T>
-T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
+constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* file, [[maybe_unused]] int line, [[maybe_unused]] const char* func, [[maybe_unused]] const char* assertion)
 {
-    if constexpr (IS_ASSERT
-#ifdef ABORT_ON_FAILED_ASSUME
-                  || true
-#endif
-    ) {
+    if (IS_ASSERT || std::is_constant_evaluated() || G_FUZZING_BUILD || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
             assertion_fail(file, line, func, assertion);
         }

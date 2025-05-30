@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2021 The Bitcoin Core developers
+// Copyright (c) 2013-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(hash_tests)
+BOOST_FIXTURE_TEST_SUITE(hash_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {
@@ -104,14 +104,14 @@ BOOST_AUTO_TEST_CASE(siphash)
     hasher.Write(0x2F2E2D2C2B2A2928ULL);
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0xe612a3cb9ecba951ull);
 
-    BOOST_CHECK_EQUAL(SipHashUint256(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL, uint256S("1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100")), 0x7127512f72f27cceull);
+    BOOST_CHECK_EQUAL(SipHashUint256(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL, uint256{"1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100"}), 0x7127512f72f27cceull);
 
     // Check test vectors from spec, one byte at a time
     CSipHasher hasher2(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
     for (uint8_t x=0; x<std::size(siphash_4_2_testvec); ++x)
     {
         BOOST_CHECK_EQUAL(hasher2.Finalize(), siphash_4_2_testvec[x]);
-        hasher2.Write(Span{&x, 1});
+        hasher2.Write(std::span{&x, 1});
     }
     // Check test vectors from spec, eight bytes at a time
     CSipHasher hasher3(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
@@ -124,9 +124,9 @@ BOOST_AUTO_TEST_CASE(siphash)
 
     HashWriter ss{};
     CMutableTransaction tx;
-    // Note these tests were originally written with tx.nVersion=1
+    // Note these tests were originally written with tx.version=1
     // and the test would be affected by default tx version bumps if not fixed.
-    tx.nVersion = 1;
+    tx.version = 1;
     ss << TX_WITH_WITNESS(tx);
     BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(siphash)
     for (int i = 0; i < 16; ++i) {
         uint64_t k1 = ctx.rand64();
         uint64_t k2 = ctx.rand64();
-        uint256 x = InsecureRand256();
+        uint256 x = m_rng.rand256();
         uint32_t n = ctx.rand32();
         uint8_t nb[4];
         WriteLE32(nb, n);

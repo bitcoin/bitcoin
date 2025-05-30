@@ -176,6 +176,10 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Gapjyk üçin öňki we täze parol sözlemiňi ýaz.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Dowam et</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Gapjygyňy şifrlemek kompýuteriňe zyýanly programma ýokuşmak arkaly bitkoinleriň ogurlanmagyndan doly gorap bilmejekdigini ýatdan çykarma.</translation>
     </message>
@@ -399,7 +403,11 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
             <numerusform>%n ýyl</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">deslapky bellenen gapjyk</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -636,7 +644,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin amalyny (BGÇBA) ýükle</translation>
+        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin geleşigini ýükle</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -644,7 +652,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Bölekleýin gol çekilen bitkoin amalyny alyş-çalyş panelinden ýükle</translation>
+        <translation type="unfinished">Bölekleýin gol çekilen bitkoin geleşigini alyş-çalyş panelinden ýükle</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -703,10 +711,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Gözden geçir bölüminde sanlaryň üstüni ört</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">deslapky bellenen gapjyk</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -1058,10 +1062,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Gapjyk açmak duýduryşy</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">deslapky bellenen gapjyk</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1551,11 +1551,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Bu sazlama gaýdyp barmak üçin tutuş blok zynjyryny gaýtadan ýükläp almak zerur.</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Maksimum maglumat binýadynyň keş göwrümi. Keş näçe uly boldugyça sinhronlaşdyrma şonça çalt bolmagyna goşant goşular, ondan soň peýdasy köplenç köp bildirmeýär. Keş göwrümini azaltmak ýadyň ulanylyşyny azaldar. Ulanylmaýan umumy ýat howuzy bu keş üçin paýlaşylýar.  </translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Skript tassyklama akymlarynyň sanyny belläň. Otrisatel sanlar ulgam üçin boş galdyryljak ýadrolaryň sanyna gabat gelýär.</translation>
@@ -1621,22 +1616,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Daşyndan gol çekijiniň skript ýoly</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Bitkoin müşderi portuny routerde awtomatik usulda aç. Bu diňe routeriňiz UPnP goldaýan bolsa we ol işjeň bolsa işleýär.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp;UPnP ulanyp porty aşyryň</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Bitkoin müşderi portuny routerde awtomatik usulda açýar. Bu diňe routeriňiz NAT-PMP goldaýan we ol işjeňleşdirilen bolsa işleýär. Daşarky router tötänleýin bolup biler.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">NA&amp;T-PMP ulanýan porty aşyryň</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1729,18 +1708,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Tor onion hyzmatlary arkaly düwünlere aralaşmak üçin SOCKS&amp;5 proksisini ulan:</translation>
-    </message>
-    <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Gözden geçir sahypasynda monoaralykly harp görnüşi:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">içine gurnalan "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">iň meňzeş gabat gelme "%1"</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1978,10 +1945,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT diskde ýatda saklandy.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished"> * %2-ä %1 iberilýär</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2342,6 +2305,10 @@ Size bu ýalňyşlyk gelýän bolsa, siz täjirden BIP21-e gabat gelýän URI-ni
         <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation type="unfinished">&amp;Salgyny göçür</translation>
     </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">ýok</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -2597,13 +2564,6 @@ Size bu ýalňyşlyk gelýän bolsa, siz täjirden BIP21-e gabat gelýän URI-ni
         <translation type="unfinished">Ýalňyşlyk</translation>
     </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">deslapky bellenen gapjyk</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>

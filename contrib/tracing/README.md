@@ -82,7 +82,7 @@ about the connection. Peers can be selected individually to view recent P2P
 messages.
 
 ```
-$ python3 contrib/tracing/p2p_monitor.py ./src/bitcoind
+$ python3 contrib/tracing/p2p_monitor.py $(pidof bitcoind)
 ```
 
 Lists selectable peers and traffic and connection information.
@@ -150,12 +150,12 @@ lost. BCC prints: `Possibly lost 2 samples` on lost messages.
 
 
 ```
-$ python3 contrib/tracing/log_raw_p2p_msgs.py ./src/bitcoind
+$ python3 contrib/tracing/log_raw_p2p_msgs.py $(pidof bitcoind)
 ```
 
 ```
 Logging raw P2P messages.
-Messages larger that about 32kb will be cut off!
+Messages larger than about 32kb will be cut off!
 Some messages might be lost!
  outbound msg 'inv' from peer 4 (outbound-full-relay, XX.XXX.XX.4:8333) with 253 bytes: 0705000000be2245c8f844c9f763748e1a7…
 …
@@ -188,7 +188,7 @@ In a different terminal, starting Bitcoin Core in SigNet mode and with
 re-indexing enabled.
 
 ```
-$ ./src/bitcoind -signet -reindex
+$ ./build/bin/bitcoind -signet -reindex
 ```
 
 This produces the following output.
@@ -241,7 +241,7 @@ A BCC Python script to log the UTXO cache flushes. Based on the
 `utxocache:flush` tracepoint.
 
 ```bash
-$ python3 contrib/tracing/log_utxocache_flush.py ./src/bitcoind
+$ python3 contrib/tracing/log_utxocache_flush.py $(pidof bitcoind)
 ```
 
 ```
@@ -300,7 +300,7 @@ comprising a timestamp along with all event data available via the event's
 tracepoint.
 
 ```console
-$ python3 contrib/tracing/mempool_monitor.py ./src/bitcoind
+$ python3 contrib/tracing/mempool_monitor.py $(pidof bitcoind)
 ```
 
 ```
@@ -335,4 +335,25 @@ $ python3 contrib/tracing/mempool_monitor.py ./src/bitcoind
  │ 13:10:32Z added c78e87be86c828137a6e7e00a177c03b52202ce4c39029b99904c2a094b9da87 with feerate 11.00 sat/vB (1562 sat, 142 vbytes)                                            │
  │                                                                                                                                                                              │
  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+### log_p2p_connections.bt
+
+A `bpftrace` script to log information about opened, closed, misbehaving, and
+evicted P2P connections. Uses the `net:*_connection` tracepoints.
+
+```bash
+$ bpftrace contrib/tracing/log_p2p_connections.bt
+```
+
+This should produce an output similar to the following.
+
+```bash
+Attaching 6 probes...
+Logging opened, closed, misbehaving, and evicted P2P connections
+OUTBOUND conn to 127.0.0.1:15287: id=0, type=block-relay-only, network=0, total_out=1
+INBOUND conn from 127.0.0.1:45324: id=1, type=inbound, network=0, total_in=1
+MISBEHAVING conn id=1, score_before=0, score_increase=20, message='getdata message size = 50001', threshold_exceeded=false
+CLOSED conn to 127.0.0.1:15287: id=0, type=block-relay-only, network=0, established=1231006505
+EVICTED conn to 127.0.0.1:45324: id=1, type=inbound, network=0, established=1612312312
+...
 ```

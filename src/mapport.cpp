@@ -2,34 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <mapport.h>
 
 #include <clientversion.h>
+#include <common/netif.h>
+#include <common/pcp.h>
 #include <common/system.h>
 #include <logging.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <random.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
-
-#ifdef USE_NATPMP
-#include <compat/compat.h>
-#include <natpmp.h>
-#endif // USE_NATPMP
-
-#ifdef USE_UPNP
-#include <miniupnpc/miniupnpc.h>
-#include <miniupnpc/upnpcommands.h>
-#include <miniupnpc/upnperrors.h>
-// The minimum supported miniUPnPc API version is set to 17. This excludes
-// versions with known vulnerabilities.
-static_assert(MINIUPNPC_API_VERSION >= 17, "miniUPnPc API version >= 17 assumed");
-#endif // USE_UPNP
 
 #include <atomic>
 #include <cassert>
@@ -38,214 +23,107 @@ static_assert(MINIUPNPC_API_VERSION >= 17, "miniUPnPc API version >= 17 assumed"
 #include <string>
 #include <thread>
 
-#if defined(USE_NATPMP) || defined(USE_UPNP)
 static CThreadInterrupt g_mapport_interrupt;
 static std::thread g_mapport_thread;
-static std::atomic_uint g_mapport_enabled_protos{MapPortProtoFlag::NONE};
-static std::atomic<MapPortProtoFlag> g_mapport_current_proto{MapPortProtoFlag::NONE};
 
 using namespace std::chrono_literals;
 static constexpr auto PORT_MAPPING_REANNOUNCE_PERIOD{20min};
 static constexpr auto PORT_MAPPING_RETRY_PERIOD{5min};
 
-#ifdef USE_NATPMP
-static uint16_t g_mapport_external_port = 0;
-static bool NatpmpInit(natpmp_t* natpmp)
+static void ProcessPCP()
 {
-    const int r_init = initnatpmp(natpmp, /* detect gateway automatically */ 0, /* forced gateway - NOT APPLIED*/ 0);
-    if (r_init == 0) return true;
-    LogPrintf("natpmp: initnatpmp() failed with %d error.\n", r_init);
-    return false;
-}
+    // The same nonce is used for all mappings, this is allowed by the spec, and simplifies keeping track of them.
+    PCPMappingNonce pcp_nonce;
+    GetRandBytes(pcp_nonce);
 
-static bool NatpmpDiscover(natpmp_t* natpmp, struct in_addr& external_ipv4_addr)
-{
-    const int r_send = sendpublicaddressrequest(natpmp);
-    if (r_send == 2 /* OK */) {
-        int r_read;
-        natpmpresp_t response;
-        do {
-            r_read = readnatpmpresponseorretry(natpmp, &response);
-        } while (r_read == NATPMP_TRYAGAIN);
-
-        if (r_read == 0) {
-            external_ipv4_addr = response.pnu.publicaddress.addr;
-            return true;
-        } else if (r_read == NATPMP_ERR_NOGATEWAYSUPPORT) {
-            LogPrintf("natpmp: The gateway does not support NAT-PMP.\n");
-        } else {
-            LogPrintf("natpmp: readnatpmpresponseorretry() for public address failed with %d error.\n", r_read);
-        }
-    } else {
-        LogPrintf("natpmp: sendpublicaddressrequest() failed with %d error.\n", r_send);
-    }
-
-    return false;
-}
-
-static bool NatpmpMapping(natpmp_t* natpmp, const struct in_addr& external_ipv4_addr, uint16_t private_port, bool& external_ip_discovered)
-{
-    const uint16_t suggested_external_port = g_mapport_external_port ? g_mapport_external_port : private_port;
-    const int r_send = sendnewportmappingrequest(natpmp, NATPMP_PROTOCOL_TCP, private_port, suggested_external_port, 3600 /*seconds*/);
-    if (r_send == 12 /* OK */) {
-        int r_read;
-        natpmpresp_t response;
-        do {
-            r_read = readnatpmpresponseorretry(natpmp, &response);
-        } while (r_read == NATPMP_TRYAGAIN);
-
-        if (r_read == 0) {
-            auto pm = response.pnu.newportmapping;
-            if (private_port == pm.privateport && pm.lifetime > 0) {
-                g_mapport_external_port = pm.mappedpublicport;
-                const CService external{external_ipv4_addr, pm.mappedpublicport};
-                if (!external_ip_discovered && fDiscover) {
-                    AddLocal(external, LOCAL_MAPPED);
-                    external_ip_discovered = true;
-                }
-                LogPrintf("natpmp: Port mapping successful. External address = %s\n", external.ToStringAddrPort());
-                return true;
-            } else {
-                LogPrintf("natpmp: Port mapping failed.\n");
-            }
-        } else if (r_read == NATPMP_ERR_NOGATEWAYSUPPORT) {
-            LogPrintf("natpmp: The gateway does not support NAT-PMP.\n");
-        } else {
-            LogPrintf("natpmp: readnatpmpresponseorretry() for port mapping failed with %d error.\n", r_read);
-        }
-    } else {
-        LogPrintf("natpmp: sendnewportmappingrequest() failed with %d error.\n", r_send);
-    }
-
-    return false;
-}
-
-static bool ProcessNatpmp()
-{
     bool ret = false;
-    natpmp_t natpmp;
-    struct in_addr external_ipv4_addr;
-    if (NatpmpInit(&natpmp) && NatpmpDiscover(&natpmp, external_ipv4_addr)) {
-        bool external_ip_discovered = false;
-        const uint16_t private_port = GetListenPort();
-        do {
-            ret = NatpmpMapping(&natpmp, external_ipv4_addr, private_port, external_ip_discovered);
-        } while (ret && g_mapport_interrupt.sleep_for(PORT_MAPPING_REANNOUNCE_PERIOD));
-        g_mapport_interrupt.reset();
+    bool no_resources = false;
+    const uint16_t private_port = GetListenPort();
+    // Multiply the reannounce period by two, as we'll try to renew approximately halfway.
+    const uint32_t requested_lifetime = std::chrono::seconds(PORT_MAPPING_REANNOUNCE_PERIOD * 2).count();
+    uint32_t actual_lifetime = 0;
+    std::chrono::milliseconds sleep_time;
 
-        const int r_send = sendnewportmappingrequest(&natpmp, NATPMP_PROTOCOL_TCP, private_port, g_mapport_external_port, /* remove a port mapping */ 0);
-        g_mapport_external_port = 0;
-        if (r_send == 12 /* OK */) {
-            LogPrintf("natpmp: Port mapping removed successfully.\n");
+    // Local functor to handle result from PCP/NATPMP mapping.
+    auto handle_mapping = [&](std::variant<MappingResult, MappingError> &res) -> void {
+        if (MappingResult* mapping = std::get_if<MappingResult>(&res)) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Info, "portmap: Added mapping %s\n", mapping->ToString());
+            AddLocal(mapping->external, LOCAL_MAPPED);
+            ret = true;
+            actual_lifetime = std::min(actual_lifetime, mapping->lifetime);
+        } else if (MappingError *err = std::get_if<MappingError>(&res)) {
+            // Detailed error will already have been logged internally in respective Portmap function.
+            if (*err == MappingError::NO_RESOURCES) {
+                no_resources = true;
+            }
+        }
+    };
+
+    do {
+        actual_lifetime = requested_lifetime;
+        no_resources = false; // Set to true if there was any "no resources" error.
+        ret = false; // Set to true if any mapping succeeds.
+
+        // IPv4
+        std::optional<CNetAddr> gateway4 = QueryDefaultGateway(NET_IPV4);
+        if (!gateway4) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: Could not determine IPv4 default gateway\n");
         } else {
-            LogPrintf("natpmp: sendnewportmappingrequest(0) failed with %d error.\n", r_send);
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: gateway [IPv4]: %s\n", gateway4->ToStringAddr());
+
+            // Open a port mapping on whatever local address we have toward the gateway.
+            struct in_addr inaddr_any;
+            inaddr_any.s_addr = htonl(INADDR_ANY);
+            auto res = PCPRequestPortMap(pcp_nonce, *gateway4, CNetAddr(inaddr_any), private_port, requested_lifetime);
+            MappingError* pcp_err = std::get_if<MappingError>(&res);
+            if (pcp_err && *pcp_err == MappingError::UNSUPP_VERSION) {
+                LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: Got unsupported PCP version response, falling back to NAT-PMP\n");
+                res = NATPMPRequestPortMap(*gateway4, private_port, requested_lifetime);
+            }
+            handle_mapping(res);
         }
-    }
 
-    closenatpmp(&natpmp);
-    return ret;
-}
-#endif // USE_NATPMP
+        // IPv6
+        std::optional<CNetAddr> gateway6 = QueryDefaultGateway(NET_IPV6);
+        if (!gateway6) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: Could not determine IPv6 default gateway\n");
+        } else {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "portmap: gateway [IPv6]: %s\n", gateway6->ToStringAddr());
 
-#ifdef USE_UPNP
-static bool ProcessUpnp()
-{
-    bool ret = false;
-    std::string port = strprintf("%u", GetListenPort());
-    const char * multicastif = nullptr;
-    const char * minissdpdpath = nullptr;
-    struct UPNPDev * devlist = nullptr;
-    char lanaddr[64];
-
-    int error = 0;
-    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
-
-    struct UPNPUrls urls;
-    struct IGDdatas data;
-    int r;
-
-    r = UPNP_GetValidIGD(devlist, &urls, &data, lanaddr, sizeof(lanaddr));
-    if (r == 1)
-    {
-        if (fDiscover) {
-            char externalIPAddress[40];
-            r = UPNP_GetExternalIPAddress(urls.controlURL, data.first.servicetype, externalIPAddress);
-            if (r != UPNPCOMMAND_SUCCESS) {
-                LogPrintf("UPnP: GetExternalIPAddress() returned %d\n", r);
-            } else {
-                if (externalIPAddress[0]) {
-                    std::optional<CNetAddr> resolved{LookupHost(externalIPAddress, false)};
-                    if (resolved.has_value()) {
-                        LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved->ToStringAddr());
-                        AddLocal(resolved.value(), LOCAL_MAPPED);
-                    }
-                } else {
-                    LogPrintf("UPnP: GetExternalIPAddress failed.\n");
-                }
+            // Try to open pinholes for all routable local IPv6 addresses.
+            for (const auto &addr: GetLocalAddresses()) {
+                if (!addr.IsRoutable() || !addr.IsIPv6()) continue;
+                auto res = PCPRequestPortMap(pcp_nonce, *gateway6, addr, private_port, requested_lifetime);
+                handle_mapping(res);
             }
         }
 
-        std::string strDesc = PACKAGE_NAME " " + FormatFullVersion();
+        // Log message if we got NO_RESOURCES.
+        if (no_resources) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "portmap: At least one mapping failed because of a NO_RESOURCES error. This usually indicates that the port is already used on the router. If this is the only instance of bitcoin running on the network, this will resolve itself automatically. Otherwise, you might want to choose a different P2P port to prevent this conflict.\n");
+        }
 
-        do {
-            r = UPNP_AddPortMapping(urls.controlURL, data.first.servicetype, port.c_str(), port.c_str(), lanaddr, strDesc.c_str(), "TCP", nullptr, "0");
+        // Sanity-check returned lifetime.
+        if (actual_lifetime < 30) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "portmap: Got impossibly short mapping lifetime of %d seconds\n", actual_lifetime);
+            return;
+        }
+        // RFC6887 11.2.1 recommends that clients send their first renewal packet at a time chosen with uniform random
+        // distribution in the range 1/2 to 5/8 of expiration time.
+        std::chrono::seconds sleep_time_min(actual_lifetime / 2);
+        std::chrono::seconds sleep_time_max(actual_lifetime * 5 / 8);
+        sleep_time = sleep_time_min + FastRandomContext().randrange<std::chrono::milliseconds>(sleep_time_max - sleep_time_min);
+    } while (ret && g_mapport_interrupt.sleep_for(sleep_time));
 
-            if (r != UPNPCOMMAND_SUCCESS) {
-                ret = false;
-                LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n", port, port, lanaddr, r, strupnperror(r));
-                break;
-            } else {
-                ret = true;
-                LogPrintf("UPnP Port Mapping successful.\n");
-            }
-        } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_REANNOUNCE_PERIOD));
-        g_mapport_interrupt.reset();
-
-        r = UPNP_DeletePortMapping(urls.controlURL, data.first.servicetype, port.c_str(), "TCP", nullptr);
-        LogPrintf("UPNP_DeletePortMapping() returned: %d\n", r);
-        freeUPNPDevlist(devlist); devlist = nullptr;
-        FreeUPNPUrls(&urls);
-    } else {
-        LogPrintf("No valid UPnP IGDs found\n");
-        freeUPNPDevlist(devlist); devlist = nullptr;
-        if (r != 0)
-            FreeUPNPUrls(&urls);
-    }
-
-    return ret;
+    // We don't delete the mappings when the thread is interrupted because this would add additional complexity, so
+    // we rather just choose a fairly short expiry time.
 }
-#endif // USE_UPNP
 
 static void ThreadMapPort()
 {
-    bool ok;
     do {
-        ok = false;
-
-#ifdef USE_UPNP
-        // High priority protocol.
-        if (g_mapport_enabled_protos & MapPortProtoFlag::UPNP) {
-            g_mapport_current_proto = MapPortProtoFlag::UPNP;
-            ok = ProcessUpnp();
-            if (ok) continue;
-        }
-#endif // USE_UPNP
-
-#ifdef USE_NATPMP
-        // Low priority protocol.
-        if (g_mapport_enabled_protos & MapPortProtoFlag::NAT_PMP) {
-            g_mapport_current_proto = MapPortProtoFlag::NAT_PMP;
-            ok = ProcessNatpmp();
-            if (ok) continue;
-        }
-#endif // USE_NATPMP
-
-        g_mapport_current_proto = MapPortProtoFlag::NONE;
-        if (g_mapport_enabled_protos == MapPortProtoFlag::NONE) {
-            return;
-        }
-
-    } while (ok || g_mapport_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
+        ProcessPCP();
+    } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
 }
 
 void StartThreadMapPort()
@@ -256,54 +134,18 @@ void StartThreadMapPort()
     }
 }
 
-static void DispatchMapPort()
+void StartMapPort(bool enable)
 {
-    if (g_mapport_current_proto == MapPortProtoFlag::NONE && g_mapport_enabled_protos == MapPortProtoFlag::NONE) {
-        return;
-    }
-
-    if (g_mapport_current_proto == MapPortProtoFlag::NONE && g_mapport_enabled_protos != MapPortProtoFlag::NONE) {
+    if (enable) {
         StartThreadMapPort();
-        return;
-    }
-
-    if (g_mapport_current_proto != MapPortProtoFlag::NONE && g_mapport_enabled_protos == MapPortProtoFlag::NONE) {
+    } else {
         InterruptMapPort();
         StopMapPort();
-        return;
     }
-
-    if (g_mapport_enabled_protos & g_mapport_current_proto) {
-        // Enabling another protocol does not cause switching from the currently used one.
-        return;
-    }
-
-    assert(g_mapport_thread.joinable());
-    assert(!g_mapport_interrupt);
-    // Interrupt a protocol-specific loop in the ThreadUpnp() or in the ThreadNatpmp()
-    // to force trying the next protocol in the ThreadMapPort() loop.
-    g_mapport_interrupt();
-}
-
-static void MapPortProtoSetEnabled(MapPortProtoFlag proto, bool enabled)
-{
-    if (enabled) {
-        g_mapport_enabled_protos |= proto;
-    } else {
-        g_mapport_enabled_protos &= ~proto;
-    }
-}
-
-void StartMapPort(bool use_upnp, bool use_natpmp)
-{
-    MapPortProtoSetEnabled(MapPortProtoFlag::UPNP, use_upnp);
-    MapPortProtoSetEnabled(MapPortProtoFlag::NAT_PMP, use_natpmp);
-    DispatchMapPort();
 }
 
 void InterruptMapPort()
 {
-    g_mapport_enabled_protos = MapPortProtoFlag::NONE;
     if (g_mapport_thread.joinable()) {
         g_mapport_interrupt();
     }
@@ -316,18 +158,3 @@ void StopMapPort()
         g_mapport_interrupt.reset();
     }
 }
-
-#else  // #if defined(USE_NATPMP) || defined(USE_UPNP)
-void StartMapPort(bool use_upnp, bool use_natpmp)
-{
-    // Intentionally left blank.
-}
-void InterruptMapPort()
-{
-    // Intentionally left blank.
-}
-void StopMapPort()
-{
-    // Intentionally left blank.
-}
-#endif // #if defined(USE_NATPMP) || defined(USE_UPNP)

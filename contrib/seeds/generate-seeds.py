@@ -5,11 +5,13 @@
 '''
 Script to generate list of seed nodes for kernel/chainparams.cpp.
 
-This script expects two text files in the directory that is passed as an
+This script expects three text files in the directory that is passed as an
 argument:
 
     nodes_main.txt
+    nodes_signet.txt
     nodes_test.txt
+    nodes_testnet4.txt
 
 These files must consist of lines in the format
 
@@ -18,9 +20,9 @@ These files must consist of lines in the format
     <onion>.onion:<port>
     <i2p>.b32.i2p:<port>
 
-The output will be two data structures with the peers in binary format:
+The output will be several data structures with the peers in binary format:
 
-   static const uint8_t chainparams_seed_{main,test}[]={
+   static const uint8_t chainparams_seed_{main,signet,test,testnet4}[]={
    ...
    }
 
@@ -29,7 +31,6 @@ These should be pasted into `src/chainparamsseeds.h`.
 
 from base64 import b32decode
 from enum import Enum
-import struct
 import sys
 import os
 import re
@@ -115,13 +116,13 @@ def parse_spec(s):
 def ser_compact_size(l):
     r = b""
     if l < 253:
-        r = struct.pack("B", l)
+        r = l.to_bytes(1, "little")
     elif l < 0x10000:
-        r = struct.pack("<BH", 253, l)
+        r = (253).to_bytes(1, "little") + l.to_bytes(2, "little")
     elif l < 0x100000000:
-        r = struct.pack("<BI", 254, l)
+        r = (254).to_bytes(1, "little") + l.to_bytes(4, "little")
     else:
-        r = struct.pack("<BQ", 255, l)
+        r = (255).to_bytes(1, "little") + l.to_bytes(8, "little")
     return r
 
 def bip155_serialize(spec):
@@ -129,10 +130,10 @@ def bip155_serialize(spec):
     Serialize (networkID, addr, port) tuple to BIP155 binary format.
     '''
     r = b""
-    r += struct.pack('B', spec[0].value)
+    r += spec[0].value.to_bytes(1, "little")
     r += ser_compact_size(len(spec[1]))
     r += spec[1]
-    r += struct.pack('>H', spec[2])
+    r += spec[2].to_bytes(2, "big")
     return r
 
 def process_nodes(g, f, structname):
@@ -170,8 +171,14 @@ def main():
     with open(os.path.join(indir,'nodes_main.txt'), 'r', encoding="utf8") as f:
         process_nodes(g, f, 'chainparams_seed_main')
     g.write('\n')
+    with open(os.path.join(indir,'nodes_signet.txt'), 'r', encoding="utf8") as f:
+        process_nodes(g, f, 'chainparams_seed_signet')
+    g.write('\n')
     with open(os.path.join(indir,'nodes_test.txt'), 'r', encoding="utf8") as f:
         process_nodes(g, f, 'chainparams_seed_test')
+    g.write('\n')
+    with open(os.path.join(indir,'nodes_testnet4.txt'), 'r', encoding="utf8") as f:
+        process_nodes(g, f, 'chainparams_seed_testnet4')
     g.write('#endif // BITCOIN_CHAINPARAMSSEEDS_H\n')
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,9 +32,9 @@ private:
 public:
     static constexpr size_t OUTPUT_SIZE = 32;
 
-    SHA3_256() {}
-    SHA3_256& Write(Span<const unsigned char> data);
-    SHA3_256& Finalize(Span<unsigned char> output);
+    SHA3_256() = default;
+    SHA3_256& Write(std::span<const unsigned char> data);
+    SHA3_256& Finalize(std::span<unsigned char> output);
     SHA3_256& Reset();
 };
 

@@ -3,18 +3,22 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
-#include <clientversion.h>
 #include <common/args.h>
 #include <crypto/sha256.h>
+#include <tinyformat.h>
 #include <util/fs.h>
-#include <util/strencodings.h>
+#include <util/string.h>
+#include <test/util/setup_common.h>
 
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
+using util::SplitString;
 
 static const char* DEFAULT_BENCH_FILTER = ".*";
 static constexpr int64_t DEFAULT_MIN_TIME_MS{10};
@@ -24,6 +28,7 @@ static const std::string DEFAULT_PRIORITY{"all"};
 static void SetupBenchArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
+    SetupCommonTestArgs(argsman);
 
     argsman.AddArg("-asymptote=<n1,n2,n3,...>", "Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -55,6 +60,18 @@ static uint8_t parsePriorityLevel(const std::string& str) {
         levels |= benchmark::StringToPriority(level);
     }
     return levels;
+}
+
+static std::vector<std::string> parseTestSetupArgs(const ArgsManager& argsman)
+{
+    // Parses unit test framework arguments supported by the benchmark framework.
+    std::vector<std::string> args;
+    static std::vector<std::string> AVAILABLE_ARGS = {"-testdatadir"};
+    for (const std::string& arg_name : AVAILABLE_ARGS) {
+        auto op_arg = argsman.GetArg(arg_name);
+        if (op_arg) args.emplace_back(strprintf("%s=%s", arg_name, *op_arg));
+    }
+    return args;
 }
 
 int main(int argc, char** argv)
@@ -128,6 +145,7 @@ int main(int argc, char** argv)
         args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
         args.sanity_check = argsman.GetBoolArg("-sanity-check", false);
         args.priority = parsePriorityLevel(argsman.GetArg("-priority-level", DEFAULT_PRIORITY));
+        args.setup_args = parseTestSetupArgs(argsman);
 
         benchmark::BenchRunner::RunAll(args);
 

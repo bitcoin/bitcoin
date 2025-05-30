@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <hash.h>
+#include <crypto/sha256.h>
 #include <random.h>
 #include <uint256.h>
 

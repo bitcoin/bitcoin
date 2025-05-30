@@ -12,14 +12,14 @@ namespace util {
 //! as its system thread name.
 //! @note Do not call this for the main thread, as this will interfere with
 //! UNIX utilities such as top and killall. Use ThreadSetInternalName instead.
-void ThreadRename(std::string&&);
+void ThreadRename(const std::string&);
 
 //! Set the internal (in-memory) name of the current thread only.
-void ThreadSetInternalName(std::string&&);
+void ThreadSetInternalName(const std::string&);
 
 //! Get the thread's internal (in-memory) name; used e.g. for identification in
 //! logging.
-const std::string& ThreadGetInternalName();
+std::string ThreadGetInternalName();
 
 } // namespace util
 

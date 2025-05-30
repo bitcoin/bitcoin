@@ -43,13 +43,13 @@ private:
     bool AllowPrune() const override { return true; }
 
 protected:
-    bool CustomInit(const std::optional<interfaces::BlockKey>& block) override;
+    bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
 
     bool CustomCommit(CDBBatch& batch) override;
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
-    bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
+    bool CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip) override;
 
     BaseIndex::DB& GetDB() const override { return *m_db; }
 

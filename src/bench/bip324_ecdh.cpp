@@ -3,18 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
 #include <span.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 
 static void BIP324_ECDH(benchmark::Bench& bench)
 {
-    ECC_Start();
+    ECC_Context ecc_context{};
     FastRandomContext rng;
 
     std::array<std::byte, 32> key_data;
@@ -27,7 +27,7 @@ static void BIP324_ECDH(benchmark::Bench& bench)
 
     bench.batch(1).unit("ecdh").run([&] {
         CKey key;
-        key.Set(UCharCast(key_data.data()), UCharCast(key_data.data()) + 32, true);
+        key.Set(key_data.data(), key_data.data() + 32, true);
         EllSwiftPubKey our_ellswift(our_ellswift_data);
         EllSwiftPubKey their_ellswift(their_ellswift_data);
 
@@ -44,8 +44,6 @@ static void BIP324_ECDH(benchmark::Bench& bench)
         // - Copy 16 bytes from the resulting shared secret into the middle of their ellswift key.
         std::copy(ret.begin() + 16, ret.end(), their_ellswift_data.begin() + 24);
     });
-
-    ECC_Stop();
 }
 
 BENCHMARK(BIP324_ECDH, benchmark::PriorityLevel::HIGH);

@@ -5,6 +5,8 @@
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
 #include <string>
 
 using namespace std::literals;
@@ -21,7 +23,7 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
         BOOST_CHECK_EQUAL(strEnc, vstrOut[i]);
         auto dec = DecodeBase64(strEnc);
         BOOST_REQUIRE(dec);
-        BOOST_CHECK_MESSAGE(MakeByteSpan(*dec) == MakeByteSpan(vstrIn[i]), vstrOut[i]);
+        BOOST_CHECK_MESSAGE(std::ranges::equal(*dec, vstrIn[i]), vstrOut[i]);
     }
 
     {
@@ -34,11 +36,24 @@ BOOST_AUTO_TEST_CASE(base64_testvectors)
         BOOST_CHECK_EQUAL(EncodeBase64(in_s), out_exp);
     }
 
+    BOOST_CHECK(DecodeBase64("nQB/pZw=")); // valid
+
     // Decoding strings with embedded NUL characters should fail
-    BOOST_CHECK(!DecodeBase64("invalid\0"s));
-    BOOST_CHECK(DecodeBase64("nQB/pZw="s));
-    BOOST_CHECK(!DecodeBase64("nQB/pZw=\0invalid"s));
-    BOOST_CHECK(!DecodeBase64("nQB/pZw=invalid\0"s));
+    BOOST_CHECK(!DecodeBase64("invalid\0"sv)); // correct size, invalid due to \0
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=\0invalid"sv));
+    BOOST_CHECK(!DecodeBase64("nQB/pZw=invalid\0"sv)); // invalid, padding only allowed at the end
+}
+
+BOOST_AUTO_TEST_CASE(base64_padding)
+{
+    // Is valid without padding
+    BOOST_CHECK_EQUAL(EncodeBase64("foobar"), "Zm9vYmFy");
+
+    // Valid size
+    BOOST_CHECK(!DecodeBase64("===="));
+    BOOST_CHECK(!DecodeBase64("a==="));
+    BOOST_CHECK( DecodeBase64("YQ=="));
+    BOOST_CHECK( DecodeBase64("YWE="));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

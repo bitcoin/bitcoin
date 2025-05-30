@@ -62,6 +62,13 @@
         <translation type="unfinished">यी भुक्तानी गर्नका लागि तपाइका बिट्कोइन ठेगानाहरू हुन्। सिक्काहरू पठाउनुअघि रकम र प्राप्त गर्ने ठेगाना जाँच गर्नुहोस।</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">यी तपाईंका भुक्तानी प्राप्त गर्ने बिटकोईन ठेगानाहरू हुन्। नयाँ ठेगाना बनाउनको लागि, 'प्राप्त' ट्याबमा रहेको 'नयाँ प्राप्त गर्ने ठेगाना सिर्जना गर्नुहोस्' बटनको प्रयोग गर्नुहोस्। 
+हस्ताक्षर केवल 'लेगेसी' प्रकारका ठेगानाहरूमा मात्र सम्भव छ।
+ </translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation type="unfinished">ठेगाना कपी गर्नुहोस्</translation>
     </message>
@@ -88,6 +95,14 @@
         <translation type="unfinished">ठेगाना सुची %1मा बचत गर्ने प्रयासमा त्रुटि भएको छ। कृपया पुनः प्रयास गर्नुहोस।</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">ठेगानाहरू पठाउँदै - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">ठेगानाहरू प्राप्त गर्दै - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">निर्यात असफल</translation>
     </message>
@@ -102,7 +117,11 @@
         <source>Address</source>
         <translation type="unfinished">ठेगाना</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(लेबल छैन)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -130,6 +149,10 @@
         <translation type="unfinished">वालेट इन्क्रिप्ट गर्नुहोस् </translation>
     </message>
     <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">यो अपरेसनलाई वालेट अनलक गर्न तपाईंको वालेट पासफ्रेज चाहिन्छ।</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation type="unfinished">वालेट अनलक गर्नुहोस्</translation>
     </message>
@@ -142,6 +165,10 @@
         <translation type="unfinished">वालेट इन्क्रिप्सन सुनिश्चित गर्नुहोस</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">यदि तपाईंले आफ्नो वालेटलाई इन्क्रिप्ट  गरेर पासफ्रेज बिर्सनु भयो भने , &lt;b&gt; तपाईंले आफ्ना सबै बिटकोइनहरू गुमाउनुहुनेछ &lt;/b&gt; ।</translation>
+    </message>
+    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation type="unfinished">के तपाइँ तपाइँको वालेट ईन्क्रिप्ट गर्न निश्चित हुनुहुन्छ?</translation>
     </message>
@@ -150,16 +177,68 @@
         <translation type="unfinished">वालेट इन्क्रिप्ट भयो</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished">वालेटको लागि नयाँ पासफ्रेज प्रविष्ट गर्नुहोस्। &lt;br/&gt;कृपया पासफ्रेज प्रयोग गर्नुहोस् &lt;b&gt;दस वा बढी अनियमित वर्णहरू &lt;/b&gt;, वा &lt;b&gt;आठ वा बढी शब्दहरू &lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation type="unfinished">वालेटको लागि पुरानो पासफ्रेज र नयाँ पासफ्रेज प्रविष्ट गर्नुहोस्।</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">याद गर्नुहोस् कि तपाईको वालेट इन्क्रिप्ट गर्नाले तपाईको बिटकोइनलाई तपाईको कम्प्युटरमा मालवेयरले चोरी हुनबाट पूर्णतया सुरक्षित गर्न सक्दैन।</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">वालेट इन्क्रिप्ट गर्न</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation type="unfinished">तपाईंको वालेट इन्क्रिप्ट हुन लागेको छ।</translation>
+    </message>
+    <message>
         <source>Your wallet is now encrypted. </source>
         <translation type="unfinished">अब वालेट इन्क्रिप्ट भएको छ।</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation type="unfinished">महत्वपूर्ण: तपाईंले आफ्नो वालेट फाइलको कुनै पनि पुराना ब्याकअपहरू नयाँ बनाइएको र इन्क्रिप्ट गरिएको वालेट फाइलले प्रतिस्थापन गर्नुपर्छ। सुरक्षा कारणले, इन्क्रिप्ट नगरिएको वालेट फाइलका पुराना ब्याकअपहरू तपाईंले नयाँ, इन्क्रिप्ट गरिएको वालेट प्रयोग गर्न थालेपछि बेकार हुनेछन्।</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
         <translation type="unfinished">वालेट इन्क्रिप्सन असफल </translation>
     </message>
     <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation type="unfinished">आन्तरिक त्रुटिका कारण वालेट इन्क्रिप्सन असफल भयो। तपाईंको वालेट इन्क्रिप्ट गरिएको थिएन।</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation type="unfinished">प्रदान गरिएका पासफ्रेजहरू मेल खाँदैनन्।</translation>
+    </message>
+    <message>
         <source>Wallet unlock failed</source>
         <translation type="unfinished">वालेट अनलक असफल </translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation type="unfinished">वालेट डिक्रिप्शनको लागि प्रविष्ट गरिएको पासफ्रेज गलत थियो।</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">वालेट डिक्रिप्सनका लागि प्रविष्ट गरिएको पासफ्रेज गलत छ। यसमा शून्य क्यारेक्टर (जस्तै - शून्य बाइट) समावेश छ। यदि पासफ्रेज यस सफ्टवेयरको संस्करण २५.० भन्दा पहिले सेट गरिएको थियो भने, पहिलो शून्य क्यारेक्टरसम्मका क्यारेक्टरहरू मात्र प्रयोग गरेर पुन: प्रयास गर्नुहोस्, तर पहिलो शून्य क्यारेक्टरलाई समावेश नगर्नुहोस्। यदि यो सफल भयो भने, भविष्यमा यो समस्या नदोहोरियोस् भन्नका लागि नयाँ पासफ्रेज सेट गर्नुहोस्।</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation type="unfinished">वालेट पासफ्रेज सफलतापूर्वक परिवर्तन गरियो।</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">पासफ्रेज परिवर्तन असफल भयो</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">वालेट डिक्रिप्सनका लागि प्रविष्ट गरिएको पासफ्रेज गलत छ। यसमा शून्य क्यारेक्टर (जस्तै - शून्य बाइट) समावेश छ। यदि पासफ्रेज यस सफ्टवेयरको संस्करण 25.0 भन्दा पहिले सेट गरिएको थियो भने, पहिलो शून्य क्यारेक्टरसम्मका क्यारेक्टरहरू मात्र प्रयोग गरेर पुन: प्रयास गर्नुहोस्, तर पहिलो शून्य क्यारेक्टरलाई समावेश नगर्नुहोस्।</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -180,8 +259,16 @@
 <context>
     <name>BitcoinApplication</name>
     <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">सेटिङ फाइल %1 भ्रष्ट वा अवैध हुन सक्छ।</translation>
+    </message>
+    <message>
         <source>Runaway exception</source>
         <translation type="unfinished">रनअवे अपवाद</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">एउटा घातक त्रुटि भयो। %1 अब सुरक्षित रूपमा जारी राख्न सक्दैन र छोड्नेछ।</translation>
     </message>
     <message>
         <source>Internal error</source>
@@ -190,6 +277,19 @@
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">के तपाइँ पूर्वनिर्धारित मानहरूमा सेटिङहरू रिसेट गर्न चाहनुहुन्छ, वा परिवर्तन नगरी रद्द गर्न चाहनुहुन्छ?</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">त्रुटि: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1अझै सुरक्षित बाहिर निस्किएन...</translation>
+    </message>
     <message>
         <source>unknown</source>
         <translation type="unfinished">थाहा नभयेको</translation>
@@ -382,6 +482,10 @@
         <source>&amp;Help</source>
         <translation type="unfinished">&amp;मद्दत</translation>
     </message>
+    <message>
+        <source>Tabs toolbar</source>
+        <translation type="unfinished">ट्याबहरू उपकरणपट्टी</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -414,6 +518,10 @@
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Error: %1</source>
+        <translation type="unfinished">त्रुटि: %1</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -433,9 +541,17 @@
         <source>Confirmed</source>
         <translation type="unfinished">पुष्टि भयो</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(लेबल छैन)</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">तपाईं आफ्नो नयाँ वालेट सिर्जना गर्नबाट एक कदम मात्र टाढा हुनुहुन्छ!</translation>
+    </message>
     <message>
         <source>Wallet Name</source>
         <translation type="unfinished">वालेट को नाम</translation>
@@ -553,6 +669,10 @@
         <translation type="unfinished">&amp;मुख्य</translation>
     </message>
     <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">%1 अनुकूल स्क्रिप्टको पूर्ण पथ (उदाहरणका लागि, C:\Downloads\hwi.exe वा /Users/you/Downloads/hwi.py) प्रविष्ट गर्नुहोस्। सावधान : मालवेयरले तपाईंका सिक्काहरू चोरी गर्न सक्छ!</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation type="unfinished">&amp;नेटवर्क</translation>
     </message>
@@ -642,6 +762,17 @@
         <source>Close</source>
         <translation type="unfinished">बन्द गर्नुहोस्</translation>
     </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation type="unfinished">कारोबार सफलतापूर्वक प्रसारण गरियो! कारोबारआईडी: %1</translation>
+    </message>
+    </context>
+<context>
+    <name>PaymentServer</name>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI पढ्न सकिएन! यस्तो आमान्य बिटकोइन ठेगाना वा गलत URI प्यारामिटरहरूका कारण हुन सक्छ</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -715,12 +846,24 @@
         <source>Label</source>
         <translation type="unfinished">लेबल</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(लेबल छैन)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <source>Insufficient funds!</source>
+        <translation type="unfinished">अपर्याप्त कोष!</translation>
+    </message>
+    <message>
         <source>Hide</source>
         <translation type="unfinished">लुकाउनुहोस्</translation>
+    </message>
+    <message>
+        <source>Transaction creation failed!</source>
+        <translation type="unfinished">कारोबार सिर्जना सफल भएन ।</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -729,7 +872,11 @@
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(लेबल छैन)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -751,10 +898,6 @@
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">आफ्नो ठेगानामा पठाइएको बिटकोइन प्राप्त गर्न सकिन्छ भनेर प्रमाणित गर्न तपाईंले ती ठेगानाले सन्देश/सम्झौताहरूमा हस्ताक्षर गर्न सक्नुहुन्छ । फिसिङ आक्रमणले तपाईंलाई छक्याएर अरूका लागि तपाईंको परिचयमा हस्ताक्षर गराउने प्रयास गर्न सक्ने भएकाले अस्पष्ट वा जथाभावीमा हस्ताक्षर गर्दा ध्यान दिनुहोस् । आफू सहमत भएको पूर्ण विस्तृत-कथनमा मात्र हस्ताक्षर गर्नुहोस् ।</translation>
-    </message>
     <message>
         <source>Choose previously used address</source>
         <translation type="unfinished">पहिला प्रयोग गरिएको ठेगाना प्रयोग गर्नुहोस्</translation>
@@ -803,6 +946,10 @@
     <message>
         <source>Label</source>
         <translation type="unfinished">लेबल</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation type="unfinished">(लेबल छैन)</translation>
     </message>
     </context>
 <context>
@@ -892,10 +1039,6 @@
     <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">क्षति पुगेको ब्लक डाटाबेस फेला पर</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">तपाईं अहिले ब्लक डेटाबेस पुनर्निर्माण गर्न चाहनुहुन्छ ?</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>

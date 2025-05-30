@@ -22,6 +22,11 @@ if ! sed --help 2>&1 | grep -q 'GNU'; then
     exit 1;
 fi
 
+if ! grep --help 2>&1 | grep -q 'GNU'; then
+    echo "Error: the installed grep package is not compatible. Please make sure you have GNU grep installed in your system.";
+    exit 1;
+fi
+
 RET=0
 PREV_BRANCH=$(git name-rev --name-only HEAD)
 PREV_HEAD=$(git rev-parse HEAD)
@@ -30,20 +35,20 @@ for commit in $(git rev-list --reverse "$1"); do
         git checkout --quiet "$commit"^ || exit
         SCRIPT="$(git rev-list --format=%b -n1 "$commit" | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d')"
         if test -z "$SCRIPT"; then
-            echo "Error: missing script for: $commit"
-            echo "Failed"
+            echo "Error: missing script for: $commit" >&2
+            echo "Failed" >&2
             RET=1
         else
-            echo "Running script for: $commit"
-            echo "$SCRIPT"
+            echo "Running script for: $commit" >&2
+            echo "$SCRIPT" >&2
             (eval "$SCRIPT")
-            git --no-pager diff --exit-code "$commit" && echo "OK" || (echo "Failed"; false) || RET=1
+            git --no-pager diff --exit-code "$commit" && echo "OK" >&2 || (echo "Failed" >&2; false) || RET=1
         fi
         git reset --quiet --hard HEAD
      else
         if git rev-list "--format=%b" -n1 "$commit" | grep -q '^-\(BEGIN\|END\)[ a-zA-Z]*-$'; then
-            echo "Error: script block marker but no scripted-diff in title of commit $commit"
-            echo "Failed"
+            echo "Error: script block marker but no scripted-diff in title of commit $commit" >&2
+            echo "Failed" >&2
             RET=1
         fi
     fi

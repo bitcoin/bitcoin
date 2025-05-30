@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,7 +45,7 @@ public:
     BIP324Cipher() = delete;
 
     /** Initialize a BIP324 cipher with specified key and encoding entropy (testing only). */
-    BIP324Cipher(const CKey& key, Span<const std::byte> ent32) noexcept;
+    BIP324Cipher(const CKey& key, std::span<const std::byte> ent32) noexcept;
 
     /** Initialize a BIP324 cipher with specified key (testing only). */
     BIP324Cipher(const CKey& key, const EllSwiftPubKey& pubkey) noexcept;
@@ -68,29 +68,29 @@ public:
      *
      * It must hold that output.size() == contents.size() + EXPANSION.
      */
-    void Encrypt(Span<const std::byte> contents, Span<const std::byte> aad, bool ignore, Span<std::byte> output) noexcept;
+    void Encrypt(std::span<const std::byte> contents, std::span<const std::byte> aad, bool ignore, std::span<std::byte> output) noexcept;
 
     /** Decrypt the length of a packet. Only after Initialize().
      *
      * It must hold that input.size() == LENGTH_LEN.
      */
-    unsigned DecryptLength(Span<const std::byte> input) noexcept;
+    unsigned DecryptLength(std::span<const std::byte> input) noexcept;
 
     /** Decrypt a packet. Only after Initialize().
      *
      * It must hold that input.size() + LENGTH_LEN == contents.size() + EXPANSION.
      * Contents.size() must equal the length returned by DecryptLength.
      */
-    bool Decrypt(Span<const std::byte> input, Span<const std::byte> aad, bool& ignore, Span<std::byte> contents) noexcept;
+    bool Decrypt(std::span<const std::byte> input, std::span<const std::byte> aad, bool& ignore, std::span<std::byte> contents) noexcept;
 
     /** Get the Session ID. Only after Initialize(). */
-    Span<const std::byte> GetSessionID() const noexcept { return m_session_id; }
+    std::span<const std::byte> GetSessionID() const noexcept { return m_session_id; }
 
     /** Get the Garbage Terminator to send. Only after Initialize(). */
-    Span<const std::byte> GetSendGarbageTerminator() const noexcept { return m_send_garbage_terminator; }
+    std::span<const std::byte> GetSendGarbageTerminator() const noexcept { return m_send_garbage_terminator; }
 
     /** Get the expected Garbage Terminator to receive. Only after Initialize(). */
-    Span<const std::byte> GetReceiveGarbageTerminator() const noexcept { return m_recv_garbage_terminator; }
+    std::span<const std::byte> GetReceiveGarbageTerminator() const noexcept { return m_recv_garbage_terminator; }
 };
 
 #endif // BITCOIN_BIP324_H

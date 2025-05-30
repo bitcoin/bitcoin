@@ -1,10 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <span.h>
 #include <util/strencodings.h>
+
+#include <crypto/hex_base.h>
+#include <span.h>
 
 #include <array>
 #include <cassert>
@@ -36,29 +38,6 @@ std::string SanitizeString(std::string_view str, int rule)
     return result;
 }
 
-const signed char p_util_hexdigit[256] =
-{ -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,
-  -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,0xa,0xb,0xc,0xd,0xe,0xf,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-  -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, };
-
-signed char HexDigit(char c)
-{
-    return p_util_hexdigit[(unsigned char)c];
-}
-
 bool IsHex(std::string_view str)
 {
     for (char c : str) {
@@ -67,20 +46,12 @@ bool IsHex(std::string_view str)
     return (str.size() > 0) && (str.size()%2 == 0);
 }
 
-bool IsHexNumber(std::string_view str)
-{
-    if (str.substr(0, 2) == "0x") str.remove_prefix(2);
-    for (char c : str) {
-        if (HexDigit(c) < 0) return false;
-    }
-    // Return false for empty string or "0x".
-    return str.size() > 0;
-}
-
 template <typename Byte>
 std::optional<std::vector<Byte>> TryParseHex(std::string_view str)
 {
     std::vector<Byte> vch;
+    vch.reserve(str.size() / 2); // two hex characters form a single byte
+
     auto it = str.begin();
     while (it != str.end()) {
         if (IsSpace(*it)) {
@@ -107,10 +78,9 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
     bool fBracketed = fHaveColon && (in[0] == '[' && in[colon - 1] == ']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
     bool fMultiColon{fHaveColon && colon != 0 && (in.find_last_of(':', colon - 1) != in.npos)};
     if (fHaveColon && (colon == 0 || fBracketed || !fMultiColon)) {
-        uint16_t n;
-        if (ParseUInt16(in.substr(colon + 1), &n)) {
+        if (const auto n{ToIntegral<uint16_t>(in.substr(colon + 1))}) {
             in = in.substr(0, colon);
-            portOut = n;
+            portOut = *n;
             valid = (portOut != 0);
         }
     } else {
@@ -125,7 +95,7 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
     return valid;
 }
 
-std::string EncodeBase64(Span<const unsigned char> input)
+std::string EncodeBase64(std::span<const unsigned char> input)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -171,7 +141,7 @@ std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str)
     return ret;
 }
 
-std::string EncodeBase32(Span<const unsigned char> input, bool pad)
+std::string EncodeBase32(std::span<const unsigned char> input, bool pad)
 {
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
@@ -227,57 +197,6 @@ std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str)
     if (!valid) return {};
 
     return ret;
-}
-
-namespace {
-template <typename T>
-bool ParseIntegral(std::string_view str, T* out)
-{
-    static_assert(std::is_integral<T>::value);
-    // Replicate the exact behavior of strtol/strtoll/strtoul/strtoull when
-    // handling leading +/- for backwards compatibility.
-    if (str.length() >= 2 && str[0] == '+' && str[1] == '-') {
-        return false;
-    }
-    const std::optional<T> opt_int = ToIntegral<T>((!str.empty() && str[0] == '+') ? str.substr(1) : str);
-    if (!opt_int) {
-        return false;
-    }
-    if (out != nullptr) {
-        *out = *opt_int;
-    }
-    return true;
-}
-}; // namespace
-
-bool ParseInt32(std::string_view str, int32_t* out)
-{
-    return ParseIntegral<int32_t>(str, out);
-}
-
-bool ParseInt64(std::string_view str, int64_t* out)
-{
-    return ParseIntegral<int64_t>(str, out);
-}
-
-bool ParseUInt8(std::string_view str, uint8_t* out)
-{
-    return ParseIntegral<uint8_t>(str, out);
-}
-
-bool ParseUInt16(std::string_view str, uint16_t* out)
-{
-    return ParseIntegral<uint16_t>(str, out);
-}
-
-bool ParseUInt32(std::string_view str, uint32_t* out)
-{
-    return ParseIntegral<uint32_t>(str, out);
-}
-
-bool ParseUInt64(std::string_view str, uint64_t* out)
-{
-    return ParseIntegral<uint64_t>(str, out);
 }
 
 std::string FormatParagraph(std::string_view in, size_t width, size_t indent)
@@ -444,6 +363,7 @@ bool ParseFixedPoint(std::string_view val, int decimals, int64_t *amount_out)
 std::string ToLower(std::string_view str)
 {
     std::string r;
+    r.reserve(str.size());
     for (auto ch : str) r += ToLower(ch);
     return r;
 }
@@ -451,6 +371,7 @@ std::string ToLower(std::string_view str)
 std::string ToUpper(std::string_view str)
 {
     std::string r;
+    r.reserve(str.size());
     for (auto ch : str) r += ToUpper(ch);
     return r;
 }
@@ -460,40 +381,6 @@ std::string Capitalize(std::string str)
     if (str.empty()) return str;
     str[0] = ToUpper(str.front());
     return str;
-}
-
-namespace {
-
-using ByteAsHex = std::array<char, 2>;
-
-constexpr std::array<ByteAsHex, 256> CreateByteToHexMap()
-{
-    constexpr char hexmap[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-
-    std::array<ByteAsHex, 256> byte_to_hex{};
-    for (size_t i = 0; i < byte_to_hex.size(); ++i) {
-        byte_to_hex[i][0] = hexmap[i >> 4];
-        byte_to_hex[i][1] = hexmap[i & 15];
-    }
-    return byte_to_hex;
-}
-
-} // namespace
-
-std::string HexStr(const Span<const uint8_t> s)
-{
-    std::string rv(s.size() * 2, '\0');
-    static constexpr auto byte_to_hex = CreateByteToHexMap();
-    static_assert(sizeof(byte_to_hex) == 512);
-
-    char* it = rv.data();
-    for (uint8_t v : s) {
-        std::memcpy(it, byte_to_hex[v].data(), 2);
-        it += 2;
-    }
-
-    assert(it == rv.data() + rv.size());
-    return rv;
 }
 
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier)

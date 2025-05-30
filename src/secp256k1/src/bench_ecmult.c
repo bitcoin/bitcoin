@@ -4,6 +4,7 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "secp256k1.c"
 #include "../include/secp256k1.h"
@@ -71,7 +72,7 @@ static void bench_ecmult_teardown_helper(bench_data* data, size_t* seckey_offset
     secp256k1_scalar sum_scalars;
 
     secp256k1_gej_set_infinity(&sum_output);
-    secp256k1_scalar_clear(&sum_scalars);
+    secp256k1_scalar_set_int(&sum_scalars, 0);
     for (i = 0; i < iters; ++i) {
         secp256k1_gej_add_var(&sum_output, &sum_output, &data->output[i], NULL);
         if (scalar_gen_offset != NULL) {
@@ -287,7 +288,7 @@ int main(int argc, char **argv) {
            || have_flag(argc, argv, "--help")
            || have_flag(argc, argv, "help")) {
             help(argv);
-            return 0;
+            return EXIT_SUCCESS;
         } else if(have_flag(argc, argv, "pippenger_wnaf")) {
             printf("Using pippenger_wnaf:\n");
             data.ecmult_multi = secp256k1_ecmult_pippenger_batch_single;
@@ -299,7 +300,7 @@ int main(int argc, char **argv) {
         } else {
             fprintf(stderr, "%s: unrecognized argument '%s'.\n\n", argv[0], argv[1]);
             help(argv);
-            return 1;
+            return EXIT_FAILURE;
         }
     }
 
@@ -363,5 +364,5 @@ int main(int argc, char **argv) {
     free(data.output);
     free(data.expected_output);
 
-    return(0);
+    return EXIT_SUCCESS;
 }

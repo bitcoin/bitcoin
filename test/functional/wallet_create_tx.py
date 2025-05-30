@@ -3,6 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+from test_framework.messages import (
+    tx_from_hex,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -14,12 +17,10 @@ from test_framework.blocktools import (
 
 
 class CreateTxWalletTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-deprecatedrpc=settxfee"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -33,6 +34,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
         self.test_anti_fee_sniping()
         self.test_tx_size_too_large()
         self.test_create_too_long_mempool_chain()
+        self.test_version3()
 
     def test_anti_fee_sniping(self):
         self.log.info('Check that we have some (old) blocks and that anti-fee-sniping is disabled')
@@ -67,7 +69,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
             )
 
         self.log.info('Check maxtxfee in combination with settxfee')
-        self.restart_node(0)
+        self.restart_node(0, expected_stderr='Warning: -paytxfee is deprecated and will be fully removed in v31.0.')
         self.nodes[0].settxfee(0.01)
         assert_raises_rpc_error(
             -6,
@@ -106,6 +108,23 @@ class CreateTxWalletTest(BitcoinTestFramework):
 
         test_wallet.unloadwallet()
 
+    def test_version3(self):
+        self.log.info('Check wallet does not create transactions with version=3 yet')
+        wallet_rpc = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        self.nodes[0].createwallet("version3")
+        wallet_v3 = self.nodes[0].get_wallet_rpc("version3")
+
+        tx_data = wallet_rpc.send(outputs=[{wallet_v3.getnewaddress(): 25}], options={"change_position": 0})
+        wallet_tx_data = wallet_rpc.gettransaction(tx_data["txid"])
+        tx_current_version = tx_from_hex(wallet_tx_data["hex"])
+
+        # While version=3 transactions are standard, the CURRENT_VERSION is 2.
+        # This test can be removed if CURRENT_VERSION is changed, and replaced with tests that the
+        # wallet handles TRUC rules properly.
+        assert_equal(tx_current_version.version, 2)
+        wallet_v3.unloadwallet()
+
 
 if __name__ == '__main__':
-    CreateTxWalletTest().main()
+    CreateTxWalletTest(__file__).main()

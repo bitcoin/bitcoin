@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,6 +18,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/random.h>
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 
@@ -32,12 +33,13 @@
 
 void initialize_key()
 {
-    ECC_Start();
+    static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);
 }
 
 FUZZ_TARGET(key, .init = initialize_key)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     const CKey key = [&] {
         CKey k;
         k.Set(buffer.begin(), buffer.end(), true);
@@ -78,16 +80,6 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(copied_key == key);
     }
 
-    {
-        CKey negated_key = key;
-        negated_key.Negate();
-        assert(negated_key.IsValid());
-        assert(!(negated_key == key));
-
-        negated_key.Negate();
-        assert(negated_key == key);
-    }
-
     const uint256 random_uint256 = Hash(buffer);
 
     {
@@ -112,7 +104,6 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(pubkey.IsValid());
         assert(pubkey.IsFullyValid());
         assert(HexToPubKey(HexStr(pubkey)) == pubkey);
-        assert(GetAllDestinationsForKey(pubkey).size() == 3);
     }
 
     {
@@ -183,7 +174,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(v_solutions_ret_tx_multisig[2].size() == 1);
 
         OutputType output_type{};
-        const CTxDestination tx_destination = GetDestinationForKey(pubkey, output_type);
+        const CTxDestination tx_destination{PKHash{pubkey}};
         assert(output_type == OutputType::LEGACY);
         assert(IsValidDestination(tx_destination));
         assert(PKHash{pubkey} == *std::get_if<PKHash>(&tx_destination));
@@ -193,9 +184,6 @@ FUZZ_TARGET(key, .init = initialize_key)
 
         const std::string destination_address = EncodeDestination(tx_destination);
         assert(DecodeDestination(destination_address) == tx_destination);
-
-        const CPubKey pubkey_from_address_string = AddrToPubKey(fillable_signing_provider, destination_address);
-        assert(pubkey_from_address_string == pubkey);
 
         CKeyID key_id = pubkey.GetID();
         assert(!key_id.IsNull());

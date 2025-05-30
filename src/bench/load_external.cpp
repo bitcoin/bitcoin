@@ -1,14 +1,25 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data.h>
+#include <bench/data/block413567.raw.h>
 #include <chainparams.h>
-#include <clientversion.h>
+#include <flatfile.h>
+#include <node/blockstorage.h>
+#include <span.h>
+#include <streams.h>
 #include <test/util/setup_common.h>
-#include <util/chaintype.h>
+#include <uint256.h>
+#include <util/fs.h>
 #include <validation.h>
+
+#include <cstdint>
+#include <cstdio>
+#include <map>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 /**
  * The LoadExternalBlockFile() function is used during -reindex and -loadblock.
@@ -33,9 +44,8 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
     auto params{testing_setup->m_node.chainman->GetParams()};
     ss << params.MessageStart();
     ss << static_cast<uint32_t>(benchmark::data::block413567.size());
-    // We can't use the streaming serialization (ss << benchmark::data::block413567)
-    // because that first writes a compact size.
-    ss << Span{benchmark::data::block413567};
+    // Use span-serialization to avoid writing the size first.
+    ss << std::span{benchmark::data::block413567};
 
     // Create the test file.
     {

@@ -33,7 +33,6 @@ and confirm again balances are correct.
 from decimal import Decimal
 import os
 from random import randint
-import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
@@ -44,19 +43,17 @@ from test_framework.util import (
 
 
 class WalletBackupTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
-        # nodes 1, 2,3 are spenders, let's give them a keypool=100
-        # whitelist all peers to speed up tx relay / mempool sync
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
+        # nodes 1, 2, 3 are spenders, let's give them a keypool=100
         self.extra_args = [
-            ["-whitelist=noban@127.0.0.1", "-keypool=100"],
-            ["-whitelist=noban@127.0.0.1", "-keypool=100"],
-            ["-whitelist=noban@127.0.0.1", "-keypool=100"],
-            ["-whitelist=noban@127.0.0.1"],
+            ["-keypool=100"],
+            ["-keypool=100"],
+            ["-keypool=100"],
+            [],
         ]
         self.rpc_timeout = 120
 
@@ -139,6 +136,25 @@ class WalletBackupTest(BitcoinTestFramework):
         assert_raises_rpc_error(-36, error_message, node.restorewallet, wallet_name, backup_file)
         assert wallet_file.exists()
 
+    def test_pruned_wallet_backup(self):
+        self.log.info("Test loading backup on a pruned node when the backup was created close to the prune height of the restoring node")
+        node = self.nodes[3]
+        self.restart_node(3, ["-prune=1", "-fastprune=1"])
+        # Ensure the chain tip is at height 214, because this test assume it is.
+        assert_equal(node.getchaintips()[0]["height"], 214)
+        # We need a few more blocks so we can actually get above an realistic
+        # minimal prune height
+        self.generate(node, 50, sync_fun=self.no_op)
+        # Backup created at block height 264
+        node.backupwallet(node.datadir_path / 'wallet_pruned.bak')
+        # Generate more blocks so we can actually prune the older blocks
+        self.generate(node, 300, sync_fun=self.no_op)
+        # This gives us an actual prune height roughly in the range of 220 - 240
+        node.pruneblockchain(250)
+        # The backup should be updated with the latest height (locator) for
+        # the backup to load successfully this close to the prune height
+        node.restorewallet('pruned', node.datadir_path / 'wallet_pruned.bak')
+
     def run_test(self):
         self.log.info("Generating initial blockchain")
         self.generate(self.nodes[0], 1)
@@ -160,10 +176,6 @@ class WalletBackupTest(BitcoinTestFramework):
 
         for node_num in range(3):
             self.nodes[node_num].backupwallet(self.nodes[node_num].datadir_path / 'wallet.bak')
-
-        if not self.options.descriptors:
-            for node_num in range(3):
-                self.nodes[node_num].dumpwallet(self.nodes[node_num].datadir_path / 'wallet.dump')
 
         self.log.info("More transactions")
         for _ in range(5):
@@ -208,29 +220,6 @@ class WalletBackupTest(BitcoinTestFramework):
 
         self.restore_wallet_existent_name()
 
-        if not self.options.descriptors:
-            self.log.info("Restoring using dumped wallet")
-            self.stop_three()
-            self.erase_three()
-
-            #start node2 with no chain
-            shutil.rmtree(self.nodes[2].blocks_path)
-            shutil.rmtree(self.nodes[2].chain_path / 'chainstate')
-
-            self.start_three(["-nowallet"])
-            # Create new wallets for the three nodes.
-            # We will use this empty wallets to test the 'importwallet()' RPC command below.
-            for node_num in range(3):
-                self.nodes[node_num].createwallet(wallet_name=self.default_wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
-                assert_equal(self.nodes[node_num].getbalance(), 0)
-                self.nodes[node_num].importwallet(self.nodes[node_num].datadir_path / 'wallet.dump')
-
-            self.sync_blocks()
-
-            assert_equal(self.nodes[0].getbalance(), balance0)
-            assert_equal(self.nodes[1].getbalance(), balance1)
-            assert_equal(self.nodes[2].getbalance(), balance2)
-
         # Backup to source wallet file must fail
         sourcePaths = [
             os.path.join(self.nodes[0].wallets_path, self.default_wallet_name, self.wallet_data_filename),
@@ -241,6 +230,8 @@ class WalletBackupTest(BitcoinTestFramework):
         for sourcePath in sourcePaths:
             assert_raises_rpc_error(-4, "backup failed", self.nodes[0].backupwallet, sourcePath)
 
+        self.test_pruned_wallet_backup()
+
 
 if __name__ == '__main__':
-    WalletBackupTest().main()
+    WalletBackupTest(__file__).main()

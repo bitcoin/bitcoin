@@ -93,19 +93,16 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
 
         block1 = self.build_block_on_tip()
 
-        p2p_conn_blocksonly.send_message(msg_headers(headers=[CBlockHeader(block1)]))
-        p2p_conn_blocksonly.sync_with_ping()
+        p2p_conn_blocksonly.send_and_ping(msg_headers(headers=[CBlockHeader(block1)]))
         assert_equal(p2p_conn_blocksonly.last_message['getdata'].inv, [CInv(MSG_BLOCK | MSG_WITNESS_FLAG, block1.sha256)])
 
-        p2p_conn_high_bw.send_message(msg_headers(headers=[CBlockHeader(block1)]))
-        p2p_conn_high_bw.sync_with_ping()
+        p2p_conn_high_bw.send_and_ping(msg_headers(headers=[CBlockHeader(block1)]))
         assert_equal(p2p_conn_high_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.sha256)])
 
         self.log.info("Test that getdata(CMPCT) is still sent on BIP152 low bandwidth connections"
                       " when no -blocksonly nodes are involved")
 
         p2p_conn_low_bw.send_and_ping(msg_headers(headers=[CBlockHeader(block1)]))
-        p2p_conn_low_bw.sync_with_ping()
         assert_equal(p2p_conn_low_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.sha256)])
 
         self.log.info("Test that -blocksonly nodes still serve compact blocks")
@@ -115,7 +112,7 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
                 return False
             return p2p_conn_blocksonly.last_message['cmpctblock'].header_and_shortids.header.rehash() == block.sha256
 
-        p2p_conn_blocksonly.send_message(msg_getdata([CInv(MSG_CMPCT_BLOCK, block0.sha256)]))
+        p2p_conn_blocksonly.send_without_ping(msg_getdata([CInv(MSG_CMPCT_BLOCK, block0.sha256)]))
         p2p_conn_blocksonly.wait_until(lambda: test_for_cmpctblock(block0))
 
         # Request BIP152 high bandwidth mode from the -blocksonly node.
@@ -127,4 +124,4 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         p2p_conn_blocksonly.wait_until(lambda: test_for_cmpctblock(block2))
 
 if __name__ == '__main__':
-    P2PCompactBlocksBlocksOnly().main()
+    P2PCompactBlocksBlocksOnly(__file__).main()

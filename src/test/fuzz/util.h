@@ -79,6 +79,7 @@ template<typename B = uint8_t>
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<std::string> r;
+    r.reserve(n_elements);
     for (size_t i = 0; i < n_elements; ++i) {
         r.push_back(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length));
     }
@@ -90,6 +91,7 @@ template <typename T>
 {
     const size_t n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_vector_size);
     std::vector<T> r;
+    r.reserve(n_elements);
     for (size_t i = 0; i < n_elements; ++i) {
         r.push_back(fuzzed_data_provider.ConsumeIntegral<T>());
     }
@@ -132,7 +134,7 @@ template <typename WeakEnumType, size_t size>
 {
     return fuzzed_data_provider.ConsumeBool() ?
                fuzzed_data_provider.PickValueInArray<WeakEnumType>(all_types) :
-               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<typename std::underlying_type<WeakEnumType>::type>());
+               WeakEnumType(fuzzed_data_provider.ConsumeIntegral<std::underlying_type_t<WeakEnumType>>());
 }
 
 [[nodiscard]] inline opcodetype ConsumeOpcodeType(FuzzedDataProvider& fuzzed_data_provider) noexcept
@@ -180,6 +182,22 @@ template <typename WeakEnumType, size_t size>
     return UintToArith256(ConsumeUInt256(fuzzed_data_provider));
 }
 
+[[nodiscard]] inline arith_uint256 ConsumeArithUInt256InRange(FuzzedDataProvider& fuzzed_data_provider, const arith_uint256& min, const arith_uint256& max) noexcept
+{
+    assert(min <= max);
+    const arith_uint256 range = max - min;
+    const arith_uint256 value = ConsumeArithUInt256(fuzzed_data_provider);
+    arith_uint256 result = value;
+    // Avoid division by 0, in case range + 1 results in overflow.
+    if (range != ~arith_uint256(0)) {
+        const arith_uint256 quotient = value / (range + 1);
+        result = value - (quotient * (range + 1));
+    }
+    result += min;
+    assert(result >= min && result <= max);
+    return result;
+}
+
 [[nodiscard]] std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
@@ -189,7 +207,7 @@ template <typename WeakEnumType, size_t size>
 template <typename T>
 [[nodiscard]] bool MultiplicationOverflow(const T i, const T j) noexcept
 {
-    static_assert(std::is_integral<T>::value, "Integral required.");
+    static_assert(std::is_integral_v<T>, "Integral required.");
     if (std::numeric_limits<T>::is_signed) {
         if (i > 0) {
             if (j > 0) {

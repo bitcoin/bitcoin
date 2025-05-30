@@ -55,6 +55,9 @@ The currently available tracepoints are listed here.
 
 ### Context `net`
 
+[^address-length]: An Onion v3 address with a `:` and a five digit port has 68
+  chars. However, addresses of peers added with host names might be longer.
+
 #### Tracepoint `net:inbound_message`
 
 Is called when a message is received from a peer over the P2P network. Passes
@@ -62,7 +65,7 @@ information about our peer, the connection and the message as arguments.
 
 Arguments passed:
 1. Peer ID as `int64`
-2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
 3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
 4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
 5. Message Size in bytes as `uint64`
@@ -70,7 +73,7 @@ Arguments passed:
 
 Note: The message is passed to the tracepoint in full, however, due to space
 limitations in the eBPF kernel VM it might not be possible to pass the message
-to user-space in full. Messages longer than a 32kb might be cut off. This can
+to user-space in full. Messages longer than 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
 
@@ -81,7 +84,7 @@ information about our peer, the connection and the message as arguments.
 
 Arguments passed:
 1. Peer ID as `int64`
-2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
 3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
 4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
 5. Message Size in bytes as `uint64`
@@ -89,9 +92,65 @@ Arguments passed:
 
 Note: The message is passed to the tracepoint in full, however, due to space
 limitations in the eBPF kernel VM it might not be possible to pass the message
-to user-space in full. Messages longer than a 32kb might be cut off. This can
+to user-space in full. Messages longer than 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
+
+#### Tracepoint `net:inbound_connection`
+
+Is called when a new inbound connection is opened to us. Passes information about
+the peer and the number of inbound connections including the newly opened connection.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Number of existing inbound connections as `uint64` including the newly opened inbound connection.
+
+#### Tracepoint `net:outbound_connection`
+
+Is called when a new outbound connection is opened by us. Passes information about
+the peer and the number of outbound connections including the newly opened connection.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network of the peer as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Number of existing outbound connections as `uint64` including the newly opened outbound connection.
+
+#### Tracepoint `net:evicted_inbound_connection`
+
+Is called when an inbound connection is evicted by us. Passes information about the evicted peer and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp in seconds as `uint64`.
+
+#### Tracepoint `net:misbehaving_connection`
+
+Is called when a connection is misbehaving. Passes the peer id and a
+reason for the peers misbehavior.
+
+Arguments passed:
+1. Peer ID as `int64`.
+2. Reason why the peer is misbehaving as `pointer to C-style String` (max. length 128 characters).
+
+#### Tracepoint `net:closed_connection`
+
+Is called when a connection is closed. Passes information about the closed peer
+and the time at connection establishment.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer address and port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (normally up to 68 characters[^address-length])
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Network the peer connects from as `uint32` (1 = IPv4, 2 = IPv6, 3 = Onion, 4 = I2P, 5 = CJDNS). See `Network` enum in `netaddress.h`.
+5. Connection established UNIX epoch timestamp in seconds as `uint64`.
 
 ### Context `validation`
 
@@ -106,7 +165,7 @@ Arguments passed:
 3. Transactions in the Block as `uint64`
 4. Inputs spend in the Block as `int32`
 5. SigOps in the Block (excluding coinbase SigOps) `uint64`
-6. Time it took to connect the Block in microseconds (µs) as `uint64`
+6. Time it took to connect the Block in nanoseconds (ns) as `uint64`
 
 ### Context `utxocache`
 
@@ -245,14 +304,15 @@ Arguments passed:
 2. Replaced transaction virtual size as `int32`
 3. Replaced transaction fee as `int64`
 4. Replaced transaction mempool entry time (epoch) as `uint64`
-5. Replacement transaction ID (hash) as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+5. Replacement transaction ID or package hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 6. Replacement transaction virtual size as `int32`
 7. Replacement transaction fee as `int64`
+8. `bool` indicating if the argument 5. is a transaction ID or package hash (true if it's a transaction ID)
 
-Note: In cases where a single replacement transaction replaces multiple
+Note: In cases where a replacement transaction or package replaces multiple
 existing transactions in the mempool, the tracepoint is called once for each
-replaced transaction, with data of the replacement transaction being the same
-in each call.
+replaced transaction, with data of the replacement transaction or package
+being the same in each call.
 
 #### Tracepoint `mempool:rejected`
 
@@ -265,42 +325,52 @@ Arguments passed:
 
 ## Adding tracepoints to Bitcoin Core
 
-To add a new tracepoint, `#include <util/trace.h>` in the compilation unit where
-the tracepoint is inserted. Use one of the `TRACEx` macros listed below
-depending on the number of arguments passed to the tracepoint. Up to 12
-arguments can be provided. The `context` and `event` specify the names by which
-the tracepoint is referred to. Please use `snake_case` and try to make sure that
-the tracepoint names make sense even without detailed knowledge of the
-implementation details. Do not forget to update the tracepoint list in this
-document.
+Use the `TRACEPOINT` macro to add a new tracepoint. If not yet included, include
+`util/trace.h` (defines the tracepoint macros) with `#include <util/trace.h>`.
+Each tracepoint needs a `context` and an `event`. Please use `snake_case` and
+try to make sure that the tracepoint names make sense even without detailed
+knowledge of the implementation details. You can pass zero to twelve arguments
+to the tracepoint. Each tracepoint also needs a global semaphore. The semaphore
+gates the tracepoint arguments from being processed if we are not attached to
+the tracepoint. Add a `TRACEPOINT_SEMAPHORE(context, event)` with the `context`
+and `event` of your tracepoint in the top-level namespace at the beginning of
+the file. Do not forget to update the tracepoint list in this document.
 
-```c
-#define TRACE(context, event)
-#define TRACE1(context, event, a)
-#define TRACE2(context, event, a, b)
-#define TRACE3(context, event, a, b, c)
-#define TRACE4(context, event, a, b, c, d)
-#define TRACE5(context, event, a, b, c, d, e)
-#define TRACE6(context, event, a, b, c, d, e, f)
-#define TRACE7(context, event, a, b, c, d, e, f, g)
-#define TRACE8(context, event, a, b, c, d, e, f, g, h)
-#define TRACE9(context, event, a, b, c, d, e, f, g, h, i)
-#define TRACE10(context, event, a, b, c, d, e, f, g, h, i, j)
-#define TRACE11(context, event, a, b, c, d, e, f, g, h, i, j, k)
-#define TRACE12(context, event, a, b, c, d, e, f, g, h, i, j, k, l)
-```
-
-For example:
+For example, the `net:outbound_message` tracepoint in `src/net.cpp` with six
+arguments.
 
 ```C++
-TRACE6(net, inbound_message,
-    pnode->GetId(),
-    pnode->m_addr_name.c_str(),
-    pnode->ConnectionTypeAsString().c_str(),
-    sanitizedType.c_str(),
-    msg.data.size(),
-    msg.data.data()
-);
+// src/net.cpp
+TRACEPOINT_SEMAPHORE(net, outbound_message);
+…
+void CConnman::PushMessage(…) {
+  …
+  TRACEPOINT(net, outbound_message,
+      pnode->GetId(),
+      pnode->m_addr_name.c_str(),
+      pnode->ConnectionTypeAsString().c_str(),
+      sanitizedType.c_str(),
+      msg.data.size(),
+      msg.data.data()
+  );
+  …
+}
+```
+If needed, an extra `if (TRACEPOINT_ACTIVE(context, event)) {...}` check can be
+used to prepare somewhat expensive arguments right before the tracepoint. While
+the tracepoint arguments are only prepared when we attach something to the
+tracepoint, an argument preparation should never hang the process. Hashing and
+serialization of data structures is probably fine, a `sleep(10s)` not.
+
+```C++
+// An example tracepoint with an expensive argument.
+
+TRACEPOINT_SEMAPHORE(example, gated_expensive_argument);
+…
+if (TRACEPOINT_ACTIVE(example, gated_expensive_argument)) {
+    expensive_argument = expensive_calulation();
+    TRACEPOINT(example, gated_expensive_argument, expensive_argument);
+}
 ```
 
 ### Guidelines and best practices
@@ -317,12 +387,6 @@ can be kept simple but should give others a starting point when working with
 the tracepoint. See existing examples in [contrib/tracing/].
 
 [contrib/tracing/]: ../contrib/tracing/
-
-#### No expensive computations for tracepoints
-Data passed to the tracepoint should be inexpensive to compute. Although the
-tracepoint itself only has overhead when enabled, the code to compute arguments
-is always run - even if the tracepoint is not used. For example, avoid
-serialization and parsing.
 
 #### Semi-stable API
 Tracepoints should have a semi-stable API. Users should be able to rely on the
@@ -347,7 +411,7 @@ first six argument fields. Binary data can be placed in later arguments. The BCC
 supports reading from all 12 arguments.
 
 #### Strings as C-style String
-Generally, strings should be passed into the `TRACEx` macros as pointers to
+Generally, strings should be passed into the `TRACEPOINT` macros as pointers to
 C-style strings (a null-terminated sequence of characters). For C++
 `std::strings`, [`c_str()`]  can be used. It's recommended to document the
 maximum expected string size if known.
@@ -366,13 +430,13 @@ USDT support.
 To list probes in Bitcoin Core, use `info probes` in `gdb`:
 
 ```
-$ gdb ./src/bitcoind
+$ gdb ./build/bin/bitcoind
 …
 (gdb) info probes
 Type Provider   Name             Where              Semaphore Object
-stap net        inbound_message  0x000000000014419e /src/bitcoind
-stap net        outbound_message 0x0000000000107c05 /src/bitcoind
-stap validation block_connected  0x00000000002fb10c /src/bitcoind
+stap net        inbound_message  0x000000000014419e 0x0000000000d29bd2 /build/bin/bitcoind
+stap net        outbound_message 0x0000000000107c05 0x0000000000d29bd0 /build/bin/bitcoind
+stap validation block_connected  0x00000000002fb10c 0x0000000000d29bd8 /build/bin/bitcoind
 …
 ```
 
@@ -382,13 +446,13 @@ The `readelf` tool can be used to display the USDT tracepoints in Bitcoin Core.
 Look for the notes with the description `NT_STAPSDT`.
 
 ```
-$ readelf -n ./src/bitcoind | grep NT_STAPSDT -A 4 -B 2
+$ readelf -n ./build/bin/bitcoind | grep NT_STAPSDT -A 4 -B 2
 Displaying notes found in: .note.stapsdt
   Owner                 Data size	Description
   stapsdt              0x0000005d	NT_STAPSDT (SystemTap probe descriptors)
     Provider: net
     Name: outbound_message
-    Location: 0x0000000000107c05, Base: 0x0000000000579c90, Semaphore: 0x0000000000000000
+    Location: 0x0000000000107c05, Base: 0x0000000000579c90, Semaphore: 0x0000000000d29bd0
     Arguments: -8@%r12 8@%rbx 8@%rdi 8@192(%rsp) 8@%rax 8@%rdx
 …
 ```
@@ -406,8 +470,8 @@ between distributions. For example, on
 [ubuntu binary]: https://github.com/iovisor/bcc/blob/master/INSTALL.md#ubuntu---binary
 
 ```
-$ tplist -l ./src/bitcoind -v
-b'net':b'outbound_message' [sema 0x0]
+$ tplist -l ./build/bin/bitcoind -v
+b'net':b'outbound_message' [sema 0xd29bd0]
   1 location(s)
   6 argument(s)
 …

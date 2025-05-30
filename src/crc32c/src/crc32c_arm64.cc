@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 #include "./crc32c_internal.h"
 #ifdef CRC32C_HAVE_CONFIG_H
@@ -29,14 +30,14 @@
 // compute 8bytes for each segment parallelly
 #define CRC32C32BYTES(P, IND)                                             \
   do {                                                                    \
-    crc1 = __crc32cd(                                                     \
-        crc1, *((const uint64_t *)(P) + (SEGMENTBYTES / 8) * 1 + (IND))); \
-    crc2 = __crc32cd(                                                     \
-        crc2, *((const uint64_t *)(P) + (SEGMENTBYTES / 8) * 2 + (IND))); \
-    crc3 = __crc32cd(                                                     \
-        crc3, *((const uint64_t *)(P) + (SEGMENTBYTES / 8) * 3 + (IND))); \
-    crc0 = __crc32cd(                                                     \
-        crc0, *((const uint64_t *)(P) + (SEGMENTBYTES / 8) * 0 + (IND))); \
+    std::memcpy(&d64, (P) + SEGMENTBYTES * 1 + (IND) * 8, sizeof(d64));   \
+    crc1 = __crc32cd(crc1, d64);                                          \
+    std::memcpy(&d64, (P) + SEGMENTBYTES * 2 + (IND) * 8, sizeof(d64));   \
+    crc2 = __crc32cd(crc2, d64);                                          \
+    std::memcpy(&d64, (P) + SEGMENTBYTES * 3 + (IND) * 8, sizeof(d64));   \
+    crc3 = __crc32cd(crc3, d64);                                          \
+    std::memcpy(&d64, (P) + SEGMENTBYTES * 0 + (IND) * 8, sizeof(d64));   \
+    crc0 = __crc32cd(crc0, d64);                                          \
   } while (0);
 
 // compute 8*8 bytes for each segment parallelly
@@ -68,6 +69,9 @@ uint32_t ExtendArm64(uint32_t crc, const uint8_t *data, size_t size) {
   int64_t length = size;
   uint32_t crc0, crc1, crc2, crc3;
   uint64_t t0, t1, t2;
+  uint16_t d16;
+  uint32_t d32;
+  uint64_t d64;
 
   // k0=CRC(x^(3*SEGMENTBYTES*8)), k1=CRC(x^(2*SEGMENTBYTES*8)),
   // k2=CRC(x^(SEGMENTBYTES*8))
@@ -88,7 +92,8 @@ uint32_t ExtendArm64(uint32_t crc, const uint8_t *data, size_t size) {
     t2 = (uint64_t)vmull_p64(crc2, k2);
     t1 = (uint64_t)vmull_p64(crc1, k1);
     t0 = (uint64_t)vmull_p64(crc0, k0);
-    crc = __crc32cd(crc3, *(uint64_t *)data);
+    std::memcpy(&d64, data, sizeof(d64));
+    crc = __crc32cd(crc3, d64);
     data += sizeof(uint64_t);
     crc ^= __crc32cd(0, t2);
     crc ^= __crc32cd(0, t1);
@@ -98,18 +103,21 @@ uint32_t ExtendArm64(uint32_t crc, const uint8_t *data, size_t size) {
   }
 
   while (length >= 8) {
-    crc = __crc32cd(crc, *(uint64_t *)data);
+    std::memcpy(&d64, data, sizeof(d64));
+    crc = __crc32cd(crc, d64);
     data += 8;
     length -= 8;
   }
 
   if (length & 4) {
-    crc = __crc32cw(crc, *(uint32_t *)data);
+    std::memcpy(&d32, data, sizeof(d32));
+    crc = __crc32cw(crc, d32);
     data += 4;
   }
 
   if (length & 2) {
-    crc = __crc32ch(crc, *(uint16_t *)data);
+    std::memcpy(&d16, data, sizeof(d16));
+    crc = __crc32ch(crc, d16);
     data += 2;
   }
 

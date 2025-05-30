@@ -33,6 +33,8 @@ from test_framework.util import assert_equal
 
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_WEIGHT = 4000000
+DEFAULT_BLOCK_RESERVED_WEIGHT = 8000
+MINIMUM_BLOCK_RESERVED_WEIGHT = 2000
 MAX_BLOOM_FILTER_SIZE = 36000
 MAX_BLOOM_HASH_FUNCS = 50
 
@@ -40,12 +42,14 @@ COIN = 100000000  # 1 btc in satoshis
 MAX_MONEY = 21000000 * COIN
 
 MAX_BIP125_RBF_SEQUENCE = 0xfffffffd  # Sequence number that is rbf-opt-in (BIP 125) and csv-opt-out (BIP 68)
+MAX_SEQUENCE_NONFINAL = 0xfffffffe  # Sequence number that is csv-opt-out (BIP 68)
 SEQUENCE_FINAL = 0xffffffff  # Sequence number that disables nLockTime if set for every input of a tx
 
 MAX_PROTOCOL_MESSAGE_LENGTH = 4000000  # Maximum length of incoming protocol messages
 MAX_HEADERS_RESULTS = 2000  # Number of headers sent in one getheaders result
 MAX_INV_SIZE = 50000  # Maximum number of entries in an 'inv' protocol message
 
+NODE_NONE = 0
 NODE_NETWORK = (1 << 0)
 NODE_BLOOM = (1 << 2)
 NODE_WITNESS = (1 << 3)
@@ -75,10 +79,10 @@ MAX_OP_RETURN_RELAY = 83
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
 
 MAGIC_BYTES = {
-    "mainnet": b"\xf9\xbe\xb4\xd9",   # mainnet
-    "testnet3": b"\x0b\x11\x09\x07",  # testnet3
-    "regtest": b"\xfa\xbf\xb5\xda",   # regtest
-    "signet": b"\x0a\x03\xcf\x40",    # signet
+    "mainnet": b"\xf9\xbe\xb4\xd9",
+    "testnet4": b"\x1c\x16\x3f\x28",
+    "regtest": b"\xfa\xbf\xb5\xda",
+    "signet": b"\x0a\x03\xcf\x40",
 }
 
 def sha256(s):
@@ -115,6 +119,26 @@ def deser_compact_size(f):
     elif nit == 255:
         nit = int.from_bytes(f.read(8), "little")
     return nit
+
+
+def ser_varint(l):
+    r = b""
+    while True:
+        r = bytes([(l & 0x7f) | (0x80 if len(r) > 0 else 0x00)]) + r
+        if l <= 0x7f:
+            return r
+        l = (l >> 7) - 1
+
+
+def deser_varint(f):
+    n = 0
+    while True:
+        dat = f.read(1)[0]
+        n = (n << 7) | (dat & 0x7f)
+        if (dat & 0x80) > 0:
+            n += 1
+        else:
+            return n
 
 
 def deser_string(f):
@@ -326,7 +350,7 @@ class CAddress:
         elif self.net == self.NET_CJDNS:
             self.ip = socket.inet_ntop(socket.AF_INET6, addr_bytes)
         else:
-            raise Exception(f"Address type not supported")
+            raise Exception("Address type not supported")
 
         self.port = int.from_bytes(f.read(2), "big")
 
@@ -353,7 +377,7 @@ class CAddress:
         elif self.net == self.NET_CJDNS:
             r += socket.inet_pton(socket.AF_INET6, self.ip)
         else:
-            raise Exception(f"Address type not supported")
+            raise Exception("Address type not supported")
         r += self.port.to_bytes(2, "big")
         return r
 
@@ -559,12 +583,12 @@ class CTxWitness:
 
 
 class CTransaction:
-    __slots__ = ("hash", "nLockTime", "nVersion", "sha256", "vin", "vout",
+    __slots__ = ("hash", "nLockTime", "version", "sha256", "vin", "vout",
                  "wit")
 
     def __init__(self, tx=None):
         if tx is None:
-            self.nVersion = 2
+            self.version = 2
             self.vin = []
             self.vout = []
             self.wit = CTxWitness()
@@ -572,7 +596,7 @@ class CTransaction:
             self.sha256 = None
             self.hash = None
         else:
-            self.nVersion = tx.nVersion
+            self.version = tx.version
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
@@ -581,7 +605,7 @@ class CTransaction:
             self.wit = copy.deepcopy(tx.wit)
 
     def deserialize(self, f):
-        self.nVersion = int.from_bytes(f.read(4), "little", signed=True)
+        self.version = int.from_bytes(f.read(4), "little")
         self.vin = deser_vector(f, CTxIn)
         flags = 0
         if len(self.vin) == 0:
@@ -604,7 +628,7 @@ class CTransaction:
 
     def serialize_without_witness(self):
         r = b""
-        r += self.nVersion.to_bytes(4, "little", signed=True)
+        r += self.version.to_bytes(4, "little")
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += self.nLockTime.to_bytes(4, "little")
@@ -616,7 +640,7 @@ class CTransaction:
         if not self.wit.is_null():
             flags |= 1
         r = b""
-        r += self.nVersion.to_bytes(4, "little", signed=True)
+        r += self.version.to_bytes(4, "little")
         if flags:
             dummy = []
             r += ser_vector(dummy)
@@ -676,8 +700,8 @@ class CTransaction:
         return math.ceil(self.get_weight() / WITNESS_SCALE_FACTOR)
 
     def __repr__(self):
-        return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
-            % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
+        return "CTransaction(version=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
+            % (self.version, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
 
 
 class CBlockHeader:
@@ -1293,8 +1317,11 @@ class msg_tx:
     __slots__ = ("tx",)
     msgtype = b"tx"
 
-    def __init__(self, tx=CTransaction()):
-        self.tx = tx
+    def __init__(self, tx=None):
+        if tx is None:
+            self.tx = CTransaction()
+        else:
+            self.tx = tx
 
     def deserialize(self, f):
         self.tx.deserialize(f)
@@ -1907,3 +1934,20 @@ class TestFrameworkScript(unittest.TestCase):
         check_addrv2("2bqghnldu6mcug4pikzprwhtjjnsyederctvci6klcwzepnjd46ikjyd.onion", CAddress.NET_TORV3)
         check_addrv2("255fhcp6ajvftnyo7bwz3an3t4a4brhopm3bamyh2iu5r3gnr2rq.b32.i2p", CAddress.NET_I2P)
         check_addrv2("fc32:17ea:e415:c3bf:9808:149d:b5a2:c9aa", CAddress.NET_CJDNS)
+
+    def test_varint_encode_decode(self):
+        def check_varint(num, expected_encoding_hex):
+            expected_encoding = bytes.fromhex(expected_encoding_hex)
+            self.assertEqual(ser_varint(num), expected_encoding)
+            self.assertEqual(deser_varint(BytesIO(expected_encoding)), num)
+
+        # test cases from serialize_tests.cpp:varint_bitpatterns
+        check_varint(0, "00")
+        check_varint(0x7f, "7f")
+        check_varint(0x80, "8000")
+        check_varint(0x1234, "a334")
+        check_varint(0xffff, "82fe7f")
+        check_varint(0x123456, "c7e756")
+        check_varint(0x80123456, "86ffc7e756")
+        check_varint(0xffffffff, "8efefefe7f")
+        check_varint(0xffffffffffffffff, "80fefefefefefefefe7f")

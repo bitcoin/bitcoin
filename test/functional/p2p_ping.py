@@ -10,7 +10,10 @@ import time
 from test_framework.messages import msg_pong
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 
 PING_INTERVAL = 2 * 60
@@ -52,7 +55,7 @@ class PingPongTest(BitcoinTestFramework):
         self.log.info('Check that ping is sent after connection is established')
         no_pong_node = self.nodes[0].add_p2p_connection(NodeNoPong())
         self.mock_forward(3)
-        assert no_pong_node.last_message.pop('ping').nonce != 0
+        assert_not_equal(no_pong_node.last_message.pop('ping').nonce, 0)
         self.check_peer_info(pingtime=None, minping=None, pingwait=3)
 
         self.log.info('Reply without nonce cancels ping')
@@ -117,4 +120,4 @@ class PingPongTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    PingPongTest().main()
+    PingPongTest(__file__).main()

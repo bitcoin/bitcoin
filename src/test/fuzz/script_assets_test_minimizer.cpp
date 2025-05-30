@@ -17,6 +17,8 @@
 #include <string>
 #include <vector>
 
+using util::SplitString;
+
 // This fuzz "test" can be used to minimize test cases for script_assets_test in
 // src/test/script_tests.cpp. While it written as a fuzz test, and can be used as such,
 // fuzzing the inputs is unlikely to construct useful test cases.
@@ -33,7 +35,7 @@
 //
 // (libFuzzer build)
 // $ mkdir dump-min
-// $ FUZZ=script_assets_test_minimizer ./src/test/fuzz/fuzz -merge=1 -use_value_profile=1 dump-min/ dump/
+// $ FUZZ=script_assets_test_minimizer ./bin/fuzz -merge=1 -use_value_profile=1 dump-min/ dump/
 // $ (echo -en '[\n'; cat dump-min/* | head -c -2; echo -en '\n]') >script_assets_test.json
 
 namespace {

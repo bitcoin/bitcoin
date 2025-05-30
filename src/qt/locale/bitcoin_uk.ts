@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">Створити нову адресу</translation>
+        <translation type="unfinished">Додати нову адрессу</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -39,7 +39,7 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Експортувати</translation>
+        <translation type="unfinished">Експортувати</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -184,6 +184,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Введіть стару та нову парольну фразу для гаманця.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Продовжити</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Назад</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Пам’ятайте, що шифрування гаманця не може повністю захистити ваші біткоїни від крадіжки, у випадку якщо ваш комп’ютер буде інфіковано шкідливими програмами.</translation>
     </message>
@@ -301,6 +309,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>unknown</source>
         <translation type="unfinished">невідомо</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Вбудований "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Системний шрифт за замовчуванням "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Настроюваний…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -445,6 +465,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 GB</source>
         <translation type="unfinished">%1 ГБ</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">гаманець за замовчуванням</translation>
+    </message>
 </context>
 <context>
     <name>BitcoinGUI</name>
@@ -579,15 +603,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">Закрити гаманець…</translation>
+        <translation type="unfinished">Закрити Гаманець…</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">Створити гаманець…</translation>
+        <translation type="unfinished">Створити Гаманець…</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
-        <translation type="unfinished">Закрити всі гаманці…</translation>
+        <translation type="unfinished">Закрити Всі Гаманці…</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -607,7 +631,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Триває синхронізація заголовків (%1%)…</translation>
+        <translation type="unfinished">Синхронізація заголовків (%1%)…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
@@ -639,7 +663,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">Параметри &amp;командного рядка</translation>
+        <translation type="unfinished">П&amp;араметри командного рядка</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -683,7 +707,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Завантажити частково підписану біткоїн-транзакцію (PSBT) з файлу</translation>
+        <translation type="unfinished">Завантажити частково підписану біткоїн-транзакцію (PSBT)</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -703,11 +727,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
-        <translation type="unfinished">Адреси для &amp;відправлення</translation>
+        <translation type="unfinished">&amp;Адреси для відправлення</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">Адреси для &amp;отримання</translation>
+        <translation type="unfinished">&amp;Адреси для отримання</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
@@ -758,10 +782,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Приховати значення на вкладці Огляд</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">гаманець за замовчуванням</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -1093,7 +1113,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Can't list signers</source>
-        <translation type="unfinished">Неможливо показати зовнішні підписувачі</translation>
+        <translation type="unfinished">Неможливо показати підписувачі</translation>
     </message>
     <message>
         <source>Too many external signers found</source>
@@ -1131,7 +1151,7 @@ If this wallet contains any solvable but not watched scripts, a different and ne
 The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
         <translation type="unfinished">Під час перенесення гаманця він буде перетворено на один або кілька гаманців з підтримкою дескрипторів. Необхідно буде створити нову резервну копію гаманця.
 Якщо цей гаманець містить будь-які скрипти "тільки для перегляду", буде створено новий гаманець, що містить такі скрипти.
-Якщо цей гаманець містить будь-які спроможні, але не спостережувані скрипти, буде створено інший новий гаманець, що містить такі скрипти.
+Якщо цей гаманець містить будь-які спроможні скрипти, але не "тільки для перегляду", буде створено інший новий гаманець, що містить такі скрипти.
 Процес перенесення створить резервну копію гаманця перед початком. Цей файл резервної копії буде названий &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak і знаходитиметься в каталозі для цього гаманця. У випадку неправильного перенесення резервну копію можна відновити за допомогою функціоналу "Відновити гаманець".</translation>
     </message>
     <message>
@@ -1147,12 +1167,12 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">Гаманець '%1' був успішно перенесений.</translation>
     </message>
     <message>
-        <source> Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished"> Скрипти "тільки для перегляду" були перенесені в новий гаманець під назвою  '%1'.</translation>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Скрипти "тільки для перегляду" були перенесені в новий гаманець під назвою  '%1'.</translation>
     </message>
     <message>
-        <source> Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished"> Спроможні, але не спостережувані скрипти були перенесені в новий гаманець під назвою '%1'.</translation>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Спроможні скрипти, але не "тільки для перегляду", були перенесені в новий гаманець під назвою '%1'.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1172,10 +1192,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Попередження відкриття гаманця</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">гаманець за замовчуванням</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1275,7 +1291,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
-        <translation type="unfinished">Вимкнути приватні ключі для цього гаманця. Гаманці з вимкнутими приватними ключами не матимуть приватних ключів і не можуть мати набір HD або імпортовані приватні ключі. Це ідеально підходить для гаманців "тільки для перегляду".</translation>
+        <translation type="unfinished">Вимкнути приватні ключі для цього гаманця. Гаманці з вимкнутими приватними ключами не матимуть приватних ключів і не можуть мати набір HD або імпортовані приватні ключі. Це ідеально підходить для гаманців для спостереження.</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>
@@ -1543,7 +1559,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>calculating…</source>
-        <translation type="unfinished">рахування…</translation>
+        <translation type="unfinished">підраховується…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1587,7 +1603,7 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Paste address from clipboard</source>
         <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
-        <translation type="unfinished">Вставити адресу</translation>
+        <translation type="unfinished">Вставити адресу з буфера обміну</translation>
     </message>
 </context>
 <context>
@@ -1613,6 +1629,11 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">Увімкнення режиму скороченого блокчейну значно зменшує дисковий простір, що необхідний для збереження транзакцій. Всі блоки продовжують проходити повну перевірку. Вимкнення цього параметру потребує повторного завантаження всього блокчейну.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Максимальний розмір кешу бази даних. Переконайтеся, що у вас достатньо оперативної пам’яті. Більший кеш може пришвидшити синхронізацію, після чого його переваги менш помітні у більшості випадків. Зменшення розміру кешу знизить використання пам'яті. Невикористана пулом транзакцій пам'ять використовується спільно з цим кешем.</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">Розмір ке&amp;шу бази даних</translation>
     </message>
@@ -1625,6 +1646,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">Повний шлях до скрипту, сумісного з %1 (наприклад, C:\Downloads\hwi.exe або /Users/you/Downloads/hwi.py). Обережно: зловмисні програми можуть вкрасти Ваші монети!</translation>
     </message>
     <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Автоматично відкривати порт клієнта Біткоїн в маршрутизаторі. Це працює лише за умови, що ваш маршрутизатор підтримує PCP або NAT-PMP, і ця функція ввімкнена. Зовнішній порт може бути випадковим.</translation>
+    </message>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">Переадресовувати порт за допомогою PCP або NA&amp;T-PMP</translation>
+    </message>
+    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation type="unfinished">IP-адреса проксі-сервера (наприклад IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
@@ -1635,6 +1664,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">Згортати замість закриття. Якщо ця опція включена, програма закриється лише після вибору відповідного пункту в меню.</translation>
+    </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Шрифт на вкладці Огляд:</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line:</source>
@@ -1671,11 +1704,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation type="unfinished">Повернення цього параметра вимагає перезавантаження всього блокчейну.</translation>
-    </message>
-    <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Максимальний розмір кешу бази даних. Більший кеш може прискорити синхронізацію, після якої користь менш виражена для більшості випадків використання. Зменшення розміру кешу зменшить використання пам'яті. Невикористана пулом транзакцій пам'ять використовується спільно з цим кешем.</translation>
     </message>
     <message>
         <source>MiB</source>
@@ -1747,22 +1775,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Шлях до скрипту зовнішнього підписувача</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Автоматично відкривати порт для клієнту Біткоїн на роутері. Працює лише, якщо ваш роутер підтримує UPnP, і ця функція увімкнена.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Перенаправити порт за допомогою &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Автоматично відкривати порт клієнта Біткоїн в маршрутизаторі. Це працює, якщо ваш маршрутизатор підтримує NAT-PMP, і ця функція увімкнута. Зовнішній порт може бути випадковим.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">Переадресовувати порт за допомогою NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1859,18 +1871,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Використовувати окремий проксі-сервер SOCKS&amp;5, щоб дістатися до вузлів через сервіси Tor:</translation>
-    </message>
-    <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">Моноширинний шрифт на вкладці Огляд:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">вбудований "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">найбільш подібний "%1"</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -2110,8 +2110,8 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">PSBT-транзакцію збережено на диск.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished"> * Надсилає від %1 до %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Відправляє %1 до %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2174,7 +2174,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Не вдалося запустити біткоїн: обробник "click-to-pay"</translation>
+        <translation type="unfinished">Не вдалося запустити "bitcoin: click-to-pay" обробник</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -2347,6 +2347,14 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Кількість підключень</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">Локальні адреси</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Мережеві адреси, які ваша біткоїн-вузол використовує для зв'язку з іншими вузлами</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">Блокчейн</translation>
     </message>
@@ -2395,16 +2403,16 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Виберіть учасника для перегляду детальнішої інформації</translation>
     </message>
     <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">Приховати відомості про учасника</translation>
+    </message>
+    <message>
         <source>The transport layer version: %1</source>
         <translation type="unfinished">Версія транспортного рівня: %1</translation>
     </message>
     <message>
         <source>Transport</source>
         <translation type="unfinished">Траспорт</translation>
-    </message>
-    <message>
-        <source>The BIP324 session ID string in hex, if any.</source>
-        <translation type="unfinished">Ідентифікатор сесії BIP324 у hex форматі, якщо є.</translation>
     </message>
     <message>
         <source>Session ID</source>
@@ -2511,6 +2519,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Direction/Type</source>
         <translation type="unfinished">Напрямок/Тип</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation type="unfinished">Рядок ідентифікатора сесії BIP324 в шістнадцятковому форматі</translation>
     </message>
     <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
@@ -2705,8 +2717,16 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Мережева активність вимкнена.</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Відсутні</translation>
+    </message>
+    <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Виконання команди без гаманця</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Вікно вузла - [%1]</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
@@ -3177,10 +3197,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Створює частково підписану біткоїн-транзакцію (PSBT) для використання, наприклад, офлайн-гаманець %1 або гаманця, сумісного з PSBT.</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished"> з гаманця '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">%1 до '%2'</translation>
     </message>
@@ -3236,6 +3252,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation type="unfinished">Перевірте запропоновану транзакцію. Буде сформована частково підписана біткоїн-транзакція (PSBT), яку можна зберегти або скопіювати, а потім підписати з використанням, наприклад, офлайн гаманця %1 або апаратного PSBT-сумісного гаманця.</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 з гаманця '%2'</translation>
     </message>
     <message>
         <source>Do you want to create this transaction?</source>
@@ -3377,7 +3397,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished">Вставити адресу</translation>
+        <translation type="unfinished">Вставити адресу з буфера обміну</translation>
     </message>
     <message>
         <source>Remove this entry</source>
@@ -3434,8 +3454,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">&amp;Підписати повідомлення</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Ви можете підписувати повідомлення/угоди своїми адресами, щоб довести можливість отримання біткоїнів, що будуть надіслані на них. Остерігайтеся підписувати будь-що нечітке чи неочікуване, так як за допомогою фішинг-атаки вас можуть спробувати ввести в оману для отримання вашого підпису під чужими словами. Підписуйте лише чіткі твердження, з якими ви повністю згодні.</translation>
+        <source>You can sign messages/agreements with your legacy (P2PKH) addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">Ви можете підписувати повідомлення/угоди своїми старими (P2PKH) адресами, щоб підтвердити, що можете отримувати біткоїни, надіслані на них. Будьте обережні і не підписуйте нічого розпливчастого або випадкового, оскільки фішингові атаки можуть спробувати обдурити вас, щоб ви передали їм свої особисті дані. Підписуйте лише повністю деталізовані заяви, з якими ви згодні.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -3447,7 +3467,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation type="unfinished">Вставити адресу</translation>
+        <translation type="unfinished">Вставити адресу з буфера обміну</translation>
     </message>
     <message>
         <source>Enter the message you want to sign here</source>
@@ -3522,8 +3542,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Перевірте адресу та спробуйте ще раз.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Введена адреса не відноситься до ключа.</translation>
+        <source>The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.</source>
+        <translation type="unfinished">Введена адреса не відповідає застарілому (P2PKH) ключу. Підписування повідомлень для SegWit та інших типів адрес, відмінних від P2PKH, не підтримується в цій версії %1. Будь ласка, перевірте адресу та спробуйте ще раз.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -3717,8 +3737,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Вихідний індекс</translation>
     </message>
     <message>
-        <source> (Certificate was not verified)</source>
-        <translation type="unfinished"> (Сертифікат не підтверджено)</translation>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (Сертифікат не підтверджено)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3939,7 +3959,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>&amp;Show transaction details</source>
-        <translation type="unfinished">&amp;Показати деталі транзакції</translation>
+        <translation type="unfinished">&amp;Показати подробиці транзакції</translation>
     </message>
     <message>
         <source>Increase transaction &amp;fee</source>
@@ -4107,9 +4127,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">PSBT-транзакцію скопійовано</translation>
     </message>
     <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">Скопійовано в буфер обміну</translation>
+        <source>Fee-bump PSBT copied to clipboard</source>
+        <translation type="unfinished">PSBT з комісією скопійовано до буферу обміну</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -4120,19 +4139,19 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Не вдалось виконати транзакцію</translation>
     </message>
     <message>
-        <source>Can't display address</source>
-        <translation type="unfinished">Неможливо показати адресу</translation>
+        <source>Signer error</source>
+        <translation type="unfinished">Помилка підписувача</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">гаманець за замовчуванням</translation>
+        <source>Can't display address</source>
+        <translation type="unfinished">Неможливо показати адресу</translation>
     </message>
 </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;Експортувати</translation>
+        <translation type="unfinished">Експортувати</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -4184,15 +4203,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation type="unfinished">%s прохання прослухати на порту %u . Цей порт вважається «поганим» і тому навряд чи до нього підключиться який-небудь бенкет. Перегляньте doc/p2p-bad-ports.md для отримання детальної інформації та повного списку.</translation>
+        <translation type="unfinished">Запит %s на прослуховування порту %u. Цей порт вважається «поганим» і тому навряд чи до нього підключиться який-небудь учасник. Перегляньте doc/p2p-bad-ports.md для отримання подробиць та повного списку.</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
         <translation type="unfinished">Не вдалося понизити версію гаманця з %i на %i. Версія гаманця залишилася без змін.</translation>
-    </message>
-    <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Не вдалося заблокувати каталог даних %s. %s, ймовірно, вже працює.</translation>
     </message>
     <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
@@ -4200,7 +4215,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
-        <translation type="unfinished">Дисковий простір для %s може не вмістити блокові файли. Приблизно %u ГБ даних буде зберігатися в цьому каталозі.</translation>
+        <translation type="unfinished">Дисковий простір для %s може не вмістити файли блоків. Приблизно %u ГБ даних буде зберігатися в цьому каталозі.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
@@ -4213,6 +4228,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
         <translation type="unfinished">Помилка читання %s! Дані транзакцій можуть бути відсутніми чи невірними. Повторне сканування гаманця.</translation>
+    </message>
+    <message>
+        <source>Error starting/committing db txn for wallet transactions removal process</source>
+        <translation type="unfinished">Помилка початку/фіксації транзакції БД під час видалення транзакцій гаманця</translation>
     </message>
     <message>
         <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
@@ -4243,6 +4262,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Неприпустимий або пошкоджений peers.dat (%s). Якщо ви вважаєте, що сталася помилка, повідомте про неї до %s. Щоб уникнути цієї проблеми, можна прибрати (перейменувати, перемістити або видалити) цей файл (%s), щоб під час наступного запуску створити новий.</translation>
     </message>
     <message>
+        <source>Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets</source>
+        <translation type="unfinished">Виявлено некоректне значення для '-wallet' або '-nowallet'. Параметр '-wallet' вимагає рядкове значення, тоді як '-nowallet' приймає лише '1' для вимкнення всіх гаманців</translation>
+    </message>
+    <message>
         <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
         <translation type="unfinished">Надано більше однієї адреси прив'язки служби Tor. Використання %s для автоматично створеної служби Tor.</translation>
     </message>
@@ -4259,8 +4282,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Не вказано формат файлу гаманця. Щоб використовувати createfromdump, потрібно вказати -format=&lt;format&gt;.</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Перевірте правильність дати та часу свого комп'ютера. Якщо ваш годинник налаштовано невірно, %s не буде працювати належним чином.</translation>
+        <source>Option '-upnp' is set but UPnP support was dropped in version 29.0. Consider using '-natpmp' instead.</source>
+        <translation type="unfinished">Параметр '-upnp' встановлено, але підтримку UPnP було припинено у версії 29.0. Розгляньте можливість використання '-natpmp' замість нього.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
@@ -4371,8 +4394,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">-maxmempool має бути не менше %d МБ</translation>
     </message>
     <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">Сталася критична внутрішня помилка, дивіться подробиці в debug.log</translation>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">Неможливо заблокувати каталог %s. Ймовірно, %s вже запущено.</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4385,10 +4408,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation type="unfinished">Неможливо встановити -peerblockfilters без -blockfilterindex.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Неможливо записати до каталогу даних '%s'; перевірте дозвіли.</translation>
     </message>
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
@@ -4423,6 +4442,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Не вдалося розрахувати підвищені комісії, оскільки непідтверджені UTXO залежать від величезного кластеру непідтверджених транзакцій.</translation>
     </message>
     <message>
+        <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
+</source>
+        <translation type="unfinished">Не вдалося видалити каталог стану блокчейну знімка (%s). Видаліть його вручну перед перезапуском.
+</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Не вдалося перейменувати недійсний файл peers.dat. Будь ласка, перемістіть його та повторіть спробу </translation>
     </message>
@@ -4431,12 +4456,28 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Оцінка комісії не вдалася. Fallbackfee вимкнено. Зачекайте кілька блоків або ввімкніть %s.</translation>
     </message>
     <message>
+        <source>Flushing block file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">Не вдалося записати файл блоків на диск. Ймовірно, це результат помилки вводу/виводу.</translation>
+    </message>
+    <message>
+        <source>Flushing undo file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">Не вдалося записати файл скасування на диск. Ймовірно, це результат помилки вводу/виводу.</translation>
+    </message>
+    <message>
         <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
         <translation type="unfinished">Несумісні параметри: чітко вказано -dnsseed=1, але -onlynet забороняє IPv4/IPv6 з'єднання</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation type="unfinished">Неприпустима сума в %s=&lt;amount&gt;: '%s' (має бути не меншим за комісію minrelay %s, запобігти застряганню транзакцій)</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is less than transaction weight without inputs</source>
+        <translation type="unfinished">Максимальна вага транзакції менша за вагу транзакції без вхідних даних</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is too low, can not accommodate change output</source>
+        <translation type="unfinished">Максимальна вага транзакції занадто мала, не може вмістити виведення змін</translation>
     </message>
     <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
@@ -4455,6 +4496,26 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Вихідні з'єднання, обмежені i2p (-onlynet=i2p), але -i2psam не надаються</translation>
     </message>
     <message>
+        <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
+        <translation type="unfinished">Не вдалося перейменувати '%s' -&gt; '%s'. Неможливо очистити leveldb каталог фонового стану блокчейну.</translation>
+    </message>
+    <message>
+        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Зазначене значення -blockmaxweight (%d) перевищує максимальну вагу блоку за консенсусом (%d)</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Зазначене значення -blockreservedweight (%d) перевищує максимальну вагу блоку за консенсусом (%d)</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">Зазначене значення -blockreservedweight (%d) нижче за мінімальне безпечне значення (%d)</translation>
+    </message>
+    <message>
+        <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
+        <translation type="unfinished">Комбінація попередньо вибраних вхідних даних та автоматичного вибору вхідних даних гаманця перевищує максимальну вагу транзакції. Будь ласка, спробуйте надіслати меншу суму або консолідувати UTXO вашого гаманця вручну</translation>
+    </message>
+    <message>
         <source>The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
         <translation type="unfinished">Розмір входів перевищує максимальну вагу. Будь ласка, спробуйте надіслати меншу суму або вручну консолідувати UTXO вашого гаманця</translation>
     </message>
@@ -4464,7 +4525,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
-        <translation type="unfinished">Транзакція потребує одного призначення ненульової вартості, ненульової комісії або попередньо вибраного входу.</translation>
+        <translation type="unfinished">Транзакція вимагає хоча б одного призначення зі значенням, відмінним від 0, комісії, відмінної від 0, або попередньо вибраного входу</translation>
     </message>
     <message>
         <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>
@@ -4497,6 +4558,10 @@ Please try running the latest software version.
 </translation>
     </message>
     <message>
+        <source>Your computer's date and time appear to be more than %d minutes out of sync with the network, this may lead to consensus failure. After you've confirmed your computer's clock, this message should no longer appear when you restart your node. Without a restart, it should stop showing automatically after you've connected to a sufficient number of new outbound peers, which may take some time. You can inspect the `timeoffset` field of the `getpeerinfo` and `getnetworkinfo` RPC methods to get more info.</source>
+        <translation type="unfinished">Дата і час на вашому комп’ютері, схоже, відрізняються від мережі більш ніж на %d хвилин, що може призвести до порушення консенсусу. Після перевірки системного часу це повідомлення більше не з’являтиметься після перезапуску вузла. Без перезапуску воно має зникнути автоматично після підключення до достатньої кількості нових вихідних з'єднань, що може зайняти певний час. Додаткову інформацію можна отримати у полі `timeoffset` RPC методів `getpeerinfo` and `getnetworkinfo`.</translation>
+    </message>
+    <message>
         <source>
 Unable to cleanup failed migration</source>
         <translation type="unfinished">
@@ -4509,8 +4574,24 @@ Unable to restore backup of wallet.</source>
 Не вдалося відновити резервну копію гаманця.</translation>
     </message>
     <message>
+        <source>whitebind may only be used for incoming connections ("out" was passed)</source>
+        <translation type="unfinished">whitebind можна використовувати лише для вхідних з'єднань (передано «out»)</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details: </source>
+        <translation type="unfinished">Виникла фатальна внутрішня помилка, докладніше див. debug.log: </translation>
+    </message>
+    <message>
+        <source>Assumeutxo data not found for the given blockhash '%s'.</source>
+        <translation type="unfinished">Дані assumeutxo не знайдено для вказаного хешу блоку '%s'.</translation>
+    </message>
+    <message>
         <source>Block verification was interrupted</source>
         <translation type="unfinished">Перевірка блоків перервана</translation>
+    </message>
+    <message>
+        <source>Cannot write to directory '%s'; check permissions.</source>
+        <translation type="unfinished">Неможливо записати до каталогу '%s'; перевірте дозволи.</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -4519,6 +4600,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Copyright (C) %i-%i</source>
         <translation type="unfinished">Всі права збережено. %i-%i</translation>
+    </message>
+    <message>
+        <source>Corrupt block found indicating potential hardware failure.</source>
+        <translation type="unfinished">Виявлено пошкоджений блок, що вказує на потенційну несправність обладнання.</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -4537,16 +4622,16 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Місця на диску занадто мало!</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Перебудувати базу даних блоків зараз?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Завантаження завершено</translation>
     </message>
     <message>
         <source>Dump file %s does not exist.</source>
         <translation type="unfinished">Файл дампа %s не існує.</translation>
+    </message>
+    <message>
+        <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
+        <translation type="unfinished">Збій перевірки коректності еліптичної криптографії. %s завершує роботу.</translation>
     </message>
     <message>
         <source>Error creating %s</source>
@@ -4581,8 +4666,16 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Помилка завантаження бази даних блоків</translation>
     </message>
     <message>
+        <source>Error loading databases</source>
+        <translation type="unfinished">Помилка завантаження баз даних</translation>
+    </message>
+    <message>
         <source>Error opening block database</source>
         <translation type="unfinished">Помилка відкриття блока бази даних</translation>
+    </message>
+    <message>
+        <source>Error opening coins database</source>
+        <translation type="unfinished">Помилка відкриття бази даних монет</translation>
     </message>
     <message>
         <source>Error reading configuration file: %s</source>
@@ -4601,14 +4694,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Помилка: не вдається встановити призначення зі створеного сценарію scriptpubkey</translation>
     </message>
     <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Помилка: Не вдалося додати транзакцію "тільки для перегляду" до гаманця-для-перегляду</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Помилка: Не вдалося видалити транзакції "тільки для перегляду"</translation>
-    </message>
-    <message>
         <source>Error: Couldn't create cursor into database</source>
         <translation type="unfinished">Помилка: Неможливо створити курсор в базі даних</translation>
     </message>
@@ -4622,7 +4707,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Error: Failed to create new watchonly wallet</source>
-        <translation type="unfinished">Помилка: Не вдалося створити новий гаманець "тільки для перегляду"</translation>
+        <translation type="unfinished">Помилка: Не вдалося створити новий гаманець для спостереження</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
@@ -4643,10 +4728,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error: No %s addresses available.</source>
         <translation type="unfinished">Помилка:  Немає доступних %s адрес.</translation>
-    </message>
-    <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Помилка: Не всі транзакції "тільки для перегляду" вдалося видалити</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>
@@ -4673,16 +4754,48 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Помилка: Не вдалося зчитати всі записи бази даних</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Помилка: Не вдалося прочитати запис гаманця про локатор найкращого блока</translation>
+    </message>
+    <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Помилка: Не вдалося видалити дані "тільки для перегляду" з адресної книги</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write data to disk for wallet %s</source>
+        <translation type="unfinished">Помилка: Не вдалося записати дані на диск для гаманця %s</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
         <translation type="unfinished">Помилка: Не вдалося додати запис до нового гаманця</translation>
     </message>
     <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Помилка: Не вдалося записати запис спроможного гаманця про локатор найкращого блока</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Помилка: Не вдалося записати запис гаманця для спостереження про локатор найкращого блока</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Помилка: транзакцію бази даних не вдалося виконати для гаманця %s</translation>
+    </message>
+    <message>
+        <source>Failed to connect best block (%s).</source>
+        <translation type="unfinished">Не вдалося підключити найкращий блок (%s).</translation>
+    </message>
+    <message>
+        <source>Failed to disconnect block.</source>
+        <translation type="unfinished">Не вдалося відключити блок.</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">Не вдалося слухати на жодному порту. Використовуйте -listen=0, якщо ви хочете цього.</translation>
+    </message>
+    <message>
+        <source>Failed to read block.</source>
+        <translation type="unfinished">Не вдалося прочитати блок.</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
@@ -4695,6 +4808,26 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">Не вдалося перевірити базу даних</translation>
+    </message>
+    <message>
+        <source>Failed to write block.</source>
+        <translation type="unfinished">Не вдалося написати блок.</translation>
+    </message>
+    <message>
+        <source>Failed to write to block index database.</source>
+        <translation type="unfinished">Не вдалося записати в базу даних блочного індексу.</translation>
+    </message>
+    <message>
+        <source>Failed to write to coin database.</source>
+        <translation type="unfinished">Не вдалося записати в базу даних монет.</translation>
+    </message>
+    <message>
+        <source>Failed to write undo data.</source>
+        <translation type="unfinished">Не вдалося записати дані для скасування.</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">Помилка при видаленні транзакції: %s</translation>
     </message>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
@@ -4789,6 +4922,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Завантаження гаманця…</translation>
     </message>
     <message>
+        <source>Maximum transaction weight must be between %d and %d</source>
+        <translation type="unfinished">Максимальна вага транзакції має бути в межах від %d до %d</translation>
+    </message>
+    <message>
         <source>Missing amount</source>
         <translation type="unfinished">Відсутня сума</translation>
     </message>
@@ -4805,16 +4942,16 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Немає доступних адрес</translation>
     </message>
     <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Бракує доступних дескрипторів файлів.</translation>
-    </message>
-    <message>
         <source>Not found pre-selected input %s</source>
         <translation type="unfinished">Не знайдено попередньо вибраних вхідних даних %s</translation>
     </message>
     <message>
         <source>Not solvable pre-selected input %s</source>
         <translation type="unfinished">Неспроможний попередньо вибраний вхід %s</translation>
+    </message>
+    <message>
+        <source>Only direction was set, no permissions: '%s'</source>
+        <translation type="unfinished">Встановлено лише напрямок, без дозволів: '%s'</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -4861,6 +4998,18 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Розділ [%s] не розпізнано.</translation>
     </message>
     <message>
+        <source>Signer did not echo address</source>
+        <translation type="unfinished">Підписувач не підтвердив адресу</translation>
+    </message>
+    <message>
+        <source>Signer echoed unexpected address %s</source>
+        <translation type="unfinished">Підписувач відтворив неочікувану адресу %s</translation>
+    </message>
+    <message>
+        <source>Signer returned error: %s</source>
+        <translation type="unfinished">Підписувач повернув помилку: %s</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation type="unfinished">Підписання транзакції не вдалося</translation>
     </message>
@@ -4889,6 +5038,18 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Запуск мережевих потоків…</translation>
     </message>
     <message>
+        <source>System error while flushing: %s</source>
+        <translation type="unfinished">Системна помилка під час запису: %s</translation>
+    </message>
+    <message>
+        <source>System error while loading external block file: %s</source>
+        <translation type="unfinished">Системна помилка під час завантаження зовнішнього файлу блоків: %s</translation>
+    </message>
+    <message>
+        <source>System error while saving block to disk: %s</source>
+        <translation type="unfinished">Системна помилка під час запису блоку на диск: %s</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">Вихідний код доступний з %s.</translation>
     </message>
@@ -4901,8 +5062,16 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Неможливо сплатити комісію із-за малої суми транзакції</translation>
     </message>
     <message>
+        <source>The transactions removal process can only be executed within a db txn</source>
+        <translation type="unfinished">Процес видалення транзакцій можна виконати лише в межах транзакції БД</translation>
+    </message>
+    <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation type="unfinished">Гаманець не переведе кошти, якщо комісія становить менше мінімальної плати за транзакцію.</translation>
+    </message>
+    <message>
+        <source>There is no ScriptPubKeyManager for this address</source>
+        <translation type="unfinished">Для цієї адреси не існує ScriptPubKeyManager</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -4917,6 +5086,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Це транзакційна комісія, яку ви сплатите, якщо будете надсилати транзакцію.</translation>
     </message>
     <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">Транзакція %s не належить до цього гаманця</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">Сума транзакції занадто мала</translation>
     </message>
@@ -4929,10 +5102,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">У транзакції індекс виходу решти поза діапазоном</translation>
     </message>
     <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Транзакція має занадто довгий ланцюг у пулі транзакцій</translation>
-    </message>
-    <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">У транзакції повинен бути щонайменше один одержувач</translation>
     </message>
@@ -4943,10 +5112,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Транзакція занадто велика</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Не вдалося виділити пам'ять для -maxsigcachesize: '%s' МіБ</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -5009,8 +5174,16 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">Активовані невідомі нові правила (versionbit %i)</translation>
     </message>
     <message>
+        <source>Unrecognised option "%s" provided in -test=&lt;option&gt;.</source>
+        <translation type="unfinished">Невідомий параметр "%s" указано в -test=&lt;option&gt;.</translation>
+    </message>
+    <message>
         <source>Unsupported global logging level %s=%s. Valid values: %s.</source>
         <translation type="unfinished">Непідтримуваний глобальний рівень журналювання %s=%s. Припустимі значення: %s.</translation>
+    </message>
+    <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">Помилка створення файлу гаманця: %s</translation>
     </message>
     <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
@@ -5019,6 +5192,30 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Непідтримувана категорія ведення журналу %s=%s.</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the databases now?</source>
+        <translation type="unfinished">Перебудувати бази даних зараз?</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Помилка: Не вдалося додати транзакцію "тільки для перегляду" %s до гаманця для спостереження</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Помилка: Не вдалося видалити транзакції "тільки для перегляду".</translation>
+    </message>
+    <message>
+        <source>Error: Wallet does not exist</source>
+        <translation type="unfinished">Помилка: Гаманець не існує</translation>
+    </message>
+    <message>
+        <source>Error: cannot remove legacy wallet records</source>
+        <translation type="unfinished">Помилка: неможливо видалити записи застарілого гаманця</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available. %d available, %d required.</source>
+        <translation type="unfinished">Недостатньо файлових дескрипторів. Доступно: %d, потрібно: %d.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

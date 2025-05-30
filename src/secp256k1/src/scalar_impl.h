@@ -27,6 +27,10 @@
 static const secp256k1_scalar secp256k1_scalar_one = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
 static const secp256k1_scalar secp256k1_scalar_zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
 
+SECP256K1_INLINE static void secp256k1_scalar_clear(secp256k1_scalar *r) {
+    secp256k1_memclear(r, sizeof(secp256k1_scalar));
+}
+
 static int secp256k1_scalar_set_b32_seckey(secp256k1_scalar *r, const unsigned char *bin) {
     int overflow;
     secp256k1_scalar_set_b32(r, bin, &overflow);
@@ -86,11 +90,11 @@ static void secp256k1_scalar_split_lambda_verify(const secp256k1_scalar *r1, con
 #endif
 
 /*
- * Both lambda and beta are primitive cube roots of unity.  That is lamba^3 == 1 mod n and
+ * Both lambda and beta are primitive cube roots of unity.  That is lambda^3 == 1 mod n and
  * beta^3 == 1 mod p, where n is the curve order and p is the field order.
  *
  * Furthermore, because (X^3 - 1) = (X - 1)(X^2 + X + 1), the primitive cube roots of unity are
- * roots of X^2 + X + 1.  Therefore lambda^2 + lamba == -1 mod n and beta^2 + beta == -1 mod p.
+ * roots of X^2 + X + 1.  Therefore lambda^2 + lambda == -1 mod n and beta^2 + beta == -1 mod p.
  * (The other primitive cube roots of unity are lambda^2 and beta^2 respectively.)
  *
  * Let l = -1/2 + i*sqrt(3)/2, the complex root of X^2 + X + 1. We can define a ring
@@ -229,7 +233,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
  * <=   {triangle inequality}
  *    a1*|k*b2/n - c1| + a2*|k*(-b1)/n - c2|
  * <    {Lemma 1 and Lemma 2}
- *    a1*(2^-1 + epslion1) + a2*(2^-1 + epsilon2)
+ *    a1*(2^-1 + epsilon1) + a2*(2^-1 + epsilon2)
  * <    {rounding up to an integer}
  *    (a1 + a2 + 1)/2
  * <    {rounding up to a power of 2}
@@ -247,7 +251,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
  * <=   {triangle inequality}
  *    (-b1)*|k*b2/n - c1| + b2*|k*(-b1)/n - c2|
  * <    {Lemma 1 and Lemma 2}
- *    (-b1)*(2^-1 + epslion1) + b2*(2^-1 + epsilon2)
+ *    (-b1)*(2^-1 + epsilon1) + b2*(2^-1 + epsilon2)
  * <    {rounding up to an integer}
  *    (-b1 + b2)/2 + 1
  * <    {rounding up to a power of 2}

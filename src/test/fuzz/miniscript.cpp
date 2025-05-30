@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,8 @@
 #include <test/fuzz/util.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
+
 namespace {
 
 using Fragment = miniscript::Fragment;
@@ -20,7 +22,7 @@ using NodeRef = miniscript::NodeRef<CPubKey>;
 using Node = miniscript::Node<CPubKey>;
 using Type = miniscript::Type;
 using MsCtx = miniscript::MiniscriptContext;
-using miniscript::operator"" _mst;
+using miniscript::operator""_mst;
 
 //! Some pre-computed data for more efficient string roundtrips and to simulate challenges.
 struct TestData {
@@ -47,9 +49,9 @@ struct TestData {
     void Init() {
         unsigned char keydata[32] = {1};
         // All our signatures sign (and are required to sign) this constant message.
-        auto const MESSAGE_HASH{uint256S("f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065")};
+        constexpr uint256 MESSAGE_HASH{"0000000000000000f5cd94e18b6fe77dd7aca9e35c2b0c9cbd86356c80a71065"};
         // We don't pass additional randomness when creating a schnorr signature.
-        auto const EMPTY_AUX{uint256S("")};
+        const auto EMPTY_AUX{uint256::ZERO};
 
         for (size_t i = 0; i < 256; i++) {
             keydata[31] = i;
@@ -127,7 +129,7 @@ struct ParserContext {
         auto it = TEST_DATA.dummy_key_idx_map.find(key);
         if (it == TEST_DATA.dummy_key_idx_map.end()) return {};
         uint8_t idx = it->second;
-        return HexStr(Span{&idx, 1});
+        return HexStr(std::span{&idx, 1});
     }
 
     std::vector<unsigned char> ToPKBytes(const Key& key) const {
@@ -288,12 +290,12 @@ const struct CheckerContext: BaseSignatureChecker {
         if (it == TEST_DATA.dummy_sigs.end()) return false;
         return it->second.first == sig;
     }
-    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion,
+    bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion,
                                ScriptExecutionData&, ScriptError*) const override {
         XOnlyPubKey pk{pubkey};
         auto it = TEST_DATA.schnorr_sigs.find(pk);
         if (it == TEST_DATA.schnorr_sigs.end()) return false;
-        return it->second.first == sig;
+        return std::ranges::equal(it->second.first, sig);
     }
     bool CheckLockTime(const CScriptNum& nLockTime) const override { return nLockTime.GetInt64() & 1; }
     bool CheckSequence(const CScriptNum& nSequence) const override { return nSequence.GetInt64() & 1; }
@@ -308,9 +310,6 @@ const struct KeyComparator {
 
 // A dummy scriptsig to pass to VerifyScript (we always use Segwit v0).
 const CScript DUMMY_SCRIPTSIG;
-
-//! Public key to be used as internal key for dummy Taproot spends.
-const std::vector<unsigned char> NUMS_PK{ParseHex("50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")};
 
 //! Construct a miniscript node as a shared_ptr.
 template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
@@ -391,6 +390,7 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
     bool allow_K = (type_needed == ""_mst) || (type_needed << "K"_mst);
     bool allow_V = (type_needed == ""_mst) || (type_needed << "V"_mst);
     bool allow_W = (type_needed == ""_mst) || (type_needed << "W"_mst);
+    static constexpr auto B{"B"_mst}, K{"K"_mst}, V{"V"_mst}, W{"W"_mst};
 
     switch (provider.ConsumeIntegral<uint8_t>()) {
         case 0:
@@ -440,22 +440,22 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
         }
         case 11:
             if (!(allow_B || allow_K || allow_V)) return {};
-            return {{{"B"_mst, type_needed, type_needed}, Fragment::ANDOR}};
+            return {{{B, type_needed, type_needed}, Fragment::ANDOR}};
         case 12:
             if (!(allow_B || allow_K || allow_V)) return {};
-            return {{{"V"_mst, type_needed}, Fragment::AND_V}};
+            return {{{V, type_needed}, Fragment::AND_V}};
         case 13:
             if (!allow_B) return {};
-            return {{{"B"_mst, "W"_mst}, Fragment::AND_B}};
+            return {{{B, W}, Fragment::AND_B}};
         case 15:
             if (!allow_B) return {};
-            return {{{"B"_mst, "W"_mst}, Fragment::OR_B}};
+            return {{{B, W}, Fragment::OR_B}};
         case 16:
             if (!allow_V) return {};
-            return {{{"B"_mst, "V"_mst}, Fragment::OR_C}};
+            return {{{B, V}, Fragment::OR_C}};
         case 17:
             if (!allow_B) return {};
-            return {{{"B"_mst, "B"_mst}, Fragment::OR_D}};
+            return {{{B, B}, Fragment::OR_D}};
         case 18:
             if (!(allow_B || allow_K || allow_V)) return {};
             return {{{type_needed, type_needed}, Fragment::OR_I}};
@@ -472,25 +472,25 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
         }
         case 20:
             if (!allow_W) return {};
-            return {{{"B"_mst}, Fragment::WRAP_A}};
+            return {{{B}, Fragment::WRAP_A}};
         case 21:
             if (!allow_W) return {};
-            return {{{"B"_mst}, Fragment::WRAP_S}};
+            return {{{B}, Fragment::WRAP_S}};
         case 22:
             if (!allow_B) return {};
-            return {{{"K"_mst}, Fragment::WRAP_C}};
+            return {{{K}, Fragment::WRAP_C}};
         case 23:
             if (!allow_B) return {};
-            return {{{"V"_mst}, Fragment::WRAP_D}};
+            return {{{V}, Fragment::WRAP_D}};
         case 24:
             if (!allow_V) return {};
-            return {{{"B"_mst}, Fragment::WRAP_V}};
+            return {{{B}, Fragment::WRAP_V}};
         case 25:
             if (!allow_B) return {};
-            return {{{"B"_mst}, Fragment::WRAP_J}};
+            return {{{B}, Fragment::WRAP_J}};
         case 26:
             if (!allow_B) return {};
-            return {{{"B"_mst}, Fragment::WRAP_N}};
+            return {{{B}, Fragment::WRAP_N}};
         case 27: {
             if (!allow_B || !IsTapscript(script_ctx)) return {};
             const auto k = provider.ConsumeIntegral<uint16_t>();
@@ -528,20 +528,23 @@ struct SmartInfo
     {
         /* Construct a set of interesting type requirements to reason with (sections of BKVWzondu). */
         std::vector<Type> types;
+        static constexpr auto B_mst{"B"_mst}, K_mst{"K"_mst}, V_mst{"V"_mst}, W_mst{"W"_mst};
+        static constexpr auto d_mst{"d"_mst}, n_mst{"n"_mst}, o_mst{"o"_mst}, u_mst{"u"_mst}, z_mst{"z"_mst};
+        static constexpr auto NONE_mst{""_mst};
         for (int base = 0; base < 4; ++base) { /* select from B,K,V,W */
-            Type type_base = base == 0 ? "B"_mst : base == 1 ? "K"_mst : base == 2 ? "V"_mst : "W"_mst;
+            Type type_base = base == 0 ? B_mst : base == 1 ? K_mst : base == 2 ? V_mst : W_mst;
             for (int zo = 0; zo < 3; ++zo) { /* select from z,o,(none) */
-                Type type_zo = zo == 0 ? "z"_mst : zo == 1 ? "o"_mst : ""_mst;
+                Type type_zo = zo == 0 ? z_mst : zo == 1 ? o_mst : NONE_mst;
                 for (int n = 0; n < 2; ++n) { /* select from (none),n */
                     if (zo == 0 && n == 1) continue; /* z conflicts with n */
                     if (base == 3 && n == 1) continue; /* W conflicts with n */
-                    Type type_n = n == 0 ? ""_mst : "n"_mst;
+                    Type type_n = n == 0 ? NONE_mst : n_mst;
                     for (int d = 0; d < 2; ++d) { /* select from (none),d */
                         if (base == 2 && d == 1) continue; /* V conflicts with d */
-                        Type type_d = d == 0 ? ""_mst : "d"_mst;
+                        Type type_d = d == 0 ? NONE_mst : d_mst;
                         for (int u = 0; u < 2; ++u) { /* select from (none),u */
                             if (base == 2 && u == 1) continue; /* V conflicts with u */
-                            Type type_u = u == 0 ? ""_mst : "u"_mst;
+                            Type type_u = u == 0 ? NONE_mst : u_mst;
                             Type type = type_base | type_zo | type_n | type_d | type_u;
                             types.push_back(type);
                         }
@@ -683,7 +686,7 @@ struct SmartInfo
         /* Find which types are useful. The fuzzer logic only cares about constructing
          * B,V,K,W nodes, so any type that isn't needed in any recipe (directly or
          * indirectly) for the construction of those is uninteresting. */
-        std::set<Type> useful_types{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
+        std::set<Type> useful_types{B_mst, V_mst, K_mst, W_mst};
         // Find the transitive closure by adding types until the set of types does not change.
         while (true) {
             size_t set_size = useful_types.size();
@@ -1014,7 +1017,7 @@ CScript ScriptPubKey(MsCtx ctx, const CScript& script, TaprootBuilder& builder)
 
     // For Taproot outputs we always use a tree with a single script and a dummy internal key.
     builder.Add(0, script, TAPROOT_LEAF_TAPSCRIPT);
-    builder.Finalize(XOnlyPubKey{NUMS_PK});
+    builder.Finalize(XOnlyPubKey::NUMS_H);
     return GetScriptForDestination(builder.GetOutput());
 }
 
@@ -1197,7 +1200,7 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
 
 void FuzzInit()
 {
-    ECC_Start();
+    static ECC_Context ecc_context{};
     TEST_DATA.Init();
 }
 

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Spustelėkite dešinįjį pelės klavišą norint keisti adresą arba etiketę </translation>
+        <translation type="unfinished">Spauskite dešinįjį pelės klavišą norint keisti adresą arba etiketę </translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -94,6 +94,14 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Bandant išsaugoti adresų sąrašą - įvyko klaida keliant į %1. Prašome bandyti dar kartą.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Siuntimo adresai -%1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Gaunami adresai - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Eksportavimas nepavyko</translation>
     </message>
@@ -168,8 +176,16 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Piniginė užšifruota</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished">Įveskite naują piniginės slaptafrazę. &lt;br/&gt; Naudokite &lt;b&gt; 10 ar daugiau atsitiktinių simbolių &lt;/b&gt;, arba &lt;b&gt; 8 ar daugiau žodžių slaptafrazę&lt;/b&gt;.</translation>
+    </message>
+    <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
         <translation type="unfinished">Įveskite seną ir naują slaptažodį.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">Atminkite kad piniginės užšifravimas neužtrikrina kad jūsų bitkoinai negali būti pavogti dėl kenkėjiškų programų užkrėtusių jūsų kompiuterį.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -335,7 +351,11 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">numatyta piniginė</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -426,6 +446,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>&amp;Options…</source>
         <translation type="unfinished">&amp;Nustatymai</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp; Užšifruoti piniginę</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -546,10 +570,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Rodyti %1 pagalbos žinutę su Bitcoin pasirinkimo komandomis</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -820,10 +840,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Piniginės atidarymo įspėjimas</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1226,14 +1242,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp;Išleiskite nepatvirtintus pakeitimus</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Automatiškai atidaryti Bitcoin kliento prievadą maršrutizatoriuje. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Persiųsti prievadą naudojant &amp;UPnP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1793,6 +1801,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Tinklo veikla išjungta</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Nė vienas</translation>
+    </message>
+    <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Vykdyti komandą be jokios piniginės</translation>
     </message>
@@ -2117,10 +2129,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">%1 (%2 blokai)</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">iš piniginės '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation type="unfinished">'%1' į '%2'</translation>
     </message>
@@ -2357,10 +2365,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Please check the address and try again.</source>
         <translation type="unfinished">Patikrinkite adresą ir bandykite dar kartą.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Įvestas adresas nėra susijęs su raktu.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2806,11 +2810,7 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <source>Could not commit transaction</source>
         <translation type="unfinished">Nepavyko įvykdyti sandorio</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2877,10 +2877,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Nustatyta sugadinta blokų duomenų bazė</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Ar norite dabar atstatyti blokų duomenų bazę?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Įkėlimas baigtas</translation>
     </message>
@@ -2921,10 +2917,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Nepakanka lėšų</translation>
     </message>
     <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Nėra pakankamai failų aprašų.</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation type="unfinished">Transakcijos pasirašymas nepavyko</translation>
     </message>
@@ -2955,10 +2947,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">Transakcijos suma negali buti neigiama</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Sandoris turi per ilgą mempool grandinę</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

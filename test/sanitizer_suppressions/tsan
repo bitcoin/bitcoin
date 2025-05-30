@@ -5,9 +5,6 @@
 
 # race (TODO fix)
 race:LoadWallet
-race:WalletBatch::WriteHDChain
-race:BerkeleyBatch
-race:BerkeleyDatabase
 race:DatabaseBatch
 race:zmq::*
 race:bitcoin-qt
@@ -25,8 +22,6 @@ race:src/qt/test/*
 deadlock:src/qt/test/*
 
 # External libraries
-# https://github.com/bitcoin/bitcoin/pull/27658#issuecomment-1547639621
-deadlock:libdb
 race:libzmq
 
 # Intermittent issues

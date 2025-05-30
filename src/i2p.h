@@ -7,6 +7,7 @@
 
 #include <compat/compat.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <sync.h>
 #include <util/fs.h>
 #include <util/sock.h>
@@ -67,7 +68,7 @@ public:
      * `Session` object.
      */
     Session(const fs::path& private_key_file,
-            const CService& control_host,
+            const Proxy& control_host,
             CThreadInterrupt* interrupt);
 
     /**
@@ -81,7 +82,7 @@ public:
      * `CThreadInterrupt` object is saved, so it must not be destroyed earlier than this
      * `Session` object.
      */
-    Session(const CService& control_host, CThreadInterrupt* interrupt);
+    Session(const Proxy& control_host, CThreadInterrupt* interrupt);
 
     /**
      * Destroy the session, closing the internally used sockets. The sockets that have been
@@ -156,14 +157,6 @@ private:
     };
 
     /**
-     * Log a message in the `BCLog::I2P` category.
-     * @param[in] fmt printf(3)-like format string.
-     * @param[in] args printf(3)-like arguments that correspond to `fmt`.
-     */
-    template <typename... Args>
-    void Log(const std::string& fmt, const Args&... args) const;
-
-    /**
      * Send request and get a reply from the SAM proxy.
      * @param[in] sock A socket that is connected to the SAM proxy.
      * @param[in] request Raw request to send, a newline terminator is appended to it.
@@ -235,9 +228,9 @@ private:
     const fs::path m_private_key_file;
 
     /**
-     * The host and port of the SAM control service.
+     * The SAM control service proxy.
      */
-    const CService m_control_host;
+    const Proxy m_control_host;
 
     /**
      * Cease network activity when this is signaled.

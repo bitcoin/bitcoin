@@ -9,6 +9,7 @@ See also wallet_signer.py for tests that require wallet context.
 """
 import os
 import platform
+import sys
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -20,10 +21,7 @@ from test_framework.util import (
 class RPCSignerTest(BitcoinTestFramework):
     def mock_signer_path(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'signer.py')
-        if platform.system() == "Windows":
-            return "py -3 " + path
-        else:
-            return path
+        return sys.executable + " " + path
 
     def set_test_params(self):
         self.num_nodes = 4
@@ -77,4 +75,4 @@ class RPCSignerTest(BitcoinTestFramework):
         assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)
 
 if __name__ == '__main__':
-    RPCSignerTest().main()
+    RPCSignerTest(__file__).main()

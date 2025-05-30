@@ -202,6 +202,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ang passphrase na inilagay para sa pag-dedekripto ng pitaka ay hindi tama</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">Ang passphrase na isinumite para sa pag-decrypt ng pitaka ay mali. Naglalaman ito ng null character (halimbawa - isang zero byte). Kung ang passphrase ay itinakda gamit ang isang bersyon ng software na ito bago ang 25.0, subukan muli lamang ang mga karakter mula sa simula hanggang sa una nilalang null character. Kung magtagumpay ito, mangyaring magtakda ng bagong passphrase upang maiwasan ang isyung ito sa hinaharap.</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Matagumpay na nabago ang passphrase ng walet.</translation>
     </message>
@@ -217,6 +221,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Bawal Hanggang</translation>
     </message>
 </context>
+<context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Isang fatal error ang naganap.  %1 ay hindi na maaaring magpatuloy nang ligtas at magtitigil.</translation>
+    </message>
+    </context>
 <context>
     <name>QObject</name>
     <message>
@@ -295,7 +306,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">walet na default</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -373,7 +388,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation type="unfinished">Palitan ang passphrase na ginamit para sa pag-enkripto ng pitaka</translation>
+        <translation type="unfinished">Palitan ang passphrase na ginamit para sa pag-encrypt ng walet</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -495,10 +510,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ipakita sa %1 ang tulong na mensahe upang makuha ang talaan ng mga posibleng opsyon ng Bitcoin command-line</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">walet na default</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">Walang magagamit na mga walet</translation>
     </message>
@@ -534,6 +545,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">Kamalian: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation type="unfinished">Babala:%1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -695,7 +710,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation type="unfinished">(%1 ay naka-lock)</translation>
+        <translation type="unfinished">(%1 Naka-lock)</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -739,10 +754,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Buksan ang babala sa pitaka</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">walet na default</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1112,14 +1123,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">Gastusin ang sukli na hindi pa nakumpirma</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Kusang buksan ang Bitcoin client port sa router. Gumagana lamang ito kapag ang iyong router ay sumusuporta ng UPnP at ito ay pinagana.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Isamapa ang port gamit ang UPnP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1565,8 +1568,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Mapped AS</source>
-        <translation type="unfinished">Mapa sa AS
-</translation>
+        <translation type="unfinished">Mapa sa AS</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1680,6 +1682,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Network activity disabled</source>
         <translation type="unfinished">Ang aktibidad ng network ay hindi gumagana.</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">Wala</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
@@ -2022,6 +2028,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Lumikha ng Unsigned</translation>
     </message>
     <message>
+        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation type="unfinished">Lumilikha ng isang Bahagyang Signed Bitcoin Transaction (PSBT) para magamit sa hal. isang offline na%1 wallet, o isang wallet na hardware na katugma sa PSBT.</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation type="unfinished">%1 hanggang %2</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation type="unfinished">%1 sa %2</translation>
     </message>
@@ -2187,10 +2201,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Pirmahan ang Mensahe</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Maaari kang pumirma ng mga mensahe/kasunduan sa iyong mga address upang mapatunayan na maaari kang makatanggap ng mga bitcoin na ipinadala sa kanila. Mag-ingat na huwag pumirma ng anumang bagay na hindi malinaw o random, dahil ang mga phishing attack ay maaaring subukan na linlangin ka sa pagpirma ng iyong pagkakakilanlan sa kanila. Pumirma lamang ng kumpletong mga pahayag na sumasang-ayon ka.</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to sign the message with</source>
         <translation type="unfinished">Ang Bitcoin address kung anong ipipirma sa mensahe</translation>
     </message>
@@ -2265,10 +2275,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Please check the address and try again.</source>
         <translation type="unfinished">Mangyaring suriin ang address at subukang muli.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Ang pinasok na address ay hindi tumutukoy sa isang key.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2708,11 +2714,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Could not commit transaction</source>
         <translation type="unfinished">Hindi makagawa ng transaksyon</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">walet na default</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2755,16 +2757,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Ang mga %s developers</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Hindi makakuha ng lock sa direktoryo ng data %s. Malamang na tumatakbo ang %s.</translation>
-    </message>
-    <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">Naipamahagi sa ilalim ng lisensya ng MIT software, tingnan ang kasamang file %s o %s</translation>
-    </message>
-    <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Mangyaring suriin na ang petsa at oras ng iyong computer ay tama! Kung mali ang iyong orasan, ang %s ay hindi gagana nang maayos.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
@@ -2835,20 +2829,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Hindi malutas - %s address: ' %s'</translation>
     </message>
     <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Hindi makapagsulat sa direktoryo ng data '%s'; suriin ang mga pahintulot.</translation>
-    </message>
-    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">Ang config setting para sa %s ay inilalapat lamang sa %s network kapag sa [%s] na seksyon.</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">Sirang block database ay napansin</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Nais mo bang muling itayo ang block database?</translation>
     </message>
     <message>
         <source>Done loading</source>
@@ -2931,10 +2917,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kailangang tukuyin ang port na may -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Hindi sapat ang mga file descriptors na magagamit.</translation>
-    </message>
-    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation type="unfinished">Hindi ma-configure ang prune na may negatibong halaga.</translation>
     </message>
@@ -3001,10 +2983,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation type="unfinished">Ang mga halaga ng transaksyon ay hindi dapat negative</translation>
-    </message>
-    <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">Ang transaksyon ay may masyadong mahabang chain ng mempool</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

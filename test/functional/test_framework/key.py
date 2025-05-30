@@ -14,6 +14,7 @@ import random
 import unittest
 
 from test_framework.crypto import secp256k1
+from test_framework.util import assert_not_equal, random_bitflip
 
 # Point with no known discrete log.
 H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
@@ -282,7 +283,7 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         sec = ORDER - sec
     t = (sec ^ int.from_bytes(TaggedHash("BIP0340/aux", aux), 'big')).to_bytes(32, 'big')
     kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + P.to_bytes_xonly() + msg), 'big') % ORDER
-    assert kp != 0
+    assert_not_equal(kp, 0)
     R = kp * secp256k1.G
     k = kp if R.y.is_even() != flip_r else ORDER - kp
     e = int.from_bytes(TaggedHash("BIP0340/challenge", R.to_bytes_xonly() + P.to_bytes_xonly() + msg), 'big') % ORDER
@@ -292,11 +293,6 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
 class TestFrameworkKey(unittest.TestCase):
     def test_ecdsa_and_schnorr(self):
         """Test the Python ECDSA and Schnorr implementations."""
-        def random_bitflip(sig):
-            sig = list(sig)
-            sig[random.randrange(len(sig))] ^= (1 << (random.randrange(8)))
-            return bytes(sig)
-
         byte_arrays = [generate_privkey() for _ in range(3)] + [v.to_bytes(32, 'big') for v in [0, ORDER - 1, ORDER, 2**256 - 1]]
         keys = {}
         for privkey_bytes in byte_arrays:  # build array of key/pubkey pairs

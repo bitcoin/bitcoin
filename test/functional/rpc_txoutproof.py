@@ -12,6 +12,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    sync_txindex,
 )
 from test_framework.wallet import MiniWallet
 
@@ -67,12 +68,17 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid_spent], blockhash)), [txid_spent])
         # We can't get the proof if we specify a non-existent block
         assert_raises_rpc_error(-5, "Block not found", self.nodes[0].gettxoutproof, [txid_spent], "0000000000000000000000000000000000000000000000000000000000000000")
+        # We can't get the proof if we only have the header of the specified block
+        block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
+        self.nodes[0].submitheader(block["hex"])
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].gettxoutproof, [txid_spent], block['hash'])
         # We can get the proof if the transaction is unspent
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid_unspent])), [txid_unspent])
         # We can get the proof if we provide a list of transactions and one of them is unspent. The ordering of the list should not matter.
         assert_equal(sorted(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2]))), sorted(txlist))
         assert_equal(sorted(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid2, txid1]))), sorted(txlist))
         # We can always get a proof if we have a -txindex
+        sync_txindex(self, self.nodes[1])
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[1].gettxoutproof([txid_spent])), [txid_spent])
         # We can't get a proof if we specify transactions from different blocks
         assert_raises_rpc_error(-5, "Not all transactions found in specified or retrieved block", self.nodes[0].gettxoutproof, [txid1, txid3])
@@ -104,4 +110,4 @@ class MerkleBlockTest(BitcoinTestFramework):
         # verify that the proofs are invalid
 
 if __name__ == '__main__':
-    MerkleBlockTest().main()
+    MerkleBlockTest(__file__).main()

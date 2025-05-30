@@ -7,12 +7,10 @@ netbsd_NM = $(host_toolchain)gcc-nm
 netbsd_RANLIB = $(host_toolchain)gcc-ranlib
 endif
 
-netbsd_CXXFLAGS=$(netbsd_CFLAGS)
-
 netbsd_release_CFLAGS=-O2
 netbsd_release_CXXFLAGS=$(netbsd_release_CFLAGS)
 
-netbsd_debug_CFLAGS=-O1
+netbsd_debug_CFLAGS=-O1 -g
 netbsd_debug_CXXFLAGS=$(netbsd_debug_CFLAGS)
 
 ifeq (86,$(findstring 86,$(build_arch)))
@@ -36,4 +34,4 @@ x86_64_netbsd_CC=$(default_host_CC) -m64
 x86_64_netbsd_CXX=$(default_host_CXX) -m64
 endif
 
-netbsd_cmake_system=NetBSD
+netbsd_cmake_system_name=NetBSD

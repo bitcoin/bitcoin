@@ -20,8 +20,9 @@ namespace {
 
 static RPCHelpMan getzmqnotifications()
 {
-    return RPCHelpMan{"getzmqnotifications",
-                "\nReturns information about the active ZeroMQ notifications.\n",
+    return RPCHelpMan{
+        "getzmqnotifications",
+        "Returns information about the active ZeroMQ notifications.\n",
                 {},
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -47,7 +48,7 @@ static RPCHelpMan getzmqnotifications()
             obj.pushKV("type", n->GetType());
             obj.pushKV("address", n->GetAddress());
             obj.pushKV("hwm", n->GetOutboundMessageHighWaterMark());
-            result.push_back(obj);
+            result.push_back(std::move(obj));
         }
     }
 

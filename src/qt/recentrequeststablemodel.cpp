@@ -20,6 +20,8 @@
 #include <QLatin1Char>
 #include <QLatin1String>
 
+using util::ToString;
+
 RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)
 {

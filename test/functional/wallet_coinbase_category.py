@@ -13,9 +13,6 @@ from test_framework.util import (
 )
 
 class CoinbaseCategoryTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -60,4 +57,4 @@ class CoinbaseCategoryTest(BitcoinTestFramework):
         self.assert_category("orphan", address, txid, 100)
 
 if __name__ == '__main__':
-    CoinbaseCategoryTest().main()
+    CoinbaseCategoryTest(__file__).main()

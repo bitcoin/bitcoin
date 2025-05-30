@@ -176,6 +176,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">შეიყვანეთ ძველი საიდუმლო ფრაზა და ახალი საიდუმლო ფრაზა საფულისთვის</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">გაგრძელება</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">გახსოვდეთ, რომ თქვენი საფულის დაშიფვრა ვერ უზრუნველყოფს სრულად დაიცვას თქვენი ბიტკოინების მოპარვა კომპიუტერში მავნე პროგრამებით.</translation>
     </message>
@@ -368,7 +372,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">ნაგულისხმევი საფულე</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -431,6 +439,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">ქსელური აქტივობა გათიშულია.</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation type="unfinished">მარიონეტული &lt;b&gt;ჩართულია&lt;/b&gt; :%1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -640,10 +652,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Close all wallets</source>
         <translation type="unfinished">ყველა საფულის დახურვა</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ნაგულისხმევი საფულე</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -921,10 +929,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Open wallet failed</source>
         <translation type="unfinished">საფულის გახსნა ვერ მოხერხდა</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ნაგულისხმევი საფულე</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1250,14 +1254,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
         <translation type="unfinished">დაუდასტურებელი ხურდის გამოყენების აკრძალვის შემდეგ მათი გამოყენება შეუძლებელი იქნება, სანამ ტრანსაქციას არ ექნება ერთი დასტური მაინც. ეს აისახება თქვენი ნაშთის დათვლაზეც.</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">როუტერში Bitcoin-კლიენტის პორტის ავტომატური გახსნა. მუშაობს, თუ თქვენს როუტერს ჩართული აქვს UPnP.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">პორტის გადამისამართება &amp;UPnP-ით</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -2333,10 +2329,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">შეამოწმეთ მისამართი და სცადეთ ხელახლა.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">შეყვანილი მისამართი არ არის კავშირში გასაღებთან.</translation>
-    </message>
-    <message>
         <source>Wallet unlock was cancelled.</source>
         <translation type="unfinished">საფულის განბლოკვა შეწყვეტილია.</translation>
     </message>
@@ -2780,11 +2772,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Send Coins</source>
         <translation type="unfinished">მონეტების გაგზავნა</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ნაგულისხმევი საფულე</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2844,20 +2832,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">-maxmempool უნდა იყოს მინიმუმ %d MB</translation>
     </message>
     <message>
-        <source>A fatal internal error occurred, see debug.log for details</source>
-        <translation type="unfinished">მოხდა ფატალური შიდა შეცდომა. გამართვის დეტალებისთვის იხილეთ debug.log</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">შენიშნულია ბლოკთა ბაზის დაზიანება</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
         <translation type="unfinished">დისკის სივრცე ძალიან დაბალია!</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">გავუშვათ ბლოკთა ბაზის ხელახლა აგება ეხლა?</translation>
     </message>
     <message>
         <source>Done loading</source>
@@ -2910,10 +2890,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No addresses available</source>
         <translation type="unfinished">არცერთი მისამართი არ არსებობს</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">არ არის საკმარისი ფაილ-დესკრიპტორები.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>

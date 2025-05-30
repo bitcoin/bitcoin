@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,7 @@ FUZZ_TARGET(span)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     std::string str = fuzzed_data_provider.ConsumeBytesAsString(32);
-    const Span<const char> span{str};
+    const std::span<const char> span{str};
     (void)span.data();
     (void)span.begin();
     (void)span.end();
@@ -30,10 +30,4 @@ FUZZ_TARGET(span)
         (void)span.subspan(idx, span.size() - idx);
         (void)span[idx];
     }
-
-    std::string another_str = fuzzed_data_provider.ConsumeBytesAsString(32);
-    const Span<const char> another_span{another_str};
-    assert((span <= another_span) != (span > another_span));
-    assert((span == another_span) != (span != another_span));
-    assert((span >= another_span) != (span < another_span));
 }

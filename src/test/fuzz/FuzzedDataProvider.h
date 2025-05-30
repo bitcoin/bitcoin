@@ -18,6 +18,7 @@
 #include <climits>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <initializer_list>
 #include <limits>
@@ -202,7 +203,7 @@ template <typename T> T FuzzedDataProvider::ConsumeIntegral() {
 // be less than or equal to |max|.
 template <typename T>
 T FuzzedDataProvider::ConsumeIntegralInRange(T min, T max) {
-  static_assert(std::is_integral<T>::value, "An integral type is required.");
+  static_assert(std::is_integral_v<T>, "An integral type is required.");
   static_assert(sizeof(T) <= sizeof(uint64_t), "Unsupported integral type.");
 
   if (min > max)
@@ -270,14 +271,14 @@ T FuzzedDataProvider::ConsumeFloatingPointInRange(T min, T max) {
 // Returns a floating point number in the range [0.0, 1.0]. If there's no
 // input data left, always returns 0.
 template <typename T> T FuzzedDataProvider::ConsumeProbability() {
-  static_assert(std::is_floating_point<T>::value,
+  static_assert(std::is_floating_point_v<T>,
                 "A floating point type is required.");
 
   // Use different integral types for different floating point types in order
   // to provide better density of the resulting values.
   using IntegralType =
-      typename std::conditional<(sizeof(T) <= sizeof(uint32_t)), uint32_t,
-                                uint64_t>::type;
+      typename std::conditional_t<(sizeof(T) <= sizeof(uint32_t)), uint32_t,
+                                  uint64_t>;
 
   T result = static_cast<T>(ConsumeIntegral<IntegralType>());
   result /= static_cast<T>(std::numeric_limits<IntegralType>::max());
@@ -293,7 +294,7 @@ inline bool FuzzedDataProvider::ConsumeBool() {
 // also contain |kMaxValue| aliased to its largest (inclusive) value. Such as:
 // enum class Foo { SomeValue, OtherValue, kMaxValue = OtherValue };
 template <typename T> T FuzzedDataProvider::ConsumeEnum() {
-  static_assert(std::is_enum<T>::value, "|T| must be an enum type.");
+  static_assert(std::is_enum_v<T>, "|T| must be an enum type.");
   return static_cast<T>(
       ConsumeIntegralInRange<uint32_t>(0, static_cast<uint32_t>(T::kMaxValue)));
 }

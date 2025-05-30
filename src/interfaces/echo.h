@@ -13,7 +13,7 @@ namespace interfaces {
 class Echo
 {
 public:
-    virtual ~Echo() {}
+    virtual ~Echo() = default;
 
     //! Echo provided string.
     virtual std::string echo(const std::string& echo) = 0;

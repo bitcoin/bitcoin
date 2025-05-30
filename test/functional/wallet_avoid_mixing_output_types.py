@@ -106,28 +106,23 @@ def generate_payment_values(n, m):
 
 
 class AddressInputTypeGrouping(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [
             [
                 "-addresstype=bech32",
-                "-whitelist=noban@127.0.0.1",
-                "-txindex",
             ],
             [
                 "-addresstype=p2sh-segwit",
-                "-whitelist=noban@127.0.0.1",
                 "-txindex",
             ],
         ]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
 
     def make_payment(self, A, B, v, addr_type):
         fee_rate = random.randint(1, 20)
@@ -177,4 +172,4 @@ class AddressInputTypeGrouping(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    AddressInputTypeGrouping().main()
+    AddressInputTypeGrouping(__file__).main()

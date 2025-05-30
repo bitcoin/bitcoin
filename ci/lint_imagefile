@@ -4,15 +4,15 @@
 
 # See test/lint/README.md for usage.
 
-FROM debian:bookworm
+FROM mirror.gcr.io/ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
 
+COPY ./ci/retry/retry /ci_retry
 COPY ./.python-version /.python-version
 COPY ./ci/lint/container-entrypoint.sh /entrypoint.sh
 COPY ./ci/lint/04_install.sh /install.sh
-COPY ./test/lint/test_runner /test/lint/test_runner
 
 RUN /install.sh && \
   echo 'alias lint="./ci/lint/06_script.sh"' >> ~/.bashrc && \

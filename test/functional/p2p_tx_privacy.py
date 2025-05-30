@@ -39,7 +39,7 @@ class P2PTxSpy(P2PInterface):
         self.all_invs = []
 
     def on_version(self, message):
-        self.send_message(msg_wtxidrelay())
+        self.send_without_ping(msg_wtxidrelay())
 
     def on_inv(self, message):
         self.all_invs += message.inv
@@ -74,4 +74,4 @@ class TxPrivacyTest(BitcoinTestFramework):
         spy.wait_for_inv_match(CInv(MSG_WTX, tx2.calc_sha256(True)))
 
 if __name__ == '__main__':
-    TxPrivacyTest().main()
+    TxPrivacyTest(__file__).main()

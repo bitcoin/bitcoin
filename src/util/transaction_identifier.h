@@ -1,3 +1,7 @@
+// Copyright (c) 2023-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit.
+
 #ifndef BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
 #define BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
 
@@ -42,8 +46,15 @@ public:
     /** Wrapped `uint256` methods. */
     constexpr bool IsNull() const { return m_wrapped.IsNull(); }
     constexpr void SetNull() { m_wrapped.SetNull(); }
+    static std::optional<transaction_identifier> FromHex(std::string_view hex)
+    {
+        auto u{uint256::FromHex(hex)};
+        if (!u) return std::nullopt;
+        return FromUint256(*u);
+    }
     std::string GetHex() const { return m_wrapped.GetHex(); }
     std::string ToString() const { return m_wrapped.ToString(); }
+    static constexpr auto size() { return decltype(m_wrapped)::size(); }
     constexpr const std::byte* data() const { return reinterpret_cast<const std::byte*>(m_wrapped.data()); }
     constexpr const std::byte* begin() const { return reinterpret_cast<const std::byte*>(m_wrapped.begin()); }
     constexpr const std::byte* end() const { return reinterpret_cast<const std::byte*>(m_wrapped.end()); }
@@ -64,10 +75,5 @@ public:
 using Txid = transaction_identifier<false>;
 /** Wtxid commits to all transaction fields including the witness. */
 using Wtxid = transaction_identifier<true>;
-
-inline Txid TxidFromString(std::string_view str)
-{
-    return Txid::FromUint256(uint256S(str.data()));
-}
 
 #endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H

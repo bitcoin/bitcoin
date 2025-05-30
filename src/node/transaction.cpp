@@ -9,6 +9,7 @@
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/types.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -54,7 +55,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             const Coin& existingCoin = view.AccessCoin(COutPoint(txid, o));
             // IsSpent doesn't mean the coin is spent, it means the output doesn't exist.
             // So if the output does exist, then this transaction exists in the chain.
-            if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_CHAIN;
+            if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_UTXO_SET;
         }
 
         if (auto mempool_tx = node.mempool->get(txid); mempool_tx) {
@@ -92,7 +93,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 node.mempool->AddUnbroadcastTx(txid);
             }
 
-            if (wait_callback) {
+            if (wait_callback && node.validation_signals) {
                 // For transactions broadcast from outside the wallet, make sure
                 // that the wallet has been notified of the transaction before
                 // continuing.
@@ -101,7 +102,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 // with a transaction to/from their wallet, immediately call some
                 // wallet RPC, and get a stale result because callbacks have not
                 // yet been processed.
-                CallFunctionInValidationInterfaceQueue([&promise] {
+                node.validation_signals->CallFunctionInValidationInterfaceQueue([&promise] {
                     promise.set_value();
                 });
                 callback_set = true;
@@ -143,7 +144,7 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
     }
     if (block_index) {
         CBlock block;
-        if (blockman.ReadBlockFromDisk(block, *block_index)) {
+        if (blockman.ReadBlock(block, *block_index)) {
             for (const auto& tx : block.vtx) {
                 if (tx->GetHash() == hash) {
                     hashBlock = block_index->GetBlockHash();

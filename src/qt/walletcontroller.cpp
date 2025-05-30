@@ -30,6 +30,7 @@
 #include <QTimer>
 #include <QWindow>
 
+using util::Join;
 using wallet::WALLET_FLAG_BLANK_WALLET;
 using wallet::WALLET_FLAG_DESCRIPTORS;
 using wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS;
@@ -64,18 +65,26 @@ WalletController::~WalletController()
     delete m_activity_worker;
 }
 
-std::map<std::string, bool> WalletController::listWalletDir() const
+std::map<std::string, std::pair<bool, std::string>> WalletController::listWalletDir() const
 {
     QMutexLocker locker(&m_mutex);
-    std::map<std::string, bool> wallets;
-    for (const std::string& name : m_node.walletLoader().listWalletDir()) {
-        wallets[name] = false;
+    std::map<std::string, std::pair<bool, std::string>> wallets;
+    for (const auto& [name, format] : m_node.walletLoader().listWalletDir()) {
+        wallets[name] = std::make_pair(false, format);
     }
     for (WalletModel* wallet_model : m_wallets) {
         auto it = wallets.find(wallet_model->wallet().getWalletName());
-        if (it != wallets.end()) it->second = true;
+        if (it != wallets.end()) it->second.first = true;
     }
     return wallets;
+}
+
+void WalletController::removeWallet(WalletModel* wallet_model)
+{
+    // Once the wallet is successfully removed from the node, the model will emit the 'WalletModel::unload' signal.
+    // This signal is already connected and will complete the removal of the view from the GUI.
+    // Look at 'WalletController::getOrCreateWallet' for the signal connection.
+    wallet_model->wallet().remove();
 }
 
 void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
@@ -88,10 +97,7 @@ void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
     box.setDefaultButton(QMessageBox::Yes);
     if (box.exec() != QMessageBox::Yes) return;
 
-    // First remove wallet from node.
-    wallet_model->wallet().remove();
-    // Now release the model.
-    removeAndDeleteWallet(wallet_model);
+    removeWallet(wallet_model);
 }
 
 void WalletController::closeAllWallets(QWidget* parent)
@@ -104,11 +110,8 @@ void WalletController::closeAllWallets(QWidget* parent)
 
     QMutexLocker locker(&m_mutex);
     for (WalletModel* wallet_model : m_wallets) {
-        wallet_model->wallet().remove();
-        Q_EMIT walletRemoved(wallet_model);
-        delete wallet_model;
+        removeWallet(wallet_model);
     }
-    m_wallets.clear();
 }
 
 WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet)
@@ -149,9 +152,10 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     assert(called);
 
     connect(wallet_model, &WalletModel::unload, this, [this, wallet_model] {
-        // Defer removeAndDeleteWallet when no modal widget is active.
+        // Defer removeAndDeleteWallet when no modal widget is actively waiting for an action.
         // TODO: remove this workaround by removing usage of QDialog::exec.
-        if (QApplication::activeModalWidget()) {
+        QWidget* active_dialog = QApplication::activeModalWidget();
+        if (active_dialog && dynamic_cast<QProgressDialog*>(active_dialog) == nullptr) {
             connect(qApp, &QApplication::focusWindowChanged, wallet_model, [this, wallet_model]() {
                 if (!QApplication::activeModalWidget()) {
                     removeAndDeleteWallet(wallet_model);
@@ -342,7 +346,7 @@ void OpenWalletActivity::finish()
 
 void OpenWalletActivity::open(const std::string& path)
 {
-    QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
+    QString name = GUIUtil::WalletDisplayName(path);
 
     showProgressDialog(
         //: Title of window indicating the progress of opening of a wallet.
@@ -435,12 +439,12 @@ void RestoreWalletActivity::finish()
     Q_EMIT finished();
 }
 
-void MigrateWalletActivity::migrate(WalletModel* wallet_model)
+void MigrateWalletActivity::migrate(const std::string& name)
 {
     // Warn the user about migration
     QMessageBox box(m_parent_widget);
     box.setWindowTitle(tr("Migrate wallet"));
-    box.setText(tr("Are you sure you wish to migrate the wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(wallet_model->getDisplayName())));
+    box.setText(tr("Are you sure you wish to migrate the wallet <i>%1</i>?").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(name))));
     box.setInformativeText(tr("Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.\n"
                 "If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.\n"
                 "If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.\n\n"
@@ -451,18 +455,12 @@ void MigrateWalletActivity::migrate(WalletModel* wallet_model)
     box.setDefaultButton(QMessageBox::Yes);
     if (box.exec() != QMessageBox::Yes) return;
 
-    // Get the passphrase if it is encrypted regardless of it is locked or unlocked. We need the passphrase itself.
     SecureString passphrase;
-    WalletModel::EncryptionStatus enc_status = wallet_model->getEncryptionStatus();
-    if (enc_status == WalletModel::EncryptionStatus::Locked || enc_status == WalletModel::EncryptionStatus::Unlocked) {
-        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, m_parent_widget, &passphrase);
-        dlg.setModel(wallet_model);
-        dlg.exec();
+    if (node().walletLoader().isEncrypted(name)) {
+        // Get the passphrase for the wallet
+        AskPassphraseDialog dlg(AskPassphraseDialog::UnlockMigration, m_parent_widget, &passphrase);
+        if (dlg.exec() == QDialog::Rejected) return;
     }
-
-    // GUI needs to remove the wallet so that it can actually be unloaded by migration
-    const std::string name = wallet_model->wallet().getWalletName();
-    m_wallet_controller->removeAndDeleteWallet(wallet_model);
 
     showProgressDialog(tr("Migrate Wallet"), tr("Migrating Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(name)));
 
@@ -470,12 +468,12 @@ void MigrateWalletActivity::migrate(WalletModel* wallet_model)
         auto res{node().walletLoader().migrateWallet(name, passphrase)};
 
         if (res) {
-            m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(res->wallet->getWalletName()));
+            m_success_message = tr("The wallet '%1' was migrated successfully.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->wallet->getWalletName())));
             if (res->watchonly_wallet_name) {
-                m_success_message += QChar(' ') + tr("Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->watchonly_wallet_name.value()));
+                m_success_message += QChar(' ') + tr("Watchonly scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->watchonly_wallet_name.value())));
             }
             if (res->solvables_wallet_name) {
-                m_success_message += QChar(' ') + tr("Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(res->solvables_wallet_name.value()));
+                m_success_message += QChar(' ') + tr("Solvable but not watched scripts have been migrated to a new wallet named '%1'.").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(res->solvables_wallet_name.value())));
             }
             m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(res->wallet));
         } else {

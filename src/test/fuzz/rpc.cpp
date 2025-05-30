@@ -36,9 +36,12 @@
 #include <vector>
 enum class ChainType;
 
+using util::Join;
+using util::ToString;
+
 namespace {
 struct RPCFuzzTestingSetup : public TestingSetup {
-    RPCFuzzTestingSetup(const ChainType chain_type, const std::vector<const char*>& extra_args) : TestingSetup{chain_type, extra_args}
+    RPCFuzzTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
     {
     }
 
@@ -72,14 +75,12 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "addnode",        // avoid DNS lookups
     "addpeeraddress", // avoid DNS lookups
     "dumptxoutset",   // avoid writing to disk
-    "dumpwallet", // avoid writing to disk
     "enumeratesigners",
     "echoipc",              // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
     "generatetoaddress",    // avoid prohibitively slow execution (when `num_blocks` is large)
     "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
     "gettxoutproof",        // avoid prohibitively slow execution
     "importmempool", // avoid reading from disk
-    "importwallet", // avoid reading from disk
     "loadtxoutset",   // avoid reading from disk
     "loadwallet",   // avoid reading from disk
     "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future
@@ -127,6 +128,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getchaintxstats",
     "getconnectioncount",
     "getdeploymentinfo",
+    "getdescriptoractivity",
     "getdescriptorinfo",
     "getdifficulty",
     "getindexinfo",
@@ -140,6 +142,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "getnetworkhashps",
     "getnetworkinfo",
     "getnodeaddresses",
+    "getorphantxs",
     "getpeerinfo",
     "getprioritisedtransactions",
     "getrawaddrman",
@@ -360,6 +363,7 @@ void initialize_rpc()
 
 FUZZ_TARGET(rpc, .init = initialize_rpc)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bool good_data{true};
     SetMockTime(ConsumeTime(fuzzed_data_provider));

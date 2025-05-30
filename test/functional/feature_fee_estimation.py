@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
 from copy import deepcopy
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 import os
 import random
 import time
@@ -14,6 +14,7 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
@@ -40,7 +41,7 @@ def small_txpuzzle_randfee(
     # Exponentially distributed from 1-128 * fee_increment
     rand_fee = float(fee_increment) * (1.1892 ** random.randint(0, 28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
-    fee = min_fee - fee_increment + satoshi_round(rand_fee)
+    fee = min_fee - fee_increment + satoshi_round(rand_fee, rounding=ROUND_DOWN)
     utxos_to_spend = []
     total_in = Decimal("0.00000000")
     while total_in <= (amount + fee) and len(conflist) > 0:
@@ -128,15 +129,24 @@ def make_tx(wallet, utxo, feerate):
         fee_rate=Decimal(feerate * 1000) / COIN,
     )
 
+def check_fee_estimates_btw_modes(node, expected_conservative, expected_economical):
+    fee_est_conservative = node.estimatesmartfee(1, estimate_mode="conservative")['feerate']
+    fee_est_economical = node.estimatesmartfee(1, estimate_mode="economical")['feerate']
+    fee_est_default = node.estimatesmartfee(1)['feerate']
+    assert_equal(fee_est_conservative, expected_conservative)
+    assert_equal(fee_est_economical, expected_economical)
+    assert_equal(fee_est_default, expected_economical)
+
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
-        # Force fSendTrickle to true (via whitelist.noban)
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [
-            ["-whitelist=noban@127.0.0.1"],
-            ["-whitelist=noban@127.0.0.1", "-blockmaxweight=68000"],
-            ["-whitelist=noban@127.0.0.1", "-blockmaxweight=32000"],
+            [],
+            ["-blockmaxweight=68000"],
+            ["-blockmaxweight=32000"],
         ]
 
     def setup_network(self):
@@ -354,7 +364,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
         fee_dat_current_content = open(fee_dat, "rb").read()
-        assert fee_dat_current_content != fee_dat_initial_content
+        assert_not_equal(fee_dat_current_content, fee_dat_initial_content)
 
         fee_dat_initial_content = fee_dat_current_content
 
@@ -362,7 +372,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.restart_node(0)
         fee_dat_current_content = open(fee_dat, "rb").read()
-        assert fee_dat_current_content != fee_dat_initial_content
+        assert_not_equal(fee_dat_current_content, fee_dat_initial_content)
 
 
     def test_acceptstalefeeestimates_option(self):
@@ -380,6 +390,41 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Restart node with -acceptstalefeeestimates option to ensure fee_estimate.dat file is read
         self.start_node(0,extra_args=["-acceptstalefeeestimates"])
         assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
+
+    def clear_estimates(self):
+        self.log.info("Restarting node with fresh estimation")
+        self.stop_node(0)
+        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+        os.remove(fee_dat)
+        self.start_node(0)
+        self.connect_nodes(0, 1)
+        self.connect_nodes(0, 2)
+        self.sync_blocks()
+        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
+
+    def broadcast_and_mine(self, broadcaster, miner, feerate, count):
+        """Broadcast and mine some number of transactions with a specified fee rate."""
+        for _ in range(count):
+            self.wallet.send_self_transfer(from_node=broadcaster, fee_rate=feerate)
+        self.sync_mempools()
+        self.generate(miner, 1)
+
+    def test_estimation_modes(self):
+        low_feerate = Decimal("0.001")
+        high_feerate = Decimal("0.005")
+        tx_count = 24
+        # Broadcast and mine high fee transactions for the first 12 blocks.
+        for _ in range(12):
+            self.broadcast_and_mine(self.nodes[1], self.nodes[2], high_feerate, tx_count)
+        check_fee_estimates_btw_modes(self.nodes[0], high_feerate, high_feerate)
+
+        # We now track 12 blocks; short horizon stats will start decaying.
+        # Broadcast and mine low fee transactions for the next 4 blocks.
+        for _ in range(4):
+            self.broadcast_and_mine(self.nodes[1], self.nodes[2], low_feerate, tx_count)
+        # conservative mode will consider longer time horizons while economical mode does not
+        # Check the fee estimates for both modes after mining low fee transactions.
+        check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
 
 
     def run_test(self):
@@ -419,16 +464,14 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test reading old fee_estimates.dat")
         self.test_old_fee_estimate_file()
 
-        self.log.info("Restarting node with fresh estimation")
-        self.stop_node(0)
-        fee_dat = os.path.join(self.nodes[0].chain_path, "fee_estimates.dat")
-        os.remove(fee_dat)
-        self.start_node(0)
-        self.connect_nodes(0, 1)
-        self.connect_nodes(0, 2)
+        self.clear_estimates()
 
         self.log.info("Testing estimates with RBF.")
         self.sanity_check_rbf_estimates(self.confutxo + self.memutxo)
+
+        self.clear_estimates()
+        self.log.info("Test estimatesmartfee modes")
+        self.test_estimation_modes()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
@@ -438,4 +481,4 @@ class EstimateFeeTest(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    EstimateFeeTest().main()
+    EstimateFeeTest(__file__).main()

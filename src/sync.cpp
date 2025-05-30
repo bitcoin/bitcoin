@@ -37,11 +37,11 @@ struct CLockLocation {
         const char* pszFile,
         int nLine,
         bool fTryIn,
-        const std::string& thread_name)
+        std::string&& thread_name)
         : fTry(fTryIn),
           mutexName(pszName),
           sourceFile(pszFile),
-          m_thread_name(thread_name),
+          m_thread_name(std::move(thread_name)),
           sourceLine(nLine) {}
 
     std::string ToString() const
@@ -60,7 +60,7 @@ private:
     bool fTry;
     std::string mutexName;
     std::string sourceFile;
-    const std::string& m_thread_name;
+    const std::string m_thread_name;
     int sourceLine;
 };
 
@@ -148,8 +148,8 @@ template <typename MutexType>
 static void push_lock(MutexType* c, const CLockLocation& locklocation)
 {
     constexpr bool is_recursive_mutex =
-        std::is_base_of<RecursiveMutex, MutexType>::value ||
-        std::is_base_of<std::recursive_mutex, MutexType>::value;
+        std::is_base_of_v<RecursiveMutex, MutexType> ||
+        std::is_base_of_v<std::recursive_mutex, MutexType>;
 
     LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);

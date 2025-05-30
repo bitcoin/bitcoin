@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,17 +22,17 @@
 
 #define REPEAT10(a) do { {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; {a}; } while(0)
 
-void ChaCha20Aligned::SetKey(Span<const std::byte> key) noexcept
+void ChaCha20Aligned::SetKey(std::span<const std::byte> key) noexcept
 {
     assert(key.size() == KEYLEN);
-    input[0] = ReadLE32(UCharCast(key.data() + 0));
-    input[1] = ReadLE32(UCharCast(key.data() + 4));
-    input[2] = ReadLE32(UCharCast(key.data() + 8));
-    input[3] = ReadLE32(UCharCast(key.data() + 12));
-    input[4] = ReadLE32(UCharCast(key.data() + 16));
-    input[5] = ReadLE32(UCharCast(key.data() + 20));
-    input[6] = ReadLE32(UCharCast(key.data() + 24));
-    input[7] = ReadLE32(UCharCast(key.data() + 28));
+    input[0] = ReadLE32(key.data() + 0);
+    input[1] = ReadLE32(key.data() + 4);
+    input[2] = ReadLE32(key.data() + 8);
+    input[3] = ReadLE32(key.data() + 12);
+    input[4] = ReadLE32(key.data() + 16);
+    input[5] = ReadLE32(key.data() + 20);
+    input[6] = ReadLE32(key.data() + 24);
+    input[7] = ReadLE32(key.data() + 28);
     input[8] = 0;
     input[9] = 0;
     input[10] = 0;
@@ -44,7 +44,7 @@ ChaCha20Aligned::~ChaCha20Aligned()
     memory_cleanse(input, sizeof(input));
 }
 
-ChaCha20Aligned::ChaCha20Aligned(Span<const std::byte> key) noexcept
+ChaCha20Aligned::ChaCha20Aligned(std::span<const std::byte> key) noexcept
 {
     SetKey(key);
 }
@@ -57,9 +57,9 @@ void ChaCha20Aligned::Seek(Nonce96 nonce, uint32_t block_counter) noexcept
     input[11] = nonce.second >> 32;
 }
 
-inline void ChaCha20Aligned::Keystream(Span<std::byte> output) noexcept
+inline void ChaCha20Aligned::Keystream(std::span<std::byte> output) noexcept
 {
-    unsigned char* c = UCharCast(output.data());
+    std::byte* c = output.data();
     size_t blocks = output.size() / BLOCKLEN;
     assert(blocks * BLOCKLEN == output.size());
 
@@ -158,11 +158,11 @@ inline void ChaCha20Aligned::Keystream(Span<std::byte> output) noexcept
     }
 }
 
-inline void ChaCha20Aligned::Crypt(Span<const std::byte> in_bytes, Span<std::byte> out_bytes) noexcept
+inline void ChaCha20Aligned::Crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes) noexcept
 {
     assert(in_bytes.size() == out_bytes.size());
-    const unsigned char* m = UCharCast(in_bytes.data());
-    unsigned char* c = UCharCast(out_bytes.data());
+    const std::byte* m = in_bytes.data();
+    std::byte* c = out_bytes.data();
     size_t blocks = out_bytes.size() / BLOCKLEN;
     assert(blocks * BLOCKLEN == out_bytes.size());
 
@@ -279,7 +279,7 @@ inline void ChaCha20Aligned::Crypt(Span<const std::byte> in_bytes, Span<std::byt
     }
 }
 
-void ChaCha20::Keystream(Span<std::byte> out) noexcept
+void ChaCha20::Keystream(std::span<std::byte> out) noexcept
 {
     if (out.empty()) return;
     if (m_bufleft) {
@@ -300,7 +300,7 @@ void ChaCha20::Keystream(Span<std::byte> out) noexcept
     }
 }
 
-void ChaCha20::Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept
+void ChaCha20::Crypt(std::span<const std::byte> input, std::span<std::byte> output) noexcept
 {
     assert(input.size() == output.size());
 
@@ -334,20 +334,20 @@ ChaCha20::~ChaCha20()
     memory_cleanse(m_buffer.data(), m_buffer.size());
 }
 
-void ChaCha20::SetKey(Span<const std::byte> key) noexcept
+void ChaCha20::SetKey(std::span<const std::byte> key) noexcept
 {
     m_aligned.SetKey(key);
     m_bufleft = 0;
     memory_cleanse(m_buffer.data(), m_buffer.size());
 }
 
-FSChaCha20::FSChaCha20(Span<const std::byte> key, uint32_t rekey_interval) noexcept :
+FSChaCha20::FSChaCha20(std::span<const std::byte> key, uint32_t rekey_interval) noexcept :
     m_chacha20(key), m_rekey_interval(rekey_interval)
 {
     assert(key.size() == KEYLEN);
 }
 
-void FSChaCha20::Crypt(Span<const std::byte> input, Span<std::byte> output) noexcept
+void FSChaCha20::Crypt(std::span<const std::byte> input, std::span<std::byte> output) noexcept
 {
     assert(input.size() == output.size());
 

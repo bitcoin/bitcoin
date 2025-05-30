@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/signmessage.h>
 #include <key.h>
 #include <key_io.h>
 #include <rpc/protocol.h>
@@ -10,7 +11,6 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <univalue.h>
-#include <util/message.h>
 
 #include <string>
 
@@ -38,9 +38,9 @@ static RPCHelpMan verifymessage()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            std::string strAddress = request.params[0].get_str();
-            std::string strSign = request.params[1].get_str();
-            std::string strMessage = request.params[2].get_str();
+            std::string strAddress = self.Arg<std::string>("address");
+            std::string strSign = self.Arg<std::string>("signature");
+            std::string strMessage = self.Arg<std::string>("message");
 
             switch (MessageVerify(strAddress, strSign, strMessage)) {
             case MessageVerificationResult::ERR_INVALID_ADDRESS:
@@ -63,8 +63,9 @@ static RPCHelpMan verifymessage()
 
 static RPCHelpMan signmessagewithprivkey()
 {
-    return RPCHelpMan{"signmessagewithprivkey",
-        "\nSign a message with the private key of an address\n",
+    return RPCHelpMan{
+        "signmessagewithprivkey",
+        "Sign a message with the private key of an address\n",
         {
             {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The private key to sign the message with."},
             {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},

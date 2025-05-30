@@ -77,7 +77,7 @@ class FrameworkInfo(object):
     bundleBinaryDirectory = "Contents/MacOS"
     
     @classmethod
-    def fromOtoolLibraryLine(cls, line: str) -> Optional['FrameworkInfo']:
+    def fromLibraryLine(cls, line: str) -> Optional['FrameworkInfo']:
         # Note: line must be trimmed
         if line == "":
             return None
@@ -88,7 +88,7 @@ class FrameworkInfo(object):
         
         m = cls.reOLine.match(line)
         if m is None:
-            raise RuntimeError(f"otool line could not be parsed: {line}")
+            raise RuntimeError(f"Line could not be parsed: {line}")
         
         path = m.group(1)
         
@@ -120,7 +120,7 @@ class FrameworkInfo(object):
                     break
                 i += 1
             if i == len(parts):
-                raise RuntimeError(f"Could not find .framework or .dylib in otool line: {line}")
+                raise RuntimeError(f"Could not find .framework or .dylib in line: {line}")
             
             info.frameworkName = parts[i]
             info.frameworkDirectory = "/".join(parts[:i])
@@ -157,20 +157,19 @@ class DeploymentInfo(object):
         self.qtPath = None
         self.pluginPath = None
         self.deployedFrameworks = []
-    
+
     def detectQtPath(self, frameworkDirectory: str):
         parentDir = os.path.dirname(frameworkDirectory)
-        if os.path.exists(os.path.join(parentDir, "translations")):
-            # Classic layout, e.g. "/usr/local/Trolltech/Qt-4.x.x"
+        if os.path.exists(os.path.join(parentDir, "share", "qt", "translations")):
             self.qtPath = parentDir
         else:
             self.qtPath = os.getenv("QTDIR", None)
 
         if self.qtPath is not None:
-            pluginPath = os.path.join(self.qtPath, "plugins")
+            pluginPath = os.path.join(self.qtPath, "share", "qt", "plugins")
             if os.path.exists(pluginPath):
                 self.pluginPath = pluginPath
-    
+
     def usesFramework(self, name: str) -> bool:
         for framework in self.deployedFrameworks:
             if framework.endswith(".framework"):
@@ -181,31 +180,33 @@ class DeploymentInfo(object):
                     return True
         return False
 
-def getFrameworks(binaryPath: str, verbose: int) -> list[FrameworkInfo]:
+def getFrameworks(binaryPath: str, verbose: int, rpath: str = '') -> list[FrameworkInfo]:
+    objdump = os.getenv("OBJDUMP", "objdump")
     if verbose:
-        print(f"Inspecting with otool: {binaryPath}")
-    otoolbin=os.getenv("OTOOL", "otool")
-    otool = run([otoolbin, "-L", binaryPath], stdout=PIPE, stderr=PIPE, text=True)
-    if otool.returncode != 0:
-        sys.stderr.write(otool.stderr)
+        print(f"Inspecting with {objdump}: {binaryPath}")
+    output = run([objdump, "--macho", "--dylibs-used", binaryPath], stdout=PIPE, stderr=PIPE, text=True)
+    if output.returncode != 0:
+        sys.stderr.write(output.stderr)
         sys.stderr.flush()
-        raise RuntimeError(f"otool failed with return code {otool.returncode}")
+        raise RuntimeError(f"{objdump} failed with return code {output.returncode}")
 
-    otoolLines = otool.stdout.split("\n")
-    otoolLines.pop(0) # First line is the inspected binary
+    lines = output.stdout.split("\n")
+    lines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
-        otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
-    
+        lines.pop(0) # Frameworks and dylibs list themselves as a dependency.
+
     libraries = []
-    for line in otoolLines:
+    for line in lines:
         line = line.replace("@loader_path", os.path.dirname(binaryPath))
-        info = FrameworkInfo.fromOtoolLibraryLine(line.strip())
+        if rpath:
+            line = line.replace("@rpath", rpath)
+        info = FrameworkInfo.fromLibraryLine(line.strip())
         if info is not None:
             if verbose:
                 print("Found framework:")
                 print(info)
             libraries.append(info)
-    
+
     return libraries
 
 def runInstallNameTool(action: str, *args):
@@ -318,7 +319,7 @@ def deployFrameworks(frameworks: list[FrameworkInfo], bundlePath: str, binaryPat
         # install_name_tool it a new id.
         changeIdentification(framework.deployedInstallName, deployedBinaryPath, verbose)
         # Check for framework dependencies
-        dependencies = getFrameworks(deployedBinaryPath, verbose)
+        dependencies = getFrameworks(deployedBinaryPath, verbose, rpath=framework.frameworkDirectory)
         
         for dependency in dependencies:
             changeInstallName(dependency.installName, dependency.deployedInstallName, deployedBinaryPath, verbose)

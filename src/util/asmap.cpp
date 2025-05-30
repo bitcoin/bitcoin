@@ -5,13 +5,13 @@
 #include <util/asmap.h>
 
 #include <clientversion.h>
-#include <crypto/common.h>
 #include <logging.h>
 #include <serialize.h>
 #include <streams.h>
 #include <util/fs.h>
 
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cstdio>
 #include <utility>
@@ -111,7 +111,7 @@ uint32_t Interpret(const std::vector<bool> &asmap, const std::vector<bool> &ip)
         } else if (opcode == Instruction::MATCH) {
             match = DecodeMatch(pos, endpos);
             if (match == INVALID) break; // Match bits straddle EOF
-            matchlen = CountBits(match) - 1;
+            matchlen = std::bit_width(match) - 1;
             if (bits < matchlen) break; // Not enough input bits
             for (uint32_t bit = 0; bit < matchlen; bit++) {
                 if ((ip[ip.size() - bits]) != ((match >> (matchlen - 1 - bit)) & 1)) {
@@ -175,7 +175,7 @@ bool SanityCheckASMap(const std::vector<bool>& asmap, int bits)
         } else if (opcode == Instruction::MATCH) {
             uint32_t match = DecodeMatch(pos, endpos);
             if (match == INVALID) return false; // Match bits straddle EOF
-            int matchlen = CountBits(match) - 1;
+            int matchlen = std::bit_width(match) - 1;
             if (prevopcode != Instruction::MATCH) had_incomplete_match = false;
             if (matchlen < 8 && had_incomplete_match) return false; // Within a sequence of matches only at most one should be incomplete
             had_incomplete_match = (matchlen < 8);
@@ -203,10 +203,10 @@ std::vector<bool> DecodeAsmap(fs::path path)
         LogPrintf("Failed to open asmap file from disk\n");
         return bits;
     }
-    fseek(filestr, 0, SEEK_END);
-    int length = ftell(filestr);
+    file.seek(0, SEEK_END);
+    int length = file.tell();
     LogPrintf("Opened asmap file %s (%d bytes) from disk\n", fs::quoted(fs::PathToString(path)), length);
-    fseek(filestr, 0, SEEK_SET);
+    file.seek(0, SEEK_SET);
     uint8_t cur_byte;
     for (int i = 0; i < length; ++i) {
         file >> cur_byte;

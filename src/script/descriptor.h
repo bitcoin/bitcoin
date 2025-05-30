@@ -158,6 +158,13 @@ struct Descriptor {
 
     /** Get the maximum size number of stack elements for satisfying this descriptor. */
     virtual std::optional<int64_t> MaxSatisfactionElems() const = 0;
+
+    /** Return all (extended) public keys for this descriptor, including any from subdescriptors.
+     *
+     * @param[out] pubkeys Any public keys
+     * @param[out] ext_pubs Any extended public keys
+     */
+    virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.
@@ -166,9 +173,9 @@ struct Descriptor {
  * is set, the checksum is mandatory - otherwise it is optional.
  *
  * If a parse error occurs, or the checksum is missing/invalid, or anything
- * else is wrong, `nullptr` is returned.
+ * else is wrong, an empty vector is returned.
  */
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
+std::vector<std::unique_ptr<Descriptor>> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
 
 /** Get the checksum for a `descriptor`.
  *

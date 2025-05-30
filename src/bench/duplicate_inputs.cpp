@@ -3,14 +3,27 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <chain.h>
 #include <chainparams.h>
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <pow.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <random.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
-#include <txmempool.h>
+#include <uint256.h>
 #include <validation.h>
+
+#include <cassert>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 
 static void DuplicateInputs(benchmark::Bench& bench)

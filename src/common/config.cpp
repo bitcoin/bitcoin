@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -26,6 +27,9 @@
 #include <string_view>
 #include <utility>
 #include <vector>
+
+using util::TrimString;
+using util::TrimStringView;
 
 static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
 {
@@ -61,7 +65,7 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
                 }
             } else {
                 error = strprintf("parse error on line %i: %s", linenr, str);
-                if (str.size() >= 2 && str.substr(0, 2) == "no") {
+                if (str.size() >= 2 && str.starts_with("no")) {
                     error += strprintf(", if you intended to specify a negated option, use %s=1 instead", str);
                 }
                 return false;
@@ -125,12 +129,18 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     const auto conf_path{GetConfigFilePath()};
-    std::ifstream stream{conf_path};
-
-    // not ok to have a config file specified that cannot be opened
-    if (IsArgSet("-conf") && !stream.good()) {
-        error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
-        return false;
+    std::ifstream stream;
+    if (!conf_path.empty()) { // path is empty when -noconf is specified
+        if (fs::is_directory(conf_path)) {
+            error = strprintf("Config file \"%s\" is a directory.", fs::PathToString(conf_path));
+            return false;
+        }
+        stream = std::ifstream{conf_path};
+        // If the file is explicitly specified, it must be readable
+        if (IsArgSet("-conf") && !stream.good()) {
+            error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
+            return false;
+        }
     }
     // ok to not have a config file
     if (stream.good()) {
@@ -172,7 +182,12 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             const size_t default_includes = add_includes({});
 
             for (const std::string& conf_file_name : conf_file_names) {
-                std::ifstream conf_file_stream{AbsPathForConfigVal(*this, fs::PathFromString(conf_file_name), /*net_specific=*/false)};
+                const auto include_conf_path{AbsPathForConfigVal(*this, fs::PathFromString(conf_file_name), /*net_specific=*/false)};
+                if (fs::is_directory(include_conf_path)) {
+                    error = strprintf("Included config file \"%s\" is a directory.", fs::PathToString(include_conf_path));
+                    return false;
+                }
+                std::ifstream conf_file_stream{include_conf_path};
                 if (conf_file_stream.good()) {
                     if (!ReadConfigStream(conf_file_stream, conf_file_name, error, ignore_invalid_keys)) {
                         return false;
@@ -210,7 +225,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
 fs::path AbsPathForConfigVal(const ArgsManager& args, const fs::path& path, bool net_specific)
 {
-    if (path.is_absolute()) {
+    if (path.is_absolute() || path.empty()) {
         return path;
     }
     return fsbridge::AbsPathJoin(net_specific ? args.GetDataDirNet() : args.GetDataDirBase(), path);

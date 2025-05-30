@@ -10,6 +10,7 @@ import socket
 from test_framework.messages import MAGIC_BYTES, NODE_P2P_V2
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     p2p_port,
     assert_raises_rpc_error
@@ -70,7 +71,7 @@ class V2TransportTest(BitcoinTestFramework):
             self.connect_nodes(2, 3, peer_advertises_v2=False)
         self.generate(self.nodes[2], 8, sync_fun=lambda: self.sync_all(self.nodes[2:4]))
         assert_equal(self.nodes[3].getblockcount(), 8)
-        assert self.nodes[0].getbestblockhash() != self.nodes[2].getbestblockhash()
+        assert_not_equal(self.nodes[0].getbestblockhash(), self.nodes[2].getbestblockhash())
         # verify there is a v1 connection between node 2 and 3
         node_2_info = self.nodes[2].getpeerinfo()
         node_3_info = self.nodes[3].getpeerinfo()
@@ -89,7 +90,7 @@ class V2TransportTest(BitcoinTestFramework):
             self.connect_nodes(2, 1, peer_advertises_v2=False) # cannot enable v2 on v1 node
         self.sync_all(self.nodes[1:3])
         assert_equal(self.nodes[1].getblockcount(), 8)
-        assert self.nodes[0].getbestblockhash() != self.nodes[1].getbestblockhash()
+        assert_not_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
         # verify there is a v1 connection between node 1 and 2
         node_1_info = self.nodes[1].getpeerinfo()
         node_2_info = self.nodes[2].getpeerinfo()
@@ -168,4 +169,4 @@ class V2TransportTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    V2TransportTest().main()
+    V2TransportTest(__file__).main()

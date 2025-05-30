@@ -18,12 +18,14 @@ class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.supports_cli = False
+        self.extra_args = [[
+            "-deprecatedrpc=settxfee"
+        ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def add_options(self, parser):
-        self.add_wallet_options(parser)
         parser.add_argument("--mineblock", dest="mine_block", default=False, action="store_true",
                             help="Test double-spend of 1-confirmed transaction")
         parser.add_argument("--segwit", dest="segwit", default=False, action="store_true",
@@ -149,4 +151,4 @@ class TxnMallTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    TxnMallTest().main()
+    TxnMallTest(__file__).main()

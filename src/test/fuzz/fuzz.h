@@ -5,10 +5,9 @@
 #ifndef BITCOIN_TEST_FUZZ_FUZZ_H
 #define BITCOIN_TEST_FUZZ_FUZZ_H
 
-#include <span.h>
-
 #include <cstdint>
 #include <functional>
+#include <span>
 #include <string_view>
 
 /**
@@ -23,7 +22,7 @@
 #define LIMITED_WHILE(condition, limit) \
     for (unsigned _count{limit}; (condition) && _count; --_count)
 
-using FuzzBufferType = Span<const uint8_t>;
+using FuzzBufferType = std::span<const uint8_t>;
 
 using TypeTestOneInput = std::function<void(FuzzBufferType)>;
 struct FuzzTargetOptions {

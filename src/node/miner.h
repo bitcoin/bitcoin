@@ -6,9 +6,12 @@
 #ifndef BITCOIN_NODE_MINER_H
 #define BITCOIN_NODE_MINER_H
 
+#include <interfaces/types.h>
+#include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
+#include <util/feefrac.h>
 
 #include <memory>
 #include <optional>
@@ -29,15 +32,24 @@ class ChainstateManager;
 
 namespace Consensus { struct Params; };
 
+using interfaces::BlockRef;
+
 namespace node {
-static const bool DEFAULT_PRINTPRIORITY = false;
+class KernelNotifications;
+
+static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 struct CBlockTemplate
 {
     CBlock block;
+    // Fees per transaction, not including coinbase transaction (unlike CBlock::vtx).
     std::vector<CAmount> vTxFees;
+    // Sigops per transaction, not including coinbase transaction (unlike CBlock::vtx).
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
+    /* A vector of package fee rates, ordered by the sequence in which
+     * packages are selected for inclusion in the block template.*/
+    std::vector<FeeFrac> m_package_feerates;
 };
 
 // Container for tracking updates to ancestor feerate as we include (parent)
@@ -96,21 +108,25 @@ struct CompareTxIterByAncestorCount {
     }
 };
 
+
+struct CTxMemPoolModifiedEntry_Indices final : boost::multi_index::indexed_by<
+    boost::multi_index::ordered_unique<
+        modifiedentry_iter,
+        CompareCTxMemPoolIter
+    >,
+    // sorted by modified ancestor fee rate
+    boost::multi_index::ordered_non_unique<
+        // Reuse same tag from CTxMemPool's similar index
+        boost::multi_index::tag<ancestor_score>,
+        boost::multi_index::identity<CTxMemPoolModifiedEntry>,
+        CompareTxMemPoolEntryByAncestorFee
+    >
+>
+{};
+
 typedef boost::multi_index_container<
     CTxMemPoolModifiedEntry,
-    boost::multi_index::indexed_by<
-        boost::multi_index::ordered_unique<
-            modifiedentry_iter,
-            CompareCTxMemPoolIter
-        >,
-        // sorted by modified ancestor fee rate
-        boost::multi_index::ordered_non_unique<
-            // Reuse same tag from CTxMemPool's similar index
-            boost::multi_index::tag<ancestor_score>,
-            boost::multi_index::identity<CTxMemPoolModifiedEntry>,
-            CompareTxMemPoolEntryByAncestorFee
-        >
-    >
+    CTxMemPoolModifiedEntry_Indices
 > indexed_modified_transaction_set;
 
 typedef indexed_modified_transaction_set::nth_index<0>::type::iterator modtxiter;
@@ -153,21 +169,23 @@ private:
     Chainstate& m_chainstate;
 
 public:
-    struct Options {
+    struct Options : BlockCreateOptions {
         // Configuration parameters for the block size
         size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
         CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
+        bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
     };
 
-    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool);
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
 
-    /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    /** Construct a new block template */
+    std::unique_ptr<CBlockTemplate> CreateNewBlock();
 
+    /** The number of transactions in the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_num_txs{};
+    /** The weight of the last assembled block (including reserved weight for block header, txs count and coinbase tx) */
     inline static std::optional<int64_t> m_last_block_weight{};
 
 private:
@@ -182,8 +200,11 @@ private:
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
-      * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(const CTxMemPool& mempool, int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
+      * statistics from the package selection (for logging statistics).
+      *
+      * @pre BlockAssembler::m_mempool must not be nullptr
+    */
+    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(!m_mempool->cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */
@@ -199,6 +220,13 @@ private:
     void SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries);
 };
 
+/**
+ * Get the minimum time a miner should use in the next block. This always
+ * accounts for the BIP94 timewarp rule, so does not necessarily reflect the
+ * consensus limit.
+ */
+int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval);
+
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
@@ -206,6 +234,27 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 
 /** Apply -blockmintxfee and -blockmaxweight options from ArgsManager to BlockAssembler options. */
 void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& options);
+
+/* Compute the block's merkle root, insert or replace the coinbase transaction and the merkle root into the block */
+void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
+
+/**
+ * Return a new block template when fees rise to a certain threshold or after a
+ * new tip; return nullopt if timeout is reached.
+ */
+std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+                                                      KernelNotifications& kernel_notifications,
+                                                      CTxMemPool* mempool,
+                                                      const std::unique_ptr<CBlockTemplate>& block_template,
+                                                      const BlockWaitOptions& options,
+                                                      const BlockAssembler::Options& assemble_options);
+
+/* Locks cs_main and returns the block hash and block height of the active chain if it exists; otherwise, returns nullopt.*/
+std::optional<BlockRef> GetTip(ChainstateManager& chainman);
+
+/* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
+ * Returns the current tip, or nullopt if the node is shutting down. */
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

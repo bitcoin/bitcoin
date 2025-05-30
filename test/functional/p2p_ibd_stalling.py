@@ -38,7 +38,7 @@ class P2PStaller(P2PDataStore):
             self.getdata_requests.append(inv.hash)
             if (inv.type & MSG_TYPE_MASK) == MSG_BLOCK:
                 if (inv.hash != self.stall_block):
-                    self.send_message(msg_block(self.block_store[inv.hash]))
+                    self.send_without_ping(msg_block(self.block_store[inv.hash]))
 
     def on_getheaders(self, message):
         pass
@@ -73,18 +73,21 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         peers = []
 
         self.log.info("Check that a staller does not get disconnected if the 1024 block lookahead buffer is filled")
+        self.mocktime = int(time.time()) + 1
+        node.setmocktime(self.mocktime)
         for id in range(NUM_PEERS):
             peers.append(node.add_outbound_p2p_connection(P2PStaller(stall_block), p2p_idx=id, connection_type="outbound-full-relay"))
             peers[-1].block_store = block_dict
-            peers[-1].send_message(headers_message)
+            peers[-1].send_and_ping(headers_message)
 
         # Need to wait until 1023 blocks are received - the magic total bytes number is a workaround in lack of an rpc
         # returning the number of downloaded (but not connected) blocks.
-        self.wait_until(lambda: self.total_bytes_recv_for_blocks() == 172761)
+        bytes_recv = 172761 if not self.options.v2transport else 169692
+        self.wait_until(lambda: self.total_bytes_recv_for_blocks() == bytes_recv)
 
         self.all_sync_send_with_ping(peers)
         # If there was a peer marked for stalling, it would get disconnected
-        self.mocktime = int(time.time()) + 3
+        self.mocktime += 3
         node.setmocktime(self.mocktime)
         self.all_sync_send_with_ping(peers)
         assert_equal(node.num_test_p2p_connections(), NUM_PEERS)
@@ -93,7 +96,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         headers_message.headers = [CBlockHeader(b) for b in blocks]
         with node.assert_debug_log(expected_msgs=['Stall started']):
             for p in peers:
-                p.send_message(headers_message)
+                p.send_without_ping(headers_message)
             self.all_sync_send_with_ping(peers)
 
         self.log.info("Check that the stalling peer is disconnected after 2 seconds")
@@ -136,7 +139,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         with node.assert_debug_log(expected_msgs=['Decreased stalling timeout to 2 seconds']):
             for p in peers:
                 if p.is_connected and (stall_block in p.getdata_requests):
-                    p.send_message(msg_block(block_dict[stall_block]))
+                    p.send_without_ping(msg_block(block_dict[stall_block]))
 
         self.log.info("Check that all outstanding blocks get connected")
         self.wait_until(lambda: node.getblockcount() == NUM_BLOCKS)
@@ -161,4 +164,4 @@ class P2PIBDStallingTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PIBDStallingTest().main()
+    P2PIBDStallingTest(__file__).main()

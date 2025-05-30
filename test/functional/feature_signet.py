@@ -9,6 +9,8 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
+SIGNET_DEFAULT_CHALLENGE = '512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae'
+
 signet_blocks = [
     '00000020f61eee3b63a380a477a063af32b2bbc97c9ff9f01f2c4225e973988108000000f575c83235984e7dc4afc1f30944c170462e84437ab6f2d52e16878a79e4678bd1914d5fae77031eccf4070001010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff025151feffffff0200f2052a010000001600149243f727dd5343293eb83174324019ec16c2630f0000000000000000776a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf94c4fecc7daa2490047304402205e423a8754336ca99dbe16509b877ef1bf98d008836c725005b3c787c41ebe46022047246e4467ad7cc7f1ad98662afcaf14c115e0095a227c7b05c5182591c23e7e01000120000000000000000000000000000000000000000000000000000000000000000000000000',
     '00000020533b53ded9bff4adc94101d32400a144c54edc5ed492a3b26c63b2d686000000b38fef50592017cfafbcab88eb3d9cf50b2c801711cad8299495d26df5e54812e7914d5fae77031ecfdd0b0001010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff025251feffffff0200f2052a01000000160014fd09839740f0e0b4fc6d5e2527e4022aa9b89dfa0000000000000000776a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf94c4fecc7daa24900473044022031d64a1692cdad1fc0ced69838169fe19ae01be524d831b95fcf5ea4e6541c3c02204f9dea0801df8b4d0cd0857c62ab35c6c25cc47c930630dc7fe723531daa3e9b01000120000000000000000000000000000000000000000000000000000000000000000000000000',
@@ -22,21 +24,33 @@ signet_blocks = [
     '00000020a868e8514be5e46dabd6a122132f423f36a43b716a40c394e2a8d063e1010000f4c6c717e99d800c699c25a2006a75a0c5c09f432a936f385e6fce139cdbd1a5e9964d5fae77031e7d026e0001010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff025a51feffffff0200f2052a01000000160014aaa671c82b138e3b8f510cd801e5f2bd0aa305940000000000000000776a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf94c4fecc7daa24900473044022042309f4c3c7a1a2ac8c24f890f962df1c0086cec10be0868087cfc427520cb2702201dafee8911c269b7e786e242045bb57cef3f5b0f177010c6159abae42f646cc501000120000000000000000000000000000000000000000000000000000000000000000000000000',
 ]
 
+class SignetParams:
+    def __init__(self, challenge=None):
+        # Prune to prevent disk space warning on CI systems with limited space,
+        # when using networks other than regtest.
+        if challenge is None:
+            self.challenge = SIGNET_DEFAULT_CHALLENGE
+            self.shared_args = ["-prune=550"]
+        else:
+            self.challenge = challenge
+            self.shared_args = ["-prune=550", f"-signetchallenge={challenge}"]
 
 class SignetBasicTest(BitcoinTestFramework):
     def set_test_params(self):
         self.chain = "signet"
         self.num_nodes = 6
         self.setup_clean_chain = True
-        shared_args1 = ["-signetchallenge=51"]  # OP_TRUE
-        shared_args2 = []  # default challenge
-        # we use the exact same challenge except we do it as a 2-of-2, which means it should fail
-        shared_args3 = ["-signetchallenge=522103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae"]
+        self.signets = [
+            SignetParams(challenge='51'), # OP_TRUE
+            SignetParams(), # default challenge
+            # default challenge as a 2-of-2, which means it should fail
+            SignetParams(challenge='522103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae')
+        ]
 
         self.extra_args = [
-            shared_args1, shared_args1,
-            shared_args2, shared_args2,
-            shared_args3, shared_args3,
+            self.signets[0].shared_args, self.signets[0].shared_args,
+            self.signets[1].shared_args, self.signets[1].shared_args,
+            self.signets[2].shared_args, self.signets[2].shared_args,
         ]
 
     def setup_network(self):
@@ -50,14 +64,28 @@ class SignetBasicTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("basic tests using OP_TRUE challenge")
 
+        self.log.info('getblockchaininfo')
+        def check_getblockchaininfo(node_idx, signet_idx):
+            blockchain_info = self.nodes[node_idx].getblockchaininfo()
+            assert_equal(blockchain_info['chain'], 'signet')
+            assert_equal(blockchain_info['signet_challenge'], self.signets[signet_idx].challenge)
+        check_getblockchaininfo(node_idx=1, signet_idx=0)
+        check_getblockchaininfo(node_idx=2, signet_idx=1)
+        check_getblockchaininfo(node_idx=5, signet_idx=2)
+
         self.log.info('getmininginfo')
-        mining_info = self.nodes[0].getmininginfo()
-        assert_equal(mining_info['blocks'], 0)
-        assert_equal(mining_info['chain'], 'signet')
-        assert 'currentblocktx' not in mining_info
-        assert 'currentblockweight' not in mining_info
-        assert_equal(mining_info['networkhashps'], Decimal('0'))
-        assert_equal(mining_info['pooledtx'], 0)
+        def check_getmininginfo(node_idx, signet_idx):
+            mining_info = self.nodes[node_idx].getmininginfo()
+            assert_equal(mining_info['blocks'], 0)
+            assert_equal(mining_info['chain'], 'signet')
+            assert 'currentblocktx' not in mining_info
+            assert 'currentblockweight' not in mining_info
+            assert_equal(mining_info['networkhashps'], Decimal('0'))
+            assert_equal(mining_info['pooledtx'], 0)
+            assert_equal(mining_info['signet_challenge'], self.signets[signet_idx].challenge)
+        check_getmininginfo(node_idx=0, signet_idx=0)
+        check_getmininginfo(node_idx=3, signet_idx=1)
+        check_getmininginfo(node_idx=4, signet_idx=2)
 
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
@@ -82,4 +110,4 @@ class SignetBasicTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    SignetBasicTest().main()
+    SignetBasicTest(__file__).main()

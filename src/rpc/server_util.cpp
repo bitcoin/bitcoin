@@ -4,10 +4,13 @@
 
 #include <rpc/server_util.h>
 
+#include <chain.h>
 #include <common/args.h>
 #include <net_processing.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <policy/fees.h>
+#include <pow.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <txmempool.h>
@@ -17,6 +20,7 @@
 #include <any>
 
 using node::NodeContext;
+using node::UpdateTime;
 
 NodeContext& EnsureAnyNodeContext(const std::any& context)
 {
@@ -101,6 +105,14 @@ CConnman& EnsureConnman(const NodeContext& node)
     return *node.connman;
 }
 
+interfaces::Mining& EnsureMining(const NodeContext& node)
+{
+    if (!node.mining) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node miner not found");
+    }
+    return *node.mining;
+}
+
 PeerManager& EnsurePeerman(const NodeContext& node)
 {
     if (!node.peerman) {
@@ -120,4 +132,19 @@ AddrMan& EnsureAddrman(const NodeContext& node)
 AddrMan& EnsureAnyAddrman(const std::any& context)
 {
     return EnsureAddrman(EnsureAnyNodeContext(context));
+}
+
+void NextEmptyBlockIndex(CBlockIndex& tip, const Consensus::Params& consensusParams, CBlockIndex& next_index)
+{
+    CBlockHeader next_header{};
+    next_header.hashPrevBlock  = tip.GetBlockHash();
+    UpdateTime(&next_header, consensusParams, &tip);
+    next_header.nBits = GetNextWorkRequired(&tip, &next_header, consensusParams);
+    next_header.nNonce = 0;
+
+    next_index.pprev = &tip;
+    next_index.nTime = next_header.nTime;
+    next_index.nBits = next_header.nBits;
+    next_index.nNonce = next_header.nNonce;
+    next_index.nHeight = tip.nHeight + 1;
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,9 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/util/xoroshiro128plusplus.h>
 #include <util/chaintype.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <limits>
@@ -21,13 +21,12 @@
 
 namespace {
 
-std::vector<std::string> g_all_messages;
+auto g_all_messages = ALL_NET_MESSAGE_TYPES;
 
 void initialize_p2p_transport_serialization()
 {
-    ECC_Start();
+    static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);
-    g_all_messages = getAllNetMessageTypes();
     std::sort(g_all_messages.begin(), g_all_messages.end());
 }
 
@@ -73,7 +72,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
     }
 
     mutable_msg_bytes.insert(mutable_msg_bytes.end(), payload_bytes.begin(), payload_bytes.end());
-    Span<const uint8_t> msg_bytes{mutable_msg_bytes};
+    std::span<const uint8_t> msg_bytes{mutable_msg_bytes};
     while (msg_bytes.size() > 0) {
         if (!recv_transport.ReceivedBytes(msg_bytes)) {
             break;
@@ -82,13 +81,13 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             bool reject_message{false};
             CNetMessage msg = recv_transport.GetReceivedMessage(m_time, reject_message);
-            assert(msg.m_type.size() <= CMessageHeader::COMMAND_SIZE);
+            assert(msg.m_type.size() <= CMessageHeader::MESSAGE_TYPE_SIZE);
             assert(msg.m_raw_message_size <= mutable_msg_bytes.size());
             assert(msg.m_raw_message_size == CMessageHeader::HEADER_SIZE + msg.m_message_size);
             assert(msg.m_time == m_time);
 
             std::vector<unsigned char> header;
-            auto msg2 = NetMsg::Make(msg.m_type, Span{msg.m_recv});
+            auto msg2 = NetMsg::Make(msg.m_type, std::span{msg.m_recv});
             bool queued = send_transport.SetMessageToSend(msg2);
             assert(queued);
             std::optional<bool> known_more;
@@ -105,7 +104,7 @@ FUZZ_TARGET(p2p_transport_serialization, .init = initialize_p2p_transport_serial
 
 namespace {
 
-template<typename R>
+template<RandomNumberGenerator R>
 void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDataProvider& provider)
 {
     // Simulation test with two Transport objects, which send messages to each other, with
@@ -140,9 +139,9 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
             // If v is 0xFF, construct a valid (but possibly unknown) message type from the fuzz
             // data.
             std::string ret;
-            while (ret.size() < CMessageHeader::COMMAND_SIZE) {
+            while (ret.size() < CMessageHeader::MESSAGE_TYPE_SIZE) {
                 char c = provider.ConsumeIntegral<char>();
-                // Match the allowed characters in CMessageHeader::IsCommandValid(). Any other
+                // Match the allowed characters in CMessageHeader::IsMessageTypeValid(). Any other
                 // character is interpreted as end.
                 if (c < ' ' || c > 0x7E) break;
                 ret += c;
@@ -166,8 +165,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         // Determine size of message to send (limited to 75 kB for performance reasons).
         size_t size = provider.ConsumeIntegralInRange<uint32_t>(0, 75000);
         // Get payload of message from RNG.
-        msg.data.resize(size);
-        for (auto& v : msg.data) v = uint8_t(rng());
+        msg.data = rng.randbytes(size);
         // Return.
         return msg;
     };
@@ -188,12 +186,12 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         // Compare with expected more.
         if (expect_more[side].has_value()) assert(!bytes.empty() == *expect_more[side]);
         // Verify consistency between the two results.
-        assert(bytes == bytes_next);
+        assert(std::ranges::equal(bytes, bytes_next));
         assert(msg_type == msg_type_next);
         if (more_nonext) assert(more_next);
         // Compare with previously reported output.
         assert(to_send[side].size() <= bytes.size());
-        assert(to_send[side] == Span{bytes}.first(to_send[side].size()));
+        assert(std::ranges::equal(to_send[side], std::span{bytes}.first(to_send[side].size())));
         to_send[side].resize(bytes.size());
         std::copy(bytes.begin(), bytes.end(), to_send[side].begin());
         // Remember 'more' results.
@@ -254,7 +252,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
         // Decide span to receive
         size_t to_recv_len = in_flight[side].size();
         if (!everything) to_recv_len = provider.ConsumeIntegralInRange<size_t>(0, to_recv_len);
-        Span<const uint8_t> to_recv = Span{in_flight[side]}.first(to_recv_len);
+        std::span<const uint8_t> to_recv = std::span{in_flight[side]}.first(to_recv_len);
         // Process those bytes
         while (!to_recv.empty()) {
             size_t old_len = to_recv.size();
@@ -281,7 +279,7 @@ void SimulationTest(Transport& initiator, Transport& responder, R& rng, FuzzedDa
                 // The m_type must match what is expected.
                 assert(received.m_type == expected[side].front().m_type);
                 // The data must match what is expected.
-                assert(MakeByteSpan(received.m_recv) == MakeByteSpan(expected[side].front().data));
+                assert(std::ranges::equal(received.m_recv, MakeByteSpan(expected[side].front().data)));
                 expected[side].pop_front();
                 progress = true;
             }
@@ -338,7 +336,7 @@ std::unique_ptr<Transport> MakeV1Transport(NodeId nodeid) noexcept
     return std::make_unique<V1Transport>(nodeid);
 }
 
-template<typename RNG>
+template<RandomNumberGenerator RNG>
 std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& rng, FuzzedDataProvider& provider)
 {
     // Retrieve key
@@ -354,7 +352,7 @@ std::unique_ptr<Transport> MakeV2Transport(NodeId nodeid, bool initiator, RNG& r
     } else {
         // If it's longer, generate it from the RNG. This avoids having large amounts of
         // (hopefully) irrelevant data needing to be stored in the fuzzer data.
-        for (auto& v : garb) v = uint8_t(rng());
+        garb = rng.randbytes(garb_len);
     }
     // Retrieve entropy
     auto ent = provider.ConsumeBytes<std::byte>(32);
@@ -378,7 +376,7 @@ FUZZ_TARGET(p2p_transport_bidirectional, .init = initialize_p2p_transport_serial
 {
     // Test with two V1 transports talking to each other.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
     auto t1 = MakeV1Transport(NodeId{0});
     auto t2 = MakeV1Transport(NodeId{1});
     if (!t1 || !t2) return;
@@ -389,7 +387,7 @@ FUZZ_TARGET(p2p_transport_bidirectional_v2, .init = initialize_p2p_transport_ser
 {
     // Test with two V2 transports talking to each other.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
     auto t1 = MakeV2Transport(NodeId{0}, true, rng, provider);
     auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
     if (!t1 || !t2) return;
@@ -400,7 +398,7 @@ FUZZ_TARGET(p2p_transport_bidirectional_v1v2, .init = initialize_p2p_transport_s
 {
     // Test with a V1 initiator talking to a V2 responder.
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
-    XoRoShiRo128PlusPlus rng(provider.ConsumeIntegral<uint64_t>());
+    InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
     auto t1 = MakeV1Transport(NodeId{0});
     auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
     if (!t1 || !t2) return;

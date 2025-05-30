@@ -12,6 +12,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    wallet_importprivkey,
 )
 import json
 import os
@@ -45,7 +46,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(mocktime)
         self.nodes[0].createwallet(wallet_name='test')
         privkey = self.nodes[0].get_deterministic_priv_key().key
-        self.nodes[0].importprivkey(privkey)
+        wallet_importprivkey(self.nodes[0], privkey, 0)
 
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
@@ -114,7 +115,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(stats[self.max_stat_pos]['height'], self.start_height + self.max_stat_pos)
 
         for i in range(self.max_stat_pos+1):
-            self.log.info('Checking block %d\n' % (i))
+            self.log.info('Checking block %d' % (i))
             assert_equal(stats[i], self.expected_stats[i])
 
             # Check selecting block by hash too
@@ -182,5 +183,16 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(tip_stats["utxo_increase_actual"], 4)
         assert_equal(tip_stats["utxo_size_inc_actual"], 300)
 
+        self.log.info("Test when only header is known")
+        block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
+        self.nodes[0].submitheader(block["hex"])
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: self.nodes[0].getblockstats(block['hash']))
+
+        self.log.info('Test when block is missing')
+        (self.nodes[0].blocks_path / 'blk00000.dat').rename(self.nodes[0].blocks_path / 'blk00000.dat.backup')
+        assert_raises_rpc_error(-1, 'Block not found on disk', self.nodes[0].getblockstats, hash_or_height=1)
+        (self.nodes[0].blocks_path / 'blk00000.dat.backup').rename(self.nodes[0].blocks_path / 'blk00000.dat')
+
+
 if __name__ == '__main__':
-    GetblockstatsTest().main()
+    GetblockstatsTest(__file__).main()

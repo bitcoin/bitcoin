@@ -44,11 +44,12 @@ The Contributor Workflow & Peer Review in libsecp256k1 are similar to Bitcoin Co
 
 In addition, libsecp256k1 tries to maintain the following coding conventions:
 
-* No runtime heap allocation (e.g., no `malloc`) unless explicitly requested by the caller (via `secp256k1_context_create` or `secp256k1_scratch_space_create`, for example). Morever, it should be possible to use the library without any heap allocations.
+* No runtime heap allocation (e.g., no `malloc`) unless explicitly requested by the caller (via `secp256k1_context_create` or `secp256k1_scratch_space_create`, for example). Moreover, it should be possible to use the library without any heap allocations.
 * The tests should cover all lines and branches of the library (see [Test coverage](#coverage)).
 * Operations involving secret data should be tested for being constant time with respect to the secrets (see [src/ctime_tests.c](src/ctime_tests.c)).
 * Local variables containing secret data should be cleared explicitly to try to delete secrets from memory.
 * Use `secp256k1_memcmp_var` instead of `memcmp` (see [#823](https://github.com/bitcoin-core/secp256k1/issues/823)).
+* As a rule of thumb, the default values for configuration options should target standard desktop machines and align with Bitcoin Core's defaults, and the tests should mostly exercise the default configuration (see [#1549](https://github.com/bitcoin-core/secp256k1/issues/1549#issuecomment-2200559257)).
 
 #### Style conventions
 
@@ -73,6 +74,7 @@ In addition, libsecp256k1 tries to maintain the following coding conventions:
 * User-facing comment lines in headers should be limited to 80 chars if possible.
 * All identifiers in file scope should start with `secp256k1_`.
 * Avoid trailing whitespace.
+* Use the constants `EXIT_SUCCESS`/`EXIT_FAILURE` (defined in `stdlib.h`) to indicate program execution status for examples and other binaries.
 
 ### Tests
 

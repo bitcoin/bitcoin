@@ -8,6 +8,9 @@ from decimal import Decimal
 import random
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.mempool_util import (
+    fill_mempool,
+)
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     tx_from_hex,
@@ -20,16 +23,21 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import (
+    COIN,
     DEFAULT_FEE,
     MiniWallet,
 )
+
+
+MAX_PACKAGE_COUNT = 25
 
 
 class RPCPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [["-whitelist=noban@127.0.0.1"]] # noban speeds up tx relay
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
 
     def assert_testres_equal(self, package_hex, testres_expected):
         """Shuffle package_hex and assert that the testmempoolaccept result matches testres_expected. This should only
@@ -81,6 +89,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.test_conflicting()
         self.test_rbf()
         self.test_submitpackage()
+        self.test_maxfeerate_submitpackage()
+        self.test_maxburn_submitpackage()
 
     def test_independent(self, coin):
         self.log.info("Test multiple independent transactions in a package")
@@ -100,17 +110,21 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.assert_testres_equal(package_bad, testres_bad)
 
         self.log.info("Check testmempoolaccept tells us when some transactions completed validation successfully")
-        tx_bad_sig_hex = node.createrawtransaction([{"txid": coin["txid"], "vout": 0}],
+        tx_bad_sig_hex = node.createrawtransaction([{"txid": coin["txid"], "vout": coin["vout"]}],
                                            {address : coin["amount"] - Decimal("0.0001")})
         tx_bad_sig = tx_from_hex(tx_bad_sig_hex)
         testres_bad_sig = node.testmempoolaccept(self.independent_txns_hex + [tx_bad_sig_hex])
         # By the time the signature for the last transaction is checked, all the other transactions
         # have been fully validated, which is why the node returns full validation results for all
         # transactions here but empty results in other cases.
+        tx_bad_sig_txid = tx_bad_sig.rehash()
+        tx_bad_sig_wtxid = tx_bad_sig.getwtxid()
         assert_equal(testres_bad_sig, self.independent_txns_testres + [{
-            "txid": tx_bad_sig.rehash(),
-            "wtxid": tx_bad_sig.getwtxid(), "allowed": False,
-            "reject-reason": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)"
+            "txid": tx_bad_sig_txid,
+            "wtxid": tx_bad_sig_wtxid, "allowed": False,
+            "reject-reason": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)",
+            "reject-details": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size), " +
+                              f"input 0 of {tx_bad_sig_txid} (wtxid {tx_bad_sig_wtxid}), spending {coin['txid']}:{coin['vout']}"
         }])
 
         self.log.info("Check testmempoolaccept reports txns in packages that exceed max feerate")
@@ -233,6 +247,37 @@ class RPCPackagesTest(BitcoinTestFramework):
             {"txid": tx2["txid"], "wtxid": tx2["wtxid"], "package-error": "conflict-in-package"}
         ])
 
+        # Add a child that spends both at high feerate to submit via submitpackage
+        tx_child = self.wallet.create_self_transfer_multi(
+            fee_per_output=int(DEFAULT_FEE * 5 * COIN),
+            utxos_to_spend=[tx1["new_utxo"], tx2["new_utxo"]],
+        )
+
+        testres = node.testmempoolaccept([tx1["hex"], tx2["hex"], tx_child["hex"]])
+
+        assert_equal(testres, [
+            {"txid": tx1["txid"], "wtxid": tx1["wtxid"], "package-error": "conflict-in-package"},
+            {"txid": tx2["txid"], "wtxid": tx2["wtxid"], "package-error": "conflict-in-package"},
+            {"txid": tx_child["txid"], "wtxid": tx_child["wtxid"], "package-error": "conflict-in-package"}
+        ])
+
+        submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
+        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+
+        # Submit tx1 to mempool, then try the same package again
+        node.sendrawtransaction(tx1["hex"])
+
+        submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
+        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        assert tx_child["txid"] not in node.getrawmempool()
+
+        # ... and without the in-mempool ancestor tx1 included in the call
+        submitres = node.submitpackage([tx2["hex"], tx_child["hex"]])
+        assert_equal(submitres, {'package_msg': 'package-not-child-with-unconfirmed-parents', 'tx-results': {}, 'replaced-transactions': []})
+
+        # Regardless of error type, the child can never enter the mempool
+        assert tx_child["txid"] not in node.getrawmempool()
+
     def test_rbf(self):
         node = self.nodes[0]
 
@@ -263,7 +308,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert testres_rbf_single[0]["allowed"]
         testres_rbf_package = self.independent_txns_testres_blank + [{
             "txid": replacement_tx["txid"], "wtxid": replacement_tx["wtxid"], "allowed": False,
-            "reject-reason": "bip125-replacement-disallowed"
+            "reject-reason": "bip125-replacement-disallowed",
+            "reject-details": "bip125-replacement-disallowed"
         }]
         self.assert_testres_equal(self.independent_txns_hex + [replacement_tx["hex"]], testres_rbf_package)
 
@@ -328,8 +374,16 @@ class RPCPackagesTest(BitcoinTestFramework):
     def test_submitpackage(self):
         node = self.nodes[0]
 
-        self.log.info("Submitpackage valid packages with 1 child and some number of parents")
-        for num_parents in [1, 2, 24]:
+        self.log.info("Submitpackage only allows valid hex inputs")
+        valid_tx_list = self.wallet.create_self_transfer_chain(chain_length=2)
+        hex_list = [valid_tx_list[0]["hex"][:-1] + 'X', valid_tx_list[1]["hex"]]
+        txid_list = [valid_tx_list[0]["txid"], valid_tx_list[1]["txid"]]
+        assert_raises_rpc_error(-22, "TX decode failed:", node.submitpackage, hex_list)
+        assert txid_list[0] not in node.getrawmempool()
+        assert txid_list[1] not in node.getrawmempool()
+
+        self.log.info("Submitpackage valid packages with 1 child and some number of parents (or none)")
+        for num_parents in [0, 1, 2, 24]:
             self.test_submit_child_with_parents(num_parents, False)
             self.test_submit_child_with_parents(num_parents, True)
 
@@ -340,13 +394,19 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
         assert_equal(legacy_pool, node.getrawmempool())
 
+        assert_raises_rpc_error(-8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
+        assert_raises_rpc_error(
+            -8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.",
+            node.submitpackage, [chain_hex[0]] * (MAX_PACKAGE_COUNT + 1)
+        )
+
         # Create a transaction chain such as only the parent gets accepted (by making the child's
         # version non-standard). Make sure the parent does get broadcast.
         self.log.info("If a package is partially submitted, transactions included in mempool get broadcast")
         peer = node.add_p2p_connection(P2PTxInvStore())
         txs = self.wallet.create_self_transfer_chain(chain_length=2)
         bad_child = tx_from_hex(txs[1]["hex"])
-        bad_child.nVersion = -1
+        bad_child.version = 0xffffffff
         hex_partial_acceptance = [txs[0]["hex"], bad_child.serialize().hex()]
         res = node.submitpackage(hex_partial_acceptance)
         assert_equal(res["package_msg"], "transaction failed")
@@ -356,5 +416,89 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(res["tx-results"][sec_wtxid]["error"], "version")
         peer.wait_for_broadcast([first_wtxid])
 
+    def test_maxfeerate_submitpackage(self):
+        node = self.nodes[0]
+        # clear mempool
+        deterministic_address = node.get_deterministic_priv_key().address
+        self.generatetoaddress(node, 1, deterministic_address)
+
+        self.log.info("Submitpackage maxfeerate arg testing")
+        chained_txns = self.wallet.create_self_transfer_chain(chain_length=2)
+        minrate_btc_kvb = min([chained_txn["fee"] / chained_txn["tx"].get_vsize() * 1000 for chained_txn in chained_txns])
+        chain_hex = [t["hex"] for t in chained_txns]
+        pkg_result = node.submitpackage(chain_hex, maxfeerate=minrate_btc_kvb - Decimal("0.00000001"))
+
+        # First tx failed in single transaction evaluation, so package message is generic
+        assert_equal(pkg_result["package_msg"], "transaction failed")
+        assert_equal(pkg_result["tx-results"][chained_txns[0]["wtxid"]]["error"], "max feerate exceeded")
+        assert_equal(pkg_result["tx-results"][chained_txns[1]["wtxid"]]["error"], "bad-txns-inputs-missingorspent")
+        assert_equal(node.getrawmempool(), [])
+
+        # Make chain of two transactions where parent doesn't make minfee threshold
+        # but child is too high fee
+        # Lower mempool limit to make it easier to fill_mempool
+        self.restart_node(0, extra_args=[
+            "-datacarriersize=100000",
+            "-maxmempool=5",
+            "-persistmempool=0",
+        ])
+        self.wallet.rescan_utxos()
+
+        fill_mempool(self, node)
+
+        minrelay = node.getmempoolinfo()["minrelaytxfee"]
+        parent = self.wallet.create_self_transfer(
+            fee_rate=minrelay,
+            confirmed_only=True,
+        )
+
+        child = self.wallet.create_self_transfer(
+            fee_rate=DEFAULT_FEE,
+            utxo_to_spend=parent["new_utxo"],
+        )
+
+        pkg_result = node.submitpackage([parent["hex"], child["hex"]], maxfeerate=DEFAULT_FEE - Decimal("0.00000001"))
+
+        # Child is connected even though parent is invalid and still reports fee exceeded
+        # this implies sub-package evaluation of both entries together.
+        assert_equal(pkg_result["package_msg"], "transaction failed")
+        assert "mempool min fee not met" in pkg_result["tx-results"][parent["wtxid"]]["error"]
+        assert_equal(pkg_result["tx-results"][child["wtxid"]]["error"], "max feerate exceeded")
+        assert parent["txid"] not in node.getrawmempool()
+        assert child["txid"] not in node.getrawmempool()
+
+        # Reset maxmempool, datacarriersize, reset dynamic mempool minimum feerate, and empty mempool.
+        self.restart_node(0)
+        self.wallet.rescan_utxos()
+
+        assert_equal(node.getrawmempool(), [])
+
+    def test_maxburn_submitpackage(self):
+        node = self.nodes[0]
+
+        assert_equal(node.getrawmempool(), [])
+
+        self.log.info("Submitpackage maxburnamount arg testing")
+        chained_txns_burn = self.wallet.create_self_transfer_chain(
+            chain_length=2,
+            utxo_to_spend=self.wallet.get_utxo(confirmed_only=True),
+        )
+        chained_burn_hex = [t["hex"] for t in chained_txns_burn]
+
+        tx = tx_from_hex(chained_burn_hex[1])
+        tx.vout[-1].scriptPubKey = b'a' * 10001 # scriptPubKey bigger than 10k IsUnspendable
+        chained_burn_hex = [chained_burn_hex[0], tx.serialize().hex()]
+        # burn test is run before any package evaluation; nothing makes it in and we get broader exception
+        assert_raises_rpc_error(-25, "Unspendable output exceeds maximum configured by user", node.submitpackage, chained_burn_hex, 0, chained_txns_burn[1]["new_utxo"]["value"] - Decimal("0.00000001"))
+        assert_equal(node.getrawmempool(), [])
+
+        minrate_btc_kvb_burn = min([chained_txn_burn["fee"] / chained_txn_burn["tx"].get_vsize() * 1000 for chained_txn_burn in chained_txns_burn])
+
+        # Relax the restrictions for both and send it; parent gets through as own subpackage
+        pkg_result = node.submitpackage(chained_burn_hex, maxfeerate=minrate_btc_kvb_burn, maxburnamount=chained_txns_burn[1]["new_utxo"]["value"])
+        assert "error" not in pkg_result["tx-results"][chained_txns_burn[0]["wtxid"]]
+        assert_equal(pkg_result["tx-results"][tx.getwtxid()]["error"], "scriptpubkey")
+        assert_equal(node.getrawmempool(), [chained_txns_burn[0]["txid"]])
+
 if __name__ == "__main__":
-    RPCPackagesTest().main()
+    RPCPackagesTest(__file__).main()

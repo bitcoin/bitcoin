@@ -113,8 +113,10 @@ template CAddress::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) n
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
     : Sock{fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET)},
       m_fuzzed_data_provider{fuzzed_data_provider},
-      m_selectable{fuzzed_data_provider.ConsumeBool()}
+      m_selectable{fuzzed_data_provider.ConsumeBool()},
+      m_time{MockableSteadyClock::INITIAL_MOCK_TIME}
 {
+    ElapseTime(std::chrono::seconds(0)); // start mocking the steady clock.
 }
 
 FuzzedSock::~FuzzedSock()
@@ -124,6 +126,12 @@ FuzzedSock::~FuzzedSock()
     // Avoid closing an arbitrary file descriptor (m_socket is just a random very high number which
     // theoretically may concide with a real opened file descriptor).
     m_socket = INVALID_SOCKET;
+}
+
+void FuzzedSock::ElapseTime(std::chrono::milliseconds duration) const
+{
+    m_time += duration;
+    MockableSteadyClock::SetMockTime(m_time);
 }
 
 FuzzedSock& FuzzedSock::operator=(Sock&& other)
@@ -182,6 +190,12 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
         EWOULDBLOCK,
     };
     assert(buf != nullptr || len == 0);
+
+    // Do the latency before any of the "return" statements.
+    if (m_fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) {
+        std::this_thread::sleep_for(std::chrono::milliseconds{2});
+    }
+
     if (len == 0 || m_fuzzed_data_provider.ConsumeBool()) {
         const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
         if (r == -1) {
@@ -189,44 +203,41 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
         }
         return r;
     }
-    std::vector<uint8_t> random_bytes;
-    bool pad_to_len_bytes{m_fuzzed_data_provider.ConsumeBool()};
-    if (m_peek_data.has_value()) {
-        // `MSG_PEEK` was used in the preceding `Recv()` call, return `m_peek_data`.
-        random_bytes.assign({m_peek_data.value()});
+
+    size_t copied_so_far{0};
+
+    if (!m_peek_data.empty()) {
+        // `MSG_PEEK` was used in the preceding `Recv()` call, copy the first bytes from `m_peek_data`.
+        const size_t copy_len{std::min(len, m_peek_data.size())};
+        std::memcpy(buf, m_peek_data.data(), copy_len);
+        copied_so_far += copy_len;
         if ((flags & MSG_PEEK) == 0) {
-            m_peek_data.reset();
+            m_peek_data.erase(m_peek_data.begin(), m_peek_data.begin() + copy_len);
         }
-        pad_to_len_bytes = false;
-    } else if ((flags & MSG_PEEK) != 0) {
-        // New call with `MSG_PEEK`.
-        random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(1);
-        if (!random_bytes.empty()) {
-            m_peek_data = random_bytes[0];
-            pad_to_len_bytes = false;
-        }
-    } else {
-        random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(
-            m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, len));
     }
-    if (random_bytes.empty()) {
-        const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
-        if (r == -1) {
-            SetFuzzedErrNo(m_fuzzed_data_provider, recv_errnos);
-        }
-        return r;
+
+    if (copied_so_far == len) {
+        return copied_so_far;
     }
-    std::memcpy(buf, random_bytes.data(), random_bytes.size());
-    if (pad_to_len_bytes) {
-        if (len > random_bytes.size()) {
-            std::memset((char*)buf + random_bytes.size(), 0, len - random_bytes.size());
-        }
-        return len;
+
+    auto new_data = ConsumeRandomLengthByteVector(m_fuzzed_data_provider, len - copied_so_far);
+    if (new_data.empty()) return copied_so_far;
+
+    std::memcpy(reinterpret_cast<uint8_t*>(buf) + copied_so_far, new_data.data(), new_data.size());
+    copied_so_far += new_data.size();
+
+    if ((flags & MSG_PEEK) != 0) {
+        m_peek_data.insert(m_peek_data.end(), new_data.begin(), new_data.end());
     }
-    if (m_fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) {
-        std::this_thread::sleep_for(std::chrono::milliseconds{2});
+
+    if (copied_so_far == len || m_fuzzed_data_provider.ConsumeBool()) {
+        return copied_so_far;
     }
-    return random_bytes.size();
+
+    // Pad to len bytes.
+    std::memset(reinterpret_cast<uint8_t*>(buf) + copied_so_far, 0x0, len - copied_so_far);
+
+    return len;
 }
 
 int FuzzedSock::Connect(const sockaddr*, socklen_t) const
@@ -346,7 +357,11 @@ int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
         SetFuzzedErrNo(m_fuzzed_data_provider, getsockname_errnos);
         return -1;
     }
-    *name_len = m_fuzzed_data_provider.ConsumeData(name, *name_len);
+    assert(name_len);
+    const auto bytes{ConsumeRandomLengthByteVector(m_fuzzed_data_provider, *name_len)};
+    if (bytes.size() < (int)sizeof(sockaddr)) return -1;
+    std::memcpy(name, bytes.data(), bytes.size());
+    *name_len = bytes.size();
     return 0;
 }
 
@@ -380,8 +395,12 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
         return false;
     }
     if (occurred != nullptr) {
-        *occurred = m_fuzzed_data_provider.ConsumeBool() ? requested : 0;
+        // We simulate the requested event as occurred when ConsumeBool()
+        // returns false. This avoids simulating endless waiting if the
+        // FuzzedDataProvider runs out of data.
+        *occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : requested;
     }
+    ElapseTime(timeout);
     return true;
 }
 
@@ -389,8 +408,12 @@ bool FuzzedSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& even
 {
     for (auto& [sock, events] : events_per_sock) {
         (void)sock;
-        events.occurred = m_fuzzed_data_provider.ConsumeBool() ? events.requested : 0;
+        // We simulate the requested event as occurred when ConsumeBool()
+        // returns false. This avoids simulating endless waiting if the
+        // FuzzedDataProvider runs out of data.
+        events.occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : events.requested;
     }
+    ElapseTime(timeout);
     return true;
 }
 
@@ -405,10 +428,10 @@ bool FuzzedSock::IsConnected(std::string& errmsg) const
 
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman, CNode& node) noexcept
 {
-    connman.Handshake(node,
-                      /*successfully_connected=*/fuzzed_data_provider.ConsumeBool(),
-                      /*remote_services=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS),
-                      /*local_services=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS),
-                      /*version=*/fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max()),
-                      /*relay_txs=*/fuzzed_data_provider.ConsumeBool());
+    auto successfully_connected = fuzzed_data_provider.ConsumeBool();
+    auto remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
+    auto local_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
+    auto version = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(MIN_PEER_PROTO_VERSION, std::numeric_limits<int32_t>::max());
+    auto relay_txs = fuzzed_data_provider.ConsumeBool();
+    connman.Handshake(node, successfully_connected, remote_services, local_services, version, relay_txs);
 }

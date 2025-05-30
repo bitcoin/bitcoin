@@ -36,8 +36,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">
-Alihkan fail data ke dalam tab semasa</translation>
+        <translation type="unfinished">Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -79,6 +78,14 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Terdapat ralat semasa cubaan menyimpan senarai alamat kepada %1. Sila cuba lagi.</translation>
+    </message>
+    <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Alamat Kirim  - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Alamat Penerima - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -147,6 +154,10 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">Dompet dienkripsi</translation>
     </message>
     <message>
+        <source>Back</source>
+        <translation type="unfinished">Kembali</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation type="unfinished">PENTING: Apa-apa sandaran yang anda buat sebelum ini untuk fail dompet anda hendaklah digantikan dengan fail dompet enkripsi yang dijana baru. Untuk sebab-sebab keselamatan , sandaran fail dompet yang belum dibuat enkripsi sebelum ini akan menjadi tidak berguna secepat anda mula guna dompet enkripsi baru.</translation>
     </message>
@@ -171,8 +182,20 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">Frasa laluan dimasukki untuk dekripsi dompet adalah tidak betul.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">Frasa-laluan yang dimasukkan untuk dinyahsulitkan dompet tidak tepat. Ia mengandungi karakter nul (ie- byte kosong). Jika frasa-laluan disetkan dengan versi perisian sebelum ini hingga ke 25.0, sila cuba lagi hanya dengan karakter hingga ke — tapi tak termasuk — karakter nul pertama. Jika berjaya, sila set frasa-laluan baru bagi mengelakkan isu sama pada masa depan. </translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Frasa laluan dompet berjaya ditukar.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Perubahan frasa-laluan gagal</translation>
+    </message>
+    <message>
+        <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
+        <translation type="unfinished">Frasa-laluan lama yang dimasukkan untuk dinyahsulitkan dompet tidak tepat. Ia mengandungi karakter nul (ie- byte kosong). Jika frasa-laluan disetkan dengan versi perisian sebelum ini hingga ke 25.0, sila cuba lagi hanya dengan karakter hingga ke — tapi tak termasuk — karakter nul pertama.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -187,7 +210,24 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
 </context>
 <context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation type="unfinished">Tetapan fail %1 mungkin rosak atau tidak sah.</translation>
+    </message>
+    </context>
+<context>
     <name>QObject</name>
+    <message>
+        <source>Do you want to reset settings to default values, or to abort without making changes?</source>
+        <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
+        <translation type="unfinished">Adakah anda mahu tetapkan semula tetapan kepada nilai pra-tetap, atau abaikan tanpa melakukan perubahan?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">Kesilapan serius berlaku. Semak fail tetapan boleh ditulis, atau cuba jalankan dengan -tanpatetapan.</translation>
+    </message>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
@@ -224,7 +264,12 @@ Alihkan fail data ke dalam tab semasa</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">dompet lalai
+</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -270,6 +315,10 @@ Alihkan fail data ke dalam tab semasa</translation>
     <message>
         <source>Modify configuration options for %1</source>
         <translation type="unfinished">Mengubah suai pilihan konfigurasi untuk %1</translation>
+    </message>
+    <message>
+        <source>&amp;Minimize</source>
+        <translation type="unfinished">&amp;Kecilkan</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -342,7 +391,7 @@ Alihkan fail data ke dalam tab semasa</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>Proses %nblok dari sejarah transaksi.</numerusform>
         </translation>
     </message>
     <message>
@@ -362,6 +411,10 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">Terkini</translation>
     </message>
     <message>
+        <source>Load PSBT from &amp;clipboard…</source>
+        <translation type="unfinished">Muat PSBT dari &amp;papanklip...</translation>
+    </message>
+    <message>
         <source>Open Wallet</source>
         <translation type="unfinished">Buka Wallet</translation>
     </message>
@@ -370,36 +423,148 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation type="unfinished">Tutup Wallet</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">dompet lalai
-</translation>
+        <source>Restore Wallet…</source>
+        <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
+        <translation type="unfinished">Dompet dipulihkan...</translation>
+    </message>
+    <message>
+        <source>Restore a wallet from a backup file</source>
+        <extracomment>Status tip for Restore Wallet menu item</extracomment>
+        <translation type="unfinished">Pulihkan dompet dari fail sandaran.</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Pindah Dompet</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Pindah satu Dompet</translation>
+    </message>
+    <message>
+        <source>Load Wallet Backup</source>
+        <extracomment>The title for Restore Wallet File Windows</extracomment>
+        <translation type="unfinished">Muat sandaran dompet.</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Pulih Dompet</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;Sorok</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nsambungan aktif ke rangkaian Bitcoin.</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Pra-laras tajuk (%1%)...</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Ralat mencipta dompet</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Dompet baru tidak boleh dicipta, perisian disusun tanpa sokongan sqlite (diperlukan untuk dinyahskrip dompet)</translation>
     </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copy alamat</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Salin &amp;label</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">Salin &amp;ID transakksi dan indek keluaran </translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">L&amp;ock tak dibelanjakan</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Unlock tak dibelanjakan</translation>
+    </message>
     <message>
         <source>(no label)</source>
         <translation type="unfinished">(tiada label)</translation>
     </message>
     </context>
 <context>
-    <name>OpenWalletActivity</name>
+    <name>CreateWalletActivity</name>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">dompet lalai
-</translation>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Penandatangan tidak boleh disenaraikan</translation>
     </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Terlalu banyak penandatangan luaran ditemui</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">Muat dompet</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">Memuat dompets...</translation>
+    </message>
+</context>
+<context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Pindah Dompet</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Anda pasti anda mahu pindah dompet &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Memindah dompet akan menukarkan dompet ini kepada satu atau lebih dompet dinyahskrip. Satu dompet sandaran perlu dibuat.
+Jika dompet ini mengandungi sebarang skrip hanya-tonton, satu dompet baharu akan dicipta yang mengandungi skrip hanya-tonton tersebut.
+Jika dompet ini mengandungi sebarang skrip yang boleh diselesaikan tetapi tidak diperhatikan, satu dompet baharu dan berbeza akan dicipta yang mengandungi skrip tersebut.
+ Proses pemindahan akan mencipta salinan pendua dompet sebelum pemindahan berlaku. Fail pendua ini akan dinamakan &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak dan boleh ditemui dalam direktori bagi dompet ini. Sekiranya berlaku pemindahan yang tidak betul, salinan pendua boleh dipulihkan dengan menggunakan fungsi "Pulihkan Dompet".</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Pindah Dompet</translation>
+    </message>
+    </context>
+<context>
+    <name>OpenWalletActivity</name>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">Buka Wallet</translation>
+    </message>
+    </context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Pulih Dompet</translation>
     </message>
     </context>
 <context>
@@ -475,6 +640,25 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     </context>
 <context>
+    <name>RPCConsole</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;Copy alamat</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copy alamat</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Salin &amp;label</translation>
+    </message>
+    </context>
+<context>
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Wallet:</source>
@@ -528,6 +712,14 @@ Alihkan fail data ke dalam tab semasa</translation>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Copy alamat</translation>
+    </message>
+    <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Salin &amp;label</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation type="unfinished">Alamat</translation>
     </message>
@@ -544,14 +736,6 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     </context>
 <context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">dompet lalai
-</translation>
-    </message>
-</context>
-<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -559,8 +743,7 @@ Alihkan fail data ke dalam tab semasa</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">
-Alihkan fail data ke dalam tab semasa</translation>
+        <translation type="unfinished">Alihkan fail data ke dalam tab semasa</translation>
     </message>
     </context>
 <context>

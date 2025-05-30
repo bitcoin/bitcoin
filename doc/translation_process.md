@@ -18,8 +18,8 @@ We use automated scripts to help extract translations in both Qt, and non-Qt sou
 
 To automatically regenerate the `bitcoin_en.ts` file, run the following commands:
 ```sh
-cd src/
-make translate
+cmake --preset dev-mode -DWITH_USDT=OFF -DENABLE_IPC=OFF
+cmake --build build_dev_mode --target translate
 ```
 
 **Example Qt translation**

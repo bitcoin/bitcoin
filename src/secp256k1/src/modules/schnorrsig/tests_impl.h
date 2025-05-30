@@ -15,15 +15,15 @@
 static void nonce_function_bip340_bitflip(unsigned char **args, size_t n_flip, size_t n_bytes, size_t msglen, size_t algolen) {
     unsigned char nonces[2][32];
     CHECK(nonce_function_bip340(nonces[0], args[0], msglen, args[1], args[2], args[3], algolen, args[4]) == 1);
-    secp256k1_testrand_flip(args[n_flip], n_bytes);
+    testrand_flip(args[n_flip], n_bytes);
     CHECK(nonce_function_bip340(nonces[1], args[0], msglen, args[1], args[2], args[3], algolen, args[4]) == 1);
     CHECK(secp256k1_memcmp_var(nonces[0], nonces[1], 32) != 0);
 }
 
 static void run_nonce_function_bip340_tests(void) {
-    unsigned char tag[13] = "BIP0340/nonce";
-    unsigned char aux_tag[11] = "BIP0340/aux";
-    unsigned char algo[13] = "BIP0340/nonce";
+    unsigned char tag[] = {'B', 'I', 'P', '0', '3', '4', '0', '/', 'n', 'o', 'n', 'c', 'e'};
+    unsigned char aux_tag[] = {'B', 'I', 'P', '0', '3', '4', '0', '/', 'a', 'u', 'x'};
+    unsigned char algo[] = {'B', 'I', 'P', '0', '3', '4', '0', '/', 'n', 'o', 'n', 'c', 'e'};
     size_t algolen = sizeof(algo);
     secp256k1_sha256 sha;
     secp256k1_sha256 sha_optimized;
@@ -50,10 +50,10 @@ static void run_nonce_function_bip340_tests(void) {
     secp256k1_nonce_function_bip340_sha256_tagged_aux(&sha_optimized);
     test_sha256_eq(&sha, &sha_optimized);
 
-    secp256k1_testrand256(msg);
-    secp256k1_testrand256(key);
-    secp256k1_testrand256(pk);
-    secp256k1_testrand256(aux_rand);
+    testrand256(msg);
+    testrand256(key);
+    testrand256(pk);
+    testrand256(aux_rand);
 
     /* Check that a bitflip in an argument results in different nonces. */
     args[0] = msg;
@@ -76,12 +76,12 @@ static void run_nonce_function_bip340_tests(void) {
     CHECK(nonce_function_bip340(nonce, msg, msglen, key, pk, NULL, 0, NULL) == 0);
     CHECK(nonce_function_bip340(nonce, msg, msglen, key, pk, algo, algolen, NULL) == 1);
     /* Other algo is fine */
-    secp256k1_testrand_bytes_test(algo, algolen);
+    testrand_bytes_test(algo, algolen);
     CHECK(nonce_function_bip340(nonce, msg, msglen, key, pk, algo, algolen, NULL) == 1);
 
     for (i = 0; i < COUNT; i++) {
         unsigned char nonce2[32];
-        uint32_t offset = secp256k1_testrand_int(msglen - 1);
+        uint32_t offset = testrand_int(msglen - 1);
         size_t msglen_tmp = (msglen + offset) % msglen;
         size_t algolen_tmp;
 
@@ -90,7 +90,7 @@ static void run_nonce_function_bip340_tests(void) {
         CHECK(secp256k1_memcmp_var(nonce, nonce2, 32) != 0);
 
         /* Different algolen gives different nonce */
-        offset = secp256k1_testrand_int(algolen - 1);
+        offset = testrand_int(algolen - 1);
         algolen_tmp = (algolen + offset) % algolen;
         CHECK(nonce_function_bip340(nonce2, msg, msglen, key, pk, algo, algolen_tmp, NULL) == 1);
         CHECK(secp256k1_memcmp_var(nonce, nonce2, 32) != 0);
@@ -116,10 +116,10 @@ static void test_schnorrsig_api(void) {
     secp256k1_schnorrsig_extraparams extraparams = SECP256K1_SCHNORRSIG_EXTRAPARAMS_INIT;
     secp256k1_schnorrsig_extraparams invalid_extraparams = {{ 0 }, NULL, NULL};
 
-    secp256k1_testrand256(sk1);
-    secp256k1_testrand256(sk2);
-    secp256k1_testrand256(sk3);
-    secp256k1_testrand256(msg);
+    testrand256(sk1);
+    testrand256(sk2);
+    testrand256(sk3);
+    testrand256(msg);
     CHECK(secp256k1_keypair_create(CTX, &keypairs[0], sk1) == 1);
     CHECK(secp256k1_keypair_create(CTX, &keypairs[1], sk2) == 1);
     CHECK(secp256k1_keypair_create(CTX, &keypairs[2], sk3) == 1);
@@ -158,7 +158,7 @@ static void test_schnorrsig_api(void) {
 /* Checks that hash initialized by secp256k1_schnorrsig_sha256_tagged has the
  * expected state. */
 static void test_schnorrsig_sha256_tagged(void) {
-    unsigned char tag[17] = "BIP0340/challenge";
+    unsigned char tag[] = {'B', 'I', 'P', '0', '3', '4', '0', '/', 'c', 'h', 'a', 'l', 'l', 'e', 'n', 'g', 'e'};
     secp256k1_sha256 sha;
     secp256k1_sha256 sha_optimized;
 
@@ -806,15 +806,15 @@ static void test_schnorrsig_sign(void) {
     unsigned char sk[32];
     secp256k1_xonly_pubkey pk;
     secp256k1_keypair keypair;
-    const unsigned char msg[32] = "this is a msg for a schnorrsig..";
+    const unsigned char msg[] = {'t', 'h', 'i', 's', ' ', 'i', 's', ' ', 'a', ' ', 'm', 's', 'g', ' ', 'f', 'o', 'r', ' ', 'a', ' ', 's', 'c', 'h', 'n', 'o', 'r', 'r', 's', 'i', 'g', '.', '.'};
     unsigned char sig[64];
     unsigned char sig2[64];
     unsigned char zeros64[64] = { 0 };
     secp256k1_schnorrsig_extraparams extraparams = SECP256K1_SCHNORRSIG_EXTRAPARAMS_INIT;
     unsigned char aux_rand[32];
 
-    secp256k1_testrand256(sk);
-    secp256k1_testrand256(aux_rand);
+    testrand256(sk);
+    testrand256(aux_rand);
     CHECK(secp256k1_keypair_create(CTX, &keypair, sk));
     CHECK(secp256k1_keypair_xonly_pub(CTX, &pk, NULL, &keypair));
     CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, &keypair, NULL) == 1);
@@ -861,12 +861,12 @@ static void test_schnorrsig_sign_verify(void) {
     secp256k1_xonly_pubkey pk;
     secp256k1_scalar s;
 
-    secp256k1_testrand256(sk);
+    testrand256(sk);
     CHECK(secp256k1_keypair_create(CTX, &keypair, sk));
     CHECK(secp256k1_keypair_xonly_pub(CTX, &pk, NULL, &keypair));
 
     for (i = 0; i < N_SIGS; i++) {
-        secp256k1_testrand256(msg[i]);
+        testrand256(msg[i]);
         CHECK(secp256k1_schnorrsig_sign32(CTX, sig[i], msg[i], &keypair, NULL));
         CHECK(secp256k1_schnorrsig_verify(CTX, sig[i], msg[i], sizeof(msg[i]), &pk));
     }
@@ -874,19 +874,19 @@ static void test_schnorrsig_sign_verify(void) {
     {
         /* Flip a few bits in the signature and in the message and check that
          * verify and verify_batch (TODO) fail */
-        size_t sig_idx = secp256k1_testrand_int(N_SIGS);
-        size_t byte_idx = secp256k1_testrand_bits(5);
-        unsigned char xorbyte = secp256k1_testrand_int(254)+1;
+        size_t sig_idx = testrand_int(N_SIGS);
+        size_t byte_idx = testrand_bits(5);
+        unsigned char xorbyte = testrand_int(254)+1;
         sig[sig_idx][byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(CTX, sig[sig_idx], msg[sig_idx], sizeof(msg[sig_idx]), &pk));
         sig[sig_idx][byte_idx] ^= xorbyte;
 
-        byte_idx = secp256k1_testrand_bits(5);
+        byte_idx = testrand_bits(5);
         sig[sig_idx][32+byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(CTX, sig[sig_idx], msg[sig_idx], sizeof(msg[sig_idx]), &pk));
         sig[sig_idx][32+byte_idx] ^= xorbyte;
 
-        byte_idx = secp256k1_testrand_bits(5);
+        byte_idx = testrand_bits(5);
         msg[sig_idx][byte_idx] ^= xorbyte;
         CHECK(!secp256k1_schnorrsig_verify(CTX, sig[sig_idx], msg[sig_idx], sizeof(msg[sig_idx]), &pk));
         msg[sig_idx][byte_idx] ^= xorbyte;
@@ -916,9 +916,9 @@ static void test_schnorrsig_sign_verify(void) {
     {
         /* Test varying message lengths */
         unsigned char msg_large[32 * 8];
-        uint32_t msglen  = secp256k1_testrand_int(sizeof(msg_large));
+        uint32_t msglen  = testrand_int(sizeof(msg_large));
         for (i = 0; i < sizeof(msg_large); i += 32) {
-            secp256k1_testrand256(&msg_large[i]);
+            testrand256(&msg_large[i]);
         }
         CHECK(secp256k1_schnorrsig_sign_custom(CTX, sig[0], msg_large, msglen, &keypair, NULL) == 1);
         CHECK(secp256k1_schnorrsig_verify(CTX, sig[0], msg_large, msglen, &pk) == 1);
@@ -942,7 +942,7 @@ static void test_schnorrsig_taproot(void) {
     unsigned char sig[64];
 
     /* Create output key */
-    secp256k1_testrand256(sk);
+    testrand256(sk);
     CHECK(secp256k1_keypair_create(CTX, &keypair, sk) == 1);
     CHECK(secp256k1_keypair_xonly_pub(CTX, &internal_pk, NULL, &keypair) == 1);
     /* In actual taproot the tweak would be hash of internal_pk */
@@ -952,7 +952,7 @@ static void test_schnorrsig_taproot(void) {
     CHECK(secp256k1_xonly_pubkey_serialize(CTX, output_pk_bytes, &output_pk) == 1);
 
     /* Key spend */
-    secp256k1_testrand256(msg);
+    testrand256(msg);
     CHECK(secp256k1_schnorrsig_sign32(CTX, sig, msg, &keypair, NULL) == 1);
     /* Verify key spend */
     CHECK(secp256k1_xonly_pubkey_parse(CTX, &output_pk, output_pk_bytes) == 1);

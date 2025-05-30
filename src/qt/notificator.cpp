@@ -2,9 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/notificator.h>
 
@@ -112,10 +110,10 @@ FreedesktopImage::FreedesktopImage(const QImage &img):
 
     for(unsigned int ptr = 0; ptr < num_pixels; ++ptr)
     {
-        image[ptr*BYTES_PER_PIXEL+0] = data[ptr] >> 16; // R
-        image[ptr*BYTES_PER_PIXEL+1] = data[ptr] >> 8;  // G
-        image[ptr*BYTES_PER_PIXEL+2] = data[ptr];       // B
-        image[ptr*BYTES_PER_PIXEL+3] = data[ptr] >> 24; // A
+        image[ptr * BYTES_PER_PIXEL + 0] = char(data[ptr] >> 16); // R
+        image[ptr * BYTES_PER_PIXEL + 1] = char(data[ptr] >> 8);  // G
+        image[ptr * BYTES_PER_PIXEL + 2] = char(data[ptr]);       // B
+        image[ptr * BYTES_PER_PIXEL + 3] = char(data[ptr] >> 24); // A
     }
 }
 

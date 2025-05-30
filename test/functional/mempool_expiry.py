@@ -114,4 +114,4 @@ class MempoolExpiryTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    MempoolExpiryTest().main()
+    MempoolExpiryTest(__file__).main()

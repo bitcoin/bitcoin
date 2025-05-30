@@ -26,4 +26,4 @@ class FeatureFastpruneTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    FeatureFastpruneTest().main()
+    FeatureFastpruneTest(__file__).main()

@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+// NOLINTNEXTLINE(misc-no-recursion)
 class UniValue {
 public:
     enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VBOOL, };
@@ -136,7 +137,7 @@ void UniValue::push_backV(It first, It last)
 template <typename Int>
 Int UniValue::getInt() const
 {
-    static_assert(std::is_integral<Int>::value);
+    static_assert(std::is_integral_v<Int>);
     checkType(VNUM);
     Int result;
     const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);

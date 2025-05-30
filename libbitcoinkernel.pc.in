@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: @CLIENT_NAME@ kernel library
+Description: Experimental library for the @CLIENT_NAME@ validation engine.
+Version: @CLIENT_VERSION_STRING@
+Libs: -L${libdir} -lbitcoinkernel
+Libs.private: -L${libdir} @LIBS_PRIVATE@
+Cflags: -I${includedir}

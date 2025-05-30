@@ -13,6 +13,7 @@
 #include <serialize.h>
 #include <support/allocators/pool.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hasher.h>
 
 #include <assert.h>
@@ -86,6 +87,9 @@ public:
     }
 };
 
+struct CCoinsCacheEntry;
+using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
+
 /**
  * A Coin in one level of the coins database caching hierarchy.
  *
@@ -103,8 +107,44 @@ public:
  */
 struct CCoinsCacheEntry
 {
+private:
+    /**
+     * These are used to create a doubly linked list of flagged entries.
+     * They are set in SetDirty, SetFresh, and unset in SetClean.
+     * A flagged entry is any entry that is either DIRTY, FRESH, or both.
+     *
+     * DIRTY entries are tracked so that only modified entries can be passed to
+     * the parent cache for batch writing. This is a performance optimization
+     * compared to giving all entries in the cache to the parent and having the
+     * parent scan for only modified entries.
+     *
+     * FRESH-but-not-DIRTY coins can not occur in practice, since that would
+     * mean a spent coin exists in the parent CCoinsView and not in the child
+     * CCoinsViewCache. Nevertheless, if a spent coin is retrieved from the
+     * parent cache, the FRESH-but-not-DIRTY coin will be tracked by the linked
+     * list and deleted when Sync or Flush is called on the CCoinsViewCache.
+     */
+    CoinsCachePair* m_prev{nullptr};
+    CoinsCachePair* m_next{nullptr};
+    uint8_t m_flags{0};
+
+    //! Adding a flag requires a reference to the sentinel of the flagged pair linked list.
+    static void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
+    {
+        Assume(flags & (DIRTY | FRESH));
+        if (!pair.second.m_flags) {
+            Assume(!pair.second.m_prev && !pair.second.m_next);
+            pair.second.m_prev = sentinel.second.m_prev;
+            pair.second.m_next = &sentinel;
+            sentinel.second.m_prev = &pair;
+            pair.second.m_prev->second.m_next = &pair;
+        }
+        Assume(pair.second.m_prev && pair.second.m_next);
+        pair.second.m_flags |= flags;
+    }
+
+public:
     Coin coin; // The actual cached data.
-    unsigned char flags;
 
     enum Flags {
         /**
@@ -127,9 +167,50 @@ struct CCoinsCacheEntry
         FRESH = (1 << 1),
     };
 
-    CCoinsCacheEntry() : flags(0) {}
-    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
-    CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
+    CCoinsCacheEntry() noexcept = default;
+    explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
+    ~CCoinsCacheEntry()
+    {
+        SetClean();
+    }
+
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
+    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
+
+    void SetClean() noexcept
+    {
+        if (!m_flags) return;
+        m_next->second.m_prev = m_prev;
+        m_prev->second.m_next = m_next;
+        m_flags = 0;
+        m_prev = m_next = nullptr;
+    }
+    bool IsDirty() const noexcept { return m_flags & DIRTY; }
+    bool IsFresh() const noexcept { return m_flags & FRESH; }
+
+    //! Only call Next when this entry is DIRTY, FRESH, or both
+    CoinsCachePair* Next() const noexcept
+    {
+        Assume(m_flags);
+        return m_next;
+    }
+
+    //! Only call Prev when this entry is DIRTY, FRESH, or both
+    CoinsCachePair* Prev() const noexcept
+    {
+        Assume(m_flags);
+        return m_prev;
+    }
+
+    //! Only use this for initializing the linked list sentinel
+    void SelfRef(CoinsCachePair& pair) noexcept
+    {
+        Assume(&pair.second == this);
+        m_prev = &pair;
+        m_next = &pair;
+        // Set sentinel to DIRTY so we can call Next on it
+        m_flags = DIRTY;
+    }
 };
 
 /**
@@ -144,8 +225,8 @@ using CCoinsMap = std::unordered_map<COutPoint,
                                      CCoinsCacheEntry,
                                      SaltedOutpointHasher,
                                      std::equal_to<COutPoint>,
-                                     PoolAllocator<std::pair<const COutPoint, CCoinsCacheEntry>,
-                                                   sizeof(std::pair<const COutPoint, CCoinsCacheEntry>) + sizeof(void*) * 4>>;
+                                     PoolAllocator<CoinsCachePair,
+                                                   sizeof(CoinsCachePair) + sizeof(void*) * 4>>;
 
 using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 
@@ -154,7 +235,7 @@ class CCoinsViewCursor
 {
 public:
     CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
-    virtual ~CCoinsViewCursor() {}
+    virtual ~CCoinsViewCursor() = default;
 
     virtual bool GetKey(COutPoint &key) const = 0;
     virtual bool GetValue(Coin &coin) const = 0;
@@ -168,15 +249,68 @@ private:
     uint256 hashBlock;
 };
 
+/**
+ * Cursor for iterating over the linked list of flagged entries in CCoinsViewCache.
+ *
+ * This is a helper struct to encapsulate the diverging logic between a non-erasing
+ * CCoinsViewCache::Sync and an erasing CCoinsViewCache::Flush. This allows the receiver
+ * of CCoinsView::BatchWrite to iterate through the flagged entries without knowing
+ * the caller's intent.
+ *
+ * However, the receiver can still call CoinsViewCacheCursor::WillErase to see if the
+ * caller will erase the entry after BatchWrite returns. If so, the receiver can
+ * perform optimizations such as moving the coin out of the CCoinsCachEntry instead
+ * of copying it.
+ */
+struct CoinsViewCacheCursor
+{
+    //! If will_erase is not set, iterating through the cursor will erase spent coins from the map,
+    //! and other coins will be unflagged (removing them from the linked list).
+    //! If will_erase is set, the underlying map and linked list will not be modified,
+    //! as the caller is expected to wipe the entire map anyway.
+    //! This is an optimization compared to erasing all entries as the cursor iterates them when will_erase is set.
+    //! Calling CCoinsMap::clear() afterwards is faster because a CoinsCachePair cannot be coerced back into a
+    //! CCoinsMap::iterator to be erased, and must therefore be looked up again by key in the CCoinsMap before being erased.
+    CoinsViewCacheCursor(size_t& usage LIFETIMEBOUND,
+                        CoinsCachePair& sentinel LIFETIMEBOUND,
+                        CCoinsMap& map LIFETIMEBOUND,
+                        bool will_erase) noexcept
+        : m_usage(usage), m_sentinel(sentinel), m_map(map), m_will_erase(will_erase) {}
+
+    inline CoinsCachePair* Begin() const noexcept { return m_sentinel.second.Next(); }
+    inline CoinsCachePair* End() const noexcept { return &m_sentinel; }
+
+    //! Return the next entry after current, possibly erasing current
+    inline CoinsCachePair* NextAndMaybeErase(CoinsCachePair& current) noexcept
+    {
+        const auto next_entry{current.second.Next()};
+        // If we are not going to erase the cache, we must still erase spent entries.
+        // Otherwise, clear the state of the entry.
+        if (!m_will_erase) {
+            if (current.second.coin.IsSpent()) {
+                m_usage -= current.second.coin.DynamicMemoryUsage();
+                m_map.erase(current.first);
+            } else {
+                current.second.SetClean();
+            }
+        }
+        return next_entry;
+    }
+
+    inline bool WillErase(CoinsCachePair& current) const noexcept { return m_will_erase || current.second.coin.IsSpent(); }
+private:
+    size_t& m_usage;
+    CoinsCachePair& m_sentinel;
+    CCoinsMap& m_map;
+    bool m_will_erase;
+};
+
 /** Abstract view on the open txout dataset. */
 class CCoinsView
 {
 public:
-    /** Retrieve the Coin (unspent transaction output) for a given outpoint.
-     *  Returns true only when an unspent coin was found, which is returned in coin.
-     *  When false is returned, coin's value is unspecified.
-     */
-    virtual bool GetCoin(const COutPoint &outpoint, Coin &coin) const;
+    //! Retrieve the Coin (unspent transaction output) for a given outpoint.
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
 
     //! Just check whether a given outpoint is unspent.
     virtual bool HaveCoin(const COutPoint &outpoint) const;
@@ -191,14 +325,14 @@ public:
     virtual std::vector<uint256> GetHeadBlocks() const;
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
-    //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true);
+    //! The passed cursor is used to iterate through the coins.
+    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock);
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor
-    virtual ~CCoinsView() {}
+    virtual ~CCoinsView() = default;
 
     //! Estimate database size (0 if not implemented)
     virtual size_t EstimateSize() const { return 0; }
@@ -213,12 +347,12 @@ protected:
 
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
+    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -237,6 +371,8 @@ protected:
      */
     mutable uint256 hashBlock;
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
+    /* The starting sentinel of the flagged entry circular doubly linked list. */
+    mutable CoinsCachePair m_sentinel;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
@@ -251,11 +387,11 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, bool erase = true) override;
+    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
@@ -381,7 +517,7 @@ public:
         m_err_callbacks.emplace_back(std::move(f));
     }
 
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
 
 private:

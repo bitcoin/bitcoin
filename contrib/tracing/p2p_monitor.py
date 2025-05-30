@@ -14,8 +14,9 @@
 # outbound P2P messages. The eBPF program submits the P2P messages to
 # this script via a BPF ring buffer.
 
-import sys
 import curses
+import os
+import sys
 from curses import wrapper, panel
 from bcc import BPF, USDT
 
@@ -46,11 +47,15 @@ BPF_PERF_OUTPUT(outbound_messages);
 
 int trace_inbound_message(struct pt_regs *ctx) {
     struct p2p_message msg = {};
+    void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL;
 
     bpf_usdt_readarg(1, ctx, &msg.peer_id);
-    bpf_usdt_readarg_p(2, ctx, &msg.peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
-    bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
+    bpf_usdt_readarg(2, ctx, &paddr);
+    bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
+    bpf_usdt_readarg(3, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
+    bpf_usdt_readarg(4, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
     inbound_messages.perf_submit(ctx, &msg, sizeof(msg));
@@ -59,11 +64,15 @@ int trace_inbound_message(struct pt_regs *ctx) {
 
 int trace_outbound_message(struct pt_regs *ctx) {
     struct p2p_message msg = {};
+    void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL;
 
     bpf_usdt_readarg(1, ctx, &msg.peer_id);
-    bpf_usdt_readarg_p(2, ctx, &msg.peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
-    bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
+    bpf_usdt_readarg(2, ctx, &paddr);
+    bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
+    bpf_usdt_readarg(3, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
+    bpf_usdt_readarg(4, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
     outbound_messages.perf_submit(ctx, &msg, sizeof(msg));
@@ -115,10 +124,10 @@ class Peer:
             self.total_outbound_msgs += 1
 
 
-def main(bitcoind_path):
+def main(pid):
     peers = dict()
-
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+    print(f"Hooking into bitcoind with pid {pid}")
+    bitcoind_with_usdts = USDT(pid=int(pid))
 
     # attaching the trace functions defined in the BPF program to the tracepoints
     bitcoind_with_usdts.enable_probe(
@@ -245,9 +254,14 @@ def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_pa
                         (msg.msg_type, msg.size), curses.A_NORMAL)
 
 
+def running_as_root():
+    return os.getuid() == 0
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("USAGE:", sys.argv[0], "path/to/bitcoind")
+    if len(sys.argv) != 2:
+        print("USAGE:", sys.argv[0], "<pid of bitcoind>")
         exit()
-    path = sys.argv[1]
-    main(path)
+    if not running_as_root():
+        print("You might not have the privileges required to hook into the tracepoints!")
+    pid = sys.argv[1]
+    main(pid)

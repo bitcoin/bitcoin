@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # Copyright 2014 BitPay Inc.
-# Copyright 2016-2017 The Bitcoin Core developers
+# Copyright 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test framework for bitcoin utils.
 
-Runs automatically during `make check`.
+Runs automatically during `ctest --test-dir build/`.
 
 Can also be run manually."""
 
@@ -73,7 +73,7 @@ def bctest(testDir, testObj, buildenv):
     are not as expected. Error is caught by bctester() and reported.
     """
     # Get the exec names and arguments
-    execprog = os.path.join(buildenv["BUILDDIR"], "src", testObj["exec"] + buildenv["EXEEXT"])
+    execprog = os.path.join(buildenv["BUILDDIR"], "bin", testObj["exec"] + buildenv["EXEEXT"])
     if testObj["exec"] == "./bitcoin-util":
         execprog = os.getenv("BITCOINUTIL", default=execprog)
     elif testObj["exec"] == "./bitcoin-tx":
@@ -83,13 +83,11 @@ def bctest(testDir, testObj, buildenv):
     execrun = [execprog] + execargs
 
     # Read the input data (if there is any)
-    stdinCfg = None
     inputData = None
     if "input" in testObj:
         filename = os.path.join(testDir, testObj["input"])
         with open(filename, encoding="utf8") as f:
             inputData = f.read()
-        stdinCfg = subprocess.PIPE
 
     # Read the expected output data (if there is any)
     outputFn = None
@@ -112,9 +110,8 @@ def bctest(testDir, testObj, buildenv):
             raise Exception
 
     # Run the test
-    proc = subprocess.Popen(execrun, stdin=stdinCfg, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
-        outs = proc.communicate(input=inputData)
+        res = subprocess.run(execrun, capture_output=True, text=True, input=inputData)
     except OSError:
         logging.error("OSError, Failed to execute " + execprog)
         raise
@@ -123,9 +120,9 @@ def bctest(testDir, testObj, buildenv):
         data_mismatch, formatting_mismatch = False, False
         # Parse command output and expected output
         try:
-            a_parsed = parse_output(outs[0], outputType)
+            a_parsed = parse_output(res.stdout, outputType)
         except Exception as e:
-            logging.error('Error parsing command output as %s: %s' % (outputType, e))
+            logging.error(f"Error parsing command output as {outputType}: '{str(e)}'; res: {str(res)}")
             raise
         try:
             b_parsed = parse_output(outputData, outputType)
@@ -134,13 +131,13 @@ def bctest(testDir, testObj, buildenv):
             raise
         # Compare data
         if a_parsed != b_parsed:
-            logging.error("Output data mismatch for " + outputFn + " (format " + outputType + ")")
+            logging.error(f"Output data mismatch for {outputFn} (format {outputType}); res: {str(res)}")
             data_mismatch = True
         # Compare formatting
-        if outs[0] != outputData:
-            error_message = "Output formatting mismatch for " + outputFn + ":\n"
+        if res.stdout != outputData:
+            error_message = f"Output formatting mismatch for {outputFn}:\nres: {str(res)}\n"
             error_message += "".join(difflib.context_diff(outputData.splitlines(True),
-                                                          outs[0].splitlines(True),
+                                                          res.stdout.splitlines(True),
                                                           fromfile=outputFn,
                                                           tofile="returned"))
             logging.error(error_message)
@@ -152,21 +149,22 @@ def bctest(testDir, testObj, buildenv):
     wantRC = 0
     if "return_code" in testObj:
         wantRC = testObj['return_code']
-    if proc.returncode != wantRC:
-        logging.error("Return code mismatch for " + outputFn)
+    if res.returncode != wantRC:
+        logging.error(f"Return code mismatch for {outputFn}; res: {str(res)}")
         raise Exception
 
     if "error_txt" in testObj:
         want_error = testObj["error_txt"]
-        # Compare error text
-        # TODO: ideally, we'd compare the strings exactly and also assert
-        # That stderr is empty if no errors are expected. However, bitcoin-tx
-        # emits DISPLAY errors when running as a windows application on
-        # linux through wine. Just assert that the expected error text appears
-        # somewhere in stderr.
-        if want_error not in outs[1]:
-            logging.error("Error mismatch:\n" + "Expected: " + want_error + "\nReceived: " + outs[1].rstrip())
+        # A partial match instead of an exact match makes writing tests easier
+        # and should be sufficient.
+        if want_error not in res.stderr:
+            logging.error(f"Error mismatch:\nExpected: {want_error}\nReceived: {res.stderr.rstrip()}\nres: {str(res)}")
             raise Exception
+    else:
+        if res.stderr:
+            logging.error(f"Unexpected error received: {res.stderr.rstrip()}\nres: {str(res)}")
+            raise Exception
+
 
 def parse_output(a, fmt):
     """Parse the output according to specified format.

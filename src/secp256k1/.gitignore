@@ -10,6 +10,8 @@ ctime_tests
 ecdh_example
 ecdsa_example
 schnorr_example
+ellswift_example
+musig_example
 *.exe
 *.so
 *.a
@@ -63,3 +65,7 @@ libsecp256k1.pc
 /CMakeUserPresets.json
 # Default CMake build directory.
 /build
+
+### Python
+__pycache__/
+*.py[oc]

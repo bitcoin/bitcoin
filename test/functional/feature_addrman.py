@@ -6,7 +6,6 @@
 
 import os
 import re
-import struct
 
 from test_framework.messages import ser_uint256, hash256, MAGIC_BYTES
 from test_framework.netutil import ADDRMAN_NEW_BUCKET_COUNT, ADDRMAN_TRIED_BUCKET_COUNT, ADDRMAN_BUCKET_SIZE
@@ -28,15 +27,15 @@ def serialize_addrman(
     tried = []
     INCOMPATIBILITY_BASE = 32
     r = MAGIC_BYTES[net_magic]
-    r += struct.pack("B", format)
-    r += struct.pack("B", INCOMPATIBILITY_BASE + lowest_compatible)
+    r += format.to_bytes(1, "little")
+    r += (INCOMPATIBILITY_BASE + lowest_compatible).to_bytes(1, "little")
     r += ser_uint256(bucket_key)
-    r += struct.pack("<i", len_new or len(new))
-    r += struct.pack("<i", len_tried or len(tried))
+    r += (len_new or len(new)).to_bytes(4, "little", signed=True)
+    r += (len_tried or len(tried)).to_bytes(4, "little", signed=True)
     ADDRMAN_NEW_BUCKET_COUNT = 1 << 10
-    r += struct.pack("<i", ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30))
+    r += (ADDRMAN_NEW_BUCKET_COUNT ^ (1 << 30)).to_bytes(4, "little", signed=True)
     for _ in range(ADDRMAN_NEW_BUCKET_COUNT):
-        r += struct.pack("<i", 0)
+        r += (0).to_bytes(4, "little", signed=True)
     checksum = hash256(r)
     r += mock_checksum or checksum
     return r
@@ -55,7 +54,7 @@ class AddrmanTest(BitcoinTestFramework):
         peers_dat = os.path.join(self.nodes[0].chain_path, "peers.dat")
         init_error = lambda reason: (
             f"Error: Invalid or corrupt peers.dat \\({reason}\\). If you believe this "
-            f"is a bug, please report it to {self.config['environment']['PACKAGE_BUGREPORT']}. "
+            f"is a bug, please report it to {self.config['environment']['CLIENT_BUGREPORT']}. "
             f'As a workaround, you can move the file \\("{re.escape(peers_dat)}"\\) out of the way \\(rename, '
             "move, or delete\\) to have a new one created on the next start."
         )
@@ -156,14 +155,9 @@ class AddrmanTest(BitcoinTestFramework):
         )
 
         self.log.info("Check that missing addrman is recreated")
-        self.stop_node(0)
-        os.remove(peers_dat)
-        with self.nodes[0].assert_debug_log([
-                f'Creating peers.dat because the file was not found ("{peers_dat}")',
-        ]):
-            self.start_node(0)
+        self.restart_node(0, clear_addrman=True)
         assert_equal(self.nodes[0].getnodeaddresses(), [])
 
 
 if __name__ == "__main__":
-    AddrmanTest().main()
+    AddrmanTest(__file__).main()

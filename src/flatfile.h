@@ -18,7 +18,7 @@ struct FlatFilePos
 
     SERIALIZE_METHODS(FlatFilePos, obj) { READWRITE(VARINT_MODE(obj.nFile, VarIntMode::NONNEGATIVE_SIGNED), VARINT(obj.nPos)); }
 
-    FlatFilePos() {}
+    FlatFilePos() = default;
 
     FlatFilePos(int nFileIn, unsigned int nPosIn) :
         nFile(nFileIn),
@@ -63,7 +63,7 @@ public:
     fs::path FileName(const FlatFilePos& pos) const;
 
     /** Open a handle to the file at the given position. */
-    FILE* Open(const FlatFilePos& pos, bool read_only = false);
+    FILE* Open(const FlatFilePos& pos, bool read_only = false) const;
 
     /**
      * Allocate additional space in a file after the given starting position. The amount allocated
@@ -74,7 +74,7 @@ public:
      * @param[out] out_of_space Whether the allocation failed due to insufficient disk space.
      * @return The number of bytes successfully allocated.
      */
-    size_t Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space);
+    size_t Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space) const;
 
     /**
      * Commit a file to disk, and optionally truncate off extra pre-allocated bytes if final.
@@ -83,7 +83,7 @@ public:
      * @param[in] finalize True if no more data will be written to this file.
      * @return true on success, false on failure.
      */
-    bool Flush(const FlatFilePos& pos, bool finalize = false);
+    bool Flush(const FlatFilePos& pos, bool finalize = false) const;
 };
 
 #endif // BITCOIN_FLATFILE_H

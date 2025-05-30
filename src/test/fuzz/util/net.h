@@ -5,6 +5,8 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_NET_H
 #define BITCOIN_TEST_FUZZ_UTIL_NET_H
 
+#include <addrman.h>
+#include <addrman_impl.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
@@ -15,6 +17,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
 #include <threadsafety.h>
+#include <util/asmap.h>
 #include <util/sock.h>
 
 #include <chrono>
@@ -34,6 +37,108 @@
  */
 CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext* rand = nullptr) noexcept;
 
+class AddrManDeterministic : public AddrMan
+{
+public:
+    explicit AddrManDeterministic(const NetGroupManager& netgroupman, FuzzedDataProvider& fuzzed_data_provider, int32_t check_ratio)
+        : AddrMan(netgroupman, /*deterministic=*/true, check_ratio)
+    {
+        WITH_LOCK(m_impl->cs, m_impl->insecure_rand.Reseed(ConsumeUInt256(fuzzed_data_provider)));
+    }
+
+    /**
+     * Compare with another AddrMan.
+     * This compares:
+     * - the values in `mapInfo` (the keys aka ids are ignored)
+     * - vvNew entries refer to the same addresses
+     * - vvTried entries refer to the same addresses
+     */
+    bool operator==(const AddrManDeterministic& other) const
+    {
+        LOCK2(m_impl->cs, other.m_impl->cs);
+
+        if (m_impl->mapInfo.size() != other.m_impl->mapInfo.size() || m_impl->nNew != other.m_impl->nNew ||
+            m_impl->nTried != other.m_impl->nTried) {
+            return false;
+        }
+
+        // Check that all values in `mapInfo` are equal to all values in `other.mapInfo`.
+        // Keys may be different.
+
+        auto addrinfo_hasher = [](const AddrInfo& a) {
+            CSipHasher hasher(0, 0);
+            auto addr_key = a.GetKey();
+            auto source_key = a.source.GetAddrBytes();
+            hasher.Write(TicksSinceEpoch<std::chrono::seconds>(a.m_last_success));
+            hasher.Write(a.nAttempts);
+            hasher.Write(a.nRefCount);
+            hasher.Write(a.fInTried);
+            hasher.Write(a.GetNetwork());
+            hasher.Write(a.source.GetNetwork());
+            hasher.Write(addr_key.size());
+            hasher.Write(source_key.size());
+            hasher.Write(addr_key);
+            hasher.Write(source_key);
+            return (size_t)hasher.Finalize();
+        };
+
+        auto addrinfo_eq = [](const AddrInfo& lhs, const AddrInfo& rhs) {
+            return std::tie(static_cast<const CService&>(lhs), lhs.source, lhs.m_last_success, lhs.nAttempts, lhs.nRefCount, lhs.fInTried) ==
+                   std::tie(static_cast<const CService&>(rhs), rhs.source, rhs.m_last_success, rhs.nAttempts, rhs.nRefCount, rhs.fInTried);
+        };
+
+        using Addresses = std::unordered_set<AddrInfo, decltype(addrinfo_hasher), decltype(addrinfo_eq)>;
+
+        const size_t num_addresses{m_impl->mapInfo.size()};
+
+        Addresses addresses{num_addresses, addrinfo_hasher, addrinfo_eq};
+        for (const auto& [id, addr] : m_impl->mapInfo) {
+            addresses.insert(addr);
+        }
+
+        Addresses other_addresses{num_addresses, addrinfo_hasher, addrinfo_eq};
+        for (const auto& [id, addr] : other.m_impl->mapInfo) {
+            other_addresses.insert(addr);
+        }
+
+        if (addresses != other_addresses) {
+            return false;
+        }
+
+        auto IdsReferToSameAddress = [&](nid_type id, nid_type other_id) EXCLUSIVE_LOCKS_REQUIRED(m_impl->cs, other.m_impl->cs) {
+            if (id == -1 && other_id == -1) {
+                return true;
+            }
+            if ((id == -1 && other_id != -1) || (id != -1 && other_id == -1)) {
+                return false;
+            }
+            return m_impl->mapInfo.at(id) == other.m_impl->mapInfo.at(other_id);
+        };
+
+        // Check that `vvNew` contains the same addresses as `other.vvNew`. Notice - `vvNew[i][j]`
+        // contains just an id and the address is to be found in `mapInfo.at(id)`. The ids
+        // themselves may differ between `vvNew` and `other.vvNew`.
+        for (size_t i = 0; i < ADDRMAN_NEW_BUCKET_COUNT; ++i) {
+            for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
+                if (!IdsReferToSameAddress(m_impl->vvNew[i][j], other.m_impl->vvNew[i][j])) {
+                    return false;
+                }
+            }
+        }
+
+        // Same for `vvTried`.
+        for (size_t i = 0; i < ADDRMAN_TRIED_BUCKET_COUNT; ++i) {
+            for (size_t j = 0; j < ADDRMAN_BUCKET_SIZE; ++j) {
+                if (!IdsReferToSameAddress(m_impl->vvTried[i][j], other.m_impl->vvTried[i][j])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+};
+
 class FuzzedSock : public Sock
 {
     FuzzedDataProvider& m_fuzzed_data_provider;
@@ -43,7 +148,7 @@ class FuzzedSock : public Sock
      * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
      * `Recv()` call we must return the same data, thus we remember it here.
      */
-    mutable std::optional<uint8_t> m_peek_data;
+    mutable std::vector<uint8_t> m_peek_data;
 
     /**
      * Whether to pretend that the socket is select(2)-able. This is randomly set in the
@@ -51,6 +156,16 @@ class FuzzedSock : public Sock
      * return the same value.
      */
     const bool m_selectable;
+
+    /**
+     * Used to mock the steady clock in methods waiting for a given duration.
+     */
+    mutable std::chrono::milliseconds m_time;
+
+    /**
+     * Set the value of the mocked steady clock such as that many ms have passed.
+     */
+    void ElapseTime(std::chrono::milliseconds duration) const;
 
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
@@ -91,6 +206,13 @@ public:
 [[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
 {
     return FuzzedSock{fuzzed_data_provider};
+}
+
+[[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
+    return NetGroupManager(asmap);
 }
 
 inline CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept

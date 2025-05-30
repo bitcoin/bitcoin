@@ -99,6 +99,21 @@ class LoggingTest(BitcoinTestFramework):
             match=ErrorMatch.PARTIAL_REGEX,
         )
 
+        self.log.info("Test that -nodebug,-debug=0,-debug=none clear previously specified debug options")
+        disable_debug_options = [
+            '-debug=0',
+            '-debug=none',
+            '-nodebug'
+        ]
+
+        for disable_debug_opt in disable_debug_options:
+            # Every category before disable_debug_opt will be ignored, including the invalid 'abc'
+            self.restart_node(0, ['-debug=http', '-debug=abc', disable_debug_opt, '-debug=rpc', '-debug=net'])
+            logging = self.nodes[0].logging()
+            assert not logging['http']
+            assert 'abc' not in logging
+            assert logging['rpc']
+            assert logging['net']
 
 if __name__ == '__main__':
-    LoggingTest().main()
+    LoggingTest(__file__).main()

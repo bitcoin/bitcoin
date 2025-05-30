@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -100,7 +100,7 @@ public:
 
                 assert(p <= limit);
                 base[std::min(bufsize - 1, (int)(p - base))] = '\0';
-                LogPrintLevel(BCLog::LEVELDB, BCLog::Level::Debug, "%s", base); // NOLINT(bitcoin-unterminated-logprintf)
+                LogDebug(BCLog::LEVELDB, "%s\n", util::RemoveSuffixView(base, "\n"));
                 if (base != buffer) {
                     delete[] base;
                 }
@@ -130,7 +130,7 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
         options->max_open_files = 64;
     }
 #endif
-    LogPrint(BCLog::LEVELDB, "LevelDB using max_open_files=%d (default=%d)\n",
+    LogDebug(BCLog::LEVELDB, "LevelDB using max_open_files=%d (default=%d)\n",
              options->max_open_files, default_open_files);
 }
 
@@ -147,6 +147,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
         // on corruption in later versions.
         options.paranoid_checks = true;
     }
+    options.max_file_size = std::max(options.max_file_size, DBWRAPPER_MAX_FILE_SIZE);
     SetMaxOpenFiles(&options);
     return options;
 }
@@ -157,42 +158,35 @@ struct CDBBatch::WriteBatchImpl {
 
 CDBBatch::CDBBatch(const CDBWrapper& _parent)
     : parent{_parent},
-      m_impl_batch{std::make_unique<CDBBatch::WriteBatchImpl>()} {};
+      m_impl_batch{std::make_unique<CDBBatch::WriteBatchImpl>()}
+{
+    Clear();
+};
 
 CDBBatch::~CDBBatch() = default;
 
 void CDBBatch::Clear()
 {
     m_impl_batch->batch.Clear();
-    size_estimate = 0;
 }
 
-void CDBBatch::WriteImpl(Span<const std::byte> key, DataStream& ssValue)
+void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
     leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
     m_impl_batch->batch.Put(slKey, slValue);
-    // LevelDB serializes writes as:
-    // - byte: header
-    // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
-    // - byte[]: key
-    // - varint: value length
-    // - byte[]: value
-    // The formula below assumes the key and value are both less than 16k.
-    size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
 }
 
-void CDBBatch::EraseImpl(Span<const std::byte> key)
+void CDBBatch::EraseImpl(std::span<const std::byte> key)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     m_impl_batch->batch.Delete(slKey);
-    // LevelDB serializes erases as:
-    // - byte: header
-    // - varint: key length
-    // - byte[]: key
-    // The formula below assumes the key is less than 16kB.
-    size_estimate += 2 + (slKey.size() > 127) + slKey.size();
+}
+
+size_t CDBBatch::ApproximateSize() const
+{
+    return m_impl_batch->batch.ApproximateSize();
 }
 
 struct LevelDBContext {
@@ -299,7 +293,7 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     HandleError(status);
     if (log_memory) {
         double mem_after = DynamicMemoryUsage() / 1024.0 / 1024;
-        LogPrint(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
+        LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
                  m_name, mem_before, mem_after);
     }
     return true;
@@ -310,7 +304,7 @@ size_t CDBWrapper::DynamicMemoryUsage() const
     std::string memory;
     std::optional<size_t> parsed;
     if (!DBContext().pdb->GetProperty("leveldb.approximate-memory-usage", &memory) || !(parsed = ToIntegral<size_t>(memory))) {
-        LogPrint(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
+        LogDebug(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
         return 0;
     }
     return parsed.value();
@@ -335,7 +329,7 @@ std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
     return ret;
 }
 
-std::optional<std::string> CDBWrapper::ReadImpl(Span<const std::byte> key) const
+std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) const
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     std::string strValue;
@@ -349,7 +343,7 @@ std::optional<std::string> CDBWrapper::ReadImpl(Span<const std::byte> key) const
     return strValue;
 }
 
-bool CDBWrapper::ExistsImpl(Span<const std::byte> key) const
+bool CDBWrapper::ExistsImpl(std::span<const std::byte> key) const
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
 
@@ -364,7 +358,7 @@ bool CDBWrapper::ExistsImpl(Span<const std::byte> key) const
     return true;
 }
 
-size_t CDBWrapper::EstimateSizeImpl(Span<const std::byte> key1, Span<const std::byte> key2) const
+size_t CDBWrapper::EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const
 {
     leveldb::Slice slKey1(CharCast(key1.data()), key1.size());
     leveldb::Slice slKey2(CharCast(key2.data()), key2.size());
@@ -395,18 +389,18 @@ CDBIterator* CDBWrapper::NewIterator()
     return new CDBIterator{*this, std::make_unique<CDBIterator::IteratorImpl>(DBContext().pdb->NewIterator(DBContext().iteroptions))};
 }
 
-void CDBIterator::SeekImpl(Span<const std::byte> key)
+void CDBIterator::SeekImpl(std::span<const std::byte> key)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     m_impl_iter->iter->Seek(slKey);
 }
 
-Span<const std::byte> CDBIterator::GetKeyImpl() const
+std::span<const std::byte> CDBIterator::GetKeyImpl() const
 {
     return MakeByteSpan(m_impl_iter->iter->key());
 }
 
-Span<const std::byte> CDBIterator::GetValueImpl() const
+std::span<const std::byte> CDBIterator::GetValueImpl() const
 {
     return MakeByteSpan(m_impl_iter->iter->value());
 }

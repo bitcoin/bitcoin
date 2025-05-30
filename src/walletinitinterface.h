@@ -22,7 +22,7 @@ public:
     /** Add wallets that should be opened to list of chain clients. */
     virtual void Construct(node::NodeContext& node) const = 0;
 
-    virtual ~WalletInitInterface() {}
+    virtual ~WalletInitInterface() = default;
 };
 
 extern const WalletInitInterface& g_wallet_init_interface;

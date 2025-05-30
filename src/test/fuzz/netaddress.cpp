@@ -6,6 +6,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util/net.h>
+#include <test/util/random.h>
 
 #include <cassert>
 #include <cstdint>
@@ -13,6 +14,7 @@
 
 FUZZ_TARGET(netaddress)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const CNetAddr net_addr = ConsumeNetAddr(fuzzed_data_provider);
@@ -99,9 +101,13 @@ FUZZ_TARGET(netaddress)
     (void)net_addr.GetReachabilityFrom(other_net_addr);
     (void)sub_net.Match(other_net_addr);
 
-    const CService other_service{net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
+    const CService other_service{fuzzed_data_provider.ConsumeBool() ? net_addr : other_net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
     assert((service == other_service) != (service != other_service));
     (void)(service < other_service);
+
+    if (service.ToStringAddrPort() == other_service.ToStringAddrPort()) {
+        assert(static_cast<CNetAddr>(service) == static_cast<CNetAddr>(other_service));
+    }
 
     const CSubNet sub_net_copy_1{net_addr, other_net_addr};
     const CSubNet sub_net_copy_2{net_addr};

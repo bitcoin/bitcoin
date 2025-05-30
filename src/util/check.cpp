@@ -4,9 +4,7 @@
 
 #include <util/check.h>
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <clientversion.h>
 #include <tinyformat.h>
@@ -21,7 +19,7 @@ std::string StrFormatInternalBug(std::string_view msg, std::string_view file, in
     return strprintf("Internal bug detected: %s\n%s:%d (%s)\n"
                      "%s %s\n"
                      "Please report this issue here: %s\n",
-                     msg, file, line, func, PACKAGE_NAME, FormatFullVersion(), PACKAGE_BUGREPORT);
+                     msg, file, line, func, CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
 }
 
 NonFatalCheckError::NonFatalCheckError(std::string_view msg, std::string_view file, int line, std::string_view func)
@@ -35,3 +33,5 @@ void assertion_fail(std::string_view file, int line, std::string_view func, std:
     fwrite(str.data(), 1, str.size(), stderr);
     std::abort();
 }
+
+std::atomic<bool> g_enable_dynamic_fuzz_determinism{false};

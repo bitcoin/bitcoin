@@ -1,47 +1,6 @@
-# assumeutxo
+# Assumeutxo Design
 
-Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
-instance.
-
-## Loading a snapshot
-
-There is currently no canonical source for snapshots, but any downloaded snapshot
-will be checked against a hash that's been hardcoded in source code.
-
-Once you've obtained the snapshot, you can use the RPC command `loadtxoutset` to
-load it.
-
-### Pruning
-
-A pruned node can load a snapshot. To save space, it's possible to delete the
-snapshot file as soon as `loadtxoutset` finishes.
-
-The minimum `-dbcache` setting is 550 MiB, but this functionality ignores that
-minimum and uses at least 1100 MiB.
-
-As the background sync continues there will be temporarily two chainstate
-directories, each multiple gigabytes in size (likely growing larger than the
-the downloaded snapshot).
-
-### Indexes
-
-Indexes work but don't take advantage of this feature. They always start building
-from the genesis block. Once the background validation reaches the snapshot block,
-indexes will continue to build all the way to the tip.
-
-For indexes that support pruning, note that no pruning will take place between
-the snapshot and the tip, until the background sync has completed - after which
-everything is pruned. Depending on how old the snapshot is, this may temporarily
-use a significant amount of disk space.
-
-## Generating a snapshot
-
-The RPC command `dumptxoutset` can be used to generate a snapshot. This can be used
-to create a snapshot on one node that you wish to load on another node.
-It can also be used to verify the hardcoded snapshot hash in the source code.
-
-The utility script
-`./contrib/devtools/utxo_snapshot.sh` may be of use.
+For notes on the usage of Assumeutxo, please refer to [the usage doc](/doc/assumeutxo.md).
 
 ## General background
 
@@ -51,18 +10,12 @@ The utility script
 
 ## Design notes
 
-- A new block index `nStatus` flag is introduced, `BLOCK_ASSUMED_VALID`, to mark block
-  index entries that are required to be assumed-valid by a chainstate created
-  from a UTXO snapshot. This flag is used as a way to modify certain
-  CheckBlockIndex() logic to account for index entries that are pending validation by a
-  chainstate running asynchronously in the background.
-
 - The concept of UTXO snapshots is treated as an implementation detail that lives
   behind the ChainstateManager interface. The external presentation of the changes
   required to facilitate the use of UTXO snapshots is the understanding that there are
-  now certain regions of the chain that can be temporarily assumed to be valid (using
-  the nStatus flag mentioned above). In certain cases, e.g. wallet rescanning, this is
-  very similar to dealing with a pruned chain.
+  now certain regions of the chain that can be temporarily assumed to be valid.
+  In certain cases, e.g. wallet rescanning, this is very similar to dealing with
+  a pruned chain.
 
   Logic outside ChainstateManager should try not to know about snapshots, instead
   preferring to work in terms of more general states like assumed-valid.
@@ -85,7 +38,7 @@ data.
 ### "Normal" operation via initial block download
 
 `ChainstateManager` manages a single Chainstate object, for which
-`m_snapshot_blockhash` is null. This chainstate is (maybe obviously)
+`m_from_snapshot_blockhash` is `std::nullopt`. This chainstate is (maybe obviously)
 considered active. This is the "traditional" mode of operation for bitcoind.
 
 |    |    |
@@ -145,7 +98,7 @@ sequentially.
 
 Once the tip of the background chainstate hits the base block of the snapshot
 chainstate, we stop use of the background chainstate by setting `m_disabled`, in
-`CompleteSnapshotValidation()`, which is checked in `ActivateBestChain()`). We hash the
+`MaybeCompleteSnapshotValidation()`, which is checked in `ActivateBestChain()`). We hash the
 background chainstate's UTXO set contents and ensure it matches the compiled value in
 `CMainParams::m_assumeutxo_data`.
 

@@ -172,6 +172,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">వాలెట్ కోసం క్రొత్త పాస్‌ఫ్రేజ్‌ని నమోదు చేయండి.&lt;br/&gt; దయచేసి &lt;b&gt;పది లేదా అంతకంటే ఎక్కువ యాదృచ్ఛిక అక్షరాల&lt;/b&gt; పాస్‌ఫ్రేజ్‌ని లేదా &lt;b&gt;ఎనిమిది లేదా అంతకంటే ఎక్కువ పదాలను ఉపయోగించండి.&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">కొనసాగించు</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">మీ వాలెట్‌ను గుప్తీకరించడం వల్ల మీ కంప్యూటర్‌కు హాని కలిగించే మాల్వేర్ దొంగిలించకుండా మీ బిట్‌కాయిన్‌లను పూర్తిగా రక్షించలేమని గుర్తుంచుకోండి.</translation>
     </message>
@@ -379,7 +383,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform>%n సంవత్సరం(లు)</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">డిఫాల్ట్ వాలెట్</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -473,7 +481,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">&amp;వాలెట్‌ని ఎన్‌క్రిప్ట్ చేయండి...</translation>
+        <translation type="unfinished">&amp;వాలెట్‌ని గుప్తీకరించు...</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -578,8 +586,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform>లావాదేవీ చరిత్ర యొక్క %n బ్లాక్(లు) ప్రాసెస్ చేయబడింది.</numerusform>
-            <numerusform>లావాదేవీ చరిత్ర యొక్క %n బ్లాక్(లు) ప్రాసెస్ చేయబడింది.</numerusform>
+            <numerusform>లావాదేవీ %n చరిత్ర యొక్క ప్రాసెస్ చేయబడిన బ్లాక్(లు).</numerusform>
+            <numerusform>లావాదేవీ %n చరిత్ర యొక్క ప్రాసెస్ చేయబడిన బ్లాక్(లు).</numerusform>
         </translation>
     </message>
     <message>
@@ -685,10 +693,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ఓవర్‌వ్యూ ట్యాబ్‌లోని విలువలను కప్పిపుచ్చడం చేయండి</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">డిఫాల్ట్ వాలెట్</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">వాలెట్లు అందుబాటులో లేవు</translation>
     </message>
@@ -734,7 +738,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>S&amp;how</source>
-        <translation type="unfinished">S&amp;ఎలా</translation>
+        <translation type="unfinished">&amp;చూపించు</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -1038,10 +1042,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">ఓపెన్ వాలెట్ హెచ్చరిక</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">డిఫాల్ట్ వాలెట్</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1513,18 +1513,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;బాహ్య సంతకం స్క్రిప్ట్ మార్గం</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">రౌటర్‌లో బిట్‌కాయిన్ క్లయింట్ పోర్ట్‌ను స్వయంచాలకంగా తెరవండి. ఇది మీ రూటర్ UPnPకి మద్దతు ఇచ్చినప్పుడు మరియు అది ప్రారంభించబడినప్పుడు మాత్రమే పని చేస్తుంది.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp;UPnPని ఉపయోగించి మ్యాప్ పోర్ట్</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">NA&amp;T-PMPని ఉపయోగించి మ్యాప్ పోర్ట్</translation>
-    </message>
-    <message>
         <source>Accept connections from outside.</source>
         <translation type="unfinished">బయటి నుండి కనెక్షన్లను అంగీకరించండి.</translation>
     </message>
@@ -1615,18 +1603,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Tor onion సేవల ద్వారా సహచరులను చేరుకోవడానికి ప్రత్యేక SOCKS&amp;5 ప్రాక్సీని ఉపయోగించండి:</translation>
-    </message>
-    <message>
-        <source>Monospaced font in the Overview tab:</source>
-        <translation type="unfinished">ఓవర్‌వ్యూ ట్యాబ్‌లో మోనోస్పేస్డ్ ఫాంట్:</translation>
-    </message>
-    <message>
-        <source>embedded "%1"</source>
-        <translation type="unfinished">పొందుపరిచారు "%1"</translation>
-    </message>
-    <message>
-        <source>closest matching "%1"</source>
-        <translation type="unfinished">సన్నిహిత సరిపోలిక "%1"</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1864,10 +1840,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT డిస్క్‌లో సేవ్ చేయబడింది.</translation>
-    </message>
-    <message>
-        <source> * Sends %1 to %2</source>
-        <translation type="unfinished">* %1 ని %2 కి పంపుతుంది</translation>
     </message>
     <message>
         <source>Unable to calculate transaction fee or total transaction amount.</source>
@@ -2152,6 +2124,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;కాపీ చిరునామా</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">ఏదీ లేదు</translation>
+    </message>
+    <message>
         <source>To</source>
         <translation type="unfinished">కు</translation>
     </message>
@@ -2318,10 +2294,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>%1 (%2 blocks)</source>
         <translation type="unfinished">%1 (%2 బ్లాక్‌లు)</translation>
-    </message>
-    <message>
-        <source> from wallet '%1'</source>
-        <translation type="unfinished">వాలెట్ నుండి '%1'</translation>
     </message>
     <message>
         <source>%1 to '%2'</source>
@@ -2514,13 +2486,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">డిఫాల్ట్ వాలెట్</translation>
-    </message>
-</context>
-<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -2619,10 +2584,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">లావాదేవీ మార్పు అవుట్‌పుట్ సూచిక పరిధి వెలుపల ఉంది</translation>
     </message>
     <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">లావాదేవీ మెంపూల్ చైన్‌లో చాలా పొడవుగా ఉంది</translation>
-    </message>
-    <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">లావాదేవీకి కనీసం ఒక గ్రహీత ఉండాలి</translation>
     </message>
@@ -2633,10 +2594,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">లావాదేవీ చాలా పెద్దది</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">-maxsigcacheize కోసం మెమరీని కేటాయించడం సాధ్యం కాలేదు: '%s' MiB</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

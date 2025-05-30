@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,12 +14,17 @@
 #include <node/database_args.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
+#include <util/string.h>
 #include <util/thread.h>
 #include <util/translation.h>
-#include <validation.h> // For g_chainman
-#include <warnings.h>
+#include <validation.h>
 
+#include <chrono>
+#include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
@@ -28,10 +33,10 @@ constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
 
 template <typename... Args>
-void BaseIndex::FatalErrorf(const char* fmt, const Args&... args)
+void BaseIndex::FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     auto message = tfm::format(fmt, args...);
-    node::AbortNode(m_chain->context()->shutdown, m_chain->context()->exit_status, message);
+    node::AbortNode(m_chain->context()->shutdown_request, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());
 }
 
 CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
@@ -89,7 +94,7 @@ bool BaseIndex::Init()
         return &m_chain->context()->chainman->GetChainstateForIndexing());
     // Register to validation interface before setting the 'm_synced' flag, so that
     // callbacks are not missed once m_synced is true.
-    RegisterValidationInterface(this);
+    m_chain->context()->validation_signals->RegisterValidationInterface(this);
 
     CBlockLocator locator;
     if (!GetDB().ReadBestBlock(locator)) {
@@ -106,14 +111,14 @@ bool BaseIndex::Init()
         // best chain, we will rewind to the fork point during index sync
         const CBlockIndex* locator_index{m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0))};
         if (!locator_index) {
-            return InitError(strprintf(Untranslated("%s: best block of the index not found. Please rebuild the index."), GetName()));
+            return InitError(Untranslated(strprintf("%s: best block of the index not found. Please rebuild the index.", GetName())));
         }
         SetBestBlockIndex(locator_index);
     }
 
     // Child init
     const CBlockIndex* start_block = m_best_block_index.load();
-    if (!CustomInit(start_block ? std::make_optional(interfaces::BlockKey{start_block->GetBlockHash(), start_block->nHeight}) : std::nullopt)) {
+    if (!CustomInit(start_block ? std::make_optional(interfaces::BlockRef{start_block->GetBlockHash(), start_block->nHeight}) : std::nullopt)) {
         return false;
     }
 
@@ -141,7 +146,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
     return chain.Next(chain.FindFork(pindex_prev));
 }
 
-void BaseIndex::ThreadSync()
+void BaseIndex::Sync()
 {
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
@@ -159,41 +164,36 @@ void BaseIndex::ThreadSync()
                 return;
             }
 
-            {
-                LOCK(cs_main);
-                const CBlockIndex* pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
-                if (!pindex_next) {
-                    SetBestBlockIndex(pindex);
-                    m_synced = true;
-                    // No need to handle errors in Commit. See rationale above.
-                    Commit();
-                    break;
-                }
-                if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
-                    FatalErrorf("%s: Failed to rewind index %s to a previous chain tip",
-                               __func__, GetName());
-                    return;
-                }
-                pindex = pindex_next;
-            }
-
-            auto current_time{std::chrono::steady_clock::now()};
-            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
-                LogPrintf("Syncing %s with block chain from height %d\n",
-                          GetName(), pindex->nHeight);
-                last_log_time = current_time;
-            }
-
-            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
-                SetBestBlockIndex(pindex->pprev);
-                last_locator_write_time = current_time;
+            const CBlockIndex* pindex_next = WITH_LOCK(cs_main, return NextSyncBlock(pindex, m_chainstate->m_chain));
+            // If pindex_next is null, it means pindex is the chain tip, so
+            // commit data indexed so far.
+            if (!pindex_next) {
+                SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. See rationale above.
                 Commit();
+
+                // If pindex is still the chain tip after committing, exit the
+                // sync loop. It is important for cs_main to be locked while
+                // setting m_synced = true, otherwise a new block could be
+                // attached while m_synced is still false, and it would not be
+                // indexed.
+                LOCK(::cs_main);
+                pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
+                if (!pindex_next) {
+                    m_synced = true;
+                    break;
+                }
             }
+            if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
+                FatalErrorf("%s: Failed to rewind index %s to a previous chain tip", __func__, GetName());
+                return;
+            }
+            pindex = pindex_next;
+
 
             CBlock block;
             interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
-            if (!m_chainstate->m_blockman.ReadBlockFromDisk(block, *pindex)) {
+            if (!m_chainstate->m_blockman.ReadBlock(block, *pindex)) {
                 FatalErrorf("%s: Failed to read block %s from disk",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
@@ -204,6 +204,20 @@ void BaseIndex::ThreadSync()
                 FatalErrorf("%s: Failed to write block %s to index database",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
+            }
+
+            auto current_time{std::chrono::steady_clock::now()};
+            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
+                LogPrintf("Syncing %s with block chain from height %d\n",
+                          GetName(), pindex->nHeight);
+                last_log_time = current_time;
+            }
+
+            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
+                SetBestBlockIndex(pindex);
+                last_locator_write_time = current_time;
+                // No need to handle errors in Commit. See rationale above.
+                Commit();
             }
         }
     }
@@ -229,7 +243,8 @@ bool BaseIndex::Commit()
         }
     }
     if (!ok) {
-        return error("%s: Failed to commit latest %s state", __func__, GetName());
+        LogError("%s: Failed to commit latest %s state\n", __func__, GetName());
+        return false;
     }
     return true;
 }
@@ -246,7 +261,7 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     // In the case of a reorg, ensure persisted block locator is not stale.
     // Pruning has a minimum of 288 blocks-to-keep and getting the index
     // out of sync may be possible but a users fault.
-    // In case we reorg beyond the pruned depth, ReadBlockFromDisk would
+    // In case we reorg beyond the pruned depth, ReadBlock would
     // throw and lead to a graceful shutdown
     SetBestBlockIndex(new_tip);
     if (!Commit()) {
@@ -380,7 +395,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
     }
 
     LogPrintf("%s: %s is catching up on block notifications\n", __func__, GetName());
-    SyncWithValidationInterfaceQueue();
+    m_chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
     return true;
 }
 
@@ -393,13 +408,15 @@ bool BaseIndex::StartBackgroundSync()
 {
     if (!m_init) throw std::logic_error("Error: Cannot start a non-initialized index");
 
-    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { ThreadSync(); });
+    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { Sync(); });
     return true;
 }
 
 void BaseIndex::Stop()
 {
-    UnregisterValidationInterface(this);
+    if (m_chain->context()->validation_signals) {
+        m_chain->context()->validation_signals->UnregisterValidationInterface(this);
+    }
 
     if (m_thread_sync.joinable()) {
         m_thread_sync.join();

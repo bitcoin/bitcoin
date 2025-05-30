@@ -15,9 +15,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h> /* for USE_QRCODE */
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #ifdef USE_QRCODE
 #include <qrencode.h>
@@ -94,7 +92,11 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
 
 QImage QRImageWidget::exportImage()
 {
-    return GUIUtil::GetImage(this);
+    if (!GUIUtil::HasPixmap(this)) {
+        return QImage();
+    }
+
+    return this->pixmap(Qt::ReturnByValue).toImage();
 }
 
 void QRImageWidget::mousePressEvent(QMouseEvent *event)

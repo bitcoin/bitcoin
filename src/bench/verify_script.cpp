@@ -2,27 +2,27 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <bench/bench.h>
+#include <hash.h>
 #include <key.h>
-#if defined(HAVE_CONSENSUS_LIB)
-#include <script/bitcoinconsensus.h>
-#endif
-#include <script/script.h>
+#include <primitives/transaction.h>
+#include <pubkey.h>
 #include <script/interpreter.h>
-#include <streams.h>
+#include <script/script.h>
+#include <span.h>
 #include <test/util/transaction_utils.h>
+#include <uint256.h>
 
 #include <array>
+#include <cassert>
+#include <cstdint>
+#include <vector>
 
 // Microbenchmark for verification of a basic P2WPKH script. Can be easily
 // modified to measure performance of other types of scripts.
 static void VerifyScriptBench(benchmark::Bench& bench)
 {
-    ECC_Start();
+    ECC_Context ecc_context{};
 
     const uint32_t flags{SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH};
     const int witnessversion = 0;
@@ -63,19 +63,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
             &err);
         assert(err == SCRIPT_ERR_OK);
         assert(success);
-
-#if defined(HAVE_CONSENSUS_LIB)
-        DataStream stream;
-        stream << TX_WITH_WITNESS(txSpend);
-        int csuccess = bitcoinconsensus_verify_script_with_amount(
-            txCredit.vout[0].scriptPubKey.data(),
-            txCredit.vout[0].scriptPubKey.size(),
-            txCredit.vout[0].nValue,
-            (const unsigned char*)stream.data(), stream.size(), 0, flags, nullptr);
-        assert(csuccess == 1);
-#endif
     });
-    ECC_Stop();
 }
 
 static void VerifyNestedIfScript(benchmark::Bench& bench)

@@ -19,7 +19,11 @@ import time
 
 from test_framework.p2p import P2PInterface, msg_getheaders
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    ensure_for,
+    assert_not_equal,
+)
 
 # 2 hashes required per regtest block (with no difficulty adjustment)
 REGTEST_WORK_PER_BLOCK = 2
@@ -58,21 +62,17 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         hashes = self.generate(self.nodes[0], num_blocks_to_generate, sync_fun=self.no_op)
 
         self.log.info(f"Node0 current chain work: {self.nodes[0].getblockheader(hashes[-1])['chainwork']}")
-
-        # Sleep a few seconds and verify that node2 didn't get any new blocks
-        # or headers.  We sleep, rather than sync_blocks(node0, node1) because
-        # it's reasonable either way for node1 to get the blocks, or not get
-        # them (since they're below node1's minchainwork).
-        time.sleep(3)
-
         self.log.info("Verifying node 2 has no more blocks than before")
         self.log.info(f"Blockcounts: {[n.getblockcount() for n in self.nodes]}")
         # Node2 shouldn't have any new headers yet, because node1 should not
         # have relayed anything.
-        assert_equal(len(self.nodes[2].getchaintips()), 1)
+        # We wait 3 seconds, rather than sync_blocks(node0, node1) because
+        # it's reasonable either way for node1 to get the blocks, or not get
+        # them (since they're below node1's minchainwork).
+        ensure_for(duration=3, f=lambda: len(self.nodes[2].getchaintips()) == 1)
         assert_equal(self.nodes[2].getchaintips()[0]['height'], 0)
 
-        assert self.nodes[1].getbestblockhash() != self.nodes[0].getbestblockhash()
+        assert_not_equal(self.nodes[1].getbestblockhash(), self.nodes[0].getbestblockhash())
         assert_equal(self.nodes[2].getblockcount(), starting_blockcount)
 
         self.log.info("Check that getheaders requests to node2 are ignored")
@@ -81,8 +81,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         msg.locator.vHave = [int(self.nodes[2].getbestblockhash(), 16)]
         msg.hashstop = 0
         peer.send_and_ping(msg)
-        time.sleep(5)
-        assert "headers" not in peer.last_message or len(peer.last_message["headers"].headers) == 0
+        ensure_for(duration=5, f=lambda: "headers" not in peer.last_message or len(peer.last_message["headers"].headers) == 0)
 
         self.log.info("Generating one more block")
         self.generate(self.nodes[0], 1)
@@ -110,9 +109,9 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
             ["-minimumchainwork=test"],
-            expected_msg='Error: Invalid non-hex (test) minimum chain work value specified',
+            expected_msg='Error: Invalid minimum work specified (test), must be up to 64 hex digits',
         )
 
 
 if __name__ == '__main__':
-    MinimumChainWorkTest().main()
+    MinimumChainWorkTest(__file__).main()

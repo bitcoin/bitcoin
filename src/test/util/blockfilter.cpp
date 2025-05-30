@@ -17,12 +17,12 @@ bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex& block_index, 
     LOCK(::cs_main);
 
     CBlock block;
-    if (!blockman.ReadBlockFromDisk(block, block_index.GetBlockPos())) {
+    if (!blockman.ReadBlock(block, block_index.GetBlockPos())) {
         return false;
     }
 
     CBlockUndo block_undo;
-    if (block_index.nHeight > 0 && !blockman.UndoReadFromDisk(block_undo, block_index)) {
+    if (block_index.nHeight > 0 && !blockman.ReadBlockUndo(block_undo, block_index)) {
         return false;
     }
 

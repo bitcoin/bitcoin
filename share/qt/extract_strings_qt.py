@@ -56,7 +56,7 @@ files = sys.argv[1:]
 XGETTEXT=os.getenv('XGETTEXT', 'xgettext')
 if not XGETTEXT:
     print('Cannot extract strings: xgettext utility is not installed or not configured.',file=sys.stderr)
-    print('Please install package "gettext" and re-run \'./configure\'.',file=sys.stderr)
+    print('Please install package "gettext" and re-run \'cmake -B build\'.',file=sys.stderr)
     sys.exit(1)
 child = Popen([XGETTEXT,'--output=-','--from-code=utf-8','-n','--keyword=_'] + files, stdout=PIPE)
 (out, err) = child.communicate()

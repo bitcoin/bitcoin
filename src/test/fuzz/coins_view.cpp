@@ -27,7 +27,6 @@
 #include <vector>
 
 namespace {
-const TestingSetup* g_setup;
 const Coin EMPTY_COIN{};
 
 bool operator==(const Coin& a, const Coin& b)
@@ -39,8 +38,7 @@ bool operator==(const Coin& a, const Coin& b)
 
 void initialize_coins_view()
 {
-    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
-    g_setup = testing_setup.get();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET(coins_view, .init = initialize_coins_view)
@@ -122,12 +120,16 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 random_mutable_transaction = *opt_mutable_transaction;
             },
             [&] {
+                CoinsCachePair sentinel{};
+                sentinel.second.SelfRef(sentinel);
+                size_t usage{0};
                 CCoinsMapMemoryResource resource;
                 CCoinsMap coins_map{0, SaltedOutpointHasher{/*deterministic=*/true}, CCoinsMap::key_equal{}, &resource};
                 LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
                 {
                     CCoinsCacheEntry coins_cache_entry;
-                    coins_cache_entry.flags = fuzzed_data_provider.ConsumeIntegral<unsigned char>();
+                    const auto dirty{fuzzed_data_provider.ConsumeBool()};
+                    const auto fresh{fuzzed_data_provider.ConsumeBool()};
                     if (fuzzed_data_provider.ConsumeBool()) {
                         coins_cache_entry.coin = random_coin;
                     } else {
@@ -138,11 +140,15 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                         }
                         coins_cache_entry.coin = *opt_coin;
                     }
-                    coins_map.emplace(random_out_point, std::move(coins_cache_entry));
+                    auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
+                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
+                    if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
+                    usage += it->second.coin.DynamicMemoryUsage();
                 }
                 bool expected_code_path = false;
                 try {
-                    coins_view_cache.BatchWrite(coins_map, fuzzed_data_provider.ConsumeBool() ? ConsumeUInt256(fuzzed_data_provider) : coins_view_cache.GetBestBlock());
+                    auto cursor{CoinsViewCacheCursor(usage, sentinel, coins_map, /*will_erase=*/true)};
+                    coins_view_cache.BatchWrite(cursor, fuzzed_data_provider.ConsumeBool() ? ConsumeUInt256(fuzzed_data_provider) : coins_view_cache.GetBestBlock());
                     expected_code_path = true;
                 } catch (const std::logic_error& e) {
                     if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}) {
@@ -158,22 +164,20 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
         const bool exists_using_access_coin = !(coin_using_access_coin == EMPTY_COIN);
         const bool exists_using_have_coin = coins_view_cache.HaveCoin(random_out_point);
         const bool exists_using_have_coin_in_cache = coins_view_cache.HaveCoinInCache(random_out_point);
-        Coin coin_using_get_coin;
-        const bool exists_using_get_coin = coins_view_cache.GetCoin(random_out_point, coin_using_get_coin);
-        if (exists_using_get_coin) {
-            assert(coin_using_get_coin == coin_using_access_coin);
+        if (auto coin{coins_view_cache.GetCoin(random_out_point)}) {
+            assert(*coin == coin_using_access_coin);
+            assert(exists_using_access_coin && exists_using_have_coin_in_cache && exists_using_have_coin);
+        } else {
+            assert(!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin);
         }
-        assert((exists_using_access_coin && exists_using_have_coin_in_cache && exists_using_have_coin && exists_using_get_coin) ||
-               (!exists_using_access_coin && !exists_using_have_coin_in_cache && !exists_using_have_coin && !exists_using_get_coin));
         // If HaveCoin on the backend is true, it must also be on the cache if the coin wasn't spent.
         const bool exists_using_have_coin_in_backend = backend_coins_view.HaveCoin(random_out_point);
         if (!coin_using_access_coin.IsSpent() && exists_using_have_coin_in_backend) {
             assert(exists_using_have_coin);
         }
-        Coin coin_using_backend_get_coin;
-        if (backend_coins_view.GetCoin(random_out_point, coin_using_backend_get_coin)) {
+        if (auto coin{backend_coins_view.GetCoin(random_out_point)}) {
             assert(exists_using_have_coin_in_backend);
-            // Note we can't assert that `coin_using_get_coin == coin_using_backend_get_coin` because the coin in
+            // Note we can't assert that `coin_using_get_coin == *coin` because the coin in
             // the cache may have been modified but not yet flushed.
         } else {
             assert(!exists_using_have_coin_in_backend);

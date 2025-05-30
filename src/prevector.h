@@ -1,17 +1,17 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_PREVECTOR_H
 #define BITCOIN_PREVECTOR_H
 
-#include <assert.h>
-#include <cstdlib>
-#include <stdint.h>
-#include <string.h>
-
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <iterator>
 #include <type_traits>
 #include <utility>
 
@@ -50,7 +50,6 @@ public:
         T* ptr{};
     public:
         typedef Diff difference_type;
-        typedef T value_type;
         typedef T* pointer;
         typedef T& reference;
         using element_type = T;
@@ -78,31 +77,10 @@ public:
         bool operator<(iterator x) const { return ptr < x.ptr; }
     };
 
-    class reverse_iterator {
-        T* ptr{};
-    public:
-        typedef Diff difference_type;
-        typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
-        typedef std::bidirectional_iterator_tag iterator_category;
-        reverse_iterator() = default;
-        reverse_iterator(T* ptr_) : ptr(ptr_) {}
-        T& operator*() const { return *ptr; }
-        T* operator->() const { return ptr; }
-        reverse_iterator& operator--() { ptr++; return *this; }
-        reverse_iterator& operator++() { ptr--; return *this; }
-        reverse_iterator operator++(int) { reverse_iterator copy(*this); ++(*this); return copy; }
-        reverse_iterator operator--(int) { reverse_iterator copy(*this); --(*this); return copy; }
-        bool operator==(reverse_iterator x) const { return ptr == x.ptr; }
-        bool operator!=(reverse_iterator x) const { return ptr != x.ptr; }
-    };
-
     class const_iterator {
         const T* ptr{};
     public:
         typedef Diff difference_type;
-        typedef const T value_type;
         typedef const T* pointer;
         typedef const T& reference;
         using element_type = const T;
@@ -129,27 +107,6 @@ public:
         bool operator<=(const_iterator x) const { return ptr <= x.ptr; }
         bool operator>(const_iterator x) const { return ptr > x.ptr; }
         bool operator<(const_iterator x) const { return ptr < x.ptr; }
-    };
-
-    class const_reverse_iterator {
-        const T* ptr{};
-    public:
-        typedef Diff difference_type;
-        typedef const T value_type;
-        typedef const T* pointer;
-        typedef const T& reference;
-        typedef std::bidirectional_iterator_tag iterator_category;
-        const_reverse_iterator() = default;
-        const_reverse_iterator(const T* ptr_) : ptr(ptr_) {}
-        const_reverse_iterator(reverse_iterator x) : ptr(&(*x)) {}
-        const T& operator*() const { return *ptr; }
-        const T* operator->() const { return ptr; }
-        const_reverse_iterator& operator--() { ptr++; return *this; }
-        const_reverse_iterator& operator++() { ptr--; return *this; }
-        const_reverse_iterator operator++(int) { const_reverse_iterator copy(*this); ++(*this); return copy; }
-        const_reverse_iterator operator--(int) { const_reverse_iterator copy(*this); --(*this); return copy; }
-        bool operator==(const_reverse_iterator x) const { return ptr == x.ptr; }
-        bool operator!=(const_reverse_iterator x) const { return ptr != x.ptr; }
     };
 
 private:
@@ -212,7 +169,7 @@ private:
         std::fill_n(dst, count, value);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     void fill(T* dst, InputIterator first, InputIterator last) {
         while (first != last) {
             new(static_cast<void*>(dst)) T(*first);
@@ -231,7 +188,7 @@ public:
         fill(item_ptr(0), n, val);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     void assign(InputIterator first, InputIterator last) {
         size_type n = last - first;
         clear();
@@ -242,7 +199,7 @@ public:
         fill(item_ptr(0), first, last);
     }
 
-    prevector() {}
+    prevector() = default;
 
     explicit prevector(size_type n) {
         resize(n);
@@ -254,7 +211,7 @@ public:
         fill(item_ptr(0), n, val);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     prevector(InputIterator first, InputIterator last) {
         size_type n = last - first;
         change_capacity(n);
@@ -305,11 +262,6 @@ public:
     const_iterator begin() const { return const_iterator(item_ptr(0)); }
     iterator end() { return iterator(item_ptr(size())); }
     const_iterator end() const { return const_iterator(item_ptr(size())); }
-
-    reverse_iterator rbegin() { return reverse_iterator(item_ptr(size() - 1)); }
-    const_reverse_iterator rbegin() const { return const_reverse_iterator(item_ptr(size() - 1)); }
-    reverse_iterator rend() { return reverse_iterator(item_ptr(-1)); }
-    const_reverse_iterator rend() const { return const_reverse_iterator(item_ptr(-1)); }
 
     size_t capacity() const {
         if (is_direct()) {
@@ -365,7 +317,8 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + 1, ptr, (size() - p) * sizeof(T));
+        T* dst = ptr + 1;
+        memmove(dst, ptr, (size() - p) * sizeof(T));
         _size++;
         new(static_cast<void*>(ptr)) T(value);
         return iterator(ptr);
@@ -378,12 +331,13 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
+        T* dst = ptr + count;
+        memmove(dst, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(item_ptr(p), count, value);
     }
 
-    template<typename InputIterator>
+    template <std::input_iterator InputIterator>
     void insert(iterator pos, InputIterator first, InputIterator last) {
         size_type p = pos - begin();
         difference_type count = last - first;
@@ -392,7 +346,8 @@ public:
             change_capacity(new_size + (new_size >> 1));
         }
         T* ptr = item_ptr(p);
-        memmove(ptr + count, ptr, (size() - p) * sizeof(T));
+        T* dst = ptr + count;
+        memmove(dst, ptr, (size() - p) * sizeof(T));
         _size += count;
         fill(ptr, first, last);
     }

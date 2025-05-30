@@ -9,9 +9,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
 class WalletRBFTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -32,4 +29,4 @@ class WalletRBFTest(BitcoinTestFramework):
         assert_raises_rpc_error(-6, "Fee estimation failed", lambda: self.nodes[0].sendmany("", {self.nodes[0].getnewaddress(): 1}))
 
 if __name__ == '__main__':
-    WalletRBFTest().main()
+    WalletRBFTest(__file__).main()

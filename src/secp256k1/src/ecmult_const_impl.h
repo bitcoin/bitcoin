@@ -214,8 +214,8 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
 #ifdef VERIFY
     /* Verify that v1 and v2 are in range [0, 2^129-1]. */
     for (i = 129; i < 256; ++i) {
-        VERIFY_CHECK(secp256k1_scalar_get_bits(&v1, i, 1) == 0);
-        VERIFY_CHECK(secp256k1_scalar_get_bits(&v2, i, 1) == 0);
+        VERIFY_CHECK(secp256k1_scalar_get_bits_limb32(&v1, i, 1) == 0);
+        VERIFY_CHECK(secp256k1_scalar_get_bits_limb32(&v2, i, 1) == 0);
     }
 #endif
 

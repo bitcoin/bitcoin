@@ -1,10 +1,6 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
 
 #include <boost/test/unit_test.hpp>
 
@@ -12,32 +8,33 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
-#ifdef USE_BDB
-#include <wallet/bdb.h>
-#endif
-#ifdef USE_SQLITE
 #include <wallet/sqlite.h>
-#endif
+#include <wallet/migrate.h>
 #include <wallet/test/util.h>
-#include <wallet/walletutil.h> // for WALLET_FLAG_DESCRIPTORS
+#include <wallet/walletutil.h>
 
+#include <cstddef>
 #include <fstream>
 #include <memory>
+#include <span>
 #include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 inline std::ostream& operator<<(std::ostream& os, const std::pair<const SerializeData, SerializeData>& kv)
 {
-    Span key{kv.first}, value{kv.second};
+    std::span key{kv.first}, value{kv.second};
     os << "(\"" << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\", \""
-       << std::string_view{reinterpret_cast<const char*>(key.data()), key.size()} << "\")";
+       << std::string_view{reinterpret_cast<const char*>(value.data()), value.size()} << "\")";
     return os;
 }
 
 namespace wallet {
 
-static Span<const std::byte> StringBytes(std::string_view str)
+inline std::span<const std::byte> StringBytes(std::string_view str)
 {
-    return AsBytes<const char>({str.data(), str.size()});
+    return std::as_bytes(std::span{str});
 }
 
 static SerializeData StringData(std::string_view str)
@@ -46,7 +43,7 @@ static SerializeData StringData(std::string_view str)
     return SerializeData{bytes.begin(), bytes.end()};
 }
 
-static void CheckPrefix(DatabaseBatch& batch, Span<const std::byte> prefix, MockableData expected)
+static void CheckPrefix(DatabaseBatch& batch, std::span<const std::byte> prefix, MockableData expected)
 {
     std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
     MockableData actual;
@@ -63,81 +60,14 @@ static void CheckPrefix(DatabaseBatch& batch, Span<const std::byte> prefix, Mock
 
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
-static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, fs::path& database_filename)
-{
-    fs::path data_file = BDBDataFile(path);
-    database_filename = data_file.filename();
-    return GetBerkeleyEnv(data_file.parent_path(), false);
-}
-
-BOOST_AUTO_TEST_CASE(getwalletenv_file)
-{
-    fs::path test_name = "test_name.dat";
-    const fs::path datadir = m_args.GetDataDirNet();
-    fs::path file_path = datadir / test_name;
-    std::ofstream f{file_path};
-    f.close();
-
-    fs::path filename;
-    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
-    BOOST_CHECK_EQUAL(filename, test_name);
-    BOOST_CHECK_EQUAL(env->Directory(), datadir);
-}
-
-BOOST_AUTO_TEST_CASE(getwalletenv_directory)
-{
-    fs::path expected_name = "wallet.dat";
-    const fs::path datadir = m_args.GetDataDirNet();
-
-    fs::path filename;
-    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(datadir, filename);
-    BOOST_CHECK_EQUAL(filename, expected_name);
-    BOOST_CHECK_EQUAL(env->Directory(), datadir);
-}
-
-BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_multiple)
-{
-    fs::path datadir = m_args.GetDataDirNet() / "1";
-    fs::path datadir_2 = m_args.GetDataDirNet() / "2";
-    fs::path filename;
-
-    std::shared_ptr<BerkeleyEnvironment> env_1 = GetWalletEnv(datadir, filename);
-    std::shared_ptr<BerkeleyEnvironment> env_2 = GetWalletEnv(datadir, filename);
-    std::shared_ptr<BerkeleyEnvironment> env_3 = GetWalletEnv(datadir_2, filename);
-
-    BOOST_CHECK(env_1 == env_2);
-    BOOST_CHECK(env_2 != env_3);
-}
-
-BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
-{
-    fs::path datadir = gArgs.GetDataDirNet() / "1";
-    fs::path datadir_2 = gArgs.GetDataDirNet() / "2";
-    fs::path filename;
-
-    std::shared_ptr <BerkeleyEnvironment> env_1_a = GetWalletEnv(datadir, filename);
-    std::shared_ptr <BerkeleyEnvironment> env_2_a = GetWalletEnv(datadir_2, filename);
-    env_1_a.reset();
-
-    std::shared_ptr<BerkeleyEnvironment> env_1_b = GetWalletEnv(datadir, filename);
-    std::shared_ptr<BerkeleyEnvironment> env_2_b = GetWalletEnv(datadir_2, filename);
-
-    BOOST_CHECK(env_1_a != env_1_b);
-    BOOST_CHECK(env_2_a == env_2_b);
-}
-
 static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path& path_root)
 {
     std::vector<std::unique_ptr<WalletDatabase>> dbs;
     DatabaseOptions options;
     DatabaseStatus status;
     bilingual_str error;
-#ifdef USE_BDB
-    dbs.emplace_back(MakeBerkeleyDatabase(path_root / "bdb", options, status, error));
-#endif
-#ifdef USE_SQLITE
+    // Unable to test BerkeleyRO since we cannot create a new BDB database to open
     dbs.emplace_back(MakeSQLiteDatabase(path_root / "sqlite", options, status, error));
-#endif
     dbs.emplace_back(CreateMockableWalletDatabase());
     return dbs;
 }
@@ -148,8 +78,8 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_range_test)
     for (const auto& database : TestDatabases(m_path_root)) {
         std::vector<std::string> prefixes = {"", "FIRST", "SECOND", "P\xfe\xff", "P\xff\x01", "\xff\xff"};
 
-        // Write elements to it
         std::unique_ptr<DatabaseBatch> handler = Assert(database)->MakeBatch();
+        // Write elements to it
         for (unsigned int i = 0; i < 10; i++) {
             for (const auto& prefix : prefixes) {
                 BOOST_CHECK(handler->Write(std::make_pair(prefix, i), i));
@@ -180,6 +110,8 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_range_test)
             // Let's now read it once more, it should return DONE
             BOOST_CHECK(cursor->Next(key, value) == DatabaseCursor::Status::DONE);
         }
+        handler.reset();
+        database->Close();
     }
 }
 
@@ -199,13 +131,18 @@ BOOST_AUTO_TEST_CASE(db_cursor_prefix_byte_test)
         ffs{StringData("\xff\xffsuffix"), StringData("ffs")};
     for (const auto& database : TestDatabases(m_path_root)) {
         std::unique_ptr<DatabaseBatch> batch = database->MakeBatch();
+
+        // Write elements to it if not berkeleyro
         for (const auto& [k, v] : {e, p, ps, f, fs, ff, ffs}) {
-            batch->Write(Span{k}, Span{v});
+            batch->Write(std::span{k}, std::span{v});
         }
+
         CheckPrefix(*batch, StringBytes(""), {e, p, ps, f, fs, ff, ffs});
         CheckPrefix(*batch, StringBytes("prefix"), {p, ps});
         CheckPrefix(*batch, StringBytes("\xff"), {f, fs, ff, ffs});
         CheckPrefix(*batch, StringBytes("\xff\xff"), {ff, ffs});
+        batch.reset();
+        database->Close();
     }
 }
 
@@ -243,6 +180,10 @@ BOOST_AUTO_TEST_CASE(erase_prefix)
     auto make_key = [](std::string type, std::string id) { return std::make_pair(type, id); };
 
     for (const auto& database : TestDatabases(m_path_root)) {
+        if (dynamic_cast<BerkeleyRODatabase*>(database.get())) {
+            // Skip this test if BerkeleyRO
+            continue;
+        }
         std::unique_ptr<DatabaseBatch> batch = database->MakeBatch();
 
         // Write two entries with the same key type prefix, a third one with a different prefix
@@ -264,8 +205,6 @@ BOOST_AUTO_TEST_CASE(erase_prefix)
         BOOST_CHECK(batch->Exists(make_key(value, key)));
     }
 }
-
-#ifdef USE_SQLITE
 
 // Test-only statement execution error
 constexpr int TEST_SQLITE_ERROR = -999;
@@ -357,7 +296,6 @@ BOOST_AUTO_TEST_CASE(concurrent_txn_dont_interfere)
     BOOST_CHECK(handler2->Read(key, read_value));
     BOOST_CHECK_EQUAL(read_value, value2);
 }
-#endif // USE_SQLITE
 
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

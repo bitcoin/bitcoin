@@ -6,6 +6,10 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+)
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -35,12 +39,33 @@ class InvalidateTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.sync_blocks(self.nodes[0:2])
         assert_equal(self.nodes[0].getblockcount(), 6)
-        badhash = self.nodes[1].getblockhash(2)
+
+        # Add a header to the tip of node 0 without submitting the block. This shouldn't
+        # affect results since this chain will be invalidated next.
+        tip = self.nodes[0].getbestblockhash()
+        block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
+        block = create_block(int(tip, 16), create_coinbase(self.nodes[0].getblockcount()), block_time, version=4)
+        block.solve()
+        self.nodes[0].submitheader(block.serialize().hex())
+        assert_equal(self.nodes[0].getblockchaininfo()["headers"], self.nodes[0].getblockchaininfo()["blocks"] + 1)
 
         self.log.info("Invalidate block 2 on node 0 and verify we reorg to node 0's original chain")
+        badhash = self.nodes[1].getblockhash(2)
         self.nodes[0].invalidateblock(badhash)
         assert_equal(self.nodes[0].getblockcount(), 4)
         assert_equal(self.nodes[0].getbestblockhash(), besthash_n0)
+        # Should report consistent blockchain info
+        assert_equal(self.nodes[0].getblockchaininfo()["headers"], self.nodes[0].getblockchaininfo()["blocks"])
+
+        self.log.info("Reconsider block 6 on node 0 again and verify that the best header is set correctly")
+        self.nodes[0].reconsiderblock(tip)
+        assert_equal(self.nodes[0].getblockchaininfo()["headers"], self.nodes[0].getblockchaininfo()["blocks"] + 1)
+
+        self.log.info("Invalidate block 2 on node 0 and verify we reorg to node 0's original chain again")
+        self.nodes[0].invalidateblock(badhash)
+        assert_equal(self.nodes[0].getblockcount(), 4)
+        assert_equal(self.nodes[0].getbestblockhash(), besthash_n0)
+        assert_equal(self.nodes[0].getblockchaininfo()["headers"], self.nodes[0].getblockchaininfo()["blocks"])
 
         self.log.info("Make sure we won't reorg to a lower work chain:")
         self.connect_nodes(1, 2)
@@ -83,6 +108,8 @@ class InvalidateTest(BitcoinTestFramework):
         self.nodes[1].reconsiderblock(blocks[-4])
         # Should be back at the tip by now
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+        # Should report consistent blockchain info
+        assert_equal(self.nodes[1].getblockchaininfo()["headers"], self.nodes[1].getblockchaininfo()["blocks"])
 
         self.log.info("Verify that invalidating an unknown block throws an error")
         assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
@@ -90,4 +117,4 @@ class InvalidateTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    InvalidateTest().main()
+    InvalidateTest(__file__).main()

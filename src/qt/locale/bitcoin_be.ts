@@ -83,6 +83,14 @@
         <translation type="unfinished">Адбылася памылка падчас спробы захаваць адрас у %1. Паспрабуйце зноў.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Адрасы адпраўкі - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Адрасы прымання - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Экспартаванне няўдалае</translation>
     </message>
@@ -155,6 +163,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation type="unfinished">Гаманец зашыфраваны</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Гаманец будзе зашыфраваны</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -1074,10 +1086,6 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Ці жадаеце вы перабудаваць зараз базу звестак блокаў?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Загрузка выканана</translation>
     </message>
@@ -1100,10 +1108,6 @@
     <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Недастаткова сродкаў</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Не хапае файлавых дэскрыптараў.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>

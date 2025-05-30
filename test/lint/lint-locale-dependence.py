@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2022 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -43,14 +43,15 @@ from subprocess import check_output, CalledProcessError
 
 KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
+    "src/span.h:.*printf",
     "src/test/fuzz/locale.cpp:.*setlocale",
     "src/test/util_tests.cpp:.*strtoll",
-    "src/wallet/bdb.cpp:.*DbEnv::strerror",  # False positive
     "src/util/syserror.cpp:.*strerror",      # Outside this function use `SysErrorString`
 ]
 
 REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
     "src/crypto/ctaes/",
+    "src/ipc/libmultiprocess/",
     "src/leveldb/",
     "src/secp256k1/",
     "src/minisketch/",
@@ -214,7 +215,7 @@ LOCALE_DEPENDENT_FUNCTIONS = [
 def find_locale_dependent_function_uses():
     regexp_locale_dependent_functions = "|".join(LOCALE_DEPENDENT_FUNCTIONS)
     exclude_args = [":(exclude)" + excl for excl in REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS]
-    git_grep_command = ["git", "grep", "-E", "[^a-zA-Z0-9_\\`'\"<>](" +  regexp_locale_dependent_functions + ")(_r|_s)?[^a-zA-Z0-9_\\`'\"<>]", "--", "*.cpp", "*.h"] + exclude_args
+    git_grep_command = ["git", "grep", "--extended-regexp", "[^a-zA-Z0-9_\\`'\"<>](" +  regexp_locale_dependent_functions + ")(_r|_s)?\\(", "--", "*.cpp", "*.h"] + exclude_args
     git_grep_output = list()
 
     try:
@@ -234,8 +235,8 @@ def main():
 
     for locale_dependent_function in LOCALE_DEPENDENT_FUNCTIONS:
         matches =  [line for line in git_grep_output
-                    if re.search("[^a-zA-Z0-9_\\`'\"<>]" + locale_dependent_function + "(_r|_s)?[^a-zA-Z0-9_\\`'\"<>]", line)
-                    and not re.search("\\.(c|cpp|h):\\s*(//|\\*|/\\*|\").*" + locale_dependent_function, line)
+                    if re.search("[^a-zA-Z0-9_\\`'\"<>]" + locale_dependent_function + "(_r|_s)?\\(", line)
+                    and not re.search("\\.(c|cpp|h):\\s*//.*" + locale_dependent_function, line)
                     and not re.search(regexp_ignore_known_violations, line)]
         if matches:
             print(f"The locale dependent function {locale_dependent_function}(...) appears to be used:")

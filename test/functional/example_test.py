@@ -79,9 +79,6 @@ class ExampleTest(BitcoinTestFramework):
     # Override the set_test_params(), skip_test_if_missing_module(), add_options(), setup_chain(), setup_network()
     # and setup_nodes() methods to customize the test setup as required.
 
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         """Override test parameters for your individual test.
 
@@ -184,7 +181,7 @@ class ExampleTest(BitcoinTestFramework):
             block.solve()
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our P2PInterface
-            peer_messaging.send_message(block_message)
+            peer_messaging.send_without_ping(block_message)
             self.tip = block.sha256
             blocks.append(self.tip)
             self.block_time += 1
@@ -209,7 +206,7 @@ class ExampleTest(BitcoinTestFramework):
         getdata_request = msg_getdata()
         for block in blocks:
             getdata_request.inv.append(CInv(MSG_BLOCK, block))
-        peer_receiving.send_message(getdata_request)
+        peer_receiving.send_without_ping(getdata_request)
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
         # P2PInterface objects.
@@ -225,4 +222,4 @@ class ExampleTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    ExampleTest().main()
+    ExampleTest(__file__).main()

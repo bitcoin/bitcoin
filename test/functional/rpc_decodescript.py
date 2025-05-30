@@ -187,6 +187,16 @@ class DecodeScriptTest(BitcoinTestFramework):
         assert_equal('1 ' + xonly_public_key, rpc_result['asm'])
         assert 'segwit' not in rpc_result
 
+        self.log.info("- P2A (anchor)")
+        # 1 <4e73>
+        witprog_hex = '4e73'
+        rpc_result = self.nodes[0].decodescript('5102' + witprog_hex)
+        assert_equal('anchor', rpc_result['type'])
+        # in the disassembly, the witness program is shown as single decimal due to its small size
+        witprog_as_decimal = int.from_bytes(bytes.fromhex(witprog_hex), 'little')
+        assert_equal(f'1 {witprog_as_decimal}', rpc_result['asm'])
+        assert_equal('bcrt1pfeesnyr2tx', rpc_result['address'])
+
     def decoderawtransaction_asm_sighashtype(self):
         """Test decoding scripts via RPC command "decoderawtransaction".
 
@@ -289,4 +299,4 @@ class DecodeScriptTest(BitcoinTestFramework):
         self.decodescript_miniscript()
 
 if __name__ == '__main__':
-    DecodeScriptTest().main()
+    DecodeScriptTest(__file__).main()

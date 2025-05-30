@@ -21,8 +21,8 @@ env:
   MAKEFLAGS: '-j4'
   BUILD: 'check'
   ### secp256k1 config
-  ECMULTWINDOW: 'auto'
-  ECMULTGENPRECISION: 'auto'
+  ECMULTWINDOW: 15
+  ECMULTGENKB: 86
   ASM: 'no'
   WIDEMUL: 'auto'
   WITH_VALGRIND: 'yes'
@@ -31,13 +31,16 @@ env:
   EXPERIMENTAL: 'no'
   ECDH: 'no'
   RECOVERY: 'no'
+  EXTRAKEYS: 'no'
   SCHNORRSIG: 'no'
+  MUSIG: 'no'
   ELLSWIFT: 'no'
   ### test options
-  SECP256K1_TEST_ITERS:
+  SECP256K1_TEST_ITERS: 64
   BENCH: 'yes'
   SECP256K1_BENCH_ITERS: 2
   CTIMETESTS: 'yes'
+  SYMBOL_CHECK: 'yes'
   # Compile and run the examples.
   EXAMPLES: 'yes'
 
@@ -71,20 +74,20 @@ jobs:
       matrix:
         configuration:
           - env_vars: { WIDEMUL: 'int64',  RECOVERY: 'yes' }
-          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - env_vars: { WIDEMUL: 'int128' }
-          - env_vars: { WIDEMUL: 'int128_struct',                                           ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                   ELLSWIFT: 'yes' }
-          - env_vars: {                    RECOVERY: 'yes',              SCHNORRSIG: 'yes' }
-          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', CPPFLAGS: '-DVERIFY' }
+          - env_vars: { WIDEMUL: 'int128_struct',                                                             ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
+          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                                     ELLSWIFT: 'yes' }
+          - env_vars: {                    RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
+          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', CPPFLAGS: '-DVERIFY' }
           - env_vars: { BUILD: 'distcheck', WITH_VALGRIND: 'no', CTIMETESTS: 'no', BENCH: 'no' }
           - env_vars: { CPPFLAGS: '-DDETERMINISTIC' }
           - env_vars: { CFLAGS: '-O0', CTIMETESTS: 'no' }
-          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - env_vars: { ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
-          - env_vars: { ECMULTGENPRECISION: 8, ECMULTWINDOW: 4 }
+          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - env_vars: { ECMULTGENKB: 2, ECMULTWINDOW: 2 }
+          - env_vars: { ECMULTGENKB: 86, ECMULTWINDOW: 4 }
         cc:
           - 'gcc'
           - 'clang'
@@ -105,23 +108,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   i686_debian:
     name: "i686: Linux (Debian stable)"
@@ -139,7 +128,9 @@ jobs:
       HOST: 'i686-linux-gnu'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CC: ${{ matrix.cc }}
 
@@ -153,23 +144,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   s390x_debian:
     name: "s390x (big-endian): Linux (Debian stable, QEMU)"
@@ -183,7 +160,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -197,23 +176,10 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   arm32_debian:
     name: "ARM32: Linux (Debian stable, QEMU)"
@@ -234,7 +200,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -249,23 +217,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   arm64_debian:
     name: "ARM64: Linux (Debian stable, QEMU)"
@@ -279,7 +233,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -304,23 +260,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   ppc64le_debian:
     name: "ppc64le: Linux (Debian stable, QEMU)"
@@ -334,7 +276,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -348,23 +292,10 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   valgrind_debian:
     name: "Valgrind (memcheck)"
@@ -377,8 +308,8 @@ jobs:
         configuration:
           - env_vars: { CC: 'clang',                                      ASM: 'auto' }
           - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
-          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
-          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
 
     env:
       # The `--error-exitcode` is required to make the test fail if valgrind found errors,
@@ -386,7 +317,9 @@ jobs:
       WRAPPER_CMD: 'valgrind --error-exitcode=42'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
       SECP256K1_TEST_ITERS: 2
@@ -402,23 +335,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   sanitizers_debian:
     name: "UBSan, ASan, LSan"
@@ -431,13 +350,15 @@ jobs:
         configuration:
           - env_vars: { CC: 'clang',                                      ASM: 'auto' }
           - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
-          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
-          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENPRECISION: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
+          - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
 
     env:
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
       CFLAGS: '-fsanitize=undefined,address -g'
@@ -445,6 +366,7 @@ jobs:
       ASAN_OPTIONS: 'strict_string_checks=1:detect_stack_use_after_return=1:detect_leaks=1'
       LSAN_OPTIONS: 'use_unaligned=1'
       SECP256K1_TEST_ITERS: 32
+      SYMBOL_CHECK: 'no'
 
     steps:
       - name: Checkout
@@ -457,23 +379,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   msan_debian:
     name: "MSan"
@@ -485,22 +393,31 @@ jobs:
       matrix:
         configuration:
           - env_vars:
+              CTIMETESTS: 'yes'
               CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g'
           - env_vars:
-              ECMULTGENPRECISION: 2
+              ECMULTGENKB: 2
               ECMULTWINDOW: 2
+              CTIMETESTS: 'yes'
               CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -g -O3'
+          - env_vars:
+              # -fsanitize-memory-param-retval is clang's default, but our build system disables it
+              # when ctime_tests when enabled.
+              CFLAGS: '-fsanitize=memory -fsanitize-recover=memory -fsanitize-memory-param-retval -g'
+              CTIMETESTS: 'no'
 
     env:
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
-      CTIMETESTS: 'yes'
       CC: 'clang'
       SECP256K1_TEST_ITERS: 32
       ASM: 'no'
       WITH_VALGRIND: 'no'
+      SYMBOL_CHECK: 'no'
 
     steps:
       - name: Checkout
@@ -513,23 +430,10 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   mingw_debian:
     name: ${{ matrix.configuration.job_name }}
@@ -541,7 +445,9 @@ jobs:
       WITH_VALGRIND: 'no'
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
       CTIMETESTS: 'no'
 
@@ -567,47 +473,34 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
-  macos-native:
-    name: "x86_64: macOS Monterey"
+  x86_64-macos-native:
+    name: "x86_64: macOS Ventura, Valgrind"
     # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-12 # Use M1 once available https://github.com/github/roadmap/issues/528
+    runs-on: macos-13
 
     env:
       CC: 'clang'
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
+      SYMBOL_CHECK: 'no'
 
     strategy:
       fail-fast: false
       matrix:
         env_vars:
-          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - { WIDEMUL: 'int128_struct', ECMULTGENPRECISION: 2, ECMULTWINDOW: 4 }
-          - { WIDEMUL: 'int128',                  ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128_struct', ECMULTGENKB: 2, ECMULTWINDOW: 4 }
+          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
           - BUILD: 'distcheck'
 
     steps:
@@ -616,7 +509,7 @@ jobs:
 
       - name: Install Homebrew packages
         run: |
-          brew install automake libtool gcc
+          brew install --quiet automake libtool gcc
           ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
 
       - name: Install and cache Valgrind
@@ -626,23 +519,69 @@ jobs:
         env: ${{ matrix.env_vars }}
         run: ./ci/ci.sh
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Symbol check
+        run: |
+          python3 --version
+          python3 -m pip install lief
+          python3 ./tools/symbol-check.py .libs/libsecp256k1.dylib
+
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
+  arm64-macos-native:
+    name: "ARM64: macOS Sonoma"
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: macos-14
+
+    env:
+      CC: 'clang'
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      WITH_VALGRIND: 'no'
+      CTIMETESTS: 'no'
+      SYMBOL_CHECK: 'no'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        env_vars:
+          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128_struct', ECMULTGENPRECISION: 2, ECMULTWINDOW: 4 }
+          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CC: 'gcc' }
+          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY' }
+          - BUILD: 'distcheck'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Homebrew packages
+        run: |
+          brew install --quiet automake libtool gcc
+          ln -s $(brew --prefix gcc)/bin/gcc-?? /usr/local/bin/gcc
+
+      - name: CI script
+        env: ${{ matrix.env_vars }}
+        run: ./ci/ci.sh
+
+      - name: Symbol check
+        env:
+          VIRTUAL_ENV: '${{ github.workspace }}/venv'
+        run: |
+          python3 --version
+          python3 -m venv $VIRTUAL_ENV
+          export PATH="$VIRTUAL_ENV/bin:$PATH"
+          python3 -m pip install lief
+          python3 ./tools/symbol-check.py .libs/libsecp256k1.dylib
+
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
+
 
   win64-native:
     name: ${{ matrix.configuration.job_name }}
@@ -655,6 +594,7 @@ jobs:
         configuration:
           - job_name: 'x64 (MSVC): Windows (VS 2022, shared)'
             cmake_options: '-A x64 -DBUILD_SHARED_LIBS=ON'
+            symbol_check: 'true'
           - job_name: 'x64 (MSVC): Windows (VS 2022, static)'
             cmake_options: '-A x64 -DBUILD_SHARED_LIBS=OFF'
           - job_name: 'x64 (MSVC): Windows (VS 2022, int128_struct)'
@@ -664,6 +604,8 @@ jobs:
             cpp_flags: '/DSECP256K1_MSVC_MULH_TEST_OVERRIDE'
           - job_name: 'x86 (MSVC): Windows (VS 2022)'
             cmake_options: '-A Win32'
+          - job_name: 'x64 (MSVC): Windows (clang-cl)'
+            cmake_options: '-T ClangCL'
 
     steps:
       - name: Checkout
@@ -679,14 +621,21 @@ jobs:
         # Use the bash shell included with Git for Windows.
         shell: bash
         run: |
-          cd build/src/RelWithDebInfo && file *tests.exe bench*.exe libsecp256k1-*.dll || true
+          cd build/bin/RelWithDebInfo && file *tests.exe bench*.exe libsecp256k1-*.dll || true
+
+      - name: Symbol check
+        if: ${{ matrix.configuration.symbol_check }}
+        run: |
+          py -3 --version
+          py -3 -m pip install lief
+          py -3 .\tools\symbol-check.py build\bin\RelWithDebInfo\libsecp256k1-5.dll
 
       - name: Check
         run: |
           ctest -C RelWithDebInfo --test-dir build -j ([int]$env:NUMBER_OF_PROCESSORS + 1)
-          build\src\RelWithDebInfo\bench_ecmult.exe
-          build\src\RelWithDebInfo\bench_internal.exe
-          build\src\RelWithDebInfo\bench.exe
+          build\bin\RelWithDebInfo\bench_ecmult.exe
+          build\bin\RelWithDebInfo\bench_internal.exe
+          build\bin\RelWithDebInfo\bench.exe
 
   win64-native-headers:
     name: "x64 (MSVC): C++ (public headers)"
@@ -716,7 +665,9 @@ jobs:
       WERROR_CFLAGS:
       ECDH: 'yes'
       RECOVERY: 'yes'
+      EXTRAKEYS: 'yes'
       SCHNORRSIG: 'yes'
+      MUSIG: 'yes'
       ELLSWIFT: 'yes'
 
     steps:
@@ -729,23 +680,9 @@ jobs:
           dockerfile: ./ci/linux-debian.Dockerfile
           tag: linux-debian-image
 
-      - run: cat tests.log || true
-        if: ${{ always() }}
-      - run: cat noverify_tests.log || true
-        if: ${{ always() }}
-      - run: cat exhaustive_tests.log || true
-        if: ${{ always() }}
-      - run: cat ctime_tests.log || true
-        if: ${{ always() }}
-      - run: cat bench.log || true
-        if: ${{ always() }}
-      - run: cat config.log || true
-        if: ${{ always() }}
-      - run: cat test_env.log || true
-        if: ${{ always() }}
-      - name: CI env
-        run: env
-        if: ${{ always() }}
+      - name: Print logs
+        uses: ./.github/actions/print-logs
+        if: ${{ !cancelled() }}
 
   cxx_headers_debian:
     name: "C++ (public headers)"
@@ -802,5 +739,5 @@ jobs:
           CI_BUILD: ${{ runner.temp }}/${{ github.run_id }}${{ github.action }}/build
           CI_INSTALL: ${{ runner.temp }}/${{ github.run_id }}${{ github.action }}/install
         run: |
-          cmake -B ${{ env.CI_BUILD }} -DCMAKE_INSTALL_PREFIX=${{ env.CI_INSTALL }} && cmake --build ${{ env.CI_BUILD }} --target install && ls -RlAh ${{ env.CI_INSTALL }}
+          cmake -B ${{ env.CI_BUILD }} -DCMAKE_INSTALL_PREFIX=${{ env.CI_INSTALL }} && cmake --build ${{ env.CI_BUILD }} && cmake --install ${{ env.CI_BUILD }} && ls -RlAh ${{ env.CI_INSTALL }}
           gcc -o ecdsa examples/ecdsa.c -I ${{ env.CI_INSTALL }}/include -L ${{ env.CI_INSTALL }}/lib*/ -l secp256k1 -Wl,-rpath,"${{ env.CI_INSTALL }}/lib",-rpath,"${{ env.CI_INSTALL }}/lib64" && ./ecdsa

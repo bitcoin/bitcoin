@@ -34,13 +34,13 @@ from test_framework.wallet import MiniWallet
 class SlowP2PDataStore(P2PDataStore):
     def on_ping(self, message):
         time.sleep(0.1)
-        self.send_message(msg_pong(message.nonce))
+        self.send_without_ping(msg_pong(message.nonce))
 
 
 class SlowP2PInterface(P2PInterface):
     def on_ping(self, message):
         time.sleep(0.1)
-        self.send_message(msg_pong(message.nonce))
+        self.send_without_ping(msg_pong(message.nonce))
 
 
 class P2PEvict(BitcoinTestFramework):
@@ -82,7 +82,7 @@ class P2PEvict(BitcoinTestFramework):
             txpeer.sync_with_ping()
 
             tx = self.wallet.create_self_transfer()['tx']
-            txpeer.send_message(msg_tx(tx))
+            txpeer.send_without_ping(msg_tx(tx))
             protected_peers.add(current_peer)
 
         self.log.info("Create 8 peers and protect them from eviction by having faster pings")
@@ -124,4 +124,4 @@ class P2PEvict(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PEvict().main()
+    P2PEvict(__file__).main()

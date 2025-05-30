@@ -71,8 +71,38 @@ class DustRelayFeeTest(BitcoinTestFramework):
         # finally send the transaction to avoid running out of MiniWallet UTXOs
         self.wallet.sendrawtransaction(from_node=node, tx_hex=tx_good_hex)
 
+    def test_dustrelay(self):
+        self.log.info("Test that small outputs are acceptable when dust relay rate is set to 0 that would otherwise trigger ephemeral dust rules")
+
+        self.restart_node(0, extra_args=["-dustrelayfee=0"])
+
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
+        # Create two dust outputs. Transaction has zero fees. both dust outputs are unspent, and would have failed individual checks.
+        # The amount is 1 satoshi because create_self_transfer_multi disallows 0.
+        dusty_tx = self.wallet.create_self_transfer_multi(fee_per_output=1000, amount_per_output=1, num_outputs=2)
+        dust_txid = self.nodes[0].sendrawtransaction(hexstring=dusty_tx["hex"], maxfeerate=0)
+
+        assert_equal(self.nodes[0].getrawmempool(), [dust_txid])
+
+        # Spends one dust along with fee input, leave other dust unspent to check ephemeral dust checks aren't being enforced
+        sweep_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=[self.wallet.get_utxo(), dusty_tx["new_utxos"][0]])
+        sweep_txid = self.nodes[0].sendrawtransaction(sweep_tx["hex"])
+
+        mempool_entries = self.nodes[0].getrawmempool()
+        assert dust_txid in mempool_entries
+        assert sweep_txid in mempool_entries
+        assert_equal(len(mempool_entries), 2)
+
+        # Wipe extra arg to reset dust relay
+        self.restart_node(0, extra_args=[])
+
+        assert_equal(self.nodes[0].getrawmempool(), [])
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
+
+        self.test_dustrelay()
 
         # prepare output scripts of each standard type
         _, uncompressed_pubkey = generate_keypair(compressed=False)
@@ -110,4 +140,4 @@ class DustRelayFeeTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    DustRelayFeeTest().main()
+    DustRelayFeeTest(__file__).main()

@@ -113,8 +113,8 @@ class PriorityComputer {
     const uint64_t m_k0, m_k1;
 public:
     explicit PriorityComputer(bool deterministic) :
-        m_k0{deterministic ? 0 : GetRand(0xFFFFFFFFFFFFFFFF)},
-        m_k1{deterministic ? 0 : GetRand(0xFFFFFFFFFFFFFFFF)} {}
+        m_k0{deterministic ? 0 : FastRandomContext().rand64()},
+        m_k1{deterministic ? 0 : FastRandomContext().rand64()} {}
 
     Priority operator()(const uint256& txhash, NodeId peer, bool preferred) const
     {
@@ -212,14 +212,17 @@ struct ByTimeViewExtractor
     }
 };
 
+struct Announcement_Indices final : boost::multi_index::indexed_by<
+    boost::multi_index::ordered_unique<boost::multi_index::tag<ByPeer>, ByPeerViewExtractor>,
+    boost::multi_index::ordered_non_unique<boost::multi_index::tag<ByTxHash>, ByTxHashViewExtractor>,
+    boost::multi_index::ordered_non_unique<boost::multi_index::tag<ByTime>, ByTimeViewExtractor>
+>
+{};
+
 /** Data type for the main data structure (Announcement objects with ByPeer/ByTxHash/ByTime indexes). */
 using Index = boost::multi_index_container<
     Announcement,
-    boost::multi_index::indexed_by<
-        boost::multi_index::ordered_unique<boost::multi_index::tag<ByPeer>, ByPeerViewExtractor>,
-        boost::multi_index::ordered_non_unique<boost::multi_index::tag<ByTxHash>, ByTxHashViewExtractor>,
-        boost::multi_index::ordered_non_unique<boost::multi_index::tag<ByTime>, ByTimeViewExtractor>
-    >
+    Announcement_Indices
 >;
 
 /** Helper type to simplify syntax of iterator types. */
@@ -571,6 +574,15 @@ public:
         }
     }
 
+    void GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const
+    {
+        auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
+        while (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash && it->GetState() != State::COMPLETED) {
+            result_peers.push_back(it->m_peer);
+            ++it;
+        }
+    }
+
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
         std::chrono::microseconds reqtime)
     {
@@ -718,6 +730,7 @@ size_t TxRequestTracker::CountInFlight(NodeId peer) const { return m_impl->Count
 size_t TxRequestTracker::CountCandidates(NodeId peer) const { return m_impl->CountCandidates(peer); }
 size_t TxRequestTracker::Count(NodeId peer) const { return m_impl->Count(peer); }
 size_t TxRequestTracker::Size() const { return m_impl->Size(); }
+void TxRequestTracker::GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const { return m_impl->GetCandidatePeers(txhash, result_peers); }
 void TxRequestTracker::SanityCheck() const { m_impl->SanityCheck(); }
 
 void TxRequestTracker::PostGetRequestableSanityCheck(std::chrono::microseconds now) const

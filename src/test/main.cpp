@@ -39,3 +39,10 @@ const std::function<std::vector<const char*>()> G_TEST_COMMAND_LINE_ARGUMENTS = 
     }
     return args;
 };
+
+/**
+ * Retrieve the boost unit test name.
+ */
+const std::function<std::string()> G_TEST_GET_FULL_NAME = []() {
+    return boost::unit_test::framework::current_test_case().full_name();
+};

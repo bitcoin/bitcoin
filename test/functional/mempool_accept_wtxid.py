@@ -31,6 +31,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
 )
 
@@ -86,7 +87,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
         child_two_txid = child_two.rehash()
 
         assert_equal(child_one_txid, child_two_txid)
-        assert child_one_wtxid != child_two_wtxid
+        assert_not_equal(child_one_wtxid, child_two_wtxid)
 
         self.log.info("Submit child_one to the mempool")
         txid_submitted = node.sendrawtransaction(child_one.serialize().hex())
@@ -100,13 +101,15 @@ class MempoolWtxidTest(BitcoinTestFramework):
             "txid": child_one_txid,
             "wtxid": child_one_wtxid,
             "allowed": False,
-            "reject-reason": "txn-already-in-mempool"
+            "reject-reason": "txn-already-in-mempool",
+            "reject-details": "txn-already-in-mempool"
         }])
         assert_equal(node.testmempoolaccept([child_two.serialize().hex()])[0], {
             "txid": child_two_txid,
             "wtxid": child_two_wtxid,
             "allowed": False,
-            "reject-reason": "txn-same-nonwitness-data-in-mempool"
+            "reject-reason": "txn-same-nonwitness-data-in-mempool",
+            "reject-details": "txn-same-nonwitness-data-in-mempool"
         })
 
         # sendrawtransaction will not throw but quits early when the exact same transaction is already in mempool
@@ -125,4 +128,4 @@ class MempoolWtxidTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)
 
 if __name__ == '__main__':
-    MempoolWtxidTest().main()
+    MempoolWtxidTest(__file__).main()

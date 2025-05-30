@@ -29,7 +29,7 @@ public:
     static QString toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord* rec, BitcoinUnit unit);
 
 private:
-    TransactionDesc() {}
+    TransactionDesc() = default;
 
     static QString FormatTxStatus(const interfaces::WalletTxStatus& status, bool inMempool);
 };

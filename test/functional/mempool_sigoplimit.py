@@ -154,7 +154,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
             return (tx_utxo, tx)
 
         tx_parent_utxo, tx_parent = create_bare_multisig_tx()
-        tx_child_utxo, tx_child = create_bare_multisig_tx(tx_parent_utxo)
+        _tx_child_utxo, tx_child = create_bare_multisig_tx(tx_parent_utxo)
 
         # Separately, the parent tx is ok
         parent_individual_testres = self.nodes[0].testmempoolaccept([tx_parent.serialize().hex()])[0]
@@ -196,4 +196,4 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    BytesPerSigOpTest().main()
+    BytesPerSigOpTest(__file__).main()

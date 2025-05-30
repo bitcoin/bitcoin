@@ -47,12 +47,14 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             assert node.getblockchaininfo()['initialblockdownload']
             self.wait_until(lambda: all(peer['minfeefilter'] == MAX_FEE_FILTER for peer in node.getpeerinfo()))
 
+        self.nodes[0].setmocktime(int(time.time()))
+
         self.log.info("Check that nodes don't send getdatas for transactions while still in IBD")
         peer_inver = self.nodes[0].add_p2p_connection(P2PDataStore())
         txid = 0xdeadbeef
         peer_inver.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=txid)]))
         # The node should not send a getdata, but if it did, it would first delay 2 seconds
-        self.nodes[0].setmocktime(int(time.time() + NONPREF_PEER_TX_DELAY))
+        self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY)
         peer_inver.sync_with_ping()
         with p2p_lock:
             assert txid not in peer_inver.getdata_requests
@@ -86,4 +88,4 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             peer_txer.send_and_ping(msg_tx(tx))
 
 if __name__ == '__main__':
-    P2PIBDTxRelayTest().main()
+    P2PIBDTxRelayTest(__file__).main()

@@ -12,12 +12,13 @@ print_environment() {
     # There are many ways to print variable names and their content. This one
     # does not rely on bash.
     for var in WERROR_CFLAGS MAKEFLAGS BUILD \
-            ECMULTWINDOW ECMULTGENPRECISION ASM WIDEMUL WITH_VALGRIND EXTRAFLAGS \
-            EXPERIMENTAL ECDH RECOVERY SCHNORRSIG ELLSWIFT \
-            SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETESTS\
+            ECMULTWINDOW ECMULTGENKB ASM WIDEMUL WITH_VALGRIND EXTRAFLAGS \
+            EXPERIMENTAL ECDH RECOVERY EXTRAKEYS MUSIG SCHNORRSIG ELLSWIFT \
+            SECP256K1_TEST_ITERS BENCH SECP256K1_BENCH_ITERS CTIMETESTS SYMBOL_CHECK \
             EXAMPLES \
             HOST WRAPPER_CMD \
-            CC CFLAGS CPPFLAGS AR NM
+            CC CFLAGS CPPFLAGS AR NM \
+            UBSAN_OPTIONS ASAN_OPTIONS LSAN_OPTIONS
     do
         eval "isset=\${$var+x}"
         if [ -n "$isset" ]; then
@@ -73,10 +74,12 @@ esac
     --enable-experimental="$EXPERIMENTAL" \
     --with-test-override-wide-multiply="$WIDEMUL" --with-asm="$ASM" \
     --with-ecmult-window="$ECMULTWINDOW" \
-    --with-ecmult-gen-precision="$ECMULTGENPRECISION" \
+    --with-ecmult-gen-kb="$ECMULTGENKB" \
     --enable-module-ecdh="$ECDH" --enable-module-recovery="$RECOVERY" \
     --enable-module-ellswift="$ELLSWIFT" \
+    --enable-module-extrakeys="$EXTRAKEYS" \
     --enable-module-schnorrsig="$SCHNORRSIG" \
+    --enable-module-musig="$MUSIG" \
     --enable-examples="$EXAMPLES" \
     --enable-ctime-tests="$CTIMETESTS" \
     --with-valgrind="$WITH_VALGRIND" \
@@ -91,10 +94,10 @@ if [ $build_exit_code -ne 0 ]; then
         *snapshot*)
             # Ignore internal compiler errors in gcc-snapshot and clang-snapshot
             grep -e "internal compiler error:" -e "PLEASE submit a bug report" make.log
-            return $?;
+            exit $?
             ;;
         *)
-            return 1;
+            exit 1
             ;;
     esac
 fi
@@ -103,6 +106,20 @@ fi
 file *tests* || true
 file bench* || true
 file .libs/* || true
+
+if [ "$SYMBOL_CHECK" = "yes" ]
+then
+    python3 --version
+    case "$HOST" in
+        *mingw*)
+            ls -l .libs
+            python3 ./tools/symbol-check.py .libs/libsecp256k1-5.dll
+            ;;
+        *)
+            python3 ./tools/symbol-check.py .libs/libsecp256k1.so
+            ;;
+    esac
+fi
 
 # This tells `make check` to wrap test invocations.
 export LOG_COMPILER="$WRAPPER_CMD"

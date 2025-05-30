@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -20,6 +21,7 @@
 
 namespace {
 
+struct BIP324Test : BasicTestingSetup {
 void TestBIP324PacketVector(
     uint32_t in_idx,
     const std::string& in_priv_ours_hex,
@@ -62,9 +64,9 @@ void TestBIP324PacketVector(
     BOOST_CHECK(cipher);
 
     // Compare session variables.
-    BOOST_CHECK(Span{out_session_id} == cipher.GetSessionID());
-    BOOST_CHECK(Span{mid_send_garbage} == cipher.GetSendGarbageTerminator());
-    BOOST_CHECK(Span{mid_recv_garbage} == cipher.GetReceiveGarbageTerminator());
+    BOOST_CHECK(std::ranges::equal(out_session_id, cipher.GetSessionID()));
+    BOOST_CHECK(std::ranges::equal(mid_send_garbage, cipher.GetSendGarbageTerminator()));
+    BOOST_CHECK(std::ranges::equal(mid_recv_garbage, cipher.GetReceiveGarbageTerminator()));
 
     // Vector of encrypted empty messages, encrypted in order to seek to the right position.
     std::vector<std::vector<std::byte>> dummies(in_idx);
@@ -89,7 +91,7 @@ void TestBIP324PacketVector(
         BOOST_CHECK(out_ciphertext == ciphertext);
     } else {
         BOOST_CHECK(ciphertext.size() >= out_ciphertext_endswith.size());
-        BOOST_CHECK(Span{out_ciphertext_endswith} == Span{ciphertext}.last(out_ciphertext_endswith.size()));
+        BOOST_CHECK(std::ranges::equal(out_ciphertext_endswith, std::span{ciphertext}.last(out_ciphertext_endswith.size())));
     }
 
     for (unsigned error = 0; error <= 12; ++error) {
@@ -109,25 +111,25 @@ void TestBIP324PacketVector(
         BOOST_CHECK(dec_cipher);
 
         // Compare session variables.
-        BOOST_CHECK((Span{out_session_id} == dec_cipher.GetSessionID()) == (error != 1));
-        BOOST_CHECK((Span{mid_send_garbage} == dec_cipher.GetSendGarbageTerminator()) == (error != 1));
-        BOOST_CHECK((Span{mid_recv_garbage} == dec_cipher.GetReceiveGarbageTerminator()) == (error != 1));
+        BOOST_CHECK(std::ranges::equal(out_session_id, dec_cipher.GetSessionID()) == (error != 1));
+        BOOST_CHECK(std::ranges::equal(mid_send_garbage, dec_cipher.GetSendGarbageTerminator()) == (error != 1));
+        BOOST_CHECK(std::ranges::equal(mid_recv_garbage, dec_cipher.GetReceiveGarbageTerminator()) == (error != 1));
 
         // Seek to the numbered packet.
         if (in_idx == 0 && error == 12) continue;
-        uint32_t dec_idx = in_idx ^ (error == 12 ? (1U << InsecureRandRange(16)) : 0);
+        uint32_t dec_idx = in_idx ^ (error == 12 ? (1U << m_rng.randrange(16)) : 0);
         for (uint32_t i = 0; i < dec_idx; ++i) {
             unsigned use_idx = i < in_idx ? i : 0;
             bool dec_ignore{false};
-            dec_cipher.DecryptLength(Span{dummies[use_idx]}.first(cipher.LENGTH_LEN));
-            dec_cipher.Decrypt(Span{dummies[use_idx]}.subspan(cipher.LENGTH_LEN), {}, dec_ignore, {});
+            dec_cipher.DecryptLength(std::span{dummies[use_idx]}.first(cipher.LENGTH_LEN));
+            dec_cipher.Decrypt(std::span{dummies[use_idx]}.subspan(cipher.LENGTH_LEN), {}, dec_ignore, {});
         }
 
         // Construct copied (and possibly damaged) copy of ciphertext.
         // Decrypt length
         auto to_decrypt = ciphertext;
         if (error >= 2 && error <= 9) {
-            to_decrypt[InsecureRandRange(to_decrypt.size())] ^= std::byte(1U << (error - 2));
+            to_decrypt[m_rng.randrange(to_decrypt.size())] ^= std::byte(1U << (error - 2));
         }
 
         // Decrypt length and resize ciphertext to accommodate.
@@ -138,14 +140,14 @@ void TestBIP324PacketVector(
         auto dec_aad = in_aad;
         if (error == 10) {
             if (in_aad.size() == 0) continue;
-            dec_aad[InsecureRandRange(dec_aad.size())] ^= std::byte(1U << InsecureRandRange(8));
+            dec_aad[m_rng.randrange(dec_aad.size())] ^= std::byte(1U << m_rng.randrange(8));
         }
         if (error == 11) dec_aad.push_back({});
 
         // Decrypt contents.
         std::vector<std::byte> decrypted(dec_len);
         bool dec_ignore{false};
-        bool dec_ok = dec_cipher.Decrypt(Span{to_decrypt}.subspan(cipher.LENGTH_LEN), dec_aad, dec_ignore, decrypted);
+        bool dec_ok = dec_cipher.Decrypt(std::span{to_decrypt}.subspan(cipher.LENGTH_LEN), dec_aad, dec_ignore, decrypted);
 
         // Verify result.
         BOOST_CHECK(dec_ok == !error);
@@ -155,10 +157,11 @@ void TestBIP324PacketVector(
         }
     }
 }
+}; // struct BIP324Test
 
 }  // namespace
 
-BOOST_FIXTURE_TEST_SUITE(bip324_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(bip324_tests, BIP324Test)
 
 BOOST_AUTO_TEST_CASE(packet_test_vectors) {
     // BIP324 key derivation uses network magic in the HKDF process. We use mainnet params here

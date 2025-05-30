@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,12 +6,14 @@
 #define BITCOIN_TEST_UTIL_NET_H
 
 #include <compat/compat.h>
+#include <netmessagemaker.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netaddress.h>
 #include <node/connection_types.h>
 #include <node/eviction.h>
+#include <span.h>
 #include <sync.h>
 #include <util/sock.h>
 
@@ -19,20 +21,24 @@
 #include <array>
 #include <cassert>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 class FastRandomContext;
 
-template <typename C>
-class Span;
-
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
+
+    void SetMsgProc(NetEventsInterface* msgproc)
+    {
+        m_msgproc = msgproc;
+    }
 
     void SetPeerConnectTimeout(std::chrono::seconds timeout)
     {
@@ -75,7 +81,7 @@ struct ConnmanTestMsg : public CConnman {
         return m_msgproc->ProcessMessages(&node, flagInterruptMsgProc);
     }
 
-    void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
+    void NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const;
 
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
     void FlushSendBuffer(CNode& node) const;
@@ -129,98 +135,63 @@ constexpr auto ALL_NETWORKS = std::array{
 };
 
 /**
+ * A mocked Sock alternative that succeeds on all operations.
+ * Returns infinite amount of 0x0 bytes on reads.
+ */
+class ZeroSock : public Sock
+{
+public:
+    ZeroSock();
+
+    ~ZeroSock() override;
+
+    ssize_t Send(const void*, size_t len, int) const override;
+
+    ssize_t Recv(void* buf, size_t len, int flags) const override;
+
+    int Connect(const sockaddr*, socklen_t) const override;
+
+    int Bind(const sockaddr*, socklen_t) const override;
+
+    int Listen(int) const override;
+
+    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
+
+    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
+
+    int SetSockOpt(int, int, const void*, socklen_t) const override;
+
+    int GetSockName(sockaddr* name, socklen_t* name_len) const override;
+
+    bool SetNonBlocking() const override;
+
+    bool IsSelectable() const override;
+
+    bool Wait(std::chrono::milliseconds timeout,
+              Event requested,
+              Event* occurred = nullptr) const override;
+
+    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
+
+private:
+    ZeroSock& operator=(Sock&& other) override;
+};
+
+/**
  * A mocked Sock alternative that returns a statically contained data upon read and succeeds
  * and ignores all writes. The data to be returned is given to the constructor and when it is
  * exhausted an EOF is returned by further reads.
  */
-class StaticContentsSock : public Sock
+class StaticContentsSock : public ZeroSock
 {
 public:
-    explicit StaticContentsSock(const std::string& contents)
-        : Sock{INVALID_SOCKET},
-          m_contents{contents}
-    {
-    }
+    explicit StaticContentsSock(const std::string& contents);
 
-    ~StaticContentsSock() override { m_socket = INVALID_SOCKET; }
-
-    StaticContentsSock& operator=(Sock&& other) override
-    {
-        assert(false && "Move of Sock into MockSock not allowed.");
-        return *this;
-    }
-
-    ssize_t Send(const void*, size_t len, int) const override { return len; }
-
-    ssize_t Recv(void* buf, size_t len, int flags) const override
-    {
-        const size_t consume_bytes{std::min(len, m_contents.size() - m_consumed)};
-        std::memcpy(buf, m_contents.data() + m_consumed, consume_bytes);
-        if ((flags & MSG_PEEK) == 0) {
-            m_consumed += consume_bytes;
-        }
-        return consume_bytes;
-    }
-
-    int Connect(const sockaddr*, socklen_t) const override { return 0; }
-
-    int Bind(const sockaddr*, socklen_t) const override { return 0; }
-
-    int Listen(int) const override { return 0; }
-
-    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override
-    {
-        if (addr != nullptr) {
-            // Pretend all connections come from 5.5.5.5:6789
-            memset(addr, 0x00, *addr_len);
-            const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in));
-            if (*addr_len >= write_len) {
-                *addr_len = write_len;
-                sockaddr_in* addr_in = reinterpret_cast<sockaddr_in*>(addr);
-                addr_in->sin_family = AF_INET;
-                memset(&addr_in->sin_addr, 0x05, sizeof(addr_in->sin_addr));
-                addr_in->sin_port = htons(6789);
-            }
-        }
-        return std::make_unique<StaticContentsSock>("");
-    };
-
-    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override
-    {
-        std::memset(opt_val, 0x0, *opt_len);
-        return 0;
-    }
-
-    int SetSockOpt(int, int, const void*, socklen_t) const override { return 0; }
-
-    int GetSockName(sockaddr* name, socklen_t* name_len) const override
-    {
-        std::memset(name, 0x0, *name_len);
-        return 0;
-    }
-
-    bool SetNonBlocking() const override { return true; }
-
-    bool IsSelectable() const override { return true; }
-
-    bool Wait(std::chrono::milliseconds timeout,
-              Event requested,
-              Event* occurred = nullptr) const override
-    {
-        if (occurred != nullptr) {
-            *occurred = requested;
-        }
-        return true;
-    }
-
-    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override
-    {
-        for (auto& [sock, events] : events_per_sock) {
-            (void)sock;
-            events.occurred = events.requested;
-        }
-        return true;
-    }
+    /**
+     * Return parts of the contents that was provided at construction until it is exhausted
+     * and then return 0 (EOF).
+     */
+    ssize_t Recv(void* buf, size_t len, int flags) const override;
 
     bool IsConnected(std::string&) const override
     {
@@ -228,9 +199,162 @@ public:
     }
 
 private:
+    StaticContentsSock& operator=(Sock&& other) override;
+
     const std::string m_contents;
     mutable size_t m_consumed{0};
 };
+
+/**
+ * A mocked Sock alternative that allows providing the data to be returned by Recv()
+ * and inspecting the data that has been supplied to Send().
+ */
+class DynSock : public ZeroSock
+{
+public:
+    /**
+     * Unidirectional bytes or CNetMessage queue (FIFO).
+     */
+    class Pipe
+    {
+    public:
+        /**
+         * Get bytes and remove them from the pipe.
+         * @param[in] buf Destination to write bytes to.
+         * @param[in] len Write up to this number of bytes.
+         * @param[in] flags Same as the flags of `recv(2)`. Just `MSG_PEEK` is honored.
+         * @return The number of bytes written to `buf`. `0` if `Eof()` has been called.
+         * If no bytes are available then `-1` is returned and `errno` is set to `EAGAIN`.
+         */
+        ssize_t GetBytes(void* buf, size_t len, int flags = 0) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+        /**
+         * Deserialize a `CNetMessage` and remove it from the pipe.
+         * If not enough bytes are available then the function will wait. If parsing fails
+         * or EOF is signaled to the pipe, then `std::nullopt` is returned.
+         */
+        std::optional<CNetMessage> GetNetMsg() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+        /**
+         * Push bytes to the pipe.
+         */
+        void PushBytes(const void* buf, size_t len) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+        /**
+         * Construct and push CNetMessage to the pipe.
+         */
+        template <typename... Args>
+        void PushNetMsg(const std::string& type, Args&&... payload) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+        /**
+         * Signal end-of-file on the receiving end (`GetBytes()` or `GetNetMsg()`).
+         */
+        void Eof() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    private:
+        /**
+         * Return when there is some data to read or EOF has been signaled.
+         * @param[in,out] lock Unique lock that must have been derived from `m_mutex` by `WAIT_LOCK(m_mutex, lock)`.
+         */
+        void WaitForDataOrEof(UniqueLock<Mutex>& lock) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+
+        Mutex m_mutex;
+        std::condition_variable m_cond;
+        std::vector<uint8_t> m_data GUARDED_BY(m_mutex);
+        bool m_eof GUARDED_BY(m_mutex){false};
+    };
+
+    struct Pipes {
+        Pipe recv;
+        Pipe send;
+    };
+
+    /**
+     * A basic thread-safe queue, used for queuing sockets to be returned by Accept().
+     */
+    class Queue
+    {
+    public:
+        using S = std::unique_ptr<DynSock>;
+
+        void Push(S s) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+        {
+            LOCK(m_mutex);
+            m_queue.push(std::move(s));
+        }
+
+        std::optional<S> Pop() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+        {
+            LOCK(m_mutex);
+            if (m_queue.empty()) {
+                return std::nullopt;
+            }
+            S front{std::move(m_queue.front())};
+            m_queue.pop();
+            return front;
+        }
+
+        bool Empty() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+        {
+            LOCK(m_mutex);
+            return m_queue.empty();
+        }
+
+    private:
+        mutable Mutex m_mutex;
+        std::queue<S> m_queue GUARDED_BY(m_mutex);
+    };
+
+    /**
+     * Create a new mocked sock.
+     * @param[in] pipes Send/recv pipes used by the Send() and Recv() methods.
+     * @param[in] accept_sockets Sockets to return by the Accept() method.
+     */
+    explicit DynSock(std::shared_ptr<Pipes> pipes, std::shared_ptr<Queue> accept_sockets);
+
+    ~DynSock();
+
+    ssize_t Recv(void* buf, size_t len, int flags) const override;
+
+    ssize_t Send(const void* buf, size_t len, int) const override;
+
+    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
+
+    bool Wait(std::chrono::milliseconds timeout,
+              Event requested,
+              Event* occurred = nullptr) const override;
+
+    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
+
+private:
+    DynSock& operator=(Sock&&) override;
+
+    std::shared_ptr<Pipes> m_pipes;
+    std::shared_ptr<Queue> m_accept_sockets;
+};
+
+template <typename... Args>
+void DynSock::Pipe::PushNetMsg(const std::string& type, Args&&... payload)
+{
+    auto msg = NetMsg::Make(type, std::forward<Args>(payload)...);
+    V1Transport transport{NodeId{0}};
+
+    const bool queued{transport.SetMessageToSend(msg)};
+    assert(queued);
+
+    LOCK(m_mutex);
+
+    for (;;) {
+        const auto& [bytes, _more, _msg_type] = transport.GetBytesToSend(/*have_next_message=*/true);
+        if (bytes.empty()) {
+            break;
+        }
+        m_data.insert(m_data.end(), bytes.begin(), bytes.end());
+        transport.MarkBytesSent(bytes.size());
+    }
+
+    m_cond.notify_all();
+}
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context);
 

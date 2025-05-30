@@ -30,7 +30,11 @@ from test_framework.messages import (
     MAX_MONEY,
     SEQUENCE_FINAL,
 )
-from test_framework.blocktools import create_tx_with_script, MAX_BLOCK_SIGOPS
+from test_framework.blocktools import (
+    create_tx_with_script,
+    MAX_BLOCK_SIGOPS,
+    MAX_STANDARD_TX_SIGOPS,
+)
 from test_framework.script import (
     CScript,
     OP_0,
@@ -134,6 +138,8 @@ class BadInputOutpointIndex(BadTxTemplate):
     # Won't be rejected - nonexistent outpoint index is treated as an orphan since the coins
     # database can't distinguish between spent outpoints and outpoints which never existed.
     reject_reason = None
+    # But fails in block
+    block_reject_reason = "bad-txns-inputs-missingorspent"
     expect_disconnect = False
 
     def get_tx(self):
@@ -176,6 +182,8 @@ class PrevoutNullInput(BadTxTemplate):
 class NonexistentInput(BadTxTemplate):
     reject_reason = None  # Added as an orphan tx.
     expect_disconnect = False
+    # But fails in block
+    block_reject_reason = "bad-txns-inputs-missingorspent"
 
     def get_tx(self):
         tx = CTransaction()
@@ -192,7 +200,7 @@ class SpendTooMuch(BadTxTemplate):
 
     def get_tx(self):
         return create_tx_with_script(
-            self.spend_tx, 0, script_pub_key=basic_p2sh, amount=(self.spend_avail + 1))
+            self.spend_tx, 0, output_script=basic_p2sh, amount=(self.spend_avail + 1))
 
 
 class CreateNegative(BadTxTemplate):
@@ -225,7 +233,6 @@ class CreateSumTooLarge(BadTxTemplate):
 class InvalidOPIFConstruction(BadTxTemplate):
     reject_reason = "mandatory-script-verify-flag-failed (Invalid OP_IF construction)"
     expect_disconnect = True
-    valid_in_block = True
 
     def get_tx(self):
         return create_tx_with_script(
@@ -233,7 +240,7 @@ class InvalidOPIFConstruction(BadTxTemplate):
             amount=(self.spend_avail // 2))
 
 
-class TooManySigops(BadTxTemplate):
+class TooManySigopsPerBlock(BadTxTemplate):
     reject_reason = "bad-txns-too-many-sigops"
     block_reject_reason = "bad-blk-sigops, out-of-bounds SigOpCount"
     expect_disconnect = False
@@ -242,8 +249,22 @@ class TooManySigops(BadTxTemplate):
         lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
         return create_tx_with_script(
             self.spend_tx, 0,
-            script_pub_key=lotsa_checksigs,
+            output_script=lotsa_checksigs,
             amount=1)
+
+
+class TooManySigopsPerTransaction(BadTxTemplate):
+    reject_reason = "bad-txns-too-many-sigops"
+    expect_disconnect = False
+    valid_in_block = True
+
+    def get_tx(self):
+        lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_STANDARD_TX_SIGOPS + 1))
+        return create_tx_with_script(
+            self.spend_tx, 0,
+            output_script=lotsa_checksigs,
+            amount=1)
+
 
 def getDisabledOpcodeTemplate(opcode):
     """ Creates disabled opcode tx template class"""
@@ -260,8 +281,19 @@ def getDisabledOpcodeTemplate(opcode):
         'reject_reason': "disabled opcode",
         'expect_disconnect': True,
         'get_tx': get_tx,
-        'valid_in_block' : True
+        'valid_in_block' : False
         })
+
+class NonStandardAndInvalid(BadTxTemplate):
+    """A non-standard transaction which is also consensus-invalid should return the consensus error."""
+    reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
+    expect_disconnect = True
+    valid_in_block = False
+
+    def get_tx(self):
+        return create_tx_with_script(
+            self.spend_tx, 0, script_sig=b'\x00' * 3 + b'\xab\x6a',
+            amount=(self.spend_avail // 2))
 
 # Disabled opcode tx templates (CVE-2010-5137)
 DisabledOpcodeTemplates = [getDisabledOpcodeTemplate(opcode) for opcode in [

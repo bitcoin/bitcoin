@@ -42,16 +42,23 @@ private:
     /** cache of block hash to filter header, to avoid disk access when responding to getcfcheckpt. */
     std::unordered_map<uint256, uint256, FilterHeaderHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
 
+    // Last computed header to avoid disk reads on every new block.
+    uint256 m_last_header{};
+
     bool AllowPrune() const override { return true; }
 
+    bool Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header);
+
+    std::optional<uint256> ReadFilterHeader(int height, const uint256& expected_block_hash);
+
 protected:
-    bool CustomInit(const std::optional<interfaces::BlockKey>& block) override;
+    bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
 
     bool CustomCommit(CDBBatch& batch) override;
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
-    bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override;
+    bool CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip) override;
 
     BaseIndex::DB& GetDB() const LIFETIMEBOUND override { return *m_db; }
 

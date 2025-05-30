@@ -3,9 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <chainparams.h>
 #include <httpserver.h>
@@ -26,6 +24,7 @@
 #include <univalue.h>
 #include <util/any.h>
 #include <util/check.h>
+#include <util/time.h>
 
 #include <stdint.h>
 #ifdef HAVE_MALLOC_INFO
@@ -36,8 +35,9 @@ using node::NodeContext;
 
 static RPCHelpMan setmocktime()
 {
-    return RPCHelpMan{"setmocktime",
-        "\nSet the local time to given timestamp (-regtest only)\n",
+    return RPCHelpMan{
+        "setmocktime",
+        "Set the local time to given timestamp (-regtest only)\n",
         {
             {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
              "Pass 0 to go back to using the system time."},
@@ -58,9 +58,11 @@ static RPCHelpMan setmocktime()
     LOCK(cs_main);
 
     const int64_t time{request.params[0].getInt<int64_t>()};
-    if (time < 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime cannot be negative: %s.", time));
+    constexpr int64_t max_time{Ticks<std::chrono::seconds>(std::chrono::nanoseconds::max())};
+    if (time < 0 || time > max_time) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime must be in the range [0, %s], not %s.", max_time, time));
     }
+
     SetMockTime(time);
     const NodeContext& node_context{EnsureAnyNodeContext(request.context)};
     for (const auto& chain_client : node_context.chain_clients) {
@@ -74,8 +76,9 @@ static RPCHelpMan setmocktime()
 
 static RPCHelpMan mockscheduler()
 {
-    return RPCHelpMan{"mockscheduler",
-        "\nBump the scheduler into the future (-regtest only)\n",
+    return RPCHelpMan{
+        "mockscheduler",
+        "Bump the scheduler into the future (-regtest only)\n",
         {
             {"delta_time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Number of seconds to forward the scheduler into the future." },
         },
@@ -94,7 +97,7 @@ static RPCHelpMan mockscheduler()
 
     const NodeContext& node_context{EnsureAnyNodeContext(request.context)};
     CHECK_NONFATAL(node_context.scheduler)->MockForward(std::chrono::seconds{delta_seconds});
-    SyncWithValidationInterfaceQueue();
+    CHECK_NONFATAL(node_context.validation_signals)->SyncWithValidationInterfaceQueue();
     for (const auto& chain_client : node_context.chain_clients) {
         chain_client->schedulerMockForward(std::chrono::seconds(delta_seconds));
     }
@@ -220,7 +223,6 @@ static RPCHelpMan logging()
             "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
             "In addition, the following are available as category names with special meanings:\n"
             "  - \"all\",  \"1\" : represent all logging categories.\n"
-            "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
             ,
                 {
                     {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The categories to add to debug logging",
@@ -244,15 +246,15 @@ static RPCHelpMan logging()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint32_t original_log_categories = LogInstance().GetCategoryMask();
+    BCLog::CategoryMask original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
         EnableOrDisableLogCategories(request.params[0], true);
     }
     if (request.params[1].isArray()) {
         EnableOrDisableLogCategories(request.params[1], false);
     }
-    uint32_t updated_log_categories = LogInstance().GetCategoryMask();
-    uint32_t changed_log_categories = original_log_categories ^ updated_log_categories;
+    BCLog::CategoryMask updated_log_categories = LogInstance().GetCategoryMask();
+    BCLog::CategoryMask changed_log_categories = original_log_categories ^ updated_log_categories;
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
     if (changed_log_categories & BCLog::LIBEVENT) {
@@ -271,8 +273,9 @@ static RPCHelpMan logging()
 
 static RPCHelpMan echo(const std::string& name)
 {
-    return RPCHelpMan{name,
-                "\nSimply echo back the input arguments. This command is for testing.\n"
+    return RPCHelpMan{
+        name,
+        "Simply echo back the input arguments. This command is for testing.\n"
                 "\nIt will return an internal bug report when arg9='trigger_internal_bug' is passed.\n"
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "bitcoin-cli and the GUI. There is no server-side difference.",
@@ -308,7 +311,7 @@ static RPCHelpMan echoipc()
 {
     return RPCHelpMan{
         "echoipc",
-        "\nEcho back the input argument, passing it through a spawned process in a multiprocess build.\n"
+        "Echo back the input argument, passing it through a spawned process in a multiprocess build.\n"
         "This command is for testing.\n",
         {{"arg", RPCArg::Type::STR, RPCArg::Optional::NO, "The string to echo",}},
         RPCResult{RPCResult::Type::STR, "echo", "The echoed string."},
@@ -350,14 +353,15 @@ static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_na
     UniValue entry(UniValue::VOBJ);
     entry.pushKV("synced", summary.synced);
     entry.pushKV("best_block_height", summary.best_block_height);
-    ret_summary.pushKV(summary.name, entry);
+    ret_summary.pushKV(summary.name, std::move(entry));
     return ret_summary;
 }
 
 static RPCHelpMan getindexinfo()
 {
-    return RPCHelpMan{"getindexinfo",
-                "\nReturns the status of one or all available indices currently running in the node.\n",
+    return RPCHelpMan{
+        "getindexinfo",
+        "Returns the status of one or all available indices currently running in the node.\n",
                 {
                     {"index_name", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Filter results for an index with a specific name."},
                 },

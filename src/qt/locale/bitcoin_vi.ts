@@ -69,7 +69,11 @@
         <source>Export Address List</source>
         <translation type="unfinished">Xuất danh sách địa chỉ</translation>
     </message>
-    </context>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Quá trình xuất dữ liệu đã thất bại</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -146,6 +150,10 @@
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
         <translation type="unfinished">Nhập mật khẩu cũ và mật khẩu mới cho ví.</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Tiếp tục</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -282,7 +290,11 @@
             <numerusform>%nnăm</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">ví mặc định</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -407,18 +419,6 @@
         <translation type="unfinished">Đóng tất cả các ví…</translation>
     </message>
     <message>
-        <source>&amp;File</source>
-        <translation type="unfinished">&amp;Tệp</translation>
-    </message>
-    <message>
-        <source>&amp;Settings</source>
-        <translation type="unfinished">&amp;Cài đặt</translation>
-    </message>
-    <message>
-        <source>&amp;Help</source>
-        <translation type="unfinished">&amp;Giúp đỡ</translation>
-    </message>
-    <message>
         <source>Tabs toolbar</source>
         <translation type="unfinished">Các thanh công cụ</translation>
     </message>
@@ -438,6 +438,10 @@
         <source>Processing blocks on disk…</source>
         <translation type="unfinished">Xử lý khối trên đĩa…</translation>
     </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">Kết nối với các peer…</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -445,8 +449,28 @@
         </translation>
     </message>
     <message>
+        <source>%1 behind</source>
+        <translation type="unfinished">%1 phía sau</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">Đang bắt kịp...</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Lỗi</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished">Thông tin</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation type="unfinished">cập nhật</translation>
+    </message>
+    <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Tải một phần giao dịch Bitcoin đã ký</translation>
+        <translation type="unfinished">Kết nối với mạng Bitcoin thông qua một proxy SOCKS5 riêng cho các dịch vụ Tor hành.</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -466,11 +490,11 @@
     </message>
     <message>
         <source>&amp;Sending addresses</source>
-        <translation type="unfinished">Các địa chỉ đang &amp;gửi</translation>
+        <translation type="unfinished">&amp;Các địa chỉ đang gửi</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">Các địa chỉ đang &amp;nhận</translation>
+        <translation type="unfinished">&amp;Các địa chỉ đang nhận</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
@@ -515,10 +539,6 @@
         <translation type="unfinished">Che các giá trị trong tab Tổng quan</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ví mặc định</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">Không có ví nào</translation>
     </message>
@@ -535,6 +555,10 @@
     <message>
         <source>Ctrl+M</source>
         <translation type="unfinished">Nhấn Ctrl + M</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation type="unfinished">%1 khách</translation>
     </message>
     <message>
         <source>&amp;Hide</source>
@@ -644,10 +668,6 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ví mặc định</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -876,11 +896,6 @@
         <translation type="unfinished">&amp;Mạng</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Kích thước bộ đệm cơ sở dữ liệu tối đa. Bộ nhớ đệm lớn hơn có thể góp phần đồng bộ hóa nhanh hơn, sau đó lợi ích ít rõ rệt hơn đối với hầu hết các trường hợp sử dụng. Giảm kích thước bộ nhớ cache sẽ làm giảm mức sử dụng bộ nhớ. Bộ nhớ mempool không sử dụng được chia sẻ cho bộ nhớ cache này.</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Đặt số lượng chuỗi xác minh tập lệnh. Giá trị âm tương ứng với số lõi bạn muốn để lại miễn phí cho hệ thống.</translation>
@@ -952,6 +967,10 @@
     <message>
         <source>Continue</source>
         <translation type="unfinished">Tiếp tục</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Lỗi</translation>
     </message>
     </context>
 <context>
@@ -1087,10 +1106,6 @@
         <source>Label</source>
         <translation type="unfinished">Nhãn</translation>
     </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(không có nhãn)</translation>
-    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -1128,11 +1143,7 @@
             <numerusform>Ước tính sẽ bắt đầu xác nhận trong %n khối.</numerusform>
         </translation>
     </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(không có nhãn)</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -1186,10 +1197,6 @@
         <source>Label</source>
         <translation type="unfinished">Nhãn</translation>
     </message>
-    <message>
-        <source>(no label)</source>
-        <translation type="unfinished">(không có nhãn)</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>
@@ -1210,6 +1217,10 @@
         <source>Address</source>
         <translation type="unfinished">Địa chỉ</translation>
     </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Quá trình xuất dữ liệu đã thất bại</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -1217,19 +1228,11 @@
         <source>Create a new wallet</source>
         <translation type="unfinished">Tạo một ví mới</translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Lỗi</translation>
+    </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">Đã sao chép vào bảng tạm.</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">ví mặc định</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -1326,20 +1329,8 @@ Không thể khôi phục bản sao lưu của ví.</translation>
         <translation type="unfinished">Lỗi: Không thể trích xuất điểm đến trong mã khóa công khai đã tạo</translation>
     </message>
     <message>
-        <source>Error: Could not add watchonly tx to watchonly wallet</source>
-        <translation type="unfinished">Lỗi: Không thể thêm giao dịch chỉ xem vào ví chỉ xem</translation>
-    </message>
-    <message>
-        <source>Error: Could not delete watchonly transactions</source>
-        <translation type="unfinished">Lỗi: Không thể xóa các giao dịch chỉ xem</translation>
-    </message>
-    <message>
         <source>Error: Failed to create new watchonly wallet</source>
         <translation type="unfinished">Lỗi: Tạo ví chỉ xem mới thất bại</translation>
-    </message>
-    <message>
-        <source>Error: Not all watchonly txs could be deleted</source>
-        <translation type="unfinished">Lỗi: Không phải giao dịch chỉ xem nào cũng xóa được</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>
@@ -1424,10 +1415,6 @@ Không thể khôi phục bản sao lưu của ví.</translation>
     <message>
         <source>Transaction needs a change address, but we can't generate it.</source>
         <translation type="unfinished">Giao dịch cần thay đổi địa chỉ, nhưng chúng tôi không thể tạo địa chỉ đó.</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Không có khả năng để phân bổ bộ nhớ cho -maxsigcachesize: '%s' MiB</translation>
     </message>
     <message>
         <source>Unable to find UTXO for external input</source>

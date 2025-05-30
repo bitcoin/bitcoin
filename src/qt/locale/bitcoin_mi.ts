@@ -244,7 +244,7 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     </message>
     <message>
         <source>Runaway exception</source>
-        <translation type="unfinished">&lt;text_to_translate&gt;Tūkino whakawhiti&lt;/text_to_translate&gt;</translation>
+        <translation type="unfinished">Tūkino whakawhiti</translation>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
@@ -620,10 +620,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">He whakawhitiwhitinga whakaputanga hōputu whakararuraru te tūnga</translation>
     </message>
     <message>
-        <source>Transaction has too long of a mempool chain</source>
-        <translation type="unfinished">He whakawhitiwhitinga whakapau kaha te whakapau kaha o te whakapau kaha.</translation>
-    </message>
-    <message>
         <source>Transaction must have at least one recipient</source>
         <translation type="unfinished">Me whiwhi whakaritenga tātari tētahi whiwhi whakaritenga ki te kaiwhiwhi kotahi i te minimuma</translation>
     </message>
@@ -634,10 +630,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">He whakawhitiwhitinga nui rawa te whakapau kaha</translation>
-    </message>
-    <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Kāore e taea te whakararuraru i te mahere mō te -maxsigcachesize: '%s' MiB</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

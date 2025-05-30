@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <kernel/mempool_persist.h>
+#include <node/mempool_persist.h>
 
 #include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
@@ -13,14 +13,16 @@
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <cstdint>
 #include <vector>
 
-using kernel::DumpMempool;
-using kernel::LoadMempool;
+using node::DumpMempool;
+using node::LoadMempool;
 
 using node::MempoolPath;
 
@@ -36,11 +38,14 @@ void initialize_validation_load_mempool()
 
 FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
 
-    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node)};
+    bilingual_str error;
+    CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
+    Assert(error.empty());
 
     auto& chainstate{static_cast<DummyChainState&>(g_setup->m_node.chainman->ActiveChainstate())};
     chainstate.SetMempool(&pool);

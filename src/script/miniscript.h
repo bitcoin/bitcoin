@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,22 +6,26 @@
 #define BITCOIN_SCRIPT_MINISCRIPT_H
 
 #include <algorithm>
-#include <functional>
-#include <numeric>
+#include <compare>
+#include <cstdint>
+#include <cstdlib>
+#include <iterator>
 #include <memory>
 #include <optional>
-#include <string>
+#include <set>
+#include <stdexcept>
+#include <tuple>
+#include <utility>
 #include <vector>
 
-#include <assert.h>
-#include <cstdlib>
-
+#include <consensus/consensus.h>
 #include <policy/policy.h>
-#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <script/parsing.h>
 #include <script/script.h>
+#include <serialize.h>
 #include <span.h>
 #include <util/check.h>
-#include <util/spanparsing.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/vector.h>
@@ -61,7 +65,7 @@ namespace miniscript {
  *   - Is always "OP_SWAP [B]" or "OP_TOALTSTACK [B] OP_FROMALTSTACK".
  *   - For example sc:pk_k(key) = OP_SWAP <key> OP_CHECKSIG
  *
- * There a type properties that help reasoning about correctness:
+ * There are type properties that help reasoning about correctness:
  * - "z" Zero-arg:
  *   - Is known to always consume exactly 0 stack elements.
  *   - For example after(n) = <n> OP_CHECKLOCKTIMEVERIFY
@@ -84,7 +88,7 @@ namespace miniscript {
  * - "e" Expression:
  *   - This implies property 'd', but the dissatisfaction is nonmalleable.
  *   - This generally requires 'e' for all subexpressions which are invoked for that
- *     dissatifsaction, and property 'f' for the unexecuted subexpressions in that case.
+ *     dissatisfaction, and property 'f' for the unexecuted subexpressions in that case.
  *   - Conflicts with type 'V'.
  * - "f" Forced:
  *   - Dissatisfactions (if any) for this expression always involve at least one signature.
@@ -123,12 +127,12 @@ class Type {
     //! Internal bitmap of properties (see ""_mst operator for details).
     uint32_t m_flags;
 
-    //! Internal constructor used by the ""_mst operator.
-    explicit constexpr Type(uint32_t flags) : m_flags(flags) {}
+    //! Internal constructor.
+    explicit constexpr Type(uint32_t flags) noexcept : m_flags(flags) {}
 
 public:
-    //! The only way to publicly construct a Type is using this literal operator.
-    friend constexpr Type operator"" _mst(const char* c, size_t l);
+    //! Construction function used by the ""_mst operator.
+    static consteval Type Make(uint32_t flags) noexcept { return Type(flags); }
 
     //! Compute the type with the union of properties.
     constexpr Type operator|(Type x) const { return Type(m_flags | x.m_flags); }
@@ -150,11 +154,12 @@ public:
 };
 
 //! Literal operator to construct Type objects.
-inline constexpr Type operator"" _mst(const char* c, size_t l) {
-    Type typ{0};
+inline consteval Type operator""_mst(const char* c, size_t l)
+{
+    Type typ{Type::Make(0)};
 
     for (const char *p = c; p < c + l; p++) {
-        typ = typ | Type(
+        typ = typ | Type::Make(
             *p == 'B' ? 1 << 0 : // Base type
             *p == 'V' ? 1 << 1 : // Verify type
             *p == 'K' ? 1 << 2 : // Key type
@@ -184,11 +189,11 @@ inline constexpr Type operator"" _mst(const char* c, size_t l) {
 using Opcode = std::pair<opcodetype, std::vector<unsigned char>>;
 
 template<typename Key> struct Node;
-template<typename Key> using NodeRef = std::shared_ptr<const Node<Key>>;
+template<typename Key> using NodeRef = std::unique_ptr<const Node<Key>>;
 
-//! Construct a miniscript node as a shared_ptr.
+//! Construct a miniscript node as a unique_ptr.
 template<typename Key, typename... Args>
-NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_shared<const Node<Key>>(std::forward<Args>(args)...); }
+NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_unique<const Node<Key>>(std::forward<Args>(args)...); }
 
 //! The different node types in miniscript.
 enum class Fragment {
@@ -251,7 +256,7 @@ namespace internal {
 //! The maximum size of a witness item for a Miniscript under Tapscript context. (A BIP340 signature with a sighash type byte.)
 static constexpr uint32_t MAX_TAPMINISCRIPT_STACK_ELEM_SIZE{65};
 
-//! nVersion + nLockTime
+//! version + nLockTime
 constexpr uint32_t TX_OVERHEAD{4 + 4};
 //! prevout + nSequence + scriptSig
 constexpr uint32_t TXIN_BYTES_NO_WITNESS{36 + 4 + 1};
@@ -305,7 +310,7 @@ struct InputStack {
     //! Data elements.
     std::vector<std::vector<unsigned char>> stack;
     //! Construct an empty stack (valid).
-    InputStack() {}
+    InputStack() = default;
     //! Construct a valid single-element stack (with an element up to 75 bytes).
     InputStack(std::vector<unsigned char> in) : size(in.size() + 1), stack(Vector(std::move(in))) {}
     //! Change availability
@@ -523,6 +528,20 @@ struct Node {
         }
     }
 
+    NodeRef<Key> Clone() const
+    {
+        // Use TreeEval() to avoid a stack-overflow due to recursion
+        auto upfn = [](const Node& node, std::span<NodeRef<Key>> children) {
+            std::vector<NodeRef<Key>> new_subs;
+            for (auto child = children.begin(); child != children.end(); ++child) {
+                new_subs.emplace_back(std::move(*child));
+            }
+            // std::make_unique (and therefore MakeNodeRef) doesn't work on private constructors
+            return std::unique_ptr<Node>{new Node{internal::NoDupCheck{}, node.m_script_ctx, node.fragment, std::move(new_subs), node.keys, node.data, node.k}};
+        };
+        return TreeEval<NodeRef<Key>>(upfn);
+    }
+
 private:
     //! Cached ops counts.
     const internal::Ops ops;
@@ -541,6 +560,11 @@ private:
     //! for all subnodes as well.
     mutable std::optional<bool> has_duplicate_keys;
 
+    // Constructor which takes all of the data that a Node could possibly contain.
+    // This is kept private as no valid fragment has all of these arguments.
+    // Only used by Clone()
+    Node(internal::NoDupCheck, MiniscriptContext script_ctx, Fragment nt, std::vector<NodeRef<Key>> sub, std::vector<Key> key, std::vector<unsigned char> arg, uint32_t val)
+        : fragment(nt), k(val), keys(key), data(std::move(arg)), subs(std::move(sub)), m_script_ctx{script_ctx}, ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
 
     //! Compute the length of the script for this miniscript (including children).
     size_t CalcScriptLen() const {
@@ -548,7 +572,8 @@ private:
         for (const auto& sub : subs) {
             subsize += sub->ScriptSize();
         }
-        Type sub0type = subs.size() > 0 ? subs[0]->GetType() : ""_mst;
+        static constexpr auto NONE_MST{""_mst};
+        Type sub0type = subs.size() > 0 ? subs[0]->GetType() : NONE_MST;
         return internal::ComputeScriptLen(fragment, sub0type, subsize, k, subs.size(), keys.size(), m_script_ctx);
     }
 
@@ -567,8 +592,8 @@ private:
      *   node, its state, and an index of one of its children, computes the state of that
      *   child. It can modify the state. Children of a given node will have downfn()
      *   called in order.
-     * - upfn is a callable (State&&, const Node&, Span<Result>) -> std::optional<Result>,
-     *   which given a node, its state, and a Span of the results of its children,
+     * - upfn is a callable (State&&, const Node&, std::span<Result>) -> std::optional<Result>,
+     *   which given a node, its state, and a span of the results of its children,
      *   computes the result of the node. If std::nullopt is returned by upfn,
      *   TreeEvalMaybe() immediately returns std::nullopt.
      * The return value of TreeEvalMaybe is the result of the root node.
@@ -625,7 +650,7 @@ private:
             // Invoke upfn with the last node.subs.size() elements of results as input.
             assert(results.size() >= node.subs.size());
             std::optional<Result> result{upfn(std::move(stack.back().state), node,
-                Span<Result>{results}.last(node.subs.size()))};
+                std::span<Result>{results}.last(node.subs.size()))};
             // If evaluation returns std::nullopt, abort immediately.
             if (!result) return {};
             // Replace the last node.subs.size() elements of results with the new result.
@@ -634,19 +659,20 @@ private:
             stack.pop_back();
         }
         // The final remaining results element is the root result, return it.
-        assert(results.size() == 1);
+        assert(results.size() >= 1);
+        CHECK_NONFATAL(results.size() == 1);
         return std::move(results[0]);
     }
 
     /** Like TreeEvalMaybe, but without downfn or State type.
-     * upfn takes (const Node&, Span<Result>) and returns std::optional<Result>. */
+     * upfn takes (const Node&, std::span<Result>) and returns std::optional<Result>. */
     template<typename Result, typename UpFn>
     std::optional<Result> TreeEvalMaybe(UpFn upfn) const
     {
         struct DummyState {};
         return TreeEvalMaybe<Result>(DummyState{},
             [](DummyState, const Node&, size_t) { return DummyState{}; },
-            [&upfn](DummyState, const Node& node, Span<Result> subs) {
+            [&upfn](DummyState, const Node& node, std::span<Result> subs) {
                 return upfn(node, subs);
             }
         );
@@ -660,7 +686,7 @@ private:
         // unconditionally dereference the result (it cannot be std::nullopt).
         return std::move(*TreeEvalMaybe<Result>(std::move(root_state),
             std::forward<DownFn>(downfn),
-            [&upfn](State&& state, const Node& node, Span<Result> subs) {
+            [&upfn](State&& state, const Node& node, std::span<Result> subs) {
                 Result res{upfn(std::move(state), node, subs)};
                 return std::optional<Result>(std::move(res));
             }
@@ -668,14 +694,14 @@ private:
     }
 
     /** Like TreeEval, but without downfn or State type.
-     *  upfn takes (const Node&, Span<Result>) and returns Result. */
+     *  upfn takes (const Node&, std::span<Result>) and returns Result. */
     template<typename Result, typename UpFn>
     Result TreeEval(UpFn upfn) const
     {
         struct DummyState {};
         return std::move(*TreeEvalMaybe<Result>(DummyState{},
             [](DummyState, const Node&, size_t) { return DummyState{}; },
-            [&upfn](DummyState, const Node& node, Span<Result> subs) {
+            [&upfn](DummyState, const Node& node, std::span<Result> subs) {
                 Result res{upfn(node, subs)};
                 return std::optional<Result>(std::move(res));
             }
@@ -712,9 +738,10 @@ private:
             for (const auto& sub : subs) sub_types.push_back(sub->GetType());
         }
         // All other nodes than THRESH can be computed just from the types of the 0-3 subexpressions.
-        Type x = subs.size() > 0 ? subs[0]->GetType() : ""_mst;
-        Type y = subs.size() > 1 ? subs[1]->GetType() : ""_mst;
-        Type z = subs.size() > 2 ? subs[2]->GetType() : ""_mst;
+        static constexpr auto NONE_MST{""_mst};
+        Type x = subs.size() > 0 ? subs[0]->GetType() : NONE_MST;
+        Type y = subs.size() > 1 ? subs[1]->GetType() : NONE_MST;
+        Type z = subs.size() > 2 ? subs[2]->GetType() : NONE_MST;
 
         return SanitizeType(ComputeType(fragment, x, y, z, sub_types, k, data.size(), subs.size(), keys.size(), m_script_ctx));
     }
@@ -738,7 +765,7 @@ public:
         // The upward function computes for a node, given its followed-by-OP_VERIFY status
         // and the CScripts of its child nodes, the CScript of the node.
         const bool is_tapscript{IsTapscript(m_script_ctx)};
-        auto upfn = [&ctx, is_tapscript](bool verify, const Node& node, Span<CScript> subs) -> CScript {
+        auto upfn = [&ctx, is_tapscript](bool verify, const Node& node, std::span<CScript> subs) -> CScript {
             switch (node.fragment) {
                 case Fragment::PK_K: return BuildScript(ctx.ToPKBytes(node.keys[0]));
                 case Fragment::PK_H: return BuildScript(OP_DUP, OP_HASH160, ctx.ToPKHBytes(node.keys[0]), OP_EQUALVERIFY);
@@ -816,7 +843,7 @@ public:
         // The upward function computes for a node, given whether its parent is a wrapper,
         // and the string representations of its child nodes, the string representation of the node.
         const bool is_tapscript{IsTapscript(m_script_ctx)};
-        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, Span<std::string> subs) -> std::optional<std::string> {
+        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, std::span<std::string> subs) -> std::optional<std::string> {
             std::string ret = wrapped ? ":" : "";
 
             switch (node.fragment) {
@@ -861,8 +888,8 @@ public:
                     if (!key_str) return {};
                     return std::move(ret) + "pk_h(" + std::move(*key_str) + ")";
                 }
-                case Fragment::AFTER: return std::move(ret) + "after(" + ::ToString(node.k) + ")";
-                case Fragment::OLDER: return std::move(ret) + "older(" + ::ToString(node.k) + ")";
+                case Fragment::AFTER: return std::move(ret) + "after(" + util::ToString(node.k) + ")";
+                case Fragment::OLDER: return std::move(ret) + "older(" + util::ToString(node.k) + ")";
                 case Fragment::HASH256: return std::move(ret) + "hash256(" + HexStr(node.data) + ")";
                 case Fragment::HASH160: return std::move(ret) + "hash160(" + HexStr(node.data) + ")";
                 case Fragment::SHA256: return std::move(ret) + "sha256(" + HexStr(node.data) + ")";
@@ -881,7 +908,7 @@ public:
                     return std::move(ret) + "andor(" + std::move(subs[0]) + "," + std::move(subs[1]) + "," + std::move(subs[2]) + ")";
                 case Fragment::MULTI: {
                     CHECK_NONFATAL(!is_tapscript);
-                    auto str = std::move(ret) + "multi(" + ::ToString(node.k);
+                    auto str = std::move(ret) + "multi(" + util::ToString(node.k);
                     for (const auto& key : node.keys) {
                         auto key_str = ctx.ToString(key);
                         if (!key_str) return {};
@@ -891,7 +918,7 @@ public:
                 }
                 case Fragment::MULTI_A: {
                     CHECK_NONFATAL(is_tapscript);
-                    auto str = std::move(ret) + "multi_a(" + ::ToString(node.k);
+                    auto str = std::move(ret) + "multi_a(" + util::ToString(node.k);
                     for (const auto& key : node.keys) {
                         auto key_str = ctx.ToString(key);
                         if (!key_str) return {};
@@ -900,7 +927,7 @@ public:
                     return std::move(str) + ")";
                 }
                 case Fragment::THRESH: {
-                    auto str = std::move(ret) + "thresh(" + ::ToString(node.k);
+                    auto str = std::move(ret) + "thresh(" + util::ToString(node.k);
                     for (auto& sub : subs) {
                         str += "," + std::move(sub);
                     }
@@ -982,7 +1009,7 @@ private:
                     next_sats.push_back(sats[sats.size() - 1] + sub->ops.sat);
                     sats = std::move(next_sats);
                 }
-                assert(k <= sats.size());
+                assert(k < sats.size());
                 return {count, sats[k], sats[0]};
             }
         }
@@ -1150,7 +1177,7 @@ private:
                     next_sats.push_back(sats[sats.size() - 1] + sub->ws.sat);
                     sats = std::move(next_sats);
                 }
-                assert(k <= sats.size());
+                assert(k < sats.size());
                 return {sats[k], sats[0]};
             }
         }
@@ -1163,7 +1190,7 @@ private:
 
         // Internal function which is invoked for every tree node, constructing satisfaction/dissatisfactions
         // given those of its subnodes.
-        auto helper = [&ctx](const Node& node, Span<InputResult> subres) -> InputResult {
+        auto helper = [&ctx](const Node& node, std::span<InputResult> subres) -> InputResult {
             switch (node.fragment) {
                 case Fragment::PK_K: {
                     std::vector<unsigned char> sig;
@@ -1199,8 +1226,8 @@ private:
                     // The dissatisfaction consists of as many empty vectors as there are keys, which is the same as
                     // satisfying 0 keys.
                     auto& nsat{sats[0]};
-                    assert(node.k != 0);
-                    assert(node.k <= sats.size());
+                    CHECK_NONFATAL(node.k != 0);
+                    assert(node.k < sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
                 case Fragment::MULTI: {
@@ -1226,7 +1253,7 @@ private:
                     // The dissatisfaction consists of k+1 stack elements all equal to 0.
                     InputStack nsat = ZERO;
                     for (size_t i = 0; i < node.k; ++i) nsat = std::move(nsat) + ZERO;
-                    assert(node.k <= sats.size());
+                    assert(node.k < sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
                 case Fragment::THRESH: {
@@ -1261,7 +1288,7 @@ private:
                         // Include all dissatisfactions (even these non-canonical ones) in nsat.
                         if (i != node.k) nsat = std::move(nsat) | std::move(sats[i]);
                     }
-                    assert(node.k <= sats.size());
+                    assert(node.k < sats.size());
                     return {std::move(nsat), std::move(sats[node.k])};
                 }
                 case Fragment::OLDER: {
@@ -1359,45 +1386,45 @@ private:
             return {INVALID, INVALID};
         };
 
-        auto tester = [&helper](const Node& node, Span<InputResult> subres) -> InputResult {
+        auto tester = [&helper](const Node& node, std::span<InputResult> subres) -> InputResult {
             auto ret = helper(node, subres);
 
             // Do a consistency check between the satisfaction code and the type checker
             // (the actual satisfaction code in ProduceInputHelper does not use GetType)
 
             // For 'z' nodes, available satisfactions/dissatisfactions must have stack size 0.
-            if (node.GetType() << "z"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 0);
-            if (node.GetType() << "z"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 0);
+            if (node.GetType() << "z"_mst && ret.nsat.available != Availability::NO) CHECK_NONFATAL(ret.nsat.stack.size() == 0);
+            if (node.GetType() << "z"_mst && ret.sat.available != Availability::NO) CHECK_NONFATAL(ret.sat.stack.size() == 0);
 
             // For 'o' nodes, available satisfactions/dissatisfactions must have stack size 1.
-            if (node.GetType() << "o"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() == 1);
-            if (node.GetType() << "o"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() == 1);
+            if (node.GetType() << "o"_mst && ret.nsat.available != Availability::NO) CHECK_NONFATAL(ret.nsat.stack.size() == 1);
+            if (node.GetType() << "o"_mst && ret.sat.available != Availability::NO) CHECK_NONFATAL(ret.sat.stack.size() == 1);
 
             // For 'n' nodes, available satisfactions/dissatisfactions must have stack size 1 or larger. For satisfactions,
             // the top element cannot be 0.
-            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) assert(ret.sat.stack.size() >= 1);
-            if (node.GetType() << "n"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.stack.size() >= 1);
-            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.stack.back().empty());
+            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) CHECK_NONFATAL(ret.sat.stack.size() >= 1);
+            if (node.GetType() << "n"_mst && ret.nsat.available != Availability::NO) CHECK_NONFATAL(ret.nsat.stack.size() >= 1);
+            if (node.GetType() << "n"_mst && ret.sat.available != Availability::NO) CHECK_NONFATAL(!ret.sat.stack.back().empty());
 
             // For 'd' nodes, a dissatisfaction must exist, and they must not need a signature. If it is non-malleable,
             // it must be canonical.
-            if (node.GetType() << "d"_mst) assert(ret.nsat.available != Availability::NO);
-            if (node.GetType() << "d"_mst) assert(!ret.nsat.has_sig);
-            if (node.GetType() << "d"_mst && !ret.nsat.malleable) assert(!ret.nsat.non_canon);
+            if (node.GetType() << "d"_mst) CHECK_NONFATAL(ret.nsat.available != Availability::NO);
+            if (node.GetType() << "d"_mst) CHECK_NONFATAL(!ret.nsat.has_sig);
+            if (node.GetType() << "d"_mst && !ret.nsat.malleable) CHECK_NONFATAL(!ret.nsat.non_canon);
 
             // For 'f'/'s' nodes, dissatisfactions/satisfactions must have a signature.
-            if (node.GetType() << "f"_mst && ret.nsat.available != Availability::NO) assert(ret.nsat.has_sig);
-            if (node.GetType() << "s"_mst && ret.sat.available != Availability::NO) assert(ret.sat.has_sig);
+            if (node.GetType() << "f"_mst && ret.nsat.available != Availability::NO) CHECK_NONFATAL(ret.nsat.has_sig);
+            if (node.GetType() << "s"_mst && ret.sat.available != Availability::NO) CHECK_NONFATAL(ret.sat.has_sig);
 
             // For non-malleable 'e' nodes, a non-malleable dissatisfaction must exist.
-            if (node.GetType() << "me"_mst) assert(ret.nsat.available != Availability::NO);
-            if (node.GetType() << "me"_mst) assert(!ret.nsat.malleable);
+            if (node.GetType() << "me"_mst) CHECK_NONFATAL(ret.nsat.available != Availability::NO);
+            if (node.GetType() << "me"_mst) CHECK_NONFATAL(!ret.nsat.malleable);
 
             // For 'm' nodes, if a satisfaction exists, it must be non-malleable.
-            if (node.GetType() << "m"_mst && ret.sat.available != Availability::NO) assert(!ret.sat.malleable);
+            if (node.GetType() << "m"_mst && ret.sat.available != Availability::NO) CHECK_NONFATAL(!ret.sat.malleable);
 
             // If a non-malleable satisfaction exists, it must be canonical.
-            if (ret.sat.available != Availability::NO && !ret.sat.malleable) assert(!ret.sat.non_canon);
+            if (ret.sat.available != Availability::NO && !ret.sat.malleable) CHECK_NONFATAL(!ret.sat.non_canon);
 
             return ret;
         };
@@ -1427,7 +1454,7 @@ public:
         using keyset = std::set<Key, Comp>;
         using state = std::optional<keyset>;
 
-        auto upfn = [&ctx](const Node& node, Span<state> subs) -> state {
+        auto upfn = [&ctx](const Node& node, std::span<state> subs) -> state {
             // If this node is already known to have duplicates, nothing left to do.
             if (node.has_duplicate_keys.has_value() && *node.has_duplicate_keys) return {};
 
@@ -1535,7 +1562,7 @@ public:
 
     //! Find an insane subnode which has no insane children. Nullptr if there is none.
     const Node* FindInsaneSub() const {
-        return TreeEval<const Node*>([](const Node& node, Span<const Node*> subs) -> const Node* {
+        return TreeEval<const Node*>([](const Node& node, std::span<const Node*> subs) -> const Node* {
             for (auto& sub: subs) if (sub) return sub;
             if (!node.IsSaneSubexpression()) return &node;
             return nullptr;
@@ -1548,7 +1575,7 @@ public:
     bool IsSatisfiable(F fn) const
     {
         // TreeEval() doesn't support bool as NodeType, so use int instead.
-        return TreeEval<int>([&fn](const Node& node, Span<int> subs) -> bool {
+        return TreeEval<int>([&fn](const Node& node, std::span<int> subs) -> bool {
             switch (node.fragment) {
                 case Fragment::JUST_0:
                     return false;
@@ -1578,7 +1605,8 @@ public:
                 case Fragment::THRESH:
                     return static_cast<uint32_t>(std::count(subs.begin(), subs.end(), true)) >= node.k;
                 default: // wrappers
-                    assert(subs.size() == 1);
+                    assert(subs.size() >= 1);
+                    CHECK_NONFATAL(subs.size() == 1);
                     return subs[0];
             }
         });
@@ -1617,7 +1645,7 @@ public:
     //! Produce a witness for this script, if possible and given the information available in the context.
     //! The non-malleable satisfaction is guaranteed to be valid if it exists, and ValidSatisfaction()
     //! is true. If IsSane() holds, this satisfaction is guaranteed to succeed in case the node's
-    //! conditions are satisfied (private keys and hash preimages available, locktimes satsified).
+    //! conditions are satisfied (private keys and hash preimages available, locktimes satisfied).
     template<typename Ctx>
     Availability Satisfy(const Ctx& ctx, std::vector<std::vector<unsigned char>>& stack, bool nonmalleable = true) const {
         auto ret = ProduceInput(ctx);
@@ -1656,6 +1684,10 @@ public:
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, std::move(sub), val) { DuplicateKeyCheck(ctx); }
     template <typename Ctx> Node(const Ctx& ctx, Fragment nt, uint32_t val = 0)
         : Node(internal::NoDupCheck{}, ctx.MsContext(), nt, val) { DuplicateKeyCheck(ctx); }
+
+    // Delete copy constructor and assignment operator, use Clone() instead
+    Node(const Node&) = delete;
+    Node& operator=(const Node&) = delete;
 };
 
 namespace internal {
@@ -1714,11 +1746,11 @@ enum class ParseContext {
     CLOSE_BRACKET,
 };
 
-int FindNextChar(Span<const char> in, const char m);
+int FindNextChar(std::span<const char> in, const char m);
 
 /** Parse a key string ending at the end of the fragment's text representation. */
 template<typename Key, typename Ctx>
-std::optional<std::pair<Key, int>> ParseKeyEnd(Span<const char> in, const Ctx& ctx)
+std::optional<std::pair<Key, int>> ParseKeyEnd(std::span<const char> in, const Ctx& ctx)
 {
     int key_size = FindNextChar(in, ')');
     if (key_size < 1) return {};
@@ -1729,7 +1761,7 @@ std::optional<std::pair<Key, int>> ParseKeyEnd(Span<const char> in, const Ctx& c
 
 /** Parse a hex string ending at the end of the fragment's text representation. */
 template<typename Ctx>
-std::optional<std::pair<std::vector<unsigned char>, int>> ParseHexStrEnd(Span<const char> in, const size_t expected_size,
+std::optional<std::pair<std::vector<unsigned char>, int>> ParseHexStrEnd(std::span<const char> in, const size_t expected_size,
                                                                          const Ctx& ctx)
 {
     int hash_size = FindNextChar(in, ')');
@@ -1760,9 +1792,9 @@ void BuildBack(const MiniscriptContext script_ctx, Fragment nt, std::vector<Node
  * the `IsValidTopLevel()` and `IsSaneTopLevel()` to check for these properties on the node.
  */
 template<typename Key, typename Ctx>
-inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
+inline NodeRef<Key> Parse(std::span<const char> in, const Ctx& ctx)
 {
-    using namespace spanparsing;
+    using namespace script;
 
     // Account for the minimum script size for all parsed fragments so far. It "borrows" 1
     // script byte from all leaf nodes, counting it instead whenever a space for a recursive
@@ -1784,15 +1816,16 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
 
     // Parses a multi() or multi_a() from its string representation. Returns false on parsing error.
-    const auto parse_multi_exp = [&](Span<const char>& in, const bool is_multi_a) -> bool {
+    const auto parse_multi_exp = [&](std::span<const char>& in, const bool is_multi_a) -> bool {
         const auto max_keys{is_multi_a ? MAX_PUBKEYS_PER_MULTI_A : MAX_PUBKEYS_PER_MULTISIG};
         const auto required_ctx{is_multi_a ? MiniscriptContext::TAPSCRIPT : MiniscriptContext::P2WSH};
         if (ctx.MsContext() != required_ctx) return false;
         // Get threshold
         int next_comma = FindNextChar(in, ',');
         if (next_comma < 1) return false;
-        int64_t k;
-        if (!ParseInt64(std::string(in.begin(), in.begin() + next_comma), &k)) return false;
+        const auto k_to_integral{ToIntegral<int64_t>(std::string_view(in.data(), next_comma))};
+        if (!k_to_integral.has_value()) return false;
+        const int64_t k{k_to_integral.value()};
         in = in.subspan(next_comma + 1);
         // Get keys. It is compatible for both compressed and x-only keys.
         std::vector<Key> keys;
@@ -1946,21 +1979,19 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             } else if (Const("after(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
-                int64_t num;
-                if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
-                if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::AFTER, num));
+                const auto num{ToIntegral<int64_t>(std::string_view(in.data(), arg_size))};
+                if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::AFTER, *num));
                 in = in.subspan(arg_size + 1);
-                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
+                script_size += 1 + (*num > 16) + (*num > 0x7f) + (*num > 0x7fff) + (*num > 0x7fffff);
             } else if (Const("older(", in)) {
                 int arg_size = FindNextChar(in, ')');
                 if (arg_size < 1) return {};
-                int64_t num;
-                if (!ParseInt64(std::string(in.begin(), in.begin() + arg_size), &num)) return {};
-                if (num < 1 || num >= 0x80000000L) return {};
-                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::OLDER, num));
+                const auto num{ToIntegral<int64_t>(std::string_view(in.data(), arg_size))};
+                if (!num.has_value() || *num < 1 || *num >= 0x80000000L) return {};
+                constructed.push_back(MakeNodeRef<Key>(internal::NoDupCheck{}, ctx.MsContext(), Fragment::OLDER, *num));
                 in = in.subspan(arg_size + 1);
-                script_size += 1 + (num > 16) + (num > 0x7f) + (num > 0x7fff) + (num > 0x7fffff);
+                script_size += 1 + (*num > 16) + (*num > 0x7f) + (*num > 0x7fff) + (*num > 0x7fffff);
             } else if (Const("multi(", in)) {
                 if (!parse_multi_exp(in, /* is_multi_a = */false)) return {};
             } else if (Const("multi_a(", in)) {
@@ -1968,13 +1999,13 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
             } else if (Const("thresh(", in)) {
                 int next_comma = FindNextChar(in, ',');
                 if (next_comma < 1) return {};
-                if (!ParseInt64(std::string(in.begin(), in.begin() + next_comma), &k)) return {};
-                if (k < 1) return {};
+                const auto k{ToIntegral<int64_t>(std::string_view(in.data(), next_comma))};
+                if (!k.has_value() || *k < 1) return {};
                 in = in.subspan(next_comma + 1);
                 // n = 1 here because we read the first WRAPPED_EXPR before reaching THRESH
-                to_parse.emplace_back(ParseContext::THRESH, 1, k);
+                to_parse.emplace_back(ParseContext::THRESH, 1, *k);
                 to_parse.emplace_back(ParseContext::WRAPPED_EXPR, -1, -1);
-                script_size += 2 + (k > 16) + (k > 0x7f) + (k > 0x7fff) + (k > 0x7fffff);
+                script_size += 2 + (*k > 16) + (*k > 0x7f) + (*k > 0x7fff) + (*k > 0x7fffff);
             } else if (Const("andor(", in)) {
                 to_parse.emplace_back(ParseContext::ANDOR, -1, -1);
                 to_parse.emplace_back(ParseContext::CLOSE_BRACKET, -1, -1);
@@ -2128,7 +2159,8 @@ inline NodeRef<Key> Parse(Span<const char> in, const Ctx& ctx)
     }
 
     // Sanity checks on the produced miniscript
-    assert(constructed.size() == 1);
+    assert(constructed.size() >= 1);
+    CHECK_NONFATAL(constructed.size() == 1);
     assert(constructed[0]->ScriptSize() == script_size);
     if (in.size() > 0) return {};
     NodeRef<Key> tl_node = std::move(constructed.front());

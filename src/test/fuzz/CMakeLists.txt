@@ -1,0 +1,153 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit/.
+
+add_subdirectory(util)
+
+add_executable(fuzz
+  addition_overflow.cpp
+  addrman.cpp
+  asmap.cpp
+  asmap_direct.cpp
+  autofile.cpp
+  banman.cpp
+  base_encode_decode.cpp
+  bech32.cpp
+  bip324.cpp
+  bitdeque.cpp
+  bitset.cpp
+  block.cpp
+  block_header.cpp
+  block_index.cpp
+  blockfilter.cpp
+  bloom_filter.cpp
+  buffered_file.cpp
+  chain.cpp
+  checkqueue.cpp
+  cluster_linearize.cpp
+  coins_view.cpp
+  coinscache_sim.cpp
+  connman.cpp
+  crypto.cpp
+  crypto_aes256.cpp
+  crypto_aes256cbc.cpp
+  crypto_chacha20.cpp
+  crypto_chacha20poly1305.cpp
+  crypto_common.cpp
+  crypto_diff_fuzz_chacha20.cpp
+  crypto_hkdf_hmac_sha256_l32.cpp
+  crypto_poly1305.cpp
+  cuckoocache.cpp
+  decode_tx.cpp
+  descriptor_parse.cpp
+  deserialize.cpp
+  eval_script.cpp
+  feefrac.cpp
+  fee_rate.cpp
+  feeratediagram.cpp
+  fees.cpp
+  flatfile.cpp
+  float.cpp
+  golomb_rice.cpp
+  headerssync.cpp
+  hex.cpp
+  http_request.cpp
+  i2p.cpp
+  integer.cpp
+  key.cpp
+  key_io.cpp
+  kitchen_sink.cpp
+  load_external_block_file.cpp
+  locale.cpp
+  merkleblock.cpp
+  message.cpp
+  miniscript.cpp
+  minisketch.cpp
+  mini_miner.cpp
+  muhash.cpp
+  multiplication_overflow.cpp
+  net.cpp
+  net_permissions.cpp
+  netaddress.cpp
+  netbase_dns_lookup.cpp
+  node_eviction.cpp
+  overflow.cpp
+  p2p_handshake.cpp
+  p2p_headers_presync.cpp
+  p2p_transport_serialization.cpp
+  pcp.cpp
+  package_eval.cpp
+  parse_hd_keypath.cpp
+  parse_iso8601.cpp
+  parse_numbers.cpp
+  parse_script.cpp
+  parse_univalue.cpp
+  partially_downloaded_block.cpp
+  policy_estimator.cpp
+  policy_estimator_io.cpp
+  poolresource.cpp
+  pow.cpp
+  prevector.cpp
+  primitives_transaction.cpp
+  process_message.cpp
+  process_messages.cpp
+  protocol.cpp
+  psbt.cpp
+  random.cpp
+  rbf.cpp
+  rolling_bloom_filter.cpp
+  rpc.cpp
+  script.cpp
+  script_assets_test_minimizer.cpp
+  script_descriptor_cache.cpp
+  script_flags.cpp
+  script_format.cpp
+  script_interpreter.cpp
+  script_ops.cpp
+  script_parsing.cpp
+  script_sigcache.cpp
+  script_sign.cpp
+  scriptnum_ops.cpp
+  secp256k1_ec_seckey_import_export_der.cpp
+  secp256k1_ecdsa_signature_parse_der_lax.cpp
+  signature_checker.cpp
+  signet.cpp
+  socks5.cpp
+  span.cpp
+  string.cpp
+  strprintf.cpp
+  system.cpp
+  timeoffsets.cpp
+  torcontrol.cpp
+  transaction.cpp
+  txdownloadman.cpp
+  tx_in.cpp
+  tx_out.cpp
+  tx_pool.cpp
+  txgraph.cpp
+  txorphan.cpp
+  txrequest.cpp
+  utxo_snapshot.cpp
+  utxo_total_supply.cpp
+  validation_load_mempool.cpp
+  vecdeque.cpp
+  versionbits.cpp
+)
+target_link_libraries(fuzz
+  core_interface
+  fuzzer_interface
+  test_fuzz
+  bitcoin_cli
+  bitcoin_common
+  bitcoin_util
+  minisketch
+  leveldb
+  univalue
+  secp256k1
+  Boost::headers
+  libevent::extra
+)
+
+if(ENABLE_WALLET)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test/fuzz wallet)
+endif()

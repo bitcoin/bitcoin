@@ -38,10 +38,8 @@ private:
 public:
     /** Fee rate of 0 satoshis per kvB */
     CFeeRate() : nSatoshisPerK(0) { }
-    template<typename I>
+    template<std::integral I> // Disallow silent float -> int conversion
     explicit CFeeRate(const I _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) {
-        // We've previously had bugs creep in from silent double->int conversion...
-        static_assert(std::is_integral<I>::value, "CFeeRate should be used without floats");
     }
 
     /**

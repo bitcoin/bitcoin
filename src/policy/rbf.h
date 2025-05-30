@@ -9,7 +9,9 @@
 #include <primitives/transaction.h>
 #include <threadsafety.h>
 #include <txmempool.h>
+#include <util/feefrac.h>
 
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -31,6 +33,13 @@ enum class RBFTransactionState {
     REPLACEABLE_BIP125,
     /** Neither this tx nor a mempool ancestor signals rbf */
     FINAL,
+};
+
+enum class DiagramCheckError {
+    /** Unable to calculate due to topology or other reason */
+    UNCALCULABLE,
+    /** New diagram wasn't strictly superior  */
+    FAILURE,
 };
 
 /**
@@ -105,5 +114,12 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       size_t replacement_vsize,
                                       CFeeRate relay_fee,
                                       const uint256& txid);
+
+/**
+ * The replacement transaction must improve the feerate diagram of the mempool.
+ * @param[in]   changeset           The changeset containing proposed additions/removals
+ * @returns error type and string if mempool diagram doesn't improve, otherwise std::nullopt.
+ */
+std::optional<std::pair<DiagramCheckError, std::string>> ImprovesFeerateDiagram(CTxMemPool::ChangeSet& changeset);
 
 #endif // BITCOIN_POLICY_RBF_H

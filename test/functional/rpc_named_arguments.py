@@ -35,4 +35,4 @@ class NamedArgumentTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Parameter arg1 specified twice both as positional and named argument", node.echo, 0, None, 2, arg1=1)
 
 if __name__ == '__main__':
-    NamedArgumentTest().main()
+    NamedArgumentTest(__file__).main()

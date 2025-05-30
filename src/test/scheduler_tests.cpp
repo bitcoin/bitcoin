@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     CScheduler scheduler;
 
     // each queue should be well ordered with respect to itself but not other queues
-    SingleThreadedSchedulerClient queue1(scheduler);
-    SingleThreadedSchedulerClient queue2(scheduler);
+    SerialTaskRunner queue1(scheduler);
+    SerialTaskRunner queue2(scheduler);
 
     // create more threads than queues
     // if the queues only permit execution of one task at once then
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
         threads.emplace_back([&] { scheduler.serviceQueue(); });
     }
 
-    // these are not atomic, if SinglethreadedSchedulerClient prevents
+    // these are not atomic, if SerialTaskRunner prevents
     // parallel execution at the queue level no synchronization should be required here
     int counter1 = 0;
     int counter2 = 0;
@@ -150,12 +150,12 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     // just simply count up on each queue - if execution is properly ordered then
     // the callbacks should run in exactly the order in which they were enqueued
     for (int i = 0; i < 100; ++i) {
-        queue1.AddToProcessQueue([i, &counter1]() {
+        queue1.insert([i, &counter1]() {
             bool expectation = i == counter1++;
             assert(expectation);
         });
 
-        queue2.AddToProcessQueue([i, &counter2]() {
+        queue2.insert([i, &counter2]() {
             bool expectation = i == counter2++;
             assert(expectation);
         });

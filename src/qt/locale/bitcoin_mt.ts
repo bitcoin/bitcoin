@@ -340,7 +340,11 @@ L-iffirmar huwa possibbli biss b'indirizzi tat-tip 'legacy'.</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">kartiera default</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -640,10 +644,6 @@ L-iffirmar huwa possibbli biss b'indirizzi tat-tip 'legacy'.</translation>
         <translation type="unfinished">Maskra l-valuri fit-tab Ħarsa ġenerali</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">kartiera default</translation>
-    </message>
-    <message>
         <source>No wallets available</source>
         <translation type="unfinished">Ebda kartieri disponibbli</translation>
     </message>
@@ -838,10 +838,6 @@ L-iffirmar huwa possibbli biss b'indirizzi tat-tip 'legacy'.</translation>
     </context>
 <context>
     <name>OpenWalletActivity</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">kartiera default</translation>
-    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -1056,13 +1052,6 @@ L-iffirmar huwa possibbli biss b'indirizzi tat-tip 'legacy'.</translation>
         <translation type="unfinished">Żball</translation>
     </message>
     </context>
-<context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">kartiera default</translation>
-    </message>
-</context>
 <context>
     <name>WalletView</name>
     <message>

@@ -23,6 +23,8 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <sys/socket.h>
+#include <system_error>
 #include <thread>
 
 namespace ipc {
@@ -30,7 +32,7 @@ namespace capnp {
 namespace {
 void IpcLogFn(bool raise, std::string message)
 {
-    LogPrint(BCLog::IPC, "%s\n", message);
+    LogDebug(BCLog::IPC, "%s\n", message);
     if (raise) throw Exception(message);
 }
 
@@ -51,18 +53,27 @@ public:
         startLoop(exe_name);
         return mp::ConnectStream<messages::Init>(*m_loop, fd);
     }
-    void serve(int fd, const char* exe_name, interfaces::Init& init) override
+    void listen(int listen_fd, const char* exe_name, interfaces::Init& init) override
+    {
+        startLoop(exe_name);
+        if (::listen(listen_fd, /*backlog=*/5) != 0) {
+            throw std::system_error(errno, std::system_category());
+        }
+        mp::ListenConnections<messages::Init>(*m_loop, listen_fd, init);
+    }
+    void serve(int fd, const char* exe_name, interfaces::Init& init, const std::function<void()>& ready_fn = {}) override
     {
         assert(!m_loop);
         mp::g_thread_context.thread_name = mp::ThreadName(exe_name);
         m_loop.emplace(exe_name, &IpcLogFn, &m_context);
+        if (ready_fn) ready_fn();
         mp::ServeStream<messages::Init>(*m_loop, fd, init);
         m_loop->loop();
         m_loop.reset();
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
-        mp::ProxyTypeRegister::types().at(type)(iface).cleanup.emplace_back(std::move(cleanup));
+        mp::ProxyTypeRegister::types().at(type)(iface).cleanup_fns.emplace_back(std::move(cleanup));
     }
     Context& context() override { return m_context; }
     void startLoop(const char* exe_name)
