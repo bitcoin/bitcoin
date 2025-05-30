@@ -643,6 +643,10 @@ public:
         DatabaseStatus status;
         bilingual_str error;
         auto db = MakeWalletDatabase(wallet_name, options, status, error);
+        if (!db && status == wallet::DatabaseStatus::FAILED_LEGACY_DISABLED) {
+            options.require_format = wallet::DatabaseFormat::BERKELEY_RO;
+            db = MakeWalletDatabase(wallet_name, options, status, error);
+        }
         if (!db) return false;
         return WalletBatch(*db).IsEncrypted();
     }

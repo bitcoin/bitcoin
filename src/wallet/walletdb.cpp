@@ -1390,8 +1390,8 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
 
     // BERKELEY_RO can only be opened if require_format was set, which only occurs in migration.
     if (format && format == DatabaseFormat::BERKELEY_RO && (!options.require_format || options.require_format != DatabaseFormat::BERKELEY_RO)) {
-        error = Untranslated(strprintf("Failed to open database path '%s'. The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC).", fs::PathToString(path)));
-        status = DatabaseStatus::FAILED_BAD_FORMAT;
+        error = Untranslated(strprintf("Failed to open database path '%s'. The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC or the GUI option).", fs::PathToString(path)));
+        status = DatabaseStatus::FAILED_LEGACY_DISABLED;
         return nullptr;
     }
 
