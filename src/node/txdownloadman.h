@@ -6,8 +6,8 @@
 #define BITCOIN_NODE_TXDOWNLOADMAN_H
 
 #include <net.h>
+#include <node/txorphanage.h>
 #include <policy/packages.h>
-#include <txorphanage.h>
 
 #include <cstdint>
 #include <memory>
@@ -41,8 +41,6 @@ struct TxDownloadOptions {
     const CTxMemPool& m_mempool;
     /** RNG provided by caller. */
     FastRandomContext& m_rng;
-    /** Maximum number of transactions allowed in orphanage. */
-    const uint32_t m_max_orphan_txs;
     /** Instantiate TxRequestTracker as deterministic (used for tests). */
     bool m_deterministic_txrequest{false};
 };
