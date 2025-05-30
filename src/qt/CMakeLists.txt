@@ -50,11 +50,11 @@ endfunction()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOMOC_MOC_OPTIONS "-p${CMAKE_CURRENT_SOURCE_DIR}")
-set(CMAKE_AUTORCC ON)
+# We process *.qrc files manually to allow modification
+# of the resulting source files' properties.
+set(CMAKE_AUTORCC OFF)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOUIC_SEARCH_PATHS forms)
-
-configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
 
 # The bitcoinqt sources have to include headers in
 # order to parse them to collect translatable strings.
@@ -117,8 +117,8 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   utilitydialog.h
   $<$<PLATFORM_ID:Windows>:winshutdownmonitor.cpp>
   $<$<PLATFORM_ID:Windows>:winshutdownmonitor.h>
-  bitcoin.qrc
-  ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_locale.qrc
+  ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin_locale.cpp
 )
 target_compile_definitions(bitcoinqt
   PUBLIC
@@ -247,8 +247,26 @@ file(GLOB ts_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} locale/*.ts)
 set_source_files_properties(${ts_files} PROPERTIES OUTPUT_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/locale)
 qt6_add_lrelease(bitcoinqt
   TS_FILES ${ts_files}
+  QM_FILES_OUTPUT_VARIABLE qm_files
   OPTIONS -silent
 )
+
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin.cpp
+  COMMAND Qt6::rcc --output ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin.cpp --name bitcoin --format-version 1 ${CMAKE_CURRENT_SOURCE_DIR}/bitcoin.qrc
+  MAIN_DEPENDENCY bitcoin.qrc
+  VERBATIM
+)
+
+configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin_locale.cpp
+  COMMAND Qt6::rcc --output ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin_locale.cpp --name bitcoin_locale --format-version 1 ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_locale.qrc
+  MAIN_DEPENDENCY bitcoin_locale.qrc
+  DEPENDS ${qm_files}
+  VERBATIM
+)
+unset(qm_files)
 
 add_executable(bitcoin-qt
   main.cpp
