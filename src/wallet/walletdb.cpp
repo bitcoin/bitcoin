@@ -541,7 +541,6 @@ bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch)
         std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
         if (!cursor) {
             // Could only happen on a closed db, which means there is an error in the code flow.
-            wallet.WalletLogPrintf("Error getting database cursor for '%s' records", type);
             throw std::runtime_error(strprintf("Error getting database cursor for '%s' records", type));
         }
 
@@ -1194,9 +1193,15 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
         // Load decryption keys
         result = std::max(LoadDecryptionKeys(pwallet, *m_batch), result);
-    } catch (...) {
+    } catch (std::runtime_error& e) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.
+        // Catch std::runtime_error specifically as many functions throw these and they at least have some message that
+        // we can log
+        pwallet->WalletLogPrintf("%s\n", e.what());
+        result = DBErrors::CORRUPT;
+    } catch (...) {
+        // All other exceptions are still problematic, but we can't log them
         result = DBErrors::CORRUPT;
     }
 
