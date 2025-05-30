@@ -55,13 +55,6 @@ check_cxx_source_compiles("
 
 # Check for posix_fallocate().
 check_cxx_source_compiles("
-  // same as in src/util/fs_helpers.cpp
-  #ifdef __linux__
-  #ifdef _POSIX_C_SOURCE
-  #undef _POSIX_C_SOURCE
-  #endif
-  #define _POSIX_C_SOURCE 200112L
-  #endif // __linux__
   #include <fcntl.h>
 
   int main()
