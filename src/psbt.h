@@ -1136,6 +1136,7 @@ struct PartiallySignedTransaction
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
     bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
     PartiallySignedTransaction() = default;
+    void StripDerivationPaths();
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
     /**
      * Finds the UTXO for a given input index
