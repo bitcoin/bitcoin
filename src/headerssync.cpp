@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -66,8 +66,8 @@ void HeadersSyncState::Finalize()
 /** Process the next batch of headers received from our peer.
  *  Validate and store commitments, and compare total chainwork to our target to
  *  see if we can switch to REDOWNLOAD mode.  */
-HeadersSyncState::ProcessingResult HeadersSyncState::ProcessNextHeaders(const
-        std::vector<CBlockHeader>& received_headers, const bool full_headers_message)
+HeadersSyncState::ProcessingResult HeadersSyncState::ProcessNextHeaders(
+        std::span<const CBlockHeader> received_headers, const bool full_headers_message)
 {
     ProcessingResult ret;
 
@@ -137,7 +137,7 @@ HeadersSyncState::ProcessingResult HeadersSyncState::ProcessNextHeaders(const
     return ret;
 }
 
-bool HeadersSyncState::ValidateAndStoreHeadersCommitments(const std::vector<CBlockHeader>& headers)
+bool HeadersSyncState::ValidateAndStoreHeadersCommitments(std::span<const CBlockHeader> headers)
 {
     // The caller should not give us an empty set of headers.
     Assume(headers.size() > 0);
