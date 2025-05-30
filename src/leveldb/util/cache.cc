@@ -171,8 +171,8 @@ class LRUCache {
  private:
   void LRU_Remove(LRUHandle* e);
   void LRU_Append(LRUHandle* list, LRUHandle* e);
-  void Ref(LRUHandle* e);
-  void Unref(LRUHandle* e);
+  void Ref(LRUHandle* e) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void Unref(LRUHandle* e) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   bool FinishErase(LRUHandle* e) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Initialized before use.
