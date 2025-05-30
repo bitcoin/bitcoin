@@ -5,10 +5,9 @@
 """Routines for compressing transaction output amounts and scripts."""
 import unittest
 
-from .messages import COIN
-
 
 def compress_amount(n):
+    """Equivalent of `CompressAmount()` (see compressor module)."""
     if n == 0:
         return 0
     e = 0
@@ -25,6 +24,7 @@ def compress_amount(n):
 
 
 def decompress_amount(x):
+    """Equivalent of `DecompressAmount()` (see compressor module)."""
     if x == 0:
         return 0
     x -= 1
@@ -45,6 +45,8 @@ def decompress_amount(x):
 
 class TestFrameworkCompressor(unittest.TestCase):
     def test_amount_compress_decompress(self):
+        from .messages import COIN
+
         def check_amount(amount, expected_compressed):
             self.assertEqual(compress_amount(amount), expected_compressed)
             self.assertEqual(decompress_amount(expected_compressed), amount)

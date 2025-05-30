@@ -1037,47 +1037,70 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
     return ReadBlock(block, block_pos, index.GetBlockHash());
 }
 
-bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const
+AutoFile BlockManager::OpenForRawRead(const FlatFilePos& pos, FileType file_type) const
+{
+    switch (file_type) {
+    case FileType::BlockFile:
+        return OpenBlockFile(pos, /*fReadOnly=*/true);
+    case FileType::UndoFile:
+        return OpenUndoFile(pos, /*fReadOnly=*/true);
+    }
+    assert(false);
+}
+
+
+bool BlockManager::ReadRawData(std::vector<uint8_t>& data, FlatFilePos pos, FileType file_type) const
 {
     if (pos.nPos < STORAGE_HEADER_BYTES) {
         // If nPos is less than STORAGE_HEADER_BYTES, we can't read the header that precedes the block data
         // This would cause an unsigned integer underflow when trying to position the file cursor
         // This can happen after pruning or default constructed positions
-        LogError("Failed for %s while reading raw block storage header", pos.ToString());
+        LogError("Failed for %s while reading raw data header", pos.ToString());
         return false;
     }
-    AutoFile filein{OpenBlockFile({pos.nFile, pos.nPos - STORAGE_HEADER_BYTES}, /*fReadOnly=*/true)};
+    pos.nPos -= STORAGE_HEADER_BYTES;
+    AutoFile filein{OpenForRawRead(pos, file_type)};
     if (filein.IsNull()) {
-        LogError("OpenBlockFile failed for %s while reading raw block", pos.ToString());
+        LogError("OpenBlockFile failed for %s while reading raw data", pos.ToString());
         return false;
     }
 
     try {
-        MessageStartChars blk_start;
-        unsigned int blk_size;
+        MessageStartChars data_start;
+        unsigned int data_size;
 
-        filein >> blk_start >> blk_size;
+        filein >> data_start >> data_size;
 
-        if (blk_start != GetParams().MessageStart()) {
-            LogError("Block magic mismatch for %s: %s versus expected %s while reading raw block",
-                pos.ToString(), HexStr(blk_start), HexStr(GetParams().MessageStart()));
+        if (data_start != GetParams().MessageStart()) {
+            LogError("Magic mismatch for %s: %s versus expected %s while reading raw data",
+                     pos.ToString(), HexStr(data_start), HexStr(GetParams().MessageStart()));
             return false;
         }
 
-        if (blk_size > MAX_SIZE) {
-            LogError("Block data is larger than maximum deserialization size for %s: %s versus %s while reading raw block",
-                pos.ToString(), blk_size, MAX_SIZE);
+        if (data_size > MAX_SIZE) {
+            LogError("Data is larger than maximum deserialization size for %s: %s versus %s while reading raw data",
+                     pos.ToString(), data_size, MAX_SIZE);
             return false;
         }
 
-        block.resize(blk_size); // Zeroing of memory is intentional here
-        filein.read(MakeWritableByteSpan(block));
+        data.resize(data_size); // Zeroing of memory is intentional here
+        filein.read(MakeWritableByteSpan(data));
     } catch (const std::exception& e) {
-        LogError("Read from block file failed: %s for %s while reading raw block", e.what(), pos.ToString());
+        LogError("Read from file failed: %s for %s while reading raw data", e.what(), pos.ToString());
         return false;
     }
 
     return true;
+}
+
+bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const
+{
+    return ReadRawData(block, pos, FileType::BlockFile);
+}
+
+bool BlockManager::ReadRawBlockUndo(std::vector<uint8_t>& block_undo, const FlatFilePos& pos) const
+{
+    return ReadRawData(block_undo, pos, FileType::UndoFile);
 }
 
 FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
