@@ -233,6 +233,7 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@usdt_packages@|$(usdt_packages_)|' \
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             $< > $@
+	cp $(BASEDIR)/dependency_provider.cmake $(@D)/
 	touch $@
 
 define check_or_remove_cached

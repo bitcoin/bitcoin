@@ -84,6 +84,9 @@ set(CMAKE_OBJDUMP "@OBJDUMP@")
 # Using our own built dependencies should not be
 # affected by a potentially random environment.
 set(CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH OFF)
+# Use a dependency provider to assist finding packages from depends
+set(PROVIDER_PATH "${CMAKE_CURRENT_LIST_DIR}/dependency_provider.cmake")
+list(APPEND CMAKE_PROJECT_TOP_LEVEL_INCLUDES "${PROVIDER_PATH}")
 
 set(CMAKE_FIND_ROOT_PATH "${CMAKE_CURRENT_LIST_DIR}")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
