@@ -542,13 +542,16 @@ class WalletTest(BitcoinTestFramework):
         destination = self.nodes[1].getnewaddress()
         txid = self.nodes[0].sendtoaddress(destination, 0.123)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
-        output_addresses = [vout['scriptPubKey']['address'] for vout in tx["vout"]]
-        assert len(output_addresses) > 1
-        for address in output_addresses:
+        assert len(tx["vout"]) > 1
+        for vout in tx["vout"]:
+            address = vout['scriptPubKey']['address']
             ischange = self.nodes[0].getaddressinfo(address)['ischange']
             assert_equal(ischange, address != destination)
             if ischange:
                 change = address
+                assert vout["ischange"]
+            else:
+                assert "ischange" not in vout
         self.nodes[0].setlabel(change, 'foobar')
         assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
 
