@@ -19,7 +19,7 @@ The former is assumed hereinafter.
 
 ### 2. Git
 
-Download and install [Git for Windows](https://git-scm.com/download/win). Once installed, Git is available from PowerShell or the Command Prompt.
+Download and install [Git for Windows](https://git-scm.com/downloads/win). Once installed, Git is available from PowerShell or the Command Prompt.
 
 ### 3. Clone Bitcoin Repository
 

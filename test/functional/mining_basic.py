@@ -105,7 +105,7 @@ class MiningTest(BitcoinTestFramework):
         wallet_sigops = MiniWallet(node, mode=MiniWalletMode.RAW_P2PK)
         self.generate(wallet_sigops, 1, sync_fun=self.no_op)
 
-        # Mature with regular coinbases to prevent inteference with other tests
+        # Mature with regular coinbases to prevent interference with other tests
         self.generate(self.wallet, 100, sync_fun=self.no_op)
 
         # Generate three transactions that must be mined in sequence
