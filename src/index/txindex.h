@@ -23,6 +23,7 @@ private:
     const std::unique_ptr<DB> m_db;
 
     bool AllowPrune() const override { return false; }
+    uint32_t GetVersion() const override { return 0; }
 
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
