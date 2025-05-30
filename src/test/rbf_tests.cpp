@@ -196,7 +196,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
                                        entry5_low, entry6_low_prioritised, entry7_high, entry8_high};
     CTxMemPool::setEntries empty_set;
 
-    const auto unused_txid{GetRandHash()};
+    const auto unused_txid = Txid::FromUint256(GetRandHash());
 
     // Tests for PaysMoreThanConflicts
     // These tests use feerate, not absolute fee.
@@ -293,7 +293,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     const auto spends_unconfirmed = make_tx({tx1}, {36 * CENT});
     for (const auto& input : spends_unconfirmed->vin) {
         // Spends unconfirmed inputs.
-        BOOST_CHECK(pool.exists(GenTxid::Txid(input.prevout.hash)));
+        BOOST_CHECK(pool.exists(input.prevout.hash));
     }
     BOOST_CHECK(HasNoNewUnconfirmed(/*tx=*/ *spends_unconfirmed.get(),
                                     /*pool=*/ pool,
