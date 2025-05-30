@@ -115,6 +115,8 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
         skipped_missing |= (!pdb.IsTxAvailable(i) && skip);
     }
 
+    bool segwit_active{fuzzed_data_provider.ConsumeBool()};
+
     // Mock CheckBlock
     bool fail_check_block{fuzzed_data_provider.ConsumeBool()};
     auto validation_result =
@@ -134,7 +136,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
             std::nullopt);
 
     CBlock reconstructed_block;
-    auto fill_status{pdb.FillBlock(reconstructed_block, missing)};
+    auto fill_status{pdb.FillBlock(reconstructed_block, missing, segwit_active)};
     switch (fill_status) {
     case READ_STATUS_OK:
         assert(!skipped_missing);
