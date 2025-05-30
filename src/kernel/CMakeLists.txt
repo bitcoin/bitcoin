@@ -149,3 +149,5 @@ install(TARGETS bitcoinkernel
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT libbitcoinkernel
 )
+
+install(FILES bitcoinkernel.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT Kernel)
