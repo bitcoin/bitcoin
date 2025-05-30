@@ -65,7 +65,7 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp) EXCLUSIVE
 // extracts a transaction hash from CTxMemPoolEntry or CTransactionRef
 struct mempoolentry_txid
 {
-    typedef Txid result_type;
+    using result_type = Txid;
     result_type operator() (const CTxMemPoolEntry &entry) const
     {
         return entry.GetTx().GetHash();
@@ -80,7 +80,7 @@ struct mempoolentry_txid
 // extracts a transaction witness-hash from CTxMemPoolEntry or CTransactionRef
 struct mempoolentry_wtxid
 {
-    typedef Wtxid result_type;
+    using result_type = Wtxid;
     result_type operator() (const CTxMemPoolEntry &entry) const
     {
         return entry.GetTx().GetWitnessHash();
@@ -263,7 +263,7 @@ public:
     using txiter = indexed_transaction_set::nth_index<0>::type::const_iterator;
     std::vector<std::pair<Wtxid, txiter>> txns_randomized GUARDED_BY(cs); //!< All transactions in mapTx with their wtxids, in arbitrary order
 
-    typedef std::set<txiter, CompareIteratorByHash> setEntries;
+    using setEntries = std::set<txiter, CompareIteratorByHash>;
 
     using Limits = kernel::MemPoolLimits;
 
