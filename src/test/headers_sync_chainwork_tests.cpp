@@ -6,6 +6,8 @@
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <headerssync.h>
+#include <headerssync-params.h>
+#include <net_processing.h>
 #include <pow.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
@@ -15,7 +17,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-constexpr size_t TARGET_BLOCKS{15'000};
+constexpr size_t TARGET_BLOCKS{REDOWNLOAD_BUFFER_SIZE + MAX_HEADERS_RESULTS + 123};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
 
 /** Search for a nonce to meet (regtest) proof of work */
