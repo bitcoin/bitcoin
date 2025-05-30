@@ -32,7 +32,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             self.log.info("Tests for deprecated wallet-related RPC methods (if any)")
             self.log.info("Test settxfee RPC deprecation")
             self.nodes[0].createwallet("settxfeerpc")
-            assert_raises_rpc_error(-32, 'settxfee is deprecated and will be fully removed in v31.0.', self.nodes[0].rpc.settxfee, 0.01)
+            assert_raises_rpc_error(-32, 'settxfee is deprecated and will be fully removed in v31.0.', self.nodes[0].settxfee, 0.01)
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()
