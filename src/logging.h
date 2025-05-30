@@ -6,6 +6,7 @@
 #ifndef BITCOIN_LOGGING_H
 #define BITCOIN_LOGGING_H
 
+#include <crypto/siphash.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <util/fs.h>
@@ -14,11 +15,14 @@
 
 #include <atomic>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <list>
 #include <mutex>
+#include <source_location>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -27,9 +31,28 @@ static const bool DEFAULT_LOGTIMESTAMPS = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
 static const bool DEFAULT_LOGSOURCELOCATIONS = false;
 static constexpr bool DEFAULT_LOGLEVELALWAYS = false;
+static constexpr bool DEFAULT_RATELIMITLOGGING{true};
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
+
+struct SourceLocationEqual {
+    bool operator()(const std::source_location& lhs, const std::source_location& rhs) const noexcept
+    {
+        return strcmp(lhs.file_name(), rhs.file_name()) == 0 && lhs.line() == rhs.line();
+    }
+};
+
+struct SourceLocationHasher {
+    size_t operator()(const std::source_location& s) const noexcept
+    {
+        // Use CSipHasher(0, 0) as a simple way to get uniform distribution.
+        return static_cast<size_t>(CSipHasher(0, 0)
+                                       .Write(std::hash<std::string>{}(s.file_name()))
+                                       .Write(std::hash<int>{}(s.line()))
+                                       .Finalize());
+    }
+};
 
 struct LogCategory {
     std::string category;
@@ -39,39 +62,41 @@ struct LogCategory {
 namespace BCLog {
     using CategoryMask = uint64_t;
     enum LogFlags : CategoryMask {
-        NONE        = CategoryMask{0},
-        NET         = (CategoryMask{1} <<  0),
-        TOR         = (CategoryMask{1} <<  1),
-        MEMPOOL     = (CategoryMask{1} <<  2),
-        HTTP        = (CategoryMask{1} <<  3),
-        BENCH       = (CategoryMask{1} <<  4),
-        ZMQ         = (CategoryMask{1} <<  5),
-        WALLETDB    = (CategoryMask{1} <<  6),
-        RPC         = (CategoryMask{1} <<  7),
-        ESTIMATEFEE = (CategoryMask{1} <<  8),
-        ADDRMAN     = (CategoryMask{1} <<  9),
-        SELECTCOINS = (CategoryMask{1} << 10),
-        REINDEX     = (CategoryMask{1} << 11),
-        CMPCTBLOCK  = (CategoryMask{1} << 12),
-        RAND        = (CategoryMask{1} << 13),
-        PRUNE       = (CategoryMask{1} << 14),
-        PROXY       = (CategoryMask{1} << 15),
-        MEMPOOLREJ  = (CategoryMask{1} << 16),
-        LIBEVENT    = (CategoryMask{1} << 17),
-        COINDB      = (CategoryMask{1} << 18),
-        QT          = (CategoryMask{1} << 19),
-        LEVELDB     = (CategoryMask{1} << 20),
-        VALIDATION  = (CategoryMask{1} << 21),
-        I2P         = (CategoryMask{1} << 22),
-        IPC         = (CategoryMask{1} << 23),
+        NONE                       = CategoryMask{0},
+        NET                        = (CategoryMask{1} <<  0),
+        TOR                        = (CategoryMask{1} <<  1),
+        MEMPOOL                    = (CategoryMask{1} <<  2),
+        HTTP                       = (CategoryMask{1} <<  3),
+        BENCH                      = (CategoryMask{1} <<  4),
+        ZMQ                        = (CategoryMask{1} <<  5),
+        WALLETDB                   = (CategoryMask{1} <<  6),
+        RPC                        = (CategoryMask{1} <<  7),
+        ESTIMATEFEE                = (CategoryMask{1} <<  8),
+        ADDRMAN                    = (CategoryMask{1} <<  9),
+        SELECTCOINS                = (CategoryMask{1} << 10),
+        REINDEX                    = (CategoryMask{1} << 11),
+        CMPCTBLOCK                 = (CategoryMask{1} << 12),
+        RAND                       = (CategoryMask{1} << 13),
+        PRUNE                      = (CategoryMask{1} << 14),
+        PROXY                      = (CategoryMask{1} << 15),
+        MEMPOOLREJ                 = (CategoryMask{1} << 16),
+        LIBEVENT                   = (CategoryMask{1} << 17),
+        COINDB                     = (CategoryMask{1} << 18),
+        QT                         = (CategoryMask{1} << 19),
+        LEVELDB                    = (CategoryMask{1} << 20),
+        VALIDATION                 = (CategoryMask{1} << 21),
+        I2P                        = (CategoryMask{1} << 22),
+        IPC                        = (CategoryMask{1} << 23),
 #ifdef DEBUG_LOCKCONTENTION
-        LOCK        = (CategoryMask{1} << 24),
+        LOCK                       = (CategoryMask{1} << 24),
 #endif
-        BLOCKSTORAGE = (CategoryMask{1} << 25),
-        TXRECONCILIATION = (CategoryMask{1} << 26),
-        SCAN        = (CategoryMask{1} << 27),
-        TXPACKAGES  = (CategoryMask{1} << 28),
-        ALL         = ~NONE,
+        BLOCKSTORAGE               = (CategoryMask{1} << 25),
+        TXRECONCILIATION           = (CategoryMask{1} << 26),
+        SCAN                       = (CategoryMask{1} << 27),
+        TXPACKAGES                 = (CategoryMask{1} << 28),
+        UNCONDITIONAL_RATE_LIMITED = (CategoryMask{1} << 29),
+        UNCONDITIONAL_ALWAYS       = (CategoryMask{1} << 30),
+        ALL                        = ~NONE,
     };
     enum class Level {
         Trace = 0, // High-volume or detailed logging for development/debugging
@@ -81,7 +106,45 @@ namespace BCLog {
         Error,
     };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
+    static constexpr LogFlags DEFAULT_LOG_FLAGS{UNCONDITIONAL_RATE_LIMITED | UNCONDITIONAL_ALWAYS};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
+
+    //! Fixed window rate limiter for logging.
+    class LogRateLimiter
+    {
+    private:
+        //! Timestamp of the last window reset.
+        std::chrono::time_point<NodeClock> m_last_reset;
+        //! Remaining bytes in the current window interval.
+        uint64_t m_available_bytes{WINDOW_MAX_BYTES};
+        //! Number of bytes that were not consumed within the current window.
+        uint64_t m_dropped_bytes{0};
+        //! Reset the window if the window interval has passed since the last reset.
+        void MaybeReset();
+
+    public:
+        //! Interval after which the window is reset.
+        static constexpr std::chrono::hours WINDOW_SIZE{1};
+        //! The maximum number of bytes that can be logged within one window.
+        static constexpr uint64_t WINDOW_MAX_BYTES{1024 * 1024};
+
+        LogRateLimiter() : m_last_reset{NodeClock::now()} {}
+
+        //! Consume bytes from the window if enough bytes are available.
+        //!
+        //! Returns whether or not enough bytes were available.
+        bool Consume(uint64_t bytes);
+
+        uint64_t GetAvailableBytes() const
+        {
+            return m_available_bytes;
+        }
+
+        uint64_t GetDroppedBytes() const
+        {
+            return m_dropped_bytes;
+        }
+    };
 
     class Logger
     {
@@ -89,8 +152,8 @@ namespace BCLog {
         struct BufferedLog {
             SystemClock::time_point now;
             std::chrono::seconds mocktime;
-            std::string str, logging_function, source_file, threadname;
-            int source_line;
+            std::string str, logging_function, threadname;
+            std::source_location source_loc;
             LogFlags category;
             Level level;
         };
@@ -105,6 +168,11 @@ namespace BCLog {
         size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
         size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
 
+        //! Fixed window rate limiters for each source location that has attempted to log something.
+        std::unordered_map<std::source_location, LogRateLimiter, SourceLocationHasher, SourceLocationEqual> m_ratelimiters GUARDED_BY(m_cs);
+        //! Set of source file locations that were dropped on the last log attempt.
+        std::unordered_set<std::source_location, SourceLocationHasher, SourceLocationEqual> m_suppressed_locations GUARDED_BY(m_cs);
+
         //! Category-specific log level. Overrides `m_log_level`.
         std::unordered_map<LogFlags, Level> m_category_log_levels GUARDED_BY(m_cs);
 
@@ -113,9 +181,9 @@ namespace BCLog {
         std::atomic<Level> m_log_level{DEFAULT_LOG_LEVEL};
 
         /** Log categories bitfield. */
-        std::atomic<CategoryMask> m_categories{BCLog::NONE};
+        std::atomic<CategoryMask> m_categories{DEFAULT_LOG_FLAGS};
 
-        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+        bool FormatLogStrAndRateLimit(std::string& str, LogFlags category, Level level, const std::source_location& source_loc, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
@@ -123,7 +191,7 @@ namespace BCLog {
         std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
 
         /** Send a string to the log output (internal) */
-        void LogPrintStr_(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+        void LogPrintStr_(std::string_view str, std::string_view logging_function, const std::source_location& source_loc, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
@@ -137,12 +205,13 @@ namespace BCLog {
         bool m_log_threadnames = DEFAULT_LOGTHREADNAMES;
         bool m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
         bool m_always_print_category_level = DEFAULT_LOGLEVELALWAYS;
+        bool m_ratelimit{DEFAULT_RATELIMITLOGGING};
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(std::string_view str, std::string_view logging_function, std::string_view source_file, int source_line, BCLog::LogFlags category, BCLog::Level level)
+        void LogPrintStr(std::string_view str, std::string_view logging_function, const std::source_location& source_loc, BCLog::LogFlags category, BCLog::Level level)
             EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
@@ -239,7 +308,7 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
 template <typename... Args>
-inline void LogPrintFormatInternal(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogPrintFormatInternal(std::string_view logging_function, const std::source_location& source_loc, const BCLog::LogFlags flag, const BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;
@@ -248,19 +317,19 @@ inline void LogPrintFormatInternal(std::string_view logging_function, std::strin
         } catch (tinyformat::format_error& fmterr) {
             log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
         }
-        LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
+        LogInstance().LogPrintStr(log_msg, logging_function, source_loc, flag, level);
     }
 }
 
-#define LogPrintLevel_(category, level, ...) LogPrintFormatInternal(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
+#define LogPrintLevel_(category, level, ...) LogPrintFormatInternal(__func__, std::source_location::current(), category, level, __VA_ARGS__)
 
-// Log unconditionally.
+// Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!
 // It should not be the case that an inbound peer can fill up a user's storage
 // with debug.log entries.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
+#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::UNCONDITIONAL_RATE_LIMITED, BCLog::Level::Info, __VA_ARGS__)
+#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::UNCONDITIONAL_RATE_LIMITED, BCLog::Level::Warning, __VA_ARGS__)
+#define LogError(...) LogPrintLevel_(BCLog::LogFlags::UNCONDITIONAL_RATE_LIMITED, BCLog::Level::Error, __VA_ARGS__)
 
 // Deprecated unconditional logging.
 #define LogPrintf(...) LogInfo(__VA_ARGS__)
@@ -269,6 +338,9 @@ inline void LogPrintFormatInternal(std::string_view logging_function, std::strin
 // evaluating arguments when logging for the category is not enabled.
 
 // Log conditionally, prefixing the output with the passed category name and severity level.
+// Note that conditional logging is performed WITHOUT rate limiting. Users specifying
+// -debug are assumed to be developers or power users who are aware that -debug may cause
+// excessive disk usage due to logging.
 #define LogPrintLevel(category, level, ...)               \
     do {                                                  \
         if (LogAcceptCategory((category), (level))) {     \

@@ -40,6 +40,7 @@ void AddLoggingArgs(ArgsManager& argsman)
     argsman.AddArg("-loglevelalways", strprintf("Always prepend a category and level (default: %u)", DEFAULT_LOGLEVELALWAYS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set -nodebuglogfile)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-ratelimitlogging", strprintf("Rate limit unconditional logging to disk (default: %u)", DEFAULT_RATELIMITLOGGING), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 void SetLoggingOptions(const ArgsManager& args)
@@ -52,6 +53,7 @@ void SetLoggingOptions(const ArgsManager& args)
     LogInstance().m_log_threadnames = args.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
     LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
     LogInstance().m_always_print_category_level = args.GetBoolArg("-loglevelalways", DEFAULT_LOGLEVELALWAYS);
+    LogInstance().m_ratelimit = args.GetBoolArg("-ratelimitlogging", DEFAULT_RATELIMITLOGGING);
 
     fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
 }
