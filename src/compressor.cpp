@@ -16,36 +16,27 @@
  * form).
  */
 
-static bool IsToKeyID(const CScript& script, CKeyID &hash)
+static bool IsToKeyID(const CScript& script, CKeyID& hash)
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
-                            && script[2] == 20 && script[23] == OP_EQUALVERIFY
-                            && script[24] == OP_CHECKSIG) {
-        memcpy(&hash, &script[3], 20);
-        return true;
-    }
-    return false;
+    if (!script.IsPayToPubKeyHash()) return false;
+    memcpy(&hash, &script[3], 20);
+    return true;
 }
 
-static bool IsToScriptID(const CScript& script, CScriptID &hash)
+static bool IsToScriptID(const CScript& script, CScriptID& hash)
 {
-    if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20
-                            && script[22] == OP_EQUAL) {
-        memcpy(&hash, &script[2], 20);
-        return true;
-    }
-    return false;
+    if (!script.IsPayToScriptHash()) return false;
+    memcpy(&hash, &script[2], 20);
+    return true;
 }
 
-static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
+static bool IsToPubKey(const CScript& script, CPubKey& pubkey)
 {
-    if (script.size() == 35 && script[0] == 33 && script[34] == OP_CHECKSIG
-                            && (script[1] == 0x02 || script[1] == 0x03)) {
+    if (script.IsCompressedPayToPubKey()) {
         pubkey.Set(&script[1], &script[34]);
         return true;
     }
-    if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG
-                            && script[1] == 0x04) {
+    if (script.IsUncompressedPayToPubKey()) {
         pubkey.Set(&script[1], &script[66]);
         return pubkey.IsFullyValid(); // if not fully valid, a case that would not be compressible
     }
