@@ -7,7 +7,9 @@
 #include <core_io.h>
 #include <node/context.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/forecaster_man.h>
+#include <policy/fees/forecaster_util.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -39,6 +41,8 @@ static RPCHelpMan estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"block_policy_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to use block policy estimator only.\n"},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether the response should be verbose"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -48,11 +52,15 @@ static RPCHelpMan estimatesmartfee()
                     {
                         {RPCResult::Type::STR, "", "error"},
                     }},
+                {RPCResult::Type::STR, "forecaster", /*optional=*/true, "the forecaster that provide the fee rate.\n"},
                 {RPCResult::Type::NUM, "blocks", "block number where estimate was found\n"
                 "The request target will be clamped between 2 and the highest target\n"
                 "fee estimation is able to return based on how long it has been running.\n"
                 "An error is returned if not enough transactions and blocks\n"
                 "have been observed to make an estimate for any number of blocks."},
+                {RPCResult::Type::ARR, "stats", /*optional=*/true, strprintf("%d most-recent blocks stats (if there are any), only returned when verbose is true", NUMBER_OF_BLOCKS),
+                {{RPCResult::Type::STR, "", "error"},
+            }},
         }},
         RPCExamples{
             HelpExampleCli("estimatesmartfee", "6") +
@@ -60,36 +68,75 @@ static RPCHelpMan estimatesmartfee()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            FeeRateForecasterManager& forecaster_man = EnsureAnyForecasterMan(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             const CTxMemPool& mempool = EnsureMemPool(node);
-
             CHECK_NONFATAL(mempool.m_opts.signals)->SyncWithValidationInterfaceQueue();
-            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+
+            unsigned int max_target = forecaster_man.MaximumTarget();
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
+
+            // Parse estimation mode
             bool conservative = false;
             if (!request.params[1].isNull()) {
                 FeeEstimateMode fee_mode;
                 if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
                 }
-                if (fee_mode == FeeEstimateMode::CONSERVATIVE) conservative = true;
+                conservative = (fee_mode == FeeEstimateMode::CONSERVATIVE);
             }
 
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
-            FeeCalculation feeCalc;
-            CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
-            if (feeRate != CFeeRate(0)) {
-                CFeeRate min_mempool_feerate{mempool.GetMinFee()};
-                CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
-                feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
-                result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
-            } else {
-                errors.push_back("Insufficient data or no feerate found");
-                result.pushKV("errors", std::move(errors));
+
+            // Use block policy only if requested
+            bool use_block_policy_only = false;
+            if (!request.params[2].isNull()) {
+                use_block_policy_only = request.params[2].get_bool();
             }
-            result.pushKV("blocks", feeCalc.returnedTarget);
+            CFeeRate feerate;
+            std::vector<std::string> errs;
+
+            if (use_block_policy_only) {
+                FeeCalculation feeCalc;
+                feerate = forecaster_man.GetBlockPolicyEstimator()->estimateSmartFee(conf_target, &feeCalc, conservative);
+                if (feerate == CFeeRate(0)) {
+                    errors.push_back("Insufficient data or no feerate found");
+                }
+                result.pushKV("blocks", feeCalc.returnedTarget);
+            } else {
+                auto results = forecaster_man.ForecastFeeRateFromForecasters(conf_target, conservative);
+                feerate = CFeeRate(results.first.feerate.fee, results.first.feerate.size);
+                if (feerate != CFeeRate(0)) {
+                    CHECK_NONFATAL(results.first.forecaster);
+                    result.pushKV("forecaster", forecastTypeToString(results.first.forecaster.value()));
+                }
+                result.pushKV("blocks", results.first.returned_target);
+                errs = results.second;
+            }
+
+            if (feerate != CFeeRate(0)) {
+                CFeeRate min_mempool_feerate = mempool.GetMinFee();
+                CFeeRate min_relay_feerate = mempool.m_opts.min_relay_feerate;
+                feerate = std::max({feerate, min_mempool_feerate, min_relay_feerate});
+                result.pushKV("feerate", ValueFromAmount(feerate.GetFeePerK()));
+            }
+            // Add any additional errors from forecasters
+            for (const auto& err : errs) {
+                errors.push_back(err);
+            }
+            result.pushKV("errors", std::move(errors));
+            bool verbose = false;
+            if (!request.params[3].isNull()) {
+                verbose = request.params[3].get_bool();
+            }
+            if (verbose) {
+                UniValue stats(UniValue::VARR);
+                std::vector<std::string> verbose_stats = forecaster_man.GetPreviouslyMinedBlockDataStr();
+                for (auto& stat : verbose_stats)
+                    stats.push_back(stat);
+                result.pushKV("stats", stats);
+            }
             return result;
         },
     };
@@ -152,11 +199,11 @@ static RPCHelpMan estimaterawfee()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            CBlockPolicyEstimator& block_policy_fee_estimator = *(EnsureAnyForecasterMan(request.context).GetBlockPolicyEstimator());
             const NodeContext& node = EnsureAnyNodeContext(request.context);
 
             CHECK_NONFATAL(node.validation_signals)->SyncWithValidationInterfaceQueue();
-            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int max_target = block_policy_fee_estimator.MaximumTarget();
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
             double threshold = 0.95;
             if (!request.params[1].isNull()) {
@@ -173,9 +220,9 @@ static RPCHelpMan estimaterawfee()
                 EstimationResult buckets;
 
                 // Only output results for horizons which track the target
-                if (conf_target > fee_estimator.HighestTargetTracked(horizon)) continue;
+                if (conf_target > block_policy_fee_estimator.HighestTargetTracked(horizon)) continue;
 
-                feeRate = fee_estimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
+                feeRate = block_policy_fee_estimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
                 UniValue horizon_result(UniValue::VOBJ);
                 UniValue errors(UniValue::VARR);
                 UniValue passbucket(UniValue::VOBJ);
