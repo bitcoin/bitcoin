@@ -427,11 +427,15 @@ CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
 {
     Assert(m_opts.scheduler || !m_opts.dust_relay_target);
     m_opts.dust_relay_feerate_floor = m_opts.dust_relay_feerate;
+#ifdef BUILDING_FOR_LIBBITCOINKERNEL
+    assert(!m_opts.scheduler);
+#else
     if (m_opts.scheduler) {
         m_opts.scheduler->scheduleEvery([this]{
             UpdateDynamicDustFeerate();
         }, DYNAMIC_DUST_FEERATE_UPDATE_INTERVAL);
     }
+#endif
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -732,6 +736,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     blockSinceLastRollingFeeBump = true;
 }
 
+#ifndef BUILDING_FOR_LIBBITCOINKERNEL
 void CTxMemPool::UpdateDynamicDustFeerate()
 {
     CFeeRate est_feerate{0};
@@ -761,6 +766,7 @@ void CTxMemPool::UpdateDynamicDustFeerate()
         m_opts.dust_relay_feerate = est_feerate;
     }
 }
+#endif
 
 void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const
 {
