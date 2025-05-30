@@ -237,6 +237,7 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
     uint256 blockWitness = BlockWitnessMerkleRoot(block);
 
     std::vector<uint256> hashes;
+    hashes.reserve((block.vtx.size() + 1) & ~1ULL); // capacity rounded up to even
     hashes.resize(block.vtx.size());
     hashes[0].SetNull();
     hashes[1] = block.vtx[1]->GetHash();
