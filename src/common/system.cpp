@@ -14,6 +14,7 @@
 #ifndef WIN32
 #include <sys/stat.h>
 #else
+#include <cassert>
 #include <compat/compat.h>
 #include <codecvt>
 #endif
@@ -77,6 +78,7 @@ void SetupEnvironment()
         setenv("LC_ALL", "C.UTF-8", 1);
     }
 #elif defined(WIN32)
+    assert(GetACP() == CP_UTF8);
     // Set the default input/output charset is utf-8
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
