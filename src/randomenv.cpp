@@ -222,18 +222,6 @@ void RandAddDynamicEnv(CSHA512& hasher)
     if (getrusage(RUSAGE_SELF, &usage) == 0) hasher << usage;
 #endif
 
-#ifdef __linux__
-    AddFile(hasher, "/proc/diskstats");
-    AddFile(hasher, "/proc/vmstat");
-    AddFile(hasher, "/proc/schedstat");
-    AddFile(hasher, "/proc/zoneinfo");
-    AddFile(hasher, "/proc/meminfo");
-    AddFile(hasher, "/proc/softirqs");
-    AddFile(hasher, "/proc/stat");
-    AddFile(hasher, "/proc/self/schedstat");
-    AddFile(hasher, "/proc/self/status");
-#endif
-
 #ifdef HAVE_SYSCTL
 #  ifdef CTL_KERN
 #    if defined(KERN_PROC) && defined(KERN_PROC_ALL)
