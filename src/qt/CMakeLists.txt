@@ -268,6 +268,18 @@ add_custom_command(
 )
 unset(qm_files)
 
+get_target_property(warn_flags warn_interface INTERFACE_COMPILE_OPTIONS)
+if("-Wtrailing-whitespace=any" IN_LIST warn_flags)
+  set_property(
+    SOURCE
+      ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/qrc_bitcoin_locale.cpp
+    PROPERTY COMPILE_OPTIONS
+      -Wno-trailing-whitespace
+  )
+endif()
+unset(warn_flags)
+
 add_executable(bitcoin-qt
   main.cpp
   ../init/bitcoin-qt.cpp
