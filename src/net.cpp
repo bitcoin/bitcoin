@@ -2539,7 +2539,6 @@ void CConnman::SocketHandlerConnected(const Sock::EventsPerSock& events_per_sock
         // (even if there are pending messages to be sent)
         for (auto it = mapSendableNodes.begin(); it != mapSendableNodes.end(); ) {
             if (!it->second->fCanSendData) {
-                LogPrint(BCLog::NET, "%s -- remove mapSendableNodes, peer=%d\n", __func__, it->second->GetId());
                 it = mapSendableNodes.erase(it);
             } else {
                 ++it;
@@ -2548,7 +2547,6 @@ void CConnman::SocketHandlerConnected(const Sock::EventsPerSock& events_per_sock
         // clean up mapReceivableNodes from nodes that were receivable in the last iteration but aren't anymore
         for (auto it = mapReceivableNodes.begin(); it != mapReceivableNodes.end(); ) {
             if (!it->second->fHasRecvData) {
-                LogPrint(BCLog::NET, "%s -- remove mapReceivableNodes, peer=%d\n", __func__, it->second->GetId());
                 it = mapReceivableNodes.erase(it);
             } else {
                 ++it;
