@@ -156,6 +156,7 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
     }
 
     unsigned int nDataOut = 0;
+    unsigned int n_dust{0};
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, opts.max_datacarrier_bytes, whichType)) {
@@ -164,6 +165,10 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
 
         if (whichType == TxoutType::WITNESS_UNKNOWN && !opts.acceptunknownwitness) {
             MaybeReject("scriptpubkey-unknown-witnessversion");
+        }
+
+        if (IsDust(txout, opts.dust_relay_feerate)) {
+            ++n_dust;
         }
 
         if (whichType == TxoutType::NULL_DATA) {
@@ -179,7 +184,7 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
     }
 
     // Only MAX_DUST_OUTPUTS_PER_TX dust is permitted(on otherwise valid ephemeral dust)
-    if (GetDust(tx, opts.dust_relay_feerate).size() > MAX_DUST_OUTPUTS_PER_TX) {
+    if (n_dust > MAX_DUST_OUTPUTS_PER_TX) {
         MaybeReject("dust");
     }
 
