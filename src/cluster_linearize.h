@@ -374,6 +374,22 @@ struct SetInfo
         return *this;
     }
 
+    /** Remove the transactions of other from this SetInfo (must be subset). */
+    SetInfo& operator-=(const SetInfo& other) noexcept
+    {
+        Assume(other.transactions.IsSubsetOf(transactions));
+        transactions -= other.transactions;
+        feerate -= other.feerate;
+        return *this;
+    }
+
+    /** Compute the difference between this and other SetInfo (which must be a subset). */
+    SetInfo operator-(const SetInfo& other) noexcept
+    {
+        Assume(other.transactions.IsSubsetOf(transactions));
+        return {transactions - other.transactions, feerate - other.feerate};
+    }
+
     /** Construct a new SetInfo equal to this, with more transactions added (which may overlap
      *  with the existing transactions in the SetInfo). */
     [[nodiscard]] SetInfo Add(const DepGraph<SetType>& depgraph, const SetType& txn) const noexcept
@@ -539,492 +555,772 @@ public:
     }
 };
 
-/** Class encapsulating the state needed to find the best remaining ancestor set.
+/** Class to represent the internal state of the spanning-forest linearization algorithm.
  *
- * It is initialized for an entire DepGraph, and parts of the graph can be dropped by calling
- * MarkDone.
+ * At all times, each dependency is marked as "active" or "inactive", with the constraint that
+ * no cycle of active dependencies may exist when ignoring the direction of those dependencies.
+ * So for example, the diamond (C->X->P, C->Y->P) would be considered a cycle, and those 4
+ * dependencies cannot all simultaneously be active.
  *
- * As long as any part of the graph remains, FindCandidateSet() can be called which will return a
- * SetInfo with the highest-feerate ancestor set that remains (an ancestor set is a single
- * transaction together with all its remaining ancestors).
+ * The sets of transactions that are internally connected by active dependencies are called chunks.
+ * Each chunk of N transactions contains exactly N-1 active dependencies (an additional one would
+ * necessarily form a cycle), and thus those active dependencies form a spanning tree for the chunk.
+ * The collection of all spanning trees for the entire cluster form a spanning forest. Each
+ * transaction may be in its own chunk (and thus 0 dependencies are active), or all transactions
+ * may form a single chunk (and thus N-1 dependencies are active).
+ *
+ * Each chunk has a feerate: the total fee of all transactions in it divided by the total size of
+ * all transactions in it. We say the spanning forest is topological whenever no inactive
+ * dependencies exist from one chunk to another chunk with lower or equal feerate. The algorithm
+ * can be stopped whenever the state is topological. In this case, the output linearization
+ * consists of each of the chunks, from high to low feerate, each internally ordered in an
+ * arbitrary but topologically-valid way. If the spanning forest is topological, then the output
+ * linearization is also topological.
+ *
+ * At a high level, the algorithm works by performing a sequence of the following operations:
+ * - Merging:
+ *   - Whenever an inactive dependency exists from a chunk to another chunk which has lower or
+ *     equal feerate, that dependency can be made active, merging the two chunks.
+ *   - Merging is only possible in non-topological forests, and generally helps making it
+ *     topological.
+ * - Splitting:
+ *   - Whenever an active dependency d exists, making it inactive will result in the chunk it is in
+ *     splitting in two: a bottom chunk (which d is from) and a top chunk (which d is to). This is
+ *     the case because no other active dependency between the top and bottom can exist; if it did,
+ *     it would form a cycle together with d.
+ *   - An active dependency can be deactivated whenever its would-be top chunk has strictly higher
+ *     feerate than its would-be bottom chunk.
+ *   - Splitting generally helps making a forest's output linearization better, but can result in
+ *     it becoming non-topological, necessitating merging steps.
+ *
+ * A forest is said to be optimal when neither of these operations are applicable anymore. It can
+ * be shown that the output linearization for an optimal spanning forest is optimal, and that at
+ * least one optimal spanning forest exists for every cluster. Note that no proof exists that an
+ * optimal state will always be reached.
+ *
+ * To make sure the algorithm can be interrupted quickly and get a valid linearization out, merging
+ * will always be prioritized over splitting:
+ *
+ * - Construct an initial topological spanning forest for the graph.
+ * - Loop until optimal or time runs out:
+ *   - Perform a splitting step.
+ *   - Loop until the forest is topological:
+ *     - Perform a merging step.
+ * - Output the chunks from high to low feerate, each internally sorted topologically.
+ *
+ * Merging is always done by maximal feerate difference. This guarantees that the sequence of a
+ * single split followed by merges until topological never makes the output linearization worse.
+ * In addition, this allows refining the algorithm flow into:
+ *
+ * - Construct an initial topological spanning forest for the graph:
+ *   - Start with an empty graph.
+ *   - Iterate over the transactions X of the cluster in a topological order:
+ *     - Add X to the graph, becoming a new singleton chunk.
+ *     - Add all dependencies of X to the graph, initially all inactive.
+ *     - Make the forest topological by running an upward merging sequence on X.
+ * - Loop until optimal or time runs out:
+ *   - Pick a dependency D to deactivate among those whose would-be top chunk has strictly higher
+ *     feerate than its would-be bottom chunk.
+ *   - Deactivate D, causing the chunk it is in to split into top T and bottom B.
+ *   - Make the forest topological by running an upward merging sequence on T, and a downward
+ *     merging sequence on B.
+ * - Output the chunks from high to low feerate, each internally sorted topologically.
+ *
+ * Where an upward merging sequence on a transaction X is defined as:
+ * - Loop:
+ *   - Find the chunk C which X is in.
+ *   - Iterate over all other chunks which C has a dependency on, and remember O, the
+ *     lowest-feerate one among them.
+ *   - If O has higher feerate than C, stop.
+ *   - Activate a dependency from C to O.
+ *
+ * Analogously, a downward merging sequence on a transaction X is defined as:
+ * - Loop:
+ *   - Find the chunk C which X is in.
+ *   - Iterate over all other chunks which have a dependency on C, and remember O, the
+ *     highest-feerate one among them.
+ *   - If O has lower feerate than C, stop.
+ *   - Activate a dependency from O to C.
+ *
+ * What remains to be specified are two heuristics:
+ *
+ * - How to decide what dependency to deactivate (when splitting chunks):
+ *   - Define the gain of an active dependency as
+ *     (feerate(top) - feerate(chunk)) * size(top) * size(chunk), also equal to:
+ *     fee(top) * size(chunk) - fee(chunk) * size(top).
+ *   - After every split, it is possible that the top and the bottom chunk merge with each other
+ *     again in the merge sequence (through a top->bottom dependency, not through the deactivated
+ *     one, which was bottom->top). Call this a self-merge. If a self-merge does not occur after
+ *     a split, the resulting linearization is strictly improved (the area under the fee-size
+ *     diagram increases by at least gain/2), while self-merges do not change it.
+ *   - Keep track of how many consecutive self-merges a chunk undergoes: incremented upon
+ *     self-merge, and reset to 0 in both top and bottom otherwise.
+ *   - If the number of consecutive self-merges is 2 mod 3 (i.e., it is 2, 5, 8, 11, ...), a
+ *     uniformly random dependency in the chunk among those with strictly positive gain is
+ *     deactivated.
+ *   - Otherwise (self-merges so far is not 2 mod 3), a uniformly random dependency within a chunk
+ *     among those with maximal gain is deactivated, if any with strictly positive gain exist.
+ *
+ * - How to decide what dependency to activate (when merging chunks):
+ *   - A uniformly random dependency between the two maximum-feerate-difference chunks is activated.
+ *
+ * If an optimal state is found by the above procedure, it is still possible that it contains
+ * chunks that can be split further into equal-feerate chunks. To find these, a second stage is
+ * added, which acts as if the feerates of transactions are perturbed slightly, to make
+ * equal-feerate parts of chunks break apart. The idea is:
+ * - If a transaction t is given slightly higher feerate than it really has, and an equal-feerate
+ *   topological subset of the chunk exists with t in it, it will be found using the normal
+ *   algorithm.
+ * - If a transaction t is given slightly *lower* feerate than it really has, and an equal-feerate
+ *   topological subset of the chunk exists with t *not* in it, it will be found using the normal
+ *   algorithm.
+ * Thus, by picking one transaction in a chunk, and trying both of the approaches above, then if a
+ * split exists, it must be found, because the subset must either contain t or not contain it.
+ *
+ * Specifically, within each chunk:
+ * - Pick an arbitrary pivot transaction t in the chunk.
+ * - Loop:
+ *   - Find a gain=0 dependency d in the chunk where t appears in its top. If not found, stop.
+ *   - Deactivate d.
+ *   - Find a dependency e from d's top to d's bottom. If not found, recurse into the created top
+ *     and bottom chunks.
+ *   - Activate e.
+ * - Loop:
+ *   - Find a gain=0 dependency d in the chunk where t appears in its bottom. If not found, stop.
+ *   - Deactivate d.
+ *   - Find a dependency e from d's top to d's bottom. If not found, recurse into the created top
+ *     and bottom chunks.
+ *   - Activate e.
  */
 template<typename SetType>
-class AncestorCandidateFinder
+class SpanningForestState
 {
-    /** Internal dependency graph. */
-    const DepGraph<SetType>& m_depgraph;
-    /** Which transaction are left to include. */
-    SetType m_todo;
-    /** Precomputed ancestor-set feerates (only kept up-to-date for indices in m_todo). */
-    std::vector<FeeFrac> m_ancestor_set_feerates;
-
-public:
-    /** Construct an AncestorCandidateFinder for a given cluster.
-     *
-     * Complexity: O(N^2) where N=depgraph.TxCount().
-     */
-    AncestorCandidateFinder(const DepGraph<SetType>& depgraph LIFETIMEBOUND) noexcept :
-        m_depgraph(depgraph),
-        m_todo{depgraph.Positions()},
-        m_ancestor_set_feerates(depgraph.PositionRange())
-    {
-        // Precompute ancestor-set feerates.
-        for (DepGraphIndex i : m_depgraph.Positions()) {
-            /** The remaining ancestors for transaction i. */
-            SetType anc_to_add = m_depgraph.Ancestors(i);
-            FeeFrac anc_feerate;
-            // Reuse accumulated feerate from first ancestor, if usable.
-            Assume(anc_to_add.Any());
-            DepGraphIndex first = anc_to_add.First();
-            if (first < i) {
-                anc_feerate = m_ancestor_set_feerates[first];
-                Assume(!anc_feerate.IsEmpty());
-                anc_to_add -= m_depgraph.Ancestors(first);
-            }
-            // Add in other ancestors (which necessarily include i itself).
-            Assume(anc_to_add[i]);
-            anc_feerate += m_depgraph.FeeRate(anc_to_add);
-            // Store the result.
-            m_ancestor_set_feerates[i] = anc_feerate;
-        }
-    }
-
-    /** Remove a set of transactions from the set of to-be-linearized ones.
-     *
-     * The same transaction may not be MarkDone()'d twice.
-     *
-     * Complexity: O(N*M) where N=depgraph.TxCount(), M=select.Count().
-     */
-    void MarkDone(SetType select) noexcept
-    {
-        Assume(select.Any());
-        Assume(select.IsSubsetOf(m_todo));
-        m_todo -= select;
-        for (auto i : select) {
-            auto feerate = m_depgraph.FeeRate(i);
-            for (auto j : m_depgraph.Descendants(i) & m_todo) {
-                m_ancestor_set_feerates[j] -= feerate;
-            }
-        }
-    }
-
-    /** Check whether any unlinearized transactions remain. */
-    bool AllDone() const noexcept
-    {
-        return m_todo.None();
-    }
-
-    /** Count the number of remaining unlinearized transactions. */
-    DepGraphIndex NumRemaining() const noexcept
-    {
-        return m_todo.Count();
-    }
-
-    /** Find the best (highest-feerate, smallest among those in case of a tie) ancestor set
-     *  among the remaining transactions. Requires !AllDone().
-     *
-     * Complexity: O(N) where N=depgraph.TxCount();
-     */
-    SetInfo<SetType> FindCandidateSet() const noexcept
-    {
-        Assume(!AllDone());
-        std::optional<DepGraphIndex> best;
-        for (auto i : m_todo) {
-            if (best.has_value()) {
-                Assume(!m_ancestor_set_feerates[i].IsEmpty());
-                if (!(m_ancestor_set_feerates[i] > m_ancestor_set_feerates[*best])) continue;
-            }
-            best = i;
-        }
-        Assume(best.has_value());
-        return {m_depgraph.Ancestors(*best) & m_todo, m_ancestor_set_feerates[*best]};
-    }
-};
-
-/** Class encapsulating the state needed to perform search for good candidate sets.
- *
- * It is initialized for an entire DepGraph, and parts of the graph can be dropped by calling
- * MarkDone().
- *
- * As long as any part of the graph remains, FindCandidateSet() can be called to perform a search
- * over the set of topologically-valid subsets of that remainder, with a limit on how many
- * combinations are tried.
- */
-template<typename SetType>
-class SearchCandidateFinder
-{
+private:
     /** Internal RNG. */
     InsecureRandomContext m_rng;
-    /** m_sorted_to_original[i] is the original position that sorted transaction position i had. */
-    std::vector<DepGraphIndex> m_sorted_to_original;
-    /** m_original_to_sorted[i] is the sorted position original transaction position i has. */
-    std::vector<DepGraphIndex> m_original_to_sorted;
-    /** Internal dependency graph for the cluster (with transactions in decreasing individual
-     *  feerate order). */
-    DepGraph<SetType> m_sorted_depgraph;
-    /** Which transactions are left to do (indices in m_sorted_depgraph's order). */
-    SetType m_todo;
 
-    /** Given a set of transactions with sorted indices, get their original indices. */
-    SetType SortedToOriginal(const SetType& arg) const noexcept
+    /** Data type to represent indexing into m_tx_data. */
+    using TxIdx = uint32_t;
+    /** Data type to represent indexing into m_dep_data. */
+    using DepIdx = std::conditional_t<(SetType::Size() <= 32), uint8_t, std::conditional_t<(SetType::Size() <= 512), uint16_t, uint32_t>>;
+
+    /** Structure with information about a single transaction. For transactions that are the
+     *  representative for the chunk they are in, this also stores chunk information. */
+    struct TxData {
+        /** The position in the input/original linearization. Immutable after construction. */
+        DepGraphIndex original_pos;
+        /** The dependencies to children of this transaction. All active ones (see
+         *  child_deps_active) appear first. */
+        std::array<DepIdx, SetType::Size() - 1> child_deps;
+        /** The number of children of this transaction. Immutable after construction. */
+        TxIdx child_deps_total{0};
+        /** The number of active children of this transaction. */
+        TxIdx child_deps_active{0};
+        /** The set of parent transactions of this transaction. Immutable after construction. */
+        SetType parents;
+        /** The set of child transactions of this transaction. Immutable after construction. */
+        SetType children;
+        /** The set of parent transactions of this transaction reachable through active
+         *  dependencies. */
+        SetType active_parents;
+        /** Which transaction holds the chunk_setinfo for the chunk this transaction is in
+         *  (the representative for the chunk). */
+        TxIdx chunk_rep;
+        /** (Only if this transaction is the representative for the chunk it is in) the total
+         *  chunk set and feerate. */
+        SetInfo<SetType> chunk_setinfo;
+        /** Whether this transaction appears in m_suboptimal_chunks. */
+        bool suboptimal{false};
+        /** Number of consecutive self-merges this chunk has experienced. */
+        uint32_t self_merges;
+    };
+
+    /** Structure with information about a single dependency. */
+    struct DepData {
+        /** What the parent and child transactions are. Immutable after construction. */
+        TxIdx parent, child;
+        /** Index into the parent's TxData::child_deps where this dependency appears. */
+        DepIdx child_pos;
+        /** (Only if this dependency is active) the would-be top chunk and its feerate that would
+         *  be formed if this dependency were to be deactivated. */
+        SetInfo<SetType> top_setinfo;
+    };
+
+    /** The set of all transactions in the cluster. */
+    SetType m_transactions;
+    /** A FIFO of chunk representatives of chunks that may be improved still. */
+    VecDeque<TxIdx> m_suboptimal_chunks;
+    /** A FIFO of chunk representatives, a pivot tx in it, and the stage it is in (false = first
+     *  stage, move pivot up, true = second stage, move pivot down). */
+    VecDeque<std::tuple<TxIdx, TxIdx, bool>> m_nonminimal_chunks;
+    /** Information about each transaction (and chunks). Indexed by TxIdx. */
+    std::vector<TxData> m_tx_data;
+    /** Information about each dependency. Indexed by DepIdx. */
+    std::vector<DepData> m_dep_data;
+
+    /** A metric for predicting the runtime of the algorithm. Corresponds to ~2ns on Ryzen 7995WX. */
+    uint64_t m_cost{0};
+
+    /** Walk a chunk, starting from transaction start. visit_tx(idx) is called for each encountered
+     *  transaction. visit_dep_down(dep) is called for each encountered dependency that is traversed
+     *  in the parent-to-child (downward) direction. */
+    void Walk(TxIdx start, std::invocable<TxData&> auto visit_tx, std::invocable<DepData&> auto visit_dep_down) noexcept
     {
-        SetType ret;
-        for (auto pos : arg) ret.Set(m_sorted_to_original[pos]);
-        return ret;
+        /** The set of transactions we still have to process. */
+        SetType todo = SetType::Singleton(start);
+        /** The set of transactions we have already processed. */
+        SetType done;
+        do {
+            for (auto tx_idx : todo) {
+                // Mark the transaction as processed, and invoke the visitor for it.
+                auto& tx_data = m_tx_data[tx_idx];
+                done.Set(tx_idx);
+                visit_tx(tx_data);
+                // Mark all active parents as to be processed.
+                todo |= tx_data.active_parents;
+                todo -= done;
+                // Iterate over all its active child dependencies.
+                auto child_deps = std::span{tx_data.child_deps}.first(tx_data.child_deps_active);
+                for (auto dep_idx : child_deps) {
+                    auto& dep_entry = m_dep_data[dep_idx];
+                    Assume(dep_entry.parent == tx_idx);
+                    // If this is the first time reaching the child, mark it as todo, and invoke
+                    // the downward dependency visitor for it. We do not need to check if it isn't
+                    // already in todo here, because there cannot be multiple dependencies that
+                    // reach the same transaction; the !done check is purely to prevent travelling
+                    // an already-travelled dependency back in reverse direction.
+                    if (!done[dep_entry.child]) {
+                        Assume(!todo[dep_entry.child]);
+                        todo.Set(dep_entry.child);
+                        visit_dep_down(dep_entry);
+                    }
+                }
+            }
+        } while (todo.Any());
     }
 
-    /** Given a set of transactions with original indices, get their sorted indices. */
-    SetType OriginalToSorted(const SetType& arg) const noexcept
+    /** Swap two dependencies in a given transaction's implied list of child deps. */
+    void SwapChildDeps(TxData& tx_data, DepIdx pos1, DepIdx pos2) noexcept
     {
-        SetType ret;
-        for (auto pos : arg) ret.Set(m_original_to_sorted[pos]);
-        return ret;
+        if (pos1 == pos2) return;
+        std::swap(tx_data.child_deps[pos1], tx_data.child_deps[pos2]);
+        m_dep_data[tx_data.child_deps[pos1]].child_pos = pos1;
+        m_dep_data[tx_data.child_deps[pos2]].child_pos = pos2;
+    }
+
+    /** Make a specified inactive dependency active. Returns the merged chunk representative. */
+    TxIdx Activate(DepIdx dep_idx) noexcept
+    {
+        auto& dep_data = m_dep_data[dep_idx];
+        auto& child_tx_data = m_tx_data[dep_data.child];
+        auto& parent_tx_data = m_tx_data[dep_data.parent];
+        // Make dep_idx the first inactive dependency in the parent's list of child deps.
+        SwapChildDeps(parent_tx_data, dep_data.child_pos, parent_tx_data.child_deps_active);
+        // Gather information about the parent and child chunks.
+        Assume(parent_tx_data.chunk_rep != child_tx_data.chunk_rep);
+        auto& par_chunk_data = m_tx_data[parent_tx_data.chunk_rep];
+        auto& chl_chunk_data = m_tx_data[child_tx_data.chunk_rep];
+        TxIdx top_rep = parent_tx_data.chunk_rep;
+        auto top_part = par_chunk_data.chunk_setinfo;
+        auto bottom_part = chl_chunk_data.chunk_setinfo;
+        // Update the parent chunk to also contain the child.
+        par_chunk_data.chunk_setinfo |= bottom_part;
+        int ntx = par_chunk_data.chunk_setinfo.transactions.Count();
+        m_cost += ntx * 4 - 3;
+        // Add bottom component to top transactions.
+        Walk(dep_data.parent,
+             [](TxData&) noexcept {},
+             [&](DepData& depdata) noexcept { depdata.top_setinfo |= bottom_part; });
+        // Add top component to bottom transactions.
+        Walk(dep_data.child,
+             [&](TxData& txdata) noexcept { txdata.chunk_rep = top_rep; },
+             [&](DepData& depdata) noexcept { depdata.top_setinfo |= top_part; });
+        // Make active.
+        dep_data.top_setinfo = top_part;
+        child_tx_data.active_parents.Set(dep_data.parent);
+        parent_tx_data.child_deps_active += 1;
+        Assume(parent_tx_data.child_deps_active <= parent_tx_data.child_deps_total);
+        return top_rep;
+    }
+
+    /** Make a specified active dependency inactive. */
+    void Deactivate(DepIdx dep_idx) noexcept
+    {
+        auto& dep_data = m_dep_data[dep_idx];
+        auto& child_tx_data = m_tx_data[dep_data.child];
+        auto& parent_tx_data = m_tx_data[dep_data.parent];
+        // Make dep_idx the last active dependency in the parent's list of child deps.
+        SwapChildDeps(parent_tx_data, dep_data.child_pos, parent_tx_data.child_deps_active - 1);
+        // Make inactive.
+        child_tx_data.active_parents.Reset(dep_data.parent);
+        parent_tx_data.child_deps_active -= 1;
+        // Update representatives.
+        auto& chunk_data = m_tx_data[parent_tx_data.chunk_rep];
+        int ntx = chunk_data.chunk_setinfo.transactions.Count();
+        m_cost += ntx * 4 + 2;
+        auto top_part = dep_data.top_setinfo;
+        auto bottom_part = chunk_data.chunk_setinfo - top_part;
+        chunk_data.chunk_setinfo = top_part;
+        TxIdx bottom_rep = dep_data.child;
+        auto& bottom_chunk_data = m_tx_data[bottom_rep];
+        bottom_chunk_data.chunk_setinfo = bottom_part;
+        TxIdx top_rep = dep_data.parent;
+        auto& top_chunk_data = m_tx_data[top_rep];
+        top_chunk_data.chunk_setinfo = top_part;
+        // Remove bottom component from top transactions, and make top_rep the representative for
+        // all of them.
+        Walk(dep_data.parent,
+             [&](TxData& txdata) noexcept { txdata.chunk_rep = top_rep; },
+             [&](DepData& depdata) noexcept { depdata.top_setinfo -= bottom_part; });
+        // Remove top component from bottom transactions, and make bottom_rep the representative
+        // for all of them.
+        Walk(dep_data.child,
+             [&](TxData& txdata) noexcept { txdata.chunk_rep = bottom_rep; },
+             [&](DepData& depdata) noexcept { depdata.top_setinfo -= top_part; });
+    }
+
+    /** Activate a dependency from the chunk represented by bottom_rep to the chunk represented by
+     *  top_rep. Return the representative of the merged chunk, or TxIdx(-1) if no merge took
+     *  place. */
+    TxIdx MergeChunks(TxIdx top_rep, TxIdx bottom_rep) noexcept
+    {
+        auto& top_chunk = m_tx_data[top_rep];
+        Assume(top_chunk.chunk_rep == top_rep);
+        auto& bottom_chunk = m_tx_data[bottom_rep];
+        Assume(bottom_chunk.chunk_rep == bottom_rep);
+        // Count the number of dependencies between bottom_chunk and top_chunk.
+        TxIdx num_deps{0};
+        for (auto tx : top_chunk.chunk_setinfo.transactions) {
+            auto& tx_data = m_tx_data[tx];
+            num_deps += (tx_data.children & bottom_chunk.chunk_setinfo.transactions).Count();
+            m_cost += 1;
+        }
+        if (num_deps == 0) return TxIdx(-1);
+        // Uniformly randomly pick one of them and activate it.
+        TxIdx pick = m_rng.randrange(num_deps);
+        for (auto tx : top_chunk.chunk_setinfo.transactions) {
+            auto& tx_data = m_tx_data[tx];
+            auto intersect = tx_data.children & bottom_chunk.chunk_setinfo.transactions;
+            auto count = intersect.Count();
+            m_cost += 1;
+            if (pick < count) {
+                for (auto dep : std::span{tx_data.child_deps}.first(tx_data.child_deps_total)
+                                                             .subspan(tx_data.child_deps_active)) {
+                    m_cost += 1;
+                    auto& dep_data = m_dep_data[dep];
+                    if (bottom_chunk.chunk_setinfo.transactions[dep_data.child]) {
+                        if (pick == 0) return Activate(dep);
+                        --pick;
+                    }
+                }
+                break;
+            }
+            pick -= count;
+        }
+        Assume(false);
+        return TxIdx(-1);
+    }
+
+    /** Perform an upward or downward merge sequence on the specified transaction. Returns the
+     *  representative of the merged chunk. */
+    template<bool DownWard>
+    TxIdx MergeSequence(TxIdx tx_idx) noexcept
+    {
+        auto chunk_rep = m_tx_data[tx_idx].chunk_rep;
+        while (true) {
+            /** Information about the chunk that tx_idx is currently in. */
+            auto& chunk_data = m_tx_data[chunk_rep];
+            SetType chunk_txn = chunk_data.chunk_setinfo.transactions;
+            // Iterate over all transactions in the chunk, figuring out which other chunk each
+            // depends on, but only testing each other chunk once. For those depended-on chunks,
+            // remember the highest-feerate (if DownWard) or lowest-feerate (if !DownWard) one.
+            // If multiple equal-feerate candidate chunks to merge with exist, pick a uniformly
+            // random one among them (using random tiebreaker).
+            SetType explored = chunk_txn;
+            FeeFrac best_other_chunk_feerate;
+            TxIdx best_other_chunk_rep = TxIdx(-1);
+            uint64_t best_other_chunk_tiebreak{0};
+            for (auto tx : chunk_txn) {
+                auto& tx_data = m_tx_data[tx];
+                auto unreached = (DownWard ? tx_data.children : tx_data.parents) - explored;
+                while (unreached.Any()) {
+                    m_cost += 3;
+                    auto chunk_rep = m_tx_data[unreached.First()].chunk_rep;
+                    auto& reached = m_tx_data[m_tx_data[unreached.First()].chunk_rep].chunk_setinfo;
+                    explored |= reached.transactions;
+                    unreached -= explored;
+                    auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached.feerate)
+                                        : FeeRateCompare(reached.feerate, best_other_chunk_feerate);
+                    if (cmp > 0) continue;
+                    uint64_t tiebreak = m_rng.rand64();
+                    if ((cmp < 0) || (tiebreak >= best_other_chunk_tiebreak)) {
+                        best_other_chunk_feerate = reached.feerate;
+                        best_other_chunk_tiebreak = tiebreak;
+                        best_other_chunk_rep = chunk_rep;
+                    }
+                }
+            }
+            // Stop if all of the depended-on chunks have a lower/higher feerate than the chunk
+            // that tx_idx is in.
+            if (best_other_chunk_feerate.IsEmpty()) break;
+            if (DownWard && best_other_chunk_feerate << chunk_data.chunk_setinfo.feerate) break;
+            if (!DownWard && best_other_chunk_feerate >> chunk_data.chunk_setinfo.feerate) break;
+            Assume(best_other_chunk_rep != TxIdx(-1));
+            if constexpr (DownWard) {
+                chunk_rep = MergeChunks(chunk_rep, best_other_chunk_rep);
+            } else {
+                chunk_rep = MergeChunks(best_other_chunk_rep, chunk_rep);
+            }
+            Assume(chunk_rep != TxIdx(-1));
+        }
+        // Add the chunk to the queue of improvable chunks, if it wasn't already there.
+        auto& chunk_data = m_tx_data[chunk_rep];
+        if (!chunk_data.suboptimal) {
+            chunk_data.suboptimal = true;
+            m_suboptimal_chunks.push_back(chunk_rep);
+        }
+        return chunk_rep;
+    }
+
+    /** Split a chunk, and then merge the resulting two chunks to make the graph topological
+     *  again. */
+    void Improve(DepIdx dep_idx) noexcept
+    {
+        auto& dep_data = m_dep_data[dep_idx];
+        // Remember the number of self-merges this chunk underwent so far.
+        auto self_merges = m_tx_data[m_tx_data[dep_data.parent].chunk_rep].self_merges;
+        // Deactivate the specified dependency, splitting it into two new chunks: a top containing
+        // the parent, and a bottom containing the child. The top should have a higher feerate.
+        Deactivate(dep_idx);
+        // Merge the top chunk with lower-feerate chunks it depends on (which may be the bottom it
+        // was just split from, or other pre-existing chunks).
+        auto new_par_chunk_rep = MergeSequence<false>(dep_data.parent);
+        // Merge the bottom chunk with higher-feerate chunks that depend on it.
+        auto new_chl_chunk_rep = MergeSequence<true>(dep_data.child);
+        // If the parent and child end up in the same chunk, a self-merge happened.
+        if (new_par_chunk_rep == new_chl_chunk_rep) {
+            // If so, increment the self_merges counter for this chunk.
+            m_tx_data[new_par_chunk_rep].self_merges = self_merges + 1;
+        } else {
+            // Otherwise, set the counters for both chunks (incl. whatever they merged with) to
+            // zero.
+            m_tx_data[new_par_chunk_rep].self_merges = 0;
+            m_tx_data[new_chl_chunk_rep].self_merges = 0;
+        }
     }
 
 public:
-    /** Construct a candidate finder for a graph.
-     *
-     * @param[in] depgraph   Dependency graph for the to-be-linearized cluster.
-     * @param[in] rng_seed   A random seed to control the search order.
-     *
-     * Complexity: O(N^2) where N=depgraph.Count().
-     */
-    SearchCandidateFinder(const DepGraph<SetType>& depgraph, uint64_t rng_seed) noexcept :
-        m_rng(rng_seed),
-        m_sorted_to_original(depgraph.TxCount()),
-        m_original_to_sorted(depgraph.PositionRange())
+    /** Construct an initial topological spanning forest for the given DepGraph, and optionally an
+     *  existing linearization for it. */
+    explicit SpanningForestState(const DepGraph<SetType>& depgraph, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept : m_rng(rng_seed)
     {
-        // Determine reordering mapping, by sorting by decreasing feerate. Unused positions are
-        // not included, as they will never be looked up anyway.
-        DepGraphIndex sorted_pos{0};
-        for (auto i : depgraph.Positions()) {
-            m_sorted_to_original[sorted_pos++] = i;
+        m_transactions = depgraph.Positions();
+        m_cost = 10;
+        auto num_transactions = m_transactions.Count();
+        // If no existing linearization is provided, construct a randomized topological ordering.
+        std::vector<DepGraphIndex> load_order;
+        if (old_linearization.empty()) {
+            load_order.reserve(m_transactions.Count());
+            for (auto i : m_transactions) load_order.push_back(i);
+            std::shuffle(load_order.begin(), load_order.end(), m_rng);
+            std::sort(load_order.begin(), load_order.end(), [&](TxIdx a, TxIdx b) noexcept { return depgraph.Ancestors(a).Count() < depgraph.Ancestors(b).Count(); });
+            old_linearization = std::span{load_order};
+            m_cost += 4 + 16 * load_order.size();
         }
-        std::sort(m_sorted_to_original.begin(), m_sorted_to_original.end(), [&](auto a, auto b) {
-            auto feerate_cmp = depgraph.FeeRate(a) <=> depgraph.FeeRate(b);
-            if (feerate_cmp == 0) return a < b;
-            return feerate_cmp > 0;
-        });
-        // Compute reverse mapping.
-        for (DepGraphIndex i = 0; i < m_sorted_to_original.size(); ++i) {
-            m_original_to_sorted[m_sorted_to_original[i]] = i;
+        // Add transactions one by one, in order of existing linearization.
+        m_tx_data.resize(depgraph.PositionRange());
+        m_dep_data.reserve(((num_transactions + 1) / 2) * (num_transactions / 2));
+        DepGraphIndex num_done = 0;
+        for (DepGraphIndex tx : old_linearization) {
+            // Fill in transaction data.
+            auto& tx_data = m_tx_data[tx];
+            tx_data.original_pos = num_done++;
+            tx_data.chunk_rep = tx;
+            tx_data.chunk_setinfo.transactions = SetType::Singleton(tx);
+            tx_data.chunk_setinfo.feerate = depgraph.FeeRate(tx);
+            tx_data.self_merges = 0;
+            // Add its dependencies.
+            SetType parents = depgraph.GetReducedParents(tx);
+            for (auto par : parents) {
+                auto& par_tx_data = m_tx_data[par];
+                auto dep_idx = m_dep_data.size();
+                // Construct new dependency.
+                auto& dep = m_dep_data.emplace_back();
+                dep.parent = par;
+                dep.child = tx;
+                // Add it as parent of the child.
+                tx_data.parents.Set(par);
+                // Add it as child of the parent.
+                dep.child_pos = par_tx_data.child_deps_total;
+                par_tx_data.child_deps[par_tx_data.child_deps_total++] = dep_idx;
+                par_tx_data.children.Set(tx);
+                m_cost += 2;
+            }
+            // Start a merge sequence on the new transaction to make the graph topological.
+            MergeSequence<false>(tx);
         }
-        // Compute reordered dependency graph.
-        m_sorted_depgraph = DepGraph(depgraph, m_original_to_sorted, m_sorted_to_original.size());
-        m_todo = m_sorted_depgraph.Positions();
+        // Randomize the initial order of suboptimal chunks in the queue.
+        for (TxIdx i = 0; i < m_suboptimal_chunks.size(); ++i) {
+            TxIdx j = i + m_rng.randrange<TxIdx>(m_suboptimal_chunks.size() - i);
+            if (i != j) std::swap(m_suboptimal_chunks[i], m_suboptimal_chunks[j]);
+            m_cost += 3;
+        }
+        // Account for the cost of producing linearization.
+        m_cost += 2 * m_dep_data.size() + 27 * num_transactions;
     }
 
-    /** Check whether any unlinearized transactions remain. */
-    bool AllDone() const noexcept
+    /** Try to improve the forest. Returns false if it is optimal, true otherwise. */
+    bool Step() noexcept
     {
-        return m_todo.None();
+        while (true) {
+            // If the queue of potentially-suboptimal chunks is empty, we are done.
+            if (m_suboptimal_chunks.empty()) return false;
+            // Pop an entry from the potentially-suboptimal chunk queue.
+            TxIdx chunk = m_suboptimal_chunks.front();
+            m_suboptimal_chunks.pop_front();
+            auto& chunk_data = m_tx_data[chunk];
+            chunk_data.suboptimal = false;
+            // If what was popped is not currently a chunk representative, continue. This may
+            // happen when a split chunk merges in Improve() with one or more existing chunks that
+            // are themselves on the suboptimal queue.
+            if (chunk_data.chunk_rep != chunk) continue;
+            // Determine whether to use max-gain strategy or random strategy. Generally max-gain is
+            // used, but out of an abundance of caution that max-gain might in
+            // adversarially-contructed clusters reliably make bad choices, every 3rd attempt to
+            // split the same cluster uses the random strategy.
+            const bool use_max_gain = (chunk_data.self_merges % 3) != 2;
+            // Remember the best dependency seen so far, together with its top feerate.
+            DepIdx candidate_dep = DepIdx(-1);
+            FeeFrac candidate_top_feerate; //!< Feerate of the candidate, or {} if random strategy.
+            uint64_t candidate_tiebreak = std::numeric_limits<uint64_t>::max();
+            // Iterate over all transactions.
+            for (auto tx : chunk_data.chunk_setinfo.transactions) {
+                const auto& tx_data = m_tx_data[tx];
+                // Iterate over all active child dependencies of the transaction.
+                const auto active_children = std::span{tx_data.child_deps}.first(tx_data.child_deps_active);
+                for (DepIdx dep_idx : active_children) {
+                    m_cost += 3;
+                    const auto& dep_data = m_dep_data[dep_idx];
+                    // Define gain(top) = fee(top)*size(chunk) - fee(chunk)*size(top).
+                    //                  = (feerate(top) - feerate(chunk)) * size(top) * size(chunk).
+                    // Thus:
+                    //
+                    //     gain(top1) > gain(top2)
+                    // <=>   fee(top1)*size(chunk) - fee(chunk)*size(top1)
+                    //     > fee(top2)*size(chunk) - fee(chunk)*size(top2)
+                    // <=> (fee(top1)-fee(top2))*size(chunk) > fee(chunk)*(size(top1)-size(top2))
+                    //
+                    // If size(top1)>size(top2), this corresponds to feerate(top1-top2) > feerate(chunk),
+                    // so we can use FeeRateCompare to discover if dep_data.top_setinfo has better
+                    // gain than best_top_feerate. As FeeRateCompare() is actually implemented by
+                    // checking the sign of the cross-product, it even works when
+                    // size(top1) <= size(top2). When no candidate exists so far (or the random
+                    // strategy is in use), this is equal to comparing the feerate with the chunk
+                    // directly (= the sign of gain(top)).
+                    auto cmp = FeeRateCompare(dep_data.top_setinfo.feerate - candidate_top_feerate,
+                                              chunk_data.chunk_setinfo.feerate);
+                    if (cmp < 0) continue;
+                    // Generate a random tiebreak for this dependency, and reject it if its gain is
+                    // equal to the candidate so far, but has worse tiebreak. This means that among
+                    // equal-gain dependencies, a uniformly random one (the one with the highest
+                    // tiebreak) will be chosen.
+                    uint64_t tiebreak = m_rng.rand64() >> 1;
+                    if (cmp == 0 && tiebreak <= candidate_tiebreak) continue;
+                    // Remember this as our (new) candidate dependency.
+                    candidate_dep = dep_idx;
+                    if (use_max_gain) candidate_top_feerate = dep_data.top_setinfo.feerate;
+                    candidate_tiebreak = tiebreak;
+                }
+            }
+            // If a candidate with positive gain was found, activate it.
+            if (candidate_tiebreak != std::numeric_limits<uint64_t>::max()) Improve(candidate_dep);
+            // Stop processing for now, even if nothing was activated, as the loop above may have
+            // had a nontrivial cost.
+            return true;
+        }
     }
 
-    /** Find a high-feerate topologically-valid subset of what remains of the cluster.
-     *  Requires !AllDone().
-     *
-     * @param[in] max_iterations  The maximum number of optimization steps that will be performed.
-     * @param[in] best            A set/feerate pair with an already-known good candidate. This may
-     *                            be empty.
-     * @return                    A pair of:
-     *                            - The best (highest feerate, smallest size as tiebreaker)
-     *                              topologically valid subset (and its feerate) that was
-     *                              encountered during search. It will be at least as good as the
-     *                              best passed in (if not empty).
-     *                            - The number of optimization steps that were performed. This will
-     *                              be <= max_iterations. If strictly < max_iterations, the
-     *                              returned subset is optimal.
-     *
-     * Complexity: possibly O(N * min(max_iterations, sqrt(2^N))) where N=depgraph.TxCount().
-     */
-    std::pair<SetInfo<SetType>, uint64_t> FindCandidateSet(uint64_t max_iterations, SetInfo<SetType> best) noexcept
+    /** Initialize data structure for minimizing the chunks. Step() cannot be called anymore
+     *  afterwards. */
+    void StartMinimizing() noexcept
     {
-        Assume(!AllDone());
-
-        // Convert the provided best to internal sorted indices.
-        best.transactions = OriginalToSorted(best.transactions);
-
-        /** Type for work queue items. */
-        struct WorkItem
-        {
-            /** Set of transactions definitely included (and its feerate). This must be a subset
-             *  of m_todo, and be topologically valid (includes all in-m_todo ancestors of
-             *  itself). */
-            SetInfo<SetType> inc;
-            /** Set of undecided transactions. This must be a subset of m_todo, and have no overlap
-             *  with inc. The set (inc | und) must be topologically valid. */
-            SetType und;
-            /** (Only when inc is not empty) The best feerate of any superset of inc that is also a
-             *  subset of (inc | und), without requiring it to be topologically valid. It forms a
-             *  conservative upper bound on how good a set this work item can give rise to.
-             *  Transactions whose feerate is below best's are ignored when determining this value,
-             *  which means it may technically be an underestimate, but if so, this work item
-             *  cannot result in something that beats best anyway. */
-            FeeFrac pot_feerate;
-
-            /** Construct a new work item. */
-            WorkItem(SetInfo<SetType>&& i, SetType&& u, FeeFrac&& p_f) noexcept :
-                inc(std::move(i)), und(std::move(u)), pot_feerate(std::move(p_f))
-            {
-                Assume(pot_feerate.IsEmpty() == inc.feerate.IsEmpty());
+        m_nonminimal_chunks.clear();
+        m_nonminimal_chunks.reserve(m_transactions.Count());
+        // Gather all chunks, and add the representative of each to m_nonminimal_chunks, with the
+        // representative itself as pivot.
+        for (auto i : m_transactions) {
+            auto& tx_data = m_tx_data[i];
+            if (tx_data.chunk_rep == i) {
+                m_nonminimal_chunks.emplace_back(i, i, false);
             }
+        }
+        // Randomize the initial order of nonminimal chunks in the queue.
+        for (TxIdx i = 0; i < m_nonminimal_chunks.size(); ++i) {
+            TxIdx j = i + m_rng.randrange<TxIdx>(m_nonminimal_chunks.size() - i);
+            if (i != j) std::swap(m_nonminimal_chunks[i], m_nonminimal_chunks[j]);
+        }
+        m_cost += 2 + 3 * m_nonminimal_chunks.size();
+    }
 
-            /** Swap two WorkItems. */
-            void Swap(WorkItem& other) noexcept
-            {
-                swap(inc, other.inc);
-                swap(und, other.und);
-                swap(pot_feerate, other.pot_feerate);
+    /** Try to reduce a chunk's size. Returns false if all chunks are minimal, true otherwise. */
+    bool MinimizeStep() noexcept
+    {
+        // If the queue of potentially-non-minimal chunks is empty, we are done.
+        if (m_nonminimal_chunks.empty()) return false;
+        // Pop an entry from the potentially-non-minimal chunk queue.
+        auto [chunk, pivot, move_pivot_down] = m_nonminimal_chunks.front();
+        m_nonminimal_chunks.pop_front();
+        auto& chunk_data = m_tx_data[chunk];
+        Assume(chunk_data.chunk_rep == chunk);
+        Assume(chunk_data.chunk_setinfo.transactions[pivot]);
+
+        // Find a random dependency whose gain is non-negative, and which has pivot as bottom
+        // (if move_pivot_down) or as top (if !move_pivot_down).
+        DepIdx candidate_dep = DepIdx(-1);
+        uint64_t candidate_tiebreak{0};
+        bool have_any = false;
+        // Iterate over all transactions.
+        for (auto tx : chunk_data.chunk_setinfo.transactions) {
+            const auto& tx_data = m_tx_data[tx];
+            // Iterate over all active child dependencies of the transaction.
+            const auto active_children = std::span{tx_data.child_deps}.first(tx_data.child_deps_active);
+            for (DepIdx dep_idx : active_children) {
+                m_cost += 3;
+                const auto& dep_data = m_dep_data[dep_idx];
+                // Skip if this dependency has negative gain.
+                if (dep_data.top_setinfo.feerate << chunk_data.chunk_setinfo.feerate) continue;
+                have_any = true;
+                // Skip if this dependency does not have pivot in the right place.
+                if (move_pivot_down == dep_data.top_setinfo.transactions[pivot]) continue;
+                // Remember this as our chosen dependency if it has a better tiebreak.
+                uint64_t tiebreak = m_rng.rand64() | 1;
+                if (tiebreak > candidate_tiebreak) {
+                    candidate_tiebreak = tiebreak;
+                    candidate_dep = dep_idx;
+                }
             }
+        }
+        // If all dependencies have negative gain, this chunk is optimal.
+        if (!have_any) return true;
+        // If all found dependencies have the pivot in the wrong place, try moving the pivot down
+        // instead of up. If we were already attempting to move it down, no splitting is possible.
+        if (candidate_tiebreak == 0) {
+            if (!move_pivot_down) m_nonminimal_chunks.emplace_back(chunk, pivot, true);
+            return true;
+        }
+
+        // Otherwise, deactivate the dependency that was found.
+        Deactivate(candidate_dep);
+        // If the new top has a dependency on the new bottom (opposite from chosen_dep),
+        // activate it.
+        auto& candidate_dep_data = m_dep_data[candidate_dep];
+        auto new_top_rep = m_tx_data[candidate_dep_data.parent].chunk_rep;
+        auto new_bottom_rep = m_tx_data[candidate_dep_data.child].chunk_rep;
+        auto new_rep = MergeChunks(new_bottom_rep, new_top_rep);
+        if (new_rep == TxIdx(-1)) {
+            // No new dependency was activated, and thus we have found a way to split the
+            // chunk. Add the created smaller chunks to the queue in random order.
+            bool top_first = m_rng.randbool();
+            if (top_first) m_nonminimal_chunks.emplace_back(new_top_rep, new_top_rep, false);
+            m_nonminimal_chunks.emplace_back(new_bottom_rep, new_bottom_rep, false);
+            if (!top_first) m_nonminimal_chunks.emplace_back(new_top_rep, new_top_rep, false);
+        } else {
+            // A new dependency was activated, so this chunk failed to be split. Keep trying
+            // with the same pivot (but note that the representative may have changed).
+            m_nonminimal_chunks.emplace_back(new_rep, pivot, move_pivot_down);
+        }
+        return true;
+    }
+
+    /** Construct a topologically-valid linearization from the current forest state. */
+    std::vector<DepGraphIndex> GetLinearization() const noexcept
+    {
+        /** The output linearization. */
+        std::vector<DepGraphIndex> ret;
+        /** A heap with all chunks (by representative) that can currently be included, sorted by
+         *  chunk feerate. */
+        std::vector<TxIdx> heap_chunks;
+        /** Information about chunks. Only used for chunk representatives, and counts the number
+         *  of unmet dependencies this chunk has on other chunks (not including dependencies within
+         *  the chunk itself). */
+        std::vector<TxIdx> chunk_deps(m_tx_data.size(), 0);
+        /** The set of all chunk representatives. */
+        SetType chunk_reps;
+        // Populate chunk_deps[c] with the number of out-of-chunk dependencies the chunk has.
+        for (TxIdx chl_idx : m_transactions) {
+            const auto& chl_data = m_tx_data[chl_idx];
+            auto chl_chunk_rep = chl_data.chunk_rep;
+            chunk_reps.Set(chl_chunk_rep);
+            for (auto par_idx : chl_data.parents) {
+                auto par_chunk_rep = m_tx_data[par_idx].chunk_rep;
+                chunk_deps[chl_chunk_rep] += (par_chunk_rep != chl_chunk_rep);
+            }
+        }
+        // Construct a heap with all chunks that have no out-of-chunk dependencies.
+        /** Comparison function for the heap. */
+        auto chunk_cmp_fn = [&](TxIdx a, TxIdx b) noexcept {
+            auto& chunk_a = m_tx_data[a];
+            auto& chunk_b = m_tx_data[b];
+            Assume(chunk_a.chunk_rep == a);
+            Assume(chunk_b.chunk_rep == b);
+            if (chunk_a.chunk_setinfo.feerate != chunk_b.chunk_setinfo.feerate) {
+                return chunk_a.chunk_setinfo.feerate < chunk_b.chunk_setinfo.feerate;
+            }
+            // Compare the chunks' transaction sets lexicographically as tiebreaker.
+            auto a_first = chunk_a.chunk_setinfo.transactions.First();
+            auto b_first = chunk_b.chunk_setinfo.transactions.First();
+            Assume((a == b) == (a_first == b_first));
+            return a_first < b_first;
         };
-
-        /** The queue of work items. */
-        VecDeque<WorkItem> queue;
-        queue.reserve(std::max<size_t>(256, 2 * m_todo.Count()));
-
-        // Create initial entries per connected component of m_todo. While clusters themselves are
-        // generally connected, this is not necessarily true after some parts have already been
-        // removed from m_todo. Without this, effort can be wasted on searching "inc" sets that
-        // span multiple components.
-        auto to_cover = m_todo;
-        do {
-            auto component = m_sorted_depgraph.FindConnectedComponent(to_cover);
-            to_cover -= component;
-            // If best is not provided, set it to the first component, so that during the work
-            // processing loop below, and during the add_fn/split_fn calls, we do not need to deal
-            // with the best=empty case.
-            if (best.feerate.IsEmpty()) best = SetInfo(m_sorted_depgraph, component);
-            queue.emplace_back(/*inc=*/SetInfo<SetType>{},
-                               /*und=*/std::move(component),
-                               /*pot_feerate=*/FeeFrac{});
-        } while (to_cover.Any());
-
-        /** Local copy of the iteration limit. */
-        uint64_t iterations_left = max_iterations;
-
-        /** The set of transactions in m_todo which have feerate > best's. */
-        SetType imp = m_todo;
-        while (imp.Any()) {
-            DepGraphIndex check = imp.Last();
-            if (m_sorted_depgraph.FeeRate(check) >> best.feerate) break;
-            imp.Reset(check);
+        for (TxIdx chunk_rep : chunk_reps) {
+            if (chunk_deps[chunk_rep] == 0) heap_chunks.push_back(chunk_rep);
         }
-
-        /** Internal function to add an item to the queue of elements to explore if there are any
-         *  transactions left to split on, possibly improving it before doing so, and to update
-         *  best/imp.
-         *
-         * - inc: the "inc" value for the new work item (must be topological).
-         * - und: the "und" value for the new work item ((inc | und) must be topological).
-         */
-        auto add_fn = [&](SetInfo<SetType> inc, SetType und) noexcept {
-            /** SetInfo object with the set whose feerate will become the new work item's
-             *  pot_feerate. It starts off equal to inc. */
-            auto pot = inc;
-            if (!inc.feerate.IsEmpty()) {
-                // Add entries to pot. We iterate over all undecided transactions whose feerate is
-                // higher than best. While undecided transactions of lower feerate may improve pot,
-                // the resulting pot feerate cannot possibly exceed best's (and this item will be
-                // skipped in split_fn anyway).
-                for (auto pos : imp & und) {
-                    // Determine if adding transaction pos to pot (ignoring topology) would improve
-                    // it. If not, we're done updating pot. This relies on the fact that
-                    // m_sorted_depgraph, and thus the transactions iterated over, are in decreasing
-                    // individual feerate order.
-                    if (!(m_sorted_depgraph.FeeRate(pos) >> pot.feerate)) break;
-                    pot.Set(m_sorted_depgraph, pos);
-                }
-
-                // The "jump ahead" optimization: whenever pot has a topologically-valid subset,
-                // that subset can be added to inc. Any subset of (pot - inc) has the property that
-                // its feerate exceeds that of any set compatible with this work item (superset of
-                // inc, subset of (inc | und)). Thus, if T is a topological subset of pot, and B is
-                // the best topologically-valid set compatible with this work item, and (T - B) is
-                // non-empty, then (T | B) is better than B and also topological. This is in
-                // contradiction with the assumption that B is best. Thus, (T - B) must be empty,
-                // or T must be a subset of B.
-                //
-                // See https://delvingbitcoin.org/t/how-to-linearize-your-cluster/303 section 2.4.
-                const auto init_inc = inc.transactions;
-                for (auto pos : pot.transactions - inc.transactions) {
-                    // If the transaction's ancestors are a subset of pot, we can add it together
-                    // with its ancestors to inc. Just update the transactions here; the feerate
-                    // update happens below.
-                    auto anc_todo = m_sorted_depgraph.Ancestors(pos) & m_todo;
-                    if (anc_todo.IsSubsetOf(pot.transactions)) inc.transactions |= anc_todo;
-                }
-                // Finally update und and inc's feerate to account for the added transactions.
-                und -= inc.transactions;
-                inc.feerate += m_sorted_depgraph.FeeRate(inc.transactions - init_inc);
-
-                // If inc's feerate is better than best's, remember it as our new best.
-                if (inc.feerate > best.feerate) {
-                    best = inc;
-                    // See if we can remove any entries from imp now.
-                    while (imp.Any()) {
-                        DepGraphIndex check = imp.Last();
-                        if (m_sorted_depgraph.FeeRate(check) >> best.feerate) break;
-                        imp.Reset(check);
+        std::make_heap(heap_chunks.begin(), heap_chunks.end(), chunk_cmp_fn);
+        // Pop chunks off the heap, highest-feerate ones first.
+        while (!heap_chunks.empty()) {
+            auto chunk_rep = heap_chunks.front();
+            std::pop_heap(heap_chunks.begin(), heap_chunks.end(), chunk_cmp_fn);
+            heap_chunks.pop_back();
+            Assume(m_tx_data[chunk_rep].chunk_rep == chunk_rep);
+            Assume(chunk_deps[chunk_rep] == 0);
+            const auto& chunk_txn = m_tx_data[chunk_rep].chunk_setinfo.transactions;
+            // Append all transactions in the chunk to ret, and decrement chunk dependency counts.
+            auto old_len = ret.size();
+            for (TxIdx tx_idx : chunk_txn) {
+                const auto& tx_data = m_tx_data[tx_idx];
+                // Add transaction to output linearization.
+                ret.push_back(tx_idx);
+                // Decrement chunk dependency counts.
+                for (TxIdx chl_idx : tx_data.children) {
+                    auto& chl_data = m_tx_data[chl_idx];
+                    if (chl_data.chunk_rep != chunk_rep) {
+                        Assume(chunk_deps[chl_data.chunk_rep] > 0);
+                        if (--chunk_deps[chl_data.chunk_rep] == 0) {
+                            // Child chunk has no dependencies left. Add it to the heap.
+                            heap_chunks.push_back(chl_data.chunk_rep);
+                            std::push_heap(heap_chunks.begin(), heap_chunks.end(), chunk_cmp_fn);
+                        }
                     }
                 }
-
-                // If no potential transactions exist beyond the already included ones, no
-                // improvement is possible anymore.
-                if (pot.feerate.size == inc.feerate.size) return;
-                // At this point und must be non-empty. If it were empty then pot would equal inc.
-                Assume(und.Any());
-            } else {
-                Assume(inc.transactions.None());
-                // If inc is empty, we just make sure there are undecided transactions left to
-                // split on.
-                if (und.None()) return;
             }
-
-            // Actually construct a new work item on the queue. Due to the switch to DFS when queue
-            // space runs out (see below), we know that no reallocation of the queue should ever
-            // occur.
-            Assume(queue.size() < queue.capacity());
-            queue.emplace_back(/*inc=*/std::move(inc),
-                               /*und=*/std::move(und),
-                               /*pot_feerate=*/std::move(pot.feerate));
-        };
-
-        /** Internal process function. It takes an existing work item, and splits it in two: one
-         *  with a particular transaction (and its ancestors) included, and one with that
-         *  transaction (and its descendants) excluded. */
-        auto split_fn = [&](WorkItem&& elem) noexcept {
-            // Any queue element must have undecided transactions left, otherwise there is nothing
-            // to explore anymore.
-            Assume(elem.und.Any());
-            // The included and undecided set are all subsets of m_todo.
-            Assume(elem.inc.transactions.IsSubsetOf(m_todo) && elem.und.IsSubsetOf(m_todo));
-            // Included transactions cannot be undecided.
-            Assume(!elem.inc.transactions.Overlaps(elem.und));
-            // If pot is empty, then so is inc.
-            Assume(elem.inc.feerate.IsEmpty() == elem.pot_feerate.IsEmpty());
-
-            const DepGraphIndex first = elem.und.First();
-            if (!elem.inc.feerate.IsEmpty()) {
-                // If no undecided transactions remain with feerate higher than best, this entry
-                // cannot be improved beyond best.
-                if (!elem.und.Overlaps(imp)) return;
-                // We can ignore any queue item whose potential feerate isn't better than the best
-                // seen so far.
-                if (elem.pot_feerate <= best.feerate) return;
-            } else {
-                // In case inc is empty use a simpler alternative check.
-                if (m_sorted_depgraph.FeeRate(first) <= best.feerate) return;
-            }
-
-            // Decide which transaction to split on. Splitting is how new work items are added, and
-            // how progress is made. One split transaction is chosen among the queue item's
-            // undecided ones, and:
-            // - A work item is (potentially) added with that transaction plus its remaining
-            //   descendants excluded (removed from the und set).
-            // - A work item is (potentially) added with that transaction plus its remaining
-            //   ancestors included (added to the inc set).
-            //
-            // To decide what to split on, consider the undecided ancestors of the highest
-            // individual feerate undecided transaction. Pick the one which reduces the search space
-            // most. Let I(t) be the size of the undecided set after including t, and E(t) the size
-            // of the undecided set after excluding t. Then choose the split transaction t such
-            // that 2^I(t) + 2^E(t) is minimal, tie-breaking by highest individual feerate for t.
-            DepGraphIndex split = 0;
-            const auto select = elem.und & m_sorted_depgraph.Ancestors(first);
-            Assume(select.Any());
-            std::optional<std::pair<DepGraphIndex, DepGraphIndex>> split_counts;
-            for (auto t : select) {
-                // Call max = max(I(t), E(t)) and min = min(I(t), E(t)). Let counts = {max,min}.
-                // Sorting by the tuple counts is equivalent to sorting by 2^I(t) + 2^E(t). This
-                // expression is equal to 2^max + 2^min = 2^max * (1 + 1/2^(max - min)). The second
-                // factor (1 + 1/2^(max - min)) there is in (1,2]. Thus increasing max will always
-                // increase it, even when min decreases. Because of this, we can first sort by max.
-                std::pair<DepGraphIndex, DepGraphIndex> counts{
-                    (elem.und - m_sorted_depgraph.Ancestors(t)).Count(),
-                    (elem.und - m_sorted_depgraph.Descendants(t)).Count()};
-                if (counts.first < counts.second) std::swap(counts.first, counts.second);
-                // Remember the t with the lowest counts.
-                if (!split_counts.has_value() || counts < *split_counts) {
-                    split = t;
-                    split_counts = counts;
-                }
-            }
-            // Since there was at least one transaction in select, we must always find one.
-            Assume(split_counts.has_value());
-
-            // Add a work item corresponding to exclusion of the split transaction.
-            const auto& desc = m_sorted_depgraph.Descendants(split);
-            add_fn(/*inc=*/elem.inc,
-                   /*und=*/elem.und - desc);
-
-            // Add a work item corresponding to inclusion of the split transaction.
-            const auto anc = m_sorted_depgraph.Ancestors(split) & m_todo;
-            add_fn(/*inc=*/elem.inc.Add(m_sorted_depgraph, anc),
-                   /*und=*/elem.und - anc);
-
-            // Account for the performed split.
-            --iterations_left;
-        };
-
-        // Work processing loop.
-        //
-        // New work items are always added at the back of the queue, but items to process use a
-        // hybrid approach where they can be taken from the front or the back.
-        //
-        // Depth-first search (DFS) corresponds to always taking from the back of the queue. This
-        // is very memory-efficient (linear in the number of transactions). Breadth-first search
-        // (BFS) corresponds to always taking from the front, which potentially uses more memory
-        // (up to exponential in the transaction count), but seems to work better in practice.
-        //
-        // The approach here combines the two: use BFS (plus random swapping) until the queue grows
-        // too large, at which point we temporarily switch to DFS until the size shrinks again.
-        while (!queue.empty()) {
-            // Randomly swap the first two items to randomize the search order.
-            if (queue.size() > 1 && m_rng.randbool()) {
-                queue[0].Swap(queue[1]);
-            }
-
-            // Processing the first queue item, and then using DFS for everything it gives rise to,
-            // may increase the queue size by the number of undecided elements in there, minus 1
-            // for the first queue item being removed. Thus, only when that pushes the queue over
-            // its capacity can we not process from the front (BFS), and should we use DFS.
-            while (queue.size() - 1 + queue.front().und.Count() > queue.capacity()) {
-                if (!iterations_left) break;
-                auto elem = queue.back();
-                queue.pop_back();
-                split_fn(std::move(elem));
-            }
-
-            // Process one entry from the front of the queue (BFS exploration)
-            if (!iterations_left) break;
-            auto elem = queue.front();
-            queue.pop_front();
-            split_fn(std::move(elem));
+            // Sort the transactions within the chunk according to the order they had in the
+            // original linearization.
+            std::sort(ret.begin() + old_len, ret.end(), [&](TxIdx a, TxIdx b) noexcept {
+                return m_tx_data[a].original_pos < m_tx_data[b].original_pos;
+            });
         }
-
-        // Return the found best set (converted to the original transaction indices), and the
-        // number of iterations performed.
-        best.transactions = SortedToOriginal(best.transactions);
-        return {std::move(best), max_iterations - iterations_left};
+        Assume(ret.size() == m_transactions.Count());
+        return ret;
     }
 
-    /** Remove a subset of transactions from the cluster being linearized.
-     *
-     * Complexity: O(N) where N=done.Count().
-     */
-    void MarkDone(const SetType& done) noexcept
-    {
-        const auto done_sorted = OriginalToSorted(done);
-        Assume(done_sorted.Any());
-        Assume(done_sorted.IsSubsetOf(m_todo));
-        m_todo -= done_sorted;
-    }
+    /** Determine how much work was performed so far. */
+    uint64_t GetCost() const noexcept { return m_cost; }
 };
 
 /** Find or improve a linearization for a cluster.
  *
  * @param[in] depgraph            Dependency graph of the cluster to be linearized.
- * @param[in] max_iterations      Upper bound on the number of optimization steps that will be done.
+ * @param[in] max_iterations      Upper bound on the amount of work that will be done.
  * @param[in] rng_seed            A random number seed to control search order. This prevents peers
  *                                from predicting exactly which clusters would be hard for us to
  *                                linearize.
@@ -1035,85 +1331,26 @@ public:
  *                                  good (in the feerate diagram sense) as old_linearization.
  *                                - A boolean indicating whether the result is guaranteed to be
  *                                  optimal.
- *
- * Complexity: possibly O(N * min(max_iterations + N, sqrt(2^N))) where N=depgraph.TxCount().
  */
 template<typename SetType>
 std::pair<std::vector<DepGraphIndex>, bool> Linearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations, uint64_t rng_seed, std::span<const DepGraphIndex> old_linearization = {}) noexcept
 {
-    Assume(old_linearization.empty() || old_linearization.size() == depgraph.TxCount());
-    if (depgraph.TxCount() == 0) return {{}, true};
-
-    uint64_t iterations_left = max_iterations;
-    std::vector<DepGraphIndex> linearization;
-
-    AncestorCandidateFinder anc_finder(depgraph);
-    std::optional<SearchCandidateFinder<SetType>> src_finder;
-    linearization.reserve(depgraph.TxCount());
-    bool optimal = true;
-
-    // Treat the initialization of SearchCandidateFinder as taking N^2/64 (rounded up) iterations
-    // (largely due to the cost of constructing the internal sorted-by-feerate DepGraph inside
-    // SearchCandidateFinder), a rough approximation based on benchmark. If we don't have that
-    // many, don't start it.
-    uint64_t start_iterations = (uint64_t{depgraph.TxCount()} * depgraph.TxCount() + 63) / 64;
-    if (iterations_left > start_iterations) {
-        iterations_left -= start_iterations;
-        src_finder.emplace(depgraph, rng_seed);
-    }
-
-    /** Chunking of what remains of the old linearization. */
-    LinearizationChunking old_chunking(depgraph, old_linearization);
-
+    /** Initialize a spanning forest data structure for this cluster. */
+    SpanningForestState forest(depgraph, rng_seed, old_linearization);
+    // Make improvement steps to it until we hit the max_iterations limit, or an optimal result
+    // is found.
     while (true) {
-        // Find the highest-feerate prefix of the remainder of old_linearization.
-        SetInfo<SetType> best_prefix;
-        if (old_chunking.NumChunksLeft()) best_prefix = old_chunking.GetChunk(0);
-
-        // Then initialize best to be either the best remaining ancestor set, or the first chunk.
-        auto best = anc_finder.FindCandidateSet();
-        if (!best_prefix.feerate.IsEmpty() && best_prefix.feerate >= best.feerate) best = best_prefix;
-
-        uint64_t iterations_done_now = 0;
-        uint64_t max_iterations_now = 0;
-        if (src_finder) {
-            // Treat the invocation of SearchCandidateFinder::FindCandidateSet() as costing N/4
-            // up-front (rounded up) iterations (largely due to the cost of connected-component
-            // splitting), a rough approximation based on benchmarks.
-            uint64_t base_iterations = (anc_finder.NumRemaining() + 3) / 4;
-            if (iterations_left > base_iterations) {
-                // Invoke bounded search to update best, with up to half of our remaining
-                // iterations as limit.
-                iterations_left -= base_iterations;
-                max_iterations_now = (iterations_left + 1) / 2;
-                std::tie(best, iterations_done_now) = src_finder->FindCandidateSet(max_iterations_now, best);
-                iterations_left -= iterations_done_now;
-            }
-        }
-
-        if (iterations_done_now == max_iterations_now) {
-            optimal = false;
-            // If the search result is not (guaranteed to be) optimal, run intersections to make
-            // sure we don't pick something that makes us unable to reach further diagram points
-            // of the old linearization.
-            if (old_chunking.NumChunksLeft() > 0) {
-                best = old_chunking.IntersectPrefixes(best);
-            }
-        }
-
-        // Add to output in topological order.
-        depgraph.AppendTopo(linearization, best.transactions);
-
-        // Update state to reflect best is no longer to be linearized.
-        anc_finder.MarkDone(best.transactions);
-        if (anc_finder.AllDone()) break;
-        if (src_finder) src_finder->MarkDone(best.transactions);
-        if (old_chunking.NumChunksLeft() > 0) {
-            old_chunking.MarkDone(best.transactions);
-        }
+        if (forest.GetCost() >= max_iterations) return {forest.GetLinearization(), false};
+        if (!forest.Step()) break;
     }
-
-    return {std::move(linearization), optimal};
+    // Make chunk minimization steps until we hit the max_iterations limit, or all chunks are
+    // minimal.
+    forest.StartMinimizing();
+    while (true) {
+        if (forest.GetCost() >= max_iterations) return {forest.GetLinearization(), false};
+        if (!forest.MinimizeStep()) break;
+    }
+    return {forest.GetLinearization(), true};
 }
 
 /** Improve a given linearization.
@@ -1394,3 +1631,4 @@ void FixLinearization(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex
 } // namespace cluster_linearize
 
 #endif // BITCOIN_CLUSTER_LINEARIZE_H
+
