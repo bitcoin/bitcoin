@@ -18,6 +18,7 @@
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/rbf.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -157,7 +158,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     if (!version.isNull()) {
         uint32_t nVersion = version.getInt<uint32_t>();
         if (nVersion < TX_MIN_STANDARD_VERSION || nVersion > TX_MAX_STANDARD_VERSION)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, version out of range(") + std::to_string(TX_MIN_STANDARD_VERSION) + "~" + std::to_string(TX_MAX_STANDARD_VERSION) + ")");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, version out of range(") + util::ToString(TX_MIN_STANDARD_VERSION) + "~" + util::ToString(TX_MAX_STANDARD_VERSION) + ")");
         rawTx.version = nVersion;
     }
 
