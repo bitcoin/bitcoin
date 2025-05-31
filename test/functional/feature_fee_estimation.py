@@ -145,8 +145,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.noban_tx_relay = True
         self.extra_args = [
             [],
-            ["-blockmaxweight=68000"],
-            ["-blockmaxweight=32000"],
+            ["-blockreservedweight=3932000"],
+            ["-blockreservedweight=3968000"],
         ]
 
     def setup_network(self):
