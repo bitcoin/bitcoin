@@ -1,14 +1,9 @@
-From aad25427e74f387412e8bc9a9d7bbc6c496c792f Mon Sep 17 00:00:00 2001
-From: Andrew Chow <achow101-github@achow101.com>
-Date: Wed, 6 Jul 2022 16:49:41 -0400
-Subject: [PATCH] guix: remap guix store paths to /usr
+Without ffile-prefix-map, the debug symbols will contain paths for the
+guix store which will include the hashes of each package. However, the
+hash for the same package will differ when on different architectures.
+In order to be reproducible regardless of the architecture used to build
+the package, map all guix store prefixes to something fixed, e.g. /usr.
 
----
- libgcc/Makefile.in | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/libgcc/Makefile.in b/libgcc/Makefile.in
-index 851e7657d07..476c2becd1c 100644
 --- a/libgcc/Makefile.in
 +++ b/libgcc/Makefile.in
 @@ -854,7 +854,7 @@ endif
