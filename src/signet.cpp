@@ -4,24 +4,25 @@
 
 #include <signet.h>
 
-#include <common/system.h>
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
-#include <core_io.h>
-#include <hash.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
-#include <span.h>
+#include <script/script.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/strencodings.h>
+#include <util/check.h>
 
 #include <algorithm>
-#include <array>
+#include <cstddef>
 #include <cstdint>
+#include <exception>
+#include <memory>
+#include <span>
+#include <utility>
 #include <vector>
 
 static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};

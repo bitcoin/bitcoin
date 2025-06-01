@@ -7,12 +7,10 @@
 #include <arith_uint256.h>
 #include <chain.h>
 #include <consensus/params.h>
-#include <consensus/validation.h>
 #include <dbwrapper.h>
 #include <flatfile.h>
 #include <hash.h>
 #include <kernel/blockmanager_opts.h>
-#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
@@ -24,16 +22,17 @@
 #include <random.h>
 #include <serialize.h>
 #include <signet.h>
-#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <undo.h>
-#include <util/batchpriority.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/obfuscation.h>
+#include <util/overflow.h>
+#include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
@@ -41,9 +40,17 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include <cerrno>
+#include <compare>
 #include <cstddef>
+#include <cstdio>
+#include <exception>
 #include <map>
 #include <optional>
+#include <ostream>
+#include <span>
+#include <stdexcept>
+#include <system_error>
 #include <unordered_map>
 
 namespace kernel {
