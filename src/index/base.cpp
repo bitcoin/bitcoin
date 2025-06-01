@@ -9,7 +9,6 @@
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
-#include <kernel/chain.h>
 #include <kernel/types.h>
 #include <logging.h>
 #include <node/abort.h>
