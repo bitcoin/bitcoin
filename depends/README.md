@@ -63,6 +63,10 @@ created. To use it during configuring Bitcoin Core:
 
     cmake -B build --toolchain depends/x86_64-pc-linux-gnu/toolchain.cmake
 
+To additionally use the depends [dependency provider](https://cmake.org/cmake/help/v3.24/guide/using-dependencies/index.html):
+
+    cmake -B build --toolchain depends/x86_64-pc-linux-gnu/toolchain.cmake -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=depends/x86_64-pc-linux-gnu/dependency_provider.cmake
+
 ## Dependency Options
 
 The following can be set when running make: `make FOO=bar`

@@ -190,7 +190,7 @@ $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	echo copying packages: $^
 	echo to: $(@D)
 	cd $(@D); $(foreach package,$^, $(build_TAR) xf $($(package)_cached); )
-	echo To build Bitcoin Core with these packages, pass \'--toolchain $(@D)/toolchain.cmake\' to the first CMake invocation.
+	echo To build Bitcoin Core with these packages, pass \'--toolchain $(@D)/toolchain.cmake -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=$(@D)/dependency_provider.cmake\' to the first CMake invocation.
 	touch $@
 
 ifeq ($(host),$(build))
@@ -233,6 +233,7 @@ $(host_prefix)/toolchain.cmake : toolchain.cmake.in $(host_prefix)/.stamp_$(fina
             -e 's|@usdt_packages@|$(usdt_packages_)|' \
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             $< > $@
+	cp $(BASEDIR)/dependency_provider.cmake $(@D)/
 	touch $@
 
 define check_or_remove_cached
