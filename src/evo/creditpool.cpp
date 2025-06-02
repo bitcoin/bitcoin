@@ -84,6 +84,9 @@ static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::n
 
     if (const auto opt_cbTx = GetTxPayload<CCbTx>(block.vtx[0]->vExtraPayload); opt_cbTx) {
         blockData.credit_pool = opt_cbTx->creditPoolBalance;
+    } else {
+        LogPrintf("%s: WARNING: No valid CbTx at height=%d\n", __func__, block_index->nHeight);
+        return std::nullopt;
     }
     for (CTransactionRef tx : block.vtx) {
         if (!tx->IsSpecialTxVersion() || tx->nType != TRANSACTION_ASSET_UNLOCK) continue;
