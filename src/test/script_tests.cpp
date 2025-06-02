@@ -1410,8 +1410,8 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_returns_true)
     CScript scriptSig;
 
     scriptPubKey << OP_1;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
@@ -1432,8 +1432,8 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_tx_index_err)
     CScript scriptSig;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
@@ -1454,8 +1454,8 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_tx_size)
     CScript scriptSig;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;
@@ -1476,8 +1476,8 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_tx_serialization)
     CScript scriptSig;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << 0xffffffff;
@@ -1498,8 +1498,8 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_invalid_flags)
     CScript scriptSig;
 
     scriptPubKey << OP_EQUAL;
-    CTransaction creditTx = BuildCreditingTransaction(scriptPubKey);
-    CTransaction spendTx = BuildSpendingTransaction(scriptSig, creditTx);
+    CTransaction creditTx{BuildCreditingTransaction(scriptPubKey)};
+    CTransaction spendTx{BuildSpendingTransaction(scriptSig, creditTx)};
 
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << spendTx;

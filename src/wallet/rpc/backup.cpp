@@ -127,7 +127,7 @@ RPCHelpMan importprivkey()
         EnsureWalletIsUnlocked(*pwallet);
 
         std::string strSecret = request.params[0].get_str();
-        std::string strLabel = "";
+        std::string strLabel;
         if (!request.params[1].isNull())
             strLabel = request.params[1].get_str();
 

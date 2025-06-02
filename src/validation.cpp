@@ -2490,7 +2490,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // TODO: resync data (both ways?) and try to reprocess this block later.
     CAmount blockSubsidy = GetBlockSubsidy(pindex, m_params.GetConsensus());
     CAmount feeReward = nFees;
-    std::string strError = "";
+    std::string strError;
 
     int64_t nTime5_2 = GetTimeMicros(); nTimeSubsidy += nTime5_2 - nTime5_1;
     LogPrint(BCLog::BENCHMARK, "      - GetBlockSubsidy: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_2 - nTime5_1), nTimeSubsidy * MICRO, nTimeSubsidy * MILLI / nBlocksTotal);
