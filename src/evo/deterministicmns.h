@@ -332,12 +332,6 @@ public:
     [[nodiscard]] std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindexPrev, int nCount = std::numeric_limits<int>::max()) const;
 
     /**
-     * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
-     */
-    [[nodiscard]] std::vector<CDeterministicMNCPtr> CalculateQuorum(size_t maxSize, const uint256& modifier, const bool onlyEvoNodes = false) const;
-    [[nodiscard]] std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> CalculateScores(const uint256& modifier, const bool onlyEvoNodes) const;
-
-    /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
      * for every block.
      */
