@@ -108,7 +108,7 @@ double AddrInfo::GetChance(NodeSeconds now) const
 
 AddrManImpl::AddrManImpl(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio)
     : insecure_rand{deterministic}
-    , nKey{deterministic ? uint256{1} : insecure_rand.rand256()}
+    , nKey{deterministic ? uint256{1ULL} : insecure_rand.rand256()}
     , m_consistency_check_ratio{consistency_check_ratio}
     , m_netgroupman{netgroupman}
 {

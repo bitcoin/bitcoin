@@ -198,8 +198,22 @@ public:
     static std::optional<uint256> FromHex(std::string_view str) { return detail::FromHex<uint256>(str); }
     static std::optional<uint256> FromUserHex(std::string_view str) { return detail::FromUserHex<uint256>(str); }
     constexpr uint256() = default;
-    consteval explicit uint256(std::string_view hex_str) : base_blob<256>(hex_str) {}
+    constexpr explicit uint256(uint64_t val) : base_blob<256>() {
+        for (size_t i = 0; i < 8; ++i) {
+            m_data[i] = (val >> (i * 8)) & 0xFF;
+        }
+    }
     constexpr explicit uint256(uint8_t v) : base_blob<256>(v) {}
+    consteval explicit uint256(std::string_view hex_str) : base_blob<256>() {
+        if (hex_str.size() > 64) {
+            throw "Invalid hex string size in consteval uint256";
+        }
+        for (size_t i = 0; i < 32; ++i) {
+            unsigned char high = util::ConstevalHexDigit(hex_str[2 * i]);
+            unsigned char low = util::ConstevalHexDigit(hex_str[2 * i + 1]);
+            m_data[31 - i] = (high << 4) | low;
+        }
+    }
     constexpr explicit uint256(std::span<const unsigned char> vch) : base_blob<256>(vch) {}
     static const uint256 ZERO;
     static const uint256 ONE;

@@ -31,5 +31,5 @@ template std::string base_blob<160>::ToString() const;
 template std::string base_blob<256>::GetHex() const;
 template std::string base_blob<256>::ToString() const;
 
-const uint256 uint256::ZERO(0);
-const uint256 uint256::ONE(1);
+const uint256 uint256::ZERO(0ULL);
+const uint256 uint256::ONE(1ULL);
