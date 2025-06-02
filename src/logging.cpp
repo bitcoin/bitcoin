@@ -401,7 +401,7 @@ std::string BCLog::Logger::LogTimestampStr(const std::string& str)
         }
         std::chrono::seconds mocktime = GetMockTime();
         if (mocktime > 0s) {
-            strStamped += " (mocktime: " + FormatISO8601DateTime(count_seconds(mocktime)) + ")";
+            strStamped += strprintf(" (mocktime: %d)", count_seconds(mocktime));
         }
         strStamped += ' ' + str;
     } else
