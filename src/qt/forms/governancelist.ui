@@ -89,6 +89,9 @@
            <property name="text">
             <string>Masternode Count:</string>
            </property>
+           <property name="toolTip">
+            <string>Number of masternodes this wallet can vote with (masternodes for which this wallet holds the voting key)</string>
+           </property>
           </widget>
          </item>
          <item>
