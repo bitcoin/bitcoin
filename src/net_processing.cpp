@@ -5721,7 +5721,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
 namespace {
 class CompareInvMempoolOrder
 {
-    CTxMemPool *mp;
+    CTxMemPool* mp;
 public:
     explicit CompareInvMempoolOrder(CTxMemPool *_mempool)
     {

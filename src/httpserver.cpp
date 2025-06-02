@@ -440,7 +440,7 @@ bool InitHTTPServer()
         workQueueDepthExternal = std::max((long)gArgs.GetIntArg("-rpcexternalworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
         g_external_usernames = SplitString(rpc_externaluser, ',');
     }
-    LogPrintf("HTTP: creating work queue of depth %d external_depth %d\n", workQueueDepth, workQueueDepthExternal);
+    LogPrintfCategory(BCLog::HTTP, "creating work queue of depth %d external_depth %d\n", workQueueDepth, workQueueDepthExternal);
     g_work_queue = std::make_unique<WorkQueue<HTTPClosure>>(workQueueDepth, workQueueDepthExternal);
     // transfer ownership to eventBase/HTTP via .release()
     eventBase = base_ctr.release();
@@ -469,7 +469,7 @@ void StartHTTPServer()
 {
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetIntArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
-    LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
+    LogPrintfCategory(BCLog::HTTP, "starting %d worker threads\n", rpcThreads);
     g_thread_http = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {
