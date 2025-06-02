@@ -301,10 +301,10 @@ BOOST_AUTO_TEST_CASE(from_user_hex)
     BOOST_CHECK_EQUAL(uint256::FromUserHex("0"), uint256::ZERO);
     BOOST_CHECK_EQUAL(uint256::FromUserHex("00"), uint256::ZERO);
     BOOST_CHECK_EQUAL(uint256::FromUserHex("1"), uint256::ONE);
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("0x10"), uint256{0x10});
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("10"), uint256{0x10});
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("0xFf"), uint256{0xff});
-    BOOST_CHECK_EQUAL(uint256::FromUserHex("Ff"), uint256{0xff});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("0x10"), uint256{0x10ULL});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("10"), uint256{0x10ULL});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("0xFf"), uint256{0xffULL});
+    BOOST_CHECK_EQUAL(uint256::FromUserHex("Ff"), uint256{0xffULL});
     const std::string valid_hex_64{"0x0123456789abcdef0123456789abcdef0123456789ABDCEF0123456789ABCDEF"};
     BOOST_REQUIRE_EQUAL(valid_hex_64.size(), 2 + 64); // 0x prefix and 64 hex digits
     BOOST_CHECK_EQUAL(uint256::FromUserHex(valid_hex_64.substr(2)).value().ToString(), ToLower(valid_hex_64.substr(2)));

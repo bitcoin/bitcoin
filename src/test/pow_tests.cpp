@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
     uint256 hash;
     unsigned int nBits;
     nBits = UintToArith256(consensus.powLimit).GetCompact(true);
-    hash = uint256{1};
+    hash = uint256{1ULL};
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_overflow_target)
     const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
     uint256 hash;
     unsigned int nBits{~0x00800000U};
-    hash = uint256{1};
+    hash = uint256{1ULL};
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_too_easy_target)
     arith_uint256 nBits_arith = UintToArith256(consensus.powLimit);
     nBits_arith *= 2;
     nBits = nBits_arith.GetCompact();
-    hash = uint256{1};
+    hash = uint256{1ULL};
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 

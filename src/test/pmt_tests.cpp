@@ -111,12 +111,12 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
 BOOST_AUTO_TEST_CASE(pmt_malleability)
 {
     std::vector<uint256> vTxid{
-        uint256{1}, uint256{2},
-        uint256{3}, uint256{4},
-        uint256{5}, uint256{6},
-        uint256{7}, uint256{8},
-        uint256{9}, uint256{10},
-        uint256{9}, uint256{10},
+        uint256{1ULL}, uint256{2ULL},
+        uint256{3ULL}, uint256{4ULL},
+        uint256{5ULL}, uint256{6ULL},
+        uint256{7ULL}, uint256{8ULL},
+        uint256{9ULL}, uint256{10ULL},
+        uint256{9ULL}, uint256{10ULL},
     };
     std::vector<bool> vMatch = {false, false, false, false, false, false, false, false, false, true, true, false};
 

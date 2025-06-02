@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    auto rand_ctx(FastRandomContext(uint256{42}));
+    auto rand_ctx(FastRandomContext(uint256{42ULL}));
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    auto rand_ctx(FastRandomContext(uint256{42}));
+    auto rand_ctx(FastRandomContext(uint256{42ULL}));
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    auto rand_ctx(FastRandomContext(uint256{42}));
+    auto rand_ctx(FastRandomContext(uint256{42ULL}));
     CBlock block(BuildBlockTestCase(rand_ctx));
 
     LOCK2(cs_main, pool.cs);
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     CMutableTransaction coinbase = BuildTransactionTestCase();
 
     CBlock block;
-    auto rand_ctx(FastRandomContext(uint256{42}));
+    auto rand_ctx(FastRandomContext(uint256{42ULL}));
     block.vtx.resize(1);
     block.vtx[0] = MakeTransactionRef(std::move(coinbase));
     block.nVersion = 42;
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     CTxMemPool& pool = *Assert(m_node.mempool);
     TestMemPoolEntryHelper entry;
-    auto rand_ctx(FastRandomContext(uint256{42}));
+    auto rand_ctx(FastRandomContext(uint256{42ULL}));
 
     CMutableTransaction mtx = BuildTransactionTestCase();
     mtx.vin[0].prevout.hash = Txid::FromUint256(rand_ctx.rand256());

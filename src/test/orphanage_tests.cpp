@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // ecdsa_signature_parse_der_lax are executed during this test.
     // Specifically branches that run only when an ECDSA
     // signature's R and S values have leading zeros.
-    m_rng.Reseed(uint256{33});
+    m_rng.Reseed(uint256{33ULL});
 
     TxOrphanageTest orphanage{m_rng};
     CKey key;

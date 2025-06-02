@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
 
         // Empty block is expected to have merkle root of 0x0.
         BOOST_CHECK(block.vtx.empty());
-        block.hashMerkleRoot = uint256{1};
+        block.hashMerkleRoot = uint256{1ULL};
         BOOST_CHECK(is_mutated(block, /*check_witness_root=*/false));
         block.hashMerkleRoot = uint256{};
         BOOST_CHECK(is_not_mutated(block, /*check_witness_root=*/false));
