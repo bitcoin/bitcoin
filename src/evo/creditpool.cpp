@@ -67,11 +67,8 @@ static std::optional<CreditPoolDataPerBlock> GetCreditDataFromBlock(const gsl::n
     static Mutex cache_mutex;
     static unordered_lru_cache<uint256, CreditPoolDataPerBlock, StaticSaltedHasher> block_data_cache GUARDED_BY(
         cache_mutex){static_cast<size_t>(Params().CreditPoolPeriodBlocks()) * 2};
-    {
-        LOCK(cache_mutex);
-        if (block_data_cache.get(block_index->GetBlockHash(), blockData)) {
-            return blockData;
-        }
+    if (LOCK(cache_mutex); block_data_cache.get(block_index->GetBlockHash(), blockData)) {
+        return blockData;
     }
 
     CBlock block;
