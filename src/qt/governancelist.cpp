@@ -23,6 +23,7 @@
 #include <script/standard.h>
 #include <util/message.h>
 #include <util/strencodings.h>
+#include <wallet/wallet.h>
 
 #include <univalue.h>
 
@@ -557,32 +558,8 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
         // Create vote
         CGovernanceVote vote(dmn->collateralOutpoint, proposalHash, VOTE_SIGNAL_FUNDING, outcome);
 
-        // Sign vote
-        bool signSuccess = false;
-
-        // Special implementation for testnet (same as RPC SignVote)
-        if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-            // Testnet uses SignSpecialTxPayload
-            std::vector<unsigned char> vchSig;
-            if (walletModel->wallet().signSpecialTxPayload(vote.GetSignatureHash(), votingKeyID, vchSig)) {
-                vote.SetSignature(vchSig);
-                signSuccess = true;
-            }
-        } else {
-            // Other networks use SignMessage
-            std::string strMessage = vote.GetSignatureString();
-            std::string signature;
-            SigningResult result = walletModel->wallet().signMessage(strMessage, PKHash(votingKeyID), signature);
-            if (result == SigningResult::OK) {
-                const auto decoded = DecodeBase64(signature);
-                if (decoded) {
-                    vote.SetSignature(std::vector<unsigned char>(decoded->begin(), decoded->end()));
-                    signSuccess = true;
-                }
-            }
-        }
-
-        if (!signSuccess) {
+        // Sign vote using shared helper function
+        if (!SignGovernanceVote(*walletModel->wallet().wallet(), votingKeyID, vote)) {
             nFailed++;
             failedMessages.append(
                 tr("Failed to sign vote for masternode %1").arg(QString::fromStdString(proTxHash.ToString())));

@@ -266,3 +266,34 @@ bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 
     return fResult;
 }
+
+#include <wallet/wallet.h>
+#include <util/strencodings.h>
+#include <util/message.h>
+
+bool SignGovernanceVote(const CWallet& wallet, const CKeyID& keyID, CGovernanceVote& vote)
+{
+    // Special implementation for testnet (Harden Spork6 that has not been deployed to other networks)
+    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
+        std::vector<unsigned char> signature;
+        if (!wallet.SignSpecialTxPayload(vote.GetSignatureHash(), keyID, signature)) {
+            LogPrintf("SignGovernanceVote -- SignHash() failed\n");
+            return false;
+        }
+        vote.SetSignature(signature);
+        return true;
+    } // end of testnet implementation
+
+    std::string strMessage{vote.GetSignatureString()};
+    std::string signature;
+    SigningResult err = wallet.SignMessage(strMessage, PKHash{keyID}, signature);
+    if (err != SigningResult::OK) {
+        LogPrintf("SignGovernanceVote failed due to: %s\n", SigningResultString(err));
+        return false;
+    }
+    const auto opt_decoded = DecodeBase64(signature);
+    CHECK_NONFATAL(opt_decoded.has_value()); // DecodeBase64 should not fail
+
+    vote.SetSignature(std::vector<unsigned char>(opt_decoded->data(), opt_decoded->data() + opt_decoded->size()));
+    return true;
+}
