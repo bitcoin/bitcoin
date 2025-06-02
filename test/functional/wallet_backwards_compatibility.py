@@ -14,6 +14,7 @@ Use only the latest patch version of each release, unless a test specifically
 needs an older patch version.
 """
 
+import json
 import os
 import shutil
 
@@ -160,6 +161,38 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             conn.close()
         except ImportError:
             self.log.warning("sqlite3 module not available, skipping lack of keymeta records check")
+
+    def test_ignore_legacy_during_startup(self, legacy_nodes, node_master):
+        self.log.info("Test that legacy wallets are ignored during startup on v29+")
+
+        legacy_node = legacy_nodes[0]
+        wallet_name = f"legacy_up_{legacy_node.version}"
+        legacy_node.loadwallet(wallet_name)
+        legacy_wallet = legacy_node.get_wallet_rpc(wallet_name)
+
+        # Move legacy wallet to latest node
+        wallet_path = node_master.wallets_path / wallet_name
+        wallet_path.mkdir()
+        legacy_wallet.backupwallet(wallet_path / "wallet.dat")
+        legacy_wallet.unloadwallet()
+
+        # Write wallet so it is automatically loaded during init
+        settings_path = node_master.chain_path / "settings.json"
+        with settings_path.open("w") as fp:
+            json.dump({"wallet": [wallet_name]}, fp)
+
+        # Restart latest node and verify that the legacy wallet load is skipped without exiting early during init.
+        self.restart_node(node_master.index, extra_args=[])
+        # Ensure we receive the warning message and clear the stderr pipe.
+        node_master.stderr.seek(0)
+        warning_msg = node_master.stderr.read().decode('utf-8').strip()
+        assert "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC or the GUI option)" in warning_msg
+        node_master.stderr.truncate(0), node_master.stderr.seek(0) # reset buffer
+
+        # Verify the node is still running (no shutdown occurred during startup)
+        node_master.getblockcount()
+        # Reset settings for any subsequent test
+        os.remove(settings_path)
 
     def run_test(self):
         node_miner = self.nodes[0]
@@ -378,9 +411,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Restore the wallet to master
             # Legacy wallets are no longer supported. Trying to load these should result in an error
-            assert_raises_rpc_error(-18, "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC)", node_master.restorewallet, wallet_name, backup_path)
+            assert_raises_rpc_error(-18, "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC or the GUI option)", node_master.restorewallet, wallet_name, backup_path)
 
         self.test_v22_inactivehdchain_path()
+        self.test_ignore_legacy_during_startup(legacy_nodes, node_master)
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest(__file__).main()
