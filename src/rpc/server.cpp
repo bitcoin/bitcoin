@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,6 +21,7 @@
 #include <util/time.h>
 #include <validation.h>
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <memory>
@@ -79,15 +80,13 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
     for (const auto& entry : mapCommands)
         vCommands.emplace_back(entry.second.front()->category + entry.first, entry.second.front());
-    sort(vCommands.begin(), vCommands.end());
+    std::ranges::sort(vCommands);
 
     JSONRPCRequest jreq = helpreq;
     jreq.mode = JSONRPCRequest::GET_HELP;
     jreq.params = UniValue();
 
-    for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
-    {
-        const CRPCCommand *pcmd = command.second;
+    for (const auto& [_, pcmd] : vCommands) {
         std::string strMethod = pcmd->name;
         if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
