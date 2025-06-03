@@ -1,4 +1,4 @@
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,6 +28,9 @@ interface FooInterface $Proxy.wrap("mp::test::FooImplementation") {
     passMessage @13 (arg :FooMessage) -> (result :FooMessage);
     passMutable @14 (arg :FooMutable) -> (arg :FooMutable);
     passEnum @15 (arg :Int32) -> (result :Int32);
+    passFn @16 (context :Proxy.Context, fn :FooFn) -> (result :Int32);
+    callFn @17 () -> ();
+    callFnAsync @18 (context :Proxy.Context) -> ();
 }
 
 interface FooCallback $Proxy.wrap("mp::test::FooCallback") {
@@ -37,6 +40,11 @@ interface FooCallback $Proxy.wrap("mp::test::FooCallback") {
 
 interface ExtendedCallback extends(FooCallback) $Proxy.wrap("mp::test::ExtendedCallback") {
     callExtended @0 (context :Proxy.Context, arg :Int32) -> (result :Int32);
+}
+
+interface FooFn $Proxy.wrap("ProxyCallback<std::function<int()>>") {
+    destroy @0 (context :Proxy.Context) -> ();
+    call @1 (context :Proxy.Context) -> (result :Int32);
 }
 
 struct FooStruct $Proxy.wrap("mp::test::FooStruct") {

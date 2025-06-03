@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <mp/proxy-types.h>
 #include <mp/type-context.h>
 #include <mp/type-decay.h>
+#include <mp/type-function.h>
 #include <mp/type-interface.h>
 #include <mp/type-map.h>
 #include <mp/type-message.h>
