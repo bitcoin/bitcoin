@@ -13,9 +13,9 @@
 #include <txmempool.h>
 #include <util/feefrac.h>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
-#include <cstdint>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>

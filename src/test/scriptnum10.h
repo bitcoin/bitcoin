@@ -7,9 +7,9 @@
 #define BITCOIN_TEST_SCRIPTNUM10_H
 
 #include <cassert>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
-#include <cstdint>
 #include <string>
 #include <vector>
 

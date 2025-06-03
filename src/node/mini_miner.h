@@ -9,11 +9,11 @@
 #include <primitives/transaction.h>
 #include <uint256.h>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
-#include <cstdint>
 #include <vector>
 
 class CFeeRate;

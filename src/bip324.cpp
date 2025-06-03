@@ -17,8 +17,8 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <string>
 

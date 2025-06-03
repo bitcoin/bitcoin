@@ -7,8 +7,8 @@
 #include <test/fuzz/util.h>
 #include <util/vecdeque.h>
 
-#include <deque>
 #include <cstdint>
+#include <deque>
 
 namespace {
 

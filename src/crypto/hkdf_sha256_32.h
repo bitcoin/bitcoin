@@ -7,8 +7,8 @@
 
 #include <crypto/hmac_sha256.h>
 
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 
 /** A rfc5869 HKDF implementation with HMAC_SHA256 and fixed key output length of 32 bytes (L=32) */
 class CHKDF_HMAC_SHA256_L32

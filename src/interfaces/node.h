@@ -15,10 +15,10 @@
 #include <support/allocators/secure.h>
 #include <util/translation.h>
 
-#include <functional>
-#include <memory>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>

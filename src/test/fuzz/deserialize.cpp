@@ -29,10 +29,10 @@
 #include <test/util/setup_common.h>
 #include <undo.h>
 
+#include <cstdint>
 #include <exception>
 #include <optional>
 #include <stdexcept>
-#include <cstdint>
 
 using node::SnapshotMetadata;
 

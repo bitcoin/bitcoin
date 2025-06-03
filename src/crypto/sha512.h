@@ -5,8 +5,8 @@
 #ifndef BITCOIN_CRYPTO_SHA512_H
 #define BITCOIN_CRYPTO_SHA512_H
 
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 
 /** A hasher class for SHA-512. */
 class CSHA512

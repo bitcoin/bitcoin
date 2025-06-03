@@ -4,9 +4,9 @@
 
 #include <wallet/wallet.h>
 
+#include <cstdint>
 #include <future>
 #include <memory>
-#include <cstdint>
 #include <vector>
 
 #include <addresstype.h>

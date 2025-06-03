@@ -4,8 +4,8 @@
 
 #include <crypto/chacha20poly1305.h>
 
-#include <crypto/common.h>
 #include <crypto/chacha20.h>
+#include <crypto/common.h>
 #include <crypto/poly1305.h>
 #include <span.h>
 #include <support/cleanse.h>

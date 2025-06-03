@@ -11,9 +11,9 @@
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <unordered_set>

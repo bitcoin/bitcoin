@@ -7,8 +7,8 @@
 #include <rpc/client.h>
 #include <tinyformat.h>
 
-#include <set>
 #include <cstdint>
+#include <set>
 #include <string>
 #include <string_view>
 

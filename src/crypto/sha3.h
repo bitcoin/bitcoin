@@ -7,8 +7,8 @@
 
 #include <span.h>
 
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 
 //! The Keccak-f[1600] transform.
 void KeccakF(uint64_t (&st)[25]);

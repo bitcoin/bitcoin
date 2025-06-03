@@ -15,11 +15,11 @@
 #include <util/overflow.h>
 
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <set>
-#include <cstddef>
-#include <cstdint>
 
 class CBlockIndex;
 

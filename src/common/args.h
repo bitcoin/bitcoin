@@ -11,12 +11,12 @@
 #include <util/chaintype.h>
 #include <util/fs.h>
 
+#include <cstdint>
 #include <iosfwd>
 #include <list>
 #include <map>
 #include <optional>
 #include <set>
-#include <cstdint>
 #include <string>
 #include <variant>
 #include <vector>

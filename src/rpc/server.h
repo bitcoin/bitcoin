@@ -9,9 +9,9 @@
 #include <rpc/request.h>
 #include <rpc/util.h>
 
+#include <cstdint>
 #include <functional>
 #include <map>
-#include <cstdint>
 #include <string>
 
 #include <univalue.h>

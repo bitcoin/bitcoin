@@ -6,11 +6,11 @@
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
+#include <key.h>
 #include <script/sign.h>
 #include <util/transaction_identifier.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
-#include <key.h>
 
 #include <cstdint>
 #include <string>

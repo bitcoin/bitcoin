@@ -14,12 +14,12 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
-#include <ctime>
 #include <util/asmap.h>
 #include <util/chaintype.h>
 
 #include <cassert>
 #include <cstdint>
+#include <ctime>
 #include <optional>
 #include <string>
 #include <vector>
