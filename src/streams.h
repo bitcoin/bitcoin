@@ -12,14 +12,14 @@
 #include <util/overflow.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <ios>
 #include <limits>
 #include <optional>
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
+#include <cstring>
 #include <string>
 #include <utility>
 #include <vector>

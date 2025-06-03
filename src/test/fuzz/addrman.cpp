@@ -14,7 +14,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
-#include <time.h>
+#include <ctime>
 #include <util/asmap.h>
 #include <util/chaintype.h>
 

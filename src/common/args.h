@@ -16,7 +16,7 @@
 #include <map>
 #include <optional>
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <variant>
 #include <vector>

@@ -6,7 +6,7 @@
 
 #include <future>
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 #include <addresstype.h>

@@ -16,8 +16,8 @@
 #include <util/check.h>
 #include <util/hasher.h>
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 #include <functional>
 #include <unordered_map>

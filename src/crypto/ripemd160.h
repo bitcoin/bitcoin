@@ -6,7 +6,7 @@
 #define BITCOIN_CRYPTO_RIPEMD160_H
 
 #include <cstdlib>
-#include <stdint.h>
+#include <cstdint>
 
 /** A hasher class for RIPEMD-160. */
 class CRIPEMD160

@@ -14,7 +14,7 @@
 #ifndef BITCOIN_BECH32_H
 #define BITCOIN_BECH32_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 

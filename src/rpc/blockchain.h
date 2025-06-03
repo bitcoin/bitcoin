@@ -13,7 +13,7 @@
 #include <validation.h>
 
 #include <any>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 class CBlock;

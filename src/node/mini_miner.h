@@ -13,7 +13,7 @@
 #include <memory>
 #include <optional>
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 class CFeeRate;

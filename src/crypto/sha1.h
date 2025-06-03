@@ -6,7 +6,7 @@
 #define BITCOIN_CRYPTO_SHA1_H
 
 #include <cstdlib>
-#include <stdint.h>
+#include <cstdint>
 
 /** A hasher class for SHA1. */
 class CSHA1

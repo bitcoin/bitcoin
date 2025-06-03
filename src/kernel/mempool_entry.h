@@ -18,8 +18,8 @@
 #include <functional>
 #include <memory>
 #include <set>
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 
 class CBlockIndex;
 

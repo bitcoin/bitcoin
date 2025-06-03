@@ -12,7 +12,7 @@
 
 #include <algorithm>
 #include <bit>
-#include <string.h>
+#include <cstring>
 
 #define QUARTERROUND(a,b,c,d) \
   a += b; d = std::rotl(d ^ a, 16); \

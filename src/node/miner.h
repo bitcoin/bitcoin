@@ -15,7 +15,7 @@
 
 #include <memory>
 #include <optional>
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>

@@ -9,10 +9,10 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 
-#include <assert.h>
+#include <cassert>
 #include <optional>
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 namespace {

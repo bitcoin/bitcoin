@@ -9,7 +9,7 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <stdint.h>
+#include <cstdint>
 
 #define POLY1305_BLOCK_SIZE 16
 

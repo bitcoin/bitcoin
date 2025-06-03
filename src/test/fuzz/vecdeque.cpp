@@ -8,7 +8,7 @@
 #include <util/vecdeque.h>
 
 #include <deque>
-#include <stdint.h>
+#include <cstdint>
 
 namespace {
 

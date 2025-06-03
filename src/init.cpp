@@ -105,7 +105,7 @@
 #include <vector>
 
 #ifndef WIN32
-#include <signal.h>
+#include <csignal>
 #include <sys/stat.h>
 #endif
 

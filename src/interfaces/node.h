@@ -17,8 +17,8 @@
 
 #include <functional>
 #include <memory>
-#include <stddef.h>
-#include <stdint.h>
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <tuple>
 #include <vector>

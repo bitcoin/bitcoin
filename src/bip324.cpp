@@ -16,7 +16,7 @@
 #include <uint256.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cstdint>
 #include <cstddef>
 #include <iterator>

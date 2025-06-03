@@ -9,7 +9,7 @@
 #include <key_io.h>
 #include <wallet/types.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDateTime>
 

@@ -5,7 +5,7 @@
 #include <crypto/common.h>
 #include <crypto/poly1305.h>
 
-#include <string.h>
+#include <cstring>
 
 namespace poly1305_donna {
 

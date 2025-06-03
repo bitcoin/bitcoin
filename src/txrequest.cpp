@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <assert.h>
+#include <cassert>
 
 namespace {
 

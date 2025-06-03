@@ -9,7 +9,7 @@
 #include <tinyformat.h>
 #include <util/chaintype.h>
 
-#include <assert.h>
+#include <cassert>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {

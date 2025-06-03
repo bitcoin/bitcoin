@@ -43,7 +43,7 @@
 #include <validationinterface.h>
 
 #include <numeric>
-#include <stdint.h>
+#include <cstdint>
 
 #include <univalue.h>
 

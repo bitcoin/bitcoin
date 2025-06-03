@@ -21,7 +21,7 @@
 #include <validation.h>
 
 #include <array>
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/test/unit_test.hpp>
 

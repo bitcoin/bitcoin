@@ -4,7 +4,7 @@
 
 #include <kernel/disconnected_transactions.h>
 
-#include <assert.h>
+#include <cassert>
 #include <core_memusage.h>
 #include <memusage.h>
 #include <primitives/transaction.h>

@@ -19,7 +19,7 @@
 #include <validation.h>
 #include <wallet/types.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 #include <QLatin1String>

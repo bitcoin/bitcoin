@@ -41,7 +41,7 @@
 #include <optional>
 #include <set>
 #include <span>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <utility>

@@ -44,7 +44,7 @@
 #include <validationinterface.h>
 
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 
 using interfaces::BlockRef;
 using interfaces::BlockTemplate;

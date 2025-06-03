@@ -6,7 +6,7 @@
 // (available at the bottom of this file).
 
 #include <cstdlib>
-#include <stdint.h>
+#include <cstdint>
 
 #if defined(__x86_64__) || defined(__amd64__)
 

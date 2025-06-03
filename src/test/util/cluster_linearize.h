@@ -12,7 +12,7 @@
 #include <util/bitset.h>
 #include <util/feefrac.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 #include <utility>

@@ -18,7 +18,7 @@
 #ifdef USE_DBUS
 #include <QDBusMetaType>
 #include <QtDBus>
-#include <stdint.h>
+#include <cstdint>
 #endif
 #ifdef Q_OS_MACOS
 #include <qt/macnotificationhandler.h>

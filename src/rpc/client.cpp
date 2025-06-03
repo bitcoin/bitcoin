@@ -8,7 +8,7 @@
 #include <tinyformat.h>
 
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <string_view>
 

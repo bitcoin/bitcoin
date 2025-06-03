@@ -13,7 +13,7 @@
 
 #include <functional>
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <unordered_set>

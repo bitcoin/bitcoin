@@ -13,7 +13,7 @@
 #include <util/feefrac.h>
 
 #include <algorithm>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include <utility>
 

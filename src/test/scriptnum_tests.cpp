@@ -7,8 +7,8 @@
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-#include <limits.h>
-#include <stdint.h>
+#include <climits>
+#include <cstdint>
 
 BOOST_FIXTURE_TEST_SUITE(scriptnum_tests, BasicTestingSetup)
 

@@ -23,7 +23,7 @@
 #include <util/time.h>
 #include <validation.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDebug>
 #include <QMetaObject>

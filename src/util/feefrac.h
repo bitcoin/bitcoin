@@ -5,7 +5,7 @@
 #ifndef BITCOIN_UTIL_FEEFRAC_H
 #define BITCOIN_UTIL_FEEFRAC_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <compare>
 #include <vector>
 #include <span.h>

@@ -4,7 +4,7 @@
 
 #ifdef ENABLE_AVX2
 
-#include <stdint.h>
+#include <cstdint>
 #include <immintrin.h>
 
 #include <attributes.h>

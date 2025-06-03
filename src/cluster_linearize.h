@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <numeric>
 #include <optional>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include <utility>
 

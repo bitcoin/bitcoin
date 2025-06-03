@@ -6,7 +6,7 @@
 #define BITCOIN_CRYPTO_SHA256_H
 
 #include <cstdlib>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 /** A hasher class for SHA-256. */

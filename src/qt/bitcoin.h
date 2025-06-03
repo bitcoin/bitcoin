@@ -10,7 +10,7 @@
 #include <interfaces/node.h>
 #include <qt/initexecutor.h>
 
-#include <assert.h>
+#include <cassert>
 #include <memory>
 #include <optional>
 

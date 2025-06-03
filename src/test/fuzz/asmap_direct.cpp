@@ -10,7 +10,7 @@
 #include <optional>
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 FUZZ_TARGET(asmap_direct)
 {

@@ -15,7 +15,7 @@
 #include <map>
 #include <memory>
 #include <set>
-#include <stdint.h>
+#include <cstdint>
 #include <utility>
 
 using namespace cluster_linearize;

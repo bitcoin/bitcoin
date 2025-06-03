@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 #include <random.h>
-#include <stddef.h>
+#include <cstddef>
 #include <util/strencodings.h>
 #include <cassert>
 #include <optional>
