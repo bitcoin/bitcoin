@@ -187,9 +187,6 @@ def compute_raw_taproot_address(pubkey):
 class WalletTaprootTest(BitcoinTestFramework):
     """Test generation and spending of P2TR address outputs."""
 
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -232,9 +229,9 @@ class WalletTaprootTest(BitcoinTestFramework):
 
         # Create wallets
         wallet_uuid = uuid.uuid4().hex
-        self.nodes[0].createwallet(wallet_name=f"privs_tr_enabled_{wallet_uuid}", descriptors=True, blank=True)
-        self.nodes[0].createwallet(wallet_name=f"pubs_tr_enabled_{wallet_uuid}", descriptors=True, blank=True, disable_private_keys=True)
-        self.nodes[0].createwallet(wallet_name=f"addr_gen_{wallet_uuid}", descriptors=True, disable_private_keys=True, blank=True)
+        self.nodes[0].createwallet(wallet_name=f"privs_tr_enabled_{wallet_uuid}", blank=True)
+        self.nodes[0].createwallet(wallet_name=f"pubs_tr_enabled_{wallet_uuid}", blank=True, disable_private_keys=True)
+        self.nodes[0].createwallet(wallet_name=f"addr_gen_{wallet_uuid}", disable_private_keys=True, blank=True)
         privs_tr_enabled = self.nodes[0].get_wallet_rpc(f"privs_tr_enabled_{wallet_uuid}")
         pubs_tr_enabled = self.nodes[0].get_wallet_rpc(f"pubs_tr_enabled_{wallet_uuid}")
         addr_gen = self.nodes[0].get_wallet_rpc(f"addr_gen_{wallet_uuid}")
@@ -273,7 +270,7 @@ class WalletTaprootTest(BitcoinTestFramework):
 
         # Create wallets
         wallet_uuid = uuid.uuid4().hex
-        self.nodes[0].createwallet(wallet_name=f"rpc_online_{wallet_uuid}", descriptors=True, blank=True)
+        self.nodes[0].createwallet(wallet_name=f"rpc_online_{wallet_uuid}", blank=True)
         rpc_online = self.nodes[0].get_wallet_rpc(f"rpc_online_{wallet_uuid}")
 
         desc_pay = self.make_desc(pattern, privmap, keys_pay)
@@ -314,9 +311,9 @@ class WalletTaprootTest(BitcoinTestFramework):
 
         # Create wallets
         wallet_uuid = uuid.uuid4().hex
-        self.nodes[0].createwallet(wallet_name=f"psbt_online_{wallet_uuid}", descriptors=True, disable_private_keys=True, blank=True)
-        self.nodes[1].createwallet(wallet_name=f"psbt_offline_{wallet_uuid}", descriptors=True, blank=True)
-        self.nodes[1].createwallet(f"key_only_wallet_{wallet_uuid}", descriptors=True, blank=True)
+        self.nodes[0].createwallet(wallet_name=f"psbt_online_{wallet_uuid}", disable_private_keys=True, blank=True)
+        self.nodes[1].createwallet(wallet_name=f"psbt_offline_{wallet_uuid}", blank=True)
+        self.nodes[1].createwallet(f"key_only_wallet_{wallet_uuid}", blank=True)
         psbt_online = self.nodes[0].get_wallet_rpc(f"psbt_online_{wallet_uuid}")
         psbt_offline = self.nodes[1].get_wallet_rpc(f"psbt_offline_{wallet_uuid}")
         key_only_wallet = self.nodes[1].get_wallet_rpc(f"key_only_wallet_{wallet_uuid}")

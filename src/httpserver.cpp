@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +11,7 @@
 #include <logging.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
-#include <rpc/protocol.h> // For HTTP status codes
+#include <rpc/protocol.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/signalinterrupt.h>
@@ -27,7 +27,9 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <thread>
 #include <unordered_map>
+#include <vector>
 
 #include <sys/types.h>
 #include <sys/stat.h>

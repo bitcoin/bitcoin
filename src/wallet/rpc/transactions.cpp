@@ -7,6 +7,7 @@
 #include <policy/rbf.h>
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
+#include <util/transaction_identifier.h>
 #include <util/vector.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
@@ -34,11 +35,10 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     } else {
         entry.pushKV("trusted", CachedTxIsTrusted(wallet, wtx));
     }
-    uint256 hash = wtx.GetHash();
-    entry.pushKV("txid", hash.GetHex());
+    entry.pushKV("txid", wtx.GetHash().GetHex());
     entry.pushKV("wtxid", wtx.GetWitnessHash().GetHex());
     UniValue conflicts(UniValue::VARR);
-    for (const uint256& conflict : wallet.GetTxConflicts(wtx))
+    for (const Txid& conflict : wallet.GetTxConflicts(wtx))
         conflicts.push_back(conflict.GetHex());
     entry.pushKV("walletconflicts", std::move(conflicts));
     UniValue mempool_conflicts(UniValue::VARR);
@@ -67,7 +67,7 @@ struct tallyitem
 {
     CAmount nAmount{0};
     int nConf{std::numeric_limits<int>::max()};
-    std::vector<uint256> txids;
+    std::vector<Txid> txids;
     bool fIsWatchonly{false};
     tallyitem() = default;
 };
@@ -100,8 +100,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
-    for (const std::pair<const uint256, CWalletTx>& pairWtx : wallet.mapWallet) {
-        const CWalletTx& wtx = pairWtx.second;
+    for (const auto& [_, wtx] : wallet.mapWallet) {
 
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < nMinDepth)
@@ -169,7 +168,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             obj.pushKV("label", label);
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end()) {
-                for (const uint256& _item : (*it).second.txids) {
+                for (const Txid& _item : (*it).second.txids) {
                     transactions.push_back(_item.GetHex());
                 }
             }
@@ -205,8 +204,9 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
 RPCHelpMan listreceivedbyaddress()
 {
-    return RPCHelpMan{"listreceivedbyaddress",
-                "\nList balances by receiving address.\n",
+    return RPCHelpMan{
+        "listreceivedbyaddress",
+        "List balances by receiving address.\n",
                 {
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
                     {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include addresses that haven't received any payments."},
@@ -258,8 +258,9 @@ RPCHelpMan listreceivedbyaddress()
 
 RPCHelpMan listreceivedbylabel()
 {
-    return RPCHelpMan{"listreceivedbylabel",
-                "\nList received transactions by label.\n",
+    return RPCHelpMan{
+        "listreceivedbylabel",
+        "List received transactions by label.\n",
                 {
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
                     {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include labels that haven't received any payments."},
@@ -440,8 +441,9 @@ static std::vector<RPCResult> TransactionDescriptionString()
 
 RPCHelpMan listtransactions()
 {
-    return RPCHelpMan{"listtransactions",
-                "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
+    return RPCHelpMan{
+        "listtransactions",
+        "If a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
                 "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, should be a valid label name to return only incoming transactions\n"
@@ -549,8 +551,9 @@ RPCHelpMan listtransactions()
 
 RPCHelpMan listsinceblock()
 {
-    return RPCHelpMan{"listsinceblock",
-                "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted.\n"
+    return RPCHelpMan{
+        "listsinceblock",
+        "Get all transactions in blocks since block [blockhash], or all transactions if omitted.\n"
                 "If \"blockhash\" is no longer a part of the main chain, transactions from the fork point onward are included.\n"
                 "Additionally, if include_removed is set, transactions affecting the wallet which were removed are returned in the \"removed\" array.\n",
                 {
@@ -650,8 +653,7 @@ RPCHelpMan listsinceblock()
 
     UniValue transactions(UniValue::VARR);
 
-    for (const std::pair<const uint256, CWalletTx>& pairWtx : wallet.mapWallet) {
-        const CWalletTx& tx = pairWtx.second;
+    for (const auto& [_, tx] : wallet.mapWallet) {
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
             ListTransactions(wallet, tx, 0, true, transactions, filter, filter_label, include_change);
@@ -694,8 +696,9 @@ RPCHelpMan listsinceblock()
 
 RPCHelpMan gettransaction()
 {
-    return RPCHelpMan{"gettransaction",
-                "\nGet detailed information about in-wallet transaction <txid>\n",
+    return RPCHelpMan{
+        "gettransaction",
+        "Get detailed information about in-wallet transaction <txid>\n",
                 {
                     {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"},
@@ -760,7 +763,7 @@ RPCHelpMan gettransaction()
 
     LOCK(pwallet->cs_wallet);
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
+    Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
     isminefilter filter = ISMINE_SPENDABLE;
 
@@ -808,8 +811,9 @@ RPCHelpMan gettransaction()
 
 RPCHelpMan abandontransaction()
 {
-    return RPCHelpMan{"abandontransaction",
-                "\nMark in-wallet transaction <txid> as abandoned\n"
+    return RPCHelpMan{
+        "abandontransaction",
+        "Mark in-wallet transaction <txid> as abandoned\n"
                 "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
                 "for their inputs to be respent.  It can be used to replace \"stuck\" or evicted transactions.\n"
                 "It only works on transactions which are not included in a block and are not currently in the mempool.\n"
@@ -833,7 +837,7 @@ RPCHelpMan abandontransaction()
 
     LOCK(pwallet->cs_wallet);
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
+    Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
     if (!pwallet->mapWallet.count(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
@@ -849,11 +853,12 @@ RPCHelpMan abandontransaction()
 
 RPCHelpMan rescanblockchain()
 {
-    return RPCHelpMan{"rescanblockchain",
-                "\nRescan the local blockchain for wallet related transactions.\n"
+    return RPCHelpMan{
+        "rescanblockchain",
+        "Rescan the local blockchain for wallet related transactions.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n"
-                "The rescan is significantly faster when used on a descriptor wallet\n"
-                "and block filters are available (using startup option \"-blockfilterindex=1\").\n",
+                "The rescan is significantly faster if block filters are available\n"
+                "(using startup option \"-blockfilterindex=1\").\n",
                 {
                     {"start_height", RPCArg::Type::NUM, RPCArg::Default{0}, "block height where the rescan should start"},
                     {"stop_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "the last block height that should be scanned. If none is provided it will rescan up to the tip at return time of this call."},
@@ -946,13 +951,13 @@ RPCHelpMan rescanblockchain()
 RPCHelpMan abortrescan()
 {
     return RPCHelpMan{"abortrescan",
-                "\nStops current wallet rescan triggered by an RPC call, e.g. by an importprivkey call.\n"
+                "Stops current wallet rescan triggered by an RPC call, e.g. by a rescanblockchain call.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {},
                 RPCResult{RPCResult::Type::BOOL, "", "Whether the abort was successful"},
                 RPCExamples{
             "\nImport a private key\n"
-            + HelpExampleCli("importprivkey", "\"mykey\"") +
+            + HelpExampleCli("rescanblockchain", "") +
             "\nAbort the running wallet rescan\n"
             + HelpExampleCli("abortrescan", "") +
             "\nAs a JSON-RPC call\n"

@@ -150,7 +150,6 @@ BOOST_AUTO_TEST_CASE(embedded_test)
 
 BOOST_AUTO_TEST_CASE(subnet_test)
 {
-
     BOOST_CHECK(LookupSubNet("1.2.3.0/24") == LookupSubNet("1.2.3.0/255.255.255.0"));
     BOOST_CHECK(LookupSubNet("1.2.3.0/24") != LookupSubNet("1.2.4.0/255.255.255.0"));
     BOOST_CHECK(LookupSubNet("1.2.3.0/24").Match(ResolveIP("1.2.3.4")));
@@ -185,6 +184,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     // Check valid/invalid
     BOOST_CHECK(LookupSubNet("1.2.3.0/0").IsValid());
     BOOST_CHECK(!LookupSubNet("1.2.3.0/-1").IsValid());
+    BOOST_CHECK(!LookupSubNet("1.2.3.0/+24").IsValid());
     BOOST_CHECK(LookupSubNet("1.2.3.0/32").IsValid());
     BOOST_CHECK(!LookupSubNet("1.2.3.0/33").IsValid());
     BOOST_CHECK(!LookupSubNet("1.2.3.0/300").IsValid());

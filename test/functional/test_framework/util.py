@@ -20,6 +20,7 @@ import time
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
+from .descriptors import descsum_create
 from collections.abc import Callable
 from typing import Optional, Union
 
@@ -101,10 +102,9 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     except JSONRPCException:
         raise AssertionError("Use assert_raises_rpc_error() to test RPC failures")
     except exc as e:
-        if message is not None and message not in e.error['message']:
-            raise AssertionError(
-                "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
-                    message, e.error['message']))
+        if message is not None and message not in str(e):
+            raise AssertionError("Expected substring not found in exception:\n"
+                                 f"substring: '{message}'\nexception: {e!r}.")
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
     else:
@@ -321,6 +321,13 @@ def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_fact
     raise AssertionError("Predicate {} not true after {} seconds".format(predicate_source, timeout))
 
 
+def bpf_cflags():
+    return [
+        "-Wno-error=implicit-function-declaration",
+        "-Wno-duplicate-decl-specifier",  # https://github.com/bitcoin/bitcoin/issues/32322
+    ]
+
+
 def sha256sum_file(filename):
     h = hashlib.sha256()
     with open(filename, 'rb') as f:
@@ -452,7 +459,6 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         f.write("printtoconsole=0\n")
         f.write("natpmp=0\n")
         f.write("shrinkdebugfile=0\n")
-        f.write("deprecatedrpc=create_bdb\n")  # Required to run the tests
         # To improve SQLite wallet performance so that the tests don't timeout, use -unsafesqlitesync
         f.write("unsafesqlitesync=1\n")
         if disable_autoconnect:
@@ -603,3 +609,13 @@ def sync_txindex(test_framework, node):
     sync_start = int(time.time())
     test_framework.wait_until(lambda: node.getindexinfo("txindex")["txindex"]["synced"])
     test_framework.log.debug(f"Synced in {time.time() - sync_start} seconds")
+
+def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
+    desc = descsum_create("combo(" + privkey + ")")
+    req = [{
+        "desc": desc,
+        "timestamp": timestamp,
+        "label": label,
+    }]
+    import_res = wallet_rpc.importdescriptors(req)
+    assert_equal(import_res[0]["success"], True)

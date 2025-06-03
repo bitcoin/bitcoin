@@ -256,6 +256,7 @@ add_executable(bitcoin-qt
 )
 
 add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
+add_windows_application_manifest(bitcoin-qt)
 
 target_link_libraries(bitcoin-qt
   core_interface

@@ -1071,6 +1071,8 @@ private:
 
     void AddAddressKnown(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     void PushAddress(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    void LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block);
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -2493,14 +2495,17 @@ uint32_t PeerManagerImpl::GetFetchFlags(const Peer& peer) const
 void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlock& block, const BlockTransactionsRequest& req)
 {
     BlockTransactions resp(req);
+    unsigned int tx_requested_size = 0;
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
             Misbehaving(peer, "getblocktxn with out-of-bounds tx indices");
             return;
         }
         resp.txn[i] = block.vtx[req.indexes[i]];
+        tx_requested_size += resp.txn[i]->GetTotalSize();
     }
 
+    LogDebug(BCLog::CMPCTBLOCK, "Peer %d sent us a GETBLOCKTXN for block %s, sending a BLOCKTXN with %u txns. (%u bytes)\n", pfrom.GetId(), block.GetHash().ToString(), resp.txn.size(), tx_requested_size);
     MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
 }
 
@@ -2970,13 +2975,20 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
 
     // Now process all the headers.
     BlockValidationState state;
-    if (!m_chainman.ProcessNewBlockHeaders(headers, /*min_pow_checked=*/true, state, &pindexLast)) {
+    const bool processed{m_chainman.ProcessNewBlockHeaders(headers,
+                                                           /*min_pow_checked=*/true,
+                                                           state, &pindexLast)};
+    if (!processed) {
         if (state.IsInvalid()) {
             MaybePunishNodeForBlock(pfrom.GetId(), state, via_compact_block, "invalid header received");
             return;
         }
     }
     assert(pindexLast);
+
+    if (processed && received_new_header) {
+        LogBlockHeader(*pindexLast, pfrom, /*via_compact_block=*/false);
+    }
 
     // Consider fetching more headers if we are not using our headers-sync mechanism.
     if (nCount == m_opts.max_headers_result && !have_headers_sync) {
@@ -3403,6 +3415,32 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         ProcessBlock(pfrom, pblock, /*force_processing=*/true, /*min_pow_checked=*/true);
     }
     return;
+}
+
+void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block) {
+    // To prevent log spam, this function should only be called after it was determined that a
+    // header is both new and valid.
+    //
+    // These messages are valuable for detecting potential selfish mining behavior;
+    // if multiple displacing headers are seen near simultaneously across many
+    // nodes in the network, this might be an indication of selfish mining.
+    // In addition it can be used to identify peers which send us a header, but
+    // don't followup with a complete and valid (compact) block.
+    // Having this log by default when not in IBD ensures broad availability of
+    // this data in case investigation is merited.
+    const auto msg = strprintf(
+        "Saw new %sheader hash=%s height=%d peer=%d%s",
+        via_compact_block ? "cmpctblock " : "",
+        index.GetBlockHash().ToString(),
+        index.nHeight,
+        peer.GetId(),
+        peer.LogIP(fLogIPs)
+    );
+    if (m_chainman.IsInitialBlockDownload()) {
+        LogDebug(BCLog::VALIDATION, "%s", msg);
+    } else {
+        LogInfo("%s", msg);
+    }
 }
 
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
@@ -4353,9 +4391,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
         }
 
+        // If AcceptBlockHeader returned true, it set pindex
+        Assert(pindex);
         if (received_new_header) {
-            LogInfo("Saw new cmpctblock header hash=%s peer=%d\n",
-                blockhash.ToString(), pfrom.GetId());
+            LogBlockHeader(*pindex, pfrom, /*via_compact_block=*/true);
         }
 
         bool fProcessBLOCKTXN = false;
@@ -4371,8 +4410,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         {
         LOCK(cs_main);
-        // If AcceptBlockHeader returned true, it set pindex
-        assert(pindex);
         UpdateBlockAvailability(pfrom.GetId(), pindex->GetBlockHash());
 
         CNodeState *nodestate = State(pfrom.GetId());

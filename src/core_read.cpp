@@ -83,7 +83,7 @@ CScript ParseScript(const std::string& s)
             }
 
             result << num.value();
-        } else if (w.substr(0, 2) == "0x" && w.size() > 2 && IsHex(std::string(w.begin() + 2, w.end()))) {
+        } else if (w.starts_with("0x") && w.size() > 2 && IsHex(std::string(w.begin() + 2, w.end()))) {
             // Raw hex data, inserted NOT pushed onto stack:
             std::vector<unsigned char> raw = ParseHex(std::string(w.begin() + 2, w.end()));
             result.insert(result.end(), raw.begin(), raw.end());

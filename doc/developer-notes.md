@@ -221,7 +221,6 @@ Configure with clang as the compiler:
 
 ```sh
 cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-cmake --build build -j $(nproc)
 ```
 
 The output is denoised of errors from external dependencies.
@@ -1009,38 +1008,6 @@ Strings and formatting
     buffer overflows, and surprises with `\0` characters. Also, some C string manipulations
     tend to act differently depending on platform, or even the user locale.
 
-- Use `ToIntegral` from [`strencodings.h`](/src/util/strencodings.h) for number parsing. In legacy code you might also find `ParseInt*` family of functions, `ParseDouble` or `LocaleIndependentAtoi`.
-
-  - *Rationale*: These functions do overflow checking and avoid pesky locale issues.
-
-- Avoid using locale dependent functions if possible. You can use the provided
-  [`lint-locale-dependence.py`](/test/lint/lint-locale-dependence.py)
-  to check for accidental use of locale dependent functions.
-
-  - *Rationale*: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.
-
-  - These functions are known to be locale dependent:
-    `alphasort`, `asctime`, `asprintf`, `atof`, `atoi`, `atol`, `atoll`, `atoq`,
-    `btowc`, `ctime`, `dprintf`, `fgetwc`, `fgetws`, `fprintf`, `fputwc`,
-    `fputws`, `fscanf`, `fwprintf`, `getdate`, `getwc`, `getwchar`, `isalnum`,
-    `isalpha`, `isblank`, `iscntrl`, `isdigit`, `isgraph`, `islower`, `isprint`,
-    `ispunct`, `isspace`, `isupper`, `iswalnum`, `iswalpha`, `iswblank`,
-    `iswcntrl`, `iswctype`, `iswdigit`, `iswgraph`, `iswlower`, `iswprint`,
-    `iswpunct`, `iswspace`, `iswupper`, `iswxdigit`, `isxdigit`, `mblen`,
-    `mbrlen`, `mbrtowc`, `mbsinit`, `mbsnrtowcs`, `mbsrtowcs`, `mbstowcs`,
-    `mbtowc`, `mktime`, `putwc`, `putwchar`, `scanf`, `snprintf`, `sprintf`,
-    `sscanf`, `stoi`, `stol`, `stoll`, `strcasecmp`, `strcasestr`, `strcoll`,
-    `strfmon`, `strftime`, `strncasecmp`, `strptime`, `strtod`, `strtof`,
-    `strtoimax`, `strtol`, `strtold`, `strtoll`, `strtoq`, `strtoul`,
-    `strtoull`, `strtoumax`, `strtouq`, `strxfrm`, `swprintf`, `tolower`,
-    `toupper`, `towctrans`, `towlower`, `towupper`, `ungetwc`, `vasprintf`,
-    `vdprintf`, `versionsort`, `vfprintf`, `vfscanf`, `vfwprintf`, `vprintf`,
-    `vscanf`, `vsnprintf`, `vsprintf`, `vsscanf`, `vswprintf`, `vwprintf`,
-    `wcrtomb`, `wcscasecmp`, `wcscoll`, `wcsftime`, `wcsncasecmp`, `wcsnrtombs`,
-    `wcsrtombs`, `wcstod`, `wcstof`, `wcstoimax`, `wcstol`, `wcstold`,
-    `wcstoll`, `wcstombs`, `wcstoul`, `wcstoull`, `wcstoumax`, `wcswidth`,
-    `wcsxfrm`, `wctob`, `wctomb`, `wctrans`, `wctype`, `wcwidth`, `wprintf`
-
 - For `strprintf`, `LogInfo`, `LogDebug`, etc formatting characters don't need size specifiers.
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
@@ -1300,7 +1267,7 @@ Subtrees
 
 Several parts of the repository are subtrees of software maintained elsewhere.
 
-Some of these are maintained by active developers of Bitcoin Core, in which case
+Normally, these are maintained by active developers of Bitcoin Core, in which case
 changes should go directly upstream without being PRed directly against the project.
 They will be merged back in the next subtree merge.
 
@@ -1312,31 +1279,19 @@ should be taken upstream.
 There is a tool in `test/lint/git-subtree-check.sh` ([instructions](../test/lint#git-subtree-checksh))
 to check a subtree directory for consistency with its upstream repository.
 
-Current subtrees include:
+The tool instructions also include a list of the subtrees managed by Bitcoin Core.
+
+The ultimate upstream of the few externally managed subtrees are:
 
 - src/leveldb
-  - Subtree at https://github.com/bitcoin-core/leveldb-subtree ; maintained by Core contributors.
   - Upstream at https://github.com/google/leveldb ; maintained by Google. Open
-    important PRs to the subtree to avoid delay.
+    important PRs to the Bitcoin Core subtree to avoid delay.
   - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
     merging upstream changes to the LevelDB subtree.
 
 - src/crc32c
   - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
-  - Subtree at https://github.com/bitcoin-core/crc32c-subtree ; maintained by Core contributors.
   - Upstream at https://github.com/google/crc32c ; maintained by Google.
-
-- src/secp256k1
-  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; maintained by Core contributors.
-
-- src/crypto/ctaes
-  - Upstream at https://github.com/bitcoin-core/ctaes ; maintained by Core contributors.
-
-- src/minisketch
-  - Upstream at https://github.com/bitcoin-core/minisketch ; maintained by Core contributors.
-
-- src/ipc/libmultiprocess
-  - Upstream at https://github.com/bitcoin-core/libmultiprocess ; maintained by Core contributors.
 
 Upgrading LevelDB
 ---------------------

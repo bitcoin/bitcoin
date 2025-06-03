@@ -19,9 +19,6 @@ NUM_BLOCKS = 6       # number of blocks to mine
 
 
 class WalletFastRescanTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=1']]
@@ -40,7 +37,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
 
         self.log.info("Create descriptor wallet with backup")
         WALLET_BACKUP_FILENAME = node.datadir_path / 'wallet.bak'
-        node.createwallet(wallet_name='topup_test', descriptors=True)
+        node.createwallet(wallet_name='topup_test')
         w = node.get_wallet_rpc('topup_test')
         fixed_key = get_generate_key()
         print(w.importdescriptors([{"desc": descsum_create(f"wpkh({fixed_key.privkey})"), "timestamp": "now"}]))
@@ -69,7 +66,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
         txids_fast = self.get_wallet_txids(node, 'rescan_fast')
 
         self.log.info("Import non-active descriptors with block filter index")
-        node.createwallet(wallet_name='rescan_fast_nonactive', descriptors=True, disable_private_keys=True, blank=True)
+        node.createwallet(wallet_name='rescan_fast_nonactive', disable_private_keys=True, blank=True)
         with node.assert_debug_log(['fast variant using block filters']):
             w = node.get_wallet_rpc('rescan_fast_nonactive')
             w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
@@ -82,7 +79,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
         txids_slow = self.get_wallet_txids(node, 'rescan_slow')
 
         self.log.info("Import non-active descriptors w/o block filter index")
-        node.createwallet(wallet_name='rescan_slow_nonactive', descriptors=True, disable_private_keys=True, blank=True)
+        node.createwallet(wallet_name='rescan_slow_nonactive', disable_private_keys=True, blank=True)
         with node.assert_debug_log(['slow variant inspecting all blocks']):
             w = node.get_wallet_rpc('rescan_slow_nonactive')
             w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])

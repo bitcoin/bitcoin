@@ -6,6 +6,10 @@
 Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
+
+Example usage:
+
+    find ../path/to/guix/binaries -type f -executable | xargs python3 contrib/guix/security-check.py
 '''
 import re
 import sys
@@ -122,6 +126,9 @@ def check_ELF_FORTIFY(binary) -> bool:
     # bitcoin-util does not currently contain any fortified functions
     if 'Bitcoin Core bitcoin-util utility version ' in binary.strings:
         return True
+    # bitcoin wrapper does not currently contain any fortified functions
+    if '--monolithic' in binary.strings:
+        return True
 
     chk_funcs = set()
 
@@ -130,9 +137,8 @@ def check_ELF_FORTIFY(binary) -> bool:
         if match:
             chk_funcs.add(match.group(0))
 
-    # ignore stack-protector and bdb
+    # ignore stack-protector
     chk_funcs.discard('__stack_chk')
-    chk_funcs.discard('__db_chk')
 
     return len(chk_funcs) >= 1
 

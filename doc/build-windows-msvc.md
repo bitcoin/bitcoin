@@ -10,7 +10,7 @@ For cross-compiling options, please see [`build-windows.md`](./build-windows.md)
 
 This guide relies on using CMake and vcpkg package manager provided with the Visual Studio installation.
 Here are requirements for the Visual Studio installation:
-1. Minimum required version: Visual Studio 2022 version 17.6.
+1. Minimum required version: Visual Studio 2022 version 17.13.
 2. Installed components:
 - The "Desktop development with C++" workload.
 
@@ -19,7 +19,7 @@ The former is assumed hereinafter.
 
 ### 2. Git
 
-Download and install [Git for Windows](https://git-scm.com/download/win). Once installed, Git is available from PowerShell or the Command Prompt.
+Download and install [Git for Windows](https://git-scm.com/downloads/win). Once installed, Git is available from PowerShell or the Command Prompt.
 
 ### 3. Clone Bitcoin Repository
 

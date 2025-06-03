@@ -29,6 +29,7 @@ from .messages import (
     tx_from_hex,
     uint256_from_compact,
     WITNESS_SCALE_FACTOR,
+    MAX_SEQUENCE_NONFINAL,
 )
 from .script import (
     CScript,
@@ -48,6 +49,7 @@ from .util import assert_equal
 
 MAX_BLOCK_SIGOPS = 20000
 MAX_BLOCK_SIGOPS_WEIGHT = MAX_BLOCK_SIGOPS * WITNESS_SCALE_FACTOR
+MAX_STANDARD_TX_SIGOPS = 4000
 MAX_STANDARD_TX_WEIGHT = 400000
 
 # Genesis block time (regtest)
@@ -78,6 +80,9 @@ assert_equal(uint256_from_compact(DIFF_1_N_BITS), DIFF_1_TARGET)
 DIFF_4_N_BITS = 0x1c3fffc0
 DIFF_4_TARGET = int(DIFF_1_TARGET / 4)
 assert_equal(uint256_from_compact(DIFF_4_N_BITS), DIFF_4_TARGET)
+
+# From BIP325
+SIGNET_HEADER = b"\xec\xc7\xda\xa2"
 
 def nbits_str(nbits):
     return f"{nbits:08x}"
@@ -151,7 +156,8 @@ def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_scr
     If extra_output_script is given, make a 0-value output to that
     script. This is useful to pad block weight/sigops as needed. """
     coinbase = CTransaction()
-    coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), SEQUENCE_FINAL))
+    coinbase.nLockTime = height - 1
+    coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), MAX_SEQUENCE_NONFINAL))
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = nValue * COIN
     if nValue == 50:

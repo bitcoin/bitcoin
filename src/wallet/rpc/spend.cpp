@@ -100,8 +100,8 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     // First fill transaction with our data without signing,
     // so external signers are not asked to sign more than once.
     bool complete;
-    pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/false, /*bip32derivs=*/true);
-    const auto err{pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/true, /*bip32derivs=*/false)};
+    pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true);
+    const auto err{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
@@ -226,8 +226,9 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
 
 RPCHelpMan sendtoaddress()
 {
-    return RPCHelpMan{"sendtoaddress",
-                "\nSend an amount to a given address." +
+    return RPCHelpMan{
+        "sendtoaddress",
+        "Send an amount to a given address." +
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to send to."},
@@ -417,8 +418,9 @@ RPCHelpMan sendmany()
 
 RPCHelpMan settxfee()
 {
-    return RPCHelpMan{"settxfee",
-                "\n(DEPRECATED) Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
+    return RPCHelpMan{
+        "settxfee",
+        "(DEPRECATED) Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
                 "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
                 {
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_UNIT + "/kvB"},
@@ -742,8 +744,9 @@ static void SetOptionsInputWeights(const UniValue& inputs, UniValue& options)
 
 RPCHelpMan fundrawtransaction()
 {
-    return RPCHelpMan{"fundrawtransaction",
-                "\nIf the transaction has no inputs, they will be automatically selected to meet its out value.\n"
+    return RPCHelpMan{
+        "fundrawtransaction",
+        "If the transaction has no inputs, they will be automatically selected to meet its out value.\n"
                 "It will add at most one change output to the outputs.\n"
                 "No existing outputs will be modified unless \"subtractFeeFromOutputs\" is specified.\n"
                 "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
@@ -752,7 +755,7 @@ RPCHelpMan fundrawtransaction()
                 "All existing inputs must either have their previous output transaction be in the wallet\n"
                 "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n"
                 "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
-                "in the wallet using importaddress or addmultisigaddress (to calculate fees).\n"
+                "in the wallet using importdescriptors (to calculate fees).\n"
                 "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
                 "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n",
                 {
@@ -771,7 +774,7 @@ RPCHelpMan fundrawtransaction()
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
                                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                                          "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
+                                                          "e.g. with 'importdescriptors'."},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
@@ -876,8 +879,9 @@ RPCHelpMan fundrawtransaction()
 
 RPCHelpMan signrawtransactionwithwallet()
 {
-    return RPCHelpMan{"signrawtransactionwithwallet",
-                "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
+    return RPCHelpMan{
+        "signrawtransactionwithwallet",
+        "Sign inputs for raw transaction (serialized, hex-encoded).\n"
                 "The second optional argument (may be null) is an array of previous transaction outputs that\n"
                 "this transaction depends on but may not yet be in the block chain." +
         HELP_REQUIRING_PASSPHRASE,
@@ -956,12 +960,15 @@ RPCHelpMan signrawtransactionwithwallet()
     // Parse the prevtxs array
     ParsePrevouts(request.params[1], nullptr, coins);
 
-    int nHashType = ParseSighashString(request.params[2]);
+    std::optional<int> nHashType = ParseSighashString(request.params[2]);
+    if (!nHashType) {
+        nHashType = SIGHASH_DEFAULT;
+    }
 
     // Script verification errors
     std::map<int, bilingual_str> input_errors;
 
-    bool complete = pwallet->SignTransaction(mtx, coins, nHashType, input_errors);
+    bool complete = pwallet->SignTransaction(mtx, coins, *nHashType, input_errors);
     UniValue result(UniValue::VOBJ);
     SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
     return result;
@@ -1068,7 +1075,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         throw JSONRPCError(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.");
     }
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
+    Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
     CCoinControl coin_control;
     coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
@@ -1166,7 +1173,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
         }
 
-        uint256 txid;
+        Txid txid;
         if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
             throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
         }
@@ -1175,7 +1182,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     } else {
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
-        const auto err{pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, /*sign=*/false, /*bip32derivs=*/true)};
+        const auto err{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true)};
         CHECK_NONFATAL(!err);
         CHECK_NONFATAL(!complete);
         DataStream ssTx{};
@@ -1201,8 +1208,9 @@ RPCHelpMan psbtbumpfee() { return bumpfee_helper("psbtbumpfee"); }
 
 RPCHelpMan send()
 {
-    return RPCHelpMan{"send",
-        "\nEXPERIMENTAL warning: this call may be changed in future releases.\n"
+    return RPCHelpMan{
+        "send",
+        "EXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The outputs specified as key-value pairs.\n"
@@ -1231,7 +1239,7 @@ RPCHelpMan send()
                     {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
                     {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
                                           "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                          "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
+                                          "e.g. with 'importdescriptors'."},
                     {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Specify inputs instead of adding them automatically.",
                         {
                           {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "", {
@@ -1351,7 +1359,7 @@ RPCHelpMan sendall()
                         {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
                         {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch-only.\n"
                                               "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                              "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
+                                              "e.g. with 'importdescriptors'."},
                         {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Use exactly the specified inputs to build the transaction. Specifying inputs is incompatible with the send_max, minconf, and maxconf options.",
                             {
                                 {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -1582,8 +1590,9 @@ RPCHelpMan sendall()
 
 RPCHelpMan walletprocesspsbt()
 {
-    return RPCHelpMan{"walletprocesspsbt",
-                "\nUpdate a PSBT with input information from our wallet and then sign inputs\n"
+    return RPCHelpMan{
+        "walletprocesspsbt",
+        "Update a PSBT with input information from our wallet and then sign inputs\n"
                 "that we can sign for." +
         HELP_REQUIRING_PASSPHRASE,
                 {
@@ -1629,7 +1638,7 @@ RPCHelpMan walletprocesspsbt()
     }
 
     // Get the sighash type
-    int nHashType = ParseSighashString(request.params[2]);
+    std::optional<int> nHashType = ParseSighashString(request.params[2]);
 
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
@@ -1665,8 +1674,9 @@ RPCHelpMan walletprocesspsbt()
 
 RPCHelpMan walletcreatefundedpsbt()
 {
-    return RPCHelpMan{"walletcreatefundedpsbt",
-                "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
+    return RPCHelpMan{
+        "walletcreatefundedpsbt",
+        "Creates and funds a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator and Updater roles.\n"
                 "All existing inputs must either have their previous output transaction be in the wallet\n"
                 "or be in the UTXO set. Solving data must be provided for non-wallet inputs.\n",
@@ -1777,7 +1787,7 @@ RPCHelpMan walletcreatefundedpsbt()
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
-    const auto err{wallet.FillPSBT(psbtx, complete, 1, /*sign=*/false, /*bip32derivs=*/bip32derivs)};
+    const auto err{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/bip32derivs)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }

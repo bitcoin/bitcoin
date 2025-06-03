@@ -25,9 +25,6 @@ from test_framework.util import (
 )
 
 class ReorgsRestoreTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 3
 
@@ -122,11 +119,11 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(node.getbestblockhash(), tip)
 
-        # Due to an existing bug, the wallet incorrectly keeps the transaction in an abandoned state, even though that's
-        # no longer the case (after the unclean shutdown, the node's chain returned to the pre-invalidation tip).
-        # This issue blocks any future spending and results in an incorrect balance display.
+        # After disconnecting the block, the wallet should record the new best block.
+        # Upon reload after the crash, since the chainstate was not flushed, the tip contains the previously abandoned
+        # coinbase. This should be rescanned and now un-abandoned.
         wallet = node.get_wallet_rpc("reorg_crash")
-        assert_equal(wallet.getwalletinfo()['immature_balance'], 0) # FIXME: #31824.
+        assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], False)
 
         # Previously, a bug caused the node to crash if two block disconnection events occurred consecutively.
         # Ensure this is no longer the case by simulating a new reorg.

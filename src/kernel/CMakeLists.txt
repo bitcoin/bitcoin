@@ -87,6 +87,7 @@ target_link_libraries(bitcoinkernel
     bitcoin_crypto
     leveldb
     secp256k1
+    $<$<PLATFORM_ID:Windows>:bcrypt>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
   PUBLIC
     Boost::headers

@@ -149,9 +149,17 @@ static void initialize()
         std::cerr << "No fuzz target compiled for " << g_fuzz_target << "." << std::endl;
         std::exit(EXIT_FAILURE);
     }
-    if constexpr (!G_FUZZING) {
-        std::cerr << "Must compile with -DBUILD_FOR_FUZZING=ON to execute a fuzz target." << std::endl;
+    if constexpr (!G_FUZZING_BUILD && !G_ABORT_ON_FAILED_ASSUME) {
+        std::cerr << "Must compile with -DBUILD_FOR_FUZZING=ON or in Debug mode to execute a fuzz target." << std::endl;
         std::exit(EXIT_FAILURE);
+    }
+    if (!EnableFuzzDeterminism()) {
+        if (std::getenv("FUZZ_NONDETERMINISM")) {
+            std::cerr << "Warning: FUZZ_NONDETERMINISM env var set, results may be inconsistent with fuzz build" << std::endl;
+        } else {
+            g_enable_dynamic_fuzz_determinism = true;
+            assert(EnableFuzzDeterminism());
+        }
     }
     Assert(!g_test_one_input);
     g_test_one_input = &it->second.test_one_input;

@@ -110,8 +110,9 @@ static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_ch
 
 static RPCHelpMan getnetworkhashps()
 {
-    return RPCHelpMan{"getnetworkhashps",
-                "\nReturns the estimated network hashes per second based on the last n blocks.\n"
+    return RPCHelpMan{
+        "getnetworkhashps",
+        "Returns the estimated network hashes per second based on the last n blocks.\n"
                 "Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.\n"
                 "Pass in [height] to estimate the network speed at the time when a certain block was found.\n",
                 {
@@ -414,8 +415,9 @@ static RPCHelpMan generateblock()
 
 static RPCHelpMan getmininginfo()
 {
-    return RPCHelpMan{"getmininginfo",
-                "\nReturns a json object containing mining-related information.",
+    return RPCHelpMan{
+        "getmininginfo",
+        "Returns a json object containing mining-related information.",
                 {},
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -596,10 +598,11 @@ static UniValue BIP22ValidationResult(const BlockValidationState& state)
     return "valid?";
 }
 
-static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
-    const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
-    std::string s = vbinfo.name;
-    if (!vbinfo.gbt_force) {
+// Prefix rule name with ! if not optional, see BIP9
+static std::string gbt_rule_value(const std::string& name, bool gbt_optional_rule)
+{
+    std::string s{name};
+    if (!gbt_optional_rule) {
         s.insert(s.begin(), '!');
     }
     return s;
@@ -607,8 +610,9 @@ static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
 
 static RPCHelpMan getblocktemplate()
 {
-    return RPCHelpMan{"getblocktemplate",
-        "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
+    return RPCHelpMan{
+        "getblocktemplate",
+        "If the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
         "It returns data needed to construct a block to work on.\n"
         "For full specification, see BIPs 22, 23, 9, and 145:\n"
         "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
@@ -952,45 +956,33 @@ static RPCHelpMan getblocktemplate()
     }
 
     UniValue vbavailable(UniValue::VOBJ);
-    for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
-        Consensus::DeploymentPos pos = Consensus::DeploymentPos(j);
-        ThresholdState state = chainman.m_versionbitscache.State(pindexPrev, consensusParams, pos);
-        switch (state) {
-            case ThresholdState::DEFINED:
-            case ThresholdState::FAILED:
-                // Not exposed to GBT at all
-                break;
-            case ThresholdState::LOCKED_IN:
-                // Ensure bit is set in block version
-                block.nVersion |= chainman.m_versionbitscache.Mask(consensusParams, pos);
-                [[fallthrough]];
-            case ThresholdState::STARTED:
-            {
-                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
-                vbavailable.pushKV(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit);
-                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
-                    if (!vbinfo.gbt_force) {
-                        // If the client doesn't support this, don't indicate it in the [default] version
-                        block.nVersion &= ~chainman.m_versionbitscache.Mask(consensusParams, pos);
-                    }
-                }
-                break;
-            }
-            case ThresholdState::ACTIVE:
-            {
-                // Add to rules only
-                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
-                aRules.push_back(gbt_vb_name(pos));
-                if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
-                    // Not supported by the client; make sure it's safe to proceed
-                    if (!vbinfo.gbt_force) {
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Support for '%s' rule requires explicit client support", vbinfo.name));
-                    }
-                }
-                break;
-            }
+    const auto gbtstatus = chainman.m_versionbitscache.GBTStatus(*pindexPrev, consensusParams);
+
+    for (const auto& [name, info] : gbtstatus.signalling) {
+        vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
+        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
+            // If the client doesn't support this, don't indicate it in the [default] version
+            block.nVersion &= ~info.mask;
         }
     }
+
+    for (const auto& [name, info] : gbtstatus.locked_in) {
+        block.nVersion |= info.mask;
+        vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
+        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
+            // If the client doesn't support this, don't indicate it in the [default] version
+            block.nVersion &= ~info.mask;
+        }
+    }
+
+    for (const auto& [name, info] : gbtstatus.active) {
+        aRules.push_back(gbt_rule_value(name, info.gbt_optional_rule));
+        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
+            // Not supported by the client; make sure it's safe to proceed
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Support for '%s' rule requires explicit client support", name));
+        }
+    }
+
     result.pushKV("version", block.nVersion);
     result.pushKV("rules", std::move(aRules));
     result.pushKV("vbavailable", std::move(vbavailable));
@@ -1056,8 +1048,9 @@ protected:
 static RPCHelpMan submitblock()
 {
     // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
-    return RPCHelpMan{"submitblock",
-        "\nAttempts to submit new block to network.\n"
+    return RPCHelpMan{
+        "submitblock",
+        "Attempts to submit new block to network.\n"
         "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
         {
             {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
@@ -1106,8 +1099,9 @@ static RPCHelpMan submitblock()
 
 static RPCHelpMan submitheader()
 {
-    return RPCHelpMan{"submitheader",
-                "\nDecode the given hexdata as a header and submit it as a candidate chain tip if valid."
+    return RPCHelpMan{
+        "submitheader",
+        "Decode the given hexdata as a header and submit it as a candidate chain tip if valid."
                 "\nThrows when the header is invalid.\n",
                 {
                     {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block header data"},

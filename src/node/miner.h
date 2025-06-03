@@ -6,6 +6,7 @@
 #ifndef BITCOIN_NODE_MINER_H
 #define BITCOIN_NODE_MINER_H
 
+#include <interfaces/types.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -31,7 +32,11 @@ class ChainstateManager;
 
 namespace Consensus { struct Params; };
 
+using interfaces::BlockRef;
+
 namespace node {
+class KernelNotifications;
+
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 struct CBlockTemplate
@@ -229,6 +234,27 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 
 /** Apply -blockmintxfee and -blockmaxweight options from ArgsManager to BlockAssembler options. */
 void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& options);
+
+/* Compute the block's merkle root, insert or replace the coinbase transaction and the merkle root into the block */
+void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
+
+/**
+ * Return a new block template when fees rise to a certain threshold or after a
+ * new tip; return nullopt if timeout is reached.
+ */
+std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+                                                      KernelNotifications& kernel_notifications,
+                                                      CTxMemPool* mempool,
+                                                      const std::unique_ptr<CBlockTemplate>& block_template,
+                                                      const BlockWaitOptions& options,
+                                                      const BlockAssembler::Options& assemble_options);
+
+/* Locks cs_main and returns the block hash and block height of the active chain if it exists; otherwise, returns nullopt.*/
+std::optional<BlockRef> GetTip(ChainstateManager& chainman);
+
+/* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
+ * Returns the current tip, or nullopt if the node is shutting down. */
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

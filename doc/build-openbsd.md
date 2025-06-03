@@ -26,33 +26,11 @@ git clone https://github.com/bitcoin/bitcoin.git
 #### Wallet Dependencies
 
 It is not necessary to build wallet functionality to run either `bitcoind` or `bitcoin-qt`.
+SQLite is required to build the wallet.
 
-###### Descriptor Wallet Support
-
-SQLite is required to support [descriptor wallets](descriptors.md).
 
 ``` bash
 pkg_add sqlite3
-```
-
-###### Legacy Wallet Support
-BerkeleyDB is only required to support legacy wallets.
-
-It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
-from ports. However you can build it yourself, [using depends](/depends).
-
-Refer to [depends/README.md](/depends/README.md) for detailed instructions.
-
-```bash
-gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_ZMQ=1 NO_USDT=1
-...
-to: /path/to/bitcoin/depends/*-unknown-openbsd*
-```
-
-Then set `BDB_PREFIX`:
-
-```bash
-export BDB_PREFIX="[path displayed above]"
 ```
 
 #### GUI Dependencies
@@ -107,13 +85,6 @@ cmake -B build -DBUILD_GUI=ON
 ```
 
 Run `cmake -B build -LH` to see the full list of available options.
-
-##### Descriptor & Legacy Wallet. No GUI:
-This enables support for both wallet types:
-
-```bash
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
-```
 
 ### 2. Compile
 

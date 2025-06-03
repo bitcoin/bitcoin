@@ -80,8 +80,9 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
 static DescriptorScriptPubKeyMan* CreateDescriptor(WalletDescriptor& wallet_desc, FlatSigningProvider& keys, CWallet& keystore)
 {
     LOCK(keystore.cs_wallet);
-    keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false);
-    return keystore.GetDescriptorScriptPubKeyMan(wallet_desc);
+    auto spk_manager_res = keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false);
+    if (!spk_manager_res) return nullptr;
+    return &spk_manager_res.value().get();
 };
 
 FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
@@ -188,7 +189,8 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
                 auto psbt{*opt_psbt};
                 const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
-                const int sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 150)};
+                std::optional<int> sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151)};
+                if (sighash_type == 151) sighash_type = std::nullopt;
                 auto sign  = fuzzed_data_provider.ConsumeBool();
                 auto bip32derivs = fuzzed_data_provider.ConsumeBool();
                 auto finalize = fuzzed_data_provider.ConsumeBool();

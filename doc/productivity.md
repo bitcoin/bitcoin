@@ -52,8 +52,6 @@ During the generation of the build system only essential build options are enabl
 
 Run `cmake -B build -LH` to see the full list of available options. GUI tools, such as `ccmake` and `cmake-gui`, can be also helpful.
 
-If you do need the wallet enabled (`-DENABLE_WALLET=ON`), it is common for devs to use your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.
-
 ### Make use of your threads with `-j`
 
 If you have multiple threads on your machine, you can utilize all of them with:
@@ -196,7 +194,7 @@ You can do:
 git range-diff master previously-reviewed-head new-head
 ```
 
-Note that `git range-diff` also work for rebases:
+Note that `git range-diff` also works for rebases:
 
 ```
        P1--P2--P3--P4--P5   <-- previously-reviewed-head

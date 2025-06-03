@@ -54,10 +54,6 @@ SQLite is required for the descriptor wallet:
 
     sudo apt install libsqlite3-dev
 
-Berkeley DB is only required for the legacy wallet. Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages,
-but these will install Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed
-executables, which are based on BerkeleyDB 4.8. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
-
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 ZMQ dependencies (provides ZMQ API):
@@ -109,10 +105,6 @@ SQLite is required for the descriptor wallet:
 
     sudo dnf install sqlite-devel
 
-Berkeley DB is only required for the legacy wallet. Fedora releases have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
-Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
-are based on Berkeley DB 4.8. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
-
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 ZMQ dependencies (provides ZMQ API):
@@ -153,27 +145,6 @@ See [dependencies.md](dependencies.md) for a complete overview, and
 [depends](/depends/README.md) on how to compile them yourself, if you wish to
 not use the packages of your Linux distribution.
 
-### Berkeley DB
-
-The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
-recommended to use Berkeley DB 4.8. If you have to build it yourself, and don't
-want to use any other libraries built in depends, you can do:
-```bash
-make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_ZMQ=1 NO_USDT=1
-...
-to: /path/to/bitcoin/depends/x86_64-pc-linux-gnu
-```
-and configure using the following:
-```bash
-export BDB_PREFIX="/path/to/bitcoin/depends/x86_64-pc-linux-gnu"
-
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
-```
-
-**Note**: Make sure that `BDB_PREFIX` is an absolute path.
-
-**Note**: You only need Berkeley DB if the legacy wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
-
 Disable-wallet mode
 --------------------
 When the intention is to only run a P2P node, without a wallet, Bitcoin Core can
@@ -181,7 +152,7 @@ be compiled in disable-wallet mode with:
 
     cmake -B build -DENABLE_WALLET=OFF
 
-In this case there is no dependency on SQLite or Berkeley DB.
+In this case there is no dependency on SQLite.
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 
@@ -203,5 +174,5 @@ This example lists the steps necessary to setup and build a command line only di
     cmake --build build
     ctest --test-dir build
     ./build/bin/bitcoind
+    ./build/bin/bitcoin help
 
-If you intend to work with legacy Berkeley DB wallets, see [Berkeley DB](#berkeley-db) section.

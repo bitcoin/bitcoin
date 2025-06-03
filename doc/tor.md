@@ -27,6 +27,8 @@ e.g. for `-onlynet=onion`.
 
 You can use the `getnodeaddresses` RPC to fetch a number of onion peers known to your node; run `bitcoin-cli help getnodeaddresses` for details.
 
+`bitcoin rpc` can also be substituted for `bitcoin-cli`.
+
 ## 1. Run Bitcoin Core behind a Tor proxy
 
 The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all
@@ -63,6 +65,8 @@ outgoing connections, but more is possible.
 In a typical situation, this suffices to run behind a Tor proxy:
 
     ./bitcoind -proxy=127.0.0.1:9050
+
+`bitcoin node` or `bitcoin gui` can also be substituted for `bitcoind`.
 
 ## 2. Automatically create a Bitcoin Core onion service
 

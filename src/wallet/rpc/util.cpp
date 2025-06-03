@@ -94,28 +94,6 @@ WalletContext& EnsureWalletContext(const std::any& context)
     return *wallet_context;
 }
 
-// also_create should only be set to true only when the RPC is expected to add things to a blank wallet and make it no longer blank
-LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create)
-{
-    LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (!spk_man && also_create) {
-        spk_man = wallet.GetOrCreateLegacyScriptPubKeyMan();
-    }
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Only legacy wallets are supported by this command");
-    }
-    return *spk_man;
-}
-
-const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wallet)
-{
-    const LegacyScriptPubKeyMan* spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Only legacy wallets are supported by this command");
-    }
-    return *spk_man;
-}
-
 std::string LabelFromValue(const UniValue& value)
 {
     static const std::string empty_string;
@@ -145,6 +123,7 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
         switch (status) {
             case DatabaseStatus::FAILED_NOT_FOUND:
             case DatabaseStatus::FAILED_BAD_FORMAT:
+            case DatabaseStatus::FAILED_LEGACY_DISABLED:
                 code = RPC_WALLET_NOT_FOUND;
                 break;
             case DatabaseStatus::FAILED_ALREADY_LOADED:

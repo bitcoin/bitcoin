@@ -3,8 +3,8 @@
 // file COPYING or https://opensource.org/license/mit/.
 
 use std::env;
-use std::fs;
-use std::io::ErrorKind;
+use std::fs::{self, File};
+use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio};
 
@@ -87,6 +87,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check for trailing whitespace",
             name: "trailing_whitespace",
             lint_fn: lint_trailing_whitespace
+        },
+        &Linter {
+            description: "Check for trailing newline",
+            name: "trailing_newline",
+            lint_fn: lint_trailing_newline
         },
         &Linter {
             description: "Run all linters of the form: test/lint/lint-*.py",
@@ -200,19 +205,24 @@ fn commit_range() -> String {
 
 /// Return all subtree paths
 fn get_subtrees() -> Vec<&'static str> {
+    // Keep in sync with [test/lint/README.md#git-subtree-checksh]
     vec![
         "src/crc32c",
         "src/crypto/ctaes",
+        "src/ipc/libmultiprocess",
         "src/leveldb",
         "src/minisketch",
         "src/secp256k1",
     ]
 }
 
-/// Return the pathspecs to exclude all subtrees
-fn get_pathspecs_exclude_subtrees() -> Vec<String> {
+/// Return the pathspecs to exclude by default
+fn get_pathspecs_default_excludes() -> Vec<String> {
     get_subtrees()
         .iter()
+        .chain(&[
+            "doc/release-notes/release-notes-*", // archived notes
+        ])
         .map(|s| format!(":(exclude){}", s))
         .collect()
 }
@@ -333,7 +343,7 @@ fn lint_py_lint() -> LintResult {
     let files = check_output(
         git()
             .args(["ls-files", "--", "*.py"])
-            .args(get_pathspecs_exclude_subtrees()),
+            .args(get_pathspecs_default_excludes()),
     )?;
 
     let mut cmd = Command::new(bin_name);
@@ -459,7 +469,7 @@ expected to follow the naming "/doc/release-notes-<PR number>.md".
 
 /// Return the pathspecs for whitespace related excludes
 fn get_pathspecs_exclude_whitespace() -> Vec<String> {
-    let mut list = get_pathspecs_exclude_subtrees();
+    let mut list = get_pathspecs_default_excludes();
     list.extend(
         [
             // Permanent excludes
@@ -468,7 +478,6 @@ fn get_pathspecs_exclude_whitespace() -> Vec<String> {
             "contrib/windeploy/win-codesign.cert",
             "doc/README_windows.txt",
             // Temporary excludes, or existing violations
-            "doc/release-notes/release-notes-0.*",
             "contrib/init/bitcoind.openrc",
             "contrib/macdeploy/macdeployqtplus",
             "src/crypto/sha256_sse4.cpp",
@@ -504,6 +513,44 @@ Thus, it is best to remove the trailing space now.
 
 Please add any false positives, such as subtrees, Windows-related files, patch files, or externally
 sourced files to the exclude list.
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_trailing_newline() -> LintResult {
+    let files = check_output(
+        git()
+            .args([
+                "ls-files", "--", "*.py", "*.cpp", "*.h", "*.md", "*.rs", "*.sh", "*.cmake",
+            ])
+            .args(get_pathspecs_default_excludes()),
+    )?;
+    let mut missing_newline = false;
+    for path in files.lines() {
+        let mut file = File::open(path).expect("must be able to open file");
+        if file.seek(SeekFrom::End(-1)).is_err() {
+            continue; // Allow fully empty files
+        }
+        let mut buffer = [0u8; 1];
+        file.read_exact(&mut buffer)
+            .expect("must be able to read the last byte");
+        if buffer[0] != b'\n' {
+            missing_newline = true;
+            println!("{path}");
+        }
+    }
+    if missing_newline {
+        Err(r#"
+A trailing newline is required, because git may warn about it missing. Also, it can make diffs
+verbose and can break git blame after appending lines.
+
+Thus, it is best to add the trailing newline now.
+
+Please add any false positives to the exclude list.
             "#
         .trim()
         .to_string())
@@ -569,15 +616,7 @@ fn lint_includes_build_config() -> LintResult {
                     "*.cpp",
                     "*.h",
                 ])
-                .args(get_pathspecs_exclude_subtrees())
-                .args([
-                    // These are exceptions which don't use bitcoin-build-config.h, rather CMakeLists.txt adds
-                    // these cppflags manually.
-                    ":(exclude)src/crypto/sha256_arm_shani.cpp",
-                    ":(exclude)src/crypto/sha256_avx2.cpp",
-                    ":(exclude)src/crypto/sha256_sse41.cpp",
-                    ":(exclude)src/crypto/sha256_x86_shani.cpp",
-                ]),
+                .args(get_pathspecs_default_excludes()),
         )
         .expect("grep failed");
         git()

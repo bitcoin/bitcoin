@@ -450,7 +450,7 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
 bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, CMutableTransaction& mtx, bool& complete) {
     std::optional<PSBTError> err;
     try {
-        err = model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/true, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
+        err = model->wallet().fillPSBT(std::nullopt, /*sign=*/true, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
     } catch (const std::runtime_error& e) {
         QMessageBox::critical(nullptr, tr("Sign failed"), e.what());
         return false;
@@ -468,7 +468,7 @@ bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, 
         return false;
     }
     if (err) {
-        tfm::format(std::cerr, "Failed to sign PSBT");
+        qWarning() << "Failed to sign PSBT";
         processSendCoinsReturn(WalletModel::TransactionCreationFailed);
         return false;
     }
@@ -507,7 +507,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
         // Fill without signing
-        const auto err{model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
+        const auto err{model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
         assert(!complete);
         assert(!err);
 
@@ -523,7 +523,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             bool complete = false;
             // Always fill without signing first. This prevents an external signer
             // from being called prematurely and is not expensive.
-            const auto err{model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
+            const auto err{model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
             assert(!complete);
             assert(!err);
             send_failure = !signWithExternalSigner(psbtx, mtx, complete);
@@ -711,9 +711,6 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
         CAmount balance = balances.balance;
         if (model->wallet().hasExternalSigner()) {
             ui->labelBalanceName->setText(tr("External balance:"));
-        } else if (model->wallet().isLegacy() && model->wallet().privateKeysDisabled()) {
-            balance = balances.watch_only_balance;
-            ui->labelBalanceName->setText(tr("Watch-only balance:"));
         }
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
     }
@@ -790,9 +787,6 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
 
 void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
 {
-    // Include watch-only for wallets without private key
-    m_coin_control->fAllowWatchOnly = model->wallet().privateKeysDisabled() && !model->wallet().hasExternalSigner();
-
     // Same behavior as send: if we have selected coins, only obtain their available balance.
     // Copy to avoid modifying the member's data.
     CCoinControl coin_control = *m_coin_control;
@@ -850,11 +844,13 @@ void SendCoinsDialog::updateCoinControlState()
     // Either custom fee will be used or if not selected, the confirmation target from dropdown box
     m_coin_control->m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
     m_coin_control->m_signal_bip125_rbf = ui->optInRBF->isChecked();
-    // Include watch-only for wallets without private key
-    m_coin_control->fAllowWatchOnly = model->wallet().privateKeysDisabled() && !model->wallet().hasExternalSigner();
 }
 
 void SendCoinsDialog::updateNumberOfBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype, SynchronizationState sync_state) {
+    // During shutdown, clientModel will be nullptr. Attempting to update views at this point may cause a crash
+    // due to accessing backend models that might no longer exist.
+    if (!clientModel) return;
+    // Process event
     if (sync_state == SynchronizationState::POST_INIT) {
         updateSmartFeeLabel();
     }

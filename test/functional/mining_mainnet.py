@@ -30,6 +30,7 @@ from test_framework.blocktools import (
 
 from test_framework.messages import (
     CBlock,
+    SEQUENCE_FINAL,
 )
 
 import json
@@ -52,8 +53,6 @@ class MiningMainnetTest(BitcoinTestFramework):
             help='Block data file (default: %(default)s)',
         )
 
-        self.add_wallet_options(parser)
-
     def mine(self, height, prev_hash, blocks, node, fees=0):
         self.log.debug(f"height={height}")
         block = CBlock()
@@ -63,6 +62,10 @@ class MiningMainnetTest(BitcoinTestFramework):
         block.nBits = DIFF_1_N_BITS
         block.nNonce = blocks['nonces'][height - 1]
         block.vtx = [create_coinbase(height=height, script_pubkey=bytes.fromhex(COINBASE_SCRIPT_PUBKEY), retarget_period=2016)]
+        # The alternate mainnet chain was mined with non-timelocked coinbase txs.
+        block.vtx[0].nLockTime = 0
+        block.vtx[0].vin[0].nSequence = SEQUENCE_FINAL
+        block.vtx[0].rehash()
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block_hex = block.serialize(with_witness=False).hex()

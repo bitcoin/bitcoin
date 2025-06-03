@@ -239,8 +239,6 @@ namespace fsbridge {
         void* hFile = (void*)-1; // INVALID_HANDLE_VALUE
 #endif
     };
-
-    std::string get_filesystem_error_message(const fs::filesystem_error& e);
 };
 
 // Disallow path operator<< formatting in tinyformat to avoid locale-dependent

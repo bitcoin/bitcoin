@@ -41,8 +41,6 @@ bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string&
 
 void EnsureWalletIsUnlocked(const CWallet&);
 WalletContext& EnsureWalletContext(const std::any& context);
-LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
-const LegacyScriptPubKeyMan& EnsureConstLegacyScriptPubKeyMan(const CWallet& wallet);
 
 bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param);
 bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wallet);

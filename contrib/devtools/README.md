@@ -159,35 +159,6 @@ For example:
 BUILDDIR=$PWD/my-build-dir contrib/devtools/gen-bitcoin-conf.sh
 ```
 
-security-check.py
-=================
-
-Perform basic security checks on a series of executables.
-
-symbol-check.py
-===============
-
-A script to check that release executables only contain
-certain symbols and are only linked against allowed libraries.
-
-For Linux this means checking for allowed gcc, glibc and libstdc++ version symbols.
-This makes sure they are still compatible with the minimum supported distribution versions.
-
-For macOS and Windows we check that the executables are only linked against libraries we allow.
-
-Example usage:
-
-    find ../path/to/executables -type f -executable | xargs python3 contrib/devtools/symbol-check.py
-
-If no errors occur the return value will be 0 and the output will be empty.
-
-If there are any errors the return value will be 1 and output like this will be printed:
-
-    .../64/test_bitcoin: symbol memcpy from unsupported version GLIBC_2.14
-    .../64/test_bitcoin: symbol __fdelt_chk from unsupported version GLIBC_2.15
-    .../64/test_bitcoin: symbol std::out_of_range::~out_of_range() from unsupported version GLIBCXX_3.4.15
-    .../64/test_bitcoin: symbol _ZNSt8__detail15_List_nod from unsupported version GLIBCXX_3.4.15
-
 circular-dependencies.py
 ========================
 

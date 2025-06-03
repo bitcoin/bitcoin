@@ -19,7 +19,7 @@ One can use `--preset=libfuzzer-nosan` to do the same without common sanitizers 
 See [further](#run-without-sanitizers-for-increased-throughput) for more information.
 
 There is also a runner script to execute all fuzz targets. Refer to
-`./test/fuzz/test_runner.py --help` for more details.
+`./build_fuzz/test/fuzz/test_runner.py --help` for more details.
 
 ## Overview of Bitcoin Core fuzzing
 
@@ -149,6 +149,37 @@ Patience is useful; even with improved throughput, libFuzzer may need days and
 If you find coverage increasing inputs when fuzzing you are highly encouraged to submit them for inclusion in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo.
 
 Every single pull request submitted against the Bitcoin Core repo is automatically tested against all inputs in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo. Contributing new coverage increasing inputs is an easy way to help make Bitcoin Core more robust.
+
+## Building and debugging fuzz tests
+
+There are 3 ways fuzz tests can be built:
+
+1. With `-DBUILD_FOR_FUZZING=ON` which forces on fuzz determinism (skipping
+   proof of work checks, disabling random number seeding, disabling clock time)
+   and causes `Assume()` checks to abort on failure.
+
+   This is the normal way to run fuzz tests and generate new inputs. Because
+   determinism is hardcoded on in this build, only the fuzz binary can be built
+   and all other binaries are disabled.
+
+2. With `-DBUILD_FUZZ_BINARY=ON -DCMAKE_BUILD_TYPE=Debug` which causes
+   `Assume()` checks to abort on failure, and enables fuzz determinism, but
+   makes it optional.
+
+   Determinism is turned on in the fuzz binary by default, but can be turned off
+   by setting the `FUZZ_NONDETERMINISM` environment variable to any value, which
+   may be useful for running fuzz tests with code that deterministic execution
+   would otherwise skip.
+
+   Since `BUILD_FUZZ_BINARY`, unlike `BUILD_FOR_FUZZING`, does not hardcode on
+   determinism, this allows non-fuzz binaries to coexist in the same build,
+   making it possible to reproduce fuzz test failures in a normal build.
+
+3. With `-DBUILD_FUZZ_BINARY=ON -DCMAKE_BUILD_TYPE=Release`. In this build, the
+   fuzz binary will build but refuse to run, because in release builds
+   determinism is forced off and `Assume()` checks do not abort, so running the
+   tests would not be useful. This build is only useful for ensuring fuzz tests
+   compile and link.
 
 ## macOS hints for libFuzzer
 

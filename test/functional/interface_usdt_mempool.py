@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,10 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import COIN, DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    bpf_cflags,
+)
 from test_framework.wallet import MiniWallet
 
 MEMPOOL_TRACEPOINTS_PROGRAM = """
@@ -155,6 +158,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.skip_if_no_bitcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
+        self.skip_if_running_under_valgrind()
 
     def added_test(self):
         """Add a transaction to the mempool and make sure the tracepoint returns
@@ -166,7 +170,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         node = self.nodes[0]
         ctx = USDT(pid=node.process.pid)
         ctx.enable_probe(probe="mempool:added", fn_name="trace_added")
-        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         def handle_added_event(_, data, __):
             events.append(bpf["added_events"].event(data))
@@ -203,7 +207,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         node = self.nodes[0]
         ctx = USDT(pid=node.process.pid)
         ctx.enable_probe(probe="mempool:removed", fn_name="trace_removed")
-        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         def handle_removed_event(_, data, __):
             events.append(bpf["removed_events"].event(data))
@@ -249,7 +253,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         node = self.nodes[0]
         ctx = USDT(pid=node.process.pid)
         ctx.enable_probe(probe="mempool:replaced", fn_name="trace_replaced")
-        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         def handle_replaced_event(_, data, __):
             event = ctypes.cast(data, ctypes.POINTER(MempoolReplaced)).contents
@@ -302,7 +306,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.log.info("Hooking into mempool:rejected tracepoint...")
         ctx = USDT(pid=node.process.pid)
         ctx.enable_probe(probe="mempool:rejected", fn_name="trace_rejected")
-        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        bpf = BPF(text=MEMPOOL_TRACEPOINTS_PROGRAM, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         def handle_rejected_event(_, data, __):
             events.append(bpf["rejected_events"].event(data))

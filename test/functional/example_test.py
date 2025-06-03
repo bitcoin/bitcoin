@@ -79,9 +79,6 @@ class ExampleTest(BitcoinTestFramework):
     # Override the set_test_params(), skip_test_if_missing_module(), add_options(), setup_chain(), setup_network()
     # and setup_nodes() methods to customize the test setup as required.
 
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         """Override test parameters for your individual test.
 

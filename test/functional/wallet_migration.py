@@ -15,7 +15,6 @@ from test_framework.address import (
     script_to_p2sh,
     script_to_p2wsh,
 )
-from test_framework.bdb import BTREE_MAGIC
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
@@ -33,11 +32,10 @@ from test_framework.wallet_util import (
     generate_keypair,
 )
 
+BTREE_MAGIC = 0x053162
+
 
 class WalletMigrationTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -49,10 +47,14 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.skip_if_no_previous_releases()
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes, versions=[
-            None,
-            280000,
-        ])
+        self.add_nodes(
+            self.num_nodes,
+            extra_args=self.extra_args,
+            versions=[
+                None,
+                280000,
+            ],
+        )
         self.start_nodes()
         self.init_wallet(node=0)
 
@@ -111,6 +113,11 @@ class WalletMigrationTest(BitcoinTestFramework):
             shutil.copyfile(self.old_node.wallets_path / "wallet.dat", self.master_node.wallets_path / "wallet.dat")
         else:
             shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name)
+        # Check that the wallet shows up in listwalletdir with a warning about migration
+        wallets = self.master_node.listwalletdir()
+        for w in wallets["wallets"]:
+            if w["name"] == wallet_name:
+                assert_equal(w["warnings"], ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"])
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
@@ -546,7 +553,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["format"], "sqlite")
 
         walletdir_list = wallet.listwalletdir()
-        assert {"name": info["walletname"]} in walletdir_list["wallets"]
+        assert {"name": info["walletname"]} in [{"name": w["name"]} for w in walletdir_list["wallets"]]
 
         # Check backup existence and its non-empty wallet filename
         backup_filename = f"default_wallet_{curr_time}.legacy.bak"
@@ -724,7 +731,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         send_to_script(script=script_sh_pkh, amount=2)
 
         # Import script and check balance
-        wallet.rpc.importaddress(address=script_pkh.hex(), label="raw_spk", rescan=True, p2sh=True)
+        wallet.importaddress(address=script_pkh.hex(), label="raw_spk", rescan=True, p2sh=True)
         assert_equal(wallet.getbalances()['watchonly']['trusted'], 2)
 
         # Craft wsh(pkh(key)) and send coins to it
@@ -733,7 +740,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         send_to_script(script=script_wsh_pkh, amount=3)
 
         # Import script and check balance
-        wallet.rpc.importaddress(address=script_wsh_pkh.hex(), label="raw_spk2", rescan=True, p2sh=False)
+        wallet.importaddress(address=script_wsh_pkh.hex(), label="raw_spk2", rescan=True, p2sh=False)
         assert_equal(wallet.getbalances()['watchonly']['trusted'], 5)
 
         # Import sh(pkh()) script, by using importaddress(), with the p2sh flag enabled.
@@ -749,7 +756,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Note: 'importaddress()' will add two scripts, a valid one sh(pkh()) and an invalid one 'sh(sh(pkh()))'.
         #       Both of them will be stored with the same addressbook label. And only the latter one should
         #       be discarded during migration. The first one must be migrated.
-        wallet.rpc.importaddress(address=script_sh_pkh.hex(), label=label_sh_pkh, rescan=False, p2sh=True)
+        wallet.importaddress(address=script_sh_pkh.hex(), label=label_sh_pkh, rescan=False, p2sh=True)
 
         # Migrate wallet and re-check balance
         info_migration, wallet = self.migrate_and_get_rpc("raw_p2sh")
@@ -908,22 +915,6 @@ class WalletMigrationTest(BitcoinTestFramework):
             data = f.read(16)
             _, _, magic = struct.unpack("QII", data)
             assert_equal(magic, BTREE_MAGIC)
-
-        ####################################################
-        # Perform the same test with a loaded legacy wallet.
-        # The wallet should remain loaded after the failure.
-        #
-        # This applies only when BDB is enabled, as the user
-        # cannot interact with the legacy wallet database
-        # without BDB support.
-        if self.is_bdb_compiled() is not None:
-            # Advance time to generate a different backup name
-            self.master_node.setmocktime(self.master_node.getblockheader(self.master_node.getbestblockhash())['time'] + 100)
-            assert "failed" not in self.master_node.listwallets()
-            self.master_node.loadwallet("failed")
-            assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
-            wallets = self.master_node.listwallets()
-            assert "failed" in wallets and all(wallet not in wallets for wallet in ["failed_watchonly", "failed_solvables"])
 
     def test_blank(self):
         self.log.info("Test that a blank wallet is migrated")

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -93,6 +93,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <condition_variable>
 #include <cstdint>
 #include <cstdio>
@@ -104,7 +105,6 @@
 #include <vector>
 
 #ifndef WIN32
-#include <cerrno>
 #include <signal.h>
 #include <sys/stat.h>
 #endif
@@ -298,9 +298,6 @@ void Shutdown(NodeContext& node)
     StopREST();
     StopRPC();
     StopHTTPServer();
-    for (const auto& client : node.chain_clients) {
-        client->flush();
-    }
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
@@ -564,8 +561,6 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-peertimeout=<n>", strprintf("Specify a p2p connection timeout delay in seconds. After connecting to a peer, wait this amount of time before considering disconnection based on inactivity (minimum: 1, default: %d)", DEFAULT_PEER_CONNECT_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control host and port to use if onion listening enabled (default: %s). If no port is specified, the default port of %i will be used.", DEFAULT_TOR_CONTROL, DEFAULT_TOR_CONTROL_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::CONNECTION);
-    // UPnP support was dropped. We keep `-upnp` as a hidden arg to display a more user friendly error when set. TODO: remove (here and below) for 30.0. NOTE: removing this option may prevent the GUI from starting, see https://github.com/bitcoin-core/gui/issues/843.
-    argsman.AddArg("-upnp", "", ArgsManager::ALLOW_ANY, OptionsCategory::HIDDEN);
     argsman.AddArg("-natpmp", strprintf("Use PCP or NAT-PMP to map the listening port (default: %u)", DEFAULT_NATPMP), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-whitebind=<[permissions@]addr>", "Bind to the given address and add permission flags to the peers connecting to it. "
         "Use [host]:port notation for IPv6. Allowed permissions: " + Join(NET_PERMISSIONS_DOC, ", ") + ". "
@@ -793,32 +788,6 @@ void InitParameterInteraction(ArgsManager& args)
         if (!clearnet_reachable && args.SoftSetBoolArg("-dnsseed", false)) {
             LogInfo("parameter interaction: -onlynet excludes IPv4 and IPv6 -> setting -dnsseed=0\n");
         }
-    }
-
-    // If settings.json contains a "upnp" option, migrate it to use "natpmp" instead
-    bool settings_changed{false}; // Whether settings.json file needs to be rewritten
-    args.LockSettings([&](common::Settings& settings) {
-        if (auto* upnp{common::FindKey(settings.rw_settings, "upnp")}) {
-            if (common::FindKey(settings.rw_settings, "natpmp") == nullptr) {
-                LogWarning(R"(Adding "natpmp": %s to settings.json to replace obsolete "upnp" setting)", upnp->write());
-                settings.rw_settings["natpmp"] = *upnp;
-            }
-            LogWarning(R"(Removing obsolete "upnp" setting from settings.json)");
-            settings.rw_settings.erase("upnp");
-            settings_changed = true;
-        }
-    });
-    if (settings_changed) args.WriteSettingsFile();
-
-    // We dropped UPnP support but kept the arg as hidden for now to display a friendlier error to user who has the
-    // option in their config, and migrate the setting to -natpmp.
-    if (const auto arg{args.GetBoolArg("-upnp")}) {
-        std::string message;
-        if (args.SoftSetBoolArg("-natpmp", *arg)) {
-            message = strprintf(" Substituting '-natpmp=%s'.", *arg);
-        }
-        LogWarning("Option '-upnp=%s' is given but UPnP support was dropped in version 29.0.%s",
-                *arg, message);
     }
 }
 
@@ -1182,8 +1151,8 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         "-rpcport",
     }) {
         if (const auto port{args.GetArg(port_option)}) {
-            uint16_t n;
-            if (!ParseUInt16(*port, &n) || n == 0) {
+            const auto n{ToIntegral<uint16_t>(*port)};
+            if (!n || *n == 0) {
                 return InitError(InvalidPortErrMsg(port_option, *port));
             }
         }
@@ -1818,10 +1787,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #if HAVE_SYSTEM
     const std::string block_notify = args.GetArg("-blocknotify", "");
     if (!block_notify.empty()) {
-        uiInterface.NotifyBlockTip_connect([block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
-            if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex) return;
+        uiInterface.NotifyBlockTip_connect([block_notify](SynchronizationState sync_state, const CBlockIndex& block, double /* verification_progress */) {
+            if (sync_state != SynchronizationState::POST_INIT) return;
             std::string command = block_notify;
-            ReplaceAll(command, "%s", pBlockIndex->GetBlockHash().GetHex());
+            ReplaceAll(command, "%s", block.GetBlockHash().GetHex());
             std::thread t(runCommand, command);
             t.detach(); // thread runs free
         });
@@ -1847,7 +1816,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         // Start indexes initial sync
         if (!StartIndexBackgroundSync(node)) {
-            bilingual_str err_str = _("Failed to start indexes, shutting down..");
+            bilingual_str err_str = _("Failed to start indexes, shutting down…");
             chainman.GetNotifications().fatalError(err_str);
             return;
         }

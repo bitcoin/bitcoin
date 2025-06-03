@@ -59,9 +59,8 @@ struct FuzzedWallet {
                 WalletDescriptor w_desc{std::move(parsed_desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/0};
                 assert(!wallet->GetDescriptorScriptPubKeyMan(w_desc));
                 LOCK(wallet->cs_wallet);
-                auto spk_manager{wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", internal)};
-                assert(spk_manager);
-                wallet->AddActiveScriptPubKeyMan(spk_manager->GetID(), *Assert(w_desc.descriptor->GetOutputType()), internal);
+                auto& spk_manager = Assert(wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", internal))->get();
+                wallet->AddActiveScriptPubKeyMan(spk_manager.GetID(), *Assert(w_desc.descriptor->GetOutputType()), internal);
             }
         }
     }

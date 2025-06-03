@@ -16,11 +16,14 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <logging.h>
+#include <node/context.h>
+#include <node/kernel_notifications.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
 #include <util/moneystr.h>
+#include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 
@@ -158,10 +161,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
+    coinbaseTx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    Assert(nHeight > 0);
+    coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
 
@@ -311,6 +317,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
     // close to full; this is just a simple heuristic to finish quickly if the
     // mempool has a lot of entries.
     const int64_t MAX_CONSECUTIVE_FAILURES = 1000;
+    constexpr int32_t BLOCK_FULL_ENOUGH_WEIGHT_DELTA = 4000;
     int64_t nConsecutiveFailed = 0;
 
     while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty()) {
@@ -392,7 +399,7 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
             ++nConsecutiveFailed;
 
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight >
-                    m_options.nBlockMaxWeight - m_options.block_reserved_weight) {
+                    m_options.nBlockMaxWeight - BLOCK_FULL_ENOUGH_WEIGHT_DELTA) {
                 // Give up if we're close to full and haven't succeeded in a while
                 break;
             }
@@ -432,5 +439,144 @@ void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpda
         // Update transactions that depend on each of these
         nDescendantsUpdated += UpdatePackagesForAdded(mempool, ancestors, mapModifiedTx);
     }
+}
+
+void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce)
+{
+    if (block.vtx.size() == 0) {
+        block.vtx.emplace_back(coinbase);
+    } else {
+        block.vtx[0] = coinbase;
+    }
+    block.nVersion = version;
+    block.nTime = timestamp;
+    block.nNonce = nonce;
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+}
+
+std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+                                                      KernelNotifications& kernel_notifications,
+                                                      CTxMemPool* mempool,
+                                                      const std::unique_ptr<CBlockTemplate>& block_template,
+                                                      const BlockWaitOptions& options,
+                                                      const BlockAssembler::Options& assemble_options)
+{
+    // Delay calculating the current template fees, just in case a new block
+    // comes in before the next tick.
+    CAmount current_fees = -1;
+
+    // Alternate waiting for a new tip and checking if fees have risen.
+    // The latter check is expensive so we only run it once per second.
+    auto now{NodeClock::now()};
+    const auto deadline = now + options.timeout;
+    const MillisecondsDouble tick{1000};
+    const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
+
+    do {
+        bool tip_changed{false};
+        {
+            WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+            // Note that wait_until() checks the predicate before waiting
+            kernel_notifications.m_tip_block_cv.wait_until(lock, std::min(now + tick, deadline), [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+                AssertLockHeld(kernel_notifications.m_tip_block_mutex);
+                const auto tip_block{kernel_notifications.TipBlock()};
+                // We assume tip_block is set, because this is an instance
+                // method on BlockTemplate and no template could have been
+                // generated before a tip exists.
+                tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
+                return tip_changed || chainman.m_interrupt;
+            });
+        }
+
+        if (chainman.m_interrupt) return nullptr;
+        // At this point the tip changed, a full tick went by or we reached
+        // the deadline.
+
+        // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
+        LOCK(::cs_main);
+
+        // On test networks return a minimum difficulty block after 20 minutes
+        if (!tip_changed && allow_min_difficulty) {
+            const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};
+            if (now > tip_time + 20min) {
+                tip_changed = true;
+            }
+        }
+
+        /**
+         * We determine if fees increased compared to the previous template by generating
+         * a fresh template. There may be more efficient ways to determine how much
+         * (approximate) fees for the next block increased, perhaps more so after
+         * Cluster Mempool.
+         *
+         * We'll also create a new template if the tip changed during this iteration.
+         */
+        if (options.fee_threshold < MAX_MONEY || tip_changed) {
+            auto new_tmpl{BlockAssembler{
+                chainman.ActiveChainstate(),
+                mempool,
+                assemble_options}
+                              .CreateNewBlock()};
+
+            // If the tip changed, return the new template regardless of its fees.
+            if (tip_changed) return new_tmpl;
+
+            // Calculate the original template total fees if we haven't already
+            if (current_fees == -1) {
+                current_fees = 0;
+                for (CAmount fee : block_template->vTxFees) {
+                    current_fees += fee;
+                }
+            }
+
+            CAmount new_fees = 0;
+            for (CAmount fee : new_tmpl->vTxFees) {
+                new_fees += fee;
+                Assume(options.fee_threshold != MAX_MONEY);
+                if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
+            }
+        }
+
+        now = NodeClock::now();
+    } while (now < deadline);
+
+    return nullptr;
+}
+
+std::optional<BlockRef> GetTip(ChainstateManager& chainman)
+{
+    LOCK(::cs_main);
+    CBlockIndex* tip{chainman.ActiveChain().Tip()};
+    if (!tip) return {};
+    return BlockRef{tip->GetBlockHash(), tip->nHeight};
+}
+
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout)
+{
+    Assume(timeout >= 0ms); // No internal callers should use a negative timeout
+    if (timeout < 0ms) timeout = 0ms;
+    if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
+    auto deadline{std::chrono::steady_clock::now() + timeout};
+    {
+        WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+        // For callers convenience, wait longer than the provided timeout
+        // during startup for the tip to be non-null. That way this function
+        // always returns valid tip information when possible and only
+        // returns null when shutting down, not when timing out.
+        kernel_notifications.m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+            return kernel_notifications.TipBlock() || chainman.m_interrupt;
+        });
+        if (chainman.m_interrupt) return {};
+        // At this point TipBlock is set, so continue to wait until it is
+        // different then `current_tip` provided by caller.
+        kernel_notifications.m_tip_block_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+            return Assume(kernel_notifications.TipBlock()) != current_tip || chainman.m_interrupt;
+        });
+    }
+    if (chainman.m_interrupt) return {};
+
+    // Must release m_tip_block_mutex before getTip() locks cs_main, to
+    // avoid deadlocks.
+    return GetTip(chainman);
 }
 } // namespace node

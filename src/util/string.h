@@ -168,7 +168,7 @@ std::vector<T> Split(const std::span<const char>& sp, char sep)
 
 [[nodiscard]] inline std::string_view RemovePrefixView(std::string_view str, std::string_view prefix)
 {
-    if (str.substr(0, prefix.size()) == prefix) {
+    if (str.starts_with(prefix)) {
         return str.substr(prefix.size());
     }
     return str;

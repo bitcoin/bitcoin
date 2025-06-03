@@ -115,44 +115,35 @@ endif()
 
 
 # Set configuration options for the main build system.
-set(qt_packages @qt_packages@)
-if("${qt_packages}" STREQUAL "")
+# The depends/Makefile can generate values with "not-set"
+# semantics as empty strings or strings containing only spaces.
+# Therefore, MATCHES must be used rather than STREQUAL.
+if("@qt_packages@" MATCHES "^[ ]*$")
   set(BUILD_GUI OFF CACHE BOOL "")
 else()
   set(BUILD_GUI ON CACHE BOOL "")
   set(Qt6_ROOT "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "")
 endif()
 
-set(qrencode_packages @qrencode_packages@)
-if("${qrencode_packages}" STREQUAL "")
+if("@qrencode_packages@" MATCHES "^[ ]*$")
   set(WITH_QRENCODE OFF CACHE BOOL "")
 else()
   set(WITH_QRENCODE ON CACHE BOOL "")
 endif()
 
-set(zmq_packages @zmq_packages@)
-if("${zmq_packages}" STREQUAL "")
+if("@zmq_packages@" MATCHES "^[ ]*$")
   set(WITH_ZMQ OFF CACHE BOOL "")
 else()
   set(WITH_ZMQ ON CACHE BOOL "")
 endif()
 
-set(wallet_packages @wallet_packages@)
-if("${wallet_packages}" STREQUAL "")
+if("@wallet_packages@" MATCHES "^[ ]*$")
   set(ENABLE_WALLET OFF CACHE BOOL "")
 else()
   set(ENABLE_WALLET ON CACHE BOOL "")
 endif()
 
-set(bdb_packages @bdb_packages@)
-if("${wallet_packages}" STREQUAL "" OR "${bdb_packages}" STREQUAL "")
-  set(WITH_BDB OFF CACHE BOOL "")
-else()
-  set(WITH_BDB ON CACHE BOOL "")
-endif()
-
-set(usdt_packages @usdt_packages@)
-if("${usdt_packages}" STREQUAL "")
+if("@usdt_packages@" MATCHES "^[ ]*$")
   set(WITH_USDT OFF CACHE BOOL "")
 else()
   set(WITH_USDT ON CACHE BOOL "")

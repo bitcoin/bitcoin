@@ -35,7 +35,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
         assert(descs.size() == 1);
         auto& desc = descs.at(0);
         WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-        if (!wallet->AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
+        Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
@@ -193,7 +193,7 @@ MockableDatabase& GetMockableDatabase(CWallet& wallet)
     return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
 }
 
-wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
+wallet::DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
 {
     keystore.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
 
@@ -209,7 +209,7 @@ wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& 
     WalletDescriptor w_desc(std::move(desc), timestamp, range_start, range_end, next_index);
 
     LOCK(keystore.cs_wallet);
-
-    return Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
+    auto spkm = Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
+    return &spkm.value().get();
 };
 } // namespace wallet

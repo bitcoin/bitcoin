@@ -61,7 +61,7 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
 
     // Write out the file format
     std::string format = db.Format();
-    // BDB files that are opened using BerkeleyRODatabase have it's format as "bdb_ro"
+    // BDB files that are opened using BerkeleyRODatabase have its format as "bdb_ro"
     // We want to override that format back to "bdb"
     if (format == "bdb_ro") {
         format = "bdb";
@@ -151,13 +151,13 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
         return false;
     }
     // Check the version number (value of first record)
-    uint32_t ver;
-    if (!ParseUInt32(version_value, &ver)) {
-        error =strprintf(_("Error: Unable to parse version %u as a uint32_t"), version_value);
+    const auto ver{ToIntegral<uint32_t>(version_value)};
+    if (!ver) {
+        error = strprintf(_("Error: Unable to parse version %u as a uint32_t"), version_value);
         dump_file.close();
         return false;
     }
-    if (ver != DUMP_VERSION) {
+    if (*ver != DUMP_VERSION) {
         error = strprintf(_("Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s"), version_value);
         dump_file.close();
         return false;
@@ -175,25 +175,13 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
         dump_file.close();
         return false;
     }
-    // Get the data file format with format_value as the default
-    std::string file_format = args.GetArg("-format", format_value);
-    if (file_format.empty()) {
-        error = _("No wallet file format provided. To use createfromdump, -format=<format> must be provided.");
+    // Make sure that the dump was created from a sqlite database only as that is the only
+    // type of database that we still support.
+    // Other formats such as BDB should not be loaded into a sqlite database since they also
+    // use a different type of wallet entirely which is no longer compatible with this software.
+    if (format_value != "sqlite") {
+        error = strprintf(_("Error: Dumpfile specifies an unsupported database format (%s). Only sqlite database dumps are supported"), format_value);
         return false;
-    }
-    DatabaseFormat data_format;
-    if (file_format == "bdb") {
-        data_format = DatabaseFormat::BERKELEY;
-    } else if (file_format == "sqlite") {
-        data_format = DatabaseFormat::SQLITE;
-    } else if (file_format == "bdb_swap") {
-        data_format = DatabaseFormat::BERKELEY_SWAP;
-    } else {
-        error = strprintf(_("Unknown wallet file format \"%s\" provided. Please provide one of \"bdb\" or \"sqlite\"."), file_format);
-        return false;
-    }
-    if (file_format != format_value) {
-        warnings.push_back(strprintf(_("Warning: Dumpfile wallet format \"%s\" does not match command line specified format \"%s\"."), format_value, file_format));
     }
     std::string format_hasher_line = strprintf("%s,%s\n", format_key, format_value);
     hasher << std::span{format_hasher_line};
@@ -202,7 +190,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     DatabaseStatus status;
     ReadDatabaseArgs(args, options);
     options.require_create = true;
-    options.require_format = data_format;
+    options.require_format = DatabaseFormat::SQLITE;
     std::unique_ptr<WalletDatabase> database = MakeDatabase(wallet_path, options, status, error);
     if (!database) return false;
 

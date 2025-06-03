@@ -77,7 +77,7 @@ jobs:
           git config user.name "CI"
       - run: |
           sudo apt-get update
-          sudo apt-get install clang ccache build-essential cmake ninja-build pkgconf python3-zmq libevent-dev libboost-dev libsqlite3-dev libdb++-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev -y
+          sudo apt-get install clang ccache build-essential cmake ninja-build pkgconf python3-zmq libevent-dev libboost-dev libsqlite3-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev -y
       - name: Compile and run tests
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
@@ -175,7 +175,7 @@ jobs:
         job-type: [standard, fuzz]
         include:
           - job-type: standard
-            generate-options: '-DBUILD_GUI=ON -DWITH_BDB=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
+            generate-options: '-DBUILD_GUI=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
             job-name: 'Windows native, VS 2022'
           - job-type: fuzz
             generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
@@ -236,6 +236,15 @@ jobs:
         working-directory: build
         run: |
           cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
+
+      - name: Get bitcoind manifest
+        if: matrix.job-type == 'standard'
+        working-directory: build
+        run: |
+          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -out:bitcoind.manifest
+          cat bitcoind.manifest
+          echo
+          mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -validate_manifest
 
       - name: Run test suite
         if: matrix.job-type == 'standard'
@@ -346,6 +355,20 @@ jobs:
 
       - name: Run bitcoind.exe
         run: ./bin/bitcoind.exe -version
+
+      - name: Find mt.exe tool
+        shell: pwsh
+        run: |
+          $sdk_dir = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots' -Name KitsRoot10).KitsRoot10
+          $sdk_latest = (Get-ChildItem "$sdk_dir\bin" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
+          "MT_EXE=${sdk_dir}bin\${sdk_latest}\x64\mt.exe" >> $env:GITHUB_ENV
+
+      - name: Get bitcoind manifest
+        shell: pwsh
+        run: |
+          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
+          Get-Content bitcoind.manifest
+          & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -validate_manifest
 
       - name: Run unit tests
         # Can't use ctest here like other jobs as we don't have a CMake build tree.

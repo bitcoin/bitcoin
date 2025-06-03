@@ -58,7 +58,7 @@ std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std
         const auto& factory = entry.second;
         for (std::string& address : gArgs.GetArgs(arg)) {
             // libzmq uses prefix "ipc://" for UNIX domain sockets
-            if (address.substr(0, ADDR_PREFIX_UNIX.length()) == ADDR_PREFIX_UNIX) {
+            if (address.starts_with(ADDR_PREFIX_UNIX)) {
                 address.replace(0, ADDR_PREFIX_UNIX.length(), ADDR_PREFIX_IPC);
             }
 

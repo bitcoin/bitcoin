@@ -962,9 +962,9 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
     std::string height_str;
     const RESTResponseFormat rf = ParseDataFormat(height_str, str_uri_part);
 
-    int32_t blockheight = -1; // Initialization done only to prevent valgrind false positive, see https://github.com/bitcoin/bitcoin/pull/18785
-    if (!ParseInt32(height_str, &blockheight) || blockheight < 0) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str));
+    const auto blockheight{ToIntegral<int32_t>(height_str)};
+    if (!blockheight || *blockheight < 0) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str, SAFE_CHARS_URI));
     }
 
     CBlockIndex* pblockindex = nullptr;
@@ -974,10 +974,10 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
         ChainstateManager& chainman = *maybe_chainman;
         LOCK(cs_main);
         const CChain& active_chain = chainman.ActiveChain();
-        if (blockheight > active_chain.Height()) {
+        if (*blockheight > active_chain.Height()) {
             return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
         }
-        pblockindex = active_chain[blockheight];
+        pblockindex = active_chain[*blockheight];
     }
     switch (rf) {
     case RESTResponseFormat::BINARY: {

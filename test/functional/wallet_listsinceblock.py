@@ -13,15 +13,13 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_raises_rpc_error,
+    wallet_importprivkey,
 )
 from test_framework.wallet_util import generate_keypair
 
 from decimal import Decimal
 
 class ListSinceBlockTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
@@ -45,8 +43,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.test_double_send()
         self.double_spends_filtered()
         self.test_targetconfirmations()
-        if self.options.descriptors:
-            self.test_desc()
+        self.test_desc()
         self.test_send_to_self()
         self.test_op_return()
         self.test_label()
@@ -231,10 +228,10 @@ class ListSinceBlockTest(BitcoinTestFramework):
         address = key_to_p2wpkh(pubkey)
         self.nodes[2].sendtoaddress(address, 10)
         self.generate(self.nodes[2], 6)
-        self.nodes[2].importprivkey(privkey)
+        wallet_importprivkey(self.nodes[2], privkey, "now")
         utxos = self.nodes[2].listunspent()
         utxo = [u for u in utxos if u["address"] == address][0]
-        self.nodes[1].importprivkey(privkey)
+        wallet_importprivkey(self.nodes[1], privkey, "now")
 
         # Split network into two
         self.split_network()
@@ -424,7 +421,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         # Create a watchonly wallet tracking two multisig descriptors.
         multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
         multi_b = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*,tpubD6NzVbkrYhZ4Y2RLiuEzNQkntjmsLpPYDm3LTRBYynUQtDtpzeUKAcb9sYthSFL3YR74cdFgF5mW8yKxv2W2CWuZDFR2dUpE5PF9kbrVXNZ/*))")
-        self.nodes[0].createwallet(wallet_name="wo", descriptors=True, disable_private_keys=True)
+        self.nodes[0].createwallet(wallet_name="wo", disable_private_keys=True)
         wo_wallet = self.nodes[0].get_wallet_rpc("wo")
         wo_wallet.importdescriptors([
             {

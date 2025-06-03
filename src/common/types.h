@@ -20,6 +20,8 @@ enum class PSBTError {
     EXTERNAL_SIGNER_NOT_FOUND,
     EXTERNAL_SIGNER_FAILED,
     UNSUPPORTED,
+    INCOMPLETE,
+    OK,
 };
 } // namespace common
 

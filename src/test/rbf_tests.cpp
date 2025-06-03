@@ -311,7 +311,7 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     // Tests for CheckConflictTopology
 
     // Tx4 has 23 descendants
-    BOOST_CHECK_EQUAL(pool.CheckConflictTopology(set_34_cpfp).value(), strprintf("%s has 23 descendants, max 1 allowed", entry4_high->GetSharedTx()->GetHash().ToString()));
+    BOOST_CHECK_EQUAL(pool.CheckConflictTopology(set_34_cpfp).value(), strprintf("%s has 24 descendants, max 1 allowed", entry3_low->GetSharedTx()->GetHash().ToString()));
 
     // No descendants yet
     BOOST_CHECK(pool.CheckConflictTopology({entry9_unchained}) == std::nullopt);
@@ -441,7 +441,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     const auto res3 = ImprovesFeerateDiagram(*changeset);
     BOOST_CHECK(res3.has_value());
     BOOST_CHECK(res3.value().first == DiagramCheckError::UNCALCULABLE);
-    BOOST_CHECK(res3.value().second == strprintf("%s has 2 ancestors, max 1 allowed", tx5->GetHash().GetHex()));
+    BOOST_CHECK_MESSAGE(res3.value().second == strprintf("%s has 2 descendants, max 1 allowed", tx1->GetHash().GetHex()), res3.value().second);
 }
 
 BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
@@ -536,7 +536,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         changeset->StageAddition(replacement_tx, high_fee, 0, 1, 0, false, 4, LockPoints());
         const auto replace_too_large{changeset->CalculateChunksForRBF()};
         BOOST_CHECK(!replace_too_large.has_value());
-        BOOST_CHECK_EQUAL(util::ErrorString(replace_too_large).original, strprintf("%s has 2 ancestors, max 1 allowed", normal_tx->GetHash().GetHex()));
+        BOOST_CHECK_EQUAL(util::ErrorString(replace_too_large).original, strprintf("%s has both ancestor and descendant, exceeding cluster limit of 2", high_tx->GetHash().GetHex()));
     }
 
     // Make a size 2 cluster that is itself two chunks; evict both txns
@@ -563,7 +563,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         BOOST_CHECK(replace_two_chunks_single_cluster->second == expected_new_chunks);
     }
 
-    // You can have more than two direct conflicts if the there are multiple affected clusters, all of size 2 or less
+    // You can have more than two direct conflicts if there are multiple affected clusters, all of size 2 or less
     const auto conflict_1 = make_tx(/*inputs=*/ {m_coinbase_txns[2]}, /*output_values=*/ {10 * COIN});
     AddToMempool(pool, entry.Fee(low_fee).FromTx(conflict_1));
     const auto conflict_1_entry = pool.GetIter(conflict_1->GetHash()).value();
@@ -623,7 +623,7 @@ BOOST_FIXTURE_TEST_CASE(calc_feerate_diagram_rbf, TestChain100Setup)
         const auto replace_cluster_size_3{changeset->CalculateChunksForRBF()};
 
         BOOST_CHECK(!replace_cluster_size_3.has_value());
-        BOOST_CHECK_EQUAL(util::ErrorString(replace_cluster_size_3).original, strprintf("%s has both ancestor and descendant, exceeding cluster limit of 2", conflict_1_child->GetHash().GetHex()));
+        BOOST_CHECK_EQUAL(util::ErrorString(replace_cluster_size_3).original, strprintf("%s has 2 descendants, max 1 allowed", conflict_1->GetHash().GetHex()));
     }
 }
 

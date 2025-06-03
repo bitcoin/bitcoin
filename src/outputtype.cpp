@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +9,8 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <util/vector.h>
 
-#include <assert.h>
+#include <cassert>
 #include <optional>
 #include <string>
 
@@ -45,40 +44,6 @@ const std::string& FormatOutputType(OutputType type)
     case OutputType::UNKNOWN: return OUTPUT_TYPE_STRING_UNKNOWN;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
-}
-
-CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
-{
-    switch (type) {
-    case OutputType::LEGACY: return PKHash(key);
-    case OutputType::P2SH_SEGWIT:
-    case OutputType::BECH32: {
-        if (!key.IsCompressed()) return PKHash(key);
-        CTxDestination witdest = WitnessV0KeyHash(key);
-        CScript witprog = GetScriptForDestination(witdest);
-        if (type == OutputType::P2SH_SEGWIT) {
-            return ScriptHash(witprog);
-        } else {
-            return witdest;
-        }
-    }
-    case OutputType::BECH32M:
-    case OutputType::UNKNOWN: {} // This function should never be used with BECH32M or UNKNOWN, so let it assert
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
-}
-
-std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
-{
-    PKHash keyid(key);
-    CTxDestination p2pkh{keyid};
-    if (key.IsCompressed()) {
-        CTxDestination segwit = WitnessV0KeyHash(keyid);
-        CTxDestination p2sh = ScriptHash(GetScriptForDestination(segwit));
-        return Vector(std::move(p2pkh), std::move(p2sh), std::move(segwit));
-    } else {
-        return Vector(std::move(p2pkh));
-    }
 }
 
 CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, const CScript& script, OutputType type)

@@ -18,9 +18,6 @@ from test_framework.util import (
 
 
 class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -40,7 +37,7 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
     def create_multisig(self, external_xpubs, internal_xpubs):
         """The multisig is created by importing the following descriptors. The resulting wallet is watch-only and every signer can do this."""
-        self.node.createwallet(wallet_name=f"{self.name}", blank=True, descriptors=True, disable_private_keys=True)
+        self.node.createwallet(wallet_name=f"{self.name}", blank=True, disable_private_keys=True)
         multisig = self.node.get_wallet_rpc(f"{self.name}")
         # spending policy: `thresh(4,pk(key_1),pk(key_2),pk(key_3),pk(key_4),after(t1),after(t2),after(t3))`
         # IMPORTANT: when backing up your descriptor, the order of key_1...key_4 must be correct!
@@ -75,14 +72,14 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.log.info(f"Testing a miniscript multisig which starts as 4-of-4 and 'decays' to 3-of-4 at block height {self.locktimes[0]}, 2-of-4 at {self.locktimes[1]}, and finally 1-of-4 at {self.locktimes[2]}...")
 
         self.log.info("Create the signer wallets and get their xpubs...")
-        signers = [self.node.get_wallet_rpc(self.node.createwallet(wallet_name=f"signer_{i}", descriptors=True)["name"]) for i in range(self.N)]
+        signers = [self.node.get_wallet_rpc(self.node.createwallet(wallet_name=f"signer_{i}")["name"]) for i in range(self.N)]
         external_xpubs, internal_xpubs = [[self._get_xpub(signer, internal) for signer in signers] for internal in [False, True]]
 
         self.log.info("Create the watch-only decaying multisig using signers' xpubs...")
         multisig = self.create_multisig(external_xpubs, internal_xpubs)
 
         self.log.info("Get a mature utxo to send to the multisig...")
-        coordinator_wallet = self.node.get_wallet_rpc(self.node.createwallet(wallet_name="coordinator", descriptors=True)["name"])
+        coordinator_wallet = self.node.get_wallet_rpc(self.node.createwallet(wallet_name="coordinator")["name"])
         self.generatetoaddress(self.node, 101, coordinator_wallet.getnewaddress())
 
         self.log.info("Send funds to the multisig's receiving address...")

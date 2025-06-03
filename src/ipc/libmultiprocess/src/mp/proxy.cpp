@@ -277,7 +277,7 @@ void EventLoop::startAsyncThread(std::unique_lock<std::mutex>& lock)
     }
 }
 
-bool EventLoop::done(std::unique_lock<std::mutex>& lock)
+bool EventLoop::done(std::unique_lock<std::mutex>& lock) const
 {
     assert(m_num_clients >= 0);
     assert(lock.owns_lock());

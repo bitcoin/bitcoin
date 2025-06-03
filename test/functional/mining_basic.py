@@ -28,9 +28,10 @@ from test_framework.messages import (
     COIN,
     DEFAULT_BLOCK_RESERVED_WEIGHT,
     MAX_BLOCK_WEIGHT,
+    MAX_SEQUENCE_NONFINAL,
     MINIMUM_BLOCK_RESERVED_WEIGHT,
     ser_uint256,
-    WITNESS_SCALE_FACTOR
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
@@ -104,7 +105,7 @@ class MiningTest(BitcoinTestFramework):
         wallet_sigops = MiniWallet(node, mode=MiniWalletMode.RAW_P2PK)
         self.generate(wallet_sigops, 1, sync_fun=self.no_op)
 
-        # Mature with regular coinbases to prevent inteference with other tests
+        # Mature with regular coinbases to prevent interference with other tests
         self.generate(self.wallet, 100, sync_fun=self.no_op)
 
         # Generate three transactions that must be mined in sequence
@@ -362,6 +363,12 @@ class MiningTest(BitcoinTestFramework):
             expected_msg=f"Error: Specified -blockmaxweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
         )
 
+    def test_height_in_locktime(self):
+        self.log.info("Sanity check generated blocks have their coinbase timelocked to their height.")
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+        block = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)
+        assert_equal(block["tx"][0]["locktime"], block["height"] - 1)
+        assert_equal(block["tx"][0]["vin"][0]["sequence"], MAX_SEQUENCE_NONFINAL)
 
     def run_test(self):
         node = self.nodes[0]
@@ -592,6 +599,7 @@ class MiningTest(BitcoinTestFramework):
         self.test_block_max_weight()
         self.test_timewarp()
         self.test_pruning()
+        self.test_height_in_locktime()
 
 
 if __name__ == '__main__':

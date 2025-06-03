@@ -19,6 +19,10 @@ if(POLICY CMP0171)
   cmake_policy(SET CMP0171 NEW)
 endif()
 
+# When adjusting CMake flag variables, we must not override those explicitly
+# set by the user. These are a subset of the CACHE_VARIABLES property.
+get_directory_property(precious_variables CACHE_VARIABLES)
+
 #=============================
 # Project / Package metadata
 #=============================
@@ -90,6 +94,7 @@ endif()
 #=============================
 include(CMakeDependentOption)
 # When adding a new option, end the <help_text> with a full stop for consistency.
+option(BUILD_BITCOIN_BIN "Build bitcoin executable." ON)
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
@@ -110,25 +115,8 @@ if(ENABLE_WALLET)
     find_package(SQLite3 3.7.17 REQUIRED)
   endif()
 endif()
-option(WITH_BDB "Enable Berkeley DB (BDB) wallet support." OFF)
-cmake_dependent_option(WARN_INCOMPATIBLE_BDB "Warn when using a Berkeley DB (BDB) version other than 4.8." ON "WITH_BDB" OFF)
-if(WITH_BDB)
-  find_package(BerkeleyDB 4.8 MODULE REQUIRED)
-  set(USE_BDB ON)
-  if(NOT BerkeleyDB_VERSION VERSION_EQUAL 4.8)
-    message(WARNING "Found Berkeley DB (BDB) other than 4.8.\n"
-                    "BDB (legacy) wallets opened by this build will not be portable!"
-    )
-    if(WARN_INCOMPATIBLE_BDB)
-      message(WARNING "If this is intended, pass \"-DWARN_INCOMPATIBLE_BDB=OFF\".\n"
-                      "Passing \"-DWITH_BDB=OFF\" will suppress this warning."
-      )
-    endif()
-  endif()
-endif()
 cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TESTS} "ENABLE_WALLET" OFF)
 
-option(ENABLE_HARDENING "Attempt to harden the resulting executables." ON)
 option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
 option(WERROR "Treat compiler warnings as errors." OFF)
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
@@ -143,7 +131,7 @@ if(WITH_USDT)
   find_package(USDT MODULE REQUIRED)
 endif()
 
-cmake_dependent_option(ENABLE_EXTERNAL_SIGNER "Enable external signer support." ON "NOT WIN32" OFF)
+option(ENABLE_EXTERNAL_SIGNER "Enable external signer support." ON)
 
 cmake_dependent_option(WITH_QRENCODE "Enable QR code support." ON "BUILD_GUI" OFF)
 if(WITH_QRENCODE)
@@ -151,7 +139,7 @@ if(WITH_QRENCODE)
   set(USE_QRCODE TRUE)
 endif()
 
-cmake_dependent_option(WITH_DBUS "Enable DBus support." ON "CMAKE_SYSTEM_NAME STREQUAL \"Linux\" AND BUILD_GUI" OFF)
+cmake_dependent_option(WITH_DBUS "Enable DBus support." ON "NOT CMAKE_SYSTEM_NAME MATCHES \"(Windows|Darwin)\" AND BUILD_GUI" OFF)
 
 option(ENABLE_IPC "Build multiprocess bitcoin-node and bitcoin-gui executables in addition to monolithic bitcoind and bitcoin-qt executables. Requires libmultiprocess library. Experimental." OFF)
 cmake_dependent_option(WITH_EXTERNAL_LIBMULTIPROCESS "Build with external libmultiprocess library instead of with local git subtree when ENABLE_IPC is enabled. This is not normally recommended, but can be useful for developing libmultiprocess itself." OFF "ENABLE_IPC" OFF)
@@ -215,6 +203,7 @@ target_link_libraries(core_interface INTERFACE
 
 if(BUILD_FOR_FUZZING)
   message(WARNING "BUILD_FOR_FUZZING=ON will disable all other targets and force BUILD_FUZZ_BINARY=ON.")
+  set(BUILD_BITCOIN_BIN OFF)
   set(BUILD_DAEMON OFF)
   set(BUILD_CLI OFF)
   set(BUILD_TX OFF)
@@ -288,6 +277,10 @@ if(WIN32)
       /Zc:preprocessor
       /Zc:__cplusplus
       /sdl
+    )
+    target_link_options(core_interface INTERFACE
+      # We embed our own manifests.
+      /MANIFEST:NO
     )
     # Improve parallelism in MSBuild.
     # See: https://devblogs.microsoft.com/cppblog/improved-parallelism-in-msbuild/.
@@ -502,62 +495,70 @@ try_append_cxx_flags("-fmacro-prefix-map=A=B" TARGET core_interface SKIP_LINK
 # -fstack-reuse=none for all gcc builds. (Only gcc understands this flag).
 try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 
-if(ENABLE_HARDENING)
-  add_library(hardening_interface INTERFACE)
-  target_link_libraries(core_interface INTERFACE hardening_interface)
-  if(MSVC)
-    try_append_linker_flag("/DYNAMICBASE" TARGET hardening_interface)
-    try_append_linker_flag("/HIGHENTROPYVA" TARGET hardening_interface)
-    try_append_linker_flag("/NXCOMPAT" TARGET hardening_interface)
-  else()
+if(MSVC)
+  try_append_linker_flag("/DYNAMICBASE" TARGET core_interface)
+  try_append_linker_flag("/HIGHENTROPYVA" TARGET core_interface)
+  try_append_linker_flag("/NXCOMPAT" TARGET core_interface)
+else()
 
-    # _FORTIFY_SOURCE requires that there is some level of optimization,
-    # otherwise it does nothing and just creates a compiler warning.
-    try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
-      RESULT_VAR cxx_supports_fortify_source
-      SOURCE "int main() {
-              # if !defined __OPTIMIZE__ || __OPTIMIZE__ <= 0
-                #error
-              #endif
-              }"
+  # _FORTIFY_SOURCE requires that there is some level of optimization,
+  # otherwise it does nothing and just creates a compiler warning.
+  try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
+    RESULT_VAR cxx_supports_fortify_source
+    SOURCE "int main() {
+            # if !defined __OPTIMIZE__ || __OPTIMIZE__ <= 0
+              #error
+            #endif
+            }"
+  )
+  if(cxx_supports_fortify_source)
+    target_compile_options(core_interface INTERFACE
+      -U_FORTIFY_SOURCE
+      -D_FORTIFY_SOURCE=3
     )
-    if(cxx_supports_fortify_source)
-      target_compile_options(hardening_interface INTERFACE
-        -U_FORTIFY_SOURCE
-        -D_FORTIFY_SOURCE=3
-      )
-    endif()
-    unset(cxx_supports_fortify_source)
+  endif()
+  unset(cxx_supports_fortify_source)
 
-    try_append_cxx_flags("-Wstack-protector" TARGET hardening_interface SKIP_LINK)
-    try_append_cxx_flags("-fstack-protector-all" TARGET hardening_interface)
-    try_append_cxx_flags("-fcf-protection=full" TARGET hardening_interface)
+  try_append_cxx_flags("-Wstack-protector" TARGET core_interface SKIP_LINK)
+  try_append_cxx_flags("-fstack-protector-all" TARGET core_interface)
+  try_append_cxx_flags("-fcf-protection=full" TARGET core_interface)
 
-    if(MINGW)
-      # stack-clash-protection is a no-op for Windows.
-      # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
-    else()
-      try_append_cxx_flags("-fstack-clash-protection" TARGET hardening_interface)
-    endif()
+  if(MINGW)
+    # stack-clash-protection is a no-op for Windows.
+    # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+  else()
+    try_append_cxx_flags("-fstack-clash-protection" TARGET core_interface)
+  endif()
 
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-      if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-        try_append_cxx_flags("-mbranch-protection=bti" TARGET hardening_interface SKIP_LINK)
-      else()
-        try_append_cxx_flags("-mbranch-protection=standard" TARGET hardening_interface SKIP_LINK)
-      endif()
-    endif()
-
-    try_append_linker_flag("-Wl,--enable-reloc-section" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--dynamicbase" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--nxcompat" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--high-entropy-va" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,relro" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,now" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,separate-code" TARGET hardening_interface)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-      try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
+      try_append_cxx_flags("-mbranch-protection=bti" TARGET core_interface SKIP_LINK)
+    else()
+      try_append_cxx_flags("-mbranch-protection=standard" TARGET core_interface SKIP_LINK)
     endif()
+  endif()
+
+  try_append_linker_flag("-Wl,--enable-reloc-section" TARGET core_interface)
+  try_append_linker_flag("-Wl,--dynamicbase" TARGET core_interface)
+  try_append_linker_flag("-Wl,--nxcompat" TARGET core_interface)
+  try_append_linker_flag("-Wl,--high-entropy-va" TARGET core_interface)
+  try_append_linker_flag("-Wl,-z,relro" TARGET core_interface)
+  try_append_linker_flag("-Wl,-z,now" TARGET core_interface)
+  # TODO: This can be dropped once Bitcoin Core no longer supports
+  #       NetBSD 10.0 or if upstream fix is backported.
+  # NetBSD's dynamic linker ld.elf_so < 11.0 supports exactly 2
+  # `PT_LOAD` segments and binaries linked with `-z separate-code`
+  # have 4 `PT_LOAD` segments.
+  # Relevant discussions:
+  # - https://github.com/bitcoin/bitcoin/pull/28724#issuecomment-2589347934
+  # - https://mail-index.netbsd.org/tech-userlevel/2023/01/05/msg013666.html
+  if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD" AND CMAKE_SYSTEM_VERSION VERSION_LESS 11.0)
+    try_append_linker_flag("-Wl,-z,noseparate-code" TARGET core_interface)
+  else()
+    try_append_linker_flag("-Wl,-z,separate-code" TARGET core_interface)
+  endif()
+  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    try_append_linker_flag("-Wl,-fixup_chains" TARGET core_interface)
   endif()
 endif()
 
@@ -648,6 +649,7 @@ message("\n")
 message("Configure summary")
 message("=================")
 message("Executables:")
+message("  bitcoin ............................. ${BUILD_BITCOIN_BIN}")
 message("  bitcoind ............................ ${BUILD_DAEMON}")
 if(BUILD_DAEMON AND ENABLE_IPC)
   set(bitcoin_daemon_status ON)
@@ -670,9 +672,6 @@ message("  bitcoin-chainstate (experimental) ... ${BUILD_UTIL_CHAINSTATE}")
 message("  libbitcoinkernel (experimental) ..... ${BUILD_KERNEL_LIB}")
 message("Optional features:")
 message("  wallet support ...................... ${ENABLE_WALLET}")
-if(ENABLE_WALLET)
-  message("   - legacy wallets (Berkeley DB) ..... ${WITH_BDB}")
-endif()
 message("  external signer ..................... ${ENABLE_EXTERNAL_SIGNER}")
 message("  ZeroMQ .............................. ${WITH_ZMQ}")
 if(ENABLE_IPC)
@@ -687,7 +686,7 @@ endif()
 message("  IPC ................................. ${ipc_status}")
 message("  USDT tracing ........................ ${WITH_USDT}")
 message("  QR code (GUI) ....................... ${WITH_QRENCODE}")
-message("  DBus (GUI, Linux only) .............. ${WITH_DBUS}")
+message("  DBus (GUI) .......................... ${WITH_DBUS}")
 message("Tests:")
 message("  test_bitcoin ........................ ${BUILD_TESTS}")
 message("  test_bitcoin-qt ..................... ${BUILD_GUI_TESTS}")
@@ -703,7 +702,6 @@ message("Cross compiling ....................... ${cross_status}")
 message("C++ compiler .......................... ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}, ${CMAKE_CXX_COMPILER}")
 include(FlagsSummary)
 flags_summary()
-message("Attempt to harden executables ......... ${ENABLE_HARDENING}")
 message("Treat compiler warnings as errors ..... ${WERROR}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")

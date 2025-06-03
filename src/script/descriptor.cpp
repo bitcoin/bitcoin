@@ -799,7 +799,6 @@ public:
         return OutputTypeFromDestination(m_destination);
     }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return false; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override { return GetScriptForDestination(m_destination).size(); }
@@ -827,7 +826,6 @@ public:
         return OutputTypeFromDestination(dest);
     }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return false; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override { return m_script.size(); }
@@ -856,7 +854,6 @@ protected:
 public:
     PKDescriptor(std::unique_ptr<PubkeyProvider> prov, bool xonly = false) : DescriptorImpl(Vector(std::move(prov)), "pk"), m_xonly(xonly) {}
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return true; }
 
     std::optional<int64_t> ScriptSize() const override {
         return 1 + (m_xonly ? 32 : m_pubkey_args[0]->GetSize()) + 1;
@@ -892,7 +889,6 @@ public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "pkh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return true; }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 1 + 20 + 1 + 1; }
 
@@ -926,7 +922,6 @@ public:
     WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "wpkh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return true; }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 20; }
 
@@ -968,7 +963,6 @@ protected:
 public:
     ComboDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "combo") {}
     bool IsSingleType() const final { return false; }
-    bool IsSingleKey() const final { return true; }
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<ComboDescriptor>(m_pubkey_args.at(0)->Clone());
@@ -993,7 +987,6 @@ protected:
 public:
     MultisigDescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), sorted ? "sortedmulti" : "multi"), m_threshold(threshold), m_sorted(sorted) {}
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override {
         const auto n_keys = m_pubkey_args.size();
@@ -1045,7 +1038,6 @@ protected:
 public:
     MultiADescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), sorted ? "sortedmulti_a" : "multi_a"), m_threshold(threshold), m_sorted(sorted) {}
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override {
         const auto n_keys = m_pubkey_args.size();
@@ -1092,7 +1084,6 @@ public:
         return OutputType::LEGACY;
     }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return m_subdescriptor_args[0]->IsSingleKey(); }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 20 + 1; }
 
@@ -1134,7 +1125,6 @@ public:
     WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return m_subdescriptor_args[0]->IsSingleKey(); }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
@@ -1212,7 +1202,6 @@ public:
     }
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
@@ -1340,7 +1329,6 @@ public:
 
     bool IsSolvable() const override { return true; }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override { return m_node->ScriptSize(); }
 
@@ -1380,7 +1368,6 @@ public:
     RawTRDescriptor(std::unique_ptr<PubkeyProvider> output_key) : DescriptorImpl(Vector(std::move(output_key)), "rawtr") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
     bool IsSingleType() const final { return true; }
-    bool IsSingleKey() const final { return false; }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
@@ -1423,16 +1410,16 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
             apostrophe = last == '\'';
         }
     }
-    uint32_t p;
-    if (!ParseUInt32(std::string(elem.begin(), elem.end()), &p)) {
-        error = strprintf("Key path value '%s' is not a valid uint32", std::string(elem.begin(), elem.end()));
+    const auto p{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
+    if (!p) {
+        error = strprintf("Key path value '%s' is not a valid uint32", std::string_view{elem.begin(), elem.end()});
         return std::nullopt;
-    } else if (p > 0x7FFFFFFFUL) {
-        error = strprintf("Key path value %u is out of range", p);
+    } else if (*p > 0x7FFFFFFFUL) {
+        error = strprintf("Key path value %u is out of range", *p);
         return std::nullopt;
     }
 
-    return std::make_optional<uint32_t>(p | (((uint32_t)hardened) << 31));
+    return std::make_optional<uint32_t>(*p | (((uint32_t)hardened) << 31));
 }
 
 /**
@@ -1821,7 +1808,9 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::vector<std::unique_ptr<PubkeyProvider>>> providers; // List of multipath expanded pubkeys
-        if (!ParseUInt32(std::string(threshold.begin(), threshold.end()), &thres)) {
+        if (const auto maybe_thres{ToIntegral<uint32_t>(std::string_view{threshold.begin(), threshold.end()})}) {
+            thres = *maybe_thres;
+        } else {
             error = strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()));
             return {};
         }

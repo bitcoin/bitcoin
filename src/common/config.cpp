@@ -65,7 +65,7 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
                 }
             } else {
                 error = strprintf("parse error on line %i: %s", linenr, str);
-                if (str.size() >= 2 && str.substr(0, 2) == "no") {
+                if (str.size() >= 2 && str.starts_with("no")) {
                     error += strprintf(", if you intended to specify a negated option, use %s=1 instead", str);
                 }
                 return false;

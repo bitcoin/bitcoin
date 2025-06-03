@@ -1,3 +1,7 @@
+// Copyright (c) 2022-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit.
+
 #include <arith_uint256.h>
 #include <chain.h>
 #include <chainparams.h>

@@ -8,7 +8,7 @@ and are only linked against allowed libraries.
 
 Example usage:
 
-    find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
+    find ../path/to/guix/binaries -type f -executable | xargs python3 contrib/guix/symbol-check.py
 '''
 import sys
 
@@ -153,7 +153,8 @@ MACHO_ALLOWED_LIBRARIES = {
 }
 
 PE_ALLOWED_LIBRARIES = {
-'ADVAPI32.dll', # security & registry
+'ADVAPI32.dll', # legacy security & registry
+'bcrypt.dll', # newer security and identity API
 'IPHLPAPI.DLL', # IP helper API
 'KERNEL32.dll', # win32 base APIs
 'msvcrt.dll', # C standard library for MSVC
@@ -278,6 +279,14 @@ def check_PE_subsystem_version(binary) -> bool:
         return True
     return False
 
+def check_PE_application_manifest(binary) -> bool:
+    if not binary.has_resources:
+        # No resources at all.
+        return False
+
+    rm = binary.resources_manager
+    return rm.has_manifest
+
 def check_ELF_interpreter(binary) -> bool:
     expected_interpreter = ELF_INTERPRETER_NAMES[binary.header.machine_type][binary.abstract.header.endianness]
 
@@ -307,6 +316,7 @@ lief.EXE_FORMATS.MACHO: [
 lief.EXE_FORMATS.PE: [
     ('DYNAMIC_LIBRARIES', check_PE_libraries),
     ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
+    ('APPLICATION_MANIFEST', check_PE_application_manifest),
 ]
 }
 

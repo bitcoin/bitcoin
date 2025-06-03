@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <cstring>
 #include <string>
 #include <thread>
@@ -16,7 +14,7 @@
 
 #include <util/threadnames.h>
 
-#ifdef HAVE_SYS_PRCTL_H
+#if __has_include(<sys/prctl.h>)
 #include <sys/prctl.h>
 #endif
 
