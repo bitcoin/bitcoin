@@ -411,33 +411,6 @@ static RPCHelpMan gobject_submit()
 }
 
 #ifdef ENABLE_WALLET
-static bool SignVote(const CWallet& wallet, const CKeyID& keyID, CGovernanceVote& vote)
-{
-    // Special implementation for testnet (Harden Spork6 that has not been deployed to other networks)
-    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-        std::vector<unsigned char> signature;
-        if (!wallet.SignSpecialTxPayload(vote.GetSignatureHash(), keyID, signature)) {
-            LogPrintf("SignVote -- SignHash() failed\n");
-            return false;
-        }
-        vote.SetSignature(signature);
-        return true;
-    } // end of testnet implementation
-
-    std::string strMessage{vote.GetSignatureString()};
-    std::string signature;
-    SigningResult err = wallet.SignMessage(strMessage, PKHash{keyID}, signature);
-    if (err != SigningResult::OK) {
-        LogPrintf("SignVote failed due to: %s\n", SigningResultString(err));
-        return false;
-    }
-    const auto opt_decoded = DecodeBase64(signature);
-    CHECK_NONFATAL(opt_decoded.has_value()); // DecodeBase64 should not fail
-
-    vote.SetSignature(std::vector<unsigned char>(opt_decoded->data(), opt_decoded->data() + opt_decoded->size()));
-    return true;
-}
-
 static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const CWallet& wallet,
                              const std::map<uint256, CKeyID>& votingKeys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
@@ -477,7 +450,7 @@ static UniValue VoteWithMasternodes(const JSONRPCRequest& request, const CWallet
 
         CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
 
-        if (!SignVote(wallet, keyID, vote) || !vote.CheckSignature(keyID)) {
+        if (!wallet.SignGovernanceVote(keyID, vote) || !vote.CheckSignature(keyID)) {
             nFailed++;
             statusObj.pushKV("result", "failed");
             statusObj.pushKV("errorMessage", "Failure to sign.");

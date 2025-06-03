@@ -131,6 +131,5 @@ public:
  * Sign a governance vote using wallet signing methods
  * Handles different signing approaches for different networks
  */
-bool SignGovernanceVote(const CWallet& wallet, const CKeyID& keyID, CGovernanceVote& vote);
 
 #endif // BITCOIN_GOVERNANCE_VOTE_H

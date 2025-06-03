@@ -658,6 +658,14 @@ public:
       * but it should work for any its type, we pass there directly a hash of payload.
       */
     bool SignSpecialTxPayload(const uint256& hash, const CKeyID& keyid, std::vector<unsigned char>& vchSig) const;
+    /**
+     * Sign a governance vote using wallet signing methods.
+     * 
+     * @param[in] keyID The key ID to use for signing
+     * @param[in,out] vote The governance vote to sign (signature is set on success)
+     * @return true if signing succeeded, false otherwise
+     */
+    bool SignGovernanceVote(const CKeyID& keyID, CGovernanceVote& vote) const;
 
     /**
      * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have

@@ -558,8 +558,8 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
         // Create vote
         CGovernanceVote vote(dmn->collateralOutpoint, proposalHash, VOTE_SIGNAL_FUNDING, outcome);
 
-        // Sign vote using shared helper function
-        if (!SignGovernanceVote(*walletModel->wallet().wallet(), votingKeyID, vote)) {
+        // Sign vote using CWallet member function
+        if (!walletModel->wallet().wallet()->SignGovernanceVote(votingKeyID, vote)) {
             nFailed++;
             failedMessages.append(
                 tr("Failed to sign vote for masternode %1").arg(QString::fromStdString(proTxHash.ToString())));
