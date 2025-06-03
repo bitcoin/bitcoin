@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,7 @@ template <typename Value, typename FnR, typename... FnParams, typename Output>
 void CustomBuildField(TypeList<std::function<FnR(FnParams...)>>,
     Priority<1>,
     InvokeContext& invoke_context,
-    Value& value,
+    Value&& value,
     Output&& output)
 {
     if (value) {
