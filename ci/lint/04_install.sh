@@ -37,7 +37,7 @@ command -v python3
 python3 --version
 
 ${CI_RETRY_EXE} pip3 install \
-  codespell==2.2.6 \
+  codespell==2.4.1 \
   lief==0.13.2 \
   mypy==1.4.1 \
   pyzmq==25.1.0 \

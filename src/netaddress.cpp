@@ -182,7 +182,7 @@ bool CNetAddr::SetInternal(const std::string &name)
 }
 
 namespace torv3 {
-// https://gitweb.torproject.org/torspec.git/tree/rend-spec-v3.txt?id=7116c9cdaba248aae07a3f1d0e15d9dd102f62c5#n2175
+// https://gitlab.torproject.org/tpo/core/torspec/-/tree/main/spec/rend-spec
 static constexpr size_t CHECKSUM_LEN = 2;
 static const unsigned char VERSION[] = {3};
 static constexpr size_t TOTAL_LEN = ADDR_TORV3_SIZE + CHECKSUM_LEN + sizeof(VERSION);
