@@ -80,7 +80,7 @@ static bool CheckOrphanBehavior(node::TxDownloadManagerImpl& txdownload_impl, co
         return false;
     }
 
-    if (expect_orphan != txdownload_impl.m_orphanage.HaveTx(tx->GetWitnessHash())) {
+    if (expect_orphan != txdownload_impl.m_orphanage->HaveTx(tx->GetWitnessHash())) {
         err_msg = strprintf("unexpectedly %s tx in orphanage", expect_orphan ? "did not find" : "found");
         return false;
     }
@@ -162,7 +162,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                 BOOST_CHECK_EQUAL(parent_txid_rejected, txdownload_impl.RecentRejectsFilter().contains(child_wtxid.ToUint256()));
 
                 // Unless rejected, the child should be in orphanage.
-                BOOST_CHECK_EQUAL(!parent_txid_rejected, txdownload_impl.m_orphanage.HaveTx(ptx_child->GetWitnessHash()));
+                BOOST_CHECK_EQUAL(!parent_txid_rejected, txdownload_impl.m_orphanage->HaveTx(ptx_child->GetWitnessHash()));
             }
         }
     }
