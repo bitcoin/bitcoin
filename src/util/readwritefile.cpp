@@ -7,6 +7,7 @@
 
 #include <fs.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <limits>
 #include <string>

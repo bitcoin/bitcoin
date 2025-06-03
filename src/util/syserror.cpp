@@ -10,6 +10,7 @@
 #include <util/syserror.h>
 
 #include <cstring>
+#include <string>
 
 std::string SysErrorString(int err)
 {

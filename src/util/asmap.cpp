@@ -7,11 +7,14 @@
 #include <clientversion.h>
 #include <fs.h>
 #include <logging.h>
+#include <serialize.h>
 #include <streams.h>
 
+#include <algorithm>
 #include <bit>
 #include <cassert>
-#include <map>
+#include <cstdio>
+#include <utility>
 #include <vector>
 
 namespace {

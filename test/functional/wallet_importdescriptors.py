@@ -430,7 +430,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         txid = w0.sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 6)
         wmulti_priv.sendtoaddress(w0.getnewaddress(), 8) # uses change 1
-        self.generate(self.nodes[0], 6)
+        self.sync_all()
 
         self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True, descriptors=True)
         wmulti_pub = self.nodes[1].get_wallet_rpc("wmulti_pub")

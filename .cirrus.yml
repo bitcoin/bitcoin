@@ -27,26 +27,37 @@ base_template: &BASE_TEMPLATE
     - git checkout FETCH_HEAD  # Use merged changes to detect silent merge conflicts
                                # Also, the merge commit is used to lint COMMIT_RANGE="HEAD~..HEAD"
 
+main_template: &MAIN_TEMPLATE
+  timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+  ccache_cache:
+    folder: "/tmp/ccache_dir"
+  ci_script:
+    - ./ci/test_run_all.sh
+
 global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *BASE_TEMPLATE
-  timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
   container:
     # https://cirrus-ci.org/faq/#are-there-any-limits
     # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
     cpu: 2
     greedy: true
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
-  ccache_cache:
-    folder: "/tmp/ccache_dir"
   depends_built_cache:
-    folder: "/tmp/cirrus-ci-build/depends/built"
+    folder: "depends/built"
+    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-list -1 HEAD ./depends)
   depends_sdk_cache:
     folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
   depends_releases_cache:
     folder: "/tmp/cirrus-ci-build/releases"
-  ci_script:
-    - ./ci/test_run_all.sh
+  << : *MAIN_TEMPLATE
 
+macos_native_task_template: &MACOS_NATIVE_TASK_TEMPLATE
+  << : *BASE_TEMPLATE
+  check_clang_script:
+    - clang --version
+  brew_install_script:
+    - brew install boost libevent qt@5 miniupnpc libnatpmp ccache zeromq qrencode libtool automake gnu-getopt
+  << : *MAIN_TEMPLATE
 compute_credits_template: &CREDITS_TEMPLATE
   # https://cirrus-ci.org/pricing/#compute-credits
   # Only use credits for pull requests to the main repo
@@ -169,15 +180,29 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 12 native [gui, system sqlite only] [no depends]'
-  brew_install_script:
-    - brew install boost libevent qt@5 miniupnpc ccache zeromq qrencode libtool automake gnu-getopt
-  << : *GLOBAL_TASK_TEMPLATE
+  name: 'macOS 12 native x86_64 [gui, system sqlite] [no depends]'
   macos_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: monterey-xcode-13.3  # https://cirrus-ci.org/guide/macOS
+  << : *MACOS_NATIVE_TASK_TEMPLATE
   env:
     DANGER_RUN_CI_ON_HOST: "true"
     CI_USE_APT_INSTALL: "no"
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
-    FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
+    FILE_ENV: "./ci/test/00_setup_env_mac_native_x86_64.sh"
+
+task:
+  name: 'ARM64 Android APK [focal]'
+  << : *BASE_TEMPLATE
+  android_sdk_cache:
+    folder: "depends/SDKs/android"
+    fingerprint_key: "ANDROID_API_LEVEL=28 ANDROID_BUILD_TOOLS_VERSION=28.0.3 ANDROID_NDK_VERSION=23.2.8568313"
+  depends_sources_cache:
+    folder: "depends/sources"
+    fingerprint_script: git rev-list -1 HEAD ./depends
+  << : *MAIN_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    FILE_ENV: "./ci/test/00_setup_env_android.sh"

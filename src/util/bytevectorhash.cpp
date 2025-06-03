@@ -6,6 +6,8 @@
 #include <random.h>
 #include <util/bytevectorhash.h>
 
+#include <vector>
+
 ByteVectorHash::ByteVectorHash()
 {
     GetRandBytes({reinterpret_cast<unsigned char*>(&m_k0), sizeof(m_k0)});
