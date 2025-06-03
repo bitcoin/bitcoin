@@ -12,8 +12,85 @@
 
 #include <cassert>
 
-namespace node{
-bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
+namespace node {
+
+class TxOrphanageImpl final : public TxOrphanage {
+private:
+    struct OrphanTx : public OrphanTxBase {
+        NodeSeconds nTimeExpire;
+        size_t list_pos;
+    };
+
+    /** Total usage (weight) of all entries in m_orphans. */
+    int64_t m_total_orphan_usage{0};
+
+    /** Total number of <peer, tx> pairs. Can be larger than m_orphans.size() because multiple peers
+     * may have announced the same orphan. */
+    unsigned int m_total_announcements{0};
+
+    /** Map from wtxid to orphan transaction record. Limited by
+     *  DEFAULT_MAX_ORPHAN_TRANSACTIONS */
+    std::map<Wtxid, OrphanTx> m_orphans;
+
+    struct PeerOrphanInfo {
+        /** List of transactions that should be reconsidered: added to in AddChildrenToWorkSet,
+         * removed from one-by-one with each call to GetTxToReconsider. The wtxids may refer to
+         * transactions that are no longer present in orphanage; these are lazily removed in
+         * GetTxToReconsider. */
+        std::set<Wtxid> m_work_set;
+
+        /** Total weight of orphans for which this peer is an announcer.
+         * If orphans are provided by different peers, its weight will be accounted for in each
+         * PeerOrphanInfo, so the total of all peers' m_total_usage may be larger than
+         * m_total_orphan_size. If a peer is removed as an announcer, even if the orphan still
+         * remains in the orphanage, this number will be decremented. */
+        int64_t m_total_usage{0};
+    };
+    std::map<NodeId, PeerOrphanInfo> m_peer_orphanage_info;
+
+    using OrphanMap = decltype(m_orphans);
+
+    struct IteratorComparator
+    {
+        template<typename I>
+        bool operator()(const I& a, const I& b) const
+        {
+            return a->first < b->first;
+        }
+    };
+
+    /** Index from the parents' COutPoint into the m_orphans. Used
+     *  to remove orphan transactions from the m_orphans */
+    std::map<COutPoint, std::set<OrphanMap::iterator, IteratorComparator>> m_outpoint_to_orphan_it;
+
+    /** Orphan transactions in vector for quick random eviction */
+    std::vector<OrphanMap::iterator> m_orphan_list;
+
+    /** Timestamp for the next scheduled sweep of expired orphans */
+    NodeSeconds m_next_sweep{0s};
+
+public:
+    bool AddTx(const CTransactionRef& tx, NodeId peer) override;
+    bool AddAnnouncer(const Wtxid& wtxid, NodeId peer) override;
+    CTransactionRef GetTx(const Wtxid& wtxid) const override;
+    bool HaveTx(const Wtxid& wtxid) const override;
+    bool HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const override;
+    CTransactionRef GetTxToReconsider(NodeId peer) override;
+    int EraseTx(const Wtxid& wtxid) override;
+    void EraseForPeer(NodeId peer) override;
+    void EraseForBlock(const CBlock& block) override;
+    void LimitOrphans(FastRandomContext& rng) override;
+    void AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) override;
+    bool HaveTxToReconsider(NodeId peer) override;
+    std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const override;
+    size_t Size() const override { return m_orphans.size(); }
+    std::vector<OrphanTxBase> GetOrphanTransactions() const override;
+    int64_t TotalOrphanUsage() const override { return m_total_orphan_usage; }
+    int64_t UsageByPeer(NodeId peer) const override;
+    void SanityCheck() const override;
+};
+
+bool TxOrphanageImpl::AddTx(const CTransactionRef& tx, NodeId peer)
 {
     const Txid& hash = tx->GetHash();
     const Wtxid& wtxid = tx->GetWitnessHash();
@@ -53,7 +130,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
     return true;
 }
 
-bool TxOrphanage::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
+bool TxOrphanageImpl::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
 {
     const auto it = m_orphans.find(wtxid);
     if (it != m_orphans.end()) {
@@ -70,7 +147,7 @@ bool TxOrphanage::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
     return false;
 }
 
-int TxOrphanage::EraseTx(const Wtxid& wtxid)
+int TxOrphanageImpl::EraseTx(const Wtxid& wtxid)
 {
     std::map<Wtxid, OrphanTx>::iterator it = m_orphans.find(wtxid);
     if (it == m_orphans.end())
@@ -116,7 +193,7 @@ int TxOrphanage::EraseTx(const Wtxid& wtxid)
     return 1;
 }
 
-void TxOrphanage::EraseForPeer(NodeId peer)
+void TxOrphanageImpl::EraseForPeer(NodeId peer)
 {
     // Zeroes out this peer's m_total_usage.
     m_peer_orphanage_info.erase(peer);
@@ -141,7 +218,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
     if (nErased > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d\n", nErased, peer);
 }
 
-void TxOrphanage::LimitOrphans(FastRandomContext& rng)
+void TxOrphanageImpl::LimitOrphans(FastRandomContext& rng)
 {
     unsigned int nEvicted = 0;
     auto nNow{Now<NodeSeconds>()};
@@ -173,7 +250,7 @@ void TxOrphanage::LimitOrphans(FastRandomContext& rng)
     if (nEvicted > 0) LogDebug(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx\n", nEvicted);
 }
 
-void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng)
+void TxOrphanageImpl::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng)
 {
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
@@ -201,24 +278,25 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext
     }
 }
 
-bool TxOrphanage::HaveTx(const Wtxid& wtxid) const
+bool TxOrphanageImpl::HaveTx(const Wtxid& wtxid) const
 {
     return m_orphans.count(wtxid);
 }
 
-CTransactionRef TxOrphanage::GetTx(const Wtxid& wtxid) const
+CTransactionRef TxOrphanageImpl::GetTx(const Wtxid& wtxid) const
 {
     auto it = m_orphans.find(wtxid);
     return it != m_orphans.end() ? it->second.tx : nullptr;
 }
 
-bool TxOrphanage::HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const
+
+bool TxOrphanageImpl::HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const
 {
     auto it = m_orphans.find(wtxid);
     return (it != m_orphans.end() && it->second.announcers.contains(peer));
 }
 
-CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
+CTransactionRef TxOrphanageImpl::GetTxToReconsider(NodeId peer)
 {
     auto peer_it = m_peer_orphanage_info.find(peer);
     if (peer_it == m_peer_orphanage_info.end()) return nullptr;
@@ -236,7 +314,7 @@ CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer)
     return nullptr;
 }
 
-bool TxOrphanage::HaveTxToReconsider(NodeId peer)
+bool TxOrphanageImpl::HaveTxToReconsider(NodeId peer)
 {
     auto peer_it = m_peer_orphanage_info.find(peer);
     if (peer_it == m_peer_orphanage_info.end()) return false;
@@ -245,7 +323,7 @@ bool TxOrphanage::HaveTxToReconsider(NodeId peer)
     return !work_set.empty();
 }
 
-void TxOrphanage::EraseForBlock(const CBlock& block)
+void TxOrphanageImpl::EraseForBlock(const CBlock& block)
 {
     std::vector<Wtxid> vOrphanErase;
 
@@ -273,7 +351,7 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
     }
 }
 
-std::vector<CTransactionRef> TxOrphanage::GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const
+std::vector<CTransactionRef> TxOrphanageImpl::GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const
 {
     // First construct a vector of iterators to ensure we do not return duplicates of the same tx
     // and so we can sort by nTimeExpire.
@@ -313,7 +391,7 @@ std::vector<CTransactionRef> TxOrphanage::GetChildrenFromSamePeer(const CTransac
     return children_found;
 }
 
-std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() const
+std::vector<TxOrphanage::OrphanTxBase> TxOrphanageImpl::GetOrphanTransactions() const
 {
     std::vector<OrphanTxBase> ret;
     ret.reserve(m_orphans.size());
@@ -323,7 +401,13 @@ std::vector<TxOrphanage::OrphanTxBase> TxOrphanage::GetOrphanTransactions() cons
     return ret;
 }
 
-void TxOrphanage::SanityCheck() const
+int64_t TxOrphanageImpl::UsageByPeer(NodeId peer) const
+{
+    auto peer_it = m_peer_orphanage_info.find(peer);
+    return peer_it == m_peer_orphanage_info.end() ? 0 : peer_it->second.m_total_usage;
+}
+
+void TxOrphanageImpl::SanityCheck() const
 {
     // Check that cached m_total_announcements is correct
     unsigned int counted_total_announcements{0};
@@ -362,4 +446,10 @@ void TxOrphanage::SanityCheck() const
         }
     }
 }
+
+std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept
+{
+    return std::make_unique<TxOrphanageImpl>();
+}
+
 } // namespace node

@@ -279,11 +279,9 @@ static bool HasRelayPermissions(NodeId peer) { return peer == 0; }
 
 static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl, size_t max_orphan_count)
 {
-    const node::TxOrphanage& orphanage = txdownload_impl.m_orphanage;
-
     // Orphanage usage should never exceed what is allowed
-    Assert(orphanage.Size() <= max_orphan_count);
-    txdownload_impl.m_orphanage.SanityCheck();
+    Assert(txdownload_impl.m_orphanage->Size() <= max_orphan_count);
+    txdownload_impl.m_orphanage->SanityCheck();
 
     // We should never have more than the maximum in-flight requests out for a peer.
     for (NodeId peer = 0; peer < NUM_PEERS; ++peer) {
@@ -349,7 +347,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 block.vtx.push_back(rand_tx);
                 txdownload_impl.BlockConnected(std::make_shared<CBlock>(block));
                 // Block transactions must be removed from orphanage
-                Assert(!txdownload_impl.m_orphanage.HaveTx(rand_tx->GetWitnessHash()));
+                Assert(!txdownload_impl.m_orphanage->HaveTx(rand_tx->GetWitnessHash()));
             },
             [&] {
                 txdownload_impl.BlockDisconnected();
@@ -401,7 +399,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                     const auto& package = maybe_package->m_txns;
                     // Parent is in m_lazy_recent_rejects_reconsiderable and child is in m_orphanage
                     Assert(txdownload_impl.RecentRejectsReconsiderableFilter().contains(rand_tx->GetWitnessHash().ToUint256()));
-                    Assert(txdownload_impl.m_orphanage.HaveTx(maybe_package->m_txns.back()->GetWitnessHash()));
+                    Assert(txdownload_impl.m_orphanage->HaveTx(maybe_package->m_txns.back()->GetWitnessHash()));
                     // Package has not been rejected
                     Assert(!txdownload_impl.RecentRejectsReconsiderableFilter().contains(GetPackageHash(package)));
                     // Neither is in m_lazy_recent_rejects
