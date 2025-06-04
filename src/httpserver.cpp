@@ -1019,4 +1019,9 @@ std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CSer
 
     return sock;
 }
+
+HTTPServer::Id HTTPServer::GetNewId()
+{
+    return m_next_id.fetch_add(1, std::memory_order_relaxed);
+}
 } // namespace http_bitcoin
