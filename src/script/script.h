@@ -549,13 +549,18 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
-    /*
-     * OP_1 <0x4e73>
-     */
-    bool IsPayToAnchor() const;
     /** Checks if output of IsWitnessProgram comes from a P2A output script
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
+
+    bool IsPayToAnchor() const noexcept
+    {
+        return size() == 4 &&
+               front() == OP_1 &&
+               (*this)[1] == 0x02 &&
+               (*this)[2] == 0x4e &&
+               back() == 0x73;
+    }
 
     bool IsPayToScriptHash() const noexcept
     {

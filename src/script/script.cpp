@@ -204,15 +204,6 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     return subscript.GetLegacySigOpCount(/*fAccurate=*/true);
 }
 
-bool CScript::IsPayToAnchor() const
-{
-    return (this->size() == 4 &&
-        (*this)[0] == OP_1 &&
-        (*this)[1] == 0x02 &&
-        (*this)[2] == 0x4e &&
-        (*this)[3] == 0x73);
-}
-
 bool CScript::IsPayToAnchor(int version, const std::vector<unsigned char>& program)
 {
     return version == 1 &&
