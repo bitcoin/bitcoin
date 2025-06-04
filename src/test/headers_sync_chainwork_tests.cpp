@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <headerssync.h>
+#include <net_processing.h>
 #include <pow.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
@@ -17,6 +18,8 @@
 
 constexpr size_t TARGET_BLOCKS{15'000};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
+constexpr size_t REDOWNLOAD_BUFFER_SIZE{TARGET_BLOCKS - (MAX_HEADERS_RESULTS + 123)};
+constexpr size_t COMMITMENT_PERIOD{600};
 
 /** Search for a nonce to meet (regtest) proof of work */
 static void FindProofOfWork(CBlockHeader& starting_header)
@@ -56,6 +59,10 @@ static HeadersSyncState CreateState(const CBlockIndex* chain_start, const CChain
 {
     return {/*id=*/0,
             chain_params.GetConsensus(),
+            HeadersSyncParams{
+                .commitment_period = COMMITMENT_PERIOD,
+                .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
+            },
             chain_start,
             /*minimum_required_work=*/CHAIN_WORK};
 }
