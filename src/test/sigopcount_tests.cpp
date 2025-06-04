@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
         {
             // P2SH
             const auto script{GetScriptForDestination(ScriptHash(CScript{} << OP_TRUE))};
+            BOOST_REQUIRE(script.IsPayToScriptHash());
             BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {

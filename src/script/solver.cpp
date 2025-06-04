@@ -146,7 +146,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
     if (scriptPubKey.IsPayToScriptHash())
     {
-        std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
+        std::vector<unsigned char> hashBytes(scriptPubKey.begin() + 2, scriptPubKey.begin() + 2 + HASH160_OUTPUT_SIZE);
         vSolutionsRet.push_back(hashBytes);
         return TxoutType::SCRIPTHASH;
     }

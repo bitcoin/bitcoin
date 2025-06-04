@@ -552,7 +552,13 @@ public:
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
-    bool IsPayToScriptHash() const;
+    bool IsPayToScriptHash() const noexcept
+    {
+        return size() == 3 + HASH160_OUTPUT_SIZE &&
+               (*this)[0] == OP_HASH160 &&
+               (*this)[1] == HASH160_OUTPUT_SIZE &&
+               (*this)[2 + HASH160_OUTPUT_SIZE] == OP_EQUAL;
+    }
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
