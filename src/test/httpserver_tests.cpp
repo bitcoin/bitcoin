@@ -282,5 +282,15 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
     // We are bound and listening
     BOOST_REQUIRE_EQUAL(server.GetListeningSocketCount(), 1);
+
+    // Pick up the phone, there's no one there
+    CService addr_connection;
+    BOOST_REQUIRE(!server.AcceptConnectionFromListeningSocket(addr_connection));
+
+    // Create a mock client and add it to the local CreateSock queue
+    ConnectClient();
+    // Accept the connection
+    BOOST_REQUIRE(server.AcceptConnectionFromListeningSocket(addr_connection));
+    BOOST_CHECK_EQUAL(addr_connection.ToStringAddrPort(), "5.5.5.5:6789");
 }
 BOOST_AUTO_TEST_SUITE_END()
