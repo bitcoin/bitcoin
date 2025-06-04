@@ -24,10 +24,13 @@
 #include <utility>
 #include <vector>
 
+// Hash output sizes
+static constexpr size_t HASH160_OUTPUT_SIZE{20};
+
 // Signature hash sizes
-static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
-static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
-static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
+static constexpr size_t WITNESS_V0_KEYHASH_SIZE{HASH160_OUTPUT_SIZE};
+static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE{32};
+static constexpr size_t WITNESS_V1_TAPROOT_SIZE{32};
 
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
@@ -548,7 +551,13 @@ public:
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
-    bool IsPayToScriptHash() const;
+    bool IsPayToScriptHash() const noexcept
+    {
+        return size() == 23 &&
+               (*this)[0] == OP_HASH160 &&
+               (*this)[1] == HASH160_OUTPUT_SIZE &&
+               (*this)[22] == OP_EQUAL;
+    }
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
