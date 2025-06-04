@@ -8,6 +8,8 @@
 #include <pubkey.h>
 #include <script/script.h>
 
+#include <secp256k1.h>
+
 /*
  * These check for scripts for which a special case with a shorter encoding is defined.
  * They are implemented separately from the CScript test, as these test for exact byte
@@ -30,10 +32,9 @@ static bool IsToScriptID(const CScript& script, CScriptID& hash)
     return true;
 }
 
-static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
+static bool IsToPubKey(const CScript& script, CPubKey& pubkey)
 {
-    if (script.size() == 35 && script[0] == 33 && script[34] == OP_CHECKSIG
-                            && (script[1] == 0x02 || script[1] == 0x03)) {
+    if (script.IsCompressedPayToPubKey() && (script[1] == SECP256K1_TAG_PUBKEY_EVEN || script[1] == SECP256K1_TAG_PUBKEY_ODD)) {
         pubkey.Set(&script[1], &script[34]);
         return true;
     }
