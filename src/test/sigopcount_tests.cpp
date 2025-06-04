@@ -80,6 +80,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
             // P2A
             const auto script{GetScriptForDestination(PayToAnchor{})};
 
+            BOOST_REQUIRE(script.IsPayToAnchor());
             BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {
