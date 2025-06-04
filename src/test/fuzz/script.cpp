@@ -148,6 +148,7 @@ FUZZ_TARGET(script, .init = initialize_script)
         const bool valid{IsValidDestination(tx_destination_1)};
 
         Assert(dest.IsPayToScriptHash() == std::holds_alternative<ScriptHash>(tx_destination_1));
+        Assert(dest.IsPayToWitnessScriptHash() == std::holds_alternative<WitnessV0ScriptHash>(tx_destination_1));
 
         if (!std::get_if<PubKeyDestination>(&tx_destination_1)) {
             // Only try to round trip non-pubkey destinations since PubKeyDestination has no encoding

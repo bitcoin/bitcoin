@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
         {
             // P2WSH
             const auto script{GetScriptForDestination(WitnessV0ScriptHash(CScript{} << OP_TRUE))};
+            BOOST_REQUIRE(script.IsPayToWitnessScriptHash());
             BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {

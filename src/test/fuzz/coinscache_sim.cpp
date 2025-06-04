@@ -98,6 +98,7 @@ struct PrecomputedData
                 coins[i].out.scriptPubKey[0] = OP_0;
                 coins[i].out.scriptPubKey[1] = 32;
                 std::copy(hash.begin(), hash.begin() + 32, coins[i].out.scriptPubKey.begin() + 2);
+                assert(coins[i].out.scriptPubKey.IsPayToWitnessScriptHash());
                 break;
             case 4: /* P2TR */
                 coins[i].out.scriptPubKey.resize(34);
