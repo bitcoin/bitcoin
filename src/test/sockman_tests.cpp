@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(test_sockman)
     BOOST_REQUIRE_EQUAL(sockman.GetListeningSocketCount(), 0);
     // Bind to mock Listening Socket
     bilingual_str str_error;
-    BOOST_REQUIRE(sockman.BindListenPort(addr_bind.value(), str_error));
+    BOOST_REQUIRE(sockman.BindAndStartListening(addr_bind.value(), str_error));
     // We are bound and listening
     BOOST_REQUIRE_EQUAL(sockman.GetListeningSocketCount(), 1);
 }
