@@ -6,11 +6,16 @@
 #define BITCOIN_HTTPSERVER_H
 
 #include <functional>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
+#include <vector>
 
+#include <netaddress.h>
 #include <rpc/protocol.h>
+#include <util/expected.h>
+#include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -280,6 +285,33 @@ public:
     bool LoadHeaders(LineReader& reader);
     bool LoadBody(LineReader& reader);
     /// @}
+};
+
+class HTTPServer
+{
+public:
+    /**
+     * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
+     * @param[in] to Where to bind.
+     * @returns {} or the reason for failure.
+     */
+    util::Expected<void, std::string> BindAndStartListening(const CService& to);
+
+    /**
+     * Stop listening by closing all listening sockets.
+     */
+    void StopListening();
+
+    /**
+     * Get the number of sockets the server is bound to and listening on
+     */
+    size_t GetListeningSocketCount() const { return m_listen.size(); }
+
+private:
+    /**
+     * List of listening sockets.
+     */
+    std::vector<std::shared_ptr<Sock>> m_listen;
 };
 } // namespace http_bitcoin
 
