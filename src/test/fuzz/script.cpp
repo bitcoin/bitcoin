@@ -101,6 +101,7 @@ FUZZ_TARGET(script, .init = initialize_script)
     (void)script.IsPayToPubKeyHash();
     (void)script.IsCompressedPayToPubKey();
     (void)script.IsUncompressedPayToPubKey();
+    (void)script.IsPayToWitnessPubKeyHash();
     (void)script.IsPushOnly();
     (void)script.CountSigOps(/*fAccurate=*/false);
 
