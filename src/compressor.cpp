@@ -17,21 +17,21 @@
  * form).
  */
 
-static bool IsToKeyID(const CScript& script, CKeyID &hash)
+static bool IsToKeyID(const CScript& script, CKeyID& hash)
 {
     if (!script.IsPayToPubKeyHash()) return false;
     memcpy(&hash, &script[3], 20);
     return true;
 }
 
-static bool IsToScriptID(const CScript& script, CScriptID &hash)
+static bool IsToScriptID(const CScript& script, CScriptID& hash)
 {
     if (!script.IsPayToScriptHash()) return false;
     memcpy(&hash, &script[2], 20);
     return true;
 }
 
-static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
+static bool IsToPubKey(const CScript& script, CPubKey& pubkey)
 {
     if (script.IsCompressedPayToPubKey() && (script[1] == SECP256K1_TAG_PUBKEY_EVEN || script[1] == SECP256K1_TAG_PUBKEY_ODD)) {
         pubkey.Set(&script[1], &script[34]);

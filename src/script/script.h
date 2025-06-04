@@ -581,6 +581,14 @@ public:
                back() == OP_EQUAL;
     }
 
+    bool IsPayToWitnessPubKeyHash() const noexcept
+    {
+        return size() == 22 &&
+               front() == OP_0 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE;
+    }
+
+
     bool IsPayToWitnessScriptHash() const noexcept
     {
         return size() == 34 &&
@@ -608,6 +616,7 @@ public:
                front() == CPubKey::SIZE &&
                back() == OP_CHECKSIG;
     }
+
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
