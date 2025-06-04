@@ -121,3 +121,8 @@ std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CServic
 
     return sock;
 }
+
+SockMan::Id SockMan::GetNewId()
+{
+    return m_next_id.fetch_add(1, std::memory_order_relaxed);
+}
