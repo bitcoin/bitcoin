@@ -38,9 +38,8 @@ static bool IsToPubKey(const CScript& script, CPubKey& pubkey)
         pubkey.Set(&script[1], &script[1 + CPubKey::COMPRESSED_SIZE]);
         return true;
     }
-    if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG
-                            && script[1] == 0x04) {
-        pubkey.Set(&script[1], &script[66]);
+    if (script.IsUncompressedPayToPubKey() && (script[1] == SECP256K1_TAG_PUBKEY_UNCOMPRESSED)) {
+        pubkey.Set(&script[1], &script[1 + CPubKey::SIZE]);
         return pubkey.IsFullyValid(); // if not fully valid, a case that would not be compressible
     }
     return false;
@@ -69,8 +68,8 @@ bool CompressScript(const CScript& script, CompressedScript& out)
         if (pubkey[0] == SECP256K1_TAG_PUBKEY_EVEN || pubkey[0] == SECP256K1_TAG_PUBKEY_ODD) {
             out[0] = pubkey[0];
             return true;
-        } else if (pubkey[0] == 0x04) {
-            out[0] = 0x04 | (pubkey[64] & 0x01);
+        } else if (pubkey[0] == SECP256K1_TAG_PUBKEY_UNCOMPRESSED) {
+            out[0] = 0x04 | (pubkey[CPubKey::SIZE - 1] & 0x01);
             return true;
         }
     }
@@ -115,17 +114,17 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
         return true;
     case 0x04:
     case 0x05:
-        unsigned char vch[33] = {};
+        unsigned char vch[CPubKey::COMPRESSED_SIZE] = {};
         vch[0] = nSize - 2;
-        memcpy(&vch[1], in.data(), 32);
+        memcpy(&vch[1], in.data(), CPubKey::COMPRESSED_SIZE - 1);
         CPubKey pubkey{vch};
         if (!pubkey.Decompress())
             return false;
-        assert(pubkey.size() == 65);
-        script.resize(67);
-        script[0] = 65;
-        memcpy(&script[1], pubkey.begin(), 65);
-        script[66] = OP_CHECKSIG;
+        assert(pubkey.size() == CPubKey::SIZE);
+        script.resize(2 + CPubKey::SIZE);
+        script[0] = CPubKey::SIZE;
+        memcpy(&script[1], pubkey.begin(), CPubKey::SIZE);
+        script[1 + CPubKey::SIZE] = OP_CHECKSIG;
         return true;
     }
     return false;

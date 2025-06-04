@@ -598,6 +598,14 @@ public:
                (*this)[1 + CPubKey::COMPRESSED_SIZE] == OP_CHECKSIG;
     }
 
+    //! Detect P2PK script with an uncompressed public key. Doesn't check the 0x04 key prefix.
+    bool IsUncompressedPayToPubKey() const noexcept
+    {
+        return size() == 2 + CPubKey::SIZE &&
+               (*this)[0] == CPubKey::SIZE &&
+               (*this)[1 + CPubKey::SIZE] == OP_CHECKSIG;
+    }
+
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
