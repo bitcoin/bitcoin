@@ -93,3 +93,27 @@ void SockMan::StopListening()
 {
     m_listen.clear();
 }
+
+std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
+{
+    // Make sure we only operate on our own listening sockets
+    Assume(std::ranges::any_of(m_listen, [&](const auto& sock) { return sock.get() == &listen_sock; }));
+
+    struct sockaddr_storage sockaddr;
+    socklen_t len = sizeof(sockaddr);
+    auto sock = listen_sock.Accept((struct sockaddr*)&sockaddr, &len);
+
+    if (!sock) {
+        const int nErr = WSAGetLastError();
+        if (nErr != WSAEWOULDBLOCK) {
+            LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
+        }
+        return {};
+    }
+
+    if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr, len)) {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Unknown socket family\n");
+    }
+
+    return sock;
+}
