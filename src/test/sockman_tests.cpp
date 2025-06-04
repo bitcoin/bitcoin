@@ -23,10 +23,9 @@ BOOST_AUTO_TEST_CASE(test_sockman)
     {
         // We can only bind to NET_IPV4 and NET_IPV6
         CService onion_address{Lookup("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion", 0, false).value()};
-        bilingual_str str_error;
-        auto result{sockman.BindListenPort(onion_address, str_error)};
+        auto result{sockman.BindAndStartListening(onion_address)};
         BOOST_REQUIRE(!result);
-        BOOST_CHECK_EQUAL(str_error.original, "Bind address family for aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion:0 not supported");
+        BOOST_CHECK_EQUAL(util::ErrorString(result).original, "Bind address family for aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion:0 not supported");
     }
 
     // This VALID address won't actually get used because we stubbed CreateSock()
@@ -36,7 +35,7 @@ BOOST_AUTO_TEST_CASE(test_sockman)
     BOOST_REQUIRE_EQUAL(sockman.GetListeningSocketCount(), 0);
     // Bind to mock Listening Socket
     bilingual_str str_error;
-    BOOST_REQUIRE(sockman.BindListenPort(addr_bind, str_error));
+    BOOST_REQUIRE(sockman.BindAndStartListening(addr_bind));
     // We are bound and listening
     BOOST_REQUIRE_EQUAL(sockman.GetListeningSocketCount(), 1);
 }

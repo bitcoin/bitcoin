@@ -6,6 +6,7 @@
 #define BITCOIN_COMMON_SOCKMAN_H
 
 #include <netaddress.h>
+#include <util/result.h>
 #include <util/sock.h>
 #include <util/translation.h>
 
@@ -23,12 +24,10 @@ class SockMan
 public:
     /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
-     * @param[in] addrBind Where to bind.
-     * @param[out] strError Error string if an error occurs.
-     * @retval true Success.
-     * @retval false Failure, `strError` will be set.
+     * @param[in] to Where to bind.
+     * @returns {} or the reason for failure.
      */
-    bool BindListenPort(const CService& addrBind, bilingual_str& strError);
+    util::Result<void> BindAndStartListening(const CService& to);
 
     /**
      * Stop listening by closing all listening sockets.
