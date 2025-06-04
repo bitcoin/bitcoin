@@ -221,15 +221,6 @@ bool CScript::IsPayToAnchor(int version, const std::vector<unsigned char>& progr
         program[1] == 0x73;
 }
 
-bool CScript::IsPayToScriptHash() const
-{
-    // Extra-fast test for pay-to-script-hash CScripts:
-    return (this->size() == 23 &&
-            (*this)[0] == OP_HASH160 &&
-            (*this)[1] == 0x14 &&
-            (*this)[22] == OP_EQUAL);
-}
-
 bool CScript::IsPayToWitnessScriptHash() const
 {
     // Extra-fast test for pay-to-witness-script-hash CScripts:
