@@ -601,6 +601,24 @@ void TestChain100Setup::MockMempoolMinFee(const CFeeRate& target_feerate)
     m_node.mempool->TrimToSize(0);
     assert(m_node.mempool->GetMinFee() == target_feerate);
 }
+
+SocketTestingSetup::SocketTestingSetup()
+    : m_create_sock_orig{CreateSock}
+{
+    CreateSock = [this](int, int, int) {
+        // This is a mock Listening Socket that a server can "bind" to and
+        // listen to for incoming connections. We won't need to access its I/O
+        // pipes because we don't read or write directly to it. It will return
+        // Connected Sockets from the queue via its Accept() method.
+        return std::make_unique<DynSock>(std::make_shared<DynSock::Pipes>(), m_accepted_sockets);
+    };
+};
+
+SocketTestingSetup::~SocketTestingSetup()
+{
+    CreateSock = m_create_sock_orig;
+}
+
 /**
  * @returns a real block (0000000000013b8ab2cd513b0261a14096412195a72a0c4827d229dcc7e0f7af)
  *      with 9 txs.
