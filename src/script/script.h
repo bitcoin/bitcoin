@@ -9,6 +9,7 @@
 #include <attributes.h>
 #include <crypto/common.h>
 #include <prevector.h> // IWYU pragma: export
+#include <pubkey.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
@@ -592,6 +593,13 @@ public:
         return size() == 34 &&
                front() == OP_1 &&
                (*this)[1] == WITNESS_V1_TAPROOT_SIZE;
+    }
+
+    bool IsCompressedPayToPubKey() const noexcept
+    {
+        return size() == 35 &&
+               front() == CPubKey::COMPRESSED_SIZE &&
+               back() == OP_CHECKSIG;
     }
 
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
