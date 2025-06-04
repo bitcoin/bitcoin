@@ -21,6 +21,8 @@ define $(package)_build_cmds
   $(MAKE)
 endef
 
+# mkdir detection is broken on Alpine. Set MKDIRPROG to ensure we always
+# use "mkdir -p", and avoid parallelism issues during install.
 define $(package)_stage_cmds
-  $(MAKE) DESTDIR=$($(package)_staging_dir) install
+  $(MAKE) MKDIRPROG="mkdir -p" DESTDIR=$($(package)_staging_dir) install
 endef
