@@ -277,6 +277,9 @@ public:
     explicit SocketTestingSetup();
     ~SocketTestingSetup();
 
+    // Connect to the socket with a mock client (a DynSock)
+    void ConnectClient();
+
 private:
     // Save the original value of CreateSock here and restore it when the test ends.
     const decltype(CreateSock) m_create_sock_orig;

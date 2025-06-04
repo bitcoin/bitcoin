@@ -619,6 +619,21 @@ SocketTestingSetup::~SocketTestingSetup()
     CreateSock = m_create_sock_orig;
 }
 
+void SocketTestingSetup::ConnectClient()
+{
+    // I/O pipes for a mock Connected Socket we can read and write to.
+    std::shared_ptr<DynSock::Pipes> connected_socket_pipes(std::make_shared<DynSock::Pipes>());
+
+    // TODO: Insert a payload
+
+    // Create the Mock Connected Socket that represents a client.
+    // It needs I/O pipes but its queue can remain empty
+    std::unique_ptr<DynSock> connected_socket{std::make_unique<DynSock>(connected_socket_pipes, std::make_shared<DynSock::Queue>())};
+
+    // Push into the queue of Accepted Sockets returned by the local CreateSock()
+    m_accepted_sockets->Push(std::move(connected_socket));
+}
+
 /**
  * @returns a real block (0000000000013b8ab2cd513b0261a14096412195a72a0c4827d229dcc7e0f7af)
  *      with 9 txs.

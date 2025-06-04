@@ -17,6 +17,7 @@
  * To use this class, inherit from it and implement the pure virtual methods.
  * Handled operations:
  * - binding and listening on sockets
+ * - accepting incoming connections
  */
 class SockMan
 {
@@ -36,6 +37,14 @@ public:
     void StopListening();
 
 protected:
+    /**
+     * Accept a connection.
+     * @param[in] listen_sock Socket on which to accept the connection.
+     * @param[out] addr Address of the peer that was accepted.
+     * @return Newly created socket for the accepted connection.
+     */
+    std::unique_ptr<Sock> AcceptConnection(const Sock& listen_sock, CService& addr);
+
     /**
      * List of listening sockets.
      */
