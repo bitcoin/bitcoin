@@ -16,15 +16,11 @@
  * form).
  */
 
-static bool IsToKeyID(const CScript& script, CKeyID &hash)
+static bool IsToKeyID(const CScript& script, CKeyID& hash)
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
-                            && script[2] == 20 && script[23] == OP_EQUALVERIFY
-                            && script[24] == OP_CHECKSIG) {
-        memcpy(&hash, &script[3], 20);
-        return true;
-    }
-    return false;
+    if (!script.IsPayToPubKeyHash()) return false;
+    memcpy(&hash, &script[3], HASH160_OUTPUT_SIZE);
+    return true;
 }
 
 static bool IsToScriptID(const CScript& script, CScriptID& hash)
@@ -53,9 +49,9 @@ bool CompressScript(const CScript& script, CompressedScript& out)
 {
     CKeyID keyID;
     if (IsToKeyID(script, keyID)) {
-        out.resize(21);
+        out.resize(1 + HASH160_OUTPUT_SIZE);
         out[0] = 0x00;
-        memcpy(&out[1], &keyID, 20);
+        memcpy(&out[1], &keyID, HASH160_OUTPUT_SIZE);
         return true;
     }
     CScriptID scriptID;
