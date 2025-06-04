@@ -8,6 +8,7 @@
 #include <headerssync.h>
 #include <net_processing.h>
 #include <pow.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -20,6 +21,7 @@ constexpr size_t TARGET_BLOCKS{15'000};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
 constexpr size_t REDOWNLOAD_BUFFER_SIZE{TARGET_BLOCKS - (MAX_HEADERS_RESULTS + 123)};
 constexpr size_t COMMITMENT_PERIOD{600};
+constexpr char BUFFER_SIZE_WARNING[]{"Unexpectedly reached minimum required work before filling the headers sync redownload buffer"};
 
 /** Search for a nonce to meet (regtest) proof of work */
 static void FindProofOfWork(CBlockHeader& starting_header)
@@ -87,6 +89,9 @@ static void HappyPath(const CBlockIndex* chain_start,
 static void TooLittleWork(const CBlockIndex* chain_start,
         const std::vector<CBlockHeader>& second_chain);
 
+static void TooBigBuffer(const CBlockIndex* chain_start,
+        const std::vector<CBlockHeader>& first_chain);
+
 BOOST_AUTO_TEST_CASE(headers_sync_state)
 {
     std::vector<CBlockHeader> first_chain;
@@ -106,6 +111,7 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     SneakyRedownload(chain_start, first_chain, second_chain);
     HappyPath(chain_start, first_chain);
     TooLittleWork(chain_start, second_chain);
+    TooBigBuffer(chain_start, first_chain);
 }
 
 static void SneakyRedownload(const CBlockIndex* chain_start,
@@ -153,6 +159,16 @@ static void HappyPath(const CBlockIndex* chain_start,
 {
     // This time we feed the first chain twice.
     HeadersSyncState hss{CreateState(chain_start, Params())};
+
+    // During normal operation we shouldn't get the redownload buffer size warning.
+    DebugLogHelper forbidden{BUFFER_SIZE_WARNING, [](const std::string* str) {
+        if (str == nullptr) {
+            return false; // Disable exception for not finding a match.
+        } else {
+            throw std::runtime_error{strprintf("'%s' should not exist in debug log\n", str)};
+        }
+    }};
+
     const auto genesis_hash{Params().GenesisBlock().GetHash()};
     {
         auto result{hss.ProcessNextHeaders(first_chain, true)};
@@ -230,6 +246,29 @@ static void TooLittleWork(const CBlockIndex* chain_start,
         BOOST_CHECK_EQUAL(result.pow_validated_headers.size(), 0);
         // Nevertheless, no validation errors should have been detected with the
         // chain:
+        BOOST_CHECK(result.success);
+    }
+}
+
+static void TooBigBuffer(const CBlockIndex* chain_start,
+        const std::vector<CBlockHeader>& first_chain)
+{
+    // Intentionally too big redownload buffer in order to trigger warning.
+    HeadersSyncState hss{/*id=*/0,
+                         Params().GetConsensus(),
+                         HeadersSyncParams{
+                             .commitment_period = COMMITMENT_PERIOD,
+                             .redownload_buffer_size = first_chain.size(),
+                         },
+                         chain_start,
+                         /*minimum_required_work=*/CHAIN_WORK};
+    (void)hss.ProcessNextHeaders(first_chain, true);
+    BOOST_REQUIRE_EQUAL(hss.GetState(), HeadersSyncState::State::REDOWNLOAD);
+
+    {
+        ASSERT_DEBUG_LOG(BUFFER_SIZE_WARNING);
+        auto result{hss.ProcessNextHeaders(first_chain, true)};
+        BOOST_REQUIRE_EQUAL(hss.GetState(), HeadersSyncState::State::FINAL);
         BOOST_CHECK(result.success);
     }
 }

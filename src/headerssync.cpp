@@ -278,6 +278,14 @@ std::vector<CBlockHeader> HeadersSyncState::PopHeadersReadyForAcceptance()
     Assume(m_download_state == State::REDOWNLOAD);
     if (m_download_state != State::REDOWNLOAD) return ret;
 
+    if (m_process_all_remaining_headers && m_chain_start->nHeight == 0 &&
+        m_redownload_buffer_first_prev_hash == m_chain_start->GetBlockHash() &&
+        m_redownloaded_headers.size() <= m_params.redownload_buffer_size) {
+        LogWarning("Unexpectedly reached minimum required work before filling the headers sync redownload buffer "
+                   "(m_redownload_buffer_last_height: %u, redownload_buffer_size: %u).",
+                   m_redownload_buffer_last_height, m_params.redownload_buffer_size);
+    }
+
     while (m_redownloaded_headers.size() > m_params.redownload_buffer_size ||
             (m_redownloaded_headers.size() > 0 && m_process_all_remaining_headers)) {
         ret.emplace_back(m_redownloaded_headers.front().GetFullHeader(m_redownload_buffer_first_prev_hash));
