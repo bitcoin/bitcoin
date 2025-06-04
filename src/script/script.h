@@ -562,6 +562,16 @@ public:
                back() == 0x73;
     }
 
+    bool IsPayToPubKeyHash() const noexcept
+    {
+        return size() == 25 &&
+               front() == OP_DUP &&
+               (*this)[1] == OP_HASH160 &&
+               (*this)[2] == WITNESS_V0_KEYHASH_SIZE &&
+               (*this)[23] == OP_EQUALVERIFY &&
+               back() == OP_CHECKSIG;
+    }
+
     bool IsPayToScriptHash() const noexcept
     {
         return size() == 23 &&

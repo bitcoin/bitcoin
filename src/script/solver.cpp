@@ -48,11 +48,9 @@ static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 
 static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
-        pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
-        return true;
-    }
-    return false;
+    if (!script.IsPayToPubKeyHash()) return false;
+    pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
+    return true;
 }
 
 /** Test for "small positive integer" script opcodes - OP_1 through OP_16. */

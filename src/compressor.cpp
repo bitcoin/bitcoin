@@ -18,13 +18,9 @@
 
 static bool IsToKeyID(const CScript& script, CKeyID &hash)
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
-                            && script[2] == 20 && script[23] == OP_EQUALVERIFY
-                            && script[24] == OP_CHECKSIG) {
-        memcpy(&hash, &script[3], 20);
-        return true;
-    }
-    return false;
+    if (!script.IsPayToPubKeyHash()) return false;
+    memcpy(&hash, &script[3], 20);
+    return true;
 }
 
 static bool IsToScriptID(const CScript& script, CScriptID &hash)
