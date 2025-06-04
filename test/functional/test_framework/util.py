@@ -277,6 +277,10 @@ class Binaries:
         "Return argv array that should be used to invoke bitcoin-chainstate"
         return self._argv("chainstate", self.paths.bitcoinchainstate)
 
+    def mine_argv(self):
+        "Return argv array that should be used to invoke bitcoin-mine"
+        return self._argv("mine", self.paths.bitcoinmine)
+
     def _argv(self, command, bin_path, need_ipc=False):
         """Return argv array that should be used to invoke the command. It
         either uses the bitcoin wrapper executable (if BITCOIN_CMD is set or

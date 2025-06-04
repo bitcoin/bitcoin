@@ -23,7 +23,7 @@ class TestBitcoinMine(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        args = [self.binary_paths.bitcoinmine, f"-datadir={node.datadir_path}", f"-ipcconnect=unix:{node.ipc_socket_path}"]
+        args = node.binaries.mine_argv() + [f"-datadir={node.datadir_path}", f"-ipcconnect=unix:{node.ipc_socket_path}"]
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=True)
         expect = r"Connected to bitcoin-node\nTip hash is 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206\.\n(Mined a block|Failed to mine a block).*?\n"
         if not re.fullmatch(expect, result.stdout):
