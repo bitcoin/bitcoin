@@ -53,6 +53,7 @@ FUZZ_TARGET(script_ops)
     (void)script.IsPayToAnchor();
     (void)script.IsPayToTaproot();
     (void)script.IsPayToPubKeyHash();
+    (void)script.IsCompressedPayToPubKey();
     (void)script.IsPushOnly();
     (void)script.IsUnspendable();
     {
