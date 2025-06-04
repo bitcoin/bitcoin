@@ -192,4 +192,30 @@ BOOST_AUTO_TEST_CASE(compressed_p2pk)
     }
 }
 
+BOOST_AUTO_TEST_CASE(uncompressed_p2pk)
+{
+    // Valid Uncompressed P2PK
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/false).GetPubKey())};
+        const auto script{CScript() << key << OP_CHECKSIG};
+
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
+        CompressedScript compressed_script;
+        BOOST_CHECK(CompressScript(script, compressed_script));
+        BOOST_CHECK_EQUAL(compressed_script.size(), 33U);   // compressed form is 33 bytes
+    }
+
+    // Uncompressed P2PK with an invalid prefix
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/false).GetPubKey())};
+        key[0] = 0x06; // 0x04 is the only valid prefix (but GetLen() recognizes 6)
+        const auto script{CScript() << key << OP_CHECKSIG};
+
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
+        CompressedScript compressed_script;
+        BOOST_CHECK(!CompressScript(script, compressed_script));
+        BOOST_CHECK(compressed_script.empty());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

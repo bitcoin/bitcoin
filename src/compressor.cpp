@@ -33,12 +33,11 @@ static bool IsToScriptID(const CScript& script, CScriptID &hash)
 
 static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
 {
-    if (script.IsCompressedPayToPubKey() && (script[1] == 0x02 || script[1] == 0x03)) {
+    if (script.IsCompressedPayToPubKey() && (script[1] == SECP256K1_TAG_PUBKEY_EVEN || script[1] == SECP256K1_TAG_PUBKEY_ODD)) {
         pubkey.Set(&script[1], &script[34]);
         return true;
     }
-    if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG
-                            && script[1] == 0x04) {
+    if (script.IsUncompressedPayToPubKey() && (script[1] == SECP256K1_TAG_PUBKEY_UNCOMPRESSED)) {
         pubkey.Set(&script[1], &script[66]);
         return pubkey.IsFullyValid(); // if not fully valid, a case that would not be compressible
     }

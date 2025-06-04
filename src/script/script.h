@@ -602,6 +602,12 @@ public:
                back() == OP_CHECKSIG;
     }
 
+    bool IsUncompressedPayToPubKey() const noexcept
+    {
+        return size() == 67 &&
+               front() == CPubKey::SIZE &&
+               back() == OP_CHECKSIG;
+    }
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
