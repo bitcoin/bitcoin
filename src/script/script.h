@@ -25,6 +25,14 @@
 #include <utility>
 #include <vector>
 
+// Hash output sizes
+constexpr size_t HASH160_OUTPUT_SIZE{uint160::size()};
+
+// Witness program sizes
+constexpr size_t WITNESS_V0_KEYHASH_SIZE{HASH160_OUTPUT_SIZE};
+constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE{uint256::size()};
+constexpr size_t WITNESS_V1_TAPROOT_SIZE{uint256::size()};
+
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
 
