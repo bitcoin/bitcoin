@@ -558,7 +558,14 @@ public:
                (*this)[1] == HASH160_OUTPUT_SIZE &&
                (*this)[22] == OP_EQUAL;
     }
-    bool IsPayToWitnessScriptHash() const;
+
+    bool IsPayToWitnessScriptHash() const noexcept
+    {
+        return size() == 34 &&
+               (*this)[0] == OP_0 &&
+               (*this)[1] == WITNESS_V0_SCRIPTHASH_SIZE;
+    }
+
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     bool IsPayToTaproot() const;
