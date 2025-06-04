@@ -105,6 +105,7 @@ struct PrecomputedData
                 coins[i].out.scriptPubKey[0] = OP_1;
                 coins[i].out.scriptPubKey[1] = 32;
                 std::copy(hash.begin(), hash.begin() + 32, coins[i].out.scriptPubKey.begin() + 2);
+                assert(coins[i].out.scriptPubKey.IsPayToTaproot());
                 break;
             }
             /* Hash again to construct nValue and fCoinBase. */

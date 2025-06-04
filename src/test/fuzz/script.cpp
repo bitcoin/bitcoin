@@ -149,6 +149,7 @@ FUZZ_TARGET(script, .init = initialize_script)
 
         Assert(dest.IsPayToScriptHash() == std::holds_alternative<ScriptHash>(tx_destination_1));
         Assert(dest.IsPayToWitnessScriptHash() == std::holds_alternative<WitnessV0ScriptHash>(tx_destination_1));
+        Assert(dest.IsPayToTaproot() == std::holds_alternative<WitnessV1Taproot>(tx_destination_1));
         Assert(dest.IsPayToAnchor() == std::holds_alternative<PayToAnchor>(tx_destination_1));
 
         if (!std::get_if<PubKeyDestination>(&tx_destination_1)) {

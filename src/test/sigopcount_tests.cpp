@@ -74,6 +74,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
         {
             // P2TR
             const auto script{GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey(pubkey)))};
+            BOOST_REQUIRE(script.IsPayToTaproot());
             BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {
