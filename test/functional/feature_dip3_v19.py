@@ -47,7 +47,6 @@ class DIP3V19Test(DashTestFramework):
             '-testactivationheight=v19@200',
         ]] * 6
         self.set_dash_test_params(6, 5, evo_count=2, extra_args=self.extra_args)
-        self.delay_v20_and_mn_rr(height=9000)
 
 
     def run_test(self):

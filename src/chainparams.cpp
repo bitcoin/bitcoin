@@ -925,8 +925,6 @@ public:
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST_INSTANTSEND);
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST_PLATFORM);
         UpdateLLMQInstantSendDIP0024FromArgs(args);
-        // V20 adds CL signature to CbTx; V19 switches BLS scheme from legacy to Basic.
-        assert(consensus.V20Height >= consensus.V19Height);
         // V20 features for CbTx (credit pool, CL) have no meaning without masternodes
         assert(consensus.V20Height >= consensus.DIP0003Height);
         // MN_RR reallocate part of reward to CreditPool which exits since V20

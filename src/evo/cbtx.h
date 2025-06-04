@@ -51,9 +51,6 @@ public:
             READWRITE(obj.merkleRootQuorums);
             if (obj.nVersion >= Version::CLSIG_AND_BALANCE) {
                 READWRITE(COMPACTSIZE(obj.bestCLHeightDiff));
-                // TODO: BLS scheme here should be enforced to BASIC
-                // on devnet / regtest with late v19 activation an old CL with
-                // legacy scheme could get to CbTx and cause Invalid Block errors
                 READWRITE(obj.bestCLSignature);
                 READWRITE(obj.creditPoolBalance);
             }
