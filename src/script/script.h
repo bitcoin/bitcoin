@@ -576,6 +576,13 @@ public:
                (*this)[2 + HASH160_OUTPUT_SIZE] == OP_EQUAL;
     }
 
+    bool IsPayToWitnessPubKeyHash() const noexcept
+    {
+        return size() == 2 + WITNESS_V0_KEYHASH_SIZE &&
+               (*this)[0] == OP_0 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE;
+    }
+
     bool IsPayToWitnessScriptHash() const noexcept
     {
         return size() == 2 + WITNESS_V0_SCRIPTHASH_SIZE &&

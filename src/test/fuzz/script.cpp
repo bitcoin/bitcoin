@@ -152,6 +152,7 @@ FUZZ_TARGET(script, .init = initialize_script)
         Assert(dest.IsUncompressedPayToPubKey() == (pubkey_dest && pubkey_dest->GetPubKey().size() == 65));
         Assert(dest.IsPayToPubKeyHash() == std::holds_alternative<PKHash>(tx_destination_1));
         Assert(dest.IsPayToScriptHash() == std::holds_alternative<ScriptHash>(tx_destination_1));
+        Assert(dest.IsPayToWitnessPubKeyHash() == std::holds_alternative<WitnessV0KeyHash>(tx_destination_1));
         Assert(dest.IsPayToWitnessScriptHash() == std::holds_alternative<WitnessV0ScriptHash>(tx_destination_1));
         Assert(dest.IsPayToTaproot() == std::holds_alternative<WitnessV1Taproot>(tx_destination_1));
         Assert(dest.IsPayToAnchor() == std::holds_alternative<PayToAnchor>(tx_destination_1));
