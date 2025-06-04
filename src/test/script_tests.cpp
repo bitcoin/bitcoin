@@ -1232,6 +1232,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     {
         const auto script{GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{dummy_pubkey}})};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V1_TAPROOT);
+        BOOST_CHECK(script.IsPayToTaproot());
         CHECK_SCRIPT_STATIC_SIZE(script, 34);
     }
 
