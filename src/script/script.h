@@ -9,6 +9,7 @@
 #include <attributes.h>
 #include <crypto/common.h>
 #include <prevector.h> // IWYU pragma: export
+#include <pubkey.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
@@ -586,6 +587,14 @@ public:
         return size() == 34 &&
                (*this)[0] == OP_1 &&
                (*this)[1] == WITNESS_V1_TAPROOT_SIZE;
+    }
+
+    //! Detect P2PK script with a compressed public key. Doesn't check the 0x02/0x03 key prefix.
+    bool IsCompressedPayToPubKey() const noexcept
+    {
+        return size() == 35 &&
+               (*this)[0] == CPubKey::COMPRESSED_SIZE &&
+               (*this)[34] == OP_CHECKSIG;
     }
 
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;

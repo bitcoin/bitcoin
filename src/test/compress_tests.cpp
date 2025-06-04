@@ -164,4 +164,31 @@ BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_not_on_curve)
     }
 }
 
+BOOST_AUTO_TEST_CASE(compressed_p2pk)
+{
+    // Valid Compressed P2PK
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/true).GetPubKey())};
+        const auto script{CScript() << key << OP_CHECKSIG};
+        BOOST_CHECK(script.IsCompressedPayToPubKey());
+
+        CompressedScript compressed_script;
+        BOOST_CHECK(CompressScript(script, compressed_script));
+        BOOST_CHECK_EQUAL(compressed_script.size(), 33U);
+    }
+
+    // Compressed P2PK with an invalid prefix
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/true).GetPubKey())};
+        key[0] = 0x06; // 0x02/0x03 would be valid prefixes
+
+        const auto script{CScript() << key << OP_CHECKSIG};
+        BOOST_CHECK(script.IsCompressedPayToPubKey());
+
+        CompressedScript compressed_script;
+        BOOST_CHECK(!CompressScript(script, compressed_script));
+        BOOST_CHECK(compressed_script.empty());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
