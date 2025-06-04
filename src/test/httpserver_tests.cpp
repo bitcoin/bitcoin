@@ -12,10 +12,11 @@
 using http_bitcoin::HTTPHeaders;
 using http_bitcoin::HTTPRequest;
 using http_bitcoin::HTTPResponse;
+using http_bitcoin::HTTPServer;
 using http_bitcoin::MAX_HEADERS_SIZE;
 using util::LineReader;
 
-BOOST_FIXTURE_TEST_SUITE(httpserver_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(httpserver_tests, SocketTestingSetup)
 
 BOOST_AUTO_TEST_CASE(test_query_parameters)
 {
@@ -258,5 +259,28 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK(!req.LoadBody(reader));
     }
+}
+
+BOOST_AUTO_TEST_CASE(http_server_socket_tests)
+{
+    HTTPServer server;
+
+    {
+        // We can only bind to NET_IPV4 and NET_IPV6
+        CService onion_address{Lookup("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion", 0, false).value()};
+        auto result{server.BindAndStartListening(onion_address)};
+        BOOST_REQUIRE(!result);
+        BOOST_CHECK_EQUAL(util::ErrorString(result).original, "Bind address family for aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion:0 not supported");
+    }
+
+    // This VALID address won't actually get used because we stubbed CreateSock()
+    CService addr_bind{Lookup("0.0.0.0", 0, false).value()};
+
+    // Init state
+    BOOST_REQUIRE_EQUAL(server.GetListeningSocketCount(), 0);
+    // Bind to mock Listening Socket
+    BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
+    // We are bound and listening
+    BOOST_REQUIRE_EQUAL(server.GetListeningSocketCount(), 1);
 }
 BOOST_AUTO_TEST_SUITE_END()
