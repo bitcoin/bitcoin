@@ -557,7 +557,13 @@ public:
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
-    bool IsPayToScriptHash() const;
+    bool IsPayToScriptHash() const noexcept
+    {
+        return size() == 23 &&
+               front() == OP_HASH160 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE &&
+               back() == OP_EQUAL;
+    }
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
