@@ -1253,14 +1253,15 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 
         const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
-        CHECK_SCRIPT_DYNAMIC_SIZE(script, 67, 67);
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
+        CHECK_SCRIPT_DYNAMIC_SIZE(script, /*expected_size=*/67, /*expected_extra=*/67);
     }
 
     // Bare multisig needs extra allocation
     {
         const auto script{GetScriptForMultisig(1, std::vector{2, dummy_pubkey})};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::MULTISIG);
-        CHECK_SCRIPT_DYNAMIC_SIZE(script, 71, 103);
+        CHECK_SCRIPT_DYNAMIC_SIZE(script, /*expected_size=*/71, /*expected_extra=*/103);
     }
 }
 
