@@ -557,6 +557,16 @@ public:
                (*this)[3] == 0x73;
     }
 
+    bool IsPayToPubKeyHash() const noexcept
+    {
+        return size() == 5 + HASH160_OUTPUT_SIZE &&
+               (*this)[0] == OP_DUP &&
+               (*this)[1] == OP_HASH160 &&
+               (*this)[2] == HASH160_OUTPUT_SIZE &&
+               (*this)[3 + HASH160_OUTPUT_SIZE] == OP_EQUALVERIFY &&
+               (*this)[4 + HASH160_OUTPUT_SIZE] == OP_CHECKSIG;
+    }
+
     bool IsPayToScriptHash() const noexcept
     {
         return size() == 3 + HASH160_OUTPUT_SIZE &&

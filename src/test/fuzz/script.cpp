@@ -147,6 +147,7 @@ FUZZ_TARGET(script, .init = initialize_script)
         const CScript dest{GetScriptForDestination(tx_destination_1)};
         const bool valid{IsValidDestination(tx_destination_1)};
 
+        Assert(dest.IsPayToPubKeyHash() == std::holds_alternative<PKHash>(tx_destination_1));
         Assert(dest.IsPayToScriptHash() == std::holds_alternative<ScriptHash>(tx_destination_1));
         Assert(dest.IsPayToWitnessScriptHash() == std::holds_alternative<WitnessV0ScriptHash>(tx_destination_1));
         Assert(dest.IsPayToTaproot() == std::holds_alternative<WitnessV1Taproot>(tx_destination_1));
