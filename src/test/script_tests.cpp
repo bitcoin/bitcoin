@@ -1186,8 +1186,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     BOOST_CHECK_EQUAL(sizeof(CScript), 40);
     BOOST_CHECK_EQUAL(sizeof(CTxOut), 48);
 
-    CKey dummy_key;
-    dummy_key.MakeNewKey(/*fCompressed=*/true);
+    CKey dummy_key{GenerateRandomKey(/*compressed=*/true)};
     const CPubKey dummy_pubkey{dummy_key.GetPubKey()};
 
     // Small OP_RETURN has direct allocation
@@ -1240,6 +1239,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     {
         const auto script{GetScriptForRawPubKey(dummy_pubkey)};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        BOOST_CHECK(script.IsCompressedPayToPubKey());
         CHECK_SCRIPT_STATIC_SIZE(script, 35);
     }
 

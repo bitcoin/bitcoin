@@ -117,6 +117,7 @@ FUZZ_TARGET(key, .init = initialize_key)
 
     {
         const CScript tx_pubkey_script = GetScriptForRawPubKey(pubkey);
+        assert(tx_pubkey_script.IsCompressedPayToPubKey());
         assert(!tx_pubkey_script.IsPayToScriptHash());
         assert(!tx_pubkey_script.IsPayToWitnessScriptHash());
         assert(!tx_pubkey_script.IsPushOnly());

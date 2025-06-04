@@ -8,6 +8,8 @@
 #include <pubkey.h>
 #include <script/script.h>
 
+#include <secp256k1.h>
+
 /*
  * These check for scripts for which a special case with a shorter encoding is defined.
  * They are implemented separately from the CScript test, as these test for exact byte
@@ -30,11 +32,10 @@ static bool IsToScriptID(const CScript& script, CScriptID& hash)
     return true;
 }
 
-static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
+static bool IsToPubKey(const CScript& script, CPubKey& pubkey)
 {
-    if (script.size() == 35 && script[0] == 33 && script[34] == OP_CHECKSIG
-                            && (script[1] == 0x02 || script[1] == 0x03)) {
-        pubkey.Set(&script[1], &script[34]);
+    if (script.IsCompressedPayToPubKey() && (script[1] == SECP256K1_TAG_PUBKEY_EVEN || script[1] == SECP256K1_TAG_PUBKEY_ODD)) {
+        pubkey.Set(&script[1], &script[1 + CPubKey::COMPRESSED_SIZE]);
         return true;
     }
     if (script.size() == 67 && script[0] == 65 && script[66] == OP_CHECKSIG
@@ -63,9 +64,9 @@ bool CompressScript(const CScript& script, CompressedScript& out)
     }
     CPubKey pubkey;
     if (IsToPubKey(script, pubkey)) {
-        out.resize(33);
-        memcpy(&out[1], &pubkey[1], 32);
-        if (pubkey[0] == 0x02 || pubkey[0] == 0x03) {
+        out.resize(CPubKey::COMPRESSED_SIZE);
+        memcpy(&out[1], &pubkey[1], CPubKey::COMPRESSED_SIZE - 1);
+        if (pubkey[0] == SECP256K1_TAG_PUBKEY_EVEN || pubkey[0] == SECP256K1_TAG_PUBKEY_ODD) {
             out[0] = pubkey[0];
             return true;
         } else if (pubkey[0] == 0x04) {
@@ -81,7 +82,7 @@ unsigned int GetSpecialScriptSize(unsigned int nSize)
     if (nSize == 0 || nSize == 1)
         return HASH160_OUTPUT_SIZE;
     if (nSize == 2 || nSize == 3 || nSize == 4 || nSize == 5)
-        return 32;
+        return CPubKey::COMPRESSED_SIZE - 1;
     return 0;
 }
 
@@ -106,11 +107,11 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
         return true;
     case 0x02:
     case 0x03:
-        script.resize(35);
-        script[0] = 33;
+        script.resize(2 + CPubKey::COMPRESSED_SIZE);
+        script[0] = CPubKey::COMPRESSED_SIZE;
         script[1] = nSize;
-        memcpy(&script[2], in.data(), 32);
-        script[34] = OP_CHECKSIG;
+        memcpy(&script[2], in.data(), CPubKey::COMPRESSED_SIZE - 1);
+        script[1 + CPubKey::COMPRESSED_SIZE] = OP_CHECKSIG;
         return true;
     case 0x04:
     case 0x05:

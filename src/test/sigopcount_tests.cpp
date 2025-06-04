@@ -41,6 +41,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
         {
             // P2PK (compressed)
             const auto script{GetScriptForRawPubKey(pubkey)};
+            BOOST_REQUIRE(script.IsCompressedPayToPubKey());
             BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
