@@ -575,6 +575,13 @@ public:
                (*this)[22] == OP_EQUAL;
     }
 
+    bool IsPayToWitnessPubKeyHash() const noexcept
+    {
+        return size() == 22 &&
+               (*this)[0] == OP_0 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE;
+    }
+
     bool IsPayToWitnessScriptHash() const noexcept
     {
         return size() == 34 &&

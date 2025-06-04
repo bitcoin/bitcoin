@@ -1202,6 +1202,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     {
         const auto script{GetScriptForDestination(WitnessV0KeyHash{PKHash{dummy_pubkey}})};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V0_KEYHASH);
+        BOOST_CHECK(script.IsPayToWitnessPubKeyHash());
         CHECK_SCRIPT_STATIC_SIZE(script, 22);
     }
 
