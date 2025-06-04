@@ -27,14 +27,11 @@ static bool IsToKeyID(const CScript& script, CKeyID &hash)
     return false;
 }
 
-static bool IsToScriptID(const CScript& script, CScriptID &hash)
+static bool IsToScriptID(const CScript& script, CScriptID& hash)
 {
-    if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20
-                            && script[22] == OP_EQUAL) {
-        memcpy(&hash, &script[2], 20);
-        return true;
-    }
-    return false;
+    if (!script.IsPayToScriptHash()) return false;
+    memcpy(&hash, &script[2], HASH160_OUTPUT_SIZE);
+    return true;
 }
 
 static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
@@ -63,9 +60,9 @@ bool CompressScript(const CScript& script, CompressedScript& out)
     }
     CScriptID scriptID;
     if (IsToScriptID(script, scriptID)) {
-        out.resize(21);
+        out.resize(1 + HASH160_OUTPUT_SIZE);
         out[0] = 0x01;
-        memcpy(&out[1], &scriptID, 20);
+        memcpy(&out[1], &scriptID, HASH160_OUTPUT_SIZE);
         return true;
     }
     CPubKey pubkey;
@@ -86,7 +83,7 @@ bool CompressScript(const CScript& script, CompressedScript& out)
 unsigned int GetSpecialScriptSize(unsigned int nSize)
 {
     if (nSize == 0 || nSize == 1)
-        return 20;
+        return HASH160_OUTPUT_SIZE;
     if (nSize == 2 || nSize == 3 || nSize == 4 || nSize == 5)
         return 32;
     return 0;
@@ -99,16 +96,16 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
         script.resize(25);
         script[0] = OP_DUP;
         script[1] = OP_HASH160;
-        script[2] = 20;
-        memcpy(&script[3], in.data(), 20);
+        script[2] = HASH160_OUTPUT_SIZE;
+        memcpy(&script[3], in.data(), HASH160_OUTPUT_SIZE);
         script[23] = OP_EQUALVERIFY;
         script[24] = OP_CHECKSIG;
         return true;
     case 0x01:
         script.resize(23);
         script[0] = OP_HASH160;
-        script[1] = 20;
-        memcpy(&script[2], in.data(), 20);
+        script[1] = HASH160_OUTPUT_SIZE;
+        memcpy(&script[2], in.data(), HASH160_OUTPUT_SIZE);
         script[22] = OP_EQUAL;
         return true;
     case 0x02:

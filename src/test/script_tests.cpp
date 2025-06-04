@@ -1208,6 +1208,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // P2SH has direct allocation
     {
         const auto script{GetScriptForDestination(ScriptHash{CScript{} << OP_TRUE})};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::SCRIPTHASH);
         BOOST_CHECK(script.IsPayToScriptHash());
         CHECK_SCRIPT_STATIC_SIZE(script, 23);
     }
