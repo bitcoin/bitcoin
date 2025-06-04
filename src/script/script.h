@@ -577,9 +577,14 @@ public:
                (*this)[1] == WITNESS_V0_SCRIPTHASH_SIZE;
     }
 
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+    bool IsPayToTaproot() const noexcept
+    {
+        return size() == 34 &&
+               front() == OP_1 &&
+               (*this)[1] == WITNESS_V1_TAPROOT_SIZE;
+    }
 
-    bool IsPayToTaproot() const;
+    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
