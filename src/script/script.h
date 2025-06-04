@@ -24,6 +24,11 @@
 #include <utility>
 #include <vector>
 
+// Signature hash sizes
+static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
+static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
+static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
+
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
 
