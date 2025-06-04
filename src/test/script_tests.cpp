@@ -1223,6 +1223,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // P2WSH has direct allocation
     {
         const auto script{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
+        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V0_SCRIPTHASH);
         BOOST_CHECK(script.IsPayToWitnessScriptHash());
         CHECK_SCRIPT_STATIC_SIZE(script, 34);
     }
