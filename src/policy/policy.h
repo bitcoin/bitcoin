@@ -100,6 +100,8 @@ static const bool DEFAULT_ACCEPT_DATACARRIER = true;
  * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
  * +2 for the pushdata opcodes.
  */
+/** Default for -permitbaredatacarrier */
+static const bool DEFAULT_PERMITBAREDATACARRIER{true};
 static const unsigned int MAX_OP_RETURN_RELAY = 83;
 /** Default for -datacarrierfullcount */
 static constexpr bool DEFAULT_DATACARRIER_FULLCOUNT{false};

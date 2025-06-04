@@ -157,6 +157,7 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
 
     unsigned int nDataOut = 0;
     unsigned int n_dust{0};
+    unsigned int n_monetary{0};
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, opts.max_datacarrier_bytes, whichType)) {
@@ -169,6 +170,8 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
 
         if (IsDust(txout, opts.dust_relay_feerate)) {
             ++n_dust;
+        } else if (whichType != TxoutType::NULL_DATA) {
+            ++n_monetary;
         }
 
         if (whichType == TxoutType::NULL_DATA) {
@@ -191,6 +194,12 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
     // only one OP_RETURN txout is permitted
     if (nDataOut > 1) {
         MaybeReject("multi-op-return");
+    }
+
+    if (!n_monetary) {
+        if (nDataOut && !opts.permitbaredatacarrier) {
+            MaybeReject("bare-datacarrier");
+        }
     }
 
     return true;
