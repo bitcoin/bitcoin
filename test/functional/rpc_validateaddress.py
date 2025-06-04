@@ -8,7 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 
 from test_framework.util import assert_equal
 
-INVALID_DATA = [
+INVALID_DATA_MAINNET = [
     # BIP 173
     (
         "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
@@ -106,16 +106,14 @@ INVALID_DATA = [
     ),
     ("bc1gmk9yu", "Empty Bech32 data section", []),
 ]
-VALID_DATA = [
+
+
+VALID_DATA_MAINNET = [
     # BIP 350
     (
         "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4",
         "0014751e76e8199196d454941c45d1b3a323f1433bd6",
     ),
-    # (
-    #   "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
-    #   "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
-    # ),
     (
         "bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3",
         "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
@@ -126,18 +124,10 @@ VALID_DATA = [
     ),
     ("BC1SW50QGDZ25J", "6002751e"),
     ("bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs", "5210751e76e8199196d454941c45d1b3a323"),
-    # (
-    #   "tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
-    #   "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    # ),
     (
         "bc1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses5wp4dt",
         "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
     ),
-    # (
-    #   "tb1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesf3hn0c",
-    #   "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
-    # ),
     (
         "bc1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses7epu4h",
         "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433",
@@ -211,13 +201,12 @@ VALID_DATA_SIGNET = [
     ),
 ]
 
-
 class ValidateAddressMainTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.chain = ""  # main
+        self.chain = "signet"
         self.num_nodes = 1
-        self.extra_args = [["-prune=899"]] * self.num_nodes
+        self.extra_args = [["-prune=899", "-signet"]]
 
     def check_valid(self, addr, spk):
         info = self.nodes[0].validateaddress(addr)
@@ -232,15 +221,31 @@ class ValidateAddressMainTest(BitcoinTestFramework):
         assert_equal(res["error"], error_str)
         assert_equal(res["error_locations"], error_locations)
 
-    def test_validateaddress(self):
+    def test_validateaddress_on_network(self, network_name):
+        self.log.info(f"Testing validateaddress on {network_name}")
+
+        if network_name == "signet":
+            INVALID_DATA = INVALID_DATA_SIGNET
+            VALID_DATA = VALID_DATA_SIGNET
+        else:
+            INVALID_DATA = INVALID_DATA_MAINNET
+            VALID_DATA = VALID_DATA_MAINNET
+
         for (addr, error, locs) in INVALID_DATA:
             self.check_invalid(addr, error, locs)
         for (addr, spk) in VALID_DATA:
             self.check_valid(addr, spk)
 
     def run_test(self):
-        self.test_validateaddress()
-
+        self.test_validateaddress_on_network("signet")
+        # Switch to mainnet tests
+        self.stop_nodes()
+        self.nodes.clear()
+        self.chain = "" # Switch to mainnet
+        self.extra_args = [["-prune=899"]]
+        self.setup_chain()
+        self.setup_network()
+        self.test_validateaddress_on_network("mainnet")
 
 if __name__ == "__main__":
     ValidateAddressMainTest(__file__).main()
