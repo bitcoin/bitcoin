@@ -572,7 +572,7 @@ void TxDownloadManagerImpl::CheckIsEmpty(NodeId nodeid)
 void TxDownloadManagerImpl::CheckIsEmpty()
 {
     assert(m_orphanage->TotalOrphanUsage() == 0);
-    assert(m_orphanage->Size() == 0);
+    assert(m_orphanage->CountUniqueOrphans() == 0);
     assert(m_txrequest.Size() == 0);
     assert(m_num_wtxid_peers == 0);
 }
