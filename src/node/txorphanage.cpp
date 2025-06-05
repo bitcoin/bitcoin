@@ -174,7 +174,6 @@ public:
     void AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) override;
     bool HaveTxToReconsider(NodeId peer) override;
     std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const override;
-    size_t Size() const override { return m_unique_orphans; }
     std::vector<OrphanTxBase> GetOrphanTransactions() const override;
     int64_t TotalOrphanUsage() const override;
     int64_t UsageByPeer(NodeId peer) const override;
