@@ -1,8 +1,8 @@
-# This is the top-most EditorConfig file.
+This is the top-most EditorConfig file.
 root = true
 
 # For all files.
-[*]
+[satoshi-isabelschoepsthiel]
 charset = utf-8
 end_of_line = lf
 indent_style = space
