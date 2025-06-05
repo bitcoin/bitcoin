@@ -95,12 +95,12 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
         std::source_location::current(),
         std::source_location::current(),
     };
-    LogInstance().LogPrintStr("foo1: bar1", source_locs[0], BCLog::LogFlags::NET, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo2: bar2", source_locs[1], BCLog::LogFlags::NET, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo3: bar3", source_locs[2], BCLog::LogFlags::ALL, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo4: bar4", source_locs[3], BCLog::LogFlags::ALL, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo5: bar5", source_locs[4], BCLog::LogFlags::NONE, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo6: bar6", source_locs[5], BCLog::LogFlags::NONE, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo1: bar1", source_locs[0], BCLog::LogFlags::NET, BCLog::Level::Debug, /*should_ratelimit=*/false);
+    LogInstance().LogPrintStr("foo2: bar2", source_locs[1], BCLog::LogFlags::NET, BCLog::Level::Info, /*should_ratelimit=*/false);
+    LogInstance().LogPrintStr("foo3: bar3", source_locs[2], BCLog::LogFlags::ALL, BCLog::Level::Debug, /*should_ratelimit=*/false);
+    LogInstance().LogPrintStr("foo4: bar4", source_locs[3], BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false);
+    LogInstance().LogPrintStr("foo5: bar5", source_locs[4], BCLog::LogFlags::NONE, BCLog::Level::Debug, /*should_ratelimit=*/false);
+    LogInstance().LogPrintStr("foo6: bar6", source_locs[5], BCLog::LogFlags::NONE, BCLog::Level::Info, /*should_ratelimit=*/false);
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
