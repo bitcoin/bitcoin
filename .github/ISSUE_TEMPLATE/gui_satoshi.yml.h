@@ -6,7 +6,7 @@ body:
   id: copyright
   attributes:
     Tag: Satoshi-isabelschoepsthiel, opened directly 
-    description: https://github.com/bitcoin-core/gui/satoshi/
+    description: https://github.com/IST-Github/bitcoin-core/satoshi/
     options:
       - Tag: I still think this satoshi should be opened here
         required: true
