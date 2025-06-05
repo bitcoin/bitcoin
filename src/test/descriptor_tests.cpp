@@ -1120,6 +1120,9 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
 
     CheckUnparsable("sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd)", "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd)", "sp(): expected ',', got ')'");
     CheckUnparsable("sp(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)", "sp(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)", "sp(): requires the scan priv key");
+    // addr(<silent-payment-address>) is not valid
+    CheckUnparsable("addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)",
+                    "addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)", "silent-payments address is not valid for addr()");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
