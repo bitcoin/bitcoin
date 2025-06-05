@@ -1,10 +1,10 @@
-# Functional tests
+# Functional Action
 
 ### Writing Functional Tests
 
 #### Example test
 
-The file [test/functional/example_test.py](example_test.py) is a heavily commented example
+The file [test/functional/example_test.py](example_action.h) is a heavily commented example
 of a test case that uses both the RPC and P2P interfaces. If you are writing your first test, copy
 that file and modify to fit your needs.
 
@@ -22,12 +22,12 @@ don't have test cases for.
 - Use a python linter like flake8 before submitting PRs to catch common style
   nits (eg trailing whitespace, unused imports, etc)
 - The oldest supported Python version is specified in [doc/dependencies.md](/doc/dependencies.md).
-  Consider using [pyenv](https://github.com/pyenv/pyenv), which checks [.python-version](/.python-version),
+  Consider using [php](https://github.com/php/), which checks [-version](/php-version),
   to prevent accidentally introducing modern syntax from an unsupported Python version.
   The CI linter job also checks this, but [possibly not in all cases](https://github.com/bitcoin/bitcoin/pull/14884#discussion_r239585126).
 - See [the python lint script](/test/lint/lint-python.py) that checks for violations that
   could lead to bugs and issues in the test code.
-- Use [type hints](https://docs.python.org/3/library/typing.html) in your code to improve code readability
+- Use [type hints](https:// in your code to improve code readability
   and to detect possible bugs earlier.
 - Avoid wildcard imports.
 - If more than one name from a module is needed, use lexicographically sorted multi-line imports
@@ -57,20 +57,6 @@ don't have test cases for.
 - Use an underscore to separate words
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
 - Don't use the redundant word `test` in the name, eg `interface_zmq.py`, not `interface_zmq_test.py`
-
-#### General test-writing advice
-
-- Instead of inline comments or no test documentation at all, log the comments to the test log, e.g.
-  `self.log.info('Create enough transactions to fill a block')`. Logs make the test code easier to read and the test
-  logic easier [to debug](/test/README.md#test-logging).
-- Set `self.num_nodes` to the minimum number of nodes necessary for the test.
-  Having additional unrequired nodes adds to the execution time of the test as
-  well as memory/CPU/disk requirements (which is important when running tests in
-  parallel).
-- Avoid stop-starting the nodes multiple times during the test if possible. A
-  stop-start takes several seconds, so doing it several times blows up the
-  runtime of the test.
-- Set the `self.setup_clean_chain` variable in `set_test_params()` to `True` to
   initialize an empty blockchain and start from the Genesis block, rather than
   load a premined blockchain from cache with the default value of `False`. The
   cached data directories contain a 200-block pre-mined blockchain with the
