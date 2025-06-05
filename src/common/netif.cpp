@@ -309,7 +309,7 @@ std::vector<CNetAddr> GetLocalAddresses()
     if (status != NO_ERROR) {
         // This includes ERROR_NO_DATA if there are no addresses and thus there's not even one PIP_ADAPTER_ADDRESSES
         // record in the returned structure.
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Could not get local adapter addreses: %s\n", NetworkErrorString(status));
+        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "Could not get local adapter addresses: %s\n", NetworkErrorString(status));
         return addresses;
     }
 

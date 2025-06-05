@@ -87,6 +87,8 @@ For instance:
                -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
+`bitcoin node` or `bitcoin gui` can also be substituted for `bitcoind`.
+
 Notification types correspond to message topics (details in next section). For instance,
 for the notification `-zmqpubhashtx` the topic is `hashtx`. These options can also be
 provided in bitcoin.conf.
@@ -125,7 +127,7 @@ serialized transaction.
 
 Notifies about all transactions, both when they are added to mempool or when a new block
 arrives. This means a transaction could be published multiple times: first when it enters
-mempool and then again in each block that includes it. The body part of the mesage is the
+mempool and then again in each block that includes it. The body part of the message is the
 32-byte transaction hash in reversed byte order.
 
 #### rawblock
@@ -152,7 +154,7 @@ The 8-byte LE uints correspond to _mempool sequence number_ and the types of bod
 ### Implementing ZMQ client
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
-[ZeroMQ API](http://api.zeromq.org/4-0:_start).
+[ZeroMQ API](https://libzmq.readthedocs.io/en/zeromq4-x/).
 
 Client side, then, the ZeroMQ subscriber socket must have the
 ZMQ_SUBSCRIBE option set to one or either of these prefixes (for

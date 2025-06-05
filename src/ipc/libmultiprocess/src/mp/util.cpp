@@ -137,7 +137,7 @@ void ExecProcess(const std::vector<std::string>& args)
     }
     argv.push_back(nullptr);
     if (execvp(argv[0], argv.data()) != 0) {
-        perror("execlp failed");
+        perror("execvp failed");
         _exit(1);
     }
 }

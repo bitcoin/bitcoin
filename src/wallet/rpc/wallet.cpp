@@ -135,6 +135,10 @@ static RPCHelpMan listwalletdir()
                             {RPCResult::Type::OBJ, "", "",
                             {
                                 {RPCResult::Type::STR, "name", "The wallet name"},
+                                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to loading the wallet.",
+                                {
+                                    {RPCResult::Type::STR, "", ""},
+                                }},
                             }},
                         }},
                     }
@@ -146,9 +150,14 @@ static RPCHelpMan listwalletdir()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue wallets(UniValue::VARR);
-    for (const auto& [path, _] : ListDatabases(GetWalletDir())) {
+    for (const auto& [path, db_type] : ListDatabases(GetWalletDir())) {
         UniValue wallet(UniValue::VOBJ);
         wallet.pushKV("name", path.utf8string());
+                UniValue warnings(UniValue::VARR);
+        if (db_type == "bdb") {
+            warnings.push_back("This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded");
+        }
+        wallet.pushKV("warnings", warnings);
         wallets.push_back(std::move(wallet));
     }
 

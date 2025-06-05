@@ -83,7 +83,7 @@ class PSBTTest(BitcoinTestFramework):
         wallet = node.get_wallet_rpc(self.default_wallet_name)
         address = wallet.getnewaddress()
         wallet.sendtoaddress(address=address, amount=1.0)
-        self.generate(node, nblocks=1, sync_fun=lambda: self.sync_all(self.nodes[:2]))
+        self.generate(node, nblocks=1)
 
         utxos = wallet.listunspent(addresses=[address])
         psbt = wallet.createpsbt([{"txid": utxos[0]["txid"], "vout": utxos[0]["vout"]}], [{wallet.getnewaddress(): 0.9999}])

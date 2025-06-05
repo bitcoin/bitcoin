@@ -113,6 +113,11 @@ class WalletMigrationTest(BitcoinTestFramework):
             shutil.copyfile(self.old_node.wallets_path / "wallet.dat", self.master_node.wallets_path / "wallet.dat")
         else:
             shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name)
+        # Check that the wallet shows up in listwalletdir with a warning about migration
+        wallets = self.master_node.listwalletdir()
+        for w in wallets["wallets"]:
+            if w["name"] == wallet_name:
+                assert_equal(w["warnings"], ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"])
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
@@ -548,7 +553,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["format"], "sqlite")
 
         walletdir_list = wallet.listwalletdir()
-        assert {"name": info["walletname"]} in walletdir_list["wallets"]
+        assert {"name": info["walletname"]} in [{"name": w["name"]} for w in walletdir_list["wallets"]]
 
         # Check backup existence and its non-empty wallet filename
         backup_filename = f"default_wallet_{curr_time}.legacy.bak"

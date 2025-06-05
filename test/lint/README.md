@@ -92,11 +92,14 @@ Usage: test/lint/git-subtree-check.sh [-r] DIR [COMMIT]
 
 To do a full check with `-r`, make sure that you have fetched the upstream repository branch in which the subtree is
 maintained:
-* for `src/secp256k1`: https://github.com/bitcoin-core/secp256k1.git (branch master)
-* for `src/leveldb`: https://github.com/bitcoin-core/leveldb-subtree.git (branch bitcoin-fork)
-* for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
 * for `src/crc32c`: https://github.com/bitcoin-core/crc32c-subtree.git (branch bitcoin-fork)
+* for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
+* for `src/ipc/libmultiprocess`: https://github.com/bitcoin-core/libmultiprocess (branch master)
+* for `src/leveldb`: https://github.com/bitcoin-core/leveldb-subtree.git (branch bitcoin-fork)
 * for `src/minisketch`: https://github.com/bitcoin-core/minisketch.git (branch master)
+* for `src/secp256k1`: https://github.com/bitcoin-core/secp256k1.git (branch master)
+
+Keep this list in sync with `fn get_subtrees()` in the lint runner.
 
 To do so, add the upstream repository as remote:
 

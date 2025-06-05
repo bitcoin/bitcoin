@@ -150,9 +150,6 @@ endif
 $(package)_config_opts_mingw32 := -no-dbus
 $(package)_config_opts_mingw32 += -no-freetype
 $(package)_config_opts_mingw32 += -no-pkg-config
-ifneq ($(LTO),)
-$(package)_config_opts_mingw32 += -ltcg
-endif
 
 # CMake build options.
 $(package)_config_env := CC="$$($(package)_cc)"
