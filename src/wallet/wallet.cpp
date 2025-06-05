@@ -2691,8 +2691,9 @@ util::Result<void> CWallet::DisplayAddress(const CTxDestination& dest)
         if (signer_spk_man == nullptr) {
             continue;
         }
-        ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
-        return signer_spk_man->DisplayAddress(dest, signer);
+        auto signer{ExternalSignerScriptPubKeyMan::GetExternalSigner()};
+        if (!signer) throw std::runtime_error(util::ErrorString(signer).original);
+        return signer_spk_man->DisplayAddress(dest, *signer);
     }
     return util::Error{_("There is no ScriptPubKeyManager for this address")};
 }
@@ -3762,11 +3763,12 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 
         SetupDescriptorScriptPubKeyMans(master_key);
     } else {
-        ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
+        auto signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
+        if (!signer) throw std::runtime_error(util::ErrorString(signer).original);
 
         // TODO: add account parameter
         int account = 0;
-        UniValue signer_res = signer.GetDescriptors(account);
+        UniValue signer_res = signer->GetDescriptors(account);
 
         if (!signer_res.isObject()) throw std::runtime_error(std::string(__func__) + ": Unexpected result");
 
