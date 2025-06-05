@@ -61,6 +61,15 @@ static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT{20};
 /** Default for -datacarriercost (multiplied by WITNESS_SCALE_FACTOR) */
 static constexpr unsigned int DEFAULT_WEIGHT_PER_DATA_BYTE{1};
+
+// NOTE: Changes to these three require manually adjusting doc in init.cpp
+/** Default for -permitephemeral=send */
+static constexpr bool DEFAULT_PERMITEPHEMERAL_SEND{true};
+/** Default for -permitephemeral=dust */
+static constexpr bool DEFAULT_PERMITEPHEMERAL_DUST{true};
+/** Default for -permitephemeral=anchor */
+static constexpr bool DEFAULT_PERMITEPHEMERAL_ANCHOR{true};
+
 /** Default for -permitbareanchor */
 static constexpr bool DEFAULT_PERMITBAREANCHOR{true};
 /** Default for -permitbarepubkey */

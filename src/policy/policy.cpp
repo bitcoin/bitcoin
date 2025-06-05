@@ -168,7 +168,17 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
             MaybeReject("scriptpubkey-unknown-witnessversion");
         }
 
+        if (whichType == TxoutType::ANCHOR && !opts.permitephemeral_anchor) {
+            MaybeReject("anchor");
+        }
+
         if (IsDust(txout, opts.dust_relay_feerate)) {
+            if (whichType != TxoutType::ANCHOR && !opts.permitephemeral_send) {
+                MaybeReject("dust-nonanchor");
+            }
+            if (txout.nValue && !opts.permitephemeral_dust) {
+                MaybeReject("dust-nonzero");
+            }
             ++n_dust;
         } else if (whichType != TxoutType::NULL_DATA) {
             ++n_monetary;

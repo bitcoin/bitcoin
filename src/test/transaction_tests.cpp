@@ -811,6 +811,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     CheckIsStandard(t);
 
+    g_mempool_opts.permitephemeral_anchor = true;
+    g_mempool_opts.permitephemeral_dust = true;
+    g_mempool_opts.permitephemeral_send = true;
+
     // Check dust with default relay fee:
     CAmount nDustThreshold = 182 * g_mempool_opts.dust_relay_feerate.GetFeePerK() / 1000;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
@@ -1072,6 +1076,24 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout.resize(1);
     CheckIsNotStandard(t, "bare-anchor");
     g_mempool_opts.permitbareanchor = true;
+    CheckIsStandard(t);
+
+    // Test permitephemeral
+    g_mempool_opts.permitephemeral_anchor = false;
+    CheckIsNotStandard(t, "anchor");
+    t.vout[0].nValue = 0;
+    CheckIsNotStandard(t, "anchor");
+    g_mempool_opts.permitephemeral_anchor = true;
+    g_mempool_opts.permitephemeral_dust = false;
+    CheckIsStandard(t);
+    t.vout[0].nValue = 1;
+    CheckIsNotStandard(t, "dust-nonzero");
+    g_mempool_opts.permitephemeral_dust = true;
+    g_mempool_opts.permitephemeral_send = false;
+    CheckIsStandard(t);
+    t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    CheckIsNotStandard(t, "dust-nonanchor");
+    g_mempool_opts.permitephemeral_send = true;
     CheckIsStandard(t);
 }
 
