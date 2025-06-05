@@ -5,7 +5,9 @@
 #include <init/common.h>
 #include <logging.h>
 #include <logging/timer.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <util/fs.h>
 #include <util/string.h>
 
 #include <chrono>
@@ -308,6 +310,96 @@ BOOST_AUTO_TEST_CASE(logging_sourcelocation_counter)
     BOOST_CHECK(!counter.Consume(500));
     BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), 0ull);
     BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 500ull);
+}
+
+void LogFromLocation(int location, std::string message)
+{
+    switch (location) {
+    case 0:
+        LogInfo("%s\n", message);
+        break;
+    case 1:
+        LogInfo("%s\n", message);
+        break;
+    case 2:
+        LogPrintLevel(BCLog::LogFlags::NONE, BCLog::Level::Info, "%s\n", message);
+        break;
+    case 3:
+        LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Info, "%s\n", message);
+        break;
+    }
+}
+
+void LogFromLocationAndExpect(int location, std::string message, std::string expect)
+{
+    ASSERT_DEBUG_LOG(expect);
+    LogFromLocation(location, message);
+}
+
+BOOST_AUTO_TEST_CASE(rate_limiting)
+{
+    bool prev_log_timestamps = LogInstance().m_log_timestamps;
+    LogInstance().m_log_timestamps = false;
+    bool prev_log_sourcelocations = LogInstance().m_log_sourcelocations;
+    LogInstance().m_log_sourcelocations = false;
+    bool prev_log_threadnames = LogInstance().m_log_threadnames;
+    LogInstance().m_log_threadnames = false;
+
+    // Log 1024-character lines (1023 plus newline) to make the math simple.
+    std::string log_message(1023, 'a');
+
+    SetMockTime(std::chrono::hours{1});
+
+    // Reset m_limiter so that it uses the above mock time for m_last_reset.
+    LogInstance().ResetLimiter();
+
+    size_t log_file_size = fs::file_size(LogInstance().m_file_path);
+
+    // Logging 1 MiB should be allowed.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromLocation(0, log_message);
+    }
+    BOOST_CHECK_MESSAGE(log_file_size < fs::file_size(LogInstance().m_file_path), "should be able to log 1 MiB from location 0");
+
+    log_file_size = fs::file_size(LogInstance().m_file_path);
+
+    BOOST_CHECK_NO_THROW(LogFromLocationAndExpect(0, log_message, "Excessive logging detected"));
+    BOOST_CHECK_MESSAGE(log_file_size < fs::file_size(LogInstance().m_file_path), "the start of the suppression period should be logged");
+
+    log_file_size = fs::file_size(LogInstance().m_file_path);
+    for (int i = 0; i < 1024; ++i) {
+        LogFromLocation(0, log_message);
+    }
+    BOOST_CHECK_MESSAGE(log_file_size == fs::file_size(LogInstance().m_file_path), "all further logs from location 0 should be dropped");
+
+    BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Excessive logging detected"), std::runtime_error);
+    BOOST_CHECK_MESSAGE(log_file_size < fs::file_size(LogInstance().m_file_path), "location 1 should be unaffected by other locations");
+
+    SetMockTime(std::chrono::hours{2});
+
+    log_file_size = fs::file_size(LogInstance().m_file_path);
+
+    BOOST_CHECK_NO_THROW(LogFromLocationAndExpect(0, log_message, "Restarting logging"));
+    BOOST_CHECK_MESSAGE(log_file_size < fs::file_size(LogInstance().m_file_path), "the end of the suppression period should be logged");
+
+    BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Restarting logging"), std::runtime_error);
+
+    // Attempt to log 2 MiB to disk.
+    // The exempt locations 2 and 3 should be allowed to log without limit.
+    for (int i = 0; i < 2048; ++i) {
+        log_file_size = fs::file_size(LogInstance().m_file_path);
+        BOOST_CHECK_THROW(LogFromLocationAndExpect(2, log_message, "Excessive logging detected"), std::runtime_error);
+        BOOST_CHECK_MESSAGE(log_file_size < fs::file_size(LogInstance().m_file_path), "location 2 should be exempt from rate limiting");
+
+        log_file_size = fs::file_size(LogInstance().m_file_path);
+        BOOST_CHECK_THROW(LogFromLocationAndExpect(3, log_message, "Excessive logging detected"), std::runtime_error);
+        BOOST_CHECK_MESSAGE(log_file_size < fs::file_size(LogInstance().m_file_path), "location 3 should be exempt from rate limiting");
+    }
+
+    LogInstance().m_log_timestamps = prev_log_timestamps;
+    LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
+    LogInstance().m_log_threadnames = prev_log_threadnames;
+    SetMockTime(std::chrono::seconds{0});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
