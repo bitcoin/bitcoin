@@ -651,7 +651,7 @@ void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, con
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             mapProTxRefs.emplace(tx_hash, proTx.collateralOutpoint.hash);
         }
-        for (const NetInfoEntry& entry : proTx.netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : proTx.netInfo->GetEntries()) {
             mapProTxAddresses.emplace(entry, tx_hash);
         }
         mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx_hash);
@@ -664,7 +664,7 @@ void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, con
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         auto proTx = *Assert(GetTxPayload<CProUpServTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx_hash);
-        for (const NetInfoEntry& entry : proTx.netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : proTx.netInfo->GetEntries()) {
             mapProTxAddresses.emplace(entry, tx_hash);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
@@ -755,7 +755,7 @@ void CTxMemPool::removeUncheckedProTx(const CTransaction& tx)
         if (!proTx.collateralOutpoint.IsNull()) {
             eraseProTxRef(tx_hash, proTx.collateralOutpoint.hash);
         }
-        for (const NetInfoEntry& entry : proTx.netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : proTx.netInfo->GetEntries()) {
             mapProTxAddresses.erase(entry);
         }
         mapProTxPubKeyIDs.erase(proTx.keyIDOwner);
@@ -765,7 +765,7 @@ void CTxMemPool::removeUncheckedProTx(const CTransaction& tx)
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         auto proTx = *Assert(GetTxPayload<CProUpServTx>(tx));
         eraseProTxRef(proTx.proTxHash, tx_hash);
-        for (const NetInfoEntry& entry : proTx.netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : proTx.netInfo->GetEntries()) {
             mapProTxAddresses.erase(entry);
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
@@ -994,7 +994,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
         }
         auto& proTx = *opt_proTx;
 
-        for (const NetInfoEntry& entry : proTx.netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : proTx.netInfo->GetEntries()) {
             if (mapProTxAddresses.count(entry)) {
                 uint256 conflictHash = mapProTxAddresses[entry];
                 if (conflictHash != tx_hash && mapTx.count(conflictHash)) {
@@ -1016,7 +1016,7 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
             return;
         }
 
-        for (const NetInfoEntry& entry : opt_proTx->netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : opt_proTx->netInfo->GetEntries()) {
             if (mapProTxAddresses.count(entry)) {
                 uint256 conflictHash = mapProTxAddresses[entry];
                 if (conflictHash != tx_hash && mapTx.count(conflictHash)) {
@@ -1354,7 +1354,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
             return true; // i.e. can't decode payload == conflict
         }
         auto& proTx = *opt_proTx;
-        for (const NetInfoEntry& entry : proTx.netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : proTx.netInfo->GetEntries()) {
             if (mapProTxAddresses.count(entry)) {
                 return true;
             }
@@ -1379,7 +1379,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Invalid transaction payload, tx: %s\n", __func__, tx_hash.ToString());
             return true; // i.e. can't decode payload == conflict
         }
-        for (const NetInfoEntry& entry : opt_proTx->netInfo.GetEntries()) {
+        for (const NetInfoEntry& entry : opt_proTx->netInfo->GetEntries()) {
             auto it = mapProTxAddresses.find(entry);
             if (it != mapProTxAddresses.end() && it->second != opt_proTx->proTxHash) {
                 return true;

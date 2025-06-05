@@ -71,6 +71,8 @@ public:
         m_type = NetInfoType::Service;
         m_data = service;
     }
+    template <typename Stream>
+    NetInfoEntry(deserialize_type, Stream& s) { s >> *this; }
 
     ~NetInfoEntry() = default;
 
@@ -134,6 +136,9 @@ private:
 
 public:
     MnNetInfo() = default;
+    template <typename Stream>
+    MnNetInfo(deserialize_type, Stream& s) { s >> *this; }
+
     ~MnNetInfo() = default;
 
     bool operator==(const MnNetInfo& rhs) const { return m_addr == rhs.m_addr; }
@@ -172,5 +177,10 @@ public:
 
     void Clear() { m_addr.Clear(); }
 };
+
+inline std::shared_ptr<MnNetInfo> MakeNetInfo()
+{
+    return std::make_shared<MnNetInfo>();
+}
 
 #endif // BITCOIN_EVO_NETINFO_H

@@ -32,14 +32,14 @@ std::string CDeterministicMNState::ToString() const
                      "  %s",
                      nVersion, nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight,
                      nRevocationReason, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
-                     EncodeDestination(PKHash(keyIDVoting)), payoutAddress, operatorPayoutAddress, netInfo.ToString());
+                     EncodeDestination(PKHash(keyIDVoting)), payoutAddress, operatorPayoutAddress, netInfo->ToString());
 }
 
 UniValue CDeterministicMNState::ToJson(MnType nType) const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("version", nVersion);
-    obj.pushKV("service", netInfo.GetPrimary().ToStringAddrPort());
+    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     obj.pushKV("registeredHeight", nRegisteredHeight);
     obj.pushKV("lastPaidHeight", nLastPaidHeight);
     obj.pushKV("consecutivePayments", nConsecutivePayments);
@@ -73,7 +73,7 @@ UniValue CDeterministicMNStateDiff::ToJson(MnType nType) const
         obj.pushKV("version", state.nVersion);
     }
     if (fields & Field_netInfo) {
-        obj.pushKV("service", state.netInfo.GetPrimary().ToStringAddrPort());
+        obj.pushKV("service", state.netInfo->GetPrimary().ToStringAddrPort());
     }
     if (fields & Field_nRegisteredHeight) {
         obj.pushKV("registeredHeight", state.nRegisteredHeight);

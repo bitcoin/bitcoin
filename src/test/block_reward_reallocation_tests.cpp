@@ -120,7 +120,7 @@ static CMutableTransaction CreateProRegTx(const CChain& active_chain, const CTxM
     CProRegTx proTx;
     proTx.nVersion = CProRegTx::GetMaxVersion(!bls::bls_legacy_scheme);
     proTx.collateralOutpoint.n = 0;
-    BOOST_CHECK_EQUAL(proTx.netInfo.AddEntry(strprintf("1.1.1.1:%d", port)), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(proTx.netInfo->AddEntry(strprintf("1.1.1.1:%d", port)), NetInfoStatus::Success);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
     proTx.pubKeyOperator.Set(operatorKeyRet.GetPublicKey(), bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();

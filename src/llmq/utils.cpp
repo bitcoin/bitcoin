@@ -905,7 +905,7 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
                     debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
                 } else {
                     debugMsg += strprintf("  %s (%s)\n", c.ToString(),
-                                          dmn->pdmnState->netInfo.GetPrimary().ToStringAddrPort());
+                                          dmn->pdmnState->netInfo->GetPrimary().ToStringAddrPort());
                 }
             }
             LogPrint(BCLog::NET_NETCONN, debugMsg.c_str()); /* Continued */
@@ -954,7 +954,7 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
                     debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
                 } else {
                     debugMsg += strprintf("  %s (%s)\n", c.ToString(),
-                                          dmn->pdmnState->netInfo.GetPrimary().ToStringAddrPort());
+                                          dmn->pdmnState->netInfo->GetPrimary().ToStringAddrPort());
                 }
             }
             LogPrint(BCLog::NET_NETCONN, debugMsg.c_str()); /* Continued */
