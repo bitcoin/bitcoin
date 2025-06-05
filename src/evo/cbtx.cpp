@@ -394,9 +394,7 @@ bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, co
     auto best_clsig = chainlock_handler.GetBestChainLock();
     if (best_clsig.getHeight() < Params().GetConsensus().DeploymentHeight(Consensus::DEPLOYMENT_V19)) {
         // We don't want legacy BLS ChainLocks in CbTx (can happen on regtest/devenets)
-        bestCLHeightDiff = 0;
-        bestCLSignature.Reset();
-        return false;
+        best_clsig = llmq::CChainLockSig{};
     }
     if (best_clsig.getHeight() == pindexPrev->nHeight) {
         // Our best CL is the newest one possible
