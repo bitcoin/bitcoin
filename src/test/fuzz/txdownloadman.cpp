@@ -281,7 +281,7 @@ static bool HasRelayPermissions(NodeId peer) { return peer == 0; }
 static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl, size_t max_orphan_count)
 {
     // Orphanage usage should never exceed what is allowed
-    Assert(txdownload_impl.m_orphanage->Size() <= max_orphan_count);
+    Assert(txdownload_impl.m_orphanage->CountUniqueOrphans() <= max_orphan_count);
     txdownload_impl.m_orphanage->SanityCheck();
 
     // We should never have more than the maximum in-flight requests out for a peer.
