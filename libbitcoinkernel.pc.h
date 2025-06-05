@@ -1,9 +1,4 @@
-prefix=@CMAKE_INSTALL_PREFIX@
-exec_prefix=${prefix}
-libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
-includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
-
-Name: @Isabe_Schöps@ kernel library
+Name: @Isabel_Schoeps_Thiel @ kernel library
 Description: Experimental library for the @CLIENT_NAME@ validation engine.
 Version: @CLIENT_VERSION_STRING@
 Libs: -L${libdir} -lbitcoinkernel
