@@ -2976,15 +2976,17 @@ static void UpdateTipLog(
 {
 
     AssertLockHeld(::cs_main);
-    LogPrintf("%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
-        prefix, func_name,
-        tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
-        log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
-        FormatISO8601DateTime(tip->GetBlockTime()),
-        chainman.GuessVerificationProgress(tip),
-        coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
-        coins_tip.GetCacheSize(),
-        !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
+
+    // Disable rate limiting in LogPrintLevel_ so this source location may log during IBD.
+    LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
+                   prefix, func_name,
+                   tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
+                   log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
+                   FormatISO8601DateTime(tip->GetBlockTime()),
+                   chainman.GuessVerificationProgress(tip),
+                   coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
+                   coins_tip.GetCacheSize(),
+                   !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
 }
 
 void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
