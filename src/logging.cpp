@@ -367,6 +367,30 @@ static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
     return buflog.str.size() + buflog.logging_function.size() + buflog.source_file.size() + buflog.threadname.size() + memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
 }
 
+BCLog::LogRateLimiter::LogRateLimiter(
+    SchedulerFunction scheduler_func,
+    uint64_t max_bytes,
+    std::chrono::seconds reset_window) : m_max_bytes{max_bytes}, m_reset_window{reset_window}
+{
+    scheduler_func([this] { Reset(); }, reset_window);
+}
+
+BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(
+    const std::source_location& source_loc,
+    const std::string& str)
+{
+    StdLockGuard scoped_lock(m_mutex);
+    auto& counter{m_source_locations.try_emplace(source_loc, m_max_bytes).first->second};
+    Status status{counter.GetDroppedBytes() > 0 ? Status::STILL_SUPPRESSED : Status::UNSUPPRESSED};
+
+    if (!counter.Consume(str.size()) && status == Status::UNSUPPRESSED) {
+        status = Status::NEWLY_SUPPRESSED;
+        m_suppression_active = true;
+    }
+
+    return status;
+}
+
 void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags category, BCLog::Level level, std::string_view source_file, int source_line, std::string_view logging_function, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const
 {
     if (!str.ends_with('\n')) str.push_back('\n');
@@ -490,6 +514,37 @@ void BCLog::Logger::ShrinkDebugFile()
     }
     else if (file != nullptr)
         fclose(file);
+}
+
+void BCLog::LogRateLimiter::Reset()
+{
+    decltype(m_source_locations) source_locations;
+    {
+        StdLockGuard scoped_lock(m_mutex);
+        source_locations.swap(m_source_locations);
+        m_suppression_active = false;
+    }
+    for (const auto& [source_loc, counter] : source_locations) {
+        uint64_t dropped_bytes{counter.GetDroppedBytes()};
+        if (dropped_bytes == 0) continue;
+        LogPrintLevel_(
+            LogFlags::ALL, Level::Info,
+            "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.\n",
+            source_loc.file_name(), source_loc.line(), source_loc.function_name(),
+            dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
+    }
+}
+
+bool BCLog::LogLimitStats::Consume(uint64_t bytes)
+{
+    if (bytes > m_available_bytes) {
+        m_dropped_bytes += bytes;
+        m_available_bytes = 0;
+        return false;
+    }
+
+    m_available_bytes -= bytes;
+    return true;
 }
 
 bool BCLog::Logger::SetLogLevel(std::string_view level_str)
