@@ -6,6 +6,7 @@
 #ifndef BITCOIN_LOGGING_H
 #define BITCOIN_LOGGING_H
 
+#include <crypto/siphash.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <util/fs.h>
@@ -14,11 +15,14 @@
 
 #include <atomic>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <list>
 #include <mutex>
+#include <source_location>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -30,6 +34,24 @@ static constexpr bool DEFAULT_LOGLEVELALWAYS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
+
+struct SourceLocationEqual {
+    bool operator()(const std::source_location& lhs, const std::source_location& rhs) const noexcept
+    {
+        return lhs.line() == rhs.line() && strcmp(lhs.file_name(), rhs.file_name()) == 0;
+    }
+};
+
+struct SourceLocationHasher {
+    size_t operator()(const std::source_location& s) const noexcept
+    {
+        // Use CSipHasher(0, 0) as a simple way to get uniform distribution.
+        return static_cast<size_t>(CSipHasher(0, 0)
+                                       .Write(std::hash<std::string_view>{}(s.file_name()))
+                                       .Write(s.line())
+                                       .Finalize());
+    }
+};
 
 struct LogCategory {
     std::string category;
@@ -82,6 +104,65 @@ namespace BCLog {
     };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
+    constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes that can be logged within one window
+
+    //! Keeps track of an individual source location and how many available bytes are left for logging from it.
+    class SourceLocationCounter
+    {
+    private:
+        //! Remaining bytes in the current window interval.
+        uint64_t m_available_bytes{RATELIMIT_MAX_BYTES};
+        //! Number of bytes that were not consumed within the current window.
+        uint64_t m_dropped_bytes{0};
+
+    public:
+        //! Consume bytes from the window if enough bytes are available.
+        //!
+        //! Returns whether or not enough bytes were available.
+        bool Consume(uint64_t bytes);
+
+        uint64_t GetAvailableBytes() const
+        {
+            return m_available_bytes;
+        }
+
+        uint64_t GetDroppedBytes() const
+        {
+            return m_dropped_bytes;
+        }
+    };
+
+    /**
+     * Fixed window rate limiter for logging.
+     *
+     * This class is not thread-safe.
+     */
+    class LogRateLimiter
+    {
+    private:
+        //! Timestamp of the last window reset.
+        std::chrono::time_point<NodeClock> m_last_reset;
+
+        //! Counters for each source location that has attempted to log something.
+        std::unordered_map<std::source_location, SourceLocationCounter, SourceLocationHasher, SourceLocationEqual> m_source_locations;
+        //! Set of source file locations that were dropped on the last log attempt.
+        std::unordered_set<std::source_location, SourceLocationHasher, SourceLocationEqual> m_suppressed_locations;
+
+        //! Attempts to reset the logging window if the window interval has passed. This will clear
+        //! m_source_locations and m_suppressed_locations if a reset occurs.
+        void MaybeResetWindow(std::string&);
+
+    public:
+        //! Interval after which the window is reset.
+        static constexpr std::chrono::hours WINDOW_SIZE{1};
+        //! Consumes `source_loc`'s available bytes corresponding to the size of the (formatted)
+        //! `str` and returns true if it exceeds the rate limit allowance in the current time window.
+        bool NeedsRateLimiting(const std::source_location& source_loc, std::string& str);
+
+        LogRateLimiter() : m_last_reset{NodeClock::now()} {}
+
+        friend class Logger;
+    };
 
     class Logger
     {

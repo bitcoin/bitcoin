@@ -276,4 +276,27 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     }
 }
 
+BOOST_AUTO_TEST_CASE(logging_sourcelocation_counter)
+{
+    BCLog::SourceLocationCounter counter;
+
+    // Check that counter gets initialized correctly.
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+
+    const uint64_t MESSAGE_SIZE{512 * 1024};
+    BOOST_CHECK(counter.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+
+    BOOST_CHECK(counter.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE * 2);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+
+    // Consuming more bytes after already having consumed 1MB should fail.
+    BOOST_CHECK(!counter.Consume(500));
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), 0ull);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 500ull);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
