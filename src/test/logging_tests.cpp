@@ -7,12 +7,16 @@
 #include <logging/timer.h>
 #include <scheduler.h>
 #include <test/util/setup_common.h>
+#include <tinyformat.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/string.h>
 
 #include <chrono>
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <source_location>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -88,25 +92,34 @@ BOOST_AUTO_TEST_CASE(logging_timer)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
-    LogInstance().LogPrintStr("foo1: bar1", "fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo2: bar2", "fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo3: bar3", "fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo4: bar4", "fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo5: bar5", "fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo6: bar6", "fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info);
+
+    struct Case {
+        std::string msg;
+        BCLog::LogFlags category;
+        BCLog::Level level;
+        std::string prefix;
+        std::source_location loc;
+    };
+
+    std::vector<Case> cases = {
+        {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", std::source_location::current()},
+        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", std::source_location::current()},
+        {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
+        {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", std::source_location::current()},
+        {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
+        {"foo6: bar6", BCLog::NONE, BCLog::Level::Info, "", std::source_location::current()},
+    };
+
+    std::vector<std::string> expected;
+    for (auto& [msg, category, level, prefix, loc] : cases) {
+        expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name(), prefix, msg));
+        LogInstance().LogPrintStr(msg, std::move(loc), category, level);
+    }
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
         log_lines.push_back(log);
     }
-    std::vector<std::string> expected = {
-        "[src1:1] [fn1] [net] foo1: bar1",
-        "[src2:2] [fn2] [net:info] foo2: bar2",
-        "[src3:3] [fn3] [debug] foo3: bar3",
-        "[src4:4] [fn4] foo4: bar4",
-        "[src5:5] [fn5] [debug] foo5: bar5",
-        "[src6:6] [fn6] foo6: bar6",
-    };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
