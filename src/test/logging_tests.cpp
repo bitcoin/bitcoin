@@ -6,11 +6,15 @@
 #include <logging.h>
 #include <logging/timer.h>
 #include <test/util/setup_common.h>
+#include <tinyformat.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/string.h>
 
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <source_location>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -86,24 +90,35 @@ BOOST_AUTO_TEST_CASE(logging_timer)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
-    LogInstance().LogPrintStr("foo1: bar1", "fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo2: bar2", "fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo3: bar3", "fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo4: bar4", "fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo5: bar5", "fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo6: bar6", "fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info);
+    std::vector<std::source_location> source_locs = {
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+        std::source_location::current(),
+    };
+    LogInstance().LogPrintStr("foo1: bar1", std::move(source_locs[0]), BCLog::LogFlags::NET, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo2: bar2", std::move(source_locs[1]), BCLog::LogFlags::NET, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo3: bar3", std::move(source_locs[2]), BCLog::LogFlags::ALL, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo4: bar4", std::move(source_locs[3]), BCLog::LogFlags::ALL, BCLog::Level::Info);
+    LogInstance().LogPrintStr("foo5: bar5", std::move(source_locs[4]), BCLog::LogFlags::NONE, BCLog::Level::Debug);
+    LogInstance().LogPrintStr("foo6: bar6", std::move(source_locs[5]), BCLog::LogFlags::NONE, BCLog::Level::Info);
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
         log_lines.push_back(log);
     }
+    auto format_source_location = [](const std::source_location& loc) {
+        return tfm::format("[%s:%s] [%s]", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name());
+    };
     std::vector<std::string> expected = {
-        "[src1:1] [fn1] [net] foo1: bar1",
-        "[src2:2] [fn2] [net:info] foo2: bar2",
-        "[src3:3] [fn3] [debug] foo3: bar3",
-        "[src4:4] [fn4] foo4: bar4",
-        "[src5:5] [fn5] [debug] foo5: bar5",
-        "[src6:6] [fn6] foo6: bar6",
+        format_source_location(source_locs[0]) + " [net] foo1: bar1",
+        format_source_location(source_locs[1]) + " [net:info] foo2: bar2",
+        format_source_location(source_locs[2]) + " [debug] foo3: bar3",
+        format_source_location(source_locs[3]) + " foo4: bar4",
+        format_source_location(source_locs[4]) + " [debug] foo5: bar5",
+        format_source_location(source_locs[5]) + " foo6: bar6",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
