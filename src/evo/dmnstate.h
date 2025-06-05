@@ -76,12 +76,8 @@ public:
         platformHTTPPort(proTx.platformHTTPPort)
     {
     }
-
     template <typename Stream>
-    CDeterministicMNState(deserialize_type, Stream& s)
-    {
-        s >> *this;
-    }
+    CDeterministicMNState(deserialize_type, Stream& s) { s >> *this; }
 
     SERIALIZE_METHODS(CDeterministicMNState, obj)
     {
@@ -230,6 +226,8 @@ public:
             fields |= Field_nVersion;
         }
     }
+    template <typename Stream>
+    CDeterministicMNStateDiff(deserialize_type, Stream& s) { s >> *this; }
 
     [[nodiscard]] UniValue ToJson(MnType nType) const;
 
