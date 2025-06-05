@@ -75,7 +75,7 @@ bool BCLog::Logger::StartLogging()
     // dump buffered messages from before we opened the log
     m_buffering = false;
     if (m_buffer_lines_discarded > 0) {
-        LogPrintStr_(strprintf("Early logging buffer overflowed, %d log lines discarded.\n", m_buffer_lines_discarded), std::source_location::current(), BCLog::ALL, Level::Info);
+        LogPrintStr_(strprintf("Early logging buffer overflowed, %d log lines discarded.\n", m_buffer_lines_discarded), std::source_location::current(), BCLog::ALL, Level::Info, /*should_ratelimit=*/false);
     }
     while (!m_msgs_before_open.empty()) {
         const auto& buflog = m_msgs_before_open.front();
@@ -106,6 +106,15 @@ void BCLog::Logger::DisconnectTestLogger()
     m_cur_buffer_memusage = 0;
     m_buffer_lines_discarded = 0;
     m_msgs_before_open.clear();
+}
+
+void BCLog::Logger::ResetLimiter()
+{
+    StdLockGuard scoped_lock(m_cs);
+    const auto now{NodeClock::now()};
+    m_limiter.m_last_reset = now;
+    m_limiter.m_source_locations.clear();
+    m_limiter.m_suppressed_locations.clear();
 }
 
 void BCLog::Logger::DisableLogging()
@@ -418,13 +427,13 @@ void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags catego
     str.insert(0, LogTimestampStr(now, mocktime));
 }
 
-void BCLog::Logger::LogPrintStr(std::string_view str, std::source_location&& source_loc, BCLog::LogFlags category, BCLog::Level level)
+void BCLog::Logger::LogPrintStr(std::string_view str, std::source_location&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
 {
     StdLockGuard scoped_lock(m_cs);
-    return LogPrintStr_(str, std::move(source_loc), category, level);
+    return LogPrintStr_(str, std::move(source_loc), category, level, should_ratelimit);
 }
 
-void BCLog::Logger::LogPrintStr_(std::string_view str, std::source_location&& source_loc, BCLog::LogFlags category, BCLog::Level level)
+void BCLog::Logger::LogPrintStr_(std::string_view str, std::source_location&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
 {
     std::string str_prefixed = LogEscapeMessage(str);
 
@@ -457,6 +466,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::source_location&& so
     }
 
     FormatLogStrInPlace(str_prefixed, category, level, source_loc, util::ThreadGetInternalName(), SystemClock::now(), GetMockTime());
+    bool ratelimit = should_ratelimit && m_limiter.NeedsRateLimiting(source_loc, str_prefixed);
 
     if (m_print_to_console) {
         // print to console
@@ -466,7 +476,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::source_location&& so
     for (const auto& cb : m_print_callbacks) {
         cb(str_prefixed);
     }
-    if (m_print_to_file) {
+    if (m_print_to_file && !ratelimit) {
         assert(m_fileout != nullptr);
 
         // reopen the log file, if requested
