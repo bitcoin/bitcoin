@@ -7,9 +7,6 @@ include_guard(GLOBAL)
 function(add_windows_resources target rc_file)
   if(WIN32)
     target_sources(${target} PRIVATE ${rc_file})
-    set_property(SOURCE ${rc_file}
-      APPEND PROPERTY COMPILE_DEFINITIONS WINDRES_PREPROC
-    )
   endif()
 endfunction()
 

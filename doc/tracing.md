@@ -45,7 +45,7 @@ The two main eBPF front-ends with support for USDT are [bpftrace] and
 `bpftrace` is preferred for one-liners and shorter scripts. Examples for both can
 be found in [contrib/tracing].
 
-[bpftrace]: https://github.com/iovisor/bpftrace
+[bpftrace]: https://github.com/bpftrace/bpftrace
 [BPF Compiler Collection (BCC)]: https://github.com/iovisor/bcc
 [contrib/tracing]: ../contrib/tracing/
 

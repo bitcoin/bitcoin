@@ -141,7 +141,6 @@ QVariant FreedesktopImage::toVariant(const QImage &img)
 
 void Notificator::notifyDBus(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
 {
-    // https://developer.gnome.org/notification-spec/
     // Arguments for DBus "Notify" call:
     QList<QVariant> args;
 

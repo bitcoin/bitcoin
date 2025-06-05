@@ -2495,14 +2495,17 @@ uint32_t PeerManagerImpl::GetFetchFlags(const Peer& peer) const
 void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlock& block, const BlockTransactionsRequest& req)
 {
     BlockTransactions resp(req);
+    unsigned int tx_requested_size = 0;
     for (size_t i = 0; i < req.indexes.size(); i++) {
         if (req.indexes[i] >= block.vtx.size()) {
             Misbehaving(peer, "getblocktxn with out-of-bounds tx indices");
             return;
         }
         resp.txn[i] = block.vtx[req.indexes[i]];
+        tx_requested_size += resp.txn[i]->GetTotalSize();
     }
 
+    LogDebug(BCLog::CMPCTBLOCK, "Peer %d sent us a GETBLOCKTXN for block %s, sending a BLOCKTXN with %u txns. (%u bytes)\n", pfrom.GetId(), block.GetHash().ToString(), resp.txn.size(), tx_requested_size);
     MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
 }
 

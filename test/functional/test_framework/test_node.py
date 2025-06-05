@@ -107,7 +107,7 @@ class TestNode():
         # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
         # This means that starting a bitcoind using the temp dir to debug a failed test won't
         # spam debug.log.
-        self.args = self.binaries.daemon_argv() + [
+        self.args = self.binaries.node_argv() + [
             f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
@@ -262,8 +262,13 @@ class TestNode():
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
         poll_per_s = 4
+
         suppressed_errors = collections.defaultdict(int)
-        latest_error = ""
+        latest_error = None
+        def suppress_error(category: str, e: Exception):
+            suppressed_errors[category] += 1
+            return (category, repr(e))
+
         for _ in range(poll_per_s * self.rpc_timeout):
             if self.process.poll() is not None:
                 # Attach abrupt shutdown error/s to the exception message
@@ -317,8 +322,7 @@ class TestNode():
                 # -342 Service unavailable, could be starting up or shutting down
                 if e.error['code'] not in [-28, -342]:
                     raise  # unknown JSON RPC exception
-                suppressed_errors[f"JSONRPCException {e.error['code']}"] += 1
-                latest_error = repr(e)
+                latest_error = suppress_error(f"JSONRPCException {e.error['code']}", e)
             except OSError as e:
                 error_num = e.errno
                 # Work around issue where socket timeouts don't have errno set.
@@ -334,16 +338,14 @@ class TestNode():
                     errno.ECONNREFUSED  # Port not yet open?
                 ]:
                     raise  # unknown OS error
-                suppressed_errors[f"OSError {errno.errorcode[error_num]}"] += 1
-                latest_error = repr(e)
+                latest_error = suppress_error(f"OSError {errno.errorcode[error_num]}", e)
             except ValueError as e:
                 # Suppress if cookie file isn't generated yet and no rpcuser or rpcpassword; bitcoind may be starting.
                 if "No RPC credentials" not in str(e):
                     raise
-                suppressed_errors["missing_credentials"] += 1
-                latest_error = repr(e)
+                latest_error = suppress_error("missing_credentials", e)
             time.sleep(1.0 / poll_per_s)
-        self._raise_assertion_error(f"Unable to connect to bitcoind after {self.rpc_timeout}s (ignored errors: {str(dict(suppressed_errors))}, latest error: {latest_error})")
+        self._raise_assertion_error(f"Unable to connect to bitcoind after {self.rpc_timeout}s (ignored errors: {dict(suppressed_errors)!s}{'' if latest_error is None else f', latest: {latest_error[0]!r}/{latest_error[1]}'})")
 
     def wait_for_cookie_credentials(self):
         """Ensures auth cookie credentials can be read, e.g. for testing CLI with -rpcwait before RPC connection is up."""

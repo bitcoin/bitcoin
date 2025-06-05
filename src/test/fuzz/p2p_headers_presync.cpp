@@ -32,9 +32,9 @@ public:
         PeerManager::Options peerman_opts;
         node::ApplyArgsManOptions(*m_node.args, peerman_opts);
         peerman_opts.max_headers_result = FUZZ_MAX_HEADERS_RESULTS;
-        // The peerman's rng is a global that is re-used, so it will be re-used
+        // The peerman's rng is a global that is reused, so it will be reused
         // and may cause non-determinism between runs. This may even influence
-        // the global RNG, because seeding may be done from the gloabl one. For
+        // the global RNG, because seeding may be done from the global one. For
         // now, avoid it influencing the global RNG, and initialize it with a
         // constant instead.
         peerman_opts.deterministic_rng = true;

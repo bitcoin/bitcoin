@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <txdb.h>
 #include <util/hasher.h>
 
 #include <cassert>
@@ -41,13 +42,12 @@ void initialize_coins_view()
     static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
-FUZZ_TARGET(coins_view, .init = initialize_coins_view)
+void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend_coins_view, bool is_db)
 {
-    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     bool good_data{true};
 
-    CCoinsView backend_coins_view;
     CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
+    if (is_db) coins_view_cache.SetBestBlock(uint256::ONE);
     COutPoint random_out_point;
     Coin random_coin;
     CMutableTransaction random_mutable_transaction;
@@ -69,6 +69,12 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                     if (e.what() == std::string{"Attempted to overwrite an unspent coin (when possible_overwrite is false)"}) {
                         assert(!possible_overwrite);
                         expected_code_path = true;
+                        // AddCoin() decreases cachedCoinsUsage by the memory usage of the old coin at the beginning and
+                        // increases it by the value of the new coin at the end. If it throws in the process, the value
+                        // of cachedCoinsUsage would have been incorrectly decreased, leading to an underflow later on.
+                        // To avoid this, use Flush() to reset the value of cachedCoinsUsage in sync with the cacheCoins
+                        // mapping.
+                        (void)coins_view_cache.Flush();
                     }
                 }
                 assert(expected_code_path);
@@ -80,7 +86,10 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 (void)coins_view_cache.Sync();
             },
             [&] {
-                coins_view_cache.SetBestBlock(ConsumeUInt256(fuzzed_data_provider));
+                uint256 best_block{ConsumeUInt256(fuzzed_data_provider)};
+                // Set best block hash to non-null to satisfy the assertion in CCoinsViewDB::BatchWrite().
+                if (is_db && best_block.IsNull()) best_block = uint256::ONE;
+                coins_view_cache.SetBestBlock(best_block);
             },
             [&] {
                 Coin move_to;
@@ -148,7 +157,11 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 bool expected_code_path = false;
                 try {
                     auto cursor{CoinsViewCacheCursor(usage, sentinel, coins_map, /*will_erase=*/true)};
-                    coins_view_cache.BatchWrite(cursor, fuzzed_data_provider.ConsumeBool() ? ConsumeUInt256(fuzzed_data_provider) : coins_view_cache.GetBestBlock());
+                    uint256 best_block{coins_view_cache.GetBestBlock()};
+                    if (fuzzed_data_provider.ConsumeBool()) best_block = ConsumeUInt256(fuzzed_data_provider);
+                    // Set best block hash to non-null to satisfy the assertion in CCoinsViewDB::BatchWrite().
+                    if (is_db && best_block.IsNull()) best_block = uint256::ONE;
+                    coins_view_cache.BatchWrite(cursor, best_block);
                     expected_code_path = true;
                 } catch (const std::logic_error& e) {
                     if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}) {
@@ -202,7 +215,7 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
 
     {
         std::unique_ptr<CCoinsViewCursor> coins_view_cursor = backend_coins_view.Cursor();
-        assert(!coins_view_cursor);
+        assert(is_db == !!coins_view_cursor);
         (void)backend_coins_view.EstimateSize();
         (void)backend_coins_view.GetBestBlock();
         (void)backend_coins_view.GetHeadBlocks();
@@ -287,4 +300,23 @@ FUZZ_TARGET(coins_view, .init = initialize_coins_view)
                 (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache);
             });
     }
+}
+
+FUZZ_TARGET(coins_view, .init = initialize_coins_view)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    CCoinsView backend_coins_view;
+    TestCoinsView(fuzzed_data_provider, backend_coins_view, /*is_db=*/false);
+}
+
+FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
+{
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    auto db_params = DBParams{
+        .path = "",
+        .cache_bytes = 1_MiB,
+        .memory_only = true,
+    };
+    CCoinsViewDB coins_db{std::move(db_params), CoinsViewOptions{}};
+    TestCoinsView(fuzzed_data_provider, coins_db, /*is_db=*/true);
 }

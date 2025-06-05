@@ -221,7 +221,6 @@ Configure with clang as the compiler:
 
 ```sh
 cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-cmake --build build -j $(nproc)
 ```
 
 The output is denoised of errors from external dependencies.
@@ -1268,7 +1267,7 @@ Subtrees
 
 Several parts of the repository are subtrees of software maintained elsewhere.
 
-Some of these are maintained by active developers of Bitcoin Core, in which case
+Normally, these are maintained by active developers of Bitcoin Core, in which case
 changes should go directly upstream without being PRed directly against the project.
 They will be merged back in the next subtree merge.
 
@@ -1280,31 +1279,19 @@ should be taken upstream.
 There is a tool in `test/lint/git-subtree-check.sh` ([instructions](../test/lint#git-subtree-checksh))
 to check a subtree directory for consistency with its upstream repository.
 
-Current subtrees include:
+The tool instructions also include a list of the subtrees managed by Bitcoin Core.
+
+The ultimate upstream of the few externally managed subtrees are:
 
 - src/leveldb
-  - Subtree at https://github.com/bitcoin-core/leveldb-subtree ; maintained by Core contributors.
   - Upstream at https://github.com/google/leveldb ; maintained by Google. Open
-    important PRs to the subtree to avoid delay.
+    important PRs to the Bitcoin Core subtree to avoid delay.
   - **Note**: Follow the instructions in [Upgrading LevelDB](#upgrading-leveldb) when
     merging upstream changes to the LevelDB subtree.
 
 - src/crc32c
   - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
-  - Subtree at https://github.com/bitcoin-core/crc32c-subtree ; maintained by Core contributors.
   - Upstream at https://github.com/google/crc32c ; maintained by Google.
-
-- src/secp256k1
-  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; maintained by Core contributors.
-
-- src/crypto/ctaes
-  - Upstream at https://github.com/bitcoin-core/ctaes ; maintained by Core contributors.
-
-- src/minisketch
-  - Upstream at https://github.com/bitcoin-core/minisketch ; maintained by Core contributors.
-
-- src/ipc/libmultiprocess
-  - Upstream at https://github.com/bitcoin-core/libmultiprocess ; maintained by Core contributors.
 
 Upgrading LevelDB
 ---------------------

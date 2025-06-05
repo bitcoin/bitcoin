@@ -102,9 +102,9 @@ def assert_raises_message(exc, message, fun, *args, **kwds):
     except JSONRPCException:
         raise AssertionError("Use assert_raises_rpc_error() to test RPC failures")
     except exc as e:
-        if message is not None and message not in repr(e):
+        if message is not None and message not in str(e):
             raise AssertionError("Expected substring not found in exception:\n"
-                                 f"substring: '{message}'\nexception: {repr(e)}.")
+                                 f"substring: '{message}'\nexception: {e!r}.")
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
     else:
