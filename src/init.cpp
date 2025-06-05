@@ -1143,7 +1143,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (blockfilterindex_value == "" || blockfilterindex_value == "1") {
         g_enabled_filter_types = AllBlockFilterTypes();
     } else if (blockfilterindex_value != "0") {
-        const std::vector<std::string> names = args.GetArgs("-blockfilterindex");
+        std::vector<std::string> names = args.GetArgs("-blockfilterindex");
+        if (names.empty()) {
+            // Use default value when no explicit -blockfilterindex was provided
+            names.push_back(DEFAULT_BLOCKFILTERINDEX);
+        }
         for (const auto& name : names) {
             BlockFilterType filter_type;
             if (!BlockFilterTypeByName(name, filter_type)) {
