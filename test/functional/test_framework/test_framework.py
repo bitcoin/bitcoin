@@ -272,9 +272,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.options.timeout_factor = self.options.timeout_factor or (4 if self.options.valgrind else 1)
         self.options.previous_releases_path = previous_releases_path
 
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-        self.config = config
+        self.config = configparser.ConfigParser()
+        self.config.read_file(open(self.options.configfile))
         self.binary_paths = self.get_binary_paths()
         if self.options.v1transport:
             self.options.v2transport=False
@@ -314,10 +313,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
-        config = self.config
-
         os.environ['PATH'] = os.pathsep.join([
-            os.path.join(config['environment']['BUILDDIR'], 'bin'),
+            os.path.join(self.config["environment"]["BUILDDIR"], "bin"),
             os.environ['PATH']
         ])
 
