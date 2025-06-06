@@ -6,6 +6,7 @@
 
 from test_framework.netutil import all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal, assert_raises_rpc_error, get_rpc_proxy, rpc_port, rpc_url
 
 class RPCBindTest(BitcoinTestFramework):
@@ -75,6 +76,25 @@ class RPCBindTest(BitcoinTestFramework):
         node.getnetworkinfo()
         self.stop_nodes()
 
+    def run_invalid_allowip_test(self):
+        '''
+        Check parameter interaction with -rpcallowip and -cjdnsreachable.
+        RFC4193 addresses are fc00::/7 like CJDNS but have an optional
+        "local" L bit making them fd00:: which should always be OK.
+        '''
+        self.log.info("Allow RFC4193 when compatible with CJDNS options")
+        # Don't rpcallow RFC4193 with L-bit=0 if CJDNS is enabled
+        self.nodes[0].assert_start_raises_init_error(
+            ["-rpcallowip=fc00:db8:c0:ff:ee::/80","-cjdnsreachable"],
+            "Invalid -rpcallowip subnet specification",
+            match=ErrorMatch.PARTIAL_REGEX)
+        # OK to rpcallow RFC4193 with L-bit=1 if CJDNS is enabled
+        self.start_node(0, ["-rpcallowip=fd00:db8:c0:ff:ee::/80","-cjdnsreachable"])
+        self.stop_nodes()
+        # OK to rpcallow RFC4193 with L-bit=0 if CJDNS is not enabled
+        self.start_node(0, ["-rpcallowip=fc00:db8:c0:ff:ee::/80"])
+        self.stop_nodes()
+
     def run_test(self):
         if sum([self.options.run_ipv4, self.options.run_ipv6, self.options.run_nonloopback]) > 1:
             raise AssertionError("Only one of --ipv4, --ipv6 and --nonloopback can be set")
@@ -101,6 +121,7 @@ class RPCBindTest(BitcoinTestFramework):
                 self.run_invalid_bind_test(['127.0.0.1'], ['127.0.0.1:notaport', '127.0.0.1:-18443', '127.0.0.1:0', '127.0.0.1:65536'])
             if self.options.run_ipv6:
                 self.run_invalid_bind_test(['[::1]'], ['[::1]:notaport', '[::1]:-18443', '[::1]:0', '[::1]:65536'])
+                self.run_invalid_allowip_test()
         if not self.options.run_ipv4 and not self.options.run_ipv6:
             self._run_nonloopback_tests()
 
