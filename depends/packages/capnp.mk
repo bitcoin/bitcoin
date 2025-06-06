@@ -5,6 +5,7 @@ $(package)_download_file=$(native_$(package)_download_file)
 $(package)_file_name=$(native_$(package)_file_name)
 $(package)_sha256_hash=$(native_$(package)_sha256_hash)
 $(package)_patches=abi_placement_new.patch
+$(package)_patches += fix_openbsd_build.patch
 
 define $(package)_set_vars
   $(package)_config_opts := -DBUILD_TESTING=OFF
@@ -14,7 +15,8 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
-  patch -p2 < $($(package)_patch_dir)/abi_placement_new.patch
+  patch -p2 < $($(package)_patch_dir)/abi_placement_new.patch && \
+  patch -p2 < $($(package)_patch_dir)/fix_openbsd_build.patch
 endef
 
 define $(package)_config_cmds
