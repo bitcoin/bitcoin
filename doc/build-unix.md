@@ -60,7 +60,7 @@ executables, which are based on BerkeleyDB 4.8. Otherwise, you can build Berkele
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-ZMQ dependencies (provides ZMQ API):
+ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo apt-get install libzmq3-dev
 
@@ -108,7 +108,7 @@ are based on Berkeley DB 4.8. Otherwise, you can build Berkeley DB [yourself](#b
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-ZMQ dependencies (provides ZMQ API):
+ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo dnf install zeromq-devel
 
