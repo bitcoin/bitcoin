@@ -61,9 +61,9 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
         case TRANSACTION_MNHF_SIGNAL:
             return CheckMNHFTx(chainman, qman, tx, pindexPrev, state);
         case TRANSACTION_ASSET_LOCK:
-            return CheckAssetLockUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
+            return CheckAssetLockTx(tx, state);
         case TRANSACTION_ASSET_UNLOCK:
-            return CheckAssetLockUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
+            return CheckAssetUnlockTx(chainman.m_blockman, qman, tx, pindexPrev, indexes, state);
         }
     } catch (const std::exception& e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -95,7 +95,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         static int64_t nTimePayload = 0;
         static int64_t nTimeCreditPool = 0;
 
-        int64_t nTime0 = GetTimeMicros();
+        int64_t nTime1 = GetTimeMicros();
 
         std::optional<CCbTx> opt_cbTx{std::nullopt};
         if (fCheckCbTxMerkleRoots && block.vtx.size() > 0 && block.vtx[0]->nType == TRANSACTION_COINBASE) {
@@ -117,28 +117,17 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             }
         }
 
-        int64_t nTime1 = GetTimeMicros();
-        nTimePayload += nTime1 - nTime0;
-        LogPrint(BCLog::BENCHMARK, "          - GetTxPayload: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTime0),
+        int64_t nTime2 = GetTimeMicros();
+        nTimePayload += nTime2 - nTime1;
+        LogPrint(BCLog::BENCHMARK, "      - GetTxPayload: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1),
                  nTimePayload * 0.000001);
 
-        const CCreditPool creditPool = m_cpoolman.GetCreditPool(pindex->pprev, m_consensus_params);
+        CRangesSet indexes;
         if (DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) {
+            CCreditPool creditPool{m_cpoolman.GetCreditPool(pindex->pprev, m_consensus_params)};
             LogPrint(BCLog::CREDITPOOL, "CSpecialTxProcessor::%s -- CCreditPool is %s\n", __func__, creditPool.ToString());
+            indexes = std::move(creditPool.indexes);
         }
-
-        if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
-            CAmount blockSubsidy = GetBlockSubsidy(pindex, m_consensus_params);
-            if (!CheckCreditPoolDiffForBlock(block, pindex, *opt_cbTx, blockSubsidy, state)) {
-                return error("CSpecialTxProcessor: CheckCreditPoolDiffForBlock for block %s failed with %s",
-                             pindex->GetBlockHash().ToString(), state.ToString());
-            }
-        }
-
-        int64_t nTime1_1 = GetTimeMicros();
-        nTimeCreditPool += nTime1_1 - nTime1;
-        LogPrint(BCLog::BENCHMARK, "      - CheckCreditPoolDiffForBlock: %.2fms [%.2fs]\n", 0.001 * (nTime1_1 - nTime1),
-                 nTimeCreditPool * 0.000001);
 
         for (size_t i = 0; i < block.vtx.size(); ++i) {
             // we validated CCbTx above, starts from the 2nd transaction
@@ -148,26 +137,40 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             TxValidationState tx_state;
             // At this moment CheckSpecialTx() may fail by 2 possible ways:
             // consensus failures and "TX_BAD_SPECIAL"
-            if (!CheckSpecialTxInner(m_dmnman, m_qsnapman, m_chainman, m_qman, *ptr_tx, pindex->pprev, view,
-                                     creditPool.indexes, fCheckCbTxMerkleRoots, tx_state)) {
+            if (!CheckSpecialTxInner(m_dmnman, m_qsnapman, m_chainman, m_qman, *ptr_tx, pindex->pprev, view, indexes,
+                                     fCheckCbTxMerkleRoots, tx_state)) {
                 assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Special Transaction check failed (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
             }
         }
 
-        int64_t nTime2 = GetTimeMicros();
-        nTimeLoop += nTime2 - nTime1_1;
-        LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1_1), nTimeLoop * 0.000001);
+        int64_t nTime3 = GetTimeMicros();
+        nTimeLoop += nTime3 - nTime2;
+        LogPrint(BCLog::BENCHMARK, "      - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeLoop * 0.000001);
+
+        if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
+            CAmount blockSubsidy = GetBlockSubsidy(pindex, m_consensus_params);
+            if (!CheckCreditPoolDiffForBlock(block, pindex, *opt_cbTx, blockSubsidy, state)) {
+                return error("CSpecialTxProcessor: CheckCreditPoolDiffForBlock for block %s failed with %s",
+                             pindex->GetBlockHash().ToString(), state.ToString());
+            }
+        }
+
+        int64_t nTime4 = GetTimeMicros();
+        nTimeCreditPool += nTime4 - nTime3;
+        LogPrint(BCLog::BENCHMARK, "      - CheckCreditPoolDiffForBlock: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3),
+                 nTimeCreditPool * 0.000001);
 
         if (!m_qblockman.ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerkleRoots)) {
             // pass the state returned by the function above
             return false;
         }
 
-        int64_t nTime3 = GetTimeMicros();
-        nTimeQuorum += nTime3 - nTime2;
-        LogPrint(BCLog::BENCHMARK, "        - m_qblockman: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
+        int64_t nTime5 = GetTimeMicros();
+        nTimeQuorum += nTime5 - nTime4;
+        LogPrint(BCLog::BENCHMARK, "      - m_qblockman: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4),
+                 nTimeQuorum * 0.000001);
 
 
         CDeterministicMNList mn_list;
@@ -184,41 +187,44 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             }
         }
 
-        int64_t nTime4 = GetTimeMicros();
-        nTimeDMN += nTime4 - nTime3;
-        LogPrint(BCLog::BENCHMARK, "        - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
+        int64_t nTime6 = GetTimeMicros();
+        nTimeDMN += nTime6 - nTime5;
 
-        int64_t nTime5{nTime4};
-        if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
+        LogPrint(BCLog::BENCHMARK, "      - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeDMN * 0.000001);
+
+        if (opt_cbTx.has_value()) {
             if (!CheckCbTxMerkleRoots(block, *opt_cbTx, pindex, m_qblockman, CSimplifiedMNList(mn_list), state)) {
                 // pass the state returned by the function above
                 return false;
             }
+        }
 
-            nTime5 = GetTimeMicros();
-            nTimeMerkle += nTime5 - nTime4;
+        int64_t nTime7 = GetTimeMicros();
+        nTimeMerkle += nTime7 - nTime6;
 
-            LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4),
-                     nTimeMerkle * 0.000001);
+        LogPrint(BCLog::BENCHMARK, "      - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime7 - nTime6),
+                 nTimeMerkle * 0.000001);
 
+        if (opt_cbTx.has_value()) {
             if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_clhandler, state)) {
                 // pass the state returned by the function above
                 return false;
             }
         }
 
-        int64_t nTime6 = GetTimeMicros();
-        nTimeCbTxCL += nTime6 - nTime5;
-        LogPrint(BCLog::BENCHMARK, "        - CheckCbTxBestChainlock: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCbTxCL * 0.000001);
+        int64_t nTime8 = GetTimeMicros();
+        nTimeCbTxCL += nTime8 - nTime7;
+        LogPrint(BCLog::BENCHMARK, "      - CheckCbTxBestChainlock: %.2fms [%.2fs]\n", 0.001 * (nTime8 - nTime7),
+                 nTimeCbTxCL * 0.000001);
 
         if (!m_mnhfman.ProcessBlock(block, pindex, fJustCheck, state)) {
             // pass the state returned by the function above
             return false;
         }
 
-        int64_t nTime7 = GetTimeMicros();
-        nTimeMnehf += nTime7 - nTime6;
-        LogPrint(BCLog::BENCHMARK, "        - m_mnhfman: %.2fms [%.2fs]\n", 0.001 * (nTime7 - nTime6), nTimeMnehf * 0.000001);
+        int64_t nTime9 = GetTimeMicros();
+        nTimeMnehf += nTime9 - nTime8;
+        LogPrint(BCLog::BENCHMARK, "      - m_mnhfman: %.2fms [%.2fs]\n", 0.001 * (nTime9 - nTime8), nTimeMnehf * 0.000001);
 
         if (DeploymentActiveAfter(pindex, m_consensus_params, Consensus::DEPLOYMENT_V19) && bls::bls_legacy_scheme.load()) {
             // NOTE: The block next to the activation is the one that is using new rules.
