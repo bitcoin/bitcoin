@@ -13,7 +13,6 @@
 #include <node/blockstorage.h>
 #include <undo.h>
 #include <util/fs_helpers.h>
-#include <validation.h>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
@@ -110,6 +109,13 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
 
     m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
+}
+
+interfaces::Chain::NotifyOptions BlockFilterIndex::CustomOptions()
+{
+    interfaces::Chain::NotifyOptions options;
+    options.connect_undo_data = true;
+    return options;
 }
 
 bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
@@ -250,19 +256,8 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
 
 bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
-    CBlockUndo block_undo;
-
-    if (block.height > 0) {
-        // pindex variable gives indexing code access to node internals. It
-        // will be removed in upcoming commit
-        const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block.hash));
-        if (!m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
-            return false;
-        }
-    }
-
+    const CBlockUndo& block_undo{*Assert(block.undo_data)};
     BlockFilter filter(m_filter_type, *Assert(block.data), block_undo);
-
     const uint256& header = filter.ComputeHeader(m_last_header);
     bool res = Write(filter, block.height, header);
     if (res) m_last_header = header; // update last header
@@ -316,7 +311,7 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     return true;
 }
 
-bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip)
+bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
 {
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());
@@ -324,7 +319,7 @@ bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, con
     // During a reorg, we need to copy all filters for blocks that are getting disconnected from the
     // height index to the hash index so we can still find them when the height index entries are
     // overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, new_tip.height, current_tip.height)) {
+    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, block.height - 1, block.height)) {
         return false;
     }
 
@@ -334,8 +329,8 @@ bool BlockFilterIndex::CustomRewind(const interfaces::BlockRef& current_tip, con
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
     if (!m_db->WriteBatch(batch)) return false;
 
-    // Update cached header
-    m_last_header = *Assert(ReadFilterHeader(new_tip.height, new_tip.hash));
+    // Update cached header to the previous block hash
+    m_last_header = *Assert(ReadFilterHeader(block.height - 1, *Assert(block.prev_hash)));
     return true;
 }
 
