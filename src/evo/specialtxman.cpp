@@ -193,18 +193,38 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         nTimeDMN += nTime4 - nTime3;
         LogPrint(BCLog::BENCHMARK, "        - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
-        if (fCheckCbTxMerkleRoots && !CheckCbTxMerkleRoots(block, pindex, m_qblockman, CSimplifiedMNList(mn_list), state)) {
-            // pass the state returned by the function above
-            return false;
-        }
+        int64_t nTime5{nTime4};
 
-        int64_t nTime5 = GetTimeMicros();
-        nTimeMerkle += nTime5 - nTime4;
-        LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
+        if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
+            int64_t nTime1_cbtx = GetTimeMicros();
 
-        if (fCheckCbTxMerkleRoots && !CheckCbTxBestChainlock(block, pindex, m_clhandler, state)) {
-            // pass the state returned by the function above
-            return false;
+            const auto opt_cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
+            if (!opt_cbTx) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
+            }
+            static int64_t nTimePayload = 0;
+
+            int64_t nTime2_cbtx = GetTimeMicros();
+            nTimePayload += nTime2_cbtx - nTime1_cbtx;
+            LogPrint(BCLog::BENCHMARK, "          - GetTxPayload: %.2fms [%.2fs]\n",
+                     0.001 * (nTime2_cbtx - nTime1_cbtx), nTimePayload * 0.000001);
+
+            if (!CheckCbTxMerkleRoots(block, *opt_cbTx, pindex, m_qblockman, CSimplifiedMNList(mn_list), state)) {
+                // pass the state returned by the function above
+                return false;
+            }
+
+            nTime5 = GetTimeMicros();
+            nTimeMerkle += nTime5 - nTime4;
+
+            LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4),
+                     nTimeMerkle * 0.000001);
+
+
+            if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_clhandler, state)) {
+                // pass the state returned by the function above
+                return false;
+            }
         }
 
         int64_t nTime6 = GetTimeMicros();
