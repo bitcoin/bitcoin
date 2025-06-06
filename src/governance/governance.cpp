@@ -1287,7 +1287,9 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
 
     int64_t nNow = GetTime();
     int nTimeout = 60 * 60;
-    size_t nPeersPerHashMax = 3;
+    // We isolate nodes on regtest during tests so let's use extra nodes to make sure
+    // votes from isolated nodes are requested by non-isolated nodes correctly.
+    size_t nPeersPerHashMax = Params().IsMockableChain() ? 10 : 3;
 
     std::vector<uint256> vTriggerObjHashes;
     std::vector<uint256> vOtherObjHashes;
