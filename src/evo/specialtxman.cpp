@@ -46,8 +46,16 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
             return CheckProUpRegTx(dmnman, tx, pindexPrev, state, view, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
             return CheckProUpRevTx(dmnman, tx, pindexPrev, state, check_sigs);
-        case TRANSACTION_COINBASE:
-            return CheckCbTx(tx, pindexPrev, state);
+        case TRANSACTION_COINBASE: {
+            if (!tx.IsCoinBase()) {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-invalid");
+            }
+            if (const auto opt_cbTx = GetTxPayload<CCbTx>(tx)) {
+                return CheckCbTx(*opt_cbTx, pindexPrev, state);
+            } else {
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-payload");
+            }
+        }
         case TRANSACTION_QUORUM_COMMITMENT:
             return llmq::CheckLLMQCommitment(dmnman, qsnapman, chainman, tx, pindexPrev, state);
         case TRANSACTION_MNHF_SIGNAL:
@@ -136,15 +144,45 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         static int64_t nTimeMerkle = 0;
         static int64_t nTimeCbTxCL = 0;
         static int64_t nTimeMnehf = 0;
+        static int64_t nTimePayload = 0;
+
+        int64_t nTime0 = GetTimeMicros();
+
+        std::optional<CCbTx> opt_cbTx{std::nullopt};
+        if (block.vtx.size() > 0 && block.vtx[0]->nType == TRANSACTION_COINBASE) {
+            const auto& tx = block.vtx[0];
+            if (!tx->IsCoinBase()) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-invalid");
+            }
+            if (opt_cbTx = GetTxPayload<CCbTx>(*tx); opt_cbTx) {
+                TxValidationState tx_state;
+                if (!CheckCbTx(*opt_cbTx, pindex->pprev, tx_state)) {
+                    assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS ||
+                           tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
+                                         strprintf("Special Transaction check failed (tx hash %s) %s",
+                                                   tx->GetHash().ToString(), tx_state.GetDebugMessage()));
+                }
+            } else {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
+            }
+        }
 
         int64_t nTime1 = GetTimeMicros();
+        nTimePayload += nTime1 - nTime0;
+        LogPrint(BCLog::BENCHMARK, "          - GetTxPayload: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTime0),
+                 nTimePayload * 0.000001);
 
         const CCreditPool creditPool = m_cpoolman.GetCreditPool(pindex->pprev, m_consensus_params);
         if (DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) {
             LogPrint(BCLog::CREDITPOOL, "CSpecialTxProcessor::%s -- CCreditPool is %s\n", __func__, creditPool.ToString());
         }
 
-        for (const auto& ptr_tx : block.vtx) {
+        for (size_t i = 0; i < block.vtx.size(); ++i) {
+            // we validated CCbTx above, starts from the 2nd transaction
+            if (i == 0 && block.vtx[i]->nType == TRANSACTION_COINBASE) continue;
+
+            const auto ptr_tx = block.vtx[i];
             TxValidationState tx_state;
             // At this moment CheckSpecialTx() and ProcessSpecialTx() may fail by 2 possible ways:
             // consensus failures and "TX_BAD_SPECIAL"
@@ -194,21 +232,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         LogPrint(BCLog::BENCHMARK, "        - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
         int64_t nTime5{nTime4};
-
         if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
-            int64_t nTime1_cbtx = GetTimeMicros();
-
-            const auto opt_cbTx = GetTxPayload<CCbTx>(*block.vtx[0]);
-            if (!opt_cbTx) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
-            }
-            static int64_t nTimePayload = 0;
-
-            int64_t nTime2_cbtx = GetTimeMicros();
-            nTimePayload += nTime2_cbtx - nTime1_cbtx;
-            LogPrint(BCLog::BENCHMARK, "          - GetTxPayload: %.2fms [%.2fs]\n",
-                     0.001 * (nTime2_cbtx - nTime1_cbtx), nTimePayload * 0.000001);
-
             if (!CheckCbTxMerkleRoots(block, *opt_cbTx, pindex, m_qblockman, CSimplifiedMNList(mn_list), state)) {
                 // pass the state returned by the function above
                 return false;
@@ -219,7 +243,6 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
 
             LogPrint(BCLog::BENCHMARK, "        - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4),
                      nTimeMerkle * 0.000001);
-
 
             if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_clhandler, state)) {
                 // pass the state returned by the function above

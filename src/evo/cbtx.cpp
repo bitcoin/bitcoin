@@ -19,22 +19,8 @@
 #include <deploymentstatus.h>
 
 
-bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state)
+bool CheckCbTx(const CCbTx& cbTx, const CBlockIndex* pindexPrev, TxValidationState& state)
 {
-    if (tx.nType != TRANSACTION_COINBASE) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-type");
-    }
-
-    if (!tx.IsCoinBase()) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-invalid");
-    }
-
-    const auto opt_cbTx = GetTxPayload<CCbTx>(tx);
-    if (!opt_cbTx) {
-        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-payload");
-    }
-    const auto& cbTx = *opt_cbTx;
-
     if (cbTx.nVersion == CCbTx::Version::INVALID || cbTx.nVersion >= CCbTx::Version::UNKNOWN) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-cbtx-version");
     }
