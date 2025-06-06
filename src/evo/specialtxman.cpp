@@ -93,6 +93,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         static int64_t nTimeCbTxCL = 0;
         static int64_t nTimeMnehf = 0;
         static int64_t nTimePayload = 0;
+        static int64_t nTimeCreditPool = 0;
 
         int64_t nTime0 = GetTimeMicros();
 
@@ -126,6 +127,19 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             LogPrint(BCLog::CREDITPOOL, "CSpecialTxProcessor::%s -- CCreditPool is %s\n", __func__, creditPool.ToString());
         }
 
+        if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
+            CAmount blockSubsidy = GetBlockSubsidy(pindex, m_consensus_params);
+            if (!CheckCreditPoolDiffForBlock(block, pindex, *opt_cbTx, blockSubsidy, state)) {
+                return error("CSpecialTxProcessor: CheckCreditPoolDiffForBlock for block %s failed with %s",
+                             pindex->GetBlockHash().ToString(), state.ToString());
+            }
+        }
+
+        int64_t nTime1_1 = GetTimeMicros();
+        nTimeCreditPool += nTime1_1 - nTime1;
+        LogPrint(BCLog::BENCHMARK, "      - CheckCreditPoolDiffForBlock: %.2fms [%.2fs]\n", 0.001 * (nTime1_1 - nTime1),
+                 nTimeCreditPool * 0.000001);
+
         for (size_t i = 0; i < block.vtx.size(); ++i) {
             // we validated CCbTx above, starts from the 2nd transaction
             if (i == 0 && block.vtx[i]->nType == TRANSACTION_COINBASE) continue;
@@ -143,8 +157,8 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         }
 
         int64_t nTime2 = GetTimeMicros();
-        nTimeLoop += nTime2 - nTime1;
-        LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
+        nTimeLoop += nTime2 - nTime1_1;
+        LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1_1), nTimeLoop * 0.000001);
 
         if (!m_qblockman.ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerkleRoots)) {
             // pass the state returned by the function above
@@ -254,7 +268,8 @@ bool CSpecialTxProcessor::UndoSpecialTxsInBlock(const CBlock& block, const CBloc
     return true;
 }
 
-bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CAmount blockSubsidy, BlockValidationState& state)
+bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
+                                                      const CAmount blockSubsidy, BlockValidationState& state)
 {
     AssertLockHeld(cs_main);
 
@@ -266,20 +281,7 @@ bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const
         auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_chainman.m_blockman, m_qman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
         if (!creditPoolDiff.has_value()) return false;
 
-        // If we get there we have v20 activated and credit pool amount must be included in block CbTx
-        if (block.vtx.empty()) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-missing-cbtx");
-        }
-        const auto& tx = *block.vtx[0];
-        if (!tx.IsCoinBase() || !tx.IsSpecialTxVersion() || tx.nType != TRANSACTION_COINBASE) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-type");
-        }
-
-        const auto opt_cbTx = GetTxPayload<CCbTx>(tx);
-        if (!opt_cbTx) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
-        }
-        CAmount target_balance{opt_cbTx->creditPoolBalance};
+        CAmount target_balance{cbTx.creditPoolBalance};
         // But it maybe not included yet in previous block yet; in this case value must be 0
         CAmount locked_calculated{creditPoolDiff->GetTotalLocked()};
         if (target_balance != locked_calculated) {

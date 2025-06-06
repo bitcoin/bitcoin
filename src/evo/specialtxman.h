@@ -14,6 +14,7 @@
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
+class CCbTx;
 class CCoinsViewCache;
 class CCreditPoolManager;
 class CDeterministicMNManager;
@@ -70,7 +71,9 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, std::optional<MNListUpdates>& updatesRet)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CAmount blockSubsidy, BlockValidationState& state)
+    // TODO: make it private and remove forward declaration CCbTx
+    bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
+                                     const CAmount blockSubsidy, BlockValidationState& state)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
