@@ -149,7 +149,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         int64_t nTime0 = GetTimeMicros();
 
         std::optional<CCbTx> opt_cbTx{std::nullopt};
-        if (block.vtx.size() > 0 && block.vtx[0]->nType == TRANSACTION_COINBASE) {
+        if (fCheckCbTxMerkleRoots && block.vtx.size() > 0 && block.vtx[0]->nType == TRANSACTION_COINBASE) {
             const auto& tx = block.vtx[0];
             if (!tx->IsCoinBase()) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-invalid");
