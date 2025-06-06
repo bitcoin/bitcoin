@@ -80,58 +80,6 @@ bool CSpecialTxProcessor::CheckSpecialTx(const CTransaction& tx, const CBlockInd
                                state);
 }
 
-[[nodiscard]] bool CSpecialTxProcessor::ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state)
-{
-    if (!tx.HasExtraPayloadField()) {
-        return true;
-    }
-
-    switch (tx.nType) {
-    case TRANSACTION_ASSET_LOCK:
-    case TRANSACTION_ASSET_UNLOCK:
-        return true; // handled per block (during cb)
-    case TRANSACTION_PROVIDER_REGISTER:
-    case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-    case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-    case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-        return true; // handled in batches per block
-    case TRANSACTION_COINBASE:
-        return true; // nothing to do
-    case TRANSACTION_QUORUM_COMMITMENT:
-        return true; // handled per block
-    case TRANSACTION_MNHF_SIGNAL:
-        return true; // handled per block
-    }
-
-    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-tx-type-proc");
-}
-
-[[nodiscard]] bool CSpecialTxProcessor::UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex)
-{
-    if (!tx.HasExtraPayloadField()) {
-        return true;
-    }
-
-    switch (tx.nType) {
-    case TRANSACTION_ASSET_LOCK:
-    case TRANSACTION_ASSET_UNLOCK:
-        return true; // handled per block (during cb)
-    case TRANSACTION_PROVIDER_REGISTER:
-    case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-    case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
-    case TRANSACTION_PROVIDER_UPDATE_REVOKE:
-        return true; // handled in batches per block
-    case TRANSACTION_COINBASE:
-        return true; // nothing to do
-    case TRANSACTION_QUORUM_COMMITMENT:
-        return true; // handled per block
-    case TRANSACTION_MNHF_SIGNAL:
-        return true; // handled per block
-    }
-
-    return false;
-}
-
 bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, const CCoinsViewCache& view, bool fJustCheck,
                                                    bool fCheckCbTxMerkleRoots, BlockValidationState& state, std::optional<MNListUpdates>& updatesRet)
 {
@@ -184,18 +132,13 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
 
             const auto ptr_tx = block.vtx[i];
             TxValidationState tx_state;
-            // At this moment CheckSpecialTx() and ProcessSpecialTx() may fail by 2 possible ways:
+            // At this moment CheckSpecialTx() may fail by 2 possible ways:
             // consensus failures and "TX_BAD_SPECIAL"
             if (!CheckSpecialTxInner(m_dmnman, m_qsnapman, m_chainman, m_qman, *ptr_tx, pindex->pprev, view,
                                      creditPool.indexes, fCheckCbTxMerkleRoots, tx_state)) {
                 assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
                                  strprintf("Special Transaction check failed (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
-            }
-            if (!ProcessSpecialTx(*ptr_tx, pindex, tx_state)) {
-                assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS || tx_state.GetResult() == TxValidationResult::TX_BAD_SPECIAL);
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
-                                 strprintf("Process Special Transaction failed (tx hash %s) %s", ptr_tx->GetHash().ToString(), tx_state.GetDebugMessage()));
             }
         }
 
@@ -289,13 +232,6 @@ bool CSpecialTxProcessor::UndoSpecialTxsInBlock(const CBlock& block, const CBloc
             // Removing the activation block here, so we must switch back to the old rules.
             bls::bls_legacy_scheme.store(true);
             LogPrintf("CSpecialTxProcessor::%s -- bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
-        }
-
-        for (int i = (int)block.vtx.size() - 1; i >= 0; --i) {
-            const CTransaction& tx = *block.vtx[i];
-            if (!UndoSpecialTx(tx, pindex)) {
-                return false;
-            }
         }
 
         if (!m_mnhfman.UndoBlock(block, pindex)) {
