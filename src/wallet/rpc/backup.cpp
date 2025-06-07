@@ -167,6 +167,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         }
 
         // Range check
+        std::optional<bool> is_ranged;
         int64_t range_start = 0, range_end = 1, next_index = 0;
         if (!parsed_descs.at(0)->IsRange() && data.exists("range")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
@@ -181,6 +182,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
                 range_end = wallet.m_keypool_size;
             }
             next_index = range_start;
+            is_ranged = true;
 
             if (data.exists("next_index")) {
                 next_index = data["next_index"].getInt<int64_t>();
@@ -202,12 +204,13 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         }
 
         // Ranged descriptors should not have a label
-        if (data.exists("range") && data.exists("label")) {
+        if (is_ranged.has_value() && is_ranged.value() && data.exists("label")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptors should not have a label");
         }
 
+        bool desc_internal = internal.has_value() && internal.value();
         // Internal addresses should not have a label either
-        if (internal && data.exists("label")) {
+        if (desc_internal && data.exists("label")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
         }
 
@@ -223,7 +226,6 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
 
         for (size_t j = 0; j < parsed_descs.size(); ++j) {
             auto parsed_desc = std::move(parsed_descs[j]);
-            bool desc_internal = internal.has_value() && internal.value();
             if (parsed_descs.size() == 2) {
                 desc_internal = j == 1;
             } else if (parsed_descs.size() > 2) {
