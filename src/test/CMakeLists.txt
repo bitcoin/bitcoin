@@ -35,6 +35,7 @@ add_executable(test_bitcoin
   compilerbug_tests.cpp
   compress_tests.cpp
   crypto_tests.cpp
+  ctvhash_tests.cpp
   cuckoocache_tests.cpp
   dbwrapper_tests.cpp
   denialofservice_tests.cpp
@@ -131,6 +132,7 @@ target_json_data_sources(test_bitcoin
   data/base58_encode_decode.json
   data/bip341_wallet_vectors.json
   data/blockfilters.json
+  data/ctvhash.json
   data/key_io_invalid.json
   data/key_io_valid.json
   data/script_tests.json
