@@ -63,10 +63,10 @@ public:
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
     /** Construct a new transaction with the specified feerate, and return a Ref to it.
-     *  If a staging graph exists, the new transaction is only created there. In all
-     *  further calls, only Refs created by AddTransaction() are allowed to be passed to this
-     *  TxGraph object (or empty Ref objects). Ref objects may outlive the TxGraph they were
-     *  created for. */
+     *  If a staging graph exists, the new transaction is only created there. feerate.size must be
+     *  strictly positive. In all further calls, only Refs created by AddTransaction() are allowed
+     *  to be passed to this TxGraph object (or empty Ref objects). Ref objects may outlive the
+     *  TxGraph they were created for. */
     [[nodiscard]] virtual Ref AddTransaction(const FeePerWeight& feerate) noexcept = 0;
     /** Remove the specified transaction. If a staging graph exists, the removal only happens
      *  there. This is a no-op if the transaction was already removed.
@@ -169,6 +169,11 @@ public:
      *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is
      *  usable without type-conversion. */
     virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+    /** Remove transactions (including their own descendants) according to a fast but best-effort
+     *  strategy such that the TxGraph's cluster and size limits are respected. Applies to staging
+     *  if it exists, and to main otherwise. Returns the list of all removed transactions in
+     *  unspecified order. This has no effect unless the relevant graph is oversized. */
+    virtual std::vector<Ref*> Trim() noexcept = 0;
 
     /** Interface returned by GetBlockBuilder. */
     class BlockBuilder
@@ -240,8 +245,9 @@ public:
     };
 };
 
-/** Construct a new TxGraph with the specified limit on transactions within a cluster. That
- *  number cannot exceed MAX_CLUSTER_COUNT_LIMIT. */
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count) noexcept;
+/** Construct a new TxGraph with the specified limit on the number of transactions within a cluster,
+ *  and on the sum of transaction sizes within a cluster. max_cluster_count cannot exceed
+ *  MAX_CLUSTER_COUNT_LIMIT. */
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H
