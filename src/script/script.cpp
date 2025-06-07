@@ -186,6 +186,17 @@ static constexpr std::pair<unsigned int, unsigned int> DecodePushData(
 
 unsigned int CScript::GetLegacySigOpCount(bool fAccurate) const
 {
+    switch (size()) {
+    case 0: return 0;
+    case 4: if (IsPayToAnchor()) return 0; else break;
+    case 22: if (IsPayToWitnessPubKeyHash()) return 0; else break;
+    case 23: if (IsPayToScriptHash()) return 0; else break;
+    case 25: if (IsPayToPubKeyHash()) return 1; else break;
+    case 34: if (IsPayToTaproot() || IsPayToWitnessScriptHash()) return 0; else break;
+    case 35: if (IsCompressedPayToPubKey()) return 1; else break;
+    case 67: if (IsUncompressedPayToPubKey()) return 1; else break;
+    }
+
     unsigned int n{0};
     opcodetype prev{OP_INVALIDOPCODE};
     for (const_iterator pc{begin()}, pc_end{end()}; pc < pc_end;) {
