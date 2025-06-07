@@ -26,7 +26,8 @@ function(add_boost_if_needed)
     cmake_policy(SET CMP0167 OLD)
   endif()
   set(Boost_NO_BOOST_CMAKE ON)
-  find_package(Boost 1.73.0 REQUIRED)
+  # TODO: remove this hack; why do we need to bypass provider here
+  find_package(Boost 1.73.0 REQUIRED BYPASS_PROVIDER)
   mark_as_advanced(Boost_INCLUDE_DIR)
   set_target_properties(Boost::headers PROPERTIES IMPORTED_GLOBAL TRUE)
   target_compile_definitions(Boost::headers INTERFACE

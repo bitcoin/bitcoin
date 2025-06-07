@@ -32,6 +32,18 @@ if [ -n "${APT_LLVM_V}" ]; then
   )
 fi
 
+# Fetch newer cmake on Ubuntu 22.04
+if [ -n "${KITWARE_CMAKE}" ]; then
+  ${CI_RETRY_EXE} apt-get update
+  ${CI_RETRY_EXE} apt-get install wget gpg -y
+  test -f /usr/share/doc/kitware-archive-keyring/copyright ||
+  wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+  echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main' | tee /etc/apt/sources.list.d/kitware.list >/dev/null
+  ${CI_RETRY_EXE} apt-get update
+  ${CI_RETRY_EXE} apt-get install -y cmake
+  cmake --version
+fi
+
 if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
   bash -c "dnf -y install epel-release"
   # The ninja-build package is available in the CRB repository.
