@@ -100,13 +100,14 @@ private:
 class SpanReader
 {
 private:
-    std::span<const unsigned char> m_data;
+    std::span<const std::byte> m_data;
 
 public:
     /**
      * @param[in]  data Referenced byte vector to overwrite/append
      */
-    explicit SpanReader(std::span<const unsigned char> data) : m_data{data} {}
+    explicit SpanReader(std::span<const unsigned char> data) : m_data{std::as_bytes(data)} {}
+    explicit SpanReader(std::span<const std::byte> data) : m_data{data} {}
 
     template<typename T>
     SpanReader& operator>>(T&& obj)
