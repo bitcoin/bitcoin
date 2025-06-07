@@ -273,6 +273,7 @@ BASE_SCRIPTS = [
     'feature_nulldummy.py',
     'mempool_accept.py',
     'mempool_expiry.py',
+    'wallet_addhdkey.py',
     'wallet_importdescriptors.py',
     'wallet_crosschain.py',
     'mining_basic.py',
