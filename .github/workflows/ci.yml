@@ -260,6 +260,7 @@ jobs:
         env:
           BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
           BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
+          BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
           BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
