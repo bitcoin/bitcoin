@@ -242,10 +242,9 @@ def verify_schnorr(key, sig, msg):
 
     - key is a 32-byte xonly pubkey (computed using compute_xonly_pubkey).
     - sig is a 64-byte Schnorr signature
-    - msg is a 32-byte message
+    - msg is a variable-length message
     """
     assert len(key) == 32
-    assert len(msg) == 32
     assert len(sig) == 64
 
     P = secp256k1.GE.from_bytes_xonly(key)
@@ -272,7 +271,6 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         aux = bytes(32)
 
     assert len(key) == 32
-    assert len(msg) == 32
     assert len(aux) == 32
 
     sec = int.from_bytes(key, 'big')
