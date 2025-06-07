@@ -1,8 +1,8 @@
 package=miniupnpc
-$(package)_version=2.2.8
+$(package)_version=2.3.3
 $(package)_download_path=https://miniupnp.tuxfamily.org/files/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=05b929679091b9921b6b6c1f25e39e4c8d1f4d46c8feb55a412aa697aee03a93
+$(package)_sha256_hash=d52a0afa614ad6c088cc9ddff1ae7d29c8c595ac5fdd321170a05f41e634bd1a
 $(package)_patches=dont_leak_info.patch
 $(package)_build_subdir=build
 
