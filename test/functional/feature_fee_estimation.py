@@ -427,6 +427,44 @@ class EstimateFeeTest(BitcoinTestFramework):
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
 
 
+    def test_estimates_during_low_activity(self):
+        node0 = self.nodes[0]
+        # Check initial state: estimatesmartfee should report insufficient data
+        # when there are no data points available from current or historical stats.
+        self.log.info("Test initial state with no fee estimation data")
+        initial_res = node0.estimatesmartfee(1)
+        assert_equal(initial_res["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(initial_res["blocks"], 0)
+
+        # Generate an empty block to allow the fee estimator to track the chain tip height.
+        self.log.info("Generating a block that will mark the chain tip of the estimator")
+        self.generate(node0, 1)
+
+        # To start recording block stats, the fee estimator needs to see at least one transaction
+        # from the block in its tracking stats. This signals that IBD is complete and transactions
+        # are now entering the mempool. We'll send a single transaction to be mined in the next block.
+        self.wallet.send_self_transfer(from_node=node0)
+        self.log.info("Generating 1 block with a single tx that will be the first recorded height")
+        self.generate(node0, 1)
+
+        # For the fee estimator to be able to provide an estimate for a confirmation target of n blocks,
+        # it must observe and record at least n * 2 blocks in its stats after the first recorded height.
+        self.log.info("Generating 4 blocks to provide sufficient data points for conf_target 2")
+        self.generate(node0, 4)
+        self.log.info("Test that estimateSmartFee returns max(mempoolminfee, minrelaytxfee) once enough blocks are recorded for conf_target 2")
+        mempool_info = node0.getmempoolinfo()
+        res = node0.estimatesmartfee(1)
+        assert_equal(res["feerate"], max(mempool_info["mempoolminfee"], mempool_info["minrelaytxfee"]))
+        assert_equal(res["blocks"], 2)
+
+        # When requesting a higher confirmation target than we have data for,
+        # the estimator should report insufficient data.
+        self.log.info("Test that conf_target > 2 will return insufficient data")
+        res_empty = node0.estimatesmartfee(3)
+        assert_equal(res_empty["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(res_empty["blocks"], 2)
+
+
     def run_test(self):
         self.log.info("This test is time consuming, please be patient")
         self.log.info("Splitting inputs so we can generate tx's")
@@ -472,6 +510,10 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.clear_estimates()
         self.log.info("Test estimatesmartfee modes")
         self.test_estimation_modes()
+
+        self.clear_estimates()
+        self.log.info("Testing fee estimates during low network activity")
+        self.test_estimates_during_low_activity()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
