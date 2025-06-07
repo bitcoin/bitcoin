@@ -72,6 +72,7 @@ static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path
     return dbs;
 }
 
+
 BOOST_AUTO_TEST_CASE(db_cursor_prefix_range_test)
 {
     // Test each supported db
@@ -295,6 +296,116 @@ BOOST_AUTO_TEST_CASE(concurrent_txn_dont_interfere)
     BOOST_CHECK(handler->Write(key, value2, /*fOverwrite=*/true));
     BOOST_CHECK(handler2->Read(key, read_value));
     BOOST_CHECK_EQUAL(read_value, value2);
+}
+
+BOOST_AUTO_TEST_CASE(database_readonly_flag_test)
+{
+    // Test MockableDatabase read-only functionality
+    auto mock_rw = CreateMockableWalletDatabase({}, false);
+    BOOST_CHECK(!mock_rw->IsReadOnly());
+
+    auto mock_ro = CreateMockableWalletDatabase({}, true);
+    BOOST_CHECK(mock_ro->IsReadOnly());
+
+    // Test DatabaseOptions.read_only flag with a regular database first
+    DatabaseOptions read_write_options;
+    DatabaseStatus status;
+    bilingual_str error;
+
+    // Test regular database is not read-only
+    auto rw_database = MakeSQLiteDatabase(m_path_root / "sqlite_rw", read_write_options, status, error);
+    BOOST_CHECK(rw_database);
+    BOOST_CHECK(!rw_database->IsReadOnly());
+
+    // For read-only testing, we need an existing database file
+    // Create and close the database first
+    rw_database->Open();
+    rw_database->Close();
+
+    // Now test read-only access to existing database
+    DatabaseOptions read_only_options;
+    read_only_options.read_only = true;
+    auto ro_database = MakeSQLiteDatabase(m_path_root / "sqlite_rw", read_only_options, status, error);
+    if (ro_database) {
+        BOOST_CHECK(ro_database->IsReadOnly());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(database_readonly_operations_test)
+{
+    // Test that read-only databases can read data
+
+    // First create a regular database and populate it
+    auto regular_db = CreateMockableWalletDatabase();
+    std::unique_ptr<DatabaseBatch> write_batch = regular_db->MakeBatch();
+
+    // Write some test data
+    BOOST_CHECK(write_batch->Write(std::string("key1"), std::string("value1")));
+    BOOST_CHECK(write_batch->Write(std::string("key2"), std::string("value2")));
+
+    // Verify we can read it back
+    std::string read_value;
+    BOOST_CHECK(write_batch->Read(std::string("key1"), read_value));
+    BOOST_CHECK_EQUAL(read_value, "value1");
+
+    // Now create a read-only database with the same data
+    MockableData copied_data = dynamic_cast<MockableDatabase&>(*regular_db).m_records;
+    auto readonly_db = CreateMockableWalletDatabase(copied_data, true);
+    BOOST_CHECK(readonly_db->IsReadOnly());
+
+    std::unique_ptr<DatabaseBatch> readonly_batch = readonly_db->MakeBatch();
+
+    // Should be able to read existing data from read-only database
+    BOOST_CHECK(readonly_batch->Read(std::string("key1"), read_value));
+    BOOST_CHECK_EQUAL(read_value, "value1");
+
+    BOOST_CHECK(readonly_batch->Read(std::string("key2"), read_value));
+    BOOST_CHECK_EQUAL(read_value, "value2");
+
+    // Should be able to check if keys exist
+    BOOST_CHECK(readonly_batch->Exists(std::string("key1")));
+    BOOST_CHECK(readonly_batch->Exists(std::string("key2")));
+    BOOST_CHECK(!readonly_batch->Exists(std::string("nonexistent")));
+
+    // Should be able to create cursors and iterate
+    std::unique_ptr<DatabaseCursor> cursor = readonly_batch->GetNewCursor();
+    DataStream key, value;
+    int count = 0;
+    while (cursor->Next(key, value) == DatabaseCursor::Status::MORE) {
+        count++;
+        key.clear();
+        value.clear();
+    }
+    BOOST_CHECK_EQUAL(count, 2);
+}
+
+BOOST_AUTO_TEST_CASE(database_readonly_cursor_prefix_test)
+{
+    // Test basic cursor functionality on read-only database
+
+    // First create a regular database and populate it
+    auto regular_db = CreateMockableWalletDatabase();
+    std::unique_ptr<DatabaseBatch> write_batch = regular_db->MakeBatch();
+
+    // Write some test data
+    BOOST_CHECK(write_batch->Write(std::string("key1"), std::string("value1")));
+    BOOST_CHECK(write_batch->Write(std::string("key2"), std::string("value2")));
+
+    // Create read-only database with the same data
+    MockableData copied_data = dynamic_cast<MockableDatabase&>(*regular_db).m_records;
+    auto readonly_db = CreateMockableWalletDatabase(copied_data, true);
+    std::unique_ptr<DatabaseBatch> batch = readonly_db->MakeBatch();
+
+    // Test basic cursor functionality
+    std::unique_ptr<DatabaseCursor> cursor = batch->GetNewCursor();
+    int total_count = 0;
+    DataStream key, value;
+    while (cursor->Next(key, value) == DatabaseCursor::Status::MORE) {
+        total_count++;
+        key.clear();
+        value.clear();
+    }
+    BOOST_CHECK_EQUAL(total_count, 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

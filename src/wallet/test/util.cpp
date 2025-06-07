@@ -183,9 +183,9 @@ bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
     return true;
 }
 
-std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records)
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records, bool read_only)
 {
-    return std::make_unique<MockableDatabase>(records);
+    return std::make_unique<MockableDatabase>(records, read_only);
 }
 
 MockableDatabase& GetMockableDatabase(CWallet& wallet)

@@ -98,8 +98,9 @@ class MockableDatabase : public WalletDatabase
 public:
     MockableData m_records;
     bool m_pass{true};
+    bool m_read_only{false};
 
-    MockableDatabase(MockableData records = {}) : WalletDatabase(), m_records(records) {}
+    MockableDatabase(MockableData records = {}, bool read_only = false) : WalletDatabase(), m_records(records), m_read_only(read_only) {}
     ~MockableDatabase() = default;
 
     void Open() override {}
@@ -111,9 +112,10 @@ public:
     std::string Filename() override { return "mockable"; }
     std::string Format() override { return "mock"; }
     std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<MockableBatch>(m_records, m_pass); }
+    bool IsReadOnly() const override { return m_read_only; }
 };
 
-std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records = {});
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records = {}, bool read_only = false);
 MockableDatabase& GetMockableDatabase(CWallet& wallet);
 
 DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success);

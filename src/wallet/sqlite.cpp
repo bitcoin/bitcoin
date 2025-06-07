@@ -112,7 +112,7 @@ Mutex SQLiteDatabase::g_sqlite_mutex;
 int SQLiteDatabase::g_sqlite_count = 0;
 
 SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock)
-    : WalletDatabase(), m_mock(mock), m_dir_path(fs::PathToString(dir_path)), m_file_path(fs::PathToString(file_path)), m_write_semaphore(1), m_use_unsafe_sync(options.use_unsafe_sync)
+    : WalletDatabase(), m_mock(mock), m_dir_path(fs::PathToString(dir_path)), m_file_path(fs::PathToString(file_path)), m_write_semaphore(1), m_use_unsafe_sync(options.use_unsafe_sync), m_read_only(options.read_only)
 {
     {
         LOCK(g_sqlite_mutex);
@@ -246,7 +246,12 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
 
 void SQLiteDatabase::Open()
 {
-    int flags = SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    int flags = SQLITE_OPEN_FULLMUTEX;
+    if (m_read_only) {
+        flags |= SQLITE_OPEN_READONLY;
+    } else {
+        flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    }
     if (m_mock) {
         flags |= SQLITE_OPEN_MEMORY; // In memory database for mock db
     }
@@ -273,35 +278,40 @@ void SQLiteDatabase::Open()
     }
 
     if (sqlite3_db_readonly(m_db, "main") != 0) {
-        throw std::runtime_error("SQLiteDatabase: Database opened in readonly mode but read-write permissions are needed");
+        if (!m_read_only) {
+            throw std::runtime_error("SQLiteDatabase: Database opened in readonly mode but read-write permissions are needed");
+        }
     }
 
-    // Acquire an exclusive lock on the database
-    // First change the locking mode to exclusive
-    SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
-    // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
-    int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of " CLIENT_NAME "?\n");
-    }
-    ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
-    }
+    // Skip write operations when in read-only mode
+    if (!m_read_only) {
+        // Acquire an exclusive lock on the database
+        // First change the locking mode to exclusive
+        SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
+        // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
+        int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of " CLIENT_NAME "?\n");
+        }
+        ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
+        }
 
-    // Enable fullfsync for the platforms that use it
-    SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
+        // Enable fullfsync for the platforms that use it
+        SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
 
-    if (m_use_unsafe_sync) {
-        // Use normal synchronous mode for the journal
-        LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
-        SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
+        if (m_use_unsafe_sync) {
+            // Use normal synchronous mode for the journal
+            LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
+            SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
+        }
     }
 
     // Make the table for our key-value pairs
     // First check that the main table exists
     sqlite3_stmt* check_main_stmt{nullptr};
-    ret = sqlite3_prepare_v2(m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'", -1, &check_main_stmt, nullptr);
+    int ret = sqlite3_prepare_v2(m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'", -1, &check_main_stmt, nullptr);
     if (ret != SQLITE_OK) {
         throw std::runtime_error(strprintf("SQLiteDatabase: Failed to prepare statement to check table existence: %s\n", sqlite3_errstr(ret)));
     }
@@ -319,7 +329,8 @@ void SQLiteDatabase::Open()
     }
 
     // Do the db setup things because the table doesn't exist only when we are creating a new wallet
-    if (!table_exists) {
+    // Only do table creation and setup in read-write mode
+    if (!table_exists && !m_read_only) {
         ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
         if (ret != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
