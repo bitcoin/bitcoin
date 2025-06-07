@@ -444,6 +444,47 @@ class ProxyTest(BitcoinTestFramework):
         msg = "Error: Unknown network specified in -onlynet: 'abc'"
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
+        self.log.info("Test passing trailing '=' raises expected init error")
+        self.nodes[1].extra_args = ["-proxy=127.0.0.1:9050="]
+        msg = "Error: Invalid -proxy address or hostname, ends with '=': '127.0.0.1:9050='"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing unrecognized network raises expected init error")
+        self.nodes[1].extra_args = ["-proxy=127.0.0.1:9050=foo"]
+        msg = "Error: Unrecognized network in -proxy='127.0.0.1:9050=foo': 'foo'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing proxy only for IPv6")
+        self.start_node(1, extra_args=["-proxy=127.6.6.6:6666=ipv6"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "")
+        assert_equal(nets["ipv6"]["proxy"], "127.6.6.6:6666")
+        self.stop_node(1)
+
+        self.log.info("Test passing separate proxy for IPv4 and IPv6")
+        self.start_node(1, extra_args=["-proxy=127.4.4.4:4444=ipv4", "-proxy=127.6.6.6:6666=ipv6"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "127.4.4.4:4444")
+        assert_equal(nets["ipv6"]["proxy"], "127.6.6.6:6666")
+        self.stop_node(1)
+
+        self.log.info("Test overriding the Tor proxy")
+        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=127.2.2.2:2222=tor"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["ipv6"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["onion"]["proxy"], "127.2.2.2:2222")
+        self.stop_node(1)
+
+        self.log.info("Test removing CJDNS proxy")
+        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=0=cjdns"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["ipv6"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["onion"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["cjdns"]["proxy"], "")
+        self.stop_node(1)
+
         self.log.info("Test passing too-long unix path to -proxy raises init error")
         self.nodes[1].extra_args = [f"-proxy=unix:{'x' * 1000}"]
         if self.have_unix_sockets:
