@@ -84,6 +84,10 @@ class Binaries:
         # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
         return self._argv("rpc", self.paths.bitcoincli) + ["-nonamed"]
 
+    def tx_argv(self):
+        "Return argv array that should be used to invoke bitcoin-tx"
+        return self._argv("tx", self.paths.bitcointx)
+
     def util_argv(self):
         "Return argv array that should be used to invoke bitcoin-util"
         return self._argv("util", self.paths.bitcoinutil)
@@ -288,6 +292,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoind": "BITCOIND",
             "bitcoin-cli": "BITCOINCLI",
             "bitcoin-util": "BITCOINUTIL",
+            "bitcoin-tx": "BITCOINTX",
             "bitcoin-chainstate": "BITCOINCHAINSTATE",
             "bitcoin-wallet": "BITCOINWALLET",
         }
