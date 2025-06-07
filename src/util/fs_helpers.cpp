@@ -200,10 +200,13 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
     }
     ftruncate(fileno(file), static_cast<off_t>(offset) + length);
 #else
+    off_t nEndPos = (off_t)offset + length;
 #if defined(HAVE_POSIX_FALLOCATE)
     // Version using posix_fallocate
-    off_t nEndPos = (off_t)offset + length;
     if (0 == posix_fallocate(fileno(file), 0, nEndPos)) return;
+#elif defined(__OpenBSD__)
+    // OpenBSD doesn't have fallocate or posix_fallocate, use ftruncate
+    if (0 == ftruncate(fileno(file), nEndPos)) return;
 #endif
     // Fallback version
     // TODO: just write one byte per block
