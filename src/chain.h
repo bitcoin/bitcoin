@@ -85,6 +85,28 @@ public:
     }
 };
 
+
+class BlockFileInfoWrapper : public CBlockFileInfo
+{
+public:
+    BlockFileInfoWrapper() = default;
+
+    explicit BlockFileInfoWrapper(const CBlockFileInfo* info) : CBlockFileInfo(*info)
+    {
+    }
+
+    SERIALIZE_METHODS(BlockFileInfoWrapper, obj)
+    {
+        READWRITE(obj.nBlocks);
+        READWRITE(obj.nSize);
+        READWRITE(obj.nUndoSize);
+        READWRITE(obj.nHeightFirst);
+        READWRITE(obj.nHeightLast);
+        READWRITE(obj.nTimeFirst);
+        READWRITE(obj.nTimeLast);
+    }
+};
+
 enum BlockStatus : uint32_t {
     //! Unused.
     BLOCK_VALID_UNKNOWN      =    0,
@@ -160,6 +182,9 @@ public:
 
     //! Byte offset within rev?????.dat where this block's undo data is stored
     unsigned int nUndoPos GUARDED_BY(::cs_main){0};
+
+    //! Byte offset within headers.dat where this block's header data is stored
+    unsigned int header_pos GUARDED_BY(::cs_main){0};
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
@@ -410,6 +435,34 @@ public:
 
     uint256 GetBlockHash() = delete;
     std::string ToString() = delete;
+};
+
+struct DiskBlockIndexWrapper : public CDiskBlockIndex {
+public:
+    DiskBlockIndexWrapper() = default;
+
+    explicit DiskBlockIndexWrapper(const CDiskBlockIndex* pindex) : CDiskBlockIndex(*pindex)
+    {
+    }
+
+    SERIALIZE_METHODS(DiskBlockIndexWrapper, obj)
+    {
+        LOCK(::cs_main);
+        READWRITE(obj.nHeight);
+        READWRITE(obj.nStatus);
+        READWRITE(obj.nTx);
+        READWRITE(obj.nFile);
+        READWRITE(obj.nDataPos);
+        READWRITE(obj.nUndoPos);
+        READWRITE(obj.header_pos);
+        // block header
+        READWRITE(obj.nVersion);
+        READWRITE(obj.hashPrev);
+        READWRITE(obj.hashMerkleRoot);
+        READWRITE(obj.nTime);
+        READWRITE(obj.nBits);
+        READWRITE(obj.nNonce);
+    }
 };
 
 /** An in-memory indexed chain of blocks. */

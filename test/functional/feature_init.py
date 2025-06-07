@@ -103,7 +103,8 @@ class InitTest(BitcoinTestFramework):
         self.log.info("Test startup errors after removing certain essential files")
 
         files_to_delete = {
-            'blocks/index/*.ldb': 'Error opening block database.',
+            'blocks/index/headers.dat': 'Error opening block database.',
+            'blocks/index/blockfiles.dat': 'Error opening block database.',
             'chainstate/*.ldb': 'Error opening coins database.',
             'blocks/blk*.dat': 'Error loading block database.',
             'indexes/txindex/MANIFEST*': 'LevelDB error: Corruption: CURRENT points to a non-existent file',
@@ -113,7 +114,7 @@ class InitTest(BitcoinTestFramework):
         }
 
         files_to_perturb = {
-            'blocks/index/*.ldb': 'Error loading block database.',
+            'blocks/index/headers.dat': 'Error loading block database.',
             'chainstate/*.ldb': 'Error opening coins database.',
             'blocks/blk*.dat': 'Corrupted block database detected.',
             'indexes/blockfilter/basic/db/*.*': 'LevelDB error: Corruption',

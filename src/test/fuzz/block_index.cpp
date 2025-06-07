@@ -4,6 +4,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <kernel/headerstorage.h>
 #include <node/blockstorage.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -54,17 +55,14 @@ void init_block_index()
 FUZZ_TARGET(block_index, .init = init_block_index)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    auto block_index = kernel::BlockTreeDB(DBParams{
-        .path = "", // Memory only.
-        .cache_bytes = 1 << 20, // 1MB.
-        .memory_only = true,
-    });
+    fs::path block_tree_store_dir{g_setup->m_args.GetDataDirBase()};
+    kernel::BlockTreeStore block_index{block_tree_store_dir, ::Params()};
 
     // Generate a number of block files to be stored in the index.
     int files_count = fuzzed_data_provider.ConsumeIntegralInRange(1, 100);
     std::vector<std::unique_ptr<CBlockFileInfo>> files;
     files.reserve(files_count);
-    std::vector<std::pair<int, const CBlockFileInfo*>> files_info;
+    std::vector<std::pair<int, CBlockFileInfo*>> files_info;
     files_info.reserve(files_count);
     for (int i = 0; i < files_count; i++) {
         if (auto file_info = ConsumeDeserializable<CBlockFileInfo>(fuzzed_data_provider)) {
@@ -79,7 +77,7 @@ FUZZ_TARGET(block_index, .init = init_block_index)
     int blocks_count = fuzzed_data_provider.ConsumeIntegralInRange(files_count * 10, files_count * 100);
     std::vector<std::unique_ptr<CBlockIndex>> blocks;
     blocks.reserve(blocks_count);
-    std::vector<const CBlockIndex*> blocks_info;
+    std::vector<CBlockIndex*> blocks_info;
     blocks_info.reserve(blocks_count);
     for (int i = 0; i < blocks_count; i++) {
         CBlockHeader header{ConsumeBlockHeader(fuzzed_data_provider)};
@@ -89,7 +87,7 @@ FUZZ_TARGET(block_index, .init = init_block_index)
     }
 
     // Store these files and blocks in the block index. It should not fail.
-    assert(block_index.WriteBatchSync(files_info, files_count - 1, blocks_info));
+    WITH_LOCK(::cs_main, assert(block_index.WriteBatchSync(files_info, files_count - 1, blocks_info)));
 
     // We should be able to read every block file info we stored. Its value should correspond to
     // what we stored above.
@@ -101,7 +99,7 @@ FUZZ_TARGET(block_index, .init = init_block_index)
 
     // We should be able to read the last block file number. Its value should be consistent.
     int last_block_file;
-    assert(block_index.ReadLastBlockFile(last_block_file));
+    block_index.ReadLastBlockFile(last_block_file);
     assert(last_block_file == files_count - 1);
 
     // We should be able to flip and read the reindexing flag.
@@ -115,13 +113,16 @@ FUZZ_TARGET(block_index, .init = init_block_index)
 
     // We should be able to set and read the value of any random flag.
     const std::string flag_name = fuzzed_data_provider.ConsumeRandomLengthString(100);
-    bool flag_value;
-    block_index.WriteFlag(flag_name, true);
-    block_index.ReadFlag(flag_name, flag_value);
-    assert(flag_value);
-    block_index.WriteFlag(flag_name, false);
-    block_index.ReadFlag(flag_name, flag_value);
-    assert(!flag_value);
+    bool pruning = true;
+    block_index.WritePruned(pruning);
+    pruning = false;
+    block_index.ReadPruned(pruning);
+    assert(pruning);
+    pruning = false;
+    block_index.WritePruned(pruning);
+    pruning = true;
+    block_index.ReadPruned(pruning);
+    assert(!pruning);
 
     // We should be able to load everything we've previously stored. Note to assert on the
     // return value we need to make sure all blocks pass the pow check.

@@ -57,15 +57,6 @@ bool BlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo& info)
     return Read(std::make_pair(DB_BLOCK_FILES, nFile), info);
 }
 
-bool BlockTreeDB::WriteReindexing(bool fReindexing)
-{
-    if (fReindexing) {
-        return Write(DB_REINDEX_FLAG, uint8_t{'1'});
-    } else {
-        return Erase(DB_REINDEX_FLAG);
-    }
-}
-
 void BlockTreeDB::ReadReindexing(bool& fReindexing)
 {
     fReindexing = Exists(DB_REINDEX_FLAG);
@@ -74,24 +65,6 @@ void BlockTreeDB::ReadReindexing(bool& fReindexing)
 bool BlockTreeDB::ReadLastBlockFile(int& nFile)
 {
     return Read(DB_LAST_BLOCK, nFile);
-}
-
-bool BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*>>& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo)
-{
-    CDBBatch batch(*this);
-    for (const auto& [file, info] : fileInfo) {
-        batch.Write(std::make_pair(DB_BLOCK_FILES, file), *info);
-    }
-    batch.Write(DB_LAST_BLOCK, nLastFile);
-    for (const CBlockIndex* bi : blockinfo) {
-        batch.Write(std::make_pair(DB_BLOCK_INDEX, bi->GetBlockHash()), CDiskBlockIndex{bi});
-    }
-    return WriteBatch(batch, true);
-}
-
-bool BlockTreeDB::WriteFlag(const std::string& name, bool fValue)
-{
-    return Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
 }
 
 bool BlockTreeDB::ReadFlag(const std::string& name, bool& fValue)
@@ -477,13 +450,13 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
 bool BlockManager::WriteBlockIndexDB()
 {
     AssertLockHeld(::cs_main);
-    std::vector<std::pair<int, const CBlockFileInfo*>> vFiles;
+    std::vector<std::pair<int, CBlockFileInfo*>> vFiles;
     vFiles.reserve(m_dirty_fileinfo.size());
     for (std::set<int>::iterator it = m_dirty_fileinfo.begin(); it != m_dirty_fileinfo.end();) {
         vFiles.emplace_back(*it, &m_blockfile_info[*it]);
         m_dirty_fileinfo.erase(it++);
     }
-    std::vector<const CBlockIndex*> vBlocks;
+    std::vector<CBlockIndex*> vBlocks;
     vBlocks.reserve(m_dirty_blockindex.size());
     for (std::set<CBlockIndex*>::iterator it = m_dirty_blockindex.begin(); it != m_dirty_blockindex.end();) {
         vBlocks.push_back(*it);
@@ -508,7 +481,7 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     m_blockfile_info.resize(max_blockfile_num + 1);
     LogPrintf("%s: last block file = %i\n", __func__, max_blockfile_num);
     for (int nFile = 0; nFile <= max_blockfile_num; nFile++) {
-        m_block_tree_db->ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
+        (void)m_block_tree_db->ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
     }
     LogPrintf("%s: last block file info: %s\n", __func__, m_blockfile_info[max_blockfile_num].ToString());
     for (int nFile = max_blockfile_num + 1; true; nFile++) {
@@ -545,7 +518,7 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     }
 
     // Check whether we have ever pruned block & undo files
-    m_block_tree_db->ReadFlag("prunedblockfiles", m_have_pruned);
+    m_block_tree_db->ReadPruned(m_have_pruned);
     if (m_have_pruned) {
         LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
     }
@@ -1156,6 +1129,80 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     return std::vector<std::byte>{xor_key.begin(), xor_key.end()};
 }
 
+std::unique_ptr<kernel::BlockTreeStore> BlockManager::CreateAndMigrateBlockTree()
+{
+    LOCK(::cs_main);
+    if (!fs::exists(m_opts.block_tree_dir / "CURRENT")) {
+        return std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, m_opts.chainparams, m_opts.wipe_block_tree_data);
+    }
+
+    if (m_opts.wipe_block_tree_data) {
+        fs::remove_all(m_opts.block_tree_dir);
+        return std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, m_opts.chainparams, m_opts.wipe_block_tree_data);
+    }
+
+    LogInfo("Migrating leveldb block tree db to new flat file block tree store.");
+    DBParams db_params{};
+    db_params.path = m_opts.block_tree_dir;
+    auto block_tree_db{std::make_unique<BlockTreeDB>(db_params)};
+
+    std::vector<std::pair<int, CBlockFileInfo>> files;
+    int max_blockfile_num{0};
+    bool reindexing{false};
+    bool pruned_block_files{false};
+
+    {
+        LogInfo("   Reading data from existing leveldb block tree db...");
+        block_tree_db->ReadLastBlockFile(max_blockfile_num);
+        files.reserve(max_blockfile_num);
+        for (int i = 0; i < max_blockfile_num; i++) {
+            CBlockFileInfo info;
+            block_tree_db->ReadBlockFileInfo(i, info);
+            files.emplace_back(i, info);
+        }
+
+        if (!block_tree_db->LoadBlockIndexGuts(
+                GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt)) {
+            throw std::runtime_error("Failed to load block index guts");
+        }
+        block_tree_db->ReadReindexing(reindexing);
+        block_tree_db->ReadFlag("prunedblockfiles", pruned_block_files);
+    }
+
+    auto migration_dir{m_opts.block_tree_dir.parent_path() / "migration"};
+
+    {
+        // Cleanup a potentially previously failed migration
+        fs::remove_all(migration_dir);
+        LogInfo("    Writing data back to migration directory, reindexing: %b, pruned: %b", reindexing, pruned_block_files);
+        auto block_tree_store{std::make_unique<kernel::BlockTreeStore>(migration_dir, m_opts.chainparams, m_opts.wipe_block_tree_data)};
+        block_tree_store->WritePruned(pruned_block_files);
+        block_tree_store->WriteReindexing(reindexing);
+
+        std::vector<std::pair<int, CBlockFileInfo*>> dump_files;
+        dump_files.reserve(files.size());
+        for (auto& file : files) {
+            dump_files.emplace_back(file.first, &file.second);
+        }
+        std::vector<CBlockIndex*> dump_blockindexes;
+        dump_blockindexes.reserve(m_block_index.size());
+        for (auto& pair : m_block_index) {
+            dump_blockindexes.push_back(&pair.second);
+        }
+
+        if (!block_tree_store->WriteBatchSync(dump_files, max_blockfile_num, dump_blockindexes)) {
+            throw std::runtime_error("Failed to write back data during block tree store migration");
+        }
+    }
+
+    fs::remove_all(m_opts.block_tree_dir);
+    fs::rename(migration_dir, m_opts.block_tree_dir);
+    LogInfo("   Successfully migrated the leveldb block tree db to new flat file block tree store.");
+    m_block_index.clear();
+
+    return std::make_unique<kernel::BlockTreeStore>(m_opts.block_tree_dir, m_opts.chainparams, m_opts.wipe_block_tree_data);
+}
+
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
     : m_prune_mode{opts.prune_target > 0},
       m_xor_key{InitBlocksdirXorKey(opts)},
@@ -1164,9 +1211,9 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
       m_interrupt{interrupt}
 {
-    m_block_tree_db = std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params);
+    m_block_tree_db = CreateAndMigrateBlockTree();
 
-    if (m_opts.block_tree_db_params.wipe_data) {
+    if (m_opts.wipe_block_tree_data) {
         m_block_tree_db->WriteReindexing(true);
         m_blockfiles_indexed = false;
         // If we're reindexing in prune mode, wipe away unusable block files and all undo data files
