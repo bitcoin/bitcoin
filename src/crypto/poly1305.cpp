@@ -5,8 +5,6 @@
 #include <crypto/common.h>
 #include <crypto/poly1305.h>
 
-#include <string.h>
-
 namespace poly1305_donna {
 
 // Based on the public domain implementation by Andrew Moon

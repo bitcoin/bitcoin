@@ -2,18 +2,37 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <index/coinstatsindex.h>
+
+#include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <common/args.h>
+#include <consensus/amount.h>
 #include <crypto/muhash.h>
-#include <index/coinstatsindex.h>
+#include <dbwrapper.h>
+#include <index/base.h>
+#include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <kernel/coinstats.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
 #include <serialize.h>
-#include <txdb.h>
+#include <sync.h>
+#include <uint256.h>
 #include <undo.h>
+#include <util/check.h>
+#include <util/fs.h>
 #include <validation.h>
+
+#include <ios>
+#include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 using kernel::ApplyCoinHash;
 using kernel::CCoinsStats;

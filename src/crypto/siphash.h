@@ -5,10 +5,10 @@
 #ifndef BITCOIN_CRYPTO_SIPHASH_H
 #define BITCOIN_CRYPTO_SIPHASH_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <span>
 
-#include <span.h>
-#include <uint256.h>
+class uint256;
 
 /** SipHash-2-4 */
 class CSipHasher

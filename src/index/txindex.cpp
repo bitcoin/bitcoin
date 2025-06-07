@@ -4,12 +4,30 @@
 
 #include <index/txindex.h>
 
-#include <clientversion.h>
 #include <common/args.h>
+#include <dbwrapper.h>
+#include <flatfile.h>
+#include <index/base.h>
 #include <index/disktxpos.h>
+#include <interfaces/chain.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <streams.h>
+#include <uint256.h>
+#include <util/fs.h>
 #include <validation.h>
+
+#include <cassert>
+#include <cstdint>
+#include <exception>
+#include <fcntl.h>
+#include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 constexpr uint8_t DB_TXINDEX{'t'};
 
