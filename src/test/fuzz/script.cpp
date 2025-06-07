@@ -93,7 +93,7 @@ FUZZ_TARGET(script, .init = initialize_script)
     std::vector<std::vector<unsigned char>> solutions;
     (void)Solver(script, solutions);
 
-    (void)script.HasValidOps();
+    (void)script.HasValidLegacyOps();
     (void)script.IsPayToAnchor();
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
