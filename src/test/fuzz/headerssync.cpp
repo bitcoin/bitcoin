@@ -44,7 +44,7 @@ class FuzzedHeadersSyncState : public HeadersSyncState
 {
 public:
     FuzzedHeadersSyncState(const unsigned commit_offset, const CBlockIndex* chain_start, const arith_uint256& minimum_required_work)
-        : HeadersSyncState(/*id=*/0, Params().GetConsensus(), chain_start, minimum_required_work)
+        : HeadersSyncState(/*id=*/0, Params().GetConsensus(), Params().HeadersSync(), chain_start, minimum_required_work)
     {
         const_cast<unsigned&>(m_commit_offset) = commit_offset;
     }
