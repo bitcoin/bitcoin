@@ -276,7 +276,6 @@ static RPCHelpMan echo(const std::string& name)
     return RPCHelpMan{
         name,
         "Simply echo back the input arguments. This command is for testing.\n"
-                "\nIt will return an internal bug report when arg9='trigger_internal_bug' is passed.\n"
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "bitcoin-cli and the GUI. There is no server-side difference.",
         {
@@ -295,10 +294,6 @@ static RPCHelpMan echo(const std::string& name)
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    if (request.params[9].isStr()) {
-        CHECK_NONFATAL(request.params[9].get_str() != "trigger_internal_bug");
-    }
-
     return request.params;
 },
     };
