@@ -150,6 +150,8 @@ It is required that you have `python` and `zip` installed.
 
 ### 1. Configuration
 
+Note: On macOS (x86_64), users with CMake ≥ 4.0 and Homebrew installed in `/usr/local` should pass `-DCMAKE_OSX_SYSROOT=macosx` or `export SDKROOT=macosx` when not building with Homebrew-provided tools.
+
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
 ##### Wallet (only SQlite) and GUI Support:
