@@ -23,32 +23,82 @@
 namespace mp {
 namespace test {
 
+/**
+ * Test setup class creating a two way connection between a
+ * ProxyServer<FooInterface> object and a ProxyClient<FooInterface>.
+ *
+ * Provides client_disconnect and server_disconnect lambdas that can be used to
+ * trigger disconnects and test handling of broken and closed connections.
+ *
+ * Accepts a client_owns_connection option to test different ProxyClient
+ * destroy_connection values and control whether destroying the ProxyClient
+ * object destroys the client Connection object. Normally it makes sense for
+ * this to be true to simplify shutdown and avoid needing to call
+ * client_disconnect manually, but false allows testing more ProxyClient
+ * behavior and the "IPC client method called after disconnect" code path.
+ */
+class TestSetup
+{
+public:
+    std::thread thread;
+    std::function<void()> server_disconnect;
+    std::function<void()> client_disconnect;
+    std::promise<std::unique_ptr<ProxyClient<messages::FooInterface>>> client_promise;
+    std::unique_ptr<ProxyClient<messages::FooInterface>> client;
+
+    TestSetup(bool client_owns_connection = true)
+        : thread{[&] {
+              EventLoop loop("mptest", [](bool raise, const std::string& log) {
+                  std::cout << "LOG" << raise << ": " << log << "\n";
+                  if (raise) throw std::runtime_error(log);
+              });
+              auto pipe = loop.m_io_context.provider->newTwoWayPipe();
+
+              auto server_connection =
+                  std::make_unique<Connection>(loop, kj::mv(pipe.ends[0]), [&](Connection& connection) {
+                      auto server_proxy = kj::heap<ProxyServer<messages::FooInterface>>(
+                          std::make_shared<FooImplementation>(), connection);
+                      return capnp::Capability::Client(kj::mv(server_proxy));
+                  });
+              server_disconnect = [&] { loop.sync([&] { server_connection.reset(); }); };
+              // Set handler to destroy the server when the client disconnects. This
+              // is ignored if server_disconnect() is called instead.
+              server_connection->onDisconnect([&] { server_connection.reset(); });
+
+              auto client_connection = std::make_unique<Connection>(loop, kj::mv(pipe.ends[1]));
+              auto client_proxy = std::make_unique<ProxyClient<messages::FooInterface>>(
+                  client_connection->m_rpc_system->bootstrap(ServerVatId().vat_id).castAs<messages::FooInterface>(),
+                  client_connection.get(), /* destroy_connection= */ client_owns_connection);
+              if (client_owns_connection) {
+                  client_connection.release();
+              } else {
+                  client_disconnect = [&] { loop.sync([&] { client_connection.reset(); }); };
+              }
+
+              client_promise.set_value(std::move(client_proxy));
+              loop.loop();
+          }}
+    {
+        client = client_promise.get_future().get();
+    }
+
+    ~TestSetup()
+    {
+        // Test that client cleanup_fns are executed.
+        bool destroyed = false;
+        client->m_context.cleanup_fns.emplace_front([&destroyed] { destroyed = true; });
+        client.reset();
+        KJ_EXPECT(destroyed);
+
+        thread.join();
+    }
+};
+
 KJ_TEST("Call FooInterface methods")
 {
-    std::promise<std::unique_ptr<ProxyClient<messages::FooInterface>>> foo_promise;
-    std::function<void()> disconnect_client;
-    std::thread thread([&]() {
-        EventLoop loop("mptest", [](bool raise, const std::string& log) {
-            std::cout << "LOG" << raise << ": " << log << "\n";
-        });
-        auto pipe = loop.m_io_context.provider->newTwoWayPipe();
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
 
-        auto connection_client = std::make_unique<Connection>(loop, kj::mv(pipe.ends[0]));
-        auto foo_client = std::make_unique<ProxyClient<messages::FooInterface>>(
-            connection_client->m_rpc_system->bootstrap(ServerVatId().vat_id).castAs<messages::FooInterface>(),
-            connection_client.get(), /* destroy_connection= */ false);
-        foo_promise.set_value(std::move(foo_client));
-        disconnect_client = [&] { loop.sync([&] { connection_client.reset(); }); };
-
-        auto connection_server = std::make_unique<Connection>(loop, kj::mv(pipe.ends[1]), [&](Connection& connection) {
-            auto foo_server = kj::heap<ProxyServer<messages::FooInterface>>(std::make_shared<FooImplementation>(), connection);
-            return capnp::Capability::Client(kj::mv(foo_server));
-        });
-        connection_server->onDisconnect([&] { connection_server.reset(); });
-        loop.loop();
-    });
-
-    auto foo = foo_promise.get_future().get();
     KJ_EXPECT(foo->add(1, 2) == 3);
 
     FooStruct in;
@@ -127,14 +177,40 @@ KJ_TEST("Call FooInterface methods")
     mut.message = "init";
     foo->passMutable(mut);
     KJ_EXPECT(mut.message == "init build pass call return read");
+}
 
-    disconnect_client();
-    thread.join();
+KJ_TEST("Call IPC method after client connection is closed")
+{
+    TestSetup setup{/*client_owns_connection=*/false};
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    KJ_EXPECT(foo->add(1, 2) == 3);
+    setup.client_disconnect();
 
-    bool destroyed = false;
-    foo->m_context.cleanup_fns.emplace_front([&destroyed]{ destroyed = true; });
-    foo.reset();
-    KJ_EXPECT(destroyed);
+    bool disconnected{false};
+    try {
+        foo->add(1, 2);
+    } catch (const std::runtime_error& e) {
+        KJ_EXPECT(std::string_view{e.what()} == "IPC client method called after disconnect.");
+        disconnected = true;
+    }
+    KJ_EXPECT(disconnected);
+}
+
+KJ_TEST("Calling IPC method after server connection is closed")
+{
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    KJ_EXPECT(foo->add(1, 2) == 3);
+    setup.server_disconnect();
+
+    bool disconnected{false};
+    try {
+        foo->add(1, 2);
+    } catch (const std::runtime_error& e) {
+        KJ_EXPECT(std::string_view{e.what()} == "IPC client method call interrupted by disconnect.");
+        disconnected = true;
+    }
+    KJ_EXPECT(disconnected);
 }
 
 } // namespace test

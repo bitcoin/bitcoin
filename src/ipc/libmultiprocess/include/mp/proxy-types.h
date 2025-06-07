@@ -568,7 +568,7 @@ template <typename Client>
 void clientDestroy(Client& client)
 {
     if (client.m_context.connection) {
-        client.m_context.connection->m_loop.log() << "IPC client destroy " << typeid(client).name();
+        client.m_context.loop->log() << "IPC client destroy " << typeid(client).name();
     } else {
         KJ_LOG(INFO, "IPC interrupted client destroy", typeid(client).name());
     }
@@ -577,7 +577,7 @@ void clientDestroy(Client& client)
 template <typename Server>
 void serverDestroy(Server& server)
 {
-    server.m_context.connection->m_loop.log() << "IPC server destroy " << typeid(server).name();
+    server.m_context.loop->log() << "IPC server destroy " << typeid(server).name();
 }
 
 //! Entry point called by generated client code that looks like:
@@ -592,12 +592,9 @@ void serverDestroy(Server& server)
 template <typename ProxyClient, typename GetRequest, typename... FieldObjs>
 void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, FieldObjs&&... fields)
 {
-    if (!proxy_client.m_context.connection) {
-        throw std::logic_error("clientInvoke call made after disconnect");
-    }
     if (!g_thread_context.waiter) {
         assert(g_thread_context.thread_name.empty());
-        g_thread_context.thread_name = ThreadName(proxy_client.m_context.connection->m_loop.m_exe_name);
+        g_thread_context.thread_name = ThreadName(proxy_client.m_context.loop->m_exe_name);
         // If next assert triggers, it means clientInvoke is being called from
         // the capnp event loop thread. This can happen when a ProxyServer
         // method implementation that runs synchronously on the event loop
@@ -608,7 +605,7 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
         // declaration so the server method runs in a dedicated thread.
         assert(!g_thread_context.loop_thread);
         g_thread_context.waiter = std::make_unique<Waiter>();
-        proxy_client.m_context.connection->m_loop.logPlain()
+        proxy_client.m_context.loop->logPlain()
             << "{" << g_thread_context.thread_name
             << "} IPC client first request from current thread, constructing waiter";
     }
@@ -616,18 +613,27 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
     std::exception_ptr exception;
     std::string kj_exception;
     bool done = false;
-    proxy_client.m_context.connection->m_loop.sync([&]() {
+    const char* disconnected = nullptr;
+    proxy_client.m_context.loop->sync([&]() {
+        if (!proxy_client.m_context.connection) {
+            const std::unique_lock<std::mutex> lock(invoke_context.thread_context.waiter->m_mutex);
+            done = true;
+            disconnected = "IPC client method called after disconnect.";
+            invoke_context.thread_context.waiter->m_cv.notify_all();
+            return;
+        }
+
         auto request = (proxy_client.m_client.*get_request)(nullptr);
         using Request = CapRequestTraits<decltype(request)>;
         using FieldList = typename ProxyClientMethodTraits<typename Request::Params>::Fields;
         IterateFields().handleChain(invoke_context, request, FieldList(), typename FieldObjs::BuildParams{&fields}...);
-        proxy_client.m_context.connection->m_loop.logPlain()
+        proxy_client.m_context.loop->logPlain()
             << "{" << invoke_context.thread_context.thread_name << "} IPC client send "
             << TypeName<typename Request::Params>() << " " << LogEscape(request.toString());
 
-        proxy_client.m_context.connection->m_loop.m_task_set->add(request.send().then(
+        proxy_client.m_context.loop->m_task_set->add(request.send().then(
             [&](::capnp::Response<typename Request::Results>&& response) {
-                proxy_client.m_context.connection->m_loop.logPlain()
+                proxy_client.m_context.loop->logPlain()
                     << "{" << invoke_context.thread_context.thread_name << "} IPC client recv "
                     << TypeName<typename Request::Results>() << " " << LogEscape(response.toString());
                 try {
@@ -641,9 +647,13 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
                 invoke_context.thread_context.waiter->m_cv.notify_all();
             },
             [&](const ::kj::Exception& e) {
-                kj_exception = kj::str("kj::Exception: ", e).cStr();
-                proxy_client.m_context.connection->m_loop.logPlain()
-                    << "{" << invoke_context.thread_context.thread_name << "} IPC client exception " << kj_exception;
+                if (e.getType() == ::kj::Exception::Type::DISCONNECTED) {
+                    disconnected = "IPC client method call interrupted by disconnect.";
+                } else {
+                    kj_exception = kj::str("kj::Exception: ", e).cStr();
+                    proxy_client.m_context.loop->logPlain()
+                        << "{" << invoke_context.thread_context.thread_name << "} IPC client exception " << kj_exception;
+                }
                 const std::unique_lock<std::mutex> lock(invoke_context.thread_context.waiter->m_mutex);
                 done = true;
                 invoke_context.thread_context.waiter->m_cv.notify_all();
@@ -653,7 +663,8 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
     std::unique_lock<std::mutex> lock(invoke_context.thread_context.waiter->m_mutex);
     invoke_context.thread_context.waiter->wait(lock, [&done]() { return done; });
     if (exception) std::rethrow_exception(exception);
-    if (!kj_exception.empty()) proxy_client.m_context.connection->m_loop.raise() << kj_exception;
+    if (!kj_exception.empty()) proxy_client.m_context.loop->raise() << kj_exception;
+    if (disconnected) proxy_client.m_context.loop->raise() << disconnected;
 }
 
 //! Invoke callable `fn()` that may return void. If it does return void, replace
@@ -687,7 +698,7 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
     using Results = typename decltype(call_context.getResults())::Builds;
 
     int req = ++server_reqs;
-    server.m_context.connection->m_loop.log() << "IPC server recv request  #" << req << " "
+    server.m_context.loop->log() << "IPC server recv request  #" << req << " "
                                      << TypeName<typename Params::Reads>() << " " << LogEscape(params.toString());
 
     try {
@@ -704,14 +715,14 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
         return ReplaceVoid([&]() { return fn.invoke(server_context, ArgList()); },
             [&]() { return kj::Promise<CallContext>(kj::mv(call_context)); })
             .then([&server, req](CallContext call_context) {
-                server.m_context.connection->m_loop.log() << "IPC server send response #" << req << " " << TypeName<Results>()
+                server.m_context.loop->log() << "IPC server send response #" << req << " " << TypeName<Results>()
                                                  << " " << LogEscape(call_context.getResults().toString());
             });
     } catch (const std::exception& e) {
-        server.m_context.connection->m_loop.log() << "IPC server unhandled exception: " << e.what();
+        server.m_context.loop->log() << "IPC server unhandled exception: " << e.what();
         throw;
     } catch (...) {
-        server.m_context.connection->m_loop.log() << "IPC server unhandled exception";
+        server.m_context.loop->log() << "IPC server unhandled exception";
         throw;
     }
 }
