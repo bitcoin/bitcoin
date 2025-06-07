@@ -1,6 +1,6 @@
-Bitcoin Core version 28.2rc1 is now available from:
+Bitcoin Core version 28.2rc2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.2/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-28.2/test.rc2/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -43,6 +43,8 @@ Notable changes
 - #31500 depends: Fix compiling libevent package on NetBSD
 - #31627 depends: Fix spacing issue
 - #32070 build: use make < 3.82 syntax for define directive
+- #32439 guix: accomodate migration to codeberg
+- #32568 depends: use "mkdir -p" when installing xproto
 
 ### Test
 
@@ -52,6 +54,10 @@ Notable changes
 ### Tracing
 
 - #31623 tracing: Rename the MIN macro to TRACEPOINT_TEST_MIN in log_raw_p2p_msgs
+
+### Doc
+
+- #32003 doc: remove note about macOS self-signing
 
 ### Misc
 
@@ -64,6 +70,7 @@ Credits
 - 0xB10C
 - achow101
 - Brandon Odiwuor
+- fanquake
 - Hennadii Stepanov
 - kehiy
 - MarcoFalke
