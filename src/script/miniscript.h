@@ -1203,32 +1203,50 @@ private:
                     return {ZERO + InputStack(key), (InputStack(std::move(sig)).SetWithSig() + InputStack(key)).SetAvailable(avail)};
                 }
                 case Fragment::MULTI_A: {
-                    // sats[j] represents the best stack containing j valid signatures (out of the first i keys).
-                    // In the loop below, these stacks are built up using a dynamic programming approach.
-                    std::vector<InputStack> sats = Vector(EMPTY);
+                    // take the first k number of valid signatures out of node.keys
+                    // if number of validate signatures is less than node.k, return an empty InputStack with Availability::NO
+                    InputStack sat_return;
+                    unsigned int num_of_good_sigs = 0;
                     for (size_t i = 0; i < node.keys.size(); ++i) {
-                        // Get the signature for the i'th key in reverse order (the signature for the first key needs to
-                        // be at the top of the stack, contrary to CHECKMULTISIG's satisfaction).
                         std::vector<unsigned char> sig;
                         Availability avail = ctx.Sign(node.keys[node.keys.size() - 1 - i], sig);
                         // Compute signature stack for just this key.
                         auto sat = InputStack(std::move(sig)).SetWithSig().SetAvailable(avail);
-                        // Compute the next sats vector: next_sats[0] is a copy of sats[0] (no signatures). All further
-                        // next_sats[j] are equal to either the existing sats[j] + ZERO, or sats[j-1] plus a signature
-                        // for the current (i'th) key. The very last element needs all signatures filled.
-                        std::vector<InputStack> next_sats;
-                        next_sats.push_back(sats[0] + ZERO);
-                        for (size_t j = 1; j < sats.size(); ++j) next_sats.push_back((sats[j] + ZERO) | (std::move(sats[j - 1]) + sat));
-                        next_sats.push_back(std::move(sats[sats.size() - 1]) + std::move(sat));
-                        // Switch over.
-                        sats = std::move(next_sats);
+                        if (sat.available == Availability::YES && num_of_good_sigs < node.k) {
+                            ++num_of_good_sigs;
+                            if (sat_return.available == Availability::NO) {
+                                // need to prepend i-1 number of ZEROs to fix the boundary condition that when sat_return is Availability::NO, then the operator+ will clear the stacks when add with sat with valid stacks
+                                auto temp_sat = ZERO;
+                                for (size_t k=0; k < i-1; ++k)
+                                    temp_sat = temp_sat + ZERO;
+                                sat_return = std::move(temp_sat) + std::move(sat);
+                            } else {
+                                sat_return = std::move(sat_return) + std::move(sat);
+                            }
+                        } else {
+                            if (sat.available == Availability::NO && sat_return.has_sig == false) {
+                                // when sat is Availability::NO, sat_return should be overwritten by sat:
+                                sat_return = std::move(sat);
+                            } else {
+                                sat_return = std::move(sat_return) + ZERO;
+                            }
+                        }
+                    }
+                    // for nsat_return, it expects node.keys.size() number of ZEROs, thus adding this for loop
+                    InputStack nsat_return;
+                    for (size_t i = 0; i < node.keys.size(); ++i) {
+                        nsat_return = std::move(nsat_return) + ZERO;
                     }
                     // The dissatisfaction consists of as many empty vectors as there are keys, which is the same as
                     // satisfying 0 keys.
-                    auto& nsat{sats[0]};
+                    auto& nsat{nsat_return};
                     CHECK_NONFATAL(node.k != 0);
-                    assert(node.k < sats.size());
-                    return {std::move(nsat), std::move(sats[node.k])};
+                    if (num_of_good_sigs < node.k)
+                    {
+                        // this is to reset sat_return when there are not enough k numbers of valid signatures
+                        sat_return.SetAvailable(Availability::NO);
+                    }
+                    return {std::move(nsat), std::move(sat_return)};
                 }
                 case Fragment::MULTI: {
                     // sats[j] represents the best stack containing j valid signatures (out of the first i keys).
