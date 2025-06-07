@@ -35,11 +35,11 @@ std::string GetTxnOutputType(TxoutType t)
 
 static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 {
-    if (script.size() == CPubKey::SIZE + 2 && script[0] == CPubKey::SIZE && script.back() == OP_CHECKSIG) {
+    if (script.IsUncompressedPayToPubKey()) {
         pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
-    if (script.size() == CPubKey::COMPRESSED_SIZE + 2 && script[0] == CPubKey::COMPRESSED_SIZE && script.back() == OP_CHECKSIG) {
+    if (script.IsCompressedPayToPubKey()) {
         pubkey = valtype(script.begin() + 1, script.begin() + CPubKey::COMPRESSED_SIZE + 1);
         return CPubKey::ValidSize(pubkey);
     }
@@ -48,17 +48,9 @@ static bool MatchPayToPubkey(const CScript& script, valtype& pubkey)
 
 static bool MatchPayToPubkeyHash(const CScript& script, valtype& pubkeyhash)
 {
-    if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160 && script[2] == 20 && script[23] == OP_EQUALVERIFY && script[24] == OP_CHECKSIG) {
-        pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
-        return true;
-    }
-    return false;
-}
-
-/** Test for "small positive integer" script opcodes - OP_1 through OP_16. */
-static constexpr bool IsSmallInteger(opcodetype opcode)
-{
-    return opcode >= OP_1 && opcode <= OP_16;
+    if (!script.IsPayToPubKeyHash()) return false;
+    pubkeyhash = valtype(script.begin () + 3, script.begin() + 23);
+    return true;
 }
 
 /** Retrieve a minimally-encoded number in range [min,max] from an (opcode, data) pair,
@@ -66,7 +58,7 @@ static constexpr bool IsSmallInteger(opcodetype opcode)
 static std::optional<int> GetScriptNumber(opcodetype opcode, valtype data, int min, int max)
 {
     int count;
-    if (IsSmallInteger(opcode)) {
+    if (CScript::IsSmallInteger(opcode)) {
         count = CScript::DecodeOP_N(opcode);
     } else if (IsPushdataOp(opcode)) {
         if (!CheckMinimalPush(data, opcode)) return {};

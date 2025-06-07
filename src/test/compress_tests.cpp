@@ -7,7 +7,8 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 
-#include <stdint.h>
+#include <cstdint>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -161,6 +162,59 @@ BOOST_AUTO_TEST_CASE(compress_p2pk_scripts_not_on_curve)
         CScript uncompressed_script;
         bool success = DecompressScript(uncompressed_script, compression_id, compressed_script);
         BOOST_CHECK_EQUAL(success, false);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(compressed_p2pk)
+{
+    // Valid Compressed P2PK
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/true).GetPubKey())};
+        const auto script{CScript() << key << OP_CHECKSIG};
+        BOOST_CHECK(script.IsCompressedPayToPubKey());
+
+        CompressedScript compressed_script;
+        BOOST_CHECK(CompressScript(script, compressed_script));
+        BOOST_CHECK_EQUAL(compressed_script.size(), 33U); // should be 33 bytes
+    }
+
+    // Compressed P2PK with an invalid prefix
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/true).GetPubKey())};
+        key[0] = 0x06; // 0x02/0x03 would be valid prefixes
+
+        const auto script{CScript() << key << OP_CHECKSIG};
+        BOOST_CHECK(script.IsCompressedPayToPubKey());
+
+        CompressedScript compressed_script;
+        BOOST_CHECK(!CompressScript(script, compressed_script));
+        BOOST_CHECK(compressed_script.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(uncompressed_p2pk)
+{
+    // Valid Uncompressed P2PK
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/false).GetPubKey())};
+        const auto script{CScript() << key << OP_CHECKSIG};
+
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
+        CompressedScript compressed_script;
+        BOOST_CHECK(CompressScript(script, compressed_script));
+        BOOST_CHECK_EQUAL(compressed_script.size(), 33U);   // compressed form is 33 bytes
+    }
+
+    // Uncompressed P2PK with an invalid prefix
+    {
+        auto key{ToByteVector(GenerateRandomKey(/*compressed=*/false).GetPubKey())};
+        key[0] = 0x06; // 0x04 is the only valid prefix (but GetLen() recognizes 6)
+        const auto script{CScript() << key << OP_CHECKSIG};
+
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
+        CompressedScript compressed_script;
+        BOOST_CHECK(!CompressScript(script, compressed_script));
+        BOOST_CHECK(compressed_script.empty());
     }
 }
 

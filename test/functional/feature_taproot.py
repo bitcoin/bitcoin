@@ -1501,7 +1501,7 @@ class TaprootTest(BitcoinTestFramework):
                     tx.vout[-1].nValue = random.randint(DUST_LIMIT, in_value)
                 in_value -= tx.vout[-1].nValue
                 tx.vout[-1].scriptPubKey = random.choice(host_spks)
-                sigops_weight += CScript(tx.vout[-1].scriptPubKey).GetSigOpCount(False) * WITNESS_SCALE_FACTOR
+                sigops_weight += CScript(tx.vout[-1].scriptPubKey).GetLegacySigOpCount(fAccurate=False) * WITNESS_SCALE_FACTOR
             fee += in_value
             assert fee >= 0
 
