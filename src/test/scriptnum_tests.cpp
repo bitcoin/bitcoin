@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,8 +7,8 @@
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-#include <limits.h>
-#include <stdint.h>
+#include <climits>
+#include <cstdint>
 
 BOOST_FIXTURE_TEST_SUITE(scriptnum_tests, BasicTestingSetup)
 

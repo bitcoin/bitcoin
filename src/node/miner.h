@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,9 +13,9 @@
 #include <txmempool.h>
 #include <util/feefrac.h>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
-#include <stdint.h>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>

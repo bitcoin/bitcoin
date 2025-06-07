@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include <assert.h>
+#include <cassert>
 
 namespace {
 

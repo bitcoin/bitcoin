@@ -8,7 +8,7 @@
 #include <serialize.h>
 #include <uint256.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 class Num3072
 {

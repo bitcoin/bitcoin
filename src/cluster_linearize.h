@@ -6,11 +6,11 @@
 #define BITCOIN_CLUSTER_LINEARIZE_H
 
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <optional>
-#include <stdint.h>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <random.h>
 #include <span.h>
