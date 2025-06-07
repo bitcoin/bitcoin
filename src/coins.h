@@ -423,12 +423,13 @@ public:
 
     /**
      * Emplace a coin into cacheCoins without performing any checks, marking
-     * the emplaced coin as dirty.
+     * the emplaced coin as dirty unless `set_dirty` is `false`.
      *
-     * NOT FOR GENERAL USE. Used only when loading coins from a UTXO snapshot.
+     * NOT FOR GENERAL USE. Used when loading coins from a UTXO snapshot, and
+     * in the InputFetcher.
      * @sa ChainstateManager::PopulateAndValidateSnapshot()
      */
-    void EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin);
+    void EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin, bool set_dirty = true);
 
     /**
      * Spend a coin. Pass moveto in order to get the deleted data.
