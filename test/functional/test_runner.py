@@ -270,6 +270,7 @@ BASE_SCRIPTS = [
     'rpc_generate.py',
     'wallet_balance.py',
     'p2p_initial_headers_sync.py',
+    'p2p_initial_headers_sync_timeout.py',
     'feature_nulldummy.py',
     'mempool_accept.py',
     'mempool_expiry.py',
