@@ -118,4 +118,92 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(coinstatsindex_reorg, TestChain100Setup)
+{
+    // The initial test chain is 100 blocks long
+    int test_chain_height{100};
+    CoinStatsIndex coin_stats_index{interfaces::MakeChain(m_node), 1 << 20, true};
+    BOOST_REQUIRE(coin_stats_index.Init());
+    BOOST_REQUIRE(coin_stats_index.StartBackgroundSync());
+    IndexWaitSynced(coin_stats_index, *Assert(m_node.shutdown_signal));
+    Chainstate* initial_chainstate = &Assert(m_node.chainman)->ActiveChainstate();
+
+    // Create a block that contains another transaction in addition to the coinbase (block_a)
+    const CScript output_script{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
+    const CAmount block_a_tx_amount = COIN;
+    CMutableTransaction block_a_tx = CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, test_chain_height,
+                                                                   coinbaseKey, output_script, block_a_tx_amount, false);
+    CBlock block_a = CreateBlock(std::vector<CMutableTransaction>{block_a_tx}, output_script, *initial_chainstate);
+
+    // Create a conflicting block that does not contain any transactions (block_b)
+    CBlock block_b = CreateBlock(std::vector<CMutableTransaction>{}, output_script, *initial_chainstate);
+
+    // Process the first block
+    std::shared_ptr<const CBlock> shared_pblock_a = std::make_shared<const CBlock>(block_a);
+    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock_a, true, true, nullptr);
+
+    // Process the second block
+    std::shared_ptr<const CBlock> shared_pblock_b = std::make_shared<const CBlock>(block_b);
+    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock_b, true, true, nullptr);
+
+    const CBlockIndex* initial_tip_block_index;
+    {
+        LOCK(cs_main);
+        initial_tip_block_index = m_node.chainman->ActiveChain().Tip();
+    }
+
+    // The first seen block (block_a) should be the tip
+    BOOST_CHECK(initial_tip_block_index->GetBlockHash() == block_a.GetHash());
+    ++test_chain_height;
+
+    // Let the CoinStatsIndex to catch up and check correctness of the data
+    BOOST_CHECK(coin_stats_index.BlockUntilSyncedToCurrentChain());
+    std::optional<kernel::CCoinsStats> stats_fork_a = coin_stats_index.LookUpStats(*initial_tip_block_index);
+    BOOST_CHECK(stats_fork_a);
+    BOOST_CHECK(stats_fork_a->total_coinbase_amount == test_chain_height * 50 * COIN);
+    BOOST_CHECK(stats_fork_a->total_new_outputs_ex_coinbase_amount == block_a_tx_amount);
+
+    // Block b is on an alternative chain and it should not be indexed
+    const CBlockIndex* block_b_index;
+    {
+        LOCK(cs_main);
+        block_b_index = m_node.chainman->m_blockman.LookupBlockIndex(block_b.GetHash());
+    }
+    std::optional<kernel::CCoinsStats> stats_alternative_chain = coin_stats_index.LookUpStats(*block_b_index);
+    BOOST_CHECK(!stats_alternative_chain);
+
+    // Invalidate block_a to trigger a reorg of the chain and include block_b
+    BlockValidationState validation_state;
+    Assert(m_node.chainman)->ActiveChainstate().InvalidateBlock(validation_state, const_cast<CBlockIndex*>(initial_tip_block_index));
+    BOOST_REQUIRE(validation_state.IsValid());
+    m_node.chainman->ActiveChainstate().ActivateBestChain(validation_state);
+    const CBlockIndex* new_tip_block_index;
+    {
+        LOCK(cs_main);
+        new_tip_block_index = m_node.chainman->ActiveChain().Tip();
+    }
+    BOOST_CHECK(new_tip_block_index->GetBlockHash() == block_b.GetHash());
+
+    // Let the CoinStatsIndex to catch up and check correctness of the data
+    BOOST_CHECK(coin_stats_index.BlockUntilSyncedToCurrentChain());
+    std::optional<kernel::CCoinsStats> stats_fork_b = coin_stats_index.LookUpStats(*new_tip_block_index);
+    BOOST_CHECK(stats_fork_b);
+    BOOST_CHECK(stats_fork_b->total_coinbase_amount == test_chain_height * 50 * COIN);
+    BOOST_CHECK(stats_fork_b->total_new_outputs_ex_coinbase_amount == 0); // in block_b there are no transactions
+
+    // Coinstatsindex can still access the data from the invalidated block, using the hash and not the height internally
+    // because it is no longer on the main chain
+    std::optional<kernel::CCoinsStats> stats_fork_a_after_invalidation = coin_stats_index.LookUpStats(*initial_tip_block_index);
+    BOOST_CHECK(stats_fork_a_after_invalidation);
+    BOOST_CHECK(stats_fork_a_after_invalidation->total_coinbase_amount == test_chain_height * 50 * COIN);
+    BOOST_CHECK(stats_fork_a_after_invalidation->total_new_outputs_ex_coinbase_amount == block_a_tx_amount);
+
+    // Ensure TSAN always sees the test thread waiting for the notification thread, and
+    // avoid potential false positive reports.
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+
+    // Shutdown sequence (c.f. Shutdown() in init.cpp)
+    coin_stats_index.Stop();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
