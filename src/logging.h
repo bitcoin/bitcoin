@@ -6,6 +6,7 @@
 #ifndef BITCOIN_LOGGING_H
 #define BITCOIN_LOGGING_H
 
+#include <attributes.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
 #include <util/fs.h>
@@ -20,6 +21,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+namespace BCLog {
+class Logger;
+} // namespace BCLog
+
+BCLog::Logger& LogInstance();
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
@@ -73,6 +80,11 @@ namespace BCLog {
         TXPACKAGES  = (CategoryMask{1} << 28),
         ALL         = ~NONE,
     };
+    //! Log level constants. Most code will not need to use these directly and
+    //! can use LogTrace, LogDebug, LogInfo, LogWarning, and LogError macros
+    //! defined below for less verbosity and more efficiency (by not evaluating
+    //! unused format arguments). See macro definitions below or "Logging"
+    //! section in developer-notes.md for more detailed information.
     enum class Level {
         Trace = 0, // High-volume or detailed logging for development/debugging
         Debug,     // Reasonably noisy logging, but still usable in production
@@ -225,9 +237,81 @@ namespace BCLog {
         bool DefaultShrinkDebugFile() const;
     };
 
+    //! Object representing a particular source of log messages. Holds a logging
+    //! category, a reference to the logger object to output to, and a
+    //! formatting hook.
+    struct Context {
+        Logger& logger;
+        LogFlags category;
+
+        explicit Context(Logger& logger, LogFlags category = LogFlags::ALL) : logger{logger}, category{category} {}
+
+        template <typename... Args>
+        std::string Format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args) const
+        {
+            std::string log_msg;
+            try {
+                log_msg = tfm::format(fmt, args...);
+            } catch (tinyformat::format_error& fmterr) {
+                log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
+            }
+            return log_msg;
+        }
+    };
+
+namespace detail {
+//! Internal helper to get log context object from the first macro argument.
+template <bool take_category>
+static const Context& GetContext(const Context& ctx LIFETIMEBOUND) { return ctx; }
+
+template <bool take_category>
+static Context GetContext(LogFlags category)
+{
+    //! Trigger a compile error if a caller tries to pass a category constant as
+    //! a source argument to a logging macro that specifies take_category ==
+    //! false. There is no technical reason why all logging macros cannot accept
+    //! category arguments, but for various reasons, such as (1) not wanting to
+    //! allow users filter by category at high priority levels, and (2) wanting
+    //! to incentivize developers to use lower log levels to avoid log spam,
+    //! passing category constants at higher levels is forbidden.
+    static_assert(take_category, "Cannot pass BCLog::LogFlags category argument to high level Info/Warning/Error logging macros. Please use lower level Debug/Trace macro, or drop the category argument!");
+    return Context{LogInstance(), category};
+}
+
+template <bool take_category>
+static Context GetContext(std::string_view fmt)
+{
+    //! Trigger a compile error if a caller forgets to pass a category constant
+    //! as a source argument to a logging macro that specifies take_category ==
+    //! true. There is no technical reason why all logging macros could not
+    //! allow the category argument to be optional, but low priority level
+    //! macros should specify category in order to only be visible when the
+    //! selected category is enabled. This helps reduce log spam.
+    static_assert(!take_category, "Must pass category to Debug/Trace logging macros.");
+    return Context{LogInstance()};
+}
+
+//! Internal helper to format log arguments and call a logging function.
+template <typename LogFn, typename Context, typename ContextArg, typename... Args>
+requires (!std::is_convertible_v<ContextArg, std::string_view>)
+void Format(LogFn&& log, Context&& ctx, ContextArg&&, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+{
+    log(ctx.Format(fmt, args...));
+}
+template <typename LogFn, typename Context, typename... Args>
+void Format(LogFn&& log, Context&& ctx, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+{
+    log(ctx.Format(fmt, args...));
+}
+} // namespace detail
 } // namespace BCLog
 
-BCLog::Logger& LogInstance();
+//! Determine whether logging is enabled in a context at the specified level.
+template <typename Context>
+static inline bool LogEnabled(const Context& ctx, BCLog::Level level)
+{
+    return ctx.logger.WillLogCategoryLevel(ctx.category, level) && ctx.logger.Enabled();
+}
 
 /** Return true if log accepts specified category, at the specified level. */
 static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
@@ -238,46 +322,65 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
 
-template <typename... Args>
-inline void LogPrintFormatInternal(std::string_view logging_function, std::string_view source_file, const int source_line, const BCLog::LogFlags flag, const BCLog::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
-        }
-        LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line, flag, level);
-    }
-}
 
-#define LogPrintLevel_(category, level, ...) LogPrintFormatInternal(__func__, __FILE__, __LINE__, category, level, __VA_ARGS__)
+//! Internal helper to return first arg in a __VA_ARGS__ pack. This could be
+//! simplified to `#define FirstArg_(arg, ...) arg` if not for a preprocessor
+//! bug in Visual C++.
+#define FirstArg_Impl(arg, ...) arg
+#define FirstArg_(args) FirstArg_Impl args
 
-// Log unconditionally.
-// Be conservative when using functions that unconditionally log to debug.log!
-// It should not be the case that an inbound peer can fill up a user's storage
-// with debug.log entries.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, __VA_ARGS__)
-
-// Deprecated unconditional logging.
-#define LogPrintf(...) LogInfo(__VA_ARGS__)
-
-// Use a macro instead of a function for conditional logging to prevent
-// evaluating arguments when logging for the category is not enabled.
-
-// Log conditionally, prefixing the output with the passed category name and severity level.
-#define LogPrintLevel(category, level, ...)               \
-    do {                                                  \
-        if (LogAcceptCategory((category), (level))) {     \
-            LogPrintLevel_(category, level, __VA_ARGS__); \
-        }                                                 \
+//! Internal helper to conditionally log. Only evaluates arguments when needed.
+#define LogPrint_(level, take_category, ...)                                   \
+    do {                                                                       \
+        const auto& ctx{BCLog::detail::GetContext<take_category>(FirstArg_((__VA_ARGS__)))}; \
+        if (LogEnabled(ctx, (level))) {                                        \
+            const auto& func = __func__;                                       \
+            BCLog::detail::Format([&](auto&& message) {                        \
+                ctx.logger.LogPrintStr(message, func, __FILE__, __LINE__,      \
+                    ctx.category, (level));                                    \
+            }, ctx, __VA_ARGS__);                                              \
+        }                                                                      \
     } while (0)
 
-// Log conditionally, prefixing the output with the passed category name.
-#define LogDebug(category, ...) LogPrintLevel(category, BCLog::Level::Debug, __VA_ARGS__)
-#define LogTrace(category, ...) LogPrintLevel(category, BCLog::Level::Trace, __VA_ARGS__)
+//! Logging macros which output log messages at the specified levels, and avoid
+//! evaluating their arguments if logging is not enabled for the level. The
+//! macros accept an optional log context parameter followed by a printf-style
+//! format string and arguments.
+//!
+//! - LogError(), LogWarning(), and LogInfo() are all enabled by default, so
+//!   they should be called infrequently, in cases where they will not spam the
+//!   log and take up disk space.
+//!
+//! - LogDebug() is enabled when debug logging is enabled, and should be used to
+//!   show messages that can help users troubleshoot issues.
+//!
+//! - LogTrace() is enabled when both debug logging AND tracing are enabled, and
+//!   should be used for fine-grained traces that will be helpful to developers.
+//!
+//! For more information about log levels, see the -debug and -loglevel
+//! documentation, or the "Logging" section of developer notes.
+//!
+//! `LogDebug` and `LogTrace` macros take an initial category argument, so
+//! messages can be filtered by category, but categories should be omitted at
+//! higher levels:
+//
+//!   LogDebug(BCLog::TXRECONCILIATION, "Forget txreconciliation state of peer=%d\n", peer_id);
+//!   LogInfo("Important information, no category.\n");
+//!
+//! Context arguments can also be passed to control log output (see class definition).
+//!
+//!   const BCLog::Context m_log{BCLog::TXRECONCILIATION};
+//!   ...
+//!   LogDebug(m_log, "Forget txreconciliation state of peer=%d\n", peer_id);
+//!
+#define LogError(...) LogPrint_(BCLog::Level::Error, false, __VA_ARGS__)
+#define LogWarning(...) LogPrint_(BCLog::Level::Warning, false, __VA_ARGS__)
+#define LogInfo(...) LogPrint_(BCLog::Level::Info, false, __VA_ARGS__)
+#define LogDebug(...) LogPrint_(BCLog::Level::Debug, true, __VA_ARGS__)
+#define LogTrace(...) LogPrint_(BCLog::Level::Trace, true, __VA_ARGS__)
+#define LogPrintLevel(ctx, level, ...) LogPrint_(level, true, ctx, __VA_ARGS__)
+
+//! Deprecated macros.
+#define LogPrintf(...) LogInfo(__VA_ARGS__)
 
 #endif // BITCOIN_LOGGING_H

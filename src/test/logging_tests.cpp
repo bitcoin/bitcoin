@@ -76,6 +76,113 @@ struct LogSetup : public BasicTestingSetup {
     }
 };
 
+//! Test logging to local logger.
+BOOST_AUTO_TEST_CASE(logging_local_logger)
+{
+    BCLog::Logger logger;
+    logger.m_log_timestamps = false;
+    logger.EnableCategory(BCLog::LogFlags::ALL);
+    logger.SetLogLevel(BCLog::Level::Trace);
+    logger.StartLogging();
+
+    std::vector<std::string> messages;
+    logger.PushBackCallback([&](const std::string& s) { messages.push_back(s); });
+
+    BCLog::Context log{logger, BCLog::NET};
+    LogError(log, "error %s\n", "arg");
+    LogWarning(log, "warning %s\n", "arg");
+    LogInfo(log, "info %s\n", "arg");
+    LogDebug(log, "debug %s\n", "arg");
+    LogTrace(log, "trace %s\n", "arg");
+
+    constexpr auto expected{std::to_array({
+        "[net:error] error arg\n",
+        "[net:warning] warning arg\n",
+        "[net:info] info arg\n",
+        "[net] debug arg\n",
+        "[net:trace] trace arg\n",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(messages.begin(), messages.end(), expected.begin(), expected.end());
+}
+
+//! Test logging to global logger with different types of context arguments.
+BOOST_FIXTURE_TEST_CASE(logging_context_args, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetLogLevel(BCLog::Level::Trace);
+
+    // Test logging with no context arguments.
+    LogError("error\n");
+    LogWarning("warning\n");
+    LogInfo("info\n");
+    // LogDebug("debug\n"); // Not allowed because category is required!
+    // LogTrace("trace\n"); // Not allowed because category is required!
+    LogError("error %s\n", "arg");
+    LogWarning("warning %s\n", "arg");
+    LogInfo("info %s\n", "arg");
+    // LogDebug("debug %s\n", "arg"); // Not allowed because category is required!
+    // LogTrace("trace %s\n", "arg"); // Not allowed because category is required!
+
+    // Test logging with category constant arguments.
+    // LogError(BCLog::NET, "error\n"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning\n"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info\n"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug\n");
+    LogTrace(BCLog::NET, "trace\n");
+    // LogError(BCLog::NET, "error %s\n", "arg"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning %s\n", "arg"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info %s\n", "arg"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug %s\n", "arg");
+    LogTrace(BCLog::NET, "trace %s\n", "arg");
+
+    // Test logging with context object.
+    BCLog::Context log{LogInstance(), BCLog::TOR};
+    LogError(log, "error\n");
+    LogWarning(log, "warning\n");
+    LogInfo(log, "info\n");
+    LogDebug(log, "debug\n");
+    LogTrace(log, "trace\n");
+    LogError(log, "error %s\n", "arg");
+    LogWarning(log, "warning %s\n", "arg");
+    LogInfo(log, "info %s\n", "arg");
+    LogDebug(log, "debug %s\n", "arg");
+    LogTrace(log, "trace %s\n", "arg");
+
+    constexpr auto expected{std::to_array({
+        "[error] error",
+        "[warning] warning",
+        "info",
+
+        "[error] error arg",
+        "[warning] warning arg",
+        "info arg",
+
+        "[net] debug",
+        "[net:trace] trace",
+
+        "[net] debug arg",
+        "[net:trace] trace arg",
+
+        "[tor:error] error",
+        "[tor:warning] warning",
+        "[tor:info] info",
+        "[tor] debug",
+        "[tor:trace] trace",
+
+        "[tor:error] error arg",
+        "[tor:warning] warning arg",
+        "[tor:info] info arg",
+        "[tor] debug arg",
+        "[tor:trace] trace arg",
+    })};
+    std::ifstream file{tmp_log_path};
+    std::vector<std::string> log_lines;
+    for (std::string log; std::getline(file, log);) {
+        log_lines.push_back(log);
+    }
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
