@@ -19,6 +19,7 @@
 #include <util/threadinterrupt.h>
 
 #ifdef USE_UPNP
+#include <cstddef>  // workaround missing include in miniupnpc 2.3.3
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
