@@ -10,6 +10,7 @@ define $(package)_set_vars
   $(package)_config_opts += -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE
   $(package)_config_opts += -DCMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE -DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE
   $(package)_config_opts += -DCMAKE_DISABLE_FIND_PACKAGE_BrotliDec=TRUE
+  $(package)_config_opts += -DCMAKE_POLICY_VERSION_MINIMUM=3.22
 endef
 
 define $(package)_config_cmds
