@@ -37,7 +37,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fuzz)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/util)
 
 file(GLOB_RECURSE functional_tests RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} functional/*)
-foreach(script ${functional_tests} fuzz/test_runner.py util/rpcauth-test.py util/test_runner.py)
+foreach(script ${functional_tests} fuzz/test_runner.py util/rpcauth-test.py)
   if(CMAKE_HOST_WIN32)
     set(symlink)
   else()

@@ -594,7 +594,7 @@ if(Python3_EXECUTABLE)
   set(PYTHON_COMMAND ${Python3_EXECUTABLE})
 else()
   list(APPEND configure_warnings
-    "Minimum required Python not found. Utils and rpcauth tests are disabled."
+    "Minimum required Python not found. Rpcauth tests are disabled."
   )
 endif()
 
