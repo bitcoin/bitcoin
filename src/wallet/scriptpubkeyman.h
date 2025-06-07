@@ -112,12 +112,6 @@ public:
      */
     virtual std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) { return {}; }
 
-    /** Sets up the key generation stuff, i.e. generates new HD seeds and sets them as active.
-      * Returns false if already setup or setup fails, true if setup is successful
-      * Set force=true to make it re-setup if already setup, used for upgrades
-      */
-    virtual bool SetupGeneration(bool force = false) { return false; }
-
     /* Returns true if HD is enabled */
     virtual bool IsHDEnabled() const { return false; }
 
