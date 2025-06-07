@@ -285,19 +285,19 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         paths = types.SimpleNamespace()
         binaries = {
-            "bitcoind": ("bitcoind", "BITCOIND"),
-            "bitcoin-cli": ("bitcoincli", "BITCOINCLI"),
-            "bitcoin-util": ("bitcoinutil", "BITCOINUTIL"),
-            "bitcoin-chainstate": ("bitcoinchainstate", "BITCOINCHAINSTATE"),
-            "bitcoin-wallet": ("bitcoinwallet", "BITCOINWALLET"),
+            "bitcoind": "BITCOIND",
+            "bitcoin-cli": "BITCOINCLI",
+            "bitcoin-util": "BITCOINUTIL",
+            "bitcoin-chainstate": "BITCOINCHAINSTATE",
+            "bitcoin-wallet": "BITCOINWALLET",
         }
-        for binary, [attribute_name, env_variable_name] in binaries.items():
+        for binary, env_variable_name in binaries.items():
             default_filename = os.path.join(
                 self.config["environment"]["BUILDDIR"],
                 "bin",
                 binary + self.config["environment"]["EXEEXT"],
             )
-            setattr(paths, attribute_name, os.getenv(env_variable_name, default=default_filename))
+            setattr(paths, env_variable_name.lower(), os.getenv(env_variable_name, default=default_filename))
         # BITCOIN_CMD environment variable can be specified to invoke bitcoin
         # wrapper binary instead of other executables.
         paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
