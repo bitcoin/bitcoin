@@ -29,21 +29,6 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
     return avoid_reuse;
 }
 
-/** Used by RPC commands that have an include_watchonly parameter.
- *  We default to true for watchonly wallets if include_watchonly isn't
- *  explicitly set.
- */
-bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wallet)
-{
-    if (include_watchonly.isNull()) {
-        // if include_watchonly isn't explicitly set, then check if we have a watchonly wallet
-        return wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-    }
-
-    // otherwise return whatever include_watchonly was set to
-    return include_watchonly.get_bool();
-}
-
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
@@ -109,7 +94,10 @@ void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, 
 {
     UniValue parent_descs(UniValue::VARR);
     for (const auto& desc: wallet.GetWalletDescriptors(script_pubkey)) {
-        parent_descs.push_back(desc.descriptor->ToString());
+        std::string desc_str;
+        FlatSigningProvider dummy_provider;
+        if (!CHECK_NONFATAL(desc.descriptor->ToNormalizedString(dummy_provider, desc_str, &desc.cache))) continue;
+        parent_descs.push_back(desc_str);
     }
     entry.pushKV("parent_descs", std::move(parent_descs));
 }
