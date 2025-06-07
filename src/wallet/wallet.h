@@ -160,14 +160,24 @@ static constexpr uint64_t KNOWN_WALLET_FLAGS =
 static constexpr uint64_t MUTABLE_WALLET_FLAGS =
         WALLET_FLAG_AVOID_REUSE;
 
-static const std::map<std::string,WalletFlags> WALLET_FLAG_MAP{
-    {"avoid_reuse", WALLET_FLAG_AVOID_REUSE},
-    {"blank", WALLET_FLAG_BLANK_WALLET},
-    {"key_origin_metadata", WALLET_FLAG_KEY_ORIGIN_METADATA},
-    {"last_hardened_xpub_cached", WALLET_FLAG_LAST_HARDENED_XPUB_CACHED},
-    {"disable_private_keys", WALLET_FLAG_DISABLE_PRIVATE_KEYS},
-    {"descriptor_wallet", WALLET_FLAG_DESCRIPTORS},
-    {"external_signer", WALLET_FLAG_EXTERNAL_SIGNER}
+static const std::map<WalletFlags, std::string> WALLET_FLAG_TO_STRING{
+    {WALLET_FLAG_AVOID_REUSE, "avoid_reuse"},
+    {WALLET_FLAG_BLANK_WALLET, "blank"},
+    {WALLET_FLAG_KEY_ORIGIN_METADATA, "key_origin_metadata"},
+    {WALLET_FLAG_LAST_HARDENED_XPUB_CACHED, "last_hardened_xpub_cached"},
+    {WALLET_FLAG_DISABLE_PRIVATE_KEYS, "disable_private_keys"},
+    {WALLET_FLAG_DESCRIPTORS, "descriptor_wallet"},
+    {WALLET_FLAG_EXTERNAL_SIGNER, "external_signer"}
+};
+
+static const std::map<std::string, WalletFlags> STRING_TO_WALLET_FLAG{
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_AVOID_REUSE), WALLET_FLAG_AVOID_REUSE},
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_BLANK_WALLET), WALLET_FLAG_BLANK_WALLET},
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_KEY_ORIGIN_METADATA), WALLET_FLAG_KEY_ORIGIN_METADATA},
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED), WALLET_FLAG_LAST_HARDENED_XPUB_CACHED},
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_DISABLE_PRIVATE_KEYS), WALLET_FLAG_DISABLE_PRIVATE_KEYS},
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_DESCRIPTORS), WALLET_FLAG_DESCRIPTORS},
+    {WALLET_FLAG_TO_STRING.at(WALLET_FLAG_EXTERNAL_SIGNER), WALLET_FLAG_EXTERNAL_SIGNER}
 };
 
 /** A wrapper to reserve an address from a wallet
@@ -293,6 +303,18 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+// Struct containing all of the info from WalletDescriptor, except with the descriptor as a string,
+// and without its ID or cache.
+// Used when exporting descriptors from the wallet.
+struct WalletDescInfo {
+    std::string descriptor;
+    uint64_t creation_time;
+    bool active;
+    std::optional<bool> internal;
+    std::optional<std::pair<int64_t,int64_t>> range;
+    int64_t next_index;
+};
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -333,8 +355,8 @@ private:
      */
     typedef std::unordered_multimap<COutPoint, Txid, SaltedOutpointHasher> TxSpends;
     TxSpends mapTxSpends GUARDED_BY(cs_wallet);
-    void AddToSpends(const COutPoint& outpoint, const Txid& txid, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    void AddToSpends(const CWalletTx& wtx, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AddToSpends(const COutPoint& outpoint, const Txid& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AddToSpends(const CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Add a transaction to the wallet, or update it.  confirm.block_* should
@@ -497,8 +519,10 @@ public:
     /** Set of Coins owned by this wallet that we won't try to spend from. A
      * Coin may be locked if it has already been used to fund a transaction
      * that hasn't confirmed yet. We wouldn't consider the Coin spent already,
-     * but also shouldn't try to use it again. */
-    std::set<COutPoint> setLockedCoins GUARDED_BY(cs_wallet);
+     * but also shouldn't try to use it again.
+     * bool to track whether this locked coin is persisted to disk.
+     */
+    std::map<COutPoint, bool> m_locked_coins GUARDED_BY(cs_wallet);
 
     /** Registered interfaces::Chain::Notifications handler. */
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
@@ -546,8 +570,9 @@ public:
     util::Result<void> DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool IsLockedCoin(const COutPoint& output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool LockCoin(const COutPoint& output, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool UnlockCoin(const COutPoint& output, WalletBatch* batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LoadLockedCoin(const COutPoint& coin, bool persistent) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool LockCoin(const COutPoint& output, bool persist) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ListLockedCoins(std::vector<COutPoint>& vOutpts) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
@@ -904,6 +929,8 @@ public:
     void InitWalletFlags(uint64_t flags);
     /** Loads the flags into the wallet. (used by LoadWallet) */
     bool LoadWalletFlags(uint64_t flags);
+    //! Retrieve all of the wallet's flags
+    uint64_t GetWalletFlags() const;
 
     /** Returns a bracketed wallet name for displaying in logs, will return [default wallet] if the wallet has no name */
     std::string GetDisplayName() const override
@@ -1046,6 +1073,13 @@ public:
     //! Find the private key for the given key id from the wallet's descriptors, if available
     //! Returns nullopt when no descriptor has the key or if the wallet is locked.
     std::optional<CKey> GetKey(const CKeyID& keyid) const;
+
+    //! Export the descriptors from this wallet so that they can be imported elsewhere
+    util::Result<std::vector<WalletDescInfo>> ExportDescriptors(bool export_private) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Make a new watchonly wallet file containing the public descriptors from this wallet
+    //! The exported watchonly wallet file will be named and placed at the path specified in 'destination'
+    util::Result<std::string> ExportWatchOnlyWallet(const fs::path& destination, WalletContext& context) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
