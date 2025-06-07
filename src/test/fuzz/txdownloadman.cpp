@@ -38,7 +38,6 @@ static TxValidationResult TESTED_TX_RESULTS[] = {
     TxValidationResult::TX_MISSING_INPUTS,
     TxValidationResult::TX_PREMATURE_SPEND,
     TxValidationResult::TX_WITNESS_MUTATED,
-    TxValidationResult::TX_WITNESS_STRIPPED,
     TxValidationResult::TX_CONFLICT,
     TxValidationResult::TX_MEMPOOL_POLICY,
     // Skip TX_NO_MEMPOOL
