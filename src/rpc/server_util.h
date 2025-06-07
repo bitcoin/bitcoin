@@ -12,10 +12,10 @@
 class AddrMan;
 class ArgsManager;
 class CBlockIndex;
-class CBlockPolicyEstimator;
 class CConnman;
 class CTxMemPool;
 class ChainstateManager;
+class FeeRateForecasterManager;
 class PeerManager;
 class BanMan;
 namespace node {
@@ -34,8 +34,8 @@ ArgsManager& EnsureArgsman(const node::NodeContext& node);
 ArgsManager& EnsureAnyArgsman(const std::any& context);
 ChainstateManager& EnsureChainman(const node::NodeContext& node);
 ChainstateManager& EnsureAnyChainman(const std::any& context);
-CBlockPolicyEstimator& EnsureFeeEstimator(const node::NodeContext& node);
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
+FeeRateForecasterManager& EnsureForecasterMan(const node::NodeContext& node);
+FeeRateForecasterManager& EnsureAnyForecasterMan(const std::any& context);
 CConnman& EnsureConnman(const node::NodeContext& node);
 interfaces::Mining& EnsureMining(const node::NodeContext& node);
 PeerManager& EnsurePeerman(const node::NodeContext& node);
