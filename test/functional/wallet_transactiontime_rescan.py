@@ -138,6 +138,34 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         set_node_times(self.nodes, cur_time + ten_days + ten_days + ten_days + ten_days)
         self.generatetoaddress(minernode, 10, m1)
 
+        # skip rescan internally it sets timestamp as never
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": "never"},
+                {"desc": wo2_desc, "timestamp": "never"},
+                {"desc": wo3_desc, "timestamp": "never"},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+        # check user has 0 balance and no transactions
+        assert_equal(restorewo_wallet.getbalance(), 0)
+        assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan will continue if any of the descriptors has now or valid timestamp
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": "now"},
+                {"desc": wo2_desc, "timestamp": "never"},
+                {"desc": wo3_desc, "timestamp": "now"},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+
+        # check user has 0 balance and no transactions
+        assert_equal(restorewo_wallet.getbalance(), 0)
+        assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan will continue if any of the descriptors has now as timestamp
         import_res = restorewo_wallet.importdescriptors(
             [
                 {"desc": wo1_desc, "timestamp": "now"},
@@ -147,9 +175,41 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         )
         assert_equal(all([r["success"] for r in import_res]), True)
 
-        # check user has 0 balance and no transactions
+        # since we are scanning using timestamp as now it will start scan median time
+        # so there is no tranaction. Check user has 0 balance and no transactions
         assert_equal(restorewo_wallet.getbalance(), 0)
         assert_equal(len(restorewo_wallet.listtransactions()), 0)
+
+        # rescan with timestamp as 1 internally it sets timestamp as provided value
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": 1},
+                {"desc": wo2_desc, "timestamp": 1},
+                {"desc": wo3_desc, "timestamp": 1},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+
+        # check user has balance and transactions
+        # It will scan timestamp since 1 and there are some transactions aviable during scan
+        assert_equal(restorewo_wallet.getbalance(), 16)
+        assert_equal(len(restorewo_wallet.listtransactions()), 3)
+
+        # rescan will continue if any of the descriptors has now as timestamp
+        import_res = restorewo_wallet.importdescriptors(
+            [
+                {"desc": wo1_desc, "timestamp": "now"},
+                {"desc": wo2_desc, "timestamp": "now"},
+                {"desc": wo3_desc, "timestamp": "now"},
+            ]
+        )
+        assert_equal(all([r["success"] for r in import_res]), True)
+
+        # check user has balance and transactions
+        # Previously we did scan using timestamp: 1 so we already have transactions and balance will be updated
+        # so the wallet balance is remain same
+        assert_equal(restorewo_wallet.getbalance(), 16)
+        assert_equal(len(restorewo_wallet.listtransactions()), 3)
 
         # proceed to rescan, first with an incomplete one, then with a full rescan
         self.log.info('Rescan last history part')
