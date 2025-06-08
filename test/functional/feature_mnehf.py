@@ -42,7 +42,7 @@ class MnehfTest(DashTestFramework):
 
         self.restart_node(0)
         for mn in self.mninfo: # type: MasternodeInfo
-            index = mn.node.index
+            index = mn.nodeIdx
             self.stop_node(index)
             self.start_masternode(mn)
         for i in range(1, self.num_nodes):

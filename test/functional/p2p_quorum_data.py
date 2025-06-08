@@ -124,12 +124,12 @@ class QuorumDataMessagesTest(DashTestFramework):
         self.set_dash_test_params(4, 3, extra_args=extra_args)
 
     def restart_mn(self, mn: MasternodeInfo, reindex=False):
-        args = self.extra_args[mn.node.index] + ['-masternodeblsprivkey=%s' % mn.keyOperator]
+        args = self.extra_args[mn.nodeIdx] + ['-masternodeblsprivkey=%s' % mn.keyOperator]
         if reindex:
             args.append('-reindex')
-        self.restart_node(mn.node.index, args)
+        self.restart_node(mn.nodeIdx, args)
         force_finish_mnsync(mn.node)
-        self.connect_nodes(mn.node.index, 0)
+        self.connect_nodes(mn.nodeIdx, 0)
         self.sync_blocks()
 
     def run_test(self):

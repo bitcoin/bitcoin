@@ -75,20 +75,20 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def close_mn_port(self, mn: MasternodeInfo):
         self.deaf_mns.append(mn)
-        self.stop_node(mn.node.index)
+        self.stop_node(mn.nodeIdx)
         self.start_masternode(mn, ["-listen=0", "-nobind"])
-        self.connect_nodes(mn.node.index, 0)
+        self.connect_nodes(mn.nodeIdx, 0)
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo: # type: MasternodeInfo
             if self.deaf_mns.count(mn2) == 0:
-                self.connect_nodes(mn.node.index, mn2.node.index)
+                self.connect_nodes(mn.nodeIdx, mn2.node.index)
         self.reset_probe_timeouts()
         return False, False
 
     def force_old_mn_proto(self, mn: MasternodeInfo):
-        self.stop_node(mn.node.index)
+        self.stop_node(mn.nodeIdx)
         self.start_masternode(mn, ["-pushversion=70216"])
-        self.connect_nodes(mn.node.index, 0)
+        self.connect_nodes(mn.nodeIdx, 0)
         self.reset_probe_timeouts()
         return False, True
 
@@ -210,11 +210,11 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 self.nodes[0].sendtoaddress(addr, 0.1)
                 self.nodes[0].protx('update_service', mn.proTxHash, f'127.0.0.1:{mn.nodePort}', mn.keyOperator, "", addr)
                 if restart:
-                    self.stop_node(mn.node.index)
+                    self.stop_node(mn.nodeIdx)
                     self.start_masternode(mn)
                 else:
                     mn.node.setnetworkactive(True)
-                self.connect_nodes(mn.node.index, 0)
+                self.connect_nodes(mn.nodeIdx, 0)
 
         # syncing blocks only since node 0 has txes waiting to be mined
         self.sync_blocks()
@@ -230,7 +230,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
-            self.connect_nodes(mn.node.index, 0)
+            self.connect_nodes(mn.nodeIdx, 0)
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe

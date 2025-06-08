@@ -188,7 +188,7 @@ class LLMQSigningTest(DashTestFramework):
             assert_sigs_nochange(False, False, False, 3)
             # Need to re-connect so that it later gets the recovered sig
             mn.node.setnetworkactive(True)
-            self.connect_nodes(mn.node.index, 0)
+            self.connect_nodes(mn.nodeIdx, 0)
             force_finish_mnsync(mn.node)
             # Make sure intra-quorum connections were also restored
             self.bump_mocktime(1)  # need this to bypass quorum connection retry timeout
