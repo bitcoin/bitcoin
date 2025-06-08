@@ -6,8 +6,6 @@
 # race (TODO fix)
 race:LoadWallet
 race:DatabaseBatch
-race:zmq::*
-race:bitcoin-qt
 
 # deadlock (TODO fix)
 # To reproduce, see:
@@ -17,12 +15,17 @@ deadlock:Chainstate::ConnectTip
 # Intentional deadlock in tests
 deadlock:sync_tests::potential_deadlock_detected
 
-# Wildcard for all gui tests, should be replaced with non-wildcard suppressions
+# Wildcard for all of the gui, should be replaced with non-wildcard suppressions
+race:bitcoin-qt
 race:src/qt/test/*
 deadlock:src/qt/test/*
 
 # External libraries
+# ------------------
 race:libzmq
+
+# To reproduce, build from depends with CFLAGS='-O0 -g' CXXFLAGS='-O0 -g'
+race:zmq::*
 
 # Intermittent issues
 # -------------------
