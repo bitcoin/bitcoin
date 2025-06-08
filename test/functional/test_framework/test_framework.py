@@ -1136,8 +1136,9 @@ MASTERNODE_COLLATERAL = 1000
 EVONODE_COLLATERAL = 4000
 
 class MasternodeInfo:
-    def __init__(self, proTxHash, ownerAddr, votingAddr, rewards_address, operator_reward, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout, addr, evo=False):
+    def __init__(self, proTxHash, fundsAddr, ownerAddr, votingAddr, rewards_address, operator_reward, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout, addr, evo=False):
         self.proTxHash = proTxHash
+        self.fundsAddr = fundsAddr
         self.ownerAddr = ownerAddr
         self.votingAddr = votingAddr
         self.rewards_address = rewards_address
@@ -1358,7 +1359,7 @@ class DashTestFramework(BitcoinTestFramework):
         tip = self.generate(self.nodes[0], 1)[0]
 
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
-        mn_info = MasternodeInfo(protx_result, owner_address, voting_address, reward_address, operatorReward, bls['public'], bls['secret'], collateral_address, collateral_txid, collateral_vout, ipAndPort, evo)
+        mn_info = MasternodeInfo(protx_result, funds_address, owner_address, voting_address, reward_address, operatorReward, bls['public'], bls['secret'], collateral_address, collateral_txid, collateral_vout, ipAndPort, evo)
         self.mninfo.append(mn_info)
 
         mn_type_str = "EvoNode" if evo else "MN"
@@ -1406,11 +1407,11 @@ class DashTestFramework(BitcoinTestFramework):
         v19_active = softfork_active(self.nodes[0], 'v19')
 
         bls = self.nodes[0].bls('generate') if v19_active else self.nodes[0].bls('generate', True)
-        address = self.nodes[0].getnewaddress()
+        fundsAddr = self.nodes[0].getnewaddress()
+        collateralAddr = self.nodes[0].getnewaddress()
 
         collateral_amount = MASTERNODE_COLLATERAL
-        txid = None
-        txid = self.nodes[0].sendtoaddress(address, collateral_amount)
+        txid = self.nodes[0].sendtoaddress(fundsAddr, collateral_amount)
         collateral_vout = 0
         if not register_fund:
             txraw = self.nodes[0].getrawtransaction(txid, True)
@@ -1421,7 +1422,7 @@ class DashTestFramework(BitcoinTestFramework):
             self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
         # send to same address to reserve some funds for fees
-        self.nodes[0].sendtoaddress(address, 0.001)
+        self.nodes[0].sendtoaddress(fundsAddr, 0.001)
 
         ownerAddr = self.nodes[0].getnewaddress()
         rewardsAddr = self.nodes[0].getnewaddress()
@@ -1434,10 +1435,10 @@ class DashTestFramework(BitcoinTestFramework):
         submit = (idx % 4) < 2
 
         if register_fund:
-            protx_result = self.nodes[0].protx('register_fund' if v19_active else 'register_fund_legacy', address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
+            protx_result = self.nodes[0].protx('register_fund' if v19_active else 'register_fund_legacy', collateralAddr, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, fundsAddr, submit)
         else:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            protx_result = self.nodes[0].protx('register' if v19_active else 'register_legacy', txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
+            protx_result = self.nodes[0].protx('register' if v19_active else 'register_legacy', txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, fundsAddr, submit)
 
         if submit:
             proTxHash = protx_result
@@ -1447,9 +1448,9 @@ class DashTestFramework(BitcoinTestFramework):
         if operatorReward > 0:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             operatorPayoutAddress = self.nodes[0].getnewaddress()
-            self.nodes[0].protx('update_service', proTxHash, ipAndPort, bls['secret'], operatorPayoutAddress, address)
+            self.nodes[0].protx('update_service', proTxHash, ipAndPort, bls['secret'], operatorPayoutAddress, fundsAddr)
 
-        self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, rewardsAddr, operatorReward, bls['public'], bls['secret'], address, txid, collateral_vout, ipAndPort, False))
+        self.mninfo.append(MasternodeInfo(proTxHash, fundsAddr, ownerAddr, votingAddr, rewardsAddr, operatorReward, bls['public'], bls['secret'], collateralAddr, txid, collateral_vout, ipAndPort, False))
 
         self.log.info("Prepared MN %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
 
