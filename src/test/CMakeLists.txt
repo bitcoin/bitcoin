@@ -113,6 +113,7 @@ add_executable(test_bitcoin
   txvalidation_tests.cpp
   txvalidationcache_tests.cpp
   uint256_tests.cpp
+  util_malloc_usage_tests.cpp
   util_string_tests.cpp
   util_tests.cpp
   util_threadnames_tests.cpp

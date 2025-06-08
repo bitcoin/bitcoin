@@ -184,25 +184,33 @@ template<typename X>
 struct unordered_node : private X
 {
 private:
-    void* ptr;
-    void* ptr2;
+    void* next;
+    void* prev;
 };
 
-// The memory used by an unordered_set or unordered map is the sum of the
+// The memory used by an unordered_set or unordered_map is the sum of the
 // sizes of the individual nodes (which are separately allocated) plus
 // the size of the bucket array (which is a single allocation).
 // Empirically, each element of the bucket array consists of two pointers
 // on some platforms (Windows and macOS), so be conservative.
+struct unordered_bucket_element
+{
+    void* next;
+    void* prev;
+};
+
 template<typename X, typename Y>
 static inline size_t DynamicUsage(const std::unordered_set<X, Y>& s)
 {
-    return MallocUsage(sizeof(unordered_node<X>)) * s.size() + MallocUsage(2 * sizeof(void*) * s.bucket_count());
+    return MallocUsage(sizeof(unordered_node<X>)) * s.size() +
+           MallocUsage(sizeof(unordered_bucket_element) * s.bucket_count());
 }
 
 template<typename X, typename Y, typename Z>
 static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
 {
-    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() + MallocUsage(2 * sizeof(void*) * m.bucket_count());
+    return MallocUsage(sizeof(unordered_node<std::pair<const X, Y> >)) * m.size() +
+           MallocUsage(sizeof(unordered_bucket_element) * m.bucket_count());
 }
 
 template <class Key, class T, class Hash, class Pred, std::size_t MAX_BLOCK_SIZE_BYTES, std::size_t ALIGN_BYTES>
