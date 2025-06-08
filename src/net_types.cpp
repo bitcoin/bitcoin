@@ -2,73 +2,146 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <net_types.h>
+#include <netgroup.h>
 
+#include <hash.h>
 #include <logging.h>
-#include <netaddress.h>
-#include <netbase.h>
-#include <univalue.h>
+#include <util/asmap.h>
 
-static const char* BANMAN_JSON_VERSION_KEY{"version"};
-
-CBanEntry::CBanEntry(const UniValue& json)
-    : nVersion(json[BANMAN_JSON_VERSION_KEY].getInt<int>()),
-      nCreateTime(json["ban_created"].getInt<int64_t>()),
-      nBanUntil(json["banned_until"].getInt<int64_t>())
+uint256 NetGroupManager::GetAsmapChecksum() const
 {
+    if (m_asmap.empty()) return {};
+    return (HashWriter{} << m_asmap).GetHash();
 }
 
-UniValue CBanEntry::ToJson() const
+std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) const
 {
-    UniValue json(UniValue::VOBJ);
-    json.pushKV(BANMAN_JSON_VERSION_KEY, nVersion);
-    json.pushKV("ban_created", nCreateTime);
-    json.pushKV("banned_until", nBanUntil);
-    return json;
-}
-
-static const char* BANMAN_JSON_ADDR_KEY = "address";
-
-/**
- * Convert a `banmap_t` object to a JSON array.
- * @param[in] bans Bans list to convert.
- * @return a JSON array, similar to the one returned by the `listbanned` RPC. Suitable for
- * passing to `BanMapFromJson()`.
- */
-UniValue BanMapToJson(const banmap_t& bans)
-{
-    UniValue bans_json(UniValue::VARR);
-    for (const auto& it : bans) {
-        const auto& address = it.first;
-        const auto& ban_entry = it.second;
-        UniValue j = ban_entry.ToJson();
-        j.pushKV(BANMAN_JSON_ADDR_KEY, address.ToString());
-        bans_json.push_back(std::move(j));
-    }
-    return bans_json;
-}
-
-/**
- * Convert a JSON array to a `banmap_t` object.
- * @param[in] bans_json JSON to convert, must be as returned by `BanMapToJson()`.
- * @param[out] bans Bans list to create from the JSON.
- * @throws std::runtime_error if the JSON does not have the expected fields or they contain
- * unparsable values.
- */
-void BanMapFromJson(const UniValue& bans_json, banmap_t& bans)
-{
-    for (const auto& ban_entry_json : bans_json.getValues()) {
-        const int version{ban_entry_json[BANMAN_JSON_VERSION_KEY].getInt<int>()};
-        if (version != CBanEntry::CURRENT_VERSION) {
-            LogPrintf("Dropping entry with unknown version (%s) from ban list\n", version);
-            continue;
+    std::vector<unsigned char> vchRet;
+    
+    // Try to get ASN first if asmap is available
+    if (const uint32_t asn = GetMappedAS(address); asn != 0) {
+        vchRet.push_back(NET_IPV6); // IPv4 and IPv6 with same ASN in same bucket
+        for (int i = 0; i < 4; ++i) {
+            vchRet.push_back(static_cast<unsigned char>((asn >> (8 * i)) & 0xFF));
         }
-        const auto& subnet_str = ban_entry_json[BANMAN_JSON_ADDR_KEY].get_str();
-        const CSubNet subnet{LookupSubNet(subnet_str)};
-        if (!subnet.IsValid()) {
-            LogPrintf("Dropping entry with unparseable address or subnet (%s) from ban list\n", subnet_str);
-            continue;
-        }
-        bans.insert_or_assign(subnet, CBanEntry{ban_entry_json});
+        return vchRet;
     }
+
+    const uint32_t net_class = address.GetNetClass();
+    vchRet.push_back(static_cast<unsigned char>(net_class));
+
+    if (address.IsLocal() || !address.IsRoutable()) {
+        // All local or unroutable addresses in same group
+        return vchRet;
+    }
+
+    if (address.IsInternal()) {
+        // Internal addresses get their own group
+        const auto& prefix = INTERNAL_IN_IPV6_PREFIX;
+        const auto addr_bytes = address.GetAddrBytes();
+        vchRet.insert(vchRet.end(), addr_bytes.begin() + prefix.size(), 
+                     addr_bytes.begin() + prefix.size() + ADDR_INTERNAL_SIZE);
+        return vchRet;
+    }
+
+    if (address.HasLinkedIPv4()) {
+        // IPv4 addresses use /16 groups
+        const uint32_t ipv4 = address.GetLinkedIPv4();
+        vchRet.push_back(static_cast<unsigned char>((ipv4 >> 24) & 0xFF));
+        vchRet.push_back(static_cast<unsigned char>((ipv4 >> 16) & 0xFF));
+        return vchRet;
+    }
+
+    // Handle other address types
+    int nBits = 0;
+    int nStartByte = 0;
+
+    if (address.IsTor() || address.IsI2P()) {
+        nBits = 4;
+    } 
+    else if (address.IsCJDNS()) {
+        nBits = 12;
+        nStartByte = 1; // Skip constant prefix byte
+    } 
+    else if (address.IsHeNet()) {
+        nBits = 36;
+    } 
+    else {
+        nBits = 32; // Default for other IPv6
+    }
+
+    // Add the relevant address bits
+    const auto addr_bytes = address.GetAddrBytes();
+    const size_t num_bytes = nBits / 8;
+    
+    if (num_bytes > 0) {
+        vchRet.insert(vchRet.end(), addr_bytes.begin() + nStartByte, 
+                     addr_bytes.begin() + nStartByte + num_bytes);
+    }
+
+    // Handle remaining bits
+    if (const int remaining_bits = nBits % 8; remaining_bits > 0) {
+        assert(num_bytes + nStartByte < addr_bytes.size());
+        vchRet.push_back(addr_bytes[num_bytes + nStartByte] | ((1 << (8 - remaining_bits)) - 1));
+    }
+
+    return vchRet;
+}
+
+uint32_t NetGroupManager::GetMappedAS(const CNetAddr& address) const
+{
+    if (m_asmap.empty()) return 0;
+
+    const uint32_t net_class = address.GetNetClass();
+    if (net_class != NET_IPV4 && net_class != NET_IPV6) return 0;
+
+    std::vector<bool> ip_bits(128);
+    const auto addr_bytes = address.GetAddrBytes();
+
+    if (address.HasLinkedIPv4()) {
+        // Handle IPv4-mapped IPv6 addresses
+        for (int byte_i = 0; byte_i < 12; ++byte_i) {
+            const uint8_t byte = IPV4_IN_IPV6_PREFIX[byte_i];
+            for (int bit_i = 0; bit_i < 8; ++bit_i) {
+                ip_bits[byte_i * 8 + bit_i] = (byte >> (7 - bit_i)) & 1;
+            }
+        }
+        
+        const uint32_t ipv4 = address.GetLinkedIPv4();
+        for (int i = 0; i < 32; ++i) {
+            ip_bits[96 + i] = (ipv4 >> (31 - i)) & 1;
+        }
+    } else {
+        // Handle full IPv6 addresses
+        for (int byte_i = 0; byte_i < 16; ++byte_i) {
+            const uint8_t byte = addr_bytes[byte_i];
+            for (int bit_i = 0; bit_i < 8; ++bit_i) {
+                ip_bits[byte_i * 8 + bit_i] = (byte >> (7 - bit_i)) & 1;
+            }
+        }
+    }
+
+    return Interpret(m_asmap, ip_bits);
+}
+
+void NetGroupManager::ASMapHealthCheck(const std::vector<CNetAddr>& clearnet_addrs) const
+{
+    std::set<uint32_t> clearnet_asns;
+    int unmapped_count = 0;
+
+    for (const auto& addr : clearnet_addrs) {
+        if (const uint32_t asn = GetMappedAS(addr); asn != 0) {
+            clearnet_asns.insert(asn);
+        } else {
+            ++unmapped_count;
+        }
+    }
+
+    LogPrintf("ASMap Health Check: %i clearnet peers are mapped to %i ASNs with %i peers being unmapped\n", 
+              clearnet_addrs.size(), clearnet_asns.size(), unmapped_count);
+}
+
+bool NetGroupManager::UsingASMap() const
+{
+    return !m_asmap.empty();
 }
