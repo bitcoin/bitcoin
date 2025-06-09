@@ -1153,6 +1153,10 @@ class MasternodeInfo:
     nodeIdx: Optional[int] = None
     friendlyName: Optional[str] = None
 
+    def bury_tx(self, test: BitcoinTestFramework, genIdx: int, txid: str, depth: int):
+        chain_tip = test.generate(test.nodes[genIdx], depth)[0]
+        assert_equal(test.nodes[genIdx].getrawtransaction(txid, 1, chain_tip)['confirmations'], depth)
+
     def generate_addresses(self, node: TestNode, force_all: bool = False):
         if not self.collateral_address or force_all:
             self.collateral_address = node.getnewaddress()
@@ -1372,10 +1376,9 @@ class DashTestFramework(BitcoinTestFramework):
         outputs = {mn.collateral_address: collateral_amount, mn.fundsAddr: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
-        tip = self.generate(self.nodes[0], 1)[0]
+        mn.bury_tx(self, genIdx=0, txid=collateral_txid, depth=1)
 
-        rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1, tip)
-        assert_equal(rawtx['confirmations'], 1)
+        rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1)
         collateral_vout = 0
         for txout in rawtx['vout']:
             if txout['value'] == Decimal(collateral_amount):
@@ -1393,9 +1396,8 @@ class DashTestFramework(BitcoinTestFramework):
             protx_result = self.nodes[0].protx("register_legacy" if mn.legacy else "register", collateral_txid, collateral_vout, ipAndPort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, True)
 
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
-        tip = self.generate(self.nodes[0], 1)[0]
+        mn.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
 
-        assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
         mn.set_params(proTxHash=protx_result, operator_reward=operatorReward, collateral_txid=collateral_txid, collateral_vout=collateral_vout, nodePort=node_p2p_port)
         self.mninfo.append(mn)
 
@@ -1415,15 +1417,13 @@ class DashTestFramework(BitcoinTestFramework):
 
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
-        tip = self.generate(self.nodes[0], 1)[0]
-        assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
+        evo_info.bury_tx(self, genIdx=0, txid=fund_txid, depth=1)
 
         protx_success = False
         try:
             protx_result = self.nodes[0].protx('update_service_evo', evo_info.proTxHash, f'127.0.0.1:{evo_info.nodePort}', evo_info.keyOperator, platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
             self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
-            tip = self.generate(self.nodes[0], 1)[0]
-            assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
+            evo_info.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
             protx_success = True
         except:
