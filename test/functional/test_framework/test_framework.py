@@ -1136,7 +1136,24 @@ MASTERNODE_COLLATERAL = 1000
 EVONODE_COLLATERAL = 4000
 
 class MasternodeInfo:
-    def __init__(self, proTxHash, fundsAddr, ownerAddr, votingAddr, rewards_address, operator_reward, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout, nodePort, evo=False):
+    proTxHash: str = ""
+    fundsAddr: str = ""
+    ownerAddr: str = ""
+    votingAddr: str = ""
+    rewards_address: str = ""
+    operator_reward: int = 0
+    pubKeyOperator: str = ""
+    keyOperator: str = ""
+    collateral_address: str = ""
+    collateral_txid: str = ""
+    collateral_vout: int = 0
+    nodePort: int = 0
+    evo: bool = False
+    nodeIdx: Optional[int] = None
+    friendlyName: Optional[str] = None
+
+    def __init__(self, proTxHash: str, fundsAddr: str, ownerAddr: str, votingAddr: str, rewards_address: str, operator_reward: int, pubKeyOperator: str,
+                 keyOperator: str, collateral_address: str, collateral_txid: str, collateral_vout: int, nodePort: int, evo: bool = False):
         self.proTxHash = proTxHash
         self.fundsAddr = fundsAddr
         self.ownerAddr = ownerAddr
@@ -1150,10 +1167,8 @@ class MasternodeInfo:
         self.collateral_vout = collateral_vout
         self.nodePort = nodePort
         self.evo = evo
-        self.nodeIdx = None
-        self.friendlyName=None
 
-    def set_node(self, nodeIdx, friendlyName=None):
+    def set_node(self, nodeIdx: int, friendlyName: Optional[str] = None):
         self.nodeIdx = nodeIdx
         self.friendlyName = friendlyName or f"mn-{'evo' if self.evo else 'reg'}-{self.nodeIdx}"
 
