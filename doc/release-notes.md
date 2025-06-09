@@ -40,18 +40,26 @@ unsupported systems.
 Notable changes
 ===============
 
+External signing is not currently supported when compiling with Boost version 1.88.0 or later.
+
 ### Test
 
 - #31419 test: fix MIN macro redefinition
+- #32286 test: Handle empty string returned by CLI as None in RPC tests
+- #32336 test: Suppress upstream -Wduplicate-decl-specifier in bpfcc
 
 ### Build
 
 - #31502 depends: Fix CXXFLAGS on NetBSD
 - #31627 depends: Fix spacing issue
+- #32070 build: use make < 3.82 syntax for define directive
+- #32439 guix: accomodate migration to codeberg
+- #32568 depends: use "mkdir -p" when installing xproto
 
 ### Misc
 
 - #31623 tracing: Rename the MIN macro to TRACEPOINT_TEST_MIN in log_raw_p2p_msgs
+- #32187 refactor: Remove spurious virtual from final ~CZMQNotificationInterface
 
 
 Credits
@@ -60,7 +68,11 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - 0xb10c
+- Brandon Odiwuor
+- fanquake
 - Hennadii Stepanov
+- MarcoFalke
+- Sjors Provoost
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
