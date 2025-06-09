@@ -1151,9 +1151,11 @@ class MasternodeInfo:
         self.nodePort = nodePort
         self.evo = evo
         self.nodeIdx = None
+        self.friendlyName=None
 
-    def set_node(self, nodeIdx):
+    def set_node(self, nodeIdx, friendlyName=None):
         self.nodeIdx = nodeIdx
+        self.friendlyName = friendlyName or f"mn-{'evo' if self.evo else 'reg'}-{self.nodeIdx}"
 
     def get_node(self, test: BitcoinTestFramework) -> TestNode:
         if self.nodeIdx is None:
