@@ -217,7 +217,7 @@ $ cd bitcoin/
 $ git clone https://github.com/AFLplusplus/AFLplusplus
 $ make -C AFLplusplus/ source-only
 # If afl-clang-lto is not available, see
-# https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
+# https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/fuzzing_in_depth.md#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
 $ cmake -B build_fuzz \
    -DCMAKE_C_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto" \
    -DCMAKE_CXX_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto++" \
