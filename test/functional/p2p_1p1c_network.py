@@ -41,7 +41,6 @@ class PackageRelayTest(BitcoinTestFramework):
         # hugely speeds up the test, as it involves multiple hops of tx relay.
         self.noban_tx_relay = True
         self.extra_args = [[
-            "-datacarriersize=100000",
             "-maxmempool=5",
         ]] * self.num_nodes
         self.supports_cli = False

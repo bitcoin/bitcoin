@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 
     const auto is_standard{[](const CScript& spk) {
         TxoutType type;
-        bool res{::IsStandard(spk, std::nullopt, type)};
+        bool res{::IsStandard(spk, type)};
         if (res) {
             BOOST_CHECK_EQUAL(type, TxoutType::MULTISIG);
         }
