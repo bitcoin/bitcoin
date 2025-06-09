@@ -1173,6 +1173,18 @@ class MasternodeInfo:
             self.pubKeyOperator = bls_ret['public']
             self.keyOperator = bls_ret['secret']
 
+    def get_collateral_value(self) -> int:
+        return EVONODE_COLLATERAL if self.evo else MASTERNODE_COLLATERAL
+
+    def get_collateral_vout(self, node: TestNode, txid: str, should_throw: bool = True) -> int:
+        for txout in node.getrawtransaction(txid, 1)['vout']:
+            if txout['value'] == self.get_collateral_value():
+                return txout['n']
+        if should_throw:
+            raise AssertionError(f"Unable to find collateral vout from txid {txid}")
+        else:
+            return -1
+
     def __init__(self, evo: bool, legacy: bool):
         self.evo = evo
         self.legacy = legacy
@@ -1372,19 +1384,11 @@ class DashTestFramework(BitcoinTestFramework):
         platform_p2p_port = '%d' % (node_p2p_port + 101)
         platform_http_port = '%d' % (node_p2p_port + 102)
 
-        collateral_amount = EVONODE_COLLATERAL if evo else MASTERNODE_COLLATERAL
-        outputs = {mn.collateral_address: collateral_amount, mn.fundsAddr: 1}
+        outputs = {mn.collateral_address: mn.get_collateral_value(), mn.fundsAddr: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         mn.bury_tx(self, genIdx=0, txid=collateral_txid, depth=1)
-
-        rawtx = self.nodes[0].getrawtransaction(collateral_txid, 1)
-        collateral_vout = 0
-        for txout in rawtx['vout']:
-            if txout['value'] == Decimal(collateral_amount):
-                collateral_vout = txout['n']
-                break
-        assert collateral_vout is not None
+        collateral_vout = mn.get_collateral_vout(self.nodes[0], collateral_txid)
 
         ipAndPort = '127.0.0.1:%d' % node_p2p_port
         operatorReward = idx
@@ -1441,16 +1445,11 @@ class DashTestFramework(BitcoinTestFramework):
         mn = MasternodeInfo(evo=False, legacy=(not softfork_active(self.nodes[0], 'v19')))
         mn.generate_addresses(self.nodes[0])
 
-        collateral_amount = MASTERNODE_COLLATERAL
-        txid = self.nodes[0].sendtoaddress(mn.fundsAddr, collateral_amount)
+        txid = self.nodes[0].sendtoaddress(mn.fundsAddr, mn.get_collateral_value())
         collateral_vout = 0
         register_fund = (idx % 2) == 0
         if not register_fund:
-            txraw = self.nodes[0].getrawtransaction(txid, True)
-            for vout_idx in range(0, len(txraw["vout"])):
-                vout = txraw["vout"][vout_idx]
-                if vout["value"] == collateral_amount:
-                    collateral_vout = vout_idx
+            collateral_vout = mn.get_collateral_vout(self.nodes[0], txid)
             self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
         # send to same address to reserve some funds for fees

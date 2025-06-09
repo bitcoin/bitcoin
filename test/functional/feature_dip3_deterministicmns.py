@@ -13,6 +13,7 @@ from typing import List
 from test_framework.blocktools import create_block_with_mnpayments
 from test_framework.messages import tx_from_hex
 from test_framework.test_framework import (
+    MASTERNODE_COLLATERAL,
     BitcoinTestFramework,
     MasternodeInfo,
 )
@@ -49,7 +50,7 @@ class DIP3Test(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("funding controller node")
-        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
+        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * MASTERNODE_COLLATERAL:
             self.generate(self.nodes[0], 10, sync_fun=self.no_op) # generate enough for collaterals
         self.log.info("controller node has {} dash".format(self.nodes[0].getbalance()))
 
@@ -228,34 +229,17 @@ class DIP3Test(BitcoinTestFramework):
         return mn
 
     def create_mn_collateral(self, node, mn: MasternodeInfo):
-        txid = node.sendtoaddress(mn.collateral_address, 1000)
-        vout = None
-
+        txid = node.sendtoaddress(mn.collateral_address, mn.get_collateral_value())
         self.generate(node, 1, sync_fun=self.no_op)
-        rawtx = node.getrawtransaction(txid, 1)
-        for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
-                vout = txout['n']
-                break
-        assert vout is not None
-
+        vout = mn.get_collateral_vout(node, txid)
         mn.set_params(collateral_txid=txid, collateral_vout=vout)
 
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn: MasternodeInfo):
-        node.sendtoaddress(mn.fundsAddr, 1000.001)
-
-        proTxHash = node.protx('register_fund' if softfork_active(node, 'v19') else 'register_fund_legacy', mn.collateral_address, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
-        vout = None
-
-        rawtx = node.getrawtransaction(proTxHash, 1)
-        for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
-                vout = txout['n']
-                break
-        assert vout is not None
-
-        mn.set_params(proTxHash=proTxHash, collateral_txid=proTxHash, collateral_vout=vout)
+        node.sendtoaddress(mn.fundsAddr, mn.get_collateral_value() + 0.001)
+        txid = node.protx('register_fund' if softfork_active(node, 'v19') else 'register_fund_legacy', mn.collateral_address, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        vout = mn.get_collateral_vout(node, txid)
+        mn.set_params(proTxHash=txid, collateral_txid=txid, collateral_vout=vout)
 
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn: MasternodeInfo):
@@ -275,7 +259,7 @@ class DIP3Test(BitcoinTestFramework):
         self.sync_all()
 
     def spend_mn_collateral(self, mn: MasternodeInfo, with_dummy_input_output=False):
-        return self.spend_input(mn.collateral_txid, mn.collateral_vout, 1000, with_dummy_input_output)
+        return self.spend_input(mn.collateral_txid, mn.collateral_vout, mn.get_collateral_value(), with_dummy_input_output)
 
     def update_mn_payee(self, mn: MasternodeInfo, payee):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
