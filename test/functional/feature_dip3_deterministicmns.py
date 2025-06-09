@@ -221,53 +221,47 @@ class DIP3Test(BitcoinTestFramework):
         assert old_dmnState["payoutAddress"] == new_dmnState["payoutAddress"]
 
     def prepare_mn(self, node, idx, alias) -> MasternodeInfo:
-        blsKey = node.bls('generate') if softfork_active(node, 'v19') else node.bls('generate', True)
-        fundsAddr = node.getnewaddress()
-        ownerAddr = node.getnewaddress()
-        operator_reward = (idx % self.num_initial_mn)
-
-        # proTxHash, rewards_address, collateral_address, collateral_address, collateral_txid, collateral_vout are set later
-        mn = MasternodeInfo("", fundsAddr, ownerAddr, ownerAddr, "", operator_reward, blsKey['public'], blsKey['secret'], "", "", None,
-                            p2p_port(idx), False)
+        mn = MasternodeInfo(evo=False, legacy=(not softfork_active(node, 'v19')))
+        mn.generate_addresses(node)
+        mn.set_params(operator_reward=(idx % self.num_initial_mn), nodePort=p2p_port(idx))
         mn.set_node(idx, alias)
         return mn
 
     def create_mn_collateral(self, node, mn: MasternodeInfo):
-        mn.collateral_address = node.getnewaddress()
-        mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
-        mn.collateral_vout = None
-        self.generate(node, 1, sync_fun=self.no_op)
+        txid = node.sendtoaddress(mn.collateral_address, 1000)
+        vout = None
 
-        rawtx = node.getrawtransaction(mn.collateral_txid, 1)
+        self.generate(node, 1, sync_fun=self.no_op)
+        rawtx = node.getrawtransaction(txid, 1)
         for txout in rawtx['vout']:
             if txout['value'] == Decimal(1000):
-                mn.collateral_vout = txout['n']
+                vout = txout['n']
                 break
-        assert mn.collateral_vout is not None
+        assert vout is not None
+
+        mn.set_params(collateral_txid=txid, collateral_vout=vout)
 
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn: MasternodeInfo):
         node.sendtoaddress(mn.fundsAddr, 1000.001)
-        mn.collateral_address = node.getnewaddress()
-        mn.rewards_address = node.getnewaddress()
 
-        mn.proTxHash = node.protx('register_fund' if softfork_active(node, 'v19') else 'register_fund_legacy', mn.collateral_address, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
-        mn.collateral_txid = mn.proTxHash
-        mn.collateral_vout = None
+        proTxHash = node.protx('register_fund' if softfork_active(node, 'v19') else 'register_fund_legacy', mn.collateral_address, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        vout = None
 
-        rawtx = node.getrawtransaction(mn.collateral_txid, 1)
+        rawtx = node.getrawtransaction(proTxHash, 1)
         for txout in rawtx['vout']:
             if txout['value'] == Decimal(1000):
-                mn.collateral_vout = txout['n']
+                vout = txout['n']
                 break
-        assert mn.collateral_vout is not None
+        assert vout is not None
+
+        mn.set_params(proTxHash=proTxHash, collateral_txid=proTxHash, collateral_vout=vout)
 
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn: MasternodeInfo):
         node.sendtoaddress(mn.fundsAddr, 0.001)
-        mn.rewards_address = node.getnewaddress()
-
-        mn.proTxHash = node.protx('register' if softfork_active(node, 'v19') else 'register_legacy', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        proTxHash = node.protx('register' if softfork_active(node, 'v19') else 'register_legacy', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        mn.set_params(proTxHash=proTxHash)
         self.generate(node, 1, sync_fun=self.no_op)
 
     def start_mn(self, mn: MasternodeInfo):
