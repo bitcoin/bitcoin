@@ -462,7 +462,7 @@ RPCHelpMan listdescriptors()
 {
     return RPCHelpMan{
         "listdescriptors",
-        "List descriptors imported into a descriptor-enabled wallet.\n",
+        "List all descriptors present in a wallet.\n",
         {
             {"private", RPCArg::Type::BOOL, RPCArg::Default{false}, "Show private descriptors."}
         },
