@@ -491,7 +491,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
 
     // If the tx failed in ProcessOrphanTx, it should be removed from the orphanage unless the
     // tx was still missing inputs. If the tx was not in the orphanage, EraseTx does nothing and returns 0.
-    if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS && m_orphanage->EraseTx(ptx->GetWitnessHash()) > 0) {
+    if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS && m_orphanage->EraseTx(ptx->GetWitnessHash())) {
         LogDebug(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
     }
 

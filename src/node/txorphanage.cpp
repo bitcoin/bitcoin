@@ -76,7 +76,7 @@ public:
     bool HaveTx(const Wtxid& wtxid) const override;
     bool HaveTxFromPeer(const Wtxid& wtxid, NodeId peer) const override;
     CTransactionRef GetTxToReconsider(NodeId peer) override;
-    int EraseTx(const Wtxid& wtxid) override;
+    bool EraseTx(const Wtxid& wtxid) override;
     void EraseForPeer(NodeId peer) override;
     void EraseForBlock(const CBlock& block) override;
     void LimitOrphans(FastRandomContext& rng) override;
@@ -147,11 +147,11 @@ bool TxOrphanageImpl::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
     return false;
 }
 
-int TxOrphanageImpl::EraseTx(const Wtxid& wtxid)
+bool TxOrphanageImpl::EraseTx(const Wtxid& wtxid)
 {
     std::map<Wtxid, OrphanTx>::iterator it = m_orphans.find(wtxid);
     if (it == m_orphans.end())
-        return 0;
+        return false;
     for (const CTxIn& txin : it->second.tx->vin)
     {
         auto itPrev = m_outpoint_to_orphan_it.find(txin.prevout);
@@ -190,7 +190,7 @@ int TxOrphanageImpl::EraseTx(const Wtxid& wtxid)
     m_orphan_list.pop_back();
 
     m_orphans.erase(it);
-    return 1;
+    return true;
 }
 
 void TxOrphanageImpl::EraseForPeer(NodeId peer)
