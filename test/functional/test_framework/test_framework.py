@@ -1150,9 +1150,17 @@ class MasternodeInfo:
         self.collateral_vout = collateral_vout
         self.nodePort = nodePort
         self.evo = evo
-        self.node = None
         self.nodeIdx = None
 
+    def set_node(self, nodeIdx):
+        self.nodeIdx = nodeIdx
+
+    def get_node(self, test: BitcoinTestFramework) -> TestNode:
+        if self.nodeIdx is None:
+            raise AssertionError("nodeIdx must be set, did you call set_node()")
+        if self.nodeIdx > len(test.nodes):
+            raise AssertionError(f"Node at pos {self.nodeIdx} not present, did you start the node?")
+        return test.nodes[self.nodeIdx]
 
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
@@ -1181,12 +1189,12 @@ class DashTestFramework(BitcoinTestFramework):
 
     def connect_nodes(self, a, b, *, peer_advertises_v2=None):
         for mn2 in self.mninfo: # type: MasternodeInfo
-            if mn2.node is not None:
-                mn2.node.setmnthreadactive(False)
+            if mn2.nodeIdx is not None:
+                mn2.get_node(self).setmnthreadactive(False)
         super().connect_nodes(a, b, peer_advertises_v2=peer_advertises_v2)
         for mn2 in self.mninfo: # type: MasternodeInfo
-            if mn2.node is not None:
-                mn2.node.setmnthreadactive(True)
+            if mn2.nodeIdx is not None:
+                mn2.get_node(self).setmnthreadactive(True)
 
     def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, evo_count=0):
         self.mn_count = masterodes_count
@@ -1306,8 +1314,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         for mn_info in self.mninfo: # type: MasternodeInfo
             if mn_info.proTxHash == created_mn_info.proTxHash:
-                mn_info.nodeIdx = mn_idx
-                mn_info.node = self.nodes[mn_idx]
+                mn_info.set_node(mn_idx)
 
         self.connect_nodes(mn_idx, 0)
 
@@ -1478,7 +1485,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         # start up nodes in parallel
         for idx in range(0, self.mn_count):
-            self.mninfo[idx].nodeIdx = idx + start_idx
+            self.mninfo[idx].set_node(start_idx + idx)
             jobs.append(executor.submit(self.start_masternode, self.mninfo[idx]))
 
         # wait for all nodes to start up
@@ -1497,8 +1504,7 @@ class DashTestFramework(BitcoinTestFramework):
         if extra_args is not None:
             args += extra_args
         self.start_node(mninfo.nodeIdx, extra_args=args)
-        mninfo.node = self.nodes[mninfo.nodeIdx]
-        force_finish_mnsync(mninfo.node)
+        force_finish_mnsync(mninfo.get_node(self))
 
     def dynamically_start_masternode(self, mnidx, extra_args=None):
         args = []
@@ -1649,8 +1655,8 @@ class DashTestFramework(BitcoinTestFramework):
 
         rec_sig = self.get_recovered_sig(request_id, message_hash, llmq_type=llmq_type)
 
-        block_count = self.mninfo[0].node.getblockcount()
-        cycle_hash = int(self.mninfo[0].node.getblockhash(block_count - (block_count % 24)), 16)
+        block_count = self.mninfo[0].get_node(self).getblockcount()
+        cycle_hash = int(self.mninfo[0].get_node(self).getblockhash(block_count - (block_count % 24)), 16)
         isdlock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, bytes.fromhex(rec_sig['sig']))
 
         return isdlock
@@ -1699,7 +1705,7 @@ class DashTestFramework(BitcoinTestFramework):
                 return False
 
             for mn in mninfos:
-                s = mn.node.quorum("dkgstatus")
+                s = mn.get_node(self).quorum("dkgstatus")
                 for qs in s["session"]:
                     if qs["llmqType"] != llmq_type_name:
                         continue
@@ -1738,7 +1744,7 @@ class DashTestFramework(BitcoinTestFramework):
                 return False
 
             for mn in mninfos:
-                s = mn.node.quorum('dkgstatus')
+                s = mn.get_node(self).quorum('dkgstatus')
                 for qs in s["session"]:
                     if qs["llmqType"] != llmq_type_name:
                         continue
@@ -1753,7 +1759,7 @@ class DashTestFramework(BitcoinTestFramework):
                             if c["proTxHash"] == mn.proTxHash:
                                 continue
                             if not c["outbound"]:
-                                mn2 = mn.node.protx('info', c["proTxHash"])
+                                mn2 = mn.get_node(self).protx('info', c["proTxHash"])
                                 if [m for m in mninfos if c["proTxHash"] == m.proTxHash]:
                                     # MN is expected to be online and functioning, so let's verify that the last successful
                                     # probe is not too old. Probes are retried after 50 minutes, while DKGs consider a probe
@@ -1772,7 +1778,7 @@ class DashTestFramework(BitcoinTestFramework):
         def check_dkg_session():
             member_count = 0
             for mn in mninfos:
-                s = mn.node.quorum("dkgstatus")["session"]
+                s = mn.get_node(self).quorum("dkgstatus")["session"]
                 for qs in s:
                     if qs["llmqType"] != llmq_type_name:
                         continue
@@ -1857,7 +1863,7 @@ class DashTestFramework(BitcoinTestFramework):
                       "expected_commitments=%d" % (llmq_type_name, llmq_type, expected_members, expected_connections, expected_contributions, expected_complaints,
                                                    expected_justifications, expected_commitments))
 
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        nodes = [self.nodes[0]] + [mn.get_node(self) for mn in mninfos_online]
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
@@ -1940,7 +1946,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.log.info(f"Mining quorum: expected_members={expected_members}, expected_connections={expected_connections}, expected_contributions={expected_contributions}, expected_commitments={expected_commitments}, no complains and justfications expected")
 
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        nodes = [self.nodes[0]] + [mn.get_node(self) for mn in mninfos_online]
 
         cycle_length = 24
         cur_block = self.nodes[0].getblockcount()
@@ -2052,7 +2058,7 @@ class DashTestFramework(BitcoinTestFramework):
         def check_recovered_sig():
             self.bump_mocktime(1)
             for mn in self.mninfo: # type: MasternodeInfo
-                if not mn.node.quorum("hasrecsig", llmq_type, rec_sig_id, rec_sig_msg_hash):
+                if not mn.get_node(self).quorum("hasrecsig", llmq_type, rec_sig_id, rec_sig_msg_hash):
                     return False
             return True
         self.wait_until(check_recovered_sig, timeout=timeout, sleep=1)
@@ -2061,14 +2067,14 @@ class DashTestFramework(BitcoinTestFramework):
         # Note: recsigs aren't relayed to regular nodes by default,
         # make sure to pick a mn as a node to query for recsigs.
         try:
-            quorumHash = self.mninfo[0].node.quorum("selectquorum", llmq_type, rec_sig_id)["quorumHash"]
+            quorumHash = self.mninfo[0].get_node(self).quorum("selectquorum", llmq_type, rec_sig_id)["quorumHash"]
             for mn in self.mninfo: # type: MasternodeInfo
                 if use_platformsign:
-                    mn.node.quorum("platformsign", rec_sig_id, rec_sig_msg_hash, quorumHash)
+                    mn.get_node(self).quorum("platformsign", rec_sig_id, rec_sig_msg_hash, quorumHash)
                 else:
-                    mn.node.quorum("sign", llmq_type, rec_sig_id, rec_sig_msg_hash, quorumHash)
+                    mn.get_node(self).quorum("sign", llmq_type, rec_sig_id, rec_sig_msg_hash, quorumHash)
             self.wait_for_recovered_sig(rec_sig_id, rec_sig_msg_hash, llmq_type, 10)
-            return self.mninfo[0].node.quorum("getrecsig", llmq_type, rec_sig_id, rec_sig_msg_hash)
+            return self.mninfo[0].get_node(self).quorum("getrecsig", llmq_type, rec_sig_id, rec_sig_msg_hash)
         except JSONRPCException as e:
             self.log.info(f"getrecsig failed with '{e}'")
         assert False
@@ -2087,7 +2093,7 @@ class DashTestFramework(BitcoinTestFramework):
         return None
 
     def test_mn_quorum_data(self, test_mn: MasternodeInfo, quorum_type_in, quorum_hash_in, test_secret=True, expect_secret=True):
-        quorum_info = test_mn.node.quorum("info", quorum_type_in, quorum_hash_in, True)
+        quorum_info = test_mn.get_node(self).quorum("info", quorum_type_in, quorum_hash_in, True)
         if test_secret and expect_secret != ("secretKeyShare" in quorum_info):
             return False
         if "members" not in quorum_info or len(quorum_info["members"]) == 0:

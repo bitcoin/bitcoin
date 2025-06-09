@@ -69,8 +69,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.test_no_banning(self.force_old_mn_proto, 3)
 
     def isolate_mn(self, mn: MasternodeInfo):
-        mn.node.setnetworkactive(False)
-        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
+        mn.get_node(self).setnetworkactive(False)
+        self.wait_until(lambda: mn.get_node(self).getconnectioncount() == 0)
         return True, True
 
     def close_mn_port(self, mn: MasternodeInfo):
@@ -81,7 +81,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo: # type: MasternodeInfo
             if self.deaf_mns.count(mn2) == 0:
-                self.connect_nodes(mn.nodeIdx, mn2.node.index)
+                self.connect_nodes(mn.nodeIdx, mn2.get_node(self).index)
         self.reset_probe_timeouts()
         return False, False
 
@@ -102,7 +102,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Unlike in mine_quorum we skip most of the checks and only care about
         # nodes moving forward from phase to phase correctly and the fact that the quorum is actually mined.
         self.log.info("Mining a quorum with less checks")
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        nodes = [self.nodes[0]] + [mn.get_node(self) for mn in mninfos_online]
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
@@ -213,7 +213,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.stop_node(mn.nodeIdx)
                     self.start_masternode(mn)
                 else:
-                    mn.node.setnetworkactive(True)
+                    mn.get_node(self).setnetworkactive(True)
                 self.connect_nodes(mn.nodeIdx, 0)
 
         # syncing blocks only since node 0 has txes waiting to be mined
@@ -226,10 +226,10 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo: # type: MasternodeInfo
             assert not check_banned(self.nodes[0], mn)
-            mn.node.setnetworkactive(False)
-            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
-            mn.node.setnetworkactive(True)
-            force_finish_mnsync(mn.node)
+            mn.get_node(self).setnetworkactive(False)
+            self.wait_until(lambda: mn.get_node(self).getconnectioncount() == 0)
+            mn.get_node(self).setnetworkactive(True)
+            force_finish_mnsync(mn.get_node(self))
             self.connect_nodes(mn.nodeIdx, 0)
 
     def reset_probe_timeouts(self):

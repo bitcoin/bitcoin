@@ -41,12 +41,12 @@ class QuorumDataRecoveryTest(DashTestFramework):
             args.append('-llmq-qvvec-sync=%s:%d' % (llmq_type_strings[llmq_sync[0]], llmq_sync[1]))
         if reindex:
             args.append('-reindex')
-            bb_hash = mn.node.getbestblockhash()
+            bb_hash = mn.get_node(self).getbestblockhash()
             self.restart_node(mn.nodeIdx, args)
-            self.wait_until(lambda: mn.node.getbestblockhash() == bb_hash)
+            self.wait_until(lambda: mn.get_node(self).getbestblockhash() == bb_hash)
         else:
             self.restart_node(mn.nodeIdx, args)
-        force_finish_mnsync(mn.node)
+        force_finish_mnsync(mn.get_node(self))
         self.connect_nodes(mn.nodeIdx, 0)
         if qdata_recovery_enabled:
             # trigger recovery threads and wait for them to start
