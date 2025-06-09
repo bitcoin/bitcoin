@@ -3,10 +3,6 @@
 #
 # https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions
 
-# race (TODO fix)
-race:LoadWallet
-race:DatabaseBatch
-
 # deadlock (TODO fix)
 # To reproduce, see:
 # https://github.com/bitcoin/bitcoin/issues/19303#issuecomment-1514926359
