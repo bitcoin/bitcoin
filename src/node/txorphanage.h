@@ -67,8 +67,9 @@ public:
      */
     virtual CTransactionRef GetTxToReconsider(NodeId peer) = 0;
 
-    /** Erase an orphan by wtxid */
-    virtual int EraseTx(const Wtxid& wtxid) = 0;
+    /** Erase an orphan by wtxid, including all announcements if there are multiple.
+     * Returns true if an orphan was erased, false if no tx with this wtxid exists. */
+    virtual bool EraseTx(const Wtxid& wtxid) = 0;
 
     /** Maybe erase all orphans announced by a peer (eg, after that peer disconnects). If an orphan
      * has been announced by another peer, don't erase, just remove this peer from the list of announcers. */
