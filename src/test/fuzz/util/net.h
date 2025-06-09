@@ -139,6 +139,25 @@ public:
     }
 };
 
+class FuzzedNetEvents : public NetEventsInterface
+{
+public:
+    FuzzedNetEvents(FuzzedDataProvider& fdp) : m_fdp(fdp) {}
+
+    virtual void InitializeNode(const CNode&, ServiceFlags) override {}
+
+    virtual void FinalizeNode(const CNode&) override {}
+
+    virtual bool HasAllDesirableServiceFlags(ServiceFlags) const override { return m_fdp.ConsumeBool(); }
+
+    virtual bool ProcessMessages(CNode*, std::atomic<bool>&) override { return m_fdp.ConsumeBool(); }
+
+    virtual bool SendMessages(CNode*) override { return m_fdp.ConsumeBool(); }
+
+private:
+    FuzzedDataProvider& m_fdp;
+};
+
 class FuzzedSock : public Sock
 {
     FuzzedDataProvider& m_fuzzed_data_provider;
@@ -202,6 +221,11 @@ public:
 
     bool IsConnected(std::string& errmsg) const override;
 };
+
+[[nodiscard]] inline FuzzedNetEvents ConsumeNetEvents(FuzzedDataProvider& fdp) noexcept
+{
+    return FuzzedNetEvents{fdp};
+}
 
 [[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
 {

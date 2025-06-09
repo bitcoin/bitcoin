@@ -51,6 +51,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
         }
     }
     AddrManDeterministic& addr_man{*addr_man_ptr};
+    auto net_events{ConsumeNetEvents(fuzzed_data_provider)};
     ConnmanTestMsg connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      addr_man,
@@ -60,6 +61,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     const uint64_t max_outbound_limit{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
     CConnman::Options options;
+    options.m_msgproc = &net_events;
     options.nMaxOutboundLimit = max_outbound_limit;
     connman.Init(options);
 
