@@ -6,7 +6,7 @@ from test_framework.test_framework import (
     DashTestFramework,
     MasternodeInfo,
 )
-from test_framework.util import assert_equal, p2p_port
+from test_framework.util import assert_equal
 
 '''
 rpc_quorum.py
@@ -28,7 +28,7 @@ class RPCMasternodeTest(DashTestFramework):
             mn: MasternodeInfo = self.mninfo[idx]
             for member in quorum_info["members"]:
                 if member["proTxHash"] == mn.proTxHash:
-                    assert_equal(member["service"], '127.0.0.1:%d' % p2p_port(mn.node.index))
+                    assert_equal(member["service"], f'127.0.0.1:{mn.nodePort}')
 
 if __name__ == '__main__':
     RPCMasternodeTest().main()

@@ -17,7 +17,7 @@ from test_framework.test_framework import (
     DashTestFramework,
     MasternodeInfo,
 )
-from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
+from test_framework.util import assert_equal, force_finish_mnsync
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
@@ -208,7 +208,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             if check_banned(self.nodes[0], mn) or check_punished(self.nodes[0], mn):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].sendtoaddress(addr, 0.1)
-                self.nodes[0].protx('update_service', mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
+                self.nodes[0].protx('update_service', mn.proTxHash, f'127.0.0.1:{mn.nodePort}', mn.keyOperator, "", addr)
                 if restart:
                     self.stop_node(mn.node.index)
                     self.start_masternode(mn)
