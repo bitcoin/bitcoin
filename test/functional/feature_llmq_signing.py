@@ -12,7 +12,10 @@ Checks LLMQs signing sessions
 
 from test_framework.messages import CSigShare, msg_qsigshare, uint256_to_string
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync
 
 
@@ -43,7 +46,7 @@ class LLMQSigningTest(DashTestFramework):
         msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000003"
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
-            for mn in self.mninfo:
+            for mn in self.mninfo: # type: MasternodeInfo
                 if mn.node.quorum("hasrecsig", q_type, id, msgHash) != hasrecsigs:
                     return False
                 if mn.node.quorum("isconflicting", q_type, id, msgHash) != isconflicting1:
@@ -91,11 +94,11 @@ class LLMQSigningTest(DashTestFramework):
             sig_share.id = int(sig_share_rpc_1["id"], 16)
             sig_share.msgHash = int(sig_share_rpc_1["msgHash"], 16)
             sig_share.sigShare = bytes.fromhex(sig_share_rpc_1["signature"])
-            for mn in self.mninfo:
+            for mn in self.mninfo: # type: MasternodeInfo
                 assert mn.node.getconnectioncount() == self.llmq_size
             # Get the current recovery member of the quorum
             q = self.nodes[0].quorum('selectquorum', q_type, id)
-            mn = self.get_mninfo(q['recoveryMembers'][0])
+            mn: MasternodeInfo = self.get_mninfo(q['recoveryMembers'][0])
             # Open a P2P connection to it
             p2p_interface = mn.node.add_p2p_connection(P2PInterface())
             # Send the last required QSIGSHARE message to the recovery member
@@ -142,7 +145,7 @@ class LLMQSigningTest(DashTestFramework):
                 request_id += 1
         # Produce the recovered signature
         id = uint256_to_string(request_id)
-        for mn in self.mninfo:
+        for mn in self.mninfo: # type: MasternodeInfo
             mn.node.quorum("sign", q_type, id, msgHash)
         # And mine a quorum to move the quorum which signed out of the active set
         self.mine_quorum()
@@ -177,7 +180,7 @@ class LLMQSigningTest(DashTestFramework):
 
             # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
             q = self.nodes[0].quorum('selectquorum', q_type, id)
-            mn = self.get_mninfo(q['recoveryMembers'][0])
+            mn: MasternodeInfo = self.get_mninfo(q['recoveryMembers'][0])
             mn.node.setnetworkactive(False)
             self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             for i in range(4):

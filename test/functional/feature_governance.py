@@ -7,7 +7,10 @@
 import json
 
 from test_framework.messages import uint256_to_string
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.governance import have_trigger_for_height, prepare_object
 from test_framework.util import assert_equal, satoshi_round
 
@@ -187,7 +190,7 @@ class DashGovernanceTest (DashTestFramework):
         _, mn_payee_protx = height_protx_list[1]
 
         payee_idx = None
-        for mn in self.mninfo:
+        for mn in self.mninfo: # type: MasternodeInfo
             if mn.proTxHash == mn_payee_protx:
                 payee_idx = mn.nodeIdx
                 break

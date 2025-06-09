@@ -5,7 +5,10 @@
 
 from test_framework.messages import hash256
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 '''
@@ -20,7 +23,7 @@ class FakeMNAUTHTest(DashTestFramework):
         self.set_dash_test_params(2, 1)
 
     def run_test(self):
-        masternode = self.mninfo[0]
+        masternode: MasternodeInfo = self.mninfo[0]
         masternode.node.add_p2p_connection(P2PInterface())
 
         protx_hash = masternode.proTxHash

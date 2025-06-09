@@ -14,7 +14,10 @@ from io import BytesIO
 
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, from_hex, hash256, msg_getmnlistd, QuorumId, ser_uint256
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import assert_equal
 
 DIP0008_HEIGHT = 432
@@ -50,7 +53,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         self.delay_v20_and_mn_rr(height=V20_HEIGHT)
 
     def remove_masternode(self, idx):
-        mn = self.mninfo[idx]
+        mn: MasternodeInfo = self.mninfo[idx]
         rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
@@ -80,7 +83,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # Register one more MN, but don't start it (that would fail as DashTestFramework doesn't support this atm)
         baseBlockHash = self.nodes[0].getbestblockhash()
         self.prepare_masternode(self.mn_count)
-        new_mn = self.mninfo[self.mn_count]
+        new_mn: MasternodeInfo = self.mninfo[self.mn_count]
 
         # Now test if that MN appears in a diff when the base block is the one just before MN registration
         expectedDeleted = []

@@ -10,11 +10,15 @@ Checks EvoNodes
 
 '''
 from io import BytesIO
+from typing import Optional
 
 from test_framework.p2p import P2PInterface
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, from_hex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import (
     assert_equal, assert_greater_than_or_equal,
 )
@@ -72,7 +76,7 @@ class LLMQEvoNodesTest(DashTestFramework):
 
         evo_protxhash_list = list()
         for i in range(self.evo_count):
-            evo_info = self.dynamically_add_masternode(evo=True)
+            evo_info: MasternodeInfo = self.dynamically_add_masternode(evo=True)
             evo_protxhash_list.append(evo_info.proTxHash)
             self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks())
 
@@ -111,11 +115,11 @@ class LLMQEvoNodesTest(DashTestFramework):
         return
 
     def test_evo_payments(self, window_analysis, mnrr_active):
-        current_evo = None
+        current_evo: MasternodeInfo = None
         consecutive_payments = 0
         n_payments = 0 if mnrr_active else 4
         for i in range(0, window_analysis):
-            payee = self.get_mn_payee_for_block(self.nodes[0].getbestblockhash())
+            payee: MasternodeInfo = self.get_mn_payee_for_block(self.nodes[0].getbestblockhash())
             if payee is not None and payee.evo:
                 if current_evo is not None and payee.proTxHash == current_evo.proTxHash:
                     # same EvoNode
@@ -154,12 +158,12 @@ class LLMQEvoNodesTest(DashTestFramework):
             if i % 8 == 0:
                 self.sync_blocks()
 
-    def get_mn_payee_for_block(self, block_hash):
+    def get_mn_payee_for_block(self, block_hash) -> Optional[MasternodeInfo]:
         mn_payee_info = self.nodes[0].masternode("payments", block_hash)[0]
         mn_payee_protx = mn_payee_info['masternodes'][0]['proTxHash']
 
         mninfos_online = self.mninfo.copy()
-        for mn_info in mninfos_online:
+        for mn_info in mninfos_online: # type: MasternodeInfo
             if mn_info.proTxHash == mn_payee_protx:
                 return mn_info
         return None
@@ -170,7 +174,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         mninfos_online = self.mninfo.copy()
         for qm in quorum_members:
             found = False
-            for mn in mninfos_online:
+            for mn in mninfos_online: # type: MasternodeInfo
                 if mn.proTxHash == qm:
                     assert_equal(mn.evo, True)
                     found = True

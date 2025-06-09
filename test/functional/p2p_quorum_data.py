@@ -10,7 +10,10 @@ from test_framework.p2p import (
     p2p_lock,
     P2PInterface,
 )
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -120,7 +123,7 @@ class QuorumDataMessagesTest(DashTestFramework):
         extra_args = [["-llmq-data-recovery=0", "-deprecatedrpc=banscore"]] * 4
         self.set_dash_test_params(4, 3, extra_args=extra_args)
 
-    def restart_mn(self, mn, reindex=False):
+    def restart_mn(self, mn: MasternodeInfo, reindex=False):
         args = self.extra_args[mn.node.index] + ['-masternodeblsprivkey=%s' % mn.keyOperator]
         if reindex:
             args.append('-reindex')
@@ -408,9 +411,9 @@ class QuorumDataMessagesTest(DashTestFramework):
         quorum_hash = self.mine_quorum()
 
         node0 = self.nodes[0]
-        mn1 = self.mninfo[0]
-        mn2 = self.mninfo[1]
-        mn3 = self.mninfo[2]
+        mn1: MasternodeInfo = self.mninfo[0]
+        mn2: MasternodeInfo = self.mninfo[1]
+        mn3: MasternodeInfo = self.mninfo[2]
 
         # Convert the hex values into integer values
         quorum_hash_int = int(quorum_hash, 16)

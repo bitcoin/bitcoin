@@ -14,7 +14,10 @@ from io import BytesIO
 from test_framework.p2p import P2PInterface
 from test_framework.messages import CBlock, CBlockHeader, CCbTx, CMerkleBlock, from_hex, hash256, msg_getmnlistd, \
     QuorumId, ser_uint256
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import (
     assert_equal
 )
@@ -78,16 +81,16 @@ class DIP3V19Test(DashTestFramework):
         self.log.info("pubkeyoperator should still be shown using legacy scheme")
         assert_equal(pubkeyoperator_list_before, pubkeyoperator_list_after)
 
-        evo_info_0 = self.dynamically_add_masternode(evo=True, rnd=7)
+        evo_info_0: MasternodeInfo = self.dynamically_add_masternode(evo=True, rnd=7)
         assert evo_info_0 is not None
 
         self.log.info("Checking that protxs with duplicate EvoNodes fields are rejected")
-        evo_info_1 = self.dynamically_add_masternode(evo=True, rnd=7, should_be_rejected=True)
+        evo_info_1: MasternodeInfo = self.dynamically_add_masternode(evo=True, rnd=7, should_be_rejected=True)
         assert evo_info_1 is None
         self.dynamically_evo_update_service(evo_info_0, 8)
-        evo_info_2 = self.dynamically_add_masternode(evo=True, rnd=8, should_be_rejected=True)
+        evo_info_2: MasternodeInfo = self.dynamically_add_masternode(evo=True, rnd=8, should_be_rejected=True)
         assert evo_info_2 is None
-        evo_info_3 = self.dynamically_add_masternode(evo=True, rnd=9)
+        evo_info_3: MasternodeInfo = self.dynamically_add_masternode(evo=True, rnd=9)
         assert evo_info_3 is not None
         self.dynamically_evo_update_service(evo_info_0, 9, should_be_rejected=True)
 
@@ -101,7 +104,7 @@ class DIP3V19Test(DashTestFramework):
         self.log.info("Checking that adding more regular MNs after v19 doesn't break DKGs and IS/CLs")
 
         for i in range(6):
-            new_mn = self.dynamically_add_masternode(evo=False, rnd=(10 + i))
+            new_mn: MasternodeInfo = self.dynamically_add_masternode(evo=False, rnd=(10 + i))
             assert new_mn is not None
 
         # mine more quorums and make sure everything still works
@@ -129,7 +132,7 @@ class DIP3V19Test(DashTestFramework):
         self.connect_nodes(node_idx, 0)
         self.sync_all()
         self.log.info(f"Successfully revoked={revoke_protx}")
-        for mn in self.mninfo:
+        for mn in self.mninfo: # type: MasternodeInfo
             if mn.proTxHash == revoke_protx:
                 self.mninfo.remove(mn)
                 return

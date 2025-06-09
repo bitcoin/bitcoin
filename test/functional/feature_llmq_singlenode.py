@@ -14,7 +14,10 @@ This functional test is similar to feature_llmq_signing.py but difference are bi
 import time
 
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_greater_than,
@@ -55,7 +58,7 @@ class LLMQSigningTest(DashTestFramework):
         conflicting_1 = False
         conflicting_2 = False
 
-        for mn in self.mninfo:
+        for mn in self.mninfo: # type: MasternodeInfo
             if mn.node.quorum("hasrecsig", q_type, id, msgHash):
                 has_sig = True
             if mn.node.quorum("isconflicting", q_type, id, msgHash):
