@@ -166,6 +166,10 @@ def main():
 
     # Enforce bracket syntax includes
     quote_syntax_inclusions = find_quote_syntax_inclusions()
+    # *Rationale*: Bracket syntax is less ambiguous because the preprocessor
+    # searches a fixed list of include directories without taking location of the
+    # source file into account. This allows quoted includes to stand out more when
+    # the location of the source file actually is relevant.
 
     if quote_syntax_inclusions:
         print("Please use bracket syntax includes (\"#include <foo.h>\") instead of quote syntax includes:")

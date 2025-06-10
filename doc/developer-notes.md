@@ -784,38 +784,6 @@ Threads
   - [ThreadI2PAcceptIncoming (`b-i2paccept`)](https://doxygen.bitcoincore.org/class_c_connman.html#a57787b4f9ac847d24065fbb0dd6e70f8)
     : Listens for and accepts incoming I2P connections through the I2P SAM proxy.
 
-Ignoring IDE/editor files
---------------------------
-
-In closed-source environments in which everyone uses the same IDE, it is common
-to add temporary files it produces to the project-wide `.gitignore` file.
-
-However, in open source software such as Bitcoin Core, where everyone uses
-their own editors/IDE/tools, it is less common. Only you know what files your
-editor produces and this may change from version to version. The canonical way
-to do this is thus to create your local gitignore. Add this to `~/.gitconfig`:
-
-```
-[core]
-        excludesfile = /home/.../.gitignore_global
-```
-
-(alternatively, type the command `git config --global core.excludesfile ~/.gitignore_global`
-on a terminal)
-
-Then put your favourite tool's temporary filenames in that file, e.g.
-```
-# NetBeans
-nbproject/
-```
-
-Another option is to create a per-repository excludes file `.git/info/exclude`.
-These are not committed but apply only to one repository.
-
-If a set of tools is used by the build system or scripts the repository (for
-example, lcov) it is perfectly acceptable to add its files to `.gitignore`
-and commit them.
-
 Development guidelines
 ============================
 
@@ -829,15 +797,6 @@ General Bitcoin Core
 
   - *Rationale*: RPC allows for better automatic testing. The test suite for
     the GUI is very limited.
-
-- Make sure pull requests pass CI before merging.
-
-  - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
-     on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in
-     confusion and mayhem.
-
-  - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first.
 
 Logging
 -------
@@ -877,11 +836,6 @@ logging messages. They should be used as follows:
 Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
 careful to avoid side-effects in those expressions.
-
-Wallet
--------
-
-- Make sure that no crashes happen with run-time option `-disablewallet`.
 
 General C++
 -------------
@@ -1008,7 +962,7 @@ Strings and formatting
     buffer overflows, and surprises with `\0` characters. Also, some C string manipulations
     tend to act differently depending on platform, or even the user locale.
 
-- For `strprintf`, `LogInfo`, `LogDebug`, etc formatting characters don't need size specifiers.
+- For `strprintf`, `LogInfo`, `LogDebug`, etc formatting characters don't need size specifiers (hh, h, l, ll, j, z, t, L) for arithmetic types.
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
 
@@ -1032,7 +986,7 @@ Strings and formatting
   - In cases where you do call `.c_str()`, you might want to additionally check that the string does not contain embedded '\0' characters, because
     it will (necessarily) truncate the string. This might be used to hide parts of the string from logging or to circumvent
     checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first
-    and reject it if there are any (see `ParsePrechecks` in `strencodings.cpp` for an example).
+    and reject it if there are any.
 
 Shadowing
 --------------
@@ -1159,27 +1113,7 @@ TRY_LOCK(cs_vNodes, lockNodes);
 Scripts
 --------------------------
 
-Write scripts in Python rather than bash, when possible.
-
-### Shebang
-
-- Use `#!/usr/bin/env bash` instead of obsolete `#!/bin/bash`.
-
-  - [*Rationale*](https://github.com/dylanaraps/pure-bash-bible#shebang):
-
-    `#!/bin/bash` assumes it is always installed to /bin/ which can cause issues;
-
-    `#!/usr/bin/env bash` searches the user's PATH to find the bash binary.
-
-  OK:
-```bash
-#!/usr/bin/env bash
-```
-
-  Wrong:
-```bash
-#!/bin/bash
-```
+Write scripts in Python or Rust rather than bash, when possible.
 
 Source code organization
 --------------------------
@@ -1188,12 +1122,6 @@ Source code organization
   when performance due to inlining is critical.
 
   - *Rationale*: Shorter and simpler header files are easier to read and reduce compile time.
-
-- Use only the lowercase alphanumerics (`a-z0-9`), underscore (`_`) and hyphen (`-`) in source code filenames.
-
-  - *Rationale*: `grep`:ing and auto-completing filenames is easier when using a consistent
-    naming pattern. Potential problems when building on case-insensitive filesystems are
-    avoided when using only lowercase characters in source code filenames.
 
 - Every `.cpp` and `.h` file should `#include` every header file it directly uses classes, functions or other
   definitions from, even if those headers are already included indirectly through other headers.
@@ -1221,24 +1149,6 @@ namespace {
 ```
 
   - *Rationale*: Avoids confusion about the namespace context.
-
-- Use `#include <primitives/transaction.h>` bracket syntax instead of
-  `#include "primitives/transactions.h"` quote syntax.
-
-  - *Rationale*: Bracket syntax is less ambiguous because the preprocessor
-    searches a fixed list of include directories without taking location of the
-    source file into account. This allows quoted includes to stand out more when
-    the location of the source file actually is relevant.
-
-- Use include guards to avoid the problem of double inclusion. The header file
-  `foo/bar.h` should use the include guard identifier `BITCOIN_FOO_BAR_H`, e.g.
-
-```c++
-#ifndef BITCOIN_FOO_BAR_H
-#define BITCOIN_FOO_BAR_H
-...
-#endif // BITCOIN_FOO_BAR_H
-```
 
 GUI
 -----
@@ -1466,10 +1376,6 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   - *Rationale*: Integer verbosity allows for multiple values. Undocumented boolean verbosity is deprecated
     and new RPC methods should prevent its use.
 
-- Don't forget to fill in the argument names correctly in the RPC command table.
-
-  - *Rationale*: If not, the call cannot be used with name-based arguments.
-
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
 
   - *Rationale*: `bitcoin-cli` and the GUI debug console use this table to determine how to
@@ -1500,17 +1406,6 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     client may be aware of prior to entering a wallet RPC call, we must block
     until the wallet is caught up to the chainstate as of the RPC call's entry.
     This also makes the API much easier for RPC clients to reason about.
-
-- Be aware of RPC method aliases and generally avoid registering the same
-  callback function pointer for different RPCs.
-
-  - *Rationale*: RPC methods registered with the same function pointer will be
-    considered aliases and only the first method name will show up in the
-    `help` RPC command list.
-
-  - *Exception*: Using RPC method aliases may be appropriate in cases where a
-    new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly
-    showing up in the command list.
 
 - Use *invalid* bech32 addresses (e.g. in the constant array `EXAMPLE_ADDRESS`) for
   `RPCExamples` help documentation.
