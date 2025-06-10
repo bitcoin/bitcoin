@@ -652,7 +652,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second;
-            if (txConflict != tx)
+            if (Assume(txConflict.GetHash() != tx.GetHash()))
             {
                 ClearPrioritisation(txConflict.GetHash());
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
