@@ -14,7 +14,7 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
+            VALUE "CompanyName",        CLIENT_NAME " project"
             VALUE "FileDescription",    "bitcoin-tx (CLI Bitcoin transaction editor utility)"
             VALUE "FileVersion",        CLIENT_VERSION_STRING
             VALUE "InternalName",       "bitcoin-tx"
