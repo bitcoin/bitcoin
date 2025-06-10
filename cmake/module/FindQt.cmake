@@ -40,6 +40,15 @@ find_package_handle_standard_args(Qt
   VERSION_VAR Qt${Qt_FIND_VERSION_MAJOR}_VERSION
 )
 
-foreach(component IN LISTS Qt_FIND_COMPONENTS ITEMS "")
-  mark_as_advanced(Qt${Qt_FIND_VERSION_MAJOR}${component}_DIR)
+foreach(component IN LISTS Qt_FIND_COMPONENTS)
+  mark_as_advanced(
+    Qt${Qt_FIND_VERSION_MAJOR}${component}_DIR
+    Qt${Qt_FIND_VERSION_MAJOR}${component}Tools_DIR
+  )
 endforeach()
+mark_as_advanced(
+  QT_ADDITIONAL_HOST_PACKAGES_PREFIX_PATH
+  QT_ADDITIONAL_PACKAGES_PREFIX_PATH
+  XKB_INCLUDE_DIR
+  XKB_LIBRARY
+)
