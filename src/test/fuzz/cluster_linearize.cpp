@@ -48,6 +48,8 @@ public:
     /** Find a candidate set using at most max_iterations iterations, and the number of iterations
      *  actually performed. If that number is less than max_iterations, then the result is optimal.
      *
+     * Always returns a connected set of transactions.
+     *
      * Complexity: O(N * M), where M is the number of connected topological subsets of the cluster.
      *             That number is bounded by M <= 2^(N-1).
      */
@@ -60,8 +62,9 @@ public:
         std::vector<std::pair<SetType, SetType>> queue;
         // Initially we have just one queue element, with the entire graph in und.
         queue.emplace_back(SetType{}, m_todo);
-        // Best solution so far.
-        SetInfo best(m_depgraph, m_todo);
+        // Best solution so far. Initialize with the remaining ancestors of the first remaining
+        // transaction.
+        SetInfo best(m_depgraph, m_depgraph.Ancestors(m_todo.First()) & m_todo);
         // Process the queue.
         while (!queue.empty() && iterations_left) {
             // Pop top element of the queue.
@@ -689,11 +692,11 @@ FUZZ_TARGET(clusterlin_simple_finder)
         assert(iterations_done <= (uint64_t{1} << (todo.Count() - 1)));
         if (MAX_SIMPLE_ITERATIONS > (uint64_t{1} << (todo.Count() - 1))) assert(optimal);
 
-        // Perform quality checks only if SimpleCandidateFinder claims an optimal result.
-        if (optimal) {
-            // Optimal sets are always connected.
-            assert(depgraph.IsConnected(found.transactions));
+        // SimpleCandidateFinder only finds connected sets.
+        assert(depgraph.IsConnected(found.transactions));
 
+        // Perform further quality checks only if SimpleCandidateFinder claims an optimal result.
+        if (optimal) {
             // Compare with AncestorCandidateFinder.
             auto anc = anc_finder.FindCandidateSet();
             assert(anc.feerate <= found.feerate);
