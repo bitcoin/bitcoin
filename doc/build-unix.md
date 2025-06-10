@@ -56,7 +56,7 @@ SQLite is required for the descriptor wallet:
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-ZMQ dependencies (provides ZMQ API):
+ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo apt-get install libzmq3-dev
 
@@ -107,7 +107,7 @@ SQLite is required for the descriptor wallet:
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
-ZMQ dependencies (provides ZMQ API):
+ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo dnf install zeromq-devel
 
@@ -115,7 +115,7 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
     sudo dnf install systemtap-sdt-devel
 
-IPC-enabled binaries are compiled  with `-DENABLE_IPC=ON` and require the following dependency.
+IPC-enabled binaries are compiled with `-DENABLE_IPC=ON` and require the following dependency.
 Skip if you do not need IPC functionality.
 
     sudo dnf install capnproto
