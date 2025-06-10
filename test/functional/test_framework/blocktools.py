@@ -114,6 +114,26 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block.calc_sha256()
     return block
 
+def create_empty_fork(node, fork_length):
+    '''
+        Creates a fork using node's chaintip as the starting point.
+        Returns a list of blocks to submit in order.
+    '''
+    tip = int(node.getbestblockhash(), 16)
+    height = node.getblockcount()
+    block_time = node.getblock(node.getbestblockhash())['time'] + 1
+
+    blocks = []
+    for _ in range(fork_length):
+        block = create_block(tip, create_coinbase(height + 1), block_time)
+        block.solve()
+        blocks.append(block)
+        tip = block.sha256
+        block_time += 1
+        height += 1
+
+    return blocks
+
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce))
     output_data = WITNESS_COMMITMENT_HEADER + witness_commitment
