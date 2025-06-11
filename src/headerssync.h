@@ -134,7 +134,7 @@ public:
      * minimum_required_work: amount of chain work required to accept the chain
      */
     HeadersSyncState(NodeId id, const Consensus::Params& consensus_params,
-            const CBlockIndex* chain_start, const arith_uint256& minimum_required_work);
+            const CBlockIndex& chain_start, const arith_uint256& minimum_required_work);
 
     /** Result data structure for ProcessNextHeaders. */
     struct ProcessingResult {
@@ -210,7 +210,7 @@ private:
     const Consensus::Params& m_consensus_params;
 
     /** Store the last block in our block index that the peer's chain builds from */
-    const CBlockIndex* m_chain_start{nullptr};
+    const CBlockIndex& m_chain_start;
 
     /** Minimum work that we're looking for on this chain. */
     const arith_uint256 m_minimum_required_work;

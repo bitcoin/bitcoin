@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
             Params().GenesisBlock().nVersion, Params().GenesisBlock().nTime,
             ArithToUint256(1), Params().GenesisBlock().nBits);
 
-    const CBlockIndex* chain_start = WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(Params().GenesisBlock().GetHash()));
+    const CBlockIndex& chain_start = {*Assert(WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(Params().GenesisBlock().GetHash())))};
     std::vector<CBlockHeader> headers_batch;
 
     // Feed the first chain to HeadersSyncState, by delivering 1 header

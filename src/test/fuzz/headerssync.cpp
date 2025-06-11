@@ -43,7 +43,7 @@ void MakeHeadersContinuous(
 class FuzzedHeadersSyncState : public HeadersSyncState
 {
 public:
-    FuzzedHeadersSyncState(const unsigned commit_offset, const CBlockIndex* chain_start, const arith_uint256& minimum_required_work)
+    FuzzedHeadersSyncState(const unsigned commit_offset, const CBlockIndex& chain_start, const arith_uint256& minimum_required_work)
         : HeadersSyncState(/*id=*/0, Params().GetConsensus(), chain_start, minimum_required_work)
     {
         const_cast<unsigned&>(m_commit_offset) = commit_offset;
@@ -68,7 +68,7 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
     arith_uint256 min_work{UintToArith256(ConsumeUInt256(fuzzed_data_provider))};
     FuzzedHeadersSyncState headers_sync(
         /*commit_offset=*/fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 1024),
-        /*chain_start=*/&start_index,
+        /*chain_start=*/start_index,
         /*minimum_required_work=*/min_work);
 
     // Store headers for potential redownload phase.
