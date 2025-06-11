@@ -4380,7 +4380,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> hea
     return true;
 }
 
-void ChainstateManager::ReportHeadersPresync(const arith_uint256& work, int64_t height, int64_t timestamp)
+void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)
 {
     AssertLockNotHeld(GetMutex());
     {
