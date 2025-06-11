@@ -238,30 +238,25 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 }
 
 [[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
-                                       const std::string& index_name,
-                                       int start_height, int stop_height)
+                                                     const std::string& index_name, int height)
 {
-    DBHeightKey key{start_height};
+    DBHeightKey key{height};
     db_it.Seek(key);
 
-    for (int height = start_height; height <= stop_height; ++height) {
-        if (!db_it.GetKey(key) || key.height != height) {
-            LogError("%s: unexpected key in %s: expected (%c, %d)\n",
-                         __func__, index_name, DB_BLOCK_HEIGHT, height);
-            return false;
-        }
-
-        std::pair<uint256, DBVal> value;
-        if (!db_it.GetValue(value)) {
-            LogError("%s: unable to read value in %s at key (%c, %d)\n",
-                         __func__, index_name, DB_BLOCK_HEIGHT, height);
-            return false;
-        }
-
-        batch.Write(DBHashKey(value.first), std::move(value.second));
-
-        db_it.Next();
+    if (!db_it.GetKey(key) || key.height != height) {
+        LogError("%s: unexpected key in %s: expected (%c, %d)\n",
+                 __func__, index_name, DB_BLOCK_HEIGHT, height);
+        return false;
     }
+
+    std::pair<uint256, DBVal> value;
+    if (!db_it.GetValue(value)) {
+        LogError("%s: unable to read value in %s at key (%c, %d)\n",
+                 __func__, index_name, DB_BLOCK_HEIGHT, height);
+        return false;
+    }
+
+    batch.Write(DBHashKey(value.first), std::move(value.second));
     return true;
 }
 
@@ -270,10 +265,9 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
     CDBBatch batch(*m_db);
     std::unique_ptr<CDBIterator> db_it(m_db->NewIterator());
 
-    // During a reorg, we need to copy all hash digests for blocks that are
-    // getting disconnected from the height index to the hash index so we can
-    // still find them when the height index entries are overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, block.height - 1, block.height)) {
+    // During a reorg, copy the block's hash digest from the height index to the hash index,
+    // ensuring it's still accessible after the height index entry is overwritten.
+    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, block.height)) {
         return false;
     }
 
