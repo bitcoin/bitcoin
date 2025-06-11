@@ -31,16 +31,17 @@ struct CompressedHeader {
         hashMerkleRoot.SetNull();
     }
 
-    CompressedHeader(const CBlockHeader& header)
+    explicit CompressedHeader(const CBlockHeader& header)
+        : nVersion{header.nVersion},
+          hashMerkleRoot{header.hashMerkleRoot},
+          nTime{header.nTime},
+          nBits{header.nBits},
+          nNonce{header.nNonce}
     {
-        nVersion = header.nVersion;
-        hashMerkleRoot = header.hashMerkleRoot;
-        nTime = header.nTime;
-        nBits = header.nBits;
-        nNonce = header.nNonce;
     }
 
-    CBlockHeader GetFullHeader(const uint256& hash_prev_block) {
+    CBlockHeader GetFullHeader(const uint256& hash_prev_block) const
+    {
         CBlockHeader ret;
         ret.nVersion = nVersion;
         ret.hashPrevBlock = hash_prev_block;
