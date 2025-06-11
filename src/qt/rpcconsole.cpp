@@ -1254,6 +1254,8 @@ void RPCConsole::updateDetailWidget()
             ui->peerCommonHeight->setText(ts.unknown);
         }
         ui->peerHeight->setText(QString::number(stats->nodeStateStats.m_starting_height));
+        ui->peerLastBlocktxnCount->setText(QString::number(stats->nodeStateStats.m_last_blocktxn_count));
+        ui->peerLastBlocktxnSize->setText(GUIUtil::formatBytes(stats->nodeStateStats.m_last_blocktxn_size));
         ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStateStats.m_ping_wait));
         ui->peerAddrRelayEnabled->setText(stats->nodeStateStats.m_addr_relay_enabled ? ts.yes : ts.no);
         ui->peerAddrProcessed->setText(QString::number(stats->nodeStateStats.m_addr_processed));

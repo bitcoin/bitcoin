@@ -1832,6 +1832,52 @@
                 </widget>
                </item>
                <item row="28" column="0">
+                <widget class="QLabel" name="peerLastBlocktxnSizeLabel">
+                 <property name="text">
+                  <string>Last Compact TX Size</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="28" column="1">
+                <widget class="QLabel" name="peerLastBlocktxnSize">
+                 <property name="cursor">
+                  <cursorShape>IBeamCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>N/A</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::PlainText</enum>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="29" column="0">
+                <widget class="QLabel" name="peerLastBlocktxnCountLabel">
+                 <property name="text">
+                  <string>Last Compact TX Count</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="29" column="1">
+                <widget class="QLabel" name="peerLastBlocktxnCount">
+                 <property name="cursor">
+                  <cursorShape>IBeamCursor</cursorShape>
+                 </property>
+                 <property name="text">
+                  <string>N/A</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::PlainText</enum>
+                 </property>
+                 <property name="textInteractionFlags">
+                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="30" column="0">
                 <spacer name="verticalSpacer_3">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
