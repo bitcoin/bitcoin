@@ -192,6 +192,8 @@ static RPCHelpMan getpeerinfo()
                                                               "best capture connection behaviors."},
                     {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
                     {RPCResult::Type::STR, "session_id", "The session ID for this connection, or \"\" if there is none (\"v2\" transport protocol only).\n"},
+                    {RPCResult::Type::NUM, "last_blocktxn_count", "The number of transactions sent to this peer in the last BLOCKTXN response"},
+                    {RPCResult::Type::NUM, "last_blocktxn_size", "The total byte size of transactions sent to this peer in the last BLOCKTXN response"}
                 }},
             }},
         },
@@ -298,6 +300,8 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
         obj.pushKV("transport_protocol_type", TransportTypeAsString(stats.m_transport_type));
         obj.pushKV("session_id", stats.m_session_id);
+        obj.pushKV("last_blocktxn_count", statestats.m_last_blocktxn_count);
+        obj.pushKV("last_blocktxn_size", statestats.m_last_blocktxn_size);
 
         ret.push_back(std::move(obj));
     }
