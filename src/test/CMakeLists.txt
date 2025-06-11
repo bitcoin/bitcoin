@@ -62,6 +62,7 @@ add_executable(test_bitcoin
   miniscript_tests.cpp
   minisketch_tests.cpp
   multisig_tests.cpp
+  bip328_tests.cpp
   net_peer_connection_tests.cpp
   net_peer_eviction_tests.cpp
   net_tests.cpp
