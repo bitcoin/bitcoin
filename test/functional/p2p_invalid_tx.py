@@ -91,32 +91,28 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # are sent out and in the orphan cache
         SCRIPT_PUB_KEY_OP_TRUE = b'\x51\x75' * 15 + b'\x51'
         tx_withhold = CTransaction()
-        tx_withhold.vin.append(CTxIn(outpoint=COutPoint(block1.vtx[0].sha256, 0)))
+        tx_withhold.vin.append(CTxIn(outpoint=COutPoint(block1.vtx[0].txid_int, 0)))
         tx_withhold.vout = [CTxOut(nValue=25 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE)] * 2
-        tx_withhold.calc_sha256()
 
         # Our first orphan tx with some outputs to create further orphan txs
         tx_orphan_1 = CTransaction()
-        tx_orphan_1.vin.append(CTxIn(outpoint=COutPoint(tx_withhold.sha256, 0)))
+        tx_orphan_1.vin.append(CTxIn(outpoint=COutPoint(tx_withhold.txid_int, 0)))
         tx_orphan_1.vout = [CTxOut(nValue=8 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE)] * 3
-        tx_orphan_1.calc_sha256()
 
         # A valid transaction with low fee
         tx_orphan_2_no_fee = CTransaction()
-        tx_orphan_2_no_fee.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 0)))
+        tx_orphan_2_no_fee.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.txid_int, 0)))
         tx_orphan_2_no_fee.vout.append(CTxOut(nValue=8 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
 
         # A valid transaction with sufficient fee
         tx_orphan_2_valid = CTransaction()
-        tx_orphan_2_valid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 1)))
+        tx_orphan_2_valid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.txid_int, 1)))
         tx_orphan_2_valid.vout.append(CTxOut(nValue=8 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        tx_orphan_2_valid.calc_sha256()
 
         # An invalid transaction with negative fee
         tx_orphan_2_invalid = CTransaction()
-        tx_orphan_2_invalid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 2)))
+        tx_orphan_2_invalid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.txid_int, 2)))
         tx_orphan_2_invalid.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        tx_orphan_2_invalid.calc_sha256()
 
         self.log.info('Send the orphans ... ')
         # Send valid orphan txs from p2ps[0]
@@ -133,7 +129,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         # Transactions that should end up in the mempool
         expected_mempool = {
-            t.hash
+            t.txid_hex
             for t in [
                 tx_withhold,  # The transaction that is the root for all orphans
                 tx_orphan_1,  # The orphan transaction that splits the coins
@@ -158,10 +154,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Test orphan with rejected parents')
         rejected_parent = CTransaction()
-        rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
+        rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.txid_int, 0)))
         rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        rejected_parent.rehash()
-        with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
+        with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.txid_hex)]):
             node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
 
         self.log.info('Test that a peer disconnection causes erase its transactions from the orphan pool')
@@ -170,14 +165,12 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Test that a transaction in the orphan pool is included in a new tip block causes erase this transaction from the orphan pool')
         tx_withhold_until_block_A = CTransaction()
-        tx_withhold_until_block_A.vin.append(CTxIn(outpoint=COutPoint(tx_withhold.sha256, 1)))
+        tx_withhold_until_block_A.vin.append(CTxIn(outpoint=COutPoint(tx_withhold.txid_int, 1)))
         tx_withhold_until_block_A.vout = [CTxOut(nValue=12 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE)] * 2
-        tx_withhold_until_block_A.calc_sha256()
 
         tx_orphan_include_by_block_A = CTransaction()
-        tx_orphan_include_by_block_A.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_A.sha256, 0)))
+        tx_orphan_include_by_block_A.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_A.txid_int, 0)))
         tx_orphan_include_by_block_A.vout.append(CTxOut(nValue=12 * COIN - 12000, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        tx_orphan_include_by_block_A.calc_sha256()
 
         self.log.info('Send the orphan ... ')
         node.p2ps[0].send_txs_and_test([tx_orphan_include_by_block_A], node, success=False)
@@ -195,19 +188,16 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Test that a transaction in the orphan pool conflicts with a new tip block causes erase this transaction from the orphan pool')
         tx_withhold_until_block_B = CTransaction()
-        tx_withhold_until_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_A.sha256, 1)))
+        tx_withhold_until_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_A.txid_int, 1)))
         tx_withhold_until_block_B.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        tx_withhold_until_block_B.calc_sha256()
 
         tx_orphan_include_by_block_B = CTransaction()
-        tx_orphan_include_by_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_B.sha256, 0)))
+        tx_orphan_include_by_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_B.txid_int, 0)))
         tx_orphan_include_by_block_B.vout.append(CTxOut(nValue=10 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        tx_orphan_include_by_block_B.calc_sha256()
 
         tx_orphan_conflict_by_block_B = CTransaction()
-        tx_orphan_conflict_by_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_B.sha256, 0)))
+        tx_orphan_conflict_by_block_B.vin.append(CTxIn(outpoint=COutPoint(tx_withhold_until_block_B.txid_int, 0)))
         tx_orphan_conflict_by_block_B.vout.append(CTxOut(nValue=9 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        tx_orphan_conflict_by_block_B.calc_sha256()
         self.log.info('Send the orphan ... ')
         node.p2ps[0].send_txs_and_test([tx_orphan_conflict_by_block_B], node, success=False)
 

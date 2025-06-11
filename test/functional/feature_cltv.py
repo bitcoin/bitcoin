@@ -43,7 +43,6 @@ def cltv_modify_tx(tx, prepend_scriptsig, nsequence=None, nlocktime=None):
         tx.nLockTime = nlocktime
 
     tx.vin[0].scriptSig = CScript(prepend_scriptsig + list(CScript(tx.vin[0].scriptSig)))
-    tx.rehash()
 
 
 def cltv_invalidate(tx, failure_reason):
@@ -163,8 +162,8 @@ class BIP65Test(BitcoinTestFramework):
             ][i]
             # First we show that this tx is valid except for CLTV by getting it
             # rejected from the mempool for exactly that reason.
-            spendtx_txid = spendtx.hash
-            spendtx_wtxid = spendtx.getwtxid()
+            spendtx_txid = spendtx.txid_hex
+            spendtx_wtxid = spendtx.wtxid_hex
             assert_equal(
                 [{
                     'txid': spendtx_txid,

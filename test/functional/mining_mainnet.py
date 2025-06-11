@@ -65,7 +65,6 @@ class MiningMainnetTest(BitcoinTestFramework):
         # The alternate mainnet chain was mined with non-timelocked coinbase txs.
         block.vtx[0].nLockTime = 0
         block.vtx[0].vin[0].nSequence = SEQUENCE_FINAL
-        block.vtx[0].rehash()
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         block_hex = block.serialize(with_witness=False).hex()

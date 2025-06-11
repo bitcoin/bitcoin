@@ -287,7 +287,7 @@ class MiniWallet:
         return {
             "sent_vout": 1,
             "txid": txid,
-            "wtxid": tx.getwtxid(),
+            "wtxid": tx.wtxid_hex,
             "hex": tx.serialize().hex(),
             "tx": tx,
         }
@@ -340,7 +340,7 @@ class MiniWallet:
         if target_vsize:
             self._bulk_tx(tx, target_vsize)
 
-        txid = tx.rehash()
+        txid = tx.txid_hex
         return {
             "new_utxos": [self._create_utxo(
                 txid=txid,
@@ -352,7 +352,7 @@ class MiniWallet:
             ) for i in range(len(tx.vout))],
             "fee": fee,
             "txid": txid,
-            "wtxid": tx.getwtxid(),
+            "wtxid": tx.wtxid_hex,
             "hex": tx.serialize().hex(),
             "tx": tx,
         }

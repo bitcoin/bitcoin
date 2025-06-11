@@ -1423,9 +1423,8 @@ class TaprootTest(BitcoinTestFramework):
             # Ask the wallet to sign
             fund_tx = tx_from_hex(node.signrawtransactionwithwallet(fund_tx.serialize().hex())["hex"])
             # Construct UTXOData entries
-            fund_tx.rehash()
             for i in range(count_this_tx):
-                utxodata = UTXOData(outpoint=COutPoint(fund_tx.sha256, i), output=fund_tx.vout[i], spender=spenders[done])
+                utxodata = UTXOData(outpoint=COutPoint(fund_tx.txid_int, i), output=fund_tx.vout[i], spender=spenders[done])
                 if utxodata.spender.need_vin_vout_mismatch:
                     mismatching_utxos.append(utxodata)
                 else:
@@ -1538,11 +1537,10 @@ class TaprootTest(BitcoinTestFramework):
                     and (all(utxo.spender.is_standard for utxo in input_utxos))  # All inputs must be standard
                     and tx.version >= 1  # The tx version must be standard
                     and tx.version <= 2)
-                tx.rehash()
                 msg = ','.join(utxo.spender.comment + ("*" if n == fail_input else "") for n, utxo in enumerate(input_utxos))
                 if is_standard_tx:
                     node.sendrawtransaction(tx.serialize().hex(), 0)
-                    assert node.getmempoolentry(tx.hash) is not None, "Failed to accept into mempool: " + msg
+                    assert node.getmempoolentry(tx.txid_hex) is not None, "Failed to accept into mempool: " + msg
                 else:
                     assert_raises_rpc_error(-26, None, node.sendrawtransaction, tx.serialize().hex(), 0)
                 # Submit in a block
@@ -1568,8 +1566,7 @@ class TaprootTest(BitcoinTestFramework):
         coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
         coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
-        coinbase.rehash()
-        assert coinbase.hash == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
+        assert coinbase.txid_hex == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
         block.rehash()
@@ -1651,7 +1648,7 @@ class TaprootTest(BitcoinTestFramework):
         # Construct a deterministic chain of transactions creating UTXOs to the test's spk's (so that they
         # come from distinct txids).
         txn = []
-        lasttxid = coinbase.sha256
+        lasttxid = coinbase.txid_int
         amount = 5000000000
         for i, spk in enumerate(old_spks + tap_spks):
             val = 42000000 * (i + 7)
@@ -1662,11 +1659,10 @@ class TaprootTest(BitcoinTestFramework):
             if i & 1:
                 tx.vout = list(reversed(tx.vout))
             tx.nLockTime = 0
-            tx.rehash()
             amount -= val
-            lasttxid = tx.sha256
+            lasttxid = tx.txid_int
             txn.append(tx)
-            spend_info[spk]['prevout'] = COutPoint(tx.sha256, i & 1)
+            spend_info[spk]['prevout'] = COutPoint(tx.txid_int, i & 1)
             spend_info[spk]['utxo'] = CTxOut(val, spk)
         # Mine those transactions
         self.init_blockinfo(self.nodes[0])

@@ -106,7 +106,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         # Package validation is atomic: if the node cannot find a UTXO for any single tx in the package,
         # it terminates immediately to avoid unnecessary, expensive signature verification.
         package_bad = self.independent_txns_hex + [garbage_tx]
-        testres_bad = self.independent_txns_testres_blank + [{"txid": tx.rehash(), "wtxid": tx.getwtxid(), "allowed": False, "reject-reason": "missing-inputs"}]
+        testres_bad = self.independent_txns_testres_blank + [{"txid": tx.txid_hex, "wtxid": tx.wtxid_hex, "allowed": False, "reject-reason": "missing-inputs"}]
         self.assert_testres_equal(package_bad, testres_bad)
 
         self.log.info("Check testmempoolaccept tells us when some transactions completed validation successfully")
@@ -117,8 +117,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         # By the time the signature for the last transaction is checked, all the other transactions
         # have been fully validated, which is why the node returns full validation results for all
         # transactions here but empty results in other cases.
-        tx_bad_sig_txid = tx_bad_sig.rehash()
-        tx_bad_sig_wtxid = tx_bad_sig.getwtxid()
+        tx_bad_sig_txid = tx_bad_sig.txid_hex
+        tx_bad_sig_wtxid = tx_bad_sig.wtxid_hex
         assert_equal(testres_bad_sig, self.independent_txns_testres + [{
             "txid": tx_bad_sig_txid,
             "wtxid": tx_bad_sig_wtxid, "allowed": False,
@@ -146,7 +146,7 @@ class RPCPackagesTest(BitcoinTestFramework):
 
         self.log.info("Check that testmempoolaccept requires packages to be sorted by dependency")
         assert_equal(node.testmempoolaccept(rawtxs=chain_hex[::-1]),
-                [{"txid": tx.rehash(), "wtxid": tx.getwtxid(), "package-error": "package-not-sorted"} for tx in chain_txns[::-1]])
+                [{"txid": tx.txid_hex, "wtxid": tx.wtxid_hex, "package-error": "package-not-sorted"} for tx in chain_txns[::-1]])
 
         self.log.info("Testmempoolaccept a chain of 25 transactions")
         testres_multiple = node.testmempoolaccept(rawtxs=chain_hex)
@@ -353,11 +353,11 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(submitpackage_result["package_msg"], "success")
         for package_txn in package_txns:
             tx = package_txn["tx"]
-            assert tx.getwtxid() in submitpackage_result["tx-results"]
-            wtxid = tx.getwtxid()
+            assert tx.wtxid_hex in submitpackage_result["tx-results"]
+            wtxid = tx.wtxid_hex
             assert wtxid in submitpackage_result["tx-results"]
             tx_result = submitpackage_result["tx-results"][wtxid]
-            assert_equal(tx_result["txid"], tx.rehash())
+            assert_equal(tx_result["txid"], tx.txid_hex)
             assert_equal(tx_result["vsize"], tx.get_vsize())
             assert_equal(tx_result["fees"]["base"], DEFAULT_FEE)
             if wtxid not in presubmitted_wtxids:
@@ -368,7 +368,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         self.assert_equal_package_results(node, testmempoolaccept_result, submitpackage_result)
 
         # The node should announce each transaction. No guarantees for propagation.
-        peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
+        peer.wait_for_broadcast([tx["tx"].wtxid_hex for tx in package_txns])
         self.generate(node, 1)
 
     def test_submitpackage(self):
@@ -410,9 +410,9 @@ class RPCPackagesTest(BitcoinTestFramework):
         hex_partial_acceptance = [txs[0]["hex"], bad_child.serialize().hex()]
         res = node.submitpackage(hex_partial_acceptance)
         assert_equal(res["package_msg"], "transaction failed")
-        first_wtxid = txs[0]["tx"].getwtxid()
+        first_wtxid = txs[0]["tx"].wtxid_hex
         assert "error" not in res["tx-results"][first_wtxid]
-        sec_wtxid = bad_child.getwtxid()
+        sec_wtxid = bad_child.wtxid_hex
         assert_equal(res["tx-results"][sec_wtxid]["error"], "version")
         peer.wait_for_broadcast([first_wtxid])
 
@@ -496,7 +496,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         # Relax the restrictions for both and send it; parent gets through as own subpackage
         pkg_result = node.submitpackage(chained_burn_hex, maxfeerate=minrate_btc_kvb_burn, maxburnamount=chained_txns_burn[1]["new_utxo"]["value"])
         assert "error" not in pkg_result["tx-results"][chained_txns_burn[0]["wtxid"]]
-        assert_equal(pkg_result["tx-results"][tx.getwtxid()]["error"], "scriptpubkey")
+        assert_equal(pkg_result["tx-results"][tx.wtxid_hex]["error"], "scriptpubkey")
         assert_equal(node.getrawmempool(), [chained_txns_burn[0]["txid"]])
 
 if __name__ == "__main__":

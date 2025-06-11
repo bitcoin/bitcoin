@@ -34,7 +34,7 @@ def assert_mempool_contents(test_framework, node, expected=None, sync=True):
     mempool = node.getrawmempool(verbose=False)
     assert_equal(len(mempool), len(expected))
     for tx in expected:
-        assert tx.rehash() in mempool
+        assert tx.txid_hex in mempool
 
 
 def fill_mempool(test_framework, node, *, tx_sync_fun=None):
@@ -104,5 +104,5 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
 
 def tx_in_orphanage(node, tx: CTransaction) -> bool:
     """Returns true if the transaction is in the orphanage."""
-    found = [o for o in node.getorphantxs(verbosity=1) if o["txid"] == tx.rehash() and o["wtxid"] == tx.getwtxid()]
+    found = [o for o in node.getorphantxs(verbosity=1) if o["txid"] == tx.txid_hex and o["wtxid"] == tx.wtxid_hex]
     return len(found) == 1
