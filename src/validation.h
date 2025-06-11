@@ -1252,7 +1252,7 @@ public:
      *  headers are not yet fed to validation during that time, but validation is (for now)
      *  responsible for logging and signalling through NotifyHeaderTip, so it needs this
      *  information. */
-    void ReportHeadersPresync(const arith_uint256& work, int64_t height, int64_t timestamp);
+    void ReportHeadersPresync(int64_t height, int64_t timestamp);
 
     //! When starting up, search the datadir for a chainstate based on a UTXO
     //! snapshot that is in the process of being validated.

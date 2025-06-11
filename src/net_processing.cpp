@@ -4635,7 +4635,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 if (it != m_headers_presync_stats.end()) stats = it->second;
             }
             if (stats.second) {
-                m_chainman.ReportHeadersPresync(stats.first, stats.second->first, stats.second->second);
+                m_chainman.ReportHeadersPresync(stats.second->first, stats.second->second);
             }
         }
 
