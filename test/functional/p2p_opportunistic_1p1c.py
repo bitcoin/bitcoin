@@ -25,6 +25,7 @@ from test_framework.p2p import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_equal,
     assert_greater_than,
 )
 from test_framework.wallet import (
@@ -337,7 +338,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
     @cleanup
     def test_other_parent_in_mempool(self):
-        self.log.info("Check opportunistic 1p1c works even if child already has another parent in mempool")
+        self.log.info("Check opportunistic 1p1c works when part of a 2p1c (child already has another parent in mempool)")
         node = self.nodes[0]
 
         # Grandparent will enter mempool by itself
@@ -376,6 +377,46 @@ class PackageRelayTest(BitcoinTestFramework):
         assert parent_low["txid"] in node_mempool
         assert child["txid"] in node_mempool
 
+    @cleanup
+    def test_1p1c_on_1p1c(self):
+        self.log.info("Test that opportunistic 1p1c works when part of a 4-generation chain (1p1c chained from a 1p1c)")
+        node = self.nodes[0]
+
+        # Prep 2 generations of 1p1c packages to be relayed
+        low_fee_great_grandparent = self.create_tx_below_mempoolminfee(self.wallet)
+        high_fee_grandparent = self.wallet.create_self_transfer(utxo_to_spend=low_fee_great_grandparent["new_utxo"], fee_rate=20*FEERATE_1SAT_VB)
+
+        low_fee_parent = self.create_tx_below_mempoolminfee(self.wallet, utxo_to_spend=high_fee_grandparent["new_utxo"])
+        high_fee_child = self.wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=20*FEERATE_1SAT_VB)
+
+        peer_sender = node.add_p2p_connection(P2PInterface())
+
+        # The 1p1c that spends the confirmed utxo must be received first. Afterwards, the "younger" 1p1c can be received.
+        for package in [[low_fee_great_grandparent, high_fee_grandparent], [low_fee_parent, high_fee_child]]:
+            # Aliases
+            low_fee_parent, high_fee_child = package
+
+            # 1. Child is received first (perhaps the low feerate parent didn't meet feefilter or the requests were sent to different nodes). It is missing an input.
+            high_child_wtxid_int = high_fee_child["tx"].wtxid_int
+            peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=high_child_wtxid_int)]))
+            peer_sender.wait_for_getdata([high_child_wtxid_int])
+            peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
+
+            # 2. Node requests the missing parent by txid.
+            parent_txid_int = low_fee_parent["tx"].txid_int
+            peer_sender.wait_for_getdata([parent_txid_int])
+
+            # 3. Sender relays the parent. Parent+Child are evaluated as a package and accepted.
+            peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
+
+        # 4. All transactions should now be in mempool.
+        node_mempool = node.getrawmempool()
+        assert low_fee_great_grandparent["txid"] in node_mempool
+        assert high_fee_grandparent["txid"] in node_mempool
+        assert low_fee_parent["txid"] in node_mempool
+        assert high_fee_child["txid"] in node_mempool
+        assert_equal(node.getmempoolentry(low_fee_great_grandparent["txid"])["descendantcount"], 4)
+
     def run_test(self):
         node = self.nodes[0]
         # To avoid creating transactions with the same txid (can happen if we set the same feerate
@@ -409,6 +450,7 @@ class PackageRelayTest(BitcoinTestFramework):
         self.test_parent_consensus_failure()
         self.test_multiple_parents()
         self.test_other_parent_in_mempool()
+        self.test_1p1c_on_1p1c()
 
 
 if __name__ == '__main__':
