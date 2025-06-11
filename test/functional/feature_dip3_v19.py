@@ -120,7 +120,7 @@ class DIP3V19Test(DashTestFramework):
         tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
 
-        protx_result = revoke_mn.revoke(self.nodes[0], reason=1, fundsAddr=funds_address)
+        protx_result = revoke_mn.revoke(self.nodes[0], submit=True, reason=1, fundsAddr=funds_address)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)

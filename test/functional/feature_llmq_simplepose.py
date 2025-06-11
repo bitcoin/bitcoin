@@ -208,7 +208,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             if check_banned(self.nodes[0], mn) or check_punished(self.nodes[0], mn):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].sendtoaddress(addr, 0.1)
-                mn.update_service(self.nodes[0], fundsAddr=addr)
+                mn.update_service(self.nodes[0], submit=True, fundsAddr=addr)
                 if restart:
                     self.stop_node(mn.nodeIdx)
                     self.start_masternode(mn)

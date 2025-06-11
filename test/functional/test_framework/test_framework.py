@@ -1216,7 +1216,7 @@ class MasternodeInfo:
             raise AssertionError(f"Node at pos {self.nodeIdx} not present, did you start the node?")
         return test.nodes[self.nodeIdx]
 
-    def register(self, node: TestNode, submit: bool = True, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
+    def register(self, node: TestNode, submit: bool, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
                  ipAndPort: Optional[str] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
                  operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
                  platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None) -> str:
@@ -1252,7 +1252,7 @@ class MasternodeInfo:
 
         return node.protx(command, *args)
 
-    def register_fund(self, node: TestNode, submit: bool = True, collateral_address: Optional[str] = None, ipAndPort: Optional[str] = None,
+    def register_fund(self, node: TestNode, submit: bool, collateral_address: Optional[str] = None, ipAndPort: Optional[str] = None,
                       ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
                       operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
                       platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None) -> str:
@@ -1287,7 +1287,7 @@ class MasternodeInfo:
 
         return node.protx(command, *args)
 
-    def revoke(self, node: TestNode, reason: int, fundsAddr: Optional[str] = None) -> str:
+    def revoke(self, node: TestNode, submit: bool, reason: int, fundsAddr: Optional[str] = None) -> str:
         # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
         if self.proTxHash is None:
             raise AssertionError("proTxHash not set, did you call set_params()")
@@ -1302,11 +1302,13 @@ class MasternodeInfo:
 
         # fundsAddr is an optional field that results in different behavior if omitted, so we don't fallback here
         if fundsAddr is not None:
-            args = args + [fundsAddr]
+            args = args + [fundsAddr, submit] # type: ignore
+        elif submit is not True:
+            raise AssertionError("Cannot withhold transaction if relying on fundsAddr fallback behavior")
 
         return node.protx('revoke', *args)
 
-    def update_registrar(self, node: TestNode, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+    def update_registrar(self, node: TestNode, submit: bool, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
                          rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None) -> str:
         # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding proTxHash for this reason
         if self.proTxHash is None:
@@ -1322,11 +1324,13 @@ class MasternodeInfo:
 
         # fundsAddr is an optional field that results in different behavior if omitted, so we don't fallback here
         if fundsAddr is not None:
-            args = args + [fundsAddr]
+            args = args + [fundsAddr, submit] # type: ignore
+        elif submit is not True:
+            raise AssertionError("Cannot withhold transaction if relying on fundsAddr fallback behavior")
 
         return node.protx(command, *args)
 
-    def update_service(self, node: TestNode, ipAndPort: Optional[str] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
+    def update_service(self, node: TestNode, submit: bool, ipAndPort: Optional[str] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
                        platform_http_port: Optional[int] = None, address_operator: Optional[str] = None, fundsAddr: Optional[str] = None) -> str:
         # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
         if self.proTxHash is None:
@@ -1355,10 +1359,10 @@ class MasternodeInfo:
         # Construct final command and arguments
         if self.evo:
             command = "update_service_evo"
-            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_operator, address_funds] # type: ignore
+            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_operator, address_funds, submit] # type: ignore
         else:
             command = "update_service"
-            args = args + [address_operator, address_funds] # type: ignore
+            args = args + [address_operator, address_funds, submit] # type: ignore
 
         return node.protx(command, *args)
 
@@ -1543,7 +1547,7 @@ class DashTestFramework(BitcoinTestFramework):
         operatorReward = idx
 
         # platform_node_id, platform_p2p_port and platform_http_port are ignored for regular masternodes
-        protx_result = mn.register(self.nodes[0], True, collateral_txid=collateral_txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort, operator_reward=operatorReward,
+        protx_result = mn.register(self.nodes[0], submit=True, collateral_txid=collateral_txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort, operator_reward=operatorReward,
                                    platform_node_id=platform_node_id, platform_p2p_port=platform_p2p_port, platform_http_port=platform_http_port)
 
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
@@ -1572,7 +1576,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         protx_success = False
         try:
-            protx_result = evo_info.update_service(self.nodes[0], f'127.0.0.1:{evo_info.nodePort}', platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
+            protx_result = evo_info.update_service(self.nodes[0], True, f'127.0.0.1:{evo_info.nodePort}', platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
             self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
             evo_info.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
@@ -1609,10 +1613,10 @@ class DashTestFramework(BitcoinTestFramework):
         submit = (idx % 4) < 2
 
         if register_fund:
-            protx_result = mn.register_fund(self.nodes[0], submit, ipAndPort=ipAndPort, operator_reward=operatorReward)
+            protx_result = mn.register_fund(self.nodes[0], submit=submit, ipAndPort=ipAndPort, operator_reward=operatorReward)
         else:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            protx_result = mn.register(self.nodes[0], submit, collateral_txid=txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort,
+            protx_result = mn.register(self.nodes[0], submit=submit, collateral_txid=txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort,
                                        operator_reward=operatorReward)
         if submit:
             proTxHash = protx_result
@@ -1624,7 +1628,7 @@ class DashTestFramework(BitcoinTestFramework):
         if operatorReward > 0:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             operatorPayoutAddress = self.nodes[0].getnewaddress()
-            mn.update_service(self.nodes[0], ipAndPort=ipAndPort, address_operator=operatorPayoutAddress)
+            mn.update_service(self.nodes[0], submit=True, ipAndPort=ipAndPort, address_operator=operatorPayoutAddress)
 
         self.mninfo.append(mn)
         self.log.info("Prepared MN %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))

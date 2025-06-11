@@ -320,7 +320,7 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     payload.sig = key.Sign(hash, use_legacy);
 }
 
-static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit = true)
+static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit)
 {
     {
     LOCK(cs_main);
@@ -539,9 +539,9 @@ static RPCHelpMan protx_register_fund_evo()
         },
         {
             RPCResult{"if \"submit\" is not set or set to true",
-                      RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+                RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             RPCResult{"if \"submit\" is set to false",
-                      RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
+                RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
             HelpExampleCli("protx", "register_fund_evo \"" + EXAMPLE_ADDRESS[0] + "\" \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
@@ -578,9 +578,9 @@ static RPCHelpMan protx_register_evo()
         },
         {
             RPCResult{"if \"submit\" is not set or set to true",
-                      RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+                RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             RPCResult{"if \"submit\" is set to false",
-                      RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
+                RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
             HelpExampleCli("protx", "register_evo \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"" + EXAMPLE_ADDRESS[1] + "\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"" + EXAMPLE_ADDRESS[1] + "\" 0 \"" + EXAMPLE_ADDRESS[0] + "\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
@@ -885,7 +885,7 @@ static RPCHelpMan protx_register_submit()
     ptx.vchSig = opt_vchSig.value();
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx, /*fSubmit=*/true);
 },
     };
 }
@@ -903,9 +903,13 @@ static RPCHelpMan protx_update_service()
             GetRpcArg("operatorKey"),
             GetRpcArg("operatorPayoutAddress"),
             GetRpcArg("feeSourceAddress"),
+            GetRpcArg("submit"),
         },
-        RPCResult{
-            RPCResult::Type::STR_HEX, "txid", "The transaction id"
+        {
+            RPCResult{"if \"submit\" is not set or set to true",
+                RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+            RPCResult{"if \"submit\" is set to false",
+                RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
             HelpExampleCli("protx", "update_service \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" 5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd")
@@ -935,9 +939,14 @@ static RPCHelpMan protx_update_service_evo()
             GetRpcArg("platformHTTPPort"),
             GetRpcArg("operatorPayoutAddress"),
             GetRpcArg("feeSourceAddress"),
+            GetRpcArg("submit"),
         },
-        RPCResult{
-            RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+        {
+            RPCResult{"if \"submit\" is not set or set to true",
+                RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+            RPCResult{"if \"submit\" is set to false",
+                RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
+        },
         RPCExamples{
             HelpExampleCli("protx", "update_service_evo \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" \"5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd\" \"f2dbd9b0a1f541a7c44d34a58674d0262f5feca5\" 22821 22822")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -1043,6 +1052,11 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         }
     }
 
+    bool fSubmit{true};
+    if (!request.params[paramIdx + 2].isNull()) {
+        fSubmit = ParseBoolV(request.params[paramIdx + 2], "submit");
+    }
+
     FundSpecialTx(*wallet, tx, ptx, feeSource);
 
     const bool isV19active = DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();),
@@ -1050,7 +1064,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
 }
 
 static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_scheme)
@@ -1070,9 +1084,13 @@ static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_
             GetRpcArg("votingAddress_update"),
             GetRpcArg("payoutAddress_update"),
             GetRpcArg("feeSourceAddress"),
+            GetRpcArg("submit"),
         },
-        RPCResult{
-            RPCResult::Type::STR_HEX, "txid", "The transaction id"
+        {
+            RPCResult{"if \"submit\" is not set or set to true",
+                RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+            RPCResult{"if \"submit\" is set to false",
+                RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
             HelpExampleCli("protx", rpc_example)
@@ -1149,11 +1167,16 @@ static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Dash address: ") + request.params[4].get_str());
     }
 
+    bool fSubmit{true};
+    if (!request.params[5].isNull()) {
+        fSubmit = ParseBoolV(request.params[5], "submit");
+    }
+
     FundSpecialTx(*wallet, tx, ptx, feeSourceDest);
     SignSpecialTxPayloadByHash(tx, ptx, dmn->pdmnState->keyIDOwner, *wallet);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
 },
     };
 }
@@ -1181,9 +1204,13 @@ static RPCHelpMan protx_revoke()
             GetRpcArg("operatorKey"),
             GetRpcArg("reason"),
             GetRpcArg("feeSourceAddress"),
+            GetRpcArg("submit"),
         },
-        RPCResult{
-            RPCResult::Type::STR_HEX, "txid", "The transaction id"
+        {
+            RPCResult{"if \"submit\" is not set or set to true",
+                RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+            RPCResult{"if \"submit\" is set to false",
+                RPCResult::Type::STR_HEX, "hex", "The serialized signed ProTx in hex format"},
         },
         RPCExamples{
             HelpExampleCli("protx", "revoke \"0123456701234567012345670123456701234567012345670123456701234567\" \"072f36a77261cdd5d64c32d97bac417540eddca1d5612f416feb07ff75a8e240\"")
@@ -1248,10 +1275,15 @@ static RPCHelpMan protx_revoke()
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No payout or fee source addresses found, can't revoke");
     }
 
+    bool fSubmit{true};
+    if (!request.params[4].isNull()) {
+        fSubmit = ParseBoolV(request.params[4], "submit");
+    }
+
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request, chain_helper, chainman, tx);
+    return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);
 },
     };
 }
