@@ -12,4 +12,9 @@ if(PYTHON_COMMAND)
   add_test(NAME util_rpcauth_test
     COMMAND ${PYTHON_COMMAND} ${PROJECT_BINARY_DIR}/test/util/rpcauth-test.py
   )
+  add_test(
+    NAME openapi_codegen_vs_rpc_headers
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/test/util/rpc-openapi-codegen-test.py
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
 endif()
