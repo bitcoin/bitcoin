@@ -1287,6 +1287,25 @@ class MasternodeInfo:
 
         return node.protx(command, *args)
 
+    def revoke(self, node: TestNode, reason: int, fundsAddr: Optional[str] = None) -> str:
+        # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
+        if self.proTxHash is None:
+            raise AssertionError("proTxHash not set, did you call set_params()")
+        if self.keyOperator is None:
+            raise AssertionError("keyOperator not set, did you call generate_addresses()")
+
+        args = [
+            self.proTxHash,
+            self.keyOperator,
+            reason,
+        ]
+
+        # fundsAddr is an optional field that results in different behavior if omitted, so we don't fallback here
+        if fundsAddr is not None:
+            args = args + [fundsAddr]
+
+        return node.protx('revoke', *args)
+
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
         """Tests must this method to change default values for number of nodes, topology, etc"""
