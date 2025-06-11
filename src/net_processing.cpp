@@ -269,6 +269,9 @@ struct Peer {
     /** This peer's reported block height when we connected */
     std::atomic<int> m_starting_height{-1};
 
+    std::atomic<uint64_t> m_last_blocktxn_size{0};
+    std::atomic<uint64_t> m_last_blocktxn_count{0};
+
     /** The pong reply we're expecting, or 0 if no pong expected. */
     std::atomic<uint64_t> m_ping_nonce_sent{0};
     /** When the last ping was sent, or 0 if no ping was ever sent */
@@ -1750,6 +1753,8 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
         }
     }
     stats.time_offset = peer->m_time_offset;
+    stats.m_last_blocktxn_count = peer->m_last_blocktxn_count.load();
+    stats.m_last_blocktxn_size = peer->m_last_blocktxn_size.load();
 
     return true;
 }
@@ -2504,6 +2509,9 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
         resp.txn[i] = block.vtx[req.indexes[i]];
         tx_requested_size += resp.txn[i]->GetTotalSize();
     }
+
+    peer.m_last_blocktxn_size.store(tx_requested_size);
+    peer.m_last_blocktxn_count.store(resp.txn.size());
 
     LogDebug(BCLog::CMPCTBLOCK, "Peer %d sent us a GETBLOCKTXN for block %s, sending a BLOCKTXN with %u txns. (%u bytes)\n", pfrom.GetId(), block.GetHash().ToString(), resp.txn.size(), tx_requested_size);
     MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);

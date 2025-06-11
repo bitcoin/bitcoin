@@ -63,6 +63,8 @@ struct CNodeStateStats {
     ServiceFlags their_services;
     int64_t presync_height{-1};
     std::chrono::seconds time_offset{0};
+    uint64_t m_last_blocktxn_count = 0;
+    uint64_t m_last_blocktxn_size = 0;
 };
 
 struct PeerManagerInfo {
