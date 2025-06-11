@@ -168,6 +168,58 @@ std::pair<std::vector<DepGraphIndex>, bool> SimpleLinearize(const DepGraph<SetTy
     return {std::move(linearization), optimal};
 }
 
+/** An even simpler linearization algorithm that tries all permutations.
+ *
+ * This roughly matches SimpleLinearize() (and Linearize) in interface and behavior, but always
+ * tries all topologically-valid transaction orderings, has no way to bound how much work it does,
+ * and always finds the optimal. With an O(n!) complexity, it should only be used for small
+ * clusters.
+ */
+template<typename SetType>
+std::vector<DepGraphIndex> ExhaustiveLinearize(const DepGraph<SetType>& depgraph)
+{
+    // The best linearization so far, and its chunking.
+    std::vector<DepGraphIndex> linearization;
+    std::vector<FeeFrac> chunking;
+
+    std::vector<DepGraphIndex> perm_linearization;
+    // Initialize with the lexicographically-first linearization.
+    for (DepGraphIndex i : depgraph.Positions()) perm_linearization.push_back(i);
+    // Iterate over all valid permutations.
+    do {
+        /** What prefix of perm_linearization is topological. */
+        DepGraphIndex topo_length{0};
+        TestBitSet perm_done;
+        while (topo_length < perm_linearization.size()) {
+            auto i = perm_linearization[topo_length];
+            perm_done.Set(i);
+            if (!depgraph.Ancestors(i).IsSubsetOf(perm_done)) break;
+            ++topo_length;
+        }
+        if (topo_length == perm_linearization.size()) {
+            // If all of perm_linearization is topological, check if it is perhaps our best
+            // linearization so far.
+            auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
+            auto cmp = CompareChunks(perm_chunking, chunking);
+            // If the diagram is better, or if it is equal but with more chunks (because we
+            // prefer minimal chunks), consider this better.
+            if (linearization.empty() || cmp > 0 || (cmp == 0 && perm_chunking.size() > chunking.size())) {
+                linearization = perm_linearization;
+                chunking = perm_chunking;
+            }
+        } else {
+            // Otherwise, fast forward to the last permutation with the same non-topological
+            // prefix.
+            auto first_non_topo = perm_linearization.begin() + topo_length;
+            assert(std::is_sorted(first_non_topo + 1, perm_linearization.end()));
+            std::reverse(first_non_topo + 1, perm_linearization.end());
+        }
+    } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
+
+    return linearization;
+}
+
+
 /** Stitch connected components together in a DepGraph, guaranteeing its corresponding cluster is connected. */
 template<typename BS>
 void MakeConnected(DepGraph<BS>& depgraph)
@@ -996,38 +1048,11 @@ FUZZ_TARGET(clusterlin_simple_linearize)
     // If SimpleLinearize claims optimal result, and the cluster is sufficiently small (there are
     // n! linearizations), test that the result is as good as every valid linearization.
     if (optimal && depgraph.TxCount() <= 8) {
-        std::vector<DepGraphIndex> perm_linearization;
-        // Initialize with the lexicographically-first linearization.
-        for (DepGraphIndex i : depgraph.Positions()) perm_linearization.push_back(i);
-        // Iterate over all valid permutations.
-        do {
-            /** What prefix of perm_linearization is topological. */
-            DepGraphIndex topo_length{0};
-            TestBitSet perm_done;
-            while (topo_length < perm_linearization.size()) {
-                auto i = perm_linearization[topo_length];
-                perm_done.Set(i);
-                if (!depgraph.Ancestors(i).IsSubsetOf(perm_done)) break;
-                ++topo_length;
-            }
-            if (topo_length == perm_linearization.size()) {
-                // If all of perm_linearization is topological, verify that the obtained
-                // linearization is no worse than it.
-                auto perm_chunking = ChunkLinearization(depgraph, perm_linearization);
-                auto cmp = CompareChunks(simple_chunking, perm_chunking);
-                assert(cmp >= 0);
-                // If perm_chunking is diagram-optimal, it cannot have more chunks than
-                // simple_chunking (as simple_chunking claims to be optimal, which implies minimal
-                // chunks.
-                if (cmp == 0) assert(simple_chunking.size() >= perm_chunking.size());
-            } else {
-                // Otherwise, fast forward to the last permutation with the same non-topological
-                // prefix.
-                auto first_non_topo = perm_linearization.begin() + topo_length;
-                assert(std::is_sorted(first_non_topo + 1, perm_linearization.end()));
-                std::reverse(first_non_topo + 1, perm_linearization.end());
-            }
-        } while(std::next_permutation(perm_linearization.begin(), perm_linearization.end()));
+        auto exh_linearization = ExhaustiveLinearize(depgraph);
+        auto exh_chunking = ChunkLinearization(depgraph, exh_linearization);
+        auto cmp = CompareChunks(simple_chunking, exh_chunking);
+        assert(cmp == 0);
+        assert(simple_chunking.size() == exh_chunking.size());
     }
 
     if (optimal) {
