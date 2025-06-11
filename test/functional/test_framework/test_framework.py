@@ -1306,6 +1306,26 @@ class MasternodeInfo:
 
         return node.protx('revoke', *args)
 
+    def update_registrar(self, node: TestNode, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+                         rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None) -> str:
+        # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding proTxHash for this reason
+        if self.proTxHash is None:
+            raise AssertionError("proTxHash not set, did you call set_params()")
+
+        command = 'update_registrar_legacy' if self.legacy else 'update_registrar'
+        args = [
+            self.proTxHash,
+            pubKeyOperator or self.pubKeyOperator,
+            votingAddr or self.votingAddr,
+            rewards_address or self.rewards_address,
+        ]
+
+        # fundsAddr is an optional field that results in different behavior if omitted, so we don't fallback here
+        if fundsAddr is not None:
+            args = args + [fundsAddr]
+
+        return node.protx(command, *args)
+
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
         """Tests must this method to change default values for number of nodes, topology, etc"""

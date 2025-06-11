@@ -213,7 +213,7 @@ class DIP3Test(BitcoinTestFramework):
         assert old_voting_address != new_voting_address
         # also check if funds from payout address are used when no fee source address is specified
         node.sendtoaddress(mn.rewards_address, 0.001)
-        node.protx('update_registrar' if softfork_active(node, 'v19') else 'update_registrar_legacy', mn.proTxHash, "", new_voting_address, "")
+        mn.update_registrar(node, pubKeyOperator="", votingAddr=new_voting_address, rewards_address="")
         self.generate(node, 1)
         new_dmnState = mn.get_node(self).masternode("status")["dmnState"]
         new_voting_address_from_rpc = new_dmnState["votingAddress"]
@@ -263,7 +263,7 @@ class DIP3Test(BitcoinTestFramework):
 
     def update_mn_payee(self, mn: MasternodeInfo, payee):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
-        self.nodes[0].protx('update_registrar' if softfork_active(self.nodes[0], 'v19') else 'update_registrar_legacy', mn.proTxHash, '', '', payee, mn.fundsAddr)
+        mn.update_registrar(self.nodes[0], pubKeyOperator="", votingAddr="", rewards_address=payee, fundsAddr=mn.fundsAddr)
         self.generate(self.nodes[0], 1)
         info = self.nodes[0].protx('info', mn.proTxHash)
         assert info['state']['payoutAddress'] == payee
