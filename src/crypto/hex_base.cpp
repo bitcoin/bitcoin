@@ -5,8 +5,11 @@
 #include <crypto/hex_base.h>
 
 #include <array>
+#include <cassert>
 #include <cstring>
 #include <string>
+// A workaround for https://github.com/include-what-you-use/include-what-you-use/issues/1763.
+// IWYU pragma: no_include <tuple>
 
 namespace {
 
