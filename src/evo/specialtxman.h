@@ -5,7 +5,6 @@
 #ifndef BITCOIN_EVO_SPECIALTXMAN_H
 #define BITCOIN_EVO_SPECIALTXMAN_H
 
-#include <consensus/amount.h>
 #include <sync.h>
 #include <threadsafety.h>
 
@@ -71,10 +70,10 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, std::optional<MNListUpdates>& updatesRet)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    // TODO: make it private and remove forward declaration CCbTx
+
+private:
     bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
-                                     const CAmount blockSubsidy, BlockValidationState& state)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                                     BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 #endif // BITCOIN_EVO_SPECIALTXMAN_H

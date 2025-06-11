@@ -5,6 +5,7 @@
 #include <evo/specialtxman.h>
 
 #include <chainparams.h>
+#include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <evo/assetlocktx.h>
@@ -150,8 +151,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         LogPrint(BCLog::BENCHMARK, "      - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeLoop * 0.000001);
 
         if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
-            CAmount blockSubsidy = GetBlockSubsidy(pindex, m_consensus_params);
-            if (!CheckCreditPoolDiffForBlock(block, pindex, *opt_cbTx, blockSubsidy, state)) {
+            if (!CheckCreditPoolDiffForBlock(block, pindex, *opt_cbTx, state)) {
                 return error("CSpecialTxProcessor: CheckCreditPoolDiffForBlock for block %s failed with %s",
                              pindex->GetBlockHash().ToString(), state.ToString());
             }
@@ -275,21 +275,22 @@ bool CSpecialTxProcessor::UndoSpecialTxsInBlock(const CBlock& block, const CBloc
 }
 
 bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
-                                                      const CAmount blockSubsidy, BlockValidationState& state)
+                                                      BlockValidationState& state)
 {
     AssertLockHeld(cs_main);
 
-    try {
-        if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0003)) return true;
-        if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0008)) return true;
-        if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) return true;
+    if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0008)) return true;
+    if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) return true;
 
-        auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_chainman.m_blockman, m_qman, block, pindex->pprev, m_consensus_params, blockSubsidy, state);
+    try {
+        const CAmount blockSubsidy = GetBlockSubsidy(pindex, m_consensus_params);
+        const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_chainman.m_blockman, m_qman, block,
+                                                              pindex->pprev, m_consensus_params, blockSubsidy, state);
         if (!creditPoolDiff.has_value()) return false;
 
-        CAmount target_balance{cbTx.creditPoolBalance};
+        const CAmount target_balance{cbTx.creditPoolBalance};
         // But it maybe not included yet in previous block yet; in this case value must be 0
-        CAmount locked_calculated{creditPoolDiff->GetTotalLocked()};
+        const CAmount locked_calculated{creditPoolDiff->GetTotalLocked()};
         if (target_balance != locked_calculated) {
             LogPrintf("CSpecialTxProcessor::%s -- mismatched locked amount in CbTx: %lld against re-calculated: %lld\n", __func__, target_balance, locked_calculated);
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-assetlocked-amount");
