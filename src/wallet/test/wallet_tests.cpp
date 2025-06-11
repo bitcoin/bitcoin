@@ -1,12 +1,12 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/wallet.h>
 
+#include <cstdint>
 #include <future>
 #include <memory>
-#include <stdint.h>
 #include <vector>
 
 #include <addresstype.h>

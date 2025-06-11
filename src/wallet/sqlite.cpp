@@ -10,15 +10,15 @@
 #include <crypto/common.h>
 #include <logging.h>
 #include <sync.h>
-#include <util/fs_helpers.h>
 #include <util/check.h>
+#include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <wallet/db.h>
 
 #include <sqlite3.h>
-#include <stdint.h>
 
+#include <cstdint>
 #include <optional>
 #include <utility>
 #include <vector>

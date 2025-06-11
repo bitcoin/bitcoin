@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <txgraph.h>
 #include <cluster_linearize.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <test/util/random.h>
+#include <txgraph.h>
 #include <util/bitset.h>
 #include <util/feefrac.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <map>
 #include <memory>
 #include <set>
-#include <stdint.h>
 #include <utility>
 
 using namespace cluster_linearize;

@@ -36,12 +36,12 @@
 #include <versionbits.h>
 
 #include <atomic>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <span>
-#include <stdint.h>
 #include <string>
 #include <type_traits>
 #include <utility>
