@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(connections_desirable_service_flags)
     auto tip = WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip());
     uint64_t tip_block_time = tip->GetBlockTime();
     int tip_block_height = tip->nHeight;
-    peerman->SetBestBlock(tip_block_height, std::chrono::seconds{tip_block_time});
+    peerman->SetBestBlock(tip_block_height, std::chrono::seconds{tip_block_time}, /*initial_sync_finished=*/true);
 
     SetMockTime(tip_block_time + 1); // Set node time to tip time
     BOOST_CHECK(peerman->GetDesirableServiceFlags(peer_flags) == ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS));
