@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool descendants/ancestors information update.
@@ -12,8 +12,7 @@ from math import ceil
 import time
 
 from test_framework.blocktools import (
-    create_block,
-    create_coinbase,
+    create_empty_fork,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -29,26 +28,6 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         self.num_nodes = 1
         # Ancestor and descendant limits depend on transaction_graph_test requirements
         self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000', f'-limitancestorcount={CUSTOM_ANCESTOR_COUNT}', f'-limitdescendantcount={CUSTOM_DESCENDANT_COUNT}']]
-
-    def create_empty_fork(self, fork_length):
-        '''
-            Creates a fork using first node's chaintip as the starting point.
-            Returns a list of blocks to submit in order.
-        '''
-        tip = int(self.nodes[0].getbestblockhash(), 16)
-        height = self.nodes[0].getblockcount()
-        block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
-
-        blocks = []
-        for _ in range(fork_length):
-            block = create_block(tip, create_coinbase(height + 1), block_time)
-            block.solve()
-            blocks.append(block)
-            tip = block.sha256
-            block_time += 1
-            height += 1
-
-        return blocks
 
     def transaction_graph_test(self, size, *, n_tx_to_mine, fee=100_000):
         """Create an acyclic tournament (a type of directed graph) of transactions and use it for testing.
@@ -69,7 +48,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
         # Prep for fork with empty blocks to not use invalidateblock directly
         # for reorg case. The rpc has different codepath
-        fork_blocks = self.create_empty_fork(fork_length=7)
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=7)
 
         tx_id = []
         tx_size = []
@@ -146,7 +125,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # Set up empty fork blocks ahead of time, needs to be longer than full fork made later
-        fork_blocks = self.create_empty_fork(fork_length=60)
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=60)
 
         large_std_txs = []
         # Add children to ensure they're recursively removed if disconnectpool trimming of parent occurs
@@ -195,7 +174,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # Prep fork
-        fork_blocks = self.create_empty_fork(fork_length=10)
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=10)
 
         # Two higher than descendant count
         chain = wallet.create_self_transfer_chain(chain_length=CUSTOM_DESCENDANT_COUNT + 2)
