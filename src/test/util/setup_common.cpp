@@ -599,12 +599,13 @@ SocketTestingSetup::~SocketTestingSetup()
     CreateSock = m_create_sock_orig;
 }
 
-void SocketTestingSetup::ConnectClient()
+void SocketTestingSetup::ConnectClient(std::span<const std::byte> data)
 {
     // I/O pipes for a mock Connected Socket we can read and write to.
     std::shared_ptr<DynSock::Pipes> connected_socket_pipes(std::make_shared<DynSock::Pipes>());
 
-    // TODO: Insert a payload
+    // Insert the payload
+    connected_socket_pipes->recv.PushBytes(data.data(), data.size());
 
     // Create the Mock Connected Socket that represents a client.
     // It needs I/O pipes but its queue can remain empty

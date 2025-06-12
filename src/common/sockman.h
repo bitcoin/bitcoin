@@ -104,6 +104,28 @@ protected:
                                             const CService& me,
                                             const CService& them) = 0;
 
+    /**
+     * Called when new data has been received.
+     * @param[in] id Connection for which the data arrived.
+     * @param[in] data Received data.
+     */
+    virtual void EventGotData(Id id, std::span<const std::byte> data) = 0;
+
+    /**
+     * Called when the remote peer has sent an EOF on the socket. This is a graceful
+     * close of their writing side, we can still send and they will receive, if it
+     * makes sense at the application level.
+     * @param[in] id Connection whose socket got EOF.
+     */
+    virtual void EventGotEOF(Id id) = 0;
+
+    /**
+     * Called when we get an irrecoverable error trying to read from a socket.
+     * @param[in] id Connection whose socket got an error.
+     * @param[in] errmsg Message describing the error.
+     */
+    virtual void EventGotPermanentReadError(Id id, const std::string& errmsg) = 0;
+
     //
     // Non-pure virtual functions can be overridden by children classes or left
     // alone to use the default implementation from SockMan.
@@ -221,10 +243,25 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
 
     /**
+     * Do the read/write for connected sockets that are ready for IO.
+     * @param[in] io_readiness Which sockets are ready and their connection ids.
+     */
+    void SocketHandlerConnected(const IOReadiness& io_readiness)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
      * Accept incoming connections, one from each read-ready listening socket.
      * @param[in] events_per_sock Sockets that are ready for IO.
      */
     void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
+     * Retrieve an entry from m_connected.
+     * @param[in] id Connection id to search for.
+     * @return ConnectionSockets for the given connection id or empty shared_ptr if not found.
+     */
+    std::shared_ptr<ConnectionSocket> GetConnectionSocket(Id id) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
 
     /**
