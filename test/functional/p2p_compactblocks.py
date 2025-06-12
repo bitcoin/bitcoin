@@ -80,13 +80,11 @@ class TestP2PConn(P2PInterface):
 
     def on_cmpctblock(self, message):
         self.block_announced = True
-        self.last_message["cmpctblock"].header_and_shortids.header.calc_sha256()
         self.announced_blockhashes.add(self.last_message["cmpctblock"].header_and_shortids.header.sha256)
 
     def on_headers(self, message):
         self.block_announced = True
         for x in self.last_message["headers"].headers:
-            x.calc_sha256()
             self.announced_blockhashes.add(x.sha256)
 
     def on_inv(self, message):
@@ -308,7 +306,6 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Store the raw block in our internal format.
         block = from_hex(CBlock(), node.getblock("%064x" % block_hash, False))
-        block.rehash()
 
         # Wait until the block was announced (via compact blocks)
         test_node.wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30)
@@ -336,7 +333,6 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def check_compactblock_construction_from_block(self, header_and_shortids, block_hash, block):
         # Check that we got the right block!
-        header_and_shortids.header.calc_sha256()
         assert_equal(header_and_shortids.header.sha256, block_hash)
 
         # Make sure the prefilled_txn appears to have included the coinbase
@@ -599,7 +595,6 @@ class CompactBlocksTest(BitcoinTestFramework):
             test_node.last_message.pop("blocktxn", None)
         test_node.send_and_ping(msg)
         with p2p_lock:
-            test_node.last_message["block"].block.calc_sha256()
             assert_equal(test_node.last_message["block"].block.sha256, int(block_hash, 16))
             assert "blocktxn" not in test_node.last_message
 
@@ -656,7 +651,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         test_node.send_without_ping(msg_getdata([CInv(MSG_CMPCT_BLOCK, int(new_blocks[0], 16))]))
         test_node.wait_until(lambda: "block" in test_node.last_message, timeout=30)
         with p2p_lock:
-            test_node.last_message["block"].block.calc_sha256()
             assert_equal(test_node.last_message["block"].block.sha256, int(new_blocks[0], 16))
 
         # Generate an old compactblock, and verify that it's not accepted.
@@ -705,7 +699,6 @@ class CompactBlocksTest(BitcoinTestFramework):
             l.wait_until(lambda: "cmpctblock" in l.last_message, timeout=30)
         with p2p_lock:
             for l in listeners:
-                l.last_message["cmpctblock"].header_and_shortids.header.calc_sha256()
                 assert_equal(l.last_message["cmpctblock"].header_and_shortids.header.sha256, block.sha256)
 
     # Test that we don't get disconnected if we relay a compact block with valid header,

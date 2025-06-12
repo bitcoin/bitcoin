@@ -95,7 +95,6 @@ def finish_block(block, signet_solution, grind_cmd):
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
         newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
-        block.rehash()
     return block
 
 def new_block(tmpl, reward_spk, *, blocktime=None, poolid=None):

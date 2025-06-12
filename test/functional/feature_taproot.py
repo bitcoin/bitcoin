@@ -1574,7 +1574,6 @@ class TaprootTest(BitcoinTestFramework):
         assert coinbase.txid_hex == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
-        block.rehash()
         block.solve()
         self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(self.nodes[0].getblockcount(), 1)

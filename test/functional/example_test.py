@@ -57,7 +57,6 @@ class BaseNode(P2PInterface):
         """Override the standard on_block callback
 
         Store the hash of a received block in the dictionary."""
-        message.block.calc_sha256()
         self.block_receive_map[message.block.sha256] += 1
 
     def on_inv(self, message):
