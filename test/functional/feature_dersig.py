@@ -95,7 +95,7 @@ class BIP66Test(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
         self.log.info("Test that blocks must now be at least version 3")
-        tip = block.sha256
+        tip = block.hash_int
         block_time += 1
         block = create_block(tip, create_coinbase(DERSIG_HEIGHT), block_time, version=2)
         block.solve()
@@ -146,7 +146,7 @@ class BIP66Test(BitcoinTestFramework):
         self.test_dersig_info(is_active=True)  # Not active as of current tip, but next block must obey rules
         peer.send_and_ping(msg_block(block))
         self.test_dersig_info(is_active=True)  # Active as of current tip
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hash_int)
 
 
 if __name__ == '__main__':

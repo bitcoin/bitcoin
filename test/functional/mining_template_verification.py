@@ -156,7 +156,7 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         self.log.info("Generate a block")
         target = uint256_from_compact(block.nBits)
         # Ensure that it doesn't meet the target by coincidence
-        while block.sha256 <= target:
+        while block.hash_int <= target:
             block.nNonce += 1
         self.log.debug("Found a nonce")
 

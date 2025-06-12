@@ -73,7 +73,7 @@ class GetChainTipsTest (BitcoinTestFramework):
         invalid_block.solve()
 
         block_time += 1
-        block2 = create_block(invalid_block.sha256, create_coinbase(2), block_time, version=4)
+        block2 = create_block(invalid_block.hash_int, create_coinbase(2), block_time, version=4)
         block2.solve()
 
         self.log.info("Submit headers-only chain")

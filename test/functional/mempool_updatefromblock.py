@@ -44,7 +44,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
             block = create_block(tip, create_coinbase(height + 1), block_time)
             block.solve()
             blocks.append(block)
-            tip = block.sha256
+            tip = block.hash_int
             block_time += 1
             height += 1
 

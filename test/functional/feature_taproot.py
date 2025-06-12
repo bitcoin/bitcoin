@@ -1342,7 +1342,7 @@ class TaprootTest(BitcoinTestFramework):
             assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
         if accept:
             assert node.getbestblockhash() == block.hash, "Failed to accept: %s (response: %s)" % (msg, block_response)
-            self.tip = block.sha256
+            self.tip = block.hash_int
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1

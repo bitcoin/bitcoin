@@ -473,7 +473,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(node.submitblock(hexdata=bad_block_lock.serialize().hex()), 'duplicate-invalid')
         # Build a "good" block on top of the submitted bad block
         bad_block2 = copy.deepcopy(block)
-        bad_block2.hashPrevBlock = bad_block_lock.sha256
+        bad_block2.hashPrevBlock = bad_block_lock.hash_int
         bad_block2.solve()
         assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
 

@@ -195,10 +195,10 @@ class TestP2PConn(P2PInterface):
         if use_header:
             self.send_without_ping(msg)
         else:
-            self.send_without_ping(msg_inv(inv=[CInv(MSG_BLOCK, block.sha256)]))
+            self.send_without_ping(msg_inv(inv=[CInv(MSG_BLOCK, block.hash_int)]))
             self.wait_for_getheaders(block_hash=block.hashPrevBlock, timeout=timeout)
             self.send_without_ping(msg)
-        self.wait_for_getdata([block.sha256], timeout=timeout)
+        self.wait_for_getdata([block.hash_int], timeout=timeout)
 
     def request_block(self, blockhash, inv_type, timeout=60):
         with p2p_lock:
@@ -414,8 +414,8 @@ class SegWitTest(BitcoinTestFramework):
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
             # Now try to retrieve it...
             rpc_block = self.nodes[0].getblock(block.hash, False)
-            non_wit_block = self.test_node.request_block(block.sha256, 2)
-            wit_block = self.test_node.request_block(block.sha256, 2 | MSG_WITNESS_FLAG)
+            non_wit_block = self.test_node.request_block(block.hash_int, 2)
+            wit_block = self.test_node.request_block(block.hash_int, 2 | MSG_WITNESS_FLAG)
             assert_equal(wit_block.serialize(), bytes.fromhex(rpc_block))
             assert_equal(wit_block.serialize(False), non_wit_block.serialize())
             assert_equal(wit_block.serialize(), block.serialize())
@@ -443,7 +443,7 @@ class SegWitTest(BitcoinTestFramework):
             msg.headers = [CBlockHeader(block4)]
             self.old_node.send_without_ping(msg)
             self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
-            assert block4.sha256 not in self.old_node.getdataset
+            assert block4.hash_int not in self.old_node.getdataset
 
     @subtest
     def test_v0_outputs_arent_spendable(self):
