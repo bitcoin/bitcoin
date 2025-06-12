@@ -365,6 +365,7 @@ BITCOIN_CORE_H = \
   util/moneystr.h \
   util/overflow.h \
   util/overloaded.h \
+  util/pointer.h \
   util/ranges.h \
   util/readwritefile.h \
   util/underlying.h \

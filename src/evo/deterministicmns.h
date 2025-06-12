@@ -180,7 +180,7 @@ public:
         }
     }
 
-    template<typename Stream>
+    template <typename Stream>
     void Unserialize(Stream& s)
     {
         Clear();
