@@ -704,8 +704,8 @@ class CTransaction:
 
 
 class CBlockHeader:
-    __slots__ = ("hash", "hashMerkleRoot", "hashPrevBlock", "nBits", "nNonce",
-                 "nTime", "nVersion", "sha256")
+    __slots__ = ("hashMerkleRoot", "hashPrevBlock", "nBits", "nNonce",
+                 "nTime", "nVersion")
 
     def __init__(self, header=None):
         if header is None:
@@ -717,8 +717,6 @@ class CBlockHeader:
             self.nTime = header.nTime
             self.nBits = header.nBits
             self.nNonce = header.nNonce
-            self.sha256 = header.sha256
-            self.hash = header.hash
             self.calc_sha256()
 
     def set_null(self):
@@ -728,8 +726,6 @@ class CBlockHeader:
         self.nTime = 0
         self.nBits = 0
         self.nNonce = 0
-        self.sha256 = None
-        self.hash = None
 
     def deserialize(self, f):
         self.nVersion = int.from_bytes(f.read(4), "little", signed=True)
@@ -738,8 +734,6 @@ class CBlockHeader:
         self.nTime = int.from_bytes(f.read(4), "little")
         self.nBits = int.from_bytes(f.read(4), "little")
         self.nNonce = int.from_bytes(f.read(4), "little")
-        self.sha256 = None
-        self.hash = None
 
     def serialize(self):
         return self._serialize_header()
@@ -754,15 +748,22 @@ class CBlockHeader:
         r += self.nNonce.to_bytes(4, "little")
         return r
 
-    def calc_sha256(self):
-        if self.sha256 is None:
-            r = self._serialize_header()
-            self.sha256 = uint256_from_str(hash256(r))
-            self.hash = hash256(r)[::-1].hex()
+    @property
+    def hash(self):
+        """Return block header hash as hex string."""
+        return hash256(self._serialize_header())[::-1].hex()
 
+    @property
+    def sha256(self):
+        """Return block header hash as integer."""
+        return uint256_from_str(hash256(self._serialize_header()))
+
+    # TODO: get rid of this method, remove call-sites
+    def calc_sha256(self):
+        pass
+
+    # TODO: get rid of this method, replace call-sites by .sha256 access (if return value is used)
     def rehash(self):
-        self.sha256 = None
-        self.calc_sha256()
         return self.sha256
 
     def __repr__(self):
