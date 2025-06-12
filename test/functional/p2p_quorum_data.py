@@ -10,7 +10,10 @@ from test_framework.p2p import (
     p2p_lock,
     P2PInterface,
 )
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -120,13 +123,13 @@ class QuorumDataMessagesTest(DashTestFramework):
         extra_args = [["-llmq-data-recovery=0", "-deprecatedrpc=banscore"]] * 4
         self.set_dash_test_params(4, 3, extra_args=extra_args)
 
-    def restart_mn(self, mn, reindex=False):
-        args = self.extra_args[mn.node.index] + ['-masternodeblsprivkey=%s' % mn.keyOperator]
+    def restart_mn(self, mn: MasternodeInfo, reindex=False):
+        args = self.extra_args[mn.nodeIdx] + ['-masternodeblsprivkey=%s' % mn.keyOperator]
         if reindex:
             args.append('-reindex')
-        self.restart_node(mn.node.index, args)
-        force_finish_mnsync(mn.node)
-        self.connect_nodes(mn.node.index, 0)
+        self.restart_node(mn.nodeIdx, args)
+        force_finish_mnsync(mn.get_node(self))
+        self.connect_nodes(mn.nodeIdx, 0)
         self.sync_blocks()
 
     def run_test(self):
@@ -141,13 +144,13 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.log.info("Testing basics of QGETDATA/QDATA")
             force_request_expire()
             p2p_node0 = p2p_connection(node0)
-            p2p_mn2 = p2p_connection(mn2.node)
+            p2p_mn2 = p2p_connection(mn2.get_node(self))
             id_p2p_node0 = get_p2p_id(node0)
-            id_p2p_mn2 = get_p2p_id(mn2.node)
+            id_p2p_mn2 = get_p2p_id(mn2.get_node(self))
 
             # Ensure that both nodes start with zero ban score
             wait_for_banscore(node0, id_p2p_node0, 0)
-            wait_for_banscore(mn2.node, id_p2p_mn2, 0)
+            wait_for_banscore(mn2.get_node(self), id_p2p_mn2, 0)
 
             self.log.info("Check that normal node doesn't respond to qgetdata "
                           "and does bump our score")
@@ -160,103 +163,103 @@ class QuorumDataMessagesTest(DashTestFramework):
             self.log.info("Check that masternode doesn't respond to "
                           "non-masternode connection and does bump our score")
             p2p_mn2.test_qgetdata(qgetdata_all, response_expected=False)
-            wait_for_banscore(mn2.node, id_p2p_mn2, 10)
+            wait_for_banscore(mn2.get_node(self), id_p2p_mn2, 10)
             # Open a fake MNAUTH authenticated P2P connection to the masternode to allow qgetdata
             node0.disconnect_p2ps()
-            mn2.node.disconnect_p2ps()
-            p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn2 = get_p2p_id(mn2.node)
-            mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
+            mn2.get_node(self).disconnect_p2ps()
+            p2p_mn2 = p2p_connection(mn2.get_node(self))
+            id_p2p_mn2 = get_p2p_id(mn2.get_node(self))
+            mnauth(mn2.get_node(self), id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
             # The masternode should now respond to qgetdata requests
             self.log.info("Request verification vector")
             p2p_mn2.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
-            wait_for_banscore(mn2.node, id_p2p_mn2, 0)
+            wait_for_banscore(mn2.get_node(self), id_p2p_mn2, 0)
             # Note: our banscore is bumped as we are requesting too rapidly,
             # however the node still returns the data
             self.log.info("Request encrypted contributions")
             p2p_mn2.test_qgetdata(qgetdata_contributions, 0, 0, self.llmq_size)
-            wait_for_banscore(mn2.node, id_p2p_mn2, 25)
+            wait_for_banscore(mn2.get_node(self), id_p2p_mn2, 25)
             # Request both
             # Note: our banscore is bumped as we are requesting too rapidly,
             # however the node still returns the data
             self.log.info("Request both")
             p2p_mn2.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
-            wait_for_banscore(mn2.node, id_p2p_mn2, 50)
-            mn2.node.disconnect_p2ps()
+            wait_for_banscore(mn2.get_node(self), id_p2p_mn2, 50)
+            mn2.get_node(self).disconnect_p2ps()
 
             self.log.info("Test ban score increase for invalid / unexpected QDATA")
-            p2p_mn1 = p2p_connection(mn1.node)
-            p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn1 = get_p2p_id(mn1.node)
-            id_p2p_mn2 = get_p2p_id(mn2.node)
-            mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
-            mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
-            wait_for_banscore(mn1.node, id_p2p_mn1, 0)
+            p2p_mn1 = p2p_connection(mn1.get_node(self))
+            p2p_mn2 = p2p_connection(mn2.get_node(self))
+            id_p2p_mn1 = get_p2p_id(mn1.get_node(self))
+            id_p2p_mn2 = get_p2p_id(mn2.get_node(self))
+            mnauth(mn1.get_node(self), id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
+            mnauth(mn2.get_node(self), id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 0)
             p2p_mn2.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
             qdata_valid = p2p_mn2.get_qdata()
             # - Not requested
             p2p_mn1.send_message(qdata_valid)
             time.sleep(1)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 10)
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 10)
             # - Already received
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qmessage("qgetdata")
             p2p_mn1.send_message(qdata_valid)
             time.sleep(1)
             p2p_mn1.send_message(qdata_valid)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 20)
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 20)
             # - Not like requested
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qmessage("qgetdata")
             qdata_invalid_request = qdata_valid
             qdata_invalid_request.data_mask = 2
             p2p_mn1.send_message(qdata_invalid_request)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 30)
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 30)
             # - Invalid verification vector
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qmessage("qgetdata")
             qdata_invalid_vvec = qdata_valid
             qdata_invalid_vvec.quorum_vvec.pop()
             p2p_mn1.send_message(qdata_invalid_vvec)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 40)
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 40)
             # - Invalid contributions
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qmessage("qgetdata")
             qdata_invalid_contribution = qdata_valid
             qdata_invalid_contribution.enc_contributions.pop()
             p2p_mn1.send_message(qdata_invalid_contribution)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 50)
-            mn1.node.disconnect_p2ps()
-            mn2.node.disconnect_p2ps()
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 50)
+            mn1.get_node(self).disconnect_p2ps()
+            mn2.get_node(self).disconnect_p2ps()
 
             self.log.info("Test all available error codes")
-            p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn2 = get_p2p_id(mn2.node)
-            mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
+            p2p_mn2 = p2p_connection(mn2.get_node(self))
+            id_p2p_mn2 = get_p2p_id(mn2.get_node(self))
+            mnauth(mn2.get_node(self), id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
             qgetdata_invalid_type = msg_qgetdata(quorum_hash_int, 105, 0x01, protx_hash_int)
             qgetdata_invalid_block = msg_qgetdata(protx_hash_int, 100, 0x01, protx_hash_int)
-            qgetdata_invalid_quorum = msg_qgetdata(int(mn2.node.getblockhash(0), 16), 100, 0x01, protx_hash_int)
+            qgetdata_invalid_quorum = msg_qgetdata(int(mn2.get_node(self).getblockhash(0), 16), 100, 0x01, protx_hash_int)
             qgetdata_invalid_no_member = msg_qgetdata(quorum_hash_int, 100, 0x02, quorum_hash_int)
             p2p_mn2.test_qgetdata(qgetdata_invalid_type, QUORUM_TYPE_INVALID)
             p2p_mn2.test_qgetdata(qgetdata_invalid_block, QUORUM_BLOCK_NOT_FOUND)
             p2p_mn2.test_qgetdata(qgetdata_invalid_quorum, QUORUM_NOT_FOUND)
             p2p_mn2.test_qgetdata(qgetdata_invalid_no_member, MASTERNODE_IS_NO_MEMBER)
             # The last two error case require the node to miss its DKG data so we just reindex the node.
-            mn2.node.disconnect_p2ps()
+            mn2.get_node(self).disconnect_p2ps()
             self.restart_mn(mn1, reindex=True)
             # Re-connect to the masternode
-            p2p_mn1 = p2p_connection(mn1.node)
-            p2p_mn2 = p2p_connection(mn2.node)
-            id_p2p_mn1 = get_p2p_id(mn1.node)
-            id_p2p_mn2 = get_p2p_id(mn2.node)
+            p2p_mn1 = p2p_connection(mn1.get_node(self))
+            p2p_mn2 = p2p_connection(mn2.get_node(self))
+            id_p2p_mn1 = get_p2p_id(mn1.get_node(self))
+            id_p2p_mn2 = get_p2p_id(mn2.get_node(self))
             assert id_p2p_mn1 is not None
             assert id_p2p_mn2 is not None
-            mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
-            mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
+            mnauth(mn1.get_node(self), id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
+            mnauth(mn2.get_node(self), id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
             # Validate the DKG data is missing
             p2p_mn1.test_qgetdata(qgetdata_vvec, QUORUM_VERIFICATION_VECTOR_MISSING)
             p2p_mn1.test_qgetdata(qgetdata_contributions, ENCRYPTED_CONTRIBUTIONS_MISSING)
@@ -274,7 +277,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             # Get the required DKG data for mn1
             p2p_mn2.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
             # Trigger mn1 - QGETDATA -> p2p_mn1
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             # Wait until mn1 sent the QGETDATA to p2p_mn1
             p2p_mn1.wait_for_qmessage("qgetdata")
             # Send the QDATA received from mn2 to mn1
@@ -282,8 +285,8 @@ class QuorumDataMessagesTest(DashTestFramework):
             # Now mn1 should have its data back!
             self.wait_for_quorum_data([mn1], 100, quorum_hash, recover=False)
             # Restart one more time and make sure data gets saved to db
-            mn1.node.disconnect_p2ps()
-            mn2.node.disconnect_p2ps()
+            mn1.get_node(self).disconnect_p2ps()
+            mn2.get_node(self).disconnect_p2ps()
             self.restart_mn(mn1)
             self.wait_for_quorum_data([mn1], 100, quorum_hash, recover=False)
 
@@ -297,32 +300,32 @@ class QuorumDataMessagesTest(DashTestFramework):
                     p2p_mn3_1.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
                 if send_2:
                     p2p_mn3_2.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
-                wait_for_banscore(mn3.node, id_p2p_mn3_1, expected_score_1)
-                wait_for_banscore(mn3.node, id_p2p_mn3_2, expected_score_2)
+                wait_for_banscore(mn3.get_node(self), id_p2p_mn3_1, expected_score_1)
+                wait_for_banscore(mn3.get_node(self), id_p2p_mn3_2, expected_score_2)
 
             self.log.info("Test request limiting / banscore increases")
 
-            p2p_mn1 = p2p_connection(mn1.node)
-            id_p2p_mn1 = get_p2p_id(mn1.node)
-            mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
+            p2p_mn1 = p2p_connection(mn1.get_node(self))
+            id_p2p_mn1 = get_p2p_id(mn1.get_node(self))
+            mnauth(mn1.get_node(self), id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
             p2p_mn1.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 0)
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 0)
             force_request_expire(299)  # This shouldn't clear requests, next request should bump score
             p2p_mn1.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 25)
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 25)
             force_request_expire(1)  # This should clear the requests now, next request should not bump score
             p2p_mn1.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold, 0)
-            wait_for_banscore(mn1.node, id_p2p_mn1, 25)
-            mn1.node.disconnect_p2ps()
+            wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 25)
+            mn1.get_node(self).disconnect_p2ps()
             # Requesting one QDATA with mn1 and mn2 from mn3 should not result
             # in banscore increase for either of both.
-            p2p_mn3_1 = p2p_connection(mn3.node, uacomment_m3_1)
-            p2p_mn3_2 = p2p_connection(mn3.node, uacomment_m3_2)
-            id_p2p_mn3_1 = get_p2p_id(mn3.node, uacomment_m3_1)
-            id_p2p_mn3_2 = get_p2p_id(mn3.node, uacomment_m3_2)
+            p2p_mn3_1 = p2p_connection(mn3.get_node(self), uacomment_m3_1)
+            p2p_mn3_2 = p2p_connection(mn3.get_node(self), uacomment_m3_2)
+            id_p2p_mn3_1 = get_p2p_id(mn3.get_node(self), uacomment_m3_1)
+            id_p2p_mn3_2 = get_p2p_id(mn3.get_node(self), uacomment_m3_2)
             assert id_p2p_mn3_1 != id_p2p_mn3_2
-            mnauth(mn3.node, id_p2p_mn3_1, fake_mnauth_1[0], fake_mnauth_1[1])
-            mnauth(mn3.node, id_p2p_mn3_2, fake_mnauth_2[0], fake_mnauth_2[1])
+            mnauth(mn3.get_node(self), id_p2p_mn3_1, fake_mnauth_1[0], fake_mnauth_1[1])
+            mnauth(mn3.get_node(self), id_p2p_mn3_2, fake_mnauth_2[0], fake_mnauth_2[1])
             # Now try some {mn1, mn2} - QGETDATA -> mn3 combinations to make
             # sure request limit works connection based
             test_send_from_two_to_one(False, 0, True, 0, True)
@@ -335,24 +338,24 @@ class QuorumDataMessagesTest(DashTestFramework):
             test_send_from_two_to_one(True, 75, False, 75)
             test_send_from_two_to_one(False, 75, True, None)
             # mn1 should still have a score of 75
-            wait_for_banscore(mn3.node, id_p2p_mn3_1, 75)
+            wait_for_banscore(mn3.get_node(self), id_p2p_mn3_1, 75)
             # mn2 should be "banned" now
             self.wait_until(lambda: not p2p_mn3_2.is_connected, timeout=10)
-            mn3.node.disconnect_p2ps()
+            mn3.get_node(self).disconnect_p2ps()
 
         # Test that QWATCH connections are also allowed to query data but all
         # QWATCH connections share one request limit slot
         def test_qwatch_connections():
             self.log.info("Test QWATCH connections")
             force_request_expire()
-            p2p_mn3_1 = p2p_connection(mn3.node, uacomment_m3_1)
-            p2p_mn3_2 = p2p_connection(mn3.node, uacomment_m3_2)
-            id_p2p_mn3_1 = get_p2p_id(mn3.node, uacomment_m3_1)
-            id_p2p_mn3_2 = get_p2p_id(mn3.node, uacomment_m3_2)
+            p2p_mn3_1 = p2p_connection(mn3.get_node(self), uacomment_m3_1)
+            p2p_mn3_2 = p2p_connection(mn3.get_node(self), uacomment_m3_2)
+            id_p2p_mn3_1 = get_p2p_id(mn3.get_node(self), uacomment_m3_1)
+            id_p2p_mn3_2 = get_p2p_id(mn3.get_node(self), uacomment_m3_2)
             assert id_p2p_mn3_1 != id_p2p_mn3_2
 
-            wait_for_banscore(mn3.node, id_p2p_mn3_1, 0)
-            wait_for_banscore(mn3.node, id_p2p_mn3_2, 0)
+            wait_for_banscore(mn3.get_node(self), id_p2p_mn3_1, 0)
+            wait_for_banscore(mn3.get_node(self), id_p2p_mn3_2, 0)
 
             # Send QWATCH for both connections
             p2p_mn3_1.send_message(msg_qwatch())
@@ -360,12 +363,12 @@ class QuorumDataMessagesTest(DashTestFramework):
 
             # Now send alternating and make sure they share the same request limit
             p2p_mn3_1.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
-            wait_for_banscore(mn3.node, id_p2p_mn3_1, 0)
+            wait_for_banscore(mn3.get_node(self), id_p2p_mn3_1, 0)
             p2p_mn3_2.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
-            wait_for_banscore(mn3.node, id_p2p_mn3_2, 25)
+            wait_for_banscore(mn3.get_node(self), id_p2p_mn3_2, 25)
             p2p_mn3_1.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
-            wait_for_banscore(mn3.node, id_p2p_mn3_1, 25)
-            mn3.node.disconnect_p2ps()
+            wait_for_banscore(mn3.get_node(self), id_p2p_mn3_1, 25)
+            mn3.get_node(self).disconnect_p2ps()
 
         def test_watchquorums():
             self.log.info("Test -watchquorums support")
@@ -375,11 +378,11 @@ class QuorumDataMessagesTest(DashTestFramework):
                 for i in range(self.num_nodes - 1):
                     self.connect_nodes(0, i + 1)
                 p2p_node0 = p2p_connection(node0)
-                p2p_mn2 = p2p_connection(mn2.node)
+                p2p_mn2 = p2p_connection(mn2.get_node(self))
                 id_p2p_node0 = get_p2p_id(node0)
-                id_p2p_mn2 = get_p2p_id(mn2.node)
+                id_p2p_mn2 = get_p2p_id(mn2.get_node(self))
                 mnauth(node0, id_p2p_node0, fake_mnauth_1[0], fake_mnauth_1[1])
-                mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
+                mnauth(mn2.get_node(self), id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
                 p2p_mn2.test_qgetdata(qgetdata_vvec, 0, self.llmq_threshold)
                 assert node0.quorum("getdata", id_p2p_node0, 100, quorum_hash, 0x01)
                 p2p_node0.wait_for_qmessage("qgetdata")
@@ -390,14 +393,14 @@ class QuorumDataMessagesTest(DashTestFramework):
                 p2p_node0.send_message(msg_qwatch())
                 wait_for_banscore(node0, id_p2p_node0, (1 - len(extra_args)) * 10 + 10)
                 node0.disconnect_p2ps()
-                mn2.node.disconnect_p2ps()
+                mn2.get_node(self).disconnect_p2ps()
 
         def test_rpc_quorum_getdata_protx_hash():
             self.log.info("Test optional proTxHash of `quorum getdata`")
             assert_raises_rpc_error(-8, "proTxHash missing",
-                                    mn1.node.quorum, "getdata", 0, 100, quorum_hash, 0x02)
+                                    mn1.get_node(self).quorum, "getdata", 0, 100, quorum_hash, 0x02)
             assert_raises_rpc_error(-8, "proTxHash invalid",
-                                    mn1.node.quorum, "getdata", 0, 100, quorum_hash, 0x03,
+                                    mn1.get_node(self).quorum, "getdata", 0, 100, quorum_hash, 0x03,
                                     "0000000000000000000000000000000000000000000000000000000000000000")
 
         # Enable DKG and disable ChainLocks
@@ -408,9 +411,9 @@ class QuorumDataMessagesTest(DashTestFramework):
         quorum_hash = self.mine_quorum()
 
         node0 = self.nodes[0]
-        mn1 = self.mninfo[0]
-        mn2 = self.mninfo[1]
-        mn3 = self.mninfo[2]
+        mn1: MasternodeInfo = self.mninfo[0]
+        mn2: MasternodeInfo = self.mninfo[1]
+        mn3: MasternodeInfo = self.mninfo[2]
 
         # Convert the hex values into integer values
         quorum_hash_int = int(quorum_hash, 16)

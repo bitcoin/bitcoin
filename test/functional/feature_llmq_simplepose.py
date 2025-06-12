@@ -13,8 +13,11 @@ Checks simple PoSe system based on LLMQ commitments
 import time
 
 from test_framework.masternodes import check_banned, check_punished
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, force_finish_mnsync, p2p_port
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
+from test_framework.util import assert_equal, force_finish_mnsync
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
@@ -65,27 +68,27 @@ class LLMQSimplePoSeTest(DashTestFramework):
             # With PoSe off there should be no punishing for outdated nodes
             self.test_no_banning(self.force_old_mn_proto, 3)
 
-    def isolate_mn(self, mn):
-        mn.node.setnetworkactive(False)
-        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
+    def isolate_mn(self, mn: MasternodeInfo):
+        mn.get_node(self).setnetworkactive(False)
+        self.wait_until(lambda: mn.get_node(self).getconnectioncount() == 0)
         return True, True
 
-    def close_mn_port(self, mn):
+    def close_mn_port(self, mn: MasternodeInfo):
         self.deaf_mns.append(mn)
-        self.stop_node(mn.node.index)
+        self.stop_node(mn.nodeIdx)
         self.start_masternode(mn, ["-listen=0", "-nobind"])
-        self.connect_nodes(mn.node.index, 0)
+        self.connect_nodes(mn.nodeIdx, 0)
         # Make sure the to-be-banned node is still connected well via outbound connections
-        for mn2 in self.mninfo:
+        for mn2 in self.mninfo: # type: MasternodeInfo
             if self.deaf_mns.count(mn2) == 0:
-                self.connect_nodes(mn.node.index, mn2.node.index)
+                self.connect_nodes(mn.nodeIdx, mn2.get_node(self).index)
         self.reset_probe_timeouts()
         return False, False
 
-    def force_old_mn_proto(self, mn):
-        self.stop_node(mn.node.index)
+    def force_old_mn_proto(self, mn: MasternodeInfo):
+        self.stop_node(mn.nodeIdx)
         self.start_masternode(mn, ["-pushversion=70216"])
-        self.connect_nodes(mn.node.index, 0)
+        self.connect_nodes(mn.nodeIdx, 0)
         self.reset_probe_timeouts()
         return False, True
 
@@ -99,7 +102,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Unlike in mine_quorum we skip most of the checks and only care about
         # nodes moving forward from phase to phase correctly and the fact that the quorum is actually mined.
         self.log.info("Mining a quorum with less checks")
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        nodes = [self.nodes[0]] + [mn.get_node(self) for mn in mninfos_online]
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
@@ -165,7 +168,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         expected_contributors = len(mninfos_online)
         for i in range(2):
             self.log.info(f"Testing PoSe banning due to {invalidate_proc.__name__} {i + 1}/2")
-            mn = mninfos_valid.pop()
+            mn: MasternodeInfo = mninfos_valid.pop()
             went_offline, instant_ban = invalidate_proc(mn)
             expected_complaints = expected_contributors - 1
             if went_offline:
@@ -201,17 +204,17 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def repair_masternodes(self, restart):
         self.log.info("Repairing all banned and punished masternodes")
-        for mn in self.mninfo:
+        for mn in self.mninfo: # type: MasternodeInfo
             if check_banned(self.nodes[0], mn) or check_punished(self.nodes[0], mn):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].sendtoaddress(addr, 0.1)
-                self.nodes[0].protx('update_service', mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
+                self.nodes[0].protx('update_service', mn.proTxHash, f'127.0.0.1:{mn.nodePort}', mn.keyOperator, "", addr)
                 if restart:
-                    self.stop_node(mn.node.index)
+                    self.stop_node(mn.nodeIdx)
                     self.start_masternode(mn)
                 else:
-                    mn.node.setnetworkactive(True)
-                self.connect_nodes(mn.node.index, 0)
+                    mn.get_node(self).setnetworkactive(True)
+                self.connect_nodes(mn.nodeIdx, 0)
 
         # syncing blocks only since node 0 has txes waiting to be mined
         self.sync_blocks()
@@ -221,13 +224,13 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.generate(self.nodes[0], 1)
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
-        for mn in self.mninfo:
+        for mn in self.mninfo: # type: MasternodeInfo
             assert not check_banned(self.nodes[0], mn)
-            mn.node.setnetworkactive(False)
-            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
-            mn.node.setnetworkactive(True)
-            force_finish_mnsync(mn.node)
-            self.connect_nodes(mn.node.index, 0)
+            mn.get_node(self).setnetworkactive(False)
+            self.wait_until(lambda: mn.get_node(self).getconnectioncount() == 0)
+            mn.get_node(self).setnetworkactive(True)
+            force_finish_mnsync(mn.get_node(self))
+            self.connect_nodes(mn.nodeIdx, 0)
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe

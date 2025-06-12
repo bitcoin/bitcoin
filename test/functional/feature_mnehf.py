@@ -16,7 +16,10 @@ from test_framework.messages import (
     ser_string,
 )
 
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo
+)
 from test_framework.util import (
     assert_equal,
     get_bip9_details,
@@ -38,8 +41,8 @@ class MnehfTest(DashTestFramework):
                 self.log.info(f"Actual restart options: {self.extra_args[inode]}")
 
         self.restart_node(0)
-        for mn in self.mninfo:
-            index = mn.node.index
+        for mn in self.mninfo: # type: MasternodeInfo
+            index = mn.nodeIdx
             self.stop_node(index)
             self.start_masternode(mn)
         for i in range(1, self.num_nodes):
@@ -51,7 +54,7 @@ class MnehfTest(DashTestFramework):
         request_id_buf = ser_string(b"mnhf") + struct.pack("<Q", versionBit)
         request_id = hash256(request_id_buf)[::-1].hex()
 
-        quorumHash = self.mninfo[0].node.quorum("selectquorum", 100, request_id)["quorumHash"]
+        quorumHash = self.mninfo[0].get_node(self).quorum("selectquorum", 100, request_id)["quorumHash"]
         mnehf_payload = CMnEhf(
             version = 1,
             versionBit = versionBit,
@@ -137,7 +140,7 @@ class MnehfTest(DashTestFramework):
         assert_equal(mnehf_payload.version, 1)
         assert_equal(mnehf_payload.versionBit, 28)
         self.log.info("Checking correctness of requestId and quorumHash")
-        assert_equal(mnehf_payload.quorumHash, int(self.mninfo[0].node.quorum("selectquorum", 100, 'a0eee872d7d3170dd20d5c5e8380c92b3aa887da5f63d8033289fafa35a90691')["quorumHash"], 16))
+        assert_equal(mnehf_payload.quorumHash, int(self.mninfo[0].get_node(self).quorum("selectquorum", 100, 'a0eee872d7d3170dd20d5c5e8380c92b3aa887da5f63d8033289fafa35a90691')["quorumHash"], 16))
 
         ehf_tx_sent = self.send_tx(ehf_tx)
         self.log.info(f"ehf tx: {ehf_tx_sent}")

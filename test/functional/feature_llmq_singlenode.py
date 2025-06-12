@@ -14,7 +14,10 @@ This functional test is similar to feature_llmq_signing.py but difference are bi
 import time
 
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_greater_than,
@@ -55,12 +58,12 @@ class LLMQSigningTest(DashTestFramework):
         conflicting_1 = False
         conflicting_2 = False
 
-        for mn in self.mninfo:
-            if mn.node.quorum("hasrecsig", q_type, id, msgHash):
+        for mn in self.mninfo: # type: MasternodeInfo
+            if mn.get_node(self).quorum("hasrecsig", q_type, id, msgHash):
                 has_sig = True
-            if mn.node.quorum("isconflicting", q_type, id, msgHash):
+            if mn.get_node(self).quorum("isconflicting", q_type, id, msgHash):
                 conflicting_1 = True
-            if mn.node.quorum("isconflicting", q_type, id, msgHashConflict):
+            if mn.get_node(self).quorum("isconflicting", q_type, id, msgHashConflict):
                 conflicting_2 = True
         if has_sig != hasrecsigs:
             return False
@@ -112,23 +115,23 @@ class LLMQSigningTest(DashTestFramework):
         # Sign first share without any optional parameter, should not result in recovered sig
         # Sign second share and test optional quorumHash parameter, should not result in recovered sig
         # 1. Providing an invalid quorum hash should fail and cause no changes for sigs
-        assert not self.mninfo[1].node.quorum("sign", q_type, id, msgHash, msgHash)
+        assert not self.mninfo[1].get_node(self).quorum("sign", q_type, id, msgHash, msgHash)
         self.assert_sigs_nochange(False, False, False, 3)
         # 2. Providing a valid quorum hash should succeed and cause no changes for sigss
-        quorumHash = self.mninfo[1].node.quorum("selectquorum", q_type, id)["quorumHash"]
+        quorumHash = self.mninfo[1].get_node(self).quorum("selectquorum", q_type, id)["quorumHash"]
 
-        qnode = self.mninfo[0].node
+        qnode = self.mninfo[0].get_node(self)
         try:
             qnode.quorum("sign", q_type, id, msgHash, quorumHash, False)
         except JSONRPCException as e:
             if e.error['code'] == -8: # failed to create sigShare
-                qnode = self.mninfo[1].node
+                qnode = self.mninfo[1].get_node(self)
                 qnode.quorum("sign", q_type, id, msgHash, quorumHash, False)
             else:
                 raise e
 
-        self.mninfo[0].node.quorum("sign", q_type, id, msgHash)
-        self.mninfo[1].node.quorum("sign", q_type, id, msgHash)
+        self.mninfo[0].get_node(self).quorum("sign", q_type, id, msgHash)
+        self.mninfo[1].get_node(self).quorum("sign", q_type, id, msgHash)
 
         self.wait_for_sigs(True, False, True, 15)
         has0 = self.nodes[0].quorum("hasrecsig", q_type, id, msgHash)
@@ -137,7 +140,7 @@ class LLMQSigningTest(DashTestFramework):
         assert (has0 or has1 or has2)
 
         self.log.info("Test `quorum verify` rpc")
-        node = self.mninfo[0].node
+        node = self.mninfo[0].get_node(self)
         recsig = qnode.quorum("getrecsig", q_type, id, msgHash)
         self.log.info("Find quorum automatically")
         height = node.getblockcount()

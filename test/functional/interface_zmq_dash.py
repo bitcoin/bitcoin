@@ -12,7 +12,10 @@ import random
 import struct
 import time
 
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import (
+    DashTestFramework,
+    MasternodeInfo,
+)
 from test_framework.p2p import P2PInterface
 from test_framework.util import (
     assert_equal,
@@ -166,7 +169,7 @@ class DashZMQTest (DashTestFramework):
 
     def generate_blocks(self, num_blocks):
         mninfos_online = self.mninfo.copy()
-        nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
+        nodes = [self.nodes[0]] + [mn.get_node(self) for mn in mninfos_online]
         self.generate(self.nodes[0], num_blocks, sync_fun=lambda: self.sync_blocks(nodes))
 
     def subscribe(self, publishers):
@@ -189,7 +192,7 @@ class DashZMQTest (DashTestFramework):
         def validate_recovered_sig(request_id, msg_hash):
             # Make sure the recovered sig exists by RPC
             self.wait_for_recovered_sig(request_id, msg_hash)
-            rpc_recovered_sig = self.mninfo[0].node.quorum('getrecsig', 103, request_id, msg_hash)
+            rpc_recovered_sig = self.mninfo[0].get_node(self).quorum('getrecsig', 103, request_id, msg_hash)
             # Validate hashrecoveredsig
             zmq_recovered_sig_hash = self.subscribers[ZMQPublisher.hash_recovered_sig].receive().read(32).hex()
             assert_equal(zmq_recovered_sig_hash, msg_hash)
@@ -218,8 +221,8 @@ class DashZMQTest (DashTestFramework):
         # Sign an arbitrary and make sure this leads to valid recovered sig ZMQ messages
         sign_id = uint256_to_string(random.getrandbits(256))
         sign_msg_hash = uint256_to_string(random.getrandbits(256))
-        for mn in self.get_quorum_masternodes(self.quorum_hash):
-            mn.node.quorum("sign", self.quorum_type, sign_id, sign_msg_hash)
+        for mn in self.get_quorum_masternodes(self.quorum_hash): # type: MasternodeInfo
+            mn.get_node(self).quorum("sign", self.quorum_type, sign_id, sign_msg_hash)
         validate_recovered_sig(sign_id, sign_msg_hash)
         # Unsubscribe from recovered signature messages
         self.unsubscribe(recovered_sig_publishers)
