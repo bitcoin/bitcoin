@@ -9,6 +9,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+using http_bitcoin::HTTPClient;
 using http_bitcoin::HTTPHeaders;
 using http_bitcoin::HTTPRequest;
 using http_bitcoin::HTTPResponse;
@@ -283,14 +284,34 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     // We are bound and listening
     BOOST_REQUIRE_EQUAL(server.GetListeningSocketCount(), 1);
 
-    // Pick up the phone, there's no one there
-    CService addr_connection;
-    BOOST_REQUIRE(!server.AcceptConnectionFromListeningSocket(addr_connection));
+    // Start the I/O loop
+    server.StartSocketsThreads();
+
+    // No connections yet
+    BOOST_CHECK_EQUAL(server.GetConnectionsCount(), 0);
 
     // Create a mock client and add it to the local CreateSock queue
     ConnectClient();
-    // Accept the connection
-    BOOST_REQUIRE(server.AcceptConnectionFromListeningSocket(addr_connection));
-    BOOST_CHECK_EQUAL(addr_connection.ToStringAddrPort(), "5.5.5.5:6789");
+
+    // Wait up to a minute to find and connect the client in the I/O loop
+    int attempts{6000};
+    while (server.GetConnectionsCount() < 1) {
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
+
+    // Inspect the connection
+    auto client{server.GetFirstConnection()};
+    BOOST_CHECK_EQUAL(client->m_origin, "5.5.5.5:6789");
+
+    // Close connection
+    BOOST_REQUIRE(server.CloseConnection(client));
+    // Close server
+    server.InterruptNet();
+    // Wait for I/O loop to finish, after all connected sockets are closed
+    server.JoinSocketsThreads();
+    // Close all listening sockets
+    server.StopListening();
 }
+
 BOOST_AUTO_TEST_SUITE_END()
