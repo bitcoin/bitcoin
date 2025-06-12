@@ -112,7 +112,7 @@ Mutex SQLiteDatabase::g_sqlite_mutex;
 int SQLiteDatabase::g_sqlite_count = 0;
 
 SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock)
-    : WalletDatabase(), m_mock(mock), m_dir_path(dir_path), m_file_path(fs::PathToString(file_path)), m_write_semaphore(1), m_use_unsafe_sync(options.use_unsafe_sync)
+    : WalletDatabase(), m_mock(mock), m_dir_path(dir_path), m_file_path(fs::PathToString(file_path)), m_write_semaphore(1), m_use_unsafe_sync(options.use_unsafe_sync), m_read_only(options.read_only)
 {
     {
         LOCK(g_sqlite_mutex);
@@ -243,7 +243,12 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
 
 void SQLiteDatabase::Open()
 {
-    int flags = SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    int flags = SQLITE_OPEN_FULLMUTEX;
+    if (m_read_only) {
+        flags |= SQLITE_OPEN_READONLY;
+    } else {
+        flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    }
     if (m_mock) {
         flags |= SQLITE_OPEN_MEMORY; // In memory database for mock db
     }
@@ -269,7 +274,7 @@ void SQLiteDatabase::Open()
         }
     }
 
-    if (sqlite3_db_readonly(m_db, "main") != 0) {
+    if (!m_read_only && sqlite3_db_readonly(m_db, "main") != 0) {
         throw std::runtime_error("SQLiteDatabase: Database opened in readonly mode but read-write permissions are needed");
     }
 
@@ -286,7 +291,7 @@ void SQLiteDatabase::Open()
         throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
     }
 
-    // Enable fullfsync for the platforms that use it
+    // Enable fullfsync for the platforms that use it - this doesn't write to the database
     SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
 
     if (m_use_unsafe_sync) {
@@ -315,8 +320,14 @@ void SQLiteDatabase::Open()
         throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check table existence: %s\n", sqlite3_errstr(ret)));
     }
 
+    // For read-only databases, table must exist
+    if (!table_exists && m_read_only) {
+        throw std::runtime_error("SQLiteDatabase: Cannot open read-only database without existing main table");
+    }
+
     // Do the db setup things because the table doesn't exist only when we are creating a new wallet
-    if (!table_exists) {
+    // Only do table creation and setup in read-write mode
+    if (!table_exists && !m_read_only) {
         ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
         if (ret != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
