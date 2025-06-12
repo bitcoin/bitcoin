@@ -19,6 +19,10 @@ public:
     // but the test reads them from the main thread.
     std::vector<std::pair<Id, CService>> m_connections GUARDED_BY(m_connections_mutex);
 
+    // Received data is written here by the SockMan I/O thread
+    // and tested by the main thread.
+    std::unordered_map<Id, std::vector<std::byte>> m_received GUARDED_BY(m_received_mutex);
+
     size_t GetConnectionsCount() EXCLUSIVE_LOCKS_REQUIRED(!m_connections_mutex)
     {
         LOCK(m_connections_mutex);
@@ -31,8 +35,15 @@ public:
         return m_connections.front();
     }
 
+    std::span<const std::byte> GetReceivedData(Id id) EXCLUSIVE_LOCKS_REQUIRED(!m_received_mutex)
+    {
+        LOCK(m_received_mutex);
+        return std::span<const std::byte>(m_received[id]);
+    }
+
 private:
     Mutex m_connections_mutex;
+    Mutex m_received_mutex;
 
     virtual bool EventNewConnectionAccepted(Id id,
                                         const CService& me,
@@ -43,6 +54,17 @@ private:
         m_connections.emplace_back(id, them);
         return true;
     }
+
+    // When we receive data just store it in a member variable for testing.
+    virtual void EventGotData(Id id, std::span<const std::byte> data) override
+        EXCLUSIVE_LOCKS_REQUIRED(!m_received_mutex)
+    {
+        LOCK(m_received_mutex);
+        m_received[id].assign(data.begin(), data.end());
+    }
+
+    virtual void EventGotEOF(Id id) override {}
+    virtual void EventGotPermanentReadError(Id id, const std::string& errmsg) override {}
 };
 
 BOOST_AUTO_TEST_CASE(test_sockman)
@@ -76,8 +98,11 @@ BOOST_AUTO_TEST_CASE(test_sockman)
     // No connections yet
     BOOST_CHECK_EQUAL(sockman.GetConnectionsCount(), 0);
 
-    // Create a mock client and add it to the local CreateSock queue
-    ConnectClient();
+    // Create a mock client with a data payload to send
+    // and add it to the local CreateSock queue
+    std::string request_string = "bits";
+    std::span<const std::byte> request = std::as_bytes(std::span{request_string});
+    ConnectClient(request);
 
     // Wait up to a minute to find and connect the client in the I/O loop
     int attempts{6000};
@@ -89,6 +114,13 @@ BOOST_AUTO_TEST_CASE(test_sockman)
     // Inspect the connection
     auto client{sockman.GetFirstConnection()};
     BOOST_CHECK_EQUAL(client.second.ToStringAddrPort(), "5.5.5.5:6789");
+
+    // Wait up to a minute to read the data from the connection
+    attempts = 6000;
+    while (!std::ranges::equal(sockman.GetReceivedData(client.first), request)) {
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
 
     // Close connection
     BOOST_REQUIRE(sockman.CloseConnection(client.first));
