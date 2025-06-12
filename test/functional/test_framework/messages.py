@@ -742,6 +742,9 @@ class CBlockHeader:
         self.hash = None
 
     def serialize(self):
+        return self._serialize_header()
+
+    def _serialize_header(self):
         r = b""
         r += self.nVersion.to_bytes(4, "little", signed=True)
         r += ser_uint256(self.hashPrevBlock)
@@ -753,13 +756,7 @@ class CBlockHeader:
 
     def calc_sha256(self):
         if self.sha256 is None:
-            r = b""
-            r += self.nVersion.to_bytes(4, "little", signed=True)
-            r += ser_uint256(self.hashPrevBlock)
-            r += ser_uint256(self.hashMerkleRoot)
-            r += self.nTime.to_bytes(4, "little")
-            r += self.nBits.to_bytes(4, "little")
-            r += self.nNonce.to_bytes(4, "little")
+            r = self._serialize_header()
             self.sha256 = uint256_from_str(hash256(r))
             self.hash = hash256(r)[::-1].hex()
 
