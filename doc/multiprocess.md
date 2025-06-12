@@ -4,7 +4,7 @@ _This document describes usage of the multiprocess feature. For design informati
 
 ## Build Option
 
-On Unix systems, the `-DENABLE_IPC=ON` build option can be passed to build the supplemental `bitcoin-node` and `bitcoin-gui` multiprocess executables.
+The `-DENABLE_IPC=ON` build option, supported and enabled by default on Unix systems, can be passed to build the supplemental `bitcoin-node` and `bitcoin-gui` multiprocess executables.
 
 ## Debugging
 
