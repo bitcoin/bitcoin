@@ -17,6 +17,63 @@
 #include <utility>
 #include <vector>
 
+/*
+ * The tests in this file primarily cover the candidate finder classes and linearization algorithms.
+ *
+ *   <----: An implementation (at the start of the line --) is tested in the test marked with *,
+ *          possibly by comparison with other implementations (at the end of the line ->).
+ *   <<---: The right side is implemented using the left side.
+ *
+ *   +-----------------------+
+ *   | SearchCandidateFinder | <<---------------------\
+ *   +-----------------------+                        |
+ *     |                                            +-----------+
+ *     |                                            | Linearize |
+ *     |                                            +-----------+
+ *     |        +-------------------------+           |  |
+ *     |        | AncestorCandidateFinder | <<--------/  |
+ *     |        +-------------------------+              |
+ *     |          |                     ^                |        ^^  PRODUCTION CODE
+ *     |          |                     |                |        ||
+ *  ==============================================================================================
+ *     |          |                     |                |        ||
+ *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE
+ *     |                                |                |
+ *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*
+ *     |                                |                |
+ *     v                                |                v
+ *   +-----------------------+          |           +-----------------+
+ *   | SimpleCandidateFinder | <<-------------------| SimpleLinearize |
+ *   +-----------------------+          |           +-----------------+
+ *                  |                   |                |
+ *                  +-------------------/                |
+ *                  |                                    |
+ *                  |-clusterlin_simple_finder*          |-clusterlin_simple_linearize*
+ *                  v                                    v
+ *   +---------------------------+                  +---------------------+
+ *   | ExhaustiveCandidateFinder |                  | ExhaustiveLinearize |
+ *   +---------------------------+                  +---------------------+
+ *
+ * More tests are included for lower-level and related functions and classes:
+ * - DepGraph tests:
+ *   - clusterlin_depgraph_sim
+ *   - clusterlin_depgraph_serialization
+ *   - clusterlin_components
+ * - ChunkLinearization and LinearizationChunking tests:
+ *   - clusterlin_chunking
+ *   - clusterlin_linearization_chunking
+ * - PostLinearize tests:
+ *   - clusterlin_postlinearize
+ *   - clusterlin_postlinearize_tree
+ *   - clusterlin_postlinearize_moved_leaf
+ * - MergeLinearization tests:
+ *   - clusterlin_merge
+ * - FixLinearization tests:
+ *   - clusterlin_fix_linearization
+ * - MakeConnected tests (a test-only function):
+ *   - clusterlin_make_connected
+ */
+
 using namespace cluster_linearize;
 
 namespace {
