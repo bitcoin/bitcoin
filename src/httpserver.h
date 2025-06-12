@@ -284,6 +284,8 @@ public:
     /// @}
 };
 
+class HTTPClient;
+
 class HTTPServer
 {
 public:
@@ -291,6 +293,13 @@ public:
      * Each connection is assigned an unique id of this type.
      */
     using Id = int64_t;
+
+    virtual ~HTTPServer()
+    {
+        Assume(!m_thread_socket_handler.joinable()); // Missing call to JoinSocketsThreads()
+        Assume(m_connected.empty()); // Missing call to CloseConnection()
+        Assume(m_listen.empty()); // Missing call to StopListening()
+    }
 
     /**
      * Bind to a new address:port, start listening and add the listen socket to `m_listen`.
@@ -310,14 +319,40 @@ public:
     size_t GetListeningSocketCount() const { return m_listen.size(); }
 
     /**
-     * This is a temporary method used to accept connections from a listening
-     * socket in the unit tests before the I/O loop is implemented.
+     * Get the number of HTTPClients we are connected to
+     */
+    size_t GetConnectionsCount() const { return m_connected_size.load(std::memory_order_acquire); }
+
+    /**
+     * This is a temporary method used to get a pointer to an HTTPClient
+     * so its connection can be inspected in a unit test.
      * It will be removed in a future commit.
      */
-    std::unique_ptr<Sock> AcceptConnectionFromListeningSocket(CService& addr)
-    {
-        return AcceptConnection(*m_listen.front(), addr);
-    }
+    std::shared_ptr<HTTPClient> GetFirstConnection() { return m_connected.front(); }
+
+    /**
+     * Start the necessary threads for sockets IO.
+     */
+    void StartSocketsThreads();
+
+    /**
+     * Join (wait for) the threads started by `StartSocketsThreads()` to exit.
+     */
+    void JoinSocketsThreads();
+
+    /**
+     * Stop network activity
+     */
+    void InterruptNet() { m_interrupt_net(); }
+
+    /**
+     * Destroy a given connection by closing its socket and release resources occupied by it.
+     * This is a temporary method that will be removed in a future commit when it is
+     * replaced by DisconnectClients() and run automatically in the I/O thread.
+     * @param[in] http_client Connection to destroy.
+     * @return Whether the connection existed and its socket was closed by this call.
+     */
+    bool CloseConnection(std::shared_ptr<HTTPClient> http_client);
 
 private:
     /**
@@ -331,6 +366,56 @@ private:
     std::atomic<Id> m_next_id{0};
 
     /**
+     * List of HTTPClients with connected sockets.
+     * Connections will only be added and removed in the I/O thread, but
+     * shared pointers may be passed to worker threads to handle requests
+     * and send replies.
+     */
+    std::vector<std::shared_ptr<HTTPClient>> m_connected;
+
+    /**
+     * The number of connected sockets.
+     * Updated from the I/O thread but safely readable from
+     * the main thread without locks.
+     */
+    std::atomic<size_t> m_connected_size{0};
+
+    /**
+     * Info about which socket has which event ready and a reverse map
+     * back to the HTTPClient that owns the socket.
+     */
+    struct IOReadiness {
+        /**
+         * Map of socket -> socket events. For example:
+         * socket1 -> { requested = SEND|RECV, occurred = RECV }
+         * socket2 -> { requested = SEND, occurred = SEND }
+         */
+        Sock::EventsPerSock events_per_sock;
+
+        /**
+         * Map of socket -> HTTPClient. For example:
+         * socket1 -> HTTPClient{ id=23 }
+         * socket2 -> HTTPClient{ id=56 }
+         */
+        std::unordered_map<Sock::EventsPerSock::key_type,
+                           std::shared_ptr<HTTPClient>,
+                           Sock::HashSharedPtrSock,
+                           Sock::EqualSharedPtrSock>
+            httpclients_per_sock;
+    };
+
+    /**
+     * This is signaled when network activity should cease.
+     */
+    CThreadInterrupt m_interrupt_net;
+
+    /**
+     * Thread that sends to and receives from sockets and accepts connections.
+     * Executes the I/O loop of the server.
+     */
+    std::thread m_thread_socket_handler;
+
+    /**
      * Accept a connection.
      * @param[in] listen_sock Socket on which to accept the connection.
      * @param[out] addr Address of the peer that was accepted.
@@ -342,6 +427,33 @@ private:
      * Generate an id for a newly created connection.
      */
     Id GetNewId();
+
+    /**
+     * After a new socket with a client has been created, configure its flags,
+     * make a new HTTPClient and Id and save its shared pointer.
+     * @param[in] sock The newly created socket.
+     * @param[in] them Address of the new peer.
+     */
+    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& them);
+
+    /**
+     * Accept incoming connections, one from each read-ready listening socket.
+     * @param[in] events_per_sock Sockets that are ready for IO.
+     */
+    void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock);
+
+    /**
+     * Generate a collection of sockets to check for IO readiness.
+     * @return Sockets to check for readiness plus an aux map to find the
+     * corresponding HTTPClient given a socket.
+     */
+    IOReadiness GenerateWaitSockets() const;
+
+    /**
+     * Check connected and listening sockets for IO readiness and process them accordingly.
+     * This is the main I/O loop of the server.
+     */
+    void ThreadSocketHandler();
 };
 
 class HTTPClient
@@ -356,8 +468,24 @@ public:
     //! IP:port of connected client, cached for logging purposes
     std::string m_origin;
 
-    explicit HTTPClient(HTTPServer::Id id, const CService& addr)
-        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()) {};
+    /**
+     * Mutex that serializes the Send() and Recv() calls on `m_sock`. Reading
+     * from the client occurs in the I/O thread but writing back to a client
+     * may occur in a worker thread.
+     */
+    Mutex m_sock_mutex;
+
+    /**
+     * Underlying socket.
+     * `shared_ptr` (instead of `unique_ptr`) is used to avoid premature close of the
+     * underlying file descriptor by one thread while another thread is poll(2)-ing
+     * it for activity.
+     * @see https://github.com/bitcoin/bitcoin/issues/21744 for details.
+     */
+    std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
+
+    explicit HTTPClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
+        : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)} {};
 
     // Disable copies (should only be used as shared pointers)
     HTTPClient(const HTTPClient&) = delete;
