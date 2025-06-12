@@ -77,13 +77,13 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block2 = create_block(tip, create_coinbase(height), block_time, txlist=[tx1, tx2])
         block_time += 1
         block2.solve()
-        orig_hash = block2.sha256
+        orig_hash = block2.hash_int
         block2_orig = copy.deepcopy(block2)
 
         # Mutate block 2
         block2.vtx.append(tx2)
         assert_equal(block2.hashMerkleRoot, block2.calc_merkle_root())
-        assert_equal(orig_hash, block2.rehash())
+        assert_equal(orig_hash, block2.hash_int)
         assert_not_equal(block2_orig.vtx, block2.vtx)
 
         peer.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')

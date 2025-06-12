@@ -103,7 +103,7 @@ class AssumeValidTest(BitcoinTestFramework):
         block.solve()
         # Save the coinbase for later
         self.block1 = block
-        self.tip = block.sha256
+        self.tip = block.hash_int
         height += 1
 
         # Bury the block 100 deep so the coinbase output is spendable
@@ -111,7 +111,7 @@ class AssumeValidTest(BitcoinTestFramework):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             self.blocks.append(block)
-            self.tip = block.sha256
+            self.tip = block.hash_int
             self.block_time += 1
             height += 1
 
@@ -124,7 +124,7 @@ class AssumeValidTest(BitcoinTestFramework):
         self.block_time += 1
         block102.solve()
         self.blocks.append(block102)
-        self.tip = block102.sha256
+        self.tip = block102.hash_int
         self.block_time += 1
         height += 1
 
@@ -133,7 +133,7 @@ class AssumeValidTest(BitcoinTestFramework):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.solve()
             self.blocks.append(block)
-            self.tip = block.sha256
+            self.tip = block.hash_int
             self.block_time += 1
             height += 1
 

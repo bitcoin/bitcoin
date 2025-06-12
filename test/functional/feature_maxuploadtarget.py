@@ -41,7 +41,7 @@ class TestP2PConn(P2PInterface):
         pass
 
     def on_block(self, message):
-        self.block_receive_map[message.block.sha256] += 1
+        self.block_receive_map[message.block.hash_int] += 1
 
 class MaxUploadTest(BitcoinTestFramework):
 

@@ -621,7 +621,7 @@ class BlockchainTest(BitcoinTestFramework):
             return b
 
         b1 = solve_and_send_block(int(fork_hash, 16), fork_height+1, fork_block['time'] + 1)
-        b2 = solve_and_send_block(b1.sha256, fork_height+2, b1.nTime + 1)
+        b2 = solve_and_send_block(b1.hash_int, fork_height+2, b1.nTime + 1)
 
         node.invalidateblock(b2.hash)
 
@@ -734,7 +734,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblock when block data is available but undo data isn't")
         # Submits a block building on the header-only block, so it can't be connected and has no undo data
         tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
-        block_noundo = create_block(block.sha256, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
+        block_noundo = create_block(block.hash_int, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
         block_noundo.solve()
         node.submitblock(block_noundo.serialize().hex())
 
