@@ -8,6 +8,13 @@
 #include <logging.h>
 #include <netbase.h>
 #include <util/sock.h>
+#include <util/thread.h>
+
+// The set of sockets cannot be modified while waiting
+// The sleep time needs to be small to avoid new sockets stalling
+static constexpr auto SELECT_TIMEOUT{50ms};
+
+static constexpr int SOCKET_OPTION_TRUE{1};
 
 util::Result<void> SockMan::BindAndStartListening(const CService& to)
 {
@@ -89,9 +96,65 @@ util::Result<void> SockMan::BindAndStartListening(const CService& to)
     return {};
 }
 
+void SockMan::StartSocketsThreads(const Options& options)
+{
+    m_thread_socket_handler = std::thread(
+        &util::TraceThread, options.socket_handler_thread_name, [this] { ThreadSocketHandler(); });
+}
+
+void SockMan::JoinSocketsThreads()
+{
+    if (m_thread_socket_handler.joinable()) {
+        m_thread_socket_handler.join();
+    }
+}
+
+bool SockMan::CloseConnection(Id id)
+{
+    LOCK(m_connected_mutex);
+    return m_connected.erase(id) > 0;
+}
+
 void SockMan::StopListening()
 {
     m_listen.clear();
+}
+
+bool SockMan::ShouldTryToSend(Id id) const { return true; }
+
+bool SockMan::ShouldTryToRecv(Id id) const { return true; }
+
+SockMan::Id SockMan::GetNewId()
+{
+    return m_next_id.fetch_add(1, std::memory_order_relaxed);
+}
+
+void SockMan::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& me, const CService& them)
+{
+    AssertLockNotHeld(m_connected_mutex);
+
+    if (!sock->IsSelectable()) {
+        LogPrintf("connection from %s dropped: non-selectable socket\n", them.ToStringAddrPort());
+        return;
+    }
+
+    // According to the internet TCP_NODELAY is not carried into accepted sockets
+    // on all platforms.  Set it again here just to be sure.
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &SOCKET_OPTION_TRUE, sizeof(SOCKET_OPTION_TRUE)) == SOCKET_ERROR) {
+        LogDebug(BCLog::NET, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
+                 them.ToStringAddrPort());
+    }
+
+    const Id id{GetNewId()};
+
+    {
+        LOCK(m_connected_mutex);
+        m_connected.emplace(id, std::make_shared<ConnectionSocket>(std::move(sock)));
+    }
+
+    if (!EventNewConnectionAccepted(id, me, them)) {
+        CloseConnection(id);
+    }
 }
 
 std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CService& addr)
@@ -122,7 +185,70 @@ std::unique_ptr<Sock> SockMan::AcceptConnection(const Sock& listen_sock, CServic
     return sock;
 }
 
-SockMan::Id SockMan::GetNewId()
+void SockMan::ThreadSocketHandler()
 {
-    return m_next_id.fetch_add(1, std::memory_order_relaxed);
+    AssertLockNotHeld(m_connected_mutex);
+
+    while (!m_interrupt_net) {
+        // Check for the readiness of the already connected sockets and the
+        // listening sockets in one call ("readiness" as in poll(2) or
+        // select(2)). If none are ready, wait for a short while and return
+        // empty sets.
+        auto io_readiness{GenerateWaitSockets()};
+        if (io_readiness.events_per_sock.empty() ||
+            // WaitMany() may as well be a static method, the context of the first Sock in the vector is not relevant.
+            !io_readiness.events_per_sock.begin()->first->WaitMany(SELECT_TIMEOUT,
+                                                                   io_readiness.events_per_sock)) {
+            m_interrupt_net.sleep_for(SELECT_TIMEOUT);
+        }
+
+        // Accept new connections from listening sockets.
+        SocketHandlerListening(io_readiness.events_per_sock);
+    }
+}
+
+SockMan::IOReadiness SockMan::GenerateWaitSockets()
+{
+    AssertLockNotHeld(m_connected_mutex);
+
+    IOReadiness io_readiness;
+
+    for (const auto& sock : m_listen) {
+        io_readiness.events_per_sock.emplace(sock, Sock::Events{Sock::RECV});
+    }
+
+    auto connected_snapshot{WITH_LOCK(m_connected_mutex, return m_connected;)};
+
+    for (const auto& [id, sockets] : connected_snapshot) {
+        const bool select_recv{ShouldTryToRecv(id)};
+        const bool select_send{ShouldTryToSend(id)};
+        if (!select_recv && !select_send) continue;
+
+        Sock::Event event = (select_send ? Sock::SEND : 0) | (select_recv ? Sock::RECV : 0);
+        io_readiness.events_per_sock.emplace(sockets->sock, Sock::Events{event});
+        io_readiness.ids_per_sock.emplace(sockets->sock, id);
+    }
+
+    return io_readiness;
+}
+
+void SockMan::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
+{
+    AssertLockNotHeld(m_connected_mutex);
+
+    for (const auto& sock : m_listen) {
+        if (m_interrupt_net) {
+            return;
+        }
+        const auto it = events_per_sock.find(sock);
+        if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
+            CService addr_accepted;
+
+            auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
+
+            if (sock_accepted) {
+                NewSockAccepted(std::move(sock_accepted), GetBindAddress(*sock), addr_accepted);
+            }
+        }
+    }
 }
