@@ -280,7 +280,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b12, b13, b14], success=False, reject_reason='bad-cb-amount', reconnect=True)
 
         # New tip should be b13.
-        assert_equal(node.getbestblockhash(), b13.hash)
+        assert_equal(node.getbestblockhash(), b13.hash_hex)
 
         # Add a block with MAX_BLOCK_SIGOPS and one with one more sigop
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -734,7 +734,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.block_heights[b48.hash_int] = self.block_heights[b44.hash_int] + 1 # b48 is a parent of b44
         b48p = self.next_block("48p")
         self.send_blocks([b48, b48p], success=True) # Reorg to the longer chain
-        node.invalidateblock(b48p.hash) # mark b48p as invalid
+        node.invalidateblock(b48p.hash_hex) # mark b48p as invalid
         node.setmocktime(0)
 
         # Test Merkle tree malleability
@@ -778,7 +778,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.blocks[56] = b56
         assert_equal(len(b56.vtx), 3)
         b56 = self.update_block(56, [tx1])
-        assert_equal(b56.hash, b57.hash)
+        assert_equal(b56.hash_hex, b57.hash_hex)
         self.send_blocks([b56], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
 
         # b57p2 - a good block with 6 tx'es, don't submit until end
@@ -796,7 +796,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(55)
         b56p2 = copy.deepcopy(b57p2)
         self.blocks["b56p2"] = b56p2
-        assert_equal(b56p2.hash, b57p2.hash)
+        assert_equal(b56p2.hash_hex, b57p2.hash_hex)
         assert_equal(len(b56p2.vtx), 6)
         b56p2 = self.update_block("b56p2", [tx3, tx4])
         self.send_blocks([b56p2], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
@@ -954,7 +954,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip('dup_2')
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
-        assert_equal(b64.hash, b64a.hash)
+        assert_equal(b64.hash_hex, b64a.hash_hex)
         assert_equal(b64.get_weight(), MAX_BLOCK_WEIGHT)
         self.blocks[64] = b64
         b64 = self.update_block(64, [])

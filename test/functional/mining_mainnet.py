@@ -70,7 +70,7 @@ class MiningMainnetTest(BitcoinTestFramework):
         self.log.debug(block_hex)
         assert_equal(node.submitblock(block_hex), None)
         prev_hash = node.getbestblockhash()
-        assert_equal(prev_hash, block.hash)
+        assert_equal(prev_hash, block.hash_hex)
         return prev_hash
 
 

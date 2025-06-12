@@ -143,8 +143,8 @@ class NULLDUMMYTest(BitcoinTestFramework):
         block.solve()
         assert_equal(None if accept else NULLDUMMY_ERROR, node.submitblock(block.serialize().hex()))
         if accept:
-            assert_equal(node.getbestblockhash(), block.hash)
-            self.lastblockhash = block.hash
+            assert_equal(node.getbestblockhash(), block.hash_hex)
+            self.lastblockhash = block.hash_hex
             self.lastblocktime += 1
             self.lastblockheight += 1
         else:

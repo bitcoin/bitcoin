@@ -896,9 +896,9 @@ class P2PDataStore(P2PInterface):
                 self.sync_with_ping(timeout=timeout)
 
             if success:
-                self.wait_until(lambda: node.getbestblockhash() == blocks[-1].hash, timeout=timeout)
+                self.wait_until(lambda: node.getbestblockhash() == blocks[-1].hash_hex, timeout=timeout)
             else:
-                assert_not_equal(node.getbestblockhash(), blocks[-1].hash)
+                assert_not_equal(node.getbestblockhash(), blocks[-1].hash_hex)
 
     def send_txs_and_test(self, txs, node, *, success=True, expect_disconnect=False, reject_reason=None):
         """Send txs to test node and test whether they're accepted to the mempool.

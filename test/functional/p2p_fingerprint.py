@@ -41,7 +41,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
             block.solve()
 
             blocks.append(block)
-            prev_hash = block.hash
+            prev_hash = block.hash_hex
             prev_height += 1
             prev_median_time = block_time
         return blocks

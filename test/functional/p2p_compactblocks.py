@@ -623,7 +623,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         tips = node.getchaintips()
         found = False
         for x in tips:
-            if x["hash"] == block.hash:
+            if x["hash"] == block.hash_hex:
                 found = True
                 break
         assert not found
@@ -667,7 +667,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         tips = node.getchaintips()
         found = False
         for x in tips:
-            if x["hash"] == block.hash:
+            if x["hash"] == block.hash_hex:
                 assert_equal(x["status"], "headers-only")
                 found = True
                 break

@@ -143,7 +143,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
         p2p.send_and_ping(msg_block(block) if with_witness else msg_no_witness_block(block))
-        assert_equal(node.getbestblockhash() == block.hash, accepted)
+        assert_equal(node.getbestblockhash() == block.hash_hex, accepted)
 
 
 class TestP2PConn(P2PInterface):
@@ -346,7 +346,7 @@ class SegWitTest(BitcoinTestFramework):
         # But it should not be permanently marked bad...
         # Resend without witness information.
         self.test_node.send_and_ping(msg_no_witness_block(block))  # make sure the block was processed
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         # Update our utxo list; we spent the first entry.
         self.utxo.pop(0)
@@ -413,7 +413,7 @@ class SegWitTest(BitcoinTestFramework):
             assert len(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack) == 1
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
             # Now try to retrieve it...
-            rpc_block = self.nodes[0].getblock(block.hash, False)
+            rpc_block = self.nodes[0].getblock(block.hash_hex, False)
             non_wit_block = self.test_node.request_block(block.hash_int, 2)
             wit_block = self.test_node.request_block(block.hash_int, 2 | MSG_WITNESS_FLAG)
             assert_equal(wit_block.serialize(), bytes.fromhex(rpc_block))
@@ -421,7 +421,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(wit_block.serialize(), block.serialize())
 
             # Test size, vsize, weight
-            rpc_details = self.nodes[0].getblock(block.hash, True)
+            rpc_details = self.nodes[0].getblock(block.hash_hex, True)
             assert_equal(rpc_details["size"], len(block.serialize()))
             assert_equal(rpc_details["strippedsize"], len(block.serialize(False)))
             assert_equal(rpc_details["weight"], block.get_weight())
@@ -819,13 +819,13 @@ class SegWitTest(BitcoinTestFramework):
         # TODO: repeat this test with a block that can be relayed
         assert_equal('bad-witness-nonce-size', self.nodes[0].submitblock(block.serialize().hex()))
 
-        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.pop()
         assert block.get_weight() < MAX_BLOCK_WEIGHT
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
 
-        assert self.nodes[0].getbestblockhash() == block.hash
+        assert self.nodes[0].getbestblockhash() == block.hash_hex
 
         # Now make sure that malleating the witness reserved value doesn't
         # result in a block permanently marked bad.
@@ -926,14 +926,14 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].wit = CTxWitness()  # drop the nonce
         block.solve()
         assert_equal('bad-witness-merkle-match', self.nodes[0].submitblock(block.serialize().hex()))
-        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_not_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         # Now redo commitment with the standard nonce, but let bitcoind fill it in.
         add_witness_commitment(block, nonce=0)
         block.vtx[0].wit = CTxWitness()
         block.solve()
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         # This time, add a tx with non-empty witness, but don't supply
         # the commitment.
@@ -949,7 +949,7 @@ class SegWitTest(BitcoinTestFramework):
 
         assert_equal('bad-txnmrklroot', self.nodes[0].submitblock(block_2.serialize().hex()))
         # Tip should not advance!
-        assert_not_equal(self.nodes[0].getbestblockhash(), block_2.hash)
+        assert_not_equal(self.nodes[0].getbestblockhash(), block_2.hash_hex)
 
     @subtest
     def test_extra_witness_data(self):
@@ -1891,7 +1891,7 @@ class SegWitTest(BitcoinTestFramework):
         # Reset the tip back down for the next test
         self.sync_blocks()
         for x in self.nodes:
-            x.invalidateblock(block_4.hash)
+            x.invalidateblock(block_4.hash_hex)
 
         # Try replacing the last input of tx2 to be spending the last
         # output of tx
