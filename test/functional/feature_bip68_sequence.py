@@ -383,7 +383,7 @@ class BIP68Test(BitcoinTestFramework):
         block.solve()
 
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
     def activateCSV(self):
         # activation should happen at block height 432 (3 periods)

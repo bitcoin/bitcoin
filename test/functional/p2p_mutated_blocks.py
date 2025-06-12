@@ -95,7 +95,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         block_txn = msg_blocktxn()
         block_txn.block_transactions = BlockTransactions(blockhash=block.hash_int, transactions=[tx])
         honest_relayer.send_and_ping(block_txn)
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         # Check that unexpected-witness mutation check doesn't trigger on a header that doesn't connect to anything
         assert_equal(len(self.nodes[0].getpeerinfo()), 1)
