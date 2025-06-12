@@ -36,7 +36,6 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         blockhash = self.generate(self.nodes[2], 1, sync_fun=self.no_op)[0]
         block_hex = self.nodes[2].getblock(blockhash=blockhash, verbosity=0)
         block = from_hex(CBlock(), block_hex)
-        block.rehash()
         return block
 
     def run_test(self):

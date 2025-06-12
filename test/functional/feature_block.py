@@ -661,7 +661,6 @@ class FullBlockTest(BitcoinTestFramework):
         while b47.sha256 <= target:
             # Rehash nonces until an invalid too-high-hash block is found.
             b47.nNonce += 1
-            b47.rehash()
         self.send_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
