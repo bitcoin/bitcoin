@@ -19,6 +19,7 @@
 #include <util/signalinterrupt.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
+#include <util/thread.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
 
@@ -46,6 +47,13 @@
 #include <event2/util.h>
 
 #include <support/events.h>
+
+//! The set of sockets cannot be modified while waiting, so
+//! the sleep time needs to be small to avoid new sockets stalling.
+static constexpr auto SELECT_TIMEOUT{50ms};
+
+//! Explicit alias for setting socket option methods.
+static constexpr int SOCKET_OPTION_TRUE{1};
 
 using common::InvalidPortErrMsg;
 using http_libevent::HTTPRequest;
@@ -991,6 +999,32 @@ void HTTPServer::StopListening()
     m_listen.clear();
 }
 
+void HTTPServer::StartSocketsThreads()
+{
+    m_thread_socket_handler = std::thread(&util::TraceThread,
+                                          "http",
+                                          [this] { ThreadSocketHandler(); });
+}
+
+void HTTPServer::JoinSocketsThreads()
+{
+    if (m_thread_socket_handler.joinable()) {
+        m_thread_socket_handler.join();
+    }
+}
+
+bool HTTPServer::CloseConnection(std::shared_ptr<HTTPClient> http_client)
+{
+    size_t erased = std::erase_if(m_connected,
+                                  [&](auto& client){ return client == http_client; });
+    if (erased > 0) {
+         // Report back to the main thread
+         m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
+         return true;
+    }
+    return false;
+}
+
 std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CService& addr)
 {
     // Make sure we only operate on our own listening sockets
@@ -1023,5 +1057,96 @@ std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CSer
 HTTPServer::Id HTTPServer::GetNewId()
 {
     return m_next_id.fetch_add(1, std::memory_order_relaxed);
+}
+
+void HTTPServer::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& them)
+{
+    if (!sock->IsSelectable()) {
+        LogDebug(BCLog::HTTP,
+                 "connection from %s dropped: non-selectable socket\n",
+                 them.ToStringAddrPort());
+        return;
+    }
+
+    // According to the internet TCP_NODELAY is not carried into accepted sockets
+    // on all platforms.  Set it again here just to be sure.
+    if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &SOCKET_OPTION_TRUE, sizeof(SOCKET_OPTION_TRUE)) == SOCKET_ERROR) {
+        LogDebug(BCLog::HTTP, "connection from %s: unable to set TCP_NODELAY, continuing anyway\n",
+                 them.ToStringAddrPort());
+    }
+
+    const Id id{GetNewId()};
+
+    m_connected.push_back(std::make_shared<HTTPClient>(id, them, std::move(sock)));
+    // Report back to the main thread
+    m_connected_size.fetch_add(1, std::memory_order_relaxed);
+
+    LogDebug(BCLog::HTTP,
+             "HTTP Connection accepted from %s (id=%d)\n",
+             them.ToStringAddrPort(), id);
+}
+
+void HTTPServer::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
+{
+    for (const auto& sock : m_listen) {
+        if (m_interrupt_net) {
+            return;
+        }
+        const auto it = events_per_sock.find(sock);
+        if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
+            CService addr_accepted;
+
+            auto sock_accepted{AcceptConnection(*sock, addr_accepted)};
+
+            if (sock_accepted) {
+                NewSockAccepted(std::move(sock_accepted), addr_accepted);
+            }
+        }
+    }
+}
+
+HTTPServer::IOReadiness HTTPServer::GenerateWaitSockets() const
+{
+    IOReadiness io_readiness;
+
+    for (const auto& sock : m_listen) {
+        io_readiness.events_per_sock.emplace(sock, Sock::Events{Sock::RECV});
+    }
+
+    for (const auto& http_client : m_connected) {
+        // TODO: Implement HTTPClient methods for send/receive readiness
+        const bool select_recv{true};
+        const bool select_send{true};
+        if (!select_recv && !select_send) continue;
+
+        // Safely copy the shared pointer to the socket
+        std::shared_ptr<Sock> sock{WITH_LOCK(http_client->m_sock_mutex, return http_client->m_sock;)};
+
+        Sock::Event event = (select_send ? Sock::SEND : 0) | (select_recv ? Sock::RECV : 0);
+        io_readiness.events_per_sock.emplace(sock, Sock::Events{event});
+        io_readiness.httpclients_per_sock.emplace(sock, http_client);
+    }
+
+    return io_readiness;
+}
+
+void HTTPServer::ThreadSocketHandler()
+{
+    while (!m_interrupt_net) {
+        // Check for the readiness of the already connected sockets and the
+        // listening sockets in one call ("readiness" as in poll(2) or
+        // select(2)). If none are ready, wait for a short while and return
+        // empty sets.
+        auto io_readiness{GenerateWaitSockets()};
+        if (io_readiness.events_per_sock.empty() ||
+            // WaitMany() may as well be a static method, the context of the first Sock in the vector is not relevant.
+            !io_readiness.events_per_sock.begin()->first->WaitMany(SELECT_TIMEOUT,
+                                                                   io_readiness.events_per_sock)) {
+            m_interrupt_net.sleep_for(SELECT_TIMEOUT);
+        }
+
+        // Accept new connections from listening sockets.
+        SocketHandlerListening(io_readiness.events_per_sock);
+    }
 }
 } // namespace http_bitcoin
