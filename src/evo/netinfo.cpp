@@ -147,6 +147,11 @@ std::string NetInfoEntry::ToStringAddrPort() const
         m_data);
 }
 
+std::shared_ptr<NetInfoInterface> NetInfoInterface::MakeNetInfo()
+{
+    return std::make_shared<MnNetInfo>();
+}
+
 NetInfoStatus MnNetInfo::ValidateService(const CService& service)
 {
     if (!service.IsValid()) {

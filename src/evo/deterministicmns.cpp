@@ -460,8 +460,8 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
     // Using this temporary map as a checkpoint to roll back to in case of any issues.
     decltype(mnUniquePropertyMap) mnUniquePropertyMapSaved = mnUniquePropertyMap;
 
-    auto updateNetInfo = [this](const CDeterministicMN& dmn, const std::shared_ptr<MnNetInfo>& oldInfo,
-                                const std::shared_ptr<MnNetInfo>& newInfo) -> std::string {
+    auto updateNetInfo = [this](const CDeterministicMN& dmn, const std::shared_ptr<NetInfoInterface>& oldInfo,
+                                const std::shared_ptr<NetInfoInterface>& newInfo) -> std::string {
         if (util::shared_ptr_not_equal(oldInfo, newInfo)) {
             // We track each individual entry in netInfo as opposed to netInfo itself (preventing us from
             // using UpdateUniqueProperty()), so we need to successfully purge all old entries and insert

@@ -41,7 +41,7 @@ public:
     MnType nType{MnType::Regular};
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
-    std::shared_ptr<MnNetInfo> netInfo{MakeNetInfo()};
+    std::shared_ptr<NetInfoInterface> netInfo{NetInfoInterface::MakeNetInfo()};
     uint160 platformNodeID{};
     uint16_t platformP2PPort{0};
     uint16_t platformHTTPPort{0};
@@ -67,7 +67,7 @@ public:
                 obj.nType,
                 obj.nMode,
                 obj.collateralOutpoint,
-                obj.netInfo,
+                NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.netInfo)),
                 obj.keyIDOwner,
                 CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == ProTxVersion::LegacyBLS)),
                 obj.keyIDVoting,
@@ -110,7 +110,7 @@ public:
     uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     MnType nType{MnType::Regular};
     uint256 proTxHash;
-    std::shared_ptr<MnNetInfo> netInfo{MakeNetInfo()};
+    std::shared_ptr<NetInfoInterface> netInfo{NetInfoInterface::MakeNetInfo()};
     uint160 platformNodeID{};
     uint16_t platformP2PPort{0};
     uint16_t platformHTTPPort{0};
@@ -133,7 +133,7 @@ public:
         }
         READWRITE(
                 obj.proTxHash,
-                obj.netInfo,
+                NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.netInfo)),
                 obj.scriptOperatorPayout,
                 obj.inputsHash
         );

@@ -386,6 +386,7 @@ private:
         DMNL_NO_TEMPLATE(MnNetInfo);
         DMNL_NO_TEMPLATE(NetInfoEntry);
         DMNL_NO_TEMPLATE(NetInfoInterface);
+        DMNL_NO_TEMPLATE(std::shared_ptr<NetInfoInterface>);
 #undef DMNL_NO_TEMPLATE
         return ::SerializeHash(v);
     }
