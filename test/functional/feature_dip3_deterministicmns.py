@@ -238,6 +238,7 @@ class DIP3Test(BitcoinTestFramework):
     def register_fund_mn(self, node, mn: MasternodeInfo):
         node.sendtoaddress(mn.fundsAddr, mn.get_collateral_value() + 0.001)
         txid = mn.register_fund(node, submit=True)
+        assert txid is not None
         vout = mn.get_collateral_vout(node, txid)
         mn.set_params(proTxHash=txid, collateral_txid=txid, collateral_vout=vout)
 
