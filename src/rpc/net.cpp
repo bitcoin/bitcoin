@@ -121,8 +121,18 @@ static RPCHelpMan getpeerinfo()
 {
     return RPCHelpMan{
         "getpeerinfo",
-        "Returns data about each connected network peer as a json array of objects.",
-        {},
+        "Returns data about each connected network peer as a json array of objects.\n"
+        "Optionally filter by peer ids.\n",
+        {
+            {"peer_ids", RPCArg::Type::ARR, RPCArg::Optional::OMITTED,
+                "A JSON array of peer IDs, or a single peer ID as a number.\n"
+                "If omitted, returns all peers.\n",
+                {
+                    {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Peer ID"},
+                },
+                {RPCArgOptions{.skip_type_check = true, .type_str = {"", "numeric or array"}}}
+            }
+        },
         RPCResult{
             RPCResult::Type::ARR, "", "",
             {
@@ -197,10 +207,27 @@ static RPCHelpMan getpeerinfo()
         },
         RPCExamples{
             HelpExampleCli("getpeerinfo", "")
+            + HelpExampleCli("getpeerinfo", "2")
+            + HelpExampleCli("getpeerinfo", "\"[2, 3, 7]\"")
             + HelpExampleRpc("getpeerinfo", "")
+            + HelpExampleRpc("getpeerinfo", "2")
+            + HelpExampleRpc("getpeerinfo", "[2, 3, 7]")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    std::unordered_set<NodeId> peer_ids;
+    if (const UniValue* arg = self.MaybeArg<UniValue>("peer_ids")) {
+        if (arg->isNum()) {
+            peer_ids.insert(arg->getInt<NodeId>());
+        } else if (arg->isArray()) {
+            peer_ids.reserve(arg->size());
+            for (const UniValue& v : arg->getValues()) peer_ids.insert(v.getInt<NodeId>());
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "peer_ids must be a number or an array of numbers");
+        }
+    }
+    const bool fFilter = !peer_ids.empty();
+
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
     const PeerManager& peerman = EnsurePeerman(node);
@@ -211,6 +238,7 @@ static RPCHelpMan getpeerinfo()
     UniValue ret(UniValue::VARR);
 
     for (const CNodeStats& stats : vstats) {
+        if (fFilter && !peer_ids.contains(stats.nodeid)) continue;
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
         bool fStateStats = peerman.GetNodeStateStats(stats.nodeid, statestats);
@@ -300,6 +328,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("session_id", stats.m_session_id);
 
         ret.push_back(std::move(obj));
+        if (fFilter && ret.size() >= peer_ids.size()) break; // All requested peer_ids found
     }
 
     return ret;
