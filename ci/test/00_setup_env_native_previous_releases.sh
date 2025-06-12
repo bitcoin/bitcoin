@@ -7,10 +7,10 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_previous_releases
-export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:22.04"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:bookworm"
 # Use minimum supported python3.10 and gcc-11, see doc/dependencies.md
-export PACKAGES="gcc-11 g++-11 python3-zmq"
-export DEP_OPTS="CC=gcc-11 CXX=g++-11"
+export PACKAGES="gcc-12 g++-12 python3-zmq"
+export DEP_OPTS="CC=gcc-12 CXX=g++-12"
 export TEST_RUNNER_EXTRA="--previous-releases --coverage --extended --exclude feature_dbcrash"  # Run extended tests so that coverage does not fail, but exclude the very slow dbcrash
 export RUN_UNIT_TESTS_SEQUENTIAL="true"
 export RUN_UNIT_TESTS="false"
@@ -21,7 +21,7 @@ export BITCOIN_CONFIG="\
  -DCMAKE_BUILD_TYPE=Debug \
  -DCMAKE_C_FLAGS='-funsigned-char' \
  -DCMAKE_C_FLAGS_DEBUG='-g2 -O2' \
- -DCMAKE_CXX_FLAGS='-funsigned-char' \
+ -DCMAKE_CXX_FLAGS='-funsigned-char -Wno-error=array-bounds' \
  -DCMAKE_CXX_FLAGS_DEBUG='-g2 -O2' \
  -DAPPEND_CPPFLAGS='-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE' \
 "
