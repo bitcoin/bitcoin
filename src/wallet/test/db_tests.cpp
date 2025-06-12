@@ -297,5 +297,90 @@ BOOST_AUTO_TEST_CASE(concurrent_txn_dont_interfere)
     BOOST_CHECK_EQUAL(read_value, value2);
 }
 
+BOOST_AUTO_TEST_CASE(database_readonly_comprehensive_test)
+{
+    // Test read-only database behavior - write operations should fail
+    // and database state should remain unchanged after failed writes
+
+    // Test MockableDatabase read-only enforcement
+    // First create a regular (writable) database and populate it
+    auto writable_db = CreateMockableWalletDatabase();
+    std::unique_ptr<DatabaseBatch> write_batch = writable_db->MakeBatch();
+
+    // Write some initial data
+    BOOST_CHECK(write_batch->Write(std::string("key1"), std::string("value1")));
+    BOOST_CHECK(write_batch->Write(std::string("key2"), std::string("value2")));
+
+    // Copy the data to create a read-only database
+    MockableData copied_data = dynamic_cast<MockableDatabase&>(*writable_db).m_records;
+    auto readonly_db = CreateMockableWalletDatabase(copied_data, true);
+    BOOST_CHECK(readonly_db->IsReadOnly());
+    std::unique_ptr<DatabaseBatch> readonly_batch = readonly_db->MakeBatch();
+
+    // Verify initial state - read operations should work
+    std::string read_value;
+    BOOST_CHECK(readonly_batch->Read(std::string("key1"), read_value));
+    BOOST_CHECK_EQUAL(read_value, "value1");
+    BOOST_CHECK(readonly_batch->Read(std::string("key2"), read_value));
+    BOOST_CHECK_EQUAL(read_value, "value2");
+    BOOST_CHECK(readonly_batch->Exists(std::string("key1")));
+    BOOST_CHECK(readonly_batch->Exists(std::string("key2")));
+
+    // Critical test: Write operations must fail and return false
+    BOOST_CHECK(!readonly_batch->Write(std::string("key3"), std::string("value3")));
+    BOOST_CHECK(!readonly_batch->Write(std::string("key1"), std::string("newvalue"), true));
+    BOOST_CHECK(!readonly_batch->Erase(std::string("key1")));
+
+    // Verify database state is unchanged after failed write attempts
+    BOOST_CHECK(!readonly_batch->Exists(std::string("key3"))); // New key should not exist
+    BOOST_CHECK(readonly_batch->Read(std::string("key1"), read_value));
+    BOOST_CHECK_EQUAL(read_value, "value1"); // Original value should be unchanged
+    BOOST_CHECK(readonly_batch->Read(std::string("key2"), read_value));
+    BOOST_CHECK_EQUAL(read_value, "value2"); // Original value should be unchanged
+
+    // Test that ErasePrefix also fails on read-only database
+    DataStream prefix_stream;
+    prefix_stream << std::string("key");
+    BOOST_CHECK(!readonly_batch->ErasePrefix(std::span<const std::byte>(
+        reinterpret_cast<const std::byte*>(prefix_stream.data()), prefix_stream.size())));
+
+    // Verify keys still exist after failed ErasePrefix
+    BOOST_CHECK(readonly_batch->Exists(std::string("key1")));
+    BOOST_CHECK(readonly_batch->Exists(std::string("key2")));
+
+    // Test SQLite database read-only behavior if possible
+    DatabaseOptions read_write_options;
+    DatabaseStatus status;
+    bilingual_str error;
+    auto rw_database = MakeSQLiteDatabase(m_path_root / "sqlite_rw", read_write_options, status, error);
+    if (rw_database) {
+        BOOST_CHECK(!rw_database->IsReadOnly());
+
+        // Create and populate the database first
+        rw_database->Open();
+        {
+            std::unique_ptr<DatabaseBatch> batch = rw_database->MakeBatch();
+            BOOST_CHECK(batch->Write(std::string("key1"), std::string("value1")));
+            BOOST_CHECK(batch->Write(std::string("key2"), std::string("value2")));
+        }
+        rw_database->Close();
+
+        // Now test read-only access to existing database
+        DatabaseOptions read_only_options;
+        read_only_options.read_only = true;
+        auto ro_database = MakeSQLiteDatabase(m_path_root / "sqlite_rw", read_only_options, status, error);
+        if (ro_database && ro_database->IsReadOnly()) {
+            std::unique_ptr<DatabaseBatch> ro_batch = ro_database->MakeBatch();
+
+            // Read operations should work
+            BOOST_CHECK(ro_batch->Read(std::string("key1"), read_value));
+            BOOST_CHECK_EQUAL(read_value, "value1");
+
+            // Write operations should fail on SQLite read-only database
+            BOOST_CHECK(!ro_batch->Write(std::string("key3"), std::string("value3")));
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
