@@ -120,6 +120,49 @@ void SockMan::StopListening()
     m_listen.clear();
 }
 
+ssize_t SockMan::SendBytes(Id id,
+                           std::span<const std::byte> data,
+                           bool will_send_more,
+                           std::string& errmsg) const
+{
+    AssertLockNotHeld(m_connected_mutex);
+
+    if (data.empty()) {
+        return 0;
+    }
+
+    auto sockets{GetConnectionSocket(id)};
+    if (!sockets) {
+        // Bail out immediately and just leave things in the caller's send queue.
+        return 0;
+    }
+
+    int flags{MSG_NOSIGNAL | MSG_DONTWAIT};
+#ifdef MSG_MORE
+    // We rely on the 'will_send_more' argument to correctly set the MSG_MORE flag
+    // if more bytes are still to be sent. This will "cork" the socket and prevent
+    // sending out partial frames. See kernel docs for send(2) and tcp(7).
+    if (will_send_more) {
+        flags |= MSG_MORE;
+    }
+#endif
+
+    const ssize_t sent{WITH_LOCK(
+        sockets->mutex,
+        return sockets->sock->Send(data.data(), data.size(), flags);)};
+
+    if (sent >= 0) {
+        return sent;
+    }
+
+    const int err{WSAGetLastError()};
+    if (err == WSAEWOULDBLOCK || err == WSAEMSGSIZE || err == WSAEINTR || err == WSAEINPROGRESS) {
+        return 0;
+    }
+    errmsg = NetworkErrorString(err);
+    return -1;
+}
+
 bool SockMan::ShouldTryToSend(Id id) const { return true; }
 
 bool SockMan::ShouldTryToRecv(Id id) const { return true; }
@@ -255,7 +298,13 @@ void SockMan::SocketHandlerConnected(const IOReadiness& io_readiness)
         bool err_ready = events.occurred & Sock::ERR;
 
         if (send_ready) {
-            // TODO: send data
+            bool cancel_recv;
+
+            EventReadyToSend(id, cancel_recv);
+
+            if (cancel_recv) {
+                recv_ready = false;
+            }
         }
 
         if (recv_ready || err_ready) {
