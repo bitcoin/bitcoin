@@ -1,0 +1,71 @@
+From 0cd1792332dce6a3afae6e2bc2939da69fea65fa Mon Sep 17 00:00:00 2001
+From: Sebastian Falbesoner <sebastian.falbesoner@gmail.com>
+Date: Sat, 31 May 2025 00:49:44 +0200
+Subject: [PATCH 1/2] In cidr.c++, include <netinet/in.h> on all non-Windows
+ systems
+
+The motivation for this commit is to fix the build for OpenBSD,
+but it may also solves the same potential problem for other systems
+without causing any harm.
+
+Suggested already twice, see
+https://github.com/capnproto/capnproto/pull/1846#discussion_r1399499535
+https://github.com/capnproto/capnproto/pull/1907#discussion_r1452602424
+---
+ c++/src/kj/cidr.c++ | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/c++/src/kj/cidr.c++ b/c++/src/kj/cidr.c++
+index 6a1fa32e..9432b8f4 100644
+--- a/c++/src/kj/cidr.c++
++++ b/c++/src/kj/cidr.c++
+@@ -39,9 +39,6 @@
+ #else
+ #include <sys/socket.h>
+ #include <arpa/inet.h>
+-#endif
+-
+-#if __FreeBSD__
+ #include <netinet/in.h>
+ #endif
+ 
+-- 
+2.49.0
+
+
+From 2e76d17db3fc484061487c0779b16495939d30c3 Mon Sep 17 00:00:00 2001
+From: Sebastian Falbesoner <sebastian.falbesoner@gmail.com>
+Date: Sat, 31 May 2025 01:06:42 +0200
+Subject: [PATCH 2/2] Don't set KJ_USE_KQUEUE on OpenBSD
+
+OpenBSD doesn't support user event filters yet, hence
+the build fails as it misses the symbol EVFILT_USER in
+the kqueue implementation in async-unix.c++. Fix that
+by not setting KJ_USE_KQUEUE on OpenBSD, so the poll()-
+based implementation is used instead.
+
+Suggested in
+https://github.com/capnproto/capnproto/pull/1907/commits/829d3f03735f8f6762a50fc346db56bf02140f02#r1452600300
+---
+ c++/src/kj/async-unix.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/c++/src/kj/async-unix.h b/c++/src/kj/async-unix.h
+index 665305ea..e66ad8e4 100644
+--- a/c++/src/kj/async-unix.h
++++ b/c++/src/kj/async-unix.h
+@@ -37,8 +37,9 @@ KJ_BEGIN_HEADER
+ #if __linux__
+ // Default to epoll on Linux.
+ #define KJ_USE_EPOLL 1
+-#elif __APPLE__ || __FreeBSD__ || __OpenBSD__ || __NetBSD__ || __DragonFly__
+-// MacOS and BSDs prefer kqueue() for event notification.
++#elif __APPLE__ || __FreeBSD__ || __NetBSD__ || __DragonFly__
++// MacOS and most BSDs prefer kqueue() for event notification.
++// (Note that OpenBSD's kqueue(2) doesn't support user event filters yet)
+ #define KJ_USE_KQUEUE 1
+ #endif
+ #endif
+-- 
+2.49.0
+
