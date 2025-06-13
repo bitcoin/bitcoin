@@ -121,6 +121,13 @@ public:
      */
     std::map<uint32_t, Wtxid> m_short_id_mapping;
 
+    /**
+     * Filter of recently requested transactions (via RECONCILDIFF). Used to check
+     * whether a transaction was received via fanout or reconciliation.
+     * TODO: This can likely be made smaller, given we only care about the really recent ones
+     */
+    mutable CRollingBloomFilter m_recently_requested_short_ids{50000, 0.000001};
+
     TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
 
     /**
@@ -190,7 +197,11 @@ public:
             if (local_tx != m_short_id_mapping.end()) {
                 remote_missing.push_back(local_tx->second);
             } else {
+                // FIXME: Pretty sure this should be uint32 and not uint64
                 local_missing.push_back(diff_short_id);
+                std::vector<unsigned char> data(8);
+                WriteBE64(data.data(), diff_short_id);
+                m_recently_requested_short_ids.insert(data);
             }
         }
     }
@@ -316,6 +327,7 @@ private:
             Assume(local_sketch);
             // Attempt to decode the set difference
             size_t max_elements = minisketch_compute_max_elements(RECON_FIELD_SIZE, remote_sketch_capacity, RECON_FALSE_POSITIVE_COEF);
+            // FIXME: This should be uint32_t, not uint64_t. sids are 32 bit long. For whatever reason, Sketch::Decode works with uint64_t :/
             std::vector<uint64_t> differences(max_elements);
             if (local_sketch.Merge(remote_sketch).Decode(differences)) {
                 // Initial reconciliation step succeeded.
@@ -492,6 +504,19 @@ public:
         }
 
         return removed;
+    }
+
+    bool WasTransactionRecentlyRequested(NodeId peer_id, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex) {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (!peer_state) return false;
+
+        uint64_t short_id = peer_state->ComputeShortID(wtxid);
+        // FIXME: This may need to be 32 instead of 64
+        std::vector<unsigned char> data(8);
+        WriteBE64(data.data(), short_id);
+        return peer_state->m_recently_requested_short_ids.contains(data);
     }
 
     bool IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
@@ -770,6 +795,11 @@ bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wt
 bool TxReconciliationTracker::IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now)
 {
     return m_impl->IsPeerNextToReconcileWith(peer_id, now);
+}
+
+bool TxReconciliationTracker::WasTransactionRecentlyRequested(NodeId peer_id, const Wtxid& wtxid)
+{
+    return m_impl->WasTransactionRecentlyRequested(peer_id, wtxid);
 }
 
 std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::InitiateReconciliationRequest(NodeId peer_id)
