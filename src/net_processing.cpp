@@ -4419,8 +4419,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK2(cs_main, m_tx_download_mutex);
 
-        // TODO: Until the Erlay p2p flow is defined, all transactions are flagged for fanout
         bool consider_fanout = true;
+        if (m_txreconciliation && m_txreconciliation->WasTransactionRecentlyRequested(pfrom.GetId(), ptx->GetWitnessHash())) {
+            consider_fanout = false;
+            LogDebug(BCLog::NET, "Transaction received via reconciliation %s (wtxid=%s). Skipping fanout for outbounds\n",
+                tx.GetHash().ToString(), tx.GetWitnessHash().ToString());
+        }
 
         const auto& [should_validate, package_to_validate] = m_txdownloadman.ReceivedTx(pfrom.GetId(), ptx);
         if (!should_validate) {

@@ -152,6 +152,11 @@ public:
     bool IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now);
 
     /**
+     * Checks whether a given transaction was requested by us to a given peer (during RECONCILDIFF).
+     */
+    bool WasTransactionRecentlyRequested(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
      * Step 2. Unless the peer hasn't finished a previous reconciliation round, this function will
      * return the details of our local state, which should be communicated to the peer so that they
      * better know what we need:
