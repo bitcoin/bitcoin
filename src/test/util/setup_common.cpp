@@ -619,7 +619,7 @@ SocketTestingSetup::~SocketTestingSetup()
     CreateSock = m_create_sock_orig;
 }
 
-void SocketTestingSetup::ConnectClient(const std::vector<uint8_t>& data)
+std::shared_ptr<DynSock::Pipes> SocketTestingSetup::ConnectClient(const std::vector<uint8_t>& data)
 {
     // I/O pipes for a mock Connected Socket we can read and write to.
     std::shared_ptr<DynSock::Pipes> connected_socket_pipes(std::make_shared<DynSock::Pipes>());
@@ -633,6 +633,8 @@ void SocketTestingSetup::ConnectClient(const std::vector<uint8_t>& data)
 
     // Push into the queue of Accepted Sockets returned by the local CreateSock()
     m_accepted_sockets->Push(std::move(connected_socket));
+
+    return connected_socket_pipes;
 }
 
 /**

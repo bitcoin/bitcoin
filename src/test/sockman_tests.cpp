@@ -24,6 +24,7 @@ BOOST_AUTO_TEST_CASE(test_sockman)
         // and tested by the main thread.
         Mutex m_received_mutex;
         std::vector<uint8_t> m_received;
+        std::vector<uint8_t> m_respond{'o', 'k'};
 
         size_t GetConnectionsCount() EXCLUSIVE_LOCKS_REQUIRED(!m_connections_mutex)
         {
@@ -63,6 +64,20 @@ BOOST_AUTO_TEST_CASE(test_sockman)
         };
         virtual void EventGotEOF(Id id) override {};
         virtual void EventGotPermanentReadError(Id id, const std::string& errmsg) override {};
+
+        // As soon as we can send data to the connected socket, send the preloaded response.
+        // Data is sent by the SockMan I/O thread and read by the main test thread,
+        // but the Mutex in SockMan::ConnectionSockets guards this.
+        virtual void EventReadyToSend(Id id, bool& cancel_recv) override
+        {
+            cancel_recv = false;
+            if (m_respond.size() > 0) {
+                std::string errmsg;
+                ssize_t sent = SendBytes(id, m_respond, /*will_send_more=*/false, errmsg);
+                // Remove sent bytes until entire response is sent.
+                m_respond.erase(m_respond.begin(), m_respond.begin() + sent);
+            }
+        }
     };
 
     TestSockMan sockman;
@@ -89,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test_sockman)
     // Create a mock client with a data payload to send
     // and add it to the local CreateSock queue
     const std::vector<uint8_t> request = {'b', 'i', 't', 's'};
-    ConnectClient(request);
+    auto pipes{ConnectClient(request)};
 
     // Wait up to a minute to find and connect the client in the I/O loop
     int attempts{6000};
@@ -105,6 +120,22 @@ BOOST_AUTO_TEST_CASE(test_sockman)
     // Wait up to a minute to read the data from the connection
     attempts = 6000;
     while (!std::ranges::equal(sockman.GetReceivedData(), request)) {
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
+
+    // Wait up to a minute to write our response data back to the connection
+    attempts = 6000;
+    size_t expected_response_size = sockman.m_respond.size();
+    std::vector<uint8_t> actually_received(expected_response_size);
+    while (!std::ranges::equal(actually_received, sockman.m_respond)) {
+        // Read the data received by the mock socket
+        ssize_t bytes_read = pipes->send.GetBytes((void *)actually_received.data(), expected_response_size);
+        // We may need to wait a few loop iterations in the socket thread
+        // but once we can write, we can expect all the data at once.
+        if (bytes_read >= 0) {
+            BOOST_CHECK_EQUAL(bytes_read, expected_response_size);
+        }
         std::this_thread::sleep_for(10ms);
         BOOST_REQUIRE(--attempts > 0);
     }

@@ -188,6 +188,46 @@ bool SockMan::CloseConnection(Id id)
     return m_connected.erase(id) > 0;
 }
 
+ssize_t SockMan::SendBytes(Id id,
+                           std::span<const unsigned char> data,
+                           bool will_send_more,
+                           std::string& errmsg) const
+{
+    AssertLockNotHeld(m_connected_mutex);
+
+    if (data.empty()) {
+        return 0;
+    }
+
+    auto sockets{GetConnectionSockets(id)};
+    if (!sockets) {
+        // Bail out immediately and just leave things in the caller's send queue.
+        return 0;
+    }
+
+    int flags{MSG_NOSIGNAL | MSG_DONTWAIT};
+#ifdef MSG_MORE
+    if (will_send_more) {
+        flags |= MSG_MORE;
+    }
+#endif
+
+    const ssize_t sent{WITH_LOCK(
+        sockets->mutex,
+        return sockets->sock->Send(reinterpret_cast<const char*>(data.data()), data.size(), flags);)};
+
+    if (sent >= 0) {
+        return sent;
+    }
+
+    const int err{WSAGetLastError()};
+    if (err == WSAEWOULDBLOCK || err == WSAEMSGSIZE || err == WSAEINTR || err == WSAEINPROGRESS) {
+        return 0;
+    }
+    errmsg = NetworkErrorString(err);
+    return -1;
+}
+
 void SockMan::StopListening()
 {
     m_listen.clear();
@@ -267,7 +307,13 @@ void SockMan::SocketHandlerConnected(const IOReadiness& io_readiness)
         bool err_ready = events.occurred & Sock::ERR;
 
         if (send_ready) {
-            // TODO: send data
+            bool cancel_recv;
+
+            EventReadyToSend(id, cancel_recv);
+
+            if (cancel_recv) {
+                recv_ready = false;
+            }
         }
 
         if (recv_ready || err_ready) {

@@ -96,6 +96,23 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
 
     /**
+     * Try to send some data over the given connection.
+     * @param[in] id Identifier of the connection.
+     * @param[in] data The data to send, it might happen that only a prefix of this is sent.
+     * @param[in] will_send_more Used as an optimization if the caller knows that they will
+     * be sending more data soon after this call.
+     * @param[out] errmsg If <0 is returned then this will contain a human readable message
+     * explaining the error.
+     * @retval >=0 The number of bytes actually sent.
+     * @retval <0 A permanent error has occurred.
+     */
+    ssize_t SendBytes(Id id,
+                      std::span<const unsigned char> data,
+                      bool will_send_more,
+                      std::string& errmsg) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_connected_mutex);
+
+    /**
      * Stop listening by closing all listening sockets.
      */
     void StopListening();
@@ -128,6 +145,16 @@ private:
     virtual bool EventNewConnectionAccepted(Id id,
                                             const CService& me,
                                             const CService& them) = 0;
+
+    /**
+     * Called when the socket is ready to send data and `ShouldTryToSend()` has
+     * returned true. This is where the higher level code serializes its messages
+     * and calls `SockMan::SendBytes()`.
+     * @param[in] id Id of the connection whose socket is ready to send.
+     * @param[out] cancel_recv Should always be set upon return and if it is true,
+     * then the next attempt to receive data from that connection will be omitted.
+     */
+    virtual void EventReadyToSend(Id id, bool& cancel_recv) = 0;
 
     /**
      * Called when new data has been received.

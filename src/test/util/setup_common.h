@@ -278,7 +278,8 @@ public:
     ~SocketTestingSetup();
 
     // Connect to the socket with a mock client (a DynSock) and send pre-loaded data.
-    void ConnectClient(const std::vector<uint8_t>& data);
+    // Returns the I/O pipes from the mock client so we can read response datasent to it.
+    std::shared_ptr<DynSock::Pipes> ConnectClient(const std::vector<uint8_t>& data);
 
 private:
     // Save the original value of CreateSock here and restore it when the test ends.
