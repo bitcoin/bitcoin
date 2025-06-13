@@ -71,6 +71,8 @@ void TxReconciliationState::GetRelevantIDsFromShortIDs(const std::vector<uint64_
                                                        // returning values
                                                        std::vector<uint32_t>& local_missing, std::vector<Wtxid>& remote_missing) const
 {
+    // diff elements are 64-bit since Minisketch::Decode works with 64-bit elements, no matter what the field element size is.
+    // In our case, elements are always 32-bit long, so we can safely cast them down.
     for (const auto& diff_short_id : diff) {
         const auto local_tx = m_short_id_mapping.find(diff_short_id);
         if (local_tx != m_short_id_mapping.end()) {
@@ -114,6 +116,13 @@ private:
 
     /** Next time m_inbound_fanout_targets need to be rotated. */
     std::chrono::microseconds GUARDED_BY(m_txreconciliation_mutex) m_next_inbound_peer_rotation_time{0};
+
+    /**
+     * Filter of recently requested transactions (via RECONCILDIFF).
+     * Used to check whether a transaction was received via fanout or reconciliation.
+     * TODO: This can likely be made smaller, given we only care about the really recent ones
+     */
+    mutable CRollingBloomFilter m_recently_requested_short_ids GUARDED_BY(m_txreconciliation_mutex){50000, 0.000001};
 
     TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
     {
@@ -386,6 +395,37 @@ public:
         return removed;
     }
 
+    void TrackRecentlyRequestedTransactions(std::vector<uint32_t>& requested_txs) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        std::vector<unsigned char> data(4);
+        for (auto& short_id : requested_txs) {
+            WriteLE32(data.data(), short_id);
+            m_recently_requested_short_ids.insert(data);
+        }
+    }
+
+    bool WasTransactionRecentlyRequested(const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        std::vector<unsigned char> data(4);
+        // FIXME: I'm not sure this may be the best way of doing this (as opposed to having a filter per peer). But it'll do for now
+        for (auto& [peer_id, opt_peer_state]: m_states) {
+            auto peer_state = std::get<TxReconciliationState>(opt_peer_state);
+            // We only care about outbound peers
+            if (!peer_state.m_we_initiate) continue;
+            auto short_id = peer_state.ComputeShortID(wtxid);
+            WriteLE32(data.data(), short_id);
+            if (m_recently_requested_short_ids.contains(data)) return true;
+        }
+
+        return false;
+    }
+
     std::optional<std::pair<uint16_t, uint16_t>> InitiateReconciliationRequest(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -585,6 +625,16 @@ AddToSetResult TxReconciliationTracker::AddToSet(NodeId peer_id, const Wtxid& wt
 bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)
 {
     return m_impl->TryRemovingFromSet(peer_id, wtxid);
+}
+
+void TxReconciliationTracker::TrackRecentlyRequestedTransactions(std::vector<uint32_t>& requested_txs)
+{
+    return m_impl->TrackRecentlyRequestedTransactions(requested_txs);
+}
+
+bool TxReconciliationTracker::WasTransactionRecentlyRequested(const Wtxid& wtxid)
+{
+    return m_impl->WasTransactionRecentlyRequested(wtxid);
 }
 
 std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::InitiateReconciliationRequest(NodeId peer_id)

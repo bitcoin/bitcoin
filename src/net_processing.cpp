@@ -5109,6 +5109,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         if (valid_sketch) {
             MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, recon_result, txs_to_request);
+            m_txreconciliation->TrackRecentlyRequestedTransactions(txs_to_request);
             AnnounceTxs(txs_to_announce, pfrom);
         } else {
             // Disconnect peers that send reconciliation sketch violating the protocol.
@@ -6001,6 +6002,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 LOCK(m_peer_mutex);
                 for (auto& [inv, out_fanout_count] : to_be_announced) {
                     if(inv.IsMsgTx()) continue; // Skip. We do no reconcile by txid
+                    // Shortcut if the transaction was received via reconciliation, we can simply keep reconciling
+                    if (m_txreconciliation->WasTransactionRecentlyRequested(Wtxid::FromUint256(inv.hash))) {
+                        out_fanout_count = node::OUTBOUND_FANOUT_THRESHOLD;
+                        continue;
+                    }
                     for (const auto& [cur_peer_id, cur_peer] : m_peer_map) {
                         if (cur_peer->m_is_inbound) continue; // Skip. Inbound peers don't add to the count
                         if (auto peer_tx_relay = cur_peer->GetTxRelay()) {
