@@ -1002,6 +1002,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_wallet_tool_compiled():
             raise SkipTest("bitcoin-wallet has not been compiled")
 
+    def skip_if_no_bitcoin_tx(self):
+        """Skip the running test if bitcoin-tx has not been compiled."""
+        if not self.is_bitcoin_tx_compiled():
+            raise SkipTest("bitcoin-tx has not been compiled")
+
     def skip_if_no_bitcoin_util(self):
         """Skip the running test if bitcoin-util has not been compiled."""
         if not self.is_bitcoin_util_compiled():
@@ -1055,6 +1060,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_wallet_tool_compiled(self):
         """Checks whether bitcoin-wallet was compiled."""
         return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
+
+    def is_bitcoin_tx_compiled(self):
+        """Checks whether bitcoin-tx was compiled."""
+        return self.config["components"].getboolean("BUILD_BITCOIN_TX")
 
     def is_bitcoin_util_compiled(self):
         """Checks whether bitcoin-util was compiled."""
