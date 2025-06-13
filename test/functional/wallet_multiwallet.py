@@ -78,6 +78,24 @@ class MultiWalletTest(BitcoinTestFramework):
         self.stop_nodes()
         assert_equal(os.path.isfile(wallet_dir(self.default_wallet_name, self.wallet_data_filename)), True)
 
+        self.log.info("Verify warning is emitted when failing to scan the wallets directory")
+        if platform.system() == 'Windows':
+            self.log.warning('Skipping test involving chmod as Windows does not support it.')
+        elif os.geteuid() == 0:
+            self.log.warning('Skipping test involving chmod as it requires a non-root user.')
+        else:
+            self.start_node(0)
+            with self.nodes[0].assert_debug_log(unexpected_msgs=['Error scanning directory entries under'], expected_msgs=[]):
+                result = self.nodes[0].listwalletdir()
+                assert_equal(result, {'wallets': [{'name': self.default_wallet_name}]})
+            os.chmod(data_dir('wallets'), 0)
+            with self.nodes[0].assert_debug_log(expected_msgs=['Error scanning directory entries under']):
+                result = self.nodes[0].listwalletdir()
+                assert_equal(result, {'wallets': []})
+            self.stop_node(0)
+            # Restore permissions
+            os.chmod(data_dir('wallets'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
         # create symlink to verify wallet directory path can be referenced
         # through symlink
         os.mkdir(wallet_dir('w7'))
