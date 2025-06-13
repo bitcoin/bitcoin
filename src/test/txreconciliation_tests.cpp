@@ -320,6 +320,88 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
 }
 
+BOOST_AUTO_TEST_CASE(RecentlyRequestedTxsTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    // If there are not registered peers (outbound), there are no filters to check
+    for (auto i=0; i<100; i++) {
+        BOOST_REQUIRE(!tracker.WasTransactionRecentlyRequested(Wtxid::FromUint256(frc.rand256())));
+    }
+
+    NodeId peer_id0 = 0;
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, 1).has_value());
+    // If there are registered (outbound) peers, but no transaction was added, there is nothing to match against
+    for (auto i=0; i<100; i++) {
+
+        BOOST_REQUIRE(!tracker.WasTransactionRecentlyRequested(Wtxid::FromUint256(frc.rand256())));
+    }
+
+    // The RecentlyRequested filter is per-peer, so we need to have a registered peer and know the full salt to add data straight to the filter
+    NodeId peer_id1 = 1;
+    auto remote_salt = frc.rand64();
+    auto local_salt = frc.rand64();
+    const uint256 full_salt_p1{ComputeSalt(local_salt, remote_salt)};
+    tracker.PreRegisterPeerWithSalt(peer_id1, local_salt);
+    // We care only about announcements from outbound peers, since inbounds are not to be trusted
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, remote_salt).has_value());
+
+    std::vector<Wtxid> target_wtxids;
+    std::vector<uint32_t> target_short_ids;
+    std::vector<Wtxid> irrelevant_wtxids;
+    int n_added_txs = 0;
+
+    while(n_added_txs < 100) {
+        Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+        if (n_added_txs % 2 == 0) {
+            uint32_t short_id = ComputeShortIDHelper(wtxid, full_salt_p1);
+            // Avoid short ID collisions
+            if (auto it = std::find(target_short_ids.begin(), target_short_ids.end(), short_id); it == target_short_ids.end()) {
+                target_wtxids.push_back(wtxid);
+                target_short_ids.push_back(short_id);
+                ++n_added_txs;
+            }
+        } else {
+            irrelevant_wtxids.push_back(wtxid);
+            ++n_added_txs;
+        }
+    }
+
+    tracker.TrackRecentlyRequestedTransactions(target_short_ids);
+    BOOST_REQUIRE(std::all_of(target_wtxids.begin(), target_wtxids.end(),
+                            [&tracker](Wtxid wtxid) { return tracker.WasTransactionRecentlyRequested(wtxid); }));
+    BOOST_REQUIRE(std::none_of(irrelevant_wtxids.begin(), irrelevant_wtxids.end(),
+                            [&tracker](Wtxid wtxid) { return tracker.WasTransactionRecentlyRequested(wtxid); }));
+
+
+    // Announcements from inbound peers are not recorded
+    NodeId peer_id2 = 2;
+    remote_salt = frc.rand64();
+    local_salt = frc.rand64();
+    const uint256 full_salt_p2{ComputeSalt(local_salt, remote_salt)};
+    tracker.PreRegisterPeerWithSalt(peer_id2, local_salt);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id2, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, remote_salt).has_value());
+
+    target_wtxids.clear();
+    target_short_ids.clear();
+    n_added_txs = 0;
+    while(n_added_txs < 10) {
+        Wtxid wtxid{Wtxid::FromUint256(frc.rand256())};
+        uint32_t short_id = ComputeShortIDHelper(wtxid, full_salt_p2);
+        // Avoid short ID collisions
+        if (auto it = std::find(target_short_ids.begin(), target_short_ids.end(), short_id); it == target_short_ids.end()) {
+            target_wtxids.push_back(wtxid);
+            target_short_ids.push_back(short_id);
+            ++n_added_txs;
+        }
+    }
+
+    BOOST_REQUIRE(std::none_of(target_wtxids.begin(), target_wtxids.end(),
+                            [&tracker](Wtxid wtxid) { return tracker.WasTransactionRecentlyRequested(wtxid); }));
+}
+
 BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestTest)
 {
     TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);

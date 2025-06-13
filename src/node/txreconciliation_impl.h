@@ -181,6 +181,15 @@ public:
     bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
 
     /**
+     * Adds a collection of transactions (identified by short_id) to m_recently_requested_short_ids.
+     * This should be called with the short IDs of the transaction being requested to a peer when sending out a RECONCILDIFF.
+     */
+    void TrackRecentlyRequestedTransactions(std::vector<uint32_t>& requested_txs);
+
+    /**  Checks whether a given transaction was requested by us to any of our Erlay outbound peers (during RECONCILDIFF). */
+    bool WasTransactionRecentlyRequested(const Wtxid& wtxid);
+
+    /**
      * Step 2. Unless the peer hasn't finished a previous reconciliation round, this function will
      * return the details of our local state, which should be communicated to the peer so that they
      * better know what we need:
