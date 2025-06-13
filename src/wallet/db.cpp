@@ -21,15 +21,7 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
     std::error_code ec;
 
     for (auto it = fs::recursive_directory_iterator(wallet_dir, ec); it != fs::recursive_directory_iterator(); it.increment(ec)) {
-        if (ec) {
-            if (fs::is_directory(*it)) {
-                it.disable_recursion_pending();
-                LogPrintf("%s: %s %s -- skipping.\n", __func__, ec.message(), fs::PathToString(it->path()));
-            } else {
-                LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(it->path()));
-            }
-            continue;
-        }
+        assert(!ec); // Loop should exit on error.
 
         try {
             const fs::path path{it->path().lexically_relative(wallet_dir)};
@@ -55,6 +47,14 @@ std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
             LogPrintf("%s: Error scanning %s: %s\n", __func__, fs::PathToString(it->path()), e.what());
             it.disable_recursion_pending();
         }
+    }
+    if (ec) {
+        // Loop could have exited with an error due to one of:
+        // * wallet_dir itself not being scannable.
+        // * increment() failure. (Observed on Windows native builds when
+        //   removing the ACL read permissions of a wallet directory after the
+        //   process started).
+        LogWarning("Error scanning directory entries under %s: %s", fs::PathToString(wallet_dir), ec.message());
     }
 
     return paths;
