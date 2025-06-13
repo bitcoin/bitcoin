@@ -45,6 +45,7 @@ Notable changes
 - #32070 build: use make < 3.82 syntax for define directive
 - #32439 guix: accomodate migration to codeberg
 - #32568 depends: use "mkdir -p" when installing xproto
+- #32693 depends: fix cmake compatibility error for freetype
 
 ### Test
 
@@ -72,6 +73,7 @@ Credits
 - Brandon Odiwuor
 - fanquake
 - Hennadii Stepanov
+- josibake
 - kehiy
 - MarcoFalke
 - Sjors Provoost

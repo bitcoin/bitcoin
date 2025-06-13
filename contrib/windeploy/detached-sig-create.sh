@@ -8,9 +8,9 @@ if [ -z "$OSSLSIGNCODE" ]; then
   OSSLSIGNCODE=osslsigncode
 fi
 
-if [ -z "$1" ]; then
-  echo "usage: $0 <osslcodesign args>"
-  echo "example: $0 -key codesign.key"
+if [ "$#" -ne 1 ]; then
+  echo "usage: $0 <path to key>"
+  echo "example: $0 codesign.key"
   exit 1
 fi
 
@@ -22,12 +22,22 @@ OUTSUBDIR="${OUTDIR}/win"
 TIMESERVER=http://timestamp.comodoca.com
 CERTFILE="win-codesign.cert"
 
+stty -echo
+printf "Enter the passphrase for %s: " "$1"
+read cs_key_pass
+printf "\n"
+stty echo
+
+
 mkdir -p "${OUTSUBDIR}"
-# shellcheck disable=SC2046
-basename -a $(ls -1 "${SRCDIR}"/*-unsigned.exe) | while read UNSIGNED; do
-  echo Signing "${UNSIGNED}"
-  "${OSSLSIGNCODE}" sign -certs "${CERTFILE}" -t "${TIMESERVER}" -h sha256 -in "${SRCDIR}/${UNSIGNED}" -out "${WORKDIR}/${UNSIGNED}" "$@"
-  "${OSSLSIGNCODE}" extract-signature -pem -in "${WORKDIR}/${UNSIGNED}" -out "${OUTSUBDIR}/${UNSIGNED}.pem" && rm "${WORKDIR}/${UNSIGNED}"
+find ${SRCDIR} -wholename "*.exe" -type f -exec realpath --relative-to=. {} \; | while read -r bin
+do
+    echo Signing "${bin}"
+    bin_base="$(realpath --relative-to=${SRCDIR} "${bin}")"
+    mkdir -p "$(dirname ${WORKDIR}/"${bin_base}")"
+    "${OSSLSIGNCODE}" sign -certs "${CERTFILE}" -t "${TIMESERVER}" -h sha256 -in "${bin}" -out "${WORKDIR}/${bin_base}" -key "$1" -pass "${cs_key_pass}"
+    mkdir -p "$(dirname ${OUTSUBDIR}/"${bin_base}")"
+    "${OSSLSIGNCODE}" extract-signature -pem -in "${WORKDIR}/${bin_base}" -out "${OUTSUBDIR}/${bin_base}.pem" && rm "${WORKDIR}/${bin_base}"
 done
 
 rm -f "${OUT}"
