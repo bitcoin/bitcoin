@@ -167,6 +167,10 @@ bool SockMan::ShouldTryToSend(Id id) const { return true; }
 
 bool SockMan::ShouldTryToRecv(Id id) const { return true; }
 
+void SockMan::EventIOLoopCompletedForOne(Id id) {}
+
+void SockMan::EventIOLoopCompletedForAll() {}
+
 SockMan::Id SockMan::GetNewId()
 {
     return m_next_id.fetch_add(1, std::memory_order_relaxed);
@@ -233,6 +237,8 @@ void SockMan::ThreadSocketHandler()
     AssertLockNotHeld(m_connected_mutex);
 
     while (!m_interrupt_net) {
+        EventIOLoopCompletedForAll();
+
         // Check for the readiness of the already connected sockets and the
         // listening sockets in one call ("readiness" as in poll(2) or
         // select(2)). If none are ready, wait for a short while and return
@@ -330,6 +336,8 @@ void SockMan::SocketHandlerConnected(const IOReadiness& io_readiness)
                 EventGotData(id, {buf, static_cast<size_t>(nrecv)});
             }
         }
+
+        EventIOLoopCompletedForOne(id);
     }
 }
 
