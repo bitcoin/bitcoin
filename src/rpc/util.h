@@ -67,6 +67,10 @@ class FillableSigningProvider;
 class CScript;
 struct Sections;
 
+struct HelpResult : std::runtime_error {
+    explicit HelpResult(const std::string& msg) : std::runtime_error{msg} {}
+};
+
 /**
  * Gets all existing output types formatted for RPC help sections.
  *
