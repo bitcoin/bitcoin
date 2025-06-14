@@ -247,12 +247,12 @@ class SendHeadersTest(BitcoinTestFramework):
         block.solve()
         test_node.send_header_for_blocks([block])
         test_node.clear_block_announcements()
-        test_node.send_get_headers(locator=[], hashstop=int(block.hash_hex, 16))
+        test_node.send_get_headers(locator=[], hashstop=block.hash_int)
         test_node.sync_with_ping()
         assert_equal(test_node.block_announced, False)
         inv_node.clear_block_announcements()
         test_node.send_without_ping(msg_block(block))
-        inv_node.check_last_inv_announcement(inv=[int(block.hash_hex, 16)])
+        inv_node.check_last_inv_announcement(inv=[block.hash_int])
 
     def test_nonnull_locators(self, test_node, inv_node):
         tip = int(self.nodes[0].getbestblockhash(), 16)
@@ -538,7 +538,7 @@ class SendHeadersTest(BitcoinTestFramework):
             test_node.wait_for_getdata([x.hash_int for x in blocks])
             [test_node.send_without_ping(msg_block(x)) for x in blocks]
             test_node.sync_with_ping()
-            assert_equal(int(self.nodes[0].getbestblockhash(), 16), blocks[1].hash_int)
+            assert_equal(self.nodes[0].getbestblockhash(), blocks[1].hash_hex)
             expected_hash = blocks[1].hash_int
 
         blocks = []

@@ -115,7 +115,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Update tip info
         height += 1
         block_time += 1
-        tip = int(block2_orig.hash_hex, 16)
+        tip = block2_orig.hash_int
 
         # Complete testing of CVE-2018-17144, by checking for the inflation bug.
         # Create a block that spends the output of a tx in a previous block.
