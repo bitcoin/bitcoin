@@ -75,6 +75,9 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
+    runs = 0
+    debug_runs = None
+
     def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, v2transport=False, uses_wallet=False):
         """
         Kwargs:
@@ -251,10 +254,18 @@ class TestNode():
         if env is not None:
             subp_env.update(env)
 
+        wait_for_debugger = TestNode.debug_runs is not None and TestNode.runs in TestNode.debug_runs
+        if wait_for_debugger:
+            extra_args.append("-waitfordebugger")
+
         self.process = subprocess.Popen(self.args + extra_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
-        self.log.debug("bitcoind started, waiting for RPC to come up")
+        if wait_for_debugger:
+            self.log.info(f"bitcoind started (run #{TestNode.runs}, node #{self.index}), waiting for debugger, PID: {self.process.pid}")
+        else:
+            self.log.debug(f"bitcoind started (run #{TestNode.runs}, node #{self.index}), waiting for RPC to come up")
+        TestNode.runs += 1
 
         if self.start_perf:
             self._start_perf()
