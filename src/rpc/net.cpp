@@ -122,7 +122,9 @@ static RPCHelpMan getpeerinfo()
     return RPCHelpMan{
         "getpeerinfo",
         "Returns data about each connected network peer as a json array of objects.",
-        {},
+        {
+            {"nodeid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If provided, return only the peer with this nodeid."}
+        },
         RPCResult{
             RPCResult::Type::ARR, "", "",
             {
@@ -197,10 +199,14 @@ static RPCHelpMan getpeerinfo()
         },
         RPCExamples{
             HelpExampleCli("getpeerinfo", "")
+            + HelpExampleCli("getpeerinfo", "7")
             + HelpExampleRpc("getpeerinfo", "")
+            + HelpExampleRpc("getpeerinfo", "7")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    const std::optional<NodeId> arg_nodeid_filter = self.MaybeArg<NodeId>("nodeid");
+
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
     const PeerManager& peerman = EnsurePeerman(node);
@@ -211,6 +217,8 @@ static RPCHelpMan getpeerinfo()
     UniValue ret(UniValue::VARR);
 
     for (const CNodeStats& stats : vstats) {
+        if (arg_nodeid_filter && stats.nodeid != *arg_nodeid_filter) continue;
+
         UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
         bool fStateStats = peerman.GetNodeStateStats(stats.nodeid, statestats);
@@ -300,6 +308,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("session_id", stats.m_session_id);
 
         ret.push_back(std::move(obj));
+        if (arg_nodeid_filter && stats.nodeid == *arg_nodeid_filter) break;
     }
 
     return ret;
