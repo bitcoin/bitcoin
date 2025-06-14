@@ -227,9 +227,12 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                 Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
             },
             [&] {
-                GenTxid gtxid = fuzzed_data_provider.ConsumeBool() ?
-                                GenTxid::Txid(rand_tx->GetHash()) :
-                                GenTxid::Wtxid(rand_tx->GetWitnessHash());
+                GenTxid gtxid;
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    gtxid = rand_tx->GetHash();
+                } else {
+                    gtxid = rand_tx->GetWitnessHash();
+                }
                 txdownloadman.AddTxAnnouncement(rand_peer, gtxid, time);
             },
             [&] {
@@ -373,9 +376,12 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 if (!reject_contains_wtxid) Assert(todo.m_unique_parents.size() <= rand_tx->vin.size());
             },
             [&] {
-                GenTxid gtxid = fuzzed_data_provider.ConsumeBool() ?
-                                GenTxid::Txid(rand_tx->GetHash()) :
-                                GenTxid::Wtxid(rand_tx->GetWitnessHash());
+                GenTxid gtxid;
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    gtxid = rand_tx->GetHash();
+                } else {
+                    gtxid = rand_tx->GetWitnessHash();
+                }
                 txdownload_impl.AddTxAnnouncement(rand_peer, gtxid, time);
             },
             [&] {
@@ -395,7 +401,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 // The only combination that doesn't make sense is validate both tx and package.
                 Assert(!(should_validate && maybe_package.has_value()));
                 if (should_validate) {
-                    Assert(!txdownload_impl.AlreadyHaveTx(GenTxid::Wtxid(rand_tx->GetWitnessHash()), /*include_reconsiderable=*/true));
+                    Assert(!txdownload_impl.AlreadyHaveTx(rand_tx->GetWitnessHash(), /*include_reconsiderable=*/true));
                 }
                 if (maybe_package.has_value()) {
                     CheckPackageToValidate(*maybe_package, rand_peer);
@@ -424,7 +430,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                     // However, if there was a non-null tx in the workset, HaveMoreWork should have
                     // returned true.
                     Assert(expect_work);
-                    Assert(txdownload_impl.AlreadyHaveTx(GenTxid::Wtxid(ptx->GetWitnessHash()), /*include_reconsiderable=*/false));
+                    Assert(txdownload_impl.AlreadyHaveTx(ptx->GetWitnessHash(), /*include_reconsiderable=*/false));
                     // Presumably we have validated this tx. Use "missing inputs" to keep it in the
                     // orphanage longer. Later iterations might call MempoolAcceptedTx or
                     // MempoolRejectedTx with a different error.

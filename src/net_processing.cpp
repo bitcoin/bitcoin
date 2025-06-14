@@ -302,7 +302,7 @@ struct Peer {
          *  non-wtxid-relay peers, wtxid for wtxid-relay peers). We use the
          *  mempool to sort transactions in dependency order before relay, so
          *  this does not have to be sorted. */
-        std::set<uint256> m_tx_inventory_to_send GUARDED_BY(m_tx_inventory_mutex);
+        std::set<GenTxid> m_tx_inventory_to_send GUARDED_BY(m_tx_inventory_mutex);
         /** Whether the peer has requested us to send our complete mempool. Only
          *  permitted if the peer has NetPermissionFlags::Mempool or we advertise
          *  NODE_BLOOM. See BIP35. */
@@ -536,7 +536,7 @@ public:
     std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayTransaction(const Txid& txid, const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -856,7 +856,7 @@ private:
     std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
     uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
-    std::unique_ptr<const std::map<uint256, CTransactionRef>> m_most_recent_block_txs GUARDED_BY(m_most_recent_block_mutex);
+    std::unique_ptr<const std::map<GenTxid, CTransactionRef>> m_most_recent_block_txs GUARDED_BY(m_most_recent_block_mutex);
 
     // Data about the low-work headers synchronization, aggregated from all peers' HeadersSyncStates.
     /** Mutex guarding the other m_headers_presync_* variables. */
@@ -947,7 +947,8 @@ private:
     std::atomic<std::chrono::seconds> m_last_tip_update{0s};
 
     /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
-    CTransactionRef FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
+    template <typename T>
+    CTransactionRef FindTxForGetData(const Peer::TxRelay& tx_relay, const T& id)
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, NetEventsInterface::g_msgproc_mutex);
 
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc)
@@ -1583,7 +1584,7 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
         CTransactionRef tx = m_mempool.get(txid);
 
         if (tx != nullptr) {
-            RelayTransaction(txid, tx->GetWitnessHash());
+            RelayTransaction(Txid::FromUint256(txid), tx->GetWitnessHash());
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
@@ -2027,7 +2028,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
 
     {
-        auto most_recent_block_txs = std::make_unique<std::map<uint256, CTransactionRef>>();
+        auto most_recent_block_txs = std::make_unique<std::map<GenTxid, CTransactionRef>>();
         for (const auto& tx : pblock->vtx) {
             most_recent_block_txs->emplace(tx->GetHash(), tx);
             most_recent_block_txs->emplace(tx->GetWitnessHash(), tx);
@@ -2150,7 +2151,7 @@ void PeerManagerImpl::SendPings()
     for(auto& it : m_peer_map) it.second->m_ping_queued = true;
 }
 
-void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid)
+void PeerManagerImpl::RelayTransaction(const Txid& txid, const Wtxid& wtxid)
 {
     LOCK(m_peer_mutex);
     for(auto& it : m_peer_map) {
@@ -2166,11 +2167,11 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
         // in the announcement.
         if (tx_relay->m_next_inv_send_time == 0s) continue;
 
-        const uint256& hash{peer.m_wtxid_relay ? wtxid : txid};
-        if (!tx_relay->m_tx_inventory_known_filter.contains(hash)) {
-            tx_relay->m_tx_inventory_to_send.insert(hash);
+        const auto gtxid{peer.m_wtxid_relay ? GenTxid{wtxid} : GenTxid{txid}};
+        if (!tx_relay->m_tx_inventory_known_filter.contains(gtxid.ToUint256())) {
+            tx_relay->m_tx_inventory_to_send.insert(gtxid);
         }
-    };
+    }
 }
 
 void PeerManagerImpl::RelayAddress(NodeId originator,
@@ -2391,10 +2392,11 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     }
 }
 
-CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
+template <typename T>
+CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const T& id)
 {
     // If a tx was in the mempool prior to the last INV for this peer, permit the request.
-    auto txinfo = m_mempool.info_for_relay(gtxid, tx_relay.m_last_inv_sequence);
+    auto txinfo = m_mempool.info_for_relay(id, tx_relay.m_last_inv_sequence);
     if (txinfo.tx) {
         return std::move(txinfo.tx);
     }
@@ -2403,7 +2405,7 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
     {
         LOCK(m_most_recent_block_mutex);
         if (m_most_recent_block_txs != nullptr) {
-            auto it = m_most_recent_block_txs->find(gtxid.GetHash());
+            auto it = m_most_recent_block_txs->find(id);
             if (it != m_most_recent_block_txs->end()) return it->second;
         }
     }
@@ -2437,7 +2439,9 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             continue;
         }
 
-        CTransactionRef tx = FindTxForGetData(*tx_relay, ToGenTxid(inv));
+        CTransactionRef tx{inv.IsMsgWtx() ?
+                                 FindTxForGetData(*tx_relay, Wtxid::FromUint256(inv.hash)) :
+                                 FindTxForGetData(*tx_relay, Txid::FromUint256(inv.hash))};
         if (tx) {
             // WTX and WITNESS_TX imply we serialize with witness
             const auto maybe_with_witness = (inv.IsMsgTx() ? TX_NO_WITNESS : TX_WITH_WITNESS);
@@ -4306,7 +4310,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
-                if (!m_mempool.exists(GenTxid::Txid(tx.GetHash()))) {
+                if (!m_mempool.exists(tx.GetHash())) {
                     LogPrintf("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
                               tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
                 } else {
@@ -4938,11 +4942,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::NOTFOUND) {
         std::vector<CInv> vInv;
         vRecv >> vInv;
-        std::vector<uint256> tx_invs;
+        std::vector<GenTxid> tx_invs;
         if (vInv.size() <= node::MAX_PEER_TX_ANNOUNCEMENTS + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv : vInv) {
                 if (inv.IsGenTxMsg()) {
-                    tx_invs.emplace_back(inv.hash);
+                    tx_invs.emplace_back(ToGenTxid(inv));
                 }
             }
         }
@@ -5443,19 +5447,17 @@ namespace {
 class CompareInvMempoolOrder
 {
     CTxMemPool* mp;
-    bool m_wtxid_relay;
 public:
-    explicit CompareInvMempoolOrder(CTxMemPool *_mempool, bool use_wtxid)
+    explicit CompareInvMempoolOrder(CTxMemPool *_mempool)
     {
         mp = _mempool;
-        m_wtxid_relay = use_wtxid;
     }
 
-    bool operator()(std::set<uint256>::iterator a, std::set<uint256>::iterator b)
+    bool operator()(std::set<GenTxid>::iterator a, std::set<GenTxid>::iterator b)
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * fewest ancestors/highest fee to sort later. */
-        return mp->CompareDepthAndScore(*b, *a, m_wtxid_relay);
+        return mp->CompareDepthAndScore(*b, *a);
     }
 };
 } // namespace
@@ -5773,7 +5775,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                 txinfo.tx->GetWitnessHash().ToUint256() :
                                 txinfo.tx->GetHash().ToUint256(),
                         };
-                        tx_relay->m_tx_inventory_to_send.erase(inv.hash);
+                        tx_relay->m_tx_inventory_to_send.erase(ToGenTxid(inv));
 
                         // Don't send transactions that peers will not put into their mempool
                         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
@@ -5794,15 +5796,15 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // Determine transactions to relay
                 if (fSendTrickle) {
                     // Produce a vector with all candidates for sending
-                    std::vector<std::set<uint256>::iterator> vInvTx;
+                    std::vector<std::set<GenTxid>::iterator> vInvTx;
                     vInvTx.reserve(tx_relay->m_tx_inventory_to_send.size());
-                    for (std::set<uint256>::iterator it = tx_relay->m_tx_inventory_to_send.begin(); it != tx_relay->m_tx_inventory_to_send.end(); it++) {
+                    for (std::set<GenTxid>::iterator it = tx_relay->m_tx_inventory_to_send.begin(); it != tx_relay->m_tx_inventory_to_send.end(); it++) {
                         vInvTx.push_back(it);
                     }
                     const CFeeRate filterrate{tx_relay->m_fee_filter_received.load()};
                     // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                     // A heap is used so that not all items need sorting if only a few are being sent.
-                    CompareInvMempoolOrder compareInvMempoolOrder(&m_mempool, peer->m_wtxid_relay);
+                    CompareInvMempoolOrder compareInvMempoolOrder(&m_mempool);
                     std::make_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                     // No reason to drain out at many times the network's capacity,
                     // especially since we have many peers and some will draw much shorter delays.
@@ -5813,18 +5815,19 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     while (!vInvTx.empty() && nRelayedTransactions < broadcast_max) {
                         // Fetch the top element from the heap
                         std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
-                        std::set<uint256>::iterator it = vInvTx.back();
+                        std::set<GenTxid>::iterator it = vInvTx.back();
                         vInvTx.pop_back();
-                        uint256 hash = *it;
-                        CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
+                        GenTxid hash = *it;
+                        Assume(peer->m_wtxid_relay == std::holds_alternative<Wtxid>(hash));
+                        CInv inv(peer->m_wtxid_relay ? MSG_WTX : MSG_TX, hash.ToUint256());
                         // Remove it from the to-be-sent set
                         tx_relay->m_tx_inventory_to_send.erase(it);
                         // Check if not in the filter already
-                        if (tx_relay->m_tx_inventory_known_filter.contains(hash)) {
+                        if (tx_relay->m_tx_inventory_known_filter.contains(hash.ToUint256())) {
                             continue;
                         }
                         // Not in the mempool anymore? don't bother sending it.
-                        auto txinfo = m_mempool.info(ToGenTxid(inv));
+                        auto txinfo{std::visit([&](const auto& id) { return m_mempool.info(id); }, hash)};
                         if (!txinfo.tx) {
                             continue;
                         }
@@ -5840,7 +5843,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
                             vInv.clear();
                         }
-                        tx_relay->m_tx_inventory_known_filter.insert(hash);
+                        tx_relay->m_tx_inventory_known_filter.insert(hash.ToUint256());
                     }
 
                     // Ensure we'll respond to GETDATA requests for anything we've just announced
@@ -5963,7 +5966,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         {
             LOCK(m_tx_download_mutex);
             for (const GenTxid& gtxid : m_txdownloadman.GetRequestsToSend(pto->GetId(), current_time)) {
-                vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.GetHash());
+                vGetData.emplace_back(std::holds_alternative<Wtxid>(gtxid) ? MSG_WTX : (MSG_TX | GetFetchFlags(*peer)), gtxid.ToUint256());
                 if (vGetData.size() >= MAX_GETDATA_SZ) {
                     MakeAndPushMessage(*pto, NetMsgType::GETDATA, vGetData);
                     vGetData.clear();
