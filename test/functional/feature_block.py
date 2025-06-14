@@ -719,8 +719,7 @@ class FullBlockTest(BitcoinTestFramework):
         # valid timestamp
         self.move_tip(53)
         b55 = self.next_block(55, spend=out[15])
-        b55.nTime = b35.nTime
-        self.update_block(55, [])
+        self.update_block(55, [], nTime=b35.nTime)
         self.send_blocks([b55], True)
         self.save_spendable_output()
 
@@ -1408,10 +1407,12 @@ class FullBlockTest(BitcoinTestFramework):
         self.tip = self.blocks[number]
 
     # adds transactions to the block and updates state
-    def update_block(self, block_number, new_transactions):
+    def update_block(self, block_number, new_transactions, *, nTime=None):
         block = self.blocks[block_number]
         self.add_transactions_to_block(block, new_transactions)
         old_sha256 = block.sha256
+        if nTime is not None:
+            block.nTime = nTime
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
         # Update the internal state just like in next_block
