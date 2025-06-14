@@ -17,7 +17,7 @@ bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex& block_index, 
     LOCK(::cs_main);
 
     CBlock block;
-    if (!blockman.ReadBlock(block, block_index.GetBlockPos())) {
+    if (!blockman.ReadBlock(block, block_index)) {
         return false;
     }
 
