@@ -715,9 +715,27 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 
         std::vector<CScript> desc_spks;
 
-        // Make the descriptor string with private keys
-        std::string desc_str;
-        bool watchonly = !desc->ToPrivateString(*this, desc_str);
+        size_t privkey_count{0};
+        std::set<CPubKey> pubkeys;
+        std::set<CExtPubKey> ext_pubkeys;
+        desc->GetPubKeys(pubkeys, ext_pubkeys);
+        auto output_type{desc->GetOutputType()};
+        for (auto pubkey : pubkeys) {
+            CKey key;
+            if (GetKey(pubkey.GetID(), key)) {
+                privkey_count += 1;
+            } else if (output_type.has_value() && *output_type == OutputType::BECH32M && GetKeyByXOnly(XOnlyPubKey(pubkey), key)) {
+                privkey_count += 1;
+            }
+        }
+        for (auto extpubkey : ext_pubkeys) {
+            CKey key;
+            if (GetKey(extpubkey.pubkey.GetID(), key)) {
+                privkey_count += 1;
+            }
+        }
+        size_t pubkey_count{pubkeys.size() + ext_pubkeys.size()};
+        bool watchonly{privkey_count == 0 || pubkey_count > privkey_count};
         if (watchonly && !m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             out.watch_descs.emplace_back(desc->ToString(), creation_time);
 
