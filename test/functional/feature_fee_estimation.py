@@ -374,6 +374,22 @@ class EstimateFeeTest(BitcoinTestFramework):
         fee_dat_current_content = open(fee_dat, "rb").read()
         assert_not_equal(fee_dat_current_content, fee_dat_initial_content)
 
+        # Ensure that we do not flush fee estimates when no usable data is available.
+        # Stop the node and rename the fee_estimates.dat file so the node won't load it on startup.
+        self.stop_node(0)
+        temp_name = self.nodes[0].chain_path / "temp_estimates.dat"
+        os.rename(fee_dat, temp_name)
+
+        assert_equal(os.path.isfile(fee_dat), False)
+
+        self.start_node(0)
+        self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
+        assert_equal(os.path.isfile(fee_dat), False)
+
+        self.stop_node(0)
+        os.rename(temp_name, fee_dat)
+        self.start_node(0)
+
 
     def test_acceptstalefeeestimates_option(self):
         # Get the initial fee rate while node is running
