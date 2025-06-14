@@ -390,14 +390,13 @@ class MiningTest(BitcoinTestFramework):
         assert 'currentblockweight' not in mining_info
         assert_equal(mining_info['bits'], nbits_str(REGTEST_N_BITS))
         assert_equal(mining_info['target'], target_str(REGTEST_TARGET))
-        assert_equal(mining_info['difficulty'], Decimal('4.656542373906925E-10'))
-        assert_equal(mining_info['next'], {
-            'height': 201,
-            'target': target_str(REGTEST_TARGET),
-            'bits': nbits_str(REGTEST_N_BITS),
-            'difficulty': Decimal('4.656542373906925E-10')
-        })
-        assert_equal(mining_info['networkhashps'], Decimal('0.003333333333333334'))
+        # We don't care about precision, round to avoid mismatch under Valgrind:
+        assert_equal(round(mining_info['difficulty'], 10), Decimal('0.0000000005'))
+        assert_equal(mining_info['next']['height'], 201)
+        assert_equal(mining_info['next']['target'], target_str(REGTEST_TARGET))
+        assert_equal(mining_info['next']['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(round(mining_info['next']['difficulty'], 10), Decimal('0.0000000005'))
+        assert_equal(round(mining_info['networkhashps'], 5), Decimal('0.00333'))
         assert_equal(mining_info['pooledtx'], 0)
 
         self.log.info("getblocktemplate: Test default witness commitment")
