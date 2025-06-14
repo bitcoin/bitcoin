@@ -167,6 +167,13 @@ class ECKey:
     def sign_ecdsa(self, msg, low_s=True, rfc6979=False):
         """Construct a DER-encoded ECDSA signature with this key.
 
+        Args:
+            msg (bytes): The message to be signed.
+            low_s (bool): Determines whether to return a low-s or high-s signature.
+                - If True: Return a signature with a low s value (s <= ORDER_HALF).
+                - If False: Return a signature with a high s value (s > ORDER_HALF).
+            rfc6979 (bool): If True, use deterministic nonce per RFC 6979, otherwise uses a random nonce
+
         See https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm for the
         ECDSA signer algorithm."""
         assert self.valid
@@ -179,7 +186,7 @@ class ECKey:
         R = k * secp256k1.G
         r = int(R.x) % ORDER
         s = (pow(k, -1, ORDER) * (z + self.secret * r)) % ORDER
-        if low_s and s > secp256k1.GE.ORDER_HALF:
+        if (low_s and s > secp256k1.GE.ORDER_HALF) or (not low_s and s < secp256k1.GE.ORDER_HALF):
             s = ORDER - s
         # Represent in DER format. The byte representations of r and s have
         # length rounded up (255 bits becomes 32 bytes and 256 bits becomes 33
