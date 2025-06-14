@@ -15,23 +15,24 @@
 // See https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 // for documentation.  The clang compiler can do advanced static analysis
 // of locking when given the -Wthread-safety option.
-#define LOCKABLE __attribute__((lockable))
+#define LOCKABLE __attribute__((capability("")))
 #define SCOPED_LOCKABLE __attribute__((scoped_lockable))
 #define GUARDED_BY(x) __attribute__((guarded_by(x)))
 #define PT_GUARDED_BY(x) __attribute__((pt_guarded_by(x)))
 #define ACQUIRED_AFTER(...) __attribute__((acquired_after(__VA_ARGS__)))
 #define ACQUIRED_BEFORE(...) __attribute__((acquired_before(__VA_ARGS__)))
-#define EXCLUSIVE_LOCK_FUNCTION(...) __attribute__((exclusive_lock_function(__VA_ARGS__)))
-#define SHARED_LOCK_FUNCTION(...) __attribute__((shared_lock_function(__VA_ARGS__)))
-#define EXCLUSIVE_TRYLOCK_FUNCTION(...) __attribute__((exclusive_trylock_function(__VA_ARGS__)))
-#define SHARED_TRYLOCK_FUNCTION(...) __attribute__((shared_trylock_function(__VA_ARGS__)))
-#define UNLOCK_FUNCTION(...) __attribute__((unlock_function(__VA_ARGS__)))
+#define EXCLUSIVE_LOCK_FUNCTION(...) __attribute__((acquire_capability(__VA_ARGS__)))
+#define SHARED_LOCK_FUNCTION(...) __attribute__((acquire_shared_capability(__VA_ARGS__)))
+#define EXCLUSIVE_TRYLOCK_FUNCTION(...) __attribute__((try_acquire_capability(__VA_ARGS__)))
+#define SHARED_TRYLOCK_FUNCTION(...) __attribute__((try_acquire_shared_capability(__VA_ARGS__)))
+#define UNLOCK_FUNCTION(...) __attribute__((release_capability(__VA_ARGS__)))
+#define SHARED_UNLOCK_FUNCTION(...) __attribute__((release_shared_capability(__VA_ARGS__)))
 #define LOCK_RETURNED(x) __attribute__((lock_returned(x)))
 #define LOCKS_EXCLUDED(...) __attribute__((locks_excluded(__VA_ARGS__)))
-#define EXCLUSIVE_LOCKS_REQUIRED(...) __attribute__((exclusive_locks_required(__VA_ARGS__)))
-#define SHARED_LOCKS_REQUIRED(...) __attribute__((shared_locks_required(__VA_ARGS__)))
+#define EXCLUSIVE_LOCKS_REQUIRED(...) __attribute__((requires_capability(__VA_ARGS__)))
+#define SHARED_LOCKS_REQUIRED(...) __attribute__((requires_shared_capability(__VA_ARGS__)))
 #define NO_THREAD_SAFETY_ANALYSIS __attribute__((no_thread_safety_analysis))
-#define ASSERT_EXCLUSIVE_LOCK(...) __attribute__((assert_exclusive_lock(__VA_ARGS__)))
+#define ASSERT_EXCLUSIVE_LOCK(...) __attribute__((assert_capability(__VA_ARGS__)))
 #else
 #define LOCKABLE
 #define SCOPED_LOCKABLE
@@ -44,6 +45,7 @@
 #define EXCLUSIVE_TRYLOCK_FUNCTION(...)
 #define SHARED_TRYLOCK_FUNCTION(...)
 #define UNLOCK_FUNCTION(...)
+#define SHARED_UNLOCK_FUNCTION(...)
 #define LOCK_RETURNED(x)
 #define LOCKS_EXCLUDED(...)
 #define EXCLUSIVE_LOCKS_REQUIRED(...)

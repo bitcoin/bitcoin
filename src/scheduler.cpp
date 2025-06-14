@@ -56,7 +56,7 @@ void CScheduler::serviceQueue()
             {
                 // Unlock before calling f, so it can reschedule itself or another task
                 // without deadlocking:
-                REVERSE_LOCK(lock);
+                REVERSE_LOCK(lock, newTaskMutex);
                 f();
             }
         } catch (...) {
