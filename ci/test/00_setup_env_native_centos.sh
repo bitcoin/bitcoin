@@ -18,3 +18,4 @@ export BITCOIN_CONFIG="\
  -DAPPEND_CPPFLAGS='-D_GLIBCXX_ASSERTIONS' \
  -DCMAKE_BUILD_TYPE=Debug \
 "
+export BITCOIN_CMD="bitcoin -m" # Used in functional tests
