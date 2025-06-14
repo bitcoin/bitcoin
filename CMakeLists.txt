@@ -7,7 +7,7 @@
 #
 # Centos Stream 9, https://www.centos.org/cl-vs-cs/#end-of-life, EOL in May 2027:
 #  - CMake 3.26.5, https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.24)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "In-source builds are not allowed.")
@@ -694,6 +694,18 @@ message("  test_bitcoin-qt ..................... ${BUILD_GUI_TESTS}")
 message("  bench_bitcoin ....................... ${BUILD_BENCH}")
 message("  fuzz binary ......................... ${BUILD_FUZZ_BINARY}")
 message("")
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE OR NOT EXISTS "${CMAKE_TOOLCHAIN_FILE}")
+  set(TOOLCHAIN_MESSAGE "NONE")
+else()
+  set(TOOLCHAIN_MESSAGE "${CMAKE_TOOLCHAIN_FILE}")
+endif()
+if(NOT DEFINED BITCOIN_DEPENDENCY_PROVIDER_ACTIVE)
+  set(DEP_PROVIDER_MESSAGE "INACTIVE")
+else()
+  set(DEP_PROVIDER_MESSAGE "${BITCOIN_DEPENDENCY_PROVIDER_PATH}")
+endif()
+message("Toolchain file ........................ ${TOOLCHAIN_MESSAGE}")
+message("Dependency provider ................... ${DEP_PROVIDER_MESSAGE}")
 if(CMAKE_CROSSCOMPILING)
   set(cross_status "TRUE, for ${CMAKE_SYSTEM_NAME}, ${CMAKE_SYSTEM_PROCESSOR}")
 else()
