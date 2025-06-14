@@ -29,9 +29,21 @@ std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wall
         if (ec) {
             if (fs::is_directory(*it)) {
                 it.disable_recursion_pending();
+<<<<<<< HEAD
+                LogWarning("Error while scanning wallet dir item: %s [%s] -- skipping.", ec.message(), fs::PathToString(it->path()));
+||||||| parent of f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
                 LogPrintf("%s: %s %s -- skipping.\n", __func__, ec.message(), fs::PathToString(it->path()));
+=======
+                LogInfo("%s: %s %s -- skipping.\n", __func__, ec.message(), fs::PathToString(it->path()));
+>>>>>>> f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
             } else {
+<<<<<<< HEAD
+                LogWarning("Error while scanning wallet dir item: %s [%s].", ec.message(), fs::PathToString(it->path()));
+||||||| parent of f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
                 LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(it->path()));
+=======
+                LogInfo("%s: %s %s\n", __func__, ec.message(), fs::PathToString(it->path()));
+>>>>>>> f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
             }
             continue;
         }
@@ -65,7 +77,13 @@ std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wall
                 }
             }
         } catch (const std::exception& e) {
+<<<<<<< HEAD
+            LogWarning("Error while scanning wallet dir item: %s [%s].", e.what(), fs::PathToString(it->path()));
+||||||| parent of f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
             LogPrintf("%s: Error scanning %s: %s\n", __func__, fs::PathToString(it->path()), e.what());
+=======
+            LogInfo("%s: Error scanning %s: %s\n", __func__, fs::PathToString(it->path()), e.what());
+>>>>>>> f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
             it.disable_recursion_pending();
         }
     }
@@ -100,7 +118,13 @@ bool IsBDBFile(const fs::path& path)
     // This check also prevents opening lock files.
     std::error_code ec;
     auto size = fs::file_size(path, ec);
+<<<<<<< HEAD
+    if (ec) LogWarning("Error reading file_size: %s [%s]", ec.message(), fs::PathToString(path));
+||||||| parent of f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
     if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
+=======
+    if (ec) LogInfo("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
+>>>>>>> f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
     if (size < 4096) return false;
 
     std::ifstream file{path, std::ios::binary};
@@ -124,7 +148,13 @@ bool IsSQLiteFile(const fs::path& path)
     // A SQLite Database file is at least 512 bytes.
     std::error_code ec;
     auto size = fs::file_size(path, ec);
+<<<<<<< HEAD
+    if (ec) LogWarning("Error reading file_size: %s [%s]", ec.message(), fs::PathToString(path));
+||||||| parent of f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
     if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
+=======
+    if (ec) LogInfo("%s: %s %s\n", __func__, ec.message(), fs::PathToString(path));
+>>>>>>> f957f4a24c (scripted-diff: LogPrintf -> LogInfo)
     if (size < 512) return false;
 
     std::ifstream file{path, std::ios::binary};
