@@ -124,15 +124,14 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
             fuzzed_data_provider,
             [&] {
                 const CScript script{ConsumeScript(fuzzed_data_provider)};
-                auto is_mine{spk_manager->IsMine(script)};
-                if (is_mine == isminetype::ISMINE_SPENDABLE) {
+                if (spk_manager->IsMine(script)) {
                     assert(spk_manager->GetScriptPubKeys().count(script));
                 }
             },
             [&] {
                 auto spks{spk_manager->GetScriptPubKeys()};
                 for (const CScript& spk : spks) {
-                    assert(spk_manager->IsMine(spk) == ISMINE_SPENDABLE);
+                    assert(spk_manager->IsMine(spk));
                     CTxDestination dest;
                     bool extract_dest{ExtractDestination(spk, dest)};
                     if (extract_dest) {
