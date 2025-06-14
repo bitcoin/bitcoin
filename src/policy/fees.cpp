@@ -960,6 +960,13 @@ void CBlockPolicyEstimator::Flush() {
 
 void CBlockPolicyEstimator::FlushFeeEstimates()
 {
+    {
+        LOCK(m_cs_fee_estimator);
+        // We should only flush the fee estimates if usable estimates are available.
+        // This prevents redundant flushes e.g during IBD.
+        if (!MaxUsableEstimate()) return;
+    }
+
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
         LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
