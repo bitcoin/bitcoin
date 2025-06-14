@@ -332,7 +332,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Verify if the string "Flushed fee estimates to fee_estimates.dat." is present in the debug log file.
         # If present, it indicates that fee estimates have been successfully flushed to disk.
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
+        expected_message = f"Flushed fee estimates to {fee_dat}."
+        with self.nodes[0].assert_debug_log(expected_msgs=[expected_message], timeout=1):
             # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
@@ -342,7 +343,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Verify that the estimates remain the same if there are no blocks in the flush interval
         block_hash_before = self.nodes[0].getbestblockhash()
         fee_dat_initial_content = open(fee_dat, "rb").read()
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
+        with self.nodes[0].assert_debug_log(expected_msgs=[expected_message], timeout=1):
             # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
@@ -358,7 +359,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_equal(fee_dat_current_content, fee_dat_initial_content)
 
         # Verify that the estimates are not the same if new blocks were produced in the flush interval
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
+        with self.nodes[0].assert_debug_log(expected_msgs=[expected_message], timeout=1):
             # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
             self.generate(self.nodes[0], 5, sync_fun=self.no_op)
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
