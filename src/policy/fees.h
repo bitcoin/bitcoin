@@ -303,6 +303,9 @@ private:
     /** Process a transaction confirmed in a block*/
     bool processBlockTx(unsigned int nBlockHeight, const RemovedMempoolTransactionInfo& tx) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
+    /** Remove transactions CPFP'd by some child from fee estimation tracking stats */
+    void removeCPFPdParentTxs(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
+
     /** Helper for estimateSmartFee */
     double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Helper for estimateSmartFee */
