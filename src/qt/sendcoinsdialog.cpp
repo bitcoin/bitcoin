@@ -21,7 +21,7 @@
 #include <key_io.h>
 #include <node/interface_ui.h>
 #include <node/types.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
