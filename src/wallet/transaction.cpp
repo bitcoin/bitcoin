@@ -13,8 +13,14 @@ bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
 {
         CMutableTransaction tx1 {*this->tx};
         CMutableTransaction tx2 {*_tx.tx};
-        for (auto& txin : tx1.vin) txin.scriptSig = CScript();
-        for (auto& txin : tx2.vin) txin.scriptSig = CScript();
+        for (auto& txin : tx1.vin) {
+            txin.scriptSig = CScript();
+            txin.scriptWitness.SetNull();
+        }
+        for (auto& txin : tx2.vin) {
+            txin.scriptSig = CScript();
+            txin.scriptWitness.SetNull();
+        }
         return CTransaction(tx1) == CTransaction(tx2);
 }
 
