@@ -68,7 +68,6 @@ struct tallyitem
     CAmount nAmount{0};
     int nConf{std::numeric_limits<int>::max()};
     std::vector<Txid> txids;
-    bool fIsWatchonly{false};
     tallyitem() = default;
 };
 
@@ -85,10 +84,6 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
         fIncludeEmpty = params[1].get_bool();
 
     isminefilter filter = ISMINE_SPENDABLE;
-
-    if (ParseIncludeWatchonly(params[2], wallet)) {
-        filter |= ISMINE_WATCH_ONLY;
-    }
 
     std::optional<CTxDestination> filtered_address{std::nullopt};
     if (!by_label && !params[3].isNull() && !params[3].get_str().empty()) {
@@ -129,8 +124,6 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             item.nAmount += txout.nValue;
             item.nConf = std::min(item.nConf, nDepth);
             item.txids.push_back(wtx.GetHash());
-            if (mine & ISMINE_WATCH_ONLY)
-                item.fIsWatchonly = true;
         }
     }
 
@@ -147,21 +140,17 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
-        bool fIsWatchonly = false;
         if (it != mapTally.end()) {
             nAmount = (*it).second.nAmount;
             nConf = (*it).second.nConf;
-            fIsWatchonly = (*it).second.fIsWatchonly;
         }
 
         if (by_label) {
             tallyitem& _item = label_tally[label];
             _item.nAmount += nAmount;
             _item.nConf = std::min(_item.nConf, nConf);
-            _item.fIsWatchonly = fIsWatchonly;
         } else {
             UniValue obj(UniValue::VOBJ);
-            if (fIsWatchonly) obj.pushKV("involvesWatchonly", true);
             obj.pushKV("address",       EncodeDestination(address));
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
@@ -190,8 +179,6 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             CAmount nAmount = entry.second.nAmount;
             int nConf = entry.second.nConf;
             UniValue obj(UniValue::VOBJ);
-            if (entry.second.fIsWatchonly)
-                obj.pushKV("involvesWatchonly", true);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             obj.pushKV("label",         entry.first);
@@ -210,7 +197,7 @@ RPCHelpMan listreceivedbyaddress()
                 {
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
                     {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include addresses that haven't received any payments."},
-                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see 'importaddress')"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                     {"address_filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If present and non-empty, only return information on this address."},
                     {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase transactions."},
                 },
@@ -219,7 +206,6 @@ RPCHelpMan listreceivedbyaddress()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
                             {RPCResult::Type::STR, "address", "The receiving address"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received by the address"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
@@ -264,7 +250,7 @@ RPCHelpMan listreceivedbylabel()
                 {
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
                     {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include labels that haven't received any payments."},
-                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see 'importaddress')"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                     {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase transactions."},
                 },
                 RPCResult{
@@ -272,7 +258,6 @@ RPCHelpMan listreceivedbylabel()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "The total amount received by addresses with this label"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
                             {RPCResult::Type::STR, "label", "The label of the receiving address. The default label is \"\""},
@@ -332,17 +317,12 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
 
     CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine, include_change);
 
-    bool involvesWatchonly = CachedTxIsFromMe(wallet, wtx, ISMINE_WATCH_ONLY);
-
     // Sent
     if (!filter_label.has_value())
     {
         for (const COutputEntry& s : listSent)
         {
             UniValue entry(UniValue::VOBJ);
-            if (involvesWatchonly || (wallet.IsMine(s.destination) & ISMINE_WATCH_ONLY)) {
-                entry.pushKV("involvesWatchonly", true);
-            }
             MaybePushAddress(entry, s.destination);
             entry.pushKV("category", "send");
             entry.pushKV("amount", ValueFromAmount(-s.amount));
@@ -372,9 +352,6 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 continue;
             }
             UniValue entry(UniValue::VOBJ);
-            if (involvesWatchonly || (wallet.IsMine(r.destination) & ISMINE_WATCH_ONLY)) {
-                entry.pushKV("involvesWatchonly", true);
-            }
             MaybePushAddress(entry, r.destination);
             PushParentDescriptors(wallet, wtx.tx->vout.at(r.vout).scriptPubKey, entry);
             if (wtx.IsCoinBase())
@@ -450,14 +427,13 @@ RPCHelpMan listtransactions()
                           "with the specified label, or \"*\" to disable filtering and return all transactions."},
                     {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return"},
                     {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip"},
-                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
                     {
                         {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                         {
-                            {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction."},
                             {RPCResult::Type::STR, "address",  /*optional=*/true, "The bitcoin address of the transaction (not returned if the output does not have an address, e.g. OP_RETURN null data)."},
                             {RPCResult::Type::STR, "category", "The transaction category.\n"
                                 "\"send\"                  Transactions sent.\n"
@@ -510,10 +486,6 @@ RPCHelpMan listtransactions()
         nFrom = request.params[2].getInt<int>();
     isminefilter filter = ISMINE_SPENDABLE;
 
-    if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
-        filter |= ISMINE_WATCH_ONLY;
-    }
-
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     if (nFrom < 0)
@@ -559,7 +531,7 @@ RPCHelpMan listsinceblock()
                 {
                     {"blockhash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, the block hash to list transactions since, otherwise list all transactions."},
                     {"target_confirmations", RPCArg::Type::NUM, RPCArg::Default{1}, "Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value"},
-                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                     {"include_removed", RPCArg::Type::BOOL, RPCArg::Default{true}, "Show transactions that were removed due to a reorg in the \"removed\" array\n"
                                                                        "(not guaranteed to work on pruned nodes)"},
                     {"include_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also add entries for change outputs.\n"},
@@ -572,7 +544,6 @@ RPCHelpMan listsinceblock()
                         {
                             {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
                             {
-                                {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction."},
                                 {RPCResult::Type::STR, "address",  /*optional=*/true, "The bitcoin address of the transaction (not returned if the output does not have an address, e.g. OP_RETURN null data)."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
@@ -638,10 +609,6 @@ RPCHelpMan listsinceblock()
         }
     }
 
-    if (ParseIncludeWatchonly(request.params[2], wallet)) {
-        filter |= ISMINE_WATCH_ONLY;
-    }
-
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
     bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
 
@@ -701,8 +668,7 @@ RPCHelpMan gettransaction()
         "Get detailed information about in-wallet transaction <txid>\n",
                 {
                     {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
-                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"},
-                            "Whether to include watch-only addresses in balance calculation and details[]"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                     {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false},
                             "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
                 },
@@ -719,7 +685,6 @@ RPCHelpMan gettransaction()
                         {
                             {RPCResult::Type::OBJ, "", "",
                             {
-                                {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction."},
                                 {RPCResult::Type::STR, "address", /*optional=*/true, "The bitcoin address involved in the transaction."},
                                 {RPCResult::Type::STR, "category", "The transaction category.\n"
                                     "\"send\"                  Transactions sent.\n"
@@ -766,10 +731,6 @@ RPCHelpMan gettransaction()
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
     isminefilter filter = ISMINE_SPENDABLE;
-
-    if (ParseIncludeWatchonly(request.params[1], *pwallet)) {
-        filter |= ISMINE_WATCH_ONLY;
-    }
 
     bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
 

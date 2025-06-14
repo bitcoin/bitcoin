@@ -102,7 +102,6 @@ struct FuzzedWallet {
             fuzzed_data_provider, [&] { coin_control.destChange = GetDestination(fuzzed_data_provider); },
             [&] { coin_control.m_change_type.emplace(fuzzed_data_provider.PickValueInArray(OUTPUT_TYPES)); },
             [&] { /* no op (leave uninitialized) */ });
-        coin_control.fAllowWatchOnly = fuzzed_data_provider.ConsumeBool();
         coin_control.m_include_unsafe_inputs = fuzzed_data_provider.ConsumeBool();
         {
             auto& r{coin_control.m_signal_bip125_rbf};
