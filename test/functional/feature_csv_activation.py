@@ -100,7 +100,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.extra_args = [[
             f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
         ]]
-        self.supports_cli = False
 
     def create_self_transfer_from_utxo(self, input_tx):
         utxo = self.miniwallet.get_utxo(txid=input_tx.txid_hex, mark_as_spent=False)

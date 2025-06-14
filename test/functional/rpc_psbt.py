@@ -72,7 +72,6 @@ class PSBTTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         for args in self.extra_args:
             args.append("-whitelist=noban@127.0.0.1")
-        self.supports_cli = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -96,7 +95,7 @@ class PSBTTest(BitcoinTestFramework):
         signed_psbt_obj.g.map[PSBT_GLOBAL_UNSIGNED_TX] = bytes.fromhex(raw)
 
         # Check that the walletprocesspsbt call succeeds but also recognizes that the transaction is not complete
-        signed_psbt_incomplete = wallet.walletprocesspsbt(signed_psbt_obj.to_base64(), finalize=False)
+        signed_psbt_incomplete = wallet.walletprocesspsbt(psbt=signed_psbt_obj.to_base64(), finalize=False)
         assert signed_psbt_incomplete["complete"] is False
 
     def test_utxo_conversion(self):
