@@ -93,7 +93,7 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
 }
 
-void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate)
+void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, DummyChainState& chainstate)
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
@@ -112,6 +112,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     }
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    chainstate.SetMempool(g_setup->m_node.mempool.get());
 }
 
 void MockTime(FuzzedDataProvider& fuzzed_data_provider, const Chainstate& chainstate)
