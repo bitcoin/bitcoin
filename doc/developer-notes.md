@@ -100,6 +100,11 @@ code.
     naming style](#internal-interface-naming-style) for an exception to this
     convention.
 
+  - With `PascalCase`, do not use screaming/acronym caps. Legacy identifiers that violate this rule remain for compatibility and will be renamed gradually. Hence:
+
+    - `JSONRPCRequest` -> `JsonRpcRequest`.
+    - `BIP9Stats` -> `Bip9Stats`.
+
   - Test suite naming convention: The Boost test suite in file
     `src/test/foo_tests.cpp` should be named `foo_tests`. Test suite names
     must be unique.
