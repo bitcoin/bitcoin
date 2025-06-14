@@ -9,6 +9,7 @@
 #include <attributes.h>
 #include <crypto/common.h>
 #include <prevector.h> // IWYU pragma: export
+#include <pubkey.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
@@ -23,6 +24,11 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+// Signature hash sizes
+static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
+static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
+static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
 
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
@@ -212,8 +218,8 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
-// Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_NOP10;
+// Highest opcode allowed in pre-Taproot scripts
+static constexpr unsigned MAX_LEGACY_OPCODE{OP_NOP10};
 
 std::string GetOpName(opcodetype opcode);
 
@@ -536,7 +542,7 @@ public:
      * counted more accurately, assuming they are of the form
      *  ... OP_N CHECKMULTISIG ...
      */
-    unsigned int GetSigOpCount(bool fAccurate) const;
+    unsigned int GetLegacySigOpCount(bool fAccurate) const;
 
     /**
      * Accurately count sigOps, including sigOps in
@@ -544,26 +550,80 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
-    /*
-     * OP_1 <0x4e73>
-     */
-    bool IsPayToAnchor() const;
     /** Checks if output of IsWitnessProgram comes from a P2A output script
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
-    bool IsPayToScriptHash() const;
-    bool IsPayToWitnessScriptHash() const;
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+    bool IsPayToAnchor() const noexcept
+    {
+        return size() == 4 &&
+               front() == OP_1 &&
+               (*this)[1] == 0x02 &&
+               (*this)[2] == 0x4e &&
+               back() == 0x73;
+    }
 
-    bool IsPayToTaproot() const;
+    bool IsPayToPubKeyHash() const noexcept
+    {
+        return size() == 25 &&
+               front() == OP_DUP &&
+               (*this)[1] == OP_HASH160 &&
+               (*this)[2] == WITNESS_V0_KEYHASH_SIZE &&
+               (*this)[23] == OP_EQUALVERIFY &&
+               back() == OP_CHECKSIG;
+    }
+
+    bool IsPayToScriptHash() const noexcept
+    {
+        return size() == 23 &&
+               front() == OP_HASH160 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE &&
+               back() == OP_EQUAL;
+    }
+
+    bool IsPayToWitnessPubKeyHash() const noexcept
+    {
+        return size() == 22 &&
+               front() == OP_0 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE;
+    }
+
+    bool IsPayToWitnessScriptHash() const noexcept
+    {
+        return size() == 34 &&
+               front() == OP_0 &&
+               (*this)[1] == WITNESS_V0_SCRIPTHASH_SIZE;
+    }
+
+    bool IsPayToTaproot() const noexcept
+    {
+        return size() == 34 &&
+               front() == OP_1 &&
+               (*this)[1] == WITNESS_V1_TAPROOT_SIZE;
+    }
+
+    bool IsCompressedPayToPubKey() const noexcept
+    {
+        return size() == 35 &&
+               front() == CPubKey::COMPRESSED_SIZE &&
+               back() == OP_CHECKSIG;
+    }
+
+    bool IsUncompressedPayToPubKey() const noexcept
+    {
+        return size() == 67 &&
+               front() == CPubKey::SIZE &&
+               back() == OP_CHECKSIG;
+    }
+
+    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
 
     /** Check if the script contains valid OP_CODES */
-    bool HasValidOps() const;
+    bool HasValidLegacyOps() const;
 
     /**
      * Returns whether the script is guaranteed to fail at execution,
