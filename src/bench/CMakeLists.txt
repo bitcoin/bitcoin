@@ -53,6 +53,8 @@ add_executable(bench_bitcoin
   xor.cpp
 )
 
+add_windows_application_manifest(bench_bitcoin)
+
 include(TargetDataSources)
 target_raw_data_sources(bench_bitcoin NAMESPACE benchmark::data
   data/block413567.raw

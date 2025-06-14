@@ -94,10 +94,6 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
 MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
-#ifdef WIN32
-    common::WinCmdLineArgs winArgs;
-    std::tie(argc, argv) = winArgs.get();
-#endif
 
     int exit_status;
     std::unique_ptr<interfaces::Init> init = interfaces::MakeWalletInit(argc, argv, exit_status);
