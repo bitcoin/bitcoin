@@ -176,7 +176,7 @@ void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransaction
     });
 }
 
-void CZMQNotificationInterface::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
+void CZMQNotificationInterface::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, bool is_ibd)
 {
     if (role == ChainstateRole::BACKGROUND) {
         return;

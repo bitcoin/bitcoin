@@ -464,7 +464,7 @@ public:
     {
         m_notifications->transactionRemovedFromMempool(tx, reason);
     }
-    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
+    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* index, bool is_ibd) override
     {
         m_notifications->blockConnected(role, kernel::MakeBlockInfo(index, block.get()));
     }

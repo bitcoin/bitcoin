@@ -208,9 +208,9 @@ void ValidationSignals::TransactionRemovedFromMempool(const CTransactionRef& tx,
                           RemovalReasonToString(reason));
 }
 
-void ValidationSignals::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
-    auto event = [role, pblock, pindex, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(role, pblock, pindex); });
+void ValidationSignals::BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex, bool is_ibd) {
+    auto event = [role, pblock, pindex, is_ibd, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(role, pblock, pindex, is_ibd); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
                           pblock->GetHash().ToString(),

@@ -26,7 +26,8 @@ void ValidationInterfaceTest::BlockConnected(
         ChainstateRole role,
         CValidationInterface& obj,
         const std::shared_ptr<const CBlock>& block,
-        const CBlockIndex* pindex)
+        const CBlockIndex* pindex,
+        bool is_ibd)
 {
-    obj.BlockConnected(role, block, pindex);
+    obj.BlockConnected(role, block, pindex, is_ibd);
 }

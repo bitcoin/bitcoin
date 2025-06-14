@@ -23,7 +23,8 @@ public:
         ChainstateRole role,
         CValidationInterface& obj,
         const std::shared_ptr<const CBlock>& block,
-        const CBlockIndex* pindex);
+        const CBlockIndex* pindex,
+        bool is_ibd);
 };
 
 #endif // BITCOIN_TEST_UTIL_VALIDATION_H

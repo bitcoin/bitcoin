@@ -507,7 +507,7 @@ public:
     /** Overridden from CValidationInterface. */
     void ActiveTipChange(const CBlockIndex& new_tip, bool) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
-    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override
+    void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, bool is_ibd) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
@@ -1975,7 +1975,8 @@ void PeerManagerImpl::ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd)
 void PeerManagerImpl::BlockConnected(
     ChainstateRole role,
     const std::shared_ptr<const CBlock>& pblock,
-    const CBlockIndex* pindex)
+    const CBlockIndex* pindex,
+    bool is_ibd)
 {
     // Update this for all chainstate roles so that we don't mistakenly see peers
     // helping us do background IBD as having a stale tip.
@@ -1993,7 +1994,7 @@ void PeerManagerImpl::BlockConnected(
 
     // The following task can be skipped since we don't maintain a mempool for
     // the ibd/background chainstate.
-    if (role == ChainstateRole::BACKGROUND) {
+    if (is_ibd || role == ChainstateRole::BACKGROUND) {
         return;
     }
     LOCK(m_tx_download_mutex);

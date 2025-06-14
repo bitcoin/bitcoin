@@ -119,7 +119,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {}
+    virtual void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, bool is_ibd) {}
     /**
      * Notifies listeners of a block being disconnected
      * Provides the block that was disconnected.
@@ -222,7 +222,7 @@ public:
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);
-    void BlockConnected(ChainstateRole, const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
+    void BlockConnected(ChainstateRole, const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, bool is_ibd);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
     void ChainStateFlushed(ChainstateRole, const CBlockLocator &);
     void BlockChecked(const CBlock&, const BlockValidationState&);

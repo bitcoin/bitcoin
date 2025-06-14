@@ -3102,6 +3102,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
 struct PerBlockConnectTrace {
     CBlockIndex* pindex = nullptr;
     std::shared_ptr<const CBlock> pblock;
+    bool ibd{true};
     PerBlockConnectTrace() = default;
 };
 /**
@@ -3118,12 +3119,14 @@ private:
 public:
     explicit ConnectTrace() : blocksConnected(1) {}
 
-    void BlockConnected(CBlockIndex* pindex, std::shared_ptr<const CBlock> pblock) {
+    void BlockConnected(CBlockIndex* pindex, std::shared_ptr<const CBlock> pblock, bool ibd) {
         assert(!blocksConnected.back().pindex);
         assert(pindex);
         assert(pblock);
-        blocksConnected.back().pindex = pindex;
-        blocksConnected.back().pblock = std::move(pblock);
+        auto& trace = blocksConnected.back();
+        trace.pindex = pindex;
+        trace.pblock = std::move(pblock);
+        trace.ibd = ibd;
         blocksConnected.emplace_back();
     }
 
@@ -3239,7 +3242,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
         m_chainman.MaybeCompleteSnapshotValidation();
     }
 
-    connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
+    connectTrace.BlockConnected(pindexNew, std::move(pthisBlock), m_chainman.IsInitialBlockDownload());
     return true;
 }
 
@@ -3525,7 +3528,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                 for (const PerBlockConnectTrace& trace : connectTrace.GetBlocksConnected()) {
                     assert(trace.pblock && trace.pindex);
                     if (m_chainman.m_options.signals) {
-                        m_chainman.m_options.signals->BlockConnected(chainstate_role, trace.pblock, trace.pindex);
+                        m_chainman.m_options.signals->BlockConnected(chainstate_role, trace.pblock, trace.pindex, trace.ibd);
                     }
                 }
 
