@@ -85,6 +85,7 @@ void AutoFile::write(std::span<const std::byte> src)
         if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
             throw std::ios_base::failure("AutoFile::write: write failed");
         }
+        m_was_written = true;
         if (m_position.has_value()) *m_position += src.size();
     } else {
         std::array<std::byte, 4096> buf;
@@ -107,6 +108,7 @@ void AutoFile::write_buffer(std::span<std::byte> src)
     if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
         throw std::ios_base::failure("AutoFile::write_buffer: write failed");
     }
+    m_was_written = true;
     if (m_position) *m_position += src.size();
 }
 
@@ -117,6 +119,7 @@ bool AutoFile::Commit()
 
 bool AutoFile::Truncate(unsigned size)
 {
+    m_was_written = true;
     return ::TruncateFile(m_file, size);
 }
 
