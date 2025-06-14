@@ -14,6 +14,7 @@ import copy
 from test_framework.blocktools import (
     create_block,
     create_coinbase,
+    add_witness_commitment,
 )
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -24,6 +25,11 @@ from test_framework.util import (
 
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
+    uint256_from_compact,
+)
+
+from test_framework.wallet import (
+    MiniWallet,
 )
 
 def assert_template(node, block, expect, *, rehash=True, submit=True, solve=True, expect_submit=None):
@@ -118,6 +124,11 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         bad_block.nBits = 469762303  # impossible in the real world
         assert_template(node, bad_block, "bad-diffbits", solve=False, expect_submit="high-hash")
 
+        self.log.info("Lowering nBits should make the block invalid")
+        bad_block = copy.deepcopy(block)
+        bad_block.nBits -= 1
+        assert_template(node, bad_block, "bad-diffbits")
+
     def merkle_root_test(self, node, block):
         self.log.info("Bad merkle root")
         bad_block = copy.deepcopy(block)
@@ -139,6 +150,117 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         bad_block.solve()
 
         assert_template(node, bad_block, "inconclusive-not-best-prevblk", expect_submit="prev-blk-not-found")
+
+    def pow_test(self, node, block):
+        '''Modifies block with the generated PoW'''
+        self.log.info("Generate a block")
+        target = uint256_from_compact(block.nBits)
+        # Ensure that it doesn't meet the target by coincidence
+        while block.sha256 <= target:
+            block.nNonce += 1
+            block.rehash()
+        self.log.debug("Found a nonce")
+
+        self.log.info("A block template doesn't need PoW")
+        assert_template(node, block, None)
+
+        self.log.info("Add proof of work")
+        block.solve()
+        assert_template(node, block, None)
+
+    def submit_test(self, node, block_0_height, block):
+        self.log.info("getblocktemplate call in previous tests did not submit the block")
+        assert_equal(node.getblockcount(), block_0_height + 1)
+
+        self.log.info("Submitting this block should succeed")
+        assert_equal(node.submitblock(block.serialize().hex()), None)
+        node.waitforblockheight(2)
+
+    def transaction_test(self, node, block_0_height, tx):
+        self.log.info("make block template with a transaction")
+
+        block_1 = node.getblock(node.getblockhash(block_0_height + 1))
+        block_2_hash = node.getblockhash(block_0_height + 2)
+
+        block_3 = create_block(
+            int(block_2_hash, 16),
+            create_coinbase(block_0_height + 3),
+            block_1["mediantime"] + 1,
+            txlist=[tx["hex"]],
+        )
+        assert_equal(len(block_3.vtx), 2)
+        add_witness_commitment(block_3)
+        block_3.solve()
+        assert_template(node, block_3, None)
+
+        self.log.info("checking block validity did not update the UTXO set")
+        # Call again to ensure the UTXO set wasn't updated
+        assert_template(node, block_3, None)
+
+    def overspending_transaction_test(self, node, block_0_height, tx):
+        self.log.info("Add an transaction that spends too much")
+
+        block_1 = node.getblock(node.getblockhash(block_0_height + 1))
+        block_2_hash = node.getblockhash(block_0_height + 2)
+
+        bad_tx = copy.deepcopy(tx)
+        bad_tx["tx"].vout[0].nValue = 10000000000
+        bad_tx_hex = bad_tx["tx"].serialize().hex()
+        assert_equal(
+            node.testmempoolaccept([bad_tx_hex])[0]["reject-reason"],
+            "bad-txns-in-belowout",
+        )
+        block_3 = create_block(
+            int(block_2_hash, 16),
+            create_coinbase(block_0_height + 3),
+            block_1["mediantime"] + 1,
+            txlist=[bad_tx_hex],
+        )
+        assert_equal(len(block_3.vtx), 2)
+        add_witness_commitment(block_3)
+        block_3.solve()
+
+        assert_template(node, block_3, "bad-txns-in-belowout")
+
+    def spend_twice_test(self, node, block_0_height, tx):
+        block_1 = node.getblock(node.getblockhash(block_0_height + 1))
+        block_2_hash = node.getblockhash(block_0_height + 2)
+
+        self.log.info("Can't spend coins twice")
+        tx_hex = tx["tx"].serialize().hex()
+        tx_2 = copy.deepcopy(tx)
+        tx_2_hex = tx_2["tx"].serialize().hex()
+        # Nothing wrong with these transactions individually
+        assert_equal(node.testmempoolaccept([tx_hex])[0]["allowed"], True)
+        assert_equal(node.testmempoolaccept([tx_2_hex])[0]["allowed"], True)
+        # But can't be combined
+        assert_equal(
+            node.testmempoolaccept([tx_hex, tx_2_hex])[0]["package-error"],
+            "package-contains-duplicates",
+        )
+        block_3 = create_block(
+            int(block_2_hash, 16),
+            create_coinbase(block_0_height + 3),
+            block_1["mediantime"] + 1,
+            txlist=[tx_hex, tx_2_hex],
+        )
+        assert_equal(len(block_3.vtx), 3)
+        add_witness_commitment(block_3)
+
+        assert_template(node, block_3, "bad-txns-inputs-missingorspent", submit=False)
+
+        return block_3
+
+    def parallel_test(self, node, block_3):
+        # Ensure that getblocktemplate can be called concurrently by many threads.
+        self.log.info("Check blocks in parallel")
+        check_50_blocks = lambda n: [
+            assert_template(n, block_3, "bad-txns-inputs-missingorspent", submit=False)
+            for _ in range(50)
+        ]
+        rpcs = [node.cli for _ in range(6)]
+        with ThreadPoolExecutor(max_workers=len(rpcs)) as threads:
+            list(threads.map(check_50_blocks, rpcs))
 
     def run_test(self):
         node = self.nodes[0]
@@ -164,6 +286,17 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         self.merkle_root_test(node, block_2)
         self.bad_timestamp_test(node, block_2)
         self.current_tip_test(node, block_2)
+        # This sets the PoW for the next test
+        self.pow_test(node, block_2)
+        self.submit_test(node, block_0_height, block_2)
+
+        self.log.info("Generate a transaction")
+        tx = MiniWallet(node).create_self_transfer()
+
+        self.transaction_test(node, block_0_height, tx)
+        self.overspending_transaction_test(node, block_0_height, tx)
+        block_3 = self.spend_twice_test(node, block_0_height, tx)
+        self.parallel_test(node, block_3)
 
 if __name__ == "__main__":
     MiningTemplateVerificationTest(__file__).main()
