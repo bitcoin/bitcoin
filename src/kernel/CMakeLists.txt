@@ -83,7 +83,6 @@ add_library(bitcoinkernel
 target_link_libraries(bitcoinkernel
   PRIVATE
     core_interface
-    bitcoin_clientversion
     bitcoin_crypto
     leveldb
     secp256k1
