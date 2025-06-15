@@ -25,7 +25,7 @@ class SnapshotImpl : public Snapshot {
   friend class SnapshotList;
 
   // SnapshotImpl is kept in a doubly-linked circular list. The SnapshotList
-  // implementation operates on the next/previous fields direcly.
+  // implementation operates on the next/previous fields directly.
   SnapshotImpl* prev_;
   SnapshotImpl* next_;
 

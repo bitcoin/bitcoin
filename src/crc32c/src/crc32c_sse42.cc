@@ -176,7 +176,7 @@ uint32_t ExtendSse42(uint32_t crc, const uint8_t* data, size_t size) {
     }
   }
 
-  // Proccess the data in predetermined block sizes with tables for quickly
+  // Process the data in predetermined block sizes with tables for quickly
   // combining the checksum. Experimentally it's better to use larger block
   // sizes where possible so use a hierarchy of decreasing block sizes.
   uint64_t l64 = l;
