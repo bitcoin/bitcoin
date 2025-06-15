@@ -94,7 +94,7 @@ struct ReadDestEmplace
 {
     ReadDestEmplace(TypeList<LocalType>, EmplaceFn&& emplace_fn) : m_emplace_fn(emplace_fn) {}
 
-    //! Simple case. If ReadField impementation calls this construct() method
+    //! Simple case. If ReadField implementation calls this construct() method
     //! with constructor arguments, just pass them on to the emplace function.
     template <typename... Args>
     decltype(auto) construct(Args&&... args)

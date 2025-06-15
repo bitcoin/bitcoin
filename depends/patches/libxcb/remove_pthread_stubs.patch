@@ -1,4 +1,4 @@
-Remove uneeded pthread-stubs dependency
+Remove unneeded pthread-stubs dependency
 --- a/configure
 +++ b/configure
 @@ -19695,7 +19695,7 @@ fi

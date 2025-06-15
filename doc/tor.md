@@ -59,7 +59,7 @@ outgoing connections, but more is possible.
         service provider.
         ------------------------------------------------------------------------
 
-If -proxy or -onion is specified multiple times, later occurences override
+If -proxy or -onion is specified multiple times, later occurrences override
 earlier ones and command line overrides the config file. UNIX domain sockets may
 be used for proxy connections. Set `-onion` or `-proxy` to the local socket path
 with the prefix `unix:` (e.g. `-onion=unix:/home/me/torsocket`).

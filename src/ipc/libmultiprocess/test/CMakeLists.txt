@@ -13,7 +13,7 @@ add_custom_target(mptests)
 add_custom_target(mpcheck COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS mptests)
 
 # Only add more convenient tests and check targets if project is being built
-# standlone, to prevent clashes with external projects.
+# standalone, to prevent clashes with external projects.
 if (MP_STANDALONE)
   add_custom_target(tests DEPENDS mptests)
   add_custom_target(check DEPENDS mpcheck)
