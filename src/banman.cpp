@@ -91,8 +91,8 @@ bool BanMan::IsBanned(const CNetAddr& net_addr)
     auto current_time = GetTime();
     LOCK(m_banned_mutex);
     for (const auto& it : m_banned) {
-        CSubNet sub_net = it.first;
-        CBanEntry ban_entry = it.second;
+        const CSubNet& sub_net = it.first;
+        const CBanEntry& ban_entry = it.second;
 
         if (current_time < ban_entry.nBanUntil && sub_net.Match(net_addr)) {
             return true;
@@ -107,7 +107,7 @@ bool BanMan::IsBanned(const CSubNet& sub_net)
     LOCK(m_banned_mutex);
     banmap_t::iterator i = m_banned.find(sub_net);
     if (i != m_banned.end()) {
-        CBanEntry ban_entry = (*i).second;
+        const CBanEntry& ban_entry = i->second;
         if (current_time < ban_entry.nBanUntil) {
             return true;
         }
@@ -185,10 +185,10 @@ void BanMan::SweepBanned()
 
     int64_t now = GetTime();
     bool notify_ui = false;
-    banmap_t::iterator it = m_banned.begin();
+    auto it = m_banned.begin();
     while (it != m_banned.end()) {
-        CSubNet sub_net = (*it).first;
-        CBanEntry ban_entry = (*it).second;
+        const CSubNet& sub_net = it->first;
+        const CBanEntry& ban_entry = it->second;
         if (!sub_net.IsValid() || now > ban_entry.nBanUntil) {
             m_banned.erase(it++);
             m_is_dirty = true;
