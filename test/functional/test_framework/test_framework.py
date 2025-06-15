@@ -1242,6 +1242,11 @@ class MasternodeInfo:
         ]
         address_funds = fundsAddr or self.fundsAddr
 
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit
+        if use_srt:
+            submit = False
+
         # Construct final command and arguments
         if self.evo:
             command = "register_evo"
@@ -1250,7 +1255,11 @@ class MasternodeInfo:
             command = "register_legacy" if self.legacy else "register"
             args = args + [address_funds, submit] # type: ignore
 
-        return node.protx(command, *args)
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
 
     def register_fund(self, node: TestNode, submit: bool, collateral_address: Optional[str] = None, ipAndPort: Optional[str] = None,
                       ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
@@ -1264,6 +1273,11 @@ class MasternodeInfo:
                 raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
             if platform_http_port is None:
                 raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit
+        if use_srt:
+            submit = False
 
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
@@ -1285,7 +1299,11 @@ class MasternodeInfo:
             command = "register_fund_legacy" if self.legacy else "register_fund"
             args = args + [address_funds, submit] # type: ignore
 
-        return node.protx(command, *args)
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
 
     def revoke(self, node: TestNode, submit: bool, reason: int, fundsAddr: Optional[str] = None) -> str:
         # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
@@ -1293,6 +1311,11 @@ class MasternodeInfo:
             raise AssertionError("proTxHash not set, did you call set_params()")
         if self.keyOperator is None:
             raise AssertionError("keyOperator not set, did you call generate_addresses()")
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit and (fundsAddr is not None)
+        if use_srt:
+            submit = False
 
         args = [
             self.proTxHash,
@@ -1306,13 +1329,22 @@ class MasternodeInfo:
         elif submit is not True:
             raise AssertionError("Cannot withhold transaction if relying on fundsAddr fallback behavior")
 
-        return node.protx('revoke', *args)
+        ret: str = node.protx('revoke', *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
 
     def update_registrar(self, node: TestNode, submit: bool, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
                          rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None) -> str:
         # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding proTxHash for this reason
         if self.proTxHash is None:
             raise AssertionError("proTxHash not set, did you call set_params()")
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit and (fundsAddr is not None)
+        if use_srt:
+            submit = False
 
         command = 'update_registrar_legacy' if self.legacy else 'update_registrar'
         args = [
@@ -1328,7 +1360,11 @@ class MasternodeInfo:
         elif submit is not True:
             raise AssertionError("Cannot withhold transaction if relying on fundsAddr fallback behavior")
 
-        return node.protx(command, *args)
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
 
     def update_service(self, node: TestNode, submit: bool, ipAndPort: Optional[str] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
                        platform_http_port: Optional[int] = None, address_operator: Optional[str] = None, fundsAddr: Optional[str] = None) -> str:
@@ -1347,6 +1383,11 @@ class MasternodeInfo:
             if platform_http_port is None:
                 raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
 
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit
+        if use_srt:
+            submit = False
+
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
             self.proTxHash,
@@ -1364,7 +1405,11 @@ class MasternodeInfo:
             command = "update_service"
             args = args + [address_operator, address_funds, submit] # type: ignore
 
-        return node.protx(command, *args)
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
 
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
