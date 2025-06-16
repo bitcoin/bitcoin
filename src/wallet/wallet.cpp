@@ -2297,7 +2297,6 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 
 void CWallet::CommitTransaction(
     CTransactionRef tx,
-    mapValue_t mapValue,
     std::vector<std::pair<std::string, std::string>> orderForm,
     std::optional<Txid> replaces_txid,
     std::optional<std::string> comment,
@@ -2312,7 +2311,6 @@ void CWallet::CommitTransaction(
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
         CHECK_NONFATAL(wtx.mapValue.empty());
         CHECK_NONFATAL(wtx.vOrderForm.empty());
-        wtx.mapValue = std::move(mapValue);
         if (replaces_txid) wtx.mapValue["replaces_txid"] = replaces_txid->ToString();
         if (comment) wtx.mapValue["comment"] = *comment;
         if (comment_to) wtx.mapValue["to"] = *comment_to;
