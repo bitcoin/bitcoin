@@ -103,9 +103,10 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
 {
     int numBlocks;
     interfaces::WalletTxStatus status;
-    interfaces::WalletOrderForm orderForm;
     bool inMempool;
-    interfaces::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, orderForm, inMempool, numBlocks);
+    std::vector<std::string> messages;
+    std::vector<std::string> payment_requests;
+    interfaces::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, messages, payment_requests, inMempool, numBlocks);
 
     QString strHTML;
 
@@ -297,24 +298,19 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
     // Message from normal bitcoin:URI (bitcoin:123...?message=example)
-    for (const std::pair<std::string, std::string>& r : orderForm) {
-        if (r.first == "Message")
-            strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
-
-        //
-        // PaymentRequest info:
-        //
-        if (r.first == "PaymentRequest")
-        {
-            QString merchant;
-            if (!GetPaymentRequestMerchant(r.second, merchant)) {
-                merchant.clear();
-            } else {
-                merchant = tr("%1 (Certificate was not verified)").arg(merchant);
-            }
-            if (!merchant.isNull()) {
-                strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
-            }
+    for (const std::string& msg : messages) {
+        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(msg, true) + "<br>";
+    }
+    // BIP 70 Payment Requests
+    for (const std::string& req : payment_requests) {
+        QString merchant;
+        if (!GetPaymentRequestMerchant(req, merchant)) {
+            merchant.clear();
+        } else {
+            merchant = tr("%1 (Certificate was not verified)").arg(merchant);
+        }
+        if (!merchant.isNull()) {
+            strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
         }
     }
 
