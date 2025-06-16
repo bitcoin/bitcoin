@@ -182,14 +182,15 @@ public:
     // These fields are kept to avoid losing metadata.
     std::optional<std::string> m_from;
     std::optional<std::string> m_message;
+    // Comment strings provided by the user
+    std::optional<std::string> m_comment;
+    std::optional<std::string> m_comment_to;
     /**
      * Key/value map with information about the transaction.
      *
      * The following keys can be read and written through the map and are
      * serialized in the wallet database:
      *
-     *     "comment", "to"   - comment strings provided to sendtoaddress,
-     *                         and sendmany wallet RPCs
      *     "replaces_txid"   - txid (as HexStr) of transaction replaced by
      *                         bumpfee on transaction created by bumpfee
      *     "replaced_by_txid" - txid (as HexStr) of transaction created by
@@ -206,6 +207,8 @@ public:
      *                         2014 (removed in commit 93a18a3)
      *     "from", "message" - obsolete fields that could be set in UI prior to
      *                         2011 (removed in commit 4d9b223)
+     *     "comment", "to"   - comment strings provided to sendtoaddress,
+     *                         and sendmany wallet RPCs
      */
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
@@ -267,6 +270,8 @@ public:
     void Serialize(Stream& s) const
     {
         mapValue_t mapValueCopy = mapValue;
+        if (m_comment) mapValueCopy["comment"] = *m_comment;
+        if (m_comment_to) mapValueCopy["to"] = *m_comment_to;
 
         mapValueCopy["fromaccount"] = "";
         if (nOrderPos != -1) {
@@ -300,15 +305,19 @@ public:
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
-        const auto it_op = mapValue.find("n");
-        nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi<int64_t>(it_op->second) : -1;
-        const auto it_ts = mapValue.find("timesmart");
-        nTimeSmart = (it_ts != mapValue.end()) ? static_cast<unsigned int>(LocaleIndependentAtoi<int64_t>(it_ts->second)) : 0;
+        for (const auto& [key, value] : mapValue) {
+            if (key == "n") nOrderPos = LocaleIndependentAtoi<int64_t>(value);
+            else if (key == "timesmart") nTimeSmart = LocaleIndependentAtoi<int64_t>(value);
+            else if (key == "comment") m_comment = value;
+            else if (key == "to") m_comment_to = value;
+        }
 
         mapValue.erase("fromaccount");
         mapValue.erase("spent");
         mapValue.erase("n");
         mapValue.erase("timesmart");
+        mapValue.erase("comment");
+        mapValue.erase("to");
     }
 
     void SetTx(CTransactionRef arg)
