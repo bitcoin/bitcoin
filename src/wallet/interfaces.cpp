@@ -49,7 +49,6 @@ using interfaces::WalletOrderForm;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
 using interfaces::WalletTxStatus;
-using interfaces::WalletValueMap;
 
 namespace wallet {
 // All members of the classes in this namespace are intentionally public, as the
@@ -84,7 +83,6 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     result.message = wtx.m_message;
     result.comment = wtx.m_comment;
     result.comment_to = wtx.m_comment_to;
-    result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
     return result;
 }

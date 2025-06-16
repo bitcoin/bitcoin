@@ -728,7 +728,6 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         copyTo->m_comment_to = copyFrom->m_comment_to;
         copyTo->m_replaces_txid = copyFrom->m_replaces_txid;
         copyTo->m_replaced_by_txid = copyFrom->m_replaced_by_txid;
-        copyTo->mapValue = copyFrom->mapValue;
         copyTo->vOrderForm = copyFrom->vOrderForm;
         // nTimeReceived not copied on purpose
         copyTo->nTimeSmart = copyFrom->nTimeSmart;
@@ -2236,7 +2235,6 @@ void CWallet::CommitTransaction(
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
-        CHECK_NONFATAL(wtx.mapValue.empty());
         CHECK_NONFATAL(wtx.vOrderForm.empty());
         if (replaces_txid) wtx.m_replaces_txid = replaces_txid;
         if (comment) wtx.m_comment = comment;
