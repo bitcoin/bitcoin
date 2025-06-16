@@ -695,17 +695,18 @@ public:
      * broadcasting the transaction.
      *
      * @param[in] tx The transaction to be broadcast.
-     * @param[in] orderForm BIP 70 / BIP 21 order form details to be set on the transaction.
      * @param[in] replaces_txid The txid of the transaction that this transaction replaces
      * @param[in] comment The user's comment for this transaction
      * @param[in] comment_to The comment for this transaction indicating where coins are sent to
+     * @param[in] messages The BIP 21 URI messages to attach to this transaction
      */
     void CommitTransaction(
         CTransactionRef tx,
-        std::vector<std::pair<std::string, std::string>> orderForm,
         std::optional<Txid> replaces_txid = std::nullopt,
         std::optional<std::string> comment = std::nullopt,
-        std::optional<std::string> comment_to = std::nullopt
+        std::optional<std::string> comment_to = std::nullopt,
+        const std::vector<std::string>& messages = {},
+        const std::vector<std::string>& payment_requests = {}
     );
 
     /** Pass this transaction to node for mempool insertion and relay to peers if flag set to true */

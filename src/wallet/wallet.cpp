@@ -2223,10 +2223,11 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 
 void CWallet::CommitTransaction(
     CTransactionRef tx,
-    std::vector<std::pair<std::string, std::string>> orderForm,
     std::optional<Txid> replaces_txid,
     std::optional<std::string> comment,
-    std::optional<std::string> comment_to
+    std::optional<std::string> comment_to,
+    const std::vector<std::string>& messages,
+    const std::vector<std::string>& payment_requests
 )
 {
     LOCK(cs_wallet);
@@ -2239,7 +2240,16 @@ void CWallet::CommitTransaction(
         if (replaces_txid) wtx.m_replaces_txid = replaces_txid;
         if (comment) wtx.m_comment = comment;
         if (comment_to) wtx.m_comment_to = comment_to;
-        wtx.vOrderForm = std::move(orderForm);
+        if (!messages.empty()) {
+            for (const std::string& msg : messages) {
+                wtx.vOrderForm.emplace_back("Message", msg);
+            }
+        }
+        if (!payment_requests.empty()) {
+            for (const std::string& msg : messages) {
+                wtx.vOrderForm.emplace_back("PaymentRequest", msg);
+            }
+        }
         return true;
     });
 

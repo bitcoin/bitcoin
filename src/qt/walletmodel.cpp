@@ -242,15 +242,16 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
     QByteArray transaction_array; /* store serialized transaction */
 
     {
-        std::vector<std::pair<std::string, std::string>> vOrderForm;
+        std::vector<std::string> messages;
         for (const SendCoinsRecipient &rcp : transaction.getRecipients())
         {
-            if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
-                vOrderForm.emplace_back("Message", rcp.message.toStdString());
+            if (!rcp.message.isEmpty()) { // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+                messages.emplace_back(rcp.message.toStdString());
+            }
         }
 
         auto& newTx = transaction.getWtx();
-        wallet().commitTransaction(newTx, std::move(vOrderForm));
+        wallet().commitTransaction(newTx, messages);
 
         DataStream ssTx;
         ssTx << TX_WITH_WITNESS(*newTx);
