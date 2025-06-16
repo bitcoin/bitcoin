@@ -199,14 +199,15 @@ public:
     // These fields are kept to avoid losing metadata.
     std::optional<std::string> m_from;
     std::optional<std::string> m_message;
+    // Comment strings provided by the user
+    std::optional<std::string> m_comment;
+    std::optional<std::string> m_comment_to;
     /**
      * Key/value map with information about the transaction.
      *
      * The following keys can be read and written through the map and are
      * serialized in the wallet database:
      *
-     *     "comment", "to"   - comment strings provided to sendtoaddress,
-     *                         and sendmany wallet RPCs
      *     "replaces_txid"   - txid (as HexStr) of transaction replaced by
      *                         bumpfee on transaction created by bumpfee
      *     "replaced_by_txid" - txid (as HexStr) of transaction created by
@@ -223,6 +224,8 @@ public:
      *                         2014 (removed in commit 93a18a3)
      *     "from", "message" - obsolete fields that could be set in UI prior to
      *                         2011 (removed in commit 4d9b223)
+     *     "comment", "to"   - comment strings provided to sendtoaddress,
+     *                         and sendmany wallet RPCs
      */
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
@@ -292,6 +295,8 @@ public:
         mapValue_t mapValueCopy = mapValue;
         if (m_from) mapValueCopy["from"] = *m_from;
         if (m_message) mapValueCopy["message"] = *m_message;
+        if (m_comment) mapValueCopy["comment"] = *m_comment;
+        if (m_comment_to) mapValueCopy["to"] = *m_comment_to;
 
         mapValueCopy["fromaccount"] = "";
         if (nOrderPos != -1) {
@@ -330,6 +335,8 @@ public:
             else if (key == "timesmart") nTimeSmart = LocaleIndependentAtoi<int64_t>(value);
             else if (key == "from") m_from = value;
             else if (key == "message") m_message = value;
+            else if (key == "comment") m_comment = value;
+            else if (key == "to") m_comment_to = value;
         }
 
         mapValue.erase("fromaccount");
@@ -338,6 +345,8 @@ public:
         mapValue.erase("timesmart");
         mapValue.erase("from");
         mapValue.erase("message");
+        mapValue.erase("comment");
+        mapValue.erase("to");
     }
 
     void SetTx(CTransactionRef arg)

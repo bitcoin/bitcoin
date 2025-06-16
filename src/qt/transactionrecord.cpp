@@ -77,7 +77,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 {
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     sub.type = TransactionRecord::SendToOther;
-                    sub.address = mapValue["to"];
+                    sub.address = wtx.comment_to.value_or("");
                 }
 
                 CAmount nValue = txout.nValue;
