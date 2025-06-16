@@ -318,7 +318,7 @@ static bool rest_block(const std::any& context,
         pos = pblockindex->GetBlockPos();
     }
 
-    std::vector<uint8_t> block_data{};
+    std::vector<std::byte> block_data{};
     if (!chainman.m_blockman.ReadRawBlock(block_data, pos)) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
@@ -326,7 +326,7 @@ static bool rest_block(const std::any& context,
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, std::as_bytes(std::span{block_data}));
+        req->WriteReply(HTTP_OK, block_data);
         return true;
     }
 

@@ -660,9 +660,9 @@ static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex& blockin
     return block;
 }
 
-static std::vector<uint8_t> GetRawBlockChecked(BlockManager& blockman, const CBlockIndex& blockindex)
+static std::vector<std::byte> GetRawBlockChecked(BlockManager& blockman, const CBlockIndex& blockindex)
 {
-    std::vector<uint8_t> data{};
+    std::vector<std::byte> data{};
     FlatFilePos pos{};
     {
         LOCK(cs_main);
@@ -812,7 +812,7 @@ static RPCHelpMan getblock()
         }
     }
 
-    const std::vector<uint8_t> block_data{GetRawBlockChecked(chainman.m_blockman, *pblockindex)};
+    const std::vector<std::byte> block_data{GetRawBlockChecked(chainman.m_blockman, *pblockindex)};
 
     if (verbosity <= 0) {
         return HexStr(block_data);

@@ -243,7 +243,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     LogDebug(BCLog::ZMQ, "Publish rawblock %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 
-    std::vector<uint8_t> block{};
+    std::vector<std::byte> block{};
     if (!m_get_block_by_index(block, *pindex)) {
         zmqError("Can't read block from disk");
         return false;
