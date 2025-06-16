@@ -32,7 +32,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
     Txid hash = wtx.tx->GetHash();
-    std::map<std::string, std::string> mapValue = wtx.value_map;
 
     bool all_from_me = true;
     bool any_from_me = false;
