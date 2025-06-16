@@ -392,6 +392,8 @@ struct WalletTx
     CAmount debit;
     CAmount change;
     int64_t time;
+    std::optional<std::string> from; // Deprecated
+    std::optional<std::string> message; // Deprecated
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
 
