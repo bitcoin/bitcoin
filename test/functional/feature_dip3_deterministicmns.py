@@ -244,7 +244,7 @@ class DIP3Test(BitcoinTestFramework):
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn: MasternodeInfo):
         node.sendtoaddress(mn.fundsAddr, 0.001)
-        proTxHash = node.protx('register' if softfork_active(node, 'v19') else 'register_legacy', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        proTxHash = mn.register(node, True)
         mn.set_params(proTxHash=proTxHash)
         self.generate(node, 1, sync_fun=self.no_op)
 

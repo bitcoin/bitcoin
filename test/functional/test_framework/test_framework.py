@@ -1186,6 +1186,8 @@ class MasternodeInfo:
             return -1
 
     def __init__(self, evo: bool, legacy: bool):
+        if evo and legacy:
+            raise AssertionError("EvoNodes are not allowed to use legacy scheme")
         self.evo = evo
         self.legacy = legacy
 
@@ -1204,6 +1206,7 @@ class MasternodeInfo:
 
     def set_node(self, nodeIdx: int, friendlyName: Optional[str] = None):
         self.nodeIdx = nodeIdx
+        self.nodePort = p2p_port(nodeIdx)
         self.friendlyName = friendlyName or f"mn-{'evo' if self.evo else 'reg'}-{self.nodeIdx}"
 
     def get_node(self, test: BitcoinTestFramework) -> TestNode:
@@ -1212,6 +1215,42 @@ class MasternodeInfo:
         if self.nodeIdx > len(test.nodes):
             raise AssertionError(f"Node at pos {self.nodeIdx} not present, did you start the node?")
         return test.nodes[self.nodeIdx]
+
+    def register(self, node: TestNode, submit: bool = True, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
+                 ipAndPort: Optional[str] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+                 operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
+                 platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None) -> str:
+        # EvoNode-specific fields are ignored for regular masternodes
+        if self.evo:
+            if platform_node_id is None:
+                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
+            if platform_p2p_port is None:
+                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
+            if platform_http_port is None:
+                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+
+        # Common arguments shared between regular masternodes and EvoNodes
+        args = [
+            collateral_txid or self.collateral_txid,
+            collateral_vout or self.collateral_vout,
+            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            ownerAddr or self.ownerAddr,
+            pubKeyOperator or self.pubKeyOperator,
+            votingAddr or self.votingAddr,
+            operator_reward or self.operator_reward,
+            rewards_address or self.rewards_address,
+        ]
+        address_funds = fundsAddr or self.fundsAddr
+
+        # Construct final command and arguments
+        if self.evo:
+            command = "register_evo"
+            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_funds, submit] # type: ignore
+        else:
+            command = "register_legacy" if self.legacy else "register"
+            args = args + [address_funds, submit] # type: ignore
+
+        return node.protx(command, *args)
 
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
@@ -1381,8 +1420,8 @@ class DashTestFramework(BitcoinTestFramework):
         mn.generate_addresses(self.nodes[0])
 
         platform_node_id = hash160(b'%d' % rnd).hex() if rnd is not None else hash160(b'%d' % node_p2p_port).hex()
-        platform_p2p_port = '%d' % (node_p2p_port + 101)
-        platform_http_port = '%d' % (node_p2p_port + 102)
+        platform_p2p_port = node_p2p_port + 101
+        platform_http_port = node_p2p_port + 102
 
         outputs = {mn.collateral_address: mn.get_collateral_value(), mn.fundsAddr: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
@@ -1393,11 +1432,9 @@ class DashTestFramework(BitcoinTestFramework):
         ipAndPort = '127.0.0.1:%d' % node_p2p_port
         operatorReward = idx
 
-        protx_result = None
-        if evo:
-            protx_result = self.nodes[0].protx("register_evo", collateral_txid, collateral_vout, ipAndPort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, platform_node_id, platform_p2p_port, platform_http_port, mn.fundsAddr, True)
-        else:
-            protx_result = self.nodes[0].protx("register_legacy" if mn.legacy else "register", collateral_txid, collateral_vout, ipAndPort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, True)
+        # platform_node_id, platform_p2p_port and platform_http_port are ignored for regular masternodes
+        protx_result = mn.register(self.nodes[0], True, collateral_txid=collateral_txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort, operator_reward=operatorReward,
+                                   platform_node_id=platform_node_id, platform_p2p_port=platform_p2p_port, platform_http_port=platform_http_port)
 
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         mn.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
@@ -1466,9 +1503,8 @@ class DashTestFramework(BitcoinTestFramework):
                                                mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, submit)
         else:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            protx_result = self.nodes[0].protx('register_legacy' if mn.legacy else 'register', txid, collateral_vout, ipAndPort,
-                                               mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, submit)
-
+            protx_result = mn.register(self.nodes[0], submit, collateral_txid=txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort,
+                                       operator_reward=operatorReward)
         if submit:
             proTxHash = protx_result
         else:
