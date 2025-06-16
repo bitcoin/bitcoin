@@ -60,7 +60,6 @@ struct WalletTxStatus;
 struct WalletMigrationResult;
 
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
-using WalletValueMap = std::map<std::string, std::string>;
 
 //! Interface for accessing a wallet.
 class Wallet
@@ -396,7 +395,6 @@ struct WalletTx
     std::optional<std::string> message; // Deprecated
     std::optional<std::string> comment;
     std::optional<std::string> comment_to;
-    std::map<std::string, std::string> value_map;
     bool is_coinbase;
 
     bool operator<(const WalletTx& a) const { return tx->GetHash() < a.tx->GetHash(); }
