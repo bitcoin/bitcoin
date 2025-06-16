@@ -128,11 +128,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx.is_coinbase)
     {
         strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
-    }
-    else if (wtx.value_map.count("from") && !wtx.value_map["from"].empty())
-    {
+    } else if (wtx.from) {
         // Online transaction
-        strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(wtx.value_map["from"]) + "<br>";
+        strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(*wtx.from) + "<br>";
     }
     else
     {
@@ -288,8 +286,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // Message
     //
-    if (wtx.value_map.count("message") && !wtx.value_map["message"].empty())
-        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["message"], true) + "<br>";
+    if (wtx.message) {
+        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(*wtx.message, true) + "<br>";
+    }
     if (wtx.value_map.count("comment") && !wtx.value_map["comment"].empty())
         strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["comment"], true) + "<br>";
 
