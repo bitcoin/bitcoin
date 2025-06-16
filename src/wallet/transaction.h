@@ -184,7 +184,11 @@ public:
     std::optional<std::string> m_comment_to;
     std::optional<Txid> m_replaces_txid;
     std::optional<Txid> m_replaced_by_txid;
-    std::vector<std::pair<std::string, std::string> > vOrderForm;
+    // BIP 21 URI Messages
+    std::vector<std::string> m_messages;
+    // BIP 70 Payment Request (deprecated, field kept to preserve metadata from old wallets)
+    std::vector<std::string> m_payment_requests;
+    unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
     /**
      * Stable timestamp that never changes, and reflects the order a transaction
@@ -219,7 +223,6 @@ public:
 
     void Init()
     {
-        vOrderForm.clear();
         nTimeReceived = 0;
         nTimeSmart = 0;
         fChangeCached = false;
@@ -250,13 +253,22 @@ public:
         if (nOrderPos != -1) string_values["n"] = util::ToString(nOrderPos);
         if (nTimeSmart) string_values["timesmart"] = strprintf("%u", nTimeSmart);
 
+        std::vector<std::pair<std::string, std::string>> msgs_reqs;
+        msgs_reqs.resize(m_messages.size() + m_payment_requests.size());
+        for (const std::string& msg : m_messages) {
+            msgs_reqs.emplace_back("Message", msg);
+        }
+        for (const std::string& req : m_payment_requests) {
+            msgs_reqs.emplace_back("PaymentRequest", req);
+        }
+
         std::vector<uint8_t> dummy_vector1; //!< Used to be vMerkleBranch
         std::vector<uint8_t> dummy_vector2; //!< Used to be vtxPrev
         bool dummy_bool = false; //!< Used to be fFromMe, and fSpent
         uint32_t dummy_int = 0; // Used to be fTimeReceivedIsTxTime
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
-        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << vOrderForm << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << msgs_reqs << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
     }
 
     template<typename Stream>
@@ -271,7 +283,8 @@ public:
         uint256 serialized_block_hash;
         int serializedIndex;
         std::map<std::string, std::string> string_values;
-        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> vOrderForm >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+        std::vector<std::pair<std::string, std::string>> msgs_reqs;
+        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> msgs_reqs >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
@@ -282,6 +295,11 @@ public:
             else if (key == "to") m_comment_to = value;
             else if (key == "replaces_txid") m_replaces_txid = Txid::FromHex(value);
             else if (key == "replaced_by_txid") m_replaced_by_txid = Txid::FromHex(value);
+        }
+
+        for (const auto& [type, data] : msgs_reqs) {
+            if (type == "Message") m_messages.emplace_back(data);
+            else if (type == "PaymentRequest") m_payment_requests.emplace_back(data);
         }
     }
 

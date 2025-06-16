@@ -728,7 +728,8 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         copyTo->m_comment_to = copyFrom->m_comment_to;
         copyTo->m_replaces_txid = copyFrom->m_replaces_txid;
         copyTo->m_replaced_by_txid = copyFrom->m_replaced_by_txid;
-        copyTo->vOrderForm = copyFrom->vOrderForm;
+        copyTo->m_messages = copyFrom->m_messages;
+        copyTo->m_payment_requests = copyFrom->m_payment_requests;
         // nTimeReceived not copied on purpose
         copyTo->nTimeSmart = copyFrom->nTimeSmart;
         // nOrderPos not copied on purpose
@@ -2236,20 +2237,11 @@ void CWallet::CommitTransaction(
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
-        CHECK_NONFATAL(wtx.vOrderForm.empty());
         if (replaces_txid) wtx.m_replaces_txid = replaces_txid;
         if (comment) wtx.m_comment = comment;
         if (comment_to) wtx.m_comment_to = comment_to;
-        if (!messages.empty()) {
-            for (const std::string& msg : messages) {
-                wtx.vOrderForm.emplace_back("Message", msg);
-            }
-        }
-        if (!payment_requests.empty()) {
-            for (const std::string& msg : messages) {
-                wtx.vOrderForm.emplace_back("PaymentRequest", msg);
-            }
-        }
+        if (!messages.empty()) wtx.m_messages = messages;
+        if (!payment_requests.empty()) wtx.m_payment_requests = payment_requests;
         return true;
     });
 
