@@ -125,6 +125,11 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     CBlockIndex* lower_block = chainman->ActiveChain()[tip.nHeight / 2];
     BOOST_CHECK(blockman.CheckBlockDataAvailability(tip, *lower_block));
 
+    // Ensure we don't fail due to the expected absence of undo data in the genesis block
+    CBlockIndex* upper_block = chainman->ActiveChain()[2];
+    CBlockIndex* genesis = chainman->ActiveChain()[0];
+    BOOST_CHECK(blockman.CheckBlockDataAvailability(*upper_block, *genesis, BlockStatus{BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO}));
+
     // Prune half of the blocks
     int height_to_prune = tip.nHeight / 2;
     CBlockIndex* first_available_block = chainman->ActiveChain()[height_to_prune + 1];
@@ -135,6 +140,11 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK_EQUAL(blockman.GetFirstBlock(tip, BLOCK_HAVE_DATA), first_available_block);
     BOOST_CHECK(blockman.CheckBlockDataAvailability(tip, *first_available_block));
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
+
+    // Simulate that the first available block is missing undo data and
+    // detect this by using a status mask.
+    first_available_block->nStatus &= ~BLOCK_HAVE_UNDO;
+    BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *first_available_block, BlockStatus{BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO}));
 }
 
 BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
