@@ -369,7 +369,9 @@ Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&
 
     // commit/broadcast the tx
     CTransactionRef tx = MakeTransactionRef(std::move(mtx));
-    wallet.CommitTransaction(tx, oldWtx.mapValue, oldWtx.vOrderForm, oldWtx.GetHash());
+    std::optional<std::string> comment = oldWtx.mapValue.contains("comment") ? std::optional(oldWtx.mapValue.at("comment")) : std::nullopt;
+    std::optional<std::string> comment_to = oldWtx.mapValue.contains("to") ? std::optional(oldWtx.mapValue.at("to")) : std::nullopt;
+    wallet.CommitTransaction(tx, oldWtx.vOrderForm, oldWtx.GetHash(), comment, comment_to);
 
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();
