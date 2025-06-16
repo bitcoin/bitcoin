@@ -1713,7 +1713,7 @@ static RPCHelpMan bls_generate()
         "bls generate",
         "\nReturns a BLS secret/public key pair.\n",
         {
-            {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "Set it true if need in legacy BLS scheme"},
+            {"legacy", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED, can be set if -deprecatedrpc=legacy_mn is passed) Set true to use legacy BLS scheme"},
         },
         RPCResult{RPCResult::Type::OBJ,
                   "",
@@ -1727,6 +1727,9 @@ static RPCHelpMan bls_generate()
             sk.MakeNewKey();
             bool bls_legacy_scheme{false};
             if (!request.params[0].isNull()) {
+                if (!IsDeprecatedRPCEnabled("legacy_mn")) {
+                    throw std::runtime_error("DEPRECATED: Pass config option -deprecatedrpc=legacy_mn to set this argument");
+                }
                 bls_legacy_scheme = ParseBoolV(request.params[0], "bls_legacy_scheme");
             }
             UniValue ret(UniValue::VOBJ);
