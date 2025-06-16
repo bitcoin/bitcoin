@@ -394,6 +394,8 @@ struct WalletTx
     int64_t time;
     std::optional<std::string> from; // Deprecated
     std::optional<std::string> message; // Deprecated
+    std::optional<std::string> comment;
+    std::optional<std::string> comment_to;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
 
