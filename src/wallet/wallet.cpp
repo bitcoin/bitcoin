@@ -724,6 +724,8 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         if (copyFrom == copyTo) continue;
         assert(copyFrom && "Oldest wallet transaction in range assumed to have been found.");
         if (!copyFrom->IsEquivalentTo(*copyTo)) continue;
+        copyTo->m_comment = copyFrom->m_comment;
+        copyTo->m_comment_to = copyFrom->m_comment_to;
         copyTo->mapValue = copyFrom->mapValue;
         copyTo->vOrderForm = copyFrom->vOrderForm;
         // fTimeReceivedIsTxTime not copied on purpose
@@ -2232,8 +2234,8 @@ void CWallet::CommitTransaction(
         CHECK_NONFATAL(wtx.mapValue.empty());
         CHECK_NONFATAL(wtx.vOrderForm.empty());
         if (replaces_txid) wtx.mapValue["replaces_txid"] = replaces_txid->ToString();
-        if (comment) wtx.mapValue["comment"] = *comment;
-        if (comment_to) wtx.mapValue["to"] = *comment_to;
+        if (comment) wtx.m_comment = comment;
+        if (comment_to) wtx.m_comment_to = comment_to;
         wtx.vOrderForm = std::move(orderForm);
         wtx.fTimeReceivedIsTxTime = true;
         return true;
