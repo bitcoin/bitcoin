@@ -1326,6 +1326,42 @@ class MasternodeInfo:
 
         return node.protx(command, *args)
 
+    def update_service(self, node: TestNode, ipAndPort: Optional[str] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
+                       platform_http_port: Optional[int] = None, address_operator: Optional[str] = None, fundsAddr: Optional[str] = None) -> str:
+        # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
+        if self.proTxHash is None:
+            raise AssertionError("proTxHash not set, did you call set_params()")
+        if self.keyOperator is None:
+            raise AssertionError("keyOperator not set, did you call generate_addresses()")
+
+        # EvoNode-specific fields are ignored for regular masternodes
+        if self.evo:
+            if platform_node_id is None:
+                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
+            if platform_p2p_port is None:
+                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
+            if platform_http_port is None:
+                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+
+        # Common arguments shared between regular masternodes and EvoNodes
+        args = [
+            self.proTxHash,
+            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            self.keyOperator,
+        ]
+        address_funds = fundsAddr or self.fundsAddr
+        address_operator = address_operator or ""
+
+        # Construct final command and arguments
+        if self.evo:
+            command = "update_service_evo"
+            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_operator, address_funds] # type: ignore
+        else:
+            command = "update_service"
+            args = args + [address_operator, address_funds] # type: ignore
+
+        return node.protx(command, *args)
+
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
         """Tests must this method to change default values for number of nodes, topology, etc"""
@@ -1527,8 +1563,8 @@ class DashTestFramework(BitcoinTestFramework):
         # For the sake of the test, generate random nodeid, p2p and http platform values
         r = rnd if rnd is not None else random.randint(21000, 65000)
         platform_node_id = hash160(b'%d' % r).hex()
-        platform_p2p_port = '%d' % (r + 1)
-        platform_http_port = '%d' % (r + 2)
+        platform_p2p_port = r + 1
+        platform_http_port = r + 2
 
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
@@ -1536,7 +1572,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         protx_success = False
         try:
-            protx_result = self.nodes[0].protx('update_service_evo', evo_info.proTxHash, f'127.0.0.1:{evo_info.nodePort}', evo_info.keyOperator, platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
+            protx_result = evo_info.update_service(self.nodes[0], f'127.0.0.1:{evo_info.nodePort}', platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
             self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
             evo_info.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
@@ -1583,12 +1619,13 @@ class DashTestFramework(BitcoinTestFramework):
         else:
             proTxHash = self.nodes[0].sendrawtransaction(protx_result)
 
+        mn.set_params(proTxHash=proTxHash, operator_reward=operatorReward, collateral_txid=txid, collateral_vout=collateral_vout, nodePort=port)
+
         if operatorReward > 0:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             operatorPayoutAddress = self.nodes[0].getnewaddress()
-            self.nodes[0].protx('update_service', proTxHash, ipAndPort, mn.keyOperator, operatorPayoutAddress, mn.fundsAddr)
+            mn.update_service(self.nodes[0], ipAndPort=ipAndPort, address_operator=operatorPayoutAddress)
 
-        mn.set_params(proTxHash=proTxHash, operator_reward=operatorReward, collateral_txid=txid, collateral_vout=collateral_vout, nodePort=port)
         self.mninfo.append(mn)
         self.log.info("Prepared MN %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
 

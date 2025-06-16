@@ -270,7 +270,7 @@ class DIP3Test(BitcoinTestFramework):
 
     def test_protx_update_service(self, mn: MasternodeInfo):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
-        self.nodes[0].protx('update_service', mn.proTxHash, '127.0.0.2:%d' % mn.nodePort, mn.keyOperator, "", mn.fundsAddr)
+        mn.update_service(self.nodes[0], ipAndPort=f'127.0.0.2:{mn.nodePort}')
         self.generate(self.nodes[0], 1)
         for node in self.nodes:
             protx_info = node.protx('info', mn.proTxHash)
@@ -279,7 +279,7 @@ class DIP3Test(BitcoinTestFramework):
             assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.nodePort)
 
         # undo
-        self.nodes[0].protx('update_service', mn.proTxHash, '127.0.0.1:%d' % mn.nodePort, mn.keyOperator, "", mn.fundsAddr)
+        mn.update_service(self.nodes[0])
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
 
     def assert_mnlists(self, mns):
