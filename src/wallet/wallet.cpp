@@ -2219,7 +2219,9 @@ void CWallet::CommitTransaction(
     CTransactionRef tx,
     mapValue_t mapValue,
     std::vector<std::pair<std::string, std::string>> orderForm,
-    std::optional<Txid> replaces_txid
+    std::optional<Txid> replaces_txid,
+    std::optional<std::string> comment,
+    std::optional<std::string> comment_to
 )
 {
     LOCK(cs_wallet);
@@ -2232,6 +2234,8 @@ void CWallet::CommitTransaction(
         CHECK_NONFATAL(wtx.vOrderForm.empty());
         wtx.mapValue = std::move(mapValue);
         if (replaces_txid) wtx.mapValue["replaces_txid"] = replaces_txid->ToString();
+        if (comment) wtx.mapValue["comment"] = *comment;
+        if (comment_to) wtx.mapValue["to"] = *comment_to;
         wtx.vOrderForm = std::move(orderForm);
         wtx.fTimeReceivedIsTxTime = true;
         return true;
