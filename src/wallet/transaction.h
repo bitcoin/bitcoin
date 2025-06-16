@@ -147,9 +147,6 @@ struct CachableAmount
 };
 
 
-typedef std::map<std::string, std::string> mapValue_t;
-
-
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
  * but old wallet.dat files may still contain vtxPrev vectors of CMerkleTxs.
@@ -187,28 +184,6 @@ public:
     std::optional<std::string> m_comment_to;
     std::optional<Txid> m_replaces_txid;
     std::optional<Txid> m_replaced_by_txid;
-    /**
-     * Key/value map with information about the transaction.
-     *
-     * The following keys are serialized in the wallet database, but shouldn't
-     * be read or written through the map (they will be temporarily added and
-     * removed from the map during serialization):
-     *
-     *     "fromaccount"     - serialized strFromAccount value
-     *     "n"               - serialized nOrderPos value
-     *     "timesmart"       - serialized nTimeSmart value
-     *     "spent"           - serialized vfSpent value that existed prior to
-     *                         2014 (removed in commit 93a18a3)
-     *     "from", "message" - obsolete fields that could be set in UI prior to
-     *                         2011 (removed in commit 4d9b223)
-     *     "comment", "to"   - comment strings provided to sendtoaddress,
-     *                         and sendmany wallet RPCs
-     *     "replaces_txid"   - txid (as HexStr) of transaction replaced by
-     *                         bumpfee on transaction created by bumpfee
-     *     "replaced_by_txid" - txid (as HexStr) of transaction created by
-     *                         bumpfee on transaction replaced by bumpfee
-     */
-    mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int nTimeReceived; //!< time received by this node
     /**
@@ -244,7 +219,6 @@ public:
 
     void Init()
     {
-        mapValue.clear();
         vOrderForm.clear();
         nTimeReceived = 0;
         nTimeSmart = 0;
@@ -267,19 +241,14 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        mapValue_t mapValueCopy = mapValue;
-        if (m_comment) mapValueCopy["comment"] = *m_comment;
-        if (m_comment_to) mapValueCopy["to"] = *m_comment_to;
-        if (m_replaces_txid) mapValueCopy["replaces_txid"] = m_replaces_txid->ToString();
-        if (m_replaced_by_txid) mapValueCopy["replaced_by_txid"] = m_replaced_by_txid->ToString();
-
-        mapValueCopy["fromaccount"] = "";
-        if (nOrderPos != -1) {
-            mapValueCopy["n"] = util::ToString(nOrderPos);
-        }
-        if (nTimeSmart) {
-            mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
-        }
+        std::map<std::string, std::string> string_values;
+        if (m_comment) string_values["comment"] = *m_comment;
+        if (m_comment_to) string_values["to"] = *m_comment_to;
+        if (m_replaces_txid) string_values["replaces_txid"] = m_replaces_txid->ToString();
+        if (m_replaced_by_txid) string_values["replaced_by_txid"] = m_replaced_by_txid->ToString();
+        string_values["fromaccount"] = "";
+        if (nOrderPos != -1) string_values["n"] = util::ToString(nOrderPos);
+        if (nTimeSmart) string_values["timesmart"] = strprintf("%u", nTimeSmart);
 
         std::vector<uint8_t> dummy_vector1; //!< Used to be vMerkleBranch
         std::vector<uint8_t> dummy_vector2; //!< Used to be vtxPrev
@@ -287,7 +256,7 @@ public:
         uint32_t dummy_int = 0; // Used to be fTimeReceivedIsTxTime
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
-        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << string_values << vOrderForm << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
     }
 
     template<typename Stream>
@@ -301,11 +270,12 @@ public:
         uint32_t dummy_int; // Used to be fTimeReceivedIsTxTime
         uint256 serialized_block_hash;
         int serializedIndex;
-        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+        std::map<std::string, std::string> string_values;
+        s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> string_values >> vOrderForm >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
-        for (const auto& [key, value] : mapValue) {
+        for (const auto& [key, value] : string_values) {
             if (key == "n") nOrderPos = LocaleIndependentAtoi<int64_t>(value);
             else if (key == "timesmart") nTimeSmart = LocaleIndependentAtoi<int64_t>(value);
             else if (key == "comment") m_comment = value;
@@ -313,15 +283,6 @@ public:
             else if (key == "replaces_txid") m_replaces_txid = Txid::FromHex(value);
             else if (key == "replaced_by_txid") m_replaced_by_txid = Txid::FromHex(value);
         }
-
-        mapValue.erase("fromaccount");
-        mapValue.erase("spent");
-        mapValue.erase("n");
-        mapValue.erase("timesmart");
-        mapValue.erase("comment");
-        mapValue.erase("to");
-        mapValue.erase("replaces_txid");
-        mapValue.erase("replaced_by_txid");
     }
 
     void SetTx(CTransactionRef arg)
