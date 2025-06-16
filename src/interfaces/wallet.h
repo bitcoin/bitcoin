@@ -57,8 +57,6 @@ struct WalletTxOut;
 struct WalletTxStatus;
 struct WalletMigrationResult;
 
-using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
-
 //! Interface for accessing a wallet.
 class Wallet
 {
@@ -194,7 +192,8 @@ public:
     //! Get transaction details.
     virtual WalletTx getWalletTxDetails(const Txid& txid,
         WalletTxStatus& tx_status,
-        WalletOrderForm& order_form,
+        std::vector<std::string>& messages,
+        std::vector<std::string>& payment_requests,
         bool& in_mempool,
         int& num_blocks) = 0;
 

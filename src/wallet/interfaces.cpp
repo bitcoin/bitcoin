@@ -44,7 +44,6 @@ using interfaces::WalletAddress;
 using interfaces::WalletBalances;
 using interfaces::WalletLoader;
 using interfaces::WalletMigrationResult;
-using interfaces::WalletOrderForm;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
 using interfaces::WalletTxStatus;
@@ -357,7 +356,8 @@ public:
     }
     WalletTx getWalletTxDetails(const Txid& txid,
         WalletTxStatus& tx_status,
-        WalletOrderForm& order_form,
+        std::vector<std::string>& messages,
+        std::vector<std::string>& payment_requests,
         bool& in_mempool,
         int& num_blocks) override
     {
@@ -366,7 +366,8 @@ public:
         if (mi != m_wallet->mapWallet.end()) {
             num_blocks = m_wallet->GetLastBlockHeight();
             in_mempool = mi->second.InMempool();
-            order_form = mi->second.vOrderForm;
+            messages = mi->second.m_messages;
+            payment_requests = mi->second.m_payment_requests;
             tx_status = MakeWalletTxStatus(*m_wallet, mi->second);
             return MakeWalletTx(*m_wallet, mi->second);
         }
