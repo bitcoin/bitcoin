@@ -59,6 +59,9 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     }
     entry.pushKV("bip125-replaceable", rbfStatus);
 
+    if (wtx.m_comment) entry.pushKV("comment", *wtx.m_comment);
+    if (wtx.m_comment_to) entry.pushKV("to", *wtx.m_comment_to);
+
     for (const std::pair<const std::string, std::string>& item : wtx.mapValue)
         entry.pushKV(item.first, item.second);
 }

@@ -82,6 +82,8 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     result.time = wtx.GetTxTime();
     result.from = wtx.m_from;
     result.message = wtx.m_message;
+    result.comment = wtx.m_comment;
+    result.comment_to = wtx.m_comment_to;
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
     return result;
