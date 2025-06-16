@@ -185,16 +185,10 @@ public:
     // Comment strings provided by the user
     std::optional<std::string> m_comment;
     std::optional<std::string> m_comment_to;
+    std::optional<Txid> m_replaces_txid;
+    std::optional<Txid> m_replaced_by_txid;
     /**
      * Key/value map with information about the transaction.
-     *
-     * The following keys can be read and written through the map and are
-     * serialized in the wallet database:
-     *
-     *     "replaces_txid"   - txid (as HexStr) of transaction replaced by
-     *                         bumpfee on transaction created by bumpfee
-     *     "replaced_by_txid" - txid (as HexStr) of transaction created by
-     *                         bumpfee on transaction replaced by bumpfee
      *
      * The following keys are serialized in the wallet database, but shouldn't
      * be read or written through the map (they will be temporarily added and
@@ -209,6 +203,10 @@ public:
      *                         2011 (removed in commit 4d9b223)
      *     "comment", "to"   - comment strings provided to sendtoaddress,
      *                         and sendmany wallet RPCs
+     *     "replaces_txid"   - txid (as HexStr) of transaction replaced by
+     *                         bumpfee on transaction created by bumpfee
+     *     "replaced_by_txid" - txid (as HexStr) of transaction created by
+     *                         bumpfee on transaction replaced by bumpfee
      */
     mapValue_t mapValue;
     std::vector<std::pair<std::string, std::string> > vOrderForm;
@@ -272,6 +270,8 @@ public:
         mapValue_t mapValueCopy = mapValue;
         if (m_comment) mapValueCopy["comment"] = *m_comment;
         if (m_comment_to) mapValueCopy["to"] = *m_comment_to;
+        if (m_replaces_txid) mapValueCopy["replaces_txid"] = m_replaces_txid->ToString();
+        if (m_replaced_by_txid) mapValueCopy["replaced_by_txid"] = m_replaced_by_txid->ToString();
 
         mapValueCopy["fromaccount"] = "";
         if (nOrderPos != -1) {
@@ -310,6 +310,8 @@ public:
             else if (key == "timesmart") nTimeSmart = LocaleIndependentAtoi<int64_t>(value);
             else if (key == "comment") m_comment = value;
             else if (key == "to") m_comment_to = value;
+            else if (key == "replaces_txid") m_replaces_txid = Txid::FromHex(value);
+            else if (key == "replaced_by_txid") m_replaced_by_txid = Txid::FromHex(value);
         }
 
         mapValue.erase("fromaccount");
@@ -318,6 +320,8 @@ public:
         mapValue.erase("timesmart");
         mapValue.erase("comment");
         mapValue.erase("to");
+        mapValue.erase("replaces_txid");
+        mapValue.erase("replaced_by_txid");
     }
 
     void SetTx(CTransactionRef arg)
