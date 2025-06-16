@@ -22,6 +22,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/bip32.h>
 #include <util/check.h>
 #include <util/result.h>
 #include <util/strencodings.h>
@@ -1380,6 +1381,15 @@ std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext
         }
     }
     return std::make_pair(descendant, origin);
+}
+
+std::vector<uint32_t> ParsePathBIP32(const std::string& path)
+{
+    std::vector<uint32_t> out;
+    if (!ParseHDKeypath(path, out)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP32 keypath");
+    }
+    return out;
 }
 
 /** Convert a vector of bilingual strings to a UniValue::VARR containing their original untranslated values. */

@@ -162,6 +162,9 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
 //! @return the resulting extended private key and origin info (blank if path is empty)
 std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const std::vector<uint32_t>& path);
 
+//! Parse BIP32 path
+std::vector<uint32_t> ParsePathBIP32(const std::string& path);
+
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
  * dictionaries can be nested in json. The top-level outer type is "NONE".
