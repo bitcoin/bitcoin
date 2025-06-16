@@ -286,11 +286,10 @@ public:
 
         return txr.tx;
     }
-    void commitTransaction(CTransactionRef tx,
-        WalletOrderForm order_form) override
+    void commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) override
     {
         LOCK(m_wallet->cs_wallet);
-        m_wallet->CommitTransaction(std::move(tx), std::move(order_form));
+        m_wallet->CommitTransaction(std::move(tx), /*replaces_txid=*/std::nullopt, /*comment=*/std::nullopt, /*comment_to=*/std::nullopt, messages);
     }
     bool transactionCanBeAbandoned(const Txid& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
     bool abandonTransaction(const Txid& txid) override
