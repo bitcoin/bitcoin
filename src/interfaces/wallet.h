@@ -153,7 +153,6 @@ public:
 
     //! Commit transaction.
     virtual void commitTransaction(CTransactionRef tx,
-        WalletValueMap value_map,
         WalletOrderForm order_form) = 0;
 
     //! Return whether transaction can be abandoned.
