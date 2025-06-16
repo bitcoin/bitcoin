@@ -696,8 +696,14 @@ public:
      * @param[in] tx The transaction to be broadcast.
      * @param[in] mapValue key-values to be set on the transaction.
      * @param[in] orderForm BIP 70 / BIP 21 order form details to be set on the transaction.
+     * @param[in] replaces_txid The txid of the transaction that this transaction replaces
      */
-    void CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm);
+    void CommitTransaction(
+        CTransactionRef tx,
+        mapValue_t mapValue,
+        std::vector<std::pair<std::string, std::string>> orderForm,
+        std::optional<Txid> replaces_txid = std::nullopt
+    );
 
     /** Pass this transaction to node for optional mempool insertion and relay to peers. */
     bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, node::TxBroadcast broadcast_method) const
