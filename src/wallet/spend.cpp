@@ -370,7 +370,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // be a 1-block reorg away from the chain where transactions A and C
             // were accepted to another chain where B, B', and C were all
             // accepted.
-            if (nDepth == 0 && wtx.mapValue.count("replaces_txid")) {
+            if (nDepth == 0 && wtx.m_replaces_txid) {
                 safeTx = false;
             }
 
@@ -382,7 +382,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             // intending to replace A', but potentially resulting in a scenario
             // where A, A', and D could all be accepted (instead of just B and
             // D, or just A and A' like the user would want).
-            if (nDepth == 0 && wtx.mapValue.count("replaced_by_txid")) {
+            if (nDepth == 0 && wtx.m_replaced_by_txid) {
                 safeTx = false;
             }
 
