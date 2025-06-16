@@ -155,10 +155,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // To
     //
-    if (wtx.value_map.contains("to") && !wtx.value_map["to"].empty())
-    {
+    if (wtx.comment_to) {
         // Online transaction
-        std::string strAddress = wtx.value_map["to"];
+        std::string strAddress = *wtx.comment_to;
         strHTML += "<b>" + tr("To") + ":</b> ";
         CTxDestination dest = DecodeDestination(strAddress);
         std::string name;
@@ -210,8 +209,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                 if (toSelf && all_from_me)
                     continue;
 
-                if (!wtx.value_map.contains("to") || wtx.value_map["to"].empty())
-                {
+                if (!wtx.comment_to) {
                     // Offline transaction
                     CTxDestination address;
                     if (ExtractDestination(txout.scriptPubKey, address))
@@ -274,8 +272,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx.message) {
         strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(*wtx.message, true) + "<br>";
     }
-    if (wtx.value_map.count("comment") && !wtx.value_map["comment"].empty())
-        strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["comment"], true) + "<br>";
+    if (wtx.comment) {
+        strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(*wtx.comment, true) + "<br>";
+    }
 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxHash() + "<br>";
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
