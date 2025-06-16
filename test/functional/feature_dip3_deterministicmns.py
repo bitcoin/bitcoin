@@ -237,7 +237,7 @@ class DIP3Test(BitcoinTestFramework):
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn: MasternodeInfo):
         node.sendtoaddress(mn.fundsAddr, mn.get_collateral_value() + 0.001)
-        txid = node.protx('register_fund' if softfork_active(node, 'v19') else 'register_fund_legacy', mn.collateral_address, '127.0.0.1:%d' % mn.nodePort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, mn.operator_reward, mn.rewards_address, mn.fundsAddr)
+        txid = mn.register_fund(node, True)
         vout = mn.get_collateral_vout(node, txid)
         mn.set_params(proTxHash=txid, collateral_txid=txid, collateral_vout=vout)
 

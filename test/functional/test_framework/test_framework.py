@@ -1252,6 +1252,41 @@ class MasternodeInfo:
 
         return node.protx(command, *args)
 
+    def register_fund(self, node: TestNode, submit: bool = True, collateral_address: Optional[str] = None, ipAndPort: Optional[str] = None,
+                      ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+                      operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
+                      platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None) -> str:
+        # EvoNode-specific fields are ignored for regular masternodes
+        if self.evo:
+            if platform_node_id is None:
+                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
+            if platform_p2p_port is None:
+                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
+            if platform_http_port is None:
+                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+
+        # Common arguments shared between regular masternodes and EvoNodes
+        args = [
+            collateral_address or self.collateral_address,
+            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            ownerAddr or self.ownerAddr,
+            pubKeyOperator or self.pubKeyOperator,
+            votingAddr or self.votingAddr,
+            operator_reward or self.operator_reward,
+            rewards_address or self.rewards_address,
+        ]
+        address_funds = fundsAddr or self.fundsAddr
+
+        # Construct final command and arguments
+        if self.evo:
+            command = "register_fund_evo"
+            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_funds, submit] # type: ignore
+        else:
+            command = "register_fund_legacy" if self.legacy else "register_fund"
+            args = args + [address_funds, submit] # type: ignore
+
+        return node.protx(command, *args)
+
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
         """Tests must this method to change default values for number of nodes, topology, etc"""
@@ -1499,8 +1534,7 @@ class DashTestFramework(BitcoinTestFramework):
         submit = (idx % 4) < 2
 
         if register_fund:
-            protx_result = self.nodes[0].protx('register_fund_legacy' if mn.legacy else 'register_fund', mn.collateral_address, ipAndPort,
-                                               mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, submit)
+            protx_result = mn.register_fund(self.nodes[0], submit, ipAndPort=ipAndPort, operator_reward=operatorReward)
         else:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             protx_result = mn.register(self.nodes[0], submit, collateral_txid=txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort,
