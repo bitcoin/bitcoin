@@ -726,6 +726,8 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         if (!copyFrom->IsEquivalentTo(*copyTo)) continue;
         copyTo->m_comment = copyFrom->m_comment;
         copyTo->m_comment_to = copyFrom->m_comment_to;
+        copyTo->m_replaces_txid = copyFrom->m_replaces_txid;
+        copyTo->m_replaced_by_txid = copyFrom->m_replaced_by_txid;
         copyTo->mapValue = copyFrom->mapValue;
         copyTo->vOrderForm = copyFrom->vOrderForm;
         // nTimeReceived not copied on purpose
@@ -950,9 +952,9 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     CWalletTx& wtx = (*mi).second;
 
     // Ensure for now that we're not overwriting data
-    assert(wtx.mapValue.count("replaced_by_txid") == 0);
+    Assert(!wtx.m_replaced_by_txid);
 
-    wtx.mapValue["replaced_by_txid"] = newHash.ToString();
+    wtx.m_replaced_by_txid = newHash;
 
     // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
     RefreshMempoolStatus(wtx, chain());
@@ -2236,7 +2238,7 @@ void CWallet::CommitTransaction(
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
         CHECK_NONFATAL(wtx.mapValue.empty());
         CHECK_NONFATAL(wtx.vOrderForm.empty());
-        if (replaces_txid) wtx.mapValue["replaces_txid"] = replaces_txid->ToString();
+        if (replaces_txid) wtx.m_replaces_txid = replaces_txid;
         if (comment) wtx.m_comment = comment;
         if (comment_to) wtx.m_comment_to = comment_to;
         wtx.vOrderForm = std::move(orderForm);
