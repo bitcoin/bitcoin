@@ -250,7 +250,7 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
         }
 
         auto& newTx = transaction.getWtx();
-        wallet().commitTransaction(newTx, /*value_map=*/{}, std::move(vOrderForm));
+        wallet().commitTransaction(newTx, std::move(vOrderForm));
 
         DataStream ssTx;
         ssTx << TX_WITH_WITNESS(*newTx);
