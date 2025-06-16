@@ -79,6 +79,8 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
     result.debit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/true);
     result.change = CachedTxGetChange(wallet, wtx);
     result.time = wtx.GetTxTime();
+    result.from = wtx.m_from;
+    result.message = wtx.m_message;
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
     return result;
