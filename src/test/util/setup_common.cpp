@@ -399,7 +399,7 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::vector<const char*>& e
             /*TestChainBRRBeforeActivationSetup=*/
             {  497, uint256S("0x0857a9b5db51835b1c828f019f4c664b5fe6c28ac44a6d868436930f832d31e5") },
             /*TestChainV19BeforeActivationSetup=*/
-            {  494, uint256S("0x06ec12cb5419daf83e04455a24ff8f27fef76cfdbd3e8723ca4946fab91a2f11") },
+            {  494, uint256S("0x44ee5c8a5e5cbd4437d63c54ddc1d40329be811b25c492fa901e11cdf408f905") },
         }
     };
 

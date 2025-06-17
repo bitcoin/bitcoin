@@ -925,7 +925,9 @@ public:
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST_INSTANTSEND);
         UpdateLLMQTestParametersFromArgs(args, Consensus::LLMQType::LLMQ_TEST_PLATFORM);
         UpdateLLMQInstantSendDIP0024FromArgs(args);
+        // V20 features for CbTx (credit pool, CL) have no meaning without masternodes
         assert(consensus.V20Height >= consensus.DIP0003Height);
+        // MN_RR reallocate part of reward to CreditPool which exits since V20
         assert(consensus.MN_RRHeight >= consensus.V20Height);
     }
 
