@@ -248,7 +248,7 @@ public:
 // it is not possible to use the lock's copy of the mutex for that purpose.
 // Instead, the original mutex needs to be passed back to the reverse_lock for
 // the sake of thread-safety analysis, but it is not actually used otherwise.
-#define REVERSE_LOCK(g, cs) typename std::decay<decltype(g)>::type::reverse_lock UNIQUE_NAME(revlock)(g, cs, #g, __FILE__, __LINE__)
+#define REVERSE_LOCK(g, cs) typename std::decay<decltype(g)>::type::reverse_lock UNIQUE_NAME(revlock)(g, cs, #cs, __FILE__, __LINE__)
 
 // When locking a Mutex, require negative capability to ensure the lock
 // is not already held
