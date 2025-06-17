@@ -1005,7 +1005,7 @@ static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) E
     return result;
 }
 
-static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, std::vector<Txid>& upgraded_txs, bool& any_unordered) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_unordered) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
     DBErrors result = DBErrors::LOAD_OK;
@@ -1128,7 +1128,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 {
     DBErrors result = DBErrors::LOAD_OK;
     bool any_unordered = false;
-    std::vector<Txid> upgraded_txs;
 
     LOCK(pwallet->cs_wallet);
 
@@ -1165,7 +1164,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         result = std::max(LoadAddressBookRecords(pwallet, *m_batch), result);
 
         // Load tx records
-        result = std::max(LoadTxRecords(pwallet, *m_batch, upgraded_txs, any_unordered), result);
+        result = std::max(LoadTxRecords(pwallet, *m_batch, any_unordered), result);
 
         // Load SPKMs
         result = std::max(LoadActiveSPKMs(pwallet, *m_batch), result);
@@ -1188,9 +1187,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // upgrading, we don't want to make it worse.
     if (result != DBErrors::LOAD_OK)
         return result;
-
-    for (const Txid& hash : upgraded_txs)
-        WriteTx(pwallet->mapWallet.at(hash));
 
     if (!has_last_client || last_client != CLIENT_VERSION) // Update
         m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
