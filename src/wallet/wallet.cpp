@@ -4199,15 +4199,6 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
 
     const std::string wallet_name = local_wallet->GetName();
 
-    // Helper to reload as normal for some of our exit scenarios
-    const auto& reload_wallet = [&](std::shared_ptr<CWallet>& to_reload) {
-        assert(to_reload.use_count() == 1);
-        std::string name = to_reload->GetName();
-        to_reload.reset();
-        to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
-        return to_reload != nullptr;
-    };
-
     // Before anything else, check if there is something to migrate.
     if (local_wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         return util::Error{_("Error: This wallet is already a descriptor wallet")};
@@ -4252,27 +4243,36 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         }
     }
 
-    // In case of reloading failure, we need to remember the wallet dirs to remove
-    // Set is used as it may be populated with the same wallet directory paths multiple times,
-    // both before and after reloading. This ensures the set is complete even if one of the wallets
-    // fails to reload.
+    // In case of loading failure, we need to remember the wallet dirs to remove
+    // A `set` is used as it may be populated with the same wallet directory paths multiple times,
+    // both before and after loading. This ensures the set is complete even if one of the wallets
+    // fails to load.
     std::set<fs::path> wallet_dirs;
     if (success) {
-        // Migration successful, unload all wallets locally, then reload them.
-        // Reload the main wallet
+        // Helper to load all the migrated wallets
+        const auto& load_wallet = [&](std::shared_ptr<CWallet>& to_load) {
+            assert(to_load.use_count() == 1);
+            std::string name = to_load->GetName();
+            to_load.reset();
+            to_load = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
+            return to_load != nullptr;
+        };
+
+        // Migration successful, load all the migrated wallets.
+        // Load the main wallet
         wallet_dirs.insert(fs::PathFromString(local_wallet->GetDatabase().Filename()).parent_path());
-        success = reload_wallet(local_wallet);
+        success = load_wallet(local_wallet);
         res.wallet = local_wallet;
         res.wallet_name = wallet_name;
         if (success && res.watchonly_wallet) {
-            // Reload watchonly
+            // Load watchonly
             wallet_dirs.insert(fs::PathFromString(res.watchonly_wallet->GetDatabase().Filename()).parent_path());
-            success = reload_wallet(res.watchonly_wallet);
+            success = load_wallet(res.watchonly_wallet);
         }
         if (success && res.solvables_wallet) {
-            // Reload solvables
+            // Load solvables
             wallet_dirs.insert(fs::PathFromString(res.solvables_wallet->GetDatabase().Filename()).parent_path());
-            success = reload_wallet(res.solvables_wallet);
+            success = load_wallet(res.solvables_wallet);
         }
     }
     if (!success) {
