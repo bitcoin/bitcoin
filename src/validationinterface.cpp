@@ -83,7 +83,7 @@ public:
         for (auto it = m_list.begin(); it != m_list.end();) {
             ++it->count;
             {
-                REVERSE_LOCK(lock);
+                REVERSE_LOCK(lock, m_mutex);
                 f(*it->callbacks);
             }
             it = --it->count ? std::next(it) : m_list.erase(it);
