@@ -206,8 +206,6 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexTyp
 {
     push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry, util::ThreadGetInternalName()));
 }
-template void EnterCritical(const char*, const char*, int, Mutex*, bool);
-template void EnterCritical(const char*, const char*, int, RecursiveMutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
 
