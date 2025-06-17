@@ -282,10 +282,10 @@ public:
     /** Construct a Taproot tweaked output point with this point as internal key. */
     std::optional<std::pair<XOnlyPubKey, bool>> CreateTapTweak(const uint256* merkle_root) const;
 
-    /** Returns a list of CKeyIDs for the CPubKeys that could have been used to create this XOnlyPubKey.
+    /** Returns CKeyIDs for the even and odd CPubKeys that could have been used to create this XOnlyPubKey.
      * This is needed for key lookups since keys are indexed by CKeyID.
      */
-    std::vector<CKeyID> GetKeyIDs() const;
+    std::array<CKeyID, 2> GetKeyIDs() const;
 
     CPubKey GetEvenCorrespondingCPubKey() const;
 
