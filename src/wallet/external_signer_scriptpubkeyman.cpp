@@ -45,14 +45,14 @@ bool ExternalSignerScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, std::uni
     return true;
 }
 
-ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
+ util::Result<ExternalSigner> ExternalSignerScriptPubKeyMan::GetExternalSigner() {
     const std::string command = gArgs.GetArg("-signer", "");
-    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
+    if (command == "") return util::Error{Untranslated("restart bitcoind with -signer=<cmd>")};
     std::vector<ExternalSigner> signers;
     ExternalSigner::Enumerate(command, signers, Params().GetChainTypeString());
-    if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
+    if (signers.empty()) return util::Error{Untranslated("No external signers found")};
     // TODO: add fingerprint argument instead of failing in case of multiple signers.
-    if (signers.size() > 1) throw std::runtime_error(std::string(__func__) + ": More than one external signer found. Please connect only one at a time.");
+    if (signers.size() > 1) return util::Error{Untranslated("More than one external signer found. Please connect only one at a time.")};
     return signers[0];
 }
 
@@ -93,9 +93,15 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
     }
     if (complete) return {};
 
-    std::string strFailReason;
-    if(!GetExternalSigner().SignTransaction(psbt, strFailReason)) {
-        tfm::format(std::cerr, "Failed to sign: %s\n", strFailReason);
+    auto signer{GetExternalSigner()};
+    if (!signer) {
+        LogWarning("%s", util::ErrorString(signer).original);
+        return PSBTError::EXTERNAL_SIGNER_NOT_FOUND;
+    }
+
+    std::string failure_reason;
+    if(!signer->SignTransaction(psbt, failure_reason)) {
+        LogWarning("Failed to sign: %s\n", failure_reason);
         return PSBTError::EXTERNAL_SIGNER_FAILED;
     }
     if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
