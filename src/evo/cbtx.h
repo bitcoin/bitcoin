@@ -64,9 +64,9 @@ public:
 };
 template<> struct is_serializable_enum<CCbTx::Version> : std::true_type {};
 
-bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state);
+bool CheckCbTx(const CCbTx& cbTx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
-bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex,
+bool CheckCbTxMerkleRoots(const CBlock& block, const CCbTx& cbTx, const CBlockIndex* pindex,
                           const llmq::CQuorumBlockProcessor& quorum_block_processor, CSimplifiedMNList&& sml,
                           BlockValidationState& state);
 bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, BlockValidationState& state);
@@ -74,7 +74,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
                                const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet,
                                BlockValidationState& state);
 
-bool CheckCbTxBestChainlock(const CBlock& block, const CBlockIndex* pindexPrev,
+bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindexPrev,
                             const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state);
 bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, const CBlockIndex* pindexPrev,
                            uint32_t& bestCLHeightDiff, CBLSSignature& bestCLSignature);

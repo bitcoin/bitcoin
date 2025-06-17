@@ -5,7 +5,6 @@
 #ifndef BITCOIN_EVO_SPECIALTXMAN_H
 #define BITCOIN_EVO_SPECIALTXMAN_H
 
-#include <consensus/amount.h>
 #include <sync.h>
 #include <threadsafety.h>
 
@@ -14,6 +13,7 @@
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
+class CCbTx;
 class CCoinsViewCache;
 class CCreditPoolManager;
 class CDeterministicMNManager;
@@ -46,10 +46,6 @@ private:
     const llmq::CChainLocksHandler& m_clhandler;
     const llmq::CQuorumManager& m_qman;
 
-private:
-    [[nodiscard]] bool ProcessSpecialTx(const CTransaction& tx, const CBlockIndex* pindex, TxValidationState& state);
-    [[nodiscard]] bool UndoSpecialTx(const CTransaction& tx, const CBlockIndex* pindex);
-
 public:
     explicit CSpecialTxProcessor(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman, CMNHFManager& mnhfman,
                                  llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
@@ -74,8 +70,10 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, std::optional<MNListUpdates>& updatesRet)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CAmount blockSubsidy, BlockValidationState& state)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+private:
+    bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
+                                     BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 #endif // BITCOIN_EVO_SPECIALTXMAN_H
