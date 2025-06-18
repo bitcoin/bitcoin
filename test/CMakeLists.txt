@@ -33,6 +33,10 @@ endfunction()
 create_test_config()
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/data)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/mocks)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/test_framework)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/test_framework/crypto)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fuzz)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/util)
 
