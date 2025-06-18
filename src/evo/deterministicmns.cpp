@@ -884,7 +884,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, gsl::no
                 newState->ResetOperatorFields();
                 newState->BanIfNotBanned(nHeight);
                 // we update pubKeyOperator here, make sure state version matches
-                newState->nVersion = opt_proTx->nVersion;
+                // Make sure we don't accidentally downgrade the state version if using version after basic BLS
+                newState->nVersion = newState->nVersion > ProTxVersion::BasicBLS ? newState->nVersion : opt_proTx->nVersion;
                 newState->netInfo = NetInfoInterface::MakeNetInfo(newState->nVersion);
                 newState->pubKeyOperator = opt_proTx->pubKeyOperator;
             }

@@ -138,6 +138,7 @@ public:
     virtual NetInfoList GetEntries() const = 0;
 
     virtual const CService& GetPrimary() const = 0;
+    virtual bool CanStorePlatform() const = 0;
     virtual bool IsEmpty() const = 0;
     virtual NetInfoStatus Validate() const = 0;
     virtual std::string ToString() const = 0;
@@ -194,6 +195,7 @@ public:
 
     const CService& GetPrimary() const override;
     bool IsEmpty() const override { return m_addr.IsEmpty(); }
+    bool CanStorePlatform() const override { return false; }
     NetInfoStatus Validate() const override;
     std::string ToString() const override;
 
@@ -214,13 +216,17 @@ class NetInfoSerWrapper
 {
 private:
     std::shared_ptr<NetInfoInterface>& m_data;
+    const bool m_is_extended{false};
 
 public:
     NetInfoSerWrapper() = delete;
     NetInfoSerWrapper(const NetInfoSerWrapper&) = delete;
-    NetInfoSerWrapper(std::shared_ptr<NetInfoInterface>& data) :
-        m_data{data}
+    NetInfoSerWrapper(std::shared_ptr<NetInfoInterface>& data, const bool is_extended) :
+        m_data{data},
+        m_is_extended{is_extended}
     {
+        // TODO: Remove when extended addresses implementation is added in
+        assert(!m_is_extended);
     }
 
     ~NetInfoSerWrapper() = default;

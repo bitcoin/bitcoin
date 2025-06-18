@@ -18,9 +18,13 @@ template <typename T>
 [[nodiscard]] uint16_t GetMaxFromDeployment(gsl::not_null<const CBlockIndex*> pindexPrev,
                                             std::optional<bool> is_basic_override)
 {
-    return ProTxVersion::GetMax(
-        is_basic_override ? *is_basic_override
-                          : DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19));
+    constexpr bool is_extaddr_eligible{std::is_same_v<std::decay_t<T>, CProRegTx> || std::is_same_v<std::decay_t<T>, CProUpServTx>};
+    return ProTxVersion::GetMax(is_basic_override ? *is_basic_override
+                                                  : DeploymentActiveAfter(pindexPrev, Params().GetConsensus(),
+                                                                          Consensus::DEPLOYMENT_V19),
+                                is_extaddr_eligible ? DeploymentActiveAfter(pindexPrev, Params().GetConsensus(),
+                                                                            Consensus::DEPLOYMENT_V23)
+                                                    : false);
 }
 template uint16_t GetMaxFromDeployment<CProRegTx>(gsl::not_null<const CBlockIndex*> pindexPrev, std::optional<bool> is_basic_override);
 template uint16_t GetMaxFromDeployment<CProUpServTx>(gsl::not_null<const CBlockIndex*> pindexPrev, std::optional<bool> is_basic_override);
@@ -51,6 +55,9 @@ bool CProRegTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, T
     }
     if (!scriptPayout.IsPayToPublicKeyHash() && !scriptPayout.IsPayToScriptHash()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee");
+    }
+    if (netInfo->CanStorePlatform() != (nVersion == ProTxVersion::ExtAddr)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-netinfo-version");
     }
     for (const NetInfoEntry& entry : netInfo->GetEntries()) {
         if (!entry.IsTriviallyValid()) {
@@ -125,6 +132,9 @@ bool CProUpServTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev
     }
     if (nVersion < ProTxVersion::BasicBLS && nType == MnType::Evo) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-evo-version");
+    }
+    if (netInfo->CanStorePlatform() != (nVersion == ProTxVersion::ExtAddr)) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-netinfo-version");
     }
     if (netInfo->IsEmpty()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-empty");

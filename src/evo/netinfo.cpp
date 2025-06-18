@@ -5,6 +5,7 @@
 #include <evo/netinfo.h>
 
 #include <chainparams.h>
+#include <evo/providertx.h>
 #include <netbase.h>
 #include <span.h>
 #include <util/check.h>
@@ -149,7 +150,7 @@ std::string NetInfoEntry::ToStringAddrPort() const
 
 std::shared_ptr<NetInfoInterface> NetInfoInterface::MakeNetInfo(const uint16_t nVersion)
 {
-    assert(nVersion > 0);
+    assert(nVersion > 0 && nVersion < ProTxVersion::ExtAddr);
     return std::make_shared<MnNetInfo>();
 }
 

@@ -1014,7 +1014,8 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         throw std::runtime_error(strprintf("masternode with proTxHash %s is not a %s", ptx.proTxHash.ToString(), GetMnType(mnType).description));
     }
 
-    ptx.nVersion = dmn->pdmnState->nVersion;
+    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpServTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()),
+                                                                    /*is_basic_override=*/dmn->pdmnState->nVersion > ProTxVersion::LegacyBLS);
     ptx.netInfo = NetInfoInterface::MakeNetInfo(ptx.nVersion);
 
     if (auto entryRet = ptx.netInfo->AddEntry(request.params[1].get_str()); entryRet != NetInfoStatus::Success) {

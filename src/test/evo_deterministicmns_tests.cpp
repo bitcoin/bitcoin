@@ -106,7 +106,7 @@ static CMutableTransaction CreateProRegTx(const CChain& active_chain, const CTxM
     operatorKeyRet.MakeNewKey();
 
     CProRegTx proTx;
-    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme);
+    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     proTx.netInfo = NetInfoInterface::MakeNetInfo(proTx.nVersion);
     proTx.collateralOutpoint.n = 0;
     BOOST_CHECK_EQUAL(proTx.netInfo->AddEntry(strprintf("1.1.1.1:%d", port)), NetInfoStatus::Success);
@@ -129,7 +129,7 @@ static CMutableTransaction CreateProRegTx(const CChain& active_chain, const CTxM
 static CMutableTransaction CreateProUpServTx(const CChain& active_chain, const CTxMemPool& mempool, SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, int port, const CScript& scriptOperatorPayout, const CKey& coinbaseKey)
 {
     CProUpServTx proTx;
-    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme);
+    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     proTx.netInfo = NetInfoInterface::MakeNetInfo(proTx.nVersion);
     proTx.proTxHash = proTxHash;
     BOOST_CHECK_EQUAL(proTx.netInfo->AddEntry(strprintf("1.1.1.1:%d", port)), NetInfoStatus::Success);
@@ -150,7 +150,7 @@ static CMutableTransaction CreateProUpServTx(const CChain& active_chain, const C
 static CMutableTransaction CreateProUpRegTx(const CChain& active_chain, const CTxMemPool& mempool, SimpleUTXOMap& utxos, const uint256& proTxHash, const CKey& mnKey, const CBLSPublicKey& pubKeyOperator, const CKeyID& keyIDVoting, const CScript& scriptPayout, const CKey& coinbaseKey)
 {
     CProUpRegTx proTx;
-    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme);
+    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     proTx.proTxHash = proTxHash;
     proTx.pubKeyOperator.Set(pubKeyOperator, bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = keyIDVoting;
@@ -171,7 +171,7 @@ static CMutableTransaction CreateProUpRegTx(const CChain& active_chain, const CT
 static CMutableTransaction CreateProUpRevTx(const CChain& active_chain, const CTxMemPool& mempool, SimpleUTXOMap& utxos, const uint256& proTxHash, const CBLSSecretKey& operatorKey, const CKey& coinbaseKey)
 {
     CProUpRevTx proTx;
-    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme);
+    proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     proTx.proTxHash = proTxHash;
 
     CMutableTransaction tx;
@@ -640,7 +640,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
     BOOST_CHECK_EQUAL(block->GetHash(), chainman.ActiveChain().Tip()->GetBlockHash());
 
     CProRegTx payload;
-    payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme);
+    payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     payload.netInfo = NetInfoInterface::MakeNetInfo(payload.nVersion);
     BOOST_CHECK_EQUAL(payload.netInfo->AddEntry("1.1.1.1:1"), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
@@ -716,7 +716,7 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
     auto scriptPayout = GetScriptForDestination(PKHash(payoutKey.GetPubKey()));
 
     CProRegTx payload;
-    payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme);
+    payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     payload.netInfo = NetInfoInterface::MakeNetInfo(payload.nVersion);
     BOOST_CHECK_EQUAL(payload.netInfo->AddEntry("1.1.1.1:2"), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
@@ -785,7 +785,7 @@ void FuncVerifyDB(TestChainSetup& setup)
     BOOST_CHECK_EQUAL(block->GetHash(), chainman.ActiveChain().Tip()->GetBlockHash());
 
     CProRegTx payload;
-    payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme);
+    payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     payload.netInfo = NetInfoInterface::MakeNetInfo(payload.nVersion);
     BOOST_CHECK_EQUAL(payload.netInfo->AddEntry("1.1.1.1:1"), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();

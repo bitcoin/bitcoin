@@ -60,6 +60,7 @@ void trivialvalidation_runner(const CChain& active_chain, const std::string& jso
             txType = test[1].get_str();
             BOOST_CHECK(test[2].get_str() == "basic" || test[2].get_str() == "legacy");
             // Determine which pindexPrev to supply based on whether we want to validate legacy or basic
+            // TODO: Introduce trivial validation test vectors for extended addresses
             const CBlockIndex* pindexPrev{(test[2].get_str() == "basic") ? active_chain[100] : active_chain[98]};
             assert(pindexPrev);
             // Raw transaction
