@@ -215,6 +215,7 @@ class MiniWallet:
         utxos_to_spend: Optional[List[dict]] = None,
         num_outputs=1,
         amount_per_output=0,
+        locktime=0,
         sequence=0,
         fee_per_output=1000,
     ):
@@ -226,26 +227,29 @@ class MiniWallet:
         utxos_to_spend = utxos_to_spend or [self.get_utxo()]
         sequence = [sequence] * len(utxos_to_spend) if type(sequence) is int else sequence
         assert_equal(len(utxos_to_spend), len(sequence))
-        # create simple tx template (1 input, 1 output)
-        tx = self.create_self_transfer(
-            fee_rate=0,
-            utxo_to_spend=utxos_to_spend[0])["tx"]
 
-        # duplicate inputs, witnesses and outputs
-        tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
-        for txin, seq in zip(tx.vin, sequence):
-            txin.nSequence = seq
-        tx.vout = [deepcopy(tx.vout[0]) for _ in range(num_outputs)]
-
-        # adapt input prevouts
-        for i, utxo in enumerate(utxos_to_spend):
-            tx.vin[i] = CTxIn(COutPoint(int(utxo['txid'], 16), utxo['vout']))
-
-        # adapt output amounts (use fixed fee per output)
+        # calculate output amount
         inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
         outputs_value_total = inputs_value_total - fee_per_output * num_outputs
-        for o in tx.vout:
-            o.nValue = amount_per_output or (outputs_value_total // num_outputs)
+        amount_per_output = amount_per_output or (outputs_value_total // num_outputs)
+
+        # create tx
+        tx = CTransaction()
+        tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=seq) for utxo_to_spend,seq in zip(utxos_to_spend, sequence)]
+        tx.vout = [CTxOut(amount_per_output, bytearray(self._scriptPubKey)) for _ in range(num_outputs)]
+        tx.nLockTime = locktime
+
+        if self._mode == MiniWalletMode.RAW_P2PK:
+            self.sign_tx(tx)
+        elif self._mode == MiniWalletMode.RAW_OP_TRUE:
+            for i in range(len(utxos_to_spend)):
+                tx.vin[i].scriptSig = CScript([OP_NOP] * 24)  # pad to identical size
+        elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
+            for i in range(len(utxos_to_spend)):
+                tx.vin[i].scriptSig = CScript([CScript([OP_TRUE])])
+        else:
+            assert False
+
         txid = tx.rehash()
         return {
             "new_utxos": [self._create_utxo(
@@ -264,6 +268,7 @@ class MiniWallet:
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         assert fee_rate >= 0
         assert fee >= 0
+        # calculate fee
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
             vsize = Decimal(85)  # anyone-can-spend
         elif self._mode == MiniWalletMode.RAW_P2PK:
@@ -273,24 +278,11 @@ class MiniWallet:
         send_value = utxo_to_spend["value"] - (fee or (fee_rate * vsize / 1000))
         assert send_value > 0
 
-        tx = CTransaction()
-        tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']), nSequence=sequence)]
-        tx.vout = [CTxOut(int(COIN * send_value), bytearray(self._scriptPubKey))]
-        tx.nLockTime = locktime
-        if self._mode == MiniWalletMode.RAW_P2PK:
-            self.sign_tx(tx)
-        elif self._mode == MiniWalletMode.RAW_OP_TRUE:
-            tx.vin[0].scriptSig = CScript([OP_NOP] * 24)  # pad to identical size
-        elif self._mode == MiniWalletMode.ADDRESS_OP_TRUE:
-            tx.vin[0].scriptSig = CScript([CScript([OP_TRUE])])
-        else:
-            assert False
-        tx_hex = tx.serialize().hex()
+        # create tx
+        tx = self.create_self_transfer_multi(utxos_to_spend=[utxo_to_spend], locktime=locktime, sequence=sequence, amount_per_output=int(COIN * send_value))
+        assert_equal(tx["tx"].get_vsize(), vsize)
 
-        assert_equal(tx.get_vsize(), vsize)
-        new_utxo = self._create_utxo(txid=tx.rehash(), vout=0, value=send_value, height=0)
-
-        return {"txid": new_utxo["txid"], "hex": tx_hex, "tx": tx, "new_utxo": new_utxo}
+        return {"txid": tx["txid"], "hex": tx["hex"], "tx": tx["tx"], "new_utxo": tx["new_utxos"][0]}
 
     def sendrawtransaction(self, *, from_node, tx_hex, maxfeerate=0, **kwargs):
         txid = from_node.sendrawtransaction(hexstring=tx_hex, maxfeerate=maxfeerate, **kwargs)
