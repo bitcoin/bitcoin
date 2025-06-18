@@ -31,7 +31,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
     def send_large_txs(self, node, miniwallet, txouts, fee, tx_batch_size):
         for _ in range(tx_batch_size):
-            tx = miniwallet.create_self_transfer(from_node=node, fee_rate=0)['tx']
+            tx = miniwallet.create_self_transfer(fee_rate=0)['tx']
             for txout in txouts:
                 tx.vout.append(txout)
             tx.vout[0].nValue -= int(fee * COIN)
