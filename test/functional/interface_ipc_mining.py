@@ -5,10 +5,8 @@
 """Test bitcoin-mine"""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-)
 
+import re
 import subprocess
 import sys
 import tempfile
@@ -48,7 +46,9 @@ class TestBitcoinMine(BitcoinTestFramework):
     def run_test(self):
         args = [self.binary_paths.bitcoinmine, f"-datadir={self.nodes[0].datadir_path}"] + self.mine_args
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=True)
-        assert_equal(result.stdout, "Connected to bitcoin-node\nTip hash is 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206.\n")
+        expect = r"Connected to bitcoin-node\nTip hash is 0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206\.\n(Mined a block|Failed to mine a block).*?\n"
+        if not re.fullmatch(expect, result.stdout):
+            raise AssertionError(f"bitcoin-mine output {result.stdout!r} does not match expected {expect!r}")
 
 if __name__ == '__main__':
     TestBitcoinMine(__file__).main()
