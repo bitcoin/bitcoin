@@ -30,10 +30,12 @@ class Coin;
 class uint256;
 enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
-enum class ChainstateRole;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+namespace kernel {
+struct ChainstateRole;
+} // namespace kernel
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -321,10 +323,10 @@ public:
         virtual ~Notifications() = default;
         virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
-        virtual void blockConnected(ChainstateRole role, const BlockInfo& block) {}
+        virtual void blockConnected(const kernel::ChainstateRole& role, const BlockInfo& block) {}
         virtual void blockDisconnected(const BlockInfo& block) {}
         virtual void updatedBlockTip() {}
-        virtual void chainStateFlushed(ChainstateRole role, const CBlockLocator& locator) {}
+        virtual void chainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
     };
 
     //! Options specifying which chain notifications are required.
