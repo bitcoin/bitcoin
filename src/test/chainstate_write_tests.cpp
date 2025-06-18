@@ -8,13 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
+using kernel::ChainstateRole;
+
 BOOST_AUTO_TEST_SUITE(chainstate_write_tests)
 
 BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
 {
     struct TestSubscriber final : CValidationInterface {
         bool m_did_flush{false};
-        void ChainStateFlushed(ChainstateRole, const CBlockLocator&) override
+        void ChainStateFlushed(const ChainstateRole&, const CBlockLocator&) override
         {
             m_did_flush = true;
         }
