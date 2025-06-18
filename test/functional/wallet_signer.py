@@ -23,6 +23,10 @@ class WalletSignerTest(BitcoinTestFramework):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'signer.py')
         return sys.executable + " " + path
 
+    def mock_no_connected_signer_path(self):
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'no_signer.py')
+        return sys.executable + " " + path
+
     def mock_invalid_signer_path(self):
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'mocks', 'invalid_signer.py')
         return sys.executable + " " + path
@@ -52,6 +56,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_valid_signer()
+        self.test_disconnected_signer()
         self.restart_node(1, [f"-signer={self.mock_invalid_signer_path()}", "-keypool=10"])
         self.test_invalid_signer()
         self.restart_node(1, [f"-signer={self.mock_multi_signers_path()}", "-keypool=10"])
@@ -234,6 +239,28 @@ class WalletSignerTest(BitcoinTestFramework):
         # )
         # self.clear_mock_result(self.nodes[4])
 
+    def test_disconnected_signer(self):
+        self.log.info('Test disconnected external signer')
+
+        # First create a wallet with the signer connected
+        self.nodes[1].createwallet(wallet_name='hww_disconnect', disable_private_keys=True, external_signer=True)
+        hww = self.nodes[1].get_wallet_rpc('hww_disconnect')
+        assert_equal(hww.getwalletinfo()["external_signer"], True)
+
+        # Fund wallet
+        self.nodes[0].sendtoaddress(hww.getnewaddress(address_type="bech32m"), 1)
+        self.generate(self.nodes[0], 1)
+
+        # Restart node with no signer connected
+        self.log.debug(f"-signer={self.mock_no_connected_signer_path()}")
+        self.restart_node(1, [f"-signer={self.mock_no_connected_signer_path()}", "-keypool=10"])
+        self.nodes[1].loadwallet('hww_disconnect')
+        hww = self.nodes[1].get_wallet_rpc('hww_disconnect')
+
+        # Try to spend
+        dest = hww.getrawchangeaddress()
+        assert_raises_rpc_error(-25, "External signer not found", hww.send, outputs=[{dest:0.5}])
+
     def test_invalid_signer(self):
         self.log.debug(f"-signer={self.mock_invalid_signer_path()}")
         self.log.info('Test invalid external signer')
@@ -243,7 +270,7 @@ class WalletSignerTest(BitcoinTestFramework):
         self.log.debug(f"-signer={self.mock_multi_signers_path()}")
         self.log.info('Test multiple external signers')
 
-        assert_raises_rpc_error(-1, "GetExternalSigner: More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, external_signer=True)
+        assert_raises_rpc_error(-1, "More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, external_signer=True)
 
 if __name__ == '__main__':
     WalletSignerTest(__file__).main()

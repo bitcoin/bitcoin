@@ -356,11 +356,6 @@ RPCHelpMan importdescriptors()
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
-    //  Make sure wallet is a descriptor wallet
-    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "importdescriptors is not available for non-descriptor wallets");
-    }
-
     WalletRescanReserver reserver(*pwallet);
     if (!reserver.reserve(/*with_passphrase=*/true)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
@@ -492,10 +487,6 @@ RPCHelpMan listdescriptors()
 {
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return UniValue::VNULL;
-
-    if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "listdescriptors is not available for non-descriptor wallets");
-    }
 
     const bool priv = !request.params[0].isNull() && request.params[0].get_bool();
     if (priv) {

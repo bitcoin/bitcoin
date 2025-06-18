@@ -2303,7 +2303,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     } else if (inv.IsMsgWitnessBlk()) {
         // Fast-path: in this case it is possible to serve the block directly from disk,
         // as the network format matches the format on disk
-        std::vector<uint8_t> block_data;
+        std::vector<std::byte> block_data;
         if (!m_chainman.m_blockman.ReadRawBlock(block_data, block_pos)) {
             if (WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.IsBlockPruned(*pindex))) {
                 LogDebug(BCLog::NET, "Block was pruned before it could be read, %s\n", pfrom.DisconnectMsg(fLogIPs));

@@ -995,7 +995,7 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
     block.SetNull();
 
     // Open history file to read
-    std::vector<uint8_t> block_data;
+    std::vector<std::byte> block_data;
     if (!ReadRawBlock(block_data, pos)) {
         return false;
     }
@@ -1037,7 +1037,7 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
     return ReadBlock(block, block_pos, index.GetBlockHash());
 }
 
-bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const
+bool BlockManager::ReadRawBlock(std::vector<std::byte>& block, const FlatFilePos& pos) const
 {
     if (pos.nPos < STORAGE_HEADER_BYTES) {
         // If nPos is less than STORAGE_HEADER_BYTES, we can't read the header that precedes the block data
@@ -1071,7 +1071,7 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
         }
 
         block.resize(blk_size); // Zeroing of memory is intentional here
-        filein.read(MakeWritableByteSpan(block));
+        filein.read(block);
     } catch (const std::exception& e) {
         LogError("Read from block file failed: %s for %s while reading raw block", e.what(), pos.ToString());
         return false;

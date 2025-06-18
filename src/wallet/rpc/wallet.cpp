@@ -763,10 +763,6 @@ RPCHelpMan gethdkeys()
             const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return UniValue::VNULL;
 
-            if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "gethdkeys is not available for non-descriptor wallets");
-            }
-
             LOCK(wallet->cs_wallet);
 
             UniValue options{request.params[0].isNull() ? UniValue::VOBJ : request.params[0]};
@@ -864,11 +860,6 @@ static RPCHelpMan createwalletdescriptor()
         {
             std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;
-
-            //  Make sure wallet is a descriptor wallet
-            if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "createwalletdescriptor is not available for non-descriptor wallets");
-            }
 
             std::optional<OutputType> output_type = ParseOutputType(request.params[0].get_str());
             if (!output_type) {

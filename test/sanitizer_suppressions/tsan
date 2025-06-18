@@ -11,7 +11,7 @@ deadlock:Chainstate::ConnectTip
 # Intentional deadlock in tests
 deadlock:sync_tests::potential_deadlock_detected
 
-# Wildcard for all of the gui, should be replaced with non-wildcard suppressions
+# Wildcard for all of the gui
 race:bitcoin-qt
 race:src/qt/test/*
 deadlock:src/qt/test/*
