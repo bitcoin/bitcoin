@@ -192,6 +192,45 @@ class MiniWallet:
         txid = self.sendrawtransaction(from_node=from_node, tx_hex=tx.serialize().hex())
         return txid, 1
 
+    def send_self_transfer_multi(self, **kwargs):
+        """
+        Create and send a transaction that spends the given UTXOs and creates a
+        certain number of outputs with equal amounts.
+
+        Returns a dictionary with
+            - txid
+            - serialized transaction in hex format
+            - transaction as CTransaction instance
+            - list of newly created UTXOs, ordered by vout index
+        """
+        tx = self.create_self_transfer_multi(**kwargs)
+        txid = self.sendrawtransaction(from_node=kwargs['from_node'], tx_hex=tx.serialize().hex())
+        return {'new_utxos': [self.get_utxo(txid=txid, vout=vout) for vout in range(len(tx.vout))],
+                'txid': txid, 'hex': tx.serialize().hex(), 'tx': tx}
+
+    def create_self_transfer_multi(self, *, from_node, utxos_to_spend, num_outputs=1, fee_per_output=1000):
+        """
+        Create and return a transaction that spends the given UTXOs and creates a
+        certain number of outputs with equal amounts.
+        """
+        # create simple tx template (1 input, 1 output)
+        tx = self.create_self_transfer(fee_rate=0, from_node=from_node, utxo_to_spend=utxos_to_spend[0], mempool_valid=False)['tx']
+
+        # duplicate inputs, witnesses and outputs
+        tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
+        tx.vout = [deepcopy(tx.vout[0]) for _ in range(num_outputs)]
+
+        # adapt input prevouts
+        for i, utxo in enumerate(utxos_to_spend):
+            tx.vin[i] = CTxIn(COutPoint(int(utxo['txid'], 16), utxo['vout']))
+
+        # adapt output amounts (use fixed fee per output)
+        inputs_value_total = sum([int(COIN * utxo['value']) for utxo in utxos_to_spend])
+        outputs_value_total = inputs_value_total - fee_per_output * num_outputs
+        for i in range(num_outputs):
+            tx.vout[i].nValue = outputs_value_total // num_outputs
+        return tx
+
     def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         from_node = from_node or self._test_node
