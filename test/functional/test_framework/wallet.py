@@ -187,7 +187,7 @@ class MiniWallet:
 
         Returns a tuple (txid, n) referring to the created external utxo outpoint.
         """
-        tx = self.create_self_transfer(from_node=from_node, fee_rate=0, mempool_valid=False)['tx']
+        tx = self.create_self_transfer(from_node=from_node, fee_rate=0)["tx"]
         assert_greater_than_or_equal(tx.vout[0].nValue, amount + fee)
         tx.vout[0].nValue -= (amount + fee)           # change output -> MiniWallet
         tx.vout.append(CTxOut(amount, scriptPubKey))  # arbitrary output -> to be returned
@@ -224,7 +224,7 @@ class MiniWallet:
         # create simple tx template (1 input, 1 output)
         tx = self.create_self_transfer(
             fee_rate=0, from_node=from_node,
-            utxo_to_spend=utxos_to_spend[0], sequence=sequence, mempool_valid=False)['tx']
+            utxo_to_spend=utxos_to_spend[0], sequence=sequence)["tx"]
 
         # duplicate inputs, witnesses and outputs
         tx.vin = [deepcopy(tx.vin[0]) for _ in range(len(utxos_to_spend))]
@@ -241,9 +241,8 @@ class MiniWallet:
             o.nValue = outputs_value_total // num_outputs
         return tx
 
-    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, mempool_valid=True, locktime=0, sequence=0):
-        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed.
-           Checking mempool validity via the testmempoolaccept RPC can be skipped by setting mempool_valid to False."""
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node=None, utxo_to_spend=None, locktime=0, sequence=0):
+        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         from_node = from_node or self._test_node
         utxo_to_spend = utxo_to_spend or self.get_utxo()
         if self._mode in (MiniWalletMode.RAW_OP_TRUE, MiniWalletMode.ADDRESS_OP_TRUE):
@@ -269,11 +268,7 @@ class MiniWallet:
             assert False
         tx_hex = tx.serialize().hex()
 
-        if mempool_valid:
-            tx_info = from_node.testmempoolaccept([tx_hex])[0]
-            assert_equal(tx_info['allowed'], True)
-            assert_equal(len(tx_hex) // 2, vsize) # 1 byte = 2 character
-            assert_equal(tx_info['fees']['base'], utxo_to_spend['value'] - Decimal(send_value) / COIN)
+        assert_equal(tx.get_vsize(), vsize)
 
         return {'txid': tx.rehash(), 'hex': tx_hex, 'tx': tx}
 

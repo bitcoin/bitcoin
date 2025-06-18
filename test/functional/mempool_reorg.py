@@ -53,8 +53,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         utxo = wallet.get_utxo(txid=coinbase_txids[0])
         timelock_tx = wallet.create_self_transfer(
             utxo_to_spend=utxo,
-            mempool_valid=False,
-            locktime=self.nodes[0].getblockcount() + 2
+            locktime=self.nodes[0].getblockcount() + 2,
         )['hex']
 
         self.log.info("Check that the time-locked transaction is too immature to spend")

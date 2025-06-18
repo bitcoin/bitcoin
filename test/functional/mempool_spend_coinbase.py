@@ -40,7 +40,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         spend_mature_id = wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_mature)["txid"]
 
         # other coinbase should be too immature to spend
-        immature_tx = wallet.create_self_transfer(utxo_to_spend=utxo_immature, mempool_valid=False)
+        immature_tx = wallet.create_self_transfer(utxo_to_spend=utxo_immature)
         assert_raises_rpc_error(-26,
                                 "bad-txns-premature-spend-of-coinbase",
                                 lambda: self.nodes[0].sendrawtransaction(immature_tx['hex']))
