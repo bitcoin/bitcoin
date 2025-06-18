@@ -15,6 +15,8 @@
 #include <optional>
 #include <vector>
 
+static constexpr int MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD{14};
+
 /**
  * Queue for verifications that have to be performed.
   * The verifications are represented by a type T, which must provide an
@@ -33,6 +35,11 @@ template <typename T, typename R = std::remove_cvref_t<decltype(std::declval<T>(
 class CCheckQueue
 {
 private:
+    //! fAtomic indicates if the atomic version of worker pool is enabled
+    //! m_worker_threads.size() <= MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD: use the mutex version
+    //! m_worker_threads.size() > MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD: use the atomic version
+    bool fAtomic;
+
     //! Mutex to protect the inner state
     Mutex m_mutex;
 
@@ -44,7 +51,7 @@ private:
 
     //! The queue of elements to be processed.
     //! As the order of booleans doesn't matter, it is used as a LIFO (stack)
-    std::vector<T> queue GUARDED_BY(m_mutex);
+    std::vector<T> queue;
 
     //! The number of workers (including the master) that are idle.
     int nIdle GUARDED_BY(m_mutex){0};
@@ -69,7 +76,7 @@ private:
     bool m_request_stop GUARDED_BY(m_mutex){false};
 
     /** Internal function that does bulk of the verification work. If fMaster, return the final result. */
-    std::optional<R> Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    std::optional<R> LoopMutex(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
         std::vector<T> vChecks;
@@ -136,20 +143,82 @@ private:
         } while (true);
     }
 
+    std::atomic<int> nNext;
+    std::atomic<int> nTodo2;
+
+    /** Internal function that does bulk of the verification work. If fMaster, return the final result. */
+    std::optional<R> LoopAtomic(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        std::condition_variable& cond = fMaster ? m_master_cv : m_worker_cv;
+        std::optional<R> local_result;
+        int start_index = 0, end_index = 0;
+
+        while (true) {
+            if (end_index == (int)queue.size() && !fMaster) {
+                WAIT_LOCK(m_mutex, lock);
+                if (m_request_stop) return std::nullopt;
+                cond.wait(lock); // wait
+                start_index = end_index = 0;
+                local_result = std::nullopt;
+            }
+
+
+            while(end_index != (int)queue.size()) {
+                start_index = nNext.fetch_add(nBatchSize, std::memory_order_relaxed);
+                end_index = std::min(start_index + nBatchSize, (unsigned int)queue.size());
+                for (int i = start_index; i < end_index; i++) {
+                    local_result = queue[i]();
+                    if (local_result.has_value()) {
+                        LOCK(m_mutex);
+                        if (!m_result.has_value())
+                            std::swap(local_result, m_result);
+                        break;
+                    }
+                }
+                if (end_index > start_index)
+                    nTodo2.fetch_sub(end_index - start_index);
+            }
+
+            if (fMaster) {
+                WAIT_LOCK(m_mutex, lock);
+                cond.wait(lock, [&] { return !nTodo2; });
+
+                std::optional<R> to_return = std::move(m_result);
+                m_result = std::nullopt;
+                return to_return;
+            } else {
+                if (!nTodo2) {
+                    LOCK(m_mutex);
+                    m_master_cv.notify_one();
+                }
+            }
+        }
+
+        return std::nullopt;
+    }
+
 public:
     //! Mutex to ensure only one concurrent CCheckQueueControl
     Mutex m_control_mutex;
 
     //! Create a new check queue
     explicit CCheckQueue(unsigned int batch_size, int worker_threads_num)
-        : nBatchSize(batch_size)
+        : nBatchSize(worker_threads_num <= MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD ? batch_size : 5)
     {
+        fAtomic = false;
+        if (worker_threads_num > MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD) {
+            fAtomic = true;
+        }
+
         LogInfo("Script verification uses %d additional threads", worker_threads_num);
         m_worker_threads.reserve(worker_threads_num);
         for (int n = 0; n < worker_threads_num; ++n) {
             m_worker_threads.emplace_back([this, n]() {
                 util::ThreadRename(strprintf("scriptch.%i", n));
-                Loop(false /* worker thread */);
+                if (!fAtomic)
+                    LoopMutex(false /* worker thread */);
+                else
+                    LoopAtomic(false);
             });
         }
     }
@@ -162,10 +231,15 @@ public:
     CCheckQueue& operator=(CCheckQueue&&) = delete;
 
     //! Join the execution until completion. If at least one evaluation wasn't successful, return
-    //! its error.
+    //! its error. This is designed to be called only once, and should be after all the Add operations.
     std::optional<R> Complete() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
-        return Loop(true /* master thread */);
+        if (!fAtomic)
+            return LoopMutex(true /* master thread */);
+
+        if (queue.size() > 1)
+            m_worker_cv.notify_all();
+        return LoopAtomic(true /* master thread */);
     }
 
     //! Add a batch of checks to the queue
@@ -175,16 +249,25 @@ public:
             return;
         }
 
-        {
+        if (!fAtomic) {
             LOCK(m_mutex);
             queue.insert(queue.end(), std::make_move_iterator(vChecks.begin()), std::make_move_iterator(vChecks.end()));
             nTodo += vChecks.size();
-        }
 
-        if (vChecks.size() == 1) {
-            m_worker_cv.notify_one();
+            if (vChecks.size() == 1) {
+                m_worker_cv.notify_one();
+            } else {
+                m_worker_cv.notify_all();
+            }
         } else {
-            m_worker_cv.notify_all();
+           if (!nTodo2) {
+                nNext = 0;
+                queue.clear();
+                WITH_LOCK(m_mutex, m_result = std::nullopt);
+            }
+
+            queue.insert(queue.end(), std::make_move_iterator(vChecks.begin()), std::make_move_iterator(vChecks.end()));
+            nTodo2.fetch_add(vChecks.size());
         }
     }
 
