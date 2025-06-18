@@ -12,9 +12,11 @@
 #include <flatfile.h>
 #include <hash.h>
 #include <kernel/blockmanager_opts.h>
+#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
+#include <kernel/types.h>
 #include <logging.h>
 #include <pow.h>
 #include <primitives/block.h>

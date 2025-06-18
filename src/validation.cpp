@@ -20,13 +20,13 @@
 #include <cuckoocache.h>
 #include <flatfile.h>
 #include <hash.h>
-#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/coinstats.h>
 #include <kernel/disconnected_transactions.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
+#include <kernel/types.h>
 #include <kernel/warning.h>
 #include <logging.h>
 #include <logging/timer.h>
@@ -77,6 +77,7 @@
 #include <utility>
 
 using kernel::CCoinsStats;
+using kernel::ChainstateRole;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
 using kernel::Notifications;
@@ -1986,7 +1987,7 @@ void Chainstate::CheckForkWarningConditions()
 {
     AssertLockHeld(cs_main);
 
-    if (this->GetRole() == ChainstateRole::BACKGROUND) {
+    if (this->GetRole().historical) {
         return;
     }
 
@@ -2532,7 +2533,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(m_chainman.time_forks) / m_chainman.num_blocks_total);
 
     const bool fScriptChecks{!!script_check_reason};
-    if (script_check_reason != m_last_script_check_reason_logged && GetRole() == ChainstateRole::NORMAL) {
+    const kernel::ChainstateRole role{GetRole()};
+    if (script_check_reason != m_last_script_check_reason_logged && role.validated && !role.historical) {
         if (fScriptChecks) {
             LogInfo("Enabling script verification at block #%d (%s): %s.",
                     pindex->nHeight, block_hash.ToString(), script_check_reason);
@@ -4656,7 +4658,7 @@ bool Chainstate::LoadChainTip()
               m_chainman.GuessVerificationProgress(tip));
 
     // Ensure KernelNotifications m_tip_block is set even if no new block arrives.
-    if (this->GetRole() != ChainstateRole::BACKGROUND) {
+    if (!this->GetRole().historical) {
         // Ignoring return value for now.
         (void)m_chainman.GetNotifications().blockTip(
             /*state=*/GetSynchronizationState(/*init=*/true, m_chainman.m_blockman.m_blockfiles_indexed),
@@ -6354,7 +6356,7 @@ bool ChainstateManager::DeleteSnapshotChainstate()
 
 ChainstateRole Chainstate::GetRole() const
 {
-    return m_target_blockhash ? ChainstateRole::BACKGROUND : m_assumeutxo == Assumeutxo::UNVALIDATED ? ChainstateRole::ASSUMEDVALID : ChainstateRole::NORMAL;
+    return ChainstateRole{.validated = m_assumeutxo == Assumeutxo::VALIDATED, .historical = bool{m_target_blockhash}};
 }
 
 void ChainstateManager::RecalculateBestHeader()
