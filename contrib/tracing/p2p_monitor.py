@@ -54,7 +54,7 @@ int trace_inbound_message(struct pt_regs *ctx) {
     bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
     bpf_usdt_readarg(3, ctx, &pconn_type);
     bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
-    bpf_usdt_readarg(4, ctx, &pconn_type);
+    bpf_usdt_readarg(4, ctx, &pmsg_type);
     bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
@@ -71,7 +71,7 @@ int trace_outbound_message(struct pt_regs *ctx) {
     bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
     bpf_usdt_readarg(3, ctx, &pconn_type);
     bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
-    bpf_usdt_readarg(4, ctx, &pconn_type);
+    bpf_usdt_readarg(4, ctx, &pmsg_type);
     bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
