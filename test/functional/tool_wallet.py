@@ -82,17 +82,45 @@ class ToolWalletTest(BitcoinTestFramework):
         result = 'unchanged' if new == old else 'increased!'
         self.log.debug('Wallet file timestamp {}'.format(result))
 
-    def test_readonly_tool_command(self, command_name, tool_args, expected_output=None):
+    def test_wallet_command_unchanged(self, command_name, action_func):
         """
-        Helper method to test wallet tool commands with read-only file permissions.
-        Tests that the command works with read-only permissions and doesn't modify the wallet file.
+        Unified helper method to test wallet commands that should not modify the wallet file.
+        Records wallet state before/after and verifies no changes occurred.
 
         Args:
             command_name: Name of the command being tested (for logging)
-            tool_args: List of arguments to pass to bitcoin-wallet tool
-            expected_output: Expected stdout output (if None, only checks command succeeds)
+            action_func: Function that performs the wallet action to test
         """
-        self.log.debug(f'Setting wallet file permissions to 400 (read-only) for {command_name}')
+        # Record state before command
+        shasum_before = self.wallet_shasum()
+        timestamp_before = self.wallet_timestamp()
+        self.log.debug(f'Wallet file timestamp before calling {command_name}: {timestamp_before}')
+
+        # Execute the action
+        action_func()
+
+        # Record state after command
+        shasum_after = self.wallet_shasum()
+        timestamp_after = self.wallet_timestamp()
+        self.log.debug(f'Wallet file timestamp after calling {command_name}: {timestamp_after}')
+        self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
+
+        # Verify wallet file unchanged
+        assert_equal(timestamp_before, timestamp_after)
+        assert_equal(shasum_before, shasum_after)
+        self.log.debug(f'Wallet file shasum unchanged after {command_name}\n')
+
+    def execute_readonly_tool_command(self, tool_args, expected_output):
+        """
+        Helper to execute a tool command with read-only file permissions.
+        Sets read-only permissions, executes command, then restores permissions.
+
+        Args:
+            tool_args: List of arguments to pass to bitcoin-wallet tool
+            expected_output: Expected stdout output
+        """
+        # Set read-only permissions
+        self.log.debug('Setting wallet file permissions to 400 (read-only)')
         os.chmod(self.wallet_path, stat.S_IRUSR)
 
         # Cross-platform permission check
@@ -100,82 +128,18 @@ class ToolWalletTest(BitcoinTestFramework):
         self.log.debug(f'Wallet permissions after setting read-only: {permissions}')
         expected_permissions = ['400', '444', '666', '644', '600', '755', '777']
         assert permissions in expected_permissions, f"Expected permissions in {expected_permissions}, got '{permissions}'"
-        assert self.is_wallet_readable(), f"Wallet file should still be readable after setting read-only permissions for {command_name}"
+        assert self.is_wallet_readable(), "Wallet file should still be readable after setting read-only permissions"
 
-        # Record state before command
-        shasum_before = self.wallet_shasum()
-        timestamp_before = self.wallet_timestamp()
-        self.log.debug(f'Wallet file timestamp before calling {command_name}: {timestamp_before}')
-
-        # Execute the tool command
-        if expected_output is not None:
+        try:
+            # Execute the tool command
             self.assert_tool_output(expected_output, *tool_args)
-        else:
-            p = self.bitcoin_wallet_process(*tool_args)
-            stdout, stderr = p.communicate()
-            assert_equal(p.poll(), 0)
-
-        # Record state after command
-        timestamp_after = self.wallet_timestamp()
-        self.log.debug(f'Wallet file timestamp after calling {command_name}: {timestamp_after}')
-        self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
-
-        # Restore permissions
-        self.log.debug('Setting wallet file permissions back to 600 (read/write)')
-        os.chmod(self.wallet_path, stat.S_IRUSR | stat.S_IWUSR)
-        permissions_after = self.wallet_permissions()
-        self.log.debug(f'Wallet permissions after restoring read-write: {permissions_after}')
-        assert self.is_wallet_readable(), f"Wallet file should be readable after restoring permissions for {command_name}"
-
-        # Verify wallet file unchanged
-        assert_equal(timestamp_before, timestamp_after)
-        shasum_after = self.wallet_shasum()
-        assert_equal(shasum_before, shasum_after)
-        self.log.debug(f'Wallet file shasum unchanged after {command_name}\n')
-
-    def test_tool_command_wallet_unchanged(self, command_name, tool_args, expected_output):
-        """
-        Helper method to test wallet tool commands that should not modify the wallet file.
-        Records wallet state before/after and verifies no changes occurred.
-
-        Args:
-            command_name: Name of the command being tested (for logging)
-            tool_args: List of arguments to pass to bitcoin-wallet tool
-            expected_output: Expected stdout output
-        """
-        shasum_before = self.wallet_shasum()
-        timestamp_before = self.wallet_timestamp()
-        self.log.debug(f'Wallet file timestamp before calling {command_name}: {timestamp_before}')
-
-        self.assert_tool_output(expected_output, *tool_args)
-
-        shasum_after = self.wallet_shasum()
-        timestamp_after = self.wallet_timestamp()
-        self.log.debug(f'Wallet file timestamp after calling {command_name}: {timestamp_after}')
-        self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
-
-        # Verify wallet file unchanged
-        assert_equal(timestamp_before, timestamp_after)
-        assert_equal(shasum_before, shasum_after)
-        self.log.debug(f'Wallet file shasum unchanged after {command_name}\n')
-
-    def verify_wallet_file_unchanged(self, command_name, shasum_before, timestamp_before):
-        """
-        Helper method to verify wallet file was not modified after an operation.
-
-        Args:
-            command_name: Name of the command being tested (for logging)
-            shasum_before: Wallet checksum before operation
-            timestamp_before: Wallet timestamp before operation
-        """
-        shasum_after = self.wallet_shasum()
-        timestamp_after = self.wallet_timestamp()
-        self.log.debug(f'Wallet file timestamp after calling {command_name}: {timestamp_after}')
-        self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
-
-        assert_equal(timestamp_before, timestamp_after)
-        assert_equal(shasum_before, shasum_after)
-        self.log.debug(f'Wallet file shasum unchanged after {command_name}\n')
+        finally:
+            # Restore permissions
+            self.log.debug('Setting wallet file permissions back to 600 (read/write)')
+            os.chmod(self.wallet_path, stat.S_IRUSR | stat.S_IWUSR)
+            permissions_after = self.wallet_permissions()
+            self.log.debug(f'Wallet permissions after restoring read-write: {permissions_after}')
+            assert self.is_wallet_readable(), "Wallet file should be readable after restoring permissions"
 
     def get_expected_info_output(self, name="", transactions=0, keypool=2, address=0, imported_privs=0):
         wallet_name = self.default_wallet_name if name == "" else name
@@ -261,7 +225,8 @@ class ToolWalletTest(BitcoinTestFramework):
         # Test wallet tool info with read-only file permissions
         out = self.get_expected_info_output(imported_privs=1)
         tool_args = ['-wallet=' + self.default_wallet_name, 'info']
-        self.test_readonly_tool_command('info', tool_args, out)
+        self.test_wallet_command_unchanged('info',
+            lambda: self.execute_readonly_tool_command(tool_args, out))
 
     def test_tool_wallet_dump_readonly(self):
         """Test dump command with read-only wallet file permissions"""
@@ -271,7 +236,8 @@ class ToolWalletTest(BitcoinTestFramework):
         wallet_dump = self.nodes[0].datadir_path / "readonly_wallet.dump"
         expected_output = 'The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n'
         tool_args = ['-wallet=' + self.default_wallet_name, '-dumpfile={}'.format(wallet_dump), 'dump']
-        self.test_readonly_tool_command('dump', tool_args, expected_output)
+        self.test_wallet_command_unchanged('dump',
+            lambda: self.execute_readonly_tool_command(tool_args, expected_output))
 
         # Verify dump file was created and contains expected data
         assert wallet_dump.exists(), "Dump file should have been created"
@@ -293,30 +259,29 @@ class ToolWalletTest(BitcoinTestFramework):
         self.log.info('Calling wallet tool info after generating a transaction, testing output')
         out = self.get_expected_info_output(transactions=1, imported_privs=1)
         tool_args = ['-wallet=' + self.default_wallet_name, 'info']
-        self.test_tool_command_wallet_unchanged('info', tool_args, out)
+        self.test_wallet_command_unchanged('info',
+            lambda: self.assert_tool_output(out, *tool_args))
 
     def test_tool_wallet_create_on_existing_wallet(self):
         self.log.info('Calling wallet tool create on an existing wallet, testing output')
         out = "Topping up keypool...\n" + self.get_expected_info_output(name="foo", keypool=2000)
         tool_args = ['-wallet=foo', 'create']
-        self.test_tool_command_wallet_unchanged('create', tool_args, out)
+        self.test_wallet_command_unchanged('create',
+            lambda: self.assert_tool_output(out, *tool_args))
 
     def test_getwalletinfo_on_different_wallet(self):
         self.log.info('Starting node with arg -wallet=foo')
         self.start_node(0, ['-nowallet', '-wallet=foo'])
 
         self.log.info('Calling getwalletinfo on a different wallet ("foo"), testing output')
-        shasum_before = self.wallet_shasum()
-        timestamp_before = self.wallet_timestamp()
-        self.log.debug('Wallet file timestamp before calling getwalletinfo: {}'.format(timestamp_before))
-        out = self.nodes[0].getwalletinfo()
-        self.stop_node(0)
+        def getwalletinfo_action():
+            out = self.nodes[0].getwalletinfo()
+            self.stop_node(0)
+            assert_equal(0, out['txcount'])
+            assert_equal(4000, out['keypoolsize'])
+            assert_equal(4000, out['keypoolsize_hd_internal'])
 
-        assert_equal(0, out['txcount'])
-        assert_equal(4000, out['keypoolsize'])
-        assert_equal(4000, out['keypoolsize_hd_internal'])
-
-        self.verify_wallet_file_unchanged('getwalletinfo', shasum_before, timestamp_before)
+        self.test_wallet_command_unchanged('getwalletinfo', getwalletinfo_action)
 
     def test_dump_createfromdump(self):
         self.start_node(0)
