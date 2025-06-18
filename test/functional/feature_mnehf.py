@@ -229,7 +229,7 @@ class MnehfTest(DashTestFramework):
             self.bump_mocktime(1)
             self.generate(self.nodes[1], 1)
             return get_bip9_details(self.nodes[0], 'testdummy')['status'] == 'active'
-        self.wait_until(lambda: check_ehf_activated(self))
+        self.wait_until(lambda: check_ehf_activated(self), sleep=1)
 
 if __name__ == '__main__':
     MnehfTest().main()
