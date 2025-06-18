@@ -50,34 +50,41 @@ BOOST_AUTO_TEST_CASE(walletdb_readonly_database)
     std::shared_ptr<CWallet> readonly_wallet = std::make_shared<CWallet>(nullptr, "", std::move(readonly_db));
     BOOST_CHECK(readonly_wallet->GetDatabase().IsReadOnly());
 
-    // Test 2: Batch operations with read-only database
-    MockableData initial_data;
+    // Test 2: WalletBatch operations with read-only database
+    // First create a writable database and populate it with wallet data
+    auto writable_database = CreateMockableWalletDatabase();
+    {
+        WalletBatch write_batch(*writable_database);
 
-    // Pre-populate with some wallet-like data
-    DataStream key_stream, value_stream;
-    key_stream << std::make_pair(DBKeys::VERSION, std::string{});
-    value_stream << CLIENT_VERSION;
-    initial_data[SerializeData(key_stream.begin(), key_stream.end())] = SerializeData(value_stream.begin(), value_stream.end());
+        // Write some wallet data using WalletBatch methods
+        BOOST_CHECK(write_batch.WriteWalletFlags(WALLET_FLAG_DESCRIPTORS));
+        BOOST_CHECK(write_batch.WriteName("address1", "Alice"));
+        BOOST_CHECK(write_batch.WritePurpose("address1", "receive"));
+    }
 
-    key_stream.clear();
-    value_stream.clear();
-    key_stream << std::make_pair(DBKeys::FLAGS, std::string{});
-    value_stream << uint64_t{WALLET_FLAG_DESCRIPTORS};
-    initial_data[SerializeData(key_stream.begin(), key_stream.end())] = SerializeData(value_stream.begin(), value_stream.end());
+    // Copy the data to create a read-only database
+    MockableData wallet_data = dynamic_cast<MockableDatabase&>(*writable_database).m_records;
+    auto readonly_database = CreateMockableWalletDatabase(wallet_data, true);
+    BOOST_CHECK(readonly_database->IsReadOnly());
 
-    auto readonly_database = CreateMockableWalletDatabase(initial_data, true);
+    // Test WalletBatch with read-only database
+    WalletBatch readonly_batch(*readonly_database);
 
-    // Test that we can create a batch and perform read operations
-    std::unique_ptr<DatabaseBatch> batch = readonly_database->MakeBatch();
+    // Reading should work through WalletBatch
+    std::string read_name, read_purpose;
+    BOOST_CHECK(readonly_batch.ReadName("address1", read_name));
+    BOOST_CHECK_EQUAL(read_name, "Alice");
+    BOOST_CHECK(readonly_batch.ReadPurpose("address1", read_purpose));
+    BOOST_CHECK_EQUAL(read_purpose, "receive");
 
-    // Reading should work
-    int version;
-    BOOST_CHECK(batch->Read(std::make_pair(DBKeys::VERSION, std::string{}), version));
-    BOOST_CHECK_EQUAL(version, CLIENT_VERSION);
+    // Write operations should fail on read-only database
+    BOOST_CHECK(!readonly_batch.WriteName("address2", "Bob"));
+    BOOST_CHECK(!readonly_batch.WritePurpose("address2", "send"));
+    BOOST_CHECK(!readonly_batch.EraseName("address1"));
 
-    uint64_t flags;
-    BOOST_CHECK(batch->Read(std::make_pair(DBKeys::FLAGS, std::string{}), flags));
-    BOOST_CHECK_EQUAL(flags, WALLET_FLAG_DESCRIPTORS);
+    // Verify original data is unchanged
+    BOOST_CHECK(readonly_batch.ReadName("address1", read_name));
+    BOOST_CHECK_EQUAL(read_name, "Alice");
 
     // Test 3: LoadWallet with read-only databases
     // Create a regular wallet first to populate data
@@ -102,8 +109,8 @@ BOOST_AUTO_TEST_CASE(walletdb_readonly_database)
     }
 
     // Now test with read-only database
-    MockableData wallet_data = dynamic_cast<MockableDatabase&>(wallet->GetDatabase()).m_records;
-    auto readonly_loadwallet_database = CreateMockableWalletDatabase(wallet_data, true);
+    MockableData loadwallet_data = dynamic_cast<MockableDatabase&>(wallet->GetDatabase()).m_records;
+    auto readonly_loadwallet_database = CreateMockableWalletDatabase(loadwallet_data, true);
     BOOST_CHECK(readonly_loadwallet_database->IsReadOnly());
 
     std::shared_ptr<CWallet> readonly_loadwallet_wallet = std::make_shared<CWallet>(nullptr, "", std::move(readonly_loadwallet_database));

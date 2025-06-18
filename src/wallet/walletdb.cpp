@@ -78,6 +78,11 @@ bool WalletBatch::WriteName(const std::string& strAddress, const std::string& st
     return WriteIC(std::make_pair(DBKeys::NAME, strAddress), strName);
 }
 
+bool WalletBatch::ReadName(const std::string& strAddress, std::string& strName)
+{
+    return m_batch->Read(std::make_pair(DBKeys::NAME, strAddress), strName);
+}
+
 bool WalletBatch::EraseName(const std::string& strAddress)
 {
     // This should only be used for sending addresses, never for receiving addresses,
@@ -88,6 +93,11 @@ bool WalletBatch::EraseName(const std::string& strAddress)
 bool WalletBatch::WritePurpose(const std::string& strAddress, const std::string& strPurpose)
 {
     return WriteIC(std::make_pair(DBKeys::PURPOSE, strAddress), strPurpose);
+}
+
+bool WalletBatch::ReadPurpose(const std::string& strAddress, std::string& strPurpose)
+{
+    return m_batch->Read(std::make_pair(DBKeys::PURPOSE, strAddress), strPurpose);
 }
 
 bool WalletBatch::ErasePurpose(const std::string& strAddress)

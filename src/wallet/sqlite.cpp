@@ -320,27 +320,27 @@ void SQLiteDatabase::Open()
         throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check table existence: %s\n", sqlite3_errstr(ret)));
     }
 
-    // For read-only databases, table must exist
-    if (!table_exists && m_read_only) {
-        throw std::runtime_error("SQLiteDatabase: Cannot open read-only database without existing main table");
-    }
+    if(!table_exists) {
+        // For read-only databases, table must exist
+        if(m_read_only) {
+            throw std::runtime_error("SQLiteDatabase: Cannot open read-only database without existing main table");
+        } else {
+            // Do the db setup things because the table doesn't exist only when we are creating a new wallet
+            // Only do table creation and setup in read-write mode
+            ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
+            if (ret != SQLITE_OK) {
+                throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
+            }
 
-    // Do the db setup things because the table doesn't exist only when we are creating a new wallet
-    // Only do table creation and setup in read-write mode
-    if (!table_exists && !m_read_only) {
-        ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
-        if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
+            // Set the application id
+            uint32_t app_id = ReadBE32(Params().MessageStart().data());
+            SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
+                      "Failed to set the application id");
+
+            // Set the user version
+            SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
+                      "Failed to set the wallet schema version");
         }
-
-        // Set the application id
-        uint32_t app_id = ReadBE32(Params().MessageStart().data());
-        SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
-                  "Failed to set the application id");
-
-        // Set the user version
-        SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
-                  "Failed to set the wallet schema version");
     }
 }
 
