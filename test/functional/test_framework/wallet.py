@@ -89,6 +89,9 @@ class MiniWallet:
             self._address = ADDRESS_BCRT1_P2SH_OP_TRUE
             self._scriptPubKey = bytes.fromhex(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
+    def get_balance(self):
+        return sum(u['value'] for u in self._utxos)
+
     def rescan_utxos(self):
         """Drop all utxos and rescan the utxo set"""
         self._utxos = []
