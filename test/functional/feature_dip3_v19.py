@@ -95,10 +95,8 @@ class DIP3V19Test(DashTestFramework):
         assert evo_info_3 is not None
         self.dynamically_evo_update_service(evo_info_0, 9, should_be_rejected=True)
 
-        revoke_protx = self.mninfo[-1].proTxHash
-        revoke_keyoperator = self.mninfo[-1].keyOperator
-        self.log.info(f"Trying to revoke proTx:{revoke_protx}")
-        self.test_revoke_protx(evo_info_3.nodeIdx, revoke_protx, revoke_keyoperator)
+        self.log.info(f"Trying to revoke proTx:{self.mninfo[-1].proTxHash}")
+        self.test_revoke_protx(evo_info_3.nodeIdx, self.mninfo[-1])
 
         self.mine_quorum(llmq_type_name='llmq_test', llmq_type=100)
 
@@ -116,14 +114,14 @@ class DIP3V19Test(DashTestFramework):
 
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
-    def test_revoke_protx(self, node_idx, revoke_protx, revoke_keyoperator):
+    def test_revoke_protx(self, node_idx, revoke_mn: MasternodeInfo):
         funds_address = self.nodes[0].getnewaddress()
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         tip = self.generate(self.nodes[0], 1)[0]
         assert_equal(self.nodes[0].getrawtransaction(fund_txid, 1, tip)['confirmations'], 1)
 
-        protx_result = self.nodes[0].protx('revoke', revoke_protx, revoke_keyoperator, 1, funds_address)
+        protx_result = revoke_mn.revoke(self.nodes[0], submit=True, reason=1, fundsAddr=funds_address)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         tip = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         assert_equal(self.nodes[0].getrawtransaction(protx_result, 1, tip)['confirmations'], 1)
@@ -132,9 +130,9 @@ class DIP3V19Test(DashTestFramework):
         self.wait_until(lambda: self.nodes[node_idx].getconnectioncount() == 0)
         self.connect_nodes(node_idx, 0)
         self.sync_all()
-        self.log.info(f"Successfully revoked={revoke_protx}")
+        self.log.info(f"Successfully revoked={revoke_mn.proTxHash}")
         for mn in self.mninfo: # type: MasternodeInfo
-            if mn.proTxHash == revoke_protx:
+            if mn.proTxHash == revoke_mn.proTxHash:
                 self.mninfo.remove(mn)
                 return
 

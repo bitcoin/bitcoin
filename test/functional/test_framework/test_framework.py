@@ -35,8 +35,6 @@ from .messages import (
     ser_compact_size,
     ser_string,
     tx_from_hex,
-
-
 )
 from .script import hash160
 from .p2p import NetworkThread
@@ -46,6 +44,7 @@ from .util import (
     MAX_NODES,
     append_config,
     assert_equal,
+    assert_raises_rpc_error,
     check_json_precision,
     copy_datadir,
     force_finish_mnsync,
@@ -1186,6 +1185,8 @@ class MasternodeInfo:
             return -1
 
     def __init__(self, evo: bool, legacy: bool):
+        if evo and legacy:
+            raise AssertionError("EvoNodes are not allowed to use legacy scheme")
         self.evo = evo
         self.legacy = legacy
 
@@ -1204,6 +1205,7 @@ class MasternodeInfo:
 
     def set_node(self, nodeIdx: int, friendlyName: Optional[str] = None):
         self.nodeIdx = nodeIdx
+        self.nodePort = p2p_port(nodeIdx)
         self.friendlyName = friendlyName or f"mn-{'evo' if self.evo else 'reg'}-{self.nodeIdx}"
 
     def get_node(self, test: BitcoinTestFramework) -> TestNode:
@@ -1212,6 +1214,257 @@ class MasternodeInfo:
         if self.nodeIdx > len(test.nodes):
             raise AssertionError(f"Node at pos {self.nodeIdx} not present, did you start the node?")
         return test.nodes[self.nodeIdx]
+
+    def register(self, node: TestNode, submit: bool, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
+                 ipAndPort: Optional[str] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+                 operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
+                 platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None,
+                 expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+        if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
+            raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
+
+        # EvoNode-specific fields are ignored for regular masternodes
+        if self.evo:
+            if platform_node_id is None:
+                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
+            if platform_p2p_port is None:
+                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
+            if platform_http_port is None:
+                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+
+        # Common arguments shared between regular masternodes and EvoNodes
+        args = [
+            collateral_txid or self.collateral_txid,
+            collateral_vout or self.collateral_vout,
+            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            ownerAddr or self.ownerAddr,
+            pubKeyOperator or self.pubKeyOperator,
+            votingAddr or self.votingAddr,
+            operator_reward or self.operator_reward,
+            rewards_address or self.rewards_address,
+        ]
+        address_funds = fundsAddr or self.fundsAddr
+
+        # Use assert_raises_rpc_error if we expect to error out
+        use_assert: bool = bool(expected_assert_code and expected_assert_msg)
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit and not use_assert
+        if use_srt:
+            submit = False
+
+        # Construct final command and arguments
+        if self.evo:
+            command = "register_evo"
+            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_funds, submit] # type: ignore
+        else:
+            command = "register_legacy" if self.legacy else "register"
+            args = args + [address_funds, submit] # type: ignore
+
+        if use_assert:
+            assert_raises_rpc_error(expected_assert_code, expected_assert_msg, node.protx, command, *args)
+            return None
+
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
+
+    def register_fund(self, node: TestNode, submit: bool, collateral_address: Optional[str] = None, ipAndPort: Optional[str] = None,
+                      ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+                      operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
+                      platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None,
+                      expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+        if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
+            raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
+
+        # EvoNode-specific fields are ignored for regular masternodes
+        if self.evo:
+            if platform_node_id is None:
+                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
+            if platform_p2p_port is None:
+                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
+            if platform_http_port is None:
+                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+
+        # Use assert_raises_rpc_error if we expect to error out
+        use_assert: bool = bool(expected_assert_code and expected_assert_msg)
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit and not use_assert
+        if use_srt:
+            submit = False
+
+        # Common arguments shared between regular masternodes and EvoNodes
+        args = [
+            collateral_address or self.collateral_address,
+            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            ownerAddr or self.ownerAddr,
+            pubKeyOperator or self.pubKeyOperator,
+            votingAddr or self.votingAddr,
+            operator_reward or self.operator_reward,
+            rewards_address or self.rewards_address,
+        ]
+        address_funds = fundsAddr or self.fundsAddr
+
+        # Construct final command and arguments
+        if self.evo:
+            command = "register_fund_evo"
+            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_funds, submit] # type: ignore
+        else:
+            command = "register_fund_legacy" if self.legacy else "register_fund"
+            args = args + [address_funds, submit] # type: ignore
+
+        if use_assert:
+            assert_raises_rpc_error(expected_assert_code, expected_assert_msg, node.protx, command, *args)
+            return None
+
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
+
+    def revoke(self, node: TestNode, submit: bool, reason: int, fundsAddr: Optional[str] = None,
+               expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+        if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
+            raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
+
+        # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
+        if self.proTxHash is None:
+            raise AssertionError("proTxHash not set, did you call set_params()")
+        if self.keyOperator is None:
+            raise AssertionError("keyOperator not set, did you call generate_addresses()")
+
+        # Use assert_raises_rpc_error if we expect to error out
+        use_assert: bool = bool(expected_assert_code and expected_assert_msg)
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit and (fundsAddr is not None) and not use_assert
+        if use_srt:
+            submit = False
+
+        command = 'revoke'
+        args = [
+            self.proTxHash,
+            self.keyOperator,
+            reason,
+        ]
+
+        # fundsAddr is an optional field that results in different behavior if omitted, so we don't fallback here
+        if fundsAddr is not None:
+            args = args + [fundsAddr, submit] # type: ignore
+        elif submit is not True:
+            raise AssertionError("Cannot withhold transaction if relying on fundsAddr fallback behavior")
+
+        if use_assert:
+            assert_raises_rpc_error(expected_assert_code, expected_assert_msg, node.protx, command, *args)
+            return None
+
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
+
+    def update_registrar(self, node: TestNode, submit: bool, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+                         rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
+                         expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+        if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
+            raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
+
+        # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding proTxHash for this reason
+        if self.proTxHash is None:
+            raise AssertionError("proTxHash not set, did you call set_params()")
+
+        # Use assert_raises_rpc_error if we expect to error out
+        use_assert: bool = bool(expected_assert_code and expected_assert_msg)
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit and (fundsAddr is not None) and not use_assert
+        if use_srt:
+            submit = False
+
+        command = 'update_registrar_legacy' if self.legacy else 'update_registrar'
+        args = [
+            self.proTxHash,
+            pubKeyOperator or self.pubKeyOperator,
+            votingAddr or self.votingAddr,
+            rewards_address or self.rewards_address,
+        ]
+
+        # fundsAddr is an optional field that results in different behavior if omitted, so we don't fallback here
+        if fundsAddr is not None:
+            args = args + [fundsAddr, submit] # type: ignore
+        elif submit is not True:
+            raise AssertionError("Cannot withhold transaction if relying on fundsAddr fallback behavior")
+
+        if use_assert:
+            assert_raises_rpc_error(expected_assert_code, expected_assert_msg, node.protx, command, *args)
+            return None
+
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
+
+    def update_service(self, node: TestNode, submit: bool, ipAndPort: Optional[str] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
+                       platform_http_port: Optional[int] = None, address_operator: Optional[str] = None, fundsAddr: Optional[str] = None,
+                       expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+        if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
+            raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
+
+        # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
+        if self.proTxHash is None:
+            raise AssertionError("proTxHash not set, did you call set_params()")
+        if self.keyOperator is None:
+            raise AssertionError("keyOperator not set, did you call generate_addresses()")
+
+        # EvoNode-specific fields are ignored for regular masternodes
+        if self.evo:
+            if platform_node_id is None:
+                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
+            if platform_p2p_port is None:
+                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
+            if platform_http_port is None:
+                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+
+        # Use assert_raises_rpc_error if we expect to error out
+        use_assert: bool = bool(expected_assert_code and expected_assert_msg)
+
+        # Flip a coin and decide if we will submit the transaction directly or use sendrawtransaction
+        use_srt: bool = bool(random.getrandbits(1)) and submit and not use_assert
+        if use_srt:
+            submit = False
+
+        # Common arguments shared between regular masternodes and EvoNodes
+        args = [
+            self.proTxHash,
+            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            self.keyOperator,
+        ]
+        address_funds = fundsAddr or self.fundsAddr
+        address_operator = address_operator or ""
+
+        # Construct final command and arguments
+        if self.evo:
+            command = "update_service_evo"
+            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_operator, address_funds, submit] # type: ignore
+        else:
+            command = "update_service"
+            args = args + [address_operator, address_funds, submit] # type: ignore
+
+        if use_assert:
+            assert_raises_rpc_error(expected_assert_code, expected_assert_msg, node.protx, command, *args)
+            return None
+
+        ret: str = node.protx(command, *args)
+        if use_srt:
+            ret = node.sendrawtransaction(ret)
+
+        return ret
 
 class DashTestFramework(BitcoinTestFramework):
     def set_test_params(self):
@@ -1381,8 +1634,8 @@ class DashTestFramework(BitcoinTestFramework):
         mn.generate_addresses(self.nodes[0])
 
         platform_node_id = hash160(b'%d' % rnd).hex() if rnd is not None else hash160(b'%d' % node_p2p_port).hex()
-        platform_p2p_port = '%d' % (node_p2p_port + 101)
-        platform_http_port = '%d' % (node_p2p_port + 102)
+        platform_p2p_port = node_p2p_port + 101
+        platform_http_port = node_p2p_port + 102
 
         outputs = {mn.collateral_address: mn.get_collateral_value(), mn.fundsAddr: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
@@ -1393,11 +1646,10 @@ class DashTestFramework(BitcoinTestFramework):
         ipAndPort = '127.0.0.1:%d' % node_p2p_port
         operatorReward = idx
 
-        protx_result = None
-        if evo:
-            protx_result = self.nodes[0].protx("register_evo", collateral_txid, collateral_vout, ipAndPort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, platform_node_id, platform_p2p_port, platform_http_port, mn.fundsAddr, True)
-        else:
-            protx_result = self.nodes[0].protx("register_legacy" if mn.legacy else "register", collateral_txid, collateral_vout, ipAndPort, mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, True)
+        # platform_node_id, platform_p2p_port and platform_http_port are ignored for regular masternodes
+        protx_result = mn.register(self.nodes[0], submit=True, collateral_txid=collateral_txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort, operator_reward=operatorReward,
+                                   platform_node_id=platform_node_id, platform_p2p_port=platform_p2p_port, platform_http_port=platform_http_port)
+        assert protx_result is not None
 
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
         mn.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
@@ -1416,8 +1668,8 @@ class DashTestFramework(BitcoinTestFramework):
         # For the sake of the test, generate random nodeid, p2p and http platform values
         r = rnd if rnd is not None else random.randint(21000, 65000)
         platform_node_id = hash160(b'%d' % r).hex()
-        platform_p2p_port = '%d' % (r + 1)
-        platform_http_port = '%d' % (r + 2)
+        platform_p2p_port = r + 1
+        platform_http_port = r + 2
 
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
@@ -1425,7 +1677,8 @@ class DashTestFramework(BitcoinTestFramework):
 
         protx_success = False
         try:
-            protx_result = self.nodes[0].protx('update_service_evo', evo_info.proTxHash, f'127.0.0.1:{evo_info.nodePort}', evo_info.keyOperator, platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
+            protx_result = evo_info.update_service(self.nodes[0], True, f'127.0.0.1:{evo_info.nodePort}', platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
+            assert protx_result is not None
             self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
             evo_info.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
             self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
@@ -1462,24 +1715,23 @@ class DashTestFramework(BitcoinTestFramework):
         submit = (idx % 4) < 2
 
         if register_fund:
-            protx_result = self.nodes[0].protx('register_fund_legacy' if mn.legacy else 'register_fund', mn.collateral_address, ipAndPort,
-                                               mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, submit)
+            protx_result = mn.register_fund(self.nodes[0], submit=submit, ipAndPort=ipAndPort, operator_reward=operatorReward)
         else:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-            protx_result = self.nodes[0].protx('register_legacy' if mn.legacy else 'register', txid, collateral_vout, ipAndPort,
-                                               mn.ownerAddr, mn.pubKeyOperator, mn.votingAddr, operatorReward, mn.rewards_address, mn.fundsAddr, submit)
-
+            protx_result = mn.register(self.nodes[0], submit=submit, collateral_txid=txid, collateral_vout=collateral_vout, ipAndPort=ipAndPort,
+                                       operator_reward=operatorReward)
         if submit:
             proTxHash = protx_result
         else:
             proTxHash = self.nodes[0].sendrawtransaction(protx_result)
 
+        mn.set_params(proTxHash=proTxHash, operator_reward=operatorReward, collateral_txid=txid, collateral_vout=collateral_vout, nodePort=port)
+
         if operatorReward > 0:
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             operatorPayoutAddress = self.nodes[0].getnewaddress()
-            self.nodes[0].protx('update_service', proTxHash, ipAndPort, mn.keyOperator, operatorPayoutAddress, mn.fundsAddr)
+            mn.update_service(self.nodes[0], submit=True, ipAndPort=ipAndPort, address_operator=operatorPayoutAddress)
 
-        mn.set_params(proTxHash=proTxHash, operator_reward=operatorReward, collateral_txid=txid, collateral_vout=collateral_vout, nodePort=port)
         self.mninfo.append(mn)
         self.log.info("Prepared MN %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
 
