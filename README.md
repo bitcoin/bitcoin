@@ -265,3 +265,7 @@ The question is not whether there will be massive Bitcoin losses across generati
 ---
 
 **"The question is not whether there will be massive Bitcoin losses across generations - the question is what we will do about it."**
+
+## Learn More
+
+For additional information and resources about the Bitcoin 2.0 Continuity Protocol, visit: https://k10.netlify.app/recursos/picoin
