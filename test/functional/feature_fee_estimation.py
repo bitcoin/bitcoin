@@ -87,10 +87,11 @@ def check_raw_estimates(node, fees_seen):
 
 
 def check_smart_estimates(node, fees_seen):
-    """Call estimatesmartfee and verify that the estimates meet certain invariants."""
+    """Call estimatesmartfee "economical" True and verify that the estimates meet certain invariants."""
 
     delta = 1.0e-6  # account for rounding error
-    all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
+    last_feerate = float(max(fees_seen))
+    all_smart_estimates = [node.estimatesmartfee(i, "economical", True) for i in range(1, 26)]
     mempoolMinFee = node.getmempoolinfo()["mempoolminfee"]
     minRelaytxFee = node.getmempoolinfo()["minrelaytxfee"]
     feerate_ceiling = max(max(fees_seen), float(mempoolMinFee), float(minRelaytxFee))
@@ -130,9 +131,9 @@ def make_tx(wallet, utxo, feerate):
     )
 
 def check_fee_estimates_btw_modes(node, expected_conservative, expected_economical):
-    fee_est_conservative = node.estimatesmartfee(1, estimate_mode="conservative")['feerate']
-    fee_est_economical = node.estimatesmartfee(1, estimate_mode="economical")['feerate']
-    fee_est_default = node.estimatesmartfee(1)['feerate']
+    fee_est_conservative = node.estimatesmartfee(1, estimate_mode="conservative", block_policy_only=True)['feerate']
+    fee_est_economical = node.estimatesmartfee(1, estimate_mode="economical", block_policy_only=True)['feerate']
+    fee_est_default = node.estimatesmartfee(1, estimate_mode="economical", block_policy_only=True)['feerate'] # Default is economical.
     assert_equal(fee_est_conservative, expected_conservative)
     assert_equal(fee_est_economical, expected_economical)
     assert_equal(fee_est_default, expected_economical)
@@ -239,7 +240,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         check_estimates(self.nodes[1], self.fees_per_kb)
 
     def test_estimates_with_highminrelaytxfee(self):
-        high_val = 3 * self.nodes[1].estimatesmartfee(2)["feerate"]
+        high_val = 3 * self.nodes[1].estimatesmartfee(2, "economical", True)["feerate"]
         self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}"])
         check_smart_estimates(self.nodes[1], self.fees_per_kb)
         self.restart_node(1)
@@ -300,16 +301,16 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Only 10% of the transactions were really confirmed with a low feerate,
         # the rest needed to be RBF'd. We must return the 90% conf rate feerate.
         high_feerate_kvb = Decimal(high_feerate) / COIN * 10 ** 3
-        est_feerate = node.estimatesmartfee(2)["feerate"]
+        est_feerate = node.estimatesmartfee(2, "economical", True)["feerate"]
         assert_equal(est_feerate, high_feerate_kvb)
 
     def test_old_fee_estimate_file(self):
         # Get the initial fee rate while node is running
-        fee_rate = self.nodes[0].estimatesmartfee(1)["feerate"]
+        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"]
 
         # Restart node to ensure fee_estimate.dat file is read
         self.restart_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"], fee_rate)
 
         fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
 
@@ -320,7 +321,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Start node and ensure the fee_estimates.dat file was not read
         self.start_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["errors"], ["Insufficient data or no feerate found"])
 
 
     def test_estimate_dat_is_flushed_periodically(self):
@@ -377,7 +378,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def test_acceptstalefeeestimates_option(self):
         # Get the initial fee rate while node is running
-        fee_rate = self.nodes[0].estimatesmartfee(1)["feerate"]
+        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"]
 
         self.stop_node(0)
 
@@ -389,7 +390,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Restart node with -acceptstalefeeestimates option to ensure fee_estimate.dat file is read
         self.start_node(0,extra_args=["-acceptstalefeeestimates"])
-        assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"], fee_rate)
 
     def clear_estimates(self):
         self.log.info("Restarting node with fresh estimation")
@@ -400,7 +401,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
         self.sync_blocks()
-        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["errors"], ["Insufficient data or no feerate found"])
 
     def broadcast_and_mine(self, broadcaster, miner, feerate, count):
         """Broadcast and mine some number of transactions with a specified fee rate."""
