@@ -146,6 +146,7 @@ private:
 
     std::atomic<int> nNext;
     std::atomic<int> nTodo2;
+    std::atomic<bool> fResultDone;
 
     /** Internal function that does bulk of the verification work. If fMaster, return the final result. */
     std::optional<R> LoopAtomic(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -155,7 +156,7 @@ private:
         int start_index = 0, end_index = 0;
 
         while (true) {
-            if (end_index == (int)queue.size() && !fMaster) {
+            if ((end_index == (int)queue.size() || fResultDone) && !fMaster) {
                 WAIT_LOCK(m_mutex, lock);
                 if (m_request_stop) return std::nullopt;
                 cond.wait(lock); // wait
@@ -171,24 +172,31 @@ private:
                     local_result = queue[i]();
                     if (local_result.has_value()) {
                         LOCK(m_mutex);
-                        if (!m_result.has_value())
+                        if (!m_result.has_value()) {
                             std::swap(local_result, m_result);
+                            fResultDone = true;
+                        }
                         break;
                     }
                 }
-                if (end_index > start_index)
-                    nTodo2.fetch_sub(end_index - start_index);
+                if (end_index > start_index) {
+                    int todo = nTodo2.fetch_sub(end_index - start_index);
+                    if (!(todo - (end_index - start_index))) {
+                        fResultDone = true;
+                    }
+                }
+                if (fResultDone) break;
             }
 
             if (fMaster) {
                 WAIT_LOCK(m_mutex, lock);
-                cond.wait(lock, [&] { return !nTodo2; });
+                cond.wait(lock, [&] { return fResultDone.load(); });
 
                 std::optional<R> to_return = std::move(m_result);
                 m_result = std::nullopt;
                 return to_return;
             } else {
-                if (!nTodo2) {
+                if (fResultDone) {
                     LOCK(m_mutex);
                     m_master_cv.notify_one();
                 }
@@ -269,6 +277,7 @@ public:
            if (!nTodo2) {
                 nNext = 0;
                 queue.clear();
+                fResultDone = false;
                 WITH_LOCK(m_mutex, m_result = std::nullopt);
             }
 
