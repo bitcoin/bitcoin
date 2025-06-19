@@ -64,11 +64,9 @@ class ToolUtils(BitcoinTestFramework):
             with open(self.testcase_dir / outputFn, encoding="utf8") as f:
                 outputData = f.read()
             if not outputData:
-                logging.error("Output data missing for " + outputFn)
-                raise Exception
+                raise Exception(f"Output data missing for {outputFn}")
             if not outputType:
-                logging.error("Output file %s does not have a file extension" % outputFn)
-                raise Exception
+                raise Exception(f"Output file {outputFn} does not have a file extension")
 
         # Run the test
         res = subprocess.run(execrun, capture_output=True, text=True, input=inputData)
@@ -107,20 +105,17 @@ class ToolUtils(BitcoinTestFramework):
         if "return_code" in testObj:
             wantRC = testObj['return_code']
         if res.returncode != wantRC:
-            logging.error(f"Return code mismatch for {outputFn}; res: {str(res)}")
-            raise Exception
+            raise Exception(f"Return code mismatch for {outputFn}; res: {str(res)}")
 
         if "error_txt" in testObj:
             want_error = testObj["error_txt"]
             # A partial match instead of an exact match makes writing tests easier
             # and should be sufficient.
             if want_error not in res.stderr:
-                logging.error(f"Error mismatch:\nExpected: {want_error}\nReceived: {res.stderr.rstrip()}\nres: {str(res)}")
-                raise Exception
+                raise Exception(f"Error mismatch:\nExpected: {want_error}\nReceived: {res.stderr.rstrip()}\nres: {str(res)}")
         else:
             if res.stderr:
-                logging.error(f"Unexpected error received: {res.stderr.rstrip()}\nres: {str(res)}")
-                raise Exception
+                raise Exception(f"Unexpected error received: {res.stderr.rstrip()}\nres: {str(res)}")
 
 
 def parse_output(a, fmt):
