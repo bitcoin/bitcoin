@@ -85,14 +85,12 @@ static RPCHelpMan gettxoutproof()
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    LOCK(cs_main);
-
     if (pblockindex == nullptr) {
         const CTransactionRef tx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, *setTxids.begin(), Params().GetConsensus(), hashBlock);
         if (!tx || hashBlock.IsNull()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         }
-        pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
+        pblockindex = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(hashBlock));
         if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
         }
