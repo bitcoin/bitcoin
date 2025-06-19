@@ -1,6 +1,6 @@
-Bitcoin Core version 28.2rc2 is now available from:
+Bitcoin Core version 28.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.2/test.rc2/>
+  <https://bitcoincore.org/bin/bitcoin-core-28.2/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -68,6 +68,7 @@ Notable changes
 Credits
 =======
 
+Thanks to everyone who directly contributed to this release:
 - 0xB10C
 - achow101
 - Brandon Odiwuor
@@ -77,8 +78,6 @@ Credits
 - kehiy
 - MarcoFalke
 - Sjors Provoost
-
-Thanks to everyone who directly contributed to this release:
 
 As well as to everyone that helped with translations on
 [Transifex](https://www.transifex.com/bitcoin/bitcoin/).
