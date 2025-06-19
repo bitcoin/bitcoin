@@ -2116,6 +2116,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
 static int64_t nTimeVerify = 0;
+static int64_t nTimeUndo = 0;
 static int64_t nTimeISFilter = 0;
 static int64_t nTimeSubsidy = 0;
 static int64_t nTimeValueValid = 0;
@@ -2526,16 +2527,19 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     if (fJustCheck)
         return true;
 
+    int64_t nTime6 = GetTimeMicros();
+
     if (!m_blockman.WriteUndoDataForBlock(blockundo, state, pindex, m_params)) {
         return false;
     }
+
+    int64_t nTime7 = GetTimeMicros(); nTimeUndo += nTime7 - nTime6;
+    LogPrint(BCLog::BENCHMARK, "    - Write undo data: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime7 - nTime6), nTimeUndo * MICRO, nTimeUndo * MILLI / nBlocksTotal);
 
     if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
-
-    int64_t nTime6 = GetTimeMicros();
 
     if (fAddressIndex) {
         if (!m_blockman.m_block_tree_db->WriteAddressIndex(addressIndex)) {
@@ -2555,8 +2559,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         if (!m_blockman.m_block_tree_db->WriteTimestampIndex(CTimestampIndexKey(pindex->nTime, pindex->GetBlockHash())))
             return AbortNode(state, "Failed to write timestamp index");
 
-    int64_t nTime7 = GetTimeMicros(); nTimeIndexWrite += nTime7 - nTime6;
-    LogPrint(BCLog::BENCHMARK, "      - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime7 - nTime6), nTimeIndexWrite * MICRO, nTimeIndexWrite * MILLI / nBlocksTotal);
+    int64_t nTime8 = GetTimeMicros(); nTimeIndexWrite += nTime8 - nTime7;
+    LogPrint(BCLog::BENCHMARK, "      - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime8 - nTime7), nTimeIndexWrite * MICRO, nTimeIndexWrite * MILLI / nBlocksTotal);
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -2568,7 +2572,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         uiInterface.NotifyMasternodeListChanged(mnlu.new_list, pindex);
     }
 
-    ::g_stats_client->timing("ConnectBlock_ms", (nTime7 - nTimeStart) / 1000, 1.0f);
+    ::g_stats_client->timing("ConnectBlock_ms", (nTime8 - nTimeStart) / 1000, 1.0f);
 
     TRACE6(validation, block_connected,
         block_hash.data(),
@@ -2576,7 +2580,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         block.vtx.size(),
         nInputs,
         nSigOps,
-        nTime7 - nTimeStart // in microseconds (µs)
+        nTime8 - nTimeStart // in microseconds (µs)
     );
 
     return true;
@@ -2963,7 +2967,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     return true;
 }
 
-static int64_t nTimeReadFromDisk = 0;
+static int64_t nTimeReadFromDiskTotal = 0;
 static int64_t nTimeConnectTotal = 0;
 static int64_t nTimeFlush = 0;
 static int64_t nTimeChainState = 0;
@@ -3031,13 +3035,14 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
         }
         pthisBlock = pblockNew;
     } else {
+        LogPrint(BCLog::BENCHMARK, "  - Using cached block\n");
         pthisBlock = pblock;
     }
     const CBlock& blockConnecting = *pthisBlock;
     // Apply the block atomically to the chain state.
-    int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
+    int64_t nTime2 = GetTimeMicros(); nTimeReadFromDiskTotal += nTime2 - nTime1;
     int64_t nTime3;
-    LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
+    LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDiskTotal * MICRO, nTimeReadFromDiskTotal * MILLI / nBlocksTotal);
     {
         auto dbTx = m_evoDb.BeginTransaction();
 
