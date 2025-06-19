@@ -132,9 +132,11 @@ class CBlock;
 struct CMutableTransaction;
 class CScript;
 
-struct TestChainSetup : public RegTestingSetup
+struct TestChainSetup : public TestingSetup
 {
-    TestChainSetup(int num_blocks, const std::vector<const char*>& extra_args = {});
+    TestChainSetup(int num_blocks,
+                   const std::string& chain_name = CBaseChainParams::REGTEST,
+                   const std::vector<const char*>& extra_args = {});
     ~TestChainSetup();
 
     /**
@@ -182,6 +184,19 @@ struct TestChainSetup : public RegTestingSetup
                                                       CAmount output_amount = CAmount(1 * COIN),
                                                       bool submit = true);
 
+    /** Create transactions spending from m_coinbase_txns. These transactions will only spend coins
+     * that exist in the current chain, but may be premature coinbase spends, have missing
+     * signatures, or violate some other consensus rules. They should only be used for testing
+     * mempool consistency. All transactions will have some random number of inputs and outputs
+     * (between 1 and 24). Transactions may or may not be dependent upon each other; if dependencies
+     * exit, every parent will always be somewhere in the list before the child so each transaction
+     * can be submitted in the same order they appear in the list.
+     * @param[in]   submit      When true, submit transactions to the mempool.
+     *                          When false, return them but don't submit them.
+     * @returns A vector of transactions that can be submitted to the mempool.
+     */
+    std::vector<CTransactionRef> PopulateMempool(FastRandomContext& det_rand, size_t num_transactions, bool submit);
+
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
@@ -190,7 +205,8 @@ struct TestChainSetup : public RegTestingSetup
  * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
  */
 struct TestChain100Setup : public TestChainSetup {
-    TestChain100Setup(const std::vector<const char*>& extra_args = {});
+    TestChain100Setup(const std::string& chain_name = CBaseChainParams::REGTEST,
+                      const std::vector<const char*>& extra_args = {});
 };
 
 /**
