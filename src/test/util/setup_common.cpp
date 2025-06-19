@@ -8,6 +8,7 @@
 #include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
@@ -502,11 +503,14 @@ CBlock TestChainSetup::CreateBlock(
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }
 
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
+    // Create a valid coinbase and merkleRoot
     {
-        LOCK(cs_main);
-        unsigned int extraNonce = 0;
-        IncrementExtraNonce(&block, chainstate.m_chain.Tip(), extraNonce);
+        LOCK(::cs_main);
+        block.hashPrevBlock = chainstate.m_chain.Tip()->GetBlockHash();
+        CMutableTransaction tx_coinbase{*block.vtx[0]};
+        tx_coinbase.vin[0].scriptSig = CScript{} << (chainstate.m_chain.Height() + 1) << CScriptNum{1};
+        block.vtx[0] = MakeTransactionRef(std::move(tx_coinbase));
+        block.hashMerkleRoot = BlockMerkleRoot(block);
     }
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
