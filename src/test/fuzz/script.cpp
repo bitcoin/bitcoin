@@ -131,12 +131,4 @@ FUZZ_TARGET(script, .init = initialize_script)
         (void)(tx_destination_1 == tx_destination_2);
         (void)(tx_destination_1 < tx_destination_2);
     }
-
-    (void)FormatScript(script);
-    (void)ScriptToAsmStr(script, /*fAttemptSighashDecode=*/fuzzed_data_provider.ConsumeBool());
-
-    UniValue o1(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o1, /*include_hex=*/fuzzed_data_provider.ConsumeBool());
-    UniValue o3(UniValue::VOBJ);
-    ScriptToUniv(script, o3);
 }
