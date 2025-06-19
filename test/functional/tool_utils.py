@@ -9,7 +9,6 @@ from test_framework.test_framework import BitcoinTestFramework
 
 import difflib
 import json
-import logging
 import os
 import subprocess
 from pathlib import Path
@@ -77,16 +76,16 @@ class ToolUtils(BitcoinTestFramework):
             try:
                 a_parsed = parse_output(res.stdout, outputType)
             except Exception as e:
-                logging.error(f"Error parsing command output as {outputType}: '{str(e)}'; res: {str(res)}")
+                self.log.error(f"Error parsing command output as {outputType}: '{str(e)}'; res: {str(res)}")
                 raise
             try:
                 b_parsed = parse_output(outputData, outputType)
             except Exception as e:
-                logging.error('Error parsing expected output %s as %s: %s' % (outputFn, outputType, e))
+                self.log.error('Error parsing expected output %s as %s: %s' % (outputFn, outputType, e))
                 raise
             # Compare data
             if a_parsed != b_parsed:
-                logging.error(f"Output data mismatch for {outputFn} (format {outputType}); res: {str(res)}")
+                self.log.error(f"Output data mismatch for {outputFn} (format {outputType}); res: {str(res)}")
                 data_mismatch = True
             # Compare formatting
             if res.stdout != outputData:
@@ -95,7 +94,7 @@ class ToolUtils(BitcoinTestFramework):
                                                               res.stdout.splitlines(True),
                                                               fromfile=outputFn,
                                                               tofile="returned"))
-                logging.error(error_message)
+                self.log.error(error_message)
                 formatting_mismatch = True
 
             assert not data_mismatch and not formatting_mismatch
