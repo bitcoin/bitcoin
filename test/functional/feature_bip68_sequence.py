@@ -148,8 +148,10 @@ class BIP68Test(BitcoinTestFramework):
         # between height/time locking). Small random chance of making the locks
         # all pass.
         for _ in range(400):
+            available_utxos = len(utxos)
+
             # Randomly choose up to 10 inputs
-            num_inputs = random.randint(1, 10)
+            num_inputs = random.randint(1, min(10, available_utxos))
             random.shuffle(utxos)
 
             # Track whether any sequence locks used should fail
