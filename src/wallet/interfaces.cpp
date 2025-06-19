@@ -613,6 +613,7 @@ public:
         std::shared_ptr<CWallet> wallet;
         DatabaseOptions options;
         DatabaseStatus status;
+        ReadDatabaseArgs(*m_context.args, options);
         options.require_create = true;
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
@@ -622,6 +623,7 @@ public:
     {
         DatabaseOptions options;
         DatabaseStatus status;
+        ReadDatabaseArgs(*m_context.args, options);
         options.require_existing = true;
         return MakeWallet(m_context, LoadWallet(m_context, name, true /* load_on_start */, options, status, error, warnings));
     }

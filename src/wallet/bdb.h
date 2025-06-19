@@ -30,9 +30,6 @@ struct bilingual_str;
 #pragma GCC diagnostic pop
 #endif
 
-static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
-static const bool DEFAULT_WALLET_PRIVDB = true;
-
 struct WalletDatabaseFileId {
     uint8_t value[DB_FILE_ID_LEN];
     bool operator==(const WalletDatabaseFileId& rhs) const;
@@ -54,8 +51,9 @@ public:
     std::map<fs::path, std::reference_wrapper<BerkeleyDatabase>> m_databases;
     std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
+    bool m_use_shared_memory;
 
-    explicit BerkeleyEnvironment(const fs::path& env_directory);
+    explicit BerkeleyEnvironment(const fs::path& env_directory, bool use_shared_memory);
     BerkeleyEnvironment();
     ~BerkeleyEnvironment();
     void Reset();
@@ -83,7 +81,7 @@ public:
 };
 
 /** Get BerkeleyEnvironment given a directory path. */
-std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory);
+std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory, bool use_shared_memory);
 
 class BerkeleyBatch;
 
@@ -96,8 +94,8 @@ public:
     BerkeleyDatabase() = delete;
 
     /** Create DB handle to real database */
-    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename) :
-        WalletDatabase(), env(std::move(env)), m_filename(std::move(filename))
+    BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, fs::path filename, const DatabaseOptions& options) :
+        WalletDatabase(), env(std::move(env)), m_filename(std::move(filename)), m_max_log_mb(options.max_log_mb)
     {
         auto inserted = this->env->m_databases.emplace(m_filename, std::ref(*this));
         assert(inserted.second);
@@ -158,6 +156,7 @@ public:
     std::unique_ptr<Db> m_db;
 
     fs::path m_filename;
+    int64_t m_max_log_mb;
 
     /** Make a BerkeleyBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
