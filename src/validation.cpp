@@ -1939,18 +1939,44 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     return result;
 }
 
+// MODIFICATION OF THE 100 CYCLES START
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+   // Original Bitcoin logic for the first ~132 years
+   int original_halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+   if (original_halvings < 33) {
+       // Force block reward to zero when right shift is undefined.
+       if (original_halvings >= 64)
+           return 0;
+           
+       CAmount nSubsidy = 50 * COIN;
+       nSubsidy >>= original_halvings;
+       return nSubsidy;
+   }
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
-    return nSubsidy;
+   // --- FROM HERE, THE NEW "PICOIN" ERA BEGINS ---
+   // Block height subtracted from the beginning of the new era
+   int nHeight_new_era = nHeight - (33 * consensusParams.nSubsidyHalvingInterval);
+
+   // Total limit of 100 new cycles
+   int total_new_blocks_limit = 100 * 33 * consensusParams.nSubsidyHalvingInterval;
+   if (nHeight_new_era >= total_new_blocks_limit) {
+       return 0;
+   }
+   
+   // Calculate the halving within the new era
+   int new_halvings = (nHeight_new_era / consensusParams.nSubsidyHalvingInterval) % 33;
+
+   // Additional protection for the new era as well
+   if (new_halvings >= 64)
+       return 0;
+
+   CAmount nSubsidy = 50 * COIN;
+   nSubsidy >>= new_halvings;
+   
+   return nSubsidy;
 }
+// MODIFICATION OF THE 100 CYCLES END
 
 CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)
     : m_dbview{std::move(db_params), std::move(options)},
@@ -4600,78 +4626,42 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
     return result;
 }
 
-
-BlockValidationState TestBlockValidity(
-    Chainstate& chainstate,
-    const CBlock& block,
-    const bool check_pow,
-    const bool check_merkle_root)
+bool TestBlockValidity(BlockValidationState& state,
+                       const CChainParams& chainparams,
+                       Chainstate& chainstate,
+                       const CBlock& block,
+                       CBlockIndex* pindexPrev,
+                       bool fCheckPOW,
+                       bool fCheckMerkleRoot)
 {
-    // Lock must be held throughout this function for two reasons:
-    // 1. We don't want the tip to change during several of the validation steps
-    // 2. To prevent a CheckBlock() race condition for fChecked, see ProcessNewBlock()
-    AssertLockHeld(chainstate.m_chainman.GetMutex());
-
-    BlockValidationState state;
-    CBlockIndex* tip{Assert(chainstate.m_chain.Tip())};
-
-    if (block.hashPrevBlock != *Assert(tip->phashBlock)) {
-        state.Invalid({}, "inconclusive-not-best-prevblk");
-        return state;
-    }
-
-    // For signets CheckBlock() verifies the challenge iff fCheckPow is set.
-    if (!CheckBlock(block, state, chainstate.m_chainman.GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root)) {
-        // This should never happen, but belt-and-suspenders don't approve the
-        // block if it does.
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
-        return state;
-    }
-
-    /**
-     * At this point ProcessNewBlock would call AcceptBlock(), but we
-     * don't want to store the block or its header. Run individual checks
-     * instead:
-     * - skip AcceptBlockHeader() because:
-     *   - we don't want to update the block index
-     *   - we do not care about duplicates
-     *   - we already ran CheckBlockHeader() via CheckBlock()
-     *   - we already checked for prev-blk-not-found
-     *   - we know the tip is valid, so no need to check bad-prevblk
-     * - we already ran CheckBlock()
-     * - do run ContextualCheckBlockHeader()
-     * - do run ContextualCheckBlock()
-     */
-
-    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, tip)) {
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
-        return state;
-    }
-
-    if (!ContextualCheckBlock(block, state, chainstate.m_chainman, tip)) {
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
-        return state;
-    }
-
-    // We don't want ConnectBlock to update the actual chainstate, so create
-    // a cache on top of it, along with a dummy block index.
-    CBlockIndex index_dummy{block};
+    AssertLockHeld(cs_main);
+    assert(pindexPrev && pindexPrev == chainstate.m_chain.Tip());
+    CCoinsViewCache viewNew(&chainstate.CoinsTip());
     uint256 block_hash(block.GetHash());
-    index_dummy.pprev = tip;
-    index_dummy.nHeight = tip->nHeight + 1;
-    index_dummy.phashBlock = &block_hash;
-    CCoinsViewCache view_dummy(&chainstate.CoinsTip());
+    CBlockIndex indexDummy(block);
+    indexDummy.pprev = pindexPrev;
+    indexDummy.nHeight = pindexPrev->nHeight + 1;
+    indexDummy.phashBlock = &block_hash;
 
-    // Set fJustCheck to true in order to update, and not clear, validation caches.
-    if(!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
-        return state;
+    // NOTE: CheckBlockHeader is called by CheckBlock
+    if (!ContextualCheckBlockHeader(block, state, chainstate.m_blockman, chainstate.m_chainman, pindexPrev)) {
+        LogError("%s: Consensus::ContextualCheckBlockHeader: %s\n", __func__, state.ToString());
+        return false;
     }
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot)) {
+        LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
+        return false;
+    }
+    if (!ContextualCheckBlock(block, state, chainstate.m_chainman, pindexPrev)) {
+        LogError("%s: Consensus::ContextualCheckBlock: %s\n", __func__, state.ToString());
+        return false;
+    }
+    if (!chainstate.ConnectBlock(block, state, &indexDummy, viewNew, true)) {
+        return false;
+    }
+    assert(state.IsValid());
 
-    // Ensure no check returned successfully while also setting an invalid state.
-    if (!state.IsValid()) NONFATAL_UNREACHABLE();
-
-    return state;
+    return true;
 }
 
 /* This function is called from the RPC code for pruneblockchain */
