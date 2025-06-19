@@ -64,7 +64,7 @@ struct CTxMemPoolModifiedEntry {
         nSigOpCountWithAncestors = entry->GetSigOpCountWithAncestors();
     }
 
-    int64_t GetModifiedFee() const { return iter->GetModifiedFee(); }
+    CAmount GetModifiedFee() const { return iter->GetModifiedFee(); }
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     size_t GetTxSize() const { return iter->GetTxSize(); }
