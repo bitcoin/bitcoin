@@ -138,6 +138,11 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
     return m_chain.Genesis();
 }
 
+bool PreCheckInputScripts(const CTransaction& tx,
+                       const CCoinsViewCache& inputs, script_verify_flags flags,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, script_verify_flags flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
@@ -2162,6 +2167,30 @@ void EnsureTxData(const CTransaction& tx, const CCoinsViewCache& inputs, Precomp
 }
 
 /**
+ * Check if this transaction's input scripts need to be checked, i.e. they are not cached and
+ * this is not a coinbase transaction. Returning false indicates that checks are not possible
+ * or necessary. Also ensures txdata is complete.
+ *
+ * Non-static (and redeclared) in src/test/txvalidationcache_tests.cpp
+ */
+bool PreCheckInputScripts(const CTransaction& tx,
+                       const CCoinsViewCache& inputs, script_verify_flags flags,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    if (tx.IsCoinBase()) return false;
+
+    uint256 hashCacheEntry = GetHashCacheEntry(validation_cache, tx, flags);
+    if (IsScriptCached(validation_cache, cacheFullScriptStore, hashCacheEntry)) {
+        return false;
+    }
+
+    EnsureTxData(tx, inputs, txdata);
+
+    return true;
+}
+
+/**
  * Check whether all of this transaction's input scripts succeed.
  *
  * This involves ECDSA signature checks so can be computationally intensive. This function should
@@ -2186,18 +2215,9 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks)
 {
-    if (tx.IsCoinBase()) return true;
-
-    if (pvChecks) {
-        pvChecks->reserve(tx.vin.size());
+    if (!PreCheckInputScripts(tx, inputs, flags, cacheFullScriptStore, txdata, validation_cache)) {
+         return true;
     }
-
-    uint256 hashCacheEntry = GetHashCacheEntry(validation_cache, tx, flags);
-    if (IsScriptCached(validation_cache, cacheFullScriptStore, hashCacheEntry)) {
-        return true;
-    }
-
-    EnsureTxData(tx, inputs, txdata);
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
@@ -2229,6 +2249,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     if (cacheFullScriptStore && !pvChecks) {
         // We executed all of the provided scripts, and were told to
         // cache the result. Do so now.
+        uint256 hashCacheEntry = GetHashCacheEntry(validation_cache, tx, flags);
         validation_cache.m_script_execution_cache.insert(hashCacheEntry);
     }
 
