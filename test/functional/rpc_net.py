@@ -198,8 +198,8 @@ class NetTest(DashTestFramework):
             self.nodes[0].setnetworkactive(state=False)
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], False)
         # Wait a bit for all sockets to close
-        self.wait_until(lambda: self.nodes[0].getnetworkinfo()['connections'] == 0, timeout=3)
-        self.wait_until(lambda: self.nodes[1].getnetworkinfo()['connections'] == 0, timeout=3)
+        for n in self.nodes:
+            self.wait_until(lambda: n.getnetworkinfo()['connections'] == 0, timeout=3)
 
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.nodes[0].setnetworkactive(state=True)
