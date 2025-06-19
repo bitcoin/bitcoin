@@ -61,12 +61,8 @@ class ToolUtils(BitcoinTestFramework):
         if "output_cmp" in testObj:
             outputFn = testObj['output_cmp']
             outputType = os.path.splitext(outputFn)[1][1:]  # output type from file extension (determines how to compare)
-            try:
-                with open(self.testcase_dir / outputFn, encoding="utf8") as f:
-                    outputData = f.read()
-            except Exception:
-                logging.error("Output file " + outputFn + " cannot be opened")
-                raise
+            with open(self.testcase_dir / outputFn, encoding="utf8") as f:
+                outputData = f.read()
             if not outputData:
                 logging.error("Output data missing for " + outputFn)
                 raise Exception
@@ -75,11 +71,7 @@ class ToolUtils(BitcoinTestFramework):
                 raise Exception
 
         # Run the test
-        try:
-            res = subprocess.run(execrun, capture_output=True, text=True, input=inputData)
-        except OSError:
-            logging.error("OSError, Failed to execute " + str(execrun))
-            raise
+        res = subprocess.run(execrun, capture_output=True, text=True, input=inputData)
 
         if outputData:
             data_mismatch, formatting_mismatch = False, False
