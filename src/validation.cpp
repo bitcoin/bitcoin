@@ -2125,7 +2125,6 @@ static int64_t nTimeDashSpecific = 0;
 static int64_t nTimeConnect = 0;
 static int64_t nTimeIndexConnect = 0;
 static int64_t nTimeIndexWrite = 0;
-static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
@@ -2569,10 +2568,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         uiInterface.NotifyMasternodeListChanged(mnlu.new_list, pindex);
     }
 
-    int64_t nTime8 = GetTimeMicros(); nTimeCallbacks += nTime8 - nTime5;
-    LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime8 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
-
-    ::g_stats_client->timing("ConnectBlock_ms", (nTime8 - nTimeStart) / 1000, 1.0f);
+    ::g_stats_client->timing("ConnectBlock_ms", (nTime7 - nTimeStart) / 1000, 1.0f);
 
     TRACE6(validation, block_connected,
         block_hash.data(),
@@ -2580,7 +2576,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         block.vtx.size(),
         nInputs,
         nSigOps,
-        nTime8 - nTimeStart // in microseconds (µs)
+        nTime7 - nTimeStart // in microseconds (µs)
     );
 
     return true;
