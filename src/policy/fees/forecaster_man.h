@@ -44,7 +44,7 @@ public:
      * Polls all registered forecasters and selects the lowest fee rate.
      *
      * @param[in] target The target within which the transaction should be confirmed.
-     * @param[in] conservative True if the package cannot be fee bumped later.
+     * @param[in] conservative If true, returns a higher fee rate for greater confirmation probability.
      * @return A pair consisting of the forecast result and a vector of error messages.
      */
     std::pair<ForecastResult, std::vector<std::string>> ForecastFeeRateFromForecasters(int target, bool conservative) const;

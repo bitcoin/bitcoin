@@ -33,6 +33,9 @@ struct ForecastResult {
     //! The block height at which the forecast was made.
     unsigned int current_block_height{0};
 
+    //! The confirmation target the forecast was made for.
+    unsigned int returned_target{0};
+
     std::optional<std::string> error; ///< Optional error message.
 
     /**
