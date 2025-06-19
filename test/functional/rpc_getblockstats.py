@@ -44,6 +44,9 @@ class GetblockstatsTest(BitcoinTestFramework):
     def generate_test_data(self, filename):
         self.nodes[0].setmocktime(self.mocktime)
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        self.nodes[0].createwallet(wallet_name='test')
+        privkey = self.nodes[0].get_deterministic_priv_key().key
+        self.nodes[0].importprivkey(privkey)
 
         address = self.nodes[0].get_deterministic_priv_key().address
         self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
@@ -53,6 +56,8 @@ class GetblockstatsTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=False)
         self.nodes[0].settxfee(amount=0.003)
         self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True)
+        # Send to OP_RETURN output to test its exclusion from statistics
+        self.nodes[0].send(outputs={"data": "21"})
         self.sync_all()
         self.generate(self.nodes[0], 1)
 
@@ -161,6 +166,20 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
         assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats)
 
+        self.log.info('Test block height 0')
+        genesis_stats = self.nodes[0].getblockstats(0)
+        assert_equal(genesis_stats["blockhash"], "000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")
+        assert_equal(genesis_stats["utxo_increase"], 1)
+        assert_equal(genesis_stats["utxo_size_inc"], 117)
+        assert_equal(genesis_stats["utxo_increase_actual"], 0)
+        assert_equal(genesis_stats["utxo_size_inc_actual"], 0)
+
+        self.log.info('Test tip including OP_RETURN')
+        tip_stats = self.nodes[0].getblockstats(tip)
+        assert_equal(tip_stats["utxo_increase"], 4)
+        assert_equal(tip_stats["utxo_size_inc"], 300)
+        assert_equal(tip_stats["utxo_increase_actual"], 4)
+        assert_equal(tip_stats["utxo_size_inc_actual"], 300)
 
 if __name__ == '__main__':
     GetblockstatsTest().main()

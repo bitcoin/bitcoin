@@ -132,16 +132,12 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
             }
         }
 
-        // TODO: Deduplicate BIP30 related code
-        bool is_bip30_block{(pindex->nHeight == 91722 && pindex->GetBlockHash() == uint256S("0x00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e")) ||
-                            (pindex->nHeight == 91812 && pindex->GetBlockHash() == uint256S("0x00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"))};
-
         // Add the new utxos created from the block
         for (size_t i = 0; i < block.vtx.size(); ++i) {
             const auto& tx{block.vtx.at(i)};
 
             // Skip duplicate txid coinbase transactions (BIP30).
-            if (is_bip30_block && tx->IsCoinBase()) {
+            if (IsBIP30Unspendable(*pindex) && tx->IsCoinBase()) {
                 m_total_unspendable_amount += block_subsidy;
                 m_total_unspendables_bip30 += block_subsidy;
                 continue;
