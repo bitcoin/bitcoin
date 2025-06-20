@@ -1233,7 +1233,13 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
     const CTransaction& tx = *ws.m_ptx;
     TxValidationState& state = ws.m_state;
 
-    constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+    unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+
+    // CHECKTEMPLATEVERIFY (BIP119) is always active on regtest, but no other chain.
+    if (args.m_chainparams.GetChainType() == ChainType::REGTEST) {
+        scriptVerifyFlags |= SCRIPT_VERIFY_CHECKTEMPLATEVERIFY;
+        scriptVerifyFlags &= ~SCRIPT_VERIFY_DISCOURAGE_CHECKTEMPLATEVERIFY;
+    }
 
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -2383,6 +2389,11 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     const auto it{consensusparams.script_flag_exceptions.find(*Assert(block_index.phashBlock))};
     if (it != consensusparams.script_flag_exceptions.end()) {
         flags = it->second;
+    }
+
+    // Enforce CHECKTEMPLATEVERIFY (BIP119)
+    if (DeploymentActiveAt(block_index, chainman, Consensus::DEPLOYMENT_CTV)) {
+        flags |= SCRIPT_VERIFY_CHECKTEMPLATEVERIFY;
     }
 
     // Enforce the DERSIG (BIP66) rule
