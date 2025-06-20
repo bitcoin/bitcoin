@@ -63,7 +63,7 @@ static std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuar
     const CBlockIndex* pCycleQuorumBaseBlockIndex);
 
 static std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+    const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& dmnman, CQuorumSnapshotManager& qsnapman,
     const CBlockIndex* pCycleQuorumBaseBlockIndex, const PreviousQuorumQuarters& previousQuarters);
 
 static PreviousQuorumQuarters GetPreviousQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams,
@@ -314,7 +314,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
     const CBlockIndex* pBlockHMinus2CIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 2 * cycleLength);
     const CBlockIndex* pBlockHMinus3CIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 3 * cycleLength);
     const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 8);
-    auto allMns = dmnman.GetListForBlock(pWorkBlockIndex);
+    CDeterministicMNList allMns = dmnman.GetListForBlock(pWorkBlockIndex);
     LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n", ToUnderlying(llmqType), pCycleQuorumBaseBlockIndex->nHeight, allMns.GetValidMNsCount());
 
     PreviousQuorumQuarters previousQuarters = GetPreviousQuorumQuarterMembers(llmqParams, dmnman, qsnapman,
@@ -325,7 +325,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuarterRota
     size_t nQuorums = static_cast<size_t>(llmqParams.signingActiveQuorumCount);
     std::vector<std::vector<CDeterministicMNCPtr>> quorumMembers{nQuorums};
 
-    auto newQuarterMembers = BuildNewQuorumQuarterMembers(llmqParams, dmnman, qsnapman, pCycleQuorumBaseBlockIndex,
+    auto newQuarterMembers = BuildNewQuorumQuarterMembers(llmqParams, allMns, qsnapman, pCycleQuorumBaseBlockIndex,
                                                           previousQuarters);
     //TODO Check if it is triggered from outside (P2P, block validation). Throwing an exception is probably a wiser choice
     //assert (!newQuarterMembers.empty());
@@ -415,7 +415,7 @@ PreviousQuorumQuarters GetPreviousQuorumQuarterMembers(const Consensus::LLMQPara
 }
 
 std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
+    const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& allMns, CQuorumSnapshotManager& qsnapman,
     const CBlockIndex* pCycleQuorumBaseBlockIndex, const PreviousQuorumQuarters& previousQuarters)
 {
     if (!llmqParams.useRotation || pCycleQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval != 0) {
@@ -428,10 +428,8 @@ std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
 
     size_t quorumSize = static_cast<size_t>(llmqParams.size);
     auto quarterSize{quorumSize / 4};
-    const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 8);
     const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
 
-    auto allMns = dmnman.GetListForBlock(pWorkBlockIndex);
 
     if (allMns.GetValidMNsCount() < quarterSize) {
         return quarterQuorumMembers;
