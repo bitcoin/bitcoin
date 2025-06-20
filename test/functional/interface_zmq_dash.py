@@ -151,7 +151,7 @@ class DashZMQTest (DashTestFramework):
             # has been sent which leads to test failure.
             time.sleep(1)
             # Test all dash related ZMQ publisher
-            #self.test_recovered_signature_publishers()
+            self.test_recovered_signature_publishers()
             self.test_chainlock_publishers()
             self.test_governance_publishers()
             self.test_getzmqnotifications()
@@ -192,7 +192,7 @@ class DashZMQTest (DashTestFramework):
         def validate_recovered_sig(request_id, msg_hash):
             # Make sure the recovered sig exists by RPC
             self.wait_for_recovered_sig(request_id, msg_hash)
-            rpc_recovered_sig = self.mninfo[0].get_node(self).quorum('getrecsig', 103, request_id, msg_hash)
+            rpc_recovered_sig = self.mninfo[0].get_node(self).quorum('getrecsig', 100, request_id, msg_hash)
             # Validate hashrecoveredsig
             zmq_recovered_sig_hash = self.subscribers[ZMQPublisher.hash_recovered_sig].receive().read(32).hex()
             assert_equal(zmq_recovered_sig_hash, msg_hash)
@@ -221,8 +221,9 @@ class DashZMQTest (DashTestFramework):
         # Sign an arbitrary and make sure this leads to valid recovered sig ZMQ messages
         sign_id = uint256_to_string(random.getrandbits(256))
         sign_msg_hash = uint256_to_string(random.getrandbits(256))
-        for mn in self.get_quorum_masternodes(self.quorum_hash): # type: MasternodeInfo
-            mn.get_node(self).quorum("sign", self.quorum_type, sign_id, sign_msg_hash)
+        quorumHash = self.nodes[0].quorum("selectquorum", 100, sign_id)["quorumHash"]
+        for mn in self.get_quorum_masternodes(quorumHash): # type: MasternodeInfo
+            mn.get_node(self).quorum("sign", 100, sign_id, sign_msg_hash)
         validate_recovered_sig(sign_id, sign_msg_hash)
         # Unsubscribe from recovered signature messages
         self.unsubscribe(recovered_sig_publishers)
