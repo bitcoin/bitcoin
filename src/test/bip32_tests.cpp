@@ -282,6 +282,15 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     BOOST_CHECK(ParseHDKeypath("m/0'", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/0''", keypath));
 
+    keypath.clear();
+    BOOST_REQUIRE(ParseHDKeypath("m/0h/1h/2h", keypath));
+    BOOST_REQUIRE_EQUAL(keypath.size(), 3);
+    BOOST_CHECK_EQUAL(keypath[0], 0x80000000U);
+    BOOST_CHECK_EQUAL(keypath[1], 0x80000001U);
+    BOOST_CHECK_EQUAL(keypath[2], 0x80000002U);
+    BOOST_CHECK(!ParseHDKeypath("m/0hh", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0", keypath));
+
     BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
 
