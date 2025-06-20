@@ -755,16 +755,11 @@ bool CWallet::IsSpent(const COutPoint& outpoint) const
     return false;
 }
 
-void CWallet::AddToSpends(const COutPoint& outpoint, const Txid& txid, WalletBatch* batch)
+void CWallet::AddToSpends(const COutPoint& outpoint, const Txid& txid)
 {
     mapTxSpends.insert(std::make_pair(outpoint, txid));
 
-    if (batch) {
-        UnlockCoin(outpoint, batch);
-    } else {
-        WalletBatch temp_batch(GetDatabase());
-        UnlockCoin(outpoint, &temp_batch);
-    }
+    UnlockCoin(outpoint);
 
     std::pair<TxSpends::iterator, TxSpends::iterator> range;
     range = mapTxSpends.equal_range(outpoint);
@@ -772,13 +767,13 @@ void CWallet::AddToSpends(const COutPoint& outpoint, const Txid& txid, WalletBat
 }
 
 
-void CWallet::AddToSpends(const CWalletTx& wtx, WalletBatch* batch)
+void CWallet::AddToSpends(const CWalletTx& wtx)
 {
     if (wtx.IsCoinBase()) // Coinbases don't spend anything!
         return;
 
     for (const CTxIn& txin : wtx.tx->vin)
-        AddToSpends(txin.prevout, wtx.GetHash(), batch);
+        AddToSpends(txin.prevout, wtx.GetHash());
 }
 
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
@@ -1031,7 +1026,7 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
         wtx.nOrderPos = IncOrderPosNext(&batch);
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
-        AddToSpends(wtx, &batch);
+        AddToSpends(wtx);
 
         // Update birth time when tx time is older than it.
         MaybeUpdateBirthTime(wtx.GetTxTime());
@@ -1710,6 +1705,11 @@ void CWallet::InitWalletFlags(uint64_t flags)
     }
 
     if (!LoadWalletFlags(flags)) assert(false);
+}
+
+uint64_t CWallet::GetWalletFlags() const
+{
+    return m_wallet_flags;
 }
 
 void CWallet::MaybeUpdateBirthTime(int64_t time)
@@ -2582,22 +2582,34 @@ util::Result<void> CWallet::DisplayAddress(const CTxDestination& dest)
     return util::Error{_("There is no ScriptPubKeyManager for this address")};
 }
 
-bool CWallet::LockCoin(const COutPoint& output, WalletBatch* batch)
+void CWallet::LoadLockedCoin(const COutPoint& coin, bool persistent)
 {
     AssertLockHeld(cs_wallet);
-    setLockedCoins.insert(output);
-    if (batch) {
-        return batch->WriteLockedUTXO(output);
+    m_locked_coins.emplace(coin, persistent);
+}
+
+bool CWallet::LockCoin(const COutPoint& output, bool persist)
+{
+    AssertLockHeld(cs_wallet);
+    LoadLockedCoin(output, persist);
+    if (persist) {
+        WalletBatch batch(GetDatabase());
+        return batch.WriteLockedUTXO(output);
     }
     return true;
 }
 
-bool CWallet::UnlockCoin(const COutPoint& output, WalletBatch* batch)
+bool CWallet::UnlockCoin(const COutPoint& output)
 {
     AssertLockHeld(cs_wallet);
-    bool was_locked = setLockedCoins.erase(output);
-    if (batch && was_locked) {
-        return batch->EraseLockedUTXO(output);
+    auto locked_coin_it = m_locked_coins.find(output);
+    if (locked_coin_it != m_locked_coins.end()) {
+        bool persisted = locked_coin_it->second;
+        m_locked_coins.erase(locked_coin_it);
+        if (persisted) {
+            WalletBatch batch(GetDatabase());
+            return batch.EraseLockedUTXO(output);
+        }
     }
     return true;
 }
@@ -2607,26 +2619,24 @@ bool CWallet::UnlockAllCoins()
     AssertLockHeld(cs_wallet);
     bool success = true;
     WalletBatch batch(GetDatabase());
-    for (auto it = setLockedCoins.begin(); it != setLockedCoins.end(); ++it) {
-        success &= batch.EraseLockedUTXO(*it);
+    for (const auto& [coin, persistent] : m_locked_coins) {
+        if (persistent) success = success && batch.EraseLockedUTXO(coin);
     }
-    setLockedCoins.clear();
+    m_locked_coins.clear();
     return success;
 }
 
 bool CWallet::IsLockedCoin(const COutPoint& output) const
 {
     AssertLockHeld(cs_wallet);
-    return setLockedCoins.count(output) > 0;
+    return m_locked_coins.count(output) > 0;
 }
 
 void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 {
     AssertLockHeld(cs_wallet);
-    for (std::set<COutPoint>::iterator it = setLockedCoins.begin();
-         it != setLockedCoins.end(); it++) {
-        COutPoint outpt = (*it);
-        vOutpts.push_back(outpt);
+    for (const auto& [coin, _] : m_locked_coins) {
+        vOutpts.push_back(coin);
     }
 }
 
@@ -2864,7 +2874,9 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
-        walletInstance->InitWalletFlags(wallet_creation_flags);
+        // Init with passed flags.
+        // Always set the cache upgrade flag as this feature is supported from the beginning.
+        walletInstance->InitWalletFlags(wallet_creation_flags | WALLET_FLAG_LAST_HARDENED_XPUB_CACHED);
 
         // Only descriptor wallets can be created
         assert(walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -3696,6 +3708,10 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
         // Save the descriptor to memory
         uint256 id = new_spk_man->GetID();
         AddScriptPubKeyMan(id, std::move(new_spk_man));
+
+        // Write the existing cache to disk
+        WalletBatch batch(GetDatabase());
+        batch.WriteDescriptorCacheItems(id, desc.cache);
     }
 
     // Add the private keys to the descriptor
@@ -4416,5 +4432,198 @@ void CWallet::WriteBestBlock() const
         WalletBatch batch(GetDatabase());
         batch.WriteBestBlock(loc);
     }
+}
+
+util::Result<std::vector<WalletDescInfo>> CWallet::ExportDescriptors(bool export_private) const
+{
+    AssertLockHeld(cs_wallet);
+    std::vector<WalletDescInfo> wallet_descriptors;
+    for (const auto& spk_man : GetAllScriptPubKeyMans()) {
+        const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
+        if (!desc_spk_man) {
+            return util::Error{_("Unexpected ScriptPubKey manager type.")};
+        }
+        LOCK(desc_spk_man->cs_desc_man);
+        const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
+        std::string descriptor;
+        if (!desc_spk_man->GetDescriptorString(descriptor, export_private)) {
+            return util::Error{_("Can't get descriptor string.")};
+        }
+        const bool is_range = wallet_descriptor.descriptor->IsRange();
+        wallet_descriptors.push_back({
+            descriptor,
+            wallet_descriptor.creation_time,
+            IsActiveScriptPubKeyMan(*desc_spk_man),
+            IsInternalScriptPubKeyMan(desc_spk_man),
+            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
+            wallet_descriptor.next_index
+        });
+    }
+    return wallet_descriptors;
+}
+
+util::Result<std::string> CWallet::ExportWatchOnlyWallet(const fs::path& destination, WalletContext& context) const
+{
+    AssertLockHeld(cs_wallet);
+
+    if (destination.empty()) {
+        return util::Error{_("Error: Export destination cannot be empty")};
+    }
+    if (fs::exists(destination)) {
+        return util::Error{strprintf(_("Error: Export destination '%s' already exists"), fs::PathToString(destination))};
+    }
+    fs::path canonical_dest = fs::canonical(destination.parent_path());
+    canonical_dest /= destination.filename();
+
+    // Get the descriptors from this wallet
+    util::Result<std::vector<WalletDescInfo>> exported = ExportDescriptors(/*export_private=*/false);
+    if (!exported) {
+        return util::Error{util::ErrorString(exported)};
+    }
+
+    // Setup DatabaseOptions to create a new sqlite database
+    DatabaseOptions options;
+    options.require_existing = false;
+    options.require_create = true;
+    options.require_format = DatabaseFormat::SQLITE;
+
+    // Make the wallet with the same flags as this wallet, but without private keys
+    options.create_flags = GetWalletFlags() | WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+
+    // Make the watchonly wallet
+    DatabaseStatus status;
+    std::vector<bilingual_str> warnings;
+    std::string wallet_name = GetName() + "_watchonly";
+    bilingual_str error;
+    std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
+    if (!database) {
+        return util::Error{strprintf(_("Wallet file creation failed: %s"), error)};
+    }
+    WalletContext empty_context;
+    empty_context.args = context.args;
+    std::shared_ptr<CWallet> watchonly_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+    if (!watchonly_wallet) {
+        return util::Error{_("Error: Failed to create new watchonly wallet")};
+    }
+
+    {
+        LOCK(watchonly_wallet->cs_wallet);
+
+        // Parse the descriptors and add them to the new wallet
+        for (const WalletDescInfo& desc_info : *exported) {
+            // Parse the descriptor
+            FlatSigningProvider keys;
+            std::string parse_err;
+            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_info.descriptor, keys, parse_err, /*require_checksum=*/true);
+            assert(descs.size() == 1); // All of our descriptors should be valid, and not multipath
+
+            // Get the range if there is one
+            int32_t range_start = 0;
+            int32_t range_end = 0;
+            if (desc_info.range) {
+                range_start = desc_info.range->first;
+                range_end = desc_info.range->second;
+            }
+
+            WalletDescriptor w_desc(std::move(descs.at(0)), desc_info.creation_time, range_start, range_end, desc_info.next_index);
+
+            // For descriptors that cannot self expand (i.e. needs private keys or cache), retrieve the cache
+            uint256 desc_id = w_desc.id;
+            if (!w_desc.descriptor->CanSelfExpand()) {
+                DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(GetScriptPubKeyMan(desc_id));
+                w_desc.cache = WITH_LOCK(desc_spkm->cs_desc_man, return desc_spkm->GetWalletDescriptor().cache);
+            }
+
+            // Add to the watchonly wallet
+            if (auto spkm_res = watchonly_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
+                return util::Error{util::ErrorString(spkm_res)};
+            }
+
+            // Set active spkms as active
+            if (desc_info.active) {
+                // Determine whether this descriptor is internal
+                // This is only set for active spkms
+                bool internal = false;
+                if (desc_info.internal) {
+                    internal = *desc_info.internal;
+                }
+                watchonly_wallet->AddActiveScriptPubKeyMan(desc_id, *w_desc.descriptor->GetOutputType(), internal);
+            }
+        }
+
+        // Copy locked coins that are persisted
+        for (const auto& [coin, persisted] : m_locked_coins) {
+            if (!persisted) continue;
+            watchonly_wallet->LockCoin(coin, persisted);
+        }
+
+        {
+            // Make a WalletBatch for the watchonly_wallet so that everything else can be written atomically
+            WalletBatch watchonly_batch(watchonly_wallet->GetDatabase());
+            if (!watchonly_batch.TxnBegin()) {
+                return util::Error{strprintf(_("Error: database transaction cannot be executed for new watchonly wallet %s"), watchonly_wallet->GetName())};
+            }
+
+            // Copy minversion
+            // Don't use SetMinVersion to account for the newly created wallet having FEATURE_LATEST
+            // while the source wallet doesn't.
+            watchonly_wallet->LoadMinVersion(GetVersion());
+            watchonly_batch.WriteMinVersion(watchonly_wallet->GetVersion());
+
+            // Copy orderPosNext
+            watchonly_batch.WriteOrderPosNext(watchonly_wallet->nOrderPosNext);
+
+            // Write the best block locator to avoid rescanning on reload
+            CBlockLocator best_block_locator;
+            {
+                WalletBatch local_wallet_batch(GetDatabase());
+                if (!local_wallet_batch.ReadBestBlock(best_block_locator)) {
+                    return util::Error{_("Error: Unable to read wallet's best block locator record")};
+                }
+            }
+            if (!watchonly_batch.WriteBestBlock(best_block_locator)) {
+                return util::Error{_("Error: Unable to write watchonly wallet best block locator record")};
+            }
+
+            // Copy the transactions
+            for (const auto& [txid, wtx] : mapWallet) {
+                const CWalletTx& to_copy_wtx = wtx;
+                if (!watchonly_wallet->LoadToWallet(txid, [&](CWalletTx& ins_wtx, bool new_tx) EXCLUSIVE_LOCKS_REQUIRED(watchonly_wallet->cs_wallet) {
+                    if (!new_tx) return false;
+                    ins_wtx.SetTx(to_copy_wtx.tx);
+                    ins_wtx.CopyFrom(to_copy_wtx);
+                    return true;
+                })) {
+                    return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), txid.GetHex())};
+                }
+                watchonly_batch.WriteTx(watchonly_wallet->mapWallet.at(txid));
+            }
+
+            // Copy address book
+            for (const auto& [dest, entry] : m_address_book) {
+                auto address{EncodeDestination(dest)};
+                if (entry.purpose) watchonly_batch.WritePurpose(address, PurposeToString(*entry.purpose));
+                if (entry.label) watchonly_batch.WriteName(address, *entry.label);
+                for (const auto& [id, request] : entry.receive_requests) {
+                    watchonly_batch.WriteAddressReceiveRequest(dest, id, request);
+                }
+                if (entry.previously_spent) watchonly_batch.WriteAddressPreviouslySpent(dest, true);
+            }
+
+            if (!watchonly_batch.TxnCommit()) {
+                return util::Error{_("Error: cannot commit db transaction for watchonly wallet export")};
+            }
+        }
+
+        // Make a backup of this wallet at the specified destination directory
+        watchonly_wallet->BackupWallet(fs::PathToString(canonical_dest));
+    }
+
+    // Delete the watchonly wallet now that it has been exported to the desired location
+    fs::path watchonly_path = fs::PathFromString(watchonly_wallet->GetDatabase().Filename()).parent_path();
+    watchonly_wallet.reset();
+    fs::remove_all(watchonly_path);
+
+    return fs::PathToString(canonical_dest);
 }
 } // namespace wallet
