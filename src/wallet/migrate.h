@@ -55,6 +55,9 @@ public:
 
     /** Make a DatabaseBatch connected to this database */
     std::unique_ptr<DatabaseBatch> MakeBatch() override;
+
+    /** Return true if database is opened in read-only mode */
+    bool IsReadOnly() const override { return true; }
 };
 
 class BerkeleyROCursor : public DatabaseCursor
