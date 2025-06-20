@@ -60,4 +60,13 @@ static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
 } // namespace node
 
+/**
+ * Retrieve transaction and block from txindex (or mempool)
+ * That's just a wrapper over GetTransaction to break circular dependencies
+ * and to simplify caller for case if no block_index
+ */
+std::pair</*tx=*/CTransactionRef, /*hash_block=*/uint256> GetTransactionBlock(const uint256& hash,
+                                                                              const CTxMemPool* const mempool);
+
+
 #endif // BITCOIN_NODE_TRANSACTION_H

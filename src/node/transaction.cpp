@@ -150,3 +150,10 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
     return nullptr;
 }
 } // namespace node
+
+std::pair<CTransactionRef, uint256> GetTransactionBlock(const uint256& hash, const CTxMemPool* const mempool)
+{
+    uint256 hashBlock{};
+    if (!g_txindex && !mempool) return {nullptr, hashBlock}; // Fast-fail as we don't have any other way to search
+    return {GetTransaction(/*block_index=*/nullptr, mempool, hash, Params().GetConsensus(), hashBlock), hashBlock};
+}

@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/dmn_types.h>
 #include <evo/dmnstate.h>
@@ -27,6 +26,10 @@
 #include <optional>
 #include <memory>
 
+// Forward declaration to break dependency over node/transaction.h
+class CTxMemPool;
+std::pair<CTransactionRef, uint256> GetTransactionBlock(const uint256& hash, const CTxMemPool* const mempool);
+
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
 static const std::string DB_LIST_DIFF = "dmn_D3";
 
@@ -50,7 +53,7 @@ UniValue CDeterministicMN::ToJson() const
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
 
-    auto [collateralTx, _] = GetTransactionBlock(collateralOutpoint.hash);
+    auto [collateralTx, _] = GetTransactionBlock(collateralOutpoint.hash, nullptr);
     if (collateralTx) {
         CTxDestination dest;
         if (ExtractDestination(collateralTx->vout[collateralOutpoint.n].scriptPubKey, dest)) {

@@ -10,7 +10,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <evo/chainhelper.h>
 #include <masternode/sync.h>
 #include <node/blockstorage.h>
 #include <node/interface_ui.h>
@@ -25,6 +24,9 @@
 #include <validationinterface.h>
 
 using node::ReadBlockFromDisk;
+
+// Forward declaration to break dependency over node/transaction.h
+std::pair<CTransactionRef, uint256> GetTransactionBlock(const uint256& hash, const CTxMemPool* const mempool);
 
 static bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
 {
