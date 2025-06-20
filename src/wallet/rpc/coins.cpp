@@ -167,7 +167,8 @@ RPCHelpMan getbalance()
         "getbalance",
         "Returns the total available balance.\n"
                 "The available balance is what the wallet considers currently spendable, and is\n"
-                "thus affected by options which limit spendability such as -spendzeroconfchange.\n",
+                "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
+                "Note: For watch-only wallets, all the unspent outputs sent to wallet addresses are considered spendable.\n",
                 {
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Only include transactions confirmed at least this many times."},
@@ -432,7 +433,8 @@ RPCHelpMan getbalances()
 {
     return RPCHelpMan{
         "getbalances",
-        "Returns an object with all balances in " + CURRENCY_UNIT + ".\n",
+        "Returns an object with all balances in " + CURRENCY_UNIT + ".\n"
+        "Note: For watch-only wallets, all the unspent outputs sent to wallet addresses are considered spendable.\n",
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
