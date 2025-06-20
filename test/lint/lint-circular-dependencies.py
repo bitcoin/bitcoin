@@ -52,7 +52,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "evo/deterministicmns -> llmq/utils -> net -> evo/deterministicmns",
     "evo/deterministicmns -> validationinterface -> evo/deterministicmns",
     "evo/deterministicmns -> validationinterface -> governance/vote -> evo/deterministicmns",
-    "evo/mnhftx -> validation -> evo/mnhftx",
     "evo/simplifiedmns -> llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> evo/simplifiedmns",
     "evo/specialtxman -> validation -> evo/specialtxman",
     "governance/governance -> governance/object -> governance/governance",
