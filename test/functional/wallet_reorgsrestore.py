@@ -100,7 +100,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Restart to ensure node and wallet are flushed
         self.restart_node(0)
         wallet = node.get_wallet_rpc("reorg_crash")
-        assert_greater_than(wallet.getwalletinfo()['immature_balance'], 0)
+        assert_greater_than(wallet.getbalances()["mine"]["immature"], 0)
 
         # Disconnect tip and sync wallet state
         tip = wallet.getbestblockhash()
@@ -108,7 +108,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         wallet.syncwithvalidationinterfacequeue()
 
         # Tip was disconnected, ensure coinbase has been abandoned
-        assert_equal(wallet.getwalletinfo()['immature_balance'], 0)
+        assert_equal(wallet.getbalances()["mine"]["immature"], 0)
         coinbase_tx_id = wallet.getblock(tip, verbose=1)["tx"][0]
         assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
 
@@ -131,12 +131,12 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         assert(node.getbestblockhash() != tip)
         # Ensure wallet state is consistent now
         assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
-        assert_equal(wallet.getwalletinfo()['immature_balance'], 0)
+        assert_equal(wallet.getbalances()["mine"]["immature"], 0)
 
         # And finally, verify the state if the block ends up being into the best chain again
         node.reconsiderblock(tip)
         assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], False)
-        assert_greater_than(wallet.getwalletinfo()['immature_balance'], 0)
+        assert_greater_than(wallet.getbalances()["mine"]["immature"], 0)
 
     def run_test(self):
         # Send a tx from which to conflict outputs later
