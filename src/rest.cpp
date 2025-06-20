@@ -27,6 +27,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <txmempool.h>
+#include <undo.h>
 #include <util/any.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -275,6 +276,113 @@ static bool rest_headers(const std::any& context,
         req->WriteReply(HTTP_OK, strJSON);
         return true;
     }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
+}
+
+/**
+ * Serialize spent outputs as a list of per-transaction CTxOut lists using binary format.
+ */
+static void SerializeBlockUndo(DataStream& stream, const CBlockUndo& block_undo)
+{
+    WriteCompactSize(stream, block_undo.vtxundo.size() + 1);
+    WriteCompactSize(stream, 0); // block_undo.vtxundo doesn't contain coinbase tx
+    for (const CTxUndo& tx_undo : block_undo.vtxundo) {
+        WriteCompactSize(stream, tx_undo.vprevout.size());
+        for (const Coin& coin : tx_undo.vprevout) {
+            coin.out.Serialize(stream);
+        }
+    }
+}
+
+/**
+ * Serialize spent outputs as a list of per-transaction CTxOut lists using JSON format.
+ */
+static void BlockUndoToJSON(const CBlockUndo& block_undo, UniValue& result)
+{
+    result.push_back({UniValue::VARR}); // block_undo.vtxundo doesn't contain coinbase tx
+    for (const CTxUndo& tx_undo : block_undo.vtxundo) {
+        UniValue tx_prevouts(UniValue::VARR);
+        for (const Coin& coin : tx_undo.vprevout) {
+            UniValue prevout(UniValue::VOBJ);
+            prevout.pushKV("value", ValueFromAmount(coin.out.nValue));
+
+            UniValue script_pub_key(UniValue::VOBJ);
+            ScriptToUniv(coin.out.scriptPubKey, /*out=*/script_pub_key, /*include_hex=*/true, /*include_address=*/true);
+            prevout.pushKV("scriptPubKey", std::move(script_pub_key));
+
+            tx_prevouts.push_back(std::move(prevout));
+        }
+        result.push_back(std::move(tx_prevouts));
+    }
+}
+
+static bool rest_spent_txouts(const std::any& context, HTTPRequest* req, const std::string& strURIPart)
+{
+    if (!CheckWarmup(req)) {
+        return false;
+    }
+    std::string param;
+    const RESTResponseFormat rf = ParseDataFormat(param, strURIPart);
+    std::vector<std::string> path = SplitString(param, '/');
+
+    std::string hashStr;
+    if (path.size() == 1) {
+        // path with query parameter: /rest/spenttxouts/<hash>
+        hashStr = path[0];
+    } else {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/spenttxouts/<hash>.<ext>");
+    }
+
+    auto hash{uint256::FromHex(hashStr)};
+    if (!hash) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
+    }
+
+    ChainstateManager* chainman = GetChainman(context, req);
+    if (!chainman) {
+        return false;
+    }
+
+    const CBlockIndex* pblockindex = WITH_LOCK(cs_main, return chainman->m_blockman.LookupBlockIndex(*hash));
+    if (!pblockindex) {
+        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
+    }
+
+    CBlockUndo block_undo;
+    if (pblockindex->nHeight > 0 && !chainman->m_blockman.ReadBlockUndo(block_undo, *pblockindex)) {
+        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " undo not available");
+    }
+
+    switch (rf) {
+    case RESTResponseFormat::BINARY: {
+        DataStream ssSpentResponse{};
+        SerializeBlockUndo(ssSpentResponse, block_undo);
+        req->WriteHeader("Content-Type", "application/octet-stream");
+        req->WriteReply(HTTP_OK, ssSpentResponse);
+        return true;
+    }
+
+    case RESTResponseFormat::HEX: {
+        DataStream ssSpentResponse{};
+        SerializeBlockUndo(ssSpentResponse, block_undo);
+        const std::string strHex{HexStr(ssSpentResponse) + "\n"};
+        req->WriteHeader("Content-Type", "text/plain");
+        req->WriteReply(HTTP_OK, strHex);
+        return true;
+    }
+
+    case RESTResponseFormat::JSON: {
+        UniValue result(UniValue::VARR);
+        BlockUndoToJSON(block_undo, result);
+        std::string strJSON = result.write() + "\n";
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, strJSON);
+        return true;
+    }
+
     default: {
         return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
     }
@@ -1021,6 +1129,7 @@ static const struct {
       {"/rest/deploymentinfo/", rest_deploymentinfo},
       {"/rest/deploymentinfo", rest_deploymentinfo},
       {"/rest/blockhashbyheight/", rest_blockhash_by_height},
+      {"/rest/spenttxouts/", rest_spent_txouts},
 };
 
 void StartREST(const std::any& context)
