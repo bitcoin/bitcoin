@@ -1,0 +1,37 @@
+# Copyright (c) 2025-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+name: secp256k1 tests
+on:
+  pull_request:
+    paths:
+      - 'src/secp256k1/**'
+  push:
+    paths:
+      - 'src/secp256k1/**'
+
+env:
+  MAKEJOBS: '-j10'
+
+jobs:
+  secp256k1-tests:
+    name: 'secp256k1 tests'
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 120
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkgconf python3 libevent-dev libboost-dev libsqlite3-dev
+      - name: Build with secp256k1 tests enabled
+        run: |
+          cmake -B build \
+            -DSECP256K1_BUILD_TESTS=ON \
+            -DSECP256K1_BUILD_EXHAUSTIVE_TESTS=ON
+          cmake --build build -j $(nproc)
+      - name: Run secp256k1 tests
+        run: |
+          # Run only the secp256k1 tests
+          ctest --test-dir build --output-on-failure -R "secp256k1" -j $(nproc)
