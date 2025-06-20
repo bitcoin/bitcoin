@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <mp/util.h>
 
 #include <array>
+#include <cassert>
 #include <functional>
 #include <list>
 #include <stddef.h>
@@ -47,13 +48,34 @@ inline void CleanupRun(CleanupList& fns) {
     }
 }
 
+//! Event loop smart pointer automatically managing m_num_clients.
+//! If a lock pointer argument is passed, the specified lock will be used,
+//! otherwise EventLoop::m_mutex will be locked when needed.
+class EventLoopRef
+{
+public:
+    explicit EventLoopRef(EventLoop& loop, Lock* lock = nullptr);
+    EventLoopRef(EventLoopRef&& other) noexcept : m_loop(other.m_loop) { other.m_loop = nullptr; }
+    EventLoopRef(const EventLoopRef&) = delete;
+    EventLoopRef& operator=(const EventLoopRef&) = delete;
+    EventLoopRef& operator=(EventLoopRef&&) = delete;
+    ~EventLoopRef() { reset(); }
+    EventLoop& operator*() const { assert(m_loop); return *m_loop; }
+    EventLoop* operator->() const { assert(m_loop); return m_loop; }
+    void reset(bool relock=false);
+
+    EventLoop* m_loop{nullptr};
+    Lock* m_lock{nullptr};
+};
+
 //! Context data associated with proxy client and server classes.
 struct ProxyContext
 {
     Connection* connection;
+    EventLoopRef loop;
     CleanupList cleanup_fns;
 
-    ProxyContext(Connection* connection) : connection(connection) {}
+    ProxyContext(Connection* connection);
 };
 
 //! Base class for generated ProxyClient classes that implement a C++ interface
@@ -67,6 +89,15 @@ public:
     using Sub = ProxyClient<Interface>;
     using Super = ProxyClientBase<Interface, Impl>;
 
+    //! Construct libmultiprocess client object wrapping Cap'n Proto client
+    //! object with a reference to the associated mp::Connection object.
+    //!
+    //! The destroy_connection option determines whether destroying this client
+    //! object closes the connection. It is set to true for the
+    //! ProxyClient<InitInterface> object returned by ConnectStream, to let IPC
+    //! clients close the connection by freeing the object. It is false for
+    //! other client objects so they can be destroyed without affecting the
+    //! connection.
     ProxyClientBase(typename Interface::Client client, Connection* connection, bool destroy_connection);
     ~ProxyClientBase() noexcept;
 
