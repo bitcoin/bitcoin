@@ -11,6 +11,7 @@
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -182,6 +183,35 @@ BOOST_AUTO_TEST_CASE(bip32_test5) {
         BOOST_CHECK_MESSAGE(!dec_extkey.key.IsValid(), "Decoding '" + str + "' as xprv should fail");
         BOOST_CHECK_MESSAGE(!dec_extpubkey.pubkey.IsValid(), "Decoding '" + str + "' as xpub should fail");
     }
+}
+
+BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
+{
+    const CExtKey master{DecodeExtKey(test1.vDerive[0].prv)};
+    const std::vector<uint32_t> path{test1.vDerive[0].nChild, test1.vDerive[1].nChild};
+    const auto derived{DeriveExtKey(master, path)};
+    BOOST_REQUIRE(derived);
+    BOOST_CHECK(EncodeExtKey(derived->first) == test1.vDerive[2].prv);
+
+    KeyOriginInfo expected_origin;
+    const CKeyID id{master.key.GetPubKey().GetID()};
+    std::copy(id.begin(), id.begin() + sizeof(expected_origin.fingerprint), expected_origin.fingerprint);
+    expected_origin.path = path;
+    BOOST_CHECK(derived->second == expected_origin);
+
+    const auto root{DeriveExtKey(master, {})};
+    BOOST_REQUIRE(root);
+    BOOST_CHECK(root->first == master);
+    expected_origin.path.clear();
+    BOOST_CHECK(root->second == expected_origin);
+
+    CExtKey max_depth{master};
+    for (auto i{0}; i++ < 255;) {
+        CExtKey next_key;
+        BOOST_REQUIRE(max_depth.Derive(next_key, 0));
+        max_depth = next_key;
+    }
+    BOOST_CHECK(!DeriveExtKey(max_depth, {0}));
 }
 
 BOOST_AUTO_TEST_CASE(bip32_max_depth) {
