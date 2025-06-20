@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(get_difficulty_for_very_high_target)
 
 //! Prune chain from height down to genesis block and check that
 //! GetPruneHeight returns the correct value
-static void CheckGetPruneHeight(node::BlockManager& blockman, CChain& chain, int height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+static void CheckGetPruneHeight(const node::BlockManager& blockman, const CChain& chain, int height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     AssertLockHeld(::cs_main);
 
@@ -98,8 +98,8 @@ static void CheckGetPruneHeight(node::BlockManager& blockman, CChain& chain, int
 BOOST_FIXTURE_TEST_CASE(get_prune_height, TestChain100Setup)
 {
     LOCK(::cs_main);
-    auto& chain = m_node.chainman->ActiveChain();
-    auto& blockman = m_node.chainman->m_blockman;
+    const auto& chain = m_node.chainman->ActiveChain();
+    const auto& blockman = m_node.chainman->m_blockman;
 
     // Fresh chain of 100 blocks without any pruned blocks, so std::nullopt should be returned
     BOOST_CHECK(!GetPruneHeight(blockman, chain).has_value());
