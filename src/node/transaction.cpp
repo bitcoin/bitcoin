@@ -117,7 +117,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
 
     if (relay) {
-        node.peerman->RelayTransaction(txid, wtxid);
+        // Always consider fanout for out own transactions
+        node.peerman->RelayTransaction(txid, wtxid, /*consider_fanout=*/true);
     }
 
     return TransactionError::OK;
