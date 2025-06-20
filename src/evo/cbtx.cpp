@@ -88,50 +88,6 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CCbTx& cbTx, const CBlockIn
     return true;
 }
 
-bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, BlockValidationState& state)
-{
-    try {
-        static std::atomic<int64_t> nTimeMerkle = 0;
-
-        int64_t nTime1 = GetTimeMicros();
-
-        static Mutex cached_mutex;
-        static CSimplifiedMNList smlCached GUARDED_BY(cached_mutex);
-        static uint256 merkleRootCached GUARDED_BY(cached_mutex);
-        static bool mutatedCached GUARDED_BY(cached_mutex) {false};
-
-        LOCK(cached_mutex);
-        if (sml == smlCached) {
-            merkleRootRet = merkleRootCached;
-            if (mutatedCached) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mutated-cached-calc-cb-mnmerkleroot");
-            }
-            return true;
-        }
-
-        bool mutated = false;
-        merkleRootRet = sml.CalcMerkleRoot(&mutated);
-
-        int64_t nTime2 = GetTimeMicros();
-        nTimeMerkle += nTime2 - nTime1;
-        LogPrint(BCLog::BENCHMARK, "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1),
-                 nTimeMerkle * 0.000001);
-
-        smlCached = std::move(sml);
-        merkleRootCached = merkleRootRet;
-        mutatedCached = mutated;
-
-        if (mutated) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mutated-calc-cb-mnmerkleroot");
-        }
-
-        return true;
-    } catch (const std::exception& e) {
-        LogPrintf("%s -- failed: %s\n", __func__, e.what());
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-calc-cb-mnmerkleroot");
-    }
-}
-
 using QcHashMap = std::map<Consensus::LLMQType, std::vector<uint256>>;
 using QcIndexedHashMap = std::map<Consensus::LLMQType, std::map<int16_t, uint256>>;
 
