@@ -14,7 +14,7 @@
 static void RollingBloom(benchmark::Bench& bench)
 {
     CRollingBloomFilter filter(120000, 0.000001);
-    std::vector<unsigned char> data(32);
+    std::vector<unsigned char> data(4);
     uint32_t count = 0;
     bench.run([&] {
         count++;
