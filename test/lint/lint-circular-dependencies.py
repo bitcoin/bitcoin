@@ -47,7 +47,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "evo/netinfo -> evo/providertx -> evo/netinfo",
     "evo/simplifiedmns -> llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> evo/simplifiedmns",
     "core_io -> evo/assetlocktx -> llmq/signing -> net_processing -> evo/simplifiedmns -> core_io",
-    "evo/cbtx -> llmq/chainlocks -> llmq/instantsend -> net_processing -> evo/simplifiedmns -> evo/cbtx",
     "evo/specialtxman -> validation -> evo/specialtxman",
     "governance/governance -> governance/object -> governance/governance",
     "governance/governance -> masternode/sync -> governance/governance",
