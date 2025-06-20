@@ -93,12 +93,20 @@ FUZZ_TARGET(script, .init = initialize_script)
     std::vector<std::vector<unsigned char>> solutions;
     (void)Solver(script, solutions);
 
-    (void)script.HasValidOps();
+    (void)script.HasValidLegacyOps();
     (void)script.IsPayToAnchor();
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
+    (void)script.IsPayToTaproot();
+    (void)script.IsPayToPubKeyHash();
+    (void)script.IsCompressedPayToPubKey();
+    (void)script.IsUncompressedPayToPubKey();
+    (void)script.IsPayToWitnessPubKeyHash();
     (void)script.IsPushOnly();
-    (void)script.GetSigOpCount(/* fAccurate= */ false);
+    (void)script.GetLegacySigOpCount(/*fAccurate=*/fuzzed_data_provider.ConsumeBool());
+
+    auto script_sig{ConsumeScript(fuzzed_data_provider)};
+    (void)script.GetSigOpCount(script_sig);
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
