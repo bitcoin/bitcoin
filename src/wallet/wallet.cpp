@@ -374,6 +374,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     DatabaseOptions options;
+    ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
 
     if (!fs::exists(backup_file)) {
@@ -3299,7 +3300,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
     } else {
         // ... strWalletName file
         fs::path strSourceFile = BDBDataFile(wallet_path);
-        std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(strSourceFile.parent_path());
+        std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(strSourceFile.parent_path(), /*use_shared_memory=*/true);
         fs::path sourceFile = env->Directory() / strSourceFile;
         fs::path backupFile = backupsDir / fs::u8path(strWalletName + dateTimeStr);
         sourceFile.make_preferred();

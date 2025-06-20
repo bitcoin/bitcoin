@@ -336,6 +336,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/script_bitcoin_consensus.cpp \
  test/fuzz/script_descriptor_cache.cpp \
  test/fuzz/script_flags.cpp \
+ test/fuzz/script_format.cpp \
  test/fuzz/script_interpreter.cpp \
  test/fuzz/script_ops.cpp \
  test/fuzz/script_sigcache.cpp \

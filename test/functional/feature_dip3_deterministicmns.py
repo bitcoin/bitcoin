@@ -27,10 +27,11 @@ class DIP3Test(BitcoinTestFramework):
         self.disable_mocktime = True
         self.supports_cli = False
 
-        self.extra_args = ["-deprecatedrpc=addresses"]
-        self.extra_args += ["-budgetparams=10:10:10"]
-        self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-        self.extra_args += ["-dip3params=135:150"]
+        self.extra_args = [
+            "-budgetparams=10:10:10",
+            "-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK",
+            "-dip3params=135:150",
+        ]
 
 
     def skip_test_if_missing_module(self):

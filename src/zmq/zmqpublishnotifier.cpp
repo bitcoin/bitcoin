@@ -310,17 +310,13 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    {
-        LOCK(cs_main);
-        CBlock block;
-        if(!ReadBlockFromDisk(block, pindex, consensusParams))
-        {
-            zmqError("Can't read block from disk");
-            return false;
-        }
-
-        ss << block;
+    CBlock block;
+    if(!ReadBlockFromDisk(block, pindex, consensusParams)) {
+        zmqError("Can't read block from disk");
+        return false;
     }
+
+    ss << block;
 
     return SendZmqMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }

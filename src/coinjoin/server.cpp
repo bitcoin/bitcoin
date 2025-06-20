@@ -384,7 +384,7 @@ void CCoinJoinServer::ChargeFees() const
     if (!m_mn_activeman) return;
 
     //we don't need to charge collateral for every offence.
-    if (GetRandInt(100) > 33) return;
+    if (GetRand<int>(/*nMax=*/100) > 33) return;
 
     std::vector<CTransactionRef> vecOffendersCollaterals;
 
@@ -420,7 +420,7 @@ void CCoinJoinServer::ChargeFees() const
     if (vecOffendersCollaterals.empty()) return;
 
     //mostly offending? Charge sometimes
-    if (vecOffendersCollaterals.size() >= vecSessionCollaterals.size() - 1 && GetRandInt(100) > 33) return;
+    if (vecOffendersCollaterals.size() >= vecSessionCollaterals.size() - 1 && GetRand<int>(/*nMax=*/100) > 33) return;
 
     //everyone is an offender? That's not right
     if (vecOffendersCollaterals.size() >= vecSessionCollaterals.size()) return;
@@ -452,7 +452,7 @@ void CCoinJoinServer::ChargeRandomFees() const
     if (!m_mn_activeman) return;
 
     for (const auto& txCollateral : vecSessionCollaterals) {
-        if (GetRandInt(100) > 10) return;
+        if (GetRand<int>(/*nMax=*/100) > 10) return;
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::ChargeRandomFees -- charging random fees, txCollateral=%s", txCollateral->ToString()); /* Continued */
         ConsumeCollateral(txCollateral);
     }
@@ -719,7 +719,7 @@ bool CCoinJoinServer::CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& 
 
     // start new session
     nMessageIDRet = MSG_NOERR;
-    nSessionID = GetRandInt(999999) + 1;
+    nSessionID = GetRand<int>(/*nMax=*/999999) + 1;
     nSessionDenom = dsa.nDenom;
 
     SetState(POOL_STATE_QUEUE);

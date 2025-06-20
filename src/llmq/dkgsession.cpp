@@ -999,7 +999,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages, PeerManag
 
     int lieType = -1;
     if (ShouldSimulateError(DKGError::type::COMMIT_LIE)) {
-        lieType = GetRandInt(5);
+        lieType = GetRand<int>(/*nMax=*/5);
         logger.Batch("lying on commitment. lieType=%d", lieType);
     }
 

@@ -316,9 +316,10 @@ static bool rest_block(const CoreContext& context,
 
         if (chainman.m_blockman.IsBlockPruned(pblockindex))
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not available (pruned data)");
+    }
 
-        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
-            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
+    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
     switch (rf) {
@@ -694,7 +695,7 @@ static bool rest_tx(const CoreContext& context, HTTPRequest* req, const std::str
 
     case RetFormat::JSON: {
         UniValue objTx(UniValue::VOBJ);
-        TxToUniv(*tx, hashBlock, objTx);
+        TxToUniv(*tx, /*block_hash=*/hashBlock, /*entry=*/objTx);
         std::string strJSON = objTx.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -879,7 +880,7 @@ static bool rest_getutxos(const CoreContext& context, HTTPRequest* req, const st
 
             // include the script in a json output
             UniValue o(UniValue::VOBJ);
-            ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
+            ScriptToUniv(coin.out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
             utxo.pushKV("scriptPubKey", o);
             utxos.push_back(utxo);
         }

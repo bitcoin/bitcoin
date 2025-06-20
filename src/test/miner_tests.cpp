@@ -465,16 +465,18 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx})); // Sequence locks fail
 
-    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i)->nTime += 512; //Trick the MedianTimePast
-
+    const int SEQUENCE_LOCK_TIME = 512; // Sequence locks pass 512 seconds later
+    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i)
+        m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i)->nTime += SEQUENCE_LOCK_TIME; // Trick the MedianTimePast
     {
         CBlockIndex* active_chain_tip = m_node.chainman->ActiveChain().Tip();
-        BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, CreateBlockIndex(active_chain_tip->nHeight + 1, active_chain_tip))); // Sequence locks pass 512 seconds later
+        BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, CreateBlockIndex(active_chain_tip->nHeight + 1, active_chain_tip)));
     }
 
-    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i)->nTime -= 512; //undo tricked MTP
+    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
+        CBlockIndex* ancestor{Assert(m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i))};
+        ancestor->nTime -= SEQUENCE_LOCK_TIME; // undo tricked MTP
+    }
 
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
@@ -519,11 +521,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // but relative locked txs will if inconsistently added to mempool.
     // For now these will still generate a valid template until BIP68 soft fork
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3U);
-    // However if we advance height by 1 and time by 512, all of them should be mined
-    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
-        m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i)->nTime += 512; //Trick the MedianTimePast
-
+    // However if we advance height by 1 and time by SEQUENCE_LOCK_TIME, all of them should be mined
+    for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
+        CBlockIndex* ancestor{Assert(m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i))};
+        ancestor->nTime += SEQUENCE_LOCK_TIME; // Trick the MedianTimePast
     } // unlock cs_main while calling createAndProcessEmptyBlock
+    }
 
     // Mine an empty block
     createAndProcessEmptyBlock();

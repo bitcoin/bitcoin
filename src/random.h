@@ -72,7 +72,17 @@
  */
 void GetRandBytes(Span<unsigned char> bytes) noexcept;
 /** Generate a uniform random integer in the range [0..range). Precondition: range > 0 */
-uint64_t GetRand(uint64_t nMax) noexcept;
+uint64_t GetRandInternal(uint64_t nMax) noexcept;
+/** Generate a uniform random integer of type T in the range [0..nMax)
+ *  nMax defaults to std::numeric_limits<T>::max()
+ *  Precondition: nMax > 0, T is an integral type, no larger than uint64_t
+ */
+template<typename T>
+T GetRand(T nMax=std::numeric_limits<T>::max()) noexcept {
+    static_assert(std::is_integral<T>(), "T must be integral");
+    static_assert(std::numeric_limits<T>::max() <= std::numeric_limits<uint64_t>::max(), "GetRand only supports up to uint64_t");
+    return T(GetRandInternal(nMax));
+}
 /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
 template <typename D>
 D GetRandomDuration(typename std::common_type<D>::type max) noexcept
@@ -98,7 +108,6 @@ constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
  * */
 std::chrono::microseconds GetExponentialRand(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
-int GetRandInt(int nMax) noexcept;
 uint256 GetRandHash() noexcept;
 
 bool GetRandBool(double rate);

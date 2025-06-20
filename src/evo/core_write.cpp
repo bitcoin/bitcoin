@@ -20,7 +20,7 @@
         out.pushKV("value", ValueFromAmount(credit_output.nValue));
         out.pushKV("valueSat", credit_output.nValue);
         UniValue spk(UniValue::VOBJ);
-        ScriptPubKeyToUniv(credit_output.scriptPubKey, spk, /*include_hex=*/true, /*include_address=*/false);
+        ScriptToUniv(credit_output.scriptPubKey, spk, /*include_hex=*/true, /*include_address=*/false);
         out.pushKV("scriptPubKey", spk);
         outputs.push_back(out);
     }

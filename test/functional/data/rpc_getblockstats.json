@@ -138,7 +138,9 @@
       "totalfee": 0,
       "txs": 1,
       "utxo_increase": 1,
-      "utxo_size_inc": 85
+      "utxo_increase_actual": 1,
+      "utxo_size_inc": 85,
+      "utxo_size_inc_actual": 85
     },
     {
       "avgfee": 192,
@@ -172,7 +174,9 @@
       "totalfee": 192,
       "txs": 2,
       "utxo_increase": 2,
-      "utxo_size_inc": 150
+      "utxo_increase_actual": 2,
+      "utxo_size_inc": 150,
+      "utxo_size_inc_actual": 150
     },
     {
       "avgfee": 22739,
@@ -205,7 +209,9 @@
       "totalfee": 68218,
       "txs": 4,
       "utxo_increase": 4,
-      "utxo_size_inc": 300
+      "utxo_increase_actual": 4,
+      "utxo_size_inc": 300,
+      "utxo_size_inc_actual": 300
     }
   ]
 }

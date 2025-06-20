@@ -31,16 +31,6 @@
 #include <optional>
 #include <ranges>
 
-struct update_fee_delta
-{
-    explicit update_fee_delta(int64_t _feeDelta) : feeDelta(_feeDelta) { }
-
-    void operator() (CTxMemPoolEntry &e) { e.UpdateModifiedFee(feeDelta); }
-
-private:
-    int64_t feeDelta;
-};
-
 bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 {
     AssertLockHeld(cs_main);
@@ -77,11 +67,11 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
       nModFeesWithAncestors{nFee},
       nSigOpCountWithAncestors{sigOpCount} {}
 
-void CTxMemPoolEntry::UpdateModifiedFee(int64_t fee_diff)
+void CTxMemPoolEntry::UpdateModifiedFee(CAmount newFeeDelta)
 {
-    nModFeesWithDescendants = SaturatingAdd(nModFeesWithDescendants, fee_diff);
-    nModFeesWithAncestors = SaturatingAdd(nModFeesWithAncestors, fee_diff);
-    m_modified_fee = SaturatingAdd(m_modified_fee, fee_diff);
+    nModFeesWithDescendants = SaturatingAdd(nModFeesWithDescendants, newFeeDelta);
+    nModFeesWithAncestors = SaturatingAdd(nModFeesWithAncestors, newFeeDelta);
+    m_modified_fee = SaturatingAdd(m_modified_fee, newFeeDelta);
 }
 
 void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
@@ -485,7 +475,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // The following call to UpdateModifiedFee assumes no previous fee modifications
     Assume(entry.GetFee() == entry.GetModifiedFee());
     if (delta) {
-            mapTx.modify(newit, update_fee_delta(delta));
+        mapTx.modify(newit, [&delta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(delta); });
     }
 
     // Update cachedInnerUsage to include contained transaction's usage.
@@ -1449,7 +1439,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
         delta = SaturatingAdd(delta, nFeeDelta);
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
-            mapTx.modify(it, update_fee_delta(nFeeDelta));
+            mapTx.modify(it, [&nFeeDelta](CTxMemPoolEntry& e) { e.UpdateModifiedFee(nFeeDelta); });
             // Now update all ancestors' modified fees with descendants
             setEntries setAncestors;
             uint64_t nNoLimit = std::numeric_limits<uint64_t>::max();

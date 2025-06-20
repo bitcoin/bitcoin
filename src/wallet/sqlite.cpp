@@ -103,8 +103,8 @@ static void SetPragma(sqlite3* db, const std::string& key, const std::string& va
     }
 }
 
-SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, bool mock)
-    : WalletDatabase(), m_mock(mock), m_dir_path(fs::PathToString(dir_path)), m_file_path(fs::PathToString(file_path))
+SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock)
+    : WalletDatabase(), m_mock(mock), m_dir_path(fs::PathToString(dir_path)), m_file_path(fs::PathToString(file_path)), m_use_unsafe_sync(options.use_unsafe_sync)
 {
     {
         LOCK(g_sqlite_mutex);
@@ -282,7 +282,7 @@ void SQLiteDatabase::Open()
     // Enable fullfsync for the platforms that use it
     SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
 
-    if (gArgs.GetBoolArg("-unsafesqlitesync", false)) {
+    if (m_use_unsafe_sync) {
         // Use normal synchronous mode for the journal
         LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
         SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
@@ -571,7 +571,7 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
 {
     try {
         fs::path data_file = SQLiteDataFile(path);
-        auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file);
+        auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options);
         if (options.verify && !db->Verify(error)) {
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;

@@ -995,10 +995,7 @@ if test "$use_hardening" != "no"; then
   AX_CHECK_COMPILE_FLAG([-Wstack-protector], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -Wstack-protector"])
   AX_CHECK_COMPILE_FLAG([-fstack-protector-all], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-protector-all"])
 
-  dnl -fcf-protection used with Clang 7 causes ld to emit warnings:
-  dnl ld: error: ... <corrupt x86 feature size: 0x8>
-  dnl Use CHECK_LINK_FLAG & --fatal-warnings to ensure we wont use the flag in this case.
-  AX_CHECK_LINK_FLAG([-fcf-protection=full], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"], [], [$LDFLAG_WERROR])
+  AX_CHECK_COMPILE_FLAG([-fcf-protection=full], [HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"])
 
   case $host in
     *mingw*)

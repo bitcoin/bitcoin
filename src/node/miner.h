@@ -64,7 +64,7 @@ struct CTxMemPoolModifiedEntry {
         nSigOpCountWithAncestors = entry->GetSigOpCountWithAncestors();
     }
 
-    int64_t GetModifiedFee() const { return iter->GetModifiedFee(); }
+    CAmount GetModifiedFee() const { return iter->GetModifiedFee(); }
     uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
     CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
     size_t GetTxSize() const { return iter->GetTxSize(); }
@@ -226,8 +226,6 @@ private:
     void SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries);
 };
 
-/** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 #endif // BITCOIN_NODE_MINER_H

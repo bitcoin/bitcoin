@@ -223,7 +223,12 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
                     maxInputHeight = std::max(maxInputHeight, height);
                 }
             }
-            lp->maxInputBlock = tip->GetAncestor(maxInputHeight);
+            // tip->GetAncestor(maxInputHeight) should never return a nullptr
+            // because maxInputHeight is always less than the tip height.
+            // It would, however, be a bad bug to continue execution, since a
+            // LockPoints object with the maxInputBlock member set to nullptr
+            // signifies no relative lock time.
+            lp->maxInputBlock = Assert(tip->GetAncestor(maxInputHeight));
         }
     }
     return EvaluateSequenceLocks(index, lockPair);
@@ -2111,6 +2116,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
 static int64_t nTimeVerify = 0;
+static int64_t nTimeUndo = 0;
 static int64_t nTimeISFilter = 0;
 static int64_t nTimeSubsidy = 0;
 static int64_t nTimeValueValid = 0;
@@ -2120,7 +2126,6 @@ static int64_t nTimeDashSpecific = 0;
 static int64_t nTimeConnect = 0;
 static int64_t nTimeIndexConnect = 0;
 static int64_t nTimeIndexWrite = 0;
-static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
 
@@ -2233,8 +2238,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
-    bool fEnforceBIP30 = !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
-                           (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
+    bool fEnforceBIP30 = !IsBIP30Repeat(*pindex);
 
     // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
     // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
@@ -2523,16 +2527,19 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     if (fJustCheck)
         return true;
 
+    int64_t nTime6 = GetTimeMicros();
+
     if (!m_blockman.WriteUndoDataForBlock(blockundo, state, pindex, m_params)) {
         return false;
     }
+
+    int64_t nTime7 = GetTimeMicros(); nTimeUndo += nTime7 - nTime6;
+    LogPrint(BCLog::BENCHMARK, "    - Write undo data: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime7 - nTime6), nTimeUndo * MICRO, nTimeUndo * MILLI / nBlocksTotal);
 
     if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
-
-    int64_t nTime6 = GetTimeMicros();
 
     if (fAddressIndex) {
         if (!m_blockman.m_block_tree_db->WriteAddressIndex(addressIndex)) {
@@ -2552,8 +2559,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         if (!m_blockman.m_block_tree_db->WriteTimestampIndex(CTimestampIndexKey(pindex->nTime, pindex->GetBlockHash())))
             return AbortNode(state, "Failed to write timestamp index");
 
-    int64_t nTime7 = GetTimeMicros(); nTimeIndexWrite += nTime7 - nTime6;
-    LogPrint(BCLog::BENCHMARK, "      - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime7 - nTime6), nTimeIndexWrite * MICRO, nTimeIndexWrite * MILLI / nBlocksTotal);
+    int64_t nTime8 = GetTimeMicros(); nTimeIndexWrite += nTime8 - nTime7;
+    LogPrint(BCLog::BENCHMARK, "      - Index writing: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime8 - nTime7), nTimeIndexWrite * MICRO, nTimeIndexWrite * MILLI / nBlocksTotal);
 
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -2564,9 +2571,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         GetMainSignals().NotifyMasternodeListChanged(false, mnlu.old_list, mnlu.diff);
         uiInterface.NotifyMasternodeListChanged(mnlu.new_list, pindex);
     }
-
-    int64_t nTime8 = GetTimeMicros(); nTimeCallbacks += nTime8 - nTime5;
-    LogPrint(BCLog::BENCHMARK, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime8 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
 
     ::g_stats_client->timing("ConnectBlock_ms", (nTime8 - nTimeStart) / 1000, 1.0f);
 
@@ -2963,7 +2967,7 @@ bool CChainState::DisconnectTip(BlockValidationState& state, DisconnectedBlockTr
     return true;
 }
 
-static int64_t nTimeReadFromDisk = 0;
+static int64_t nTimeReadFromDiskTotal = 0;
 static int64_t nTimeConnectTotal = 0;
 static int64_t nTimeFlush = 0;
 static int64_t nTimeChainState = 0;
@@ -3031,13 +3035,14 @@ bool CChainState::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew
         }
         pthisBlock = pblockNew;
     } else {
+        LogPrint(BCLog::BENCHMARK, "  - Using cached block\n");
         pthisBlock = pblock;
     }
     const CBlock& blockConnecting = *pthisBlock;
     // Apply the block atomically to the chain state.
-    int64_t nTime2 = GetTimeMicros(); nTimeReadFromDisk += nTime2 - nTime1;
+    int64_t nTime2 = GetTimeMicros(); nTimeReadFromDiskTotal += nTime2 - nTime1;
     int64_t nTime3;
-    LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDisk * MICRO);
+    LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime2 - nTime1) * MILLI, nTimeReadFromDiskTotal * MICRO, nTimeReadFromDiskTotal * MILLI / nBlocksTotal);
     {
         auto dbTx = m_evoDb.BeginTransaction();
 
@@ -4732,10 +4737,11 @@ bool CChainState::ReplayBlocks()
     // Roll forward from the forking point to the new tip.
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
-        const CBlockIndex* pindex = pindexNew->GetAncestor(nHeight);
-        LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
+        const CBlockIndex& pindex{*Assert(pindexNew->GetAncestor(nHeight))};
+
+        LogPrintf("Rolling forward %s (%i)\n", pindex.GetBlockHash().ToString(), nHeight);
         uiInterface.ShowProgress(_("Replaying blocks…").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
-        if (!RollforwardBlock(pindex, cache)) return false;
+        if (!RollforwardBlock(&pindex, cache)) return false;
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
@@ -5897,4 +5903,16 @@ ChainstateManager::~ChainstateManager()
     for (auto& i : warningcache) {
         i.clear();
     }
+}
+
+bool IsBIP30Repeat(const CBlockIndex& block_index)
+{
+    return (block_index.nHeight==91842 && block_index.GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
+           (block_index.nHeight==91880 && block_index.GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721"));
+}
+
+bool IsBIP30Unspendable(const CBlockIndex& block_index)
+{
+    return (block_index.nHeight==91722 && block_index.GetBlockHash() == uint256S("0x00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e")) ||
+           (block_index.nHeight==91812 && block_index.GetBlockHash() == uint256S("0x00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"));
 }

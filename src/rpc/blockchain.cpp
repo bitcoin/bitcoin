@@ -170,14 +170,15 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
         case TxVerbosity::SHOW_DETAILS:
         case TxVerbosity::SHOW_DETAILS_AND_PREVOUT:
             CBlockUndo blockUndo;
-            const bool have_undo{WITH_LOCK(::cs_main, return !blockman.IsBlockPruned(blockindex) && UndoReadFromDisk(blockUndo, blockindex))};
+            const bool is_not_pruned{WITH_LOCK(::cs_main, return !blockman.IsBlockPruned(blockindex))};
+            const bool have_undo{is_not_pruned && UndoReadFromDisk(blockUndo, blockindex)};
 
             for (size_t i = 0; i < block.vtx.size(); ++i) {
                 const CTransactionRef& tx = block.vtx.at(i);
                 // coinbase transaction (i.e. i == 0) doesn't have undo data
                 const CTxUndo* txundo = (have_undo && i > 0) ? &blockUndo.vtxundo.at(i - 1) : nullptr;
                 UniValue objTx(UniValue::VOBJ);
-                TxToUniv(*tx, uint256(), objTx, true, 0, txundo, verbosity);
+                TxToUniv(*tx, /*block_hash=*/uint256(), /*entry=*/objTx, /*include_hex=*/true, /*serialize_flags=*/0, txundo, verbosity);
                 bool fLocked = isman.IsLocked(tx->GetHash());
                 objTx.pushKV("instantlock", fLocked || result["chainlock"].get_bool());
                 objTx.pushKV("instantlock_internal", fLocked);
@@ -762,30 +763,38 @@ static RPCHelpMan getblockheaders()
     };
 }
 
-static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+static CBlock GetBlockChecked(BlockManager& blockman, const CBlockIndex* pblockindex)
 {
-    AssertLockHeld(::cs_main);
     CBlock block;
-    if (blockman.IsBlockPruned(pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+    {
+        LOCK(cs_main);
+        if (blockman.IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+        }
     }
 
     if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
         // Block not found on disk. This could be because we have the block
         // header in our index but not yet have the block or did not accept the
-        // block.
+        // block. Or if the block was pruned right after we released the lock above.
         throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
     }
 
     return block;
 }
 
-static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex* pblockindex)
 {
-    AssertLockHeld(::cs_main);
     CBlockUndo blockUndo;
-    if (blockman.IsBlockPruned(pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+
+    // The Genesis block does not have undo data
+    if (pblockindex->nHeight == 0) return blockUndo;
+
+    {
+        LOCK(cs_main);
+        if (blockman.IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+        }
     }
 
     if (!UndoReadFromDisk(blockUndo, pblockindex)) {
@@ -978,7 +987,6 @@ static RPCHelpMan getblock()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    CBlock block;
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     ChainstateManager& chainman = EnsureChainman(node);
@@ -990,9 +998,9 @@ static RPCHelpMan getblock()
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-
-        block = GetBlockChecked(chainman.m_blockman, pblockindex);
     }
+
+    const CBlock block{GetBlockChecked(chainman.m_blockman, pblockindex)};
 
     if (verbosity <= 0)
     {
@@ -1310,7 +1318,7 @@ static RPCHelpMan gettxout()
     }
     ret.pushKV("value", ValueFromAmount(coin.out.nValue));
     UniValue o(UniValue::VOBJ);
-    ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
+    ScriptToUniv(coin.out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
     ret.pushKV("scriptPubKey", o);
     ret.pushKV("coinbase", (bool)coin.fCoinBase);
 
@@ -1875,9 +1883,9 @@ static RPCHelpMan getchaintxstats()
         }
     }
 
-    const CBlockIndex* pindexPast = pindex->GetAncestor(pindex->nHeight - blockcount);
-    int nTimeDiff = pindex->GetMedianTimePast() - pindexPast->GetMedianTimePast();
-    int nTxDiff = pindex->nChainTx - pindexPast->nChainTx;
+    const CBlockIndex& past_block{*CHECK_NONFATAL(pindex->GetAncestor(pindex->nHeight - blockcount))};
+    const int64_t nTimeDiff{pindex->GetMedianTimePast() - past_block.GetMedianTimePast()};
+    const int nTxDiff = pindex->nChainTx - past_block.nChainTx;
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("time", (int64_t)pindex->nTime);
@@ -2001,8 +2009,10 @@ static RPCHelpMan getblockstats()
                 {RPCResult::Type::NUM, "total_size", /* optional */ true, "Total size of all non-coinbase transactions"},
                 {RPCResult::Type::NUM, "totalfee", /* optional */ true, "The fee total"},
                 {RPCResult::Type::NUM, "txs", /* optional */ true, "The number of transactions (including coinbase)"},
-                {RPCResult::Type::NUM, "utxo_increase", /* optional */ true, "The increase/decrease in the number of unspent outputs"},
+                {RPCResult::Type::NUM, "utxo_increase", /* optional */ true, "The increase/decrease in the number of unspent outputs  (not discounting op_return and similar)"},
                 {RPCResult::Type::NUM, "utxo_size_inc", /* optional */ true, "The increase/decrease in size for the utxo index (not discounting op_return and similar)"},
+                {RPCResult::Type::NUM, "utxo_increase_actual", /*optional=*/true, "The increase/decrease in the number of unspent outputs, not counting unspendables"},
+                {RPCResult::Type::NUM, "utxo_size_inc_actual", /*optional=*/true, "The increase/decrease in size for the utxo index, not counting unspendables"},
             }},
                 RPCExamples{
                     HelpExampleCli("getblockstats", R"('"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09"' '["minfeerate","avgfeerate"]')") +
@@ -2017,9 +2027,7 @@ static RPCHelpMan getblockstats()
     }
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
-    const CBlockIndex* pindex{ParseHashOrHeight(request.params[0], chainman)};
-    CHECK_NONFATAL(pindex != nullptr);
+    const CBlockIndex& pindex{*CHECK_NONFATAL(ParseHashOrHeight(request.params[0], chainman))};
 
     std::set<std::string> stats;
     if (!request.params[1].isNull()) {
@@ -2030,15 +2038,15 @@ static RPCHelpMan getblockstats()
         }
     }
 
-    const CBlock block = GetBlockChecked(chainman.m_blockman, pindex);
-    const CBlockUndo blockUndo = GetUndoChecked(chainman.m_blockman, pindex);
+    const CBlock& block = GetBlockChecked(chainman.m_blockman, &pindex);
+    const CBlockUndo& blockUndo = GetUndoChecked(chainman.m_blockman, &pindex);
 
     const bool do_all = stats.size() == 0; // Calculate everything if nothing selected (default)
     const bool do_mediantxsize = do_all || stats.count("mediantxsize") != 0;
     const bool do_medianfee = do_all || stats.count("medianfee") != 0;
     const bool do_feerate_percentiles = do_all || stats.count("feerate_percentiles") != 0;
     const bool loop_inputs = do_all || do_medianfee || do_feerate_percentiles ||
-        SetHasKeys(stats, "utxo_size_inc", "totalfee", "avgfee", "avgfeerate", "minfee", "maxfee", "minfeerate", "maxfeerate");
+        SetHasKeys(stats, "utxo_increase", "utxo_increase_actual", "utxo_size_inc", "utxo_size_inc_actual", "totalfee", "avgfee", "avgfeerate", "minfee", "maxfee", "minfeerate", "maxfeerate");
     const bool loop_outputs = do_all || loop_inputs || stats.count("total_out");
     const bool do_calculate_size = do_all || do_mediantxsize ||
         SetHasKeys(stats, "total_size", "avgtxsize", "mintxsize", "maxtxsize", "avgfeerate", "feerate_percentiles", "minfeerate", "maxfeerate");
@@ -2054,7 +2062,9 @@ static RPCHelpMan getblockstats()
     int64_t mintxsize = MaxBlockSize();
     int64_t outputs = 0;
     int64_t total_size = 0;
+    int64_t utxos = 0;
     int64_t utxo_size_inc = 0;
+    int64_t utxo_size_inc_actual = 0;
     std::vector<CAmount> fee_array;
     std::vector<std::pair<CAmount, int64_t>> feerate_array;
     std::vector<int64_t> txsize_array;
@@ -2067,7 +2077,18 @@ static RPCHelpMan getblockstats()
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
                 tx_total_out += out.nValue;
-                utxo_size_inc += GetSerializeSize(out, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+
+                size_t out_size = GetSerializeSize(out, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                utxo_size_inc += out_size;
+
+                // The Genesis block and the repeated BIP30 block coinbases don't change the UTXO
+                // set counts, so they have to be excluded from the statistics
+                if (pindex.nHeight == 0 || (IsBIP30Repeat(pindex) && tx->IsCoinBase())) continue;
+                // Skip unspendable outputs since they are not included in the UTXO set
+                if (out.scriptPubKey.IsUnspendable()) continue;
+
+                ++utxos;
+                utxo_size_inc_actual += out_size;
             }
         }
 
@@ -2097,7 +2118,9 @@ static RPCHelpMan getblockstats()
                 const CTxOut& prevoutput = coin.out;
 
                 tx_total_in += prevoutput.nValue;
-                utxo_size_inc -= GetSerializeSize(prevoutput, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                size_t prevout_size = GetSerializeSize(prevoutput, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                utxo_size_inc -= prevout_size;
+                utxo_size_inc_actual -= prevout_size;
             }
 
             CAmount txfee = tx_total_in - tx_total_out;
@@ -2137,28 +2160,30 @@ static RPCHelpMan getblockstats()
     ret_all.pushKV("avgfee", (block.vtx.size() > 1) ? totalfee / (block.vtx.size() - 1) : 0);
     ret_all.pushKV("avgfeerate", total_size ? totalfee / total_size : 0); // Unit: sat/byte
     ret_all.pushKV("avgtxsize", (block.vtx.size() > 1) ? total_size / (block.vtx.size() - 1) : 0);
-    ret_all.pushKV("blockhash", pindex->GetBlockHash().GetHex());
+    ret_all.pushKV("blockhash", pindex.GetBlockHash().GetHex());
     ret_all.pushKV("feerate_percentiles", feerates_res);
-    ret_all.pushKV("height", (int64_t)pindex->nHeight);
+    ret_all.pushKV("height", (int64_t)pindex.nHeight);
     ret_all.pushKV("ins", inputs);
     ret_all.pushKV("maxfee", maxfee);
     ret_all.pushKV("maxfeerate", maxfeerate);
     ret_all.pushKV("maxtxsize", maxtxsize);
     ret_all.pushKV("medianfee", CalculateTruncatedMedian(fee_array));
-    ret_all.pushKV("mediantime", pindex->GetMedianTimePast());
+    ret_all.pushKV("mediantime", pindex.GetMedianTimePast());
     ret_all.pushKV("mediantxsize", CalculateTruncatedMedian(txsize_array));
     ret_all.pushKV("minfee", (minfee == MAX_MONEY) ? 0 : minfee);
     ret_all.pushKV("minfeerate", (minfeerate == MAX_MONEY) ? 0 : minfeerate);
     ret_all.pushKV("mintxsize", mintxsize == MaxBlockSize() ? 0 : mintxsize);
     ret_all.pushKV("outs", outputs);
-    ret_all.pushKV("subsidy", GetBlockSubsidy(pindex, Params().GetConsensus()));
-    ret_all.pushKV("time", pindex->GetBlockTime());
+    ret_all.pushKV("subsidy", GetBlockSubsidy(&pindex, Params().GetConsensus()));
+    ret_all.pushKV("time", pindex.GetBlockTime());
     ret_all.pushKV("total_out", total_out);
     ret_all.pushKV("total_size", total_size);
     ret_all.pushKV("totalfee", totalfee);
     ret_all.pushKV("txs", (int64_t)block.vtx.size());
     ret_all.pushKV("utxo_increase", outputs - inputs);
     ret_all.pushKV("utxo_size_inc", utxo_size_inc);
+    ret_all.pushKV("utxo_increase_actual", utxos - inputs);
+    ret_all.pushKV("utxo_size_inc_actual", utxo_size_inc_actual);
 
     if (do_all) {
         return ret_all;

@@ -86,7 +86,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
     }
     std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /* min_ancestors */ 1);
     const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN);
-    CTxMemPool pool;
+    CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
     LOCK2(cs_main, pool.cs);
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         for (auto& tx : ordered_coins) {
@@ -100,16 +100,15 @@ static void ComplexMemPool(benchmark::Bench& bench)
 static void MempoolCheck(benchmark::Bench& bench)
 {
     FastRandomContext det_rand{true};
-    const int childTxs = bench.complexityN() > 1 ? static_cast<int>(bench.complexityN()) : 2000;
-    const std::vector<CTransactionRef> ordered_coins = CreateOrderedCoins(det_rand, childTxs, /* min_ancestors */ 5);
-    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN, {"-checkmempool=1"});
-    CTxMemPool pool;
+    auto testing_setup = MakeNoLogFileContext<TestChain100Setup>(CBaseChainParams::REGTEST, {"-checkmempool=1"});
+    CTxMemPool& pool = *testing_setup.get()->m_node.mempool;
     LOCK2(cs_main, pool.cs);
+    testing_setup->PopulateMempool(det_rand, 400, true);
     const CCoinsViewCache& coins_tip = testing_setup.get()->m_node.chainman->ActiveChainstate().CoinsTip();
-    for (auto& tx : ordered_coins) AddTx(tx, pool);
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.check(coins_tip, /* spendheight */ 2);
+        // Bump up the spendheight so we don't hit premature coinbase spend errors.
+        pool.check(coins_tip, /*spendheight=*/300);
     });
 }
 

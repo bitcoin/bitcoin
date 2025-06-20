@@ -659,14 +659,9 @@ void RandAddEvent(const uint32_t event_info) noexcept { GetRNGState().AddEvent(e
 
 bool g_mock_deterministic_tests{false};
 
-uint64_t GetRand(uint64_t nMax) noexcept
+uint64_t GetRandInternal(uint64_t nMax) noexcept
 {
     return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
-}
-
-int GetRandInt(int nMax) noexcept
-{
-    return GetRand(nMax);
 }
 
 uint256 GetRandHash() noexcept

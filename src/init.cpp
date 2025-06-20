@@ -1619,8 +1619,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetIntArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
-    node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()),
-                                              GetRand(std::numeric_limits<uint64_t>::max()),
+    node.connman = std::make_unique<CConnman>(GetRand<uint64_t>(),
+                                              GetRand<uint64_t>(),
                                               *node.addrman, *node.netgroupman, args.GetBoolArg("-networkactive", true));
 
     assert(!node.fee_estimator);
@@ -2162,8 +2162,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        LOCK(::cs_main);
-        if (const auto error{CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db))}) {
+        if (const auto error{WITH_LOCK(cs_main, return CheckLegacyTxindex(*Assert(chainman.m_blockman.m_block_tree_db)))}) {
             return InitError(*error);
         }
 
