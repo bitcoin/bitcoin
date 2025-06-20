@@ -1,4 +1,4 @@
-// Copyright (c) 2020-present The Bitcoin Core developers
+// Copyright (c) 2020-present The Baxium Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -147,6 +147,55 @@ SHA3_256& SHA3_256::Finalize(std::span<unsigned char> output)
 }
 
 SHA3_256& SHA3_256::Reset()
+{
+    m_bufsize = 0;
+    m_pos = 0;
+    std::fill(std::begin(m_state), std::end(m_state), 0);
+    return *this;
+}
+
+SHA3_512& SHA3_512::Write(std::span<const unsigned char> data)
+{
+    if (m_bufsize && data.size() >= sizeof(m_buffer) - m_bufsize) {
+        std::copy(data.begin(), data.begin() + (sizeof(m_buffer) - m_bufsize), m_buffer + m_bufsize);
+        data = data.subspan(sizeof(m_buffer) - m_bufsize);
+        m_state[m_pos++] ^= ReadLE64(m_buffer);
+        m_bufsize = 0;
+        if (m_pos == RATE_BUFFERS) {
+            KeccakF(m_state);
+            m_pos = 0;
+        }
+    }
+    while (data.size() >= sizeof(m_buffer)) {
+        m_state[m_pos++] ^= ReadLE64(data.data());
+        data = data.subspan(8);
+        if (m_pos == RATE_BUFFERS) {
+            KeccakF(m_state);
+            m_pos = 0;
+        }
+    }
+    if (data.size()) {
+        std::copy(data.begin(), data.end(), m_buffer + m_bufsize);
+        m_bufsize += data.size();
+    }
+    return *this;
+}
+
+SHA3_512& SHA3_512::Finalize(std::span<unsigned char> output)
+{
+    assert(output.size() == OUTPUT_SIZE);
+    std::fill(m_buffer + m_bufsize, m_buffer + sizeof(m_buffer), 0);
+    m_buffer[m_bufsize] ^= 0x06;
+    m_state[m_pos] ^= ReadLE64(m_buffer);
+    m_state[RATE_BUFFERS - 1] ^= 0x8000000000000000;
+    KeccakF(m_state);
+    for (unsigned i = 0; i < 8; ++i) {
+        WriteLE64(output.data() + 8 * i, m_state[i]);
+    }
+    return *this;
+}
+
+SHA3_512& SHA3_512::Reset()
 {
     m_bufsize = 0;
     m_pos = 0;
