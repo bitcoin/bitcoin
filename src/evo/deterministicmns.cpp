@@ -1335,6 +1335,13 @@ bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl:
         return false;
     }
 
+    const bool is_v23_active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V23)};
+
+    // No longer allow legacy scheme masternode registration
+    if (is_v23_active && opt_ptx->nVersion < ProTxVersion::BasicBLS) {
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-disallowed");
+    }
+
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be issues later
     // If any of both is set, it must be valid however
     if (!opt_ptx->netInfo->IsEmpty() && !CheckService(*opt_ptx, state)) {
