@@ -120,6 +120,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         tx.nVersion = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
+        tx.rehash()
         return tx
 
     def create_bip112emptystack(self, input, txversion):
@@ -127,6 +128,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         tx.nVersion = txversion
         self.miniwallet.sign_tx(tx)
         tx.vin[0].scriptSig = CScript([OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
+        tx.rehash()
         return tx
 
     def send_generic_input_tx(self, coinbases):
@@ -144,7 +146,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
             tx.nVersion = txversion
             tx.vin[0].nSequence = locktime + locktime_delta
             self.miniwallet.sign_tx(tx)
-            tx.rehash()
             txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
 
         return txs
@@ -350,20 +351,16 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # BIP 113 tests should now fail regardless of version number if nLockTime isn't satisfied by new rules
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         self.miniwallet.sign_tx(bip113tx_v1)
-        bip113tx_v1.rehash()
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5  # = MTP of prior block (not <) but < time put on current block
         self.miniwallet.sign_tx(bip113tx_v2)
-        bip113tx_v2.rehash()
         for bip113tx in [bip113tx_v1, bip113tx_v2]:
             self.send_blocks([self.create_test_block([bip113tx])], success=False, reject_reason='bad-txns-nonfinal')
 
         # BIP 113 tests should now pass if the locktime is < MTP
         bip113tx_v1.nLockTime = self.last_block_time - 600 * 5 - 1  # < MTP of prior block
         self.miniwallet.sign_tx(bip113tx_v1)
-        bip113tx_v1.rehash()
         bip113tx_v2.nLockTime = self.last_block_time - 600 * 5 - 1  # < MTP of prior block
         self.miniwallet.sign_tx(bip113tx_v2)
-        bip113tx_v2.rehash()
         for bip113tx in [bip113tx_v1, bip113tx_v2]:
             self.send_blocks([self.create_test_block([bip113tx])])
             self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
@@ -488,7 +485,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         for tx in [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if not tx['sdf'] and tx['stf']]:
             tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME | SEQ_TYPE_FLAG
             self.miniwallet.sign_tx(tx)
-            tx.rehash()
             time_txs.append(tx)
 
         self.send_blocks([self.create_test_block(time_txs)])
