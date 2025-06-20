@@ -444,7 +444,10 @@ RPCHelpMan listtransactions()
     return RPCHelpMan{
         "listtransactions",
         "If a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
-                "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n",
+                "Returns up to 'count' most recent transactions ordered from oldest to newest while skipping the first 'from' transactions.\n"
+                "Every item in the response array is per output level, i.e., a transaction can have multiple items in the array.\n"
+                "Eg: A transaction sending wallet funds to 2 non-wallet addresses and 1 wallet address will have 4 items in the array - \n"
+                "3 in the send category and 1 in the receive category.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If set, should be a valid label name to return only incoming transactions\n"
                           "with the specified label, or \"*\" to disable filtering and return all transactions."},
