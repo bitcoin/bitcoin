@@ -8,6 +8,7 @@
 #include <common/types.h>
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <key.h>
 #include <key_io.h>
 #include <node/types.h>
 #include <outputtype.h>
@@ -15,6 +16,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
+#include <script/keyorigin.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <tinyformat.h>
@@ -1362,6 +1364,22 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
         }
     }
     return ret;
+}
+
+std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const std::vector<uint32_t>& path) {
+    CExtKey descendant = ext_key;
+    KeyOriginInfo origin;
+    origin.clear(); // Prevent spurious uninitialized variable warning
+    origin.path = path;
+    bool first = true;
+    for (uint32_t i : path) {
+        if (!descendant.Derive(descendant, i)) return std::nullopt;
+        if (first) {
+            memcpy(origin.fingerprint, descendant.vchFingerprint, 4);
+            first = false;
+        }
+    }
+    return std::make_pair(descendant, origin);
 }
 
 /** Convert a vector of bilingual strings to a UniValue::VARR containing their original untranslated values. */

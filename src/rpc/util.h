@@ -156,6 +156,12 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 /** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
 std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider, const bool expand_priv = false);
 
+//! Get extended key and origin info for a given path
+//! @param[in] ext_key The extended private key to derive from
+//! @param[in] path The BIP 32 path
+//! @return the resulting extended private key and origin info (blank if path is empty)
+std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const std::vector<uint32_t>& path);
+
 /**
  * Serializing JSON objects depends on the outer type. Only arrays and
  * dictionaries can be nested in json. The top-level outer type is "NONE".
