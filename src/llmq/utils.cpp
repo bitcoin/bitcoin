@@ -77,7 +77,7 @@ static std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersByS
     const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
     const CBlockIndex* pCycleQuorumBaseBlockIndex, const llmq::CQuorumSnapshot& snapshot, int nHeight);
 static std::pair<std::vector<CDeterministicMNCPtr>, std::vector<CDeterministicMNCPtr>> GetMNUsageBySnapshot(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
+    const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& mn_list,
     const CBlockIndex* pCycleQuorumBaseBlockIndex, const llmq::CQuorumSnapshot& snapshot, int nHeight);
 
 static void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& allMns,
@@ -617,7 +617,12 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
     std::vector<CDeterministicMNCPtr> sortedCombinedMns;
     {
         const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
-        auto [MnsUsedAtH, MnsNotUsedAtH] = GetMNUsageBySnapshot(llmqParams, dmnman, pCycleQuorumBaseBlockIndex,
+
+        const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(
+            pCycleQuorumBaseBlockIndex->nHeight - 8);
+        auto mn_list = dmnman.GetListForBlock(pWorkBlockIndex);
+
+        auto [MnsUsedAtH, MnsNotUsedAtH] = GetMNUsageBySnapshot(llmqParams, mn_list, pCycleQuorumBaseBlockIndex,
                                                                 snapshot, nHeight);
         // the list begins with all the unused MNs
         sortedCombinedMns = CalculateQuorum(std::move(MnsNotUsedAtH), modifier);
@@ -700,7 +705,7 @@ std::vector<std::vector<CDeterministicMNCPtr>> GetQuorumQuarterMembersBySnapshot
 }
 
 static std::pair<std::vector<CDeterministicMNCPtr>, std::vector<CDeterministicMNCPtr>> GetMNUsageBySnapshot(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
+    const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& mn_list,
     const CBlockIndex* pCycleQuorumBaseBlockIndex, const llmq::CQuorumSnapshot& snapshot, int nHeight)
 {
     if (!llmqParams.useRotation || pCycleQuorumBaseBlockIndex->nHeight % llmqParams.dkgInterval != 0) {
@@ -711,11 +716,8 @@ static std::pair<std::vector<CDeterministicMNCPtr>, std::vector<CDeterministicMN
     std::vector<CDeterministicMNCPtr> usedMNs;
     std::vector<CDeterministicMNCPtr> nonUsedMNs;
 
-    const CBlockIndex* pWorkBlockIndex = pCycleQuorumBaseBlockIndex->GetAncestor(pCycleQuorumBaseBlockIndex->nHeight - 8);
     const auto modifier = GetHashModifier(llmqParams, pCycleQuorumBaseBlockIndex);
-
-    auto allMns = dmnman.GetListForBlock(pWorkBlockIndex);
-    auto sortedAllMns = CalculateQuorum(allMns, modifier);
+    auto sortedAllMns = CalculateQuorum(mn_list, modifier);
 
     size_t i{0};
     for (const auto& dmn : sortedAllMns) {
