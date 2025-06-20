@@ -537,10 +537,11 @@ public:
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void SetBestBlock(int height, std::chrono::seconds time) override
+    void SetBestBlock(int height, std::chrono::seconds time, bool initial_sync_finished) override
     {
         m_best_height = height;
         m_best_block_time = time;
+        m_initial_sync_finished = initial_sync_finished;
     };
     void UnitTestMisbehaving(NodeId peer_id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex) { Misbehaving(*Assert(GetPeerRef(peer_id)), ""); };
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
@@ -790,7 +791,7 @@ private:
 
     /** Whether we've completed initial sync yet, for determining when to turn
       * on extra block-relay-only peers. */
-    bool m_initial_sync_finished GUARDED_BY(cs_main){false};
+    std::atomic<bool> m_initial_sync_finished{false};
 
     /** Protects m_peer_map. This mutex must not be locked while holding a lock
      *  on any of the mutexes inside a Peer object. */
@@ -1993,7 +1994,7 @@ void PeerManagerImpl::BlockConnected(
 
     // The following task can be skipped since we don't maintain a mempool for
     // the ibd/background chainstate.
-    if (role == ChainstateRole::BACKGROUND) {
+    if (!m_initial_sync_finished || role == ChainstateRole::BACKGROUND) {
         return;
     }
     LOCK(m_tx_download_mutex);
@@ -2067,7 +2068,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
  */
 void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    SetBestBlock(pindexNew->nHeight, std::chrono::seconds{pindexNew->GetBlockTime()});
+    SetBestBlock(pindexNew->nHeight, std::chrono::seconds{pindexNew->GetBlockTime()}, !fInitialDownload);
 
     // Don't relay inventory during initial block download.
     if (fInitialDownload) return;
@@ -5267,7 +5268,6 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 
     if (!m_initial_sync_finished && CanDirectFetch()) {
         m_connman.StartExtraBlockRelayPeers();
-        m_initial_sync_finished = true;
     }
 }
 
