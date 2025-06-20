@@ -374,9 +374,6 @@ jobs:
         # Can't use ctest here like other jobs as we don't have a CMake build tree.
         run: |
           ./bin/test_bitcoin.exe -l test_suite
-          ./src/secp256k1/bin/exhaustive_tests.exe
-          ./src/secp256k1/bin/noverify_tests.exe
-          ./src/secp256k1/bin/tests.exe
           ./src/univalue/object.exe
           ./src/univalue/unitester.exe
 
