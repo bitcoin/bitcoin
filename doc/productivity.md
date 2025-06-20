@@ -185,6 +185,37 @@ As an alternative to fetching commits directly, when looking at pull requests by
 
 This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all` or `git fetch upstream-pull`. It will download and store on disk quite a lot of data (all PRs, including merged and closed ones). Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`, `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
 
+### Fetch and update PRs individually
+
+The refspec remote is quite resource-heavy, and it is possible to fetch PRs singularly from the remote. To do this you can run:
+
+```bash
+# Individual fetch
+git fetch upstream pull/<number>/head
+
+# Fetch with automatic branch creation and switch
+git fetch upstream pull/<number>/head:pr-<number> && git switch pr-<number>
+```
+
+...from the command line, substituting `<number>` with the PR number you want to fetch/update.
+
+> [!NOTE]
+> The remote named "upstream" here must be the one that the pull request was opened against.
+> e.g. github.com/bitcoin/bitcoin.git or for the GUI github.com/bitcoin-core/gui
+
+Make these easier to use by adding aliases to your git config:
+
+```
+[alias]
+    # Fetch a single Pull Request and switch to it in a new branch, with `git pr 12345`
+    pr = "!f() { git fetch upstream pull/$1/head:pr-$1 && git switch pr-$1; }; f";
+
+    # Update a Pull Request branch, even after a force push, and even if checked out, with `git pru 12345`
+    pru = "!f() { git fetch --update-head-ok -f upstream pull/$1/head:pr-$1; }; f";
+```
+
+Then a simple `git pr 12345` will fetch and check out that pr from upstream.
+
 ### Diff the diffs with `git range-diff`
 
 It is very common for contributors to rebase their pull requests, or make changes to commits (perhaps in response to review) that are not at the head of their branch. This poses a problem for reviewers as when the contributor force pushes, the reviewer is no longer sure that his previous reviews of commits are still valid (as the commit hashes can now be different even though the diff is semantically the same). [git range-diff](https://git-scm.com/docs/git-range-diff) (Git >= 2.19) can help solve this problem by diffing the diffs.
