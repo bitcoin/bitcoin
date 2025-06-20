@@ -4,7 +4,6 @@
 
 #include <consensus/validation.h>
 #include <evo/cbtx.h>
-#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
@@ -45,44 +44,18 @@ bool CheckCbTx(const CCbTx& cbTx, const CBlockIndex* pindexPrev, TxValidationSta
     return true;
 }
 
-// This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
 bool CheckCbTxMerkleRoots(const CBlock& block, const CCbTx& cbTx, const CBlockIndex* pindex,
-                          const llmq::CQuorumBlockProcessor& quorum_block_processor, CSimplifiedMNList&& sml,
-                          BlockValidationState& state)
+                          const llmq::CQuorumBlockProcessor& quorum_block_processor, BlockValidationState& state)
 {
-    if (pindex) {
-        static int64_t nTimeMerkleMNL = 0;
-        static int64_t nTimeMerkleQuorum = 0;
-
-        int64_t nTime1 = GetTimeMicros();
+    if (pindex && cbTx.nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
         uint256 calculatedMerkleRoot;
-        if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, std::move(sml), state)) {
+        if (!CalcCbTxMerkleRootQuorums(block, pindex->pprev, quorum_block_processor, calculatedMerkleRoot, state)) {
             // pass the state returned by the function above
             return false;
         }
-        if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-mnmerkleroot");
+        if (calculatedMerkleRoot != cbTx.merkleRootQuorums) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-quorummerkleroot");
         }
-
-        int64_t nTime2 = GetTimeMicros();
-        nTimeMerkleMNL += nTime2 - nTime1;
-        LogPrint(BCLog::BENCHMARK, "          - CalcCbTxMerkleRootMNList: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1),
-                 nTimeMerkleMNL * 0.000001);
-
-        if (cbTx.nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
-            if (!CalcCbTxMerkleRootQuorums(block, pindex->pprev, quorum_block_processor, calculatedMerkleRoot, state)) {
-                // pass the state returned by the function above
-                return false;
-            }
-            if (calculatedMerkleRoot != cbTx.merkleRootQuorums) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-quorummerkleroot");
-            }
-        }
-
-        int64_t nTime3 = GetTimeMicros();
-        nTimeMerkleQuorum += nTime3 - nTime2;
-        LogPrint(BCLog::BENCHMARK, "          - CalcCbTxMerkleRootQuorums: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2),
-                 nTimeMerkleQuorum * 0.000001);
     }
 
     return true;

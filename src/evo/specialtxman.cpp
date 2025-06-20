@@ -90,6 +90,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         static int64_t nTimeLoop = 0;
         static int64_t nTimeQuorum = 0;
         static int64_t nTimeDMN = 0;
+        static int64_t nTimeMerkleMNL = 0;
         static int64_t nTimeMerkle = 0;
         static int64_t nTimeCbTxCL = 0;
         static int64_t nTimeMnehf = 0;
@@ -115,6 +116,12 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
                 }
             } else {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-payload");
+            }
+        }
+        if (fCheckCbTxMerkleRoots) {
+            // To ensure that opt_cbTx is not missing when it's supposed to be
+            if (DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0003) && !opt_cbTx.has_value()) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-version");
             }
         }
 
@@ -150,7 +157,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         nTimeLoop += nTime3 - nTime2;
         LogPrint(BCLog::BENCHMARK, "      - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeLoop * 0.000001);
 
-        if (fCheckCbTxMerkleRoots && block.vtx[0]->nType == TRANSACTION_COINBASE) {
+        if (opt_cbTx.has_value()) {
             if (!CheckCreditPoolDiffForBlock(block, pindex, *opt_cbTx, state)) {
                 return error("CSpecialTxProcessor: CheckCreditPoolDiffForBlock for block %s failed with %s",
                              pindex->GetBlockHash().ToString(), state.ToString());
@@ -173,8 +180,8 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
                  nTimeQuorum * 0.000001);
 
 
-        CDeterministicMNList mn_list;
-        if (DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0003)) {
+        if (opt_cbTx.has_value()) {
+            CDeterministicMNList mn_list;
             if (!m_dmnman.BuildNewListFromBlock(block, pindex->pprev, state, view, mn_list, m_qsnapman, true)) {
                 // pass the state returned by the function above
                 return false;
@@ -185,15 +192,31 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
                 // pass the state returned by the function above
                 return false;
             }
+
+            int64_t nTime5_1 = GetTimeMicros();
+            nTimeDMN += nTime5_1 - nTime5;
+
+            LogPrint(BCLog::BENCHMARK, "      - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime5_1 - nTime5),
+                     nTimeDMN * 0.000001);
+
+            uint256 calculatedMerkleRoot;
+            if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, CSimplifiedMNList{std::move(mn_list)}, state)) {
+                // pass the state returned by the function above
+                return false;
+            }
+            if (calculatedMerkleRoot != opt_cbTx->merkleRootMNList) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-mnmerkleroot");
+            }
+
+            int64_t nTime5_2 = GetTimeMicros();
+            nTimeMerkleMNL += nTime5_2 - nTime5_1;
+            LogPrint(BCLog::BENCHMARK, "      - CalcCbTxMerkleRootMNList: %.2fms [%.2fs]\n",
+                     0.001 * (nTime5_2 - nTime5_1), nTimeMerkleMNL * 0.000001);
         }
 
         int64_t nTime6 = GetTimeMicros();
-        nTimeDMN += nTime6 - nTime5;
-
-        LogPrint(BCLog::BENCHMARK, "      - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeDMN * 0.000001);
-
         if (opt_cbTx.has_value()) {
-            if (!CheckCbTxMerkleRoots(block, *opt_cbTx, pindex, m_qblockman, CSimplifiedMNList(mn_list), state)) {
+            if (!CheckCbTxMerkleRoots(block, *opt_cbTx, pindex, m_qblockman, state)) {
                 // pass the state returned by the function above
                 return false;
             }
