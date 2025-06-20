@@ -237,11 +237,27 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
-    def test_feerate_mempoolminfee(self):
+    def test_estimates_with_highminrelaytxfee(self):
         high_val = 3 * self.nodes[1].estimatesmartfee(1)["feerate"]
         self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}"])
-        check_estimates(self.nodes[1], self.fees_per_kb)
+
+        # Raw estimates should pass using the original list of seen fees,
+        # because we return the exact fee rate estimate.
+        check_raw_estimates(self.nodes[1], self.fees_per_kb)
+
+        # Append the high minrelaytxfee to the list of seen fees.
+        # Because estimatesmartfee returns the max of (fee rate estimate, minrelaytxfee and mempoolminfee)
+        self.fees_per_kb.append(high_val)
+        # Test for confirmation target of 2 and then all targets.
+        assert_greater_than_or_equal(self.nodes[1].estimatesmartfee(1)["feerate"], high_val)
+        check_smart_estimates(self.nodes[1], self.fees_per_kb)
+
+        # Remove high_val from the list of seen fees.
+        self.fees_per_kb.pop()
+        # Restart the node with default minrelaytxfee and perform estimates checks
         self.restart_node(1)
+        check_estimates(self.nodes[1], self.fees_per_kb)
+
 
     def sanity_check_rbf_estimates(self, utxos):
         """During 5 blocks, broadcast low fee transactions. Only 10% of them get
@@ -451,11 +467,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test fee_estimates.dat is flushed periodically")
         self.test_estimate_dat_is_flushed_periodically()
 
-        # check that the effective feerate is greater than or equal to the mempoolminfee even for high mempoolminfee
+        # check that estimatesmartfee feerate is greater than or equal to maximum of mempoolminfee and minrelaytxfee
         self.log.info(
-            "Test fee rate estimation after restarting node with high MempoolMinFee"
+            "Test fee rate estimation after restarting node with high minrelaytxfee"
         )
-        self.test_feerate_mempoolminfee()
+        self.test_estimates_with_highminrelaytxfee()
 
         self.log.info("Test acceptstalefeeestimates option")
         self.test_acceptstalefeeestimates_option()
