@@ -13,6 +13,6 @@ cp "./ci/retry/retry" "/ci_retry"
 cp "./.python-version" "/.python-version"
 mkdir --parents "/test/lint"
 cp --recursive "./test/lint/test_runner" "/test/lint/"
-set -o errexit; source ./ci/lint/04_install.sh
+set -o errexit; source ./ci/lint/01_install.sh
 set -o errexit
 ./ci/lint/06_script.sh

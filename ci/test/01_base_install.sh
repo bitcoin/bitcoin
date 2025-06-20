@@ -6,11 +6,11 @@
 
 export LC_ALL=C.UTF-8
 
-set -ex
+set -o errexit -o pipefail -o xtrace
 
-CFG_DONE="ci.base-install-done"  # Use a global git setting to remember whether this script ran to avoid running it twice
+CFG_DONE="${BASE_ROOT_DIR}/ci.base-install-done"  # Use a global setting to remember whether this script ran to avoid running it twice
 
-if [ "$(git config --global ${CFG_DONE})" == "true" ]; then
+if [ "$( cat "${CFG_DONE}" || true )" == "done" ]; then
   echo "Skip base install"
   exit 0
 fi
@@ -105,4 +105,4 @@ if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]
   tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
 fi
 
-git config --global ${CFG_DONE} "true"
+echo -n "done" > "${CFG_DONE}"
