@@ -190,12 +190,12 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     BOOST_CHECK_EQUAL(read_block.nVersion, 0);
     {
         ASSERT_DEBUG_LOG("Errors in block header");
-        BOOST_CHECK(!blockman.ReadBlock(read_block, pos1));
+        BOOST_CHECK(!blockman.ReadBlock(read_block, pos1, {}));
         BOOST_CHECK_EQUAL(read_block.nVersion, 1);
     }
     {
         ASSERT_DEBUG_LOG("Errors in block header");
-        BOOST_CHECK(!blockman.ReadBlock(read_block, pos2));
+        BOOST_CHECK(!blockman.ReadBlock(read_block, pos2, {}));
         BOOST_CHECK_EQUAL(read_block.nVersion, 2);
     }
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     BOOST_CHECK_EQUAL(blockman.CalculateCurrentUsage(), (TEST_BLOCK_SIZE + STORAGE_HEADER_BYTES) * 2);
 
     // Block 2 was not overwritten:
-    blockman.ReadBlock(read_block, pos2);
+    BOOST_CHECK(!blockman.ReadBlock(read_block, pos2, {}));
     BOOST_CHECK_EQUAL(read_block.nVersion, 2);
 }
 
