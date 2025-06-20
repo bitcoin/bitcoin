@@ -1404,7 +1404,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
     bool hardened = false;
     if (elem.size() > 0) {
         const char last = elem[elem.size() - 1];
-        if (last == '\'' || last == 'h') {
+        if (last == '\'' || last == 'h' || last == 'H') {
             elem = elem.first(elem.size() - 1);
             hardened = true;
             apostrophe = last == '\'';
