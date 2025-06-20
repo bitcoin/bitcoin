@@ -46,7 +46,9 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
     }
     if (pos.nPos && fseek(file, pos.nPos, SEEK_SET)) {
         LogPrintf("Unable to seek to position %u of %s\n", pos.nPos, fs::PathToString(path));
-        fclose(file);
+        if (fclose(file) != 0) {
+            LogError("Unable to close file %s", fs::PathToString(path));
+        }
         return nullptr;
     }
     return file;
@@ -68,7 +70,10 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
             if (file) {
                 LogDebug(BCLog::VALIDATION, "Pre-allocating up to position 0x%x in %s%05u.dat\n", new_size, m_prefix, pos.nFile);
                 AllocateFileRange(file, pos.nPos, inc_size);
-                fclose(file);
+                if (fclose(file) != 0) {
+                    LogError("Cannot close file %s%05u.dat after extending it with %u bytes", m_prefix, pos.nFile, new_size);
+                    return 0;
+                }
                 return inc_size;
             }
         } else {
@@ -86,17 +91,24 @@ bool FlatFileSeq::Flush(const FlatFilePos& pos, bool finalize) const
         return false;
     }
     if (finalize && !TruncateFile(file, pos.nPos)) {
-        fclose(file);
         LogError("%s: failed to truncate file %d\n", __func__, pos.nFile);
+        if (fclose(file) != 0) {
+            LogError("Failed to close file %d", pos.nFile);
+        }
         return false;
     }
     if (!FileCommit(file)) {
-        fclose(file);
         LogError("%s: failed to commit file %d\n", __func__, pos.nFile);
+        if (fclose(file) != 0) {
+            LogError("Failed to close file %d", pos.nFile);
+        }
         return false;
     }
     DirectoryCommit(m_dir);
 
-    fclose(file);
+    if (fclose(file) != 0) {
+        LogError("Failed to close file %d after flush", pos.nFile);
+        return false;
+    }
     return true;
 }

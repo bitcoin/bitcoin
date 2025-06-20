@@ -6,10 +6,13 @@
 #ifndef BITCOIN_STREAMS_H
 #define BITCOIN_STREAMS_H
 
+#include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
+#include <util/check.h>
 #include <util/overflow.h>
+#include <util/syserror.h>
 
 #include <algorithm>
 #include <cassert>
@@ -387,7 +390,13 @@ public:
  *
  * Will automatically close the file when it goes out of scope if not null.
  * If you're returning the file pointer, return file.release().
- * If you need to close the file early, use file.fclose() instead of fclose(file).
+ * If you need to close the file early, use autofile.fclose() instead of fclose(underlying_FILE).
+ *
+ * @note If the file has been written to, then the caller must close it
+ * explicitly with the `fclose()` method, check if it returns an error and treat
+ * such an error as if the `write()` method failed. The OS's `fclose(3)` may
+ * fail to flush to disk data that has been previously written, rendering the
+ * file corrupt.
  */
 class AutoFile
 {
@@ -395,11 +404,28 @@ protected:
     std::FILE* m_file;
     std::vector<std::byte> m_xor;
     std::optional<int64_t> m_position;
+    bool m_was_written{false};
 
 public:
     explicit AutoFile(std::FILE* file, std::vector<std::byte> data_xor={});
 
-    ~AutoFile() { fclose(); }
+    ~AutoFile()
+    {
+        if (m_was_written) {
+            // Callers that wrote to the file must have closed it explicitly
+            // with the fclose() method and checked that the close succeeded.
+            // This is because here in the destructor we have no way to signal
+            // errors from fclose() which, after write, could mean the file is
+            // corrupted and must be handled properly at the call site.
+            // Destructors in C++ cannot signal an error to the callers because
+            // they do not return a value and are not allowed to throw exceptions.
+            Assume(IsNull());
+        }
+
+        if (fclose() != 0) {
+            LogError("Failed to close file: %s", SysErrorString(errno));
+        }
+    }
 
     // Disallow copies
     AutoFile(const AutoFile&) = delete;
@@ -407,7 +433,7 @@ public:
 
     bool feof() const { return std::feof(m_file); }
 
-    int fclose()
+    [[nodiscard]] int fclose()
     {
         if (auto rel{release()}) return std::fclose(rel);
         return 0;
