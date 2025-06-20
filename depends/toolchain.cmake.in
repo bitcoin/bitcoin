@@ -13,6 +13,10 @@ if(@depends_crosscompiling@)
   set(CMAKE_SYSTEM_NAME @host_system_name@)
   set(CMAKE_SYSTEM_VERSION @host_system_version@)
   set(CMAKE_SYSTEM_PROCESSOR @host_arch@)
+
+  set(CMAKE_C_COMPILER_TARGET @host@)
+  set(CMAKE_CXX_COMPILER_TARGET @host@)
+  set(CMAKE_OBJCXX_COMPILER_TARGET @host@)
 endif()
 
 if(NOT DEFINED CMAKE_C_FLAGS_INIT)
@@ -81,12 +85,12 @@ set(CMAKE_OBJDUMP "@OBJDUMP@")
 # affected by a potentially random environment.
 set(CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH OFF)
 
-set(CMAKE_FIND_ROOT_PATH "@depends_prefix@")
+set(CMAKE_FIND_ROOT_PATH "${CMAKE_CURRENT_LIST_DIR}")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-set(QT_TRANSLATIONS_DIR "@depends_prefix@/translations")
+set(QT_TRANSLATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}/translations")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   # The find_package(Qt ...) function internally uses find_library()
@@ -96,66 +100,60 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   set(CMAKE_FRAMEWORK_PATH "@OSX_SDK@/System/Library/Frameworks")
 endif()
 
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # Customize pkg-config behavior for finding dependencies
+  # of the xcb QPA platform plugin:
+  # 1. Restrict search paths to the depends.
+  # 2. Make output suitable for static linking.
+  cmake_path(APPEND CMAKE_CURRENT_LIST_DIR "lib" "pkgconfig" OUTPUT_VARIABLE pkg_config_path)
+  set(ENV{PKG_CONFIG_PATH} ${pkg_config_path})
+  set(ENV{PKG_CONFIG_LIBDIR} ${pkg_config_path})
+  unset(pkg_config_path)
+  set(PKG_CONFIG_ARGN --static)
+endif()
+
+
 # Set configuration options for the main build system.
-set(qt_packages @qt_packages@)
-if("${qt_packages}" STREQUAL "")
+# The depends/Makefile can generate values with "not-set"
+# semantics as empty strings or strings containing only spaces.
+# Therefore, MATCHES must be used rather than STREQUAL.
+if("@qt_packages@" MATCHES "^[ ]*$")
   set(BUILD_GUI OFF CACHE BOOL "")
 else()
   set(BUILD_GUI ON CACHE BOOL "")
+  set(Qt6_ROOT "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "")
 endif()
 
-set(qrencode_packages @qrencode_packages@)
-if("${qrencode_packages}" STREQUAL "")
+if("@qrencode_packages@" MATCHES "^[ ]*$")
   set(WITH_QRENCODE OFF CACHE BOOL "")
 else()
   set(WITH_QRENCODE ON CACHE BOOL "")
 endif()
 
-set(zmq_packages @zmq_packages@)
-if("${zmq_packages}" STREQUAL "")
+if("@zmq_packages@" MATCHES "^[ ]*$")
   set(WITH_ZMQ OFF CACHE BOOL "")
 else()
   set(WITH_ZMQ ON CACHE BOOL "")
 endif()
 
-set(wallet_packages @wallet_packages@)
-if("${wallet_packages}" STREQUAL "")
+if("@wallet_packages@" MATCHES "^[ ]*$")
   set(ENABLE_WALLET OFF CACHE BOOL "")
 else()
   set(ENABLE_WALLET ON CACHE BOOL "")
 endif()
 
-set(bdb_packages @bdb_packages@)
-if("${wallet_packages}" STREQUAL "" OR "${bdb_packages}" STREQUAL "")
-  set(WITH_BDB OFF CACHE BOOL "")
-else()
-  set(WITH_BDB ON CACHE BOOL "")
-endif()
-
-set(sqlite_packages @sqlite_packages@)
-if("${wallet_packages}" STREQUAL "" OR "${sqlite_packages}" STREQUAL "")
-  set(WITH_SQLITE OFF CACHE BOOL "")
-else()
-  set(WITH_SQLITE ON CACHE BOOL "")
-endif()
-
-set(usdt_packages @usdt_packages@)
-if("${usdt_packages}" STREQUAL "")
+if("@usdt_packages@" MATCHES "^[ ]*$")
   set(WITH_USDT OFF CACHE BOOL "")
 else()
   set(WITH_USDT ON CACHE BOOL "")
 endif()
 
-if("@no_harden@")
-  set(ENABLE_HARDENING OFF CACHE BOOL "")
-else()
-  set(ENABLE_HARDENING ON CACHE BOOL "")
-endif()
-
 if("@multiprocess@" STREQUAL "1")
-  set(WITH_MULTIPROCESS ON CACHE BOOL "")
-  set(Libmultiprocess_ROOT "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "")
-  set(LibmultiprocessNative_ROOT "${CMAKE_CURRENT_LIST_DIR}/native" CACHE PATH "")
+  set(ENABLE_IPC ON CACHE BOOL "")
+  set(MPGEN_EXECUTABLE "${CMAKE_CURRENT_LIST_DIR}/native/bin/mpgen" CACHE FILEPATH "")
+  set(CAPNP_EXECUTABLE "${CMAKE_CURRENT_LIST_DIR}/native/bin/capnp" CACHE FILEPATH "")
+  set(CAPNPC_CXX_EXECUTABLE "${CMAKE_CURRENT_LIST_DIR}/native/bin/capnpc-c++" CACHE FILEPATH "")
 else()
-  set(WITH_MULTIPROCESS OFF CACHE BOOL "")
+  set(ENABLE_IPC OFF CACHE BOOL "")
 endif()

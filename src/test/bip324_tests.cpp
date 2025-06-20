@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -91,7 +91,7 @@ void TestBIP324PacketVector(
         BOOST_CHECK(out_ciphertext == ciphertext);
     } else {
         BOOST_CHECK(ciphertext.size() >= out_ciphertext_endswith.size());
-        BOOST_CHECK(std::ranges::equal(out_ciphertext_endswith, Span{ciphertext}.last(out_ciphertext_endswith.size())));
+        BOOST_CHECK(std::ranges::equal(out_ciphertext_endswith, std::span{ciphertext}.last(out_ciphertext_endswith.size())));
     }
 
     for (unsigned error = 0; error <= 12; ++error) {
@@ -121,8 +121,8 @@ void TestBIP324PacketVector(
         for (uint32_t i = 0; i < dec_idx; ++i) {
             unsigned use_idx = i < in_idx ? i : 0;
             bool dec_ignore{false};
-            dec_cipher.DecryptLength(Span{dummies[use_idx]}.first(cipher.LENGTH_LEN));
-            dec_cipher.Decrypt(Span{dummies[use_idx]}.subspan(cipher.LENGTH_LEN), {}, dec_ignore, {});
+            dec_cipher.DecryptLength(std::span{dummies[use_idx]}.first(cipher.LENGTH_LEN));
+            dec_cipher.Decrypt(std::span{dummies[use_idx]}.subspan(cipher.LENGTH_LEN), {}, dec_ignore, {});
         }
 
         // Construct copied (and possibly damaged) copy of ciphertext.
@@ -147,7 +147,7 @@ void TestBIP324PacketVector(
         // Decrypt contents.
         std::vector<std::byte> decrypted(dec_len);
         bool dec_ignore{false};
-        bool dec_ok = dec_cipher.Decrypt(Span{to_decrypt}.subspan(cipher.LENGTH_LEN), dec_aad, dec_ignore, decrypted);
+        bool dec_ok = dec_cipher.Decrypt(std::span{to_decrypt}.subspan(cipher.LENGTH_LEN), dec_aad, dec_ignore, decrypted);
 
         // Verify result.
         BOOST_CHECK(dec_ok == !error);

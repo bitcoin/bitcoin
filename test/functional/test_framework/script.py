@@ -17,14 +17,13 @@ from .messages import (
     CTxOut,
     hash256,
     ser_string,
-    ser_uint256,
     sha256,
-    uint256_from_str,
 )
 
 from .crypto.ripemd160 import ripemd160
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
+MAX_SCRIPT_SIZE = 10000
 MAX_PUBKEYS_PER_MULTI_A = 999
 LOCKTIME_THRESHOLD = 500000000
 ANNEX_TAG = 0x50
@@ -695,7 +694,6 @@ def sign_input_legacy(tx, input_index, input_scriptpubkey, privkey, sighash_type
     assert err is None
     der_sig = privkey.sign_ecdsa(sighash)
     tx.vin[input_index].scriptSig = bytes(CScript([der_sig + bytes([sighash_type])])) + tx.vin[input_index].scriptSig
-    tx.rehash()
 
 def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, privkey, sighash_type=SIGHASH_ALL):
     """Add segwitv0 ECDSA signature for a given transaction input. Note that the signature
@@ -704,48 +702,48 @@ def sign_input_segwitv0(tx, input_index, input_scriptpubkey, input_amount, privk
     sighash = SegwitV0SignatureHash(input_scriptpubkey, tx, input_index, sighash_type, input_amount)
     der_sig = privkey.sign_ecdsa(sighash)
     tx.wit.vtxinwit[input_index].scriptWitness.stack.insert(0, der_sig + bytes([sighash_type]))
-    tx.rehash()
 
 # TODO: Allow cached hashPrevouts/hashSequence/hashOutputs to be provided.
 # Performance optimization probably not necessary for python tests, however.
 # Note that this corresponds to sigversion == 1 in EvalScript, which is used
 # for version 0 witnesses.
 def SegwitV0SignatureMsg(script, txTo, inIdx, hashtype, amount):
+    ZERO_HASH = bytes([0]*32)
 
-    hashPrevouts = 0
-    hashSequence = 0
-    hashOutputs = 0
+    hashPrevouts = ZERO_HASH
+    hashSequence = ZERO_HASH
+    hashOutputs = ZERO_HASH
 
     if not (hashtype & SIGHASH_ANYONECANPAY):
         serialize_prevouts = bytes()
         for i in txTo.vin:
             serialize_prevouts += i.prevout.serialize()
-        hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
+        hashPrevouts = hash256(serialize_prevouts)
 
     if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
         serialize_sequence = bytes()
         for i in txTo.vin:
             serialize_sequence += i.nSequence.to_bytes(4, "little")
-        hashSequence = uint256_from_str(hash256(serialize_sequence))
+        hashSequence = hash256(serialize_sequence)
 
     if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
         serialize_outputs = bytes()
         for o in txTo.vout:
             serialize_outputs += o.serialize()
-        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+        hashOutputs = hash256(serialize_outputs)
     elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
         serialize_outputs = txTo.vout[inIdx].serialize()
-        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+        hashOutputs = hash256(serialize_outputs)
 
     ss = bytes()
     ss += txTo.version.to_bytes(4, "little")
-    ss += ser_uint256(hashPrevouts)
-    ss += ser_uint256(hashSequence)
+    ss += hashPrevouts
+    ss += hashSequence
     ss += txTo.vin[inIdx].prevout.serialize()
     ss += ser_string(script)
     ss += amount.to_bytes(8, "little", signed=True)
     ss += txTo.vin[inIdx].nSequence.to_bytes(4, "little")
-    ss += ser_uint256(hashOutputs)
+    ss += hashOutputs
     ss += txTo.nLockTime.to_bytes(4, "little")
     ss += hashtype.to_bytes(4, "little")
     return ss

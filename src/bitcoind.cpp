@@ -34,7 +34,7 @@
 
 using node::NodeContext;
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+const TranslateFn G_TRANSLATION_FUN{nullptr};
 
 #if HAVE_DECL_FORK
 
@@ -228,10 +228,10 @@ static bool AppInit(NodeContext& node)
             return InitError(Untranslated("-daemon is not supported on this operating system"));
 #endif // HAVE_DECL_FORK
         }
-        // Lock data directory after daemonization
-        if (!AppInitLockDataDirectory())
+        // Lock critical directories after daemonization
+        if (!AppInitLockDirectories())
         {
-            // If locking the data directory failed, exit immediately
+            // If locking a directory failed, exit immediately
             return false;
         }
         fRet = AppInitInterfaces(node) && AppInitMain(node);

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,6 +23,7 @@
 
 #include <chrono>
 #include <memory>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 
@@ -298,7 +299,7 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
     Reply reply;
 
     // Don't log the full "SESSION CREATE ..." because it contains our private key.
-    reply.request = request.substr(0, 14) == "SESSION CREATE" ? "SESSION CREATE ..." : request;
+    reply.request = request.starts_with("SESSION CREATE") ? "SESSION CREATE ..." : request;
 
     // It could take a few minutes for the I2P router to reply as it is querying the I2P network
     // (when doing name lookup, for example). Notice: `RecvUntilTerminator()` is checking
@@ -309,7 +310,7 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
     reply.full = sock.RecvUntilTerminator('\n', recv_timeout, *m_interrupt, MAX_MSG_SIZE);
 
     for (const auto& kv : Split(reply.full, ' ')) {
-        const auto& pos = std::find(kv.begin(), kv.end(), '=');
+        const auto pos{std::ranges::find(kv, '=')};
         if (pos != kv.end()) {
             reply.keys.emplace(std::string{kv.begin(), pos}, std::string{pos + 1, kv.end()});
         } else {

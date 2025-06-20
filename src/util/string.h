@@ -103,8 +103,8 @@ void ReplaceAll(std::string& in_out, const std::string& search, const std::strin
  * Note that this function does not care about braces, so splitting
  * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
  */
-template <typename T = Span<const char>>
-std::vector<T> Split(const Span<const char>& sp, std::string_view separators)
+template <typename T = std::span<const char>>
+std::vector<T> Split(const std::span<const char>& sp, std::string_view separators)
 {
     std::vector<T> ret;
     auto it = sp.begin();
@@ -127,8 +127,8 @@ std::vector<T> Split(const Span<const char>& sp, std::string_view separators)
  * Note that this function does not care about braces, so splitting
  * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
  */
-template <typename T = Span<const char>>
-std::vector<T> Split(const Span<const char>& sp, char sep)
+template <typename T = std::span<const char>>
+std::vector<T> Split(const std::span<const char>& sp, char sep)
 {
     return Split<T>(sp, std::string_view{&sep, 1});
 }
@@ -168,7 +168,7 @@ std::vector<T> Split(const Span<const char>& sp, char sep)
 
 [[nodiscard]] inline std::string_view RemovePrefixView(std::string_view str, std::string_view prefix)
 {
-    if (str.substr(0, prefix.size()) == prefix) {
+    if (str.starts_with(prefix)) {
         return str.substr(prefix.size());
     }
     return str;

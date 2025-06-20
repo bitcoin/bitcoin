@@ -8,6 +8,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
+#include <interfaces/mining.h>
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <test/util/random.h>
@@ -15,21 +16,25 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/feefrac.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <versionbits.h>
+#include <pow.h>
 
 #include <test/util/setup_common.h>
 
 #include <memory>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
 using namespace util::hex_literals;
+using interfaces::BlockTemplate;
+using interfaces::Mining;
 using node::BlockAssembler;
-using node::CBlockTemplate;
 
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
@@ -54,7 +59,10 @@ struct MinerTestingSetup : public TestingSetup {
         Assert(error.empty());
         return *m_node.mempool;
     }
-    BlockAssembler AssemblerForTest(CTxMemPool& tx_mempool, BlockAssembler::Options options);
+    std::unique_ptr<Mining> MakeMining()
+    {
+        return interfaces::MakeMining(m_node);
+    }
 };
 } // namespace miner_tests
 
@@ -62,35 +70,28 @@ BOOST_FIXTURE_TEST_SUITE(miner_tests, MinerTestingSetup)
 
 static CFeeRate blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
 
-BlockAssembler MinerTestingSetup::AssemblerForTest(CTxMemPool& tx_mempool, BlockAssembler::Options options)
-{
-    options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
-    options.blockMinFeeRate = blockMinFeeRate;
-    return BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options};
-}
-
 constexpr static struct {
-    unsigned char extranonce;
+    unsigned int extranonce;
     unsigned int nonce;
-} BLOCKINFO[]{{8, 582909131},  {0, 971462344},  {2, 1169481553}, {6, 66147495},  {7, 427785981},  {8, 80538907},
-              {8, 207348013},  {2, 1951240923}, {4, 215054351},  {1, 491520534}, {8, 1282281282}, {4, 639565734},
-              {3, 248274685},  {8, 1160085976}, {6, 396349768},  {5, 393780549}, {5, 1096899528}, {4, 965381630},
-              {0, 728758712},  {5, 318638310},  {3, 164591898},  {2, 274234550}, {2, 254411237},  {7, 561761812},
-              {2, 268342573},  {0, 402816691},  {1, 221006382},  {6, 538872455}, {7, 393315655},  {4, 814555937},
-              {7, 504879194},  {6, 467769648},  {3, 925972193},  {2, 200581872}, {3, 168915404},  {8, 430446262},
-              {5, 773507406},  {3, 1195366164}, {0, 433361157},  {3, 297051771}, {0, 558856551},  {2, 501614039},
-              {3, 528488272},  {2, 473587734},  {8, 230125274},  {2, 494084400}, {4, 357314010},  {8, 60361686},
-              {7, 640624687},  {3, 480441695},  {8, 1424447925}, {4, 752745419}, {1, 288532283},  {6, 669170574},
-              {5, 1900907591}, {3, 555326037},  {3, 1121014051}, {0, 545835650}, {8, 189196651},  {5, 252371575},
-              {0, 199163095},  {6, 558895874},  {6, 1656839784}, {6, 815175452}, {6, 718677851},  {5, 544000334},
-              {0, 340113484},  {6, 850744437},  {4, 496721063},  {8, 524715182}, {6, 574361898},  {6, 1642305743},
-              {6, 355110149},  {5, 1647379658}, {8, 1103005356}, {7, 556460625}, {3, 1139533992}, {5, 304736030},
-              {2, 361539446},  {2, 143720360},  {6, 201939025},  {7, 423141476}, {4, 574633709},  {3, 1412254823},
-              {4, 873254135},  {0, 341817335},  {6, 53501687},   {3, 179755410}, {5, 172209688},  {8, 516810279},
-              {4, 1228391489}, {8, 325372589},  {6, 550367589},  {0, 876291812}, {7, 412454120},  {7, 717202854},
-              {2, 222677843},  {6, 251778867},  {7, 842004420},  {7, 194762829}, {4, 96668841},   {1, 925485796},
-              {0, 792342903},  {6, 678455063},  {6, 773251385},  {5, 186617471}, {6, 883189502},  {7, 396077336},
-              {8, 254702874},  {0, 455592851}};
+} BLOCKINFO[]{{0, 3552706918},   {500, 37506755},   {1000, 948987788}, {400, 524762339},  {800, 258510074},  {300, 102309278},
+              {1300, 54365202},  {600, 1107740426}, {1000, 203094491}, {900, 391178848},  {800, 381177271},  {600, 87188412},
+              {0, 66522866},     {800, 874942736},  {1000, 89200838},  {400, 312638088},  {400, 66263693},   {500, 924648304},
+              {400, 369913599},  {500, 47630099},   {500, 115045364},  {100, 277026602},  {1100, 809621409}, {700, 155345322},
+              {800, 943579953},  {400, 28200730},   {900, 77200495},   {0, 105935488},    {400, 698721821},  {500, 111098863},
+              {1300, 445389594}, {500, 621849894},  {1400, 56010046},  {1100, 370669776}, {1200, 380301940}, {1200, 110654905},
+              {400, 213771024},  {1500, 120014726}, {1200, 835019014}, {1500, 624817237}, {900, 1404297},    {400, 189414558},
+              {400, 293178348},  {1100, 15393789},  {600, 396764180},  {800, 1387046371}, {800, 199368303},  {700, 111496662},
+              {100, 129759616},  {200, 536577982},  {500, 125881300},  {500, 101053391},  {1200, 471590548}, {900, 86957729},
+              {1200, 179604104}, {600, 68658642},   {1000, 203295701}, {500, 139615361},  {900, 233693412},  {300, 153225163},
+              {0, 27616254},     {1200, 9856191},   {100, 220392722},  {200, 66257599},   {1100, 145489641}, {1300, 37859442},
+              {400, 5816075},    {1200, 215752117}, {1400, 32361482},  {1400, 6529223},   {500, 143332977},  {800, 878392},
+              {700, 159290408},  {400, 123197595},  {700, 43988693},   {300, 304224916},  {700, 214771621},  {1100, 274148273},
+              {400, 285632418},  {1100, 923451065}, {600, 12818092},   {1200, 736282054}, {1000, 246683167}, {600, 92950402},
+              {1400, 29223405},  {1000, 841327192}, {700, 174301283},  {1400, 214009854}, {1000, 6989517},   {1200, 278226956},
+              {700, 540219613},  {400, 93663104},   {1100, 152345635}, {1500, 464194499}, {1300, 333850111}, {600, 258311263},
+              {600, 90173162},   {1000, 33590797},  {1500, 332866027}, {100, 204704427},  {1000, 463153545}, {800, 303244785},
+              {600, 88096214},   {0, 137477892},    {1200, 195514506}, {300, 704114595},  {900, 292087369},  {1400, 758684870},
+              {1300, 163493028}, {1200, 53151293}};
 
 static std::unique_ptr<CBlockIndex> CreateBlockIndex(int nHeight, CBlockIndex* active_chain_tip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -106,6 +107,10 @@ static std::unique_ptr<CBlockIndex> CreateBlockIndex(int nHeight, CBlockIndex* a
 void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
 {
     CTxMemPool& tx_mempool{MakeMempool()};
+    auto mining{MakeMining()};
+    BlockAssembler::Options options;
+    options.coinbase_output_script = scriptPubKey;
+
     LOCK(tx_mempool.cs);
     // Test the ancestor feerate transaction selection.
     TestMemPoolEntryHelper entry;
@@ -121,27 +126,45 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000;
     // This tx has a low fee: 1000 satoshis
     Txid hashParentTx = tx.GetHash(); // save this txid for later use
-    AddToMempool(tx_mempool, entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    const auto parent_tx{entry.Fee(1000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    AddToMempool(tx_mempool, parent_tx);
 
     // This tx has a medium fee: 10000 satoshis
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vout[0].nValue = 5000000000LL - 10000;
     Txid hashMediumFeeTx = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    const auto medium_fee_tx{entry.Fee(10000).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx)};
+    AddToMempool(tx_mempool, medium_fee_tx);
 
     // This tx has a high fee, but depends on the first transaction
     tx.vin[0].prevout.hash = hashParentTx;
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000; // 50k satoshi fee
     Txid hashHighFeeTx = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
+    const auto high_fee_tx{entry.Fee(50000).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx)};
+    AddToMempool(tx_mempool, high_fee_tx);
 
-    BlockAssembler::Options options;
-    options.coinbase_output_script = scriptPubKey;
-    std::unique_ptr<CBlockTemplate> pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
-    BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 4U);
-    BOOST_CHECK(pblocktemplate->block.vtx[1]->GetHash() == hashParentTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashHighFeeTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[3]->GetHash() == hashMediumFeeTx);
+    std::unique_ptr<BlockTemplate> block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
+    CBlock block{block_template->getBlock()};
+    BOOST_REQUIRE_EQUAL(block.vtx.size(), 4U);
+    BOOST_CHECK(block.vtx[1]->GetHash() == hashParentTx);
+    BOOST_CHECK(block.vtx[2]->GetHash() == hashHighFeeTx);
+    BOOST_CHECK(block.vtx[3]->GetHash() == hashMediumFeeTx);
+
+    // Test the inclusion of package feerates in the block template and ensure they are sequential.
+    const auto block_package_feerates = BlockAssembler{m_node.chainman->ActiveChainstate(), &tx_mempool, options}.CreateNewBlock()->m_package_feerates;
+    BOOST_CHECK(block_package_feerates.size() == 2);
+
+    // parent_tx and high_fee_tx are added to the block as a package.
+    const auto combined_txs_fee = parent_tx.GetFee() + high_fee_tx.GetFee();
+    const auto combined_txs_size = parent_tx.GetTxSize() + high_fee_tx.GetTxSize();
+    FeeFrac package_feefrac{combined_txs_fee, combined_txs_size};
+    // The package should be added first.
+    BOOST_CHECK(block_package_feerates[0] == package_feefrac);
+
+    // The medium_fee_tx should be added next.
+    FeeFrac medium_tx_feefrac{medium_fee_tx.GetFee(), medium_fee_tx.GetTxSize()};
+    BOOST_CHECK(block_package_feerates[1] == medium_tx_feefrac);
 
     // Test that a package below the block min tx fee doesn't get included
     tx.vin[0].prevout.hash = hashHighFeeTx;
@@ -158,11 +181,16 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 1000 - 50000 - feeToUse;
     Txid hashLowFeeTx = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
-    pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
+
+    // waitNext() should return nullptr because there is no better template
+    auto should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
+    BOOST_REQUIRE(should_be_nullptr == nullptr);
+
+    block = block_template->getBlock();
     // Verify that the free tx and the low fee tx didn't get selected
-    for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
-        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeTx);
-        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashLowFeeTx);
+    for (size_t i=0; i<block.vtx.size(); ++i) {
+        BOOST_CHECK(block.vtx[i]->GetHash() != hashFreeTx);
+        BOOST_CHECK(block.vtx[i]->GetHash() != hashLowFeeTx);
     }
 
     // Test that packages above the min relay fee do get included, even if one
@@ -172,10 +200,14 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue -= 2; // Now we should be just over the min relay fee
     hashLowFeeTx = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
-    pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
-    BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 6U);
-    BOOST_CHECK(pblocktemplate->block.vtx[4]->GetHash() == hashFreeTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[5]->GetHash() == hashLowFeeTx);
+
+    // waitNext() should return if fees for the new template are at least 1 sat up
+    block_template = block_template->waitNext({.fee_threshold = 1});
+    BOOST_REQUIRE(block_template);
+    block = block_template->getBlock();
+    BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
+    BOOST_CHECK(block.vtx[4]->GetHash() == hashFreeTx);
+    BOOST_CHECK(block.vtx[5]->GetHash() == hashLowFeeTx);
 
     // Test that transaction selection properly updates ancestor fee
     // calculations as ancestor transactions get included in a block.
@@ -194,12 +226,14 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 100000000 - feeToUse;
     Txid hashLowFeeTx2 = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
-    pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
+    block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
+    block = block_template->getBlock();
 
     // Verify that this tx isn't selected.
-    for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
-        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeTx2);
-        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashLowFeeTx2);
+    for (size_t i=0; i<block.vtx.size(); ++i) {
+        BOOST_CHECK(block.vtx[i]->GetHash() != hashFreeTx2);
+        BOOST_CHECK(block.vtx[i]->GetHash() != hashLowFeeTx2);
     }
 
     // This tx will be mineable, and should cause hashLowFeeTx2 to be selected
@@ -207,9 +241,11 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vin[0].prevout.n = 1;
     tx.vout[0].nValue = 100000000 - 10000; // 10k satoshi fee
     AddToMempool(tx_mempool, entry.Fee(10000).FromTx(tx));
-    pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
-    BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 9U);
-    BOOST_CHECK(pblocktemplate->block.vtx[8]->GetHash() == hashLowFeeTx2);
+    block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
+    block = block_template->getBlock();
+    BOOST_REQUIRE_EQUAL(block.vtx.size(), 9U);
+    BOOST_CHECK(block.vtx[8]->GetHash() == hashLowFeeTx2);
 }
 
 void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
@@ -225,6 +261,9 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     const CAmount HIGHFEE = COIN;
     const CAmount HIGHERFEE = 4 * COIN;
 
+    auto mining{MakeMining()};
+    BOOST_REQUIRE(mining);
+
     BlockAssembler::Options options;
     options.coinbase_output_script = scriptPubKey;
 
@@ -233,8 +272,9 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         LOCK(tx_mempool.cs);
 
         // Just to make sure we can still make simple blocks
-        auto pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
-        BOOST_CHECK(pblocktemplate);
+        auto block_template{mining->createNewBlock(options)};
+        BOOST_REQUIRE(block_template);
+        CBlock block{block_template->getBlock()};
 
         // block sigops > limit: 1000 CHECKMULTISIG + 1
         tx.vin.resize(1);
@@ -253,7 +293,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
             tx.vin[0].prevout.hash = hash;
         }
 
-        BOOST_CHECK_EXCEPTION(AssemblerForTest(tx_mempool, options).CreateNewBlock(), std::runtime_error, HasReason("bad-blk-sigops"));
+        BOOST_CHECK_EXCEPTION(mining->createNewBlock(options), std::runtime_error, HasReason("bad-blk-sigops"));
     }
 
     {
@@ -270,7 +310,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
             AddToMempool(tx_mempool, entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(spendsCoinbase).SigOpsCost(80).FromTx(tx));
             tx.vin[0].prevout.hash = hash;
         }
-        BOOST_CHECK(AssemblerForTest(tx_mempool, options).CreateNewBlock());
+        BOOST_REQUIRE(mining->createNewBlock(options));
     }
 
     {
@@ -294,7 +334,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
             AddToMempool(tx_mempool, entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(spendsCoinbase).FromTx(tx));
             tx.vin[0].prevout.hash = hash;
         }
-        BOOST_CHECK(AssemblerForTest(tx_mempool, options).CreateNewBlock());
+        BOOST_REQUIRE(mining->createNewBlock(options));
     }
 
     {
@@ -304,7 +344,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // orphan in tx_mempool, template creation fails
         hash = tx.GetHash();
         AddToMempool(tx_mempool, entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).FromTx(tx));
-        BOOST_CHECK_EXCEPTION(AssemblerForTest(tx_mempool, options).CreateNewBlock(), std::runtime_error, HasReason("bad-txns-inputs-missingorspent"));
+        BOOST_CHECK_EXCEPTION(mining->createNewBlock(options), std::runtime_error, HasReason("bad-txns-inputs-missingorspent"));
     }
 
     {
@@ -325,7 +365,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vout[0].nValue = tx.vout[0].nValue + BLOCKSUBSIDY - HIGHERFEE; // First txn output + fresh coinbase - new txn fee
         hash = tx.GetHash();
         AddToMempool(tx_mempool, entry.Fee(HIGHERFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
-        BOOST_CHECK(AssemblerForTest(tx_mempool, options).CreateNewBlock());
+        BOOST_REQUIRE(mining->createNewBlock(options));
     }
 
     {
@@ -341,7 +381,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // give it a fee so it'll get mined
         AddToMempool(tx_mempool, entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
         // Should throw bad-cb-multiple
-        BOOST_CHECK_EXCEPTION(AssemblerForTest(tx_mempool, options).CreateNewBlock(), std::runtime_error, HasReason("bad-cb-multiple"));
+        BOOST_CHECK_EXCEPTION(mining->createNewBlock(options), std::runtime_error, HasReason("bad-cb-multiple"));
     }
 
     {
@@ -358,7 +398,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vout[0].scriptPubKey = CScript() << OP_2;
         hash = tx.GetHash();
         AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
-        BOOST_CHECK_EXCEPTION(AssemblerForTest(tx_mempool, options).CreateNewBlock(), std::runtime_error, HasReason("bad-txns-inputs-missingorspent"));
+        BOOST_CHECK_EXCEPTION(mining->createNewBlock(options), std::runtime_error, HasReason("bad-txns-inputs-missingorspent"));
     }
 
     {
@@ -378,7 +418,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
             next->BuildSkip();
             m_node.chainman->ActiveChain().SetTip(*next);
         }
-        BOOST_CHECK(AssemblerForTest(tx_mempool, options).CreateNewBlock());
+        BOOST_REQUIRE(mining->createNewBlock(options));
         // Extend to a 210000-long block chain.
         while (m_node.chainman->ActiveChain().Tip()->nHeight < 210000) {
             CBlockIndex* prev = m_node.chainman->ActiveChain().Tip();
@@ -390,7 +430,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
             next->BuildSkip();
             m_node.chainman->ActiveChain().SetTip(*next);
         }
-        BOOST_CHECK(AssemblerForTest(tx_mempool, options).CreateNewBlock());
+        BOOST_REQUIRE(mining->createNewBlock(options));
 
         // invalid p2sh txn in tx_mempool, template creation fails
         tx.vin[0].prevout.hash = txFirst[0]->GetHash();
@@ -406,7 +446,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vout[0].nValue -= LOWFEE;
         hash = tx.GetHash();
         AddToMempool(tx_mempool, entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
-        BOOST_CHECK_EXCEPTION(AssemblerForTest(tx_mempool, options).CreateNewBlock(), std::runtime_error, HasReason("mandatory-script-verify-flag-failed"));
+        BOOST_CHECK_EXCEPTION(mining->createNewBlock(options), std::runtime_error, HasReason("mandatory-script-verify-flag-failed"));
 
         // Delete the dummy blocks again.
         while (m_node.chainman->ActiveChain().Tip()->nHeight > nHeight) {
@@ -508,14 +548,15 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1;
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
-    auto pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
-    BOOST_CHECK(pblocktemplate);
+    auto block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
 
     // None of the of the absolute height/time locked tx should have made
     // it into the template because we still check IsFinalTx in CreateNewBlock,
     // but relative locked txs will if inconsistently added to mempool.
     // For now these will still generate a valid template until BIP68 soft fork
-    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3U);
+    CBlock block{block_template->getBlock()};
+    BOOST_CHECK_EQUAL(block.vtx.size(), 3U);
     // However if we advance height by 1 and time by SEQUENCE_LOCK_TIME, all of them should be mined
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
         CBlockIndex* ancestor{Assert(m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i))};
@@ -524,12 +565,17 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     m_node.chainman->ActiveChain().Tip()->nHeight++;
     SetMockTime(m_node.chainman->ActiveChain().Tip()->GetMedianTimePast() + 1);
 
-    BOOST_CHECK(pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock());
-    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5U);
+    block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
+    block = block_template->getBlock();
+    BOOST_CHECK_EQUAL(block.vtx.size(), 5U);
 }
 
 void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
 {
+    auto mining{MakeMining()};
+    BOOST_REQUIRE(mining);
+
     BlockAssembler::Options options;
     options.coinbase_output_script = scriptPubKey;
 
@@ -594,34 +640,71 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     Txid hashFreeGrandchild = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(false).FromTx(tx));
 
-    auto pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock();
-    BOOST_REQUIRE_EQUAL(pblocktemplate->block.vtx.size(), 6U);
-    BOOST_CHECK(pblocktemplate->block.vtx[1]->GetHash() == hashFreeParent);
-    BOOST_CHECK(pblocktemplate->block.vtx[2]->GetHash() == hashFreePrioritisedTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[3]->GetHash() == hashParentTx);
-    BOOST_CHECK(pblocktemplate->block.vtx[4]->GetHash() == hashPrioritsedChild);
-    BOOST_CHECK(pblocktemplate->block.vtx[5]->GetHash() == hashFreeChild);
-    for (size_t i=0; i<pblocktemplate->block.vtx.size(); ++i) {
+    auto block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
+    CBlock block{block_template->getBlock()};
+    BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
+    BOOST_CHECK(block.vtx[1]->GetHash() == hashFreeParent);
+    BOOST_CHECK(block.vtx[2]->GetHash() == hashFreePrioritisedTx);
+    BOOST_CHECK(block.vtx[3]->GetHash() == hashParentTx);
+    BOOST_CHECK(block.vtx[4]->GetHash() == hashPrioritsedChild);
+    BOOST_CHECK(block.vtx[5]->GetHash() == hashFreeChild);
+    for (size_t i=0; i<block.vtx.size(); ++i) {
         // The FreeParent and FreeChild's prioritisations should not impact the child.
-        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashFreeGrandchild);
+        BOOST_CHECK(block.vtx[i]->GetHash() != hashFreeGrandchild);
         // De-prioritised transaction should not be included.
-        BOOST_CHECK(pblocktemplate->block.vtx[i]->GetHash() != hashMediumFeeTx);
+        BOOST_CHECK(block.vtx[i]->GetHash() != hashMediumFeeTx);
     }
 }
 
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
+    auto mining{MakeMining()};
+    BOOST_REQUIRE(mining);
+
     // Note that by default, these tests run with size accounting enabled.
     CScript scriptPubKey = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
-    std::unique_ptr<CBlockTemplate> pblocktemplate;
-
     BlockAssembler::Options options;
     options.coinbase_output_script = scriptPubKey;
 
-    CTxMemPool& tx_mempool{*m_node.mempool};
-    // Simple block creation, nothing special yet:
-    BOOST_CHECK(pblocktemplate = AssemblerForTest(tx_mempool, options).CreateNewBlock());
+    // Create and check a simple template
+    std::unique_ptr<BlockTemplate> block_template = mining->createNewBlock(options);
+    BOOST_REQUIRE(block_template);
+    {
+        CBlock block{block_template->getBlock()};
+        {
+            std::string reason;
+            std::string debug;
+            BOOST_REQUIRE(!mining->checkBlock(block, {.check_pow = false}, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "bad-txnmrklroot");
+            BOOST_REQUIRE_EQUAL(debug, "hashMerkleRoot mismatch");
+        }
+
+        block.hashMerkleRoot = BlockMerkleRoot(block);
+
+        {
+            std::string reason;
+            std::string debug;
+            BOOST_REQUIRE(mining->checkBlock(block, {.check_pow = false}, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "");
+            BOOST_REQUIRE_EQUAL(debug, "");
+        }
+
+        {
+            // A block template does not have proof-of-work, but it might pass
+            // verification by coincidence. Grind the nonce if needed:
+            while (CheckProofOfWork(block.GetHash(), block.nBits, Assert(m_node.chainman)->GetParams().GetConsensus())) {
+                block.nNonce++;
+            }
+
+            std::string reason;
+            std::string debug;
+            BOOST_REQUIRE(!mining->checkBlock(block, {.check_pow = true}, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "high-hash");
+            BOOST_REQUIRE_EQUAL(debug, "proof of work failed");
+        }
+    }
 
     // We can't make transactions until we have inputs
     // Therefore, load 110 blocks :)
@@ -629,27 +712,59 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     int baseheight = 0;
     std::vector<CTransactionRef> txFirst;
     for (const auto& bi : BLOCKINFO) {
-        CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+        const int current_height{mining->getTip()->height};
+
+        /**
+         * Simple block creation, nothing special yet.
+         * If current_height is odd, block_template will have already been
+         * set at the end of the previous loop.
+         */
+        if (current_height % 2 == 0) {
+            block_template = mining->createNewBlock(options);
+            BOOST_REQUIRE(block_template);
+        }
+
+        CBlock block{block_template->getBlock()};
+        CMutableTransaction txCoinbase(*block.vtx[0]);
         {
             LOCK(cs_main);
-            pblock->nVersion = VERSIONBITS_TOP_BITS;
-            pblock->nTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1;
-            CMutableTransaction txCoinbase(*pblock->vtx[0]);
+            block.nVersion = VERSIONBITS_TOP_BITS;
+            block.nTime = Assert(m_node.chainman)->ActiveChain().Tip()->GetMedianTimePast()+1;
             txCoinbase.version = 1;
-            txCoinbase.vin[0].scriptSig = CScript{} << (m_node.chainman->ActiveChain().Height() + 1) << bi.extranonce;
+            txCoinbase.vin[0].scriptSig = CScript{} << (current_height + 1) << bi.extranonce;
             txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
             txCoinbase.vout[0].scriptPubKey = CScript();
-            pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
+            block.vtx[0] = MakeTransactionRef(txCoinbase);
             if (txFirst.size() == 0)
-                baseheight = m_node.chainman->ActiveChain().Height();
+                baseheight = current_height;
             if (txFirst.size() < 4)
-                txFirst.push_back(pblock->vtx[0]);
-            pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
-            pblock->nNonce = bi.nonce;
+                txFirst.push_back(block.vtx[0]);
+            block.hashMerkleRoot = BlockMerkleRoot(block);
+            block.nNonce = bi.nonce;
         }
-        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr));
-        pblock->hashPrevBlock = pblock->GetHash();
+        std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
+        // Alternate calls between Chainman's ProcessNewBlock and submitSolution
+        // via the Mining interface. The former is used by net_processing as well
+        // as the submitblock RPC.
+        if (current_height % 2 == 0) {
+            BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+        } else {
+            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase)));
+        }
+        {
+            LOCK(cs_main);
+            // The above calls don't guarantee the tip is actually updated, so
+            // we explicitly check this.
+            auto maybe_new_tip{Assert(m_node.chainman)->ActiveChain().Tip()};
+            BOOST_REQUIRE_EQUAL(maybe_new_tip->GetBlockHash(), block.GetHash());
+        }
+        if (current_height % 2 == 0) {
+            block_template = block_template->waitNext();
+            BOOST_REQUIRE(block_template);
+        } else {
+            // This just adds coverage
+            mining->waitTipChanged(block.hashPrevBlock);
+        }
     }
 
     LOCK(cs_main);

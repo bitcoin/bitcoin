@@ -12,6 +12,7 @@
 #include <wallet/coinselection.h>
 
 #include <numeric>
+#include <span>
 #include <vector>
 
 namespace wallet {
@@ -216,8 +217,14 @@ FUZZ_TARGET(coin_grinder_is_optimal)
     assert(!result_cg);
 }
 
-FUZZ_TARGET(coinselection)
-{
+enum class CoinSelectionAlgorithm {
+    BNB,
+    SRD,
+    KNAPSACK,
+};
+
+template<CoinSelectionAlgorithm Algorithm>
+void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     std::vector<COutput> utxo_pool;
@@ -249,66 +256,74 @@ FUZZ_TARGET(coinselection)
 
     std::vector<OutputGroup> group_pos;
     GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/true, group_pos);
-    std::vector<OutputGroup> group_all;
-    GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/false, group_all);
-
-    for (const OutputGroup& group : group_all) {
-        const CoinEligibilityFilter filter{fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
-        (void)group.EligibleForSpending(filter);
-    }
 
     int max_selection_weight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max());
 
-    // Run coinselection algorithms
-    auto result_bnb = coin_params.m_subtract_fee_outputs ? util::Error{Untranslated("BnB disabled when SFFO is enabled")} :
-                      SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, max_selection_weight);
-    if (result_bnb) {
-        assert(result_bnb->GetChange(coin_params.min_viable_change, coin_params.m_change_fee) == 0);
-        assert(result_bnb->GetSelectedValue() >= target);
-        assert(result_bnb->GetWeight() <= max_selection_weight);
-        (void)result_bnb->GetShuffledInputVector();
-        (void)result_bnb->GetInputSet();
+    std::optional<SelectionResult> result;
+
+    if constexpr (Algorithm == CoinSelectionAlgorithm::BNB) {
+        if (!coin_params.m_subtract_fee_outputs) {
+            auto result_bnb = SelectCoinsBnB(group_pos, target, coin_params.m_cost_of_change, max_selection_weight);
+            if (result_bnb) {
+                result = *result_bnb;
+                assert(result_bnb->GetChange(coin_params.min_viable_change, coin_params.m_change_fee) == 0);
+                assert(result_bnb->GetSelectedValue() >= target);
+                assert(result_bnb->GetWeight() <= max_selection_weight);
+                (void)result_bnb->GetShuffledInputVector();
+                (void)result_bnb->GetInputSet();
+            }
+        }
     }
 
-    auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, max_selection_weight);
-    if (result_srd) {
-        assert(result_srd->GetSelectedValue() >= target);
-        assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0); // Demonstrate that SRD creates change of at least CHANGE_LOWER
-        assert(result_srd->GetWeight() <= max_selection_weight);
-        result_srd->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
-        (void)result_srd->GetShuffledInputVector();
-        (void)result_srd->GetInputSet();
+    if constexpr (Algorithm == CoinSelectionAlgorithm::SRD) {
+        auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, max_selection_weight);
+        if (result_srd) {
+            result = *result_srd;
+            assert(result_srd->GetSelectedValue() >= target);
+            assert(result_srd->GetChange(CHANGE_LOWER, coin_params.m_change_fee) > 0);
+            assert(result_srd->GetWeight() <= max_selection_weight);
+            result_srd->SetBumpFeeDiscount(ConsumeMoney(fuzzed_data_provider));
+            result_srd->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
+            (void)result_srd->GetShuffledInputVector();
+            (void)result_srd->GetInputSet();
+        }
     }
 
-    CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
-    auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, max_selection_weight);
-    if (result_knapsack) {
-        assert(result_knapsack->GetSelectedValue() >= target);
-        assert(result_knapsack->GetWeight() <= max_selection_weight);
-        result_knapsack->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
-        (void)result_knapsack->GetShuffledInputVector();
-        (void)result_knapsack->GetInputSet();
-    }
+    if constexpr (Algorithm == CoinSelectionAlgorithm::KNAPSACK) {
+        std::vector<OutputGroup> group_all;
+        GroupCoins(fuzzed_data_provider, utxo_pool, coin_params, /*positive_only=*/false, group_all);
 
-    // If the total balance is sufficient for the target and we are not using
-    // effective values, Knapsack should always find a solution (unless the selection exceeded the max tx weight).
-    if (total_balance >= target && subtract_fee_outputs && !HasErrorMsg(result_knapsack)) {
-        assert(result_knapsack);
+        for (const OutputGroup& group : group_all) {
+            const CoinEligibilityFilter filter{fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<int>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+            (void)group.EligibleForSpending(filter);
+        }
+
+        CAmount change_target{GenerateChangeTarget(target, coin_params.m_change_fee, fast_random_context)};
+        auto result_knapsack = KnapsackSolver(group_all, target, change_target, fast_random_context, max_selection_weight);
+        // If the total balance is sufficient for the target and we are not using
+        // effective values, Knapsack should always find a solution (unless the selection exceeded the max tx weight).
+        if (total_balance >= target && subtract_fee_outputs && !HasErrorMsg(result_knapsack)) {
+            assert(result_knapsack);
+        }
+        if (result_knapsack) {
+            result = *result_knapsack;
+            assert(result_knapsack->GetSelectedValue() >= target);
+            assert(result_knapsack->GetWeight() <= max_selection_weight);
+            result_knapsack->SetBumpFeeDiscount(ConsumeMoney(fuzzed_data_provider));
+            result_knapsack->RecalculateWaste(coin_params.min_viable_change, coin_params.m_cost_of_change, coin_params.m_change_fee);
+            (void)result_knapsack->GetShuffledInputVector();
+            (void)result_knapsack->GetInputSet();
+        }
     }
 
     std::vector<COutput> utxos;
-    std::vector<util::Result<SelectionResult>> results;
-    results.emplace_back(std::move(result_srd));
-    results.emplace_back(std::move(result_knapsack));
-    results.emplace_back(std::move(result_bnb));
     CAmount new_total_balance{CreateCoins(fuzzed_data_provider, utxos, coin_params, next_locktime)};
     if (new_total_balance > 0) {
         std::set<std::shared_ptr<COutput>> new_utxo_pool;
         for (const auto& utxo : utxos) {
             new_utxo_pool.insert(std::make_shared<COutput>(utxo));
         }
-        for (auto& result : results) {
-            if (!result) continue;
+        if (result) {
             const auto weight{result->GetWeight()};
             result->AddInputs(new_utxo_pool, subtract_fee_outputs);
             assert(result->GetWeight() > weight);
@@ -319,8 +334,7 @@ FUZZ_TARGET(coinselection)
     CAmount manual_balance{CreateCoins(fuzzed_data_provider, manual_inputs, coin_params, next_locktime)};
     if (manual_balance == 0) return;
     auto manual_selection{ManualSelection(manual_inputs, manual_balance, coin_params.m_subtract_fee_outputs)};
-    for (auto& result : results) {
-        if (!result) continue;
+    if (result) {
         const CAmount old_target{result->GetTarget()};
         const std::set<std::shared_ptr<COutput>> input_set{result->GetInputSet()};
         const int old_weight{result->GetWeight()};
@@ -329,6 +343,18 @@ FUZZ_TARGET(coinselection)
         assert(result->GetTarget() == old_target + manual_selection.GetTarget());
         assert(result->GetWeight() == old_weight + manual_selection.GetWeight());
     }
+}
+
+FUZZ_TARGET(coinselection_bnb) {
+    FuzzCoinSelectionAlgorithm<CoinSelectionAlgorithm::BNB>(buffer);
+}
+
+FUZZ_TARGET(coinselection_srd) {
+    FuzzCoinSelectionAlgorithm<CoinSelectionAlgorithm::SRD>(buffer);
+}
+
+FUZZ_TARGET(coinselection_knapsack) {
+    FuzzCoinSelectionAlgorithm<CoinSelectionAlgorithm::KNAPSACK>(buffer);
 }
 
 } // namespace wallet

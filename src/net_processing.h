@@ -1,21 +1,34 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_NET_PROCESSING_H
 #define BITCOIN_NET_PROCESSING_H
 
+#include <consensus/amount.h>
 #include <net.h>
+#include <protocol.h>
+#include <threadsafety.h>
 #include <txorphanage.h>
 #include <validationinterface.h>
 
+#include <atomic>
 #include <chrono>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 class AddrMan;
-class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
+class BanMan;
+class CBlockIndex;
+class CScheduler;
+class DataStream;
+class uint256;
 
 namespace node {
 class Warnings;

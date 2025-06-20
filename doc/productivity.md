@@ -19,6 +19,7 @@ Table of Contents
    * [More conflict context with `merge.conflictstyle diff3`](#more-conflict-context-with-mergeconflictstyle-diff3)
 * [Reviewing code](#reviewing-code)
    * [Reduce mental load with `git diff` options](#reduce-mental-load-with-git-diff-options)
+   * [Fetch commits directly](#fetch-commits-directly)
    * [Reference PRs easily with `refspec`s](#reference-prs-easily-with-refspecs)
    * [Diff the diffs with `git range-diff`](#diff-the-diffs-with-git-range-diff)
 
@@ -51,8 +52,6 @@ You _must not_ set base_dir to "/", or anywhere that contains system headers (ac
 During the generation of the build system only essential build options are enabled by default to save on compilation time.
 
 Run `cmake -B build -LH` to see the full list of available options. GUI tools, such as `ccmake` and `cmake-gui`, can be also helpful.
-
-If you do need the wallet enabled (`-DENABLE_WALLET=ON`), it is common for devs to use your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.
 
 ### Make use of your threads with `-j`
 
@@ -166,9 +165,17 @@ When reviewing patches that change symbol names in many places, use `git diff --
 
 When reviewing patches that move code around, try using `git diff --patience commit~:old/file.cpp commit:new/file/name.cpp`, and ignoring everything except the moved body of code which should show up as neither `+` or `-` lines. In case it was not a pure move, this may even work when combined with the `-w` or `--word-diff` options described above. `--color-moved=dimmed-zebra` will also dim the coloring of moved hunks in the diff on compatible terminals.
 
+### Fetch commits directly
+
+Before inspecting any remotely created commit locally, it has to be fetched.
+This is possible via `git fetch origin <full_commit_hash>`. Even commits not
+part of any branch or tag can be fetched as long as the remote has not garbage
+collected them.
+
+
 ### Reference PRs easily with `refspec`s
 
-When looking at other's pull requests, it may make sense to add the following section to your `.git/config` file:
+As an alternative to fetching commits directly, when looking at pull requests by others, it may make sense to add the following section to your `.git/config` file:
 
 ```
 [remote "upstream-pull"]
@@ -196,7 +203,7 @@ You can do:
 git range-diff master previously-reviewed-head new-head
 ```
 
-Note that `git range-diff` also work for rebases:
+Note that `git range-diff` also works for rebases:
 
 ```
        P1--P2--P3--P4--P5   <-- previously-reviewed-head

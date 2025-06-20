@@ -29,7 +29,6 @@ class MempoolLimitTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [[
-            "-datacarriersize=100000",
             "-maxmempool=5",
         ]]
         self.supports_cli = False
@@ -380,7 +379,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
         rich_parent_result = submitpackage_result["tx-results"][tx_rich["wtxid"]]
         poor_parent_result = submitpackage_result["tx-results"][tx_poor["wtxid"]]
-        child_result = submitpackage_result["tx-results"][tx_child["tx"].getwtxid()]
+        child_result = submitpackage_result["tx-results"][tx_child["tx"].wtxid_hex]
         assert_fee_amount(poor_parent_result["fees"]["base"], tx_poor["tx"].get_vsize(), relayfee)
         assert_equal(rich_parent_result["fees"]["base"], 0)
         assert_equal(child_result["fees"]["base"], DEFAULT_FEE)
@@ -393,11 +392,11 @@ class MempoolLimitTest(BitcoinTestFramework):
         package_vsize = tx_poor["tx"].get_vsize() + tx_child["tx"].get_vsize()
         assert_fee_amount(package_fees, package_vsize, poor_parent_result["fees"]["effective-feerate"])
         assert_fee_amount(package_fees, package_vsize, child_result["fees"]["effective-feerate"])
-        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], poor_parent_result["fees"]["effective-includes"])
-        assert_equal([tx_poor["wtxid"], tx_child["tx"].getwtxid()], child_result["fees"]["effective-includes"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].wtxid_hex], poor_parent_result["fees"]["effective-includes"])
+        assert_equal([tx_poor["wtxid"], tx_child["tx"].wtxid_hex], child_result["fees"]["effective-includes"])
 
         # The node will broadcast each transaction, still abiding by its peer's fee filter
-        peer.wait_for_broadcast([tx["tx"].getwtxid() for tx in package_txns])
+        peer.wait_for_broadcast([tx["tx"].wtxid_hex for tx in package_txns])
 
         self.log.info("Check a package that passes mempoolminfee but is evicted immediately after submission")
         mempoolmin_feerate = node.getmempoolinfo()["mempoolminfee"]

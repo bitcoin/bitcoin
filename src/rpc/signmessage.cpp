@@ -63,8 +63,9 @@ static RPCHelpMan verifymessage()
 
 static RPCHelpMan signmessagewithprivkey()
 {
-    return RPCHelpMan{"signmessagewithprivkey",
-        "\nSign a message with the private key of an address\n",
+    return RPCHelpMan{
+        "signmessagewithprivkey",
+        "Sign a message with the private key of an address\n",
         {
             {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The private key to sign the message with."},
             {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},

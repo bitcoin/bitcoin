@@ -59,7 +59,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Dette er dine Bitcoin adresser for å sende  å sende betalinger. Husk å sjekke beløp og mottager adresser før du sender mynter.</translation>
+        <translation type="unfinished">Dette er dine Bitcoin adresser for å sende betalinger. Husk å sjekke beløp og mottakeradressen før du sender mynter.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -80,7 +80,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Export Address List</source>
-        <translation type="unfinished">Eksporter adresse listen</translation>
+        <translation type="unfinished">Eksporter adresseliste</translation>
     </message>
     <message>
         <source>Comma separated file</source>
@@ -179,6 +179,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Fortsett</translation>
     </message>
     <message>
+        <source>Back</source>
+        <translation type="unfinished">Tilbake</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Husk at å kryptere lommeboken ikke vil beskytte dine bitcoins fullstendig fra å bli stjålet av skadevare som infiserer datamaskinen din.</translation>
     </message>
@@ -221,6 +225,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Passordsetningen for lommeboken ble endret</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Passordendring feilet</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -727,6 +735,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%1 client</source>
         <translation type="unfinished">%1-klient</translation>
     </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">&amp;Skjul</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
@@ -1055,6 +1067,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Lag lommebok</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Du er ett steg unna å opprette din nye lommebok!</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1478,14 +1494,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Ekstern undertegner skriptsti</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Åpne automatisk Bitcoin klientporten på ruteren. Dette virker kun om din ruter støtter UPnP og dette er påslått.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Sett opp port ved hjelp av &amp;UPnP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1983,14 +1991,6 @@ Hvis du får denne feilen burde du be forretningsdrivende om å tilby en BIP21 k
     <message>
         <source>Datadir</source>
         <translation type="unfinished">Datamappe</translation>
-    </message>
-    <message>
-        <source>To specify a non-default location of the data directory use the '%1' option.</source>
-        <translation type="unfinished">For å spesifisere en ikke-standardplassering av datakatalogen, bruk alternativet '%1'.</translation>
-    </message>
-    <message>
-        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
-        <translation type="unfinished">For å spesifisere en ikke-standardplassering for blokkeringsmappen bruker du alternativet '%1'.</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -3592,10 +3592,6 @@ Gå til Fil &gt; Åpne lommebok for å laste en lommebok.
         <translation type="unfinished">Kan ikke nedgradere lommebok fra versjon %i til versjon %i. Lommebokversjon er uforandret.</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Kan ikke låse datamappen %s. %s kjører antagelig allerede.</translation>
-    </message>
-    <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
         <translation type="unfinished">Kan ikke oppgradere en ikke-HD delt lommebok fra versjon %i til versjon %i uten å først oppgradere for å få støtte for forhåndsdelt keypool. Vennligst bruk versjon %i eller ingen versjon spesifisert.</translation>
     </message>
@@ -3736,10 +3732,6 @@ Kunne ikke gjenopprette sikkerhetskopi av lommebok.</translation>
     <message>
         <source>Disk space is too low!</source>
         <translation type="unfinished">For lite diskplass!</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Ønsker du å gjenopprette blokkdatabasen nå?</translation>
     </message>
     <message>
         <source>Done loading</source>
@@ -3917,10 +3909,6 @@ Mangler løsningsdata for å estimere transaksjonsstørrelse</translation>
     <message>
         <source>No addresses available</source>
         <translation type="unfinished">Ingen adresser tilgjengelig</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">For få fildeskriptorer tilgjengelig.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>

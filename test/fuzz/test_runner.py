@@ -11,7 +11,6 @@ import argparse
 import configparser
 import logging
 import os
-import platform
 import random
 import subprocess
 import sys
@@ -19,7 +18,7 @@ import sys
 
 def get_fuzz_env(*, target, source_dir):
     symbolizer = os.environ.get('LLVM_SYMBOLIZER_PATH', "/usr/bin/llvm-symbolizer")
-    fuzz_env = {
+    fuzz_env = os.environ | {
         'FUZZ': target,
         'UBSAN_OPTIONS':
         f'suppressions={source_dir}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1',
@@ -28,9 +27,6 @@ def get_fuzz_env(*, target, source_dir):
         'ASAN_SYMBOLIZER_PATH': symbolizer,
         'MSAN_SYMBOLIZER_PATH': symbolizer,
     }
-    if platform.system() == "Windows":
-        # On Windows, `env` option must include valid `SystemRoot`.
-        fuzz_env = {**fuzz_env, 'SystemRoot': os.environ.get('SystemRoot')}
     return fuzz_env
 
 
@@ -109,7 +105,7 @@ def main():
         logging.error("Must have fuzz executable built")
         sys.exit(1)
 
-    fuzz_bin=os.getenv("BITCOINFUZZ", default=os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'))
+    fuzz_bin=os.getenv("BITCOINFUZZ", default=os.path.join(config["environment"]["BUILDDIR"], 'bin', 'fuzz'))
 
     # Build list of tests
     test_list_all = parse_test_list(
@@ -155,24 +151,21 @@ def main():
             )
             logging.info("Please consider adding a fuzz corpus at https://github.com/bitcoin-core/qa-assets")
 
-    try:
-        help_output = subprocess.run(
-            args=[
-                fuzz_bin,
-                '-help=1',
-            ],
-            env=get_fuzz_env(target=test_list_selection[0], source_dir=config['environment']['SRCDIR']),
-            timeout=20,
-            check=False,
-            stderr=subprocess.PIPE,
-            text=True,
-        ).stderr
-        using_libfuzzer = "libFuzzer" in help_output
-        if (args.generate or args.m_dir) and not using_libfuzzer:
-            logging.error("Must be built with libFuzzer")
-            sys.exit(1)
-    except subprocess.TimeoutExpired:
-        logging.error("subprocess timed out: Currently only libFuzzer is supported")
+    print("Check if using libFuzzer ... ", end='')
+    help_output = subprocess.run(
+        args=[
+            fuzz_bin,
+            '-help=1',
+        ],
+        env=get_fuzz_env(target=test_list_selection[0], source_dir=config['environment']['SRCDIR']),
+        check=False,
+        stderr=subprocess.PIPE,
+        text=True,
+    ).stderr
+    using_libfuzzer = "libFuzzer" in help_output
+    print(using_libfuzzer)
+    if (args.generate or args.m_dir) and not using_libfuzzer:
+        logging.error("Must be built with libFuzzer")
         sys.exit(1)
 
     with ThreadPoolExecutor(max_workers=args.par) as fuzz_pool:

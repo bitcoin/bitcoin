@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,7 @@
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 #include <boost/test/unit_test.hpp>
@@ -211,32 +211,32 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
-    ss << Span{"\xfd\x00\x00"}.first(3);
+    ss << std::span{"\xfd\x00\x00"}.first(3);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfc encoded with three bytes:
-    ss << Span{"\xfd\xfc\x00"}.first(3);
+    ss << std::span{"\xfd\xfc\x00"}.first(3);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xfd encoded with three bytes is OK:
-    ss << Span{"\xfd\xfd\x00"}.first(3);
+    ss << std::span{"\xfd\xfd\x00"}.first(3);
     n = ReadCompactSize(ss);
     BOOST_CHECK(n == 0xfd);
 
     // zero encoded with five bytes:
-    ss << Span{"\xfe\x00\x00\x00\x00"}.first(5);
+    ss << std::span{"\xfe\x00\x00\x00\x00"}.first(5);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0xffff encoded with five bytes:
-    ss << Span{"\xfe\xff\xff\x00\x00"}.first(5);
+    ss << std::span{"\xfe\xff\xff\x00\x00"}.first(5);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // zero encoded with nine bytes:
-    ss << Span{"\xff\x00\x00\x00\x00\x00\x00\x00\x00"}.first(9);
+    ss << std::span{"\xff\x00\x00\x00\x00\x00\x00\x00\x00"}.first(9);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 
     // 0x01ffffff encoded with nine bytes:
-    ss << Span{"\xff\xff\xff\xff\x01\x00\x00\x00\x00"}.first(9);
+    ss << std::span{"\xff\xff\xff\xff\x01\x00\x00\x00\x00"}.first(9);
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 }
 
@@ -269,10 +269,10 @@ BOOST_AUTO_TEST_CASE(class_methods)
     {
         DataStream ds;
         const std::string in{"ab"};
-        ds << Span{in} << std::byte{'c'};
+        ds << std::span{in} << std::byte{'c'};
         std::array<std::byte, 2> out;
         std::byte out_3;
-        ds >> Span{out} >> out_3;
+        ds >> std::span{out} >> out_3;
         BOOST_CHECK_EQUAL(out.at(0), std::byte{'a'});
         BOOST_CHECK_EQUAL(out.at(1), std::byte{'b'});
         BOOST_CHECK_EQUAL(out_3, std::byte{'c'});
@@ -304,7 +304,7 @@ public:
         if (s.template GetParams<BaseFormat>().m_base_format == BaseFormat::RAW) {
             s << m_base_data;
         } else {
-            s << Span{HexStr(Span{&m_base_data, 1})};
+            s << std::span<const char>{HexStr(std::span{&m_base_data, 1})};
         }
     }
 
@@ -315,7 +315,7 @@ public:
             s >> m_base_data;
         } else {
             std::string hex{"aa"};
-            s >> Span{hex}.first(hex.size());
+            s >> std::span{hex}.first(hex.size());
             m_base_data = TryParseHex<uint8_t>(hex).value().at(0);
         }
     }

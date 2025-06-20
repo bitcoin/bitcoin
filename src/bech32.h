@@ -1,5 +1,5 @@
 // Copyright (c) 2017, 2021 Pieter Wuille
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,15 +14,15 @@
 #ifndef BITCOIN_BECH32_H
 #define BITCOIN_BECH32_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace bech32
 {
 
-/** The Bech32 and Bech32m checksum size */
-constexpr size_t CHECKSUM_SIZE = 6;
+static constexpr size_t CHECKSUM_SIZE = 6;
+static constexpr char SEPARATOR = '1';
 
 enum class Encoding {
     INVALID, //!< Failed decoding

@@ -225,10 +225,10 @@ static bool rest_headers(const std::any& context,
     const CBlockIndex* tip = nullptr;
     std::vector<const CBlockIndex*> headers;
     headers.reserve(*parsed_count);
+    ChainstateManager* maybe_chainman = GetChainman(context, req);
+    if (!maybe_chainman) return false;
+    ChainstateManager& chainman = *maybe_chainman;
     {
-        ChainstateManager* maybe_chainman = GetChainman(context, req);
-        if (!maybe_chainman) return false;
-        ChainstateManager& chainman = *maybe_chainman;
         LOCK(cs_main);
         CChain& active_chain = chainman.ActiveChain();
         tip = active_chain.Tip();
@@ -268,7 +268,7 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::JSON: {
         UniValue jsonHeaders(UniValue::VARR);
         for (const CBlockIndex *pindex : headers) {
-            jsonHeaders.push_back(blockheaderToJSON(*tip, *pindex));
+            jsonHeaders.push_back(blockheaderToJSON(*tip, *pindex, chainman.GetConsensus().powLimit));
         }
         std::string strJSON = jsonHeaders.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -318,15 +318,15 @@ static bool rest_block(const std::any& context,
         pos = pblockindex->GetBlockPos();
     }
 
-    std::vector<uint8_t> block_data{};
-    if (!chainman.m_blockman.ReadRawBlockFromDisk(block_data, pos)) {
+    std::vector<std::byte> block_data{};
+    if (!chainman.m_blockman.ReadRawBlock(block_data, pos)) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, std::as_bytes(std::span{block_data}));
+        req->WriteReply(HTTP_OK, block_data);
         return true;
     }
 
@@ -341,7 +341,7 @@ static bool rest_block(const std::any& context,
         CBlock block{};
         DataStream block_stream{block_data};
         block_stream >> TX_WITH_WITNESS(block);
-        UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, tx_verbosity);
+        UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, tx_verbosity, chainman.GetConsensus().powLimit);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
@@ -962,9 +962,9 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
     std::string height_str;
     const RESTResponseFormat rf = ParseDataFormat(height_str, str_uri_part);
 
-    int32_t blockheight = -1; // Initialization done only to prevent valgrind false positive, see https://github.com/bitcoin/bitcoin/pull/18785
-    if (!ParseInt32(height_str, &blockheight) || blockheight < 0) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str));
+    const auto blockheight{ToIntegral<int32_t>(height_str)};
+    if (!blockheight || *blockheight < 0) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str, SAFE_CHARS_URI));
     }
 
     CBlockIndex* pblockindex = nullptr;
@@ -974,10 +974,10 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
         ChainstateManager& chainman = *maybe_chainman;
         LOCK(cs_main);
         const CChain& active_chain = chainman.ActiveChain();
-        if (blockheight > active_chain.Height()) {
+        if (*blockheight > active_chain.Height()) {
             return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
         }
-        pblockindex = active_chain[blockheight];
+        pblockindex = active_chain[*blockheight];
     }
     switch (rf) {
     case RESTResponseFormat::BINARY: {

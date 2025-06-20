@@ -1,6 +1,6 @@
 # NetBSD Build Guide
 
-**Updated for NetBSD [10.0](https://netbsd.org/releases/formal-10/NetBSD-10.0.html)**
+**Updated for NetBSD [10.1](https://netbsd.org/releases/formal-10/NetBSD-10.1.html)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on NetBSD.
 
@@ -55,22 +55,14 @@ It is not necessary to build wallet functionality to run bitcoind or the GUI.
 pkgin install sqlite3
 ```
 
-###### Legacy Wallet Support
-
-`db4` is required to enable support for legacy wallets.
-
-```bash
-pkgin install db4
-```
-
 #### GUI Dependencies
-###### Qt5
+###### Qt6
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
-pkgin install qt5-qtbase qt5-qttools
+pkgin install qt6-qtbase qt6-qttools
 ```
 
 ###### libqrencode
@@ -83,6 +75,13 @@ pkgin install qrencode
 
 Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` option to disable this feature in order to compile the GUI.
 
+#### Notifications
+###### ZeroMQ
+
+Bitcoin Core can provide notifications via ZeroMQ. If the package is installed, support will be compiled in.
+```bash
+pkgin zeromq
+```
 
 #### Test Suite Dependencies
 
@@ -90,10 +89,10 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkgin install python39
+pkgin install python310 py310-zmq
 ```
 
-### Building Bitcoin Core
+## Building Bitcoin Core
 
 ### 1. Configuration
 

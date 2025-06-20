@@ -78,8 +78,8 @@ class AddrTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info('Check disconnection when sending sendaddrv2 after verack')
         conn = self.nodes[0].add_p2p_connection(P2PInterface())
-        with self.nodes[0].assert_debug_log(['sendaddrv2 received after verack from peer=0; disconnecting']):
-            conn.send_message(msg_sendaddrv2())
+        with self.nodes[0].assert_debug_log(['sendaddrv2 received after verack, disconnecting peer=0']):
+            conn.send_without_ping(msg_sendaddrv2())
             conn.wait_for_disconnect()
 
         self.log.info('Create connection that sends addrv2 messages')
@@ -104,7 +104,7 @@ class AddrTest(BitcoinTestFramework):
         self.log.info('Send too-large addrv2 message')
         msg.addrs = ADDRS * 101
         with self.nodes[0].assert_debug_log(['addrv2 message size = 1010']):
-            addr_source.send_message(msg)
+            addr_source.send_without_ping(msg)
             addr_source.wait_for_disconnect()
 
 

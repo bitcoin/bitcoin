@@ -2,6 +2,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+include(GNUInstallDirs)
+
 # TODO: libbitcoinkernel is a work in progress consensus engine
 #       library, as more and more modules are decoupled from the
 #       consensus engine, this list will shrink to only those
@@ -85,6 +87,7 @@ target_link_libraries(bitcoinkernel
     bitcoin_crypto
     leveldb
     secp256k1
+    $<$<PLATFORM_ID:Windows>:bcrypt>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
   PUBLIC
     Boost::headers
@@ -100,6 +103,10 @@ set_target_properties(bitcoinkernel PROPERTIES
   CXX_VISIBILITY_PRESET default
 )
 
+# Add a convenience libbitcoinkernel target as a synonym for bitcoinkernel.
+add_custom_target(libbitcoinkernel)
+add_dependencies(libbitcoinkernel bitcoinkernel)
+
 # When building the static library, install all static libraries the
 # bitcoinkernel depends on.
 if(NOT BUILD_SHARED_LIBS)
@@ -108,6 +115,7 @@ if(NOT BUILD_SHARED_LIBS)
     get_target_property(linked_libraries ${target} LINK_LIBRARIES)
     foreach(dep ${linked_libraries})
       if(TARGET ${dep})
+        add_dependencies(libbitcoinkernel ${dep})
         get_target_property(dep_type ${dep} TYPE)
         if(dep_type STREQUAL "STATIC_LIBRARY")
           list(APPEND ${libs_out} ${dep})
@@ -121,24 +129,23 @@ if(NOT BUILD_SHARED_LIBS)
   set(all_kernel_static_link_libs "")
   get_target_static_link_libs(bitcoinkernel all_kernel_static_link_libs)
 
-  install(TARGETS ${all_kernel_static_link_libs} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Kernel)
+  install(TARGETS ${all_kernel_static_link_libs} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libbitcoinkernel)
   list(TRANSFORM all_kernel_static_link_libs PREPEND "-l")
   # LIBS_PRIVATE is substituted in the pkg-config file.
   list(JOIN all_kernel_static_link_libs " " LIBS_PRIVATE)
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/libbitcoinkernel.pc.in ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc @ONLY)
-install(FILES ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT Kernel)
+install(FILES ${PROJECT_BINARY_DIR}/libbitcoinkernel.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" COMPONENT libbitcoinkernel)
 
-include(GNUInstallDirs)
 install(TARGETS bitcoinkernel
   RUNTIME
     DESTINATION ${CMAKE_INSTALL_BINDIR}
-    COMPONENT Kernel
+    COMPONENT libbitcoinkernel
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT Kernel
+    COMPONENT libbitcoinkernel
   ARCHIVE
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT Kernel
+    COMPONENT libbitcoinkernel
 )

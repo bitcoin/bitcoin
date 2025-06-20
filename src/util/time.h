@@ -31,6 +31,32 @@ using SteadyMicroseconds = std::chrono::time_point<std::chrono::steady_clock, st
 
 using SystemClock = std::chrono::system_clock;
 
+/**
+ * Version of SteadyClock that is mockable in the context of tests (set the
+ * current value with SetMockTime), otherwise the system steady clock.
+ */
+struct MockableSteadyClock : public std::chrono::steady_clock {
+    using time_point = std::chrono::time_point<MockableSteadyClock>;
+
+    using mock_time_point = std::chrono::time_point<MockableSteadyClock, std::chrono::milliseconds>;
+    static constexpr mock_time_point::duration INITIAL_MOCK_TIME{1};
+
+    /** Return current system time or mocked time, if set */
+    static time_point now() noexcept;
+    static std::time_t to_time_t(const time_point&) = delete; // unused
+    static time_point from_time_t(std::time_t) = delete;      // unused
+
+    /** Set mock time for testing.
+     * When mocking the steady clock, start at INITIAL_MOCK_TIME and add durations to elapse time as necessary
+     * for testing.
+     * To stop mocking, call ClearMockTime().
+     */
+    static void SetMockTime(mock_time_point::duration mock_time_in);
+
+    /** Clear mock time, go back to system steady clock. */
+    static void ClearMockTime();
+};
+
 void UninterruptibleSleep(const std::chrono::microseconds& n);
 
 /**

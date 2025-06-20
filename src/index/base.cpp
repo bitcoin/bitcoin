@@ -14,12 +14,18 @@
 #include <node/database_args.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
+#include <undo.h>
 #include <util/string.h>
 #include <util/thread.h>
 #include <util/translation.h>
-#include <validation.h> // For g_chainman
+#include <validation.h>
 
+#include <chrono>
+#include <memory>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
@@ -138,7 +144,42 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
         return pindex;
     }
 
+    // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
+    // Caller will be responsible for rewinding back to the common ancestor.
     return chain.Next(chain.FindFork(pindex_prev));
+}
+
+bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
+{
+    interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block_data);
+
+    CBlock block;
+    if (!block_data) { // disk lookup if block data wasn't provided
+        if (!m_chainstate->m_blockman.ReadBlock(block, *pindex)) {
+            FatalErrorf("%s: Failed to read block %s from disk",
+                        __func__, pindex->GetBlockHash().ToString());
+            return false;
+        }
+        block_info.data = &block;
+    }
+
+    CBlockUndo block_undo;
+    if (CustomOptions().connect_undo_data) {
+        if (pindex->nHeight > 0 && !m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
+            FatalErrorf("%s: Failed to read undo block data %s from disk",
+                        __func__, pindex->GetBlockHash().ToString());
+            return false;
+        }
+        block_info.undo_data = &block_undo;
+    }
+
+    if (!CustomAppend(block_info)) {
+        FatalErrorf("%s: Failed to write block %s to index database",
+                    __func__, pindex->GetBlockHash().ToString());
+        return false;
+    }
+
+    return true;
 }
 
 void BaseIndex::Sync()
@@ -186,20 +227,7 @@ void BaseIndex::Sync()
             pindex = pindex_next;
 
 
-            CBlock block;
-            interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex);
-            if (!m_chainstate->m_blockman.ReadBlockFromDisk(block, *pindex)) {
-                FatalErrorf("%s: Failed to read block %s from disk",
-                           __func__, pindex->GetBlockHash().ToString());
-                return;
-            } else {
-                block_info.data = &block;
-            }
-            if (!CustomAppend(block_info)) {
-                FatalErrorf("%s: Failed to write block %s to index database",
-                           __func__, pindex->GetBlockHash().ToString());
-                return;
-            }
+            if (!ProcessBlock(pindex)) return; // error logged internally
 
             auto current_time{std::chrono::steady_clock::now()};
             if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
@@ -249,14 +277,34 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     assert(current_tip == m_best_block_index);
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
-    if (!CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight})) {
-        return false;
+    CBlock block;
+    CBlockUndo block_undo;
+
+    for (const CBlockIndex* iter_tip = current_tip; iter_tip != new_tip; iter_tip = iter_tip->pprev) {
+        interfaces::BlockInfo block_info = kernel::MakeBlockInfo(iter_tip);
+        if (CustomOptions().disconnect_data) {
+            if (!m_chainstate->m_blockman.ReadBlock(block, *iter_tip)) {
+                LogError("%s: Failed to read block %s from disk",
+                             __func__, iter_tip->GetBlockHash().ToString());
+                return false;
+            }
+            block_info.data = &block;
+        }
+        if (CustomOptions().disconnect_undo_data && iter_tip->nHeight > 0) {
+            if (!m_chainstate->m_blockman.ReadBlockUndo(block_undo, *iter_tip)) {
+                return false;
+            }
+            block_info.undo_data = &block_undo;
+        }
+        if (!CustomRemove(block_info)) {
+            return false;
+        }
     }
 
     // In the case of a reorg, ensure persisted block locator is not stale.
     // Pruning has a minimum of 288 blocks-to-keep and getting the index
     // out of sync may be possible but a users fault.
-    // In case we reorg beyond the pruned depth, ReadBlockFromDisk would
+    // In case we reorg beyond the pruned depth, ReadBlock would
     // throw and lead to a graceful shutdown
     SetBestBlockIndex(new_tip);
     if (!Commit()) {
@@ -311,17 +359,14 @@ void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const 
             return;
         }
     }
-    interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block.get());
-    if (CustomAppend(block_info)) {
+
+    // Dispatch block to child class; errors are logged internally and abort the node.
+    if (ProcessBlock(pindex, block.get())) {
         // Setting the best block index is intentionally the last step of this
         // function, so BlockUntilSyncedToCurrentChain callers waiting for the
         // best block index to be updated can rely on the block being fully
         // processed, and the index object being safe to delete.
         SetBestBlockIndex(pindex);
-    } else {
-        FatalErrorf("%s: Failed to write block %s to index",
-                   __func__, pindex->GetBlockHash().ToString());
-        return;
     }
 }
 

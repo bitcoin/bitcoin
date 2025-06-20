@@ -41,8 +41,9 @@ using util::ToString;
 
 static RPCHelpMan sendrawtransaction()
 {
-    return RPCHelpMan{"sendrawtransaction",
-        "\nSubmit a raw transaction (serialized, hex-encoded) to local node and network.\n"
+    return RPCHelpMan{
+        "sendrawtransaction",
+        "Submit a raw transaction (serialized, hex-encoded) to local node and network.\n"
         "\nThe transaction will be sent unconditionally to all peers, so using sendrawtransaction\n"
         "for manual rebroadcast may degrade privacy by leaking the transaction's origin, as\n"
         "nodes will normally not rebroadcast non-wallet transactions already in their mempool.\n"
@@ -108,8 +109,9 @@ static RPCHelpMan sendrawtransaction()
 
 static RPCHelpMan testmempoolaccept()
 {
-    return RPCHelpMan{"testmempoolaccept",
-        "\nReturns result of mempool acceptance tests indicating if raw transaction(s) (serialized, hex-encoded) would be accepted by mempool.\n"
+    return RPCHelpMan{
+        "testmempoolaccept",
+        "Returns result of mempool acceptance tests indicating if raw transaction(s) (serialized, hex-encoded) would be accepted by mempool.\n"
         "\nIf multiple transactions are passed in, parents must come before children and package policies apply: the transactions cannot conflict with any mempool transactions or each other.\n"
         "\nIf one transaction fails, other transactions may not be fully validated (the 'allowed' key will be blank).\n"
         "\nThe maximum number of transactions allowed is " + ToString(MAX_PACKAGE_COUNT) + ".\n"
@@ -146,7 +148,8 @@ static RPCHelpMan testmempoolaccept()
                             {RPCResult{RPCResult::Type::STR_HEX, "", "transaction wtxid in hex"},
                         }},
                     }},
-                    {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection string (only present when 'allowed' is false)"},
+                    {RPCResult::Type::STR, "reject-reason", /*optional=*/true, "Rejection reason (only present when 'allowed' is false)"},
+                    {RPCResult::Type::STR, "reject-details", /*optional=*/true, "Rejection details (only present when 'allowed' is false and rejection details exist)"},
                 }},
             }
         },
@@ -245,6 +248,7 @@ static RPCHelpMan testmempoolaccept()
                         result_inner.pushKV("reject-reason", "missing-inputs");
                     } else {
                         result_inner.pushKV("reject-reason", state.GetRejectReason());
+                        result_inner.pushKV("reject-details", state.ToString());
                     }
                 }
                 rpc_result.push_back(std::move(result_inner));
@@ -379,8 +383,9 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
 
 static RPCHelpMan getrawmempool()
 {
-    return RPCHelpMan{"getrawmempool",
-        "\nReturns all transaction ids in memory pool as a json array of string transaction ids.\n"
+    return RPCHelpMan{
+        "getrawmempool",
+        "Returns all transaction ids in memory pool as a json array of string transaction ids.\n"
         "\nHint: use getmempoolentry to fetch a specific transaction from the mempool.\n",
         {
             {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "True for a json object, false for array of transaction ids"},
@@ -429,8 +434,9 @@ static RPCHelpMan getrawmempool()
 
 static RPCHelpMan getmempoolancestors()
 {
-    return RPCHelpMan{"getmempoolancestors",
-        "\nIf txid is in the mempool, returns all in-mempool ancestors.\n",
+    return RPCHelpMan{
+        "getmempoolancestors",
+        "If txid is in the mempool, returns all in-mempool ancestors.\n",
         {
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
             {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "True for a json object, false for array of transaction ids"},
@@ -490,8 +496,9 @@ static RPCHelpMan getmempoolancestors()
 
 static RPCHelpMan getmempooldescendants()
 {
-    return RPCHelpMan{"getmempooldescendants",
-        "\nIf txid is in the mempool, returns all in-mempool descendants.\n",
+    return RPCHelpMan{
+        "getmempooldescendants",
+        "If txid is in the mempool, returns all in-mempool descendants.\n",
         {
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
             {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "True for a json object, false for array of transaction ids"},
@@ -555,8 +562,9 @@ static RPCHelpMan getmempooldescendants()
 
 static RPCHelpMan getmempoolentry()
 {
-    return RPCHelpMan{"getmempoolentry",
-        "\nReturns mempool data for given transaction\n",
+    return RPCHelpMan{
+        "getmempoolentry",
+        "Returns mempool data for given transaction\n",
         {
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
         },
@@ -780,8 +788,9 @@ static RPCHelpMan importmempool()
 
 static RPCHelpMan savemempool()
 {
-    return RPCHelpMan{"savemempool",
-        "\nDumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
+    return RPCHelpMan{
+        "savemempool",
+        "Dumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -843,15 +852,18 @@ static UniValue OrphanToJSON(const TxOrphanage::OrphanTxBase& orphan)
     o.pushKV("entry", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire - ORPHAN_TX_EXPIRE_TIME)});
     o.pushKV("expiration", int64_t{TicksSinceEpoch<std::chrono::seconds>(orphan.nTimeExpire)});
     UniValue from(UniValue::VARR);
-    from.push_back(orphan.fromPeer); // only one fromPeer for now
+    for (const auto fromPeer: orphan.announcers) {
+        from.push_back(fromPeer);
+    }
     o.pushKV("from", from);
     return o;
 }
 
 static RPCHelpMan getorphantxs()
 {
-    return RPCHelpMan{"getorphantxs",
-        "\nShows transactions in the tx orphanage.\n"
+    return RPCHelpMan{
+        "getorphantxs",
+        "Shows transactions in the tx orphanage.\n"
         "\nEXPERIMENTAL warning: this call may be changed in future releases.\n",
         {
             {"verbosity", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for an array of txids (may contain duplicates), 1 for an array of objects with tx details, and 2 for details from (1) and tx hex",

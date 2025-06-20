@@ -46,16 +46,8 @@ FUZZ_TARGET(locale)
     assert(c_locale != nullptr);
 
     const std::string random_string = fuzzed_data_provider.ConsumeRandomLengthString(5);
-    int32_t parseint32_out_without_locale;
-    const bool parseint32_without_locale = ParseInt32(random_string, &parseint32_out_without_locale);
-    int64_t parseint64_out_without_locale;
-    const bool parseint64_without_locale = ParseInt64(random_string, &parseint64_out_without_locale);
     const int64_t random_int64 = fuzzed_data_provider.ConsumeIntegral<int64_t>();
     const std::string tostring_without_locale = util::ToString(random_int64);
-    // The variable `random_int32` is no longer used, but the harness still needs to
-    // consume the same data that it did previously to not invalidate existing seeds.
-    const int32_t random_int32 = fuzzed_data_provider.ConsumeIntegral<int32_t>();
-    (void)random_int32;
     const std::string strprintf_int_without_locale = strprintf("%d", random_int64);
     const double random_double = fuzzed_data_provider.ConsumeFloatingPoint<double>();
     const std::string strprintf_double_without_locale = strprintf("%f", random_double);
@@ -63,18 +55,6 @@ FUZZ_TARGET(locale)
     const char* new_locale = std::setlocale(LC_ALL, locale_identifier.c_str());
     assert(new_locale != nullptr);
 
-    int32_t parseint32_out_with_locale;
-    const bool parseint32_with_locale = ParseInt32(random_string, &parseint32_out_with_locale);
-    assert(parseint32_without_locale == parseint32_with_locale);
-    if (parseint32_without_locale) {
-        assert(parseint32_out_without_locale == parseint32_out_with_locale);
-    }
-    int64_t parseint64_out_with_locale;
-    const bool parseint64_with_locale = ParseInt64(random_string, &parseint64_out_with_locale);
-    assert(parseint64_without_locale == parseint64_with_locale);
-    if (parseint64_without_locale) {
-        assert(parseint64_out_without_locale == parseint64_out_with_locale);
-    }
     const std::string tostring_with_locale = util::ToString(random_int64);
     assert(tostring_without_locale == tostring_with_locale);
     const std::string strprintf_int_with_locale = strprintf("%d", random_int64);

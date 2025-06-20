@@ -15,6 +15,7 @@
 #include <test/util/net.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <validation.h>
 
@@ -31,6 +32,15 @@ public:
         PeerManager::Options peerman_opts;
         node::ApplyArgsManOptions(*m_node.args, peerman_opts);
         peerman_opts.max_headers_result = FUZZ_MAX_HEADERS_RESULTS;
+        // The peerman's rng is a global that is reused, so it will be reused
+        // and may cause non-determinism between runs. This may even influence
+        // the global RNG, because seeding may be done from the global one. For
+        // now, avoid it influencing the global RNG, and initialize it with a
+        // constant instead.
+        peerman_opts.deterministic_rng = true;
+        // No txs are relayed. Disable irrelevant and possibly
+        // non-deterministic code paths.
+        peerman_opts.ignore_incoming_txs = true;
         m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                            m_node.banman.get(), *m_node.chainman,
                                            *m_node.mempool, *m_node.warnings, peerman_opts);
@@ -51,7 +61,7 @@ void HeadersSyncSetup::ResetAndInitialize()
     auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
     connman.StopNodes();
 
-    NodeId id{0};
+    static NodeId id{0};
     std::vector<ConnectionType> conn_types = {
         ConnectionType::OUTBOUND_FULL_RELAY,
         ConnectionType::BLOCK_RELAY,
@@ -146,7 +156,12 @@ HeadersSyncSetup* g_testing_setup;
 
 void initialize()
 {
-    static auto setup = MakeNoLogFileContext<HeadersSyncSetup>(ChainType::MAIN, {.extra_args = {"-checkpoints=0"}});
+    static auto setup{
+        MakeNoLogFileContext<HeadersSyncSetup>(ChainType::MAIN,
+                                               {
+                                                   .setup_validation_interface = false,
+                                               }),
+    };
     g_testing_setup = setup.get();
 }
 } // namespace
@@ -154,16 +169,18 @@ void initialize()
 FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    // The steady clock is currently only used for logging, so a constant
+    // time-point seems acceptable for now.
+    ElapseSteady elapse_steady{};
+
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
+    CBlockHeader base{chainman.GetParams().GenesisBlock()};
+    SetMockTime(base.nTime);
 
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     g_testing_setup->ResetAndInitialize();
-
-    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-
-    CBlockHeader base{chainman.GetParams().GenesisBlock()};
-    SetMockTime(base.nTime);
 
     // The chain is just a single block, so this is equal to 1
     size_t original_index_size{WITH_LOCK(cs_main, return chainman.m_blockman.m_block_index.size())};
@@ -230,6 +247,4 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
     // to meet the anti-DoS work threshold. So, if at any point the block index grew in size, then there's a bug
     // in the headers pre-sync logic.
     assert(WITH_LOCK(cs_main, return chainman.m_blockman.m_block_index.size()) == original_index_size);
-
-    g_testing_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }

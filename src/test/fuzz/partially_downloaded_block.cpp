@@ -1,3 +1,7 @@
+// Copyright (c) 2023-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit.
+
 #include <blockencodings.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
@@ -11,6 +15,7 @@
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/check.h>
+#include <util/time.h>
 #include <util/translation.h>
 
 #include <cstddef>
@@ -46,6 +51,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     auto block{ConsumeDeserializable<CBlock>(fuzzed_data_provider, TX_WITH_WITNESS)};
     if (!block || block->vtx.size() == 0 ||
@@ -121,7 +127,6 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
              BlockValidationResult::BLOCK_MISSING_PREV,
              BlockValidationResult::BLOCK_INVALID_PREV,
              BlockValidationResult::BLOCK_TIME_FUTURE,
-             BlockValidationResult::BLOCK_CHECKPOINT,
              BlockValidationResult::BLOCK_HEADER_LOW_WORK});
     pdb.m_check_block_mock = FuzzedCheckBlock(
         fail_check_block ?

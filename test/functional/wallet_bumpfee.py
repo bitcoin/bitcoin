@@ -20,6 +20,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
+    MAX_SEQUENCE_NONFINAL,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -49,9 +50,6 @@ def get_change_address(tx, node):
     return [address for address in txout_addresses if node.getaddressinfo(address)["ischange"]]
 
 class BumpFeeTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -61,6 +59,7 @@ class BumpFeeTest(BitcoinTestFramework):
             "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
             "-addresstype=bech32",
+            "-deprecatedrpc=settxfee"
         ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
@@ -93,7 +92,7 @@ class BumpFeeTest(BitcoinTestFramework):
             test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address)
         self.test_invalid_parameters(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(self, rbf_node, dest_address)
-        test_nonrbf_bumpfee_fails(self, peer_node, dest_address)
+        test_nonrbf_bumpfee_succeeds(self, peer_node, dest_address)
         test_notmine_bumpfee(self, rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_address)
         test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_address, dest_address)
@@ -371,10 +370,10 @@ def test_segwit_bumpfee_succeeds(self, rbf_node, dest_address):
     self.clear_mempool()
 
 
-def test_nonrbf_bumpfee_fails(self, peer_node, dest_address):
-    self.log.info('Test that we cannot replace a non RBF transaction')
+def test_nonrbf_bumpfee_succeeds(self, peer_node, dest_address):
+    self.log.info("Test that we can replace a non RBF transaction")
     not_rbfid = peer_node.sendtoaddress(dest_address, Decimal("0.00090000"))
-    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", peer_node.bumpfee, not_rbfid)
+    peer_node.bumpfee(not_rbfid)
     self.clear_mempool()
 
 
@@ -595,10 +594,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
         "internal": True,
         "keypool": False
     }]
-    if self.options.descriptors:
-        result = signer.importdescriptors(reqs)
-    else:
-        result = signer.importmulti(reqs)
+    result = signer.importdescriptors(reqs)
     assert_equal(result, [{'success': True}, {'success': True}])
 
     # Create another wallet with just the public keys, which creates PSBTs
@@ -623,10 +619,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
         "watchonly": True,
         "active": True,
     }]
-    if self.options.descriptors:
-        result = watcher.importdescriptors(reqs)
-    else:
-        result = watcher.importmulti(reqs)
+    result = watcher.importdescriptors(reqs)
     assert_equal(result, [{'success': True}, {'success': True}])
 
     funding_address1 = watcher.getnewaddress(address_type='bech32')
@@ -677,11 +670,20 @@ def test_rebumping(self, rbf_node, dest_address):
 
 
 def test_rebumping_not_replaceable(self, rbf_node, dest_address):
-    self.log.info('Test that re-bumping non-replaceable fails')
+    self.log.info("Test that re-bumping non-replaceable passes")
     rbfid = spend_one_input(rbf_node, dest_address)
+
+    def check_sequence(tx, seq_in):
+        tx = rbf_node.getrawtransaction(tx["txid"])
+        tx = rbf_node.decoderawtransaction(tx)
+        seq = [i["sequence"] for i in tx["vin"]]
+        assert_equal(seq, [seq_in])
+
     bumped = rbf_node.bumpfee(rbfid, fee_rate=ECONOMICAL, replaceable=False)
-    assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                            {"fee_rate": NORMAL})
+    check_sequence(bumped, MAX_SEQUENCE_NONFINAL)
+    bumped = rbf_node.bumpfee(bumped["txid"], {"fee_rate": NORMAL})
+    check_sequence(bumped, MAX_BIP125_RBF_SEQUENCE)
+
     self.clear_mempool()
 
 

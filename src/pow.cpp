@@ -23,7 +23,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
-            // then allow mining of a min-difficulty block.
+            // then it MUST be a min-difficulty block.
             if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
                 return nProofOfWorkLimit;
             else
@@ -139,11 +139,11 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
 // the most significant bit of the last byte of the hash is set.
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
-    if constexpr (G_FUZZING) return (hash.data()[31] & 0x80) == 0;
+    if (EnableFuzzDeterminism()) return (hash.data()[31] & 0x80) == 0;
     return CheckProofOfWorkImpl(hash, nBits, params);
 }
 
-bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+std::optional<arith_uint256> DeriveTarget(unsigned int nBits, const uint256 pow_limit)
 {
     bool fNegative;
     bool fOverflow;
@@ -152,8 +152,16 @@ bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Par
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return false;
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(pow_limit))
+        return {};
+
+    return bnTarget;
+}
+
+bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Params& params)
+{
+    auto bnTarget{DeriveTarget(nBits, params.powLimit)};
+    if (!bnTarget) return false;
 
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)

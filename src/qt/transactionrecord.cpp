@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,13 +9,12 @@
 #include <key_io.h>
 #include <wallet/types.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDateTime>
 
 using wallet::ISMINE_NO;
 using wallet::ISMINE_SPENDABLE;
-using wallet::ISMINE_WATCH_ONLY;
 using wallet::isminetype;
 
 /* Return positive answer if transaction should be shown in list.
@@ -37,10 +36,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     CAmount nCredit = wtx.credit;
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
-    uint256 hash = wtx.tx->GetHash();
+    Txid hash = wtx.tx->GetHash();
     std::map<std::string, std::string> mapValue = wtx.value_map;
 
-    bool involvesWatchAddress = false;
     isminetype fAllFromMe = ISMINE_SPENDABLE;
     bool any_from_me = false;
     if (wtx.is_coinbase) {
@@ -48,18 +46,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     } else {
         for (const isminetype mine : wtx.txin_is_mine)
         {
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
             if (mine) any_from_me = true;
         }
     }
 
     if (fAllFromMe || !any_from_me) {
-        for (const isminetype mine : wtx.txout_is_mine)
-        {
-            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
-        }
-
         CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
 
         for(unsigned int i = 0; i < wtx.tx->vout.size(); i++)
@@ -79,7 +71,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
 
                 TransactionRecord sub(hash, nTime);
                 sub.idx = i;
-                sub.involvesWatchAddress = involvesWatchAddress;
 
                 if (!std::get_if<CNoDestination>(&wtx.txout_address[i]))
                 {
@@ -116,7 +107,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                 TransactionRecord sub(hash, nTime);
                 sub.idx = i; // vout index
                 sub.credit = txout.nValue;
-                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (wtx.txout_address_is_mine[i])
                 {
                     // Received by Bitcoin Address
@@ -143,7 +133,6 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
         // Mixed debit transaction, can't break down payees
         //
         parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
-        parts.last().involvesWatchAddress = involvesWatchAddress;
     }
 
     return parts;

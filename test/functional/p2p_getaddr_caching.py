@@ -12,6 +12,7 @@ from test_framework.p2p import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     p2p_port,
 )
@@ -82,9 +83,9 @@ class AddrTest(BitcoinTestFramework):
 
             if i > 0:
                 # Responses from different binds should be unique
-                assert last_response_on_local_bind != addr_receiver_onion1.get_received_addrs()
-                assert last_response_on_local_bind != addr_receiver_onion2.get_received_addrs()
-                assert last_response_on_onion_bind1 != addr_receiver_onion2.get_received_addrs()
+                assert_not_equal(last_response_on_local_bind, addr_receiver_onion1.get_received_addrs())
+                assert_not_equal(last_response_on_local_bind, addr_receiver_onion2.get_received_addrs())
+                assert_not_equal(last_response_on_onion_bind1, addr_receiver_onion2.get_received_addrs())
                 # Responses on from the same bind should be the same
                 assert_equal(last_response_on_local_bind, addr_receiver_local.get_received_addrs())
                 assert_equal(last_response_on_onion_bind1, addr_receiver_onion1.get_received_addrs())
@@ -113,9 +114,9 @@ class AddrTest(BitcoinTestFramework):
         addr_receiver_onion2.wait_until(addr_receiver_onion2.addr_received)
 
         # new response is different
-        assert set(last_response_on_local_bind) != set(addr_receiver_local.get_received_addrs())
-        assert set(last_response_on_onion_bind1) != set(addr_receiver_onion1.get_received_addrs())
-        assert set(last_response_on_onion_bind2) != set(addr_receiver_onion2.get_received_addrs())
+        assert_not_equal(set(last_response_on_local_bind), set(addr_receiver_local.get_received_addrs()))
+        assert_not_equal(set(last_response_on_onion_bind1), set(addr_receiver_onion1.get_received_addrs()))
+        assert_not_equal(set(last_response_on_onion_bind2), set(addr_receiver_onion2.get_received_addrs()))
 
 
 if __name__ == '__main__':

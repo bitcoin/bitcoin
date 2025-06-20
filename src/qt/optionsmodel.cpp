@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,19 +15,18 @@
 #include <mapport.h>
 #include <net.h>
 #include <netbase.h>
+#include <node/caches.h>
 #include <node/chainstatemanager_args.h>
-#include <txdb.h> // for -dbcache defaults
+#include <univalue.h>
 #include <util/string.h>
-#include <validation.h>    // For DEFAULT_SCRIPTCHECK_THREADS
-#include <wallet/wallet.h> // For DEFAULT_SPEND_ZEROCONF_CHANGE
+#include <validation.h>
+#include <wallet/wallet.h>
 
 #include <QDebug>
 #include <QLatin1Char>
 #include <QSettings>
 #include <QStringList>
 #include <QVariant>
-
-#include <univalue.h>
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
@@ -470,7 +469,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
                suffix.empty()          ? getOption(option, "-prev") :
                                          DEFAULT_PRUNE_TARGET_GB;
     case DatabaseCache:
-        return qlonglong(SettingToInt(setting(), nDefaultDbCache));
+        return qlonglong(SettingToInt(setting(), DEFAULT_DB_CACHE >> 20));
     case ThreadsScriptVerif:
         return qlonglong(SettingToInt(setting(), DEFAULT_SCRIPTCHECK_THREADS));
     case Listen:
@@ -733,7 +732,7 @@ void OptionsModel::checkAndMigrate()
         // see https://github.com/bitcoin/bitcoin/pull/8273
         // force people to upgrade to the new value if they are using 100MB
         if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
-            settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
+            settings.setValue("nDatabaseCache", (qint64)(DEFAULT_DB_CACHE >> 20));
 
         settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
     }

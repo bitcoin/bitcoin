@@ -188,6 +188,10 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">Continua</translation>
     </message>
     <message>
+        <source>Back</source>
+        <translation type="unfinished">Enrere</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Recorda que tot i xifrant la teva cartera, els teus bitcoins no estan completament protegits de robatori a través de programari maliciós que estigui infectant el teu ordinador.</translation>
     </message>
@@ -307,12 +311,20 @@ Només és possible firmar amb adreces del tipus "legacy".</translation>
         <translation type="unfinished">desconegut</translation>
     </message>
     <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Personalitzat…</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Import</translation>
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
         <translation type="unfinished">Introduïu una adreça de Bitcoin (p. ex. %1)</translation>
+    </message>
+    <message>
+        <source>Ctrl+W</source>
+        <translation type="unfinished">Control+W</translation>
     </message>
     <message>
         <source>Unroutable</source>
@@ -1572,6 +1584,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Minimitza en comptes de sortir de l'aplicació quan la finestra es tanca. Quan s'habilita aquesta opció l'aplicació es tancarà només quan se selecciona Surt del menú. </translation>
     </message>
     <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Tipus de lletra a la pestanya Visió general:</translation>
+    </message>
+    <message>
         <source>Options set in this dialog are overridden by the command line:</source>
         <translation type="unfinished">Les opcions configurades en aquest diàleg són sobreescrites per la línia de comandes:</translation>
     </message>
@@ -1604,8 +1620,18 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Revertir aquesta configuració requereix tornar a descarregar la cadena de blocs sencera un altre cop.</translation>
     </message>
     <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">Estableix el nombre de fils de verificació de l'script.  Els valors negatius corresponen al nombre de nuclis que voleu deixar lliures al sistema.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation type="unfinished">(0 = auto, &lt;0 = deixa tants nuclis lliures)</translation>
+    </message>
+    <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation type="unfinished">Això us permet a vosaltres o a una eina de tercers comunicar-vos amb el node mitjançant ordres de línia d'ordres i JSON-RPC.</translation>
     </message>
     <message>
         <source>Enable R&amp;PC server</source>
@@ -1615,6 +1641,16 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>W&amp;allet</source>
         <translation type="unfinished">&amp;Moneder</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">Si s'ha d'establir la quota de resta de l'import per defecte o no.</translation>
+    </message>
+    <message>
+        <source>Subtract &amp;fee from amount by default</source>
+        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">De manera predeterminada, resta &amp;fee de l'import</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
@@ -1634,28 +1670,17 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Activa els controls &amp;PSBT</translation>
     </message>
     <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation type="unfinished">Si voleu mostrar els controls PSBT.</translation>
+    </message>
+    <message>
         <source>External Signer (e.g. hardware wallet)</source>
         <translation type="unfinished">Signador extern (per exemple, cartera de maquinari)</translation>
     </message>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Camí de l'script del signatari extern</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Obre el port del client de Bitcoin al router de forma automàtica. Això només funciona quan el router implementa UPnP i l'opció està activada.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Port obert amb &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Obriu automàticament el port client de Bitcoin al router. Això només funciona quan el vostre router admet NAT-PMP i està activat. El port extern podria ser aleatori.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">Port del mapa mitjançant NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1817,6 +1842,13 @@ Això és ideal per a carteres de mode només lectura.</translation>
     </message>
 </context>
 <context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation type="unfinished">No s'ha pogut llegir la configuració "%1", %2.</translation>
+    </message>
+</context>
+<context>
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
@@ -1922,6 +1954,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation type="unfinished">Ha fallat la firma de la transacció: %1</translation>
     </message>
     <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">No es poden signar les entrades mentre la cartera està bloquejada.</translation>
+    </message>
+    <message>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">No s'han pogut firmar més entrades.</translation>
     </message>
@@ -1957,6 +1993,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>PSBT saved to disk.</source>
         <translation type="unfinished">PSBT guardada al disc.</translation>
+    </message>
+    <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Envia %1 a %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2221,6 +2261,14 @@ Si rebeu aquest error, haureu de sol·licitar al comerciant que proporcioni un U
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">Seleccioneu un igual per a mostrar informació detallada.</translation>
+    </message>
+    <message>
+        <source>Transport</source>
+        <translation type="unfinished">Transporta</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">Sessió ID</translation>
     </message>
     <message>
         <source>Version</source>
@@ -3820,10 +3868,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">No es pot degradar la cartera de la versió %i a la versió %i. La versió de la cartera no ha canviat.</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">No es pot obtenir un bloqueig al directori de dades %s. %s probablement ja s'estigui executant.</translation>
-    </message>
-    <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
         <translation type="unfinished">No es pot actualitzar una cartera dividida no HD de la versió %i a la versió %i sense actualitzar-la per a admetre l'agrupació de claus dividida prèviament. Utilitzeu la versió %i o cap versió especificada.</translation>
     </message>
@@ -3960,10 +4004,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">No es poden configurar -peerblockfilters sense -blockfilterindex.</translation>
     </message>
     <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">No es pot escriure en el directori de dades "%s". Reviseu-ne els permisos.</translation>
-    </message>
-    <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished">%s especificat molt alt! Tarifes tan grans podrien pagar-se en una única transacció.</translation>
     </message>
@@ -3998,10 +4038,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Disk space is too low!</source>
         <translation type="unfinished">L'espai de disc és insuficient!</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Voleu reconstruir la base de dades de blocs ara?</translation>
     </message>
     <message>
         <source>Done loading</source>
@@ -4133,6 +4169,10 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation type="unfinished">S'ha produït un error en la verificació de sanejament d'inicialització. S'està tancant %s.</translation>
     </message>
     <message>
+        <source>Input not found or already spent</source>
+        <translation type="unfinished">Input no trobat o s'ha gastat</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Balanç insuficient</translation>
     </message>
@@ -4191,10 +4231,6 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation type="unfinished">Cal especificar un port amb -whitebind: «%s»</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">No hi ha suficient descriptors de fitxers disponibles.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>

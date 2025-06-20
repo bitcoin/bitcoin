@@ -1185,6 +1185,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Вие сте само на крачка от създаването на вашия нов портфейл!</translation>
     </message>
     <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Моля, посочете име и, ако желаете, разрешете всички разширени опции.</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation type="unfinished">Име на портфейл</translation>
     </message>
@@ -1342,6 +1346,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Изберете директория за данни</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1592,11 +1600,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Връщането на тази настройка изисква повторно изтегляне на цялата блокова верига.</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Максимален размер кеш за базата данни.  По-големият кеш може да допринесе за по-бърза синхронизация, след което ползата е по-малко изразена за повечето случаи на употреба. Намаляването на размера на кеша ще намали използването на паметта. Неизползваната mempool памет се споделя за този кеш.</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Задайте броя на нишките за проверка на скрипта. Отрицателните стойности съответстват на броя ядра, които искате да оставите свободни за системата.</translation>
@@ -1662,14 +1665,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Външен път на скрипта на подписващия</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Автоматично отваряне на входящия Bitcoin порт. Работи само с рутери поддържащи UPnP.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Отваряне на входящия порт чрез &amp;UPnP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1793,6 +1788,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">грешка</translation>
     </message>
     <message>
+        <source>The configuration file could not be opened.</source>
+        <translation type="unfinished">Конфигурационният файл не може да бъде отворен.</translation>
+    </message>
+    <message>
         <source>This change would require a client restart.</source>
         <translation type="unfinished">Тази промяна изисква рестартиране на клиента Ви.</translation>
     </message>
@@ -1826,6 +1825,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Pending:</source>
         <translation type="unfinished">В очакване на:</translation>
+    </message>
+    <message>
+        <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
+        <translation type="unfinished">Обща сума на транзакциите, които все още не са потвърдени и все още не се отчитат в баланса за изразходване</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -1863,12 +1866,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Подпиши Тх</translation>
     </message>
     <message>
+        <source>Copy to Clipboard</source>
+        <translation type="unfinished">Копиране в клипборда</translation>
+    </message>
+    <message>
         <source>Save…</source>
         <translation type="unfinished">Запази...</translation>
     </message>
     <message>
         <source>Close</source>
         <translation type="unfinished">Затвори</translation>
+    </message>
+    <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">Не можете да подписвате входове, докато портфейлът е заключен.</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation type="unfinished">Не можах да подпиша повече входове.</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2989,10 +3004,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Конфигурирай настройки за %s само когато са приложени на %s мрежа, когато са в [%s] секция.</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Желаете ли да пресъздадете базата данни с блокове сега?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Зареждането е завършено</translation>
     </message>
@@ -3007,6 +3018,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Недостатъчно средства</translation>
+    </message>
+    <message>
+        <source>No addresses available</source>
+        <translation type="unfinished">Няма налични адреси</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>

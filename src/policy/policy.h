@@ -20,7 +20,14 @@ class CFeeRate;
 class CScript;
 
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
-static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT - 4000};
+static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT};
+/** Default for -blockreservedweight **/
+static constexpr unsigned int DEFAULT_BLOCK_RESERVED_WEIGHT{8000};
+/** This accounts for the block header, var_int encoding of the transaction count and a minimally viable
+ * coinbase transaction. It adds an additional safety margin, because even with a thorough understanding
+ * of block serialization, it's easy to make a costly mistake when trying to squeeze every last byte.
+ * Setting a lower value is prevented at startup. */
+static constexpr unsigned int MINIMUM_BLOCK_RESERVED_WEIGHT{2000};
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 static constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1000};
 /** The maximum weight for transactions we're willing to relay/mine */
@@ -66,10 +73,9 @@ static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 /**
- * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
- * +2 for the pushdata opcodes.
+ * Default setting for -datacarriersize in vbytes.
  */
-static const unsigned int MAX_OP_RETURN_RELAY = 83;
+static const unsigned int MAX_OP_RETURN_RELAY = MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR;
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
@@ -129,7 +135,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
 bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
-bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_datacarrier_bytes, TxoutType& whichType);
+bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType);
 
 /** Get the vout index numbers of all dust outputs */
 std::vector<uint32_t> GetDust(const CTransaction& tx, CFeeRate dust_relay_rate);

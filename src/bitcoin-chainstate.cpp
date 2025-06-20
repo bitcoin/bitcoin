@@ -19,9 +19,9 @@
 
 #include <consensus/validation.h>
 #include <core_io.h>
+#include <kernel/caches.h>
 #include <logging.h>
 #include <node/blockstorage.h>
-#include <node/caches.h>
 #include <node/chainstate.h>
 #include <random.h>
 #include <script/sigcache.h>
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     class KernelNotifications : public kernel::Notifications
     {
     public:
-        kernel::InterruptResult blockTip(SynchronizationState, CBlockIndex&) override
+        kernel::InterruptResult blockTip(SynchronizationState, CBlockIndex&, double) override
         {
             std::cout << "Block tip changed" << std::endl;
             return {};
@@ -106,6 +106,7 @@ int main(int argc, char* argv[])
     };
     auto notifications = std::make_unique<KernelNotifications>();
 
+    kernel::CacheSizes cache_sizes{DEFAULT_KERNEL_CACHE};
 
     // SETUP: Chainstate
     auto chainparams = CChainParams::Main();
@@ -119,14 +120,14 @@ int main(int argc, char* argv[])
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = abs_datadir / "blocks",
         .notifications = chainman_opts.notifications,
+        .block_tree_db_params = DBParams{
+            .path = abs_datadir / "blocks" / "index",
+            .cache_bytes = cache_sizes.block_tree_db,
+        },
     };
     util::SignalInterrupt interrupt;
     ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
 
-    node::CacheSizes cache_sizes;
-    cache_sizes.block_tree_db = 2 << 20;
-    cache_sizes.coins_db = 2 << 22;
-    cache_sizes.coins = (450 << 20) - (2 << 20) - (2 << 22);
     node::ChainstateLoadOptions options;
     auto [status, error] = node::LoadChainstate(chainman, cache_sizes, options);
     if (status != node::ChainstateLoadStatus::SUCCESS) {
@@ -249,9 +250,6 @@ int main(int argc, char* argv[])
             break;
         case BlockValidationResult::BLOCK_TIME_FUTURE:
             std::cerr << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
-            break;
-        case BlockValidationResult::BLOCK_CHECKPOINT:
-            std::cerr << "the block failed to meet one of our checkpoints" << std::endl;
             break;
         }
     }

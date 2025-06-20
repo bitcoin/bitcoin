@@ -11,8 +11,6 @@ Supporting RPCs are:
   addresses.
 - `listunspent` outputs a specialized descriptor for the reported unspent outputs.
 - `getaddressinfo` outputs a descriptor for solvable addresses (since v0.18).
-- `importmulti` takes as input descriptors to import into a legacy wallet
-  (since v0.18).
 - `generatetodescriptor` takes as input a descriptor and generates coins to it
   (`regtest` only, since v0.19).
 - `utxoupdatepsbt` takes as input descriptors to add information to the psbt
@@ -26,6 +24,8 @@ Supporting RPCs are:
 - `getdescriptoractivity` takes as input descriptors and blockhashes (as output
   by `scanblocks`) and returns rich event data related to spends or receives associated
   with the given descriptors.
+
+Bitcoin Core v24 extended `wsh()` output descriptor with [Miniscript](https://bitcoin.sipa.be/miniscript/) support (initially watch-only). Signing support for Miniscript descriptors was added in v25. And since v26 Miniscript expressions can now be used in Taproot descriptors.
 
 This document describes the language. For the specifics on usage, see the RPC
 documentation for the functions mentioned above.
@@ -45,6 +45,7 @@ Output descriptors currently support:
 - Any type of supported address through the `addr` function.
 - Raw hex scripts through the `raw` function.
 - Public keys (compressed and uncompressed) in hex notation, or BIP32 extended pubkeys with derivation paths.
+- [Miniscript](https://bitcoin.sipa.be/miniscript/) expressions in `wsh` (P2WSH) and `tr` (P2TR) functions.
 
 ## Examples
 
@@ -67,6 +68,7 @@ Output descriptors currently support:
 - `tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,{pk(fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556),pk(e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)})` describes a P2TR output with the `c6...` x-only pubkey as internal key, and two script paths.
 - `tr(c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5,sortedmulti_a(2,2f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,5cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc))` describes a P2TR output with the `c6...` x-only pubkey as internal key, and a single `multi_a` script that needs 2 signatures with 2 specified x-only keys, which will be sorted lexicographically.
 - `wsh(sortedmulti(2,[6f53d49c/44h/1h/0h]tpubDDjsCRDQ9YzyaAq9rspCfq8RZFrWoBpYnLxK6sS2hS2yukqSczgcYiur8Scx4Hd5AZatxTuzMtJQJhchufv1FRFanLqUP7JHwusSSpfcEp2/0/*,[e6807791/44h/1h/0h]tpubDDAfvogaaAxaFJ6c15ht7Tq6ZmiqFYfrSmZsHu7tHXBgnjMZSHAeHSwhvjARNA6Qybon4ksPksjRbPDVp7yXA1KjTjSd5x18KHqbppnXP1s/0/*,[367c9cfa/44h/1h/0h]tpubDDtPnSgWYk8dDnaDwnof4ehcnjuL5VoUt1eW2MoAed1grPHuXPDnkX1fWMvXfcz3NqFxPbhqNZ3QBdYjLz2hABeM9Z2oqMR1Gt2HHYDoCgh/0/*))#av0kxgw0` describes a *2-of-3* multisig. For brevity, the internal "change" descriptor accompanying the above external "receiving" descriptor is not included here, but it typically differs only in the xpub derivation steps, ending in `/1/*` for change addresses.
+- `wsh(thresh(4,pk([7258e4f9/44h/1h/0h]tpubDCZrkQoEU3845aFKUu9VQBYWZtrTwxMzcxnBwKFCYXHD6gEXvtFcxddCCLFsEwmxQaG15izcHxj48SXg1QS5FQGMBx5Ak6deXKPAL7wauBU/0/*),s:pk([c80b1469/44h/1h/0h]tpubDD3UwwHoNUF4F3Vi5PiUVTc3ji1uThuRfFyBexTSHoAcHuWW2z8qEE2YujegcLtgthr3wMp3ZauvNG9eT9xfJyxXCfNty8h6rDBYU8UU1qq/0/*),s:pk([4e5024fe/44h/1h/0h]tpubDDLrpPymPLSCJyCMLQdmcWxrAWwsqqssm5NdxT2WSdEBPSXNXxwbeKtsHAyXPpLkhUyKovtZgCi47QxVpw9iVkg95UUgeevyAqtJ9dqBqa1/0/*),s:pk([3b1d1ee9/44h/1h/0h]tpubDCmDTANBWPzf6d8Ap1J5Ku7J1Ay92MpHMrEV7M5muWxCrTBN1g5f1NPcjMEL6dJHxbvEKNZtYCdowaSTN81DAyLsmv6w6xjJHCQNkxrsrfu/0/*),sln:after(840000),sln:after(1050000),sln:after(1260000)))#k28080kv` describes a Miniscript multisig with spending policy: `thresh(4,pk(key_1),pk(key_2),pk(key_3),pk(key_4),after(t1),after(t2),after(t3))` that starts as 4-of-4 and "decays" to 3-of-4, 2-of-4, and finally 1-of-4 at each future halvening block height. For brevity, the internal "change" descriptor accompanying the above external "receiving" descriptor is not included here, but it typically differs only in the xpub derivation steps, ending in `/1/*` for change addresses.
 
 ## Reference
 
@@ -195,6 +197,14 @@ preferable in cases where there are more signers. This signing flow is also incl
 [The test](/test/functional/wallet_multisig_descriptor_psbt.py) is meant to be documentation as much as it is a functional test, so
 it is kept as simple and readable as possible.
 
+#### Basic Miniscript-enabled "decaying" multisig example
+
+For an example of a multisig that starts as 4-of-4 and "decays" to 3-of-4, 2-of-4, and finally 1-of-4 at each future halvening block height, see [this functional test](/test/functional/wallet_miniscript_decaying_multisig_descriptor_psbt.py).
+
+This has the same "architecture" and signing flow as the above [Basic multisig example](#basic-multisig-example). The basic steps are identical aside from the descriptor that defines this wallet, which is of the form: `wsh(thresh(4,pk(XPUB1),s:pk(XPUB2),s:pk(XPUB3),s:pk(XPUB4),sln:after(t1),sln:after(t2),sln:after(t3)))`.
+
+[The test](/test/functional/wallet_miniscript_decaying_multisig_descriptor_psbt.py) is meant to be documentation as much as it is a functional test, so it is kept as simple and readable as possible.
+
 ### BIP32 derived keys and chains
 
 Most modern wallet software and hardware uses keys that are derived using
@@ -276,11 +286,11 @@ For example, a descriptor of the form:
 
     multi(2,xpub.../<0;1;2>/0/*,xpub.../<2;3;4>/*)
 
-will expand to the two descriptors
+will expand to the 3 descriptors
 
-   multi(2,xpub.../0/0/*,xpub.../2/*)
-   multi(2,xpub.../1/0/*,xpub.../3/*)
-   multi(2,xpub.../2/0/*,xpub.../4*)
+    multi(2,xpub.../0/0/*,xpub.../2/*)
+    multi(2,xpub.../1/0/*,xpub.../3/*)
+    multi(2,xpub.../2/0/*,xpub.../4/*)
 
 When this tuple contains only two elements, wallet implementations can use the
 first descriptor for receiving addresses and the second descriptor for change addresses.
@@ -307,5 +317,5 @@ roughly 1 in a trillion chance of not detecting the errors.
 
 All RPCs in Bitcoin Core will include the checksum in their output. Only
 certain RPCs require checksums on input, including `deriveaddresses` and
-`importmulti`. The checksum for a descriptor without one can be computed
+`importdescriptors`. The checksum for a descriptor without one can be computed
 using the `getdescriptorinfo` RPC.

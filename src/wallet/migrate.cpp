@@ -1,15 +1,20 @@
+// Copyright (c) 2024-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/byteswap.h>
-#include <crypto/common.h> // For ReadBE32
+#include <crypto/common.h>
 #include <logging.h>
 #include <streams.h>
 #include <util/translation.h>
 #include <wallet/migrate.h>
 
+#include <array>
+#include <cstddef>
 #include <optional>
+#include <stdexcept>
 #include <variant>
+#include <vector>
 
 namespace wallet {
 // Magic bytes in both endianness's
@@ -244,7 +249,7 @@ public:
     void Unserialize(Stream& s)
     {
         data.resize(m_header.len);
-        s.read(AsWritableBytes(Span(data.data(), data.size())));
+        s.read(std::as_writable_bytes(std::span(data.data(), data.size())));
     }
 };
 
@@ -272,7 +277,7 @@ public:
         s >> records;
 
         data.resize(m_header.len);
-        s.read(AsWritableBytes(Span(data.data(), data.size())));
+        s.read(std::as_writable_bytes(std::span(data.data(), data.size())));
 
         if (m_header.other_endian) {
             page_num = internal_bswap_32(page_num);
@@ -456,7 +461,7 @@ public:
     void Unserialize(Stream& s)
     {
         data.resize(m_header.hf_offset);
-        s.read(AsWritableBytes(Span(data.data(), data.size())));
+        s.read(std::as_writable_bytes(std::span(data.data(), data.size())));
     }
 };
 
@@ -603,7 +608,7 @@ void BerkeleyRODatabase::Open()
 
     // Read subdatabase page number
     // It is written as a big endian 32 bit number
-    uint32_t main_db_page = ReadBE32(UCharCast(std::get<DataRecord>(page.records.at(1)).data.data()));
+    uint32_t main_db_page = ReadBE32(std::get<DataRecord>(page.records.at(1)).data.data());
 
     // The main database is in a page that doesn't exist
     if (main_db_page > outer_meta.last_page) {
@@ -699,7 +704,7 @@ void BerkeleyRODatabase::Open()
     }
 }
 
-std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch(bool flush_on_close)
+std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch()
 {
     return std::make_unique<BerkeleyROBatch>(*this);
 }
@@ -722,7 +727,7 @@ bool BerkeleyRODatabase::Backup(const std::string& dest) const
         LogPrintf("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
         return true;
     } catch (const fs::filesystem_error& e) {
-        LogPrintf("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), fsbridge::get_filesystem_error_message(e));
+        LogWarning("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), e.code().message());
         return false;
     }
 }
@@ -736,7 +741,7 @@ bool BerkeleyROBatch::ReadKey(DataStream&& key, DataStream& value)
     }
     auto val = it->second;
     value.clear();
-    value.write(Span(val));
+    value.write(std::span(val));
     return true;
 }
 
@@ -746,7 +751,7 @@ bool BerkeleyROBatch::HasKey(DataStream&& key)
     return m_database.m_records.count(key_data) > 0;
 }
 
-BerkeleyROCursor::BerkeleyROCursor(const BerkeleyRODatabase& database, Span<const std::byte> prefix)
+BerkeleyROCursor::BerkeleyROCursor(const BerkeleyRODatabase& database, std::span<const std::byte> prefix)
     : m_database(database)
 {
     std::tie(m_cursor, m_cursor_end) = m_database.m_records.equal_range(BytePrefix{prefix});
@@ -757,13 +762,13 @@ DatabaseCursor::Status BerkeleyROCursor::Next(DataStream& ssKey, DataStream& ssV
     if (m_cursor == m_cursor_end) {
         return DatabaseCursor::Status::DONE;
     }
-    ssKey.write(Span(m_cursor->first));
-    ssValue.write(Span(m_cursor->second));
+    ssKey.write(std::span(m_cursor->first));
+    ssValue.write(std::span(m_cursor->second));
     m_cursor++;
     return DatabaseCursor::Status::MORE;
 }
 
-std::unique_ptr<DatabaseCursor> BerkeleyROBatch::GetNewPrefixCursor(Span<const std::byte> prefix)
+std::unique_ptr<DatabaseCursor> BerkeleyROBatch::GetNewPrefixCursor(std::span<const std::byte> prefix)
 {
     return std::make_unique<BerkeleyROCursor>(m_database, prefix);
 }

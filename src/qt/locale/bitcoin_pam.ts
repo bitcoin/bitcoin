@@ -458,14 +458,6 @@
         <translation type="unfinished">&amp;Pun</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Ibuklat yang antimanu ing Bitcoin client port king router. Gagana yamu ini istung ing router mu susuporta yang UPnP at magsilbi ya.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Mapa ng ning port gamit ing &amp;UPnP</translation>
-    </message>
-    <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation type="unfinished">Port na ning proxy(e.g. 9050)</translation>
     </message>
@@ -1093,10 +1085,6 @@
     <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">Mekapansin lang me-corrupt a block database</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Buri meng buuan pasibayu ing block database ngene?</translation>
     </message>
     <message>
         <source>Done loading</source>

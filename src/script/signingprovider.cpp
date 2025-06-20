@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -61,6 +61,11 @@ bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info)
     bool ret = LookupHelper(origins, keyid, out);
     if (ret) info = std::move(out.second);
     return ret;
+}
+bool FlatSigningProvider::HaveKey(const CKeyID &keyid) const
+{
+    CKey key;
+    return LookupHelper(keys, keyid, key);
 }
 bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
 bool FlatSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
@@ -363,7 +368,7 @@ void TaprootBuilder::Insert(TaprootBuilder::NodeInfo&& node, int depth)
     return branch.size() == 0 || (branch.size() == 1 && branch[0]);
 }
 
-TaprootBuilder& TaprootBuilder::Add(int depth, Span<const unsigned char> script, int leaf_version, bool track)
+TaprootBuilder& TaprootBuilder::Add(int depth, std::span<const unsigned char> script, int leaf_version, bool track)
 {
     assert((leaf_version & ~TAPROOT_LEAF_MASK) == 0);
     if (!IsValid()) return *this;

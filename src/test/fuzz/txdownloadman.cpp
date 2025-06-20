@@ -18,6 +18,7 @@
 #include <test/util/txmempool.h>
 #include <util/hasher.h>
 #include <util/rbf.h>
+#include <util/time.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -167,6 +168,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     // Initialize txdownloadman
     bilingual_str error;
@@ -228,7 +230,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                 GenTxid gtxid = fuzzed_data_provider.ConsumeBool() ?
                                 GenTxid::Txid(rand_tx->GetHash()) :
                                 GenTxid::Wtxid(rand_tx->GetWitnessHash());
-                txdownloadman.AddTxAnnouncement(rand_peer, gtxid, time, /*p2p_inv=*/fuzzed_data_provider.ConsumeBool());
+                txdownloadman.AddTxAnnouncement(rand_peer, gtxid, time);
             },
             [&] {
                 txdownloadman.GetRequestsToSend(rand_peer, time);
@@ -283,6 +285,7 @@ static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl, 
 
     // Orphanage usage should never exceed what is allowed
     Assert(orphanage.Size() <= max_orphan_count);
+    txdownload_impl.m_orphanage.SanityCheck();
 
     // We should never have more than the maximum in-flight requests out for a peer.
     for (NodeId peer = 0; peer < NUM_PEERS; ++peer) {
@@ -297,6 +300,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     // Initialize a TxDownloadManagerImpl
     bilingual_str error;
@@ -372,7 +376,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 GenTxid gtxid = fuzzed_data_provider.ConsumeBool() ?
                                 GenTxid::Txid(rand_tx->GetHash()) :
                                 GenTxid::Wtxid(rand_tx->GetWitnessHash());
-                txdownload_impl.AddTxAnnouncement(rand_peer, gtxid, time, /*p2p_inv=*/fuzzed_data_provider.ConsumeBool());
+                txdownload_impl.AddTxAnnouncement(rand_peer, gtxid, time);
             },
             [&] {
                 const auto getdata_requests = txdownload_impl.GetRequestsToSend(rand_peer, time);
@@ -434,8 +438,8 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
         auto time_skip = fuzzed_data_provider.PickValueInArray(TIME_SKIPS);
         if (fuzzed_data_provider.ConsumeBool()) time_skip *= -1;
         time += time_skip;
-        CheckInvariants(txdownload_impl, max_orphan_count);
     }
+    CheckInvariants(txdownload_impl, max_orphan_count);
     // Disconnect everybody, check that all data structures are empty.
     for (NodeId nodeid = 0; nodeid < NUM_PEERS; ++nodeid) {
         txdownload_impl.DisconnectedPeer(nodeid);

@@ -1650,11 +1650,6 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
         <translation type="unfinished">A beállítás visszaállításához le kell tölteni a teljes blokkláncot.</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Adatbázis gyorsítótár maximális mérete. Nagyobb gyorsítótár gyorsabb szinkronizálást eredményez utána viszont az előnyei kevésbé számottevők. A gyorsítótár méretének csökkentése a memóriafelhasználást is mérsékli. A használaton kívüli mempool memória is osztozik ezen a táron.</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Beállítja a szkript ellenőrző szálak számát. Negatív értékkel megadható hány szabad processzormag maradjon szabadon a rendszeren.</translation>
@@ -1720,22 +1715,6 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Külső aláíró szkript elérési útvonala</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">A Bitcoin-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a router támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp;UPnP port-feltérképezés</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">A Bitcoin kliens port automatikus megnyitása a routeren. Ez csak akkor működik ha a router támogatja a NAT-PMP-t és ez engedélyezve is van. A külső port lehet véletlenszerűen választott.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">Külső port megnyitása NA&amp;T-PMP-vel</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -2293,6 +2272,14 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Kapcsolatok száma</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">Helyi címek</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Hálózati címek amelyeken keresztül jelenleg a Bitcoin csomópontja a többi csomóponttal kommunikál.</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">Blokklánc</translation>
     </message>
@@ -2339,6 +2326,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">Válasszon ki egy partnert a részletes információk megtekintéséhez.</translation>
+    </message>
+    <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">Partner részleteinek elrejtése</translation>
     </message>
     <message>
         <source>The transport layer version: %1</source>
@@ -2812,7 +2803,7 @@ Gépeljen %5 az elérhető parancsok áttekintéséhez. Több információért a
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">&amp;Összeg másolása</translation>
+        <translation type="unfinished">Ö&amp;sszeg másolása</translation>
     </message>
     <message>
         <source>Base58 (Legacy)</source>
@@ -3855,7 +3846,7 @@ Megjegyzés: Mivel a díj bájtonként van kiszámítva, egy "100 satoshi kvB-nk
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">&amp;Összeg másolása</translation>
+        <translation type="unfinished">Ö&amp;sszeg másolása</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID</source>
@@ -4122,10 +4113,6 @@ A "Fájl &gt; Tárca megnyitása" menüben tölthet be egyet.
         <translation type="unfinished">Nem sikerült a tárcát %i verzióról %i verzióra módosítani. A tárca verziója változatlan maradt.</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Az %s adatkönyvtár nem zárolható. A %s valószínűleg fut már.</translation>
-    </message>
-    <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
         <translation type="unfinished">Nem lehet frissíteni a nem HD szétválasztott tárcát %i verzióról %i verzióra az ezt támogató kulcstár frissítése nélkül. Kérjük használja a %i verziót vagy ne adjon meg verziót.</translation>
     </message>
@@ -4308,10 +4295,6 @@ A "Fájl &gt; Tárca megnyitása" menüben tölthet be egyet.
     <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation type="unfinished">A -peerblockfilters nem állítható be a -blockfilterindex opció nélkül.</translation>
-    </message>
-    <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Nem tudok írni a '%s' könyvtárba, ellenőrizd a jogosultságokat.</translation>
     </message>
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
@@ -4510,10 +4493,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">Kevés a hely a lemezen!</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Újra akarja építeni a blokk-adatbázist most?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Betöltés befejezve</translation>
     </message>
@@ -4524,10 +4503,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
         <translation type="unfinished">Elliptikus görbés kriptográfia épségi ellenőrzése sikertelen. %s most leáll.</translation>
-    </message>
-    <message>
-        <source>Error committing db txn for wallet transactions removal</source>
-        <translation type="unfinished">Hiba a tárca tranzakciókat eltávolító adatbázis tranzakció létrehozása közben</translation>
     </message>
     <message>
         <source>Error creating %s</source>
@@ -4576,10 +4551,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Error reading next record from wallet database</source>
         <translation type="unfinished">A tárca-adatbázisból a következő rekord beolvasása sikertelen.</translation>
-    </message>
-    <message>
-        <source>Error starting db txn for wallet transactions removal</source>
-        <translation type="unfinished">Hiba a tárca tranzakciókat eltávolító adatbázis tranzakció indítása közben</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>
@@ -4664,10 +4635,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Error: Unable to write watchonly wallet best block locator record</source>
         <translation type="unfinished">Hiba: Nem lehet írni a figyelő tárca legfelső blokkját megadó rekordot</translation>
-    </message>
-    <message>
-        <source>Error: address book copy failed for wallet %s</source>
-        <translation type="unfinished">Hiba: címjegyzék másolása sikertelen ehhez a tárcához: %s</translation>
     </message>
     <message>
         <source>Error: database transaction cannot be executed for wallet %s</source>
@@ -4832,10 +4799,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>No addresses available</source>
         <translation type="unfinished">Nincsenek rendelkezésre álló címek</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Nincs elég fájlleíró.</translation>
     </message>
     <message>
         <source>Not found pre-selected input %s</source>

@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,11 +35,6 @@ public:
     /** Open the database if it is not already opened. */
     void Open() override;
 
-    /** Indicate the a new database user has began using the database. Increments m_refcount */
-    void AddRef() override {}
-    /** Indicate that database user has stopped using the database and that it could be flushed or closed. Decrement m_refcount */
-    void RemoveRef() override {}
-
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
      */
     bool Rewrite(const char* pszSkip = nullptr) override { return false; }
@@ -48,20 +43,10 @@ public:
      */
     bool Backup(const std::string& strDest) const override;
 
-    /** Make sure all changes are flushed to database file.
-     */
-    void Flush() override {}
     /** Flush to the database file and close the database.
      *  Also close the environment if no other databases are open in it.
      */
     void Close() override {}
-    /* flush the wallet passively (TRY_LOCK)
-       ideal to be called periodically */
-    bool PeriodicFlush() override { return false; }
-
-    void IncrementUpdateCounter() override {}
-
-    void ReloadDbEnv() override {}
 
     /** Return path to main database file for logs and error messages. */
     std::string Filename() override { return fs::PathToString(m_filepath); }
@@ -69,7 +54,7 @@ public:
     std::string Format() override { return "bdb_ro"; }
 
     /** Make a DatabaseBatch connected to this database */
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override;
+    std::unique_ptr<DatabaseBatch> MakeBatch() override;
 };
 
 class BerkeleyROCursor : public DatabaseCursor
@@ -80,7 +65,7 @@ private:
     BerkeleyROData::const_iterator m_cursor_end;
 
 public:
-    explicit BerkeleyROCursor(const BerkeleyRODatabase& database, Span<const std::byte> prefix = {});
+    explicit BerkeleyROCursor(const BerkeleyRODatabase& database, std::span<const std::byte> prefix = {});
     ~BerkeleyROCursor() = default;
 
     Status Next(DataStream& key, DataStream& value) override;
@@ -98,7 +83,7 @@ private:
     bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite = true) override { return true; }
     bool EraseKey(DataStream&& key) override { return false; }
     bool HasKey(DataStream&& key) override;
-    bool ErasePrefix(Span<const std::byte> prefix) override { return false; }
+    bool ErasePrefix(std::span<const std::byte> prefix) override { return false; }
 
 public:
     explicit BerkeleyROBatch(const BerkeleyRODatabase& database) : m_database(database) {}
@@ -107,11 +92,10 @@ public:
     BerkeleyROBatch(const BerkeleyROBatch&) = delete;
     BerkeleyROBatch& operator=(const BerkeleyROBatch&) = delete;
 
-    void Flush() override {}
     void Close() override {}
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override { return std::make_unique<BerkeleyROCursor>(m_database); }
-    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) override;
+    std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) override;
     bool TxnBegin() override { return false; }
     bool TxnCommit() override { return false; }
     bool TxnAbort() override { return false; }

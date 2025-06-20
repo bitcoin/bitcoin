@@ -30,6 +30,14 @@
         <translation type="unfinished">Exportéiert déi Dateien op der aktueller Tabell an eng Datei.</translation>
     </message>
     <message>
+        <source>&amp;Export</source>
+        <translation type="unfinished">&amp;Exportéieren</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation type="unfinished">&amp;Läschen</translation>
+    </message>
+    <message>
         <source>Choose the address to send coins to</source>
         <translation type="unfinished">Wielt déi Adress, wou Dir d'Mënz hinschécken wëllt.</translation>
     </message>
@@ -39,7 +47,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Dat sinn är Bitcoin-Adressen fir Bezuelungen ze schécken. Iwwerpréift ëmmer de Betrag an d'Erhaltsadress virum Mënz ze schécken.</translation>
+        <translation type="unfinished">Dat sinn Är Bitcoin-Adresse fir Bezuelungen ze schécken. Iwwerpréift ëmmer de Betrag an d'Erhaltsadress virum verschécke vu Mënz.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -51,6 +59,17 @@ D'Signatur ass nëmmen mat Adressen vum Typ 'legacy' méiglech.</translation>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
         <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
         <translation type="unfinished">Et gouf en Feeler beim Versuch, d'Adressenlëscht op %1 ze speichern. Versicht et w.e.g. nach eng Kéier.</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Exportéiere feelgeschloen</translation>
+    </message>
+</context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">Adress</translation>
     </message>
     </context>
 <context>
@@ -70,6 +89,13 @@ D'Signatur ass nëmmen mat Adressen vum Typ 'legacy' méiglech.</translation>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Erënner Iech, dass d'Verschlësselung vun ärer Portemonnaie Är Bitcoins net vollstänneg vir Malware schützen kann, déi Äre Computer infizéiert.</translation>
+    </message>
+    </context>
+<context>
+    <name>BitcoinApplication</name>
+    <message>
+        <source>Internal error</source>
+        <translation type="unfinished">Interne Feeler</translation>
     </message>
     </context>
 <context>
@@ -119,6 +145,35 @@ D'Signatur ass nëmmen mat Adressen vum Typ 'legacy' méiglech.</translation>
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>&amp;Overview</source>
+        <translation type="unfinished">&amp;Iwwersiicht</translation>
+    </message>
+    <message>
+        <source>&amp;Transactions</source>
+        <translation type="unfinished">&amp;Transaktiounen</translation>
+    </message>
+    <message>
+        <source>Browse transaction history</source>
+        <translation type="unfinished">Transaktiounshistorie duerchsichen</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <extracomment>A substring of the tooltip.</extracomment>
+        <translation type="unfinished">Netzwierkaktivitéit desaktivéiert.</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation type="unfinished">&amp;Schécken</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation type="unfinished">&amp;Erhalen</translation>
+    </message>
+    <message>
+        <source>&amp;Options…</source>
+        <translation type="unfinished">&amp;Optiounen...</translation>
+    </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
@@ -168,6 +223,14 @@ D'Signatur ass nëmmen mat Adressen vum Typ 'legacy' méiglech.</translation>
     </message>
     </context>
 <context>
+    <name>PeerTableModel</name>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Adress</translation>
+    </message>
+    </context>
+<context>
     <name>SendCoinsDialog</name>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -188,7 +251,22 @@ D'Signatur ass nëmmen mat Adressen vum Typ 'legacy' méiglech.</translation>
     </message>
     </context>
 <context>
+    <name>TransactionView</name>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">Adress</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Exportéiere feelgeschloen</translation>
+    </message>
+    </context>
+<context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation type="unfinished">&amp;Exportéieren</translation>
+    </message>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Exportéiert déi Dateien op der aktueller Tabell an eng Datei.</translation>

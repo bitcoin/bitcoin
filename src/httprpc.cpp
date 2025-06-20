@@ -69,8 +69,6 @@ private:
 };
 
 
-/* Pre-base64-encoded authentication token */
-static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
 /* List of -rpcauth values */
@@ -101,31 +99,21 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
 
 //This function checks username and password against -rpcauth
 //entries from config file.
-static bool multiUserAuthorized(std::string strUserPass)
+static bool CheckUserAuthorized(std::string_view user, std::string_view pass)
 {
-    if (strUserPass.find(':') == std::string::npos) {
-        return false;
-    }
-    std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
-    std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
-
-    for (const auto& vFields : g_rpcauth) {
-        std::string strName = vFields[0];
-        if (!TimingResistantEqual(strName, strUser)) {
+    for (const auto& fields : g_rpcauth) {
+        if (!TimingResistantEqual(std::string_view(fields[0]), user)) {
             continue;
         }
 
-        std::string strSalt = vFields[1];
-        std::string strHash = vFields[2];
+        const std::string& salt = fields[1];
+        const std::string& hash = fields[2];
 
-        static const unsigned int KEY_SIZE = 32;
-        unsigned char out[KEY_SIZE];
+        std::array<unsigned char, CHMAC_SHA256::OUTPUT_SIZE> out;
+        CHMAC_SHA256(UCharCast(salt.data()), salt.size()).Write(UCharCast(pass.data()), pass.size()).Finalize(out.data());
+        std::string hash_from_pass = HexStr(out);
 
-        CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.data()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.data()), strPass.size()).Finalize(out);
-        std::vector<unsigned char> hexvec(out, out+KEY_SIZE);
-        std::string strHashFromPass = HexStr(hexvec);
-
-        if (TimingResistantEqual(strHashFromPass, strHash)) {
+        if (TimingResistantEqual(hash_from_pass, hash)) {
             return true;
         }
     }
@@ -134,7 +122,7 @@ static bool multiUserAuthorized(std::string strUserPass)
 
 static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
 {
-    if (strAuth.substr(0, 6) != "Basic ")
+    if (!strAuth.starts_with("Basic "))
         return false;
     std::string_view strUserPass64 = TrimStringView(std::string_view{strAuth}.substr(6));
     auto userpass_data = DecodeBase64(strUserPass64);
@@ -142,15 +130,14 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     if (!userpass_data) return false;
     strUserPass.assign(userpass_data->begin(), userpass_data->end());
 
-    if (strUserPass.find(':') != std::string::npos)
-        strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
-
-    // Check if authorized under single-user field.
-    // (strRPCUserColonPass is empty when -norpccookiefile is specified).
-    if (!strRPCUserColonPass.empty() && TimingResistantEqual(strUserPass, strRPCUserColonPass)) {
-        return true;
+    size_t colon_pos = strUserPass.find(':');
+    if (colon_pos == std::string::npos) {
+        return false; // Invalid basic auth.
     }
-    return multiUserAuthorized(strUserPass);
+    std::string user = strUserPass.substr(0, colon_pos);
+    std::string pass = strUserPass.substr(colon_pos + 1);
+    strAuthUsernameOut = user;
+    return CheckUserAuthorized(user, pass);
 }
 
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
@@ -291,6 +278,9 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 
 static bool InitRPCAuthentication()
 {
+    std::string user;
+    std::string pass;
+
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
         std::optional<fs::perms> cookie_perms{std::nullopt};
@@ -304,18 +294,36 @@ static bool InitRPCAuthentication()
             cookie_perms = *perm_opt;
         }
 
-        assert(strRPCUserColonPass.empty()); // Only support initializing once
-        if (!GenerateAuthCookie(&strRPCUserColonPass, cookie_perms)) {
+        switch (GenerateAuthCookie(cookie_perms, user, pass)) {
+        case GenerateAuthCookieResult::ERR:
             return false;
-        }
-        if (strRPCUserColonPass.empty()) {
+        case GenerateAuthCookieResult::DISABLED:
             LogInfo("RPC authentication cookie file generation is disabled.");
-        } else {
+            break;
+        case GenerateAuthCookieResult::OK:
             LogInfo("Using random cookie authentication.");
+            break;
         }
     } else {
-        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        LogInfo("Using rpcuser/rpcpassword authentication.");
+        LogWarning("The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.");
+        user = gArgs.GetArg("-rpcuser", "");
+        pass = gArgs.GetArg("-rpcpassword", "");
+    }
+
+    // If there is a plaintext credential, hash it with a random salt before storage.
+    if (!user.empty() || !pass.empty()) {
+        // Generate a random 16 byte hex salt.
+        std::array<unsigned char, 16> raw_salt;
+        GetStrongRandBytes(raw_salt);
+        std::string salt = HexStr(raw_salt);
+
+        // Compute HMAC.
+        std::array<unsigned char, CHMAC_SHA256::OUTPUT_SIZE> out;
+        CHMAC_SHA256(UCharCast(salt.data()), salt.size()).Write(UCharCast(pass.data()), pass.size()).Finalize(out.data());
+        std::string hash = HexStr(out);
+
+        g_rpcauth.push_back({user, salt, hash});
     }
 
     if (!gArgs.GetArgs("-rpcauth").empty()) {
@@ -334,7 +342,7 @@ static bool InitRPCAuthentication()
         }
     }
 
-    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
+    g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", !gArgs.GetArgs("-rpcwhitelist").empty());
     for (const std::string& strRPCWhitelist : gArgs.GetArgs("-rpcwhitelist")) {
         auto pos = strRPCWhitelist.find(':');
         std::string strUser = strRPCWhitelist.substr(0, pos);

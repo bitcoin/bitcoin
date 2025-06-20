@@ -13,7 +13,7 @@
 
 #include <memory>
 
-std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, Span<const uint8_t> byte_data, const bool compressed) noexcept
+std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, std::span<const uint8_t> byte_data, const bool compressed) noexcept
 {
     uint8_t pk_type;
     if (compressed) {

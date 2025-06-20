@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,7 +64,10 @@ export BASE_OUTDIR=${BASE_OUTDIR:-$BASE_SCRATCH_DIR/out}
 # The folder for previous release binaries.
 # This folder exists only on the ci guest, and on the ci host as a volume.
 export PREVIOUS_RELEASES_DIR=${PREVIOUS_RELEASES_DIR:-$BASE_ROOT_DIR/prev_releases}
-export CI_BASE_PACKAGES=${CI_BASE_PACKAGES:-build-essential pkg-config curl ca-certificates ccache python3 rsync git procps bison e2fsprogs cmake}
+export CI_BASE_PACKAGES=${CI_BASE_PACKAGES:-build-essential pkgconf curl ca-certificates ccache python3 rsync git procps bison e2fsprogs cmake ninja-build}
 export GOAL=${GOAL:-install}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_SCRATCH_DIR}/qa-assets}
 export CI_RETRY_EXE=${CI_RETRY_EXE:-"retry --"}
+
+# The --platform argument used with `docker build` and `docker run`.
+export CI_IMAGE_PLATFORM=${CI_IMAGE_PLATFORM:-"linux"} # Force linux, but use native arch by default

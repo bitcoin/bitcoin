@@ -25,7 +25,10 @@ from test_framework.messages import COIN
 from test_framework.p2p import P2PDataStore
 from test_framework.script import OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+)
 
 
 class InvalidBlockRequestTest(BitcoinTestFramework):
@@ -81,7 +84,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block2.vtx.append(tx2)
         assert_equal(block2.hashMerkleRoot, block2.calc_merkle_root())
         assert_equal(orig_hash, block2.rehash())
-        assert block2_orig.vtx != block2.vtx
+        assert_not_equal(block2_orig.vtx, block2.vtx)
 
         peer.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')
 
@@ -90,7 +93,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
 
         block2_dup = copy.deepcopy(block2_orig)
         block2_dup.vtx[2].vin.append(block2_dup.vtx[2].vin[0])
-        block2_dup.vtx[2].rehash()
         block2_dup.hashMerkleRoot = block2_dup.calc_merkle_root()
         block2_dup.solve()
         peer.send_blocks_and_test([block2_dup], node, success=False, reject_reason='bad-txns-inputs-duplicate')
@@ -119,7 +121,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Create a block that spends the output of a tx in a previous block.
         tx3 = create_tx_with_script(tx2, 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
         tx3.vin.append(tx3.vin[0])  # Duplicates input
-        tx3.rehash()
         block4 = create_block(tip, create_coinbase(height), block_time, txlist=[tx3])
         block4.solve()
         self.log.info("Test inflation by duplicating input")

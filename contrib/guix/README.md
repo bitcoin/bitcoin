@@ -247,7 +247,7 @@ details.
 * _**SDK_PATH**_
 
   Set the path where _extracted_ SDKs can be found. This is passed through to
-  the depends tree. Note that this is should be set to the _parent_ directory of
+  the depends tree. Note that this should be set to the _parent_ directory of
   the actual SDK (e.g. `SDK_PATH=$HOME/Downloads/macOS-SDKs` instead of
   `$HOME/Downloads/macOS-SDKs/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers`).
 
@@ -365,12 +365,6 @@ Where `<PREFIX>` is likely:
 - `/usr/local` if you installed Guix from source and didn't supply any
   prefix-modifying flags to Guix's `./configure`
 
-For dongcarl's substitute server at https://guix.carldong.io, run as root:
-
-```sh
-wget -qO- 'https://guix.carldong.io/signing-key.pub' | guix archive --authorize
-```
-
 #### Removing authorized keys
 
 To remove previously authorized keys, simply edit `/etc/guix/acl` and remove the
@@ -382,28 +376,28 @@ Once its key is authorized, the official Guix build farm at
 https://ci.guix.gnu.org is automatically used unless the `--no-substitutes` flag
 is supplied. This default list of substitute servers is overridable both on a
 `guix-daemon` level and when you invoke `guix` commands. See examples below for
-the various ways of adding dongcarl's substitute server after having [authorized
-his signing key](#step-1-authorize-the-signing-keys).
+the various ways of adding a substitute server after having [authorized
+its signing key](#step-1-authorize-the-signing-keys).
 
 Change the **default list** of substitute servers by starting `guix-daemon` with
 the `--substitute-urls` option (you will likely need to edit your init script):
 
 ```sh
-guix-daemon <cmd> --substitute-urls='https://guix.carldong.io https://ci.guix.gnu.org'
+guix-daemon <cmd> --substitute-urls='https://bordeaux.guix.gnu.org https://ci.guix.gnu.org'
 ```
 
 Override the default list of substitute servers by passing the
 `--substitute-urls` option for invocations of `guix` commands:
 
 ```sh
-guix <cmd> --substitute-urls='https://guix.carldong.io https://ci.guix.gnu.org'
+guix <cmd> --substitute-urls='https://bordeaux.guix.gnu.org https://ci.guix.gnu.org'
 ```
 
 For scripts under `./contrib/guix`, set the `SUBSTITUTE_URLS` environment
 variable:
 
 ```sh
-export SUBSTITUTE_URLS='https://guix.carldong.io https://ci.guix.gnu.org'
+export SUBSTITUTE_URLS='https://bordeaux.guix.gnu.org https://ci.guix.gnu.org'
 ```
 
 ## Option 2: Disabling substitutes on an ad-hoc basis

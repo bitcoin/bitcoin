@@ -1513,18 +1513,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;బాహ్య సంతకం స్క్రిప్ట్ మార్గం</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">రౌటర్‌లో బిట్‌కాయిన్ క్లయింట్ పోర్ట్‌ను స్వయంచాలకంగా తెరవండి. ఇది మీ రూటర్ UPnPకి మద్దతు ఇచ్చినప్పుడు మరియు అది ప్రారంభించబడినప్పుడు మాత్రమే పని చేస్తుంది.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp;UPnPని ఉపయోగించి మ్యాప్ పోర్ట్</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">NA&amp;T-PMPని ఉపయోగించి మ్యాప్ పోర్ట్</translation>
-    </message>
-    <message>
         <source>Accept connections from outside.</source>
         <translation type="unfinished">బయటి నుండి కనెక్షన్లను అంగీకరించండి.</translation>
     </message>

@@ -68,12 +68,12 @@ Below we compare the PinSketch algorithm (which `libminisketch` is an implementa
 
 ## Building
 
-The build system is very rudimentary for now, and [improvements](https://github.com/sipa/minisketch/pulls) are welcome.
+The build system is very rudimentary for now, and [improvements](https://github.com/bitcoin-core/minisketch/pulls) are welcome.
 
 The following may work and produce a `libminisketch.a` file you can link against:
 
 ```bash
-git clone https://github.com/sipa/minisketch
+git clone https://github.com/bitcoin-core/minisketch
 cd minisketch
 ./autogen.sh && ./configure && make
 ```

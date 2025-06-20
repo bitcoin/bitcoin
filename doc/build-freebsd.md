@@ -1,6 +1,6 @@
 # FreeBSD Build Guide
 
-**Updated for FreeBSD [14.0](https://www.freebsd.org/releases/14.0R/announce/)**
+**Updated for FreeBSD [14.3](https://www.freebsd.org/releases/14.3R/announce/)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.
 
@@ -34,41 +34,14 @@ Skip if you don't intend to use descriptor wallets.
 pkg install sqlite3
 ```
 
-###### Legacy Wallet Support
-BerkeleyDB is only required if legacy wallet support is required.
-
-It is required to use Berkeley DB 4.8. You **cannot** use the BerkeleyDB library
-from ports. However, you can build DB 4.8 yourself [using depends](/depends).
-
-```bash
-pkg install gmake
-gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_ZMQ=1 NO_USDT=1
-```
-
-When the build is complete, the Berkeley DB installation location will be displayed:
-
-```
-to: /path/to/bitcoin/depends/x86_64-unknown-freebsd[release-number]
-```
-
-Finally, set `BDB_PREFIX` to this path according to your shell:
-
-```
-csh: setenv BDB_PREFIX [path displayed above]
-```
-
-```
-sh/bash: export BDB_PREFIX=[path displayed above]
-```
-
 #### GUI Dependencies
-###### Qt5
+###### Qt6
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
-pkg install qt5-buildtools qt5-core qt5-gui qt5-linguisttools qt5-testlib qt5-widgets
+pkg install qt6-base qt6-tools
 ```
 
 ###### libqrencode
@@ -96,7 +69,7 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkg install python3 databases/py-sqlite3
+pkg install python3 databases/py-sqlite3 net/py-pyzmq
 ```
 ---
 
@@ -107,19 +80,12 @@ pkg install python3 databases/py-sqlite3
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
 ##### Descriptor Wallet and GUI:
-This disables legacy wallet support and enables the GUI, assuming `sqlite` and `qt` are installed.
+This enables the GUI, assuming `sqlite` and `qt` are installed.
 ```bash
-cmake -B build -DWITH_BDB=OFF -DBUILD_GUI=ON
+cmake -B build -DBUILD_GUI=ON
 ```
 
 Run `cmake -B build -LH` to see the full list of available options.
-
-##### Descriptor & Legacy Wallet. No GUI:
-This enables support for both wallet types, assuming
-`sqlite3` and `db4` are both installed.
-```bash
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
-```
 
 ##### No Wallet or GUI
 ```bash

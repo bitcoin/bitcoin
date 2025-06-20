@@ -7,6 +7,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/fuzz/util/check_globals.h>
+#include <test/util/coverage.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
@@ -14,6 +15,7 @@
 #include <util/sock.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -25,6 +27,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -79,7 +82,7 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 static std::string_view g_fuzz_target;
 static const TypeTestOneInput* g_test_one_input{nullptr};
 
-inline void test_one_input(FuzzBufferType buffer)
+static void test_one_input(FuzzBufferType buffer)
 {
     CheckGlobals check{};
     (*Assert(g_test_one_input))(buffer);
@@ -89,32 +92,16 @@ const std::function<std::string()> G_TEST_GET_FULL_NAME{[]{
     return std::string{g_fuzz_target};
 }};
 
-#if defined(__clang__) && defined(__linux__)
-extern "C" void __llvm_profile_reset_counters(void) __attribute__((weak));
-extern "C" void __gcov_reset(void) __attribute__((weak));
-
-void ResetCoverageCounters()
-{
-    if (__llvm_profile_reset_counters) {
-        __llvm_profile_reset_counters();
-    }
-
-    if (__gcov_reset) {
-        __gcov_reset();
-    }
-}
-#else
-void ResetCoverageCounters() {}
-#endif
-
-
-void initialize()
+static void initialize()
 {
     // By default, make the RNG deterministic with a fixed seed. This will affect all
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.
-    // - Creating a BasicTestingSetup or derived class will switch to a random seed.
+    // - Randomness obtained before this call in g_rng_temp_path_init
     SeedRandomStateForTest(SeedRand::ZEROS);
+
+    // Set time to the genesis block timestamp for deterministic initialization.
+    SetMockTime(1231006505);
 
     // Terminate immediately if a fuzzing harness ever tries to create a socket.
     // Individual tests can override this by pointing CreateSock to a mocked alternative.
@@ -162,9 +149,17 @@ void initialize()
         std::cerr << "No fuzz target compiled for " << g_fuzz_target << "." << std::endl;
         std::exit(EXIT_FAILURE);
     }
-    if constexpr (!G_FUZZING) {
-        std::cerr << "Must compile with -DBUILD_FOR_FUZZING=ON to execute a fuzz target." << std::endl;
+    if constexpr (!G_FUZZING_BUILD && !G_ABORT_ON_FAILED_ASSUME) {
+        std::cerr << "Must compile with -DBUILD_FOR_FUZZING=ON or in Debug mode to execute a fuzz target." << std::endl;
         std::exit(EXIT_FAILURE);
+    }
+    if (!EnableFuzzDeterminism()) {
+        if (std::getenv("FUZZ_NONDETERMINISM")) {
+            std::cerr << "Warning: FUZZ_NONDETERMINISM env var set, results may be inconsistent with fuzz build" << std::endl;
+        } else {
+            g_enable_dynamic_fuzz_determinism = true;
+            assert(EnableFuzzDeterminism());
+        }
     }
     Assert(!g_test_one_input);
     g_test_one_input = &it->second.test_one_input;
@@ -256,10 +251,15 @@ int main(int argc, char** argv)
     for (int i = 1; i < argc; ++i) {
         fs::path input_path(*(argv + i));
         if (fs::is_directory(input_path)) {
+            std::vector<fs::path> files;
             for (fs::directory_iterator it(input_path); it != fs::directory_iterator(); ++it) {
                 if (!fs::is_regular_file(it->path())) continue;
-                g_input_path = it->path();
-                Assert(read_file(it->path(), buffer));
+                files.emplace_back(it->path());
+            }
+            std::ranges::shuffle(files, std::mt19937{std::random_device{}()});
+            for (const auto& input_path : files) {
+                g_input_path = input_path;
+                Assert(read_file(input_path, buffer));
                 test_one_input(buffer);
                 ++tested;
                 buffer.clear();

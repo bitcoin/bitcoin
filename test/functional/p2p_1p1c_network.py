@@ -41,7 +41,6 @@ class PackageRelayTest(BitcoinTestFramework):
         # hugely speeds up the test, as it involves multiple hops of tx relay.
         self.noban_tx_relay = True
         self.extra_args = [[
-            "-datacarriersize=100000",
             "-maxmempool=5",
         ]] * self.num_nodes
         self.supports_cli = False
@@ -143,12 +142,11 @@ class PackageRelayTest(BitcoinTestFramework):
         for (i, peer) in enumerate(self.peers):
             for tx in transactions_to_presend[i]:
                 peer.send_and_ping(msg_tx(tx))
-            # This disconnect removes any sent orphans from the orphanage (EraseForPeer) and times
-            # out the in-flight requests.  It is currently required for the test to pass right now,
-            # because the node will not reconsider an orphan tx and will not (re)try requesting
-            # orphan parents from multiple peers if the first one didn't respond.
-            # TODO: remove this in the future if the node tries orphan resolution with multiple peers.
-            peer.peer_disconnect()
+
+        # Disconnect python peers to clear outstanding orphan requests with them, avoiding timeouts.
+        # We are only interested in the syncing behavior between real nodes.
+        for i in range(self.num_nodes):
+            self.nodes[i].disconnect_p2ps()
 
         self.log.info("Submit full packages to node0")
         for package_hex in packages_to_submit:
@@ -156,7 +154,7 @@ class PackageRelayTest(BitcoinTestFramework):
             assert_equal(submitpackage_result["package_msg"], "success")
 
         self.log.info("Wait for mempools to sync")
-        self.sync_mempools(timeout=20)
+        self.sync_mempools()
 
 
 if __name__ == '__main__':

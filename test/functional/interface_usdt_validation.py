@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,8 +18,10 @@ except ImportError:
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
-
+from test_framework.util import (
+    assert_equal,
+    bpf_cflags,
+)
 
 validation_blockconnected_program = """
 #include <uapi/linux/ptrace.h>
@@ -39,7 +41,9 @@ struct connected_block
 BPF_PERF_OUTPUT(block_connected);
 int trace_block_connected(struct pt_regs *ctx) {
     struct connected_block block = {};
-    bpf_usdt_readarg_p(1, ctx, &block.hash, 32);
+    void *phash = NULL;
+    bpf_usdt_readarg(1, ctx, &phash);
+    bpf_probe_read_user(&block.hash, sizeof(block.hash), phash);
     bpf_usdt_readarg(2, ctx, &block.height);
     bpf_usdt_readarg(3, ctx, &block.transactions);
     bpf_usdt_readarg(4, ctx, &block.inputs);
@@ -60,6 +64,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
         self.skip_if_no_bitcoind_tracepoints()
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
+        self.skip_if_running_under_valgrind()
 
     def run_test(self):
         # Tests the validation:block_connected tracepoint by generating blocks
@@ -95,7 +100,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
         ctx.enable_probe(probe="validation:block_connected",
                          fn_name="trace_block_connected")
         bpf = BPF(text=validation_blockconnected_program,
-                  usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+                  usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         def handle_blockconnected(_, data, __):
             event = ctypes.cast(data, ctypes.POINTER(Block)).contents

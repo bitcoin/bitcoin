@@ -7,8 +7,8 @@
 export LC_ALL=C.UTF-8
 
 export CONTAINER_NAME=ci_native_tsan
-export CI_IMAGE_NAME_TAG="docker.io/ubuntu:24.04"
-export APT_LLVM_V="19"
+export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
+export APT_LLVM_V="20"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev libc++abi-${APT_LLVM_V}-dev libc++-${APT_LLVM_V}-dev python3-zmq"
 export DEP_OPTS="CC=clang-${APT_LLVM_V} CXX='clang++-${APT_LLVM_V} -stdlib=libc++'"
 export GOAL="install"

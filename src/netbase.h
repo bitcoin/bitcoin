@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,9 @@
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <stdint.h>
 #include <string>
 #include <type_traits>
 #include <unordered_set>
@@ -37,12 +37,12 @@ enum class ConnectionDirection {
     Both = (In | Out),
 };
 static inline ConnectionDirection& operator|=(ConnectionDirection& a, ConnectionDirection b) {
-    using underlying = typename std::underlying_type<ConnectionDirection>::type;
+    using underlying = std::underlying_type_t<ConnectionDirection>;
     a = ConnectionDirection(underlying(a) | underlying(b));
     return a;
 }
 static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
-    using underlying = typename std::underlying_type<ConnectionDirection>::type;
+    using underlying = std::underlying_type_t<ConnectionDirection>;
     return (underlying(a) & underlying(b));
 }
 
@@ -58,14 +58,14 @@ bool IsUnixSocketPath(const std::string& name);
 class Proxy
 {
 public:
-    Proxy() : m_is_unix_socket(false), m_randomize_credentials(false) {}
-    explicit Proxy(const CService& _proxy, bool _randomize_credentials = false) : proxy(_proxy), m_is_unix_socket(false), m_randomize_credentials(_randomize_credentials) {}
-    explicit Proxy(const std::string path, bool _randomize_credentials = false) : m_unix_socket_path(path), m_is_unix_socket(true), m_randomize_credentials(_randomize_credentials) {}
+    Proxy() : m_is_unix_socket(false), m_tor_stream_isolation(false) {}
+    explicit Proxy(const CService& _proxy, bool tor_stream_isolation = false) : proxy(_proxy), m_is_unix_socket(false), m_tor_stream_isolation(tor_stream_isolation) {}
+    explicit Proxy(const std::string path, bool tor_stream_isolation = false) : m_unix_socket_path(path), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
 
     CService proxy;
     std::string m_unix_socket_path;
     bool m_is_unix_socket;
-    bool m_randomize_credentials;
+    bool m_tor_stream_isolation;
 
     bool IsValid() const
     {

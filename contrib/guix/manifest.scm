@@ -6,22 +6,25 @@
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
-             (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
              ((gnu packages installers) #:select (nsis-x86_64))
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
              (gnu packages mingw)
+             (gnu packages ninja)
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
-             ((gnu packages python-build) #:select (python-tomli))
+             ((gnu packages python-build) #:select (python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
+             ((gnu packages python-science) #:select (python-scikit-build-core))
+             ((gnu packages python-xyz) #:select (python-pydantic-2 python-pydantic-core))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
              (guix build-system gnu)
              (guix build-system python)
+             (guix build-system pyproject)
              (guix build-system trivial)
              (guix download)
              (guix gexp)
@@ -90,7 +93,7 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-12) ;; 12.4.0
+(define base-gcc gcc-13) ;; 13.3.0
 
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
@@ -157,37 +160,35 @@ chain for " target " development."))
 (define-public python-lief
   (package
     (name "python-lief")
-    (version "0.13.2")
+    (version "0.16.6")
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://github.com/lief-project/LIEF")
                     (commit version)))
               (file-name (git-file-name name version))
-              (modules '((guix build utils)))
-              (snippet
-               '(begin
-                  ;; Configure build for Python bindings.
-                  (substitute* "api/python/config-default.toml"
-                    (("(ninja         = )true" all m)
-                     (string-append m "false"))
-                    (("(parallel-jobs = )0" all m)
-                     (string-append m (number->string (parallel-job-count)))))))
               (sha256
                (base32
-                "0y48x358ppig5xp97ahcphfipx7cg9chldj2q5zrmn610fmi4zll"))))
-    (build-system python-build-system)
-    (native-inputs (list cmake-minimal python-tomli))
+                "1pq9nagrnkl1x943bqnpiyxmkd9vk99znfxiwqp6vf012b50bz2a"))
+              (patches (search-our-patches "lief-scikit-0-9.patch"))))
+    (build-system pyproject-build-system)
+    (native-inputs (list cmake-minimal
+                         ninja
+                         python-scikit-build-core
+                         python-pydantic-core
+                         python-pydantic-2))
     (arguments
      (list
       #:tests? #f                  ;needs network
       #:phases #~(modify-phases %standard-phases
-                   (add-before 'build 'change-directory
+                   (add-before 'build 'set-pythonpath
                      (lambda _
-                       (chdir "api/python")))
-                   (replace 'build
+                       (setenv "PYTHONPATH"
+                         (string-append (string-append (getcwd) "/api/python/backend")
+                                      ":" (or (getenv "PYTHONPATH") "")))))
+                  (add-after 'set-pythonpath 'change-directory
                      (lambda _
-                       (invoke "python" "setup.py" "build"))))))
+                       (chdir "api/python"))))))
     (home-page "https://github.com/lief-project/LIEF")
     (synopsis "Library to instrument executable formats")
     (description
@@ -381,10 +382,10 @@ specific moment in time, whitelisting and revocation checks.")
       (license license:expat))))
 
 (define-public python-signapple
-  (let ((commit "62155712e7417aba07565c9780a80e452823ae6a"))
+  (let ((commit "85bfcecc33d2773bc09bc318cec0614af2c8e287"))
     (package
       (name "python-signapple")
-      (version (git-version "0.1" "1" commit))
+      (version (git-version "0.2.0" "1" commit))
       (source
        (origin
          (method git-fetch)
@@ -394,13 +395,14 @@ specific moment in time, whitelisting and revocation checks.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1nm6rm4h4m7kbq729si4cm8rzild62mk4ni8xr5zja7l33fhv3gb"))))
-      (build-system python-build-system)
+           "17yqjll8nw83q6dhgqhkl7w502z5vy9sln8m6mlx0f1c10isg8yg"))))
+      (build-system pyproject-build-system)
       (propagated-inputs
         (list python-asn1crypto
               python-oscrypto
               python-certvalidator
               python-elfesteem))
+      (native-inputs (list python-poetry-core))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; problems, just disable the test
       (arguments '(#:tests? #f))
@@ -451,7 +453,7 @@ inspecting signatures in Mach-O binaries.")
                #t))))))))
 
 (define-public glibc-2.31
-  (let ((commit "8e30f03744837a85e33d84ccd34ed3abe30d37c3"))
+  (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
   (package
     (inherit glibc) ;; 2.35
     (version "2.31")
@@ -463,7 +465,7 @@ inspecting signatures in Mach-O binaries.")
               (file-name (git-file-name "glibc" commit))
               (sha256
                (base32
-                "1zi0s9yy5zkisw823vivn7zlj8w6g9p3mm7lmlqiixcxdkz4dbn6"))
+                "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
               (patches (search-our-patches "glibc-guix-prefix.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
@@ -474,6 +476,8 @@ inspecting signatures in Mach-O binaries.")
                   "--enable-cet",
                   "--enable-bind-now",
                   "--disable-werror",
+                  "--disable-timezone-tools",
+                  "--disable-profile",
                   building-on)))
     ((#:phases phases)
         `(modify-phases ,phases
@@ -526,7 +530,6 @@ inspecting signatures in Mach-O binaries.")
         which
         coreutils-minimal
         ;; File(system) inspection
-        file
         grep
         diffutils
         findutils
@@ -540,9 +543,10 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-12
+        gcc-toolchain-13
         cmake-minimal
         gnu-make
+        ninja
         ;; Scripting
         python-minimal ;; (3.10)
         ;; Git
@@ -559,7 +563,7 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
-                 (list gcc-toolchain-12 "static")
+                 (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-18

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +28,7 @@ static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
 
 static constexpr unsigned int BLOCK_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_NULLDUMMY;
 
-static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
+static bool FetchAndClearCommitmentSection(const std::span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
 {
     CScript replacement;
     bool found_header = false;
@@ -39,7 +39,7 @@ static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CSc
     std::vector<uint8_t> pushdata;
     while (witness_commitment.GetOp(pc, opcode, pushdata)) {
         if (pushdata.size() > 0) {
-            if (!found_header && pushdata.size() > header.size() && std::ranges::equal(Span{pushdata}.first(header.size()), header)) {
+            if (!found_header && pushdata.size() > header.size() && std::ranges::equal(std::span{pushdata}.first(header.size()), header)) {
                 // pushdata only counts if it has the header _and_ some data
                 result.insert(result.end(), pushdata.begin() + header.size(), pushdata.end());
                 pushdata.erase(pushdata.begin() + header.size(), pushdata.end());

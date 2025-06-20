@@ -2610,6 +2610,63 @@
 [["645168", 0.00000001], "0x22 0x0020f913eacf2e38a5d6fc3a8311d72ae704cb83866350a984dd3e5eb76d2a8c28e8", "HASH160 0x14 0xdbb7d1c0a56b7a9c423300c8cca6e6e065baf1dc EQUAL", "P2SH,WITNESS", "UNBALANCED_CONDITIONAL"],
 [["645168", 0.00000001], "0x22 0x0020f913eacf2e38a5d6fc3a8311d72ae704cb83866350a984dd3e5eb76d2a8c28e8", "HASH160 0x14 0xdbb7d1c0a56b7a9c423300c8cca6e6e065baf1dc EQUAL", "P2SH,WITNESS,MINIMALIF", "UNBALANCED_CONDITIONAL"],
 
+["Tapscript tests"],
+[
+    [
+        "1ffe1234567890",
+        "00",
+        "#SCRIPT# HASH256 DUP SHA1 DROP DUP DROP TOALTSTACK HASH256 DUP DROP TOALTSTACK FROMALTSTACK",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "TAPSCRIPT Tests testing tapscript with many different op codes including ALTSTACK interactions"
+],
+[
+    [
+        "abcdef",
+        "#SCRIPT# 1 IF SHA256 ENDIF SIZE SWAP DROP 32 EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "TAPSCRIPT Test IF conditional when true"
+],
+[
+    [
+        "abcdef",
+        "#SCRIPT# 0 IF SHA256 ENDIF SIZE SWAP DROP 32 EQUAL",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "EVAL_FALSE",
+    "TAPSCRIPT Test IF conditional when false"
+],
+[
+    [
+        "aa",
+        "bb",
+        "cc",
+        "#SCRIPT# EQUAL IF DROP DROP ENDIF",
+        "#CONTROLBLOCK#",
+        0.00000001
+    ],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "TAPSCRIPT Test that DROP operations do not execute inside of a false IF conditional"
+],
+
 ["NULLFAIL should cover all signatures and signatures only"],
 ["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66 and NULLFAIL-compliant"],
 ["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG,NULLFAIL", "OK", "BIP66 and NULLFAIL-compliant"],

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,8 +27,7 @@
 #include <thread>
 
 #ifdef WIN32
-#include <windows.h>
-#include <wincrypt.h>
+#include <bcrypt.h>
 #else
 #include <fcntl.h>
 #include <sys/time.h>
@@ -40,9 +39,6 @@
 
 #ifdef HAVE_SYSCTL_ARND
 #include <sys/sysctl.h>
-#endif
-#if defined(HAVE_STRONG_GETAUXVAL) && defined(__aarch64__)
-#include <sys/auxv.h>
 #endif
 
 namespace {
@@ -126,7 +122,7 @@ uint64_t GetRdRand() noexcept
 {
     // RdRand may very rarely fail. Invoke it up to 10 times in a loop to reduce this risk.
 #ifdef __i386__
-    uint8_t ok;
+    uint8_t ok = 0;
     // Initialize to 0 to silence a compiler warning that r1 or r2 may be used
     // uninitialized. Even if rdrand fails (!ok) it will set the output to 0,
     // but there is no way that the compiler could know that.
@@ -141,7 +137,7 @@ uint64_t GetRdRand() noexcept
     }
     return (((uint64_t)r2) << 32) | r1;
 #elif defined(__x86_64__) || defined(__amd64__)
-    uint8_t ok;
+    uint8_t ok = 0;
     uint64_t r1 = 0; // See above why we initialize to 0.
     for (int i = 0; i < 10; ++i) {
         __asm__ volatile (".byte 0x48, 0x0f, 0xc7, 0xf0; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdrand %rax
@@ -162,7 +158,7 @@ uint64_t GetRdSeed() noexcept
     // RdSeed may fail when the HW RNG is overloaded. Loop indefinitely until enough entropy is gathered,
     // but pause after every failure.
 #ifdef __i386__
-    uint8_t ok;
+    uint8_t ok = 0;
     uint32_t r1, r2;
     do {
         __asm__ volatile (".byte 0x0f, 0xc7, 0xf8; setc %1" : "=a"(r1), "=q"(ok) :: "cc"); // rdseed %eax
@@ -189,62 +185,6 @@ uint64_t GetRdSeed() noexcept
 #endif
 }
 
-#elif defined(__aarch64__) && defined(HWCAP2_RNG)
-
-bool g_rndr_supported = false;
-
-void InitHardwareRand()
-{
-    if (getauxval(AT_HWCAP2) & HWCAP2_RNG) {
-        g_rndr_supported = true;
-    }
-}
-
-void ReportHardwareRand()
-{
-    // This must be done in a separate function, as InitHardwareRand() may be indirectly called
-    // from global constructors, before logging is initialized.
-    if (g_rndr_supported) {
-        LogPrintf("Using RNDR and RNDRRS as additional entropy sources\n");
-    }
-}
-
-/** Read 64 bits of entropy using rndr.
- *
- * Must only be called when RNDR is supported.
- */
-uint64_t GetRNDR() noexcept
-{
-    uint8_t ok;
-    uint64_t r1;
-    do {
-        // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDR--Random-Number
-        __asm__ volatile("mrs %0, s3_3_c2_c4_0; cset %w1, ne;"
-                         : "=r"(r1), "=r"(ok)::"cc");
-        if (ok) break;
-        __asm__ volatile("yield");
-    } while (true);
-    return r1;
-}
-
-/** Read 64 bits of entropy using rndrrs.
- *
- * Must only be called when RNDRRS is supported.
- */
-uint64_t GetRNDRRS() noexcept
-{
-    uint8_t ok;
-    uint64_t r1;
-    do {
-        // https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/RNDRRS--Reseeded-Random-Number
-        __asm__ volatile("mrs %0, s3_3_c2_c4_1; cset %w1, ne;"
-                         : "=r"(r1), "=r"(ok)::"cc");
-        if (ok) break;
-        __asm__ volatile("yield");
-    } while (true);
-    return r1;
-}
-
 #else
 /* Access to other hardware random number generators could be added here later,
  * assuming it is sufficiently fast (in the order of a few hundred CPU cycles).
@@ -260,12 +200,6 @@ void SeedHardwareFast(CSHA512& hasher) noexcept {
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
     if (g_rdrand_supported) {
         uint64_t out = GetRdRand();
-        hasher.Write((const unsigned char*)&out, sizeof(out));
-        return;
-    }
-#elif defined(__aarch64__) && defined(HWCAP2_RNG)
-    if (g_rndr_supported) {
-        uint64_t out = GetRNDR();
         hasher.Write((const unsigned char*)&out, sizeof(out));
         return;
     }
@@ -290,14 +224,6 @@ void SeedHardwareSlow(CSHA512& hasher) noexcept {
         for (int i = 0; i < 4; ++i) {
             uint64_t out = 0;
             for (int j = 0; j < 1024; ++j) out ^= GetRdRand();
-            hasher.Write((const unsigned char*)&out, sizeof(out));
-        }
-        return;
-    }
-#elif defined(__aarch64__) && defined(HWCAP2_RNG)
-    if (g_rndr_supported) {
-        for (int i = 0; i < 4; ++i) {
-            uint64_t out = GetRNDRRS();
             hasher.Write((const unsigned char*)&out, sizeof(out));
         }
         return;
@@ -360,16 +286,15 @@ void Strengthen(const unsigned char (&seed)[32], SteadyClock::duration dur, CSHA
 void GetOSRand(unsigned char *ent32)
 {
 #if defined(WIN32)
-    HCRYPTPROV hProvider;
-    int ret = CryptAcquireContextW(&hProvider, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    if (!ret) {
+    constexpr uint32_t STATUS_SUCCESS{0x00000000};
+    NTSTATUS status = BCryptGenRandom(/*hAlgorithm=*/NULL,
+                                      /*pbBuffer=*/ent32,
+                                      /*cbBuffer=*/NUM_OS_RANDOM_BYTES,
+                                      /*dwFlags=*/BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+
+    if (status != STATUS_SUCCESS) {
         RandFailure();
     }
-    ret = CryptGenRandom(hProvider, NUM_OS_RANDOM_BYTES, ent32);
-    if (!ret) {
-        RandFailure();
-    }
-    CryptReleaseContext(hProvider, 0);
 #elif defined(HAVE_GETRANDOM)
     /* Linux. From the getrandom(2) man page:
      * "If the urandom source has been initialized, reads of up to 256 bytes
@@ -505,7 +430,7 @@ public:
             // Handle requests for deterministic randomness.
             if (!always_use_real_rng && m_deterministic_prng.has_value()) [[unlikely]] {
                 // Overwrite the beginning of buf, which will be used for output.
-                m_deterministic_prng->Keystream(AsWritableBytes(Span{buf, num}));
+                m_deterministic_prng->Keystream(std::as_writable_bytes(std::span{buf, num}));
                 // Do not require strong seeding for deterministic output.
                 ret = true;
             }
@@ -673,13 +598,13 @@ void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept
 }
 std::atomic<bool> g_used_g_prng{false}; // Only accessed from tests
 
-void GetRandBytes(Span<unsigned char> bytes) noexcept
+void GetRandBytes(std::span<unsigned char> bytes) noexcept
 {
     g_used_g_prng = true;
     ProcRand(bytes.data(), bytes.size(), RNGLevel::FAST, /*always_use_real_rng=*/false);
 }
 
-void GetStrongRandBytes(Span<unsigned char> bytes) noexcept
+void GetStrongRandBytes(std::span<unsigned char> bytes) noexcept
 {
     ProcRand(bytes.data(), bytes.size(), RNGLevel::SLOW, /*always_use_real_rng=*/true);
 }
@@ -698,7 +623,7 @@ void FastRandomContext::RandomSeed() noexcept
     requires_seed = false;
 }
 
-void FastRandomContext::fillrand(Span<std::byte> output) noexcept
+void FastRandomContext::fillrand(std::span<std::byte> output) noexcept
 {
     if (requires_seed) RandomSeed();
     rng.Keystream(output);

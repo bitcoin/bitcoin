@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,7 +64,7 @@
 #include <QSize>
 #include <QStandardPaths>
 #include <QString>
-#include <QTextDocument> // for Qt::mightBeRichText
+#include <QTextDocument>
 #include <QThread>
 #include <QUrlQuery>
 #include <QtGlobal>
@@ -954,33 +954,12 @@ void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action)
 
 QDateTime StartOfDay(const QDate& date)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
     return date.startOfDay();
-#else
-    return QDateTime(date);
-#endif
 }
 
 bool HasPixmap(const QLabel* label)
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
     return !label->pixmap(Qt::ReturnByValue).isNull();
-#else
-    return label->pixmap() != nullptr;
-#endif
-}
-
-QImage GetImage(const QLabel* label)
-{
-    if (!HasPixmap(label)) {
-        return QImage();
-    }
-
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
-    return label->pixmap(Qt::ReturnByValue).toImage();
-#else
-    return label->pixmap()->toImage();
-#endif
 }
 
 QString MakeHtmlLink(const QString& source, const QString& link)

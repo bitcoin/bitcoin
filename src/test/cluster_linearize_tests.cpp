@@ -28,11 +28,11 @@ void TestDepGraphSerialization(const std::vector<std::pair<FeeFrac, SetType>>& c
     // Construct DepGraph from cluster argument.
     DepGraph<SetType> depgraph;
     SetType holes;
-    for (ClusterIndex i = 0; i < cluster.size(); ++i) {
+    for (DepGraphIndex i = 0; i < cluster.size(); ++i) {
         depgraph.AddTransaction(cluster[i].first);
         if (cluster[i] == HOLE) holes.Set(i);
     }
-    for (ClusterIndex i = 0; i < cluster.size(); ++i) {
+    for (DepGraphIndex i = 0; i < cluster.size(); ++i) {
         depgraph.AddDependencies(cluster[i].second, i);
     }
     depgraph.RemoveTransactions(holes);

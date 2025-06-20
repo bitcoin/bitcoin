@@ -58,7 +58,7 @@ class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
-        self.send_message(headers_message)
+        self.send_without_ping(headers_message)
 
 
 class AssumeValidTest(BitcoinTestFramework):
@@ -80,7 +80,7 @@ class AssumeValidTest(BitcoinTestFramework):
             if not p2p_conn.is_connected:
                 break
             try:
-                p2p_conn.send_message(msg_block(self.blocks[i]))
+                p2p_conn.send_without_ping(msg_block(self.blocks[i]))
             except IOError:
                 assert not p2p_conn.is_connected
                 break
@@ -117,9 +117,8 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Create a transaction spending the coinbase output with an invalid (null) signature
         tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].sha256, 0), scriptSig=b""))
+        tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].txid_int, 0), scriptSig=b""))
         tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE])))
-        tx.calc_sha256()
 
         block102 = create_block(self.tip, create_coinbase(height), self.block_time, txlist=[tx])
         self.block_time += 1
@@ -157,7 +156,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Send all blocks to node1. All blocks will be accepted.
         for i in range(2202):
-            p2p1.send_message(msg_block(self.blocks[i]))
+            p2p1.send_without_ping(msg_block(self.blocks[i]))
         # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
         p2p1.sync_with_ping(timeout=960)
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)

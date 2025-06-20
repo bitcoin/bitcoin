@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,11 +22,11 @@ struct NewMempoolTransactionInfo;
 class CZMQNotificationInterface final : public CValidationInterface
 {
 public:
-    virtual ~CZMQNotificationInterface();
+    ~CZMQNotificationInterface();
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
-    static std::unique_ptr<CZMQNotificationInterface> Create(std::function<bool(std::vector<uint8_t>&, const CBlockIndex&)> get_block_by_index);
+    static std::unique_ptr<CZMQNotificationInterface> Create(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index);
 
 protected:
     bool Initialize();

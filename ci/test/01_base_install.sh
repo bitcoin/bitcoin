@@ -34,7 +34,8 @@ fi
 
 if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
   bash -c "dnf -y install epel-release"
-  bash -c "dnf -y --allowerasing install $CI_BASE_PACKAGES $PACKAGES"
+  # The ninja-build package is available in the CRB repository.
+  bash -c "dnf -y --allowerasing --enablerepo crb install $CI_BASE_PACKAGES $PACKAGES"
 elif [ "$CI_OS_NAME" != "macos" ]; then
   if [[ -n "${APPEND_APT_SOURCES_LIST}" ]]; then
     echo "${APPEND_APT_SOURCES_LIST}" >> /etc/apt/sources.list
@@ -49,7 +50,7 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-19.1.0" /msan/llvm-project
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-20.1.0" /msan/llvm-project
 
   cmake -G Ninja -B /msan/clang_build/ \
     -DLLVM_ENABLE_PROJECTS="clang" \
@@ -74,6 +75,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DLLVM_TARGETS_TO_BUILD=Native \
     -DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF \
     -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
+    -DLIBCXX_ABI_DEFINES="_LIBCPP_ABI_BOUNDED_ITERATORS;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR;_LIBCPP_ABI_BOUNDED_UNIQUE_PTR" \
     -DLIBCXX_HARDENING_MODE=debug \
     -S /msan/llvm-project/runtimes
 

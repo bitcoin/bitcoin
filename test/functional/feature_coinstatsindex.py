@@ -27,6 +27,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -151,7 +152,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Generate and send a normal tx with two outputs
         tx1 = self.wallet.send_to(
             from_node=node,
-            scriptPubKey=self.wallet.get_scriptPubKey(),
+            scriptPubKey=self.wallet.get_output_script(),
             amount=21 * COIN,
         )
 
@@ -190,7 +191,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # has two outputs
         cb = create_coinbase(109, nValue=35)
         cb.vout.append(CTxOut(5 * COIN, CScript([OP_FALSE])))
-        cb.rehash()
 
         # Generate a block that includes previous coinbase
         tip = self.nodes[0].getbestblockhash()
@@ -275,12 +275,12 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         res2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
         assert_equal(res["bestblock"], block)
         assert_equal(res["muhash"], res2["muhash"])
-        assert res["muhash"] != res_invalid["muhash"]
+        assert_not_equal(res["muhash"], res_invalid["muhash"])
 
         # Test that requesting reorged out block by hash is still returning correct results
         res_invalid2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=reorg_block)
         assert_equal(res_invalid2["muhash"], res_invalid["muhash"])
-        assert res["muhash"] != res_invalid2["muhash"]
+        assert_not_equal(res["muhash"], res_invalid2["muhash"])
 
         # Add another block, so we don't depend on reconsiderblock remembering which
         # blocks were touched by invalidateblock

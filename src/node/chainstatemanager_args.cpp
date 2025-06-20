@@ -29,8 +29,6 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         opts.check_block_index = args.GetArg("-checkblockindex")->empty() ? 1 : *value;
     }
 
-    if (auto value{args.GetBoolArg("-checkpoints")}) opts.checkpoints_enabled = *value;
-
     if (auto value{args.GetArg("-minimumchainwork")}) {
         if (auto min_work{uint256::FromUserHex(*value)}) {
             opts.minimum_chain_work = UintToArith256(*min_work);
@@ -49,7 +47,6 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
 
     if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
 
-    ReadDatabaseArgs(args, opts.block_tree_db);
     ReadDatabaseArgs(args, opts.coins_db);
     ReadCoinsViewArgs(args, opts.coins_view);
 

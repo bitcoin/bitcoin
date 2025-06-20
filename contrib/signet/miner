@@ -9,7 +9,7 @@ import logging
 import math
 import os
 import re
-import struct
+import shlex
 import sys
 import time
 import subprocess
@@ -18,8 +18,8 @@ PATH_BASE_CONTRIB_SIGNET = os.path.abspath(os.path.dirname(os.path.realpath(__fi
 PATH_BASE_TEST_FUNCTIONAL = os.path.abspath(os.path.join(PATH_BASE_CONTRIB_SIGNET, "..", "..", "test", "functional"))
 sys.path.insert(0, PATH_BASE_TEST_FUNCTIONAL)
 
-from test_framework.blocktools import get_witness_script, script_BIP34_coinbase_height # noqa: E402
-from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_binary, from_hex, ser_string, ser_uint256, tx_from_hex # noqa: E402
+from test_framework.blocktools import get_witness_script, script_BIP34_coinbase_height, SIGNET_HEADER # noqa: E402
+from test_framework.messages import CBlock, CBlockHeader, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, from_binary, from_hex, ser_string, ser_uint256, tx_from_hex, MAX_SEQUENCE_NONFINAL # noqa: E402
 from test_framework.psbt import PSBT, PSBTMap, PSBT_GLOBAL_UNSIGNED_TX, PSBT_IN_FINAL_SCRIPTSIG, PSBT_IN_FINAL_SCRIPTWITNESS, PSBT_IN_NON_WITNESS_UTXO, PSBT_IN_SIGHASH_TYPE # noqa: E402
 from test_framework.script import CScript, CScriptOp # noqa: E402
 
@@ -28,7 +28,6 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
 
-SIGNET_HEADER = b"\xec\xc7\xda\xa2"
 PSBT_SIGNET_BLOCK = b"\xfc\x06signetb"    # proprietary PSBT global field holding the block being signed
 RE_MULTIMINER = re.compile(r"^(\d+)(-(\d+))?/(\d+)$")
 
@@ -41,8 +40,7 @@ def signet_txs(block, challenge):
     txs[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER)
     hashes = []
     for tx in txs:
-        tx.rehash()
-        hashes.append(ser_uint256(tx.sha256))
+        hashes.append(ser_uint256(tx.txid_int))
     mroot = block.get_merkle_root(hashes)
 
     sd = b""
@@ -56,56 +54,60 @@ def signet_txs(block, challenge):
     to_spend.nLockTime = 0
     to_spend.vin = [CTxIn(COutPoint(0, 0xFFFFFFFF), b"\x00" + CScriptOp.encode_op_pushdata(sd), 0)]
     to_spend.vout = [CTxOut(0, challenge)]
-    to_spend.rehash()
 
     spend = CTransaction()
     spend.version = 0
     spend.nLockTime = 0
-    spend.vin = [CTxIn(COutPoint(to_spend.sha256, 0), b"", 0)]
+    spend.vin = [CTxIn(COutPoint(to_spend.txid_int, 0), b"", 0)]
     spend.vout = [CTxOut(0, b"\x6a")]
 
     return spend, to_spend
 
-def decode_psbt(b64psbt):
+def decode_challenge_psbt(b64psbt):
     psbt = PSBT.from_base64(b64psbt)
 
     assert len(psbt.tx.vin) == 1
     assert len(psbt.tx.vout) == 1
     assert PSBT_SIGNET_BLOCK in psbt.g.map
+    return psbt
 
+def get_block_from_psbt(psbt):
+    return from_binary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK])
+
+def get_solution_from_psbt(psbt, emptyok=False):
     scriptSig = psbt.i[0].map.get(PSBT_IN_FINAL_SCRIPTSIG, b"")
     scriptWitness = psbt.i[0].map.get(PSBT_IN_FINAL_SCRIPTWITNESS, b"\x00")
-
-    return from_binary(CBlock, psbt.g.map[PSBT_SIGNET_BLOCK]), ser_string(scriptSig) + scriptWitness
+    if emptyok and len(scriptSig) == 0 and scriptWitness == b"\x00":
+        return None
+    return ser_string(scriptSig) + scriptWitness
 
 def finish_block(block, signet_solution, grind_cmd):
-    block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
-    block.vtx[0].rehash()
-    block.hashMerkleRoot = block.calc_merkle_root()
+    if signet_solution is None:
+        pass # Don't need to add a signet commitment if there's no signet signature needed
+    else:
+        block.vtx[0].vout[-1].scriptPubKey += CScriptOp.encode_op_pushdata(SIGNET_HEADER + signet_solution)
+        block.hashMerkleRoot = block.calc_merkle_root()
     if grind_cmd is None:
         block.solve()
     else:
         headhex = CBlockHeader.serialize(block).hex()
-        cmd = grind_cmd.split(" ") + [headhex]
+        cmd = shlex.split(grind_cmd) + [headhex]
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
         newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
         block.rehash()
     return block
 
-def generate_psbt(tmpl, reward_spk, *, blocktime=None, poolid=None):
-    signet_spk = tmpl["signet_challenge"]
-    signet_spk_bin = bytes.fromhex(signet_spk)
-
+def new_block(tmpl, reward_spk, *, blocktime=None, poolid=None):
     scriptSig = script_BIP34_coinbase_height(tmpl["height"])
     if poolid is not None:
         scriptSig = CScript(b"" + scriptSig + CScriptOp.encode_op_pushdata(poolid))
 
     cbtx = CTransaction()
-    cbtx.vin = [CTxIn(COutPoint(0, 0xffffffff), scriptSig, 0xffffffff)]
+    cbtx.nLockTime = tmpl["height"] - 1
+    cbtx.vin = [CTxIn(COutPoint(0, 0xffffffff), scriptSig, MAX_SEQUENCE_NONFINAL)]
     cbtx.vout = [CTxOut(tmpl["coinbasevalue"], reward_spk)]
     cbtx.vin[0].nSequence = 2**32-2
-    cbtx.rehash()
 
     block = CBlock()
     block.nVersion = tmpl["version"]
@@ -124,8 +126,13 @@ def generate_psbt(tmpl, reward_spk, *, blocktime=None, poolid=None):
     block.vtx[0].wit.vtxinwit = [cbwit]
     block.vtx[0].vout.append(CTxOut(0, bytes(get_witness_script(witroot, witnonce))))
 
-    signme, spendme = signet_txs(block, signet_spk_bin)
+    block.hashMerkleRoot = block.calc_merkle_root()
 
+    return block
+
+def generate_psbt(block, signet_spk):
+    signet_spk_bin = bytes.fromhex(signet_spk)
+    signme, spendme = signet_txs(block, signet_spk_bin)
     psbt = PSBT()
     psbt.g = PSBTMap( {PSBT_GLOBAL_UNSIGNED_TX: signme.serialize(),
                        PSBT_SIGNET_BLOCK: block.serialize()
@@ -174,12 +181,16 @@ def get_reward_addr_spk(args, height):
 def do_genpsbt(args):
     poolid = get_poolid(args)
     tmpl = json.load(sys.stdin)
+    signet_spk = tmpl["signet_challenge"]
     _, reward_spk = get_reward_addr_spk(args, tmpl["height"])
-    psbt = generate_psbt(tmpl, reward_spk, poolid=poolid)
+    block = new_block(tmpl, reward_spk, poolid=poolid)
+    psbt = generate_psbt(block, signet_spk)
     print(psbt)
 
 def do_solvepsbt(args):
-    block, signet_solution = decode_psbt(sys.stdin.read())
+    psbt = decode_challenge_psbt(sys.stdin.read())
+    block = get_block_from_psbt(psbt)
+    signet_solution = get_solution_from_psbt(psbt, emptyok=True)
     block = finish_block(block, signet_solution, args.grind_cmd)
     print(block.serialize().hex())
 
@@ -221,6 +232,21 @@ def seconds_to_hms(s):
     if neg:
         out = "-" + out
     return out
+
+def trivial_challenge(spkhex):
+    """
+    BIP325 allows omitting the signet commitment when scriptSig and
+    scriptWitness are both empty. This is the case for trivial
+    challenges such as OP_TRUE or a single data push.
+    """
+    spk = bytes.fromhex(spkhex)
+    if len(spk) == 1 and 0x51 <= spk[0] <= 0x60:
+        # OP_TRUE/OP_1...OP_16
+        return True
+    elif 2 <= len(spk) <= 76 and spk[0] + 1 == len(spk):
+        # Single fixed push of 1-75 bytes
+        return True
+    return False
 
 class Generate:
     INTERVAL = 600.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
@@ -322,14 +348,22 @@ class Generate:
         return tmpl
 
     def mine(self, bcli, grind_cmd, tmpl, reward_spk):
-        psbt = generate_psbt(tmpl, reward_spk, blocktime=self.mine_time, poolid=self.poolid)
-        input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
-        psbt_signed = json.loads(bcli("-stdin", "walletprocesspsbt", input=input_stream))
-        if not psbt_signed.get("complete",False):
-            logging.debug("Generated PSBT: %s" % (psbt,))
-            sys.stderr.write("PSBT signing failed\n")
-            return None
-        block, signet_solution = decode_psbt(psbt_signed["psbt"])
+        block = new_block(tmpl, reward_spk, blocktime=self.mine_time, poolid=self.poolid)
+
+        signet_spk = tmpl["signet_challenge"]
+        if trivial_challenge(signet_spk):
+            signet_solution = None
+        else:
+            psbt = generate_psbt(block, signet_spk)
+            input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
+            psbt_signed = json.loads(bcli("-stdin", "walletprocesspsbt", input=input_stream))
+            if not psbt_signed.get("complete",False):
+               logging.debug("Generated PSBT: %s" % (psbt,))
+               sys.stderr.write("PSBT signing failed\n")
+               return None
+            psbt = decode_challenge_psbt(psbt_signed["psbt"])
+            signet_solution = get_solution_from_psbt(psbt)
+
         return finish_block(block, signet_solution, grind_cmd)
 
 def do_generate(args):
@@ -479,7 +513,7 @@ def do_calibrate(args):
         header.nTime = i
         header.nNonce = 0
         headhex = header.serialize().hex()
-        cmd = args.grind_cmd.split(" ") + [headhex]
+        cmd = shlex.split(args.grind_cmd) + [headhex]
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
 
     avg = (time.time() - start) * 1.0 / TRIALS
@@ -549,7 +583,7 @@ def main():
 
     args = parser.parse_args(sys.argv[1:])
 
-    args.bcli = lambda *a, input=b"", **kwargs: bitcoin_cli(args.cli.split(" "), list(a), input=input, **kwargs)
+    args.bcli = lambda *a, input=b"", **kwargs: bitcoin_cli(shlex.split(args.cli), list(a), input=input, **kwargs)
 
     if hasattr(args, "address") and hasattr(args, "descriptor"):
         args.derived_addresses = {}

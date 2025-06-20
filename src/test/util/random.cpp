@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,8 @@ void SeedRandomStateForTest(SeedRand seedtype)
     // MakeRandDeterministicDANGEROUS is called, the output of GetRandHash is
     // no longer truly random. It should be enough to get the seed once for the
     // process.
-    static const uint256 ctx_seed = []() {
+    static const auto g_ctx_seed = []() -> std::optional<uint256> {
+        if (EnableFuzzDeterminism()) return {};
         // If RANDOM_CTX_SEED is set, use that as seed.
         if (const char* num{std::getenv(RANDOM_CTX_SEED)}) {
             if (auto num_parsed{uint256::FromUserHex(num)}) {
@@ -39,10 +40,11 @@ void SeedRandomStateForTest(SeedRand seedtype)
     }();
 
     g_seeded_g_prng_zero = seedtype == SeedRand::ZEROS;
-    if constexpr (G_FUZZING) {
+    if (EnableFuzzDeterminism()) {
         Assert(g_seeded_g_prng_zero); // Only SeedRandomStateForTest(SeedRand::ZEROS) is allowed in fuzz tests
+        Assert(!g_used_g_prng);       // The global PRNG must not have been used before SeedRandomStateForTest(SeedRand::ZEROS)
     }
-    const uint256& seed{seedtype == SeedRand::FIXED_SEED ? ctx_seed : uint256::ZERO};
+    const uint256& seed{seedtype == SeedRand::FIXED_SEED ? g_ctx_seed.value() : uint256::ZERO};
     LogInfo("Setting random seed for current tests to %s=%s\n", RANDOM_CTX_SEED, seed.GetHex());
     MakeRandDeterministicDANGEROUS(seed);
 }

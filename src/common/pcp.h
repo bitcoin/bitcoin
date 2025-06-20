@@ -40,7 +40,7 @@ struct MappingResult {
     uint32_t lifetime;
 
     //! Format mapping as string for logging.
-    std::string ToString();
+    std::string ToString() const;
 };
 
 //! Try to open a port using RFC 6886 NAT-PMP. IPv4 only.

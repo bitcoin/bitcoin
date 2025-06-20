@@ -27,7 +27,7 @@ static void import_descriptor(CWallet& wallet, const std::string& descriptor)
     assert(descs.size() == 1);
     auto& desc = descs.at(0);
     WalletDescriptor w_desc(std::move(desc), 0, 0, 10, 0);
-    wallet.AddWalletDescriptor(w_desc, provider, "", false);
+    Assert(wallet.AddWalletDescriptor(w_desc, provider, "", false));
 }
 
 BOOST_AUTO_TEST_CASE(psbt_updater_test)
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
     // Fill transaction with our data
     bool complete = true;
-    BOOST_REQUIRE(!m_wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, false, true));
+    BOOST_REQUIRE(!m_wallet.FillPSBT(psbtx, complete, std::nullopt, false, true));
 
     // Get the final tx
     DataStream ssTx{};
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
     // Try to sign the mutated input
     SignatureData sigdata;
-    BOOST_CHECK(m_wallet.FillPSBT(psbtx, complete, SIGHASH_ALL, true, true));
+    BOOST_CHECK(m_wallet.FillPSBT(psbtx, complete, std::nullopt, true, true));
 }
 
 BOOST_AUTO_TEST_CASE(parse_hd_keypath)

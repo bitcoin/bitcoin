@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+capnp_prefix=@capnp_PREFIX@
+
+Name: libmultiprocess
+Description: Multiprocess IPC library
+Version: 0.0
+
+Libs: -L${libdir} -lmultiprocess -L${capnp_prefix}/lib -lcapnp-rpc -lcapnp -lkj-async -lkj -pthread -lpthread
+Cflags: -I${includedir} -I${capnp_prefix}/include -pthread

@@ -52,7 +52,7 @@ bool VerifyWallets(WalletContext& context)
 
     LogPrintf("Using wallet directory %s\n", fs::PathToString(GetWalletDir()));
 
-    chain.initMessage(_("Verifying wallet(s)…").translated);
+    chain.initMessage(_("Verifying wallet(s)…"));
 
     // For backwards compatibility if an unnamed top level wallet exists in the
     // wallets directory, include it in the default list of wallets to load.
@@ -99,6 +99,10 @@ bool VerifyWallets(WalletContext& context)
         if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
             if (status == DatabaseStatus::FAILED_NOT_FOUND) {
                 chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", error_string.original)));
+            } else if (status == DatabaseStatus::FAILED_LEGACY_DISABLED) {
+                // Skipping legacy wallets as they will not be loaded.
+                // This will be properly communicated to the user during the loading process.
+                continue;
             } else {
                 chain.initError(error_string);
                 return false;
@@ -132,10 +136,15 @@ bool LoadWallets(WalletContext& context)
             bilingual_str error;
             std::vector<bilingual_str> warnings;
             std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
-            if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
-                continue;
+            if (!database) {
+                if (status == DatabaseStatus::FAILED_NOT_FOUND) continue;
+                if (status == DatabaseStatus::FAILED_LEGACY_DISABLED) {
+                    // Inform user that legacy wallet is not loaded and suggest upgrade options
+                    chain.initWarning(error);
+                    continue;
+                }
             }
-            chain.initMessage(_("Loading wallet…").translated);
+            chain.initMessage(_("Loading wallet…"));
             std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
@@ -159,25 +168,7 @@ void StartWallets(WalletContext& context)
         pwallet->postInitProcess();
     }
 
-    // Schedule periodic wallet flushes and tx rebroadcasts
-    if (context.args->GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
-        context.scheduler->scheduleEvery([&context] { MaybeCompactWalletDB(context); }, 500ms);
-    }
     context.scheduler->scheduleEvery([&context] { MaybeResendWalletTxs(context); }, 1min);
-}
-
-void FlushWallets(WalletContext& context)
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        pwallet->Flush();
-    }
-}
-
-void StopWallets(WalletContext& context)
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
-        pwallet->Close();
-    }
 }
 
 void UnloadWallets(WalletContext& context)

@@ -13,7 +13,7 @@
 #include <string>
 
 /** Translate string to current locale using Qt. */
-extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](const char* psz) {
+extern const TranslateFn G_TRANSLATION_FUN = [](const char* psz) {
     return QCoreApplication::translate("bitcoin-core", psz).toStdString();
 };
 

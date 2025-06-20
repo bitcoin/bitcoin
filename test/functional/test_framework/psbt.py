@@ -50,6 +50,9 @@ PSBT_IN_TAP_LEAF_SCRIPT = 0x15
 PSBT_IN_TAP_BIP32_DERIVATION = 0x16
 PSBT_IN_TAP_INTERNAL_KEY = 0x17
 PSBT_IN_TAP_MERKLE_ROOT = 0x18
+PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS = 0x1a
+PSBT_IN_MUSIG2_PUB_NONCE = 0x1b
+PSBT_IN_MUSIG2_PARTIAL_SIG = 0x1c
 PSBT_IN_PROPRIETARY = 0xfc
 
 # per-output types
@@ -61,6 +64,7 @@ PSBT_OUT_SCRIPT = 0x04
 PSBT_OUT_TAP_INTERNAL_KEY = 0x05
 PSBT_OUT_TAP_TREE = 0x06
 PSBT_OUT_TAP_BIP32_DERIVATION = 0x07
+PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS = 0x08
 PSBT_OUT_PROPRIETARY = 0xfc
 
 
@@ -88,6 +92,9 @@ class PSBTMap:
         for k,v in self.map.items():
             if isinstance(k, int) and 0 <= k and k <= 255:
                 k = bytes([k])
+            if isinstance(v, list):
+                assert all(type(elem) is bytes for elem in v)
+                v = b"".join(v)  # simply concatenate the byte-strings w/o size prefixes
             m += ser_compact_size(len(k)) + k
             m += ser_compact_size(len(v)) + v
         m += b"\x00"

@@ -1,6 +1,6 @@
 # OpenBSD Build Guide
 
-**Updated for OpenBSD [7.5](https://www.openbsd.org/75.html)**
+**Updated for OpenBSD [7.6](https://www.openbsd.org/76.html)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on OpenBSD.
 
@@ -26,43 +26,21 @@ git clone https://github.com/bitcoin/bitcoin.git
 #### Wallet Dependencies
 
 It is not necessary to build wallet functionality to run either `bitcoind` or `bitcoin-qt`.
+SQLite is required to build the wallet.
 
-###### Descriptor Wallet Support
-
-SQLite is required to support [descriptor wallets](descriptors.md).
 
 ``` bash
 pkg_add sqlite3
 ```
 
-###### Legacy Wallet Support
-BerkeleyDB is only required to support legacy wallets.
-
-It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
-from ports. However you can build it yourself, [using depends](/depends).
-
-Refer to [depends/README.md](/depends/README.md) for detailed instructions.
-
-```bash
-gmake -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_ZMQ=1 NO_USDT=1
-...
-to: /path/to/bitcoin/depends/*-unknown-openbsd*
-```
-
-Then set `BDB_PREFIX`:
-
-```bash
-export BDB_PREFIX="[path displayed above]"
-```
-
 #### GUI Dependencies
-###### Qt5
+###### Qt6
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
 
 ```bash
-pkg_add qtbase qttools
+pkg_add qt6-qtbase qt6-qttools
 ```
 
 ###### libqrencode
@@ -90,7 +68,7 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkg_add python  # Select the newest version of the package.
+pkg_add python py3-zmq  # Select the newest version of the python package if necessary.
 ```
 
 ## Building Bitcoin Core
@@ -100,20 +78,13 @@ pkg_add python  # Select the newest version of the package.
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
 ##### Descriptor Wallet and GUI:
-This enables descriptor wallet support and the GUI, assuming SQLite and Qt 5 are installed.
+This enables descriptor wallet support and the GUI, assuming SQLite and Qt 6 are installed.
 
 ```bash
-cmake -B build -DWITH_SQLITE=ON -DBUILD_GUI=ON
+cmake -B build -DBUILD_GUI=ON
 ```
 
 Run `cmake -B build -LH` to see the full list of available options.
-
-##### Descriptor & Legacy Wallet. No GUI:
-This enables support for both wallet types:
-
-```bash
-cmake -B build -DBerkeleyDB_INCLUDE_DIR:PATH="${BDB_PREFIX}/include" -DWITH_BDB=ON
-```
 
 ### 2. Compile
 

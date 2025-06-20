@@ -1551,11 +1551,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Bu sazlama gaýdyp barmak üçin tutuş blok zynjyryny gaýtadan ýükläp almak zerur.</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Maksimum maglumat binýadynyň keş göwrümi. Keş näçe uly boldugyça sinhronlaşdyrma şonça çalt bolmagyna goşant goşular, ondan soň peýdasy köplenç köp bildirmeýär. Keş göwrümini azaltmak ýadyň ulanylyşyny azaldar. Ulanylmaýan umumy ýat howuzy bu keş üçin paýlaşylýar.  </translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Skript tassyklama akymlarynyň sanyny belläň. Otrisatel sanlar ulgam üçin boş galdyryljak ýadrolaryň sanyna gabat gelýär.</translation>
@@ -1621,22 +1616,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Daşyndan gol çekijiniň skript ýoly</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Bitkoin müşderi portuny routerde awtomatik usulda aç. Bu diňe routeriňiz UPnP goldaýan bolsa we ol işjeň bolsa işleýär.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp;UPnP ulanyp porty aşyryň</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Bitkoin müşderi portuny routerde awtomatik usulda açýar. Bu diňe routeriňiz NAT-PMP goldaýan we ol işjeňleşdirilen bolsa işleýär. Daşarky router tötänleýin bolup biler.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">NA&amp;T-PMP ulanýan porty aşyryň</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>

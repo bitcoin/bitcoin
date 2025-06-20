@@ -4,8 +4,6 @@
 
 include_guard(GLOBAL)
 
-include(TryAppendCXXFlags)
-
 macro(normalize_string string)
   string(REGEX REPLACE " +" " " ${string} "${${string}}")
   string(STRIP "${${string}}" ${string})
@@ -107,26 +105,19 @@ function(remove_cxx_flag_from_all_configs flag)
 endfunction()
 
 function(replace_cxx_flag_in_config config old_flag new_flag)
-  string(TOUPPER "${config}" config_uppercase)
-  string(REGEX REPLACE "(^| )${old_flag}( |$)" "\\1${new_flag}\\2" new_flags "${CMAKE_CXX_FLAGS_${config_uppercase}}")
-  set(CMAKE_CXX_FLAGS_${config_uppercase} "${new_flags}" PARENT_SCOPE)
-  set(CMAKE_CXX_FLAGS_${config_uppercase} "${new_flags}"
-    CACHE STRING
-    "Flags used by the CXX compiler during ${config_uppercase} builds."
-    FORCE
-  )
+  string(TOUPPER "CMAKE_CXX_FLAGS_${config}" var_name)
+  if("${var_name}" IN_LIST precious_variables)
+    return()
+  endif()
+  string(REGEX REPLACE "(^| )${old_flag}( |$)" "\\1${new_flag}\\2" ${var_name} "${${var_name}}")
+  set(${var_name} "${${var_name}}" PARENT_SCOPE)
+  set_property(CACHE ${var_name} PROPERTY VALUE "${${var_name}}")
 endfunction()
 
 set_default_config(RelWithDebInfo)
 
-# Redefine/adjust per-configuration flags.
-target_compile_definitions(core_interface_debug INTERFACE
-  DEBUG
-  DEBUG_LOCKORDER
-  DEBUG_LOCKCONTENTION
-  RPC_DOC_CHECK
-  ABORT_ON_FAILED_ASSUME
-)
+include(TryAppendCXXFlags)
+
 # We leave assertions on.
 if(MSVC)
   remove_cxx_flag_from_all_configs(/DNDEBUG)

@@ -163,7 +163,7 @@ static inline std::string PathToString(const path& path)
 #ifdef WIN32
     return path.utf8string();
 #else
-    static_assert(std::is_same<path::string_type, std::string>::value, "PathToString not implemented on this platform");
+    static_assert(std::is_same_v<path::string_type, std::string>, "PathToString not implemented on this platform");
     return path.std::filesystem::path::string();
 #endif
 }
@@ -239,8 +239,6 @@ namespace fsbridge {
         void* hFile = (void*)-1; // INVALID_HANDLE_VALUE
 #endif
     };
-
-    std::string get_filesystem_error_message(const fs::filesystem_error& e);
 };
 
 // Disallow path operator<< formatting in tinyformat to avoid locale-dependent

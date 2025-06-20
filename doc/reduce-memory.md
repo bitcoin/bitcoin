@@ -16,7 +16,7 @@ The size of some in-memory caches can be reduced. As caches trade off memory usa
   - The minimum value for `-maxmempool` is 5.
   - A lower maximum mempool size means that transactions will be evicted sooner. This will affect any uses of `bitcoind` that process unconfirmed transactions.
 
-- Since `0.14.0`, unused memory allocated to the mempool (default: 300MB) is shared with the UTXO cache, so when trying to reduce memory usage you should limit the mempool, with the `-maxmempool` command line argument.
+- The unused memory allocated to the mempool (default: 300MB) is shared with the UTXO cache, so when trying to reduce memory usage you should limit the mempool, with the `-maxmempool` command line argument.
 
 - To disable most of the mempool functionality there is the `-blocksonly` option. This will reduce the default memory usage to 5MB and make the client opt out of receiving (and thus relaying) transactions, except from peers who have the `relay` permission set (e.g. whitelisted peers), and as part of blocks.
 
@@ -39,7 +39,7 @@ threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a
 32-bit system.
 
 - `-par=<n>` - the number of script verification threads, defaults to the number of cores in the system minus one.
-- `-rpcthreads=<n>` - the number of threads used for processing RPC requests, defaults to `4`.
+- `-rpcthreads=<n>` - the number of threads used for processing RPC requests, defaults to `16`.
 
 ## Linux specific
 

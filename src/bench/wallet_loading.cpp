@@ -4,7 +4,6 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
-#include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <consensus/amount.h>
 #include <outputtype.h>
 #include <primitives/transaction.h>
@@ -32,7 +31,7 @@ static void AddTx(CWallet& wallet)
     wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInactive{});
 }
 
-static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
+static void WalletLoadingDescriptors(benchmark::Bench& bench)
 {
     const auto test_setup = MakeNoLogFileContext<TestingSetup>();
 
@@ -42,10 +41,7 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
 
     // Setup the wallet
     // Loading the wallet will also create it
-    uint64_t create_flags = 0;
-    if (!legacy_wallet) {
-        create_flags = WALLET_FLAG_DESCRIPTORS;
-    }
+    uint64_t create_flags = WALLET_FLAG_DESCRIPTORS;
     auto database = CreateMockableWalletDatabase();
     auto wallet = TestLoadWallet(std::move(database), context, create_flags);
 
@@ -68,13 +64,5 @@ static void WalletLoading(benchmark::Bench& bench, bool legacy_wallet)
     });
 }
 
-#ifdef USE_BDB
-static void WalletLoadingLegacy(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/true); }
-BENCHMARK(WalletLoadingLegacy, benchmark::PriorityLevel::HIGH);
-#endif
-
-#ifdef USE_SQLITE
-static void WalletLoadingDescriptors(benchmark::Bench& bench) { WalletLoading(bench, /*legacy_wallet=*/false); }
 BENCHMARK(WalletLoadingDescriptors, benchmark::PriorityLevel::HIGH);
-#endif
 } // namespace wallet

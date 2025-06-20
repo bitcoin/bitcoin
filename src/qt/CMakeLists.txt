@@ -11,21 +11,35 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   string(APPEND CMAKE_OBJCXX_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
 endif()
 
-get_target_property(qt_lib_type Qt5::Core TYPE)
+get_target_property(qt_lib_type Qt6::Core TYPE)
 
 function(import_plugins target)
   if(qt_lib_type STREQUAL "STATIC_LIBRARY")
-    set(plugins Qt5::QMinimalIntegrationPlugin)
+    set(plugins Qt6::QMinimalIntegrationPlugin)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-      list(APPEND plugins Qt5::QXcbIntegrationPlugin)
+      list(APPEND plugins Qt6::QXcbIntegrationPlugin)
     elseif(WIN32)
-      list(APPEND plugins Qt5::QWindowsIntegrationPlugin Qt5::QWindowsVistaStylePlugin)
+      list(APPEND plugins Qt6::QWindowsIntegrationPlugin Qt6::QModernWindowsStylePlugin)
     elseif(APPLE)
-      list(APPEND plugins Qt5::QCocoaIntegrationPlugin Qt5::QMacStylePlugin)
+      list(APPEND plugins Qt6::QCocoaIntegrationPlugin Qt6::QMacStylePlugin)
     endif()
-    qt5_import_plugins(${target}
+    qt6_import_plugins(${target}
       INCLUDE ${plugins}
-      EXCLUDE_BY_TYPE imageformats iconengines
+      EXCLUDE_BY_TYPE
+        accessiblebridge
+        platforms
+        platforms_darwin
+        xcbglintegrations
+        platformthemes
+        platforminputcontexts
+        generic
+        iconengines
+        imageformats
+        egldeviceintegrations
+        styles
+        networkaccess
+        networkinformation
+        tls
     )
   endif()
 endfunction()
@@ -39,13 +53,6 @@ set(CMAKE_AUTOMOC_MOC_OPTIONS "-p${CMAKE_CURRENT_SOURCE_DIR}")
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOUIC_SEARCH_PATHS forms)
-
-# TODO: The file(GLOB ...) command should be replaced with an explicit
-# file list. Such a change must be synced with the corresponding change
-# to https://github.com/bitcoin-core/bitcoin-maintainer-tools/blob/main/update-translations.py
-file(GLOB ts_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} locale/*.ts)
-set_source_files_properties(${ts_files} PROPERTIES OUTPUT_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/locale)
-qt5_add_translation(qm_files ${ts_files})
 
 configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
 
@@ -128,7 +135,7 @@ set_property(SOURCE macnotificationhandler.mm
 )
 target_link_libraries(bitcoinqt
   PUBLIC
-    Qt5::Widgets
+    Qt6::Widgets
   PRIVATE
     core_interface
     bitcoin_cli
@@ -206,21 +213,42 @@ if(ENABLE_WALLET)
   target_link_libraries(bitcoinqt
     PRIVATE
       bitcoin_wallet
-      Qt5::Network
+      Qt6::Network
   )
 endif()
 
 if(WITH_DBUS)
-  target_link_libraries(bitcoinqt PRIVATE Qt5::DBus)
+  target_link_libraries(bitcoinqt PRIVATE Qt6::DBus)
 endif()
 
 if(qt_lib_type STREQUAL "STATIC_LIBRARY")
   # We want to define static plugins to link ourselves, thus preventing
   # automatic linking against a "sane" set of default static plugins.
-  qt5_import_plugins(bitcoinqt
-      EXCLUDE_BY_TYPE bearer iconengines imageformats platforms styles
+  qt6_import_plugins(bitcoinqt
+    EXCLUDE_BY_TYPE
+      accessiblebridge
+      platforms
+      platforms_darwin
+      xcbglintegrations
+      platformthemes
+      platforminputcontexts
+      generic
+      iconengines
+      imageformats
+      egldeviceintegrations
+      styles
+      networkaccess
+      networkinformation
+      tls
   )
 endif()
+
+file(GLOB ts_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} locale/*.ts)
+set_source_files_properties(${ts_files} PROPERTIES OUTPUT_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/locale)
+qt6_add_lrelease(bitcoinqt
+  TS_FILES ${ts_files}
+  OPTIONS -silent
+)
 
 add_executable(bitcoin-qt
   main.cpp
@@ -228,6 +256,7 @@ add_executable(bitcoin-qt
 )
 
 add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
+add_windows_application_manifest(bitcoin-qt)
 
 target_link_libraries(bitcoin-qt
   core_interface
@@ -236,12 +265,12 @@ target_link_libraries(bitcoin-qt
 )
 
 import_plugins(bitcoin-qt)
-set(installable_targets bitcoin-qt)
+install_binary_component(bitcoin-qt HAS_MANPAGE)
 if(WIN32)
   set_target_properties(bitcoin-qt PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
-if(WITH_MULTIPROCESS)
+if(ENABLE_IPC)
   add_executable(bitcoin-gui
     main.cpp
     ../init/bitcoin-gui.cpp
@@ -253,16 +282,11 @@ if(WITH_MULTIPROCESS)
     bitcoin_ipc
   )
   import_plugins(bitcoin-gui)
-  list(APPEND installable_targets bitcoin-gui)
+  install_binary_component(bitcoin-gui)
   if(WIN32)
     set_target_properties(bitcoin-gui PROPERTIES WIN32_EXECUTABLE TRUE)
   endif()
 endif()
-
-install(TARGETS ${installable_targets}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  COMPONENT GUI
-)
 
 if(BUILD_GUI_TESTS)
   add_subdirectory(test)
@@ -293,7 +317,13 @@ function(get_translatable_sources var)
           get_target_property(target_source_dir ${target} SOURCE_DIR)
           cmake_path(APPEND target_source_dir ${source} OUTPUT_VARIABLE source)
         endif()
-        list(APPEND result ${source})
+        get_property(is_generated
+          SOURCE  ${source} TARGET_DIRECTORY ${target}
+          PROPERTY GENERATED
+        )
+        if(NOT is_generated)
+          list(APPEND result ${source})
+        endif()
       endforeach()
     endif()
   endforeach()
@@ -320,8 +350,8 @@ else()
   file(GLOB ui_files ${CMAKE_CURRENT_SOURCE_DIR}/forms/*.ui)
   add_custom_target(translate
     COMMAND ${CMAKE_COMMAND} -E env XGETTEXT=${XGETTEXT_EXECUTABLE} COPYRIGHT_HOLDERS=${COPYRIGHT_HOLDERS} ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/share/qt/extract_strings_qt.py ${translatable_sources}
-    COMMAND Qt5::lupdate -no-obsolete -I ${PROJECT_SOURCE_DIR}/src -locations relative ${CMAKE_CURRENT_SOURCE_DIR}/bitcoinstrings.cpp ${ui_files} ${qt_translatable_sources} -ts ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.ts
-    COMMAND Qt5::lconvert -drop-translations -o ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.xlf -i ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.ts
+    COMMAND Qt6::lupdate -no-obsolete -I ${PROJECT_SOURCE_DIR}/src -locations relative ${CMAKE_CURRENT_SOURCE_DIR}/bitcoinstrings.cpp ${ui_files} ${qt_translatable_sources} -ts ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.ts
+    COMMAND Qt6::lconvert -drop-translations -o ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.xlf -i ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.ts
     COMMAND ${SED_EXECUTABLE} -i.old -e "s|source-language=\"en\" target-language=\"en\"|source-language=\"en\"|" -e "/<target xml:space=\"preserve\"><\\/target>/d" ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.xlf
     COMMAND ${CMAKE_COMMAND} -E rm ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.xlf.old
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src

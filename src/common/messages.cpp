@@ -116,6 +116,10 @@ bilingual_str PSBTErrorString(PSBTError err)
             return Untranslated("External signer failed to sign");
         case PSBTError::UNSUPPORTED:
             return Untranslated("Signer does not support PSBT");
+        case PSBTError::INCOMPLETE:
+            return Untranslated("Input needs additional signatures or other data");
+        case PSBTError::OK:
+            return Untranslated("No errors");
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);

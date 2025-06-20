@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -83,10 +83,8 @@ private:
     DataStream ssKey{};
     DataStream ssValue{};
 
-    size_t size_estimate{0};
-
-    void WriteImpl(Span<const std::byte> key, DataStream& ssValue);
-    void EraseImpl(Span<const std::byte> key);
+    void WriteImpl(std::span<const std::byte> key, DataStream& ssValue);
+    void EraseImpl(std::span<const std::byte> key);
 
 public:
     /**
@@ -117,7 +115,7 @@ public:
         ssKey.clear();
     }
 
-    size_t SizeEstimate() const { return size_estimate; }
+    size_t ApproximateSize() const;
 };
 
 class CDBIterator
@@ -129,9 +127,9 @@ private:
     const CDBWrapper &parent;
     const std::unique_ptr<IteratorImpl> m_impl_iter;
 
-    void SeekImpl(Span<const std::byte> key);
-    Span<const std::byte> GetKeyImpl() const;
-    Span<const std::byte> GetValueImpl() const;
+    void SeekImpl(std::span<const std::byte> key);
+    std::span<const std::byte> GetKeyImpl() const;
+    std::span<const std::byte> GetValueImpl() const;
 
 public:
 
@@ -206,9 +204,9 @@ private:
     //! whether or not the database resides in memory
     bool m_is_memory;
 
-    std::optional<std::string> ReadImpl(Span<const std::byte> key) const;
-    bool ExistsImpl(Span<const std::byte> key) const;
-    size_t EstimateSizeImpl(Span<const std::byte> key1, Span<const std::byte> key2) const;
+    std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
+    bool ExistsImpl(std::span<const std::byte> key) const;
+    size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
 public:

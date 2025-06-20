@@ -11,7 +11,7 @@ $ cmake --preset=libfuzzer
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
 # libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
 $ cmake --build build_fuzz
-$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz
+$ FUZZ=process_message build_fuzz/bin/fuzz
 # abort fuzzing using ctrl-c
 ```
 
@@ -19,7 +19,7 @@ One can use `--preset=libfuzzer-nosan` to do the same without common sanitizers 
 See [further](#run-without-sanitizers-for-increased-throughput) for more information.
 
 There is also a runner script to execute all fuzz targets. Refer to
-`./test/fuzz/test_runner.py --help` for more details.
+`./build_fuzz/test/fuzz/test_runner.py --help` for more details.
 
 ## Overview of Bitcoin Core fuzzing
 
@@ -35,7 +35,7 @@ If you specify a corpus directory then any new coverage increasing inputs will b
 
 ```sh
 $ mkdir -p process_message-seeded-from-thin-air/
-$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz process_message-seeded-from-thin-air/
+$ FUZZ=process_message build_fuzz/bin/fuzz process_message-seeded-from-thin-air/
 INFO: Seed: 840522292
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55e121ef9ab8, 0x55e121f613a6),
 INFO: Loaded 1 PC tables (424174 PCs): 424174 [0x55e121f613a8,0x55e1225da288),
@@ -79,7 +79,7 @@ of the test. Just make sure to use double-dash to distinguish them from the
 fuzzer's own arguments:
 
 ```sh
-$ FUZZ=address_deserialize_v2 build_fuzz/src/test/fuzz/fuzz -runs=1 fuzz_corpora/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
+$ FUZZ=address_deserialize_v2 build_fuzz/bin/fuzz -runs=1 fuzz_corpora/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
 ```
 
 ## Fuzzing corpora
@@ -89,8 +89,8 @@ The project's collection of seed corpora is found in the [`bitcoin-core/qa-asset
 To fuzz `process_message` using the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) seed corpus:
 
 ```sh
-$ git clone https://github.com/bitcoin-core/qa-assets
-$ FUZZ=process_message build_fuzz/src/test/fuzz/fuzz qa-assets/fuzz_corpora/process_message/
+$ git clone --depth=1 https://github.com/bitcoin-core/qa-assets
+$ FUZZ=process_message build_fuzz/bin/fuzz qa-assets/fuzz_corpora/process_message/
 INFO: Seed: 1346407872
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),
 INFO: Loaded 1 PC tables (424174 PCs): 424174 [0x55d8a906c3a8,0x55d8a96e5288),
@@ -100,6 +100,18 @@ INFO: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb
 #993    INITED cov: 7063 ft: 8236 corp: 25/3821b exec/s: 0 rss: 181Mb
 …
 ```
+
+## Using the MemorySanitizer (MSan)
+
+MSan [requires](https://clang.llvm.org/docs/MemorySanitizer.html#handling-external-code)
+that all linked code be instrumented. The exact steps to achieve this may vary
+but involve compiling `clang` from source, using the built `clang` to compile
+an instrumentalized libc++, then using it to build [Bitcoin Core dependencies
+from source](../depends/README.md) and finally the Bitcoin Core fuzz binary
+itself. One can use the MSan CI job as an example for how to perform these
+steps.
+
+Valgrind is an alternative to MSan that does not require building a custom libc++.
 
 ## Run without sanitizers for increased throughput
 
@@ -122,14 +134,52 @@ Patience is useful; even with improved throughput, libFuzzer may need days and
   more slowly with sanitizers enabled, but a crash should be reproducible very
   quickly from a crash case)
 - run the fuzzer with the case number appended to the seed corpus path:
-  `FUZZ=process_message build_fuzz/src/test/fuzz/fuzz
+  `FUZZ=process_message build_fuzz/bin/fuzz
   qa-assets/fuzz_corpora/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
+- If the file does not exist, make sure you are checking out the exact same commit id
+  for the qa-assets repo. If the file was found while running the fuzz engine in the CI,
+  you should be able to reproduce the crash locally  with the same (or a similar input)
+  within a few minutes. Alternatively, you can use the base64 encoded file from the CI log,
+  if it exists. e.g.
+  `echo "Nb6Fc/97AACAAAD/ewAAgAAAAIAAAACAAAAAoA==" |
+  base64 --decode > qa-assets/fuzz_corpora/process_message/1bc91feec9fc00b107d97dc225a9f2cdaa078eb6`
 
 ## Submit improved coverage
 
 If you find coverage increasing inputs when fuzzing you are highly encouraged to submit them for inclusion in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo.
 
 Every single pull request submitted against the Bitcoin Core repo is automatically tested against all inputs in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo. Contributing new coverage increasing inputs is an easy way to help make Bitcoin Core more robust.
+
+## Building and debugging fuzz tests
+
+There are 3 ways fuzz tests can be built:
+
+1. With `-DBUILD_FOR_FUZZING=ON` which forces on fuzz determinism (skipping
+   proof of work checks, disabling random number seeding, disabling clock time)
+   and causes `Assume()` checks to abort on failure.
+
+   This is the normal way to run fuzz tests and generate new inputs. Because
+   determinism is hardcoded on in this build, only the fuzz binary can be built
+   and all other binaries are disabled.
+
+2. With `-DBUILD_FUZZ_BINARY=ON -DCMAKE_BUILD_TYPE=Debug` which causes
+   `Assume()` checks to abort on failure, and enables fuzz determinism, but
+   makes it optional.
+
+   Determinism is turned on in the fuzz binary by default, but can be turned off
+   by setting the `FUZZ_NONDETERMINISM` environment variable to any value, which
+   may be useful for running fuzz tests with code that deterministic execution
+   would otherwise skip.
+
+   Since `BUILD_FUZZ_BINARY`, unlike `BUILD_FOR_FUZZING`, does not hardcode on
+   determinism, this allows non-fuzz binaries to coexist in the same build,
+   making it possible to reproduce fuzz test failures in a normal build.
+
+3. With `-DBUILD_FUZZ_BINARY=ON -DCMAKE_BUILD_TYPE=Release`. In this build, the
+   fuzz binary will build but refuse to run, because in release builds
+   determinism is forced off and `Assume()` checks do not abort, so running the
+   tests would not be useful. This build is only useful for ensuring fuzz tests
+   compile and link.
 
 ## macOS hints for libFuzzer
 
@@ -141,13 +191,16 @@ You may also need to take care of giving the correct path for `clang` and
 `clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
 `clang` does not come first in your path.
 
-Full configuration step that was tested on macOS with `brew` installed `llvm`:
+Using `lld` is required due to issues with Apple's `ld` and `LLVM`.
+
+Full configuration step for macOS:
 
 ```sh
+$ brew install llvm lld
 $ cmake --preset=libfuzzer \
    -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
    -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
-   -DAPPEND_LDFLAGS=-Wl,-no_warn_duplicate_libraries
+   -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
 ```
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
@@ -164,7 +217,7 @@ $ cd bitcoin/
 $ git clone https://github.com/AFLplusplus/AFLplusplus
 $ make -C AFLplusplus/ source-only
 # If afl-clang-lto is not available, see
-# https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
+# https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/fuzzing_in_depth.md#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
 $ cmake -B build_fuzz \
    -DCMAKE_C_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto" \
    -DCMAKE_CXX_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto++" \
@@ -172,9 +225,11 @@ $ cmake -B build_fuzz \
 $ cmake --build build_fuzz
 # For macOS you may need to ignore x86 compilation checks when running "cmake --build". If so,
 # try compiling using: AFL_NO_X86=1 cmake --build build_fuzz
+# Also, it might be required to run "afl-system-config" to adjust the shared
+# memory parameters.
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
-$ FUZZ=bech32 ./AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- build_fuzz/src/test/fuzz/fuzz
+$ FUZZ=bech32 ./AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- build_fuzz/bin/fuzz
 # You may have to change a few kernel parameters to test optimally - afl-fuzz
 # will print an error and suggestion if so.
 ```
@@ -201,7 +256,7 @@ $ cmake -B build_fuzz \
    -DSANITIZERS=address,undefined
 $ cmake --build build_fuzz
 $ mkdir -p inputs/
-$ FUZZ=process_message ./honggfuzz/honggfuzz -i inputs/ -- build_fuzz/src/test/fuzz/fuzz
+$ FUZZ=process_message ./honggfuzz/honggfuzz -i inputs/ -- build_fuzz/bin/fuzz
 ```
 
 Read the [Honggfuzz documentation](https://github.com/google/honggfuzz/blob/master/docs/USAGE.md) for more information.

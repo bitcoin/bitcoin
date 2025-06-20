@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
         assert(descs.size() == 1);
         auto& desc = descs.at(0);
         WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-        if (!wallet->AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
+        Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
@@ -94,7 +94,7 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
     return *Assert(w.GetNewDestination(output_type, ""));
 }
 
-MockableCursor::MockableCursor(const MockableData& records, bool pass, Span<const std::byte> prefix)
+MockableCursor::MockableCursor(const MockableData& records, bool pass, std::span<const std::byte> prefix)
 {
     m_pass = pass;
     std::tie(m_cursor, m_cursor_end) = records.equal_range(BytePrefix{prefix});
@@ -166,7 +166,7 @@ bool MockableBatch::HasKey(DataStream&& key)
     return m_records.count(key_data) > 0;
 }
 
-bool MockableBatch::ErasePrefix(Span<const std::byte> prefix)
+bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
 {
     if (!m_pass) {
         return false;
@@ -192,4 +192,24 @@ MockableDatabase& GetMockableDatabase(CWallet& wallet)
 {
     return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
 }
+
+wallet::DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
+{
+    keystore.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+
+    FlatSigningProvider keys;
+    std::string error;
+    auto parsed_descs = Parse(desc_str, keys, error, false);
+    Assert(success == (!parsed_descs.empty()));
+    if (!success) return nullptr;
+    auto& desc = parsed_descs.at(0);
+
+    const int64_t range_start = 0, range_end = 1, next_index = 0, timestamp = 1;
+
+    WalletDescriptor w_desc(std::move(desc), timestamp, range_start, range_end, next_index);
+
+    LOCK(keystore.cs_wallet);
+    auto spkm = Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
+    return &spkm.value().get();
+};
 } // namespace wallet

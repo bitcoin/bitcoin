@@ -26,7 +26,7 @@ constexpr std::array<ByteAsHex, 256> CreateByteToHexMap()
 
 } // namespace
 
-std::string HexStr(const Span<const uint8_t> s)
+std::string HexStr(const std::span<const uint8_t> s)
 {
     std::string rv(s.size() * 2, '\0');
     static constexpr auto byte_to_hex = CreateByteToHexMap();

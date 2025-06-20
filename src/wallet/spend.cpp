@@ -21,6 +21,7 @@
 #include <util/rbf.h>
 #include <util/trace.h>
 #include <util/translation.h>
+#include <util/transaction_identifier.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/receive.h>
@@ -328,10 +329,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
-    std::set<uint256> trusted_parents;
+    std::set<Txid> trusted_parents;
     for (const auto& entry : wallet.mapWallet)
     {
-        const uint256& txid = entry.first;
+        const Txid& txid = entry.first;
         const CWalletTx& wtx = entry.second;
 
         if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
@@ -391,7 +392,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             const CTxOut& output = wtx.tx->vout[i];
-            const COutPoint outpoint(Txid::FromUint256(txid), i);
+            const COutPoint outpoint(txid, i);
 
             if (output.nValue < params.min_amount || output.nValue > params.max_amount)
                 continue;
@@ -508,8 +509,6 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     std::map<CTxDestination, std::vector<COutput>> result;
 
     CCoinControl coin_control;
-    // Include watch-only for LegacyScriptPubKeyMan wallets without private keys
-    coin_control.fAllowWatchOnly = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     CoinFilterParams coins_params;
     coins_params.only_spendable = false;
     coins_params.skip_locked = false;
@@ -1091,7 +1090,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Get size of spending the change output
     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet, /*coin_control=*/nullptr);
     // If the wallet doesn't know how to sign change output, assume p2sh-p2wpkh
-    // as lower-bound to allow BnB to do it's thing
+    // as lower-bound to allow BnB to do its thing
     if (change_spend_size == -1) {
         coin_selection_params.change_spend_size = DUMMY_NESTED_P2WPKH_INPUT_SIZE;
     } else {
@@ -1138,7 +1137,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // This can only happen if feerate is 0, and requested destinations are value of 0 (e.g. OP_RETURN)
     // and no pre-selected inputs. This will result in 0-input transaction, which is consensus-invalid anyways
     if (selection_target == 0 && !coin_control.HasSelected()) {
-        return util::Error{_("Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input")};
+        return util::Error{_("Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input")};
     }
 
     // Fetch manually selected coins

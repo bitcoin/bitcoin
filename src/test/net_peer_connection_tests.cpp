@@ -155,6 +155,13 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
         BOOST_CHECK(connman->AlreadyConnectedPublic(node->addr));
     }
 
+    BOOST_TEST_MESSAGE("\nCheck that peers with the same addresses as connected peers but different ports are detected as connected.");
+    for (auto node : connman->TestNodes()) {
+        uint16_t changed_port = node->addr.GetPort() + 1;
+        CService address_with_changed_port{node->addr, changed_port};
+        BOOST_CHECK(connman->AlreadyConnectedPublic(CAddress{address_with_changed_port, NODE_NONE}));
+    }
+
     // Clean up
     for (auto node : connman->TestNodes()) {
         peerman->FinalizeNode(*node);

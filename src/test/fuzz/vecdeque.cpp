@@ -7,8 +7,8 @@
 #include <test/fuzz/util.h>
 #include <util/vecdeque.h>
 
+#include <cstdint>
 #include <deque>
-#include <stdint.h>
 
 namespace {
 
@@ -24,7 +24,7 @@ static constexpr size_t MAX_OPERATIONS{1024};
  * T must be constructible from a uint64_t seed, comparable to other T, copyable, and movable.
  */
 template<typename T, bool CheckNoneLeft>
-void TestType(Span<const uint8_t> buffer, uint64_t rng_tweak)
+void TestType(std::span<const uint8_t> buffer, uint64_t rng_tweak)
 {
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     // Local RNG, only used for the seeds to initialize T objects with.

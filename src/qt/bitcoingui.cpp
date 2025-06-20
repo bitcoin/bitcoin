@@ -398,15 +398,19 @@ void BitcoinGUI::createActions()
         connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
             m_open_wallet_menu->clear();
             for (const auto& [path, info] : m_wallet_controller->listWalletDir()) {
-                const auto& [loaded, _] = info;
+                const auto& [loaded, format] = info;
                 QString name = GUIUtil::WalletDisplayName(path);
                 // An single ampersand in the menu item's text sets a shortcut for this item.
                 // Single & are shown when && is in the string. So replace & with &&.
                 name.replace(QChar('&'), QString("&&"));
+                bool is_legacy = format == "bdb";
+                if (is_legacy) {
+                    name += " (needs migration)";
+                }
                 QAction* action = m_open_wallet_menu->addAction(name);
 
-                if (loaded) {
-                    // This wallet is already loaded
+                if (loaded || is_legacy) {
+                    // This wallet is already loaded or it is a legacy wallet
                     action->setEnabled(false);
                     continue;
                 }
@@ -1215,11 +1219,6 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
 void BitcoinGUI::createWallet()
 {
 #ifdef ENABLE_WALLET
-#ifndef USE_SQLITE
-    // Compiled without sqlite support (required for descriptor wallets)
-    message(tr("Error creating wallet"), tr("Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)"), CClientUIInterface::MSG_ERROR);
-    return;
-#endif // USE_SQLITE
     auto activity = new CreateWalletActivity(getWalletController(), this);
     connect(activity, &CreateWalletActivity::created, this, &BitcoinGUI::setCurrentWallet);
     connect(activity, &CreateWalletActivity::created, rpcConsole, &RPCConsole::setCurrentWallet);

@@ -47,11 +47,15 @@ BPF_PERF_OUTPUT(outbound_messages);
 
 int trace_inbound_message(struct pt_regs *ctx) {
     struct p2p_message msg = {};
+    void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL;
 
     bpf_usdt_readarg(1, ctx, &msg.peer_id);
-    bpf_usdt_readarg_p(2, ctx, &msg.peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
-    bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
+    bpf_usdt_readarg(2, ctx, &paddr);
+    bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
+    bpf_usdt_readarg(3, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
+    bpf_usdt_readarg(4, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
     inbound_messages.perf_submit(ctx, &msg, sizeof(msg));
@@ -60,11 +64,15 @@ int trace_inbound_message(struct pt_regs *ctx) {
 
 int trace_outbound_message(struct pt_regs *ctx) {
     struct p2p_message msg = {};
+    void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL;
 
     bpf_usdt_readarg(1, ctx, &msg.peer_id);
-    bpf_usdt_readarg_p(2, ctx, &msg.peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
-    bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
+    bpf_usdt_readarg(2, ctx, &paddr);
+    bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
+    bpf_usdt_readarg(3, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
+    bpf_usdt_readarg(4, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
     outbound_messages.perf_submit(ctx, &msg, sizeof(msg));

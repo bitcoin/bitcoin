@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2023 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,23 +22,12 @@
 #include <utility>
 
 #ifndef WIN32
-// for posix_fallocate, in cmake/introspection.cmake we check if it is present after this
-#ifdef __linux__
-
-#ifdef _POSIX_C_SOURCE
-#undef _POSIX_C_SOURCE
-#endif
-
-#define _POSIX_C_SOURCE 200112L
-
-#endif // __linux__
-
 #include <fcntl.h>
 #include <sys/resource.h>
 #include <unistd.h>
 #else
-#include <io.h> /* For _get_osfhandle, _chsize */
-#include <shlobj.h> /* For SHGetSpecialFolderPathW */
+#include <io.h>
+#include <shlobj.h>
 #endif // WIN32
 
 /** Mutex to protect dir_locks. */

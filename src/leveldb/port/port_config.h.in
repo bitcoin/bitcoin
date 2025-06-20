@@ -30,10 +30,4 @@
 #cmakedefine01 HAVE_SNAPPY
 #endif  // !defined(HAVE_SNAPPY)
 
-// Define to 1 if your processor stores words with the most significant byte
-// first (like Motorola and SPARC, unlike Intel and VAX).
-#if !defined(LEVELDB_IS_BIG_ENDIAN)
-#cmakedefine01 LEVELDB_IS_BIG_ENDIAN
-#endif  // !defined(LEVELDB_IS_BIG_ENDIAN)
-
 #endif  // STORAGE_LEVELDB_PORT_PORT_CONFIG_H_

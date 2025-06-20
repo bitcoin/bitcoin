@@ -92,7 +92,11 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
 
 QImage QRImageWidget::exportImage()
 {
-    return GUIUtil::GetImage(this);
+    if (!GUIUtil::HasPixmap(this)) {
+        return QImage();
+    }
+
+    return this->pixmap(Qt::ReturnByValue).toImage();
 }
 
 void QRImageWidget::mousePressEvent(QMouseEvent *event)

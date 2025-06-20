@@ -92,9 +92,7 @@ fi
 
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
-    SHELL_OPTS="CONFIG_SHELL=/bin/dash"
-    # shellcheck disable=SC1090
-    source "/opt/rh/gcc-toolset-${STREAM_GCC_V}/enable"
+    SHELL_OPTS="CONFIG_SHELL=/bin/ksh"  # Temporarily use ksh instead of dash, until https://bugzilla.redhat.com/show_bug.cgi?id=2335416 is fixed.
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
@@ -120,7 +118,7 @@ BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_SCRATCH_DIR/build-$HOST}
 mkdir -p "${BASE_BUILD_DIR}"
 cd "${BASE_BUILD_DIR}"
 
-BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -DENABLE_EXTERNAL_SIGNER=ON -DCMAKE_INSTALL_PREFIX=$BASE_OUTDIR"
+BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -DCMAKE_INSTALL_PREFIX=$BASE_OUTDIR"
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
   BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
@@ -133,10 +131,6 @@ bash -c "cmake --build . $MAKEJOBS --target all $GOAL" || ( echo "Build failure.
 bash -c "${PRINT_CCACHE_STATISTICS}"
 du -sh "${DEPENDS_DIR}"/*/
 du -sh "${PREVIOUS_RELEASES_DIR}"
-
-if [[ $HOST = *-mingw32 ]]; then
-  "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
-fi
 
 if [ -n "$USE_VALGRIND" ]; then
   "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
@@ -166,16 +160,18 @@ if [ "${RUN_TIDY}" = "true" ]; then
   cmake --build /tidy-build --target bitcoin-tidy-tests "$MAKEJOBS"
 
   set -eo pipefail
+  # Filter out:
+  # * qt qrc and moc generated files
+  jq 'map(select(.file | test("src/qt/.*_autogen/.*\\.cpp$") | not))' "${BASE_BUILD_DIR}/compile_commands.json" > tmp.json
+  mv tmp.json "${BASE_BUILD_DIR}/compile_commands.json"
+
   cd "${BASE_BUILD_DIR}/src/"
   if ! ( run-clang-tidy-"${TIDY_LLVM_V}" -quiet -load="/tidy-build/libbitcoin-tidy.so" "${MAKEJOBS}" | tee tmp.tidy-out.txt ); then
     grep -C5 "error: " tmp.tidy-out.txt
     echo "^^^ ⚠️ Failure generated from clang-tidy"
     false
   fi
-  # Filter out:
-  # * qt qrc and moc generated files
-  jq 'map(select(.file | test("src/qt/qrc_.*\\.cpp$|/moc_.*\\.cpp$") | not))' "${BASE_BUILD_DIR}/compile_commands.json" > tmp.json
-  mv tmp.json "${BASE_BUILD_DIR}/compile_commands.json"
+
   cd "${BASE_ROOT_DIR}"
   python3 "/include-what-you-use/iwyu_tool.py" \
            -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \

@@ -35,6 +35,7 @@ If you want to build the Windows installer using the `deploy` build target, you 
 
     apt install nsis
 
+
 Acquire the source in the usual way:
 
     git clone https://github.com/bitcoin/bitcoin.git
@@ -61,9 +62,17 @@ After building using the Windows subsystem it can be useful to copy the compiled
 executables to a directory on the Windows drive in the same directory structure
 as they appear in the release `.zip` archive. This can be done in the following
 way. This will install to `c:\workspace\bitcoin`, for example:
+```shell
+cmake --install build --prefix /mnt/c/workspace/bitcoin
+```
 
-    cmake --install build --prefix /mnt/c/workspace/bitcoin
+Note that due to the presence of debug information, the binaries may be very large,
+if you do not need the debug information, you can prune it during install by calling:
+```shell
+cmake --install build --prefix /mnt/c/workspace/bitcoin --strip
+```
 
 You can also create an installer using:
-
-    cmake --build build --target deploy
+```shell
+cmake --build build --target deploy
+```

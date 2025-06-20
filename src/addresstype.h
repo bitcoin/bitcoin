@@ -117,10 +117,13 @@ public:
     }
 };
 
+/** Witness program for Pay-to-Anchor output script type */
+static const std::vector<unsigned char> ANCHOR_BYTES{0x4e, 0x73};
+
 struct PayToAnchor : public WitnessUnknown
 {
-    PayToAnchor() : WitnessUnknown(1, {0x4e, 0x73}) {
-        Assume(CScript::IsPayToAnchor(1, {0x4e, 0x73}));
+    PayToAnchor() : WitnessUnknown(1, ANCHOR_BYTES) {
+        Assume(CScript::IsPayToAnchor(1, ANCHOR_BYTES));
     };
 };
 

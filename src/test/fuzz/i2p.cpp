@@ -34,7 +34,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
 
     const fs::path private_key_path = gArgs.GetDataDirNet() / "fuzzed_i2p_private_key";
     const CService addr{in6_addr(IN6ADDR_LOOPBACK_INIT), 7656};
-    const Proxy sam_proxy{addr, false};
+    const Proxy sam_proxy{addr, /*tor_stream_isolation=*/false};
     CThreadInterrupt interrupt;
 
     i2p::sam::Session session{private_key_path, sam_proxy, &interrupt};

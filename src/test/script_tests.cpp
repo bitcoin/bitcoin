@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,6 +30,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <secp256k1.h>
 #include <univalue.h>
 
 // Uncomment if you want to output updated JSON tests.
@@ -144,25 +145,17 @@ void static NegateSignatureS(std::vector<unsigned char>& vchSig) {
     r = std::vector<unsigned char>(vchSig.begin() + 4, vchSig.begin() + 4 + vchSig[3]);
     s = std::vector<unsigned char>(vchSig.begin() + 6 + vchSig[3], vchSig.begin() + 6 + vchSig[3] + vchSig[5 + vchSig[3]]);
 
-    // Really ugly to implement mod-n negation here, but it would be feature creep to expose such functionality from libsecp256k1.
-    static const unsigned char order[33] = {
-        0x00,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
-        0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
-        0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
-    };
     while (s.size() < 33) {
         s.insert(s.begin(), 0x00);
     }
-    int carry = 0;
-    for (int p = 32; p >= 1; p--) {
-        int n = (int)order[p] - s[p] - carry;
-        s[p] = (n + 256) & 0xFF;
-        carry = (n < 0);
-    }
-    assert(carry == 0);
-    if (s.size() > 1 && s[0] == 0 && s[1] < 0x80) {
+    assert(s[0] == 0);
+    // Perform mod-n negation of s by (ab)using libsecp256k1
+    // (note that this function is meant to be used for negating secret keys,
+    //  but it works for any non-zero scalar modulo the group order, i.e. also for s)
+    int ret = secp256k1_ec_seckey_negate(secp256k1_context_static, s.data() + 1);
+    assert(ret);
+
+    if (s[1] < 0x80) {
         s.erase(s.begin());
     }
 
@@ -258,7 +251,7 @@ public:
         CScript scriptPubKey = script;
         if (wm == WitnessMode::PKH) {
             uint160 hash;
-            CHash160().Write(Span{script}.subspan(1)).Finalize(hash);
+            CHash160().Write(std::span{script}.subspan(1)).Finalize(hash);
             script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(hash) << OP_EQUALVERIFY << OP_CHECKSIG;
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
         } else if (wm == WitnessMode::SH) {
@@ -916,16 +909,38 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     // amount (nValue) to use in the crediting tx
     UniValue tests = read_json(json_tests::script_tests);
 
+    const KeyData keys;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
         std::string strTest = test.write();
         CScriptWitness witness;
+        TaprootBuilder taprootBuilder;
         CAmount nValue = 0;
         unsigned int pos = 0;
         if (test.size() > 0 && test[pos].isArray()) {
             unsigned int i=0;
             for (i = 0; i < test[pos].size()-1; i++) {
-                witness.stack.push_back(ParseHex(test[pos][i].get_str()));
+                auto element = test[pos][i].get_str();
+                // We use #SCRIPT# to flag a non-hex script that we can read using ParseScript
+                // Taproot script must be third from the last element in witness stack
+                static const std::string SCRIPT_FLAG{"#SCRIPT#"};
+                if (element.starts_with(SCRIPT_FLAG)) {
+                    CScript script = ParseScript(element.substr(SCRIPT_FLAG.size()));
+                    witness.stack.push_back(ToByteVector(script));
+                } else if (element == "#CONTROLBLOCK#") {
+                    // Taproot script control block - second from the last element in witness stack
+                    // If #CONTROLBLOCK# we auto-generate the control block
+                    taprootBuilder.Add(/*depth=*/0, witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+                    taprootBuilder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
+                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
+                    witness.stack.push_back(*(controlblocks.begin()));
+                } else {
+                    const auto witness_value{TryParseHex<unsigned char>(element)};
+                    if (!witness_value.has_value()) {
+                        BOOST_ERROR("Bad witness in test: " << strTest << " witness is not hex: " << element);
+                    }
+                    witness.stack.push_back(witness_value.value());
+                }
             }
             nValue = AmountFromValue(test[pos][i]);
             pos++;
@@ -940,7 +955,14 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         std::string scriptSigString = test[pos++].get_str();
         CScript scriptSig = ParseScript(scriptSigString);
         std::string scriptPubKeyString = test[pos++].get_str();
-        CScript scriptPubKey = ParseScript(scriptPubKeyString);
+        CScript scriptPubKey;
+        // If requested, auto-generate the taproot output
+        if (scriptPubKeyString == "0x51 0x20 #TAPROOTOUTPUT#") {
+            BOOST_CHECK_MESSAGE(taprootBuilder.IsComplete(), "Failed to autogenerate Tapscript output key");
+            scriptPubKey = CScript() << OP_1 << ToByteVector(taprootBuilder.GetOutput());
+        } else {
+            scriptPubKey = ParseScript(scriptPubKeyString);
+        }
         unsigned int scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
@@ -1700,9 +1722,8 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
             BOOST_CHECK_EQUAL(HexStr(sighash), input["intermediary"]["sigHash"].get_str());
 
             // To verify the sigmsg, hash the expected sigmsg, and compare it with the (expected) sighash.
-            BOOST_CHECK_EQUAL(HexStr((HashWriter{HASHER_TAPSIGHASH} << Span{ParseHex(input["intermediary"]["sigMsg"].get_str())}).GetSHA256()), input["intermediary"]["sigHash"].get_str());
+            BOOST_CHECK_EQUAL(HexStr((HashWriter{HASHER_TAPSIGHASH} << std::span<const uint8_t>{ParseHex(input["intermediary"]["sigMsg"].get_str())}).GetSHA256()), input["intermediary"]["sigHash"].get_str());
         }
-
     }
 }
 
@@ -1720,8 +1741,8 @@ BOOST_AUTO_TEST_CASE(compute_tapleaf)
     constexpr uint256 tlc0{"edbc10c272a1215dcdcc11d605b9027b5ad6ed97cd45521203f136767b5b9c06"};
     constexpr uint256 tlc2{"8b5c4f90ae6bf76e259dbef5d8a59df06359c391b59263741b25eca76451b27a"};
 
-    BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc0, Span(script)), tlc0);
-    BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, Span(script)), tlc2);
+    BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc0, std::span(script)), tlc0);
+    BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, std::span(script)), tlc2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

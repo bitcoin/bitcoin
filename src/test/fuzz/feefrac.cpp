@@ -2,54 +2,48 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <arith_uint256.h>
+#include <policy/feerate.h>
 #include <util/feefrac.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
 #include <compare>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 
 namespace {
 
-/** Compute a * b, represented in 4x32 bits, highest limb first. */
-std::array<uint32_t, 4> Mul128(uint64_t a, uint64_t b)
+/** The maximum absolute value of an int64_t, as an arith_uint256 (2^63). */
+const auto MAX_ABS_INT64 = arith_uint256{1} << 63;
+
+/** Construct an arith_uint256 whose value equals abs(x). */
+arith_uint256 Abs256(int64_t x)
 {
-    std::array<uint32_t, 4> ret{0, 0, 0, 0};
-
-    /** Perform ret += v << (32 * pos), at 128-bit precision. */
-    auto add_fn = [&](uint64_t v, int pos) {
-        uint64_t accum{0};
-        for (int i = 0; i + pos < 4; ++i) {
-            // Add current value at limb pos in ret.
-            accum += ret[3 - pos - i];
-            // Add low or high half of v.
-            if (i == 0) accum += v & 0xffffffff;
-            if (i == 1) accum += v >> 32;
-            // Store lower half of result in limb pos in ret.
-            ret[3 - pos - i] = accum & 0xffffffff;
-            // Leave carry in accum.
-            accum >>= 32;
-        }
-        // Make sure no overflow.
-        assert(accum == 0);
-    };
-
-    // Multiply the 4 individual limbs (schoolbook multiply, with base 2^32).
-    add_fn((a & 0xffffffff) * (b & 0xffffffff), 0);
-    add_fn((a >> 32) * (b & 0xffffffff), 1);
-    add_fn((a & 0xffffffff) * (b >> 32), 1);
-    add_fn((a >> 32) * (b >> 32), 2);
-    return ret;
+    if (x >= 0) {
+        // For positive numbers, pass through the value.
+        return arith_uint256{static_cast<uint64_t>(x)};
+    } else if (x > std::numeric_limits<int64_t>::min()) {
+        // For negative numbers, negate first.
+        return arith_uint256{static_cast<uint64_t>(-x)};
+    } else {
+        // Special case for x == -2^63 (for which -x results in integer overflow).
+        return MAX_ABS_INT64;
+    }
 }
 
-/* comparison helper for std::array */
-std::strong_ordering compare_arrays(const std::array<uint32_t, 4>& a, const std::array<uint32_t, 4>& b) {
-    for (size_t i = 0; i < a.size(); ++i) {
-        if (a[i] != b[i]) return a[i] <=> b[i];
+/** Construct an arith_uint256 whose value equals abs(x), for 96-bit x. */
+arith_uint256 Abs256(std::pair<int64_t, uint32_t> x)
+{
+    if (x.first >= 0) {
+        // x.first and x.second are both non-negative; sum their absolute values.
+        return (Abs256(x.first) << 32) + Abs256(x.second);
+    } else {
+        // x.first is negative and x.second is non-negative; subtract the absolute values.
+        return (Abs256(x.first) << 32) - Abs256(x.second);
     }
-    return std::strong_ordering::equal;
 }
 
 std::strong_ordering MulCompare(int64_t a1, int64_t a2, int64_t b1, int64_t b2)
@@ -59,23 +53,14 @@ std::strong_ordering MulCompare(int64_t a1, int64_t a2, int64_t b1, int64_t b2)
     int sign_b = (b1 == 0 ? 0 : b1 < 0 ? -1 : 1) * (b2 == 0 ? 0 : b2 < 0 ? -1 : 1);
     if (sign_a != sign_b) return sign_a <=> sign_b;
 
-    // Compute absolute values.
-    uint64_t abs_a1 = static_cast<uint64_t>(a1), abs_a2 = static_cast<uint64_t>(a2);
-    uint64_t abs_b1 = static_cast<uint64_t>(b1), abs_b2 = static_cast<uint64_t>(b2);
-    // Use (~x + 1) instead of the equivalent (-x) to silence the linter; mod 2^64 behavior is
-    // intentional here.
-    if (a1 < 0) abs_a1 = ~abs_a1 + 1;
-    if (a2 < 0) abs_a2 = ~abs_a2 + 1;
-    if (b1 < 0) abs_b1 = ~abs_b1 + 1;
-    if (b2 < 0) abs_b2 = ~abs_b2 + 1;
+    // Compute absolute values of products.
+    auto mul_abs_a = Abs256(a1) * Abs256(a2), mul_abs_b = Abs256(b1) * Abs256(b2);
 
     // Compute products of absolute values.
-    auto mul_abs_a = Mul128(abs_a1, abs_a2);
-    auto mul_abs_b = Mul128(abs_b1, abs_b2);
     if (sign_a < 0) {
-        return compare_arrays(mul_abs_b, mul_abs_a);
+        return mul_abs_b <=> mul_abs_a;
     } else {
-        return compare_arrays(mul_abs_a, mul_abs_b);
+        return mul_abs_a <=> mul_abs_b;
     }
 }
 
@@ -120,4 +105,129 @@ FUZZ_TARGET(feefrac)
     assert((fr1 >= fr2) == std::is_gteq(cmp_total));
     assert((fr1 == fr2) == std::is_eq(cmp_total));
     assert((fr1 != fr2) == std::is_neq(cmp_total));
+}
+
+FUZZ_TARGET(feefrac_div_fallback)
+{
+    // Verify the behavior of FeeFrac::DivFallback over all possible inputs.
+
+    // Construct a 96-bit signed value num, a positive 31-bit value den, and rounding mode.
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+    auto num_high = provider.ConsumeIntegral<int64_t>();
+    auto num_low = provider.ConsumeIntegral<uint32_t>();
+    std::pair<int64_t, uint32_t> num{num_high, num_low};
+    auto den = provider.ConsumeIntegralInRange<int32_t>(1, std::numeric_limits<int32_t>::max());
+    auto round_down = provider.ConsumeBool();
+
+    // Predict the sign of the actual result.
+    bool is_negative = num_high < 0;
+    // Evaluate absolute value using arith_uint256. If the actual result is negative and we are
+    // rounding down, or positive and we are rounding up, the absolute value of the quotient is
+    // the rounded-up quotient of the absolute values.
+    auto num_abs = Abs256(num);
+    auto den_abs = Abs256(den);
+    auto quot_abs = (is_negative == round_down) ?
+        (num_abs + den_abs - 1) / den_abs :
+        num_abs / den_abs;
+
+    // If the result is not representable by an int64_t, bail out.
+    if ((is_negative && quot_abs > MAX_ABS_INT64) || (!is_negative && quot_abs >= MAX_ABS_INT64)) {
+        return;
+    }
+
+    // Verify the behavior of FeeFrac::DivFallback.
+    auto res = FeeFrac::DivFallback(num, den, round_down);
+    assert(res == 0 || (res < 0) == is_negative);
+    assert(Abs256(res) == quot_abs);
+
+    // Compare approximately with floating-point.
+    long double expect = round_down ? std::floor(num_high * 4294967296.0L + num_low) / den
+                                    : std::ceil(num_high * 4294967296.0L + num_low) / den;
+    // Expect to be accurate within 50 bits of precision, +- 1 sat.
+    if (expect == 0.0L) {
+        assert(res >= -1 && res <= 1);
+    } else if (expect > 0.0L) {
+        assert(res >= expect * 0.999999999999999L - 1.0L);
+        assert(res <= expect * 1.000000000000001L + 1.0L);
+    } else {
+        assert(res >= expect * 1.000000000000001L - 1.0L);
+        assert(res <= expect * 0.999999999999999L + 1.0L);
+    }
+}
+
+FUZZ_TARGET(feefrac_mul_div)
+{
+    // Verify the behavior of:
+    // - The combination of FeeFrac::Mul + FeeFrac::Div.
+    // - The combination of FeeFrac::MulFallback + FeeFrac::DivFallback.
+    // - FeeFrac::Evaluate.
+
+    // Construct a 32-bit signed multiplicand, a 64-bit signed multiplicand, a positive 31-bit
+    // divisor, and a rounding mode.
+    FuzzedDataProvider provider(buffer.data(), buffer.size());
+    auto mul32 = provider.ConsumeIntegral<int32_t>();
+    auto mul64 = provider.ConsumeIntegral<int64_t>();
+    auto div = provider.ConsumeIntegralInRange<int32_t>(1, std::numeric_limits<int32_t>::max());
+    auto round_down = provider.ConsumeBool();
+
+    // Predict the sign of the overall result.
+    bool is_negative = ((mul32 < 0) && (mul64 > 0)) || ((mul32 > 0) && (mul64 < 0));
+    // Evaluate absolute value using arith_uint256. If the actual result is negative and we are
+    // rounding down or positive and we rounding up, the absolute value of the quotient is the
+    // rounded-up quotient of the absolute values.
+    auto prod_abs = Abs256(mul32) * Abs256(mul64);
+    auto div_abs = Abs256(div);
+    auto quot_abs = (is_negative == round_down) ?
+        (prod_abs + div_abs - 1) / div_abs :
+        prod_abs / div_abs;
+
+    // If the result is not representable by an int64_t, bail out.
+    if ((is_negative && quot_abs > MAX_ABS_INT64) || (!is_negative && quot_abs >= MAX_ABS_INT64)) {
+        // If 0 <= mul32 <= div, then the result is guaranteed to be representable. In the context
+        // of the Evaluate{Down,Up} calls below, this corresponds to 0 <= at_size <= feefrac.size.
+        assert(mul32 < 0 || mul32 > div);
+        return;
+    }
+
+    // Verify the behavior of FeeFrac::Mul + FeeFrac::Div.
+    auto res = FeeFrac::Div(FeeFrac::Mul(mul64, mul32), div, round_down);
+    assert(res == 0 || (res < 0) == is_negative);
+    assert(Abs256(res) == quot_abs);
+
+    // Verify the behavior of FeeFrac::MulFallback + FeeFrac::DivFallback.
+    auto res_fallback = FeeFrac::DivFallback(FeeFrac::MulFallback(mul64, mul32), div, round_down);
+    assert(res == res_fallback);
+
+    // Compare approximately with floating-point.
+    long double expect = round_down ? std::floor(static_cast<long double>(mul32) * mul64 / div)
+                                    : std::ceil(static_cast<long double>(mul32) * mul64 / div);
+    // Expect to be accurate within 50 bits of precision, +- 1 sat.
+    if (expect == 0.0L) {
+        assert(res >= -1 && res <= 1);
+    } else if (expect > 0.0L) {
+        assert(res >= expect * 0.999999999999999L - 1.0L);
+        assert(res <= expect * 1.000000000000001L + 1.0L);
+    } else {
+        assert(res >= expect * 1.000000000000001L - 1.0L);
+        assert(res <= expect * 0.999999999999999L + 1.0L);
+    }
+
+    // Verify the behavior of FeeFrac::Evaluate{Down,Up}.
+    if (mul32 >= 0) {
+        auto res_fee = round_down ?
+            FeeFrac{mul64, div}.EvaluateFeeDown(mul32) :
+            FeeFrac{mul64, div}.EvaluateFeeUp(mul32);
+        assert(res == res_fee);
+
+        // Compare approximately with CFeeRate.
+        if (mul64 < std::numeric_limits<int64_t>::max() / 1000 &&
+            mul64 > std::numeric_limits<int64_t>::min() / 1000 &&
+            quot_abs < arith_uint256{std::numeric_limits<int64_t>::max() / 1000}) {
+            CFeeRate feerate(mul64, (uint32_t)div);
+            CAmount feerate_fee{feerate.GetFee(mul32)};
+            auto allowed_gap = static_cast<int64_t>(mul32 / 1000 + 3 + round_down);
+            assert(feerate_fee - res_fee >= -allowed_gap);
+            assert(feerate_fee - res_fee <= allowed_gap);
+        }
+    }
 }

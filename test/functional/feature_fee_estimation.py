@@ -14,6 +14,7 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
@@ -60,8 +61,7 @@ def small_txpuzzle_randfee(
     tx.vout[0].nValue = int((total_in - amount - fee) * COIN)
     tx.vout.append(deepcopy(tx.vout[0]))
     tx.vout[1].nValue = int(amount * COIN)
-    tx.rehash()
-    txid = tx.hash
+    txid = tx.txid_hex
     tx_hex = tx.serialize().hex()
 
     batch_reqs.append(from_node.sendrawtransaction.get_request(hexstring=tx_hex, maxfeerate=0))
@@ -363,7 +363,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
         fee_dat_current_content = open(fee_dat, "rb").read()
-        assert fee_dat_current_content != fee_dat_initial_content
+        assert_not_equal(fee_dat_current_content, fee_dat_initial_content)
 
         fee_dat_initial_content = fee_dat_current_content
 
@@ -371,7 +371,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 5, sync_fun=self.no_op)
         self.restart_node(0)
         fee_dat_current_content = open(fee_dat, "rb").read()
-        assert fee_dat_current_content != fee_dat_initial_content
+        assert_not_equal(fee_dat_current_content, fee_dat_initial_content)
 
 
     def test_acceptstalefeeestimates_option(self):

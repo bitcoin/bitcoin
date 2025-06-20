@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">ایڈریس یا لیبل میں ترمیم کرنے کے لیے رائیٹ کلک کریں</translation>
+        <translation type="unfinished">ایڈریس یا لیبل میں ترمیم کرنے کے لیے دائیں کلک کریں</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -551,8 +551,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>لین دین کی سرگزشت کے %n بلاک پر کارروائی کی گئی۔</numerusform>
+            <numerusform>لین دین کی سرگزشت کے %n بلاک پر کارروائی کی گئی۔</numerusform>
         </translation>
     </message>
     <message>
@@ -709,8 +709,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>بٹ کوائن نیٹ ورک سے %n فعال کنکشن۔</numerusform>
+            <numerusform>%n active connection(s) to Bitcoin network.</numerusform>
         </translation>
     </message>
     <message>
@@ -732,6 +732,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">نیٹ ورک کی سرگرمی کو فعال کریں۔</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">والیٹ بنانے میں خرابی</translation>
     </message>
     <message>
         <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
@@ -973,6 +977,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">دستخط کنندگان کی فہرست نہیں بن سکتی</translation>
     </message>
     </context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">اپنا والٹ لوڈ کریں </translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">اپکا والٹ لوڈ ہورہا ہے </translation>
+    </message>
+</context>
 <context>
     <name>MigrateWalletActivity</name>
     <message>

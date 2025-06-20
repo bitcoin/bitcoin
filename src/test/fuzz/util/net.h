@@ -157,6 +157,16 @@ class FuzzedSock : public Sock
      */
     const bool m_selectable;
 
+    /**
+     * Used to mock the steady clock in methods waiting for a given duration.
+     */
+    mutable std::chrono::milliseconds m_time;
+
+    /**
+     * Set the value of the mocked steady clock such as that many ms have passed.
+     */
+    void ElapseTime(std::chrono::milliseconds duration) const;
+
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
 

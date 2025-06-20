@@ -33,3 +33,5 @@ void assertion_fail(std::string_view file, int line, std::string_view func, std:
     fwrite(str.data(), 1, str.size(), stderr);
     std::abort();
 }
+
+std::atomic<bool> g_enable_dynamic_fuzz_determinism{false};

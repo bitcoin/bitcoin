@@ -1,0 +1,21 @@
+Avoid defining QT_NEEDS_QMAIN macro
+
+Qt's QT_NEEDS_QMAIN macro renames our main() function to qMain(),
+which breaks our assumptions regarding exported symbols. In particular,
+the CONTROL_FLOW security check fails for Windows builds in Guix.
+
+The QT_NEEDS_QMAIN macro is required for linking to the Qt DLLs only,
+so we can safely disable it.
+
+
+--- a/qtbase/src/entrypoint/CMakeLists.txt
++++ b/qtbase/src/entrypoint/CMakeLists.txt
+@@ -104,8 +104,6 @@ if(WIN32)
+             APPEND PROPERTY INTERFACE_QT_MODULE_LDFLAGS "-lmingw32"
+         )
+ 
+-        target_compile_definitions(EntryPointPrivate INTERFACE QT_NEEDS_QMAIN)
+-        qt_internal_extend_target(EntryPointImplementation DEFINES QT_NEEDS_QMAIN)
+     endif()
+ 
+     qt_internal_add_sync_header_dependencies(EntryPointImplementation Core)

@@ -676,14 +676,6 @@
         <translation type="unfinished">&amp;Tērēt neapstiprinātu atlikumu</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Uz rūtera automātiski atvērt Bitcoin klienta portu. Tas strādā tikai tad, ja rūteris atbalsta UPnP un tas ir ieslēgts.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Kartēt portu, izmantojot &amp;UPnP</translation>
-    </message>
-    <message>
         <source>Proxy &amp;IP:</source>
         <translation type="unfinished">Starpniekservera &amp;IP:</translation>
     </message>

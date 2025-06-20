@@ -6,12 +6,13 @@ The package "mylib" will be used here as an example
 General tips:
 - mylib_foo is written as $(package)_foo in order to make recipes more similar.
 - Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
-  those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
+  those not in `ALLOWED_LIBRARIES` in `contrib/guix/symbol-check.py`) don't
   need to be shared and should be built statically whenever possible. See
   [below](#secondary-dependencies) for more details.
 
 ## Identifiers
-Each package is required to define at least these variables:
+If package does not define a `$(package)_local_dir` variable, it is required to
+define these variables:
 
     $(package)_version:
     Version of the upstream library or program. If there is no version, a
@@ -27,6 +28,9 @@ Each package is required to define at least these variables:
 
     $(package)_sha256_hash:
     The sha256 hash of the upstream file
+
+If a package does define a `$(package)_local_dir` variable, the above variables
+are not required and will be ignored.
 
 These variables are optional:
 
@@ -48,6 +52,18 @@ These variables are optional:
     Any extra files that will be fetched via $(package)_fetch_cmds. These are
     specified so that they can be fetched and verified via 'make download'.
 
+## Local packages
+
+If a package defines a `$(package)_local_dir` variable, the specified directory
+will be treated as a download source, and a tarball of its contents will be
+saved to `sources/`. A hash of the tarball will also become part of the package
+build id, so if the directory contents change, the package and everything
+depending on it will be rebuilt. For efficiency, the tarball is cached once it
+has been created, but if the local directory is touched, it will be rebuilt.
+
+Local packages can be useful for using git submodules or subtrees to manage
+package sources, or for testing local changes that are not available to
+download from an external source.
 
 ## Build Variables:
 After defining the main identifiers, build variables may be added or customized
@@ -168,7 +184,7 @@ the Autotools `--with-pic` flag, or `CMAKE_POSITION_INDEPENDENT_CODE` with CMake
 ## Secondary dependencies:
 
 Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
-those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
+those not in `ALLOWED_LIBRARIES` in `contrib/guix/symbol-check.py`) don't
 need to be shared and should be built statically whenever possible. This
 improves general build reliability as illustrated by the following example:
 

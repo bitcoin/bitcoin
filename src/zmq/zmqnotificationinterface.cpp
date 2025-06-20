@@ -40,7 +40,7 @@ std::list<const CZMQAbstractNotifier*> CZMQNotificationInterface::GetActiveNotif
     return result;
 }
 
-std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std::function<bool(std::vector<uint8_t>&, const CBlockIndex&)> get_block_by_index)
+std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index)
 {
     std::map<std::string, CZMQNotifierFactory> factories;
     factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
@@ -58,7 +58,7 @@ std::unique_ptr<CZMQNotificationInterface> CZMQNotificationInterface::Create(std
         const auto& factory = entry.second;
         for (std::string& address : gArgs.GetArgs(arg)) {
             // libzmq uses prefix "ipc://" for UNIX domain sockets
-            if (address.substr(0, ADDR_PREFIX_UNIX.length()) == ADDR_PREFIX_UNIX) {
+            if (address.starts_with(ADDR_PREFIX_UNIX)) {
                 address.replace(0, ADDR_PREFIX_UNIX.length(), ADDR_PREFIX_IPC);
             }
 

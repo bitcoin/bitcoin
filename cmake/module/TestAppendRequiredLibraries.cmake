@@ -25,18 +25,20 @@ function(test_append_socket_library target)
     }
   ")
 
-  include(CheckSourceCompilesAndLinks)
-  check_cxx_source_links("${check_socket_source}" IFADDR_LINKS_WITHOUT_LIBSOCKET)
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles("${check_socket_source}" IFADDR_LINKS_WITHOUT_LIBSOCKET)
   if(NOT IFADDR_LINKS_WITHOUT_LIBSOCKET)
-    check_cxx_source_links_with_libs(socket "${check_socket_source}" IFADDR_NEEDS_LINK_TO_LIBSOCKET)
+    include(CheckSourceCompilesWithFlags)
+    check_cxx_source_compiles_with_flags("${check_socket_source}" IFADDR_NEEDS_LINK_TO_LIBSOCKET
+      LINK_LIBRARIES socket
+    )
     if(IFADDR_NEEDS_LINK_TO_LIBSOCKET)
       target_link_libraries(${target} INTERFACE socket)
     else()
       message(FATAL_ERROR "Cannot figure out how to use getifaddrs/freeifaddrs.")
     endif()
   endif()
-  set(HAVE_DECL_GETIFADDRS TRUE PARENT_SCOPE)
-  set(HAVE_DECL_FREEIFADDRS TRUE PARENT_SCOPE)
+  set(HAVE_IFADDRS TRUE PARENT_SCOPE)
 endfunction()
 
 # Clang, when building for 32-bit,
@@ -77,16 +79,17 @@ function(test_append_atomic_library target)
     }
   ")
 
-  include(CheckSourceCompilesAndLinks)
-  check_cxx_source_links("${check_atomic_source}" STD_ATOMIC_LINKS_WITHOUT_LIBATOMIC)
-  if(STD_ATOMIC_LINKS_WITHOUT_LIBATOMIC)
-    return()
-  endif()
-
-  check_cxx_source_links_with_libs(atomic "${check_atomic_source}" STD_ATOMIC_NEEDS_LINK_TO_LIBATOMIC)
-  if(STD_ATOMIC_NEEDS_LINK_TO_LIBATOMIC)
-    target_link_libraries(${target} INTERFACE atomic)
-  else()
-    message(FATAL_ERROR "Cannot figure out how to use std::atomic.")
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles("${check_atomic_source}" STD_ATOMIC_LINKS_WITHOUT_LIBATOMIC)
+  if(NOT STD_ATOMIC_LINKS_WITHOUT_LIBATOMIC)
+    include(CheckSourceCompilesWithFlags)
+    check_cxx_source_compiles_with_flags("${check_atomic_source}" STD_ATOMIC_NEEDS_LINK_TO_LIBATOMIC
+      LINK_LIBRARIES atomic
+    )
+    if(STD_ATOMIC_NEEDS_LINK_TO_LIBATOMIC)
+      target_link_libraries(${target} INTERFACE atomic)
+    else()
+      message(FATAL_ERROR "Cannot figure out how to use std::atomic.")
+    endif()
   endif()
 endfunction()

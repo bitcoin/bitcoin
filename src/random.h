@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -114,7 +114,7 @@ void RandAddEvent(const uint32_t event_info) noexcept;
  *
  * Thread-safe.
  */
-void GetRandBytes(Span<unsigned char> bytes) noexcept;
+void GetRandBytes(std::span<unsigned char> bytes) noexcept;
 
 /**
  * Gather entropy from various sources, feed it into the internal PRNG, and
@@ -126,7 +126,7 @@ void GetRandBytes(Span<unsigned char> bytes) noexcept;
  *
  * Thread-safe.
  */
-void GetStrongRandBytes(Span<unsigned char> bytes) noexcept;
+void GetStrongRandBytes(std::span<unsigned char> bytes) noexcept;
 
 
 /* ============================= RANDOM NUMBER GENERATION CLASSES =============================
@@ -144,7 +144,7 @@ class RandomMixin;
 
 /** A concept for RandomMixin-based random number generators. */
 template<typename T>
-concept RandomNumberGenerator = requires(T& rng, Span<std::byte> s) {
+concept RandomNumberGenerator = requires(T& rng, std::span<std::byte> s) {
     // A random number generator must provide rand64().
     { rng.rand64() } noexcept -> std::same_as<uint64_t>;
     // A random number generator must derive from RandomMixin, which adds other rand* functions.
@@ -263,17 +263,17 @@ public:
         }
     }
 
-    /** Fill a Span with random bytes. */
-    void fillrand(Span<std::byte> span) noexcept
+    /** Fill a span with random bytes. */
+    void fillrand(std::span<std::byte> span) noexcept
     {
         while (span.size() >= 8) {
             uint64_t gen = Impl().rand64();
-            WriteLE64(UCharCast(span.data()), gen);
+            WriteLE64(span.data(), gen);
             span = span.subspan(8);
         }
         if (span.size() >= 4) {
             uint32_t gen = Impl().rand32();
-            WriteLE32(UCharCast(span.data()), gen);
+            WriteLE32(span.data(), gen);
             span = span.subspan(4);
         }
         while (span.size()) {
@@ -334,7 +334,7 @@ public:
 
     /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
     template <StdChronoDuration Dur>
-    Dur randrange(typename std::common_type_t<Dur> range) noexcept
+    Dur randrange(std::common_type_t<Dur> range) noexcept
     // Having the compiler infer the template argument from the function argument
     // is dangerous, because the desired return value generally has a different
     // type than the function argument. So std::common_type is used to force the
@@ -397,11 +397,11 @@ public:
         if (requires_seed) RandomSeed();
         std::array<std::byte, 8> buf;
         rng.Keystream(buf);
-        return ReadLE64(UCharCast(buf.data()));
+        return ReadLE64(buf.data());
     }
 
-    /** Fill a byte Span with random bytes. This overrides the RandomMixin version. */
-    void fillrand(Span<std::byte> output) noexcept;
+    /** Fill a byte span with random bytes. This overrides the RandomMixin version. */
+    void fillrand(std::span<std::byte> output) noexcept;
 };
 
 /** xoroshiro128++ PRNG. Extremely fast, not appropriate for cryptographic purposes.

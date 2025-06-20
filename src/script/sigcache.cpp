@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,7 +42,7 @@ void SignatureCache::ComputeEntryECDSA(uint256& entry, const uint256& hash, cons
     hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(vchSig.data(), vchSig.size()).Finalize(entry.begin());
 }
 
-void SignatureCache::ComputeEntrySchnorr(uint256& entry, const uint256& hash, Span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
+void SignatureCache::ComputeEntrySchnorr(uint256& entry, const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const
 {
     CSHA256 hasher = m_salted_hasher_schnorr;
     hasher.Write(hash.begin(), 32).Write(pubkey.data(), pubkey.size()).Write(sig.data(), sig.size()).Finalize(entry.begin());
@@ -73,7 +73,7 @@ bool CachingTransactionSignatureChecker::VerifyECDSASignature(const std::vector<
     return true;
 }
 
-bool CachingTransactionSignatureChecker::VerifySchnorrSignature(Span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const
+bool CachingTransactionSignatureChecker::VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const
 {
     uint256 entry;
     m_signature_cache.ComputeEntrySchnorr(entry, sighash, sig, pubkey);

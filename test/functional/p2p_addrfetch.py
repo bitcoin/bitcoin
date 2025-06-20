@@ -62,7 +62,7 @@ class P2PAddrFetch(BitcoinTestFramework):
 
         self.log.info("Check that answering with larger addr messages leads to disconnect")
         msg.addrs = [ADDR] * 2
-        peer.send_message(msg)
+        peer.send_without_ping(msg)
         peer.wait_for_disconnect(timeout=5)
 
         self.log.info("Check timeout for addr-fetch peer that does not send addrs")

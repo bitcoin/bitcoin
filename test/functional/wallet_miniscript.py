@@ -203,16 +203,12 @@ DESCS_PRIV = [
 
 
 class WalletMiniscriptTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.rpc_timeout = 180
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
 
     def watchonly_test(self, desc):
         self.log.info(f"Importing descriptor '{desc}'")
@@ -326,10 +322,10 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         self.log.info("Making a descriptor wallet")
         self.funder = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         self.nodes[0].createwallet(
-            wallet_name="ms_wo", descriptors=True, disable_private_keys=True
+            wallet_name="ms_wo", disable_private_keys=True
         )
         self.ms_wo_wallet = self.nodes[0].get_wallet_rpc("ms_wo")
-        self.nodes[0].createwallet(wallet_name="ms_sig", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="ms_sig")
         self.ms_sig_wallet = self.nodes[0].get_wallet_rpc("ms_sig")
 
         # Sanity check we wouldn't let an insane Miniscript descriptor in

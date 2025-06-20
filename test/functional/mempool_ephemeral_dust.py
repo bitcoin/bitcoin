@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_not_equal,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -37,13 +38,13 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Take value from first output
         result["tx"].vout[0].nValue -= output_value
         result["new_utxos"][0]["value"] = Decimal(result["tx"].vout[0].nValue) / COIN
-        new_txid = result["tx"].rehash()
+        new_txid = result["tx"].txid_hex
         result["txid"]  = new_txid
-        result["wtxid"] = result["tx"].getwtxid()
+        result["wtxid"] = result["tx"].wtxid_hex
         result["hex"] = result["tx"].serialize().hex()
         for new_utxo in result["new_utxos"]:
             new_utxo["txid"] = new_txid
-            new_utxo["wtxid"] = result["tx"].getwtxid()
+            new_utxo["wtxid"] = result["tx"].wtxid_hex
 
         result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": Decimal(output_value) / COIN, "height": 0, "coinbase": False, "confirmations": 0})
 
@@ -126,7 +127,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 2)
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx["tx"]])
 
-        # Node restart; doesn't allow allow ephemeral transaction back in due to individual submission
+        # Node restart; doesn't allow ephemeral transaction back in due to individual submission
         # resulting in 0-fee. Supporting re-submission of CPFP packages on restart is desired but not
         # yet implemented.
         self.restart_node(0)
@@ -233,13 +234,13 @@ class EphemeralDustTest(BitcoinTestFramework):
         unspent_sweep_tx = self.wallet.create_self_transfer_multi(fee_per_output=2000, utxos_to_spend=[dusty_tx["new_utxos"][0]], version=3)
         assert_greater_than(unspent_sweep_tx["fee"], sweep_tx["fee"])
         res = self.nodes[0].submitpackage([dusty_tx["hex"], unspent_sweep_tx["hex"]])
-        assert_equal(res["tx-results"][unspent_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} did not spend parent's ephemeral dust")
-        assert_raises_rpc_error(-26, f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} did not spend parent's ephemeral dust", self.nodes[0].sendrawtransaction, unspent_sweep_tx["hex"])
+        assert_equal(res["tx-results"][unspent_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} (wtxid={unspent_sweep_tx['wtxid']}) did not spend parent's ephemeral dust")
+        assert_raises_rpc_error(-26, f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} (wtxid={unspent_sweep_tx['wtxid']}) did not spend parent's ephemeral dust", self.nodes[0].sendrawtransaction, unspent_sweep_tx["hex"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx["tx"]])
 
         # Spend works with dust spent
         sweep_tx_2 = self.wallet.create_self_transfer_multi(fee_per_output=2000, utxos_to_spend=dusty_tx["new_utxos"], version=3)
-        assert sweep_tx["hex"] != sweep_tx_2["hex"]
+        assert_not_equal(sweep_tx["hex"], sweep_tx_2["hex"])
         res = self.nodes[0].submitpackage([dusty_tx["hex"], sweep_tx_2["hex"]])
         assert_equal(res["package_msg"], "success")
 
@@ -325,7 +326,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         dusty_tx, _ = self.create_ephemeral_dust_package(tx_version=3)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
 
-        block_res = self.nodes[0].rpc.generateblock(self.wallet.get_address(), [dusty_tx["hex"]])
+        block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"]], sync_fun=self.no_op)
         self.nodes[0].invalidateblock(block_res["hash"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"]], sync=False)
 
@@ -335,7 +336,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx["hex"])
 
         # Mine the sweep then re-org, the sweep will not make it back in due to spend checks
-        block_res = self.nodes[0].rpc.generateblock(self.wallet.get_address(), [dusty_tx["hex"], sweep_tx["hex"]])
+        block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"], sweep_tx["hex"]], sync_fun=self.no_op)
         self.nodes[0].invalidateblock(block_res["hash"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"]], sync=False)
 
@@ -344,7 +345,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         self.add_output_to_create_multi_result(sweep_tx_2)
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx_2["hex"])
 
-        reconsider_block_res = self.nodes[0].rpc.generateblock(self.wallet.get_address(), [dusty_tx["hex"], sweep_tx_2["hex"]])
+        reconsider_block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"], sweep_tx_2["hex"]], sync_fun=self.no_op)
         self.nodes[0].invalidateblock(reconsider_block_res["hash"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx_2["tx"]], sync=False)
 
@@ -357,13 +358,13 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         self.log.info("Test that ephemeral dust tx with fees or multi dust don't enter mempool via reorg")
         multi_dusty_tx, _ = self.create_ephemeral_dust_package(tx_version=3, num_dust_outputs=2)
-        block_res = self.nodes[0].rpc.generateblock(self.wallet.get_address(), [multi_dusty_tx["hex"]])
+        block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [multi_dusty_tx["hex"]], sync_fun=self.no_op)
         self.nodes[0].invalidateblock(block_res["hash"])
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # With fee and one dust
         dusty_fee_tx, _ = self.create_ephemeral_dust_package(tx_version=3, dust_tx_fee=1)
-        block_res = self.nodes[0].rpc.generateblock(self.wallet.get_address(), [dusty_fee_tx["hex"]])
+        block_res = self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_fee_tx["hex"]], sync_fun=self.no_op)
         self.nodes[0].invalidateblock(block_res["hash"])
         assert_equal(self.nodes[0].getrawmempool(), [])
 
@@ -405,7 +406,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         res = self.nodes[0].submitpackage([dusty_tx["hex"] for dusty_tx in dusty_txs] + [insufficient_sweep_tx["hex"]])
         assert_equal(res['package_msg'], "transaction failed")
-        assert_equal(res['tx-results'][insufficient_sweep_tx['wtxid']]['error'], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} did not spend parent's ephemeral dust")
+        assert_equal(res['tx-results'][insufficient_sweep_tx['wtxid']]['error'], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} (wtxid={insufficient_sweep_tx['wtxid']}) did not spend parent's ephemeral dust")
         # Everything got in except for insufficient spend
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs])
 
@@ -418,7 +419,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         res = self.nodes[0].submitpackage([dusty_tx["hex"] for dusty_tx in dusty_txs] + [insufficient_sweep_tx["hex"]])
         assert_equal(res['package_msg'], "transaction failed")
-        assert_equal(res['tx-results'][insufficient_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} did not spend parent's ephemeral dust")
+        assert_equal(res['tx-results'][insufficient_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {insufficient_sweep_tx['txid']} (wtxid={insufficient_sweep_tx['wtxid']}) did not spend parent's ephemeral dust")
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"] for dusty_tx in dusty_txs] + [sweep_all_but_one_tx["tx"]])
 
         # Cycle out the partial sweep to avoid triggering package RBF behavior which limits package to no in-mempool ancestors

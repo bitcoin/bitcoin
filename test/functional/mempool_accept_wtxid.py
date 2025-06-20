@@ -31,6 +31,7 @@ from test_framework.script import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
 )
 
@@ -57,7 +58,6 @@ class MempoolWtxidTest(BitcoinTestFramework):
         parent = CTransaction()
         parent.vin.append(CTxIn(COutPoint(int(txid, 16), 0), b""))
         parent.vout.append(CTxOut(int(9.99998 * COIN), script_pubkey))
-        parent.rehash()
 
         privkeys = [node.get_deterministic_priv_key().key]
         raw_parent = node.signrawtransactionwithkey(hexstring=parent.serialize().hex(), privkeys=privkeys)['hex']
@@ -76,17 +76,17 @@ class MempoolWtxidTest(BitcoinTestFramework):
         child_one.vout.append(CTxOut(int(9.99996 * COIN), child_script_pubkey))
         child_one.wit.vtxinwit.append(CTxInWitness())
         child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
-        child_one_wtxid = child_one.getwtxid()
-        child_one_txid = child_one.rehash()
+        child_one_wtxid = child_one.wtxid_hex
+        child_one_txid = child_one.txid_hex
 
         # Create another identical transaction with witness solving second branch
         child_two = deepcopy(child_one)
         child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
-        child_two_wtxid = child_two.getwtxid()
-        child_two_txid = child_two.rehash()
+        child_two_wtxid = child_two.wtxid_hex
+        child_two_txid = child_two.txid_hex
 
         assert_equal(child_one_txid, child_two_txid)
-        assert child_one_wtxid != child_two_wtxid
+        assert_not_equal(child_one_wtxid, child_two_wtxid)
 
         self.log.info("Submit child_one to the mempool")
         txid_submitted = node.sendrawtransaction(child_one.serialize().hex())
@@ -100,13 +100,15 @@ class MempoolWtxidTest(BitcoinTestFramework):
             "txid": child_one_txid,
             "wtxid": child_one_wtxid,
             "allowed": False,
-            "reject-reason": "txn-already-in-mempool"
+            "reject-reason": "txn-already-in-mempool",
+            "reject-details": "txn-already-in-mempool"
         }])
         assert_equal(node.testmempoolaccept([child_two.serialize().hex()])[0], {
             "txid": child_two_txid,
             "wtxid": child_two_wtxid,
             "allowed": False,
-            "reject-reason": "txn-same-nonwitness-data-in-mempool"
+            "reject-reason": "txn-same-nonwitness-data-in-mempool",
+            "reject-details": "txn-same-nonwitness-data-in-mempool"
         })
 
         # sendrawtransaction will not throw but quits early when the exact same transaction is already in mempool

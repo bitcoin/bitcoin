@@ -3,15 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">برای ویرایش آدرس یا لیبل کلیک راست کنید</translation>
+        <translation type="unfinished">برای ویرایش آدرس یا برچسب راست کلیک کنید</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">آدرس جدید بسازید</translation>
+        <translation type="unfinished">یک آدرس جدید بسازید</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">جدید</translation>
+        <translation type="unfinished">&amp; جدید</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">هم افزایی</translation>
+        <translation type="unfinished">&amp; ذخیره</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -29,9 +29,31 @@
         <source>Delete the currently selected address from the list</source>
         <translation type="unfinished">آدرس انتخاب شده را از لیست پاک کنید</translation>
     </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">آدرس یا برچسب را برای جستجو وارد کنید</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">داده های موجود در برگه فعلی را به یک فایل صادر کنید</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">اینها آدرس های بیت کوین شما برای ارسال پرداخت هستند. همیشه قبل از ارسال سکه، مبلغ و آدرس دریافت کننده را بررسی کنید.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">اینها آدرس های بیت کوین شما برای دریافت هستند. از دکمه "ایجاد آدرس دریافت جدید" در برگه دریافت برای ایجاد آدرس های جدید استفاده کنید.
+امضا فقط با آدرس هایی از نوع "میراث" امکان پذیر است.</translation>
+    </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">ادامه</translation>
+    </message>
     <message>
         <source>Back</source>
         <translation type="unfinished">بازگشت</translation>
@@ -50,6 +72,10 @@
     <message>
         <source>Embedded "%1"</source>
         <translation type="unfinished">تعبیه شده%1</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">فونت پیش فرض سیستم «%1»</translation>
     </message>
     <message>
         <source>Custom…</source>
@@ -113,10 +139,6 @@
     <message>
         <source>None</source>
         <translation type="unfinished">هیچ کدام</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation type="unfinished">موجود نیست</translation>
     </message>
     <message>
         <source>%1 ms</source>
@@ -689,6 +711,10 @@
         <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
         <translation type="unfinished">اسکریپت های Watchonly با موفقیت به کیف پول '%1' منتقل گردیدند.</translation>
     </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">اسکریپت های قابل حل اما تماشا نشده به کیف پول جدیدی به نام "%1" منتقل شده اند.</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -752,82 +778,6 @@
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation type="unfinished">برای برگرداندن این تنظیم نیاز به بارگیری مجدد کل بلاک چین است.</translation>
-    </message>
-    <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">حداکثر اندازه کش پایگاه داده  حافظه پنهان بزرگتر می‌تواند به همگام‌سازی سریع‌تر کمک کند، پس از آن مزیت برای بیشتر موارد استفاده کمتر مشخص می‌شود.  کاهش اندازه حافظه نهان باعث کاهش مصرف حافظه می شود.  حافظه mempool استفاده نشده برای این حافظه پنهان مشترک است.</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
-        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
-        <translation type="unfinished">تعداد رشته های تأیید اسکریپت را تنظیم کنید.  مقادیر منفی مربوط به تعداد هسته هایی است که می خواهید برای سیستم آزاد بگذارید.</translation>
-    </message>
-    <message>
-        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
-        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
-        <translation type="unfinished">این به شما یا یک ابزار شخص ثالث اجازه می دهد تا از طریق خط فرمان و دستورات JSON-RPC با گره ارتباط برقرار کنید.</translation>
-    </message>
-    <message>
-        <source>Enable R&amp;PC server</source>
-        <extracomment>An Options window setting to enable the RPC server.</extracomment>
-        <translation type="unfinished">سرور R&amp;PC را فعال کنید</translation>
-    </message>
-    <message>
-        <source>W&amp;allet</source>
-        <translation type="unfinished">کیف پول</translation>
-    </message>
-    <message>
-        <source>Whether to set subtract fee from amount as default or not.</source>
-        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
-        <translation type="unfinished">اینکه آیا باید کارمزد را از مقدار به عنوان پیش فرض کم کرد یا خیر.</translation>
-    </message>
-    <message>
-        <source>Subtract &amp;fee from amount by default</source>
-        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
-        <translation type="unfinished">به طور پیش‌فرض از مقدار &amp;کارمزد کم کنید</translation>
-    </message>
-    <message>
-        <source>Expert</source>
-        <translation type="unfinished">حرفه‌ای</translation>
-    </message>
-    <message>
-        <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">فعال کردن قابلیت سکه و کنترل</translation>
-    </message>
-    <message>
-        <source>Enable &amp;PSBT controls</source>
-        <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">کنترل‌های &amp;PSBT را فعال کنید</translation>
-    </message>
-    <message>
-        <source>Whether to show PSBT controls.</source>
-        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
-        <translation type="unfinished">برای نمایش کنترل‌های PSBT.</translation>
-    </message>
-    <message>
-        <source>External Signer (e.g. hardware wallet)</source>
-        <translation type="unfinished">امضاکنندهٔ جانبی (برای نمونه، کیف پول سخت‌افزاری)</translation>
-    </message>
-    <message>
-        <source>&amp;External signer script path</source>
-        <translation type="unfinished">مسیر اسکریپت امضاکنندهٔ جانبی</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">باز کردن خودکار درگاه شبکهٔ بیت‌کوین روی روترها. تنها زمانی کار می‌کند که روتر از پروتکل UPnP پشتیبانی کند و این پروتکل فعال باشد.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">نگاشت درگاه شبکه با استفاده از پروتکل &amp;UPnP</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">باز کردن خودکار درگاه شبکهٔ بیت‌کوین روی روتر. این پروسه تنها زمانی کار می‌کند که روتر از پروتکل NAT-PMP  پشتیبانی کند و این پروتکل فعال باشد. پورت خارجی میتواند تصادفی باشد </translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">درگاه نقشه با استفاده از NA&amp;T-PMP</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1107,6 +1057,10 @@
         <translation type="unfinished">تراکنش نسبتا امضا شده (باینری)</translation>
     </message>
     <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">%1را به %2 ارسال می کند</translation>
+    </message>
+    <message>
         <source>own address</source>
         <translation type="unfinished">آدرس خود</translation>
     </message>
@@ -1134,6 +1088,10 @@
         <source>(But this wallet cannot sign transactions.)</source>
         <translation type="unfinished">(اما این کیف پول نمی تواند معاملات را امضا کند.)
  </translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation type="unfinished">(اما این کیف پول کلید درست را ندارد.)</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>
@@ -1169,11 +1127,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>PeerTableModel</name>
     <message>
-        <source>User Agent</source>
-        <extracomment>Title of Peers Table column which contains the peer's User Agent string.</extracomment>
-        <translation type="unfinished">نماینده کاربر</translation>
-    </message>
-    <message>
         <source>Ping</source>
         <extracomment>Title of Peers Table column which indicates the current latency of the connection with the peer.</extracomment>
         <translation type="unfinished">پینگ</translation>
@@ -1201,7 +1154,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Received</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
-        <translation type="unfinished">دریافت شد</translation>
+        <translation type="unfinished">دریافتی</translation>
     </message>
     <message>
         <source>Type</source>
@@ -1217,12 +1170,75 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">آدرس‌های محلی</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">آدرس‌های شبکه ای که گره بیت کوین شما در حال حاضر از آنها برای ارتباط با گره های دیگر استفاده می کند.</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation type="unfinished">دریافتی</translation>
+    </message>
+    <message>
         <source>Sent</source>
         <translation type="unfinished">فرستاده شد</translation>
     </message>
     <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">پنهان کردن جزئیات همتایان</translation>
+    </message>
+    <message>
+        <source>Ctrl+X</source>
+        <translation type="unfinished">کنترل+X</translation>
+    </message>
+    <message>
+        <source>Last Transaction</source>
+        <translation type="unfinished">اخرین تراکنش</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation type="unfinished">پنجره گره</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation type="unfinished">مجوزها</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation type="unfinished">رشته شناسه جلسه BIP324 به صورت هگز.</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation type="unfinished">زمان اتصال</translation>
+    </message>
+    <message>
+        <source>Last Block</source>
+        <translation type="unfinished">بلاک اخیر</translation>
+    </message>
+    <message>
+        <source>&amp;Network Traffic</source>
+        <translation type="unfinished">ترافیک شبکه</translation>
+    </message>
+    <message>
+        <source>Totals</source>
+        <translation type="unfinished">جمعا</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">هیچ کدام</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">پنجره گره - [%1]</translation>
+    </message>
+    </context>
+<context>
+    <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">روگرفت م&amp;قدار</translation>
     </message>
     </context>
 <context>
@@ -1235,7 +1251,15 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <source>Change:</source>
+        <translation type="unfinished">تغییر</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
+        <translation type="unfinished">کپی مقدار</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
         <translation type="unfinished">کپی مقدار</translation>
     </message>
     <message>
@@ -1247,6 +1271,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">کپی کردن تغییر</translation>
     </message>
     <message>
+        <source>Save Transaction Data</source>
+        <translation type="unfinished">ذخیره اطلاعات عملیات</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation type="unfinished">تراکنش نسبتا امضا شده (باینری)</translation>
@@ -1254,6 +1282,14 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>or</source>
         <translation type="unfinished">یا</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 از کیف پول «%2»</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">میزان کل</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -1267,7 +1303,18 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
 </context>
 <context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>You can sign messages/agreements with your legacy (P2PKH) addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">می‌توانید پیام‌ها/توافق‌نامه‌هایی را با آدرس‌های قدیمی خود (P2PKH) امضا کنید تا ثابت کنید که می‌توانید بیت‌کوین‌های ارسال شده برای آنها را دریافت کنید. مراقب باشید هیچ چیز مبهم یا تصادفی را امضا نکنید، زیرا حملات فیشینگ ممکن است سعی کنند شما را فریب دهند تا با هویت خود آنها را امضا کنید. فقط اظهارات کاملاً مفصلی را که قابل قبول هستند را امضا کنید.</translation>
+    </message>
+    </context>
+<context>
     <name>TransactionDesc</name>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">آدرس خود</translation>
+    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -1275,8 +1322,8 @@ If you are receiving this error you should request the merchant provide a BIP21 
         </translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation type="unfinished">میزان وجه:</translation>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (گواهی تایید نشد)</translation>
     </message>
     </context>
 <context>
@@ -1292,6 +1339,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">روگرفت م&amp;قدار</translation>
+    </message>
     <message>
         <source>Type</source>
         <translation type="unfinished">نوع</translation>
@@ -1312,6 +1363,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>WalletView</name>
     <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation type="unfinished">داده های موجود در برگه فعلی را به یک فایل صادر کنید</translation>
+    </message>
+    <message>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">داده های کیف پول</translation>
@@ -1324,8 +1379,40 @@ If you are receiving this error you should request the merchant provide a BIP21 
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">نمیتواند پوشه داده ها را بنویسد ' %s';دسترسی ها را بررسی کنید.</translation>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">خطا: خواندن بهترین سابقه یاب بلوک کیف پول امکان پذیر نیست</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">خطا: نوشتن بهترین سابقه یاب بلوک کیف پول قابل حل امکان پذیر نیست</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">خطا: نوشتن بهترین سابقه بلوک یاب کیف پول فقط دیدنی امکان پذیر نیست</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">خطا: تراکنش پایگاه داده را نمی توان برای کیف پول اجرا کرد %s</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">عدم موفقیت در حذف تراکنش:%s</translation>
+    </message>
+    <message>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">تراکنش %s به این کیف پول تعلق ندارد</translation>
+    </message>
+    <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">عدم موفقیت در ساخت فایل کیف پول: %s</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">خطا:‌ نشد تراکنش فقط قابل مشاهده %s به کیف پول فقط قابل مشاهده اضافه شود</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">خطا: تراکنش های فقط دیدنی حذف نشد.</translation>
     </message>
     </context>
 </TS>

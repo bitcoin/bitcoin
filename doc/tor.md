@@ -27,42 +27,66 @@ e.g. for `-onlynet=onion`.
 
 You can use the `getnodeaddresses` RPC to fetch a number of onion peers known to your node; run `bitcoin-cli help getnodeaddresses` for details.
 
+`bitcoin rpc` can also be substituted for `bitcoin-cli`.
+
 ## 1. Run Bitcoin Core behind a Tor proxy
 
 The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all
 outgoing connections, but more is possible.
 
-    -proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
-                    server will be used to try to reach .onion addresses as well.
-                    You need to use -noonion or -onion=0 to explicitly disable
-                    outbound access to onion services.
+    -proxy=ip[:port]
+        Set the proxy server. It will be used to try to reach .onion addresses
+        as well. You need to use -noonion or -onion=0 to explicitly disable
+        outbound access to onion services.
 
-    -onion=ip:port  Set the proxy server to use for Tor onion services. You do not
-                    need to set this if it's the same as -proxy. You can use -onion=0
-                    to explicitly disable access to onion services.
-                    ------------------------------------------------------------------
-                    Note: Only the -proxy option sets the proxy for DNS requests;
-                    with -onion they will not route over Tor, so use -proxy if you
-                    have privacy concerns.
-                    ------------------------------------------------------------------
+    -proxy=ip[:port]=tor
+    or
+    -onion=ip[:port]
+        Set the proxy server for reaching .onion addresses. You do not need to
+        set this if it's the same as the generic -proxy. You can use -onion=0 to
+        explicitly disable access to onion services.
+        ------------------------------------------------------------------------
+        Note: The proxy for DNS requests is taken from
+        -proxy=addr:port or
+        -proxy=addr:port=ipv4 or
+        -proxy=addr:port=ipv6
+        (last one if multiple options are given). It is not taken from
+        -proxy=addr:port=tor or
+        -onion=addr:port.
+        If no proxy for DNS requests is configured, then they will be done using
+        the functions provided by the operating system, most likely resulting in
+        them being done over the clearnet to the DNS servers of the internet
+        service provider.
+        ------------------------------------------------------------------------
 
-    -listen         When using -proxy, listening is disabled by default. If you want
-                    to manually configure an onion service (see section 3), you'll
-                    need to enable it explicitly.
+If -proxy or -onion is specified multiple times, later occurences override
+earlier ones and command line overrides the config file. UNIX domain sockets may
+be used for proxy connections. Set `-onion` or `-proxy` to the local socket path
+with the prefix `unix:` (e.g. `-onion=unix:/home/me/torsocket`).
 
-    -connect=X      When behind a Tor proxy, you can specify .onion addresses instead
-    -addnode=X      of IP addresses or hostnames in these parameters. It requires
-    -seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
-                    other P2P nodes.
+    -listen
+        When using -proxy, listening is disabled by default. If you want to
+        manually configure an onion service (see section 3), you'll need to
+        enable it explicitly.
 
-    -onlynet=onion  Make automatic outbound connections only to .onion addresses.
-                    Inbound and manual connections are not affected by this option.
-                    It can be specified multiple times to allow multiple networks,
-                    e.g. onlynet=onion, onlynet=i2p, onlynet=cjdns.
+    -connect=X
+    -addnode=X
+    -seednode=X
+        When behind a Tor proxy, you can specify .onion addresses instead of IP
+        addresses or hostnames in these parameters. Such addresses can also be
+        exchanged with other P2P nodes.
+
+    -onlynet=onion
+        Make automatic outbound connections only to .onion addresses. Inbound
+        and manual connections are not affected by this option. It can be
+        specified multiple times to allow multiple networks, e.g. onlynet=onion,
+        onlynet=i2p, onlynet=cjdns.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
-    ./bitcoind -proxy=127.0.0.1:9050
+    bitcoind -proxy=127.0.0.1:9050
+
+`bitcoin node` or `bitcoin gui` can also be substituted for `bitcoind`.
 
 ## 2. Automatically create a Bitcoin Core onion service
 
@@ -187,25 +211,25 @@ should be equal to binding address and port for inbound Tor connections (127.0.0
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-    ./bitcoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
+    bitcoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
 
 (obviously, replace the .onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
 your address. To mitigate this, additionally bind the address of your Tor proxy:
 
-    ./bitcoind ... -bind=127.0.0.1:8334=onion
+    bitcoind ... -bind=127.0.0.1:8334=onion
 
 If you don't care too much about hiding your node, and want to be reachable on IPv4
 as well, use `discover` instead:
 
-    ./bitcoind ... -discover
+    bitcoind ... -discover
 
 and open port 8333 on your firewall (or use port mapping, i.e., `-natpmp`).
 
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-    ./bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
+    bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
 ## 4. Privacy recommendations
 

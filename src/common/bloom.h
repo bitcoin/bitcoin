@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,7 +49,7 @@ private:
     unsigned int nTweak;
     unsigned char nFlags;
 
-    unsigned int Hash(unsigned int nHashNum, Span<const unsigned char> vDataToHash) const;
+    unsigned int Hash(unsigned int nHashNum, std::span<const unsigned char> vDataToHash) const;
 
 public:
     /**
@@ -66,10 +66,10 @@ public:
 
     SERIALIZE_METHODS(CBloomFilter, obj) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
 
-    void insert(Span<const unsigned char> vKey);
+    void insert(std::span<const unsigned char> vKey);
     void insert(const COutPoint& outpoint);
 
-    bool contains(Span<const unsigned char> vKey) const;
+    bool contains(std::span<const unsigned char> vKey) const;
     bool contains(const COutPoint& outpoint) const;
 
     //! True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
@@ -110,8 +110,8 @@ class CRollingBloomFilter
 public:
     CRollingBloomFilter(const unsigned int nElements, const double nFPRate);
 
-    void insert(Span<const unsigned char> vKey);
-    bool contains(Span<const unsigned char> vKey) const;
+    void insert(std::span<const unsigned char> vKey);
+    bool contains(std::span<const unsigned char> vKey) const;
 
     void reset();
 

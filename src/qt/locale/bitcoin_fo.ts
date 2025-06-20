@@ -498,14 +498,6 @@
         <translation type="unfinished">&amp;Endurstilla stillingar</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Sjálvvirkandi upplating av Bicoin viðskiftara porturinum á beinaranum. Hetta virkar bert um UPnP er virkja í beinaranum, á netinum tú brúkar.</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Sjálvvirkandi upplating av Bicoin viðskiftara porturinum á beinaranum. Hetta virkar bert um NAT-PMP er virkja í beinaranum, á netinum tú brúkar. Ytra porturnummari kann vera tilvildarligt.</translation>
-    </message>
-    <message>
         <source>&amp;Port:</source>
         <translation type="unfinished">&amp;Portur:</translation>
     </message>

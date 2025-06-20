@@ -73,7 +73,7 @@ public:
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
-        mp::ProxyTypeRegister::types().at(type)(iface).cleanup.emplace_back(std::move(cleanup));
+        mp::ProxyTypeRegister::types().at(type)(iface).cleanup_fns.emplace_back(std::move(cleanup));
     }
     Context& context() override { return m_context; }
     void startLoop(const char* exe_name)

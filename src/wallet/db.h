@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,10 +22,10 @@ struct bilingual_str;
 namespace wallet {
 // BytePrefix compares equality with other byte spans that begin with the same prefix.
 struct BytePrefix {
-    Span<const std::byte> prefix;
+    std::span<const std::byte> prefix;
 };
-bool operator<(BytePrefix a, Span<const std::byte> b);
-bool operator<(Span<const std::byte> a, BytePrefix b);
+bool operator<(BytePrefix a, std::span<const std::byte> b);
+bool operator<(std::span<const std::byte> a, BytePrefix b);
 
 class DatabaseCursor
 {
@@ -62,7 +62,6 @@ public:
     DatabaseBatch(const DatabaseBatch&) = delete;
     DatabaseBatch& operator=(const DatabaseBatch&) = delete;
 
-    virtual void Flush() = 0;
     virtual void Close() = 0;
 
     template <typename K, typename T>
@@ -115,10 +114,10 @@ public:
 
         return HasKey(std::move(ssKey));
     }
-    virtual bool ErasePrefix(Span<const std::byte> prefix) = 0;
+    virtual bool ErasePrefix(std::span<const std::byte> prefix) = 0;
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
-    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(Span<const std::byte> prefix) = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;
@@ -131,7 +130,7 @@ class WalletDatabase
 {
 public:
     /** Create dummy DB handle */
-    WalletDatabase() : nUpdateCounter(0) {}
+    WalletDatabase() = default;
     virtual ~WalletDatabase() = default;
 
     /** Open the database if it is not already opened. */
@@ -139,10 +138,6 @@ public:
 
     //! Counts the number of active database users to be sure that the database is not closed while someone is using it
     std::atomic<int> m_refcount{0};
-    /** Indicate the a new database user has began using the database. Increments m_refcount */
-    virtual void AddRef() = 0;
-    /** Indicate that database user has stopped using the database and that it could be flushed or closed. Decrement m_refcount */
-    virtual void RemoveRef() = 0;
 
     /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
      */
@@ -152,40 +147,23 @@ public:
      */
     virtual bool Backup(const std::string& strDest) const = 0;
 
-    /** Make sure all changes are flushed to database file.
-     */
-    virtual void Flush() = 0;
     /** Flush to the database file and close the database.
      *  Also close the environment if no other databases are open in it.
      */
     virtual void Close() = 0;
-    /* flush the wallet passively (TRY_LOCK)
-       ideal to be called periodically */
-    virtual bool PeriodicFlush() = 0;
-
-    virtual void IncrementUpdateCounter() = 0;
-
-    virtual void ReloadDbEnv() = 0;
 
     /** Return path to main database file for logs and error messages. */
     virtual std::string Filename() = 0;
 
     virtual std::string Format() = 0;
 
-    std::atomic<unsigned int> nUpdateCounter;
-    unsigned int nLastSeen{0};
-    unsigned int nLastFlushed{0};
-    int64_t nLastWalletUpdate{0};
-
     /** Make a DatabaseBatch connected to this database */
-    virtual std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) = 0;
+    virtual std::unique_ptr<DatabaseBatch> MakeBatch() = 0;
 };
 
 enum class DatabaseFormat {
-    BERKELEY,
     SQLITE,
     BERKELEY_RO,
-    BERKELEY_SWAP,
 };
 
 struct DatabaseOptions {
@@ -206,6 +184,7 @@ enum class DatabaseStatus {
     SUCCESS,
     FAILED_BAD_PATH,
     FAILED_BAD_FORMAT,
+    FAILED_LEGACY_DISABLED,
     FAILED_ALREADY_LOADED,
     FAILED_ALREADY_EXISTS,
     FAILED_NOT_FOUND,

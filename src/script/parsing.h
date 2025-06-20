@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,7 @@ namespace script {
  * If sp's initial part matches str, sp is updated to skip that part, and true is returned.
  * Otherwise sp is unmodified and false is returned.
  */
-bool Const(const std::string& str, Span<const char>& sp);
+bool Const(const std::string& str, std::span<const char>& sp);
 
 /** Parse a function call.
  *
@@ -24,7 +24,7 @@ bool Const(const std::string& str, Span<const char>& sp);
  * section between the braces, and true is returned. Otherwise sp is unmodified and false
  * is returned.
  */
-bool Func(const std::string& str, Span<const char>& sp);
+bool Func(const std::string& str, std::span<const char>& sp);
 
 /** Extract the expression that sp begins with.
  *
@@ -33,7 +33,7 @@ bool Func(const std::string& str, Span<const char>& sp);
  * for "foo(bar(1),2),3" the initial part "foo(bar(1),2)" will be returned. sp will be
  * updated to skip the initial part that is returned.
  */
-Span<const char> Expr(Span<const char>& sp);
+std::span<const char> Expr(std::span<const char>& sp);
 
 } // namespace script
 

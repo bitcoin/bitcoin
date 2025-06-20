@@ -12,11 +12,7 @@
 
 // If we don't want a message to be processed by Qt, return true and set result to
 // the value that the window procedure should return. Otherwise return false.
-#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 bool WinShutdownMonitor::nativeEventFilter(const QByteArray &eventType, void *pMessage, qintptr *pnResult)
-#else
-bool WinShutdownMonitor::nativeEventFilter(const QByteArray &eventType, void *pMessage, long *pnResult)
-#endif
 {
        Q_UNUSED(eventType);
 

@@ -5,11 +5,12 @@
 #ifndef BITCOIN_UTIL_FEEFRAC_H
 #define BITCOIN_UTIL_FEEFRAC_H
 
-#include <stdint.h>
-#include <compare>
-#include <vector>
 #include <span.h>
 #include <util/check.h>
+
+#include <compare>
+#include <cstdint>
+#include <vector>
 
 /** Data structure storing a fee and size, ordered by increasing fee/size.
  *
@@ -37,27 +38,70 @@
  */
 struct FeeFrac
 {
-    /** Fallback version for Mul (see below).
-     *
-     * Separate to permit testing on platforms where it isn't actually needed.
-     */
+    /** Helper function for 32*64 signed multiplication, returning an unspecified but totally
+     *  ordered type. This is a fallback version, separate so it can be tested on platforms where
+     *  it isn't actually needed. */
     static inline std::pair<int64_t, uint32_t> MulFallback(int64_t a, int32_t b) noexcept
     {
-        // Otherwise, emulate 96-bit multiplication using two 64-bit multiplies.
         int64_t low = int64_t{static_cast<uint32_t>(a)} * b;
         int64_t high = (a >> 32) * b;
         return {high + (low >> 32), static_cast<uint32_t>(low)};
     }
 
-    // Compute a * b, returning an unspecified but totally ordered type.
+    /** Helper function for 96/32 signed division, rounding towards negative infinity (if
+     *  round_down) or positive infinity (if !round_down). This is a fallback version, separate so
+     *  that it can be tested on platforms where it isn't actually needed.
+     *
+     * The exact behavior with negative n does not really matter, but this implementation chooses
+     * to be consistent for testability reasons.
+     *
+     * The result must fit in an int64_t, and d must be strictly positive. */
+    static inline int64_t DivFallback(std::pair<int64_t, uint32_t> n, int32_t d, bool round_down) noexcept
+    {
+        Assume(d > 0);
+        // Compute quot_high = n.first / d, so the result becomes
+        // (n.second + (n.first - quot_high * d) * 2**32) / d + (quot_high * 2**32), or
+        // (n.second + (n.first % d) * 2**32) / d + (quot_high * 2**32).
+        int64_t quot_high = n.first / d;
+        // Evaluate the parenthesized expression above, so the result becomes
+        // n_low / d + (quot_high * 2**32)
+        int64_t n_low = ((n.first % d) << 32) + n.second;
+        // Evaluate the division so the result becomes quot_low + quot_high * 2**32. It is possible
+        // that the / operator here rounds in the wrong direction (if n_low is not a multiple of
+        // size, and is (if round_down) negative, or (if !round_down) positive). If so, make a
+        // correction.
+        int64_t quot_low = n_low / d;
+        int32_t mod_low = n_low % d;
+        quot_low += (mod_low > 0) - (mod_low && round_down);
+        // Combine and return the result
+        return (quot_high << 32) + quot_low;
+    }
+
 #ifdef __SIZEOF_INT128__
+    /** Helper function for 32*64 signed multiplication, returning an unspecified but totally
+     *  ordered type. This is a version relying on __int128. */
     static inline __int128 Mul(int64_t a, int32_t b) noexcept
     {
-        // If __int128 is available, use 128-bit wide multiply.
         return __int128{a} * b;
+    }
+
+    /** Helper function for 96/32 signed division, rounding towards negative infinity (if
+     *  round_down), or towards positive infinity (if !round_down). This is a
+     *  version relying on __int128.
+     *
+     * The result must fit in an int64_t, and d must be strictly positive. */
+    static inline int64_t Div(__int128 n, int32_t d, bool round_down) noexcept
+    {
+        Assume(d > 0);
+        // Compute the division.
+        int64_t quot = n / d;
+        int32_t mod = n % d;
+        // Correct result if the / operator above rounded in the wrong direction.
+        return quot + ((mod > 0) - (mod && round_down));
     }
 #else
     static constexpr auto Mul = MulFallback;
+    static constexpr auto Div = DivFallback;
 #endif
 
     int64_t fee;
@@ -144,6 +188,39 @@ struct FeeFrac
         std::swap(a.fee, b.fee);
         std::swap(a.size, b.size);
     }
+
+    /** Compute the fee for a given size `at_size` using this object's feerate.
+     *
+     * This effectively corresponds to evaluating (this->fee * at_size) / this->size, with the
+     * result rounded towards negative infinity (if RoundDown) or towards positive infinity
+     * (if !RoundDown).
+     *
+     * Requires this->size > 0, at_size >= 0, and that the correct result fits in a int64_t. This
+     * is guaranteed to be the case when 0 <= at_size <= this->size.
+     */
+    template<bool RoundDown>
+    int64_t EvaluateFee(int32_t at_size) const noexcept
+    {
+        Assume(size > 0);
+        Assume(at_size >= 0);
+        if (fee >= 0 && fee < 0x200000000) [[likely]] {
+            // Common case where (this->fee * at_size) is guaranteed to fit in a uint64_t.
+            if constexpr (RoundDown) {
+                return (uint64_t(fee) * at_size) / uint32_t(size);
+            } else {
+                return (uint64_t(fee) * at_size + size - 1U) / uint32_t(size);
+            }
+        } else {
+            // Otherwise, use Mul and Div.
+            return Div(Mul(fee, at_size), size, RoundDown);
+        }
+    }
+
+public:
+    /** Compute the fee for a given size `at_size` using this object's feerate, rounding down. */
+    int64_t EvaluateFeeDown(int32_t at_size) const noexcept { return EvaluateFee<true>(at_size); }
+    /** Compute the fee for a given size `at_size` using this object's feerate, rounding up. */
+    int64_t EvaluateFeeUp(int32_t at_size) const noexcept { return EvaluateFee<false>(at_size); }
 };
 
 /** Compare the feerate diagrams implied by the provided sorted chunks data.
@@ -154,6 +231,28 @@ struct FeeFrac
  * The caller must guarantee that the sum of the FeeFracs in either of the chunks' data set do not
  * overflow (so sum fees < 2^63, and sum sizes < 2^31).
  */
-std::partial_ordering CompareChunks(Span<const FeeFrac> chunks0, Span<const FeeFrac> chunks1);
+std::partial_ordering CompareChunks(std::span<const FeeFrac> chunks0, std::span<const FeeFrac> chunks1);
+
+/** Tagged wrapper around FeeFrac to avoid unit confusion. */
+template<typename Tag>
+struct FeePerUnit : public FeeFrac
+{
+    // Inherit FeeFrac constructors.
+    using FeeFrac::FeeFrac;
+
+    /** Convert a FeeFrac to a FeePerUnit. */
+    static FeePerUnit FromFeeFrac(const FeeFrac& feefrac) noexcept
+    {
+        return {feefrac.fee, feefrac.size};
+    }
+};
+
+// FeePerUnit instance for satoshi / vbyte.
+struct VSizeTag {};
+using FeePerVSize = FeePerUnit<VSizeTag>;
+
+// FeePerUnit instance for satoshi / WU.
+struct WeightTag {};
+using FeePerWeight = FeePerUnit<WeightTag>;
 
 #endif // BITCOIN_UTIL_FEEFRAC_H

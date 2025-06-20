@@ -71,9 +71,11 @@ add_executable(fuzz
   netaddress.cpp
   netbase_dns_lookup.cpp
   node_eviction.cpp
+  overflow.cpp
   p2p_handshake.cpp
   p2p_headers_presync.cpp
   p2p_transport_serialization.cpp
+  pcp.cpp
   package_eval.cpp
   parse_hd_keypath.cpp
   parse_iso8601.cpp
@@ -122,12 +124,10 @@ add_executable(fuzz
   tx_in.cpp
   tx_out.cpp
   tx_pool.cpp
+  txgraph.cpp
   txorphan.cpp
   txrequest.cpp
-  # Visual Studio 2022 version 17.12 introduced a bug
-  # that causes an internal compiler error.
-  # See: https://github.com/bitcoin/bitcoin/issues/31303
-  $<$<VERSION_LESS:${MSVC_VERSION},1942>:utxo_snapshot.cpp>
+  utxo_snapshot.cpp
   utxo_total_supply.cpp
   validation_load_mempool.cpp
   vecdeque.cpp
@@ -135,6 +135,7 @@ add_executable(fuzz
 )
 target_link_libraries(fuzz
   core_interface
+  fuzzer_interface
   test_fuzz
   bitcoin_cli
   bitcoin_common

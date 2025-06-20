@@ -1,10 +1,11 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_PSBT_H
 #define BITCOIN_PSBT_H
 
+#include <common/types.h>
 #include <node/transaction.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -20,6 +21,8 @@
 namespace node {
 enum class TransactionError;
 } // namespace node
+
+using common::PSBTError;
 
 // Magic bytes
 static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
@@ -50,6 +53,9 @@ static constexpr uint8_t PSBT_IN_TAP_LEAF_SCRIPT = 0x15;
 static constexpr uint8_t PSBT_IN_TAP_BIP32_DERIVATION = 0x16;
 static constexpr uint8_t PSBT_IN_TAP_INTERNAL_KEY = 0x17;
 static constexpr uint8_t PSBT_IN_TAP_MERKLE_ROOT = 0x18;
+static constexpr uint8_t PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS = 0x1a;
+static constexpr uint8_t PSBT_IN_MUSIG2_PUB_NONCE = 0x1b;
+static constexpr uint8_t PSBT_IN_MUSIG2_PARTIAL_SIG = 0x1c;
 static constexpr uint8_t PSBT_IN_PROPRIETARY = 0xFC;
 
 // Output types
@@ -59,6 +65,7 @@ static constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
 static constexpr uint8_t PSBT_OUT_TAP_INTERNAL_KEY = 0x05;
 static constexpr uint8_t PSBT_OUT_TAP_TREE = 0x06;
 static constexpr uint8_t PSBT_OUT_TAP_BIP32_DERIVATION = 0x07;
+static constexpr uint8_t PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS = 0x08;
 static constexpr uint8_t PSBT_OUT_PROPRIETARY = 0xFC;
 
 // The separator is 0x00. Reading this in means that the unserializer can interpret it
@@ -188,8 +195,51 @@ void SerializeHDKeypaths(Stream& s, const std::map<CPubKey, KeyOriginInfo>& hd_k
         if (!keypath_pair.first.IsValid()) {
             throw std::ios_base::failure("Invalid CPubKey being serialized");
         }
-        SerializeToVector(s, type, Span{keypath_pair.first});
+        SerializeToVector(s, type, std::span{keypath_pair.first});
         SerializeHDKeypath(s, keypath_pair.second);
+    }
+}
+
+// Deserialize a PSBT_{IN/OUT}_MUSIG2_PARTICIPANT_PUBKEYS field
+template<typename Stream>
+void DeserializeMuSig2ParticipantPubkeys(Stream& s, SpanReader& skey, std::map<CPubKey, std::vector<CPubKey>>& out, std::string context)
+{
+    std::array<unsigned char, CPubKey::COMPRESSED_SIZE> agg_pubkey_bytes;
+    skey >> std::as_writable_bytes(std::span{agg_pubkey_bytes});
+    CPubKey agg_pubkey(agg_pubkey_bytes);
+
+    std::vector<CPubKey> participants;
+    std::vector<unsigned char> val;
+    s >> val;
+    SpanReader s_val{val};
+    while (s_val.size() >= CPubKey::COMPRESSED_SIZE) {
+        std::array<unsigned char, CPubKey::COMPRESSED_SIZE> part_pubkey_bytes;
+        s_val >> std::as_writable_bytes(std::span{part_pubkey_bytes});
+        participants.emplace_back(std::span{part_pubkey_bytes});
+    }
+    if (!s_val.empty()) {
+        throw std::ios_base::failure(context + " musig2 participants pubkeys value size is not a multiple of 33");
+    }
+
+    out.emplace(agg_pubkey, participants);
+}
+
+// Deserialize the MuSig2 participant identifiers from PSBT_MUSIG2_{PUBNONCE/PARTIAL_SIG} fields
+// Both fields contain the same data after the type byte - aggregate pubkey | participant pubkey | leaf script hash
+template<typename Stream>
+void DeserializeMuSig2ParticipantDataIdentifier(Stream& skey, CPubKey& agg_pub, CPubKey& part_pub, uint256& leaf_hash)
+{
+    leaf_hash.SetNull();
+
+    std::array<unsigned char, CPubKey::COMPRESSED_SIZE> part_pubkey_bytes;
+    std::array<unsigned char, CPubKey::COMPRESSED_SIZE> agg_pubkey_bytes;
+
+    skey >> std::as_writable_bytes(std::span{part_pubkey_bytes}) >> std::as_writable_bytes(std::span{agg_pubkey_bytes});
+    agg_pub.Set(agg_pubkey_bytes.begin(), agg_pubkey_bytes.end());
+    part_pub.Set(part_pubkey_bytes.begin(), part_pubkey_bytes.end());
+
+    if (!skey.empty()) {
+        skey >> leaf_hash;
     }
 }
 
@@ -217,6 +267,13 @@ struct PSBTInput
     XOnlyPubKey m_tap_internal_key;
     uint256 m_tap_merkle_root;
 
+    // MuSig2 fields
+    std::map<CPubKey, std::vector<CPubKey>> m_musig2_participants;
+    // Key is the aggregate pubkey and the script leaf hash, value is a map of participant pubkey to pubnonce
+    std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, std::vector<uint8_t>>> m_musig2_pubnonces;
+    // Key is the aggregate pubkey and the script leaf hash, value is a map of participant pubkey to partial_sig
+    std::map<std::pair<CPubKey, uint256>, std::map<CPubKey, uint256>> m_musig2_partial_sigs;
+
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
@@ -242,7 +299,7 @@ struct PSBTInput
         if (final_script_sig.empty() && final_script_witness.IsNull()) {
             // Write any partial signatures
             for (const auto& sig_pair : partial_sigs) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PARTIAL_SIG), Span{sig_pair.second.first});
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_PARTIAL_SIG), std::span{sig_pair.second.first});
                 s << sig_pair.second.second;
             }
 
@@ -269,25 +326,25 @@ struct PSBTInput
 
             // Write any ripemd160 preimage
             for (const auto& [hash, preimage] : ripemd160_preimages) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_RIPEMD160), Span{hash});
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_RIPEMD160), std::span{hash});
                 s << preimage;
             }
 
             // Write any sha256 preimage
             for (const auto& [hash, preimage] : sha256_preimages) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_SHA256), Span{hash});
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_SHA256), std::span{hash});
                 s << preimage;
             }
 
             // Write any hash160 preimage
             for (const auto& [hash, preimage] : hash160_preimages) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_HASH160), Span{hash});
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_HASH160), std::span{hash});
                 s << preimage;
             }
 
             // Write any hash256 preimage
             for (const auto& [hash, preimage] : hash256_preimages) {
-                SerializeToVector(s, CompactSizeWriter(PSBT_IN_HASH256), Span{hash});
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_HASH256), std::span{hash});
                 s << preimage;
             }
 
@@ -308,7 +365,7 @@ struct PSBTInput
             for (const auto& [leaf, control_blocks] : m_tap_scripts) {
                 const auto& [script, leaf_ver] = leaf;
                 for (const auto& control_block : control_blocks) {
-                    SerializeToVector(s, PSBT_IN_TAP_LEAF_SCRIPT, Span{control_block});
+                    SerializeToVector(s, PSBT_IN_TAP_LEAF_SCRIPT, std::span{control_block});
                     std::vector<unsigned char> value_v(script.begin(), script.end());
                     value_v.push_back((uint8_t)leaf_ver);
                     s << value_v;
@@ -336,6 +393,43 @@ struct PSBTInput
             if (!m_tap_merkle_root.IsNull()) {
                 SerializeToVector(s, PSBT_IN_TAP_MERKLE_ROOT);
                 SerializeToVector(s, m_tap_merkle_root);
+            }
+
+            // Write MuSig2 Participants
+            for (const auto& [agg_pubkey, part_pubs] : m_musig2_participants) {
+                SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS), std::span{agg_pubkey});
+                std::vector<unsigned char> value;
+                VectorWriter s_value{value, 0};
+                for (auto& pk : part_pubs) {
+                    s_value << std::span{pk};
+                }
+                s << value;
+            }
+
+            // Write MuSig2 pubnonces
+            for (const auto& [agg_pubkey_leaf_hash, pubnonces] : m_musig2_pubnonces) {
+                const auto& [agg_pubkey, leaf_hash] = agg_pubkey_leaf_hash;
+                for (const auto& [part_pubkey, pubnonce] : pubnonces) {
+                    if (leaf_hash.IsNull()) {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PUB_NONCE), std::span{part_pubkey}, std::span{agg_pubkey});
+                    } else {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PUB_NONCE), std::span{part_pubkey}, std::span{agg_pubkey}, leaf_hash);
+                    }
+                    s << pubnonce;
+                }
+            }
+
+            // Write MuSig2 partial signatures
+            for (const auto& [agg_pubkey_leaf_hash, psigs] : m_musig2_partial_sigs) {
+                const auto& [agg_pubkey, leaf_hash] = agg_pubkey_leaf_hash;
+                for (const auto& [pubkey, psig] : psigs) {
+                    if (leaf_hash.IsNull()) {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PARTIAL_SIG), std::span{pubkey}, std::span{agg_pubkey});
+                    } else {
+                        SerializeToVector(s, CompactSizeWriter(PSBT_IN_MUSIG2_PARTIAL_SIG), std::span{pubkey}, std::span{agg_pubkey}, leaf_hash);
+                    }
+                    SerializeToVector(s, psig);
+                }
             }
         }
 
@@ -428,6 +522,11 @@ struct PSBTInput
                     // Read in the signature from value
                     std::vector<unsigned char> sig;
                     s >> sig;
+
+                    // Check that the signature is validly encoded
+                    if (sig.empty() || !CheckSignatureEncoding(sig, SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_STRICTENC, nullptr)) {
+                        throw std::ios_base::failure("Signature is not a valid encoding");
+                    }
 
                     // Add to list
                     partial_sigs.emplace(pubkey.GetID(), SigPair(pubkey, std::move(sig)));
@@ -594,7 +693,7 @@ struct PSBTInput
                     } else if (key.size() != 65) {
                         throw std::ios_base::failure("Input Taproot script signature key is not 65 bytes");
                     }
-                    SpanReader s_key{Span{key}.subspan(1)};
+                    SpanReader s_key{std::span{key}.subspan(1)};
                     XOnlyPubKey xonly;
                     uint256 hash;
                     s_key >> xonly;
@@ -636,7 +735,7 @@ struct PSBTInput
                     } else if (key.size() != 33) {
                         throw std::ios_base::failure("Input Taproot BIP32 keypath key is not at 33 bytes");
                     }
-                    SpanReader s_key{Span{key}.subspan(1)};
+                    SpanReader s_key{std::span{key}.subspan(1)};
                     XOnlyPubKey xonly;
                     s_key >> xonly;
                     std::set<uint256> leaf_hashes;
@@ -670,6 +769,53 @@ struct PSBTInput
                         throw std::ios_base::failure("Input Taproot merkle root key is more than one byte type");
                     }
                     UnserializeFromVector(s, m_tap_merkle_root);
+                    break;
+                }
+                case PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, input participant pubkeys for an aggregate key already provided");
+                    } else if (key.size() != CPubKey::COMPRESSED_SIZE + 1) {
+                        throw std::ios_base::failure("Input musig2 participants pubkeys aggregate key is not 34 bytes");
+                    }
+                    DeserializeMuSig2ParticipantPubkeys(s, skey, m_musig2_participants, std::string{"Input"});
+                    break;
+                }
+                case PSBT_IN_MUSIG2_PUB_NONCE:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, input musig2 pubnonce already provided");
+                    } else if (key.size() != 2 * CPubKey::COMPRESSED_SIZE + 1 && key.size() != 2 * CPubKey::COMPRESSED_SIZE + CSHA256::OUTPUT_SIZE + 1) {
+                        throw std::ios_base::failure("Input musig2 pubnonce key is not expected size of 67 or 99 bytes");
+                    }
+                    CPubKey agg_pub, part_pub;
+                    uint256 leaf_hash;
+                    DeserializeMuSig2ParticipantDataIdentifier(skey, agg_pub, part_pub, leaf_hash);
+
+                    std::vector<uint8_t> pubnonce;
+                    s >> pubnonce;
+                    if (pubnonce.size() != 66) {
+                        throw std::ios_base::failure("Input musig2 pubnonce value is not 66 bytes");
+                    }
+
+                    m_musig2_pubnonces[std::make_pair(agg_pub, leaf_hash)].emplace(part_pub, pubnonce);
+                    break;
+                }
+                case PSBT_IN_MUSIG2_PARTIAL_SIG:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, input musig2 partial sig already provided");
+                    } else if (key.size() != 2 * CPubKey::COMPRESSED_SIZE + 1 && key.size() != 2 * CPubKey::COMPRESSED_SIZE + CSHA256::OUTPUT_SIZE + 1) {
+                        throw std::ios_base::failure("Input musig2 partial sig key is not expected size of 67 or 99 bytes");
+                    }
+                    CPubKey agg_pub, part_pub;
+                    uint256 leaf_hash;
+                    DeserializeMuSig2ParticipantDataIdentifier(skey, agg_pub, part_pub, leaf_hash);
+
+                    uint256 partial_sig;
+                    UnserializeFromVector(s, partial_sig);
+
+                    m_musig2_partial_sigs[std::make_pair(agg_pub, leaf_hash)].emplace(part_pub, partial_sig);
                     break;
                 }
                 case PSBT_IN_PROPRIETARY:
@@ -719,6 +865,7 @@ struct PSBTOutput
     XOnlyPubKey m_tap_internal_key;
     std::vector<std::tuple<uint8_t, uint8_t, std::vector<unsigned char>>> m_tap_tree;
     std::map<XOnlyPubKey, std::pair<std::set<uint256>, KeyOriginInfo>> m_tap_bip32_paths;
+    std::map<CPubKey, std::vector<CPubKey>> m_musig2_participants;
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
 
@@ -778,6 +925,17 @@ struct PSBTOutput
             VectorWriter s_value{value, 0};
             s_value << leaf_hashes;
             SerializeKeyOrigin(s_value, origin);
+            s << value;
+        }
+
+        // Write MuSig2 Participants
+        for (const auto& [agg_pubkey, part_pubs] : m_musig2_participants) {
+            SerializeToVector(s, CompactSizeWriter(PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS), std::span{agg_pubkey});
+            std::vector<unsigned char> value;
+            VectorWriter s_value{value, 0};
+            for (auto& pk : part_pubs) {
+                s_value << std::span{pk};
+            }
             s << value;
         }
 
@@ -893,7 +1051,7 @@ struct PSBTOutput
                     } else if (key.size() != 33) {
                         throw std::ios_base::failure("Output Taproot BIP32 keypath key is not at 33 bytes");
                     }
-                    XOnlyPubKey xonly(uint256(Span<uint8_t>(key).last(32)));
+                    XOnlyPubKey xonly(uint256(std::span<uint8_t>(key).last(32)));
                     std::set<uint256> leaf_hashes;
                     uint64_t value_len = ReadCompactSize(s);
                     size_t before_hashes = s.size();
@@ -905,6 +1063,16 @@ struct PSBTOutput
                     }
                     size_t origin_len = value_len - hashes_len;
                     m_tap_bip32_paths.emplace(xonly, std::make_pair(leaf_hashes, DeserializeKeyOrigin(s, origin_len)));
+                    break;
+                }
+                case PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS:
+                {
+                    if (!key_lookup.emplace(key).second) {
+                        throw std::ios_base::failure("Duplicate Key, output participant pubkeys for an aggregate key already provided");
+                    } else if (key.size() != CPubKey::COMPRESSED_SIZE + 1) {
+                        throw std::ios_base::failure("Output musig2 participants pubkeys aggregate key is not 34 bytes");
+                    }
+                    DeserializeMuSig2ParticipantPubkeys(s, skey, m_musig2_participants, std::string{"Output"});
                     break;
                 }
                 case PSBT_OUT_PROPRIETARY:
@@ -1236,10 +1404,10 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction psbt, unsigned 
  * txdata should be the output of PrecomputePSBTData (which can be shared across
  * multiple SignPSBTInput calls). If it is nullptr, a dummy signature will be created.
  **/
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool finalize = true);
+[[nodiscard]] PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, std::optional<int> sighash = std::nullopt, SignatureData* out_sigdata = nullptr, bool finalize = true);
 
 /**  Reduces the size of the PSBT by dropping unnecessary `non_witness_utxos` (i.e. complete previous transactions) from a psbt when all inputs are segwit v1. */
-void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx, const int& sighash_type);
+void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx);
 
 /** Counts the unsigned inputs of a PSBT. */
 size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt);
@@ -1279,6 +1447,6 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
 //! Decode a base64ed PSBT into a PartiallySignedTransaction
 [[nodiscard]] bool DecodeBase64PSBT(PartiallySignedTransaction& decoded_psbt, const std::string& base64_psbt, std::string& error);
 //! Decode a raw (binary blob) PSBT into a PartiallySignedTransaction
-[[nodiscard]] bool DecodeRawPSBT(PartiallySignedTransaction& decoded_psbt, Span<const std::byte> raw_psbt, std::string& error);
+[[nodiscard]] bool DecodeRawPSBT(PartiallySignedTransaction& decoded_psbt, std::span<const std::byte> raw_psbt, std::string& error);
 
 #endif // BITCOIN_PSBT_H

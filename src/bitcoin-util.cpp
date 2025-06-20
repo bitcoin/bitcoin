@@ -26,7 +26,7 @@
 
 static const int CONTINUE_EXECUTION=-1;
 
-const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
+const TranslateFn G_TRANSLATION_FUN{nullptr};
 
 static void SetupBitcoinUtilArgs(ArgsManager &argsman)
 {

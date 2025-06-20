@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,18 +57,18 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
     // Write out a magic string with version
     std::string line = strprintf("%s,%u\n", DUMP_MAGIC, DUMP_VERSION);
     dump_file.write(line.data(), line.size());
-    hasher << Span{line};
+    hasher << std::span{line};
 
     // Write out the file format
     std::string format = db.Format();
-    // BDB files that are opened using BerkeleyRODatabase have it's format as "bdb_ro"
+    // BDB files that are opened using BerkeleyRODatabase have its format as "bdb_ro"
     // We want to override that format back to "bdb"
     if (format == "bdb_ro") {
         format = "bdb";
     }
     line = strprintf("%s,%s\n", "format", format);
     dump_file.write(line.data(), line.size());
-    hasher << Span{line};
+    hasher << std::span{line};
 
     if (ret) {
 
@@ -89,7 +89,7 @@ bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& erro
             std::string value_str = HexStr(ss_value);
             line = strprintf("%s,%s\n", key_str, value_str);
             dump_file.write(line.data(), line.size());
-            hasher << Span{line};
+            hasher << std::span{line};
         }
     }
 
@@ -151,19 +151,19 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
         return false;
     }
     // Check the version number (value of first record)
-    uint32_t ver;
-    if (!ParseUInt32(version_value, &ver)) {
-        error =strprintf(_("Error: Unable to parse version %u as a uint32_t"), version_value);
+    const auto ver{ToIntegral<uint32_t>(version_value)};
+    if (!ver) {
+        error = strprintf(_("Error: Unable to parse version %u as a uint32_t"), version_value);
         dump_file.close();
         return false;
     }
-    if (ver != DUMP_VERSION) {
+    if (*ver != DUMP_VERSION) {
         error = strprintf(_("Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s"), version_value);
         dump_file.close();
         return false;
     }
     std::string magic_hasher_line = strprintf("%s,%s\n", magic_key, version_value);
-    hasher << Span{magic_hasher_line};
+    hasher << std::span{magic_hasher_line};
 
     // Get the stored file format
     std::string format_key;
@@ -175,34 +175,22 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
         dump_file.close();
         return false;
     }
-    // Get the data file format with format_value as the default
-    std::string file_format = args.GetArg("-format", format_value);
-    if (file_format.empty()) {
-        error = _("No wallet file format provided. To use createfromdump, -format=<format> must be provided.");
+    // Make sure that the dump was created from a sqlite database only as that is the only
+    // type of database that we still support.
+    // Other formats such as BDB should not be loaded into a sqlite database since they also
+    // use a different type of wallet entirely which is no longer compatible with this software.
+    if (format_value != "sqlite") {
+        error = strprintf(_("Error: Dumpfile specifies an unsupported database format (%s). Only sqlite database dumps are supported"), format_value);
         return false;
-    }
-    DatabaseFormat data_format;
-    if (file_format == "bdb") {
-        data_format = DatabaseFormat::BERKELEY;
-    } else if (file_format == "sqlite") {
-        data_format = DatabaseFormat::SQLITE;
-    } else if (file_format == "bdb_swap") {
-        data_format = DatabaseFormat::BERKELEY_SWAP;
-    } else {
-        error = strprintf(_("Unknown wallet file format \"%s\" provided. Please provide one of \"bdb\" or \"sqlite\"."), file_format);
-        return false;
-    }
-    if (file_format != format_value) {
-        warnings.push_back(strprintf(_("Warning: Dumpfile wallet format \"%s\" does not match command line specified format \"%s\"."), format_value, file_format));
     }
     std::string format_hasher_line = strprintf("%s,%s\n", format_key, format_value);
-    hasher << Span{format_hasher_line};
+    hasher << std::span{format_hasher_line};
 
     DatabaseOptions options;
     DatabaseStatus status;
     ReadDatabaseArgs(args, options);
     options.require_create = true;
-    options.require_format = data_format;
+    options.require_format = DatabaseFormat::SQLITE;
     std::unique_ptr<WalletDatabase> database = MakeDatabase(wallet_path, options, status, error);
     if (!database) return false;
 
@@ -241,7 +229,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
             }
 
             std::string line = strprintf("%s,%s\n", key, value);
-            hasher << Span{line};
+            hasher << std::span{line};
 
             if (key.empty() || value.empty()) {
                 continue;
@@ -260,7 +248,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
 
             std::vector<unsigned char> k = ParseHex(key);
             std::vector<unsigned char> v = ParseHex(value);
-            if (!batch->Write(Span{k}, Span{v})) {
+            if (!batch->Write(std::span{k}, std::span{v})) {
                 error = strprintf(_("Error: Unable to write record to new wallet"));
                 ret = false;
                 break;

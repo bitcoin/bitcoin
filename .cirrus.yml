@@ -96,21 +96,15 @@ task:
   name: 'lint'
   << : *BASE_TEMPLATE
   container:
-    image: debian:bookworm
+    dockerfile: ci/lint_imagefile
     cpu: 1
     memory: 1G
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
-  test_runner_cache:
-    folder: "/lint_test_runner"
-    fingerprint_script: echo $CIRRUS_TASK_NAME $(git rev-parse HEAD:test/lint/test_runner)
-  python_cache:
-    folder: "/python_build"
-    fingerprint_script: cat .python-version /etc/os-release
   unshallow_script:
     - git fetch --unshallow --no-tags
   lint_script:
-    - ./ci/lint_run_all.sh
+    - ./ci/lint_run.sh
 
 task:
   name: 'tidy'
@@ -131,22 +125,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64-cross'
+  name: 'CentOS, depends, gui'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
       type: small
   env:
-    FILE_ENV: "./ci/test/00_setup_env_win64.sh"
-
-task:
-  name: '32-bit CentOS, dash, gui'
-  << : *GLOBAL_TASK_TEMPLATE
-  persistent_worker:
-    labels:
-      type: small
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
+    FILE_ENV: "./ci/test/00_setup_env_native_centos.sh"
 
 task:
   name: 'previous releases, depends DEBUG'
@@ -182,6 +167,7 @@ task:
   persistent_worker:
     labels:
       type: medium
+  timeout_in: 240m  # larger timeout, due to the high CPU demand
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 

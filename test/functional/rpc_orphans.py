@@ -10,10 +10,16 @@ from test_framework.mempool_util import (
     ORPHAN_TX_EXPIRE_TIME,
     tx_in_orphanage,
 )
-from test_framework.messages import msg_tx
+from test_framework.messages import (
+    CInv,
+    msg_inv,
+    msg_tx,
+    MSG_WTX,
+)
 from test_framework.p2p import P2PInterface
 from test_framework.util import (
     assert_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -105,14 +111,20 @@ class OrphanRPCsTest(BitcoinTestFramework):
         assert tx_in_orphanage(node, tx_child_2["tx"])
 
         self.log.info("Check that orphan 1 and 2 were from different peers")
-        assert orphanage[0]["from"][0] != orphanage[1]["from"][0]
+        assert_not_equal(orphanage[0]["from"][0], orphanage[1]["from"][0])
+        peer_ids = [orphanage[0]["from"][0], orphanage[1]["from"][0]]
 
         self.log.info("Unorphan child 2")
         peer_2.send_and_ping(msg_tx(tx_parent_2["tx"]))
         assert not tx_in_orphanage(node, tx_child_2["tx"])
 
+        self.log.info("Check that additional announcers are reflected in RPC result")
+        peer_2.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(tx_child_1["wtxid"], 16))]))
+
+        orphanage = node.getorphantxs(verbosity=2)
+        assert_equal(set(orphanage[0]["from"]), set(peer_ids))
+
         self.log.info("Checking orphan details")
-        orphanage = node.getorphantxs(verbosity=1)
         assert_equal(len(node.getorphantxs()), 1)
         orphan_1 = orphanage[0]
         self.orphan_details_match(orphan_1, tx_child_1, verbosity=1)

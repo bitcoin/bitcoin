@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2021 The Bitcoin Core developers
+// Copyright (c) 2014-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -176,9 +176,9 @@ void TestChaCha20(const std::string &hex_message, const std::string &hexkey, Cha
         size_t pos = 0;
         for (int j = 0; j < 3; ++j) {
             if (!hex_message.empty()) {
-                rng.Crypt(Span{m}.subspan(pos, lens[j]), Span{outres}.subspan(pos, lens[j]));
+                rng.Crypt(std::span{m}.subspan(pos, lens[j]), std::span{outres}.subspan(pos, lens[j]));
             } else {
-                rng.Keystream(Span{outres}.subspan(pos, lens[j]));
+                rng.Keystream(std::span{outres}.subspan(pos, lens[j]));
             }
             pos += lens[j];
         }
@@ -237,7 +237,7 @@ void TestPoly1305(const std::string &hexmessage, const std::string &hexkey, cons
     // Test incremental interface
     for (int splits = 0; splits < 10; ++splits) {
         for (int iter = 0; iter < 10; ++iter) {
-            auto data = Span{m};
+            auto data = std::span{m};
             Poly1305 poly1305{key};
             for (int chunk = 0; chunk < splits; ++chunk) {
                 size_t now = m_rng.randrange(data.size() + 1);
@@ -267,7 +267,7 @@ void TestChaCha20Poly1305(const std::string& plain_hex, const std::string& aad_h
         if (i == 0) {
             aead.Encrypt(plain, aad, nonce, cipher);
         } else {
-            aead.Encrypt(Span{plain}.first(prefix), Span{plain}.subspan(prefix), aad, nonce, cipher);
+            aead.Encrypt(std::span{plain}.first(prefix), std::span{plain}.subspan(prefix), aad, nonce, cipher);
         }
         BOOST_CHECK(cipher == expected_cipher);
 
@@ -277,7 +277,7 @@ void TestChaCha20Poly1305(const std::string& plain_hex, const std::string& aad_h
         if (i == 0) {
             ret = aead.Decrypt(cipher, aad, nonce, decipher);
         } else {
-            ret = aead.Decrypt(cipher, aad, nonce, Span{decipher}.first(prefix), Span{decipher}.subspan(prefix));
+            ret = aead.Decrypt(cipher, aad, nonce, std::span{decipher}.first(prefix), std::span{decipher}.subspan(prefix));
         }
         BOOST_CHECK(ret);
         BOOST_CHECK(decipher == plain);
@@ -308,21 +308,21 @@ void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::string& aad
         // Do msg_idx dummy encryptions to seek to the correct packet.
         FSChaCha20Poly1305 enc_aead{key, 224};
         for (uint64_t i = 0; i < msg_idx; ++i) {
-            enc_aead.Encrypt(Span{dummy_tag}.first(0), Span{dummy_tag}.first(0), dummy_tag);
+            enc_aead.Encrypt(std::span{dummy_tag}.first(0), std::span{dummy_tag}.first(0), dummy_tag);
         }
 
         // Invoke single-plain or plain1/plain2 Encrypt.
         if (it == 0) {
             enc_aead.Encrypt(plain, aad, cipher);
         } else {
-            enc_aead.Encrypt(Span{plain}.first(prefix), Span{plain}.subspan(prefix), aad, cipher);
+            enc_aead.Encrypt(std::span{plain}.first(prefix), std::span{plain}.subspan(prefix), aad, cipher);
         }
         BOOST_CHECK(cipher == expected_cipher);
 
         // Do msg_idx dummy decryptions to seek to the correct packet.
         FSChaCha20Poly1305 dec_aead{key, 224};
         for (uint64_t i = 0; i < msg_idx; ++i) {
-            dec_aead.Decrypt(dummy_tag, Span{dummy_tag}.first(0), Span{dummy_tag}.first(0));
+            dec_aead.Decrypt(dummy_tag, std::span{dummy_tag}.first(0), std::span{dummy_tag}.first(0));
         }
 
         // Invoke single-plain or plain1/plain2 Decrypt.
@@ -331,7 +331,7 @@ void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::string& aad
         if (it == 0) {
             ret = dec_aead.Decrypt(cipher, aad, decipher);
         } else {
-            ret = dec_aead.Decrypt(cipher, aad, Span{decipher}.first(prefix), Span{decipher}.subspan(prefix));
+            ret = dec_aead.Decrypt(cipher, aad, std::span{decipher}.first(prefix), std::span{decipher}.subspan(prefix));
         }
         BOOST_CHECK(ret);
         BOOST_CHECK(decipher == plain);
@@ -843,9 +843,9 @@ BOOST_AUTO_TEST_CASE(chacha20_midblock)
     c20.Keystream(b2);
     c20.Keystream(b3);
 
-    BOOST_CHECK(std::ranges::equal(Span{block}.first(5), b1));
-    BOOST_CHECK(std::ranges::equal(Span{block}.subspan(5, 7), b2));
-    BOOST_CHECK(std::ranges::equal(Span{block}.last(52), b3));
+    BOOST_CHECK(std::ranges::equal(std::span{block}.first(5), b1));
+    BOOST_CHECK(std::ranges::equal(std::span{block}.subspan(5, 7), b2));
+    BOOST_CHECK(std::ranges::equal(std::span{block}.last(52), b3));
 }
 
 BOOST_AUTO_TEST_CASE(poly1305_testvector)
@@ -1103,8 +1103,8 @@ void CryptoTest::TestSHA3_256(const std::string& input, const std::string& outpu
     int s1 = m_rng.randrange(in_bytes.size() + 1);
     int s2 = m_rng.randrange(in_bytes.size() + 1 - s1);
     int s3 = in_bytes.size() - s1 - s2;
-    sha.Write(Span{in_bytes}.first(s1)).Write(Span{in_bytes}.subspan(s1, s2));
-    sha.Write(Span{in_bytes}.last(s3)).Finalize(out);
+    sha.Write(std::span{in_bytes}.first(s1)).Write(std::span{in_bytes}.subspan(s1, s2));
+    sha.Write(std::span{in_bytes}.last(s3)).Finalize(out);
     BOOST_CHECK(std::equal(std::begin(out_bytes), std::end(out_bytes), out));
 }
 

@@ -26,7 +26,7 @@ class P2PNoBloomFilterMessages(BitcoinTestFramework):
     def test_message_causes_disconnect(self, message):
         """Add a p2p connection that sends a message and check that it disconnects."""
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
-        peer.send_message(message)
+        peer.send_without_ping(message)
         peer.wait_for_disconnect()
         assert_equal(self.nodes[0].getconnectioncount(), 0)
 

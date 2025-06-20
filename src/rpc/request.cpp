@@ -23,8 +23,8 @@
  * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
  * unspecified (HTTP errors and contents of 'error').
  *
- * 1.0 spec: http://json-rpc.org/wiki/specification
- * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
+ * 1.0 spec: https://www.jsonrpc.org/specification_v1
+ * 1.2 spec: https://jsonrpc.org/historical/json-rpc-over-http.html
  *
  * If the server receives a request with the JSON-RPC 2.0 marker `{"jsonrpc": "2.0"}`
  * then Bitcoin will respond with a strictly specified response.
@@ -35,7 +35,7 @@
  *
  * 2.0 spec: https://www.jsonrpc.org/specification
  *
- * Also see http://www.simple-is-better.org/rpc/#differences-between-1-0-and-2-0
+ * Also see https://www.simple-is-better.org/rpc/#differences-between-1-0-and-2-0
  */
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id)
@@ -97,12 +97,14 @@ static fs::path GetAuthCookieFile(bool temp=false)
 
 static bool g_generated_cookie = false;
 
-bool GenerateAuthCookie(std::string* cookie_out, std::optional<fs::perms> cookie_perms)
+GenerateAuthCookieResult GenerateAuthCookie(const std::optional<fs::perms>& cookie_perms,
+                                            std::string& user,
+                                            std::string& pass)
 {
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
     GetRandBytes(rand_pwd);
-    std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd);
+    const std::string rand_pwd_hex{HexStr(rand_pwd)};
 
     /** the umask determines what permissions are used to create this file -
      * these are set to 0077 in common/system.cpp.
@@ -110,27 +112,27 @@ bool GenerateAuthCookie(std::string* cookie_out, std::optional<fs::perms> cookie
     std::ofstream file;
     fs::path filepath_tmp = GetAuthCookieFile(true);
     if (filepath_tmp.empty()) {
-        return true; // -norpccookiefile
+        return GenerateAuthCookieResult::DISABLED; // -norpccookiefile
     }
     file.open(filepath_tmp);
     if (!file.is_open()) {
         LogWarning("Unable to open cookie authentication file %s for writing", fs::PathToString(filepath_tmp));
-        return false;
+        return GenerateAuthCookieResult::ERR;
     }
-    file << cookie;
+    file << COOKIEAUTH_USER << ":" << rand_pwd_hex;
     file.close();
 
     fs::path filepath = GetAuthCookieFile(false);
     if (!RenameOver(filepath_tmp, filepath)) {
         LogWarning("Unable to rename cookie authentication file %s to %s", fs::PathToString(filepath_tmp), fs::PathToString(filepath));
-        return false;
+        return GenerateAuthCookieResult::ERR;
     }
     if (cookie_perms) {
         std::error_code code;
         fs::permissions(filepath, cookie_perms.value(), fs::perm_options::replace, code);
         if (code) {
             LogWarning("Unable to set permissions on cookie authentication file %s", fs::PathToString(filepath));
-            return false;
+            return GenerateAuthCookieResult::ERR;
         }
     }
 
@@ -138,9 +140,9 @@ bool GenerateAuthCookie(std::string* cookie_out, std::optional<fs::perms> cookie
     LogInfo("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
     LogInfo("Permissions used for cookie: %s\n", PermsToSymbolicString(fs::status(filepath).permissions()));
 
-    if (cookie_out)
-        *cookie_out = cookie;
-    return true;
+    user = COOKIEAUTH_USER;
+    pass = rand_pwd_hex;
+    return GenerateAuthCookieResult::OK;
 }
 
 bool GetAuthCookie(std::string *cookie_out)
@@ -170,7 +172,7 @@ void DeleteAuthCookie()
             fs::remove(GetAuthCookieFile());
         }
     } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove random auth cookie file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
+        LogWarning("Unable to remove random auth cookie file %s: %s\n", fs::PathToString(e.path1()), e.code().message());
     }
 }
 

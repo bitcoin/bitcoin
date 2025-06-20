@@ -20,7 +20,6 @@
 #else
 #include <arpa/inet.h>   // IWYU pragma: export
 #include <fcntl.h>       // IWYU pragma: export
-#include <ifaddrs.h>     // IWYU pragma: export
 #include <net/if.h>      // IWYU pragma: export
 #include <netdb.h>       // IWYU pragma: export
 #include <netinet/in.h>  // IWYU pragma: export

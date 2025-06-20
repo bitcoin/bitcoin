@@ -880,6 +880,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">வாலட்டை குறியாக்குக</translation>
     </message>
     <message>
+        <source>Advanced Options</source>
+        <translation type="unfinished">மேம்பட்ட விருப்பங்கள்</translation>
+    </message>
+    <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation type="unfinished">இந்த வாலட்டிற்கு ப்ரைவேட் கீஸை முடக்கு. முடக்கப்பட்ட ப்ரைவேட் கீஸ் கொண்ட வாலட்டிற்கு ப்ரைவேட் கீஸ் இருக்காது மற்றும் எச்டி ஸீட் அல்லது இம்போர்ட் செய்யப்பட்ட ப்ரைவேட் கீஸ் இருக்கக்கூடாது. பார்க்க-மட்டும் உதவும் வாலட்டிற்கு இது ஏற்றது.</translation>
     </message>
@@ -1229,14 +1233,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Spend unconfirmed change</source>
         <translation type="unfinished">&amp; உறுதிப்படுத்தப்படாத மாற்றத்தை செலவழிக்கவும்</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">ரூட்டரில் Bitcoin கிளையன்ட் போர்ட் தானாக திறக்க. இது உங்கள் திசைவி UPnP ஐ ஆதரிக்கும் போது மட்டுமே இயங்குகிறது.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp; UPnP ஐப் பயன்படுத்தி வரைபடம் துறைமுகம்</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -2865,10 +2861,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">%s டெவலப்பர்கள்</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">தரவு கோப்பகத்தை %s லாக் செய்ய முடியாது. %s ஏற்கனவே இயங்குகிறது.</translation>
-    </message>
-    <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation type="unfinished">எம்ஐடி சாப்ட்வேர் விதிமுறைகளின் கீழ் பகிர்ந்தளிக்கப்படுகிறது, அதனுடன் கொடுக்கப்பட்டுள்ள %s அல்லது %s பைல் ஐ பார்க்கவும்</translation>
     </message>
@@ -2935,10 +2927,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">சிதைந்த பிளாக் டேட்டாபேஸ் கண்டறியப்பட்டது</translation>
-    </message>
-    <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">இப்போது பிளாக் டேட்டாபேஸை மீண்டும் உருவாக்க விரும்புகிறீர்களா?</translation>
     </message>
     <message>
         <source>Done loading</source>
@@ -3015,10 +3003,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation type="unfinished">-அனுமதிப்பட்டியல் குறிப்பிடப்பட்ட தவறான நெட்மாஸ்க்: '%s'</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">போதுமான ஃபைல் டிஸ்கிரிப்டார் கிடைக்கவில்லை.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>

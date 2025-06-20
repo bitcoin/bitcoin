@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -272,7 +272,7 @@ public:
         return sig == it->second;
     }
 
-    bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion,
+    bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion,
                                ScriptExecutionData&, ScriptError*) const override {
         XOnlyPubKey pk{pubkey};
         auto it = g_testdata->schnorr_signatures.find(pk);
@@ -297,28 +297,29 @@ using miniscript::operator""_mst;
 using Node = miniscript::Node<CPubKey>;
 
 /** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
-// NOLINTNEXTLINE(misc-no-recursion)
-std::set<Challenge> FindChallenges(const NodeRef& ref) {
+std::set<Challenge> FindChallenges(const Node* root)
+{
     std::set<Challenge> chal;
-    for (const auto& key : ref->keys) {
-        chal.emplace(ChallengeType::PK, ChallengeNumber(key));
-    }
-    if (ref->fragment == miniscript::Fragment::OLDER) {
-        chal.emplace(ChallengeType::OLDER, ref->k);
-    } else if (ref->fragment == miniscript::Fragment::AFTER) {
-        chal.emplace(ChallengeType::AFTER, ref->k);
-    } else if (ref->fragment == miniscript::Fragment::SHA256) {
-        chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::RIPEMD160) {
-        chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::HASH256) {
-        chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data));
-    } else if (ref->fragment == miniscript::Fragment::HASH160) {
-        chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data));
-    }
-    for (const auto& sub : ref->subs) {
-        auto sub_chal = FindChallenges(sub);
-        chal.insert(sub_chal.begin(), sub_chal.end());
+
+    for (std::vector stack{root}; !stack.empty();) {
+        const auto* ref{stack.back()};
+        stack.pop_back();
+
+        for (const auto& key : ref->keys) {
+            chal.emplace(ChallengeType::PK, ChallengeNumber(key));
+        }
+        switch (ref->fragment) {
+        case Fragment::OLDER: chal.emplace(ChallengeType::OLDER, ref->k); break;
+        case Fragment::AFTER: chal.emplace(ChallengeType::AFTER, ref->k); break;
+        case Fragment::SHA256: chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data)); break;
+        case Fragment::RIPEMD160: chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data)); break;
+        case Fragment::HASH256: chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data)); break;
+        case Fragment::HASH160: chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data)); break;
+        default: break;
+        }
+        for (const auto& sub : ref->subs) {
+            stack.push_back(sub.get());
+        }
     }
     return chal;
 }
@@ -347,7 +348,7 @@ struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
 void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
     auto script = node->ToScript(converter);
-    auto challenges = FindChallenges(node); // Find all challenges in the generated miniscript.
+    const auto challenges{FindChallenges(node.get())}; // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
     for (int iter = 0; iter < 3; ++iter) {
         std::shuffle(challist.begin(), challist.end(), m_rng);

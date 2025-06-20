@@ -2,79 +2,77 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <bench/bench.h>
 #include <interfaces/chain.h>
+#include <interfaces/wallet.h>
+#include <kernel/chain.h>
 #include <node/context.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <wallet/test/util.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
 
 #include <optional>
-
-#if defined(USE_BDB) && defined(USE_SQLITE) // only enable benchmark when bdb and sqlite are enabled
 
 namespace wallet{
 
 static void WalletMigration(benchmark::Bench& bench)
 {
-    const auto test_setup = MakeNoLogFileContext<TestingSetup>();
-
-    WalletContext context;
-    context.args = &test_setup->m_args;
-    context.chain = test_setup->m_node.chain.get();
+    const auto test_setup{MakeNoLogFileContext<TestingSetup>()};
+    const auto loader{MakeWalletLoader(*test_setup->m_node.chain, test_setup->m_args)};
 
     // Number of imported watch only addresses
     int NUM_WATCH_ONLY_ADDR = 20;
 
     // Setup legacy wallet
-    DatabaseOptions options;
-    options.use_unsafe_sync = true;
-    options.verify = false;
-    DatabaseStatus status;
-    bilingual_str error;
-    auto database = MakeWalletDatabase(fs::PathToString(test_setup->m_path_root / "legacy"), options, status, error);
-    uint64_t create_flags = 0;
-    auto wallet = TestLoadWallet(std::move(database), context, create_flags);
+    std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase());
+    LegacyDataSPKM* legacy_spkm = wallet->GetOrCreateLegacyDataSPKM();
+    WalletBatch batch{wallet->GetDatabase()};
+
+    // Write a best block record as migration expects one to exist
+    CBlockLocator loc;
+    batch.WriteBestBlock(loc);
 
     // Add watch-only addresses
     std::vector<CScript> scripts_watch_only;
     for (int w = 0; w < NUM_WATCH_ONLY_ADDR; ++w) {
         CKey key = GenerateRandomKey();
         LOCK(wallet->cs_wallet);
-        const CScript& script = scripts_watch_only.emplace_back(GetScriptForDestination(GetDestinationForKey(key.GetPubKey(), OutputType::LEGACY)));
-        bool res = wallet->ImportScriptPubKeys(strprintf("watch_%d", w), {script},
-                                    /*have_solving_data=*/false, /*apply_label=*/true, /*timestamp=*/1);
-        assert(res);
+        const PKHash dest{key.GetPubKey()};
+        const CScript& script = scripts_watch_only.emplace_back(GetScriptForDestination(dest));
+        assert(legacy_spkm->LoadWatchOnly(script));
+        assert(wallet->SetAddressBook(dest, strprintf("watch_%d", w), /*purpose=*/std::nullopt));
+        batch.WriteWatchOnly(script, CKeyMetadata());
     }
 
     // Generate transactions and local addresses
-    for (int j = 0; j < 400; ++j) {
+    for (int j = 0; j < 500; ++j) {
+        CKey key = GenerateRandomKey();
+        CPubKey pubkey = key.GetPubKey();
+        // Load key, scripts and create address book record
+        Assert(legacy_spkm->LoadKey(key, pubkey));
+        CTxDestination dest{PKHash(pubkey)};
+        Assert(wallet->SetAddressBook(dest, strprintf("legacy_%d", j), /*purpose=*/std::nullopt));
+
         CMutableTransaction mtx;
-        mtx.vout.emplace_back(COIN, GetScriptForDestination(*Assert(wallet->GetNewDestination(OutputType::BECH32, strprintf("bench_%d", j)))));
-        mtx.vout.emplace_back(COIN, GetScriptForDestination(*Assert(wallet->GetNewDestination(OutputType::LEGACY, strprintf("legacy_%d", j)))));
+        mtx.vout.emplace_back(COIN, GetScriptForDestination(dest));
         mtx.vout.emplace_back(COIN, scripts_watch_only.at(j % NUM_WATCH_ONLY_ADDR));
         mtx.vin.resize(2);
-        wallet->AddToWallet(MakeTransactionRef(mtx), TxStateInactive{}, /*update_wtx=*/nullptr, /*fFlushOnClose=*/false, /*rescanning_old_block=*/true);
+        wallet->AddToWallet(MakeTransactionRef(mtx), TxStateInactive{}, /*update_wtx=*/nullptr, /*rescanning_old_block=*/true);
+        batch.WriteKey(pubkey, key.GetPrivKey(), CKeyMetadata());
     }
 
-    // Unload so the migration process loads it
-    TestUnloadWallet(std::move(wallet));
-
-    bench.epochs(/*numEpochs=*/1).run([&] {
-        util::Result<MigrationResult> res = MigrateLegacyToDescriptor(fs::PathToString(test_setup->m_path_root / "legacy"), "", context);
-        assert(res);
-        assert(res->wallet);
-        assert(res->watchonly_wallet);
-    });
+    bench.epochs(/*numEpochs=*/1).epochIterations(/*numIters=*/1) // run the migration exactly once
+         .run([&] {
+             auto res{MigrateLegacyToDescriptor(std::move(wallet), /*passphrase=*/"", *loader->context(), /*was_loaded=*/false)};
+             assert(res);
+             assert(res->wallet);
+             assert(res->watchonly_wallet);
+         });
 }
 
 BENCHMARK(WalletMigration, benchmark::PriorityLevel::LOW);
 
 } // namespace wallet
-
-#endif // end USE_SQLITE && USE_BDB

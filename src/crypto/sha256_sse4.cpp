@@ -1,24 +1,28 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 // This is a translation to GCC extended asm syntax from YASM code by Intel
 // (available at the bottom of this file).
 
+#include <cstdint>
 #include <cstdlib>
-#include <stdint.h>
 
 #if defined(__x86_64__) || defined(__amd64__)
 
 namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
-#if defined(__clang__) && !defined(__OPTIMIZE__)
+#if defined(__clang__)
   /*
   clang is unable to compile this with -O0 and -fsanitize=address.
-  See upstream bug: https://github.com/llvm/llvm-project/issues/92182
+  See upstream bug: https://github.com/llvm/llvm-project/issues/92182.
+  This also fails to compile with -O2, -fcf-protection & -fsanitize=address.
+  See https://github.com/bitcoin/bitcoin/issues/31913.
   */
+#if __has_feature(address_sanitizer)
   __attribute__((no_sanitize("address")))
+#endif
 #endif
 {
     static const uint32_t K256 alignas(16) [] = {

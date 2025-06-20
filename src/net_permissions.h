@@ -48,7 +48,7 @@ enum class NetPermissionFlags : uint32_t {
 };
 static inline constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
 {
-    using t = typename std::underlying_type<NetPermissionFlags>::type;
+    using t = std::underlying_type_t<NetPermissionFlags>;
     return static_cast<NetPermissionFlags>(static_cast<t>(a) | static_cast<t>(b));
 }
 
@@ -59,7 +59,7 @@ public:
     static std::vector<std::string> ToStrings(NetPermissionFlags flags);
     static inline bool HasFlag(NetPermissionFlags flags, NetPermissionFlags f)
     {
-        using t = typename std::underlying_type<NetPermissionFlags>::type;
+        using t = std::underlying_type_t<NetPermissionFlags>;
         return (static_cast<t>(flags) & static_cast<t>(f)) == static_cast<t>(f);
     }
     static inline void AddFlag(NetPermissionFlags& flags, NetPermissionFlags f)
@@ -74,7 +74,7 @@ public:
     static inline void ClearFlag(NetPermissionFlags& flags, NetPermissionFlags f)
     {
         assert(f == NetPermissionFlags::Implicit);
-        using t = typename std::underlying_type<NetPermissionFlags>::type;
+        using t = std::underlying_type_t<NetPermissionFlags>;
         flags = static_cast<NetPermissionFlags>(static_cast<t>(flags) & ~static_cast<t>(f));
     }
 };

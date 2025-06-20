@@ -1,3 +1,8 @@
+// Copyright 2014 BitPay Inc.
+// Copyright (c) 2022-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit.
+
 #ifndef BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_ESCAPES_H
 #define BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_ESCAPES_H
 static const char *escapes[256] = {

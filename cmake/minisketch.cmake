@@ -2,13 +2,15 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+include(CheckSourceCompilesWithFlags)
+
 # Check for clmul instructions support.
 if(MSVC)
-  set(CLMUL_CXXFLAGS)
+  set(CLMUL_CXXFLAGS "")
 else()
   set(CLMUL_CXXFLAGS -mpclmul)
 endif()
-check_cxx_source_compiles_with_flags("${CLMUL_CXXFLAGS}" "
+check_cxx_source_compiles_with_flags("
   #include <immintrin.h>
   #include <cstdint>
 
@@ -22,13 +24,10 @@ check_cxx_source_compiles_with_flags("${CLMUL_CXXFLAGS}" "
     return e == 0;
   }
   " HAVE_CLMUL
+  CXXFLAGS ${CLMUL_CXXFLAGS}
 )
 
 add_library(minisketch_common INTERFACE)
-target_compile_definitions(minisketch_common INTERFACE
-  DISABLE_DEFAULT_FIELDS
-  ENABLE_FIELD_32
-)
 if(MSVC)
   target_compile_options(minisketch_common INTERFACE
     /wd4060
@@ -36,29 +35,6 @@ if(MSVC)
     /wd4146
     /wd4244
     /wd4267
-  )
-endif()
-
-if(HAVE_CLMUL)
-  add_library(minisketch_clmul OBJECT EXCLUDE_FROM_ALL
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_1byte.cpp
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_2bytes.cpp
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_3bytes.cpp
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_4bytes.cpp
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_5bytes.cpp
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_6bytes.cpp
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_7bytes.cpp
-    ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_8bytes.cpp
-  )
-  target_compile_definitions(minisketch_clmul PUBLIC HAVE_CLMUL)
-  target_compile_options(minisketch_clmul PRIVATE ${CLMUL_CXXFLAGS})
-  target_link_libraries(minisketch_clmul
-    PRIVATE
-      core_interface
-      minisketch_common
-  )
-  set_target_properties(minisketch_clmul PROPERTIES
-    EXPORT_COMPILE_COMMANDS OFF
   )
 endif()
 
@@ -74,6 +50,12 @@ add_library(minisketch STATIC EXCLUDE_FROM_ALL
   ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/generic_8bytes.cpp
 )
 
+target_compile_definitions(minisketch
+  PRIVATE
+    DISABLE_DEFAULT_FIELDS
+    ENABLE_FIELD_32
+)
+
 target_include_directories(minisketch
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/minisketch/include>
@@ -83,9 +65,25 @@ target_link_libraries(minisketch
   PRIVATE
     core_interface
     minisketch_common
-    $<TARGET_NAME_IF_EXISTS:minisketch_clmul>
 )
 
 set_target_properties(minisketch PROPERTIES
   EXPORT_COMPILE_COMMANDS OFF
 )
+
+if(HAVE_CLMUL)
+  set(_minisketch_clmul_src
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_1byte.cpp
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_2bytes.cpp
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_3bytes.cpp
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_4bytes.cpp
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_5bytes.cpp
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_6bytes.cpp
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_7bytes.cpp
+      ${PROJECT_SOURCE_DIR}/src/minisketch/src/fields/clmul_8bytes.cpp
+  )
+  target_sources(minisketch PRIVATE ${_minisketch_clmul_src})
+  set_property(SOURCE ${_minisketch_clmul_src} PROPERTY COMPILE_OPTIONS ${CLMUL_CXXFLAGS})
+  target_compile_definitions(minisketch PRIVATE HAVE_CLMUL)
+  unset(_minisketch_clmul_src)
+endif()

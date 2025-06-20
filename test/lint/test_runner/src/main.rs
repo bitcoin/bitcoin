@@ -3,8 +3,8 @@
 // file COPYING or https://opensource.org/license/mit/.
 
 use std::env;
-use std::fs;
-use std::io::ErrorKind;
+use std::fs::{self, File};
+use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode, Stdio};
 
@@ -49,6 +49,16 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_std_filesystem
         },
         &Linter {
+            description: "Check that fatal assertions are not used in RPC code",
+            name: "rpc_assert",
+            lint_fn: lint_rpc_assert
+        },
+        &Linter {
+            description: "Check that boost assertions are not used",
+            name: "boost_assert",
+            lint_fn: lint_boost_assert
+        },
+        &Linter {
             description: "Check that release note snippets are in the right folder",
             name: "doc_release_note_snippets",
             lint_fn: lint_doc_release_note_snippets
@@ -59,6 +69,16 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_subtree
         },
         &Linter {
+            description: "Check scripted-diffs",
+            name: "scripted_diff",
+            lint_fn: lint_scripted_diff
+        },
+        &Linter {
+            description: "Check that commit messages have a new line before the body or no body at all.",
+            name: "commit_msg",
+            lint_fn: lint_commit_msg
+        },
+        &Linter {
             description: "Check that tabs are not used as whitespace",
             name: "tabs_whitespace",
             lint_fn: lint_tabs_whitespace
@@ -67,6 +87,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check for trailing whitespace",
             name: "trailing_whitespace",
             lint_fn: lint_trailing_whitespace
+        },
+        &Linter {
+            description: "Check for trailing newline",
+            name: "trailing_newline",
+            lint_fn: lint_trailing_newline
         },
         &Linter {
             description: "Run all linters of the form: test/lint/lint-*.py",
@@ -163,21 +188,41 @@ fn get_git_root() -> PathBuf {
     PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
 }
 
+/// Return the commit range, or panic
+fn commit_range() -> String {
+    // Use the env var, if set. E.g. COMMIT_RANGE='HEAD~n..HEAD' for the last 'n' commits.
+    env::var("COMMIT_RANGE").unwrap_or_else(|_| {
+        // Otherwise, assume that a merge commit exists. This merge commit is assumed
+        // to be the base, after which linting will be done. If the merge commit is
+        // HEAD, the range will be empty.
+        format!(
+            "{}..HEAD",
+            check_output(git().args(["rev-list", "--max-count=1", "--merges", "HEAD"]))
+                .expect("check_output failed")
+        )
+    })
+}
+
 /// Return all subtree paths
 fn get_subtrees() -> Vec<&'static str> {
+    // Keep in sync with [test/lint/README.md#git-subtree-checksh]
     vec![
         "src/crc32c",
         "src/crypto/ctaes",
+        "src/ipc/libmultiprocess",
         "src/leveldb",
         "src/minisketch",
         "src/secp256k1",
     ]
 }
 
-/// Return the pathspecs to exclude all subtrees
-fn get_pathspecs_exclude_subtrees() -> Vec<String> {
+/// Return the pathspecs to exclude by default
+fn get_pathspecs_default_excludes() -> Vec<String> {
     get_subtrees()
         .iter()
+        .chain(&[
+            "doc/release-notes/release-notes-*", // archived notes
+        ])
         .map(|s| format!(":(exclude){}", s))
         .collect()
 }
@@ -192,6 +237,55 @@ fn lint_subtree() -> LintResult {
             .status()
             .expect("command_error")
             .success();
+    }
+    if good {
+        Ok(())
+    } else {
+        Err("".to_string())
+    }
+}
+
+fn lint_scripted_diff() -> LintResult {
+    if Command::new("test/lint/commit-script-check.sh")
+        .arg(commit_range())
+        .status()
+        .expect("command error")
+        .success()
+    {
+        Ok(())
+    } else {
+        Err("".to_string())
+    }
+}
+
+fn lint_commit_msg() -> LintResult {
+    let mut good = true;
+    let commit_hashes = check_output(git().args([
+        "-c",
+        "log.showSignature=false",
+        "log",
+        &commit_range(),
+        "--format=%H",
+    ]))?;
+    for hash in commit_hashes.lines() {
+        let commit_info = check_output(git().args([
+            "-c",
+            "log.showSignature=false",
+            "log",
+            "--format=%B",
+            "-n",
+            "1",
+            hash,
+        ]))?;
+        if let Some(line) = commit_info.lines().nth(1) {
+            if !line.is_empty() {
+                println!(
+                        "The subject line of commit hash {} is followed by a non-empty line. Subject lines should always be followed by a blank line.",
+                        hash
+                    );
+                good = false;
+            }
+        }
     }
     if good {
         Ok(())
@@ -237,7 +331,7 @@ fn lint_py_lint() -> LintResult {
             "F822", // undefined name name in __all__
             "F823", // local variable name … referenced before assignment
             "F841", // local variable 'foo' is assigned to but never used
-            "PLE", // Pylint errors
+            "PLE",  // Pylint errors
             "W191", // indentation contains tabs
             "W291", // trailing whitespace
             "W292", // no newline at end of file
@@ -249,7 +343,7 @@ fn lint_py_lint() -> LintResult {
     let files = check_output(
         git()
             .args(["ls-files", "--", "*.py"])
-            .args(get_pathspecs_exclude_subtrees()),
+            .args(get_pathspecs_default_excludes()),
     )?;
 
     let mut cmd = Command::new(bin_name);
@@ -273,9 +367,11 @@ fn lint_std_filesystem() -> LintResult {
     let found = git()
         .args([
             "grep",
+            "--line-number",
             "std::filesystem",
             "--",
             "./src/",
+            ":(exclude)src/ipc/libmultiprocess/",
             ":(exclude)src/util/fs.h",
         ])
         .status()
@@ -283,10 +379,66 @@ fn lint_std_filesystem() -> LintResult {
         .success();
     if found {
         Err(r#"
-^^^
 Direct use of std::filesystem may be dangerous and buggy. Please include <util/fs.h> and use the
 fs:: namespace, which has unsafe filesystem functions marked as deleted.
             "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_rpc_assert() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--extended-regexp",
+            r"\<(A|a)ss(ume|ert)\(",
+            "--",
+            "src/rpc/",
+            "src/wallet/rpc*",
+            ":(exclude)src/rpc/server.cpp",
+            // src/rpc/server.cpp is excluded from this check since it's mostly meta-code.
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of assert for RPC code.
+
+Aborting the whole process is undesirable for RPC code. So nonfatal
+checks should be used over assert. See: src/util/check.h
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_boost_assert() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--extended-regexp",
+            r"BOOST_ASSERT\(",
+            "--",
+            "*.cpp",
+            "*.h",
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+BOOST_ASSERT must be replaced with Assert, BOOST_REQUIRE, or BOOST_CHECK to avoid an unnecessary
+include of the boost/assert.hpp dependency.
+            "#
+        .trim()
         .to_string())
     } else {
         Ok(())
@@ -303,23 +455,21 @@ fn lint_doc_release_note_snippets() -> LintResult {
     if non_release_notes.is_empty() {
         Ok(())
     } else {
-        Err(format!(
-            r#"
-{}
-^^^
+        println!("{non_release_notes}");
+        Err(r#"
 Release note snippets and other docs must be put into the doc/ folder directly.
 
 The doc/release-notes/ folder is for archived release notes of previous releases only. Snippets are
 expected to follow the naming "/doc/release-notes-<PR number>.md".
-            "#,
-            non_release_notes
-        ))
+            "#
+        .trim()
+        .to_string())
     }
 }
 
 /// Return the pathspecs for whitespace related excludes
 fn get_pathspecs_exclude_whitespace() -> Vec<String> {
-    let mut list = get_pathspecs_exclude_subtrees();
+    let mut list = get_pathspecs_default_excludes();
     list.extend(
         [
             // Permanent excludes
@@ -328,7 +478,6 @@ fn get_pathspecs_exclude_whitespace() -> Vec<String> {
             "contrib/windeploy/win-codesign.cert",
             "doc/README_windows.txt",
             // Temporary excludes, or existing violations
-            "doc/release-notes/release-notes-0.*",
             "contrib/init/bitcoind.openrc",
             "contrib/macdeploy/macdeployqtplus",
             "src/crypto/sha256_sse4.cpp",
@@ -356,7 +505,6 @@ fn lint_trailing_whitespace() -> LintResult {
         .success();
     if trailing_space {
         Err(r#"
-^^^
 Trailing whitespace (including Windows line endings [CR LF]) is problematic, because git may warn
 about it, or editors may remove it by default, forcing developers in the future to either undo the
 changes manually or spend time on review.
@@ -366,6 +514,45 @@ Thus, it is best to remove the trailing space now.
 Please add any false positives, such as subtrees, Windows-related files, patch files, or externally
 sourced files to the exclude list.
             "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+fn lint_trailing_newline() -> LintResult {
+    let files = check_output(
+        git()
+            .args([
+                "ls-files", "--", "*.py", "*.cpp", "*.h", "*.md", "*.rs", "*.sh", "*.cmake",
+            ])
+            .args(get_pathspecs_default_excludes()),
+    )?;
+    let mut missing_newline = false;
+    for path in files.lines() {
+        let mut file = File::open(path).expect("must be able to open file");
+        if file.seek(SeekFrom::End(-1)).is_err() {
+            continue; // Allow fully empty files
+        }
+        let mut buffer = [0u8; 1];
+        file.read_exact(&mut buffer)
+            .expect("must be able to read the last byte");
+        if buffer[0] != b'\n' {
+            missing_newline = true;
+            println!("{path}");
+        }
+    }
+    if missing_newline {
+        Err(r#"
+A trailing newline is required, because git may warn about it missing. Also, it can make diffs
+verbose and can break git blame after appending lines.
+
+Thus, it is best to add the trailing newline now.
+
+Please add any false positives to the exclude list.
+            "#
+        .trim()
         .to_string())
     } else {
         Ok(())
@@ -382,7 +569,6 @@ fn lint_tabs_whitespace() -> LintResult {
         .success();
     if tabs {
         Err(r#"
-^^^
 Use of tabs in this codebase is problematic, because existing code uses spaces and tabs will cause
 display issues and conflict with editor settings.
 
@@ -390,6 +576,7 @@ Please remove the tabs.
 
 Please add any false positives, such as subtrees, or externally sourced files to the exclude list.
             "#
+        .trim()
         .to_string())
     } else {
         Ok(())
@@ -429,15 +616,7 @@ fn lint_includes_build_config() -> LintResult {
                     "*.cpp",
                     "*.h",
                 ])
-                .args(get_pathspecs_exclude_subtrees())
-                .args([
-                    // These are exceptions which don't use bitcoin-build-config.h, rather CMakeLists.txt adds
-                    // these cppflags manually.
-                    ":(exclude)src/crypto/sha256_arm_shani.cpp",
-                    ":(exclude)src/crypto/sha256_avx2.cpp",
-                    ":(exclude)src/crypto/sha256_sse41.cpp",
-                    ":(exclude)src/crypto/sha256_x86_shani.cpp",
-                ]),
+                .args(get_pathspecs_default_excludes()),
         )
         .expect("grep failed");
         git()
@@ -464,7 +643,6 @@ fn lint_includes_build_config() -> LintResult {
     if missing {
         return Err(format!(
             r#"
-^^^
 One or more files use a symbol declared in the bitcoin-build-config.h header. However, they are not
 including the header. This is problematic, because the header may or may not be indirectly
 included. If the indirect include were to be intentionally or accidentally removed, the build could
@@ -480,12 +658,13 @@ include again.
 #include <bitcoin-build-config.h> // IWYU pragma: keep
             "#,
             defines_regex
-        ));
+        )
+        .trim()
+        .to_string());
     }
     let redundant = print_affected_files(false);
     if redundant {
         return Err(r#"
-^^^
 None of the files use a symbol declared in the bitcoin-build-config.h header. However, they are including
 the header. Consider removing the unused include.
             "#
@@ -538,7 +717,9 @@ Markdown link errors found:
 {}
                 "#,
                 stderr
-            ))
+            )
+            .trim()
+            .to_string())
         }
         Err(e) if e.kind() == ErrorKind::NotFound => {
             println!("`mlc` was not found in $PATH, skipping markdown lint check.");
@@ -583,6 +764,10 @@ fn main() -> ExitCode {
     };
 
     let git_root = get_git_root();
+    let commit_range = commit_range();
+    let commit_log = check_output(git().args(["log", "--no-merges", "--oneline", &commit_range]))
+        .expect("check_output failed");
+    println!("Checking commit range ({commit_range}):\n{commit_log}\n");
 
     let mut test_failed = false;
     for linter in linters_to_run {
@@ -590,10 +775,9 @@ fn main() -> ExitCode {
         env::set_current_dir(&git_root).unwrap();
         if let Err(err) = (linter.lint_fn)() {
             println!(
-                "{err}\n^---- ⚠️ Failure generated from lint check '{}'!",
-                linter.name
+                "^^^\n{err}\n^---- ⚠️ Failure generated from lint check '{}' ({})!\n\n",
+                linter.name, linter.description,
             );
-            println!("{}", linter.description);
             test_failed = true;
         }
     }

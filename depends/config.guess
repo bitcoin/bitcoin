@@ -1,10 +1,10 @@
 #! /bin/sh
 # Attempt to guess a canonical system name.
-#   Copyright 1992-2023 Free Software Foundation, Inc.
+#   Copyright 1992-2024 Free Software Foundation, Inc.
 
 # shellcheck disable=SC2006,SC2268 # see below for rationale
 
-timestamp='2023-08-22'
+timestamp='2024-07-27'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ version="\
 GNU config.guess ($timestamp)
 
 Originally written by Per Bothner.
-Copyright 1992-2023 Free Software Foundation, Inc.
+Copyright 1992-2024 Free Software Foundation, Inc.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
@@ -123,7 +123,7 @@ set_cc_for_build() {
     dummy=$tmp/dummy
     case ${CC_FOR_BUILD-},${HOST_CC-},${CC-} in
 	,,)    echo "int x;" > "$dummy.c"
-	       for driver in cc gcc c89 c99 ; do
+	       for driver in cc gcc c17 c99 c89 ; do
 		   if ($driver -c -o "$dummy.o" "$dummy.c") >/dev/null 2>&1 ; then
 		       CC_FOR_BUILD=$driver
 		       break
@@ -165,6 +165,8 @@ Linux|GNU|GNU/*)
 	LIBC=dietlibc
 	#elif defined(__GLIBC__)
 	LIBC=gnu
+	#elif defined(__LLVM_LIBC__)
+	LIBC=llvm
 	#else
 	#include <stdarg.h>
 	/* First heuristic to detect musl libc.  */
@@ -632,7 +634,8 @@ EOF
 		sed 's/^		//' << EOF > "$dummy.c"
 		#include <sys/systemcfg.h>
 
-		main()
+		int
+		main ()
 			{
 			if (!__power_pc())
 				exit(1);
@@ -716,7 +719,8 @@ EOF
 		#include <stdlib.h>
 		#include <unistd.h>
 
-		int main ()
+		int
+		main ()
 		{
 		#if defined(_SC_KERNEL_BITS)
 		    long bits = sysconf(_SC_KERNEL_BITS);
@@ -1593,6 +1597,9 @@ EOF
     *:Unleashed:*:*)
 	GUESS=$UNAME_MACHINE-unknown-unleashed$UNAME_RELEASE
 	;;
+    *:Ironclad:*:*)
+	GUESS=$UNAME_MACHINE-unknown-ironclad
+	;;
 esac
 
 # Do we have a guess based on uname results?
@@ -1616,6 +1623,7 @@ cat > "$dummy.c" <<EOF
 #endif
 #endif
 #endif
+int
 main ()
 {
 #if defined (sony)

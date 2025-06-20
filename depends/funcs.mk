@@ -39,8 +39,33 @@ define fetch_file
       $(call fetch_file_inner,$(1),$(FALLBACK_DOWNLOAD_PATH),$(3),$(4),$(5))))
 endef
 
+# Shell script to create a source tarball in $(1)_source from local directory
+# $(1)_local_dir instead of downloading remote sources. Tarball is recreated if
+# any paths in the local directory have a newer mtime, and checksum of the
+# tarball is saved to $(1)_fetched and returned as output.
+define fetch_local_dir_sha256
+    if ! [ -f $($(1)_source) ] || [ -n "$$(find $($(1)_local_dir) -newer $($(1)_source) | head -n1)" ]; then \
+        mkdir -p $(dir $($(1)_source)) && \
+        $(build_TAR) -c -f $($(1)_source) -C $($(1)_local_dir) . && \
+        rm -f $($(1)_fetched); \
+    fi && \
+    if ! [ -f $($(1)_fetched) ] || [ -n "$$(find $($(1)_source) -newer $($(1)_fetched))" ]; then \
+        mkdir -p $(dir $($(1)_fetched)) && \
+        cd $($(1)_source_dir) && \
+        $(build_SHA256SUM) $($(1)_all_sources) > $($(1)_fetched); \
+    fi && \
+    cut -d" " -f1 $($(1)_fetched)
+endef
+
 define int_get_build_recipe_hash
-$(eval $(1)_all_file_checksums:=$(shell $(build_SHA256SUM) $(meta_depends) packages/$(1).mk $(addprefix $(PATCHES_PATH)/$(1)/,$($(1)_patches)) | cut -d" " -f1))
+$(eval $(1)_patches_path?=$(PATCHES_PATH)/$(1))
+$(eval $(1)_all_file_checksums:=$(shell $(build_SHA256SUM) $(meta_depends) packages/$(1).mk $(addprefix $($(1)_patches_path)/,$($(1)_patches)) | cut -d" " -f1))
+# If $(1)_local_dir is set, create a tarball of the local directory contents to
+# use as the source of the package, and include a hash of the tarball in the
+# package id, so if directory contents change, the package and packages
+# depending on it will be rebuilt.
+$(if $($(1)_local_dir),$(eval $(1)_sha256_hash:=$(shell $(call fetch_local_dir_sha256,$(1)))))
+$(if $($(1)_local_dir),$(eval $(1)_all_file_checksums+=$($(1)_sha256_hash)))
 $(eval $(1)_recipe_hash:=$(shell echo -n "$($(1)_all_file_checksums)" | $(build_SHA256SUM) | cut -d" " -f1))
 endef
 
@@ -53,20 +78,32 @@ $(eval $(1)_build_id:=$(shell echo -n "$($(1)_build_id_long)" | $(build_SHA256SU
 final_build_id_long+=$($(package)_build_id_long)
 
 #compute package-specific paths
-$(1)_build_subdir?=.
-$(1)_download_file?=$($(1)_file_name)
-$(1)_source_dir:=$(SOURCES_PATH)
-$(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
 $(1)_staging_dir=$(base_staging_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)
 $(1)_staging_prefix_dir:=$$($(1)_staging_dir)$($($(1)_type)_prefix)
 $(1)_extract_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)
-$(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
 $(1)_build_dir:=$$($(1)_extract_dir)/$$($(1)_build_subdir)
 $(1)_cached_checksum:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).tar.gz.hash
 $(1)_patch_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)/.patches-$($(1)_build_id)
-$(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_cached:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).tar.gz
 $(1)_build_log:=$(BASEDIR)/$(1)-$($(1)_version)-$($(1)_build_id).log
+endef
+
+# Convert a string to a human-readable filename, replacing dot, slash, and space
+# characters that could cause problems with dashes and collapsing them.
+define int_friendly_file_name
+$(subst $(null) $(null),-,$(strip $(subst ., ,$(subst /, ,$(1)))))
+endef
+
+define int_get_build_properties
+$(1)_build_subdir?=.
+$(1)_download_file?=$($(1)_file_name)
+$(1)_source_dir:=$(SOURCES_PATH)
+# If $(1)_file_name is empty and $(1)_local_dir is nonempty, set file name to a
+# .tar file with a friendly filename named after the directory path.
+$(if $($(1)_file_name),,$(if $($(1)_local_dir),$(eval $(1)_file_name:=$(call int_friendly_file_name,$($(1)_local_dir)).tar)))
+$(1)_source:=$$($(1)_source_dir)/$($(1)_file_name)
+$(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
+$(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_all_sources=$($(1)_file_name) $($(1)_extra_sources)
 
 #stamps
@@ -219,7 +256,7 @@ $($(1)_extracted): | $($(1)_fetched)
 $($(1)_preprocessed): | $($(1)_extracted)
 	echo Preprocessing $(1)...
 	mkdir -p $$(@D) $($(1)_patch_dir)
-	$(foreach patch,$($(1)_patches),cd $(PATCHES_PATH)/$(1); cp $(patch) $($(1)_patch_dir) ;)
+	$(foreach patch,$($(1)_patches),cd $($(1)_patches_path); cp $(patch) $($(1)_patch_dir) ;)
 	{ cd $$(@D); $($(1)_preprocess_cmds); } $$($(1)_logging)
 	touch $$@
 $($(1)_configured): | $($(1)_dependencies) $($(1)_preprocessed)
@@ -286,6 +323,9 @@ $(foreach package,$(all_packages),$(eval $(call int_vars,$(package))))
 #include package files
 $(foreach native_package,$(native_packages),$(eval include packages/$(native_package).mk))
 $(foreach package,$(packages),$(eval include packages/$(package).mk))
+
+#set build properties for included package files
+$(foreach package,$(all_packages),$(eval $(call int_get_build_properties,$(package))))
 
 #compute a hash of all files that comprise this package's build recipe
 $(foreach package,$(all_packages),$(eval $(call int_get_build_recipe_hash,$(package))))

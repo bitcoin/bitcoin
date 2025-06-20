@@ -12,6 +12,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    sync_txindex,
 )
 from test_framework.wallet import MiniWallet
 
@@ -77,6 +78,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(sorted(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2]))), sorted(txlist))
         assert_equal(sorted(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid2, txid1]))), sorted(txlist))
         # We can always get a proof if we have a -txindex
+        sync_txindex(self, self.nodes[1])
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[1].gettxoutproof([txid_spent])), [txid_spent])
         # We can't get a proof if we specify transactions from different blocks
         assert_raises_rpc_error(-5, "Not all transactions found in specified or retrieved block", self.nodes[0].gettxoutproof, [txid1, txid3])

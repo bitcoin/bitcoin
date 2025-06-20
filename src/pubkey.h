@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -103,7 +103,7 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    explicit CPubKey(Span<const uint8_t> _vch)
+    explicit CPubKey(std::span<const uint8_t> _vch)
     {
         Set(_vch.begin(), _vch.end());
     }
@@ -142,14 +142,14 @@ public:
     {
         unsigned int len = size();
         ::WriteCompactSize(s, len);
-        s << Span{vch, len};
+        s << std::span{vch, len};
     }
     template <typename Stream>
     void Unserialize(Stream& s)
     {
         const unsigned int len(::ReadCompactSize(s));
         if (len <= SIZE) {
-            s >> Span{vch, len};
+            s >> std::span{vch, len};
             if (len != size()) {
                 Invalidate();
             }
@@ -163,13 +163,13 @@ public:
     //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
-        return CKeyID(Hash160(Span{vch}.first(size())));
+        return CKeyID(Hash160(std::span{vch}.first(size())));
     }
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
-        return Hash(Span{vch}.first(size()));
+        return Hash(std::span{vch}.first(size()));
     }
 
     /*
@@ -257,13 +257,13 @@ public:
     constexpr explicit XOnlyPubKey(std::span<const unsigned char> bytes) : m_keydata{bytes} {}
 
     /** Construct an x-only pubkey from a normal pubkey. */
-    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(Span{pubkey}.subspan(1, 32)) {}
+    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(std::span{pubkey}.subspan(1, 32)) {}
 
     /** Verify a Schnorr signature against this public key.
      *
      * sigbytes must be exactly 64 bytes.
      */
-    bool VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const;
+    bool VerifySchnorr(const uint256& msg, std::span<const unsigned char> sigbytes) const;
 
     /** Compute the Taproot tweak as specified in BIP341, with *this as internal
      * key:
@@ -317,7 +317,7 @@ public:
     EllSwiftPubKey() noexcept = default;
 
     /** Construct a new ellswift public key from a given serialization. */
-    EllSwiftPubKey(Span<const std::byte> ellswift) noexcept;
+    EllSwiftPubKey(std::span<const std::byte> ellswift) noexcept;
 
     /** Decode to normal compressed CPubKey (for debugging purposes). */
     CPubKey Decode() const;

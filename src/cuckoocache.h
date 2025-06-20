@@ -7,7 +7,7 @@
 
 #include <util/fastrange.h>
 
-#include <algorithm> // std::find
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cmath>

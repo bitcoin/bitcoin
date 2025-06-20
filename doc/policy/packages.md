@@ -45,7 +45,7 @@ The following rules are enforced for all packages:
    - No more than MAX_REPLACEMENT_CANDIDATES transactions can be replaced, analogous to
      regular [replacement rule](./mempool-replacements.md) 5).
 
-   - Replacements must pay more total total fees at the incremental relay fee (analogous to
+   - Replacements must pay more total fees at the incremental relay fee (analogous to
      regular [replacement rules](./mempool-replacements.md) 3 and 4).
 
    - Parent feerate must be lower than package feerate.

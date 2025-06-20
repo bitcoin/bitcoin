@@ -56,8 +56,7 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
 
     // Tally
     CAmount amount = 0;
-    for (const std::pair<const uint256, CWalletTx>& wtx_pair : wallet.mapWallet) {
-        const CWalletTx& wtx = wtx_pair.second;
+    for (const auto& [_, wtx] : wallet.mapWallet) {
         int depth{wallet.GetTxDepthInMainChain(wtx)};
         if (depth < min_depth
             // Coinbase with less than 1 confirmation is no longer in the main chain
@@ -80,8 +79,9 @@ static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool b
 
 RPCHelpMan getreceivedbyaddress()
 {
-    return RPCHelpMan{"getreceivedbyaddress",
-                "\nReturns the total amount received by the given address in transactions with at least minconf confirmations.\n",
+    return RPCHelpMan{
+        "getreceivedbyaddress",
+        "Returns the total amount received by the given address in transactions with at least minconf confirmations.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address for transactions."},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "Only include transactions confirmed at least this many times."},
@@ -121,8 +121,9 @@ RPCHelpMan getreceivedbyaddress()
 
 RPCHelpMan getreceivedbylabel()
 {
-    return RPCHelpMan{"getreceivedbylabel",
-                "\nReturns the total amount received by addresses with <label> in transactions with at least [minconf] confirmations.\n",
+    return RPCHelpMan{
+        "getreceivedbylabel",
+        "Returns the total amount received by addresses with <label> in transactions with at least [minconf] confirmations.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The selected label, may be the default label using \"\"."},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "Only include transactions confirmed at least this many times."},
@@ -162,8 +163,9 @@ RPCHelpMan getreceivedbylabel()
 
 RPCHelpMan getbalance()
 {
-    return RPCHelpMan{"getbalance",
-                "\nReturns the total available balance.\n"
+    return RPCHelpMan{
+        "getbalance",
+        "Returns the total available balance.\n"
                 "The available balance is what the wallet considers currently spendable, and is\n"
                 "thus affected by options which limit spendability such as -spendzeroconfchange.\n",
                 {
@@ -237,8 +239,9 @@ RPCHelpMan getunconfirmedbalance()
 
 RPCHelpMan lockunspent()
 {
-    return RPCHelpMan{"lockunspent",
-                "\nUpdates list of temporarily unspendable outputs.\n"
+    return RPCHelpMan{
+        "lockunspent",
+        "Updates list of temporarily unspendable outputs.\n"
                 "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
                 "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
                 "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
@@ -373,8 +376,9 @@ RPCHelpMan lockunspent()
 
 RPCHelpMan listlockunspent()
 {
-    return RPCHelpMan{"listlockunspent",
-                "\nReturns list of temporarily unspendable outputs.\n"
+    return RPCHelpMan{
+        "listlockunspent",
+        "Returns list of temporarily unspendable outputs.\n"
                 "See the lockunspent call to lock and unlock transactions for spending.\n",
                 {},
                 RPCResult{
@@ -440,12 +444,6 @@ RPCHelpMan getbalances()
                     {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
                     {RPCResult::Type::STR_AMOUNT, "used", /*optional=*/true, "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
                 }},
-                {RPCResult::Type::OBJ, "watchonly", /*optional=*/true, "watchonly balances (not present if wallet does not watch anything)",
-                {
-                    {RPCResult::Type::STR_AMOUNT, "trusted", "trusted balance (outputs created by the wallet or confirmed outputs)"},
-                    {RPCResult::Type::STR_AMOUNT, "untrusted_pending", "untrusted pending balance (outputs created by others that are in the mempool)"},
-                    {RPCResult::Type::STR_AMOUNT, "immature", "balance from immature coinbase outputs"},
-                }},
                 RESULT_LAST_PROCESSED_BLOCK,
             }
             },
@@ -479,15 +477,6 @@ RPCHelpMan getbalances()
         }
         balances.pushKV("mine", std::move(balances_mine));
     }
-    auto spk_man = wallet.GetLegacyScriptPubKeyMan();
-    if (spk_man && spk_man->HaveWatchOnly()) {
-        UniValue balances_watchonly{UniValue::VOBJ};
-        balances_watchonly.pushKV("trusted", ValueFromAmount(bal.m_watchonly_trusted));
-        balances_watchonly.pushKV("untrusted_pending", ValueFromAmount(bal.m_watchonly_untrusted_pending));
-        balances_watchonly.pushKV("immature", ValueFromAmount(bal.m_watchonly_immature));
-        balances.pushKV("watchonly", std::move(balances_watchonly));
-    }
-
     AppendLastProcessedBlock(balances, wallet);
     return balances;
 },
@@ -497,8 +486,8 @@ RPCHelpMan getbalances()
 RPCHelpMan listunspent()
 {
     return RPCHelpMan{
-                "listunspent",
-                "\nReturns array of unspent transaction outputs\n"
+        "listunspent",
+        "Returns array of unspent transaction outputs\n"
                 "with between minconf and maxconf (inclusive) confirmations.\n"
                 "Optionally filter to only include txouts paid to specified addresses.\n",
                 {

@@ -15,6 +15,8 @@ The following command, for example, creates a descriptor wallet. More informatio
 $ bitcoin-cli createwallet "wallet-01"
 ```
 
+`bitcoin rpc` can also be substituted for `bitcoin-cli`.
+
 By default, wallets are created in the `wallets` folder of the data directory, which varies by operating system, as shown below. The user can change the default by using the `-datadir` or `-walletdir` initialization parameters.
 
 | Operating System | Default wallet directory                                    |
@@ -82,7 +84,7 @@ In the GUI, there is no specific menu item to unlock the wallet. When the user s
 
 To backup the wallet, the `backupwallet` RPC or the `Backup Wallet` GUI menu item must be used to ensure the file is in a safe state when the copy is made.
 
-In the RPC, the destination parameter must include the name of the file. Otherwise, the command will return an error message like "Error: Wallet backup failed!" for descriptor wallets. If it is a legacy wallet, it will be copied and a file will be created with the default file name `wallet.dat`.
+In the RPC, the destination parameter must include the name of the file. Otherwise, the command will return an error message like "Error: Wallet backup failed!".
 
 ```
 $ bitcoin-cli -rpcwallet="wallet-01" backupwallet /home/node01/Backups/backup-01.dat

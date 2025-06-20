@@ -16,7 +16,7 @@ template <unsigned NumArgs>
 void TfmFormatZeroes(const std::string& fmt)
 {
     std::apply([&](auto... args) {
-        (void)tfm::format(fmt, args...);
+        (void)tfm::format(tfm::RuntimeFormat{fmt}, args...);
     }, std::array<int, NumArgs>{});
 }
 

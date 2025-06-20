@@ -2,56 +2,23 @@
 # dependencies that cannot be fixed in-tree.
 #
 # Example use:
-# $ valgrind --suppressions=contrib/valgrind.supp build/src/test/test_bitcoin
+# $ valgrind --suppressions=contrib/valgrind.supp build/bin/test_bitcoin
 # $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
-#       --show-leak-kinds=all build/src/test/test_bitcoin
+#       --show-leak-kinds=all build/bin/test_bitcoin
 #
 # To create suppressions for found issues, use the --gen-suppressions=all option:
 # $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
 #       --show-leak-kinds=all --gen-suppressions=all --show-reachable=yes \
-#       --error-limit=no build/src/test/test_bitcoin
+#       --error-limit=no build/bin/test_bitcoin
 #
 # Note that suppressions may depend on OS and/or library versions.
-# Tested on:
-# * aarch64 (Ubuntu Noble system libs, clang, without gui)
-# * x86_64  (Ubuntu Noble system libs, clang, without gui)
-{
-   Suppress libdb warning - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=662917
-   Memcheck:Cond
-   obj:*/libdb_cxx-*.so
-   fun:__log_put
-}
-{
-   Suppress libdb warning
-   Memcheck:Param
-   pwrite64(buf)
-   fun:pwrite
-   fun:__os_io
-}
-{
-   Suppress libdb warning
-   Memcheck:Cond
-   fun:__log_putr.isra.1
-}
-{
-   Suppress libdb warning
-   Memcheck:Param
-   pwrite64(buf)
-   ...
-   obj:*/libdb_cxx-*.so
-}
+# Tested on aarch64 and x86_64 with Ubuntu Noble system libs, using clang-16
+# and GCC, without gui.
 {
    Suppress uninitialized bytes warning in compat code
    Memcheck:Param
    ioctl(TCSET{S,SW,SF})
    fun:tcsetattr
-}
-{
-   Suppress libdb warning
-   Memcheck:Leak
-   fun:malloc
-   ...
-   obj:*/libdb_cxx-*.so
 }
 {
    Suppress leaks on shutdown

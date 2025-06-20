@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -158,42 +158,35 @@ struct CDBBatch::WriteBatchImpl {
 
 CDBBatch::CDBBatch(const CDBWrapper& _parent)
     : parent{_parent},
-      m_impl_batch{std::make_unique<CDBBatch::WriteBatchImpl>()} {};
+      m_impl_batch{std::make_unique<CDBBatch::WriteBatchImpl>()}
+{
+    Clear();
+};
 
 CDBBatch::~CDBBatch() = default;
 
 void CDBBatch::Clear()
 {
     m_impl_batch->batch.Clear();
-    size_estimate = 0;
 }
 
-void CDBBatch::WriteImpl(Span<const std::byte> key, DataStream& ssValue)
+void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
     leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
     m_impl_batch->batch.Put(slKey, slValue);
-    // LevelDB serializes writes as:
-    // - byte: header
-    // - varint: key length (1 byte up to 127B, 2 bytes up to 16383B, ...)
-    // - byte[]: key
-    // - varint: value length
-    // - byte[]: value
-    // The formula below assumes the key and value are both less than 16k.
-    size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
 }
 
-void CDBBatch::EraseImpl(Span<const std::byte> key)
+void CDBBatch::EraseImpl(std::span<const std::byte> key)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     m_impl_batch->batch.Delete(slKey);
-    // LevelDB serializes erases as:
-    // - byte: header
-    // - varint: key length
-    // - byte[]: key
-    // The formula below assumes the key is less than 16kB.
-    size_estimate += 2 + (slKey.size() > 127) + slKey.size();
+}
+
+size_t CDBBatch::ApproximateSize() const
+{
+    return m_impl_batch->batch.ApproximateSize();
 }
 
 struct LevelDBContext {
@@ -336,7 +329,7 @@ std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
     return ret;
 }
 
-std::optional<std::string> CDBWrapper::ReadImpl(Span<const std::byte> key) const
+std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) const
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     std::string strValue;
@@ -350,7 +343,7 @@ std::optional<std::string> CDBWrapper::ReadImpl(Span<const std::byte> key) const
     return strValue;
 }
 
-bool CDBWrapper::ExistsImpl(Span<const std::byte> key) const
+bool CDBWrapper::ExistsImpl(std::span<const std::byte> key) const
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
 
@@ -365,7 +358,7 @@ bool CDBWrapper::ExistsImpl(Span<const std::byte> key) const
     return true;
 }
 
-size_t CDBWrapper::EstimateSizeImpl(Span<const std::byte> key1, Span<const std::byte> key2) const
+size_t CDBWrapper::EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const
 {
     leveldb::Slice slKey1(CharCast(key1.data()), key1.size());
     leveldb::Slice slKey2(CharCast(key2.data()), key2.size());
@@ -396,18 +389,18 @@ CDBIterator* CDBWrapper::NewIterator()
     return new CDBIterator{*this, std::make_unique<CDBIterator::IteratorImpl>(DBContext().pdb->NewIterator(DBContext().iteroptions))};
 }
 
-void CDBIterator::SeekImpl(Span<const std::byte> key)
+void CDBIterator::SeekImpl(std::span<const std::byte> key)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
     m_impl_iter->iter->Seek(slKey);
 }
 
-Span<const std::byte> CDBIterator::GetKeyImpl() const
+std::span<const std::byte> CDBIterator::GetKeyImpl() const
 {
     return MakeByteSpan(m_impl_iter->iter->key());
 }
 
-Span<const std::byte> CDBIterator::GetValueImpl() const
+std::span<const std::byte> CDBIterator::GetValueImpl() const
 {
     return MakeByteSpan(m_impl_iter->iter->value());
 }

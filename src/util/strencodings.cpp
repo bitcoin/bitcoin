@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -78,10 +78,9 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
     bool fBracketed = fHaveColon && (in[0] == '[' && in[colon - 1] == ']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
     bool fMultiColon{fHaveColon && colon != 0 && (in.find_last_of(':', colon - 1) != in.npos)};
     if (fHaveColon && (colon == 0 || fBracketed || !fMultiColon)) {
-        uint16_t n;
-        if (ParseUInt16(in.substr(colon + 1), &n)) {
+        if (const auto n{ToIntegral<uint16_t>(in.substr(colon + 1))}) {
             in = in.substr(0, colon);
-            portOut = n;
+            portOut = *n;
             valid = (portOut != 0);
         }
     } else {
@@ -96,7 +95,7 @@ bool SplitHostPort(std::string_view in, uint16_t& portOut, std::string& hostOut)
     return valid;
 }
 
-std::string EncodeBase64(Span<const unsigned char> input)
+std::string EncodeBase64(std::span<const unsigned char> input)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -142,7 +141,7 @@ std::optional<std::vector<unsigned char>> DecodeBase64(std::string_view str)
     return ret;
 }
 
-std::string EncodeBase32(Span<const unsigned char> input, bool pad)
+std::string EncodeBase32(std::span<const unsigned char> input, bool pad)
 {
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
@@ -198,57 +197,6 @@ std::optional<std::vector<unsigned char>> DecodeBase32(std::string_view str)
     if (!valid) return {};
 
     return ret;
-}
-
-namespace {
-template <typename T>
-bool ParseIntegral(std::string_view str, T* out)
-{
-    static_assert(std::is_integral<T>::value);
-    // Replicate the exact behavior of strtol/strtoll/strtoul/strtoull when
-    // handling leading +/- for backwards compatibility.
-    if (str.length() >= 2 && str[0] == '+' && str[1] == '-') {
-        return false;
-    }
-    const std::optional<T> opt_int = ToIntegral<T>((!str.empty() && str[0] == '+') ? str.substr(1) : str);
-    if (!opt_int) {
-        return false;
-    }
-    if (out != nullptr) {
-        *out = *opt_int;
-    }
-    return true;
-}
-}; // namespace
-
-bool ParseInt32(std::string_view str, int32_t* out)
-{
-    return ParseIntegral<int32_t>(str, out);
-}
-
-bool ParseInt64(std::string_view str, int64_t* out)
-{
-    return ParseIntegral<int64_t>(str, out);
-}
-
-bool ParseUInt8(std::string_view str, uint8_t* out)
-{
-    return ParseIntegral<uint8_t>(str, out);
-}
-
-bool ParseUInt16(std::string_view str, uint16_t* out)
-{
-    return ParseIntegral<uint16_t>(str, out);
-}
-
-bool ParseUInt32(std::string_view str, uint32_t* out)
-{
-    return ParseIntegral<uint32_t>(str, out);
-}
-
-bool ParseUInt64(std::string_view str, uint64_t* out)
-{
-    return ParseIntegral<uint64_t>(str, out);
 }
 
 std::string FormatParagraph(std::string_view in, size_t width, size_t indent)
