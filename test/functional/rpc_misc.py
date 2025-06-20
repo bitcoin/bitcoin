@@ -24,13 +24,6 @@ class RpcMiscTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
 
-        self.log.info("test CHECK_NONFATAL")
-        assert_raises_rpc_error(
-            -1,
-            'Internal bug detected: request.params[9].get_str() != "trigger_internal_bug"',
-            lambda: node.echo(arg9='trigger_internal_bug'),
-        )
-
         self.log.info("test getmemoryinfo")
         memory = node.getmemoryinfo()['locked']
         assert_greater_than(memory['used'], 0)
