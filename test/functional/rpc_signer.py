@@ -55,7 +55,7 @@ class RPCSignerTest(BitcoinTestFramework):
             -1,
             "CreateProcess failed: The system cannot find the file specified."
             if platform.system() == "Windows"
-            else "execve failed: No such file or directory",
+            else "not found",
             self.nodes[3].enumeratesigners,
         )
 
