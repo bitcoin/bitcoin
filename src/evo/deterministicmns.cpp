@@ -590,8 +590,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 }
 
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex,
-                                           BlockValidationState& state, const CCoinsViewCache& view,
-                                           llmq::CQuorumSnapshotManager& qsnapman, const CDeterministicMNList& newList,
+                                           BlockValidationState& state, const CDeterministicMNList& newList,
                                            std::optional<MNListUpdates>& updatesRet)
 {
     AssertLockHeld(::cs_main);

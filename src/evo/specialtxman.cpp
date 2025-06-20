@@ -258,7 +258,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             }
             mn_list.SetBlockHash(pindex->GetBlockHash());
 
-            if (!fJustCheck && !m_dmnman.ProcessBlock(block, pindex, state, view, m_qsnapman, mn_list, updatesRet)) {
+            if (!fJustCheck && !m_dmnman.ProcessBlock(block, pindex, state, mn_list, updatesRet)) {
                 // pass the state returned by the function above
                 return false;
             }
