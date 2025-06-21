@@ -153,8 +153,7 @@ bool CSpecialTxProcessor::CheckSpecialTx(const CTransaction& tx, const CBlockInd
                                state);
 }
 
-static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc,
-                                   const std::vector<CDeterministicMNCPtr>& members,
+static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, const std::vector<CDeterministicMNCPtr>& members,
                                    bool debugLogs, CDeterministicMNList& mnList)
 {
     for (size_t i = 0; i < members.size(); i++) {
@@ -172,10 +171,8 @@ static void HandleQuorumCommitment(const llmq::CFinalCommitment& qc,
 }
 
 bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
-                                                const CCoinsViewCache& view,
-                                                bool debugLogs,
-                                                BlockValidationState& state,
-                                                CDeterministicMNList& mnListRet)
+                                                const CCoinsViewCache& view, bool debugLogs,
+                                                BlockValidationState& state, CDeterministicMNList& mnListRet)
 {
     AssertLockHeld(cs_main);
 
@@ -239,7 +236,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
 
             Coin coin;
             CAmount expectedCollateral = GetMnType(proTx.nType).collat_amount;
-            if (!proTx.collateralOutpoint.hash.IsNull() && (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != expectedCollateral)) {
+            if (!proTx.collateralOutpoint.hash.IsNull() && (!view.GetCoin(dmn->collateralOutpoint, coin) ||
+                                                            coin.IsSpent() || coin.out.nValue != expectedCollateral)) {
                 // should actually never get to this point as CheckProRegTx should have handled this case.
                 // We do this additional check nevertheless to be 100% sure
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral");
@@ -252,8 +250,10 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                 // and the new one is added like a completely fresh one, which is also at the bottom of the payment list
                 newList.RemoveMN(replacedDmn->proTxHash);
                 if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was used for a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                              __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+                    LogPrintf("%s -- MN %s removed from list because collateral was used for " /* Continued */
+                              "a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                              __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(),
+                              nHeight, newList.GetAllMNsCount());
                 }
             }
 
@@ -284,8 +284,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             newList.AddMN(dmn);
 
             if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s added at height %d: %s\n",
-                    __func__, tx.GetHash().ToString(), nHeight, proTx.ToString());
+                LogPrintf("%s -- MN %s added at height %d: %s\n", __func__, tx.GetHash().ToString(), nHeight,
+                          proTx.ToString());
             }
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
             const auto opt_proTx = GetTxPayload<CProUpServTx>(tx);
@@ -334,16 +334,15 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                     !newState->keyIDOwner.IsNull()) {
                     newState->Revive(nHeight);
                     if (debugLogs) {
-                        LogPrintf("CDeterministicMNManager::%s -- MN %s revived at height %d\n",
-                            __func__, opt_proTx->proTxHash.ToString(), nHeight);
+                        LogPrintf("%s -- MN %s revived at height %d\n", __func__, opt_proTx->proTxHash.ToString(), nHeight);
                     }
                 }
             }
 
             newList.UpdateMN(opt_proTx->proTxHash, newState);
             if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
-                    __func__, opt_proTx->proTxHash.ToString(), nHeight, opt_proTx->ToString());
+                LogPrintf("%s -- MN %s updated at height %d: %s\n", __func__, opt_proTx->proTxHash.ToString(), nHeight,
+                          opt_proTx->ToString());
             }
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
             const auto opt_proTx = GetTxPayload<CProUpRegTx>(tx);
@@ -372,8 +371,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             newList.UpdateMN(opt_proTx->proTxHash, newState);
 
             if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s updated at height %d: %s\n",
-                    __func__, opt_proTx->proTxHash.ToString(), nHeight, opt_proTx->ToString());
+                LogPrintf("%s -- MN %s updated at height %d: %s\n", __func__, opt_proTx->proTxHash.ToString(), nHeight,
+                          opt_proTx->ToString());
             }
         } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
             const auto opt_proTx = GetTxPayload<CProUpRevTx>(tx);
@@ -393,8 +392,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             newList.UpdateMN(opt_proTx->proTxHash, newState);
 
             if (debugLogs) {
-                LogPrintf("CDeterministicMNManager::%s -- MN %s revoked operator key at height %d: %s\n",
-                    __func__, opt_proTx->proTxHash.ToString(), nHeight, opt_proTx->ToString());
+                LogPrintf("%s -- MN %s revoked operator key at height %d: %s\n", __func__,
+                          opt_proTx->proTxHash.ToString(), nHeight, opt_proTx->ToString());
             }
         } else if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
             const auto opt_qc = GetTxPayload<llmq::CFinalCommitmentTxPayload>(tx);
@@ -407,7 +406,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-commitment-type");
                 }
                 int qcnHeight = int(opt_qc->nHeight);
-                int quorumHeight = qcnHeight - (qcnHeight % llmq_params_opt->dkgInterval) + int(opt_qc->commitment.quorumIndex);
+                int quorumHeight = qcnHeight - (qcnHeight % llmq_params_opt->dkgInterval) +
+                                   int(opt_qc->commitment.quorumIndex);
                 auto pQuorumBaseBlockIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!pQuorumBaseBlockIndex || pQuorumBaseBlockIndex->GetBlockHash() != opt_qc->commitment.quorumHash) {
                     // we should actually never get into this case as validation should have caught it...but let's be sure
@@ -416,7 +416,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
 
                 // The commitment has already been validated at this point, so it's safe to use members of it
 
-                const auto members = llmq::utils::GetAllQuorumMembers(opt_qc->commitment.llmqType, m_dmnman, m_qsnapman, pQuorumBaseBlockIndex);
+                const auto members = llmq::utils::GetAllQuorumMembers(opt_qc->commitment.llmqType, m_dmnman, m_qsnapman,
+                                                                      pQuorumBaseBlockIndex);
                 HandleQuorumCommitment(opt_qc->commitment, members, debugLogs, newList);
             }
         }
@@ -433,8 +434,10 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
                 newList.RemoveMN(dmn->proTxHash);
 
                 if (debugLogs) {
-                    LogPrintf("CDeterministicMNManager::%s -- MN %s removed from list because collateral was spent. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                              __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight, newList.GetAllMNsCount());
+                    LogPrintf("%s -- MN %s removed from list because collateral was spent. " /* Continued */
+                              "collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                              __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight,
+                              newList.GetAllMNsCount());
                 }
             }
         }
@@ -451,8 +454,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
         if (dmn->nType == MnType::Evo && !isMNRewardReallocation) {
             ++newState->nConsecutivePayments;
             if (debugLogs) {
-                LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s is an EvoNode, bumping nConsecutivePayments to %d\n",
-                          __func__, dmn->proTxHash.ToString(), newState->nConsecutivePayments);
+                LogPrint(BCLog::MNPAYMENTS, "%s -- MN %s is an EvoNode, bumping nConsecutivePayments to %d\n", __func__,
+                         dmn->proTxHash.ToString(), newState->nConsecutivePayments);
             }
         }
         newList.UpdateMN(payee->proTxHash, newState);
@@ -461,8 +464,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             // Since the previous GetMN query returned a value, after an update, querying the same
             // hash *must* give us a result. If it doesn't, that would be a potential logic bug.
             assert(dmn);
-            LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s, nConsecutivePayments=%d\n",
-                      __func__, dmn->proTxHash.ToString(), dmn->pdmnState->nConsecutivePayments);
+            LogPrint(BCLog::MNPAYMENTS, "%s -- MN %s, nConsecutivePayments=%d\n", __func__, dmn->proTxHash.ToString(),
+                     dmn->pdmnState->nConsecutivePayments);
         }
     }
 
@@ -473,8 +476,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
         if (payee != nullptr && dmn.proTxHash == payee->proTxHash && !isMNRewardReallocation) return;
         if (dmn.pdmnState->nConsecutivePayments == 0) return;
         if (debugLogs) {
-            LogPrint(BCLog::MNPAYMENTS, "CDeterministicMNManager::%s -- MN %s, reset nConsecutivePayments %d->0\n",
-                      __func__, dmn.proTxHash.ToString(), dmn.pdmnState->nConsecutivePayments);
+            LogPrint(BCLog::MNPAYMENTS, "%s -- MN %s, reset nConsecutivePayments %d->0\n", __func__,
+                     dmn.proTxHash.ToString(), dmn.pdmnState->nConsecutivePayments);
         }
         auto newState = std::make_shared<CDeterministicMNState>(*dmn.pdmnState);
         newState->nConsecutivePayments = 0;
