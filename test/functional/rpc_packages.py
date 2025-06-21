@@ -372,6 +372,7 @@ class RPCPackagesTest(BitcoinTestFramework):
             tx_result = submitpackage_result["tx-results"][wtxid]
             assert_equal(tx_result["txid"], tx.txid_hex)
             assert_equal(tx_result["vsize"], tx.get_vsize())
+            assert_equal(tx_result["vsize_bip141"], tx.get_vsize())
             assert_equal(tx_result["fees"]["base"], DEFAULT_FEE)
             if wtxid not in presubmitted_wtxids:
                 assert_fee_amount(DEFAULT_FEE, tx.get_vsize(), tx_result["fees"]["effective-feerate"])

@@ -617,6 +617,7 @@ class SegWitTest(BitcoinTestFramework):
                     'wtxid': tx3.wtxid_hex,
                     'allowed': True,
                     'vsize': tx3.get_vsize(),
+                    'vsize_bip141': tx3.get_vsize(),
                     'fees': {
                         'base': Decimal('0.00001000'),
                     },
@@ -635,6 +636,7 @@ class SegWitTest(BitcoinTestFramework):
                     'wtxid': tx3.wtxid_hex,
                     'allowed': True,
                     'vsize': tx3.get_vsize(),
+                    'vsize_bip141': tx3.get_vsize(),
                     'fees': {
                         'base': Decimal('0.00011000'),
                     },
