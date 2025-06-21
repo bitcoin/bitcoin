@@ -1841,6 +1841,50 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+#ifdef __APPLE__
+    // Warn about exFAT filesystem usage on macOS
+    struct PathCheck {
+        fs::path path;
+        std::string_view description;
+    };
+
+    std::array<PathCheck, 2> paths{{
+        {args.GetDataDirNet(), "data directory"},
+        {args.GetBlocksDirPath(), "blocks directory"}
+    }};
+
+    std::vector<std::string> exfat_paths;
+    std::vector<std::string> error_paths;
+
+    for (const auto& check : paths) {
+        FSType fs_type = GetFilesystemType(check.path);
+        switch(fs_type) {
+            case FSType::EXFAT:
+                exfat_paths.push_back(strprintf("%s (\"%s\")",
+                    check.description,
+                    fs::PathToString(check.path)));
+                break;
+            case FSType::ERROR:
+                error_paths.push_back(strprintf("%s (\"%s\")",
+                    check.description,
+                    fs::PathToString(check.path)));
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (!exfat_paths.empty()) {
+        InitWarning(strprintf(_("The following paths are on exFAT which is known to have intermittent corruption problems on MacOS: %s. "
+            "See https://github.com/bitcoin/bitcoin/blob/master/doc/files.md#filesystem-recommendations for more information."),
+            util::Join(exfat_paths, ", ")));
+    }
+
+    if (!error_paths.empty()) {
+        LogInfo("Failed to detect filesystem type for: %s\n", util::Join(error_paths, ", "));
+    }
+#endif
+
 #if HAVE_SYSTEM
     const std::string block_notify = args.GetArg("-blocknotify", "");
     if (!block_notify.empty()) {
