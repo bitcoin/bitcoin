@@ -13,6 +13,7 @@
 #include <random.h>
 #include <streams.h>
 #include <txmempool.h>
+#include <util/overflow.h>
 #include <validation.h>
 
 #include <unordered_map>
@@ -62,7 +63,13 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (cmpctblock.prefilledtxn[i].tx->IsNull())
             return READ_STATUS_INVALID;
 
-        lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here
+        // Use overflow-safe arithmetic to prevent integer overflow
+        const auto checked_sum = CheckedAdd(lastprefilledindex, static_cast<int32_t>(cmpctblock.prefilledtxn[i].index) + 1);
+        if (!checked_sum.has_value()) {
+            return READ_STATUS_INVALID;
+        }
+        lastprefilledindex = checked_sum.value();
+
         if (lastprefilledindex > std::numeric_limits<uint16_t>::max())
             return READ_STATUS_INVALID;
         if ((uint32_t)lastprefilledindex > cmpctblock.shorttxids.size() + i) {

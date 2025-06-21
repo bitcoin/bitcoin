@@ -423,4 +423,54 @@ BOOST_AUTO_TEST_CASE(TransactionsRequestDeserializationOverflowTest) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(PrefilledTransactionIndexOverflowTest) {
+    // Test for integer overflow vulnerability in PartiallyDownloadedBlock::InitData
+    // where cumulative addition of prefilledtxn[i].index values can overflow lastprefilledindex
+
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    auto rand_ctx(FastRandomContext(uint256{42}));
+    CBlock block(BuildBlockTestCase(rand_ctx));
+    TestHeaderAndShortIDs cmpctblock(block, rand_ctx);
+
+    //TestHeaderAndShortIDs cmpctblock;
+    cmpctblock.header.nVersion = 1;
+    cmpctblock.header.hashPrevBlock = m_rng.rand256();
+    cmpctblock.header.hashMerkleRoot = m_rng.rand256();
+    cmpctblock.header.nTime = 0;
+    cmpctblock.header.nBits = 0x207fffff;
+    cmpctblock.header.nNonce = 0;
+    cmpctblock.nonce = 0;
+
+    // Create a transaction to use in prefilled transactions
+    CMutableTransaction tx = BuildTransactionTestCase();
+    CTransactionRef txRef = MakeTransactionRef(tx);
+
+    // Create multiple prefilled transactions with large indices to trigger overflow
+    // We need exactly 32769 transactions with max uint16_t index to trigger int32_t overflow
+    const size_t num_prefilled = 32769; // Exact number that causes overflow
+    const uint16_t large_index = 65535; // Maximum uint16_t value
+
+    cmpctblock.prefilledtxn.resize(num_prefilled);
+    for (size_t i = 0; i < num_prefilled; i++) {
+        cmpctblock.prefilledtxn[i].index = large_index;
+        cmpctblock.prefilledtxn[i].tx = txRef;
+    }
+
+    // This causes the cumulative sum to overflow int32_t:
+    // Starting with lastprefilledindex = -1
+    // After 32769 iterations: -1 + 32769 * (65535 + 1) = 2,147,549,183 > 2^31-1
+
+    DataStream stream{};
+    stream << cmpctblock;
+
+    CBlockHeaderAndShortTxIDs shortIDs;
+    stream >> shortIDs;
+
+    PartiallyDownloadedBlock partialBlock(&pool);
+    ReadStatus status = partialBlock.InitData(shortIDs, empty_extra_txn);
+
+    // Should return READ_STATUS_INVALID due to overflow detection, not crash
+    BOOST_CHECK(status == READ_STATUS_INVALID);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
