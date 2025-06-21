@@ -6,29 +6,31 @@
 
 from decimal import Decimal
 
-from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.messages import COIN, MAX_BLOCK_SIZE
+from test_framework.messages import (
+    COIN,
+    MAX_BLOCK_SIZE,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, create_confirmed_utxos, create_lots_of_big_transactions, gen_return_txouts
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    create_lots_of_big_transactions,
+    gen_return_txouts,
+)
 from test_framework.wallet import MiniWallet
 
 
 class PrioritiseTransactionTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
-        self.num_nodes = 2
+        self.num_nodes = 1
         self.extra_args = [[
             "-printpriority=1",
             "-datacarriersize=100000",
         ]] * self.num_nodes
         self.supports_cli = False
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def test_diamond(self):
         self.log.info("Test diamond-shape package with priority")
-        self.generate(self.wallet, COINBASE_MATURITY + 1)
         self.nodes[0].setmocktime(self.mocktime)
 
         #      tx_a
@@ -83,7 +85,6 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         self.log.info("Test priority while txs are not in mempool")
         self.restart_node(0, extra_args=["-nopersistmempool"])
-        self.connect_nodes(0, 1)
         self.nodes[0].setmocktime(self.mocktime)
         assert_equal(self.nodes[0].getmempoolinfo()["size"], 0)
         self.nodes[0].prioritisetransaction(txid=txid_b, fee_delta=int(fee_delta_b * COIN))
@@ -100,10 +101,10 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # Use default extra_args
         self.restart_node(0)
-        self.connect_nodes(0, 1)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
 
         # Test `prioritisetransaction` required parameters
         assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction)
@@ -127,7 +128,10 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
         utxo_count = 90
-        utxos = create_confirmed_utxos(self, self.relayfee, self.nodes[0], utxo_count)
+        utxos = self.wallet.send_self_transfer_multi(from_node=self.nodes[0], num_outputs=utxo_count)['new_utxos']
+        self.generate(self.wallet, 1)
+        assert_equal(len(self.nodes[0].getrawmempool()), 0)
+
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb
         txids = []
 
@@ -137,7 +141,13 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
             txids.append([])
             start_range = i * range_size
             end_range = start_range + range_size
-            txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[start_range:end_range], end_range - start_range, (i+1)*base_fee)
+            txids[i] = create_lots_of_big_transactions(
+                self.wallet,
+                self.nodes[0],
+                (i+1) * base_fee,
+                end_range - start_range,
+                self.txouts,
+                utxos[start_range:end_range])
 
         # Make sure that the size of each group of transactions exceeds
         # MAX_BLOCK_SIZE -- otherwise the test needs to be revised to
@@ -196,17 +206,9 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
                 assert x not in mempool
 
         # Create a free transaction.  Should be rejected.
-        utxo_list = self.nodes[0].listunspent()
-        assert len(utxo_list) > 0
-        utxo = utxo_list[0]
-
-        inputs = []
-        outputs = {}
-        inputs.append({"txid" : utxo["txid"], "vout" : utxo["vout"]})
-        outputs[self.nodes[0].getnewaddress()] = utxo["amount"]
-        raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
-        tx_hex = self.nodes[0].signrawtransactionwithwallet(raw_tx)["hex"]
-        tx_id = self.nodes[0].decoderawtransaction(tx_hex)["txid"]
+        tx_res = self.wallet.create_self_transfer(fee_rate=0)
+        tx_hex = tx_res['hex']
+        tx_id = tx_res['txid']
 
         # This will raise an exception due to min relay fee not being met
         assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
