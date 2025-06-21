@@ -33,6 +33,15 @@ struct LocationsIndexSetup : public TestChain100Setup {
         ssTx >> TX_WITH_WITNESS(tx);
         return tx;
     }
+
+    CTransactionRef ReadTransactionFallback(FlatFilePos block_pos, size_t i)
+    {
+        CTransactionRef tx{};
+        if (!m_node.chainman->m_blockman.ReadTxFromBlock(tx, block_pos, i)) {
+            return nullptr;
+        }
+        return tx;
+    }
 };
 
 
@@ -51,17 +60,29 @@ BOOST_FIXTURE_TEST_CASE(index_initial_sync, LocationsIndexSetup)
     BOOST_REQUIRE(tip);
     while (tip) {
         uint256 block_hash = tip->GetBlockHash();
-        CBlockIndex* block_index = WITH_LOCK(cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(block_hash));
+        CBlockIndex* block_index{nullptr};
+        FlatFilePos block_pos{};
+        {
+            LOCK(cs_main);
+            block_index = m_node.chainman->m_blockman.LookupBlockIndex(block_hash);
+            block_pos = block_index->GetBlockPos();
+        }
         BOOST_REQUIRE(block_index);
+        BOOST_REQUIRE(!block_pos.IsNull());
         CBlock block;
         BOOST_REQUIRE(m_node.chainman->m_blockman.ReadBlock(block, *block_index));
         for (size_t i = 0; i < block.vtx.size(); ++i) {
             CTransactionRef tx = ReadTransaction(block_hash, i);
             BOOST_CHECK(tx);
             BOOST_CHECK(*tx == *block.vtx[i]);
+            CTransactionRef tx_fallback = ReadTransactionFallback(block_pos, i);
+            BOOST_CHECK(tx_fallback);
+            BOOST_CHECK(*tx_fallback == *block.vtx[i]);
         }
         BOOST_CHECK(!ReadTransaction(block_hash, block.vtx.size()));
         BOOST_CHECK(!ReadTransaction(block_hash, block.vtx.size() + 1));
+        BOOST_CHECK(!ReadTransactionFallback(block_pos, block.vtx.size()));
+        BOOST_CHECK(!ReadTransactionFallback(block_pos, block.vtx.size() + 1));
         tip = tip->pprev;
     }
 
