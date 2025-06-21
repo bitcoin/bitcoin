@@ -8,7 +8,6 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <script/standard.h>
-#include <validationinterface.h>
 
 #include <univalue.h>
 #include <messagesigner.h>

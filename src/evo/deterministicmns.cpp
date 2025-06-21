@@ -20,8 +20,8 @@
 #include <stats/client.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/irange.h>
 #include <util/pointer.h>
-#include <validationinterface.h>
 
 #include <optional>
 #include <memory>
