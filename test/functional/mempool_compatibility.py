@@ -11,6 +11,7 @@ The previous release v0.15.0.0 is required by this test, see test/README.md.
 """
 
 import os
+import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
@@ -26,13 +27,16 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, versions=[
-            150000, # oldest version supported by the test framework
+            18020200, # oldest version with getmempoolinfo.loaded (used to avoid intermittent issues)
             None,
         ])
         self.extra_args = [
             [],
             [],
         ]
+        # Delete v18.2.2 cached datadir to avoid making a legacy version try to
+        # make sense of our current database formats
+        shutil.rmtree(os.path.join(self.nodes[0].datadir, self.chain))
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
 
