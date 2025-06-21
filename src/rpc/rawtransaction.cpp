@@ -60,6 +60,8 @@
 
 #include <univalue.h>
 
+using node::NodeContext;
+
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool& mempool, const CChainState& active_chainstate, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, UniValue& entry)
 {
     LOCK(::cs_main);

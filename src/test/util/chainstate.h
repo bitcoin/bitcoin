@@ -23,7 +23,7 @@ const auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
  */
 template<typename F = decltype(NoMalleation)>
 static bool
-CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleation = NoMalleation)
+CreateAndActivateUTXOSnapshot(node::NodeContext& node, const fs::path root, F malleation = NoMalleation)
 {
     // Write out a snapshot to the test's tempdir.
     //

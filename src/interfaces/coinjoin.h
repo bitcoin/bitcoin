@@ -10,7 +10,9 @@
 #include <vector>
 
 class CWallet;
+namespace node {
 struct NodeContext;
+} // namespace node
 
 class UniValue;
 
@@ -46,7 +48,7 @@ public:
 };
 } // namespace CoinJoin
 
-std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(NodeContext& node);
+std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(node::NodeContext& node);
 
 } // namespace interfaces
 

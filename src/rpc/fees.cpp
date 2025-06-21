@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <node/context.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -25,7 +26,7 @@
 #include <string>
 #include <vector>
 
-struct NodeContext;
+using node::NodeContext;
 
 static RPCHelpMan estimatesmartfee()
 {

@@ -85,17 +85,17 @@ static constexpr CAmount CENT{1000000};
 
 /** Initialize Dash-specific components during chainstate initialization (NodeContext-friendly aliases) */
 void DashChainstateSetup(ChainstateManager& chainman,
-                         NodeContext& node,
+                         node::NodeContext& node,
                          bool fReset,
                          bool fReindexChainState,
                          const Consensus::Params& consensus_params);
-void DashChainstateSetupClose(NodeContext& node);
+void DashChainstateSetupClose(node::NodeContext& node);
 
 /** Basic testing setup.
  * This just configures logging, data dir and chain parameters.
  */
 struct BasicTestingSetup {
-    NodeContext m_node;
+    node::NodeContext m_node;
 
     explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
     ~BasicTestingSetup();

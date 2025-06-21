@@ -31,6 +31,8 @@
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
 
+using node::NodeContext;
+
 class WalletInit : public WalletInitInterface
 {
 public:

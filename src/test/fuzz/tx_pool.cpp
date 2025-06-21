@@ -13,6 +13,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+using node::NodeContext;
+
 namespace {
 
 const TestingSetup* g_setup;

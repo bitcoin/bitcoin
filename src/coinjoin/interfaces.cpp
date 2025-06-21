@@ -17,6 +17,8 @@
 #include <memory>
 #include <string>
 
+using node::NodeContext;
+
 namespace coinjoin {
 namespace {
 

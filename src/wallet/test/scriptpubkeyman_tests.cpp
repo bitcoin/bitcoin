@@ -10,6 +10,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::NodeContext;
+
 BOOST_FIXTURE_TEST_SUITE(scriptpubkeyman_tests, BasicTestingSetup)
 
 // Test LegacyScriptPubKeyMan::CanProvide behavior, making sure it returns true

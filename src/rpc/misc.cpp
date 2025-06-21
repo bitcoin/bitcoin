@@ -41,6 +41,8 @@
 #include <malloc.h>
 #endif
 
+using node::NodeContext;
+
 static RPCHelpMan debug()
 {
     return RPCHelpMan{"debug",

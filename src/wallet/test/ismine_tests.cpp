@@ -12,6 +12,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::NodeContext;
 
 BOOST_FIXTURE_TEST_SUITE(ismine_tests, BasicTestingSetup)
 

@@ -34,6 +34,8 @@
 #include <fstream>
 #include <iomanip>
 
+using node::NodeContext;
+
 static RPCHelpMan masternode_connect()
 {
     return RPCHelpMan{"masternode connect",

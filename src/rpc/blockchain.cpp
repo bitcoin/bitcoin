@@ -64,6 +64,8 @@
 #include <condition_variable>
 #include <mutex>
 
+using node::NodeContext;
+
 struct CUpdatedBlock
 {
     uint256 hash;

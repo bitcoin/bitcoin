@@ -14,6 +14,8 @@
 
 #include <memory>
 
+using node::NodeContext;
+
 namespace init {
 namespace {
 class BitcoindInit : public interfaces::Init

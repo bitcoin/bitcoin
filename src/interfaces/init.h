@@ -7,7 +7,9 @@
 
 #include <memory>
 
+namespace node {
 struct NodeContext;
+} // namespace node
 
 namespace interfaces {
 class Chain;
@@ -44,7 +46,7 @@ public:
 //! status code to exit with. If this returns non-null, the caller can start up
 //! normally and use the Init object to spawn and connect to other processes
 //! while it is running.
-std::unique_ptr<Init> MakeNodeInit(NodeContext& node, int argc, char* argv[], int& exit_status);
+std::unique_ptr<Init> MakeNodeInit(node::NodeContext& node, int argc, char* argv[], int& exit_status);
 
 //! Return implementation of Init interface for the wallet process.
 std::unique_ptr<Init> MakeWalletInit(int argc, char* argv[], int& exit_status);

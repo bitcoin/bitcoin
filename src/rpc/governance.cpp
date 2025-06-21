@@ -32,6 +32,8 @@
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 
+using node::NodeContext;
+
 static RPCHelpMan gobject_count()
 {
     return RPCHelpMan{"gobject count",

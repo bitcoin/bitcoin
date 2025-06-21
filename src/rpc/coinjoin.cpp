@@ -24,6 +24,8 @@
 
 #include <univalue.h>
 
+using node::NodeContext;
+
 #ifdef ENABLE_WALLET
 namespace {
 void ValidateCoinJoinArguments()

@@ -19,6 +19,8 @@
 
 #include <any>
 
+using node::NodeContext;
+
 NodeContext& EnsureAnyNodeContext(const CoreContext& context)
 {
     auto* const node_context = GetContext<NodeContext>(context);

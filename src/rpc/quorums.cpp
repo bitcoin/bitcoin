@@ -33,6 +33,8 @@
 #include <iomanip>
 #include <optional>
 
+using node::NodeContext;
+
 static RPCHelpMan quorum_list()
 {
     return RPCHelpMan{"quorum list",

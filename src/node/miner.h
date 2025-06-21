@@ -30,7 +30,6 @@ class CEvoDB;
 class CMNHFManager;
 class CScript;
 struct LLMQContext;
-struct NodeContext;
 
 namespace Consensus { struct Params; };
 namespace llmq {
@@ -40,6 +39,9 @@ class CQuorumBlockProcessor;
 class CQuorumManager;
 class CQuorumSnapshotManager;
 } // namespace llmq
+namespace node {
+struct NodeContext;
+} // namespace node
 
 static const bool DEFAULT_PRINTPRIORITY = false;
 
@@ -188,8 +190,8 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool* mempool, const CChainParams& params);
-    explicit BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool* mempool, const CChainParams& params,
+    explicit BlockAssembler(CChainState& chainstate, const node::NodeContext& node, const CTxMemPool* mempool, const CChainParams& params);
+    explicit BlockAssembler(CChainState& chainstate, const node::NodeContext& node, const CTxMemPool* mempool, const CChainParams& params,
                             const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */

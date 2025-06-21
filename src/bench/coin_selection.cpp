@@ -11,6 +11,8 @@
 
 #include <set>
 
+using node::NodeContext;
+
 static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
 {
     static int nextLockTime = 0;

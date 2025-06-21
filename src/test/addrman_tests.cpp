@@ -20,6 +20,7 @@
 #include <string>
 
 using namespace std::literals;
+using node::NodeContext;
 
 static NetGroupManager EMPTY_NETGROUPMAN{std::vector<bool>()};
 static const bool DETERMINISTIC{true};

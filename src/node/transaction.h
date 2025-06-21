@@ -12,10 +12,12 @@
 
 class CBlockIndex;
 class CTxMemPool;
-struct NodeContext;
 namespace Consensus {
 struct Params;
 }
+namespace node {
+struct NodeContext;
+} // namespace node
 
 /** Maximum fee rate for sendrawtransaction and testmempoolaccept RPC calls.
  * Also used by the GUI when broadcasting a completed PSBT.
@@ -40,7 +42,7 @@ static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
  * @param[in]  wait_callback wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
  * return error
  */
-[[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, bilingual_str& err_string, const CAmount& highfee, bool relay, bool wait_callback, bool bypass_limits = false);
+[[nodiscard]] TransactionError BroadcastTransaction(node::NodeContext& node, CTransactionRef tx, bilingual_str& err_string, const CAmount& highfee, bool relay, bool wait_callback, bool bypass_limits = false);
 
 /**
  * Return transaction with a given hash.

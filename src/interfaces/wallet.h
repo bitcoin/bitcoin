@@ -35,10 +35,13 @@ enum class FeeReason;
 enum class TransactionError;
 enum isminetype : unsigned int;
 struct CRecipient;
-struct NodeContext;
 struct PartiallySignedTransaction;
 struct WalletContext;
 struct bilingual_str;
+namespace node {
+struct NodeContext;
+} // namespace node
+
 using isminefilter = std::underlying_type<isminetype>::type;
 
 template <typename T>
@@ -456,7 +459,7 @@ std::unique_ptr<Wallet> MakeWallet(WalletContext& context, const std::shared_ptr
 
 //! Return implementation of ChainClient interface for a wallet loader. This
 //! function will be undefined in builds where ENABLE_WALLET is false.
-std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, NodeContext& node_context,
+std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, node::NodeContext& node_context,
                                                CoinJoin::Loader& coinjoin_loader);
 
 } // namespace interfaces

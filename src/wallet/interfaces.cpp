@@ -49,6 +49,7 @@ using interfaces::WalletTx;
 using interfaces::WalletTxOut;
 using interfaces::WalletTxStatus;
 using interfaces::WalletValueMap;
+using node::NodeContext;
 
 namespace wallet {
 namespace {
