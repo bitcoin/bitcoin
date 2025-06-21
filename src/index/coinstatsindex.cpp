@@ -126,7 +126,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
         uint256 expected_block_hash{*Assert(block.prev_hash)};
         if (read_out.first != expected_block_hash) {
-            LogPrintf("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
+            LogInfo("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
                       read_out.first.ToString(), expected_block_hash.ToString());
 
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
@@ -397,7 +397,7 @@ bool CoinStatsIndex::ReverseBlock(const interfaces::BlockInfo& block)
 
         uint256 expected_block_hash{*block.prev_hash};
         if (read_out.first != expected_block_hash) {
-            LogPrintf("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
+            LogInfo("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
                       read_out.first.ToString(), expected_block_hash.ToString());
 
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
