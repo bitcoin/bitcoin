@@ -389,11 +389,13 @@ static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const 
         return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Transaction index is invalid: %s", uriParts[1]));
     }
     const size_t index = *parsed_index;
-    {
-        ChainstateManager* maybe_chainman = GetChainman(context, req);
-        if (!maybe_chainman) return false;
-        ChainstateManager& chainman = *maybe_chainman;
 
+    ChainstateManager* maybe_chainman = GetChainman(context, req);
+    if (!maybe_chainman) return false;
+    ChainstateManager& chainman = *maybe_chainman;
+
+    FlatFilePos block_pos{};
+    {
         LOCK(cs_main);
         const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*block_hash)};
         if (pindex == nullptr) {
@@ -405,37 +407,41 @@ static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const 
         if (index >= pindex->nTx) {
             return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Block %s has only %d transactions", uriParts[0], pindex->nTx));
         }
+        block_pos = pindex->GetBlockPos();
     }
 
+    std::vector<std::byte> tx_bytes{};
+    bool success{false};
     const LocationsIndex* locations_index = g_locations_index.get();
     if (!locations_index) {
-        return RESTERR(req, HTTP_BAD_REQUEST, "Locations index is not enabled");
+        // Read full block and skip irrelevant transactions
+        success = chainman.m_blockman.ReadRawTxFromBlock(tx_bytes, block_pos, index);
+    } else {
+        if (!locations_index->BlockUntilSyncedToCurrentChain()) {
+            RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Locations index is still syncing");
+        }
+        success = locations_index->ReadRawTransaction(*block_hash, index, tx_bytes);
     }
 
-    if (!locations_index->BlockUntilSyncedToCurrentChain()) {
-        RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Locations index is still syncing");
-    }
-
-    std::vector<std::byte> out;
-    if (!locations_index->ReadRawTransaction(*block_hash, index, out)) {
+    if (!success) {
         return RESTERR(req, HTTP_NOT_FOUND, strprintf("Failed to read transaction #%d from block %s", index, (*block_hash).ToString()));
     }
 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         req->WriteHeader("Content-Type", "application/octet-stream");
-        req->WriteReply(HTTP_OK, out);
+        req->WriteReply(HTTP_OK, tx_bytes);
         return true;
     }
     case RESTResponseFormat::HEX: {
-        std::string strHex = HexStr(out) + "\n";
+        std::string strHex = HexStr(tx_bytes) + "\n";
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, strHex);
         return true;
     }
     case RESTResponseFormat::JSON: {
         CTransactionRef tx;
-        DataStream ssTx(out);
+        DataStream ssTx(tx_bytes);
         ssTx >> TX_WITH_WITNESS(tx);
 
         UniValue objTx(UniValue::VOBJ);

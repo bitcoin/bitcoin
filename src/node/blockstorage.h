@@ -417,6 +417,8 @@ public:
 
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;
 
+    bool ReadRawTxFromBlock(std::vector<std::byte>& tx_bytes, const FlatFilePos& block_pos, size_t tx_index) const;
+
     void CleanupBlockRevFiles() const;
 };
 
