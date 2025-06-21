@@ -60,6 +60,10 @@
 #include <QTimer>
 #include <QVariant>
 
+#ifdef ENABLE_WALLET
+using wallet::GetWalletDir;
+#endif // ENABLE_WALLET
+
 const int CONSOLE_HISTORY = 50;
 const QSize FONT_RANGE(4, 40);
 const char fontSizeSettingsKey[] = "consoleFontSize";

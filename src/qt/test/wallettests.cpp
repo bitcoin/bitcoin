@@ -40,6 +40,15 @@
 #include <QListView>
 #include <QDialogButtonBox>
 
+using wallet::AddWallet;
+using wallet::CWallet;
+using wallet::CreateMockWalletDatabase;
+using wallet::RemoveWallet;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WalletContext;
+using wallet::WalletDescriptor;
+using wallet::WalletRescanReserver;
+
 namespace
 {
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.

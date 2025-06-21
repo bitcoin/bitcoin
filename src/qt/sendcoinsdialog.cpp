@@ -30,6 +30,9 @@
 #include <wallet/wallet.h>
 #include <chrono>
 
+using wallet::CCoinControl;
+using wallet::DEFAULT_PAY_TX_FEE;
+
 #include <array>
 #include <fstream>
 #include <memory>

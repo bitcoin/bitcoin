@@ -24,7 +24,6 @@
 
 class BanMan;
 class CBlockIndex;
-class CCoinControl;
 class CDeterministicMNList;
 class CFeeRate;
 class CGovernanceObject;
@@ -41,6 +40,9 @@ struct CNodeStateStats;
 namespace node {
 struct NodeContext;
 } // namespace node
+namespace wallet {
+class CCoinControl;
+} // namespace wallet
 
 namespace interfaces {
 class Handler;

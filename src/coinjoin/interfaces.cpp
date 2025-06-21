@@ -18,6 +18,7 @@
 #include <string>
 
 using node::NodeContext;
+using wallet::CWallet;
 
 namespace coinjoin {
 namespace {

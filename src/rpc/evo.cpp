@@ -37,17 +37,32 @@
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
-#endif//ENABLE_WALLET
+#endif // ENABLE_WALLET
 
 #ifdef ENABLE_WALLET
-extern RPCHelpMan signrawtransactionwithwallet();
 extern RPCHelpMan sendrawtransaction();
+namespace wallet {
+extern RPCHelpMan signrawtransactionwithwallet();
+} // namespace wallet
 #else
+namespace wallet {
 class CWallet;
-#endif//ENABLE_WALLET
+} // namespace wallet
+#endif // ENABLE_WALLET
 
 using node::GetTransaction;
 using node::NodeContext;
+using wallet::CWallet;
+#ifdef ENABLE_WALLET
+using wallet::CCoinControl;
+using wallet::CoinType;
+using wallet::COutput;
+using wallet::CRecipient;
+using wallet::DEFAULT_DISABLE_WALLET;
+using wallet::GetWalletForJSONRPCRequest;
+using wallet::HELP_REQUIRING_PASSPHRASE;
+using wallet::isminetype;
+#endif // ENABLE_WALLET
 
 static RPCArg GetRpcArg(const std::string& strParamName)
 {
@@ -340,7 +355,7 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainsta
     JSONRPCRequest signRequest(request);
     signRequest.params.setArray();
     signRequest.params.push_back(HexStr(ds));
-    UniValue signResult = signrawtransactionwithwallet().HandleRequest(signRequest);
+    UniValue signResult = wallet::signrawtransactionwithwallet().HandleRequest(signRequest);
 
     if (!fSubmit) {
         return signResult["hex"].get_str();
@@ -349,7 +364,7 @@ static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainsta
     JSONRPCRequest sendRequest(request);
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
-    return sendrawtransaction().HandleRequest(sendRequest).get_str();
+    return ::sendrawtransaction().HandleRequest(sendRequest).get_str();
 }
 
 // forward declaration

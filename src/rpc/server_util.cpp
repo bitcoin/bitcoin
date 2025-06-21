@@ -20,6 +20,9 @@
 #include <any>
 
 using node::NodeContext;
+#ifdef ENABLE_WALLET
+using wallet::WalletContext;
+#endif // ENABLE_WALLET
 
 NodeContext& EnsureAnyNodeContext(const CoreContext& context)
 {

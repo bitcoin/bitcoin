@@ -14,6 +14,13 @@
 
 #include <numeric>
 
+using wallet::CompactTallyItem;
+using wallet::CRecipient;
+using wallet::CWallet;
+using wallet::FEATURE_COMPRPUBKEY;
+using wallet::GetDiscardRate;
+using wallet::WalletBatch;
+
 inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
 {
     assert(nSizePrev <= nSizeNew);

@@ -7,8 +7,6 @@
 #include <walletinitinterface.h>
 
 class ArgsManager;
-class CWallet;
-
 namespace interfaces {
 class Chain;
 class Handler;
@@ -22,6 +20,9 @@ class Loader;
 namespace node {
 class NodeContext;
 } // namespace node
+namespace wallet {
+class CWallet;
+} // namespace wallet
 
 class DummyWalletInit : public WalletInitInterface {
 public:
@@ -90,7 +91,7 @@ std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(node::NodeContext& node)
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
 
-std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<wallet::CWallet>& wallet)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }

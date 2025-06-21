@@ -156,6 +156,9 @@ using node::fReindex;
 using node::fSpentIndex;
 using node::fTimestampIndex;
 using node::nPruneTarget;
+#ifdef ENABLE_WALLET
+using wallet::DEFAULT_DISABLE_WALLET;
+#endif // ENABLE_WALLET
 
 static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
 static constexpr bool DEFAULT_REST_ENABLE{false};

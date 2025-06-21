@@ -33,6 +33,12 @@
 #endif // ENABLE_WALLET
 
 using node::NodeContext;
+#ifdef ENABLE_WALLET
+using wallet::CWallet;
+using wallet::GetWalletForJSONRPCRequest;
+using wallet::HELP_REQUIRING_PASSPHRASE;
+using wallet::isminetype;
+#endif // ENABLE_WALLET
 
 static RPCHelpMan gobject_count()
 {

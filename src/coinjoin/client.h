@@ -96,7 +96,7 @@ public:
         }
     }
 
-    void Add(const std::shared_ptr<CWallet>& wallet);
+    void Add(const std::shared_ptr<wallet::CWallet>& wallet);
     void DoMaintenance(CConnman& connman);
 
     void Remove(const std::string& name);
@@ -138,7 +138,7 @@ private:
 class CCoinJoinClientSession : public CCoinJoinBaseSession
 {
 private:
-    const std::shared_ptr<CWallet> m_wallet;
+    const std::shared_ptr<wallet::CWallet> m_wallet;
     CCoinJoinClientManager& m_clientman;
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
@@ -162,12 +162,12 @@ private:
 
     /// Create denominations
     bool CreateDenominated(CAmount nBalanceToDenominate);
-    bool CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
+    bool CreateDenominated(CAmount nBalanceToDenominate, const wallet::CompactTallyItem& tallyItem, bool fCreateMixingCollaterals)
         EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet);
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
-    bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated)
+    bool MakeCollateralAmounts(const wallet::CompactTallyItem& tallyItem, bool fTryDenominated)
         EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet);
 
     bool CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
@@ -200,7 +200,7 @@ private:
     void SetNull() override EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
 public:
-    explicit CCoinJoinClientSession(const std::shared_ptr<CWallet>& wallet, CCoinJoinClientManager& clientman,
+    explicit CCoinJoinClientSession(const std::shared_ptr<wallet::CWallet>& wallet, CCoinJoinClientManager& clientman,
                                     CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
                                     const CMasternodeSync& mn_sync, const llmq::CInstantSendManager& isman,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode);
@@ -263,7 +263,7 @@ public:
 class CCoinJoinClientManager
 {
 private:
-    const std::shared_ptr<CWallet> m_wallet;
+    const std::shared_ptr<wallet::CWallet> m_wallet;
     CDeterministicMNManager& m_dmnman;
     CMasternodeMetaMan& m_mn_metaman;
     const CMasternodeSync& m_mn_sync;
@@ -302,7 +302,7 @@ public:
     CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
     CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
-    explicit CCoinJoinClientManager(const std::shared_ptr<CWallet>& wallet, CDeterministicMNManager& dmnman,
+    explicit CCoinJoinClientManager(const std::shared_ptr<wallet::CWallet>& wallet, CDeterministicMNManager& dmnman,
                                     CMasternodeMetaMan& mn_metaman, const CMasternodeSync& mn_sync,
                                     const llmq::CInstantSendManager& isman,
                                     const std::unique_ptr<CCoinJoinClientQueueManager>& queueman, bool is_masternode) :

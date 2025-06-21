@@ -31,6 +31,10 @@
 #include <QTimer>
 #include <QWindow>
 
+using wallet::WALLET_FLAG_BLANK_WALLET;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+
 WalletController::WalletController(ClientModel& client_model, QObject* parent)
     : QObject(parent)
     , m_activity_thread(new QThread(this))

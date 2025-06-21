@@ -15,11 +15,13 @@
 
 static const int MAX_SEND_POPUP_ENTRIES = 10;
 
-class CCoinControl;
 class ClientModel;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 enum class SynchronizationState;
+namespace wallet {
+class CCoinControl;
+} // namespace wallet
 
 namespace Ui {
     class SendCoinsDialog;
@@ -64,7 +66,7 @@ private:
     Ui::SendCoinsDialog *ui;
     ClientModel *clientModel;
     WalletModel *model;
-    std::unique_ptr<CCoinControl> m_coin_control;
+    std::unique_ptr<wallet::CCoinControl> m_coin_control;
     std::unique_ptr<WalletModelTransaction> m_current_transaction;
     bool fNewRecipientAllowed;
     bool send(const QList<SendCoinsRecipient>& recipients, QString& question_string, QString& informative_text, QString& detailed_text);

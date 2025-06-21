@@ -9,10 +9,12 @@
 #include <string>
 #include <vector>
 
-class CWallet;
 namespace node {
 struct NodeContext;
 } // namespace node
+namespace wallet {
+class CWallet;
+} // namespace wallet
 
 class UniValue;
 
@@ -40,7 +42,7 @@ class Loader
 public:
     virtual ~Loader() {}
     //! Add new wallet to CoinJoin client manager
-    virtual void AddWallet(const std::shared_ptr<CWallet>&) = 0;
+    virtual void AddWallet(const std::shared_ptr<wallet::CWallet>&) = 0;
     //! Remove wallet from CoinJoin client manager
     virtual void RemoveWallet(const std::string&) = 0;
     virtual void FlushWallet(const std::string&) = 0;

@@ -260,7 +260,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         request.params.setArray();
         request.params.push_back(keys);
 
-        UniValue response = importmulti().HandleRequest(request);
+        UniValue response = wallet::importmulti().HandleRequest(request);
         BOOST_CHECK_EQUAL(response.write(),
             strprintf("[{\"success\":false,\"error\":{\"code\":-1,\"message\":\"Rescan failed for key with creation "
                       "timestamp %d. There was an error reading a block from time %d, which is after or within %d "
@@ -898,12 +898,12 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
 
     // test p2pkh
     std::string addr;
-    BOOST_CHECK_NO_THROW(addr = ::getrawchangeaddress().HandleRequest(request).get_str());
+    BOOST_CHECK_NO_THROW(addr = wallet::getrawchangeaddress().HandleRequest(request).get_str());
 
     request.params.clear();
     request.params.setArray();
     request.params.push_back(addr);
-    BOOST_CHECK_NO_THROW(response = ::getaddressinfo().HandleRequest(request).get_obj());
+    BOOST_CHECK_NO_THROW(response = wallet::getaddressinfo().HandleRequest(request).get_obj());
 
     BOOST_CHECK_EQUAL(find_value(response, "ismine").get_bool(), true);
     BOOST_CHECK_EQUAL(find_value(response, "solvable").get_bool(), true);
@@ -918,8 +918,8 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     // test p2sh/multisig
     std::string addr1;
     std::string addr2;
-    BOOST_CHECK_NO_THROW(addr1 = ::getnewaddress().HandleRequest(request).get_str());
-    BOOST_CHECK_NO_THROW(addr2 = ::getnewaddress().HandleRequest(request).get_str());
+    BOOST_CHECK_NO_THROW(addr1 = wallet::getnewaddress().HandleRequest(request).get_str());
+    BOOST_CHECK_NO_THROW(addr2 = wallet::getnewaddress().HandleRequest(request).get_str());
 
     UniValue keys;
     keys.setArray();
@@ -931,14 +931,14 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     request.params.push_back(2);
     request.params.push_back(keys);
 
-    BOOST_CHECK_NO_THROW(response = ::addmultisigaddress().HandleRequest(request));
+    BOOST_CHECK_NO_THROW(response = wallet::addmultisigaddress().HandleRequest(request));
 
     std::string multisig = find_value(response.get_obj(), "address").get_str();
 
     request.params.clear();
     request.params.setArray();
     request.params.push_back(multisig);
-    BOOST_CHECK_NO_THROW(response = ::getaddressinfo().HandleRequest(request).get_obj());
+    BOOST_CHECK_NO_THROW(response = wallet::getaddressinfo().HandleRequest(request).get_obj());
 
     BOOST_CHECK_EQUAL(find_value(response, "ismine").get_bool(), true);
     BOOST_CHECK_EQUAL(find_value(response, "solvable").get_bool(), true);
@@ -1038,7 +1038,7 @@ public:
         bilingual_str strError;
 
         FeeCalculation fee_calc_out;
-        bool fCreationSucceeded = ::CreateTransaction(*wallet, GetRecipients(vecEntries), tx, nFeeRet, nChangePos, strError, coinControl, fee_calc_out);
+        bool fCreationSucceeded = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), tx, nFeeRet, nChangePos, strError, coinControl, fee_calc_out);
         bool fHitMaxTries = strError.original == strExceededMaxTries;
         // This should never happen.
         if (fHitMaxTries) {
@@ -1079,7 +1079,7 @@ public:
         for (auto entry : vecEntries) {
             JSONRPCRequest request;
             request.context = context;
-            vecRecipients.push_back({GetScriptForDestination(DecodeDestination(getnewaddress().HandleRequest(request).get_str())), entry.first, entry.second});
+            vecRecipients.push_back({GetScriptForDestination(DecodeDestination(wallet::getnewaddress().HandleRequest(request).get_str())), entry.first, entry.second});
         }
         return vecRecipients;
     }
@@ -1092,7 +1092,7 @@ public:
         bilingual_str strError;
         CCoinControl coinControl;
         FeeCalculation fee_calc_out;
-        BOOST_CHECK(::CreateTransaction(*wallet, GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
+        BOOST_CHECK(wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
