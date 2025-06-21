@@ -15,6 +15,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::BlockAssembler;
+
 const auto deployment_id = Consensus::DEPLOYMENT_TESTDUMMY;
 constexpr int window{100}, th_start{80}, th_end{60};
 

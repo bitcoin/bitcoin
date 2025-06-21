@@ -77,6 +77,11 @@
 
 #include <stats/client.h>
 
+using node::ReadBlockFromDisk;
+using node::fImporting;
+using node::fPruneMode;
+using node::fReindex;
+
 /** Maximum number of in-flight objects from a peer */
 static constexpr int32_t MAX_PEER_OBJECT_IN_FLIGHT = 100;
 /** Maximum number of announced objects from a peer */

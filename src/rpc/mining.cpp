@@ -52,7 +52,10 @@
 #include <memory>
 #include <stdint.h>
 
+using node::BlockAssembler;
+using node::CBlockTemplate;
 using node::NodeContext;
+using node::UpdateTime;
 
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,

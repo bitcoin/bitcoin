@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <optional>
 
+using node::GetTransaction;
 using node::NodeContext;
 
 static RPCHelpMan quorum_list()

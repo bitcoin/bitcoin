@@ -27,6 +27,9 @@
 #include <string>
 #include <vector>
 
+using node::CCoinsStats;
+using node::CoinStatsHashType;
+
 namespace {
 const TestingSetup* g_setup;
 const Coin EMPTY_COIN{};

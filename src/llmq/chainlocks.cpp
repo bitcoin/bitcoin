@@ -24,6 +24,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+using node::ReadBlockFromDisk;
+
 static bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
 {
     return sporkman.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;

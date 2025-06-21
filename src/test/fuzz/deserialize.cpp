@@ -35,6 +35,8 @@
 
 #include <test/fuzz/fuzz.h>
 
+using node::SnapshotMetadata;
+
 namespace {
 const BasicTestingSetup* g_setup;
 } // namespace

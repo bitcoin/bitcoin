@@ -18,6 +18,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::BlockAssembler;
+using node::CBlockTemplate;
+
 BOOST_AUTO_TEST_SUITE(blockfilter_index_tests)
 
 struct BuildChainTestingSetup : public TestChain100Setup {

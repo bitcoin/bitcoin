@@ -46,6 +46,7 @@ extern RPCHelpMan sendrawtransaction();
 class CWallet;
 #endif//ENABLE_WALLET
 
+using node::GetTransaction;
 using node::NodeContext;
 
 static RPCArg GetRpcArg(const std::string& strParamName)

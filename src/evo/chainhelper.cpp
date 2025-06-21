@@ -13,6 +13,8 @@
 #include <node/transaction.h>
 #include <txmempool.h>
 
+using node::GetTransaction;
+
 CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministicMNManager& dmnman,
                                      CMNHFManager& mnhfman, CGovernanceManager& govman, llmq::CInstantSendManager& isman,
                                      llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,

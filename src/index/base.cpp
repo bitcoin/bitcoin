@@ -13,6 +13,10 @@
 #include <validation.h>
 #include <warnings.h>
 
+using node::PruneLockInfo;
+using node::ReadBlockFromDisk;
+using node::fPruneMode;
+
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
 constexpr auto SYNC_LOG_INTERVAL{30s};

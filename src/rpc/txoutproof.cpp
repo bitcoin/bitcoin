@@ -17,6 +17,9 @@
 #include <util/strencodings.h>
 #include <validation.h>
 
+using node::GetTransaction;
+using node::ReadBlockFromDisk;
+
 static RPCHelpMan gettxoutproof()
 {
     return RPCHelpMan{"gettxoutproof",

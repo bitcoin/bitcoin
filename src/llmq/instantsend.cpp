@@ -28,6 +28,9 @@
 
 #include <cxxtimer.hpp>
 
+using node::fImporting;
+using node::fReindex;
+
 namespace llmq
 {
 

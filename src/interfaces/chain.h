@@ -31,13 +31,13 @@ enum class MemPoolRemovalReason;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
-namespace node {
-struct NodeContext;
-} // namespace node
 namespace llmq {
 class CChainLockSig;
 struct CInstantSendLock;
 } // namespace llmq
+namespace node {
+struct NodeContext;
+} // namespace node
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 

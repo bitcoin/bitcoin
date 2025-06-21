@@ -20,6 +20,8 @@
 
 #include <algorithm>
 
+using node::BlockManager;
+
 /**
  *  Common code for Asset Lock and Asset Unlock
  */

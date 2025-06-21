@@ -13,6 +13,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+using node::SnapshotMetadata;
+
 namespace {
 
 const std::vector<std::shared_ptr<CBlock>>* g_chain;

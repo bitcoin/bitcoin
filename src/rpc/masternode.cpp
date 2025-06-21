@@ -34,7 +34,9 @@
 #include <fstream>
 #include <iomanip>
 
+using node::GetTransaction;
 using node::NodeContext;
+using node::ReadBlockFromDisk;
 
 static RPCHelpMan masternode_connect()
 {

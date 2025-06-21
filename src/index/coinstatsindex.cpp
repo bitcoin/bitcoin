@@ -13,6 +13,12 @@
 #include <validation.h>
 #include <util/check.h>
 
+using node::CCoinsStats;
+using node::GetBogoSize;
+using node::ReadBlockFromDisk;
+using node::TxOutSer;
+using node::UndoReadFromDisk;
+
 static constexpr uint8_t DB_BLOCK_HASH{'s'};
 static constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
 static constexpr uint8_t DB_MUHASH{'M'};

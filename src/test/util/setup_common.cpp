@@ -72,7 +72,18 @@
 #include <memory>
 #include <stdexcept>
 
+using node::BlockAssembler;
+using node::CalculateCacheSizes;
+using node::DashChainstateSetup;
+using node::DashChainstateSetupClose;
+using node::DEFAULT_ADDRESSINDEX;
+using node::DEFAULT_SPENTINDEX;
+using node::DEFAULT_TIMESTAMPINDEX;
+using node::LoadChainstate;
 using node::NodeContext;
+using node::VerifyLoadedChainstate;
+using node::fPruneMode;
+using node::fReindex;
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;

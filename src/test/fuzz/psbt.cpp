@@ -18,6 +18,10 @@
 #include <string>
 #include <vector>
 
+using node::AnalyzePSBT;
+using node::PSBTAnalysis;
+using node::PSBTInputAnalysis;
+
 FUZZ_TARGET(psbt)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};

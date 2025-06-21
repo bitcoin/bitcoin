@@ -17,8 +17,11 @@ class WalletClient;
 class WalletLoader;
 namespace CoinJoin {
 class Loader;
-} // namespcae CoinJoin
-}
+} // namespace CoinJoin
+} // namespace interfaces
+namespace node {
+class NodeContext;
+} // namespace node
 
 class DummyWalletInit : public WalletInitInterface {
 public:
@@ -26,7 +29,7 @@ public:
     bool HasWalletSupport() const override {return false;}
     void AddWalletOptions(ArgsManager& argsman) const override;
     bool ParameterInteraction() const override {return true;}
-    void Construct(NodeContext& node) const override {LogPrintf("No wallet support compiled in!\n");}
+    void Construct(node::NodeContext& node) const override {LogPrintf("No wallet support compiled in!\n");}
 
     // Dash Specific WalletInitInterface InitCoinJoinSettings
     void AutoLockMasternodeCollaterals(interfaces::WalletLoader& wallet_loader) const override {}
@@ -82,7 +85,7 @@ const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 
 namespace interfaces {
 
-std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(NodeContext& node)
+std::unique_ptr<CoinJoin::Loader> MakeCoinJoinLoader(node::NodeContext& node)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
@@ -92,7 +95,7 @@ std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet)
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
 
-std::unique_ptr<WalletClient> MakeWalletLoader(Chain& chain, ArgsManager& args, NodeContext& node_context,
+std::unique_ptr<WalletClient> MakeWalletLoader(Chain& chain, ArgsManager& args, node::NodeContext& node_context,
                                                interfaces::CoinJoin::Loader& coinjoin_loader)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");

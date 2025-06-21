@@ -31,6 +31,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::BlockAssembler;
+using node::CBlockTemplate;
+
 namespace miner_tests {
 struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);

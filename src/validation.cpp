@@ -68,6 +68,26 @@
 #include <ranges>
 #include <string>
 
+using node::BlockManager;
+using node::BlockMap;
+using node::CBlockIndexHeightOnlyComparator;
+using node::CBlockIndexWorkComparator;
+using node::CCoinsStats;
+using node::CoinStatsHashType;
+using node::DEFAULT_ADDRESSINDEX;
+using node::DEFAULT_SPENTINDEX;
+using node::DEFAULT_TIMESTAMPINDEX;
+using node::fAddressIndex;
+using node::fImporting;
+using node::fPruneMode;
+using node::fReindex;
+using node::fSpentIndex;
+using node::fTimestampIndex;
+using node::ReadBlockFromDisk;
+using node::SnapshotMetadata;
+using node::UndoReadFromDisk;
+using node::UnlinkPrunedFiles;
+
 #define MICRO 0.000001
 #define MILLI 0.001
 

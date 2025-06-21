@@ -27,6 +27,8 @@
 #include <util/underlying.h>
 #include <util/enumerate.h>
 
+using node::ReadBlockFromDisk;
+
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
     confirmedHash(dmn.pdmnState->confirmedHash),

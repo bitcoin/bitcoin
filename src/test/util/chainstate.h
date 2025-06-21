@@ -15,7 +15,7 @@
 
 #include <univalue.h>
 
-const auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
+const auto NoMalleation = [](CAutoFile& file, node::SnapshotMetadata& meta){};
 
 /**
  * Create and activate a UTXO snapshot, optionally providing a function to
@@ -42,7 +42,7 @@ CreateAndActivateUTXOSnapshot(node::NodeContext& node, const fs::path root, F ma
     //
     FILE* infile{fsbridge::fopen(snapshot_path, "rb")};
     CAutoFile auto_infile{infile, SER_DISK, CLIENT_VERSION};
-    SnapshotMetadata metadata;
+    node::SnapshotMetadata metadata;
     auto_infile >> metadata;
 
     malleation(auto_infile, metadata);
