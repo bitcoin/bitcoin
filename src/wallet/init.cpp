@@ -33,6 +33,7 @@
 
 using node::NodeContext;
 
+namespace wallet {
 class WalletInit : public WalletInitInterface
 {
 public:
@@ -53,8 +54,6 @@ public:
     void InitCoinJoinSettings(interfaces::CoinJoin::Loader& coinjoin_loader, interfaces::WalletLoader& wallet_loader) const override;
     void InitAutoBackup() const override;
 };
-
-const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
 void WalletInit::AddWalletOptions(ArgsManager& argsman) const
 {
@@ -237,3 +236,6 @@ void WalletInit::InitAutoBackup() const
 {
     CWallet::InitAutoBackup();
 }
+} // namespace wallet
+
+const WalletInitInterface& g_wallet_init_interface = wallet::WalletInit();

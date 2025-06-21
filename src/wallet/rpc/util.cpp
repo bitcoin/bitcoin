@@ -12,6 +12,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 const std::string HELP_REQUIRING_PASSPHRASE{"\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
 
@@ -148,3 +149,4 @@ void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& st
         throw JSONRPCError(code, error.original);
     }
 }
+} // namespace wallet

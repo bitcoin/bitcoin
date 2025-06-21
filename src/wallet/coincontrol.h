@@ -13,6 +13,7 @@
 
 #include <optional>
 
+namespace wallet {
 enum class CoinType : uint8_t
 {
     ALL_COINS,
@@ -116,5 +117,6 @@ public:
 private:
     std::set<COutPoint> setSelected;
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_COINCONTROL_H

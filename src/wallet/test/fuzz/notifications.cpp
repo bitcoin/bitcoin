@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+namespace wallet {
 namespace {
 const TestingSetup* g_setup;
 
@@ -167,3 +168,4 @@ FUZZ_TARGET(wallet_notifications, .init = initialize_setup)
     }
 }
 } // namespace
+} // namespace wallet

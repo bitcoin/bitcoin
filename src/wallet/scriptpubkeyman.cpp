@@ -15,6 +15,7 @@
 #include <util/translation.h>
 #include <wallet/scriptpubkeyman.h>
 
+namespace wallet {
 bool LegacyScriptPubKeyMan::GetNewDestination(CTxDestination& dest, bilingual_str& error)
 {
     LOCK(cs_KeyStore);
@@ -2484,3 +2485,4 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
 
     return true;
 }
+} // namespace wallet

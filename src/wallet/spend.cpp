@@ -24,6 +24,7 @@
 
 using interfaces::FoundBlock;
 
+namespace wallet {
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
 int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig)
@@ -1116,3 +1117,4 @@ bool GenBudgetSystemCollateralTx(CWallet& wallet, CTransactionRef& tx, uint256 h
 
     return success;
 }
+} // namespace wallet

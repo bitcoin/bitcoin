@@ -14,6 +14,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 static CAmount GetReceived(const CWallet& wallet, const UniValue& params, bool by_label) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     std::vector<CTxDestination> address_vector;
@@ -731,3 +732,4 @@ RPCHelpMan listunspent()
 },
     };
 }
+} // namespace wallet

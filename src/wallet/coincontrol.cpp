@@ -6,8 +6,10 @@
 
 #include <util/system.h>
 
+namespace wallet {
 CCoinControl::CCoinControl(CoinType coinType)
 : nCoinType(coinType)
 {
     m_avoid_partial_spends = gArgs.GetBoolArg("-avoidpartialspends", DEFAULT_AVOIDPARTIALSPENDS);
 }
+} // namespace wallet

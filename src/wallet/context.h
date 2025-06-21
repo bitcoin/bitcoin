@@ -13,7 +13,6 @@
 #include <vector>
 
 class ArgsManager;
-class CWallet;
 namespace interfaces {
 class Chain;
 namespace CoinJoin {
@@ -24,6 +23,9 @@ class Wallet;
 namespace node {
 struct NodeContext;
 } // namespace node
+
+namespace wallet {
+class CWallet;
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
@@ -59,5 +61,6 @@ struct WalletContext {
     WalletContext();
     ~WalletContext();
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_CONTEXT_H

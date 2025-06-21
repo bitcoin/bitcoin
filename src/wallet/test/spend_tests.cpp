@@ -11,6 +11,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(spend_tests, WalletTestingSetup)
 
 BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
@@ -60,3 +61,4 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

@@ -24,6 +24,7 @@
 
 #include <system_error>
 
+namespace wallet {
 bool VerifyWallets(WalletContext& context)
 {
     interfaces::Chain& chain = *context.chain;
@@ -183,3 +184,4 @@ void UnloadWallets(WalletContext& context)
         UnloadWallet(std::move(wallet));
     }
 }
+} // namespace wallet

@@ -10,6 +10,7 @@
 #include <boost/test/unit_test.hpp>
 #include <wallet/test/wallet_test_fixture.h>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 static void import_descriptor(CWallet& wallet, const std::string& descriptor)
@@ -147,3 +148,4 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

@@ -15,6 +15,7 @@
 #include <system_error>
 #include <vector>
 
+namespace wallet {
 std::vector<fs::path> ListDatabases(const fs::path& wallet_dir)
 {
     std::vector<fs::path> paths;
@@ -145,3 +146,4 @@ void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)
     options.use_shared_memory = !args.GetBoolArg("-privdb", !options.use_shared_memory);
     options.max_log_mb = args.GetIntArg("-dblogsize", options.max_log_mb);
 }
+} // namespace wallet

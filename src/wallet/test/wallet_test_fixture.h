@@ -16,6 +16,7 @@
 
 #include <memory>
 
+namespace wallet {
 /** Testing setup and teardown for wallet.
  */
 struct WalletTestingSetup : public TestingSetup {
@@ -27,5 +28,6 @@ struct WalletTestingSetup : public TestingSetup {
     CWallet m_wallet;
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H

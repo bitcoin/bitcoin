@@ -10,6 +10,7 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction.
  * use_max_sig indicates whether to use the maximum sized, 72 byte signature when calculating the
  * size of the input spend. This should only be set when watch-only outputs are allowed */
@@ -89,5 +90,6 @@ bool CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, 
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
 
 bool GenBudgetSystemCollateralTx(CWallet& wallet, CTransactionRef& tx, uint256 hash, CAmount amount, const COutPoint& outpoint = COutPoint());
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_SPEND_H

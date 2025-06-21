@@ -14,6 +14,7 @@
 #include <numeric>
 #include <optional>
 
+namespace wallet {
 // Descending order comparator
 struct {
     bool operator()(const OutputGroup& a, const OutputGroup& b) const
@@ -544,3 +545,4 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     }
     assert(false);
 }
+} // namespace wallet

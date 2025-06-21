@@ -20,6 +20,7 @@
 #include <boost/test/unit_test.hpp>
 #include <random>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 
 // how many times to run all the tests to have a chance to catch errors that only show up with particular random shuffles
@@ -869,5 +870,6 @@ BOOST_AUTO_TEST_CASE(waste_test)
     add_coin(2 * COIN, 2, selection, fee, fee + large_fee_diff);
     BOOST_CHECK_EQUAL(target_waste2, GetSelectionWaste(selection, change_cost, target));
 }
+} // namespace wallet
 
 BOOST_AUTO_TEST_SUITE_END()

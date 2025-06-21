@@ -24,6 +24,7 @@
 #endif
 #endif
 
+namespace wallet {
 namespace {
 Span<const std::byte> SpanFromDbt(const BerkeleyBatch::SafeDbt& dbt)
 {
@@ -861,3 +862,4 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
     status = DatabaseStatus::SUCCESS;
     return db;
 }
+} // namespace wallet

@@ -6,6 +6,7 @@
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
+namespace wallet {
 RPCHelpMan walletpassphrase()
 {
     return RPCHelpMan{"walletpassphrase",
@@ -255,3 +256,4 @@ RPCHelpMan encryptwallet()
 },
     };
 }
+} // namespace wallet

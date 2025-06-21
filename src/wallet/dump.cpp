@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+namespace wallet {
 static const std::string DUMP_MAGIC = "BITCOIN_CORE_WALLET_DUMP";
 uint32_t DUMP_VERSION = 1;
 
@@ -293,3 +294,4 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
 
     return ret;
 }
+} // namespace wallet
