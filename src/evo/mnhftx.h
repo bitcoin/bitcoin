@@ -146,7 +146,7 @@ public:
      */
     void DisconnectManagers() { m_chainman = nullptr; m_qman = nullptr; };
 
-    bool ForceSignalDBUpdate() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ForceSignalDBUpdate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 private:
     void AddToCache(const Signals& signals, const CBlockIndex* const pindex);

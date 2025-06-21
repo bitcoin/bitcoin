@@ -273,7 +273,7 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
 
     CTransactionRef tx;
     {
-        LOCK2(m_wallet.cs_wallet, cs_main);
+        LOCK2(m_wallet.cs_wallet, ::cs_main);
         FeeCalculation fee_calc_out;
         if (!CreateTransaction(m_wallet, vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
             return false;
@@ -312,7 +312,7 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     }
 
     {
-        LOCK2(m_wallet.cs_wallet, cs_main);
+        LOCK2(m_wallet.cs_wallet, ::cs_main);
         m_wallet.CommitTransaction(tx, {}, {});
     }
 

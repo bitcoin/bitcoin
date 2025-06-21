@@ -588,7 +588,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
                                            llmq::CQuorumSnapshotManager& qsnapman, const CDeterministicMNList& newList,
                                            std::optional<MNListUpdates>& updatesRet)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     const auto& consensusParams = Params().GetConsensus();
     if (!DeploymentActiveAt(*pindex, consensusParams, Consensus::DEPLOYMENT_DIP0003)) {

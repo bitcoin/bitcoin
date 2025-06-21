@@ -87,7 +87,7 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
                              const CQuorumBlockProcessor& qblockman, const CGetQuorumRotationInfo& request,
                              bool use_legacy_construction, CQuorumRotationInfo& response, std::string& errorRet)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     std::vector<const CBlockIndex*> baseBlockIndexes;
     if (request.baseBlockHashes.size() == 0) {
@@ -426,7 +426,7 @@ void CQuorumSnapshotManager::StoreSnapshotForBlock(const Consensus::LLMQType llm
 {
     auto snapshotHash = ::SerializeHash(std::make_pair(llmqType, pindex->GetBlockHash()));
 
-    // LOCK(cs_main);
+    // LOCK(::cs_main);
     AssertLockNotHeld(m_evoDb.cs);
     LOCK2(snapshotCacheCs, m_evoDb.cs);
     m_evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_SNAPSHOT, snapshotHash), snapshot);

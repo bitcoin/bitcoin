@@ -588,7 +588,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
     const CBlockIndex* pindexMined;
     int nTxAge;
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         pindexMined = m_chainstate.m_blockman.LookupBlockIndex(hashBlock);
         nTxAge = m_chainstate.m_chain.Height() - pindexMined->nHeight + 1;
     }
@@ -761,7 +761,7 @@ PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom
         return tl::unexpected{100};
     }
 
-    const auto blockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(islock->cycleHash));
+    const auto blockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(islock->cycleHash));
     if (blockIndex == nullptr) {
         // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
         return tl::unexpected{1};
@@ -921,7 +921,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
             continue;
         }
 
-        const auto blockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(islock->cycleHash));
+        const auto blockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(islock->cycleHash));
         if (blockIndex == nullptr) {
             batchVerifier.badSources.emplace(nodeId);
             continue;
@@ -960,7 +960,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
     std::unordered_set<uint256, StaticSaltedHasher> badISLocks;
 
     if (ban && !batchVerifier.badSources.empty()) {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         for (const auto& nodeId : batchVerifier.badSources) {
             // Let's not be too harsh, as the peer might simply be unlucky and might have sent us an old lock which
             // does not validate anymore due to changed quorums
@@ -1015,7 +1015,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
     const CBlockIndex* pindexMined{nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     if (tx && !hashBlock.IsNull()) {
-        pindexMined = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(hashBlock));
+        pindexMined = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(hashBlock));
 
         // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
         // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
@@ -1434,7 +1434,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
             activateBestChain = true;
         } else {
             LogPrintf("CInstantSendManager::%s -- resetting block %s\n", __func__, pindex2->GetBlockHash().ToString());
-            LOCK(cs_main);
+            LOCK(::cs_main);
             m_chainstate.ResetBlockFailureFlags(pindex2);
         }
     }
@@ -1453,7 +1453,7 @@ void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const
 {
     LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: Removing ISLOCK and its chained children\n", __func__,
               islock.txid.ToString(), islockHash.ToString());
-    int tipHeight = WITH_LOCK(cs_main, return m_chainstate.m_chain.Height());
+    int tipHeight = WITH_LOCK(::cs_main, return m_chainstate.m_chain.Height());
 
     auto removedIslocks = db.RemoveChainedInstantSendLocks(islockHash, islock.txid, tipHeight);
     for (const auto& h : removedIslocks) {

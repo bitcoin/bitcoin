@@ -85,7 +85,7 @@ MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer,
     // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
     const CBlockIndex* pQuorumBaseBlockIndex;
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         pQuorumBaseBlockIndex = m_chainstate.m_blockman.LookupBlockIndex(qc.quorumHash);
         if (pQuorumBaseBlockIndex == nullptr) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
@@ -153,7 +153,7 @@ MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer,
 
 bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state, bool fJustCheck, bool fBLSChecks)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     const auto blockHash = pindex->GetBlockHash();
 
@@ -222,7 +222,7 @@ static std::tuple<std::string, Consensus::LLMQType, int, uint32_t> BuildInversed
 
 bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck, bool fBLSChecks)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     const auto& llmq_params_opt = Params().GetLLMQ(qc.llmqType);
     if (!llmq_params_opt.has_value()) {
@@ -315,7 +315,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 
 bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     PreComputeQuorumMembers(m_dmnman, m_qsnapman, pindex, /*reset_cache=*/true);
 
@@ -354,7 +354,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, gsl::not_null<const C
 
 bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, std::multimap<Consensus::LLMQType, CFinalCommitment>& ret, BlockValidationState& state)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     const auto& consensus = Params().GetConsensus();
 
@@ -396,7 +396,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, gsl::no
 
 bool CQuorumBlockProcessor::IsMiningPhase(const Consensus::LLMQParams& llmqParams, const CChain& active_chain, int nHeight)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     // Note: This function can be called for new blocks
     assert(nHeight <= active_chain.Height() + 1);
@@ -416,7 +416,7 @@ bool CQuorumBlockProcessor::IsMiningPhase(const Consensus::LLMQParams& llmqParam
 
 size_t CQuorumBlockProcessor::GetNumCommitmentsRequired(const Consensus::LLMQParams& llmqParams, int nHeight) const
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     if (!IsMiningPhase(llmqParams, m_chainstate.m_chain, nHeight)) return 0;
 
@@ -439,7 +439,7 @@ size_t CQuorumBlockProcessor::GetNumCommitmentsRequired(const Consensus::LLMQPar
 // WARNING: This method returns uint256() on the first block of the DKG interval (because the block hash is not known yet)
 uint256 CQuorumBlockProcessor::GetQuorumBlockHash(const Consensus::LLMQParams& llmqParams, const CChain& active_chain, int nHeight, int quorumIndex)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     int quorumStartHeight = nHeight - (nHeight % llmqParams.dkgInterval) + quorumIndex;
 
@@ -689,7 +689,7 @@ bool CQuorumBlockProcessor::GetMineableCommitmentByHash(const uint256& commitmen
 // Will return a null commitment if no mineable commitment is known and none was mined yet
 std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableCommitments(const Consensus::LLMQParams& llmqParams, int nHeight) const
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     std::vector<CFinalCommitment> ret;
 
@@ -744,7 +744,7 @@ std::optional<std::vector<CFinalCommitment>> CQuorumBlockProcessor::GetMineableC
 
 bool CQuorumBlockProcessor::GetMineableCommitmentsTx(const Consensus::LLMQParams& llmqParams, int nHeight, std::vector<CTransactionRef>& ret) const
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
     std::optional<std::vector<CFinalCommitment>> qcs = GetMineableCommitments(llmqParams, nHeight);
     if (!qcs.has_value()) {
         return false;

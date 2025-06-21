@@ -54,7 +54,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CConnm
     vRecv >> dsq;
 
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         peerman.EraseObjectRequest(peer.GetId(), CInv(MSG_DSQ, dsq.GetHash()));
     }
 

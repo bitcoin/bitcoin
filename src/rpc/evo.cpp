@@ -323,7 +323,7 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 static std::string SignAndSendSpecialTx(const JSONRPCRequest& request, CChainstateHelper& chain_helper, const ChainstateManager& chainman, const CMutableTransaction& tx, bool fSubmit)
 {
     {
-    LOCK(cs_main);
+    LOCK(::cs_main);
 
     TxValidationState state;
     if (!chain_helper.special_tx->CheckSpecialTx(CTransaction(tx), chainman.ActiveChain().Tip(), chainman.ActiveChainstate().CoinsTip(), true, state)) {
@@ -1071,7 +1071,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
 
     FundSpecialTx(*wallet, tx, ptx, feeSource);
 
-    const bool isV19active = DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();),
+    const bool isV19active = DeploymentActiveAfter(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip();),
                                                    Params().GetConsensus(), Consensus::DEPLOYMENT_V19);
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
     SetTxPayload(tx, ptx);
@@ -1245,7 +1245,7 @@ static RPCHelpMan protx_revoke()
 
     EnsureWalletIsUnlocked(*pwallet);
 
-    const bool isV19active{DeploymentActiveAfter(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
+    const bool isV19active{DeploymentActiveAfter(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     CProUpRevTx ptx;
     ptx.nVersion = CProUpRevTx::GetMaxVersion(/*is_basic_scheme_active=*/isV19active);
 
@@ -1333,11 +1333,11 @@ static UniValue BuildDMNListEntry(const CWallet* const pwallet, const CDetermini
 
     if (pindex != nullptr) {
         if (confirmations > -1) {
-            confirmations -= WITH_LOCK(cs_main, return chainman.ActiveChain().Height()) - pindex->nHeight;
+            confirmations -= WITH_LOCK(::cs_main, return chainman.ActiveChain().Height()) - pindex->nHeight;
         } else {
             uint256 minedBlockHash;
             collateralTx = GetTransaction(/* pindex */ nullptr, /* mempool */ nullptr, dmn.collateralOutpoint.hash, Params().GetConsensus(), minedBlockHash);
-            const CBlockIndex* const pindexMined = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(minedBlockHash));
+            const CBlockIndex* const pindexMined = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(minedBlockHash));
             CHECK_NONFATAL(pindexMined != nullptr);
             CHECK_NONFATAL(pindex->GetAncestor(pindexMined->nHeight) == pindexMined);
             confirmations = pindex->nHeight - pindexMined->nHeight + 1;
@@ -1434,7 +1434,7 @@ static RPCHelpMan protx_list()
 
         bool detailed = !request.params[1].isNull() ? ParseBoolV(request.params[1], "detailed") : false;
 
-        LOCK2(wallet->cs_wallet, cs_main);
+        LOCK2(wallet->cs_wallet, ::cs_main);
         int height = !request.params[2].isNull() ? ParseInt32V(request.params[2], "height") : chainman.ActiveChain().Height();
         if (height < 1 || height > chainman.ActiveChain().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
@@ -1464,9 +1464,9 @@ static RPCHelpMan protx_list()
         bool detailed = !request.params[1].isNull() ? ParseBoolV(request.params[1], "detailed") : false;
 
 #ifdef ENABLE_WALLET
-        LOCK2(wallet ? wallet->cs_wallet : cs_main, cs_main);
+        LOCK2(wallet ? wallet->cs_wallet : ::cs_main, ::cs_main);
 #else
-        LOCK(cs_main);
+        LOCK(::cs_main);
 #endif
         int height = !request.params[2].isNull() ? ParseInt32V(request.params[2], "height") : chainman.ActiveChain().Height();
         if (height < 1 || height > chainman.ActiveChain().Height()) {
@@ -1531,10 +1531,10 @@ static RPCHelpMan protx_info()
     uint256 proTxHash(ParseHashV(request.params[0], "proTxHash"));
 
     if (request.params[1].isNull()) {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         pindex = chainman.ActiveChain().Tip();
     } else {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         uint256 blockHash(ParseHashV(request.params[1], "blockHash"));
         pindex = chainman.m_blockman.LookupBlockIndex(blockHash);
         if (pindex == nullptr) {
@@ -1552,9 +1552,9 @@ static RPCHelpMan protx_info()
     };
 }
 
-static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static uint256 ParseBlock(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     try {
         return ParseHashV(v, strName);
@@ -1585,7 +1585,7 @@ static RPCHelpMan protx_diff()
     CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
     const LLMQContext& llmq_ctx = *CHECK_NONFATAL(node.llmq_ctx);
 
-    LOCK(cs_main);
+    LOCK(::cs_main);
     uint256 baseBlockHash = ParseBlock(request.params[0], chainman, "baseBlock");
     uint256 blockHash = ParseBlock(request.params[1], chainman, "block");
     bool extended = false;
@@ -1607,9 +1607,9 @@ static RPCHelpMan protx_diff()
     };
 }
 
-static const CBlockIndex* ParseBlockIndex(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static const CBlockIndex* ParseBlockIndex(const UniValue& v, const ChainstateManager& chainman, const std::string& strName) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     try {
         uint256 hash = ParseHashV(v, strName);
@@ -1642,7 +1642,7 @@ static RPCHelpMan protx_listdiff()
 
     CDeterministicMNManager& dmnman = *CHECK_NONFATAL(node.dmnman);
 
-    LOCK(cs_main);
+    LOCK(::cs_main);
     UniValue ret(UniValue::VOBJ);
 
     const CBlockIndex* pBaseBlockIndex = ParseBlockIndex(request.params[0], chainman, "baseBlock");

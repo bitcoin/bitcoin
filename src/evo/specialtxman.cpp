@@ -27,7 +27,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
                                 const std::optional<CRangesSet>& indexes, bool check_sigs, TxValidationState& state)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     if (!tx.HasExtraPayloadField())
         return true;
@@ -76,7 +76,7 @@ static bool CheckSpecialTxInner(CDeterministicMNManager& dmnman, llmq::CQuorumSn
 
 bool CSpecialTxProcessor::CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
     return CheckSpecialTxInner(m_dmnman, m_qsnapman, m_chainman, m_qman, tx, pindexPrev, view, std::nullopt, check_sigs,
                                state);
 }
@@ -84,7 +84,7 @@ bool CSpecialTxProcessor::CheckSpecialTx(const CTransaction& tx, const CBlockInd
 bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, const CCoinsViewCache& view, bool fJustCheck,
                                                    bool fCheckCbTxMerkleRoots, BlockValidationState& state, std::optional<MNListUpdates>& updatesRet)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     try {
         static int64_t nTimeLoop = 0;
@@ -242,7 +242,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
 
 bool CSpecialTxProcessor::UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, std::optional<MNListUpdates>& updatesRet)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
 
@@ -277,7 +277,7 @@ bool CSpecialTxProcessor::UndoSpecialTxsInBlock(const CBlock& block, const CBloc
 bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
                                                       BlockValidationState& state)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0008)) return true;
     if (!DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_V20)) return true;
