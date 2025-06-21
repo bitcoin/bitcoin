@@ -31,6 +31,7 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
 #include <evo/simplifiedmns.h>
+#include <evo/specialtxman.h>
 #include <governance/governance.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
@@ -73,12 +74,10 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node,
       m_cpoolman(*Assert(node.cpoolman)),
       m_chain_helper(chainstate.ChainHelper()),
       m_chainstate(chainstate),
-      m_dmnman(*Assert(node.dmnman)),
       m_evoDb(*Assert(node.evodb)),
       m_mnhfman(*Assert(node.mnhf_manager)),
       m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
-      m_qsnapman(*Assert(Assert(node.llmq_ctx)->qsnapman)),
       chainparams(params),
       m_mempool(mempool),
       m_quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
@@ -289,7 +288,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
         BlockValidationState state;
         CDeterministicMNList mn_list;
-        if (!m_dmnman.BuildNewListFromBlock(*pblock, pindexPrev, state, m_chainstate.CoinsTip(), mn_list, m_qsnapman, true)) {
+        if (!m_chain_helper.special_tx->BuildNewListFromBlock(*pblock, pindexPrev, m_chainstate.CoinsTip(), true, state, mn_list)) {
             throw std::runtime_error(strprintf("%s: BuildNewListFromBlock failed: %s", __func__, state.ToString()));
         }
         if (!CalcCbTxMerkleRootMNList(cbTx.merkleRootMNList, CSimplifiedMNList(mn_list), state)) {

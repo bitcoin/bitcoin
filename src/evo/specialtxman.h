@@ -7,7 +7,7 @@
 
 #include <sync.h>
 #include <threadsafety.h>
-
+#include <gsl/pointers.h>
 #include <optional>
 
 class BlockValidationState;
@@ -16,6 +16,7 @@ class CBlockIndex;
 class CCbTx;
 class CCoinsViewCache;
 class CCreditPoolManager;
+class CDeterministicMNList;
 class CDeterministicMNManager;
 class CTransaction;
 class ChainstateManager;
@@ -71,6 +72,11 @@ public:
     bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, std::optional<MNListUpdates>& updatesRet)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+
+    // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
+    bool BuildNewListFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
+                               const CCoinsViewCache& view, bool debugLogs,
+                               BlockValidationState& state, CDeterministicMNList& mnListRet) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 private:
     bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
                                      BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

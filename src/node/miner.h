@@ -24,7 +24,6 @@ class CChainParams;
 class CChainstateHelper;
 class CConnman;
 class CCreditPoolManager;
-class CDeterministicMNManager;
 class CEvoDB;
 class CMNHFManager;
 class CScript;
@@ -36,7 +35,6 @@ class CChainLocksHandler;
 class CInstantSendManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
-class CQuorumSnapshotManager;
 } // namespace llmq
 
 namespace node {
@@ -172,12 +170,10 @@ private:
     CCreditPoolManager& m_cpoolman;
     CChainstateHelper& m_chain_helper;
     CChainState& m_chainstate;
-    CDeterministicMNManager& m_dmnman;
     CEvoDB& m_evoDb;
     CMNHFManager& m_mnhfman;
     llmq::CChainLocksHandler& m_clhandler;
     llmq::CInstantSendManager& m_isman;
-    llmq::CQuorumSnapshotManager& m_qsnapman;
     const CChainParams& chainparams;
     const CTxMemPool* const m_mempool;
     const llmq::CQuorumBlockProcessor& m_quorum_block_processor;
