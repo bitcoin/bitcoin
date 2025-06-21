@@ -15,9 +15,9 @@ class CTxMemPool;
 namespace Consensus {
 struct Params;
 }
+
 namespace node {
 struct NodeContext;
-} // namespace node
 
 /** Maximum fee rate for sendrawtransaction and testmempoolaccept RPC calls.
  * Also used by the GUI when broadcasting a completed PSBT.
@@ -58,5 +58,6 @@ static const CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
  * @returns                    The tx if found, otherwise nullptr
  */
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
+} // namespace node
 
 #endif // BITCOIN_NODE_TRANSACTION_H

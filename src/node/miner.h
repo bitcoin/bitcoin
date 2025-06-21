@@ -19,7 +19,6 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
-class BlockManager;
 class CBlockIndex;
 class CChainParams;
 class CChainstateHelper;
@@ -39,9 +38,10 @@ class CQuorumBlockProcessor;
 class CQuorumManager;
 class CQuorumSnapshotManager;
 } // namespace llmq
+
 namespace node {
+class BlockManager;
 struct NodeContext;
-} // namespace node
 
 static const bool DEFAULT_PRINTPRIORITY = false;
 
@@ -229,5 +229,6 @@ private:
 };
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+} // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

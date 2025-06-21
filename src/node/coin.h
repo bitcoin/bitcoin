@@ -9,9 +9,9 @@
 
 class COutPoint;
 class Coin;
+
 namespace node {
 struct NodeContext;
-} // namespace node
 
 /**
  * Look up unspent output information. Returns coins in the mempool and in the
@@ -22,5 +22,6 @@ struct NodeContext;
  * @param[in,out] coins map to fill
  */
 void FindCoins(const node::NodeContext& node, std::map<COutPoint, Coin>& coins);
+} // namespace node
 
 #endif // BITCOIN_NODE_COIN_H

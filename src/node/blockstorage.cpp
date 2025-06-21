@@ -26,6 +26,7 @@
 #include <ranges>
 #include <unordered_map>
 
+namespace node {
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fPruneMode = false;
@@ -923,3 +924,4 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
 
     chainman.ActiveChainstate().LoadMempool(args);
 }
+} // namespace node

@@ -35,6 +35,7 @@ namespace Consensus {
 struct Params;
 }
 
+namespace node {
 static constexpr bool DEFAULT_ADDRESSINDEX{false};
 static constexpr bool DEFAULT_SPENTINDEX{false};
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
@@ -230,5 +231,6 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 
 void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CDSNotificationInterface& dsnfi,
                   std::vector<fs::path> vImportFiles, CActiveMasternodeManager* const mn_activeman, const ArgsManager& args);
+} // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H

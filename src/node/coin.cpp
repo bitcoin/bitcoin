@@ -8,8 +8,7 @@
 #include <txmempool.h>
 #include <validation.h>
 
-using node::NodeContext;
-
+namespace node {
 void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins)
 {
     assert(node.mempool);
@@ -24,3 +23,4 @@ void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins)
         }
     }
 }
+} // namespace node
