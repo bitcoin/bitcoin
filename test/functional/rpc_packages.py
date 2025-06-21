@@ -302,6 +302,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(testres_replaceable["wtxid"], replaceable_tx["wtxid"])
         assert testres_replaceable["allowed"]
         assert_equal(testres_replaceable["vsize"], replaceable_tx["tx"].get_vsize())
+        assert_equal(testres_replaceable["vsize_bip141"], replaceable_tx["tx"].get_vsize())
         assert_equal(testres_replaceable["fees"]["base"], fee)
         assert_fee_amount(fee, replaceable_tx["tx"].get_vsize(), testres_replaceable["fees"]["effective-feerate"])
         assert_equal(testres_replaceable["fees"]["effective-includes"], [replaceable_tx["wtxid"]])
@@ -339,9 +340,11 @@ class RPCPackagesTest(BitcoinTestFramework):
             # No "allowed" if the tx was already in the mempool
             if "allowed" in testres_tx and testres_tx["allowed"]:
                 assert_equal(submitres_tx["vsize"], testres_tx["vsize"])
+                assert_equal(submitres_tx["vsize_bip141"], testres_tx["vsize"])
                 assert_equal(submitres_tx["fees"]["base"], testres_tx["fees"]["base"])
             entry_info = node.getmempoolentry(submitres_tx["txid"])
             assert_equal(submitres_tx["vsize"], entry_info["vsize"])
+            assert_equal(submitres_tx["vsize_bip141"], entry_info["vsize"])
             assert_equal(submitres_tx["fees"]["base"], entry_info["fees"]["base"])
 
     def test_submit_child_with_parents(self, num_parents, partial_submit):
@@ -371,7 +374,9 @@ class RPCPackagesTest(BitcoinTestFramework):
             assert wtxid in submitpackage_result["tx-results"]
             tx_result = submitpackage_result["tx-results"][wtxid]
             assert_equal(tx_result["txid"], tx.txid_hex)
+            assert_equal(tx_result["vsize_adjusted"], tx.get_vsize())
             assert_equal(tx_result["vsize"], tx.get_vsize())
+            assert_equal(tx_result["vsize_bip141"], tx.get_vsize())
             assert_equal(tx_result["fees"]["base"], DEFAULT_FEE)
             if wtxid not in presubmitted_wtxids:
                 assert_fee_amount(DEFAULT_FEE, tx.get_vsize(), tx_result["fees"]["effective-feerate"])

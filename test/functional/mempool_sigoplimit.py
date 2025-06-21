@@ -41,6 +41,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
@@ -98,14 +99,20 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
+        assert_equal(sigop_equivalent_vsize, tx.get_vsize())
         assert_equal(res['vsize'], sigop_equivalent_vsize)
+        assert_equal(res['vsize_adjusted'], sigop_equivalent_vsize)
+        assert_equal(res['vsize_bip141'], tx.get_vsize())
 
         # increase the tx's vsize to be right above the sigop-limit equivalent size
         # => tx's vsize in mempool should also grow accordingly
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad+1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
+        assert_equal(sigop_equivalent_vsize + 1, tx.get_vsize())
         assert_equal(res['vsize'], sigop_equivalent_vsize+1)
+        assert_equal(res['vsize_adjusted'], sigop_equivalent_vsize + 1)
+        assert_equal(res['vsize_bip141'], tx.get_vsize())
 
         # decrease the tx's vsize to be right below the sigop-limit equivalent size
         # => tx's vsize in mempool should stick at the sigop-limit equivalent
@@ -114,7 +121,10 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad-1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
+        assert_not_equal(sigop_equivalent_vsize, tx.get_vsize())
         assert_equal(res['vsize'], sigop_equivalent_vsize)
+        assert_equal(res['vsize_adjusted'], sigop_equivalent_vsize)
+        assert_equal(res['vsize_bip141'], tx.get_vsize())
 
         # check that the ancestor and descendant size calculations in the mempool
         # also use the same max(sigop_equivalent_vsize, serialized_vsize) logic
@@ -166,7 +176,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         parent_individual_testres = self.nodes[0].testmempoolaccept([tx_parent.serialize().hex()])[0]
         assert parent_individual_testres["allowed"]
         max_multisig_vsize = MAX_PUBKEYS_PER_MULTISIG * 5000
-        assert_equal(parent_individual_testres["vsize"], max_multisig_vsize)
+        assert_equal(parent_individual_testres["vsize_adjusted"], max_multisig_vsize)
 
         # But together, it's exceeding limits in the *package* context. If sigops adjusted vsize wasn't being checked
         # here, it would get further in validation and give too-large-cluster error instead.
