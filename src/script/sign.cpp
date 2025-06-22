@@ -476,6 +476,14 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TxoutType::WITNESS_V1_TAPROOT:
         return SignTaproot(provider, creator, WitnessV1Taproot(XOnlyPubKey{vSolutions[0]}), sigdata, ret);
 
+    // TODO: SPHINCS+ Integration Point
+    // case TxoutType::SPHINCSPLUS_PK: // Hypothetical new TxoutType for SPHINCS+
+    //     // Logic to get SPHINCS+ public key from vSolutions
+    //     // Call a new CreateSPHINCSSig function similar to CreateSig or CreateSchnorrSig
+    //     // Populate sigdata with SPHINCS+ specific signature information
+    //     // Update SignatureData struct to hold SPHINCS+ signatures and related data
+    //     return false; // Placeholder
+
     case TxoutType::ANCHOR:
         return true;
     } // no default case, so the compiler can warn about missing cases

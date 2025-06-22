@@ -94,6 +94,7 @@ add_executable(test_bitcoin
   settings_tests.cpp
   sighash_tests.cpp
   sigopcount_tests.cpp
+    sphincsplus_tests.cpp
   skiplist_tests.cpp
   sock_tests.cpp
   span_tests.cpp

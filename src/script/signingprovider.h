@@ -159,6 +159,14 @@ public:
     virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
     virtual bool HaveKey(const CKeyID &address) const { return false; }
     virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
+
+    // TODO: SPHINCS+ Integration Point
+    // The following methods would need to be added (or adapted) to support SPHINCS+ keys:
+    // virtual bool GetSPHINCSKey(const CSPHINCSPubKey& pubkey_id, CSPHINCSKey& key) const { return false; }
+    // virtual bool GetSPHINCSPubKey(const CSPHINCSKeyID& keyid, CSPHINCSPubKey& pubkey) const { return false; }
+    // virtual bool GetSPHINCSKeyOrigin(const CSPHINCSKeyID& keyid, KeyOriginInfo& info) const { return false; }
+    // (CSPHINCSPubKey and CSPHINCSKeyID would need to be defined, perhaps in sphincsplus.h or a new dedicated types file)
+
     virtual bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const { return false; }
     virtual bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const { return false; }
 
