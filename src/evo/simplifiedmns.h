@@ -110,6 +110,6 @@ public:
     bool operator==(const CSimplifiedMNList& rhs) const;
 };
 
-bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, BlockValidationState& state);
+bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, const CDeterministicMNList& sml, BlockValidationState& state);
 
 #endif // BITCOIN_EVO_SIMPLIFIEDMNS_H

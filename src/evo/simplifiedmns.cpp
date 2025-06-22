@@ -104,7 +104,7 @@ bool CSimplifiedMNList::operator==(const CSimplifiedMNList& rhs) const
             );
 }
 
-bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, BlockValidationState& state)
+bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, const CDeterministicMNList& mn_list, BlockValidationState& state)
 {
     try {
         static std::atomic<int64_t> nTimeMerkle = 0;
@@ -112,12 +112,14 @@ bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, B
         int64_t nTime1 = GetTimeMicros();
 
         static Mutex cached_mutex;
-        static CSimplifiedMNList smlCached GUARDED_BY(cached_mutex);
+        static std::shared_ptr<const CSimplifiedMNList> cached_sml GUARDED_BY(cached_mutex){
+            std::make_shared<const CSimplifiedMNList>()};
         static uint256 merkleRootCached GUARDED_BY(cached_mutex);
         static bool mutatedCached GUARDED_BY(cached_mutex){false};
 
+        std::shared_ptr<const CSimplifiedMNList> sml{mn_list.GetSML()};
         LOCK(cached_mutex);
-        if (sml == smlCached) {
+        if (sml == cached_sml || *sml == *cached_sml) {
             merkleRootRet = merkleRootCached;
             if (mutatedCached) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mutated-cached-calc-cb-mnmerkleroot");
@@ -126,14 +128,14 @@ bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, CSimplifiedMNList&& sml, B
         }
 
         bool mutated = false;
-        merkleRootRet = sml.CalcMerkleRoot(&mutated);
+        merkleRootRet = sml->CalcMerkleRoot(&mutated);
 
         int64_t nTime2 = GetTimeMicros();
         nTimeMerkle += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1),
                  nTimeMerkle * 0.000001);
 
-        smlCached = std::move(sml);
+        cached_sml = sml;
         merkleRootCached = merkleRootRet;
         mutatedCached = mutated;
 

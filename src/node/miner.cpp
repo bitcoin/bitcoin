@@ -291,7 +291,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (!m_chain_helper.special_tx->BuildNewListFromBlock(*pblock, pindexPrev, m_chainstate.CoinsTip(), true, state, mn_list)) {
             throw std::runtime_error(strprintf("%s: BuildNewListFromBlock failed: %s", __func__, state.ToString()));
         }
-        if (!CalcCbTxMerkleRootMNList(cbTx.merkleRootMNList, CSimplifiedMNList(mn_list), state)) {
+        if (!CalcCbTxMerkleRootMNList(cbTx.merkleRootMNList, mn_list, state)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, state.ToString()));
         }
         if (fDIP0008Active_context) {

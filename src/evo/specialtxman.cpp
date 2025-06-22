@@ -608,7 +608,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
                      nTimeDMN * 0.000001);
 
             uint256 calculatedMerkleRoot;
-            if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, CSimplifiedMNList{std::move(mn_list)}, state)) {
+            if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, mn_list, state)) {
                 // pass the state returned by the function above
                 return false;
             }

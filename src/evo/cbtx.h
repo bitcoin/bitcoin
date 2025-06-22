@@ -14,7 +14,9 @@
 class BlockValidationState;
 class CBlock;
 class CBlockIndex;
+class CDeterministicMNList;
 class TxValidationState;
+
 namespace llmq {
 class CQuorumBlockProcessor;
 }// namespace llmq

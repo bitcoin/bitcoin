@@ -618,6 +618,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
     int nHeight = pindex->nHeight;
 
     try {
+        newList.GetSML(); // to fullfill cache of SML
+
         LOCK(cs);
 
         oldList = GetListForBlockInternal(pindex->pprev);
@@ -633,6 +635,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
 
         diff.nHeight = pindex->nHeight;
         mnListDiffsCache.emplace(pindex->GetBlockHash(), diff);
+        mnListsCache.emplace(newList.GetBlockHash(), newList);
     } catch (const std::exception& e) {
         LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-dmn-block");
@@ -766,7 +769,10 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
     if (tipIndex) {
         // always keep a snapshot for the tip
         if (snapshot.GetBlockHash() == tipIndex->GetBlockHash()) {
-            mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
+            auto hash = snapshot.GetBlockHash();
+            if (mnListsCache.find(hash) == mnListsCache.end()) {
+                mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
+            }
         } else {
             // keep snapshots for yet alive quorums
             if (ranges::any_of(Params().GetConsensus().llmqs,
