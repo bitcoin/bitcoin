@@ -951,3 +951,16 @@ CService MaybeFlipIPv6toCJDNS(const CService& service)
     }
     return ret;
 }
+
+CService GetBindAddress(const Sock& sock)
+{
+    CService addr_bind;
+    struct sockaddr_storage sockaddr_bind;
+    socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
+    if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
+        addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind, sockaddr_bind_len);
+    } else {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
+    }
+    return addr_bind;
+}
