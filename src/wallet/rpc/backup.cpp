@@ -229,6 +229,18 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             } else if (parsed_descs.size() > 2) {
                 CHECK_NONFATAL(!desc_internal);
             }
+
+            // Look for private keys from the wallet
+            std::set<CPubKey> desc_pubkeys;
+            std::set<CExtPubKey> desc_xpubs;
+            parsed_desc->GetPubKeys(desc_pubkeys, desc_xpubs);
+            for (const auto& entry : desc_xpubs) {
+                const CKeyID& key_id = entry.pubkey.GetID();
+                if (std::optional<CKey> key = wallet.GetKey(key_id)) {
+                    keys.keys[key_id] = *key;
+                }
+            }
+
             // Need to ExpandPrivate to check if private keys are available for all pubkeys
             FlatSigningProvider expand_keys;
             std::vector<CScript> scripts;
