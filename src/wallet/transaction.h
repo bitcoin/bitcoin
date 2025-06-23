@@ -34,13 +34,23 @@ struct TxStateConfirmed {
     int confirmed_block_height;
     int position_in_block;
 
+    TxStateConfirmed() = default;
     explicit TxStateConfirmed(const uint256& block_hash, int height, int index) : confirmed_block_hash(block_hash), confirmed_block_height(height), position_in_block(index) {}
     std::string toString() const { return strprintf("Confirmed (block=%s, height=%i, index=%i)", confirmed_block_hash.ToString(), confirmed_block_height, position_in_block); }
+
+    SERIALIZE_METHODS(TxStateConfirmed, obj)
+    {
+        READWRITE(obj.confirmed_block_hash);
+        READWRITE(obj.confirmed_block_height);
+        READWRITE(obj.position_in_block);
+    }
 };
 
 //! State of transaction added to mempool.
 struct TxStateInMempool {
     std::string toString() const { return strprintf("InMempool"); }
+
+    SERIALIZE_METHODS(TxStateInMempool, obj) {}
 };
 
 //! State of rejected transaction that conflicts with a confirmed block.
@@ -48,8 +58,15 @@ struct TxStateBlockConflicted {
     uint256 conflicting_block_hash;
     int conflicting_block_height;
 
+    TxStateBlockConflicted() = default;
     explicit TxStateBlockConflicted(const uint256& block_hash, int height) : conflicting_block_hash(block_hash), conflicting_block_height(height) {}
     std::string toString() const { return strprintf("BlockConflicted (block=%s, height=%i)", conflicting_block_hash.ToString(), conflicting_block_height); }
+
+    SERIALIZE_METHODS(TxStateBlockConflicted, obj)
+    {
+        READWRITE(obj.conflicting_block_hash);
+        READWRITE(obj.conflicting_block_height);
+    }
 };
 
 //! State of transaction not confirmed or conflicting with a known block and
@@ -61,6 +78,11 @@ struct TxStateInactive {
 
     explicit TxStateInactive(bool abandoned = false) : abandoned(abandoned) {}
     std::string toString() const { return strprintf("Inactive (abandoned=%i)", abandoned); }
+
+    SERIALIZE_METHODS(TxStateInactive, obj)
+    {
+        READWRITE(obj.abandoned);
+    }
 };
 
 //! State of transaction loaded in an unrecognized state with unexpected hash or
@@ -70,9 +92,26 @@ struct TxStateInactive {
 struct TxStateUnrecognized {
     uint256 block_hash;
     int index;
+    std::vector<unsigned char> data;
 
+    TxStateUnrecognized(int index) : index(index) {}
     TxStateUnrecognized(const uint256& block_hash, int index) : block_hash(block_hash), index(index) {}
     std::string toString() const { return strprintf("Unrecognized (block=%s, index=%i)", block_hash.ToString(), index); }
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        // Don't serialize the vector, write all of its bytes into the Stream directly
+        s.write(MakeByteSpan(data));
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        // Don't unserialize the vector, read all of its bytes from the Stream directly
+        data.resize(s.size());
+        s.read(MakeWritableByteSpan(data));
+    }
 };
 
 //! All possible CWalletTx states
