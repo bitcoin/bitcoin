@@ -7,6 +7,7 @@
 #include <evo/dmnstate.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
+#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <index/txindex.h>
 
@@ -258,6 +259,14 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
     return result;
 }
 
+gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> CDeterministicMNList::GetSML() const
+{
+    if (!m_cached_sml) {
+        m_cached_sml = std::make_shared<const CSimplifiedMNList>(*this);
+    }
+    return m_cached_sml;
+}
+
 int CDeterministicMNList::CalcMaxPoSePenalty() const
 {
     // Maximum PoSe penalty is dynamic and equals the number of registered MNs
@@ -443,6 +452,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
 
     mnMap = mnMap.set(dmn->proTxHash, dmn);
     mnInternalIdMap = mnInternalIdMap.set(dmn->GetInternalId(), dmn->proTxHash);
+    m_cached_sml = nullptr;
     if (fBumpTotalCount) {
         // nTotalRegisteredCount acts more like a checkpoint, not as a limit,
         nTotalRegisteredCount = std::max(dmn->GetInternalId() + 1, (uint64_t)nTotalRegisteredCount);
@@ -514,6 +524,9 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
 
     dmn->pdmnState = pdmnState;
     mnMap = mnMap.set(oldDmn.proTxHash, dmn);
+    if (m_cached_sml && CSimplifiedMNListEntry{oldDmn} != CSimplifiedMNListEntry{*dmn}) {
+        m_cached_sml = nullptr;
+    }
 }
 
 void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState)
@@ -585,6 +598,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 
     mnMap = mnMap.erase(proTxHash);
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
+    m_cached_sml = nullptr;
 }
 
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex,

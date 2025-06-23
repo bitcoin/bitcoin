@@ -30,6 +30,7 @@ class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
 class CEvoDB;
+class CSimplifiedMNList;
 class TxValidationState;
 
 extern RecursiveMutex cs_main;
@@ -145,6 +146,13 @@ private:
     // we keep track of this as checking for duplicates would otherwise be painfully slow
     MnUniquePropertyMap mnUniquePropertyMap;
 
+    // This SML could be null
+    // This cache is used to improve performance and meant to be reused
+    // for multiple CDeterministicMNList until mnMap is actually changed.
+    // Calls of AddMN, RemoveMN and (in some cases) UpdateMN reset this cache;
+    // it happens also for indirect calls such as ApplyDiff
+    mutable std::shared_ptr<const CSimplifiedMNList> m_cached_sml;
+
 public:
     CDeterministicMNList() = default;
     explicit CDeterministicMNList(const uint256& _blockHash, int _height, uint32_t _totalRegisteredCount) :
@@ -195,6 +203,7 @@ public:
         mnMap = MnMap();
         mnUniquePropertyMap = MnUniquePropertyMap();
         mnInternalIdMap = MnInternalIdMap();
+        m_cached_sml = nullptr;
     }
 
     [[nodiscard]] size_t GetAllMNsCount() const
@@ -313,6 +322,11 @@ public:
      * @param nCount the number of payees to return. "nCount = max()"" means "all", use it to avoid calling GetValidWeightedMNsCount twice.
      */
     [[nodiscard]] std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindexPrev, int nCount = std::numeric_limits<int>::max()) const;
+
+    /**
+     * Calculates CSimplifiedMNList for current list and cache it
+     */
+    gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> GetSML() const;
 
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
