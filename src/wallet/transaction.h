@@ -8,6 +8,7 @@
 #include <attributes.h>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
+#include <streams.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
@@ -49,8 +50,6 @@ struct TxStateConfirmed {
 //! State of transaction added to mempool.
 struct TxStateInMempool {
     std::string toString() const { return strprintf("InMempool"); }
-
-    SERIALIZE_METHODS(TxStateInMempool, obj) {}
 };
 
 //! State of rejected transaction that conflicts with a confirmed block.
@@ -132,6 +131,9 @@ static inline TxState TxStateInterpretSerialized(TxStateUnrecognized data)
     } else if (data.index == -1) {
         return TxStateBlockConflicted{data.block_hash, /*height=*/-1};
     }
+    // State is still unrecognized, put hash and index into data.data
+    VectorWriter stream(data.data, 0);
+    stream << data.block_hash;
     return data;
 }
 
@@ -158,6 +160,13 @@ static inline int TxStateSerializedIndex(const TxState& state)
         [](const TxStateUnrecognized& unrecognized) { return unrecognized.index; }
     }, state);
 }
+
+//! Get integer type of TxState
+int32_t GetTxStateType(const TxState& state);
+//! Get the data of a TxState
+std::vector<unsigned char> GetTxStateData(const TxState& state);
+
+TxState ConstructTxState(int32_t type, std::vector<unsigned char> data);
 
 //! Return TxState or SyncTxState as a string for logging or debugging.
 template<typename T>
