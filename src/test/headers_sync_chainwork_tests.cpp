@@ -52,6 +52,14 @@ static void GenerateHeaders(std::vector<CBlockHeader>& headers,
     }
 }
 
+static HeadersSyncState CreateState(const CBlockIndex* chain_start)
+{
+    return {/*id=*/0,
+            Params().GetConsensus(),
+            chain_start,
+            /*minimum_required_work=*/CHAIN_WORK};
+}
+
 BOOST_FIXTURE_TEST_SUITE(headers_sync_chainwork_tests, RegTestingSetup)
 
 // In this test, we construct two sets of headers from genesis, one with
@@ -93,78 +101,72 @@ static void SneakyRedownload(const CBlockIndex* chain_start,
         const std::vector<CBlockHeader>& first_chain,
         const std::vector<CBlockHeader>& second_chain)
 {
-    std::unique_ptr<HeadersSyncState> hss;
-
     // Feed the first chain to HeadersSyncState, by delivering 1 header
     // initially and then the rest.
-    hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, CHAIN_WORK));
-    (void)hss->ProcessNextHeaders({{first_chain.front()}}, true);
+    HeadersSyncState hss{CreateState(chain_start)};
+    (void)hss.ProcessNextHeaders({{first_chain.front()}}, true);
     // Pretend the first header is still "full", so we don't abort.
-    auto result = hss->ProcessNextHeaders(std::span{first_chain}.last(first_chain.size() - 1), true);
+    auto result{hss.ProcessNextHeaders(std::span{first_chain}.last(first_chain.size() - 1), true)};
 
     // This chain should look valid, and we should have met the proof-of-work
     // requirement.
     BOOST_CHECK(result.success);
     BOOST_CHECK(result.request_more);
-    BOOST_CHECK(hss->GetState() == HeadersSyncState::State::REDOWNLOAD);
+    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
 
     // Try to sneakily feed back the second chain.
-    result = hss->ProcessNextHeaders(second_chain, true);
+    result = hss.ProcessNextHeaders(second_chain, true);
     BOOST_CHECK(!result.success); // foiled!
-    BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
+    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
 }
 
 static void HappyPath(const CBlockIndex* chain_start,
         const std::vector<CBlockHeader>& first_chain)
 {
-    std::unique_ptr<HeadersSyncState> hss;
-    HeadersSyncState::ProcessingResult result;
     // This time we feed the first chain twice.
-    hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, CHAIN_WORK));
-    (void)hss->ProcessNextHeaders(first_chain, true);
-    BOOST_CHECK(hss->GetState() == HeadersSyncState::State::REDOWNLOAD);
+    HeadersSyncState hss{CreateState(chain_start)};
+    (void)hss.ProcessNextHeaders(first_chain, true);
+    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
 
     // Process so that the internal threshold isn't met, meaning validated
     // headers shouldn't be returned yet:
-    result = hss->ProcessNextHeaders({{first_chain.front()}}, true);
-    BOOST_CHECK_EQUAL(hss->GetState(), HeadersSyncState::State::REDOWNLOAD);
+    auto result = hss.ProcessNextHeaders({{first_chain.front()}}, true);
+    BOOST_CHECK_EQUAL(hss.GetState(), HeadersSyncState::State::REDOWNLOAD);
     BOOST_CHECK_EQUAL(result.pow_validated_headers.size(), 0);
 
     // We start receiving headers for permanent storage before completing:
-    result = hss->ProcessNextHeaders(std::span{std::next(first_chain.begin()), std::prev(first_chain.end())}, true);
-    BOOST_CHECK_EQUAL(hss->GetState(), HeadersSyncState::State::REDOWNLOAD);
+    result = hss.ProcessNextHeaders(std::span{std::next(first_chain.begin()), std::prev(first_chain.end())}, true);
+    BOOST_CHECK_EQUAL(hss.GetState(), HeadersSyncState::State::REDOWNLOAD);
     BOOST_CHECK_GT(result.pow_validated_headers.size(), 0);
     const size_t validated_headers_count = result.pow_validated_headers.size();
 
     // Feed final header, meeting the work threshold again and
     // completing the REDOWNLOAD phase.
-    result = hss->ProcessNextHeaders({{first_chain.back()}}, true);
+    result = hss.ProcessNextHeaders({{first_chain.back()}}, true);
     BOOST_CHECK(result.success);
     BOOST_CHECK(!result.request_more);
     // All headers should be ready for acceptance:
     BOOST_CHECK_EQUAL(validated_headers_count + result.pow_validated_headers.size(), first_chain.size());
     // Nothing left for the sync logic to do:
-    BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
+    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
 }
 
 static void TooLittleWork(const CBlockIndex* chain_start,
         const std::vector<CBlockHeader>& second_chain)
 {
-    std::unique_ptr<HeadersSyncState> hss;
-    HeadersSyncState::ProcessingResult result;
     // Verify that just trying to process the second chain would not succeed
     // (too little work).
-    hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, CHAIN_WORK));
-    BOOST_CHECK(hss->GetState() == HeadersSyncState::State::PRESYNC);
+    HeadersSyncState hss{CreateState(chain_start)};
+    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
      // Pretend just the first message is "full", so we don't abort.
-    (void)hss->ProcessNextHeaders({{second_chain.front()}}, true);
-    BOOST_CHECK(hss->GetState() == HeadersSyncState::State::PRESYNC);
+    (void)hss.ProcessNextHeaders({{second_chain.front()}}, true);
+    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
 
     // Tell the sync logic that the headers message was not full, implying no
     // more headers can be requested. For a low-work-chain, this should causes
     // the sync to end with no headers for acceptance.
-    result = hss->ProcessNextHeaders(std::span{second_chain}.last(second_chain.size() - 1), false);
-    BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
+    const auto result{hss.ProcessNextHeaders(std::span{second_chain}.last(second_chain.size() - 1), false)};
+    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
     BOOST_CHECK(result.pow_validated_headers.empty());
     BOOST_CHECK(!result.request_more);
     // Nevertheless, no validation errors should have been detected with the
