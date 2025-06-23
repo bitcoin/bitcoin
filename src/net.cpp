@@ -360,20 +360,6 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
     return true;
 }
 
-/** Get the bind address for a socket as CService. */
-static CService GetBindAddress(const Sock& sock)
-{
-    CService addr_bind;
-    struct sockaddr_storage sockaddr_bind;
-    socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
-    if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
-        addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind, sockaddr_bind_len);
-    } else {
-        LogWarning("getsockname failed\n");
-    }
-    return addr_bind;
-}
-
 CNode* CConnman::ConnectNode(CAddress addrConnect,
                              const char* pszDest,
                              bool fCountFailure,
