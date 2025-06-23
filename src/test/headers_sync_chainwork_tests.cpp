@@ -60,14 +60,18 @@ BOOST_FIXTURE_TEST_SUITE(headers_sync_chainwork_tests, RegTestingSetup)
 //    updates to the REDOWNLOAD phase successfully.
 // 2. Then we deliver the second set of headers and verify that they fail
 //    processing (presumably due to commitments not matching).
-// 3. Finally, we verify that repeating with the first set of headers in both
-//    phases is successful.
+static void SneakyRedownload(const CBlockIndex*, const std::vector<CBlockHeader>&, const std::vector<CBlockHeader>&);
+// 3. Verify that repeating with the first set of headers in both phases is
+//    successful.
+static void HappyPath(const CBlockIndex*, const std::vector<CBlockHeader>&);
+// 4. Repeat the second set of headers in both phases to demonstrate behavior
+//    when the chain a peer provides has too little work.
+static void TooLittleWork(const CBlockIndex*, const std::vector<CBlockHeader>&);
+
 BOOST_AUTO_TEST_CASE(headers_sync_state)
 {
     std::vector<CBlockHeader> first_chain;
     std::vector<CBlockHeader> second_chain;
-
-    std::unique_ptr<HeadersSyncState> hss;
 
     const auto genesis{Params().GenesisBlock()};
 
@@ -79,6 +83,17 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
                     genesis.nTime, /*merkle_root=*/uint256::ONE, genesis.nBits);
 
     const CBlockIndex* chain_start = WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(genesis.GetHash()));
+
+    SneakyRedownload(chain_start, first_chain, second_chain);
+    HappyPath(chain_start, first_chain);
+    TooLittleWork(chain_start, second_chain);
+}
+
+static void SneakyRedownload(const CBlockIndex* chain_start,
+        const std::vector<CBlockHeader>& first_chain,
+        const std::vector<CBlockHeader>& second_chain)
+{
+    std::unique_ptr<HeadersSyncState> hss;
 
     // Feed the first chain to HeadersSyncState, by delivering 1 header
     // initially and then the rest.
@@ -97,8 +112,14 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     result = hss->ProcessNextHeaders(second_chain, true);
     BOOST_CHECK(!result.success); // foiled!
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
+}
 
-    // Now try again, this time feeding the first chain twice.
+static void HappyPath(const CBlockIndex* chain_start,
+        const std::vector<CBlockHeader>& first_chain)
+{
+    std::unique_ptr<HeadersSyncState> hss;
+    HeadersSyncState::ProcessingResult result;
+    // This time we feed the first chain twice.
     hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, CHAIN_WORK));
     (void)hss->ProcessNextHeaders(first_chain, true);
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::REDOWNLOAD);
@@ -124,9 +145,15 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     BOOST_CHECK_EQUAL(validated_headers_count + result.pow_validated_headers.size(), first_chain.size());
     // Nothing left for the sync logic to do:
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
+}
 
-    // Finally, verify that just trying to process the second chain would not
-    // succeed (too little work)
+static void TooLittleWork(const CBlockIndex* chain_start,
+        const std::vector<CBlockHeader>& second_chain)
+{
+    std::unique_ptr<HeadersSyncState> hss;
+    HeadersSyncState::ProcessingResult result;
+    // Verify that just trying to process the second chain would not succeed
+    // (too little work).
     hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, CHAIN_WORK));
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::PRESYNC);
      // Pretend just the first message is "full", so we don't abort.
