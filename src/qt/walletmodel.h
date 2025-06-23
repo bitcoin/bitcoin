@@ -31,9 +31,9 @@ class WalletModelTransaction;
 
 class CKeyID;
 class COutPoint;
-class COutput;
 class CPubKey;
 class uint256;
+struct COutput;
 
 namespace interfaces {
 class Node;

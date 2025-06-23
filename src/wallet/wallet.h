@@ -23,7 +23,6 @@
 #include <util/strencodings.h>
 #include <util/ui_change_type.h>
 #include <validationinterface.h>
-#include <wallet/coincontrol.h>
 #include <wallet/crypter.h>
 #include <wallet/coinselection.h>
 #include <wallet/scriptpubkeyman.h>
@@ -120,7 +119,6 @@ static constexpr size_t DUMMY_NESTED_P2PKH_INPUT_SIZE = 113;
 static const bool DEFAULT_USE_HD_WALLET = true;
 
 class CCoinControl;
-class COutput;
 class CWalletTx;
 class ReserveDestination;
 
