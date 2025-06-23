@@ -118,7 +118,11 @@ def download_binary(tag, args) -> int:
         bin_path = 'releases/download/test.{}'.format(
             match.group(1), match.group(2))
     platform = args.platform
-    if tag < "v20" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
+    if platform in ["i686-w64-mingw32"]:
+        platform = "win32"
+    elif platform in ["x86_64-w64-mingw32"]:
+        platform = "win64"
+    elif tag < "v20" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
         platform = "osx64"
     tarball = 'dashcore-{tag}-{platform}.tar.gz'.format(
         tag=tag[1:], platform=platform)
