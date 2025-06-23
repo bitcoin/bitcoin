@@ -802,14 +802,14 @@ bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb
      *   both are in the mempool and a has a higher score than b
      */
     LOCK(cs);
-    indexed_transaction_set::const_iterator j = wtxid ? get_iter_from_wtxid(hashb) : mapTx.find(hashb);
-    if (j == mapTx.end()) return false;
-    indexed_transaction_set::const_iterator i = wtxid ? get_iter_from_wtxid(hasha) : mapTx.find(hasha);
-    if (i == mapTx.end()) return true;
-    uint64_t counta = i->GetCountWithAncestors();
-    uint64_t countb = j->GetCountWithAncestors();
+    auto j = wtxid ? GetIter(Wtxid::FromUint256(hashb)) : GetIter(Txid::FromUint256(hashb));
+    if (!j.has_value()) return false;
+    auto i = wtxid ? GetIter(Wtxid::FromUint256(hasha)) : GetIter(Txid::FromUint256(hasha));
+    if (!i.has_value()) return true;
+    uint64_t counta = i.value()->GetCountWithAncestors();
+    uint64_t countb = j.value()->GetCountWithAncestors();
     if (counta == countb) {
-        return CompareTxMemPoolEntryByScore()(*i, *j);
+        return CompareTxMemPoolEntryByScore()(*i.value(), *j.value());
     }
     return counta < countb;
 }
@@ -893,18 +893,16 @@ CTransactionRef CTxMemPool::get(const uint256& hash) const
 TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
 {
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
-    if (i == mapTx.end())
-        return TxMempoolInfo();
-    return GetInfo(i);
+    auto i = (gtxid.IsWtxid() ? GetIter(Wtxid::FromUint256(gtxid.GetHash())) : GetIter(Txid::FromUint256(gtxid.GetHash())));
+    return i.has_value() ? GetInfo(*i) : TxMempoolInfo{};
 }
 
 TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const
 {
     LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
-    if (i != mapTx.end() && i->GetSequence() < last_sequence) {
-        return GetInfo(i);
+    auto i = (gtxid.IsWtxid() ? GetIter(Wtxid::FromUint256(gtxid.GetHash())) : GetIter(Txid::FromUint256(gtxid.GetHash())));
+    if (i.has_value() && (*i)->GetSequence() < last_sequence) {
+        return GetInfo(*i);
     } else {
         return TxMempoolInfo();
     }
@@ -989,6 +987,13 @@ std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Txid& txid) const
     auto it = mapTx.find(txid.ToUint256());
     if (it != mapTx.end()) return it;
     return std::nullopt;
+}
+
+std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Wtxid& wtxid) const
+{
+    AssertLockHeld(cs);
+    auto it{mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid))};
+    return it != mapTx.end() ? std::make_optional(it) : std::nullopt;
 }
 
 CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<Txid>& hashes) const
