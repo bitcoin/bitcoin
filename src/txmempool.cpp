@@ -154,7 +154,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
     for (const auto& txid : descendants_to_remove) {
         // This txid may have been removed already in a prior call to removeRecursive.
         // Therefore we ensure it is not yet removed already.
-        if (const std::optional<txiter> txiter = GetIter(txid)) {
+        if (const std::optional<txiter> txiter = GetIter(Txid::FromUint256(txid))) {
             removeRecursive((*txiter)->GetTx(), MemPoolRemovalReason::SIZELIMIT);
         }
     }
@@ -984,9 +984,9 @@ const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
     return it == mapNextTx.end() ? nullptr : it->second;
 }
 
-std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
+std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Txid& txid) const
 {
-    auto it = mapTx.find(txid);
+    auto it = mapTx.find(txid.ToUint256());
     if (it != mapTx.end()) return it;
     return std::nullopt;
 }
@@ -1007,7 +1007,7 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256
     std::vector<txiter> ret;
     ret.reserve(txids.size());
     for (const auto& txid : txids) {
-        const auto it{GetIter(txid)};
+        const auto it{GetIter(Txid::FromUint256(txid))};
         if (!it) return {};
         ret.push_back(*it);
     }

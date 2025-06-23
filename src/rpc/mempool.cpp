@@ -523,12 +523,12 @@ static RPCHelpMan getmempooldescendants()
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    Txid txid{Txid::FromUint256(ParseHashV(request.params[0], "parameter 1"))};
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
 
-    const auto it{mempool.GetIter(hash)};
+    const auto it{mempool.GetIter(txid)};
     if (!it) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
