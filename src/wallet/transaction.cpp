@@ -90,6 +90,9 @@ bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state, WalletB
         if (!batch.WriteTxMetadata(*this)) {
             throw std::ios_base::failure("Unable to write tx record");
         }
+        if (!batch.SQLUpdateTxState(*this)) {
+            throw std::ios_base::failure("Unable to write tx record");
+        }
     }
 
     return new_variant || metadata_changed;
