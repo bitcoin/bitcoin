@@ -1558,8 +1558,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     AssertLockHeld(m_wallet->cs_wallet);
 
     std::vector<COutput> vCoins;
-    CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
+    CCoinControl coin_control(CoinType::ONLY_COINJOIN_COLLATERAL);
 
     AvailableCoinsListUnspent(*m_wallet, vCoins, &coin_control);
 

@@ -603,8 +603,7 @@ RPCHelpMan listunspent()
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
     uint64_t nMaximumCount = 0;
-    CCoinControl coinControl;
-    coinControl.nCoinType = CoinType::ALL_COINS;
+    CCoinControl coinControl(CoinType::ALL_COINS);
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
