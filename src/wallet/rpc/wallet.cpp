@@ -423,7 +423,7 @@ static RPCHelpMan upgradetohd()
         if (!reserver.reserve()) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
         }
-        CWallet::ScanResult result = pwallet->ScanForWalletTransactions(pwallet->chain().getBlockHash(0), 0, {}, reserver, true);
+        CWallet::ScanResult result = pwallet->ScanForWalletTransactions(pwallet->chain().getBlockHash(0), 0, {}, reserver, /*fUpdate=*/true, /*save_progress=*/false);
         switch (result.status) {
         case CWallet::ScanResult::SUCCESS:
             break;

@@ -733,7 +733,7 @@ public:
     }
     bool haveBlockOnDisk(int height) override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
         CBlockIndex* block = active[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
@@ -758,12 +758,19 @@ public:
     }
     CBlockLocator getTipLocator() override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         return chainman().ActiveChain().GetLocator();
+    }
+    CBlockLocator getActiveChainLocator(const uint256& block_hash) override
+    {
+        LOCK(::cs_main);
+        const CBlockIndex* index = chainman().m_blockman.LookupBlockIndex(block_hash);
+        if (!index) return {};
+        return chainman().ActiveChain().GetLocator(index);
     }
     std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         const CChainState& active = Assert(m_node.chainman)->ActiveChainstate();
         if (const CBlockIndex* fork = active.FindForkInGlobalIndex(locator)) {
             return fork->nHeight;
@@ -845,7 +852,7 @@ public:
     void findCoins(std::map<COutPoint, Coin>& coins) override { return FindCoins(m_node, coins); }
     double guessVerificationProgress(const uint256& block_hash) override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         return GuessVerificationProgress(Params().TxData(), chainman().m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasBlocks(const uint256& block_hash, int min_height, std::optional<int> max_height) override
@@ -935,7 +942,7 @@ public:
     CFeeRate relayDustFee() override { return ::dustRelayFee; }
     bool havePruned() override
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         return m_node.chainman->m_blockman.m_have_pruned;
     }
     bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
