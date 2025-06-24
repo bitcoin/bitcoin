@@ -126,9 +126,9 @@ class CompareTxMemPoolEntryByScore
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        double f1 = (double)a.GetFee() * b.GetTxSize();
-        double f2 = (double)b.GetFee() * a.GetTxSize();
-        if (f1 == f2) {
+        FeeFrac f1(a.GetFee(), a.GetTxSize());
+        FeeFrac f2(b.GetFee(), b.GetTxSize());
+        if (FeeRateCompare(f1, f2) == 0) {
             return b.GetTx().GetHash() < a.GetTx().GetHash();
         }
         return f1 > f2;
