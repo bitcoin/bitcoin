@@ -93,36 +93,24 @@ class CompareTxMemPoolEntryByDescendantScore
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
     {
-        double a_mod_fee, a_size, b_mod_fee, b_size;
+        FeeFrac f1 = GetModFeeAndSize(a);
+        FeeFrac f2 = GetModFeeAndSize(b);
 
-        GetModFeeAndSize(a, a_mod_fee, a_size);
-        GetModFeeAndSize(b, b_mod_fee, b_size);
-
-        // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
-        double f1 = a_mod_fee * b_size;
-        double f2 = a_size * b_mod_fee;
-
-        if (f1 == f2) {
+        if (FeeRateCompare(f1, f2) == 0) {
             return a.GetTime() >= b.GetTime();
         }
         return f1 < f2;
     }
 
     // Return the fee/size we're using for sorting this entry.
-    void GetModFeeAndSize(const CTxMemPoolEntry &a, double &mod_fee, double &size) const
+    FeeFrac GetModFeeAndSize(const CTxMemPoolEntry &a) const
     {
         // Compare feerate with descendants to feerate of the transaction, and
         // return the fee/size for the max.
-        double f1 = (double)a.GetModifiedFee() * a.GetSizeWithDescendants();
-        double f2 = (double)a.GetModFeesWithDescendants() * a.GetTxSize();
-
-        if (f2 > f1) {
-            mod_fee = a.GetModFeesWithDescendants();
-            size = a.GetSizeWithDescendants();
-        } else {
-            mod_fee = a.GetModifiedFee();
-            size = a.GetTxSize();
-        }
+        return std::max<FeeFrac>(
+            FeeFrac(a.GetModFeesWithDescendants(), a.GetSizeWithDescendants()),
+            FeeFrac(a.GetModifiedFee(), a.GetTxSize())
+        );
     }
 };
 
