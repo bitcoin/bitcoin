@@ -13,6 +13,7 @@
 #include <support/allocators/secure.h>
 #include <uint256.h>
 
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -205,6 +206,11 @@ public:
     ECDHSecret ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift,
                                        const EllSwiftPubKey& our_ellswift,
                                        bool initiating) const;
+
+    /** Compute a BIP352 tweaked private key.
+     */
+    std::optional<CKey> ComputeBIP352Key(const unsigned char* tweak32);
+
     /** Compute a KeyPair
      *
      *  Wraps a `secp256k1_keypair` type.

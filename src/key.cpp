@@ -345,6 +345,15 @@ ECDHSecret CKey::ComputeBIP324ECDHSecret(const EllSwiftPubKey& their_ellswift, c
     return output;
 }
 
+std::optional<CKey> CKey::ComputeBIP352Key(const unsigned char* tweak32)
+{
+    assert(keydata);
+    CKey tweaked_key{*this};
+    if (!secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, tweaked_key.keydata->data(), tweak32))
+        return std::nullopt;
+    return tweaked_key;
+}
+
 KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const
 {
     return KeyPair(*this, merkle_root);
