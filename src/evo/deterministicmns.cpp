@@ -8,6 +8,7 @@
 #include <evo/evodb.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
+#include <index/txindex.h>
 #include <llmq/commitment.h>
 #include <llmq/utils.h>
 
@@ -25,10 +26,6 @@
 
 #include <optional>
 #include <memory>
-
-// Forward declaration to break dependency over node/transaction.h
-class CTxMemPool;
-std::pair<CTransactionRef, uint256> GetTransactionBlock(const uint256& hash, const CTxMemPool* const mempool);
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
 static const std::string DB_LIST_DIFF = "dmn_D3";
@@ -53,11 +50,15 @@ UniValue CDeterministicMN::ToJson() const
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
 
-    auto [collateralTx, _] = GetTransactionBlock(collateralOutpoint.hash, nullptr);
-    if (collateralTx) {
-        CTxDestination dest;
-        if (ExtractDestination(collateralTx->vout[collateralOutpoint.n].scriptPubKey, dest)) {
-            obj.pushKV("collateralAddress", EncodeDestination(dest));
+    if (g_txindex) {
+        CTransactionRef collateralTx;
+        uint256 nBlockHash;
+        g_txindex->FindTx(collateralOutpoint.hash, nBlockHash, collateralTx);
+        if (collateralTx) {
+            CTxDestination dest;
+            if (ExtractDestination(collateralTx->vout[collateralOutpoint.n].scriptPubKey, dest)) {
+                obj.pushKV("collateralAddress", EncodeDestination(dest));
+            }
         }
     }
 

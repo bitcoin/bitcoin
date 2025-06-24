@@ -457,9 +457,6 @@ bool CGovernanceObject::IsCollateralValid(const ChainstateManager& chainman, std
     uint256 nBlockHash;
     if (g_txindex) {
         g_txindex->FindTx(m_obj.collateralHash, nBlockHash, txCollateral);
-    } else {
-        strError = "TxIndex is not available";
-        return false;
     }
 
     if (!txCollateral) {
