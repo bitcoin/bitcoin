@@ -2566,7 +2566,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             }
             if (!node->IsSane() || node->IsNotSatisfiable()) {
                 // Try to find the first insane sub for better error reporting.
-                auto insane_node = node.get();
+                const decltype(node)::element_type* insane_node = node.get();
                 if (const auto sub = node->FindInsaneSub()) insane_node = sub;
                 error = *insane_node->ToString(parser);
                 if (!insane_node->IsValid()) {
