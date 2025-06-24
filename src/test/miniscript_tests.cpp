@@ -292,7 +292,6 @@ public:
 };
 
 using Fragment = miniscript::Fragment;
-using NodeRef = miniscript::NodeRef<CPubKey>;
 using miniscript::operator""_mst;
 using Node = miniscript::Node<CPubKey>;
 
@@ -346,7 +345,8 @@ void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& wi
 
 struct MiniScriptTest : BasicTestingSetup {
 /** Run random satisfaction tests. */
-void TestSatisfy(const KeyConverter& converter, const std::string& testcase, const NodeRef& node) {
+void TestSatisfy(const KeyConverter& converter, const Node& node)
+{
     auto script = node.ToScript(converter);
     const auto challenges{FindChallenges(node)}; // Find all challenges in the generated miniscript.
     std::vector<Challenge> challist(challenges.begin(), challenges.end());
@@ -472,7 +472,7 @@ void Test(const std::string& ms, const std::string& hexscript, int mode, const K
         if (stacklimit != -1) BOOST_CHECK_MESSAGE((int)*node->GetStackSize() == stacklimit, "Stack limit mismatch: " << ms << " (" << *node->GetStackSize() << " vs " << stacklimit << ")");
         if (max_wit_size) BOOST_CHECK_MESSAGE(*node->GetWitnessSize() == *max_wit_size, "Witness size limit mismatch: " << ms << " (" << *node->GetWitnessSize() << " vs " << *max_wit_size << ")");
         if (stack_exec) BOOST_CHECK_MESSAGE(*node->GetExecStackSize() == *stack_exec, "Stack execution limit mismatch: " << ms << " (" << *node->GetExecStackSize() << " vs " << *stack_exec << ")");
-        TestSatisfy(converter, ms, *node);
+        TestSatisfy(converter, *node);
     }
 }
 
