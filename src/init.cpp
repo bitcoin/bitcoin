@@ -2327,7 +2327,31 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &args, &chainman, &node] {
-        ThreadImport(chainman, *node.dmnman, *g_ds_notification_interface, vImportFiles, node.mn_activeman.get(), args);
+        ThreadImport(chainman, vImportFiles, args);
+
+        // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
+        // but don't call it directly to prevent triggering of other listeners like zmq etc.
+        // GetMainSignals().UpdatedBlockTip(::ChainActive().Tip());
+        g_ds_notification_interface->InitializeCurrentBlockTip();
+
+        {
+            // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
+            // and reduce further locking overhead for cs_main in other parts of code including GUI
+            LogPrintf("Filling coin cache with masternode UTXOs...\n");
+            LOCK(cs_main);
+            const auto start{SteadyClock::now()};
+            const auto mnList{node.dmnman->GetListAtChainTip()};
+            mnList.ForEachMN(false, [&](auto& dmn) {
+                Coin coin;
+                GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
+            });
+            LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+        }
+
+        if (node.mn_activeman != nullptr) {
+            node.mn_activeman->Init(chainman.ActiveTip());
+        }
+
     });
 #ifdef ENABLE_WALLET
     if (!args.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {

@@ -18,7 +18,6 @@
 
 extern RecursiveMutex cs_main;
 
-class CActiveMasternodeManager;
 class ArgsManager;
 class BlockValidationState;
 class CBlock;
@@ -26,8 +25,6 @@ class CBlockUndo;
 class CChain;
 class CChainParams;
 class CChainState;
-class CDeterministicMNManager;
-class CDSNotificationInterface;
 class ChainstateManager;
 struct CCheckpointData;
 struct FlatFilePos;
@@ -229,8 +226,7 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 
-void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CDSNotificationInterface& dsnfi,
-                  std::vector<fs::path> vImportFiles, CActiveMasternodeManager* const mn_activeman, const ArgsManager& args);
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
