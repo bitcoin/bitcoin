@@ -17,6 +17,7 @@ import random
 import shutil
 import re
 import time
+import urllib.parse
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -364,6 +365,7 @@ def rpc_url(datadir, i, chain, rpchost=None):
             host, port = parts
         else:
             host = rpchost
+    rpc_p = urllib.parse.quote(rpc_p, safe='') # v0.12.1.x and lower used URL unsafe Base64 for their passwords, quote it
     return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
 
 
