@@ -1712,6 +1712,20 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
     return true;
 }
 
+static DeriveType ParseDeriveType(std::vector<std::span<const char>>& split, bool& apostrophe)
+{
+    DeriveType type = DeriveType::NO;
+    if (std::ranges::equal(split.back(), std::span{"*"}.first(1))) {
+        split.pop_back();
+        type = DeriveType::UNHARDENED;
+    } else if (std::ranges::equal(split.back(), std::span{"*'"}.first(2)) || std::ranges::equal(split.back(), std::span{"*h"}.first(2))) {
+        apostrophe = std::ranges::equal(split.back(), std::span{"*'"}.first(2));
+        split.pop_back();
+        type = DeriveType::HARDENED;
+    }
+    return type;
+}
+
 /** Parse a public key that excludes origin information. */
 std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_index, const std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, bool& apostrophe, std::string& error)
 {
@@ -1775,15 +1789,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
         return {};
     }
     std::vector<KeyPath> paths;
-    DeriveType type = DeriveType::NO;
-    if (std::ranges::equal(split.back(), std::span{"*"}.first(1))) {
-        split.pop_back();
-        type = DeriveType::UNHARDENED;
-    } else if (std::ranges::equal(split.back(), std::span{"*'"}.first(2)) || std::ranges::equal(split.back(), std::span{"*h"}.first(2))) {
-        apostrophe = std::ranges::equal(split.back(), std::span{"*'"}.first(2));
-        split.pop_back();
-        type = DeriveType::HARDENED;
-    }
+    DeriveType type = ParseDeriveType(split, apostrophe);
     if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return {};
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
