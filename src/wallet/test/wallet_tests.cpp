@@ -598,9 +598,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     // Lock both coins. Confirm number of available coins drops to 0.
     {
         LOCK(wallet->cs_wallet);
-        std::vector<COutput> available;
-        AvailableCoinsListUnspent(*wallet, available);
-        BOOST_CHECK_EQUAL(available.size(), 2U);
+        BOOST_CHECK_EQUAL(AvailableCoinsListUnspent(*wallet).coins.size(), 2U);
     }
     for (const auto& group : list) {
         for (const auto& coin : group.second) {
@@ -610,9 +608,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     }
     {
         LOCK(wallet->cs_wallet);
-        std::vector<COutput> available;
-        AvailableCoinsListUnspent(*wallet, available);
-        BOOST_CHECK_EQUAL(available.size(), 0U);
+        BOOST_CHECK_EQUAL(AvailableCoinsListUnspent(*wallet).coins.size(), 0U);
     }
     // Confirm ListCoins still returns same result as before, despite coins
     // being locked.
@@ -1289,11 +1285,9 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
                                   {1100, false}, {1200, false}, {1300, false}, {1400, false}, {1500, false},
                                   {3000, false}, {3000, false}, {2000, false}, {2000, false}, {1000, false}});
         // Lock all other coins which were already in the wallet
-        std::vector<COutput> vecAvailable;
         {
             LOCK(wallet->cs_wallet);
-            AvailableCoinsListUnspent(*wallet, vecAvailable);
-            for (auto coin : vecAvailable) {
+            for (auto coin : AvailableCoinsListUnspent(*wallet).coins) {
                 if (std::find(setCoins.begin(), setCoins.end(), coin.outpoint) == setCoins.end()) {
                     wallet->LockCoin(coin.outpoint);
                 }
@@ -1347,11 +1341,9 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
         // First try to send something without any coins available
         {
             // Lock all other coins
-            std::vector<COutput> vecAvailable;
             {
                 LOCK(wallet->cs_wallet);
-                AvailableCoinsListUnspent(*wallet, vecAvailable);
-                for (auto coin : vecAvailable) {
+                for (auto coin : AvailableCoinsListUnspent(*wallet).coins) {
                     wallet->LockCoin(coin.outpoint);
                 }
             }

@@ -617,14 +617,12 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
  * Outpoint is spent if any non-conflicted transaction
  * spends it:
  */
-bool CWallet::IsSpent(const uint256& hash, unsigned int n) const
+bool CWallet::IsSpent(const COutPoint& outpoint) const
 {
-    const COutPoint outpoint(hash, n);
     std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
     range = mapTxSpends.equal_range(outpoint);
 
-    for (TxSpends::const_iterator it = range.first; it != range.second; ++it)
-    {
+    for (TxSpends::const_iterator it = range.first; it != range.second; ++it) {
         const uint256& wtxid = it->second;
         std::map<uint256, CWalletTx>::const_iterator mit = mapWallet.find(wtxid);
         if (mit != mapWallet.end()) {
@@ -871,26 +869,22 @@ void CWallet::SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned
     }
 }
 
-bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
+bool CWallet::IsSpentKey(const CScript& scriptPubKey) const
 {
     AssertLockHeld(cs_wallet);
-    const CWalletTx* srctx = GetWalletTx(hash);
-    if (srctx) {
-        assert(srctx->tx->vout.size() > n);
-        CTxDestination dest;
-        if (!ExtractDestination(srctx->tx->vout[n].scriptPubKey, dest)) {
-            return false;
-        }
-        if (IsAddressUsed(dest)) {
-            return true;
-        }
-        if (IsLegacy()) {
-            LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
-            assert(spk_man != nullptr);
-            for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
-                if (IsAddressUsed(PKHash(keyid))) {
-                    return true;
-                }
+    CTxDestination dest;
+    if (!ExtractDestination(scriptPubKey, dest)) {
+        return false;
+    }
+    if (IsAddressUsed(dest)) {
+        return true;
+    }
+    if (IsLegacy()) {
+        LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+        assert(spk_man != nullptr);
+        for (const auto& keyid : GetAffectedKeys(scriptPubKey, *spk_man)) {
+            if (IsAddressUsed(PKHash(keyid))) {
+                return true;
             }
         }
     }
@@ -1045,9 +1039,10 @@ std::set<COutPoint> CWallet::AddWalletUTXOs(CTransactionRef tx, bool ret_dups)
     std::set<COutPoint> ret;
     uint256 hash{tx->GetHash()};
     for (size_t idx = 0; idx < tx->vout.size(); ++idx) {
-        if (IsMine(tx->vout[idx]) && !IsSpent(hash, idx)) {
-            if (auto [_, inserted] = setWalletUTXO.emplace(hash, idx); inserted || ret_dups) {
-                ret.emplace(hash, idx);
+        COutPoint outpoint(hash, idx);
+        if (IsMine(tx->vout[idx]) && !IsSpent(outpoint)) {
+            if (auto [_, inserted] = setWalletUTXO.emplace(outpoint); inserted || ret_dups) {
+                ret.emplace(outpoint);
             }
         }
     }
@@ -2125,8 +2120,9 @@ DBErrors CWallet::LoadWallet()
             SetLastBlockProcessed(*tip_height, chain().getBlockHash(*tip_height));
             for (auto& pair : mapWallet) {
                 for(unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
-                    if (IsMine(pair.second.tx->vout[i]) && !IsSpent(pair.first, i)) {
-                        setWalletUTXO.insert(COutPoint(pair.first, i));
+                    COutPoint outpoint(pair.first, i);
+                    if (IsMine(pair.second.tx->vout[i]) && !IsSpent(outpoint)) {
+                        setWalletUTXO.insert(outpoint);
                     }
                 }
             }
@@ -2462,12 +2458,10 @@ bool CWallet::UnlockAllCoins()
     return success;
 }
 
-bool CWallet::IsLockedCoin(uint256 hash, unsigned int n) const
+bool CWallet::IsLockedCoin(const COutPoint& output) const
 {
     AssertLockHeld(cs_wallet);
-    COutPoint outpt(hash, n);
-
-    return (setLockedCoins.count(outpt) > 0);
+    return setLockedCoins.count(output) > 0;
 }
 
 std::vector<COutPoint> CWallet::ListLockedCoins() const
