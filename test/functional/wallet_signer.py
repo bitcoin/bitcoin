@@ -80,12 +80,11 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", wallet_name='not_hww', disable_private_keys=True, external_signer=True)
 
-        # TODO: Handle error thrown by script
-        # self.set_mock_result(self.nodes[1], "2")
-        # assert_raises_rpc_error(-1, 'Unable to parse JSON',
-        #     self.nodes[1].createwallet, wallet_name='not_hww2', disable_private_keys=True, external_signer=False
-        # )
-        # self.clear_mock_result(self.nodes[1])
+        self.set_mock_result(self.nodes[1], '0 {"invalid json"}')
+        assert_raises_rpc_error(-1, 'Unable to parse JSON',
+            self.nodes[1].createwallet, wallet_name='hww2', disable_private_keys=True, external_signer=True
+        )
+        self.clear_mock_result(self.nodes[1])
 
         assert_equal(hww.getwalletinfo()["keypoolsize"], 40)
 
