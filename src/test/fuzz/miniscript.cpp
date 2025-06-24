@@ -20,7 +20,6 @@
 namespace {
 
 using Fragment = miniscript::Fragment;
-using NodeRef = miniscript::NodeRef<CPubKey>;
 using Node = miniscript::Node<CPubKey>;
 using Type = miniscript::Type;
 using MsCtx = miniscript::MiniscriptContext;
@@ -316,11 +315,6 @@ const struct KeyComparator {
 
 // A dummy scriptsig to pass to VerifyScript (we always use Segwit v0).
 const CScript DUMMY_SCRIPTSIG;
-
-//! Construct a miniscript node as a shared_ptr.
-template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
-    return miniscript::MakeNodeRef<CPubKey>(miniscript::internal::NoDupCheck{}, std::forward<Args>(args)...);
-}
 
 /** Information about a yet to be constructed Miniscript node. */
 struct NodeInfo {
@@ -861,7 +855,7 @@ template <typename F>
 std::optional<Node> GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_valid = false)
 {
     /** A stack of miniscript Nodes being built up. */
-    std::vector<NodeRef> stack;
+    std::vector<Node> stack;
     /** The queue of instructions. */
     std::vector<std::pair<Type, std::optional<NodeInfo>>> todo{{root_type, {}}};
     /** Predict the number of (static) script ops. */
@@ -964,11 +958,11 @@ std::optional<Node> GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, boo
         } else {
             // The back of todo has fragment and number of children decided, and
             // those children have been constructed at the back of stack. Pop
-            // that entry off todo, and use it to construct a new NodeRef on
+            // that entry off todo, and use it to construct a new Node on
             // stack.
             NodeInfo& info = *todo.back().second;
             // Gather children from the back of stack.
-            std::vector<NodeRef> sub;
+            std::vector<Node> sub;
             sub.reserve(info.subtypes.size());
             for (size_t i = 0; i < info.subtypes.size(); ++i) {
                 sub.push_back(std::move(*(stack.end() - info.subtypes.size() + i)));
