@@ -78,7 +78,6 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(not_hww.getwalletinfo()["external_signer"], False)
         assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
 
-        # assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", wallet_name='not_hww', disable_private_keys=True, external_signer=True)
 
         # TODO: Handle error thrown by script
         # self.set_mock_result(self.nodes[1], "2")
