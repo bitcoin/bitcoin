@@ -166,6 +166,13 @@ void CKey::MakeNewKey(bool fCompressedIn) {
     fCompressed = fCompressedIn;
 }
 
+bool CKey::TweakAdd(const unsigned char* tweak32)
+{
+    assert(keydata);
+    // Modify the current CKey's data directly.
+    return secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, keydata->data(), tweak32);
+}
+
 CPrivKey CKey::GetPrivKey() const {
     assert(keydata);
     CPrivKey seckey;

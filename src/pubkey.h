@@ -211,6 +211,7 @@ public:
      * If this public key is not fully valid, the return value will be false.
      */
     bool Verify(const uint256& hash, const std::vector<unsigned char>& vchSig) const;
+    bool TweakAdd(const unsigned char* tweak32);
 
     /**
      * Check whether a signature is normalized (lower-S).
