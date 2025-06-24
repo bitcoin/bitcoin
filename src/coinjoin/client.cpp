@@ -1561,7 +1561,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
 
-    AvailableCoins(*m_wallet, vCoins, &coin_control);
+    AvailableCoinsListUnspent(*m_wallet, vCoins, &coin_control);
 
     if (vCoins.empty()) {
         strReason = strprintf("%s requires a collateral transaction and could not locate an acceptable input!", gCoinJoinName);

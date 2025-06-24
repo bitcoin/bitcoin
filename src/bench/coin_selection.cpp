@@ -56,7 +56,7 @@ static void CoinSelection(benchmark::Bench& bench)
     // Create coins
     std::vector<COutput> coins;
     for (const auto& wtx : wtxs) {
-        coins.emplace_back(COutPoint(wtx->GetHash(), 0), wtx->tx->vout.at(0), /*depth=*/6 * 24, GetTxSpendSize(wallet, *wtx, 0), /*spendable=*/true, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true);
+        coins.emplace_back(COutPoint(wtx->GetHash(), 0), wtx->tx->vout.at(0), /*depth=*/6 * 24, GetTxSpendSize(wallet, *wtx, 0), /*spendable=*/true, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/ 0);
     }
     const CoinEligibilityFilter filter_standard(1, 6, 0);
     FastRandomContext rand{};
@@ -85,7 +85,7 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 0, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ true);
+    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 0, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ true, /*fees=*/ 0);
     set.emplace_back();
     set.back().Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
 }

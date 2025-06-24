@@ -660,7 +660,7 @@ RPCHelpMan listunspent()
         coinControl.m_include_unsafe_inputs = include_unsafe;
 
         LOCK(pwallet->cs_wallet);
-        AvailableCoins(*pwallet, vecOutputs, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        AvailableCoinsListUnspent(*pwallet, vecOutputs, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
     }
 
     LOCK(pwallet->cs_wallet);

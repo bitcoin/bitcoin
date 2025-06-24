@@ -43,7 +43,7 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<COutput>& se
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    set.emplace_back(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false);
+    set.emplace_back(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
 }
 
 static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
@@ -52,7 +52,7 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result)
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false);
+    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
     OutputGroup group;
     group.Insert(output, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ true);
     result.AddInput(group);
@@ -64,14 +64,12 @@ static void add_coin(const CAmount& nValue, int nInput, CoinSet& set, CAmount fe
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    COutput coin(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false);
-    coin.effective_value = nValue - fee;
-    coin.fee = fee;
+    COutput coin(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ 148, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, fee);
     coin.long_term_fee = long_term_fee;
     set.insert(coin);
 }
 
-static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
+static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount& nValue, CFeeRate feerate = CFeeRate(0), int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
 {
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
@@ -90,7 +88,7 @@ static void add_coin(std::vector<COutput>& coins, CWallet& wallet, const CAmount
     auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
     assert(ret.second);
     CWalletTx& wtx = (*ret.first).second;
-    coins.emplace_back(COutPoint(wtx.GetHash(), nInput), wtx.tx->vout.at(nInput), nAge, GetTxSpendSize(wallet, wtx, nInput), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe);
+    coins.emplace_back(COutPoint(wtx.GetHash(), nInput), wtx.tx->vout.at(nInput), nAge, GetTxSpendSize(wallet, wtx, nInput), /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, wtx.GetTxTime(), fIsFromMe, feerate);
 }
 
 /** Check if SelectionResult a is equivalent to SelectionResult b.
@@ -308,13 +306,13 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
         std::vector<COutput> coins;
 
-        add_coin(coins, *wallet, 1);
+        add_coin(coins, *wallet, 1, coin_selection_params_bnb.m_effective_feerate);
         coins.at(0).input_bytes = 40; // Make sure that it has a negative effective value. The next check should assert if this somehow got through. Otherwise it will fail
         BOOST_CHECK(!SelectCoinsBnB(GroupCoins(coins), 1 * CENT, coin_selection_params_bnb.m_cost_of_change));
 
         // Test fees subtracted from output:
         coins.clear();
-        add_coin(coins, *wallet, 1 * CENT);
+        add_coin(coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate);
         coins.at(0).input_bytes = 40;
         coin_selection_params_bnb.m_subtract_fee_outputs = true;
         const auto result9 = SelectCoinsBnB(GroupCoins(coins), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
@@ -331,9 +329,9 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
         std::vector<COutput> coins;
 
-        add_coin(coins, *wallet, 5 * CENT, 6 * 24, false, 0, true);
-        add_coin(coins, *wallet, 3 * CENT, 6 * 24, false, 0, true);
-        add_coin(coins, *wallet, 2 * CENT, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 3 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 2 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         CCoinControl coin_control;
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(coins.at(0).outpoint);
@@ -350,37 +348,50 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
         std::vector<COutput> coins;
 
-        add_coin(coins, *wallet, 10 * CENT, 6 * 24, false, 0, true);
-        add_coin(coins, *wallet, 9 * CENT, 6 * 24, false, 0, true);
-        add_coin(coins, *wallet, 1 * CENT, 6 * 24, false, 0, true);
-
         // single coin should be selected when effective fee > long term fee
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
+        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
+
+        add_coin(coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 9 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+
         expected_result.Clear();
         add_coin(10 * CENT, 2, expected_result);
         CCoinControl coin_control;
-        coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
-        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
         const auto result11 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result11));
+        coins.clear();
 
         // more coins should be selected when effective fee < long term fee
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(3000);
+        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(5000);
+
+        add_coin(coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 9 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+
         expected_result.Clear();
         add_coin(9 * CENT, 2, expected_result);
         add_coin(1 * CENT, 2, expected_result);
-        coin_selection_params_bnb.m_effective_feerate = CFeeRate(3000);
-        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(5000);
         const auto result12 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         // NOTE: Dash does not use BnB and therefore, this check will fail
         // BOOST_CHECK(EquivalentResult(expected_result, *result12));
+        coins.clear();
 
         // pre selected coin should be selected even if disadvantageous
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
+        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
+
+        add_coin(coins, *wallet, 10 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 9 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+        add_coin(coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
+
         expected_result.Clear();
         add_coin(9 * CENT, 2, expected_result);
         add_coin(1 * CENT, 2, expected_result);
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(coins.at(1).outpoint); // pre select 9 coin
-        coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
-        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
         const auto result13 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
         BOOST_CHECK(EquivalentResult(expected_result, *result13));
     }
@@ -407,7 +418,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         // with an empty wallet we can't even pay one cent
         BOOST_CHECK(!KnapsackSolver(KnapsackGroupOutputs(coins, *wallet, filter_standard), 1 * CENT, CENT));
 
-        add_coin(coins, *wallet, 1*CENT, 4);        // add a new 1 cent coin
+        add_coin(coins, *wallet, 1*CENT, CFeeRate(0), 4);        // add a new 1 cent coin
 
         // with a new 1 cent coin, we still can't find a mature 1 cent
         BOOST_CHECK(!KnapsackSolver(KnapsackGroupOutputs(coins, *wallet, filter_standard), 1 * CENT, CENT));
@@ -428,7 +439,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK_EQUAL(result2->GetSelectedValue(), 3 * CENT);
 
         add_coin(coins, *wallet, 5*CENT);           // add a mature 5 cent coin,
-        add_coin(coins, *wallet, 10*CENT, 3, true); // a new 10 cent coin sent from one of our own addresses
+        add_coin(coins, *wallet, 10*CENT, CFeeRate(0), 3, true); // a new 10 cent coin sent from one of our own addresses
         add_coin(coins, *wallet, 20*CENT);          // and a mature 20 cent coin
 
         // now we have new: 1+10=11 (of which 10 was self-sent), and mature: 2+5+20=27.  total = 38
@@ -869,6 +880,41 @@ BOOST_AUTO_TEST_CASE(waste_test)
     add_coin(1 * COIN, 1, selection, fee, fee + large_fee_diff);
     add_coin(2 * COIN, 2, selection, fee, fee + large_fee_diff);
     BOOST_CHECK_EQUAL(target_waste2, GetSelectionWaste(selection, change_cost, target));
+}
+
+BOOST_AUTO_TEST_CASE(effective_value_test)
+{
+    const int input_bytes = 148;
+    const CFeeRate feerate(1000);
+    const CAmount nValue = 10000;
+    const int nInput = 0;
+
+    CMutableTransaction tx;
+    tx.vout.resize(1);
+    tx.vout[nInput].nValue = nValue;
+
+    // standard case, pass feerate in constructor
+    COutput output1(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, feerate);
+    const CAmount expected_ev1 = 9852; // 10000 - 148
+    BOOST_CHECK_EQUAL(output1.GetEffectiveValue(), expected_ev1);
+
+    // input bytes unknown (input_bytes = -1), pass feerate in constructor
+    COutput output2(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, feerate);
+    BOOST_CHECK_EQUAL(output2.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
+
+    // negative effective value, pass feerate in constructor
+    COutput output3(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, CFeeRate(100000));
+    const CAmount expected_ev3 = -4800; // 10000 - 14800
+    BOOST_CHECK_EQUAL(output3.GetEffectiveValue(), expected_ev3);
+
+    // standard case, pass fees in constructor
+    const CAmount fees = 148;
+    COutput output4(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, fees);
+    BOOST_CHECK_EQUAL(output4.GetEffectiveValue(), expected_ev1);
+
+    // input bytes unknown (input_bytes = -1), pass fees in constructor
+    COutput output5(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 1, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, /*fees=*/ 0);
+    BOOST_CHECK_EQUAL(output5.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
 }
 
 BOOST_AUTO_TEST_SUITE_END()

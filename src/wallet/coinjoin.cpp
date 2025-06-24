@@ -63,7 +63,7 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
 
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(*this, vCoins, &coin_control);
+    AvailableCoinsListUnspent(*this, vCoins, &coin_control);
     WalletCJLogPrint(this, "CWallet::%s -- vCoins.size(): %d\n", __func__, vCoins.size());
 
     Shuffle(vCoins.rbegin(), vCoins.rend(), FastRandomContext());
@@ -96,7 +96,7 @@ struct CompareByPriority
     bool operator()(const COutput& t1,
                     const COutput& t2) const
     {
-        return CoinJoin::CalculateAmountPriority(t1.effective_value) > CoinJoin::CalculateAmountPriority(t2.effective_value);
+        return CoinJoin::CalculateAmountPriority(t1.GetEffectiveValue()) > CoinJoin::CalculateAmountPriority(t2.GetEffectiveValue());
     }
 };
 
@@ -110,7 +110,8 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
     std::vector<COutput> vCoins;
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(*this, vCoins, &coin_control);
+    // CompareByPriority() cares about effective value, which is only calculable when supplied a feerate
+    AvailableCoins(*this, vCoins, &coin_control, /*feerate=*/CFeeRate(0));
     // larger denoms first
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
@@ -235,7 +236,7 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
     CCoinControl coin_control;
     coin_control.m_include_unsafe_inputs = !fOnlyConfirmed;
     coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
-    AvailableCoins(*this, vCoins, &coin_control);
+    AvailableCoinsListUnspent(*this, vCoins, &coin_control);
 
     return !vCoins.empty();
 }

@@ -20,6 +20,14 @@ static constexpr CAmount CHANGE_UPPER{1000000};
 
 /** A UTXO under consideration for use in funding a new transaction. */
 struct COutput {
+private:
+    /** The output's value minus fees required to spend it.*/
+    std::optional<CAmount> effective_value;
+
+    /** The fee required to spend this output at the transaction's target feerate. */
+    std::optional<CAmount> fee;
+
+public:
     /** The outpoint identifying this UTXO */
     COutPoint outpoint;
 
@@ -55,16 +63,10 @@ struct COutput {
     /** Whether the transaction containing this output is sent from the owning wallet */
     bool from_me;
 
-    /** The output's value minus fees required to spend it. Initialized as the output's absolute value. */
-    CAmount effective_value;
-
-    /** The fee required to spend this output at the transaction's target feerate. */
-    CAmount fee{0};
-
     /** The fee required to spend this output at the consolidation feerate. */
     CAmount long_term_fee{0};
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me)
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
         : outpoint{outpoint},
           txout{txout},
           depth{depth},
@@ -73,15 +75,40 @@ struct COutput {
           solvable{solvable},
           safe{safe},
           time{time},
-          from_me{from_me},
-          effective_value{txout.nValue}
-    {}
+          from_me{from_me}
+    {
+        if (feerate) {
+            fee = input_bytes < 0 ? 0 : feerate.value().GetFee(input_bytes);
+            effective_value = txout.nValue - fee.value();
+        }
+    }
+
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
+        : COutput(outpoint, txout, depth, input_bytes, spendable, solvable, safe, time, from_me)
+    {
+        // if input_bytes is unknown, then fees should be 0, if input_bytes is known, then the fees should be a positive integer or 0 (input_bytes known and fees = 0 only happens in the tests)
+        assert((input_bytes < 0 && fees == 0) || (input_bytes > 0 && fees >= 0));
+        fee = fees;
+        effective_value = txout.nValue - fee.value();
+    }
 
     std::string ToString() const;
 
     bool operator<(const COutput& rhs) const
     {
         return outpoint < rhs.outpoint;
+    }
+
+    CAmount GetFee() const
+    {
+        assert(fee.has_value());
+        return fee.value();
+    }
+
+    CAmount GetEffectiveValue() const
+    {
+        assert(effective_value.has_value());
+        return effective_value.value();
     }
 };
 

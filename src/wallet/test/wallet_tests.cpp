@@ -599,7 +599,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     {
         LOCK(wallet->cs_wallet);
         std::vector<COutput> available;
-        AvailableCoins(*wallet, available);
+        AvailableCoinsListUnspent(*wallet, available);
         BOOST_CHECK_EQUAL(available.size(), 2U);
     }
     for (const auto& group : list) {
@@ -611,7 +611,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     {
         LOCK(wallet->cs_wallet);
         std::vector<COutput> available;
-        AvailableCoins(*wallet, available);
+        AvailableCoinsListUnspent(*wallet, available);
         BOOST_CHECK_EQUAL(available.size(), 0U);
     }
     // Confirm ListCoins still returns same result as before, despite coins
@@ -1292,7 +1292,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
         std::vector<COutput> vecAvailable;
         {
             LOCK(wallet->cs_wallet);
-            AvailableCoins(*wallet, vecAvailable);
+            AvailableCoinsListUnspent(*wallet, vecAvailable);
             for (auto coin : vecAvailable) {
                 if (std::find(setCoins.begin(), setCoins.end(), coin.outpoint) == setCoins.end()) {
                     wallet->LockCoin(coin.outpoint);
@@ -1350,7 +1350,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
             std::vector<COutput> vecAvailable;
             {
                 LOCK(wallet->cs_wallet);
-                AvailableCoins(*wallet, vecAvailable);
+                AvailableCoinsListUnspent(*wallet, vecAvailable);
                 for (auto coin : vecAvailable) {
                     wallet->LockCoin(coin.outpoint);
                 }

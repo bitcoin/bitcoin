@@ -274,7 +274,7 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
     coinControl.fRequireAllInputs = false;
 
     std::vector<COutput> vecOutputs;
-    AvailableCoins(wallet, vecOutputs);
+    AvailableCoinsListUnspent(wallet, vecOutputs);
 
     for (const auto& out : vecOutputs) {
         CTxDestination txDest;
