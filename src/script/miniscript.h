@@ -189,11 +189,11 @@ inline consteval Type operator""_mst(const char* c, size_t l)
 using Opcode = std::pair<opcodetype, std::vector<unsigned char>>;
 
 template<typename Key> class Node;
-template<typename Key> using NodeRef = std::unique_ptr<const Node<Key>>;
+template<typename Key> using NodeRef = std::unique_ptr<Node<Key>>;
 
 //! Construct a miniscript node as a unique_ptr.
 template<typename Key, typename... Args>
-NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_unique<const Node<Key>>(std::forward<Args>(args)...); }
+NodeRef<Key> MakeNodeRef(Args&&... args) { return std::make_unique<Node<Key>>(std::forward<Args>(args)...); }
 
 //! The different node types in miniscript.
 enum class Fragment {
@@ -528,7 +528,7 @@ class Node
     //! The data bytes in this expression (only for HASH160/HASH256/SHA256/RIPEMD160).
     std::vector<unsigned char> data;
     //! Subexpressions (for WRAP_*/AND_*/OR_*/ANDOR/THRESH)
-    mutable std::vector<NodeRef<Key>> subs;
+    std::vector<NodeRef<Key>> subs;
     //! The Script context for this node. Either P2WSH or Tapscript.
     MiniscriptContext m_script_ctx;
 
