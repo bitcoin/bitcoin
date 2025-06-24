@@ -266,4 +266,3 @@ bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 
     return fResult;
 }
-
