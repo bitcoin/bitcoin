@@ -932,8 +932,11 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
         if (blockIndex->nHeight + dkgInterval < m_chainstate.m_chain.Height()) {
             nSignHeight = blockIndex->nHeight + dkgInterval - 1;
         }
+        // For RegTest non-rotating quorum cycleHash has directly quorum hash
+        auto quorum = llmq_params.useRotation ? llmq::SelectQuorumForSigning(llmq_params, m_chainstate.m_chain, qman,
+                                                                             id, nSignHeight, signOffset)
+                                              : qman.GetQuorum(llmq_params.type, islock->cycleHash);
 
-        auto quorum = llmq::SelectQuorumForSigning(llmq_params, m_chainstate.m_chain, qman, id, nSignHeight, signOffset);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
             return {};
