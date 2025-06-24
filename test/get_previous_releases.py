@@ -19,7 +19,6 @@ import subprocess
 import sys
 import hashlib
 
-
 SHA256_SUMS = {
     "d1f7121a7d7bdd4077709284076860389d6a0f4481a934ad9acb85cae3d7b83e":  "dashcore-20.0.1-aarch64-linux-gnu.tar.gz",
     "37375229e5ab18d7050b729fb016df24acdd72d60bc3fa074270d89030a27827":  "dashcore-20.0.1-arm-linux-gnueabihf.tar.gz",
@@ -92,6 +91,15 @@ SHA256_SUMS = {
     "f532bc7e0360e80908eb6b9c3aeec7e0037e70e25dee3b040dbbf7a124e05619":  "dashcore-0.15.0.0-win64-setup.exe",
     "3ba6ff98113af30319fb1499d132d993633380476f9980443d630d21a40e0efb":  "dashcore-0.15.0.0-win64.zip",
     "4cc0815ebd595f3d0134a8df9e6224cbe3d79398a5a899b60ca5f4ab8a576160":  "dashcore-0.15.0.0-x86_64-linux-gnu.tar.gz",
+    #
+    "060c86587176ffcea5615ea46aa080152ea5ebd035d2a7e0340d312345c2eee0":  "dashcore-0.12.1.5-RPi2.tar.gz",
+    "369dee3e2ae8854592ca696fd5fd7314bc8bbdd865920407bc96d59acb06f81d":  "dashcore-0.12.1.5-linux32.tar.gz",
+    "81692699b99d64b50d1bb1db427f6a0d68c84b98d0e0152f854cfbe048c08fc4":  "dashcore-0.12.1.5-linux64.tar.gz",
+    "b4514d4a705cc1adb400ec0c69630612fe394508decd7bf3edef068021fc47b5":  "dashcore-0.12.1.5-osx.dmg",
+    "35eb7bd9f5883d986b32ae84ddd074566c9e01a438bddd0d147c4a1e96b81b02":  "dashcore-0.12.1.5-win32-setup.exe",
+    "2ea20e8671dcae6ed4f980b8b7dcaa1024961e0267956f4e8bd9eea31b0030e4":  "dashcore-0.12.1.5-win32.zip",
+    "db276b7697777203e98f93e1f498bdab0016f2a96f6454a56c51846120aae0b7":  "dashcore-0.12.1.5-win64-setup.exe",
+    "15ee0d8405609aaf70c31ff320b0468c86e7c6bc1f061ae90d6295a540576c39":  "dashcore-0.12.1.5-win64.zip",
 }
 
 

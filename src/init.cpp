@@ -2037,8 +2037,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 strLoadError = _("Error initializing block database");
                 break;
             case ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED:
-                strLoadError = _("Error upgrading chainstate database");
-                break;
+                return InitError(_("Unsupported chainstate database format found. "
+                                   "Please restart with -reindex-chainstate. This will "
+                                   "rebuild the chainstate database."));
             case ChainstateLoadingError::ERROR_REPLAYBLOCKS_FAILED:
                 strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
                 break;
