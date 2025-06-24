@@ -300,6 +300,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createwallet", 5, "descriptors"},
     { "createwallet", 6, "load_on_startup"},
     { "createwallet", 7, "external_signer"},
+    { "createwallet", 8, "silent_payments" },
     { "restorewallet", 2, "load_on_startup"},
     { "loadwallet", 1, "load_on_startup"},
     { "unloadwallet", 1, "load_on_startup"},
