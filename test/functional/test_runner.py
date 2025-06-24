@@ -269,6 +269,7 @@ BASE_SCRIPTS = [
     'wallet_signmessagewithaddress.py',
     'rpc_signmessagewithprivkey.py',
     'rpc_generate.py',
+    'rpc_upgradewallet.py',
     'wallet_balance.py',
     'p2p_initial_headers_sync.py',
     'feature_nulldummy.py',
