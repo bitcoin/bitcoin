@@ -131,6 +131,8 @@ class AuthServiceProxy():
             params = dict(args=args, **argsn)
         else:
             params = args or argsn
+            # v0.12.2.x and lower cannot make sense of objects, only arrays. If passing no arguments, use array.
+            params = [] if len(params) == 0 and isinstance(params, dict) else params
         return {'version': '1.1',
                 'method': self._service_name,
                 'params': params,
