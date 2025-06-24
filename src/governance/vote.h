@@ -15,7 +15,6 @@ class CGovernanceVote;
 class CMasternodeSync;
 class CKey;
 class CKeyID;
-class CWallet;
 class PeerManager;
 
 // INTENTION OF MASTERNODES REGARDING ITEM

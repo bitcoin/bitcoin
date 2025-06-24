@@ -47,6 +47,7 @@
 #include <coinjoin/common.h>
 #include <coinjoin/options.h>
 #include <evo/providertx.h>
+#include <governance/vote.h>
 
 #include <univalue.h>
 
