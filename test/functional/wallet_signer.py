@@ -168,29 +168,29 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # # Create a new wallet and populate with specific public keys, in order
         # # to work with the mock signed PSBT.
-        # self.nodes[1].createwallet(wallet_name="hww4", disable_private_keys=True, external_signer=True)
-        # hww4 = self.nodes[1].get_wallet_rpc("hww4")
-        #
-        # descriptors = [{
-        #     "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)#x30uthjs",
-        #     "timestamp": "now",
-        #     "range": [0, 1],
-        #     "internal": False,
-        #     "watchonly": True,
-        #     "active": True
-        # },
-        # {
-        #     "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)#h92akzzg",
-        #     "timestamp": "now",
-        #     "range": [0, 0],
-        #     "internal": True,
-        #     "watchonly": True,
-        #     "active": True
-        # }]
+        self.nodes[1].createwallet(wallet_name="hww4", disable_private_keys=True, external_signer=True)
+        hww4 = self.nodes[1].get_wallet_rpc("hww4")
 
-        # result = hww4.importdescriptors(descriptors)
-        # assert_equal(result[0], {'success': True})
-        # assert_equal(result[1], {'success': True})
+        descriptors = [{
+            "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)#h62dxaej",
+            "timestamp": "now",
+            "range": [0, 9],
+            "internal": False,
+            "watchonly": True,
+            "active": True
+        },
+        {
+            "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)#xw0vmgf2",
+            "timestamp": "now",
+            "range": [0, 9],
+            "internal": True,
+            "watchonly": True,
+            "active": True
+        }]
+
+        result = hww4.importdescriptors(descriptors)
+        assert_equal(result[0], {'success': True})
+        assert_equal(result[1], {'success': True})
         assert_equal(hww.getwalletinfo()["txcount"], 1)
 
         assert hww.testmempoolaccept([mock_tx])[0]["allowed"]
