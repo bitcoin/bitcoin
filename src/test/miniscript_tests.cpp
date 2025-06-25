@@ -305,19 +305,19 @@ std::set<Challenge> FindChallenges(const Node* root)
         const auto* ref{stack.back()};
         stack.pop_back();
 
-        for (const auto& key : ref->keys) {
+        for (const auto& key : ref->Keys()) {
             chal.emplace(ChallengeType::PK, ChallengeNumber(key));
         }
-        switch (ref->fragment) {
-        case Fragment::OLDER: chal.emplace(ChallengeType::OLDER, ref->k); break;
-        case Fragment::AFTER: chal.emplace(ChallengeType::AFTER, ref->k); break;
-        case Fragment::SHA256: chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->data)); break;
-        case Fragment::RIPEMD160: chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->data)); break;
-        case Fragment::HASH256: chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->data)); break;
-        case Fragment::HASH160: chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data)); break;
+        switch (ref->Fragment()) {
+        case Fragment::OLDER: chal.emplace(ChallengeType::OLDER, ref->K()); break;
+        case Fragment::AFTER: chal.emplace(ChallengeType::AFTER, ref->K()); break;
+        case Fragment::SHA256: chal.emplace(ChallengeType::SHA256, ChallengeNumber(ref->Data())); break;
+        case Fragment::RIPEMD160: chal.emplace(ChallengeType::RIPEMD160, ChallengeNumber(ref->Data())); break;
+        case Fragment::HASH256: chal.emplace(ChallengeType::HASH256, ChallengeNumber(ref->Data())); break;
+        case Fragment::HASH160: chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->Data())); break;
         default: break;
         }
-        for (const auto& sub : ref->subs) {
+        for (const auto& sub : ref->Subs()) {
             stack.push_back(sub.get());
         }
     }
