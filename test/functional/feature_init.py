@@ -100,6 +100,12 @@ class InitTest(BitcoinTestFramework):
         check_clean_start()
         self.stop_node(0)
 
+        # Prior to deleting/perturbing index files, ensure indexes are synchronized (i.e., data exists to modify)
+        self.start_node(0, extra_args=args)
+        tip_height = node.getblockcount()
+        self.wait_until(lambda: all(i["synced"] and i["best_block_height"] == tip_height for i in node.getindexinfo().values()))
+        self.stop_node(0)
+
         self.log.info("Test startup errors after removing certain essential files")
 
         deletion_rounds = [
