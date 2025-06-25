@@ -12,9 +12,7 @@ if(NOT MSVC)
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     if(CCACHE_EXECUTABLE STREQUAL compiler_resolved_link AND NOT WITH_CCACHE)
-      list(APPEND configure_warnings
-        "Disabling ccache was attempted using -DWITH_CCACHE=${WITH_CCACHE}, but ccache masquerades as the compiler."
-      )
+      message(AUTHOR_WARNING "Disabling ccache was attempted using -DWITH_CCACHE=${WITH_CCACHE}, but ccache masquerades as the compiler.")
       set(WITH_CCACHE ON)
     elseif(WITH_CCACHE)
       list(APPEND CMAKE_C_COMPILER_LAUNCHER ${CCACHE_EXECUTABLE})
