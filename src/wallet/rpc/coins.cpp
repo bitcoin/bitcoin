@@ -214,29 +214,6 @@ RPCHelpMan getbalance()
     };
 }
 
-RPCHelpMan getunconfirmedbalance()
-{
-    return RPCHelpMan{"getunconfirmedbalance",
-                "DEPRECATED\nIdentical to getbalances().mine.untrusted_pending\n",
-                {},
-                RPCResult{RPCResult::Type::NUM, "", "The balance"},
-                RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
-
-    LOCK(pwallet->cs_wallet);
-
-    return ValueFromAmount(GetBalance(*pwallet).m_mine_untrusted_pending);
-},
-    };
-}
-
 RPCHelpMan lockunspent()
 {
     return RPCHelpMan{
