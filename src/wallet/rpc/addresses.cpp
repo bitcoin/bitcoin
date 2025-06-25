@@ -463,7 +463,7 @@ RPCHelpMan getaddressinfo()
         ret.pushKV("solvable", false);
     }
 
-    const auto& spk_mans = pwallet->GetScriptPubKeyMans(scriptPubKey);
+    const auto& spk_mans = pwallet->GetScriptPubKeyMans(dest);
     // In most cases there is only one matching ScriptPubKey manager and we can't resolve ambiguity in a better way
     ScriptPubKeyMan* spk_man{nullptr};
     if (spk_mans.size()) spk_man = *spk_mans.begin();
