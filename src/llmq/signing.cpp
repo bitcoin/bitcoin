@@ -644,7 +644,7 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
         peerman.PostProcessMessage(l->HandleNewRecoveredSig(*recoveredSig));
     }
 
-    GetMainSignals().NotifyRecoveredSig(recoveredSig);
+    GetMainSignals().NotifyRecoveredSig(recoveredSig, recoveredSig->GetHash().ToString());
 }
 
 void CSigningManager::PushReconstructedRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& recoveredSig)

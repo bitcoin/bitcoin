@@ -358,7 +358,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, PeerMana
     CheckOrphanVotes(govobj, peerman);
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
-    GetMainSignals().NotifyGovernanceObject(std::make_shared<const Governance::Object>(govobj.Object()));
+    GetMainSignals().NotifyGovernanceObject(std::make_shared<const Governance::Object>(govobj.Object()), nHash.ToString());
 }
 
 void CGovernanceManager::CheckAndRemove()

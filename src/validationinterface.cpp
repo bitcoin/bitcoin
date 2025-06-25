@@ -7,15 +7,10 @@
 
 #include <chain.h>
 #include <consensus/validation.h>
-#include <governance/common.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <scheduler.h>
-#include <evo/deterministicmns.h>
-#include <governance/vote.h>
-#include <llmq/clsig.h>
-#include <llmq/signing.h>
 
 #include <future>
 #include <unordered_map>
@@ -279,27 +274,27 @@ void CMainSignals::NotifyTransactionLock(const CTransactionRef &tx, const std::s
                           tx->GetHash().ToString());
 }
 
-void CMainSignals::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {
+void CMainSignals::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig, const std::string& id) {
     auto event = [pindex, clsig, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyChainLock(pindex, clsig); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: notify chainlock at block=%s cl=%s", __func__,
             pindex->GetBlockHash().ToString(),
-            clsig->ToString());
+            id);
 }
 
-void CMainSignals::NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote) {
+void CMainSignals::NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote, const std::string& id) {
     auto event = [vote, tip_mn_list, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(tip_mn_list, vote); });
     };
-    ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance vote: %s", __func__, vote->GetHash().ToString());
+    ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance vote: %s", __func__, id);
 }
 
-void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object) {
+void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object, const std::string& id) {
     auto event = [object, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceObject(object); });
     };
-    ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance object: %s", __func__, object->GetHash().ToString());
+    ENQUEUE_AND_LOG_EVENT(event, "%s: notify governance object: %s", __func__, id);
 }
 
 void CMainSignals::NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx) {
@@ -311,12 +306,12 @@ void CMainSignals::NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& cu
             previousTx->GetHash().ToString());
 }
 
-void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig) {
+void CMainSignals::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig, const std::string& id) {
     auto event = [sig, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyRecoveredSig(sig); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: notify recoveredsig=%s", __func__,
-            sig->GetHash().ToString());
+            id);
 }
 
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {
