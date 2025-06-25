@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <headerssync.h>
+#include <net_processing.h>
 #include <pow.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
@@ -19,6 +20,8 @@ using State = HeadersSyncState::State;
 
 constexpr size_t TARGET_BLOCKS{15'000};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
+constexpr size_t REDOWNLOAD_BUFFER_SIZE{TARGET_BLOCKS - (MAX_HEADERS_RESULTS + 123)};
+constexpr size_t COMMITMENT_PERIOD{600};
 
 // Standard set of checks common to all scenarios. Macro keeps failure lines at the call-site.
 #define CHECK_RESULT(result_expression, hss, exp_state, exp_success, exp_request_more,                   \
@@ -81,6 +84,10 @@ static HeadersSyncState CreateState(const CBlockIndex* chain_start)
 {
     return {/*id=*/0,
             Params().GetConsensus(),
+            HeadersSyncParams{
+                .commitment_period = COMMITMENT_PERIOD,
+                .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
+            },
             chain_start,
             /*minimum_required_work=*/CHAIN_WORK};
 }
