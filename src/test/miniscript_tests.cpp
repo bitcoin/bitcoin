@@ -727,4 +727,23 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
     g_testdata.reset();
 }
 
+// Confirm that ~Node() and Node::Clone() are stack-safe.
+BOOST_AUTO_TEST_CASE(node_deep_destruct)
+{
+    using miniscript::internal::NoDupCheck;
+    using miniscript::Fragment;
+    using NodeU32 = miniscript::Node<uint32_t>;
+
+    constexpr auto ctx{miniscript::MiniscriptContext::P2WSH};
+
+    NodeU32 root{NoDupCheck{}, ctx, Fragment::JUST_1};
+    for (uint32_t i{0}; i < 200'000; ++i) {
+        root = NodeU32{NoDupCheck{}, ctx, Fragment::WRAP_S, Vector(std::move(root))};
+    }
+    BOOST_CHECK_EQUAL(root.ScriptSize(), 200'001);
+
+    auto clone{root.Clone()};
+    BOOST_CHECK_EQUAL(clone.ScriptSize(), root.ScriptSize());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
