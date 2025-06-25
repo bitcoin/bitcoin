@@ -638,7 +638,6 @@ add_subdirectory(src)
 include(Maintenance)
 setup_split_debug_script()
 add_maintenance_targets()
-add_windows_deploy_target()
 add_macos_deploy_target()
 
 message("\n")
