@@ -280,7 +280,9 @@ public:
 
     UniValue operator()(const V0SilentPaymentDestination& dest) const
     {
-        return UniValue(UniValue::VOBJ);
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("iswitness", false);
+        return obj;
     }
 
     UniValue operator()(const PubKeyDestination& dest) const
