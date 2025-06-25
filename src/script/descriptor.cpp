@@ -212,6 +212,12 @@ public:
      */
     virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
 
+    /** Get the descriptor string form of the provided private key
+     *  @return std::nullopt if the pubkey cannot be derived from the private key,
+     *          or the descriptor string requires other private keys.
+    */
+    virtual std::optional<std::string> GetPrivateKeyString(const CKey& key) const { return std::nullopt; }
+
     /** Derive a private key, if private data is available in arg and put it into out. */
     virtual void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const = 0;
 
@@ -263,6 +269,12 @@ public:
         if (!m_provider->ToPrivateString(arg, sub)) return false;
         ret = "[" + OriginString(StringType::PUBLIC) + "]" + std::move(sub);
         return true;
+    }
+    std::optional<std::string> GetPrivateKeyString(const CKey& key) const override
+    {
+        auto sub{m_provider->GetPrivateKeyString(key)};
+        if (!sub.has_value()) return std::nullopt;
+        return "[" + OriginString(StringType::PUBLIC) + "]" + std::move(*sub);
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
@@ -333,6 +345,12 @@ public:
         ret = EncodeSecret(*key);
         return true;
     }
+    std::optional<std::string> GetPrivateKeyString(const CKey& key) const override
+    {
+        if (!(m_xonly ? XOnlyPubKey(m_pubkey) == XOnlyPubKey(key.GetPubKey()) :
+                        m_pubkey == key.GetPubKey())) return std::nullopt;
+        return EncodeSecret(key);
+    }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
         ret = ToString(StringType::PUBLIC);
@@ -378,12 +396,19 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     {
         CKey key;
         if (!arg.GetKey(m_root_extkey.pubkey.GetID(), key)) return false;
+        ret = GetExtKey(key);
+        return true;
+    }
+
+    CExtKey GetExtKey(const CKey& key) const
+    {
+        CExtKey ret;
         ret.nDepth = m_root_extkey.nDepth;
         std::copy(m_root_extkey.vchFingerprint, m_root_extkey.vchFingerprint + sizeof(ret.vchFingerprint), ret.vchFingerprint);
         ret.nChild = m_root_extkey.nChild;
         ret.chaincode = m_root_extkey.chaincode;
         ret.key = key;
-        return true;
+        return ret;
     }
 
     // Derives the last xprv
@@ -406,6 +431,16 @@ class BIP32PubkeyProvider final : public PubkeyProvider
             if (entry >> 31) return true;
         }
         return false;
+    }
+
+    std::optional<std::string> ToPrivateString(const CExtKey& xprv) const
+    {
+        std::string out = EncodeExtKey(xprv) + FormatHDKeypath(m_path, /*apostrophe=*/m_apostrophe);
+        if (IsRange()) {
+            out += "/*";
+            if (m_derive == DeriveType::HARDENED) out += m_apostrophe ? '\'' : 'h';
+        }
+        return out;
     }
 
 public:
@@ -493,12 +528,16 @@ public:
     {
         CExtKey key;
         if (!GetExtKey(arg, key)) return false;
-        out = EncodeExtKey(key) + FormatHDKeypath(m_path, /*apostrophe=*/m_apostrophe);
-        if (IsRange()) {
-            out += "/*";
-            if (m_derive == DeriveType::HARDENED) out += m_apostrophe ? '\'' : 'h';
-        }
+        auto prv{ToPrivateString(key)};
+        assert(prv.has_value());
+        out = *prv;
         return true;
+    }
+    std::optional<std::string> GetPrivateKeyString(const CKey& key) const override
+    {
+        if (!key.IsValid() || key.GetPubKey() != m_root_extkey.pubkey) return std::nullopt;
+        CExtKey xprv{GetExtKey(key)};
+        return ToPrivateString(xprv);
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache) const override
     {
