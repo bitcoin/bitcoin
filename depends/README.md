@@ -90,15 +90,15 @@ For linux S390X cross compilation:
 
 ### Install the required dependencies: FreeBSD
 
-    pkg install bash
+    pkg install bash cmake curl gmake
 
 ### Install the required dependencies: NetBSD
 
-    pkgin install bash gmake
+    pkgin install bash cmake curl gmake perl
 
 ### Install the required dependencies: OpenBSD
 
-    pkg_add bash gmake gtar
+    pkg_add bash cmake curl gmake gtar
 
 ### Dependency Options
 
