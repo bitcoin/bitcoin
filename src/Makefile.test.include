@@ -442,7 +442,7 @@ endif
 	  cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1\
 	)" -- DEBUG_LOG_OUT > "$$TEST_LOGFILE" 2>&1 || (cat "$$TEST_LOGFILE" && false)
 
-test/data/%.json.h: test/data/%.json
+%.json.h: %.json
 	@$(MKDIR_P) $(@D)
 	@{ \
 	 echo "namespace json_tests{" && \
@@ -452,12 +452,11 @@ test/data/%.json.h: test/data/%.json
 	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"
 
-test/data/%.raw.h: test/data/%.raw
+%.raw.h: %.raw
 	@$(MKDIR_P) $(@D)
 	@{ \
-	 echo "namespace raw_tests{" && \
 	 echo "static unsigned const char $(*F)[] = {" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
-	 echo "};};"; \
+	 echo "};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"
