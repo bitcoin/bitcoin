@@ -25,7 +25,7 @@ std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wall
     std::vector<std::pair<fs::path, std::string>> paths;
     std::error_code ec;
 
-    for (auto it = fs::recursive_directory_iterator(wallet_dir, ec); it != fs::recursive_directory_iterator(); it.increment(ec)) {
+    for (auto it = fs::recursive_directory_iterator(wallet_dir, fs::directory_options::skip_permission_denied, ec); it != fs::recursive_directory_iterator(); it.increment(ec)) {
         assert(!ec); // Loop should exit on error.
         try {
             const fs::path path{it->path().lexically_relative(wallet_dir)};
