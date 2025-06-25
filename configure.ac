@@ -486,6 +486,16 @@ if test "$enable_werror" = "yes"; then
     int main(void) { return 0; }
   ])])
 
+  dnl -Wcpp is triggered due to _FORTIFY_SOURCE=3 on GCC 11 and below as level 3 was introduced in GCC 12. Do not treat these warnings as errors.
+  AX_CHECK_COMPILE_FLAG([-Wcpp], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-error=cpp"], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([
+    #if defined(__clang__) || defined(__INTEL_COMPILER) || !defined(__GNUC__)
+      #error Non-GCC compiler detected, not setting flag
+    #elif defined(__GNUC__) && __GNUC__ >= 12
+      #error GCC >=12 detected, not setting flag
+    #endif
+    int main(void) { return 0; }
+  ])])
+
   dnl -Wstringop-overread and -Wstringop-overflow are broken in GCC. Suppress warnings entirely to avoid noisy output.
   AX_CHECK_COMPILE_FLAG([-Wstringop-overread], [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-stringop-overread"], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([
     #if defined(__clang__) || defined(__INTEL_COMPILER) || !defined(__GNUC__)
