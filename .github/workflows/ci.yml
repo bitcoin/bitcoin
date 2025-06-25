@@ -372,6 +372,14 @@ jobs:
       - name: Run rpcauth test
         run: py -3 test/util/rpcauth-test.py
 
+      - name: Set previous release directory
+        run: |
+          echo "PREVIOUS_RELEASES_DIR=${{ runner.temp }}/previous_releases" >> "$GITHUB_ENV"
+
+      - name: Get previous releases
+        working-directory: test
+        run: ./get_previous_releases.py --target-dir $PREVIOUS_RELEASES_DIR
+
       - name: Run functional tests
         env:
           # TODO: Fix the excluded test and re-enable it.
