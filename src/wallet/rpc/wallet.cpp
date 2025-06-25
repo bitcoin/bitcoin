@@ -61,6 +61,10 @@ static RPCHelpMan getwalletinfo()
                         {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
                         {RPCResult::Type::BOOL, "blank", "Whether this wallet intentionally does not contain any keys, scripts, or descriptors"},
                         {RPCResult::Type::NUM_TIME, "birthtime", /*optional=*/true, "The start time for blocks scanning. It could be modified by (re)importing any descriptor with an earlier timestamp."},
+                        {RPCResult::Type::ARR, "flags", "The flags currently set on the wallet",
+                        {
+                            {RPCResult::Type::STR, "flag", "The name of the flag"},
+                        }},
                         RESULT_LAST_PROCESSED_BLOCK,
                     }},
                 },
@@ -115,6 +119,21 @@ static RPCHelpMan getwalletinfo()
     if (int64_t birthtime = pwallet->GetBirthTime(); birthtime != UNKNOWN_TIME) {
         obj.pushKV("birthtime", birthtime);
     }
+
+    // Push known flags
+    UniValue flags(UniValue::VARR);
+    uint64_t wallet_flags = pwallet->GetWalletFlags();
+    for (uint64_t i = 0; i < 64; ++i) {
+        uint64_t flag = uint64_t{1} << i;
+        if (flag & wallet_flags) {
+            if (flag & KNOWN_WALLET_FLAGS) {
+                flags.push_back(WALLET_FLAG_TO_STRING.at(WalletFlags{flag}));
+            } else {
+                flags.push_back(strprintf("unknown_flag_%u", i));
+            }
+        }
+    }
+    obj.pushKV("flags", flags);
 
     AppendLastProcessedBlock(obj, *pwallet);
     return obj;
@@ -267,7 +286,7 @@ static RPCHelpMan loadwallet()
 static RPCHelpMan setwalletflag()
 {
             std::string flags;
-            for (auto& it : WALLET_FLAG_MAP)
+            for (auto& it : STRING_TO_WALLET_FLAG)
                 if (it.second & MUTABLE_WALLET_FLAGS)
                     flags += (flags == "" ? "" : ", ") + it.first;
 
@@ -298,11 +317,11 @@ static RPCHelpMan setwalletflag()
     std::string flag_str = request.params[0].get_str();
     bool value = request.params[1].isNull() || request.params[1].get_bool();
 
-    if (!WALLET_FLAG_MAP.count(flag_str)) {
+    if (!STRING_TO_WALLET_FLAG.count(flag_str)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown wallet flag: %s", flag_str));
     }
 
-    auto flag = WALLET_FLAG_MAP.at(flag_str);
+    auto flag = STRING_TO_WALLET_FLAG.at(flag_str);
 
     if (!(flag & MUTABLE_WALLET_FLAGS)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is immutable: %s", flag_str));
