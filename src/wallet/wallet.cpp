@@ -1582,6 +1582,15 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
 isminetype CWallet::IsMine(const CTxDestination& dest) const
 {
     AssertLockHeld(cs_wallet);
+    if (IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+        // Check if the destination is a silent payment address
+        for (SilentPaymentDescriptorScriptPubKeyMan* sp_spkm : GetSilentPaymentsSPKMs()) {
+            auto ismine{sp_spkm->IsMine(dest)};
+            if (ismine) {
+                return ismine;
+            }
+        }
+    }
     return IsMine(GetScriptForDestination(dest));
 }
 
@@ -3434,6 +3443,21 @@ std::set<ScriptPubKeyMan*> CWallet::GetScriptPubKeyMans(const CScript& script) c
     Assume(std::all_of(spk_mans.begin(), spk_mans.end(), [&script, &sigdata](ScriptPubKeyMan* spkm) { return spkm->CanProvide(script, sigdata); }));
 
     return spk_mans;
+}
+
+std::set<ScriptPubKeyMan*> CWallet::GetScriptPubKeyMans(const CTxDestination& dest) const
+{
+    if (std::holds_alternative<V0SilentPaymentDestination>(dest) && IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+        std::set<ScriptPubKeyMan*> spk_mans;
+        for (SilentPaymentDescriptorScriptPubKeyMan* sp_spkm : GetSilentPaymentsSPKMs()) {
+            if (sp_spkm->IsMine(dest)) {
+                spk_mans.insert(sp_spkm);
+            }
+        }
+        return spk_mans;
+    }
+
+    return GetScriptPubKeyMans(GetScriptForDestination(dest));
 }
 
 ScriptPubKeyMan* CWallet::GetScriptPubKeyMan(const uint256& id) const
