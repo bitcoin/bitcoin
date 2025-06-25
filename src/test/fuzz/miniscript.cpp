@@ -15,6 +15,7 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <optional>
 
 namespace {
 
@@ -852,12 +853,13 @@ std::optional<NodeInfo> ConsumeNodeSmart(MsCtx script_ctx, FuzzedDataProvider& p
  * Generate a Miniscript node based on the fuzzer's input.
  *
  * - ConsumeNode is a function object taking a Type, and returning an std::optional<NodeInfo>.
- * - root_type is the required type properties of the constructed NodeRef.
+ * - root_type is the required type properties of the constructed Node.
  * - strict_valid sets whether ConsumeNode is expected to guarantee a NodeInfo that results in
- *   a NodeRef whose Type() matches the type fed to ConsumeNode.
+ *   a Node whose Type() matches the type fed to ConsumeNode.
  */
-template<typename F>
-NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_valid = false) {
+template <typename F>
+std::optional<Node> GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_valid = false)
+{
     /** A stack of miniscript Nodes being built up. */
     std::vector<NodeRef> stack;
     /** The queue of instructions. */
@@ -972,26 +974,26 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
                 sub.push_back(std::move(*(stack.end() - info.subtypes.size() + i)));
             }
             stack.erase(stack.end() - info.subtypes.size(), stack.end());
-            // Construct new NodeRef.
-            NodeRef node;
-            if (info.keys.empty()) {
-                node = MakeNodeRef(script_ctx, info.fragment, std::move(sub), std::move(info.hash), info.k);
-            } else {
+            // Construct new Node.
+            Node node{[&] {
+                if (info.keys.empty()) {
+                    return Node{miniscript::internal::NoDupCheck{}, script_ctx, info.fragment, std::move(sub), std::move(info.hash), info.k};
+                }
                 assert(sub.empty());
                 assert(info.hash.empty());
-                node = MakeNodeRef(script_ctx, info.fragment, std::move(info.keys), info.k);
-            }
+                return Node{miniscript::internal::NoDupCheck{}, script_ctx, info.fragment, std::move(info.keys), info.k};
+            }()};
             // Verify acceptability.
-            if (!node || (node->GetType() & "KVWB"_mst) == ""_mst) {
+            if ((node.GetType() & "KVWB"_mst) == ""_mst) {
                 assert(!strict_valid);
                 return {};
             }
             if (!(type_needed == ""_mst)) {
-                assert(node->GetType() << type_needed);
+                assert(node.GetType() << type_needed);
             }
-            if (!node->IsValid()) return {};
+            if (!node.IsValid()) return {};
             // Update resource predictions.
-            if (node->Fragment() == Fragment::WRAP_V && node->Subs()[0]->GetType() << "x"_mst) {
+            if (node.Fragment() == Fragment::WRAP_V && node.Subs()[0].GetType() << "x"_mst) {
                 ops += 1;
                 scriptsize += 1;
             }
@@ -1005,9 +1007,9 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
         }
     }
     assert(stack.size() == 1);
-    assert(stack[0]->GetStaticOps() == ops);
-    assert(stack[0]->ScriptSize() == scriptsize);
-    stack[0]->DuplicateKeyCheck(KEY_COMP);
+    assert(stack[0].GetStaticOps() == ops);
+    assert(stack[0].ScriptSize() == scriptsize);
+    stack[0].DuplicateKeyCheck(KEY_COMP);
     return std::move(stack[0]);
 }
 
@@ -1032,7 +1034,7 @@ void SatisfactionToWitness(MsCtx ctx, CScriptWitness& witness, const CScript& sc
 }
 
 /** Perform various applicable tests on a miniscript Node. */
-void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& provider)
+void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDataProvider& provider)
 {
     if (!node) return;
 
