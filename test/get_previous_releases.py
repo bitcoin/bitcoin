@@ -172,73 +172,24 @@ def download_binary(tag, args) -> int:
     return 0
 
 
-def build_release(tag, args) -> int:
-    githubUrl = "https://github.com/bitcoin/bitcoin"
-    if args.remove_dir:
-        if Path(tag).is_dir():
-            shutil.rmtree(tag)
-    if not Path(tag).is_dir():
-        # fetch new tags
-        subprocess.run(
-            ["git", "fetch", githubUrl, "--tags"])
-        output = subprocess.check_output(['git', 'tag', '-l', tag])
-        if not output:
-            print('Tag {} not found'.format(tag))
-            return 1
-    ret = subprocess.run([
-        'git', 'clone', f'--branch={tag}', '--depth=1', githubUrl, tag
-    ]).returncode
-    if ret:
-        return ret
-    with pushd(tag):
-        host = args.host
-        if args.depends:
-            with pushd('depends'):
-                ret = subprocess.run(['make', 'NO_QT=1']).returncode
-                if ret:
-                    return ret
-                host = os.environ.get(
-                    'HOST', subprocess.check_output(['./config.guess']))
-        config_flags = '--prefix={pwd}/depends/{host} '.format(
-            pwd=os.getcwd(),
-            host=host) + args.config_flags
-        cmds = [
-            './autogen.sh',
-            './configure {}'.format(config_flags),
-            'make',
-        ]
-        for cmd in cmds:
-            ret = subprocess.run(cmd.split()).returncode
-            if ret:
-                return ret
-        # Move binaries, so they're in the same place as in the
-        # release download
-        Path('bin').mkdir(exist_ok=True)
-        files = ['bitcoind', 'bitcoin-cli', 'bitcoin-tx']
-        for f in files:
-            Path('src/'+f).rename('bin/'+f)
-    return 0
-
-
 def check_host(args) -> int:
     args.host = os.environ.get('HOST', subprocess.check_output(
         './depends/config.guess').decode())
-    if args.download_binary:
-        platforms = {
-            'aarch64-*-linux*': 'aarch64-linux-gnu',
-            'powerpc64le-*-linux-*': 'powerpc64le-linux-gnu',
-            'riscv64-*-linux*': 'riscv64-linux-gnu',
-            'x86_64-*-linux*': 'x86_64-linux-gnu',
-            'x86_64-apple-darwin*': 'x86_64-apple-darwin',
-            'aarch64-apple-darwin*': 'arm64-apple-darwin',
-        }
-        args.platform = ''
-        for pattern, target in platforms.items():
-            if fnmatch(args.host, pattern):
-                args.platform = target
-        if not args.platform:
-            print('Not sure which binary to download for {}'.format(args.host))
-            return 1
+    platforms = {
+        'aarch64-*-linux*': 'aarch64-linux-gnu',
+        'powerpc64le-*-linux-*': 'powerpc64le-linux-gnu',
+        'riscv64-*-linux*': 'riscv64-linux-gnu',
+        'x86_64-*-linux*': 'x86_64-linux-gnu',
+        'x86_64-apple-darwin*': 'x86_64-apple-darwin',
+        'aarch64-apple-darwin*': 'arm64-apple-darwin',
+    }
+    args.platform = ''
+    for pattern, target in platforms.items():
+        if fnmatch(args.host, pattern):
+            args.platform = target
+    if not args.platform:
+        print('Not sure which binary to download for {}'.format(args.host))
+        return 1
     return 0
 
 
@@ -248,18 +199,9 @@ def main(args) -> int:
     ret = check_host(args)
     if ret:
         return ret
-    if args.download_binary:
-        with pushd(args.target_dir):
-            for tag in args.tags:
-                ret = download_binary(tag, args)
-                if ret:
-                    return ret
-        return 0
-    args.config_flags = os.environ.get('CONFIG_FLAGS', '')
-    args.config_flags += ' --without-gui --disable-tests --disable-bench'
     with pushd(args.target_dir):
         for tag in args.tags:
-            ret = build_release(tag, args)
+            ret = download_binary(tag, args)
             if ret:
                 return ret
     return 0
@@ -270,10 +212,6 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-r', '--remove-dir', action='store_true',
                         help='remove existing directory.')
-    parser.add_argument('-d', '--depends', action='store_true',
-                        help='use depends.')
-    parser.add_argument('-b', '--download-binary', action='store_true',
-                        help='download release binary.')
     parser.add_argument('-t', '--target-dir', action='store',
                         help='target directory.', default='releases')
     all_tags = sorted([*set([v['tag'] for v in SHA256_SUMS.values()])])

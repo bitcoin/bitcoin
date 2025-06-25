@@ -100,7 +100,7 @@ build/test/functional/test_runner.py --extended
 In order to run backwards compatibility tests, first run:
 
 ```
-test/get_previous_releases.py -b
+test/get_previous_releases.py
 ```
 
 to download the necessary previous release binaries.
