@@ -961,6 +961,8 @@ public:
 
     //! Get all the ScriptPubKeyMans for a script
     std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CScript& script) const;
+    //! Get all the ScriptPubKeyMans for a destination
+    std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CTxDestination& destination) const;
     //! Get the ScriptPubKeyMan by id
     ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
 

@@ -432,6 +432,7 @@ public:
     bool CanGetAddresses(bool internal) const override { return true; }
 
     isminetype IsMine(const CScript& script) const override;
+    isminetype IsMine(const CTxDestination& dest) const;
     isminetype IsMine(const std::vector<XOnlyPubKey>& output_keys, const bip352::PublicData& public_data);
 
     bool TopUp(unsigned int size = 0) override { return true; }
