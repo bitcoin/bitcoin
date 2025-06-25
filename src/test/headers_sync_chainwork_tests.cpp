@@ -8,6 +8,7 @@
 #include <headerssync.h>
 #include <net_processing.h>
 #include <pow.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -22,6 +23,7 @@ constexpr size_t TARGET_BLOCKS{15'000};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
 constexpr size_t REDOWNLOAD_BUFFER_SIZE{TARGET_BLOCKS - (MAX_HEADERS_RESULTS + 123)};
 constexpr size_t COMMITMENT_PERIOD{600};
+constexpr char BUFFER_SIZE_WARNING[]{"Unexpectedly reached minimum required work before filling the headers sync redownload buffer, even though we started all the way back from genesis"};
 
 // Standard set of checks common to all scenarios. Macro keeps failure lines at the call-site.
 #define CHECK_RESULT(result_expression, hss, exp_state, exp_success, exp_request_more,                   \
@@ -80,14 +82,15 @@ static void GenerateHeaders(std::vector<CBlockHeader>& headers,
     }
 }
 
-static HeadersSyncState CreateState(const CBlockIndex* chain_start)
+static HeadersSyncState CreateState(const CBlockIndex* chain_start,
+        const HeadersSyncParams& params = {
+            .commitment_period = COMMITMENT_PERIOD,
+            .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
+        })
 {
     return {/*id=*/0,
             Params().GetConsensus(),
-            HeadersSyncParams{
-                .commitment_period = COMMITMENT_PERIOD,
-                .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
-            },
+            params,
             chain_start,
             /*minimum_required_work=*/CHAIN_WORK};
 }
@@ -107,6 +110,9 @@ static void HappyPath(const CBlockIndex*, const std::vector<CBlockHeader>&);
 // 3. Repeat the second set of headers in both phases to demonstrate behavior
 //    when the chain a peer provides has too little work.
 static void TooLittleWork(const CBlockIndex*, const std::vector<CBlockHeader>&);
+// 4. Sets the redownload buffer size to be large enough that we reach the PoW
+//    threshold before returning any headers, resulting in a warning.
+static void TooBigBuffer(const CBlockIndex*, const std::vector<CBlockHeader>&);
 
 BOOST_AUTO_TEST_CASE(headers_sync_state)
 {
@@ -127,6 +133,7 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     SneakyRedownload(chain_start, first_chain, second_chain);
     HappyPath(chain_start, first_chain);
     TooLittleWork(chain_start, second_chain);
+    TooBigBuffer(chain_start, first_chain);
 }
 
 static void SneakyRedownload(const CBlockIndex* chain_start,
@@ -165,6 +172,9 @@ static void SneakyRedownload(const CBlockIndex* chain_start,
 static void HappyPath(const CBlockIndex* chain_start,
         const std::vector<CBlockHeader>& first_chain)
 {
+    // During normal operation we shouldn't get the redownload buffer size warning.
+    ASSERT_NO_DEBUG_LOG(BUFFER_SIZE_WARNING);
+
     // This time we feed the first chain twice.
     HeadersSyncState hss{CreateState(chain_start)};
 
@@ -226,6 +236,31 @@ static void TooLittleWork(const CBlockIndex* chain_start,
         /*exp_success*/true,
         /*exp_request_more=*/false,
         /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/std::nullopt);
+}
+
+static void TooBigBuffer(const CBlockIndex* chain_start,
+        const std::vector<CBlockHeader>& first_chain)
+{
+    // Intentionally too big redownload buffer in order to trigger warning.
+    HeadersSyncState hss{CreateState(chain_start,
+                                     HeadersSyncParams{
+                                         .commitment_period = COMMITMENT_PERIOD,
+                                         .redownload_buffer_size = first_chain.size(),
+                                     })};
+
+    const auto genesis_hash{Params().GenesisBlock().GetHash()};
+    CHECK_RESULT(hss.ProcessNextHeaders(first_chain, true),
+        hss, /*exp_state=*/State::REDOWNLOAD,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/genesis_hash);
+
+    ASSERT_DEBUG_LOG(BUFFER_SIZE_WARNING);
+    CHECK_RESULT(hss.ProcessNextHeaders(first_chain, true),
+        hss, /*exp_state=*/State::FINAL,
+        /*exp_success*/true, /*exp_request_more=*/false,
+        /*exp_headers_size=*/first_chain.size(), /*exp_pow_validated_prev=*/genesis_hash,
         /*exp_locator_hash=*/std::nullopt);
 }
 
