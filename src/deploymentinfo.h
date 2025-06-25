@@ -11,7 +11,8 @@
 #include <optional>
 #include <string>
 
-struct VBDeploymentInfo {
+struct VBDeploymentInfo
+{
     /** Deployment name */
     const char* name;
     /** Whether GBT clients can safely ignore this rule in simplified usage */
