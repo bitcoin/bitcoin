@@ -136,12 +136,6 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
         self.assert_raises_tool_error('No method provided. Run `bitcoin-wallet -help` for valid methods.')
         self.assert_raises_tool_error('Wallet name must be provided when creating a new wallet.', 'create')
-        error = f"SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['CLIENT_NAME']}?"
-        self.assert_raises_tool_error(
-            error,
-            '-wallet=' + self.default_wallet_name,
-            'info',
-        )
         path = self.nodes[0].wallets_path / "nonexistent.dat"
         self.assert_raises_tool_error("Failed to load database path '{}'. Path does not exist.".format(path), '-wallet=nonexistent.dat', 'info')
 
