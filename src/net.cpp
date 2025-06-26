@@ -41,7 +41,6 @@
 
 #include <masternode/meta.h>
 #include <masternode/sync.h>
-#include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
 
 #include <stats/client.h>
