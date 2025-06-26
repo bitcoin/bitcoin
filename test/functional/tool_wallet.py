@@ -142,35 +142,43 @@ class ToolWalletTest(BitcoinTestFramework):
     def test_tool_wallet_info(self):
         # Stop the node to close the wallet to call the info command.
         self.stop_node(0)
-        self.log.info('Calling wallet tool info, testing output')
-        #
-        # TODO: Wallet tool info should work with wallet file permissions set to
-        # read-only without raising:
-        # "Error loading wallet.dat. Is wallet being used by another process?"
-        # The following lines should be uncommented and the tests still succeed:
-        #
-        # self.log.debug('Setting wallet file permissions to 400 (read-only)')
-        # os.chmod(self.wallet_path, stat.S_IRUSR)
-        # assert self.wallet_permissions() in ['400', '666'] # Sanity check. 666 because Appveyor.
-        # shasum_before = self.wallet_shasum()
+        self.log.info('Testing wallet tool info (read-only/indempotent mode)')
+
+        # Test indempotence - wallet tool `info` should not modify the wallet file
         timestamp_before = self.wallet_timestamp()
+        shasum_before = self.wallet_shasum()
         self.log.debug('Wallet file timestamp before calling info: {}'.format(timestamp_before))
         out = self.get_expected_info_output(imported_privs=1)
         self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         timestamp_after = self.wallet_timestamp()
+        shasum_after = self.wallet_shasum()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
-        self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
+        assert_equal(timestamp_before, timestamp_after)
+        assert_equal(shasum_before, shasum_after)
+        self.log.debug('Wallet file unchanged by read-only info command (indempotent)')
+
+        # Test with read-only file permissions
+        self.log.info('Testing wallet tool info with read-only file permissions')
+        self.log.debug('Setting wallet file permissions to 400 (read-only)')
+        os.chmod(self.wallet_path, stat.S_IRUSR)
+        assert self.wallet_permissions() in ['400']
+
+        # Wallet tool should work with read-only file permissions
+        timestamp_before_ro = self.wallet_timestamp()
+        shasum_before_ro = self.wallet_shasum()
+        self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
+        timestamp_after_ro = self.wallet_timestamp()
+        shasum_after_ro = self.wallet_shasum()
+
+        # Verify indempotence with read-only permissions
+        assert_equal(timestamp_before_ro, timestamp_after_ro)
+        assert_equal(shasum_before_ro, shasum_after_ro)
+        self.log.debug('Wallet file unchanged with read-only permissions (indempotent)')
+
+        # Restore normal permissions
         self.log.debug('Setting wallet file permissions back to 600 (read/write)')
         os.chmod(self.wallet_path, stat.S_IRUSR | stat.S_IWUSR)
         assert self.wallet_permissions() in ['600', '666']  # Sanity check. 666 because Appveyor.
-        #
-        # TODO: Wallet tool info should not write to the wallet file.
-        # The following lines should be uncommented and the tests still succeed:
-        #
-        # assert_equal(timestamp_before, timestamp_after)
-        # shasum_after = self.wallet_shasum()
-        # assert_equal(shasum_before, shasum_after)
-        # self.log.debug('Wallet file shasum unchanged\n')
 
     def test_tool_wallet_info_after_transaction(self):
         """
@@ -192,10 +200,7 @@ class ToolWalletTest(BitcoinTestFramework):
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
-        #
-        # TODO: Wallet tool info should not write to the wallet file.
-        # This assertion should be uncommented and succeed:
-        # assert_equal(timestamp_before, timestamp_after)
+        assert_equal(timestamp_before, timestamp_after)
         assert_equal(shasum_before, shasum_after)
         self.log.debug('Wallet file shasum unchanged\n')
 
@@ -237,6 +242,29 @@ class ToolWalletTest(BitcoinTestFramework):
         assert_equal(timestamp_before, timestamp_after)
         assert_equal(shasum_after, shasum_before)
         self.log.debug('Wallet file shasum unchanged\n')
+
+    def test_dump_indempotence(self):
+        """Test that the dump command is indempotent and doesn't modify wallet db files"""
+        self.stop_node(0)
+
+        self.log.info('Testing dump command indempotence')
+
+        timestamp_before = self.wallet_timestamp()
+        shasum_before = self.wallet_shasum()
+
+        dump_file = self.nodes[0].datadir_path / "indempotence_test.dump"
+        self.assert_tool_output('The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n',
+                               '-wallet=' + self.default_wallet_name, '-dumpfile={}'.format(dump_file), 'dump')
+
+        timestamp_after = self.wallet_timestamp()
+        shasum_after = self.wallet_shasum()
+
+        # Verify dump command doesn't modify the wallet file
+        assert_equal(timestamp_before, timestamp_after)
+        assert_equal(shasum_before, shasum_after)
+        self.log.debug('Wallet file unchanged by dump command (indempotent)')
+
+        os.remove(dump_file)
 
     def test_dump_createfromdump(self):
         self.start_node(0)
@@ -421,6 +449,7 @@ class ToolWalletTest(BitcoinTestFramework):
         # Warning: The following tests are order-dependent.
         self.test_tool_wallet_info()
         self.test_tool_wallet_info_after_transaction()
+        self.test_dump_indempotence()
         self.test_tool_wallet_create_on_existing_wallet()
         self.test_getwalletinfo_on_different_wallet()
         self.test_dump_createfromdump()
