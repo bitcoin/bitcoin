@@ -185,7 +185,8 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         orphanage->AddTx(children.at(2), peer);
 
         // Make child0 ready to reconsider
-        orphanage->AddChildrenToWorkSet(*parents.at(0), det_rand);
+        const std::vector<std::pair<Wtxid, NodeId>> expected_set_c0{std::make_pair(children.at(0)->GetWitnessHash(), peer)};
+        BOOST_CHECK(orphanage->AddChildrenToWorkSet(*parents.at(0), det_rand) == expected_set_c0);
         BOOST_CHECK(orphanage->HaveTxToReconsider(peer));
 
         // Add 1 more orphan, causing the orphanage to be oversize. child1 is evicted.
@@ -204,9 +205,11 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         BOOST_CHECK(orphanage->HaveTx(children.at(3)->GetWitnessHash()));
         BOOST_CHECK(orphanage->HaveTx(children.at(4)->GetWitnessHash()));
 
-        // Eviction order is FIFO within the orphans that are ready to be reconsidered.
-        orphanage->AddChildrenToWorkSet(*parents.at(4), det_rand);
-        orphanage->AddChildrenToWorkSet(*parents.at(3), det_rand);
+        // Eviction order is FIFO within the orphans that are read
+        const std::vector<std::pair<Wtxid, NodeId>> expected_set_c4{std::make_pair(children.at(4)->GetWitnessHash(), peer)};
+        BOOST_CHECK(orphanage->AddChildrenToWorkSet(*parents.at(4), det_rand) == expected_set_c4);
+        const std::vector<std::pair<Wtxid, NodeId>> expected_set_c3{std::make_pair(children.at(3)->GetWitnessHash(), peer)};
+        BOOST_CHECK(orphanage->AddChildrenToWorkSet(*parents.at(3), det_rand) == expected_set_c3);
 
         // child5 is evicted immediately because it is the only non-reconsiderable orphan.
         orphanage->AddTx(children.at(5), peer);
@@ -857,7 +860,8 @@ BOOST_AUTO_TEST_CASE(peer_worksets)
         }
 
         // Parent accepted: child is added to 1 of 3 worksets.
-        orphanage->AddChildrenToWorkSet(*tx_missing_parent, det_rand);
+        auto newly_reconsiderable = orphanage->AddChildrenToWorkSet(*tx_missing_parent, det_rand);
+        BOOST_CHECK_EQUAL(newly_reconsiderable.size(), 1);
         int node0_reconsider = orphanage->HaveTxToReconsider(node0);
         int node1_reconsider = orphanage->HaveTxToReconsider(node1);
         int node2_reconsider = orphanage->HaveTxToReconsider(node2);

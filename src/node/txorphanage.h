@@ -92,7 +92,7 @@ public:
     virtual void LimitOrphans() = 0;
 
     /** Add any orphans that list a particular tx as a parent into the from peer's work set */
-    virtual void AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) = 0;
+    virtual std::vector<std::pair<Wtxid, NodeId>> AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) = 0;
 
     /** Does this peer have any work to do? */
     virtual bool HaveTxToReconsider(NodeId peer) = 0;

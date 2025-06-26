@@ -217,7 +217,7 @@ public:
     void EraseForPeer(NodeId peer) override;
     void EraseForBlock(const CBlock& block) override;
     void LimitOrphans() override;
-    void AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) override;
+    std::vector<std::pair<Wtxid, NodeId>> AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) override;
     bool HaveTxToReconsider(NodeId peer) override;
     std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const override;
     size_t Size() const override { return m_unique_orphans; }
@@ -489,8 +489,9 @@ void TxOrphanageImpl::LimitOrphans()
     LogDebug(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx (%u announcements)\n", original_unique_txns - remaining_unique_orphans, num_erased);
 }
 
-void TxOrphanageImpl::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng)
+std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng)
 {
+    std::vector<std::pair<Wtxid, NodeId>> ret;
     auto& index_by_wtxid = m_orphans.get<ByWtxid>();
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
@@ -512,13 +513,17 @@ void TxOrphanageImpl::AddChildrenToWorkSet(const CTransaction& tx, FastRandomCon
 
                 // Mark this orphan as ready to be reconsidered.
                 static constexpr auto mark_reconsidered_modifier = [](auto& ann) { ann.m_reconsider = true; };
-                index_by_wtxid.modify(it, mark_reconsidered_modifier);
+                if (!it->m_reconsider) {
+                    index_by_wtxid.modify(it, mark_reconsidered_modifier);
+                    ret.emplace_back(wtxid, it->m_announcer);
+                }
 
                 LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
                             it->m_tx->GetHash().ToString(), it->m_tx->GetWitnessHash().ToString(), it->m_announcer);
             }
         }
     }
+    return ret;
 }
 
 bool TxOrphanageImpl::HaveTx(const Wtxid& wtxid) const
