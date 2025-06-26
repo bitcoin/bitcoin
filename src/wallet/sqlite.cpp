@@ -148,13 +148,17 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
 
 void SQLiteBatch::SetupSQLStatements()
 {
-    const std::vector<std::pair<sqlite3_stmt**, const char*>> statements{
-        {&m_read_stmt, "SELECT value FROM main WHERE key = ?"},
-        {&m_insert_stmt, "INSERT INTO main VALUES(?, ?)"},
-        {&m_overwrite_stmt, "INSERT or REPLACE into main values(?, ?)"},
-        {&m_delete_stmt, "DELETE FROM main WHERE key = ?"},
-        {&m_delete_prefix_stmt, "DELETE FROM main WHERE instr(key, ?) = 1"},
-    };
+    const std::vector<std::pair<sqlite3_stmt**, const char*>> statements = m_database.IsReadOnly() ?
+        std::vector<std::pair<sqlite3_stmt**, const char*>>{
+            {&m_read_stmt, "SELECT value FROM main WHERE key = ?"}
+        } :
+        std::vector<std::pair<sqlite3_stmt**, const char*>>{
+            {&m_read_stmt, "SELECT value FROM main WHERE key = ?"},
+            {&m_insert_stmt, "INSERT INTO main VALUES(?, ?)"},
+            {&m_overwrite_stmt, "INSERT or REPLACE into main values(?, ?)"},
+            {&m_delete_stmt, "DELETE FROM main WHERE key = ?"},
+            {&m_delete_prefix_stmt, "DELETE FROM main WHERE instr(key, ?) = 1"}
+        };
 
     for (const auto& [stmt_prepared, stmt_text] : statements) {
         if (*stmt_prepared == nullptr) {
@@ -246,7 +250,12 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
 
 void SQLiteDatabase::Open()
 {
-    int flags = SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    int flags = SQLITE_OPEN_FULLMUTEX;
+    if (m_read_only) {
+        flags |= SQLITE_OPEN_READONLY;
+    } else {
+        flags |= SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    }
     if (m_mock) {
         flags |= SQLITE_OPEN_MEMORY; // In memory database for mock db
     }
@@ -272,67 +281,71 @@ void SQLiteDatabase::Open()
         }
     }
 
-    if (sqlite3_db_readonly(m_db, "main") != 0) {
+    if (!m_read_only && sqlite3_db_readonly(m_db, "main") != 0) {
         throw std::runtime_error("SQLiteDatabase: Database opened in readonly mode but read-write permissions are needed");
     }
 
-    // Acquire an exclusive lock on the database
-    // First change the locking mode to exclusive
-    SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
-    // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
-    int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of " CLIENT_NAME "?\n");
-    }
-    ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
-    }
-
-    // Enable fullfsync for the platforms that use it
-    SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
-
-    if (m_use_unsafe_sync) {
-        // Use normal synchronous mode for the journal
-        LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
-        SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
-    }
-
-    // Make the table for our key-value pairs
-    // First check that the main table exists
-    sqlite3_stmt* check_main_stmt{nullptr};
-    ret = sqlite3_prepare_v2(m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'", -1, &check_main_stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to prepare statement to check table existence: %s\n", sqlite3_errstr(ret)));
-    }
-    ret = sqlite3_step(check_main_stmt);
-    if (sqlite3_finalize(check_main_stmt) != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to finalize statement checking table existence: %s\n", sqlite3_errstr(ret)));
-    }
-    bool table_exists;
-    if (ret == SQLITE_DONE) {
-        table_exists = false;
-    } else if (ret == SQLITE_ROW) {
-        table_exists = true;
-    } else {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check table existence: %s\n", sqlite3_errstr(ret)));
-    }
-
-    // Do the db setup things because the table doesn't exist only when we are creating a new wallet
-    if (!table_exists) {
-        ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
+    if (!m_read_only) {
+        // Acquire an exclusive lock on the database
+        // First change the locking mode to exclusive
+        SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
+        // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
+        int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
         if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
+            throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of " CLIENT_NAME "?\n");
+        }
+        ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Unable to end exclusive lock transaction: %s\n", sqlite3_errstr(ret)));
         }
 
-        // Set the application id
-        uint32_t app_id = ReadBE32(Params().MessageStart().data());
-        SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
-                  "Failed to set the application id");
+        // Enable fullfsync for the platforms that use it
+        SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
 
-        // Set the user version
-        SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
-                  "Failed to set the wallet schema version");
+        if (m_use_unsafe_sync) {
+            // Use normal synchronous mode for the journal
+            LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
+            SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
+        }
+    }
+
+    if (!m_read_only) {
+        // Make the table for our key-value pairs
+        // First check that the main table exists
+        sqlite3_stmt* check_main_stmt{nullptr};
+        int ret = sqlite3_prepare_v2(m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'", -1, &check_main_stmt, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to prepare statement to check table existence: %s\n", sqlite3_errstr(ret)));
+        }
+        ret = sqlite3_step(check_main_stmt);
+        if (sqlite3_finalize(check_main_stmt) != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to finalize statement checking table existence: %s\n", sqlite3_errstr(ret)));
+        }
+        bool table_exists;
+        if (ret == SQLITE_DONE) {
+            table_exists = false;
+        } else if (ret == SQLITE_ROW) {
+            table_exists = true;
+        } else {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check table existence: %s\n", sqlite3_errstr(ret)));
+        }
+
+        // Do the db setup things because the table doesn't exist only when we are creating a new wallet
+        if (!table_exists) {
+            ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
+            if (ret != SQLITE_OK) {
+                throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new database: %s\n", sqlite3_errstr(ret)));
+            }
+
+            // Set the application id
+            uint32_t app_id = ReadBE32(Params().MessageStart().data());
+            SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
+                      "Failed to set the application id");
+
+            // Set the user version
+            SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
+                      "Failed to set the wallet schema version");
+        }
     }
 }
 
