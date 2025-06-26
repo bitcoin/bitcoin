@@ -117,7 +117,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
 endif()
 
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(CMAKE_SYSTEM_NAME MATCHES "^(Linux|FreeBSD)$")
   # Customize pkg-config behavior for finding dependencies
   # of the xcb QPA platform plugin:
   # 1. Restrict search paths to the depends.
