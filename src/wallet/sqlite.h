@@ -103,6 +103,7 @@ class SQLiteDatabase : public WalletDatabase
 {
 private:
     const bool m_mock{false};
+    const bool m_read_only{false};
 
     const std::string m_dir_path;
 
@@ -154,6 +155,9 @@ public:
 
     /** Return true if there is an on-going txn in this connection */
     bool HasActiveTxn();
+
+    /** Return true if database is opened in read-only mode */
+    bool IsReadOnly() const { return m_read_only; }
 
     sqlite3* m_db{nullptr};
     bool m_use_unsafe_sync;
