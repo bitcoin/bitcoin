@@ -664,11 +664,11 @@ FUZZ_TARGET(txorphanage_sim)
                 auto tx = read_tx_fn();
                 FastRandomContext rand_ctx(rng.rand256());
                 auto added = real->AddChildrenToWorkSet(*txn[tx], rand_ctx);
-                /** Map of all child wtxids, with value whether they already have a reconsiderable
-                    announcement from some peer. */
-                std::map<Wtxid, bool> child_wtxids;
+                /** Set of not-already-reconsiderable child wtxids. */
+                std::set<Wtxid> child_wtxids;
                 for (unsigned child_tx = 0; child_tx < NUM_TX; ++child_tx) {
                     if (!have_tx_fn(child_tx)) continue;
+                    if (have_reconsiderable_fn(child_tx)) continue;
                     bool child_of = false;
                     for (auto& txin : txn[child_tx]->vin) {
                         if (txin.prevout.hash == txn[tx]->GetHash()) {
@@ -677,11 +677,11 @@ FUZZ_TARGET(txorphanage_sim)
                         }
                     }
                     if (child_of) {
-                        child_wtxids[txn[child_tx]->GetWitnessHash()] = have_reconsiderable_fn(child_tx);
+                        child_wtxids.insert(txn[child_tx]->GetWitnessHash());
                     }
                 }
                 for (auto& [wtxid, peer] : added) {
-                    // Wtxid must be a child of tx.
+                    // Wtxid must be a child of tx that is not yet reconsiderable.
                     auto child_wtxid_it = child_wtxids.find(wtxid);
                     assert(child_wtxid_it != child_wtxids.end());
                     // Announcement must exist.
@@ -691,17 +691,12 @@ FUZZ_TARGET(txorphanage_sim)
                     assert(sim_ann_it->reconsider == false);
                     // Make reconsiderable.
                     sim_ann_it->reconsider = true;
-                }
-                for (auto& [wtxid, peer] : added) {
-                    // Remove from child_wtxids map, so we can check that only already-reconsiderable
-                    // ones we not present in added.
-                    child_wtxids.erase(wtxid);
+                    // Remove from child_wtxids map, to disallow it being reported a second time in added.
+                    child_wtxids.erase(child_wtxid_it);
                 }
                 // Verify that all child wtxids which did not occur at least once in the AddChildrenToWorkSet result
                 // are wtxid which were already reconsiderable (for some peer).
-                for (auto& [wtxid, already_reconsider] : child_wtxids) {
-                    assert(already_reconsider);
-                }
+                assert(child_wtxids.empty());
                 break;
             } else if (command-- == 0) {
                 // GetTxToReconsider.
