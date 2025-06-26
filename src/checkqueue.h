@@ -16,7 +16,7 @@
 #include <optional>
 #include <vector>
 
-static constexpr int MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD{14};
+static constexpr int MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD{-1};
 
 /**
  * Queue for verifications that have to be performed.
@@ -219,7 +219,8 @@ public:
     {
         // Some tests skip user interface and call CCheckQueue() directly
         // So this code is necessary
-        worker_threads_num = std::min(worker_threads_num, GetNumCores() - 1);
+        //worker_threads_num = std::min(worker_threads_num, GetNumCores() - 1);
+        worker_threads_num = std::min(worker_threads_num, 15);
         if (worker_threads_num > MAX_SCRIPTCHECK_MUTEX_MODE_THRESHOLD) {
             fAtomic = true;
             nBatchSize = 5;
