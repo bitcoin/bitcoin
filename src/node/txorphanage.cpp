@@ -96,6 +96,9 @@ class TxOrphanageImpl final : public TxOrphanage {
      * a transaction that can be reconsidered and to remove entries that conflict with a block.*/
     std::unordered_map<COutPoint, std::set<Wtxid>, SaltedOutpointHasher> m_outpoint_to_orphan_it;
 
+    /** Set of Wtxids for which (exactly) one announcement with m_reconsider=true exists. */
+    std::set<Wtxid> m_reconsiderable_wtxids;
+
     struct PeerDoSInfo {
         TxOrphanage::Usage m_total_usage{0};
         TxOrphanage::Count m_count_announcements{0};
@@ -211,6 +214,11 @@ void TxOrphanageImpl::Erase(Iter<Tag> it)
             }
         }
     }
+
+    // If this was the (unique) reconsiderable announcement for its wtxid, then the wtxid won't
+    // have any reconsiderable announcements left after erasing.
+    if (it->m_reconsider) m_reconsiderable_wtxids.erase(it->m_tx->GetWitnessHash());
+
     m_orphans.get<Tag>().erase(it);
 }
 
@@ -451,6 +459,9 @@ std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(cons
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
         if (it_by_prev != m_outpoint_to_orphan_it.end()) {
             for (const auto& wtxid : it_by_prev->second) {
+                // If a reconsiderable announcement for this wtxid already exists, skip it.
+                if (m_reconsiderable_wtxids.count(wtxid)) continue;
+
                 // Belt and suspenders, each entry in m_outpoint_to_orphan_it should always have at least 1 announcement.
                 auto it = index_by_wtxid.lower_bound(ByWtxidView{wtxid, MIN_PEER});
                 if (!Assume(it != index_by_wtxid.end())) continue;
@@ -467,10 +478,10 @@ std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(cons
 
                 // Mark this orphan as ready to be reconsidered.
                 static constexpr auto mark_reconsidered_modifier = [](auto& ann) { ann.m_reconsider = true; };
-                if (!it->m_reconsider) {
-                    index_by_wtxid.modify(it, mark_reconsidered_modifier);
-                    ret.emplace_back(wtxid, it->m_announcer);
-                }
+                Assume(!it->m_reconsider);
+                index_by_wtxid.modify(it, mark_reconsidered_modifier);
+                ret.emplace_back(wtxid, it->m_announcer);
+                m_reconsiderable_wtxids.insert(wtxid);
 
                 LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
                             it->m_tx->GetHash().ToString(), it->m_tx->GetWitnessHash().ToString(), it->m_announcer);
@@ -508,6 +519,9 @@ CTransactionRef TxOrphanageImpl::GetTxToReconsider(NodeId peer)
         // reconsidered again until there is a new reason to do so.
         static constexpr auto mark_reconsidered_modifier = [](auto& ann) { ann.m_reconsider = false; };
         m_orphans.get<ByPeer>().modify(it, mark_reconsidered_modifier);
+        // As there is exactly one m_reconsider announcement per reconsiderable wtxids, flipping
+        // the m_reconsider flag means the wtxid is no longer reconsiderable.
+        m_reconsiderable_wtxids.erase(it->m_tx->GetWitnessHash());
         return it->m_tx;
     }
     return nullptr;
@@ -603,6 +617,7 @@ void TxOrphanageImpl::SanityCheck() const
     std::unordered_map<NodeId, PeerDoSInfo> reconstructed_peer_info;
     std::map<Wtxid, TxOrphanage::Usage> unique_wtxids_to_usage;
     std::set<COutPoint> all_outpoints;
+    std::set<Wtxid> reconstructed_reconsiderable_wtxids;
 
     for (auto it = m_orphans.begin(); it != m_orphans.end(); ++it) {
         for (const auto& input : it->m_tx->vin) {
@@ -613,10 +628,19 @@ void TxOrphanageImpl::SanityCheck() const
         auto& peer_info = reconstructed_peer_info[it->m_announcer];
         peer_info.m_total_usage += it->GetUsage();
         peer_info.m_count_announcements += 1;
+
+        if (it->m_reconsider) {
+            auto [_, added] = reconstructed_reconsiderable_wtxids.insert(it->m_tx->GetWitnessHash());
+            // Check that there is only ever 1 announcement per wtxid with m_reconsider set.
+            assert(added);
+        }
     }
 
     // Recalculated per-peer stats are identical to m_peer_orphanage_info
     assert(reconstructed_peer_info == m_peer_orphanage_info);
+
+    // Recalculated set of reconsiderable wtxids must match.
+    assert(m_reconsiderable_wtxids == reconstructed_reconsiderable_wtxids);
 
     // All outpoints exist in m_outpoint_to_orphan_it, all keys in m_outpoint_to_orphan_it correspond to some
     // orphan, and all wtxids referenced in m_outpoint_to_orphan_it are also in m_orphans.
