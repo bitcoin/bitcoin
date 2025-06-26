@@ -892,10 +892,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     return true;
 }
 
-DBErrors CWallet::ReorderTransactions()
+bool CWallet::ReorderTransactions(WalletBatch& batch)
 {
-    LOCK(cs_wallet);
-    WalletBatch batch(GetDatabase());
+    AssertLockHeld(cs_wallet);
 
     // Old wallets didn't have any defined order for transactions
     // Probably a bad idea to change the output of this
@@ -922,8 +921,9 @@ DBErrors CWallet::ReorderTransactions()
             nOrderPos = nOrderPosNext++;
             nOrderPosOffsets.push_back(nOrderPos);
 
-            if (!batch.WriteTxMetadata(*pwtx))
-                return DBErrors::LOAD_FAIL;
+            if (!batch.WriteTxMetadata(*pwtx)) {
+                return false;
+            }
         }
         else
         {
@@ -940,13 +940,14 @@ DBErrors CWallet::ReorderTransactions()
                 continue;
 
             // Since we're changing the order, write it back
-            if (!batch.WriteTxMetadata(*pwtx))
-                return DBErrors::LOAD_FAIL;
+            if (!batch.WriteTxMetadata(*pwtx)) {
+                return false;
+            }
         }
     }
     batch.WriteOrderPosNext(nOrderPosNext);
 
-    return DBErrors::LOAD_OK;
+    return true;
 }
 
 int64_t CWallet::IncOrderPosNext(WalletBatch* batch)
