@@ -10,6 +10,7 @@ from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.util import (
     assert_equal,
     assert_not_equal,
+    p2p_port,
 )
 
 # We need to bind to a routable address for this test to exercise the relevant code
@@ -25,16 +26,17 @@ from test_framework.util import (
 ADDR1 = '1.1.1.1'
 ADDR2 = '2.2.2.2'
 
-BIND_PORT = 31001
-
 class BindPortDiscoverTest(BitcoinTestFramework):
     def set_test_params(self):
         # Avoid any -bind= on the command line. Force the framework to avoid adding -bind=127.0.0.1.
         self.setup_clean_chain = True
         self.bind_to_localhost_only = False
+        # Get dynamic ports for each node from the test framework
+        self.bind_port_0 = p2p_port(0)
+        self.bind_port_1 = p2p_port(1)
         self.extra_args = [
-            ['-discover', f'-port={BIND_PORT}'], # bind on any
-            ['-discover', f'-bind={ADDR1}:{BIND_PORT}'],
+            ['-discover', f'-port={self.bind_port_0}'], # bind on any
+            ['-discover', f'-bind={ADDR1}:{self.bind_port_1}'],
         ]
         self.num_nodes = len(self.extra_args)
 
@@ -59,10 +61,10 @@ class BindPortDiscoverTest(BitcoinTestFramework):
         for local in self.nodes[0].getnetworkinfo()['localaddresses']:
             if local['address'] == ADDR1:
                 found_addr1 = True
-                assert_equal(local['port'], BIND_PORT)
+                assert_equal(local['port'], self.bind_port_0)
             if local['address'] == ADDR2:
                 found_addr2 = True
-                assert_equal(local['port'], BIND_PORT)
+                assert_equal(local['port'], self.bind_port_0)
         assert found_addr1
         assert found_addr2
 
@@ -73,7 +75,7 @@ class BindPortDiscoverTest(BitcoinTestFramework):
         for local in self.nodes[1].getnetworkinfo()['localaddresses']:
             if local['address'] == ADDR1:
                 found_addr1 = True
-                assert_equal(local['port'], BIND_PORT)
+                assert_equal(local['port'], self.bind_port_1)
             assert_not_equal(local['address'], ADDR2)
         assert found_addr1
 
