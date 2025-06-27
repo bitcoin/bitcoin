@@ -784,13 +784,13 @@ public:
     {
         return m_mempool ? &m_mempool->cs : nullptr;
     }
+    void InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
     bool ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
 
-    void InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -914,7 +914,6 @@ private:
     //! most-work chain.
     Chainstate* m_active_chainstate GUARDED_BY(::cs_main) {nullptr};
 
-    CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
     /** The last header for which a headerTip notification was issued. */
     CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
@@ -1056,6 +1055,7 @@ public:
         In case of multiple best headers with the same work, it could point to any
         because CBlockIndexWorkComparator tiebreaker rules are not applied. */
     CBlockIndex* m_best_header GUARDED_BY(::cs_main){nullptr};
+    CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
     //! The total number of bytes available for us to use across all in-memory
     //! coins caches. This will be split somehow across chainstates.
