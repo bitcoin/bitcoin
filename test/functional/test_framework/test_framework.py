@@ -96,6 +96,10 @@ class Binaries:
         "Return argv array that should be used to invoke bitcoin-chainstate"
         return self._argv("chainstate", self.paths.bitcoinchainstate)
 
+    def mine_argv(self):
+        "Return argv array that should be used to invoke bitcoin-mine"
+        return self._argv("mine", self.paths.bitcoin_mine)
+
     def _argv(self, command, bin_path):
         """Return argv array that should be used to invoke the command. It
         either uses the bitcoin wrapper executable (if BITCOIN_CMD is set), or
@@ -290,17 +294,24 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoin-cli": ("bitcoincli", "BITCOINCLI"),
             "bitcoin-util": ("bitcoinutil", "BITCOINUTIL"),
             "bitcoin-chainstate": ("bitcoinchainstate", "BITCOINCHAINSTATE"),
+            "bitcoin-mine": ("bitcoin_mine", "BITCOINMINE"),
             "bitcoin-wallet": ("bitcoinwallet", "BITCOINWALLET"),
         }
-        for binary, [attribute_name, env_variable_name] in binaries.items():
-            default_filename = os.path.join(
+        def binary_path(binary):
+            return os.path.join(
                 self.config["environment"]["BUILDDIR"],
                 "bin",
                 binary + self.config["environment"]["EXEEXT"],
             )
-            setattr(paths, attribute_name, os.getenv(env_variable_name, default=default_filename))
+
+        # Set paths to bitcoin binaries allowing overrides with environment
+        # variables.
+        for binary, [attribute_name, env_variable_name] in binaries.items():
+            setattr(paths, attribute_name, os.getenv(env_variable_name) or binary_path(binary))
+
         # BITCOIN_CMD environment variable can be specified to invoke bitcoin
         # wrapper binary instead of other executables.
+        paths.bitcoin_bin = binary_path("bitcoin")
         paths.bitcoin_cmd = shlex.split(os.getenv("BITCOIN_CMD", "")) or None
         return paths
 
@@ -1015,6 +1026,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_cli_compiled():
             raise SkipTest("bitcoin-cli has not been compiled.")
 
+    def skip_if_no_ipc(self):
+        """Skip the running test if ipc is not enabled."""
+        if not self.is_ipc_enabled():
+            raise SkipTest("ipc is not enabled.")
+
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
         if not self.has_previous_releases():
@@ -1069,6 +1085,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_usdt_compiled(self):
         """Checks whether the USDT tracepoints were compiled."""
         return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
+
+    def is_ipc_enabled(self):
+        """Checks whether ipc is enabled."""
+        return self.config["components"].getboolean("ENABLE_IPC")
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
