@@ -7,33 +7,17 @@ Test mempool acceptance in case of an already known transaction
 with identical non-witness data but different witness.
 """
 
-from copy import deepcopy
 from test_framework.messages import (
     COIN,
-    COutPoint,
-    CTransaction,
-    CTxIn,
-    CTxInWitness,
-    CTxOut,
-    sha256,
 )
 from test_framework.p2p import P2PTxInvStore
-from test_framework.script import (
-    CScript,
-    OP_0,
-    OP_ELSE,
-    OP_ENDIF,
-    OP_EQUAL,
-    OP_HASH160,
-    OP_IF,
-    OP_TRUE,
-    hash160,
-)
+from test_framework.script_util import ValidWitnessMalleatedTx
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
 )
+
 
 class MempoolWtxidTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -50,38 +34,19 @@ class MempoolWtxidTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['size'], 0)
 
         self.log.info("Submit parent with multiple script branches to mempool")
-        hashlock = hash160(b'Preimage')
-        witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
-        witness_program = sha256(witness_script)
-        script_pubkey = CScript([OP_0, witness_program])
-
-        parent = CTransaction()
-        parent.vin.append(CTxIn(COutPoint(int(txid, 16), 0), b""))
-        parent.vout.append(CTxOut(int(9.99998 * COIN), script_pubkey))
+        txgen = ValidWitnessMalleatedTx()
+        parent = txgen.build_parent_tx(txid, 9.99998 * COIN)
 
         privkeys = [node.get_deterministic_priv_key().key]
         raw_parent = node.signrawtransactionwithkey(hexstring=parent.serialize().hex(), privkeys=privkeys)['hex']
-        parent_txid = node.sendrawtransaction(hexstring=raw_parent, maxfeerate=0)
+        signed_parent_txid = node.sendrawtransaction(hexstring=raw_parent, maxfeerate=0)
         self.generate(node, 1)
 
         peer_wtxid_relay = node.add_p2p_connection(P2PTxInvStore())
 
-        # Create a new transaction with witness solving first branch
-        child_witness_script = CScript([OP_TRUE])
-        child_witness_program = sha256(child_witness_script)
-        child_script_pubkey = CScript([OP_0, child_witness_program])
-
-        child_one = CTransaction()
-        child_one.vin.append(CTxIn(COutPoint(int(parent_txid, 16), 0), b""))
-        child_one.vout.append(CTxOut(int(9.99996 * COIN), child_script_pubkey))
-        child_one.wit.vtxinwit.append(CTxInWitness())
-        child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
+        child_one, child_two = txgen.build_malleated_children(signed_parent_txid, 9.99996 * COIN)
         child_one_wtxid = child_one.wtxid_hex
         child_one_txid = child_one.txid_hex
-
-        # Create another identical transaction with witness solving second branch
-        child_two = deepcopy(child_one)
-        child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
         child_two_wtxid = child_two.wtxid_hex
         child_two_txid = child_two.txid_hex
 
