@@ -45,6 +45,8 @@ struct ConnmanTestMsg : public CConnman {
         m_peer_connect_timeout = timeout;
     }
 
+    void ResetMaxOutboundCycle();
+
     std::vector<CNode*> TestNodes()
     {
         LOCK(m_nodes_mutex);
