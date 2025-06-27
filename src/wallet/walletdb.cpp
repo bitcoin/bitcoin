@@ -1050,7 +1050,7 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
         uint32_t n;
         key >> hash;
         key >> n;
-        pwallet->LockCoin(COutPoint(hash, n));
+        pwallet->LoadLockedCoin(COutPoint(hash, n), /*persistent=*/true);
         return DBErrors::LOAD_OK;
     });
     result = std::max(result, locked_utxo_res.m_result);
