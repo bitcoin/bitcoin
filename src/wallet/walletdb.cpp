@@ -1163,14 +1163,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         // Load address book
         result = std::max(LoadAddressBookRecords(pwallet, *m_batch), result);
 
-        // Load tx records
-        result = std::max(LoadTxRecords(pwallet, *m_batch, any_unordered), result);
-
         // Load SPKMs
         result = std::max(LoadActiveSPKMs(pwallet, *m_batch), result);
 
         // Load decryption keys
         result = std::max(LoadDecryptionKeys(pwallet, *m_batch), result);
+
+        // Load tx records
+        result = std::max(LoadTxRecords(pwallet, *m_batch, any_unordered), result);
     } catch (std::runtime_error& e) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.
