@@ -17,7 +17,6 @@ import urllib.parse
 import subprocess
 from random import SystemRandom
 import string
-import configparser
 import sys
 from typing import Optional
 
@@ -47,9 +46,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.rpcuser = "rpcuser💻"
         self.rpcpassword = "rpcpassword🔑"
 
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-        gen_rpcauth = config['environment']['RPCAUTH']
+        gen_rpcauth = self.config["environment"]["RPCAUTH"]
 
         # Generate RPCAUTH with specified password
         self.rt2password = "8/F3uMDw4KSEbw96U3CA1C4X05dkHDN2BPFjTgZW4KI="
