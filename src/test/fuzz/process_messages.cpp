@@ -55,6 +55,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
     SetMockTime(1610000000); // any time to successfully reset ibd
     chainman.ResetIbd();
+    chainman.DisableNextWrite();
 
     node::Warnings warnings{};
     NetGroupManager netgroupman{{}};
