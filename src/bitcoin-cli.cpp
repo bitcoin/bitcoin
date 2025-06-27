@@ -414,6 +414,7 @@ private:
         int64_t last_send;
         int64_t last_trxn;
         int id;
+        int cpu_load;
         int mapped_as;
         int version;
         bool is_addr_relay_enabled;
@@ -535,6 +536,7 @@ public:
                 const int64_t last_trxn{peer["last_transaction"].getInt<int64_t>()};
                 const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
+                const int cpu_load{peer["cpu_load"].isNull() ? -1 : static_cast<int>(round(peer["cpu_load"].get_real()))};
                 const std::string addr{peer["addr"].get_str()};
                 const std::string age{conn_time == 0 ? "" : ToString((time_now - conn_time) / 60)};
                 const std::string services{FormatServices(peer["servicesnames"])};
@@ -543,7 +545,30 @@ public:
                 const bool is_addr_relay_enabled{peer["addr_relay_enabled"].isNull() ? false : peer["addr_relay_enabled"].get_bool()};
                 const bool is_bip152_hb_from{peer["bip152_hb_from"].get_bool()};
                 const bool is_bip152_hb_to{peer["bip152_hb_to"].get_bool()};
-                m_peers.push_back({addr, sub_version, conn_type, NETWORK_SHORT_NAMES[network_id], age, services, transport, min_ping, ping, addr_processed, addr_rate_limited, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_addr_relay_enabled, is_bip152_hb_from, is_bip152_hb_to, is_outbound, is_tx_relay});
+                m_peers.push_back(Peer{.addr = addr,
+                                       .sub_version = sub_version,
+                                       .conn_type = conn_type,
+                                       .network = NETWORK_SHORT_NAMES[network_id],
+                                       .age = age,
+                                       .services = services,
+                                       .transport_protocol_type = transport,
+                                       .min_ping = min_ping,
+                                       .ping = ping,
+                                       .addr_processed = addr_processed,
+                                       .addr_rate_limited = addr_rate_limited,
+                                       .last_blck = last_blck,
+                                       .last_recv = last_recv,
+                                       .last_send = last_send,
+                                       .last_trxn = last_trxn,
+                                       .id = peer_id,
+                                       .cpu_load = cpu_load,
+                                       .mapped_as = mapped_as,
+                                       .version = version,
+                                       .is_addr_relay_enabled = is_addr_relay_enabled,
+                                       .is_bip152_hb_from = is_bip152_hb_from,
+                                       .is_bip152_hb_to = is_bip152_hb_to,
+                                       .is_outbound = is_outbound,
+                                       .is_tx_relay = is_tx_relay});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
                 m_max_addr_processed_length = std::max(ToString(addr_processed).length(), m_max_addr_processed_length);
                 m_max_addr_rate_limited_length = std::max(ToString(addr_rate_limited).length(), m_max_addr_rate_limited_length);
@@ -560,7 +585,7 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<->   type   net %*s  v  mping   ping send recv  txn  blk  hb %*s%*s%*s ",
+            result += strprintf("<->   type   net %*s  v  mping   ping send recv  txn  blk  hb %*s%*s cpu%*s ",
                                 m_max_services_length, "serv",
                                 m_max_addr_processed_length, "addrp",
                                 m_max_addr_rate_limited_length, "addrl",
@@ -570,7 +595,7 @@ public:
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %6s %5s %*s %2s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%*s%*i %*s %-*s%s\n",
+                    "%3s %6s %5s %*s %2s%7s%7s%5s%5s%5s%5s  %2s %*s%*s%4s%*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
                     ConnectionTypeForNetinfo(peer.conn_type),
                     peer.network,
@@ -588,6 +613,7 @@ public:
                     peer.addr_processed ? ToString(peer.addr_processed) : peer.is_addr_relay_enabled ? "" : ".",
                     m_max_addr_rate_limited_length, // variable spacing
                     peer.addr_rate_limited ? ToString(peer.addr_rate_limited) : "",
+                    peer.cpu_load > 0 ? ToString(round(peer.cpu_load)) : "",
                     m_max_age_length, // variable spacing
                     peer.age,
                     m_is_asmap_on ? 7 : 0, // variable spacing
@@ -598,7 +624,7 @@ public:
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                %*s         ms     ms  sec  sec  min  min                %*s\n\n", m_max_services_length, "", m_max_age_length, "min");
+            result += strprintf("                %*s         ms     ms  sec  sec  min  min                   ‰%*s\n\n", m_max_services_length, "", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
@@ -711,6 +737,7 @@ public:
         "  addrp    Total number of addresses processed, excluding those dropped due to rate limiting\n"
         "           \".\" - we do not relay addresses to this peer (getpeerinfo \"addr_relay_enabled\" is false)\n"
         "  addrl    Total number of addresses dropped due to rate limiting\n"
+        "  cpu      CPU time processing messages to/from peer, per milles (‰) of age, rounded to nearest integer, if non-zero\n"
         "  age      Duration of connection to the peer, in minutes\n"
         "  asmap    Mapped AS (Autonomous System) number at the end of the BGP route to the peer, used for diversifying\n"
         "           peer selection (only displayed if the -asmap config option is set)\n"

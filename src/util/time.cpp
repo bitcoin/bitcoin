@@ -17,6 +17,16 @@
 #include <string_view>
 #include <thread>
 
+#ifdef WIN32
+#include <windows.h>
+#include <winnt.h>
+
+#include <processthreadsapi.h>
+#else
+#include <ctime>
+#endif
+
+
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
 static std::atomic<std::chrono::seconds> g_mock_time{}; //!< For testing
@@ -127,4 +137,55 @@ struct timeval MillisToTimeval(int64_t nTimeout)
 struct timeval MillisToTimeval(std::chrono::milliseconds ms)
 {
     return MillisToTimeval(count_milliseconds(ms));
+}
+
+std::chrono::nanoseconds ThreadCpuTime()
+{
+#ifdef CLOCK_THREAD_CPUTIME_ID
+    timespec t;
+    if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t) == -1) {
+        return std::chrono::nanoseconds{0};
+    }
+    return std::chrono::seconds{t.tv_sec} + std::chrono::nanoseconds{t.tv_nsec};
+#elif defined(WIN32)
+    FILETIME creation;
+    FILETIME exit;
+    FILETIME kernel;
+    FILETIME user;
+    // GetThreadTimes():
+    // https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getthreadtimes
+    if (GetThreadTimes(GetCurrentThread(), &creation, &exit, &kernel, &user) == 0) {
+        return std::chrono::nanoseconds{0};
+    }
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime
+    // "... you should copy the low- and high-order parts of the file time to a
+    // ULARGE_INTEGER structure, perform 64-bit arithmetic on the QuadPart
+    // member ..."
+
+    ULARGE_INTEGER kernel_;
+    kernel_.LowPart = kernel.dwLowDateTime;
+    kernel_.HighPart = kernel.dwHighDateTime;
+
+    ULARGE_INTEGER user_;
+    user_.LowPart = user.dwLowDateTime;
+    user_.HighPart = user.dwHighDateTime;
+
+    // The units of the returned values from GetThreadTimes() are "100-nanosecond periods".
+    // So, we multiply by 100 to get nanoseconds.
+    return std::chrono::nanoseconds{(kernel_.QuadPart + user_.QuadPart) * 100};
+#else
+    return std::chrono::nanoseconds{0};
+#endif
+}
+
+std::chrono::nanoseconds operator+=(std::atomic<std::chrono::nanoseconds>& a, std::chrono::nanoseconds b)
+{
+    std::chrono::nanoseconds expected;
+    std::chrono::nanoseconds desired;
+    do {
+        expected = a.load();
+        desired = expected + b;
+    } while (!a.compare_exchange_weak(expected, desired));
+    return desired;
 }
