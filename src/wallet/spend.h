@@ -59,13 +59,13 @@ struct CoinsResult {
     void Add(OutputType type, const COutput& out);
 
     CAmount GetTotalAmount() { return total_amount; }
-    std::optional<CAmount> GetEffectiveTotalAmount() {return total_effective_amount; }
+    std::optional<CAmount> GetEffectiveTotalAmount() { return total_effective_amount; }
 
 private:
     /** Sum of all available coins raw value */
     CAmount total_amount{0};
     /** Sum of all available coins effective value (each output value minus fees required to spend it) */
-    std::optional<CAmount> total_effective_amount{0};
+    std::optional<CAmount> total_effective_amount;
 };
 
 struct CoinFilterParams {
