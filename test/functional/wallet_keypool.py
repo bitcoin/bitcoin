@@ -127,7 +127,10 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].keypoolrefill(3)
 
         # test walletpassphrase timeout
-        time.sleep(1.1)
+        # CScheduler relies on condition_variable::wait_until() which is slightly
+        # less accurate than libevent's event trigger. We'll give it 2
+        # seconds to execute a 1 second scheduled event.
+        time.sleep(2)
         assert_equal(nodes[0].getwalletinfo()["unlocked_until"], 0)
 
         # drain the keypool

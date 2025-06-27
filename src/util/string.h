@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstring>
 #include <locale>
+#include <optional>
 #include <sstream>
 #include <string>      // IWYU pragma: export
 #include <string_view> // IWYU pragma: export
@@ -248,6 +249,25 @@ template <typename T1, size_t PREFIX_LEN>
     return obj.size() >= PREFIX_LEN &&
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
+
+struct LineReader {
+    const std::span<const std::byte>::iterator start;
+    const std::span<const std::byte>::iterator end;
+    const size_t max_read;
+    std::span<const std::byte>::iterator it;
+
+    explicit LineReader(std::span<const std::byte> buffer, size_t max_read);
+
+    // Returns a string from current iterator position up to next \n
+    // and advances iterator, does not return trailing \n or \r.
+    // Will not search for \n past max_read.
+    std::optional<std::string> ReadLine();
+    // Returns string from current iterator position of specified length
+    // and advances iterator. May exceed max_read but will not read past end of buffer.
+    std::string ReadLength(size_t len);
+    // Returns remaining size of bytes in buffer
+    size_t Left() const;
+};
 } // namespace util
 
 #endif // BITCOIN_UTIL_STRING_H
