@@ -24,6 +24,7 @@ env:
   SCHNORRSIG: no
   MUSIG: no
   ELLSWIFT: no
+  SILENTPAYMENTS: no
   ### test options
   SECP256K1_TEST_ITERS: 64
   BENCH: yes
@@ -75,6 +76,7 @@ task:
     SCHNORRSIG: yes
     MUSIG: yes
     ELLSWIFT: yes
+    SILENTPAYMENTS: yes
   matrix:
      # Currently only gcc-snapshot, the other compilers are tested on GHA with QEMU
      - env: { CC: 'gcc-snapshot' }
@@ -93,6 +95,7 @@ task:
     SCHNORRSIG: yes
     MUSIG: yes
     ELLSWIFT: yes
+    SILENTPAYMENTS: yes
     WRAPPER_CMD: 'valgrind --error-exitcode=42'
     SECP256K1_TEST_ITERS: 2
   matrix:
