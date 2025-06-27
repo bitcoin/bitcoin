@@ -90,19 +90,20 @@ def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
     delta = 1.0e-6  # account for rounding error
-    last_feerate = float(max(fees_seen))
     all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
     mempoolMinFee = node.getmempoolinfo()["mempoolminfee"]
     minRelaytxFee = node.getmempoolinfo()["minrelaytxfee"]
+    feerate_ceiling = max(max(fees_seen), float(mempoolMinFee), float(minRelaytxFee))
+    last_feerate = feerate_ceiling
     for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
         feerate = float(e["feerate"])
         assert_greater_than(feerate, 0)
         assert_greater_than_or_equal(feerate, float(mempoolMinFee))
         assert_greater_than_or_equal(feerate, float(minRelaytxFee))
 
-        if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
+        if feerate + delta < min(fees_seen) or feerate - delta > feerate_ceiling:
             raise AssertionError(
-                f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{max(fees_seen)})"
+                f"Estimated fee ({feerate}) out of range ({min(fees_seen)},{feerate_ceiling})"
             )
         if feerate - delta > last_feerate:
             raise AssertionError(
@@ -144,8 +145,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.noban_tx_relay = True
         self.extra_args = [
             [],
-            ["-blockmaxweight=68000"],
-            ["-blockmaxweight=32000"],
+            ["-blockmaxweight=72000"],
+            ["-blockmaxweight=36000"],
         ]
 
     def setup_network(self):
@@ -237,10 +238,10 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
-    def test_feerate_mempoolminfee(self):
-        high_val = 3 * self.nodes[1].estimatesmartfee(1)["feerate"]
+    def test_estimates_with_highminrelaytxfee(self):
+        high_val = 3 * self.nodes[1].estimatesmartfee(2)["feerate"]
         self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}"])
-        check_estimates(self.nodes[1], self.fees_per_kb)
+        check_smart_estimates(self.nodes[1], self.fees_per_kb)
         self.restart_node(1)
 
     def sanity_check_rbf_estimates(self, utxos):
@@ -451,11 +452,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Test fee_estimates.dat is flushed periodically")
         self.test_estimate_dat_is_flushed_periodically()
 
-        # check that the effective feerate is greater than or equal to the mempoolminfee even for high mempoolminfee
+        # check that estimatesmartfee feerate is greater than or equal to maximum of mempoolminfee and minrelaytxfee
         self.log.info(
-            "Test fee rate estimation after restarting node with high MempoolMinFee"
+            "Test fee rate estimation after restarting node with high minrelaytxfee"
         )
-        self.test_feerate_mempoolminfee()
+        self.test_estimates_with_highminrelaytxfee()
 
         self.log.info("Test acceptstalefeeestimates option")
         self.test_acceptstalefeeestimates_option()
