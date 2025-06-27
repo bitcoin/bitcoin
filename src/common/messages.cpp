@@ -6,7 +6,7 @@
 #include <common/messages.h>
 
 #include <common/types.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <node/types.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
