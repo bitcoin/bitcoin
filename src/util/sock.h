@@ -221,6 +221,10 @@ public:
     [[nodiscard]] virtual bool Wait(std::chrono::milliseconds timeout,
                                     Event requested,
                                     Event* occurred = nullptr) const;
+#ifdef USE_POLL
+    bool WaitPoll(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const;
+#endif /* USE_POLL */
+    bool WaitSelect(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const;
 
     /* Higher level, convenience, methods. These may throw. */
 
