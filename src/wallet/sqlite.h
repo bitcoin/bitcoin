@@ -155,8 +155,12 @@ public:
     /** Return true if there is an on-going txn in this connection */
     bool HasActiveTxn();
 
+    /** Return true if database is opened in read-only mode */
+    bool IsReadOnly() const override { return m_read_only; }
+
     sqlite3* m_db{nullptr};
     bool m_use_unsafe_sync;
+    bool m_read_only;
 };
 
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);

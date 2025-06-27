@@ -135,6 +135,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
+        options.read_only = true;
         const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
@@ -143,6 +144,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
         options.require_existing = true;
+        options.read_only = true;
         DatabaseStatus status;
 
         if (IsBDBFile(BDBDataFile(path))) {
