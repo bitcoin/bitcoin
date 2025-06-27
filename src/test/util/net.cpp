@@ -71,6 +71,13 @@ void ConnmanTestMsg::Handshake(CNode& node,
     }
 }
 
+void ConnmanTestMsg::ResetMaxOutboundCycle()
+{
+    LOCK(m_total_bytes_sent_mutex);
+    nMaxOutboundCycleStartTime = 0s;
+    nMaxOutboundTotalBytesSentInCycle = 0;
+}
+
 void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const
 {
     assert(node.ReceiveMsgBytes(msg_bytes, complete));
