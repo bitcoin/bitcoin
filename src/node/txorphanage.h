@@ -31,6 +31,9 @@ static const uint32_t DEFAULT_MAX_ORPHAN_TRANSACTIONS{100};
  */
 class TxOrphanage {
 public:
+    using Usage = int64_t;
+    using Count = unsigned int;
+
     /** Allows providing orphan information externally */
     struct OrphanTxBase {
         CTransactionRef tx;
@@ -38,7 +41,7 @@ public:
         std::set<NodeId> announcers;
 
         /** Get the weight of this transaction, an approximation of its memory usage. */
-        unsigned int GetUsage() const {
+        TxOrphanage::Usage GetUsage() const {
             return GetTransactionWeight(*tx);
         }
     };
@@ -99,12 +102,12 @@ public:
 
     /** Get the total usage (weight) of all orphans. If an orphan has multiple announcers, its usage is
      * only counted once within this total. */
-    virtual int64_t TotalOrphanUsage() const = 0;
+    virtual Usage TotalOrphanUsage() const = 0;
 
     /** Total usage (weight) of orphans for which this peer is an announcer. If an orphan has multiple
      * announcers, its weight will be accounted for in each PeerOrphanInfo, so the total of all
-     * peers' UsageByPeer() may be larger than TotalOrphanBytes(). */
-    virtual int64_t UsageByPeer(NodeId peer) const = 0;
+     * peers' UsageByPeer() may be larger than TotalOrphanUsage(). */
+    virtual Usage UsageByPeer(NodeId peer) const = 0;
 
     /** Check consistency between PeerOrphanInfo and m_orphans. Recalculate counters and ensure they
      * match what is cached. */

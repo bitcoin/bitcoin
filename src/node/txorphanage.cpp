@@ -22,11 +22,11 @@ private:
     };
 
     /** Total usage (weight) of all entries in m_orphans. */
-    int64_t m_total_orphan_usage{0};
+    TxOrphanage::Usage m_total_orphan_usage{0};
 
     /** Total number of <peer, tx> pairs. Can be larger than m_orphans.size() because multiple peers
      * may have announced the same orphan. */
-    unsigned int m_total_announcements{0};
+    TxOrphanage::Count m_total_announcements{0};
 
     /** Map from wtxid to orphan transaction record. Limited by
      *  DEFAULT_MAX_ORPHAN_TRANSACTIONS */
@@ -44,7 +44,7 @@ private:
          * PeerOrphanInfo, so the total of all peers' m_total_usage may be larger than
          * m_total_orphan_size. If a peer is removed as an announcer, even if the orphan still
          * remains in the orphanage, this number will be decremented. */
-        int64_t m_total_usage{0};
+        TxOrphanage::Usage m_total_usage{0};
     };
     std::map<NodeId, PeerOrphanInfo> m_peer_orphanage_info;
 
@@ -85,8 +85,8 @@ public:
     std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const override;
     size_t Size() const override { return m_orphans.size(); }
     std::vector<OrphanTxBase> GetOrphanTransactions() const override;
-    int64_t TotalOrphanUsage() const override { return m_total_orphan_usage; }
-    int64_t UsageByPeer(NodeId peer) const override;
+    TxOrphanage::Usage TotalOrphanUsage() const override { return m_total_orphan_usage; }
+    TxOrphanage::Usage UsageByPeer(NodeId peer) const override;
     void SanityCheck() const override;
 };
 
@@ -401,7 +401,7 @@ std::vector<TxOrphanage::OrphanTxBase> TxOrphanageImpl::GetOrphanTransactions() 
     return ret;
 }
 
-int64_t TxOrphanageImpl::UsageByPeer(NodeId peer) const
+TxOrphanage::Usage TxOrphanageImpl::UsageByPeer(NodeId peer) const
 {
     auto peer_it = m_peer_orphanage_info.find(peer);
     return peer_it == m_peer_orphanage_info.end() ? 0 : peer_it->second.m_total_usage;
@@ -410,12 +410,12 @@ int64_t TxOrphanageImpl::UsageByPeer(NodeId peer) const
 void TxOrphanageImpl::SanityCheck() const
 {
     // Check that cached m_total_announcements is correct
-    unsigned int counted_total_announcements{0};
+    TxOrphanage::Count counted_total_announcements{0};
     // Check that m_total_orphan_usage is correct
-    int64_t counted_total_usage{0};
+    TxOrphanage::Usage counted_total_usage{0};
 
     // Check that cached PeerOrphanInfo::m_total_size is correct
-    std::map<NodeId, int64_t> counted_size_per_peer;
+    std::map<NodeId, TxOrphanage::Usage> counted_size_per_peer;
 
     for (const auto& [wtxid, orphan] : m_orphans) {
         counted_total_announcements += orphan.announcers.size();
