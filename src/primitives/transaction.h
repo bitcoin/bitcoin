@@ -423,20 +423,4 @@ struct CMutableTransaction
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 
-/** A generic txid reference (txid or wtxid). */
-class GenTxid
-{
-    bool m_is_wtxid;
-    uint256 m_hash;
-    GenTxid(bool is_wtxid, const uint256& hash) : m_is_wtxid(is_wtxid), m_hash(hash) {}
-
-public:
-    static GenTxid Txid(const uint256& hash) { return GenTxid{false, hash}; }
-    static GenTxid Wtxid(const uint256& hash) { return GenTxid{true, hash}; }
-    bool IsWtxid() const { return m_is_wtxid; }
-    const uint256& GetHash() const LIFETIMEBOUND { return m_hash; }
-    friend bool operator==(const GenTxid& a, const GenTxid& b) { return a.m_is_wtxid == b.m_is_wtxid && a.m_hash == b.m_hash; }
-    friend bool operator<(const GenTxid& a, const GenTxid& b) { return std::tie(a.m_is_wtxid, a.m_hash) < std::tie(b.m_is_wtxid, b.m_hash); }
-};
-
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H

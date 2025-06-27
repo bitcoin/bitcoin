@@ -121,5 +121,9 @@ std::vector<std::string> serviceFlagsToStr(uint64_t flags)
 GenTxid ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
-    return inv.IsMsgWtx() ? GenTxid::Wtxid(inv.hash) : GenTxid::Txid(inv.hash);
+    if (inv.IsMsgWtx()) {
+        return Wtxid::FromUint256(inv.hash);
+    } else {
+        return Txid::FromUint256(inv.hash);
+    }
 }

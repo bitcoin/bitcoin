@@ -454,12 +454,12 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     AddToMempool(pool, entry.Fee(5000LL).FromTx(tx2));
 
     pool.TrimToSize(pool.DynamicMemoryUsage()); // should do nothing
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx1.GetHash())));
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx2.GetHash())));
+    BOOST_CHECK(pool.exists(tx1.GetHash()));
+    BOOST_CHECK(pool.exists(tx2.GetHash()));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // should remove the lower-feerate transaction
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx1.GetHash())));
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx2.GetHash())));
+    BOOST_CHECK(pool.exists(tx1.GetHash()));
+    BOOST_CHECK(!pool.exists(tx2.GetHash()));
 
     AddToMempool(pool, entry.FromTx(tx2));
     CMutableTransaction tx3 = CMutableTransaction();
@@ -472,14 +472,14 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     AddToMempool(pool, entry.Fee(20000LL).FromTx(tx3));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // tx3 should pay for tx2 (CPFP)
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx1.GetHash())));
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx2.GetHash())));
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx3.GetHash())));
+    BOOST_CHECK(!pool.exists(tx1.GetHash()));
+    BOOST_CHECK(pool.exists(tx2.GetHash()));
+    BOOST_CHECK(pool.exists(tx3.GetHash()));
 
     pool.TrimToSize(GetVirtualTransactionSize(CTransaction(tx1))); // mempool is limited to tx1's size in memory usage, so nothing fits
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx1.GetHash())));
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx2.GetHash())));
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx3.GetHash())));
+    BOOST_CHECK(!pool.exists(tx1.GetHash()));
+    BOOST_CHECK(!pool.exists(tx2.GetHash()));
+    BOOST_CHECK(!pool.exists(tx3.GetHash()));
 
     CFeeRate maxFeeRateRemoved(25000, GetVirtualTransactionSize(CTransaction(tx3)) + GetVirtualTransactionSize(CTransaction(tx2)));
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + 1000);
@@ -539,19 +539,19 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
 
     // we only require this to remove, at max, 2 txn, because it's not clear what we're really optimizing for aside from that
     pool.TrimToSize(pool.DynamicMemoryUsage() - 1);
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx4.GetHash())));
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx6.GetHash())));
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx7.GetHash())));
+    BOOST_CHECK(pool.exists(tx4.GetHash()));
+    BOOST_CHECK(pool.exists(tx6.GetHash()));
+    BOOST_CHECK(!pool.exists(tx7.GetHash()));
 
-    if (!pool.exists(GenTxid::Txid(tx5.GetHash())))
+    if (!pool.exists(tx5.GetHash()))
         AddToMempool(pool, entry.Fee(1000LL).FromTx(tx5));
     AddToMempool(pool, entry.Fee(9000LL).FromTx(tx7));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() / 2); // should maximize mempool size by only removing 5/7
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx4.GetHash())));
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx5.GetHash())));
-    BOOST_CHECK(pool.exists(GenTxid::Txid(tx6.GetHash())));
-    BOOST_CHECK(!pool.exists(GenTxid::Txid(tx7.GetHash())));
+    BOOST_CHECK(pool.exists(tx4.GetHash()));
+    BOOST_CHECK(!pool.exists(tx5.GetHash()));
+    BOOST_CHECK(pool.exists(tx6.GetHash()));
+    BOOST_CHECK(!pool.exists(tx7.GetHash()));
 
     AddToMempool(pool, entry.Fee(1000LL).FromTx(tx5));
     AddToMempool(pool, entry.Fee(9000LL).FromTx(tx7));
