@@ -9,6 +9,7 @@
 #include <evo/netinfo.h>
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
+#include <evo/smldiff.h>
 #include <llmq/commitment.h>
 
 #include <univalue.h>

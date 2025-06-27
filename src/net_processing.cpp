@@ -61,7 +61,7 @@
 
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
-#include <evo/simplifiedmns.h>
+#include <evo/smldiff.h>
 #include <instantsend/lock.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>

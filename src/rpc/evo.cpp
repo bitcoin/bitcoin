@@ -12,7 +12,7 @@
 #include <evo/deterministicmns.h>
 #include <evo/dmn_types.h>
 #include <evo/providertx.h>
-#include <evo/simplifiedmns.h>
+#include <evo/smldiff.h>
 #include <evo/specialtx.h>
 #include <evo/specialtxman.h>
 #include <index/txindex.h>
