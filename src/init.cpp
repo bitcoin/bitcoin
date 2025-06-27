@@ -2115,41 +2115,62 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
 bool StartIndexBackgroundSync(NodeContext& node)
 {
-    // Find the oldest block among all indexes.
-    // This block is used to verify that we have the required blocks' data stored on disk,
-    // starting from that point up to the current tip.
-    // indexes_start_block='nullptr' means "start from height 0".
-    std::optional<const CBlockIndex*> indexes_start_block;
-    std::string older_index_name;
     ChainstateManager& chainman = *Assert(node.chainman);
     const Chainstate& chainstate = WITH_LOCK(::cs_main, return chainman.GetChainstateForIndexing());
     const CChain& index_chain = chainstate.m_chain;
+    const int current_height = WITH_LOCK(::cs_main, return index_chain.Height());
 
-    for (auto index : node.indexes) {
-        const IndexSummary& summary = index->GetSummary();
-        if (summary.synced) continue;
+    // Skip checking data availability if we have not synced any blocks yet
+    if (current_height > 0) {
+        // Check if we have the required data for the indexes available from
+        // their respective sync starting point
+        std::optional<const CBlockIndex*> block_start;
+        std::string block_start_name;
+        std::optional<const CBlockIndex*> undo_start;
+        std::string undo_start_name;
 
-        // Get the last common block between the index best block and the active chain
-        LOCK(::cs_main);
-        const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(summary.best_block_hash);
-        if (!index_chain.Contains(pindex)) {
-            pindex = index_chain.FindFork(pindex);
+        for (auto& index : node.indexes) {
+            const IndexSummary& summary = index->GetSummary();
+            if (summary.synced) continue;
+
+            // Get the last common block between the index best block and the active chain
+            const CBlockIndex* pindex = nullptr;
+            {
+                LOCK(::cs_main);
+                pindex = chainman.m_blockman.LookupBlockIndex(summary.best_block_hash);
+                if (!index_chain.Contains(pindex)) {
+                    pindex = index_chain.FindFork(pindex);
+                }
+            }
+            if (!pindex) {
+                pindex = index_chain.Genesis();
+            }
+
+            if (index->CustomOptions().connect_undo_data) {
+                if (undo_start && pindex->nHeight >= undo_start.value()->nHeight) continue;
+                undo_start = pindex;
+                undo_start_name = summary.name;
+            } else {
+                if (block_start && pindex->nHeight >= block_start.value()->nHeight) continue;
+                block_start = pindex;
+                block_start_name = summary.name;
+            }
+        };
+
+        // Verify all blocks needed to sync to current tip are present including undo data.
+        if (undo_start) {
+            LOCK(::cs_main);
+            if (!chainman.m_blockman.CheckBlockDataAvailability(*index_chain.Tip(), *Assert(undo_start.value()), BlockStatus{BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO})) {
+                return InitError(Untranslated(strprintf("%s best block of the index goes beyond pruned data (including undo data). Please disable the index or reindex (which will download the whole blockchain again)", undo_start_name)));
+            }
         }
 
-        if (!indexes_start_block || !pindex || pindex->nHeight < indexes_start_block.value()->nHeight) {
-            indexes_start_block = pindex;
-            older_index_name = summary.name;
-            if (!pindex) break; // Starting from genesis so no need to look for earlier block.
-        }
-    };
-
-    // Verify all blocks needed to sync to current tip are present.
-    if (indexes_start_block) {
-        LOCK(::cs_main);
-        const CBlockIndex* start_block = *indexes_start_block;
-        if (!start_block) start_block = chainman.ActiveChain().Genesis();
-        if (!chainman.m_blockman.CheckBlockDataAvailability(*index_chain.Tip(), *Assert(start_block))) {
-            return InitError(Untranslated(strprintf("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)", older_index_name)));
+        // Verify all blocks needed to sync to current tip are present unless we already checked all of them above.
+        if (block_start && !(undo_start && undo_start.value()->nHeight <= block_start.value()->nHeight)) {
+            LOCK(::cs_main);
+            if (!chainman.m_blockman.CheckBlockDataAvailability(*index_chain.Tip(), *Assert(block_start.value()), BlockStatus{BLOCK_HAVE_DATA})) {
+                return InitError(Untranslated(strprintf("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)", block_start_name)));
+            }
         }
     }
 
