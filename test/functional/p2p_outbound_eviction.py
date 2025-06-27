@@ -235,7 +235,7 @@ class P2POutEvict(BitcoinTestFramework):
         cur_mock_time += (CHAIN_SYNC_TIMEOUT + 1)
         node.setmocktime(cur_mock_time)
         peer.sync_with_ping()
-        peer.wait_for_getheaders(block_hash=tip_header.hash)
+        peer.wait_for_getheaders(block_hash=tip_header.rehash())
         cur_mock_time += (HEADERS_RESPONSE_TIME + 1)
         node.setmocktime(cur_mock_time)
         self.log.info("Test that the peer gets evicted")
