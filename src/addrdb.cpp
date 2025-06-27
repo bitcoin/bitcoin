@@ -24,6 +24,7 @@
 #include <univalue.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/syserror.h>
 #include <util/translation.h>
 
 namespace {
@@ -61,7 +62,6 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     AutoFile fileout{file};
     if (fileout.IsNull()) {
-        fileout.fclose();
         remove(pathTmp);
         LogError("%s: Failed to open file %s\n", __func__, fs::PathToString(pathTmp));
         return false;
@@ -69,17 +69,22 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
 
     // Serialize
     if (!SerializeDB(fileout, data)) {
-        fileout.fclose();
+        (void)fileout.fclose();
         remove(pathTmp);
         return false;
     }
     if (!fileout.Commit()) {
-        fileout.fclose();
+        (void)fileout.fclose();
         remove(pathTmp);
         LogError("%s: Failed to flush file %s\n", __func__, fs::PathToString(pathTmp));
         return false;
     }
-    fileout.fclose();
+    if (fileout.fclose() != 0) {
+        const int errno_save{errno};
+        remove(pathTmp);
+        LogError("Failed to close file %s after commit: %s", fs::PathToString(pathTmp), SysErrorString(errno_save));
+        return false;
+    }
 
     // replace existing file, if any, with new file
     if (!RenameOver(pathTmp, path)) {
