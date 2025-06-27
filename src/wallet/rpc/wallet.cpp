@@ -5,6 +5,7 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <codex32.h>
 #include <core_io.h>
 #include <key_io.h>
 #include <rpc/server.h>
@@ -941,6 +942,122 @@ static RPCHelpMan createwalletdescriptor()
     };
 }
 
+RPCHelpMan addhdkey()
+{
+    return RPCHelpMan{
+        "addhdkey",
+        "Add a BIP 32 HD key to the wallet that can be used with 'createwalletdescriptor'.\n"
+        "If no argument is provided, a randomly generated one will be added.",
+        {
+            {"hdkey", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The BIP 32 extended private key to add."},
+            {"codex32", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A codex32 (BIP 93) encoded seed, or list of codex32-encoded shares",
+             {
+                 {"share 1", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
+             },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "xpub", "The xpub of the HD key that was added to the wallet"}
+            },
+        },
+        RPCExamples{
+            HelpExampleCli("addhdkey", "xprv") + HelpExampleRpc("addhdkey", "xprv")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return UniValue::VNULL;
+
+            if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "addhdkey is not available for wallets without private keys");
+            }
+
+            EnsureWalletIsUnlocked(*wallet);
+
+            CExtKey hdkey;
+            if (request.params[0].isNull() && request.params[1].isNull()) {
+                CKey seed_key;
+                seed_key.MakeNewKey(true);
+                hdkey.SetSeed(seed_key);
+            } else if (!request.params[0].isNull() && !request.params[1].isNull()) {
+                   throw JSONRPCError(RPC_WALLET_ERROR, "addhkey takes at most one key type");
+            } else if (!request.params[0].isNull()) {
+                hdkey = DecodeExtKey(request.params[0].get_str());
+                if (!hdkey.key.IsValid()) {
+                    // Check if the user gave us an xpub and give a more descriptive error if so
+                    CExtPubKey xpub = DecodeExtPubKey(request.params[0].get_str());
+                    if (xpub.pubkey.IsValid()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Extended public key (xpub) provided, but extended private key (xprv) is required");
+                    } else {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not parse HD key");
+                    }
+                }
+            } else {
+                const auto& req_shares = request.params[1].get_array();
+                std::vector<codex32::Result> shares;
+                shares.reserve(req_shares.size());
+                for (size_t j = 0; j < req_shares.size(); ++j) {
+                    if (!req_shares[j].isStr()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "codex32 shares must be strings");
+                    }
+                    codex32::Result key_res{req_shares[j].get_str()};
+                    if (!key_res.IsValid()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid codex32 share: " + codex32::ErrorString(key_res.error()));
+                    }
+                    shares.push_back(key_res);
+                }
+
+                // Recover seed
+                std::vector<unsigned char> seed;
+                if (shares.size() == 1) {
+                    if (shares[0].GetShareIndex() != 's') {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid codex32: single share must be the S share");
+                    }
+                    seed = shares[0].GetPayload();
+                } else {
+                    codex32::Result s{shares, 's'};
+                    if (!s.IsValid()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Failed to derive codex32 seed: " + codex32::ErrorString(s.error()));
+                    }
+                    seed = s.GetPayload();
+                }
+
+                hdkey.SetSeed(std::span{(std::byte*) seed.data(), seed.size()});
+            }
+
+            LOCK(wallet->cs_wallet);
+            std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
+            FlatSigningProvider keys;
+            std::string error;
+            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, error, false);
+            CHECK_NONFATAL(!descs.empty());
+            WalletDescriptor w_desc(std::move(descs.at(0)), GetTime(), 0, 0, 0);
+            if (wallet->GetDescriptorScriptPubKeyMan(w_desc) != nullptr) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "HD key already exists");
+            }
+
+            auto spkm = wallet->AddWalletDescriptor(w_desc, keys, /*label=*/"", /*internal=*/false);
+            if (!spkm) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Unable to add HD key");
+            }
+
+            UniValue response(UniValue::VOBJ);
+            const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(*spkm);
+            LOCK(desc_spkm->cs_desc_man);
+            std::set<CPubKey> pubkeys;
+            std::set<CExtPubKey> extpubs;
+            desc_spkm->GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
+            CHECK_NONFATAL(pubkeys.size() == 0);
+            CHECK_NONFATAL(extpubs.size() == 1);
+            response.pushKV("xpub", EncodeExtPubKey(*extpubs.begin()));
+
+            return response;
+        },
+    };
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -1009,6 +1126,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"rawtransactions", &fundrawtransaction},
         {"wallet", &abandontransaction},
         {"wallet", &abortrescan},
+        {"wallet", &addhdkey},
         {"wallet", &backupwallet},
         {"wallet", &bumpfee},
         {"wallet", &psbtbumpfee},
