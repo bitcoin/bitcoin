@@ -24,6 +24,8 @@ Download and install [Git for Windows](https://git-scm.com/downloads/win). Once 
 ### 3. Clone Bitcoin Repository
 
 Clone the Bitcoin Core repository to a directory. All build scripts and commands will run from this directory.
+
+> **Hint:** Avoid using spaces in the path when cloning the repository — they have been known to cause build issues.
 ```
 git clone https://github.com/bitcoin/bitcoin.git
 ```
