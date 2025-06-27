@@ -65,7 +65,6 @@ class MiningTest(BitcoinTestFramework):
             ["-fastprune", "-prune=1"]
         ]
         self.setup_clean_chain = True
-        self.supports_cli = False
 
     def mine_chain(self):
         self.log.info('Create some old blocks')

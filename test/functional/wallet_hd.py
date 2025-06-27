@@ -22,8 +22,6 @@ class WalletHDTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
 
-        self.supports_cli = False
-
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 

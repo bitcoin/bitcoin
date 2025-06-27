@@ -327,7 +327,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         for node in descriptors_nodes:
             self.log.info(f"- {node.version}")
             wallet_name = f"up_{node.version}"
-            node.rpc.createwallet(wallet_name=wallet_name, descriptors=True)
+            node.createwallet(wallet_name=wallet_name, descriptors=True)
             wallet_prev = node.get_wallet_rpc(wallet_name)
             address = wallet_prev.getnewaddress('', "bech32")
             addr_info = wallet_prev.getaddressinfo(address)
@@ -395,9 +395,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             self.log.info(f"- {node.version}")
             wallet_name = f"legacy_up_{node.version}"
             if self.major_version_at_least(node, 21):
-                node.rpc.createwallet(wallet_name=wallet_name, descriptors=False)
+                node.createwallet(wallet_name=wallet_name, descriptors=False)
             else:
-                node.rpc.createwallet(wallet_name=wallet_name)
+                node.createwallet(wallet_name=wallet_name)
             wallet_prev = node.get_wallet_rpc(wallet_name)
             address = wallet_prev.getnewaddress('', "bech32")
             addr_info = wallet_prev.getaddressinfo(address)
