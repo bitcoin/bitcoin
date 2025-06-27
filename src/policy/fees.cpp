@@ -560,18 +560,18 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "rb")};
 
     if (est_file.IsNull()) {
-        LogPrintf("%s is not found. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
+        LogInfo("%s is not found. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
         return;
     }
 
     std::chrono::hours file_age = GetFeeEstimatorFileAge();
     if (file_age > MAX_FILE_AGE && !read_stale_estimates) {
-        LogPrintf("Fee estimation file %s too old (age=%lld > %lld hours) and will not be used to avoid serving stale estimates.\n", fs::PathToString(m_estimation_filepath), Ticks<std::chrono::hours>(file_age), Ticks<std::chrono::hours>(MAX_FILE_AGE));
+        LogInfo("Fee estimation file %s too old (age=%lld > %lld hours) and will not be used to avoid serving stale estimates.\n", fs::PathToString(m_estimation_filepath), Ticks<std::chrono::hours>(file_age), Ticks<std::chrono::hours>(MAX_FILE_AGE));
         return;
     }
 
     if (!Read(est_file)) {
-        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
+        LogInfo("Failed to read fee estimates from %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
     }
 }
 
@@ -960,11 +960,18 @@ void CBlockPolicyEstimator::Flush() {
 
 void CBlockPolicyEstimator::FlushFeeEstimates()
 {
+    {
+        LOCK(m_cs_fee_estimator);
+        // We should only flush the fee estimates if usable estimates are available.
+        // This prevents redundant flushes e.g during IBD.
+        if (!MaxUsableEstimate()) return;
+    }
+
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
+        LogDebug(BCLog::ESTIMATEFEE, "Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
     } else {
-        LogPrintf("Flushed fee estimates to %s.\n", fs::PathToString(m_estimation_filepath.filename()));
+        LogDebug(BCLog::ESTIMATEFEE, "Flushed fee estimates to %s.\n", fs::PathToString(m_estimation_filepath));
     }
 }
 
