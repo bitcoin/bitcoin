@@ -311,6 +311,74 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "addnode", 2, "v2transport" },
     { "addconnection", 2, "v2transport" },
 };
+
+class CRPCStringParam {
+public:
+    std::string methodName; //!< method name this parameter belongs to
+    int paramIdx;           //!< 0-based idx of param to convert
+    std::string paramName;  //!< parameter name
+    bool isOptional;        //!< true if this parameter is optional
+};
+
+/**
+ * Specify a (method, idx, name, optional) here if the argument is a string RPC
+ * parameter that should be recognized as a known parameter name but NOT
+ * converted from JSON. This is used for string parameters that might
+ * contain '=' character which could interfere with named parameter parsing.
+ * The isOptional flag indicates whether the parameter is optional for the
+ * given RPC method.
+ *
+ * @note Parameter indexes start from 0.
+ * @note If you include an RPC method which has optional parameter then you need to
+ * include all other optional string params that correspond to the same method for
+ * consistency and valid lookup from the table.
+ */
+static const CRPCStringParam vRPCStringParams[] =
+{
+    { "finalizepsbt", 0, "psbt", false},
+    { "decodepsbt", 0, "psbt", false},
+    { "analyzepsbt", 0, "psbt", false},
+    { "walletprocesspsbt", 0, "psbt", false},
+    { "descriptorprocesspsbt", 0, "psbt", false},
+    { "utxoupdatepsbt", 0, "psbt", false},
+    { "verifymessage", 1, "signature", false},
+    { "verifymessage", 2, "message", false},
+    { "getnewaddress", 0, "label", true},
+    { "getnewaddress", 1, "address_type", true},
+    { "backupwallet", 0, "destination", false},
+    { "createwallet", 0, "wallet_name", false},
+    { "createwallet", 3, "passphrase", true},
+    { "dumptxoutset", 0, "path", false},
+    { "echoipc", 0, "arg", false},
+    { "encryptwallet", 0, "passphrase", false},
+    { "getaddressesbylabel", 0, "label", false},
+    { "getreceivedbylabel", 0, "label", false},
+    { "importmempool", 0, "filepath", false},
+    { "listsinceblock", 5, "label", true},
+    { "listsinceblock", 0, "blockhash", true},
+    { "listtransactions", 0, "label", true},
+    { "loadtxoutset", 0, "path", false},
+    { "loadwallet", 0, "filename", false},
+    { "migratewallet", 0, "wallet_name", true},
+    { "migratewallet", 1, "passphrase", true},
+    { "restorewallet", 0, "wallet_name", false},
+    { "restorewallet", 1, "backup_file", false},
+    { "sendmany", 3, "comment", true},
+    { "sendmany", 0, "dummy", false},
+    { "sendmany", 7, "estimate_mode", true},
+    { "sendtoaddress", 2, "comment", true},
+    { "sendtoaddress", 3, "comment_to", true},
+    { "sendtoaddress", 0, "address", false},
+    { "sendtoaddress", 7, "estimate_mode", true},
+    { "setlabel", 1, "label", false},
+    { "signmessage", 1, "message", false},
+    { "signmessagewithprivkey", 1, "message", false},
+    { "unloadwallet", 0, "wallet_name", true},
+    { "walletpassphrase", 0, "passphrase", false},
+    { "walletpassphrasechange", 0, "oldpassphrase", false},
+    { "walletpassphrasechange", 1, "newpassphrase", false},
+
+};
 // clang-format on
 
 /** Parse string to UniValue or throw runtime_error if string contains invalid JSON */
@@ -326,6 +394,10 @@ class CRPCConvertTable
 private:
     std::set<std::pair<std::string, int>> members;
     std::set<std::pair<std::string, std::string>> membersByName;
+    std::set<std::pair<std::string, std::string>> stringParams;
+    std::set<std::pair<std::string, int>> stringParamsByIndex;
+    std::set<std::tuple<std::string, std::string, int>> stringParamsByAll;
+    std::set<std::string> optionalStringParams;
 
 public:
     CRPCConvertTable();
@@ -341,6 +413,36 @@ public:
     {
         return membersByName.count({method, param_name}) > 0 ? Parse(arg_value) : arg_value;
     }
+
+    /** Return true if parameter is in the string parameters table (vRPCStringParams) */
+    bool IsStringParam(const std::string& method, const std::string& param) const
+    {
+        return stringParams.count({method, param}) > 0;
+    }
+
+    /** Return true if the RPC method has any entries in the vRPCStringParams table at given index */
+    bool HasKnownStringParams(const std::string& method, int param_idx) const
+    {
+        return stringParamsByIndex.count({method, param_idx}) > 0;
+    }
+
+    /** Return true if the given method and param name is present in the conversion table (vRPCConvertParams) */
+    bool IsConvertParamByName(const std::string& method, const std::string& paramName) const
+    {
+        return membersByName.count({method, paramName}) > 0;
+    }
+
+    /** Return true if the RPC method has any entries in the vRPCStringParams table and has known param name at a given index*/
+    bool HasStringParamForMethodAndIndex(const std::string& method, const std::string& param_name, int param_idx) const
+    {
+        return stringParamsByAll.count({method, param_name, param_idx}) > 0;
+    }
+
+    /** Return true if method is an optional string parameter */
+    bool IsOptionalStringParam(const std::string& method) const
+    {
+        return optionalStringParams.count(method) > 0;
+    }
 };
 
 CRPCConvertTable::CRPCConvertTable()
@@ -348,6 +450,15 @@ CRPCConvertTable::CRPCConvertTable()
     for (const auto& cp : vRPCConvertParams) {
         members.emplace(cp.methodName, cp.paramIdx);
         membersByName.emplace(cp.methodName, cp.paramName);
+    }
+
+    for (const auto& cp : vRPCStringParams) {
+        stringParams.emplace(cp.methodName, cp.paramName);
+        stringParamsByIndex.emplace(cp.methodName, cp.paramIdx);
+        stringParamsByAll.emplace(cp.methodName, cp.paramName, cp.paramIdx);
+        if (cp.isOptional) {
+            optionalStringParams.emplace(cp.methodName);
+        }
     }
 }
 
@@ -380,6 +491,34 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         std::string name{s.substr(0, pos)};
         std::string_view value{s.substr(pos+1)};
 
+        // Handle RPC methods that have optional string parameters; for these, the parameter index and name mapping may not be fixed
+        if (rpcCvtTable.IsOptionalStringParam(strMethod)) {
+            // If the parameter name and index match an entry in vRPCStringParams, or the parameter is a known string parameter for this method, treat it as a named parameter
+            if (rpcCvtTable.HasStringParamForMethodAndIndex(strMethod, name, positional_args.size()) || rpcCvtTable.IsStringParam(strMethod, name)) {
+                params.pushKV(name, rpcCvtTable.ArgToUniValue(value, strMethod, name));
+            }
+            // If the parameter is a known conversion parameter described in the vRPCConvertParams table by name, treat it as a named parameter
+            else if(rpcCvtTable.IsConvertParamByName(strMethod, name)) {
+                params.pushKV(name, rpcCvtTable.ArgToUniValue(value, strMethod, name));
+            }
+            // If the parameter is not recognized as a named parameter, treat it as a positional
+            else {
+                positional_args.push_back(rpcCvtTable.ArgToUniValue(s, strMethod, name));
+            }
+            continue;
+        }
+
+        if (rpcCvtTable.HasKnownStringParams(strMethod, positional_args.size())) {
+            // If this method has known string parameters, check if this specific parameter is one of them
+            if (rpcCvtTable.IsStringParam(strMethod, name)) {
+                // Pass only the value as positional
+                positional_args.push_back(rpcCvtTable.ArgToUniValue(value, strMethod, positional_args.size()));
+            } else {
+                // If parameter is unknown for a given known string method, then treat the whole string as positional
+                positional_args.push_back(rpcCvtTable.ArgToUniValue(s, strMethod, positional_args.size()));
+            }
+            continue;
+        }
         // Intentionally overwrite earlier named values with later ones as a
         // convenience for scripts and command line users that want to merge
         // options.
