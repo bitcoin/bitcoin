@@ -390,7 +390,6 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
     bool allow_K = (type_needed == ""_mst) || (type_needed << "K"_mst);
     bool allow_V = (type_needed == ""_mst) || (type_needed << "V"_mst);
     bool allow_W = (type_needed == ""_mst) || (type_needed << "W"_mst);
-    static constexpr auto B{"B"_mst}, K{"K"_mst}, V{"V"_mst}, W{"W"_mst};
 
     switch (provider.ConsumeIntegral<uint8_t>()) {
         case 0:
@@ -440,22 +439,22 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
         }
         case 11:
             if (!(allow_B || allow_K || allow_V)) return {};
-            return {{{B, type_needed, type_needed}, Fragment::ANDOR}};
+            return {{{"B"_mst, type_needed, type_needed}, Fragment::ANDOR}};
         case 12:
             if (!(allow_B || allow_K || allow_V)) return {};
-            return {{{V, type_needed}, Fragment::AND_V}};
+            return {{{"V"_mst, type_needed}, Fragment::AND_V}};
         case 13:
             if (!allow_B) return {};
-            return {{{B, W}, Fragment::AND_B}};
+            return {{{"B"_mst, "W"_mst}, Fragment::AND_B}};
         case 15:
             if (!allow_B) return {};
-            return {{{B, W}, Fragment::OR_B}};
+            return {{{"B"_mst, "W"_mst}, Fragment::OR_B}};
         case 16:
             if (!allow_V) return {};
-            return {{{B, V}, Fragment::OR_C}};
+            return {{{"B"_mst, "V"_mst}, Fragment::OR_C}};
         case 17:
             if (!allow_B) return {};
-            return {{{B, B}, Fragment::OR_D}};
+            return {{{"B"_mst, "B"_mst}, Fragment::OR_D}};
         case 18:
             if (!(allow_B || allow_K || allow_V)) return {};
             return {{{type_needed, type_needed}, Fragment::OR_I}};
@@ -472,25 +471,25 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
         }
         case 20:
             if (!allow_W) return {};
-            return {{{B}, Fragment::WRAP_A}};
+            return {{{"B"_mst}, Fragment::WRAP_A}};
         case 21:
             if (!allow_W) return {};
-            return {{{B}, Fragment::WRAP_S}};
+            return {{{"B"_mst}, Fragment::WRAP_S}};
         case 22:
             if (!allow_B) return {};
-            return {{{K}, Fragment::WRAP_C}};
+            return {{{"K"_mst}, Fragment::WRAP_C}};
         case 23:
             if (!allow_B) return {};
-            return {{{V}, Fragment::WRAP_D}};
+            return {{{"V"_mst}, Fragment::WRAP_D}};
         case 24:
             if (!allow_V) return {};
-            return {{{B}, Fragment::WRAP_V}};
+            return {{{"B"_mst}, Fragment::WRAP_V}};
         case 25:
             if (!allow_B) return {};
-            return {{{B}, Fragment::WRAP_J}};
+            return {{{"B"_mst}, Fragment::WRAP_J}};
         case 26:
             if (!allow_B) return {};
-            return {{{B}, Fragment::WRAP_N}};
+            return {{{"B"_mst}, Fragment::WRAP_N}};
         case 27: {
             if (!allow_B || !IsTapscript(script_ctx)) return {};
             const auto k = provider.ConsumeIntegral<uint16_t>();
@@ -528,23 +527,20 @@ struct SmartInfo
     {
         /* Construct a set of interesting type requirements to reason with (sections of BKVWzondu). */
         std::vector<Type> types;
-        static constexpr auto B_mst{"B"_mst}, K_mst{"K"_mst}, V_mst{"V"_mst}, W_mst{"W"_mst};
-        static constexpr auto d_mst{"d"_mst}, n_mst{"n"_mst}, o_mst{"o"_mst}, u_mst{"u"_mst}, z_mst{"z"_mst};
-        static constexpr auto NONE_mst{""_mst};
         for (int base = 0; base < 4; ++base) { /* select from B,K,V,W */
-            Type type_base = base == 0 ? B_mst : base == 1 ? K_mst : base == 2 ? V_mst : W_mst;
+            Type type_base = base == 0 ? "B"_mst : base == 1 ? "K"_mst : base == 2 ? "V"_mst : "W"_mst;
             for (int zo = 0; zo < 3; ++zo) { /* select from z,o,(none) */
-                Type type_zo = zo == 0 ? z_mst : zo == 1 ? o_mst : NONE_mst;
+                Type type_zo = zo == 0 ? "z"_mst : zo == 1 ? "o"_mst : ""_mst;
                 for (int n = 0; n < 2; ++n) { /* select from (none),n */
                     if (zo == 0 && n == 1) continue; /* z conflicts with n */
                     if (base == 3 && n == 1) continue; /* W conflicts with n */
-                    Type type_n = n == 0 ? NONE_mst : n_mst;
+                    Type type_n = n == 0 ? ""_mst : "n"_mst;
                     for (int d = 0; d < 2; ++d) { /* select from (none),d */
                         if (base == 2 && d == 1) continue; /* V conflicts with d */
-                        Type type_d = d == 0 ? NONE_mst : d_mst;
+                        Type type_d = d == 0 ? ""_mst : "d"_mst;
                         for (int u = 0; u < 2; ++u) { /* select from (none),u */
                             if (base == 2 && u == 1) continue; /* V conflicts with u */
-                            Type type_u = u == 0 ? NONE_mst : u_mst;
+                            Type type_u = u == 0 ? ""_mst : "u"_mst;
                             Type type = type_base | type_zo | type_n | type_d | type_u;
                             types.push_back(type);
                         }
@@ -686,7 +682,7 @@ struct SmartInfo
         /* Find which types are useful. The fuzzer logic only cares about constructing
          * B,V,K,W nodes, so any type that isn't needed in any recipe (directly or
          * indirectly) for the construction of those is uninteresting. */
-        std::set<Type> useful_types{B_mst, V_mst, K_mst, W_mst};
+        std::set<Type> useful_types{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
         // Find the transitive closure by adding types until the set of types does not change.
         while (true) {
             size_t set_size = useful_types.size();
