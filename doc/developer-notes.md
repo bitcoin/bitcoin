@@ -67,7 +67,7 @@ Coding Style (C++)
 [src/.clang-format](/src/.clang-format). You can use the provided
 [clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
 tool to clean up patches automatically before submission.
-  - Braces on new lines for classes, functions, methods.
+  - Braces on new lines for classes, structs, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
