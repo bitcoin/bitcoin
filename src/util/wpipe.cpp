@@ -44,6 +44,7 @@ WakeupPipe::~WakeupPipe()
 {
     if (m_valid) {
 #ifdef USE_WAKEUP_PIPE
+        Drain();
         if (m_edge_trig_events && !m_edge_trig_events->UnregisterPipe(m_pipe[0])) {
             LogPrintf("Destroying WakeupPipe instance, EdgeTriggeredEvents::UnregisterPipe() failed for m_pipe[0] = %d\n",
                       m_pipe[0]);
