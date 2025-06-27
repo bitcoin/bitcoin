@@ -5,7 +5,6 @@
 #include <node/mini_miner.h>
 
 #include <boost/multi_index/detail/hash_index_iterator.hpp>
-#include <boost/operators.hpp>
 #include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
