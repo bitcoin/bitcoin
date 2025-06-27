@@ -50,6 +50,8 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     auto& connman = static_cast<ConnmanTestMsg&>(*g_setup->m_node.connman);
+    connman.ResetAddrCache();
+    connman.ResetMaxOutboundCycle();
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
     SetMockTime(1610000000); // any time to successfully reset ibd
     chainman.ResetIbd();
