@@ -164,6 +164,32 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
 }
 
 /**
+ * Check the total number of non-witness sigops across the whole transaction, as per BIP54.
+ */
+static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inputs)
+{
+    Assert(!tx.IsCoinBase());
+
+    unsigned int sigops{0};
+    for (unsigned i{0}; i < tx.vin.size(); ++i) {
+        const auto& prev_txo{inputs.AccessCoin(tx.vin[i].prevout).out};
+
+        // Unlike the existing block wide sigop limit, BIP54 counts sigops when they are actually executed.
+        // This means sigops in the spent scriptpubkey count toward the limit.
+        // `fAccurate` means correctly accounting sigops for CHECKMULTISIGs with 16 pubkeys or less. This
+        // method of accounting was introduced by BIP16, and BIP54 reuses it.
+        sigops += tx.vin[i].scriptSig.GetSigOpCount(/*fAccurate=*/true);
+        sigops += prev_txo.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
+
+        if (sigops > MAX_TX_LEGACY_SIGOPS) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
  * Check transaction inputs.
  *
  * This does three things:
@@ -178,11 +204,17 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
  *    as potential new upgrade hooks.
  *
  * Note that only the non-witness portion of the transaction is checked here.
+ *
+ * We also check the total number of non-witness sigops across the whole transaction, as per BIP54.
  */
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase()) {
         return true; // Coinbases don't use vin normally
+    }
+
+    if (!CheckSigopsBIP54(tx, mapInputs)) {
+        return false;
     }
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
