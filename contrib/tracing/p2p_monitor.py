@@ -179,7 +179,7 @@ def loop(screen, bpf, peers):
     info_panel = panel.new_panel(win)
     info_panel.hide()
 
-    ROWS_AVALIABLE_FOR_LIST = curses.LINES - 5
+    ROWS_AVAILABLE_FOR_LIST = curses.LINES - 5
     scroll = 0
 
     while True:
@@ -191,7 +191,7 @@ def loop(screen, bpf, peers):
             if (ch == curses.KEY_DOWN or ch == ord("j")) and cur_list_pos < len(
                     peers.keys()) -1 and info_panel.hidden():
                 cur_list_pos += 1
-                if cur_list_pos >= ROWS_AVALIABLE_FOR_LIST:
+                if cur_list_pos >= ROWS_AVAILABLE_FOR_LIST:
                     scroll += 1
             if (ch == curses.KEY_UP or ch == ord("k")) and cur_list_pos > 0 and info_panel.hidden():
                 cur_list_pos -= 1
@@ -203,14 +203,14 @@ def loop(screen, bpf, peers):
                 else:
                     info_panel.hide()
             screen.erase()
-            render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_panel)
+            render(screen, peers, cur_list_pos, scroll, ROWS_AVAILABLE_FOR_LIST, info_panel)
             curses.panel.update_panels()
             screen.refresh()
         except KeyboardInterrupt:
             exit()
 
 
-def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_panel):
+def render(screen, peers, cur_list_pos, scroll, ROWS_AVAILABLE_FOR_LIST, info_panel):
     """ renders the list of peers and details panel
 
     This code is unrelated to USDT, BCC and BPF.
@@ -223,7 +223,7 @@ def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_pa
         1, 0, (" Navigate with UP/DOWN or J/K and select a peer with ENTER or SPACE to see individual P2P messages"), curses.A_NORMAL)
     screen.addstr(3, 0,
                   header_format % ("PEER", "OUTBOUND", "INBOUND", "TYPE", "ADDR"), curses.A_BOLD | curses.A_UNDERLINE)
-    peer_list = sorted(peers.keys())[scroll:ROWS_AVALIABLE_FOR_LIST+scroll]
+    peer_list = sorted(peers.keys())[scroll:ROWS_AVAILABLE_FOR_LIST+scroll]
     for i, peer_id in enumerate(peer_list):
         peer = peers[peer_id]
         screen.addstr(i + 4, 0,
