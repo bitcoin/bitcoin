@@ -219,12 +219,7 @@ class LockedPoolManager : public LockedPool
 {
 public:
     /** Return the current instance, or create it once */
-    static LockedPoolManager& Instance()
-    {
-        static std::once_flag init_flag;
-        std::call_once(init_flag, LockedPoolManager::CreateInstance);
-        return *LockedPoolManager::_instance;
-    }
+    static LockedPoolManager& Instance();
 
 private:
     explicit LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator);
