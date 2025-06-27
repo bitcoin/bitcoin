@@ -360,12 +360,12 @@ public:
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {
-        return a.hash == b.hash;
+        return a.GetWitnessHash() == b.GetWitnessHash();
     }
 
     friend bool operator!=(const CTransaction& a, const CTransaction& b)
     {
-        return a.hash != b.hash;
+        return !operator==(a, b);
     }
 
     std::string ToString() const;
