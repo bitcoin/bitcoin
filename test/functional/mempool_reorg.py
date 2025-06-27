@@ -22,6 +22,12 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
+from test_framework.blocktools import (
+    create_empty_fork,
+)
+
+# Number of blocks to create in temporary blockchain branch for reorg testing
+FORK_LENGTH = 10
 
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -32,6 +38,12 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             ],
             []
         ]
+
+    def trigger_reorg(self, fork_blocks, node):
+        """Trigger reorg of the fork blocks."""
+        for block in fork_blocks:
+            node.submitblock(block.serialize().hex())
+        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash)
 
     def test_reorg_relay(self):
         self.log.info("Test that transactions from disconnected blocks are available for relay immediately")
@@ -123,7 +135,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # 1. Direct coinbase spend  :  spend_1
         # 2. Indirect (coinbase spend in chain, child in mempool) : spend_2 and spend_2_1
         # 3. Indirect (coinbase and child both in chain) : spend_3 and spend_3_1
-        # Use invalidateblock to make all of the above coinbase spends invalid (immature coinbase),
+        # Use re-org to make all of the above coinbase spends invalid (immature coinbase),
         # and make sure the mempool code behaves correctly.
         b = [self.nodes[0].getblockhash(n) for n in range(first_block, first_block+4)]
         coinbase_txids = [self.nodes[0].getblock(h)['tx'][0] for h in b]
@@ -160,7 +172,10 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Broadcast and mine spend_3_1")
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])
         self.log.info("Generate a block")
-        last_block = self.generate(self.nodes[0], 1)
+
+        # Prep for fork
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=FORK_LENGTH)
+        self.generate(self.nodes[0], 1)
         # generate() implicitly syncs blocks, so that peer 1 gets the block before timelock_tx
         # Otherwise, peer 1 would put the timelock_tx in m_lazy_recent_rejects
 
@@ -174,12 +189,12 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, timelock_tx_id})
         self.sync_all()
 
-        self.log.info("invalidate the last block")
-        for node in self.nodes:
-            node.invalidateblock(last_block[0])
+        self.trigger_reorg(fork_blocks, self.nodes[0])
+        self.sync_blocks()
+
         self.log.info("The time-locked transaction is now too immature and has been removed from the mempool")
         self.log.info("spend_3_1 has been re-orged out of the chain and is back in the mempool")
-        assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, spend_3_1_id})
+        assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, spend_3_1_id, timelock_tx_id})
 
         self.log.info("Use invalidateblock to re-org back and make all those coinbase spends immature/invalid")
         b = self.nodes[0].getblockhash(first_block + 100)
