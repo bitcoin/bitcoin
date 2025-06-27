@@ -41,7 +41,7 @@ private:
     const size_t m_max_mem_usage;
     std::list<CTransactionRef> queuedTx;
     using TxList = decltype(queuedTx);
-    std::unordered_map<uint256, TxList::iterator, SaltedTxidHasher> iters_by_txid;
+    std::unordered_map<Txid, TxList::iterator, SaltedTxidHasher> iters_by_txid;
 
     /** Trim the earliest-added entries until we are within memory bounds. */
     std::vector<CTransactionRef> LimitMemoryUsage();
