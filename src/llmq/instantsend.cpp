@@ -31,7 +31,12 @@ using node::fImporting;
 using node::fReindex;
 
 // Forward declaration to break dependency over node/transaction.h
-std::pair<CTransactionRef, uint256> GetTransactionBlock(const uint256& hash, const CTxMemPool* const mempool);
+namespace node
+{
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool,
+                               const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
+} // namespace node
+using node::GetTransaction;
 
 namespace llmq
 {
@@ -580,7 +585,8 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
         return false;
     }
 
-    auto [tx, hashBlock] = GetTransactionBlock(outpoint.hash, &mempool);
+    uint256 hashBlock{};
+    const auto tx = GetTransaction(nullptr, &mempool, outpoint.hash, params, hashBlock);
     // this relies on enabled txindex and won't work if we ever try to remove the requirement for txindex for masternodes
     if (!tx) {
         if (printDebug) {
@@ -637,7 +643,9 @@ void CInstantSendManager::HandleNewInputLockRecoveredSig(const CRecoveredSig& re
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    auto [tx, hashBlock] = GetTransactionBlock(txid, &mempool);
+
+    uint256 hashBlock{};
+    const auto tx = GetTransaction(nullptr, &mempool, txid, Params().GetConsensus(), hashBlock);
     if (!tx) {
         return;
     }
@@ -1019,7 +1027,8 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
         return;
     }
 
-    auto [tx, hashBlock] = GetTransactionBlock(islock->txid, &mempool);
+    uint256 hashBlock{};
+    const auto tx = GetTransaction(nullptr, &mempool, islock->txid, Params().GetConsensus(), hashBlock);
     const CBlockIndex* pindexMined{nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     if (tx && !hashBlock.IsNull()) {

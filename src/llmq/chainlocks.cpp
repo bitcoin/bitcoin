@@ -26,7 +26,12 @@
 using node::ReadBlockFromDisk;
 
 // Forward declaration to break dependency over node/transaction.h
-std::pair<CTransactionRef, uint256> GetTransactionBlock(const uint256& hash, const CTxMemPool* const mempool);
+namespace node
+{
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool,
+                               const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
+} // namespace node
+using node::GetTransaction;
 
 static bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
 {
@@ -640,8 +645,8 @@ void CChainLocksHandler::Cleanup()
         }
     }
     for (auto it = txFirstSeenTime.begin(); it != txFirstSeenTime.end(); ) {
-        auto [tx, hashBlock] = GetTransactionBlock(it->first, &mempool);
-        if (!tx) {
+        uint256 hashBlock;
+        if (auto tx = GetTransaction(nullptr, &mempool, it->first, Params().GetConsensus(), hashBlock); !tx) {
             // tx has vanished, probably due to conflicts
             it = txFirstSeenTime.erase(it);
         } else if (!hashBlock.IsNull()) {
