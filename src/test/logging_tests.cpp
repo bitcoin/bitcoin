@@ -65,7 +65,7 @@ struct LogSetup : public BasicTestingSetup {
     ~LogSetup()
     {
         LogInstance().m_file_path = prev_log_path;
-        LogPrintf("Sentinel log to reopen log file\n");
+        LogInfo("Sentinel log to reopen log file\n");
         LogInstance().m_print_to_file = prev_print_to_file;
         LogInstance().m_reopen_file = prev_reopen_file;
         LogInstance().m_log_timestamps = prev_log_timestamps;
@@ -110,7 +110,6 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 {
-    LogPrintf("foo5: %s\n", "bar5");
     LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
     LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
@@ -122,7 +121,6 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
         log_lines.push_back(log);
     }
     std::vector<std::string> expected = {
-        "foo5: bar5",
         "[net] foo7: bar7",
         "[net:info] foo8: bar8",
         "[net:warning] foo9: bar9",
