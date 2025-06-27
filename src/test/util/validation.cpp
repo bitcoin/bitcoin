@@ -9,6 +9,15 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+void TestChainstateManager::DisableNextWrite()
+{
+    struct TestChainstate : public Chainstate {
+        void ResetNextWrite() { m_next_write = NodeClock::time_point::max() - 1s; }
+    };
+    for (auto* cs : GetAll()) {
+        static_cast<TestChainstate*>(cs)->ResetNextWrite();
+    }
+}
 void TestChainstateManager::ResetIbd()
 {
     m_cached_finished_ibd = false;
