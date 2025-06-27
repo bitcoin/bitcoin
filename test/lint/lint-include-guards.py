@@ -83,7 +83,7 @@ def main():
 
         if count != 3:
             print(f'{header_file} seems to be missing the expected '
-                  'include guard:')
+                  'include guard to prevent the double inclusion problem:')
             print(f'  #ifndef {header_id}')
             print(f'  #define {header_id}')
             print('  ...')

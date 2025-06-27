@@ -1,0 +1,21 @@
+Partially revert f23ced2f4ffc170d0a6f40ff4a1bee575e3447cf
+
+Restore compat with python-scikit-build-core 0.9.x
+Can be dropped when using python-scikit-build-core >= 0.10.x
+
+--- a/api/python/backend/setup.py
++++ b/api/python/backend/setup.py
+@@ -101,12 +101,12 @@ def _get_hooked_config(is_editable: bool) -> Optional[dict[str, Union[str, List[
+     config_settings = {
+         "logging.level": "DEBUG",
+         "build-dir": config.build_dir,
+-        "build.targets": config.build.targets,
+         "install.strip": config.strip,
+         "backport.find-python": "0",
+         "wheel.py-api":  config.build.py_api,
+         "cmake.source-dir": SRC_DIR.as_posix(),
+         "cmake.build-type": config.build.build_type,
++        "cmake.targets": config.build.targets,
+         "cmake.args": [
+             *config.cmake_generator,
+             *config.get_cmake_args(is_editable),

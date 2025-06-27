@@ -58,7 +58,8 @@ BIPs that are implemented by Bitcoin Core:
   Validation rules for Taproot (including Schnorr signatures and Tapscript
   leaves) are implemented as of **v0.21.0** ([PR 19953](https://github.com/bitcoin/bitcoin/pull/19953)),
   with mainnet activation as of **v0.21.1** ([PR 21377](https://github.com/bitcoin/bitcoin/pull/21377),
-  [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)).
+  [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)),
+  always active as of **v24.0** ([PR 23536](https://github.com/bitcoin/bitcoin/pull/23536)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
 * [`BIP 371`](https://github.com/bitcoin/bips/blob/master/bip-0371.mediawiki): Taproot fields for PSBT as of **v24.0** ([PR 22558](https://github.com/bitcoin/bitcoin/pull/22558)).
 * [`BIP 379`](https://github.com/bitcoin/bips/blob/master/bip-0379.md): Miniscript was partially implemented in **v24.0** ([PR 24148](https://github.com/bitcoin/bitcoin/pull/24148)), and fully implemented as of **v26.0** ([PR 27255](https://github.com/bitcoin/bitcoin/pull/27255)).

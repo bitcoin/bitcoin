@@ -92,6 +92,22 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 set(QT_TRANSLATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}/translations")
 
+# The following is only necessary when using cmake from Nix or NixOS, because
+# Nix patches cmake to remove the root directory `/` from
+# CMAKE_SYSTEM_PREFIX_PATH. Adding it back is harmless on other platforms and
+# necessary on Nix because without it cmake find_path, find_package, etc
+# functions do not know where to look in CMAKE_FIND_ROOT_PATH for dependencies
+# (https://github.com/bitcoin/bitcoin/issues/32428).
+#
+# TODO: longer term, it may be possible to use a dependency provider, which
+# would bring the find_package calls completely under our control, making this
+# patch unnecessary.
+#
+# Make sure we only append once, as this file may be called repeatedly.
+if(NOT "/" IN_LIST CMAKE_PREFIX_PATH)
+  list(APPEND CMAKE_PREFIX_PATH "/")
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   # The find_package(Qt ...) function internally uses find_library()
   # calls for all dependencies to ensure their availability.
@@ -101,7 +117,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
 endif()
 
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(CMAKE_SYSTEM_NAME MATCHES "^(Linux|FreeBSD)$")
   # Customize pkg-config behavior for finding dependencies
   # of the xcb QPA platform plugin:
   # 1. Restrict search paths to the depends.

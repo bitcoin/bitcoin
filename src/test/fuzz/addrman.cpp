@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,12 +14,12 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
-#include <time.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
 
 #include <cassert>
 #include <cstdint>
+#include <ctime>
 #include <optional>
 #include <string>
 #include <vector>

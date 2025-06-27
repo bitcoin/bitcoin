@@ -484,12 +484,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         dump_output5 = n0.dumptxoutset('utxos5.dat', rollback=prev_snap_hash)
         assert_equal(sha256sum_file(dump_output4['path']), sha256sum_file(dump_output5['path']))
 
-        # TODO: This is a hack to set m_best_header to the correct value after
-        # dumptxoutset/reconsiderblock. Otherwise the wrong error messages are
-        # returned in following tests. It can be removed once this bug is
-        # fixed. See also https://github.com/bitcoin/bitcoin/issues/26245
-        self.restart_node(0, ["-reindex"])
-
         # Ensure n0 is back at the tip
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
@@ -605,7 +599,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         privkey = n0.get_deterministic_priv_key().key
         raw_tx = n1.createrawtransaction([prevout], {getnewdestination()[2]: 24.99})
         signed_tx = n1.signrawtransactionwithkey(raw_tx, [privkey], [prevout])['hex']
-        signed_txid = tx_from_hex(signed_tx).rehash()
+        signed_txid = tx_from_hex(signed_tx).txid_hex
 
         assert n1.gettxout(prev_tx['txid'], 0) is not None
         n1.sendrawtransaction(signed_tx)

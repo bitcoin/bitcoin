@@ -38,13 +38,13 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Take value from first output
         result["tx"].vout[0].nValue -= output_value
         result["new_utxos"][0]["value"] = Decimal(result["tx"].vout[0].nValue) / COIN
-        new_txid = result["tx"].rehash()
+        new_txid = result["tx"].txid_hex
         result["txid"]  = new_txid
-        result["wtxid"] = result["tx"].getwtxid()
+        result["wtxid"] = result["tx"].wtxid_hex
         result["hex"] = result["tx"].serialize().hex()
         for new_utxo in result["new_utxos"]:
             new_utxo["txid"] = new_txid
-            new_utxo["wtxid"] = result["tx"].getwtxid()
+            new_utxo["wtxid"] = result["tx"].wtxid_hex
 
         result["new_utxos"].append({"txid": new_txid, "vout": len(result["tx"].vout) - 1, "value": Decimal(output_value) / COIN, "height": 0, "coinbase": False, "confirmations": 0})
 

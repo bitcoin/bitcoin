@@ -6,7 +6,6 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
-#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -30,10 +29,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(txindex.StartBackgroundSync());
-
-    // Allow tx index to catch up with the block index.
-    IndexWaitSynced(txindex, *Assert(m_node.shutdown_signal));
+    txindex.Sync();
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();

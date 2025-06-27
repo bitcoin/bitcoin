@@ -15,10 +15,10 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <stdexcept>
-#include <string.h>
 #include <string>
 #include <unistd.h>
 #include <utility>

@@ -60,8 +60,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
         txns_hex = [tx.serialize().hex() for tx in txns]
         assert_equal(self.nodes[0].testmempoolaccept(txns_hex)[0]["reject-reason"], "too-long-mempool-chain")
         pkg_result = self.nodes[0].submitpackage(txns_hex)
-        assert "too-long-mempool-chain" in pkg_result["tx-results"][txns[0].getwtxid()]["error"]
-        assert_equal(pkg_result["tx-results"][txns[1].getwtxid()]["error"], "bad-txns-inputs-missingorspent")
+        assert "too-long-mempool-chain" in pkg_result["tx-results"][txns[0].wtxid_hex]["error"]
+        assert_equal(pkg_result["tx-results"][txns[1].wtxid_hex]["error"], "bad-txns-inputs-missingorspent")
         # But not if it chains directly off the first transaction
         self.nodes[0].sendrawtransaction(replaceable_tx["hex"])
         # and the second chain should work just fine

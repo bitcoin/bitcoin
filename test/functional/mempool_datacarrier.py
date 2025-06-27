@@ -18,14 +18,16 @@ from test_framework.wallet import MiniWallet
 
 from random import randbytes
 
+# The historical maximum, now used to test coverage
+CUSTOM_DATACARRIER_ARG = 83
 
 class DataCarrierTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.extra_args = [
-            [],
-            ["-datacarrier=0"],
-            ["-datacarrier=1", f"-datacarriersize={MAX_OP_RETURN_RELAY - 1}"],
+            [], # default is uncapped
+            ["-datacarrier=0"], # no relay of datacarrier
+            ["-datacarrier=1", f"-datacarriersize={CUSTOM_DATACARRIER_ARG}"],
             ["-datacarrier=1", "-datacarriersize=2"],
         ]
 
@@ -39,34 +41,35 @@ class DataCarrierTest(BitcoinTestFramework):
 
         if success:
             self.wallet.sendrawtransaction(from_node=node, tx_hex=tx_hex)
-            assert tx.rehash() in node.getrawmempool(True), f'{tx_hex} not in mempool'
+            assert tx.txid_hex in node.getrawmempool(True), f'{tx_hex} not in mempool'
         else:
-            assert_raises_rpc_error(-26, "scriptpubkey", self.wallet.sendrawtransaction, from_node=node, tx_hex=tx_hex)
+            assert_raises_rpc_error(-26, "datacarrier", self.wallet.sendrawtransaction, from_node=node, tx_hex=tx_hex)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
 
-        # By default, only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
-        default_size_data = randbytes(MAX_OP_RETURN_RELAY - 3)
-        too_long_data = randbytes(MAX_OP_RETURN_RELAY - 2)
-        small_data = randbytes(MAX_OP_RETURN_RELAY - 4)
+        # By default, any size is allowed.
+
+        # If it is custom set to 83, the historical value,
+        # only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
+        custom_size_data = randbytes(CUSTOM_DATACARRIER_ARG - 3)
+        too_long_data = randbytes(CUSTOM_DATACARRIER_ARG - 2)
+        extremely_long_data = randbytes(MAX_OP_RETURN_RELAY - 200)
         one_byte = randbytes(1)
         zero_bytes = randbytes(0)
 
-        self.log.info("Testing null data transaction with default -datacarrier and -datacarriersize values.")
-        self.test_null_data_transaction(node=self.nodes[0], data=default_size_data, success=True)
-
-        self.log.info("Testing a null data transaction larger than allowed by the default -datacarriersize value.")
-        self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=False)
+        self.log.info("Testing a null data transaction succeeds for default arg regardless of size.")
+        self.test_null_data_transaction(node=self.nodes[0], data=too_long_data, success=True)
+        self.test_null_data_transaction(node=self.nodes[0], data=extremely_long_data, success=True)
 
         self.log.info("Testing a null data transaction with -datacarrier=false.")
-        self.test_null_data_transaction(node=self.nodes[1], data=default_size_data, success=False)
+        self.test_null_data_transaction(node=self.nodes[1], data=custom_size_data, success=False)
 
         self.log.info("Testing a null data transaction with a size larger than accepted by -datacarriersize.")
-        self.test_null_data_transaction(node=self.nodes[2], data=default_size_data, success=False)
+        self.test_null_data_transaction(node=self.nodes[2], data=too_long_data, success=False)
 
-        self.log.info("Testing a null data transaction with a size smaller than accepted by -datacarriersize.")
-        self.test_null_data_transaction(node=self.nodes[2], data=small_data, success=True)
+        self.log.info("Testing a null data transaction with a size equal to -datacarriersize.")
+        self.test_null_data_transaction(node=self.nodes[2], data=custom_size_data, success=True)
 
         self.log.info("Testing a null data transaction with no data.")
         self.test_null_data_transaction(node=self.nodes[0], data=None, success=True)
@@ -85,6 +88,17 @@ class DataCarrierTest(BitcoinTestFramework):
         self.test_null_data_transaction(node=self.nodes[1], data=one_byte, success=False)
         self.test_null_data_transaction(node=self.nodes[2], data=one_byte, success=True)
         self.test_null_data_transaction(node=self.nodes[3], data=one_byte, success=False)
+
+        # Clean shutdown boilerplate due to deprecation
+        self.expected_stderr = [
+            "",  # node 0 has no deprecated options
+            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.",
+            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.",
+            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.",
+        ]
+
+        for i in range(self.num_nodes):
+            self.stop_node(i, expected_stderr=self.expected_stderr[i])
 
 
 if __name__ == '__main__':

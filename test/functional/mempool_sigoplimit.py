@@ -44,8 +44,6 @@ MAX_PUBKEYS_PER_MULTISIG = 20
 class BytesPerSigOpTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # allow large datacarrier output to pad transactions
-        self.extra_args = [['-datacarriersize=100000']]
 
     def create_p2wsh_spending_tx(self, witness_script, output_script):
         """Create a 1-input-1-output P2WSH spending transaction with only the
@@ -123,13 +121,13 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         parent_txid = tx.vin[0].prevout.hash.to_bytes(32, 'big').hex()
         parent_tx = tx_from_hex(self.nodes[0].getrawtransaction(txid=parent_txid))
 
-        entry_child = self.nodes[0].getmempoolentry(tx.rehash())
+        entry_child = self.nodes[0].getmempoolentry(tx.txid_hex)
         assert_equal(entry_child['descendantcount'], 1)
         assert_equal(entry_child['descendantsize'], sigop_equivalent_vsize)
         assert_equal(entry_child['ancestorcount'], 2)
         assert_equal(entry_child['ancestorsize'], sigop_equivalent_vsize + parent_tx.get_vsize())
 
-        entry_parent = self.nodes[0].getmempoolentry(parent_tx.rehash())
+        entry_parent = self.nodes[0].getmempoolentry(parent_tx.txid_hex)
         assert_equal(entry_parent['ancestorcount'], 1)
         assert_equal(entry_parent['ancestorsize'], parent_tx.get_vsize())
         assert_equal(entry_parent['descendantcount'], 2)
@@ -139,7 +137,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         self.log.info("Test a overly-large sigops-vbyte hits package limits")
         # Make a 2-transaction package which fails vbyte checks even though
         # separately they would work.
-        self.restart_node(0, extra_args=["-bytespersigop=5000","-permitbaremultisig=1"] + self.extra_args[0])
+        self.restart_node(0, extra_args=["-bytespersigop=5000","-permitbaremultisig=1"])
 
         def create_bare_multisig_tx(utxo_to_spend=None):
             _, pubkey = generate_keypair()
@@ -149,7 +147,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
             tx = tx_dict["tx"]
             tx.vout.append(CTxOut(amount_for_bare, keys_to_multisig_script([pubkey], k=1)))
             tx.vout[0].nValue -= amount_for_bare
-            tx_utxo["txid"] = tx.rehash()
+            tx_utxo["txid"] = tx.txid_hex
             tx_utxo["value"] -= Decimal("0.00005000")
             return (tx_utxo, tx)
 
@@ -170,8 +168,8 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         # When we actually try to submit, the parent makes it into the mempool, but the child would exceed ancestor vsize limits
         res = self.nodes[0].submitpackage([tx_parent.serialize().hex(), tx_child.serialize().hex()])
-        assert "too-long-mempool-chain" in res["tx-results"][tx_child.getwtxid()]["error"]
-        assert tx_parent.rehash() in self.nodes[0].getrawmempool()
+        assert "too-long-mempool-chain" in res["tx-results"][tx_child.wtxid_hex]["error"]
+        assert tx_parent.txid_hex in self.nodes[0].getrawmempool()
 
         # Transactions are tiny in weight
         assert_greater_than(2000, tx_parent.get_weight() + tx_child.get_weight())
@@ -185,7 +183,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
             else:
                 bytespersigop_parameter = f"-bytespersigop={bytes_per_sigop}"
                 self.log.info(f"Test sigops limit setting {bytespersigop_parameter}...")
-                self.restart_node(0, extra_args=[bytespersigop_parameter] + self.extra_args[0])
+                self.restart_node(0, extra_args=[bytespersigop_parameter])
 
             for num_sigops in (69, 101, 142, 183, 222):
                 self.test_sigops_limit(bytes_per_sigop, num_sigops)

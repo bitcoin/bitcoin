@@ -12,14 +12,14 @@
 #include <util/overflow.h>
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <ios>
 #include <limits>
 #include <optional>
-#include <stdint.h>
-#include <string.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -100,13 +100,14 @@ private:
 class SpanReader
 {
 private:
-    std::span<const unsigned char> m_data;
+    std::span<const std::byte> m_data;
 
 public:
     /**
      * @param[in]  data Referenced byte vector to overwrite/append
      */
-    explicit SpanReader(std::span<const unsigned char> data) : m_data{data} {}
+    explicit SpanReader(std::span<const unsigned char> data) : m_data{std::as_bytes(data)} {}
+    explicit SpanReader(std::span<const std::byte> data) : m_data{data} {}
 
     template<typename T>
     SpanReader& operator>>(T&& obj)

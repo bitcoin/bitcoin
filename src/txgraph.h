@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compare>
+#include <cstdint>
 #include <memory>
 #include <optional>
-#include <stdint.h>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include <util/feefrac.h>
 

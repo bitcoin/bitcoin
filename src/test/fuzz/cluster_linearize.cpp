@@ -6,16 +6,16 @@
 #include <random.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <test/util/cluster_linearize.h>
 #include <util/bitset.h>
 #include <util/feefrac.h>
 
 #include <algorithm>
-#include <stdint.h>
-#include <vector>
+#include <cstdint>
 #include <utility>
+#include <vector>
 
 using namespace cluster_linearize;
 

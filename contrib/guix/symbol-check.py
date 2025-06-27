@@ -34,7 +34,7 @@ import lief
 MAX_VERSIONS = {
 'GCC':       (4,3,0),
 'GLIBC': {
-    lief.ELF.ARCH.x86_64: (2,31),
+    lief.ELF.ARCH.X86_64: (2,31),
     lief.ELF.ARCH.ARM:    (2,31),
     lief.ELF.ARCH.AARCH64:(2,31),
     lief.ELF.ARCH.PPC64:  (2,31),
@@ -52,41 +52,41 @@ IGNORE_EXPORTS = {
 
 # Expected linker-loader names can be found here:
 # https://sourceware.org/glibc/wiki/ABIList?action=recall&rev=16
-ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, str]] = {
-    lief.ELF.ARCH.x86_64:  {
-        lief.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
+ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, str]] = {
+    lief.ELF.ARCH.X86_64:  {
+        lief.Header.ENDIANNESS.LITTLE: "/lib64/ld-linux-x86-64.so.2",
     },
     lief.ELF.ARCH.ARM:     {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
+        lief.Header.ENDIANNESS.LITTLE: "/lib/ld-linux-armhf.so.3",
     },
     lief.ELF.ARCH.AARCH64: {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-aarch64.so.1",
+        lief.Header.ENDIANNESS.LITTLE: "/lib/ld-linux-aarch64.so.1",
     },
     lief.ELF.ARCH.PPC64:   {
-        lief.ENDIANNESS.BIG: "/lib64/ld64.so.1",
-        lief.ENDIANNESS.LITTLE: "/lib64/ld64.so.2",
+        lief.Header.ENDIANNESS.BIG: "/lib64/ld64.so.1",
+        lief.Header.ENDIANNESS.LITTLE: "/lib64/ld64.so.2",
     },
     lief.ELF.ARCH.RISCV:    {
-        lief.ENDIANNESS.LITTLE: "/lib/ld-linux-riscv64-lp64d.so.1",
+        lief.Header.ENDIANNESS.LITTLE: "/lib/ld-linux-riscv64-lp64d.so.1",
     },
 }
 
-ELF_ABIS: dict[lief.ELF.ARCH, dict[lief.ENDIANNESS, list[int]]] = {
-    lief.ELF.ARCH.x86_64: {
-        lief.ENDIANNESS.LITTLE: [3,2,0],
+ELF_ABIS: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, list[int]]] = {
+    lief.ELF.ARCH.X86_64: {
+        lief.Header.ENDIANNESS.LITTLE: [3,2,0],
     },
     lief.ELF.ARCH.ARM: {
-        lief.ENDIANNESS.LITTLE: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,2,0],
     },
     lief.ELF.ARCH.AARCH64: {
-        lief.ENDIANNESS.LITTLE: [3,7,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,7,0],
     },
     lief.ELF.ARCH.PPC64: {
-        lief.ENDIANNESS.LITTLE: [3,10,0],
-        lief.ENDIANNESS.BIG: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,10,0],
+        lief.Header.ENDIANNESS.BIG: [3,2,0],
     },
     lief.ELF.ARCH.RISCV: {
-        lief.ENDIANNESS.LITTLE: [4,15,0],
+        lief.Header.ENDIANNESS.LITTLE: [4,15,0],
     },
 }
 
@@ -223,13 +223,13 @@ def check_exported_symbols(binary) -> bool:
         name = symbol.name
         if binary.header.machine_type == lief.ELF.ARCH.RISCV or name in IGNORE_EXPORTS:
             continue
-        print(f'{binary.name}: export of symbol {name} not allowed!')
+        print(f'{filename}: export of symbol {name} not allowed!')
         ok = False
     return ok
 
 def check_RUNPATH(binary) -> bool:
-    assert binary.get(lief.ELF.DYNAMIC_TAGS.RUNPATH) is None
-    assert binary.get(lief.ELF.DYNAMIC_TAGS.RPATH) is None
+    assert binary.get(lief.ELF.DynamicEntry.TAG.RUNPATH) is None
+    assert binary.get(lief.ELF.DynamicEntry.TAG.RPATH) is None
     return True
 
 def check_ELF_libraries(binary) -> bool:
@@ -294,12 +294,12 @@ def check_ELF_interpreter(binary) -> bool:
 
 def check_ELF_ABI(binary) -> bool:
     expected_abi = ELF_ABIS[binary.header.machine_type][binary.abstract.header.endianness]
-    note = binary.concrete.get(lief.ELF.NOTE_TYPES.ABI_TAG)
-    assert note.details.abi == lief.ELF.NOTE_ABIS.LINUX
-    return note.details.version == expected_abi
+    note = binary.concrete.get(lief.ELF.Note.TYPE.GNU_ABI_TAG)
+    assert note.abi == lief.ELF.NoteAbi.ABI.LINUX
+    return note.version == expected_abi
 
 CHECKS = {
-lief.EXE_FORMATS.ELF: [
+lief.Binary.FORMATS.ELF: [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
     ('EXPORTED_SYMBOLS', check_exported_symbols),
     ('LIBRARY_DEPENDENCIES', check_ELF_libraries),
@@ -307,13 +307,13 @@ lief.EXE_FORMATS.ELF: [
     ('ABI', check_ELF_ABI),
     ('RUNPATH', check_RUNPATH),
 ],
-lief.EXE_FORMATS.MACHO: [
+lief.Binary.FORMATS.MACHO: [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
     ('MIN_OS', check_MACHO_min_os),
     ('SDK', check_MACHO_sdk),
     ('LLD', check_MACHO_lld),
 ],
-lief.EXE_FORMATS.PE: [
+lief.Binary.FORMATS.PE: [
     ('DYNAMIC_LIBRARIES', check_PE_libraries),
     ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
     ('APPLICATION_MANIFEST', check_PE_application_manifest),
@@ -324,6 +324,7 @@ if __name__ == '__main__':
     retval: int = 0
     for filename in sys.argv[1:]:
         binary = lief.parse(filename)
+
         etype = binary.format
 
         failed: list[str] = []

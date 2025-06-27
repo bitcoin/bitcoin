@@ -9,8 +9,8 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
-#include <stdint.h>
 #include <utility>
 
 // classes for ChaCha20 256-bit stream cipher developed by Daniel J. Bernstein

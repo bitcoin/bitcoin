@@ -26,6 +26,9 @@ ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP = (
 ALLOWED_PERMISSION_NON_EXECUTABLES = 0o644
 ALLOWED_PERMISSION_EXECUTABLES = 0o755
 ALLOWED_EXECUTABLE_SHEBANG = {
+    # https://github.com/dylanaraps/pure-bash-bible#shebang:
+    # `#!/bin/bash` assumes it is always installed to /bin/ which can cause issues;
+    # `#!/usr/bin/env bash` searches the user's PATH to find the bash binary.
     "py": [b"#!/usr/bin/env python3"],
     "sh": [b"#!/usr/bin/env bash", b"#!/bin/sh"],
 }
