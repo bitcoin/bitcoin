@@ -230,6 +230,11 @@ def ser_string_vector(l):
     return r
 
 
+def deser_block_spent_outputs(f):
+    nit = deser_compact_size(f)
+    return [deser_vector(f, CTxOut) for _ in range(nit)]
+
+
 def from_hex(obj, hex_string):
     """Deserialize from a hex string representation (e.g. from RPC)
 
