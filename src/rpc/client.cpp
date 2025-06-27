@@ -310,6 +310,72 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "addnode", 2, "v2transport" },
     { "addconnection", 2, "v2transport" },
 };
+
+class RpcStringParam {
+public:
+    std::string method_name; //!< method name this parameter belongs to
+    int param_idx;           //!< 0-based idx of param
+    std::string param_name;  //!< parameter name
+};
+
+/**
+ * Specify a (method, idx, name) here if the argument is a string RPC
+ * parameter that should be recognized as a known parameter name but NOT
+ * converted from JSON. This is used for string parameters that might
+ * contain '=' character which could interfere with named parameter parsing.
+ *
+ * @note Parameter indexes start from 0.
+ * @note If you include an RPC method then you need to include all other
+ * string parameters that correspond to the same method for consistency
+ * and valid lookup from the table.
+ */
+static const RpcStringParam RPC_STRING_PARAMS[] =
+{
+    { "finalizepsbt", 0, "psbt"},
+    { "decodepsbt", 0, "psbt"},
+    { "analyzepsbt", 0, "psbt"},
+    { "walletprocesspsbt", 0, "psbt"},
+    { "walletprocesspsbt", 2, "sighashtype"},
+    { "descriptorprocesspsbt", 0, "psbt"},
+    { "descriptorprocesspsbt", 2, "sighashtype"},
+    { "utxoupdatepsbt", 0, "psbt" },
+    { "verifymessage", 1, "signature"},
+    { "verifymessage", 2, "message"},
+    { "getnewaddress", 0, "label"},
+    { "getnewaddress", 1, "address_type"},
+    { "backupwallet", 0, "destination"},
+    { "createwallet", 0, "wallet_name"},
+    { "createwallet", 3, "passphrase"},
+    { "dumptxoutset", 0, "path"},
+    { "echoipc", 0, "arg"},
+    { "encryptwallet", 0, "passphrase"},
+    { "getaddressesbylabel", 0, "label"},
+    { "getreceivedbylabel", 0, "label" },
+    { "importmempool", 0, "filepath"},
+    { "listsinceblock", 5, "label" },
+    { "listsinceblock", 0, "blockhash" },
+    { "listtransactions", 0, "label" },
+    { "loadtxoutset", 0, "path"},
+    { "loadwallet", 0, "filename"},
+    { "migratewallet", 0, "wallet_name"},
+    { "migratewallet", 1, "passphrase"},
+    { "restorewallet", 0, "wallet_name"},
+    { "restorewallet", 1, "backup_file"},
+    { "sendmany", 3, "comment" },
+    { "sendmany", 0, "dummy" },
+    { "sendmany", 7, "estimate_mode" },
+    { "sendtoaddress", 2, "comment" },
+    { "sendtoaddress", 3, "comment_to" },
+    { "sendtoaddress", 0, "address" },
+    { "sendtoaddress", 7, "estimate_mode" },
+    { "setlabel", 1, "label" },
+    { "signmessage", 1, "message" },
+    { "signmessagewithprivkey", 1, "message"},
+    { "unloadwallet", 0, "wallet_name"},
+    { "walletpassphrase", 0, "passphrase" },
+    { "walletpassphrasechange", 0, "oldpassphrase"},
+    { "walletpassphrasechange", 1, "newpassphrase"},
+};
 // clang-format on
 
 /** Parse string to UniValue or throw runtime_error if string contains invalid JSON */
@@ -325,6 +391,8 @@ class CRPCConvertTable
 private:
     std::set<std::pair<std::string, int>> members;
     std::set<std::pair<std::string, std::string>> membersByName;
+    std::set<std::pair<std::string, std::string>> stringParams;
+    std::set<std::pair<std::string, int>> stringParamsByIndex;
 
 public:
     CRPCConvertTable();
@@ -340,6 +408,30 @@ public:
     {
         return membersByName.count({method, param_name}) > 0 ? Parse(arg_value) : arg_value;
     }
+
+    /** Return true if parameter is in the string parameters table (RPC_STRING_PARAMS) */
+    bool IsStringParamByName(const std::string& method, const std::string& param) const
+    {
+        return stringParams.contains({method, param});
+    }
+
+    /** Return true if the RPC method has any entries in the RPC_STRING_PARAMS table at given index */
+    bool IsStringParamByIndex(const std::string& method, int param_idx) const
+    {
+        return stringParamsByIndex.contains({method, param_idx});
+    }
+
+    /** Return true if the given method and param name is present in the conversion table (vRPCConvertParams) */
+    bool IsConvertParamByName(const std::string& method, const std::string& paramName) const
+    {
+        return membersByName.contains({method, paramName});
+    }
+
+    /** Return true if the given method and index is present in the conversion table (vRPCConvertParams) */
+    bool IsConvertParamByIndex(const std::string& method, int param_idx) const
+    {
+        return members.contains({method, param_idx});
+    }
 };
 
 CRPCConvertTable::CRPCConvertTable()
@@ -347,6 +439,11 @@ CRPCConvertTable::CRPCConvertTable()
     for (const auto& cp : vRPCConvertParams) {
         members.emplace(cp.methodName, cp.paramIdx);
         membersByName.emplace(cp.methodName, cp.paramName);
+    }
+
+    for (const auto& cp : RPC_STRING_PARAMS) {
+        stringParams.emplace(cp.method_name, cp.param_name);
+        stringParamsByIndex.emplace(cp.method_name, cp.param_idx);
     }
 }
 
@@ -379,6 +476,30 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         std::string name{s.substr(0, pos)};
         std::string_view value{s.substr(pos+1)};
 
+        bool is_named_string_param = rpcCvtTable.IsStringParamByName(strMethod, name);
+        bool is_named_convert_param = rpcCvtTable.IsConvertParamByName(strMethod, name);
+
+        if(!is_named_string_param && !is_named_convert_param) {
+            /**
+             * This handles two cases where a named parameter (param=value) is not recognized:
+             *
+             * 1. The RPC method was listed in the RPC_STRING_PARAMS table with a given index but parameter is not a known string parameter
+             *    in such cases we pass the whole parameter as positional.
+             *
+             * 2. The RPC method was listed in the vRPCConvertParams table with a given index but the parameter is not a known convert parameter
+             *    in such cases we first parse the whole parameter as JSON and then treat as positional.
+             */
+            bool next_positional_arg_is_string = rpcCvtTable.IsStringParamByIndex(strMethod, positional_args.size());
+            bool next_positional_arg_is_json = rpcCvtTable.IsConvertParamByIndex(strMethod, positional_args.size());
+            UniValue value;
+            if(next_positional_arg_is_json && value.read(s)){
+                positional_args.push_back(std::move(value));
+                continue;
+            } else if (next_positional_arg_is_string) {
+                positional_args.push_back(s);
+                continue;
+            }
+        }
         // Intentionally overwrite earlier named values with later ones as a
         // convenience for scripts and command line users that want to merge
         // options.
