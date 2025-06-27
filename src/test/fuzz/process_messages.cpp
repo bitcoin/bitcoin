@@ -5,6 +5,7 @@
 #include <consensus/consensus.h>
 #include <net.h>
 #include <net_processing.h>
+#include <node/warnings.h>
 #include <protocol.h>
 #include <script/script.h>
 #include <sync.h>
@@ -30,9 +31,11 @@ const TestingSetup* g_setup;
 
 void initialize_process_messages()
 {
-    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(
+    static const auto testing_setup{
+        MakeNoLogFileContext<TestingSetup>(
             /*chain_type=*/ChainType::REGTEST,
-            {.extra_args = {"-txreconciliation"}});
+            {}),
+    };
     g_setup = testing_setup.get();
     SetMockTime(WITH_LOCK(g_setup->m_node.chainman->GetMutex(), return g_setup->m_node.chainman->ActiveTip()->Time()));
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
@@ -46,10 +49,22 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
+    auto& connman = static_cast<ConnmanTestMsg&>(*g_setup->m_node.connman);
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
     SetMockTime(1610000000); // any time to successfully reset ibd
     chainman.ResetIbd();
+
+    node::Warnings warnings{};
+    NetGroupManager netgroupman{{}};
+    AddrMan addrman{netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
+    auto peerman = PeerManager::make(connman, addrman,
+                                     /*banman=*/nullptr, chainman,
+                                     *g_setup->m_node.mempool, warnings,
+                                     PeerManager::Options{
+                                         .reconcile_txs = true,
+                                         .deterministic_rng = true,
+                                     });
+    connman.SetMsgProc(peerman.get());
 
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
