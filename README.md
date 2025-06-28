@@ -213,6 +213,7 @@ Satoshi gave us the beginning.
 ## 🔗 Learn More & Connect
 
 * [💼 Connect on LinkedIn](https://www.linkedin.com/in/geral10/)
+* [💼 Connect on Site](https://k10.netlify.app/recursos/picoin)
 
 ```
 
