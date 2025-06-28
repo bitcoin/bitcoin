@@ -19,8 +19,8 @@ CFeeRate::CFeeRate(const CAmount& nFeePaid, int32_t num_bytes)
 
 CAmount CFeeRate::GetFee(int32_t num_bytes) const
 {
+    Assume(num_bytes >= 0);
     if (m_feerate.IsEmpty()) { return CAmount(0);}
-    if (num_bytes < 0) { return CAmount(-1);}
     CAmount nFee = CAmount(m_feerate.EvaluateFeeUp(num_bytes));
     if (nFee == 0 && num_bytes != 0 && m_feerate.fee < 0) return CAmount(-1);
     return nFee;
