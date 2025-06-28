@@ -21,15 +21,17 @@ WakeupPipe::WakeupPipe(EdgeTriggeredEvents* edge_trig_events)
     }
     for (size_t idx = 0; idx < m_pipe.size(); idx++) {
         int flags = fcntl(m_pipe[idx], F_GETFL, 0);
-        if (fcntl(m_pipe[idx], F_SETFL, flags | O_NONBLOCK) == -1) {
+        if (fcntl(m_pipe[idx], F_SETFL, flags | O_NONBLOCK) == SOCKET_ERROR) {
             LogPrintf("Unable to initialize WakeupPipe, fcntl for O_NONBLOCK on m_pipe[%d] failed with error %s\n", idx,
                       NetworkErrorString(WSAGetLastError()));
+            Close();
             return;
         }
     }
     if (edge_trig_events && !edge_trig_events->RegisterPipe(m_pipe[0])) {
         LogPrintf("Unable to initialize WakeupPipe, EdgeTriggeredEvents::RegisterPipe() failed for m_pipe[0] = %d\n",
                   m_pipe[0]);
+        Close();
         return;
     }
     m_valid = true;
@@ -46,16 +48,26 @@ WakeupPipe::~WakeupPipe()
             LogPrintf("Destroying WakeupPipe instance, EdgeTriggeredEvents::UnregisterPipe() failed for m_pipe[0] = %d\n",
                       m_pipe[0]);
         }
-        for (size_t idx = 0; idx < m_pipe.size(); idx++) {
-            if (close(m_pipe[idx]) != 0) {
-                LogPrintf("Destroying WakeupPipe instance, close() failed for m_pipe[%d] = %d with error %s\n",
-                          idx, m_pipe[idx], NetworkErrorString(WSAGetLastError()));
-            }
-        }
+        Close();
 #else
         assert(false);
 #endif /* USE_WAKEUP_PIPE */
     }
+}
+
+void WakeupPipe::Close()
+{
+#ifdef USE_WAKEUP_PIPE
+    for (size_t idx{0}; idx < m_pipe.size(); idx++) {
+        if (m_pipe[idx] != -1 && close(m_pipe[idx]) != 0) {
+            LogPrintf("close() failed for m_pipe[%d] = %d with error %s\n", idx, m_pipe[idx],
+                      NetworkErrorString(WSAGetLastError()));
+        }
+        m_pipe[idx] = -1;
+    }
+#else
+    assert(false);
+#endif /* USE_WAKEUP_PIPE */
 }
 
 void WakeupPipe::Drain() const
@@ -80,7 +92,7 @@ void WakeupPipe::Write()
 
     std::array<uint8_t, EXPECTED_PIPE_WRITTEN_BYTES> buf{};
     int ret = write(m_pipe[1], buf.data(), buf.size());
-    if (ret == -1) {
+    if (ret == SOCKET_ERROR) {
         LogPrintf("write() to m_pipe[1] = %d failed with error %s\n", m_pipe[1], NetworkErrorString(WSAGetLastError()));
     }
     if (ret != EXPECTED_PIPE_WRITTEN_BYTES) {
