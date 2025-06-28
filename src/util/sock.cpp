@@ -24,6 +24,15 @@ static inline bool IOErrorIsPermanent(int err)
     return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
 }
 
+static inline bool IsSelectableSocket(const SOCKET& s, bool is_select)
+{
+#if defined(WIN32)
+    return true;
+#else
+    return is_select ? (s < FD_SETSIZE) : true;
+#endif
+}
+
 Sock::Sock() : m_socket(INVALID_SOCKET) {}
 
 Sock::Sock(SOCKET s) : m_socket(s) {}
@@ -131,13 +140,9 @@ bool Sock::SetNonBlocking() const
     return true;
 }
 
-bool Sock::IsSelectable() const
+bool Sock::IsSelectable(bool is_select) const
 {
-#if defined(USE_POLL) || defined(WIN32)
-    return true;
-#else
-    return m_socket < FD_SETSIZE;
-#endif
+    return IsSelectableSocket(m_socket, is_select);
 }
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsMode event_mode, Event* occurred) const
@@ -213,7 +218,7 @@ bool Sock::WaitPoll(std::chrono::milliseconds timeout, Event requested, Event* o
 
 bool Sock::WaitSelect(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
-    if (!IsSelectable()) {
+    if (!IsSelectableSocket(m_socket, /*is_select=*/true)) {
         return false;
     }
 

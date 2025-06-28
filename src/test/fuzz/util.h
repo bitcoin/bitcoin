@@ -87,7 +87,7 @@ public:
 
     bool SetNonBlocking() const override;
 
-    bool IsSelectable() const override;
+    bool IsSelectable(bool is_select) const override;
 
     bool Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsMode event_mode = SEM_LT_DEFAULT, Event* occurred = nullptr) const override;
 

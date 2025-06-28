@@ -194,7 +194,7 @@ public:
      * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
      * @return true if selectable
      */
-    [[nodiscard]] virtual bool IsSelectable() const;
+    [[nodiscard]] virtual bool IsSelectable(bool is_select = (SEM_LT_DEFAULT == SocketEventsMode::Select)) const;
 
     using Event = uint8_t;
 

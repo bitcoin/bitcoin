@@ -265,7 +265,7 @@ bool FuzzedSock::SetNonBlocking() const
     return true;
 }
 
-bool FuzzedSock::IsSelectable() const
+bool FuzzedSock::IsSelectable(bool is_select) const
 {
     return m_selectable;
 }
