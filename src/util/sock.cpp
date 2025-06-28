@@ -180,49 +180,27 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
 
 bool Sock::WaitManyInternal(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SocketEventsParams event_params)
 {
-    std::string debug_str;
-
     switch (event_params.m_event_mode)
     {
-        case SocketEventsMode::Poll:
 #ifdef USE_POLL
+        case SocketEventsMode::Poll:
             return WaitManyPoll(timeout, events_per_sock, event_params.m_wrap_func);
-#else
-            debug_str += "Sock::Wait -- Support for poll not compiled in, falling back on ";
-            break;
 #endif /* USE_POLL */
         case SocketEventsMode::Select:
             return WaitManySelect(timeout, events_per_sock, event_params.m_wrap_func);
-        case SocketEventsMode::EPoll:
 #ifdef USE_EPOLL
+        case SocketEventsMode::EPoll:
             assert(event_params.m_event_fd != INVALID_SOCKET);
             return WaitManyEPoll(timeout, events_per_sock, event_params.m_event_fd, event_params.m_wrap_func);
-#else
-            debug_str += "Sock::Wait -- Support for epoll not compiled in, falling back on ";
-            break;
 #endif /* USE_EPOLL */
-        case SocketEventsMode::KQueue:
 #ifdef USE_KQUEUE
+        case SocketEventsMode::KQueue:
             assert(event_params.m_event_fd != INVALID_SOCKET);
             return WaitManyKQueue(timeout, events_per_sock, event_params.m_event_fd, event_params.m_wrap_func);
-#else
-            debug_str += "Sock::Wait -- Support for kqueue not compiled in, falling back on ";
-            break;
 #endif /* USE_KQUEUE */
         default:
             assert(false);
     }
-#ifdef USE_POLL
-    debug_str += "poll";
-#else
-    debug_str += "select";
-#endif /* USE_POLL*/
-    LogPrint(BCLog::NET, "%s\n", debug_str);
-#ifdef USE_POLL
-    return WaitManyPoll(timeout, events_per_sock, event_params.m_wrap_func);
-#else
-    return WaitManySelect(timeout, events_per_sock, event_params.m_wrap_func);
-#endif /* USE_POLL */
 }
 
 #ifdef USE_EPOLL
