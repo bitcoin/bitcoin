@@ -287,7 +287,11 @@ bool Sock::WaitManyKQueue(std::chrono::milliseconds timeout, EventsPerSock& even
                 occurred |= SEND;
             }
         }
-        events_per_sock.emplace(static_cast<SOCKET>(ev.ident), Sock::Events{/*req=*/RECV | SEND, occurred});
+        if (auto it = events_per_sock.find(static_cast<SOCKET>(ev.ident)); it != events_per_sock.end()) {
+            it->second.occurred |= occurred;
+        } else {
+            events_per_sock.emplace(static_cast<SOCKET>(ev.ident), Sock::Events{/*req=*/RECV | SEND, occurred});
+        }
     }
 
     return true;
