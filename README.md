@@ -212,8 +212,7 @@ Satoshi gave us the beginning.
 
 ## 🔗 Learn More & Connect
 
-* [📂 View the complete code on GitHub](#)
-* [💼 Connect on LinkedIn](#)
+* [💼 Connect on LinkedIn]([#](https://www.linkedin.com/in/geral10/))
 
 ```
 
