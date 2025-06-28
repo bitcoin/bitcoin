@@ -202,4 +202,4 @@ Learn More & Connect
 
 View Complete Code on GitHub
 
-Connect on LinkedIn****
+Connect on LinkedIn
