@@ -36,6 +36,17 @@ public:
     ~DebugLogHelper() { check_found(); }
 };
 
+// Test fails if the pattern *DOES NOT* show up.
 #define ASSERT_DEBUG_LOG(message) DebugLogHelper UNIQUE_NAME(debugloghelper)(message)
+
+// Test fails if the pattern *DOES* show up.
+#define ASSERT_NO_DEBUG_LOG(message)                                                        \
+    DebugLogHelper UNIQUE_NAME(nologhelper){                                                \
+        message,                                                                            \
+        [](const std::string* line) {                                                       \
+            if (line) throw std::runtime_error{"Encountered forbidden log line: " + *line}; \
+            return false; /* Suppress default 'not found' failure. */                       \
+        }                                                                                   \
+    }
 
 #endif // BITCOIN_TEST_UTIL_LOGGING_H
