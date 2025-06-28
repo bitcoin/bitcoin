@@ -572,7 +572,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             // synchronously to check for successful connection with a timeout.
             const Sock::Event requested = Sock::RECV | Sock::SEND;
             Sock::Event occurred;
-            if (!sock.Wait(std::chrono::milliseconds{nConnectTimeout}, requested, &occurred)) {
+            if (!sock.Wait(std::chrono::milliseconds{nConnectTimeout}, requested, SEM_LT_DEFAULT, &occurred)) {
                 LogPrintf("wait for connect to %s failed: %s\n",
                           dest_str,
                           NetworkErrorString(WSAGetLastError()));

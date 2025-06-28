@@ -270,7 +270,7 @@ bool FuzzedSock::IsSelectable() const
     return m_selectable;
 }
 
-bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
+bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsMode event_mode, Event* occurred) const
 {
     constexpr std::array wait_errnos{
         EBADF,

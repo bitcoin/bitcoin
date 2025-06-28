@@ -28,6 +28,12 @@ enum class SocketEventsMode : int8_t {
     Unknown = -1
 };
 
+#ifdef USE_POLL
+#define SEM_LT_DEFAULT SocketEventsMode::Poll
+#else
+#define SEM_LT_DEFAULT SocketEventsMode::Select
+#endif /* USE_POLL */
+
 /* Converts SocketEventsMode value to string with additional check to report modes not compiled for as unknown */
 constexpr std::string_view SEMToString(const SocketEventsMode val) {
     switch (val) {
@@ -212,6 +218,7 @@ public:
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
      * @param[in] requested Wait for those events, bitwise-or of `RECV` and `SEND`.
+     * @param[in] event_mode Wait using the API specified.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
      * indicates which of the requested events occurred (`ERR` will be added, even if
      * not requested, if an exceptional event occurs on the socket).
@@ -220,6 +227,7 @@ public:
      */
     [[nodiscard]] virtual bool Wait(std::chrono::milliseconds timeout,
                                     Event requested,
+                                    SocketEventsMode event_mode = SEM_LT_DEFAULT,
                                     Event* occurred = nullptr) const;
 #ifdef USE_POLL
     bool WaitPoll(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const;

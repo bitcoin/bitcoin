@@ -140,8 +140,36 @@ bool Sock::IsSelectable() const
 #endif
 }
 
-bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
+bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsMode event_mode, Event* occurred) const
 {
+    std::string debug_str;
+
+    switch (event_mode)
+    {
+        case SocketEventsMode::Poll:
+#ifdef USE_POLL
+            return WaitPoll(timeout, requested, occurred);
+#else
+            debug_str += "Sock::Wait -- Support for poll not compiled in, falling back on ";
+            break;
+#endif /* USE_POLL */
+        case SocketEventsMode::Select:
+            return WaitSelect(timeout, requested, occurred);
+        case SocketEventsMode::EPoll:
+            debug_str += "Sock::Wait -- Unimplemented for epoll, falling back on ";
+            break;
+        case SocketEventsMode::KQueue:
+            debug_str += "Sock::Wait -- Unimplemented for kqueue, falling back on ";
+            break;
+        default:
+            assert(false);
+    }
+#ifdef USE_POLL
+    debug_str += "poll";
+#else
+    debug_str += "select";
+#endif /* USE_POLL*/
+    LogPrint(BCLog::NET, "%s\n", debug_str);
 #ifdef USE_POLL
     return WaitPoll(timeout, requested, occurred);
 #else

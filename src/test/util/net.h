@@ -202,6 +202,7 @@ public:
 
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,
+              SocketEventsMode event_mode = SEM_LT_DEFAULT,
               Event* occurred = nullptr) const override
     {
         if (occurred != nullptr) {

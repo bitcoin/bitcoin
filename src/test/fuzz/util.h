@@ -89,7 +89,7 @@ public:
 
     bool IsSelectable() const override;
 
-    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
+    bool Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsMode event_mode = SEM_LT_DEFAULT, Event* occurred = nullptr) const override;
 
     bool IsConnected(std::string& errmsg) const override;
 };
