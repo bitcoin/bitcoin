@@ -28,7 +28,8 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
   */
   bool SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor>desc);
 
-  static util::Result<ExternalSigner> GetExternalSigner();
+  static ExternalSigner GetExternalSigner();
+  static util::Result<ExternalSigner> GetExternalSigner2();
 
   /**
   * Display address on the device and verify that the returned value matches.

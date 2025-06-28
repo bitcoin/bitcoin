@@ -45,7 +45,13 @@ bool ExternalSignerScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, std::uni
     return true;
 }
 
- util::Result<ExternalSigner> ExternalSignerScriptPubKeyMan::GetExternalSigner() {
+ExternalSigner ExternalSignerScriptPubKeyMan::GetExternalSigner() {
+    auto signer{GetExternalSigner2()};
+    if (!signer) throw std::runtime_error(util::ErrorString(signer).original);
+    return *signer;
+}
+
+util::Result<ExternalSigner> ExternalSignerScriptPubKeyMan::GetExternalSigner2() {
     const std::string command = gArgs.GetArg("-signer", "");
     if (command == "") return util::Error{Untranslated("restart bitcoind with -signer=<cmd>")};
     std::vector<ExternalSigner> signers;
@@ -93,7 +99,7 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
     }
     if (complete) return {};
 
-    auto signer{GetExternalSigner()};
+    auto signer{GetExternalSigner2()};
     if (!signer) {
         LogWarning("%s", util::ErrorString(signer).original);
         return PSBTError::EXTERNAL_SIGNER_NOT_FOUND;
