@@ -2399,7 +2399,7 @@ void CConnman::SocketHandler(CMasternodeSync& mn_sync)
         // select(2)). If none are ready, wait for a short while and return
         // empty sets.
         events_per_sock = GenerateWaitSockets(snap.Nodes());
-        if ((is_lt && events_per_sock.empty()) || !Sock::WaitManyInternal(timeout, events_per_sock, SocketEventsParams{socketEventsMode, GetModeFileDescriptor()})) {
+        if ((is_lt && events_per_sock.empty()) || !Sock::WaitManyInternal(timeout, events_per_sock, SocketEventsParams{socketEventsMode, GetModeFileDescriptor(), ToggleWakeupPipe})) {
             if (is_lt) {
                 interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
             }

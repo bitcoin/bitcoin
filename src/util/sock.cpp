@@ -157,7 +157,7 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, SocketEvents
 {
     EventsPerSock events_per_sock{std::make_pair(m_socket, Events{requested})};
 
-    if (auto [sem, _] = event_params; sem != SocketEventsMode::Poll && sem != SocketEventsMode::Select) {
+    if (auto [sem, _, __] = event_params; sem != SocketEventsMode::Poll && sem != SocketEventsMode::Select) {
         // We need to ensure we are only using a level-triggered mode because we are expecting
         // a direct correlation between the events reported and the one socket we are querying
         event_params = SocketEventsParams();
@@ -186,17 +186,17 @@ bool Sock::WaitManyInternal(std::chrono::milliseconds timeout, EventsPerSock& ev
     {
         case SocketEventsMode::Poll:
 #ifdef USE_POLL
-            return WaitManyPoll(timeout, events_per_sock);
+            return WaitManyPoll(timeout, events_per_sock, event_params.m_wrap_func);
 #else
             debug_str += "Sock::Wait -- Support for poll not compiled in, falling back on ";
             break;
 #endif /* USE_POLL */
         case SocketEventsMode::Select:
-            return WaitManySelect(timeout, events_per_sock);
+            return WaitManySelect(timeout, events_per_sock, event_params.m_wrap_func);
         case SocketEventsMode::EPoll:
 #ifdef USE_EPOLL
             assert(event_params.m_event_fd != INVALID_SOCKET);
-            return WaitManyEPoll(timeout, events_per_sock, event_params.m_event_fd);
+            return WaitManyEPoll(timeout, events_per_sock, event_params.m_event_fd, event_params.m_wrap_func);
 #else
             debug_str += "Sock::Wait -- Support for epoll not compiled in, falling back on ";
             break;
@@ -204,7 +204,7 @@ bool Sock::WaitManyInternal(std::chrono::milliseconds timeout, EventsPerSock& ev
         case SocketEventsMode::KQueue:
 #ifdef USE_KQUEUE
             assert(event_params.m_event_fd != INVALID_SOCKET);
-            return WaitManyKQueue(timeout, events_per_sock, event_params.m_event_fd);
+            return WaitManyKQueue(timeout, events_per_sock, event_params.m_event_fd, event_params.m_wrap_func);
 #else
             debug_str += "Sock::Wait -- Support for kqueue not compiled in, falling back on ";
             break;
@@ -219,18 +219,24 @@ bool Sock::WaitManyInternal(std::chrono::milliseconds timeout, EventsPerSock& ev
 #endif /* USE_POLL*/
     LogPrint(BCLog::NET, "%s\n", debug_str);
 #ifdef USE_POLL
-    return WaitManyPoll(timeout, events_per_sock);
+    return WaitManyPoll(timeout, events_per_sock, event_params.m_wrap_func);
 #else
-    return WaitManySelect(timeout, events_per_sock);
+    return WaitManySelect(timeout, events_per_sock, event_params.m_wrap_func);
 #endif /* USE_POLL */
 }
 
 #ifdef USE_EPOLL
-bool Sock::WaitManyEPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SOCKET epoll_fd)
+bool Sock::WaitManyEPoll(std::chrono::milliseconds timeout,
+                         EventsPerSock& events_per_sock,
+                         SOCKET epoll_fd,
+                         SocketEventsParams::wrap_fn wrap_func)
 {
     std::array<epoll_event, MAX_EVENTS> events{};
 
-    int ret = epoll_wait(epoll_fd, events.data(), events.size(), count_milliseconds(timeout));
+    int ret{SOCKET_ERROR};
+    wrap_func([&](){
+        ret = epoll_wait(epoll_fd, events.data(), events.size(), count_milliseconds(timeout));
+    });
     if (ret == SOCKET_ERROR) {
         return false;
     }
@@ -260,12 +266,18 @@ bool Sock::WaitManyEPoll(std::chrono::milliseconds timeout, EventsPerSock& event
 #endif /* USE_EPOLL */
 
 #ifdef USE_KQUEUE
-bool Sock::WaitManyKQueue(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SOCKET kqueue_fd)
+bool Sock::WaitManyKQueue(std::chrono::milliseconds timeout,
+                          EventsPerSock& events_per_sock,
+                          SOCKET kqueue_fd,
+                          SocketEventsParams::wrap_fn wrap_func)
 {
     std::array<struct kevent, MAX_EVENTS> events{};
     struct timespec ts = MillisToTimespec(timeout);
 
-    int ret = kevent(kqueue_fd, nullptr, 0, events.data(), events.size(), &ts);
+    int ret{SOCKET_ERROR};
+    wrap_func([&](){
+        ret = kevent(kqueue_fd, nullptr, 0, events.data(), events.size(), &ts);
+    });
     if (ret == SOCKET_ERROR) {
         return false;
     }
@@ -299,7 +311,9 @@ bool Sock::WaitManyKQueue(std::chrono::milliseconds timeout, EventsPerSock& even
 #endif /* USE_KQUEUE */
 
 #ifdef USE_POLL
-bool Sock::WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock)
+bool Sock::WaitManyPoll(std::chrono::milliseconds timeout,
+                        EventsPerSock& events_per_sock,
+                        SocketEventsParams::wrap_fn wrap_func)
 {
     if (events_per_sock.empty()) return true;
 
@@ -316,7 +330,11 @@ bool Sock::WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events
         }
     }
 
-    if (poll(pfds.data(), pfds.size(), count_milliseconds(timeout)) == SOCKET_ERROR) {
+    int ret{SOCKET_ERROR};
+    wrap_func([&](){
+        ret = poll(pfds.data(), pfds.size(), count_milliseconds(timeout));
+    });
+    if (ret == SOCKET_ERROR) {
         return false;
     }
 
@@ -341,7 +359,9 @@ bool Sock::WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events
 }
 #endif /* USE_POLL */
 
-bool Sock::WaitManySelect(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock)
+bool Sock::WaitManySelect(std::chrono::milliseconds timeout,
+                          EventsPerSock& events_per_sock,
+                          SocketEventsParams::wrap_fn wrap_func)
 {
     if (events_per_sock.empty()) return true;
 
@@ -370,7 +390,11 @@ bool Sock::WaitManySelect(std::chrono::milliseconds timeout, EventsPerSock& even
 
     timeval tv = MillisToTimeval(timeout);
 
-    if (select(socket_max + 1, &recv, &send, &err, &tv) == SOCKET_ERROR) {
+    int ret{SOCKET_ERROR};
+    wrap_func([&](){
+        ret = select(socket_max + 1, &recv, &send, &err, &tv);
+    });
+    if (ret == SOCKET_ERROR) {
         return false;
     }
 

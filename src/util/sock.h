@@ -10,6 +10,7 @@
 #include <util/time.h>
 
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -33,10 +34,13 @@ enum class SocketEventsMode : int8_t {
 
 struct SocketEventsParams
 {
+    using wrap_fn = std::function<void(std::function<void()>&&)>;
+
     SocketEventsParams() = default;
-    SocketEventsParams(SocketEventsMode event_mode, SOCKET event_fd) :
+    SocketEventsParams(SocketEventsMode event_mode, SOCKET event_fd, wrap_fn wrap_func) :
         m_event_mode{event_mode},
-        m_event_fd{event_fd}
+        m_event_fd{event_fd},
+        m_wrap_func{wrap_func}
     {}
     ~SocketEventsParams() = default;
 
@@ -51,6 +55,8 @@ public:
     };
     /* File descriptor for event triggered SEMs (and INVALID_SOCKET for the rest) */
     SOCKET m_event_fd{INVALID_SOCKET};
+    /* Function that wraps itself around WakeMany()'s API call */
+    wrap_fn m_wrap_func{[](std::function<void()>&& func){func();}};
 };
 
 /* Converts SocketEventsMode value to string with additional check to report modes not compiled for as unknown */
@@ -301,15 +307,25 @@ public:
                                  EventsPerSock& events_per_sock,
                                  SocketEventsParams event_params = SocketEventsParams());
 #ifdef USE_EPOLL
-    static bool WaitManyEPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SOCKET epoll_fd);
+    static bool WaitManyEPoll(std::chrono::milliseconds timeout,
+                              EventsPerSock& events_per_sock,
+                              SOCKET epoll_fd,
+                              SocketEventsParams::wrap_fn wrap_func);
 #endif /* USE_EPOLL */
 #ifdef USE_KQUEUE
-    static bool WaitManyKQueue(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SOCKET kqueue_fd);
+    static bool WaitManyKQueue(std::chrono::milliseconds timeout,
+                               EventsPerSock& events_per_sock,
+                               SOCKET kqueue_fd,
+                               SocketEventsParams::wrap_fn wrap_func);
 #endif /* USE_KQUEUE */
 #ifdef USE_POLL
-    static bool WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock);
+    static bool WaitManyPoll(std::chrono::milliseconds timeout,
+                             EventsPerSock& events_per_sock,
+                             SocketEventsParams::wrap_fn wrap_func);
 #endif /* USE_POLL */
-    static bool WaitManySelect(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock);
+    static bool WaitManySelect(std::chrono::milliseconds timeout,
+                               EventsPerSock& events_per_sock,
+                               SocketEventsParams::wrap_fn wrap_func);
 
     /* Higher level, convenience, methods. These may throw. */
 
