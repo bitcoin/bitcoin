@@ -108,12 +108,25 @@ int64_t ParseISO8601DateTime(const std::string& str)
     return (ptime - epoch).total_seconds();
 }
 
+struct timespec MillisToTimespec(int64_t nTimeout)
+{
+    struct timespec timeout;
+    timeout.tv_sec = nTimeout / 1000;
+    timeout.tv_nsec = (nTimeout % 1000) * 1000 * 1000;
+    return timeout;
+}
+
 struct timeval MillisToTimeval(int64_t nTimeout)
 {
     struct timeval timeout;
     timeout.tv_sec  = nTimeout / 1000;
     timeout.tv_usec = (nTimeout % 1000) * 1000;
     return timeout;
+}
+
+struct timespec MillisToTimespec(std::chrono::milliseconds ms)
+{
+    return MillisToTimespec(count_milliseconds(ms));
 }
 
 struct timeval MillisToTimeval(std::chrono::milliseconds ms)

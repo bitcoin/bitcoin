@@ -19,6 +19,8 @@
  */
 static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
+static constexpr size_t MAX_EVENTS = 64;
+
 enum class SocketEventsMode : int8_t {
     Select = 0,
     Poll = 1,
