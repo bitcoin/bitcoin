@@ -18,6 +18,7 @@
 #include <consensus/merkle.h>
 #include <deploymentstatus.h>
 
+using node::ReadBlockFromDisk;
 
 bool CheckCbTx(const CCbTx& cbTx, const CBlockIndex* pindexPrev, TxValidationState& state)
 {

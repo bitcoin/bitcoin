@@ -119,7 +119,7 @@ PeerMsgRet CCoinJoinServer::ProcessDSQUEUE(const CNode& peer, CDataStream& vRecv
     vRecv >> dsq;
 
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         Assert(m_peerman)->EraseObjectRequest(peer.GetId(), CInv(MSG_DSQ, dsq.GetHash()));
     }
 
@@ -327,7 +327,7 @@ void CCoinJoinServer::CommitFinalTransaction()
 
     {
         // See if the transaction is valid
-        TRY_LOCK(cs_main, lockMain);
+        TRY_LOCK(::cs_main, lockMain);
         mempool.PrioritiseTransaction(hashTx, 0.1 * COIN);
         if (!lockMain || !ATMPIfSaneFee(m_chainman, finalTransaction)) {
             LogPrint(BCLog::COINJOIN, "CCoinJoinServer::CommitFinalTransaction -- ATMPIfSaneFee() error: Transaction not valid\n");
@@ -460,7 +460,7 @@ void CCoinJoinServer::ChargeRandomFees() const
 
 void CCoinJoinServer::ConsumeCollateral(const CTransactionRef& txref) const
 {
-    LOCK(cs_main);
+    LOCK(::cs_main);
     if (!ATMPIfSaneFee(m_chainman, txref)) {
         LogPrint(BCLog::COINJOIN, "%s -- ATMPIfSaneFee failed\n", __func__);
     } else {

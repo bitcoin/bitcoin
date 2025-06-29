@@ -361,7 +361,7 @@ UniValue CGovernanceObject::ToJson() const
 
 void CGovernanceObject::UpdateLocalValidity(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
     fCachedLocalValidity = IsValidLocally(tip_mn_list, chainman, strLocalValidityError, false);
 }
@@ -376,7 +376,7 @@ bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, 
 
 bool CGovernanceObject::IsValidLocally(const CDeterministicMNList& tip_mn_list, const ChainstateManager& chainman, std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     fMissingConfirmations = false;
 
@@ -447,7 +447,7 @@ CAmount CGovernanceObject::GetMinCollateralFee() const
 
 bool CGovernanceObject::IsCollateralValid(const ChainstateManager& chainman, std::string& strError, bool& fMissingConfirmations) const
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
 
     strError = "";
     fMissingConfirmations = false;
@@ -505,7 +505,7 @@ bool CGovernanceObject::IsCollateralValid(const ChainstateManager& chainman, std
 
     // GET CONFIRMATIONS FOR TRANSACTION
 
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
     int nConfirmationsIn = 0;
     if (nBlockHash != uint256()) {
         const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(nBlockHash);

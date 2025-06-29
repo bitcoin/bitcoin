@@ -12,6 +12,7 @@
 
 using interfaces::FoundBlock;
 
+namespace wallet {
 static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue& entry)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
@@ -925,3 +926,4 @@ RPCHelpMan rescanblockchain()
 },
     };
 }
+} // namespace wallet

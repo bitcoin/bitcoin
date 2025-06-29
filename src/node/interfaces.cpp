@@ -468,7 +468,7 @@ public:
     {
         return m_context->mn_activeman != nullptr;
     }
-    bool isLoadingBlocks() override { return ::fReindex || ::fImporting; }
+    bool isLoadingBlocks() override { return node::fReindex || node::fImporting; }
     void setNetworkActive(bool active) override
     {
         if (m_context->connman) {
@@ -938,7 +938,7 @@ public:
         LOCK(cs_main);
         return m_node.chainman->m_blockman.m_have_pruned;
     }
-    bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
+    bool isReadyToBroadcast() override { return !node::fImporting && !node::fReindex && !isInitialBlockDownload(); }
     bool isInitialBlockDownload() override {
         return chainman().ActiveChainstate().IsInitialBlockDownload();
     }
@@ -1020,6 +1020,6 @@ public:
 } // namespace node
 
 namespace interfaces {
-std::unique_ptr<Node> MakeNode(NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
-std::unique_ptr<Chain> MakeChain(NodeContext& node) { return std::make_unique<node::ChainImpl>(node); }
+std::unique_ptr<Node> MakeNode(node::NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
+std::unique_ptr<Chain> MakeChain(node::NodeContext& node) { return std::make_unique<node::ChainImpl>(node); }
 } // namespace interfaces

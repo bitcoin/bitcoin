@@ -10,6 +10,7 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+namespace wallet {
 isminetype InputIsMine(const CWallet& wallet, const CTxIn& txin) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /** Returns whether all of the inputs match the filter */
@@ -61,5 +62,6 @@ Balance GetBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = 
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
 std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_RECEIVE_H

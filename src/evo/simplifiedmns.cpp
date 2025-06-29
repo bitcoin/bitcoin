@@ -27,6 +27,8 @@
 #include <util/underlying.h>
 #include <util/enumerate.h>
 
+using node::ReadBlockFromDisk;
+
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
     confirmedHash(dmn.pdmnState->confirmedHash),
@@ -335,7 +337,7 @@ bool BuildSimplifiedMNListDiff(CDeterministicMNManager& dmnman, const Chainstate
                                const llmq::CQuorumManager& qman, const uint256& baseBlockHash, const uint256& blockHash,
                                CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet, bool extended)
 {
-    AssertLockHeld(cs_main);
+    AssertLockHeld(::cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
 
     const CBlockIndex* baseBlockIndex = chainman.ActiveChain().Genesis();

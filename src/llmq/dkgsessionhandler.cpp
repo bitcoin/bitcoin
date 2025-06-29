@@ -535,7 +535,7 @@ void CDKGSessionHandler::HandleDKGRound(CConnman& connman, PeerManager& peerman)
     pendingPrematureCommitments.Clear();
     uint256 curQuorumHash = WITH_LOCK(cs_phase_qhash, return quorumHash);
 
-    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(curQuorumHash));
+    const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(curQuorumHash));
 
     if (!InitNewQuorum(pQuorumBaseBlockIndex)) {
         // should actually never happen

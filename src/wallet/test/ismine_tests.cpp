@@ -12,7 +12,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::NodeContext;
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(ismine_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(ismine_standard)
@@ -225,3 +227,4 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

@@ -11,6 +11,17 @@
 
 #include <set>
 
+using node::NodeContext;
+using wallet::CHANGE_LOWER;
+using wallet::CoinEligibilityFilter;
+using wallet::CoinSelectionParams;
+using wallet::COutput;
+using wallet::CreateDummyWalletDatabase;
+using wallet::CWallet;
+using wallet::CWalletTx;
+using wallet::OutputGroup;
+using wallet::TxStateInactive;
+
 static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
 {
     static int nextLockTime = 0;

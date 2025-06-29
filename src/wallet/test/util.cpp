@@ -15,6 +15,7 @@
 
 #include <memory>
 
+namespace wallet {
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoin_loader, CChain& cchain, ArgsManager& args, const CKey& key)
 {
     auto wallet = std::make_unique<CWallet>(&chain, &coinjoin_loader, "", args, CreateMockWalletDatabase());
@@ -44,3 +45,4 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, interfaces
     BOOST_CHECK(result.last_failed_block.IsNull());
     return wallet;
 }
+} // namespace wallet

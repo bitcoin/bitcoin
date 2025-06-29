@@ -20,7 +20,6 @@
 #include <optional>
 #include <unordered_set>
 
-class BlockManager;
 class CBlock;
 class CBlockIndex;
 class BlockValidationState;
@@ -32,6 +31,9 @@ struct Params;
 namespace llmq {
 class CQuorumManager;
 } // namespace llmq
+namespace node {
+class BlockManager;
+} // namespace node
 
 struct CCreditPool {
     CAmount locked{0};
@@ -86,7 +88,7 @@ public:
      * to change amount of credit pool
      * @return true if transaction can be included in this block
      */
-    bool ProcessLockUnlockTransaction(const BlockManager& blockman, const llmq::CQuorumManager& qman, const CTransaction& tx, TxValidationState& state);
+    bool ProcessLockUnlockTransaction(const node::BlockManager& blockman, const llmq::CQuorumManager& qman, const CTransaction& tx, TxValidationState& state);
 
     /**
      * this function returns total amount of credits for the next block
@@ -139,7 +141,7 @@ private:
                                     const Consensus::Params& consensusParams);
 };
 
-std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const BlockManager& blockman, const llmq::CQuorumManager& qman,
+std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpoolman, const node::BlockManager& blockman, const llmq::CQuorumManager& qman,
                                                          const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams,
                                                          const CAmount blockSubsidy, BlockValidationState& state);
 

@@ -527,7 +527,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pfrom, CConnman& connman, CQuorumC
 
 std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqType, size_t nCountRequested) const
 {
-    const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate.m_chain.Tip());
+    const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip());
     return ScanQuorums(llmqType, pindex, nCountRequested);
 }
 
@@ -647,7 +647,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint25
         // We cannot acquire cs_main if we have cs_quorumBaseBlockIndexCache held
         const CBlockIndex* pindex;
         if (!WITH_LOCK(cs_quorumBaseBlockIndexCache, return quorumBaseBlockIndexCache.get(quorumHash, pindex))) {
-            pindex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(quorumHash));
+            pindex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(quorumHash));
             if (pindex) {
                 LOCK(cs_quorumBaseBlockIndexCache);
                 quorumBaseBlockIndexCache.insert(quorumHash, pindex);
@@ -750,7 +750,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, const
 
         bool request_limit_exceeded(false);
         {
-            LOCK2(cs_main, cs_data_requests);
+            LOCK2(::cs_main, cs_data_requests);
             const CQuorumDataRequestKey key(pfrom.GetVerifiedProRegTxHash(), false, request.GetQuorumHash(), request.GetLLMQType());
             auto it = mapQuorumDataRequests.find(key);
             if (it == mapQuorumDataRequests.end()) {
@@ -766,7 +766,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, const
             return sendQDATA(CQuorumDataRequest::Errors::QUORUM_TYPE_INVALID, request_limit_exceeded);
         }
 
-        const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(request.GetQuorumHash()));
+        const CBlockIndex* pQuorumBaseBlockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(request.GetQuorumHash()));
         if (pQuorumBaseBlockIndex == nullptr) {
             return sendQDATA(CQuorumDataRequest::Errors::QUORUM_BLOCK_NOT_FOUND, request_limit_exceeded);
         }
@@ -815,7 +815,7 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, const
         vRecv >> request;
 
         {
-            LOCK2(cs_main, cs_data_requests);
+            LOCK2(::cs_main, cs_data_requests);
             const CQuorumDataRequestKey key(pfrom.GetVerifiedProRegTxHash(), true, request.GetQuorumHash(), request.GetLLMQType());
             auto it = mapQuorumDataRequests.find(key);
             if (it == mapQuorumDataRequests.end()) {
@@ -1214,7 +1214,7 @@ CQuorumCPtr SelectQuorumForSigning(const Consensus::LLMQParams& llmq_params, con
 
     CBlockIndex* pindexStart;
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         if (signHeight == -1) {
             signHeight = active_chain.Height();
         }

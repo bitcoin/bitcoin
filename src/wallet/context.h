@@ -13,8 +13,6 @@
 #include <vector>
 
 class ArgsManager;
-class CWallet;
-struct NodeContext;
 namespace interfaces {
 class Chain;
 namespace CoinJoin {
@@ -22,6 +20,12 @@ class Loader;
 } // namspace CoinJoin
 class Wallet;
 } // namespace interfaces
+namespace node {
+struct NodeContext;
+} // namespace node
+
+namespace wallet {
+class CWallet;
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
@@ -49,7 +53,7 @@ struct WalletContext {
     // capabilities (even though it is a hard ask sometimes). We should get
     // rid of this at some point but until then, here's NodeContext.
     // TODO: Get rid of this. It's not nice.
-    NodeContext* node_context{nullptr};
+    node::NodeContext* node_context{nullptr};
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the WalletContext struct doesn't need to #include class
@@ -57,5 +61,6 @@ struct WalletContext {
     WalletContext();
     ~WalletContext();
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_CONTEXT_H

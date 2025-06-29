@@ -14,6 +14,11 @@
 
 #include <optional>
 
+using wallet::CreateMockWalletDatabase;
+using wallet::CWallet;
+using wallet::DBErrors;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine, const uint32_t epoch_iters)
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();

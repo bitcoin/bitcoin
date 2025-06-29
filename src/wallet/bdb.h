@@ -30,6 +30,7 @@ struct bilingual_str;
 #pragma GCC diagnostic pop
 #endif
 
+namespace wallet {
 struct WalletDatabaseFileId {
     uint8_t value[DB_FILE_ID_LEN];
     bool operator==(const WalletDatabaseFileId& rhs) const;
@@ -230,5 +231,6 @@ bool BerkeleyDatabaseSanityCheck();
 
 //! Return object giving access to Berkeley database at specified path.
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_BDB_H

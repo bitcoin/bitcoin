@@ -13,6 +13,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::NodeContext;
+
 /* TODO: rename this file and test to llmq_options_test */
 BOOST_AUTO_TEST_SUITE(evo_utils_tests)
 

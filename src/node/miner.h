@@ -19,7 +19,6 @@
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
 
-class BlockManager;
 class CBlockIndex;
 class CChainParams;
 class CChainstateHelper;
@@ -30,7 +29,6 @@ class CEvoDB;
 class CMNHFManager;
 class CScript;
 struct LLMQContext;
-struct NodeContext;
 
 namespace Consensus { struct Params; };
 namespace llmq {
@@ -40,6 +38,10 @@ class CQuorumBlockProcessor;
 class CQuorumManager;
 class CQuorumSnapshotManager;
 } // namespace llmq
+
+namespace node {
+class BlockManager;
+struct NodeContext;
 
 static const bool DEFAULT_PRINTPRIORITY = false;
 
@@ -188,8 +190,8 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool* mempool, const CChainParams& params);
-    explicit BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool* mempool, const CChainParams& params,
+    explicit BlockAssembler(CChainState& chainstate, const node::NodeContext& node, const CTxMemPool* mempool, const CChainParams& params);
+    explicit BlockAssembler(CChainState& chainstate, const node::NodeContext& node, const CTxMemPool* mempool, const CChainParams& params,
                             const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
@@ -227,5 +229,6 @@ private:
 };
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+} // namespace node
 
 #endif // BITCOIN_NODE_MINER_H

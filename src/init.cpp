@@ -134,6 +134,32 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+using node::CacheSizes;
+using node::CalculateCacheSizes;
+using node::CCoinsStats;
+using node::CoinStatsHashType;
+using node::ChainstateLoadingError;
+using node::ChainstateLoadVerifyError;
+using node::DashChainstateSetupClose;
+using node::DEFAULT_ADDRESSINDEX;
+using node::DEFAULT_PRINTPRIORITY;
+using node::DEFAULT_SPENTINDEX;
+using node::DEFAULT_STOPAFTERBLOCKIMPORT;
+using node::DEFAULT_TIMESTAMPINDEX;
+using node::LoadChainstate;
+using node::NodeContext;
+using node::ThreadImport;
+using node::VerifyLoadedChainstate;
+using node::fAddressIndex;
+using node::fPruneMode;
+using node::fReindex;
+using node::fSpentIndex;
+using node::fTimestampIndex;
+using node::nPruneTarget;
+#ifdef ENABLE_WALLET
+using wallet::DEFAULT_DISABLE_WALLET;
+#endif // ENABLE_WALLET
+
 static constexpr bool DEFAULT_PROXYRANDOMIZE{true};
 static constexpr bool DEFAULT_REST_ENABLE{false};
 static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};

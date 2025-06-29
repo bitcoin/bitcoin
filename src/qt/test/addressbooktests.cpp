@@ -27,6 +27,13 @@
 #include <QTableView>
 #include <QTimer>
 
+using wallet::AddWallet;
+using wallet::CreateMockWalletDatabase;
+using wallet::CWallet;
+using wallet::RemoveWallet;
+using wallet::WALLET_FLAG_DESCRIPTORS;
+using wallet::WalletContext;
+
 namespace
 {
 

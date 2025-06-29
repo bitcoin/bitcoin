@@ -60,6 +60,12 @@
 
 #include <univalue.h>
 
+using node::AnalyzePSBT;
+using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::GetTransaction;
+using node::NodeContext;
+using node::PSBTAnalysis;
+
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool& mempool, const CChainState& active_chainstate, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, UniValue& entry)
 {
     LOCK(::cs_main);
@@ -75,7 +81,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, const  CTxMemPool
 
     // Add spent information if spentindex is enabled
     CSpentIndexTxInfo txSpentInfo;
-    if (fSpentIndex) {
+    if (node::fSpentIndex) {
         txSpentInfo = CSpentIndexTxInfo{};
         for (const auto& txin : tx.vin) {
             if (!tx.IsCoinBase()) {

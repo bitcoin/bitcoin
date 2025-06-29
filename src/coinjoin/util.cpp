@@ -14,6 +14,13 @@
 
 #include <numeric>
 
+using wallet::CompactTallyItem;
+using wallet::CRecipient;
+using wallet::CWallet;
+using wallet::FEATURE_COMPRPUBKEY;
+using wallet::GetDiscardRate;
+using wallet::WalletBatch;
+
 inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
 {
     assert(nSizePrev <= nSizeNew);
@@ -273,7 +280,7 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
 
     CTransactionRef tx;
     {
-        LOCK2(m_wallet.cs_wallet, cs_main);
+        LOCK2(m_wallet.cs_wallet, ::cs_main);
         FeeCalculation fee_calc_out;
         if (!CreateTransaction(m_wallet, vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
             return false;
@@ -312,7 +319,7 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     }
 
     {
-        LOCK2(m_wallet.cs_wallet, cs_main);
+        LOCK2(m_wallet.cs_wallet, ::cs_main);
         m_wallet.CommitTransaction(tx, {}, {});
     }
 

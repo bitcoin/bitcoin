@@ -19,6 +19,8 @@
 #include <llmq/context.h>
 #include <llmq/instantsend.h>
 
+using node::NodeContext;
+
 static std::vector<RPCResult> MempoolEntryDescription() { return {
     RPCResult{RPCResult::Type::NUM, "vsize", "virtual transaction size. This can be different from actual serialized size for high-sigop transactions."},
     RPCResult{RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true,

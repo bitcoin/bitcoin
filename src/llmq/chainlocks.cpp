@@ -24,6 +24,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+using node::ReadBlockFromDisk;
+
 static bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
 {
     return sporkman.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
@@ -121,7 +123,7 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
         return {};
     }
 
-    const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
+    const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
 
     {
         LOCK(cs);
@@ -237,7 +239,7 @@ void CChainLocksHandler::TrySignChainTip(const llmq::CInstantSendManager& isman)
         return;
     }
 
-    const CBlockIndex* pindex = WITH_LOCK(cs_main, return m_chainstate.m_chain.Tip());
+    const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip());
 
     if (pindex->pprev == nullptr) {
         return;
@@ -404,7 +406,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
 
         uint32_t blockTime;
         {
-            LOCK(cs_main);
+            LOCK(::cs_main);
             const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(blockHash);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
@@ -485,7 +487,7 @@ void CChainLocksHandler::EnforceBestChainLock()
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, dummy_state.ToString());
             return;
         }
-        LOCK(cs_main);
+        LOCK(::cs_main);
         if (m_chainstate.m_chain.Tip()->GetAncestor(currentBestChainLockBlockIndex->nHeight) != currentBestChainLockBlockIndex) {
             return;
         }
@@ -619,7 +621,7 @@ void CChainLocksHandler::Cleanup()
         }
     }
     // need mempool.cs due to GetTransaction calls
-    LOCK2(cs_main, mempool.cs);
+    LOCK2(::cs_main, mempool.cs);
     LOCK(cs);
 
     for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {

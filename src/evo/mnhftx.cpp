@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+using node::ReadBlockFromDisk;
+
 static const std::string MNEHF_REQUESTID_PREFIX = "mnhf";
 static const std::string DB_SIGNALS = "mnhf_s";
 static const std::string DB_SIGNALS_v2 = "mnhf_s2";

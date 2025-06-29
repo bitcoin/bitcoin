@@ -12,6 +12,7 @@
 
 #include <wallet/test/init_test_fixture.h>
 
+namespace wallet {
 InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
     m_coinjoin_loader = interfaces::MakeCoinJoinLoader(m_node);
@@ -48,3 +49,4 @@ void InitWalletDirTestingSetup::SetWalletDir(const fs::path& walletdir_path)
 {
     m_args.ForceSetArg("-walletdir", fs::PathToString(walletdir_path));
 }
+} // namespace wallet

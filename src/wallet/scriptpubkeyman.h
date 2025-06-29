@@ -24,6 +24,7 @@
 #include <functional>
 #include <optional>
 
+namespace wallet {
 // Wallet storage things that ScriptPubKeyMans need in order to be able to store things to the wallet database.
 // It provides access to things that are part of the entire wallet and not specific to a ScriptPubKeyMan such as
 // wallet flags, wallet version, encryption keys, encryption status, and the database itself. This allows a
@@ -605,5 +606,6 @@ public:
 
     void UpgradeDescriptorCache();
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

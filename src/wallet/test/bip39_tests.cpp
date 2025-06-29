@@ -17,6 +17,7 @@
 // In script_tests.cpp
 extern UniValue read_json(const std::string& jsondata);
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(bip39_tests, BasicTestingSetup)
 
 // https://github.com/trezor/python-mnemonic/blob/b502451a33a440783926e04428115e0bed87d01f/vectors.json
@@ -61,5 +62,6 @@ BOOST_AUTO_TEST_CASE(bip39_vectors)
         BOOST_CHECK(EncodeExtKey(key) == test[3].get_str());
     }
 }
+} // namespace wallet
 
 BOOST_AUTO_TEST_SUITE_END()

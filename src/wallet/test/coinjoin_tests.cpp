@@ -20,6 +20,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(coinjoin_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(coinjoin_options_tests)
@@ -141,7 +142,7 @@ public:
         wallet->LoadWallet();
         AddWallet(context, wallet);
         {
-            LOCK2(wallet->cs_wallet, cs_main);
+            LOCK2(wallet->cs_wallet, ::cs_main);
             wallet->GetLegacyScriptPubKeyMan()->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
             wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         }
@@ -172,7 +173,7 @@ public:
             blocktx = CMutableTransaction(*it->second.tx);
         }
         CreateAndProcessBlock({blocktx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        LOCK2(wallet->cs_wallet, cs_main);
+        LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         it->second.m_state = TxStateConfirmed{m_node.chainman->ActiveChain().Tip()->GetBlockHash(), m_node.chainman->ActiveChain().Height(), /*index=*/1};
         return it->second;
@@ -195,7 +196,7 @@ public:
             FeeCalculation fee_calc_out;
             BOOST_CHECK(CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
             {
-                LOCK2(wallet->cs_wallet, cs_main);
+                LOCK2(wallet->cs_wallet, ::cs_main);
                 wallet->CommitTransaction(tx, {}, {});
             }
             AddTxToChain(tx->GetHash());
@@ -314,5 +315,6 @@ BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
         BOOST_CHECK(vecOutputs.size() == 0);
     }
 }
+} // namespace wallet
 
 BOOST_AUTO_TEST_SUITE_END()

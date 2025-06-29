@@ -10,6 +10,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::BlockManager;
+
 BOOST_FIXTURE_TEST_SUITE(validation_flush_tests, ChainTestingSetup)
 
 //! Test utilities for detecting when we need to flush the coins cache based

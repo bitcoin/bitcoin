@@ -24,7 +24,6 @@
 
 class BanMan;
 class CBlockIndex;
-class CCoinControl;
 class CDeterministicMNList;
 class CFeeRate;
 class CGovernanceObject;
@@ -33,20 +32,24 @@ class Coin;
 class RPCTimerInterface;
 class UniValue;
 class Proxy;
-struct bilingual_str;
 enum class SynchronizationState;
 enum class TransactionError;
-struct CNodeStateStats;
-struct NodeContext;
-
 enum vote_signal_enum_t : int;
+struct bilingual_str;
+struct CNodeStateStats;
+namespace node {
+struct NodeContext;
+} // namespace node
+namespace wallet {
+class CCoinControl;
+} // namespace wallet
 
 namespace interfaces {
 class Handler;
 class WalletLoader;
 namespace CoinJoin {
 class Loader;
-} //namespsace CoinJoin
+} // namespace CoinJoin
 struct BlockTip;
 
 //! Interface for the src/evo part of a dash node (dashd process).
@@ -55,7 +58,7 @@ class EVO
 public:
     virtual ~EVO() {}
     virtual std::pair<CDeterministicMNList, const CBlockIndex*> getListAtChainTip() = 0;
-    virtual void setContext(NodeContext* context) {}
+    virtual void setContext(node::NodeContext* context) {}
 };
 
 //! Interface for the src/governance part of a dash node (dashd process).
@@ -67,7 +70,7 @@ public:
     virtual int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) = 0;
     virtual bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) = 0;
     virtual bool isEnabled() = 0;
-    virtual void setContext(NodeContext* context) {}
+    virtual void setContext(node::NodeContext* context) {}
 };
 
 //! Interface for the src/llmq part of a dash node (dashd process).
@@ -76,7 +79,7 @@ class LLMQ
 public:
     virtual ~LLMQ() {}
     virtual size_t getInstantSentLockCount() = 0;
-    virtual void setContext(NodeContext* context) {}
+    virtual void setContext(node::NodeContext* context) {}
 };
 
 //! Interface for the src/masternode part of a dash node (dashd process).
@@ -89,7 +92,7 @@ public:
     virtual bool isBlockchainSynced() = 0;
     virtual bool isSynced() = 0;
     virtual std::string getSyncStatus() =  0;
-    virtual void setContext(NodeContext* context) {}
+    virtual void setContext(node::NodeContext* context) {}
 };
 }
 
@@ -354,12 +357,12 @@ public:
 
     //! Get and set internal node context. Useful for testing, but not
     //! accessible across processes.
-    virtual NodeContext* context() { return nullptr; }
-    virtual void setContext(NodeContext* context) { }
+    virtual node::NodeContext* context() { return nullptr; }
+    virtual void setContext(node::NodeContext* context) { }
 };
 
 //! Return implementation of Node interface.
-std::unique_ptr<Node> MakeNode(NodeContext& context);
+std::unique_ptr<Node> MakeNode(node::NodeContext& context);
 
 //! Block tip (could be a header or not, depends on the subscribed signal).
 struct BlockTip {

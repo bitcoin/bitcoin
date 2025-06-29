@@ -194,7 +194,7 @@ PeerMsgRet CGovernanceManager::ProcessMessage(CNode& peer, CConnman& connman, Pe
             return {};
         }
 
-        LOCK2(cs_main, cs);
+        LOCK2(::cs_main, cs);
 
         if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
@@ -312,7 +312,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, PeerMana
 
     govobj.UpdateSentinelVariables(tip_mn_list); //this sets local vars in object
 
-    LOCK2(cs_main, cs);
+    LOCK2(::cs_main, cs);
     std::string strError;
 
     // MAKE SURE THIS OBJECT IS OK
@@ -374,7 +374,7 @@ void CGovernanceManager::CheckAndRemove()
 
     const auto tip_mn_list = Assert(m_dmnman)->GetListAtChainTip();
 
-    LOCK2(cs_main, cs);
+    LOCK2(::cs_main, cs);
 
     for (const uint256& nHash : vecDirtyHashes) {
         auto it = mapObjects.find(nHash);
@@ -701,7 +701,7 @@ std::optional<const CGovernanceObject> CGovernanceManager::CreateGovernanceTrigg
     if (!sb_opt.has_value()) return std::nullopt;
 
     //TODO: Check if nHashParentIn, nRevision and nCollateralHashIn are correct
-    LOCK2(cs_main, cs);
+    LOCK2(::cs_main, cs);
 
     // Check if identical trigger (equal DataHash()) is already created (signed by other masternode)
     CGovernanceObject gov_sb(uint256(), 1, GetAdjustedTime(), uint256(), sb_opt.value().GetHexStrData());
@@ -748,7 +748,7 @@ void CGovernanceManager::VoteGovernanceTriggers(const std::optional<const CGover
     // only active masternodes can vote on triggers
     if (mn_activeman.GetProTxHash().IsNull()) return;
 
-    LOCK2(cs_main, cs);
+    LOCK2(::cs_main, cs);
 
     if (trigger_opt.has_value()) {
         // We should never vote "yes" on another trigger or the same trigger twice
@@ -1181,7 +1181,7 @@ void CGovernanceManager::CheckPostponedObjects(PeerManager& peerman)
 {
     if (!m_mn_sync.IsSynced()) return;
 
-    LOCK2(cs_main, cs);
+    LOCK2(::cs_main, cs);
 
     // Check postponed proposals
     for (auto it = mapPostponedObjects.begin(); it != mapPostponedObjects.end();) {
@@ -1355,7 +1355,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             if (!pnode->CanRelay() || (fMasternodeMode && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
             {
-                LOCK(cs_main);
+                LOCK(::cs_main);
                 size_t nProjectedSize = peerman.GetRequestedObjectCount(pnode->GetId()) + nProjectedVotes;
                 if (nProjectedSize > MAX_INV_SZ) continue;
                 // to early to ask the same node

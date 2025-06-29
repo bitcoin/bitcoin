@@ -34,6 +34,17 @@
 #include <fstream>
 #include <iomanip>
 
+using node::GetTransaction;
+using node::NodeContext;
+using node::ReadBlockFromDisk;
+#ifdef ENABLE_WALLET
+using wallet::CCoinControl;
+using wallet::CoinType;
+using wallet::COutput;
+using wallet::CWallet;
+using wallet::GetWalletForJSONRPCRequest;
+#endif // ENABLE_WALLET
+
 static RPCHelpMan masternode_connect()
 {
     return RPCHelpMan{"masternode connect",
@@ -237,7 +248,7 @@ static RPCHelpMan masternode_winners()
     const ChainstateManager& chainman = EnsureChainman(node);
     const CBlockIndex* pindexTip{nullptr};
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         pindexTip = chainman.ActiveChain().Tip();
         if (!pindexTip) return NullUniValue;
     }
@@ -325,10 +336,10 @@ static RPCHelpMan masternode_payments()
     }
 
     if (request.params[0].isNull()) {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         pindex = chainman.ActiveChain().Tip();
     } else {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         uint256 blockHash(ParseHashV(request.params[0], "blockhash"));
         pindex = chainman.m_blockman.LookupBlockIndex(blockHash);
         if (pindex == nullptr) {
@@ -412,7 +423,7 @@ static RPCHelpMan masternode_payments()
         vecPayments.push_back(blockObj);
 
         if (nCount > 0) {
-            LOCK(cs_main);
+            LOCK(::cs_main);
             pindex = chainman.ActiveChain().Next(pindex);
         } else {
             pindex = pindex->pprev;
@@ -527,14 +538,14 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
             return (int)0;
         }
 
-        LOCK(cs_main);
+        LOCK(::cs_main);
         const CBlockIndex* pindex = chainman.ActiveChain()[dmn.pdmnState->nLastPaidHeight];
         return (int)pindex->nTime;
     };
 
     const bool showRecentMnsOnly = strMode == "recent";
     const bool showEvoOnly = strMode == "evo";
-    const int tipHeight = WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()->nHeight);
+    const int tipHeight = WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()->nHeight);
     mnList.ForEachMN(false, [&](auto& dmn) {
         if (showRecentMnsOnly && dmn.pdmnState->IsBanned()) {
             if (tipHeight - dmn.pdmnState->GetBannedHeight() > Params().GetConsensus().nSuperblockCycle) {

@@ -28,6 +28,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::GetTransaction;
+
 using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)

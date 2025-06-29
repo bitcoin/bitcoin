@@ -582,7 +582,7 @@ public:
     bool ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state,
                       const CCoinsViewCache& view, llmq::CQuorumSnapshotManager& qsnapman,
                       const CDeterministicMNList& newList, std::optional<MNListUpdates>& updatesRet)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs, cs_main);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
     bool UndoBlock(gsl::not_null<const CBlockIndex*> pindex, std::optional<MNListUpdates>& updatesRet) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void UpdatedBlockTip(gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);

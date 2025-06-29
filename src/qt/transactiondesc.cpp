@@ -27,6 +27,11 @@
 
 #include <QLatin1String>
 
+using wallet::ISMINE_ALL;
+using wallet::ISMINE_SPENDABLE;
+using wallet::ISMINE_WATCH_ONLY;
+using wallet::isminetype;
+
 QString TransactionDesc::FormatTxStatus(const interfaces::WalletTxStatus& status, bool inMempool)
 {
     int depth = status.depth_in_main_chain;

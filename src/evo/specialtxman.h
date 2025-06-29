@@ -64,16 +64,16 @@ public:
     }
 
     bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, const CCoinsViewCache& view, bool check_sigs, TxValidationState& state)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, const CCoinsViewCache& view, bool fJustCheck,
                                   bool fCheckCbTxMerkleRoots, BlockValidationState& state, std::optional<MNListUpdates>& updatesRet)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, std::optional<MNListUpdates>& updatesRet)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 private:
     bool CheckCreditPoolDiffForBlock(const CBlock& block, const CBlockIndex* pindex, const CCbTx& cbTx,
-                                     BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                                     BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 #endif // BITCOIN_EVO_SPECIALTXMAN_H

@@ -30,6 +30,9 @@
 #include <map>
 #include <vector>
 
+using node::BlockAssembler;
+using node::GetTransaction;
+
 using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 
 struct TestChainBRRBeforeActivationSetup : public TestChainSetup

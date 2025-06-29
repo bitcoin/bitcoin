@@ -14,6 +14,7 @@
 #include <wallet/wallet.h>
 #include <wallet/transaction.h>
 
+namespace wallet {
 void CWallet::InitCJSaltFromDb()
 {
     assert(nCoinJoinSalt.IsNull());
@@ -573,3 +574,4 @@ CoinJoinCredits CachedTxGetAvailableCoinJoinCredits(const CWallet& wallet, const
     }
     return ret;
 }
+} // namespace wallet

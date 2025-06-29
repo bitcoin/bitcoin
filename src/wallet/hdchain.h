@@ -7,6 +7,7 @@
 #include <script/keyorigin.h>
 #include <sync.h>
 
+namespace wallet {
 /* hd account data model */
 class CHDAccount
 {
@@ -139,5 +140,6 @@ public:
 
     std::string GetKeyPath() const;
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_HDCHAIN_H

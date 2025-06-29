@@ -10,6 +10,8 @@
 #include <node/blockstorage.h>
 #include <serialize.h>
 
+using node::UndoReadFromDisk;
+
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
  * height, and those belonging to blocks that have been reorganized out of the active chain are

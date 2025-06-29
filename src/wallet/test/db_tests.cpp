@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
 static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, fs::path& database_filename)
@@ -78,3 +79,4 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

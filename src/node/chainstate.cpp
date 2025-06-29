@@ -17,6 +17,7 @@
 #include <evo/mnhftx.h>
 #include <llmq/context.h>
 
+namespace node {
 std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      ChainstateManager& chainman,
                                                      CGovernanceManager& govman,
@@ -313,3 +314,4 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
 
     return std::nullopt;
 }
+} // namespace node

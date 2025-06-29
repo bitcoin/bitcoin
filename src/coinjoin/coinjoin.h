@@ -404,6 +404,6 @@ private:
 };
 
 bool ATMPIfSaneFee(ChainstateManager& chainman, const CTransactionRef& tx, bool test_accept = false)
-    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 #endif // BITCOIN_COINJOIN_COINJOIN_H

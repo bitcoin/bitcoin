@@ -29,6 +29,7 @@ namespace Consensus {
 struct Params;
 }
 
+namespace node {
 enum class ChainstateLoadingError {
     ERROR_LOADING_BLOCK_DB,
     ERROR_BAD_GENESIS_BLOCK,
@@ -146,5 +147,6 @@ std::optional<ChainstateLoadVerifyError> VerifyLoadedChainstate(ChainstateManage
                                                                 int check_level,
                                                                 std::function<int64_t()> get_unix_time_seconds,
                                                                 std::function<void(bool)> notify_bls_state = nullptr);
+} // namespace node
 
 #endif // BITCOIN_NODE_CHAINSTATE_H

@@ -10,10 +10,6 @@
 #include <threadsafety.h>
 #include <wallet/wallet.h>
 
-class CCoinControl;
-class CWallet;
-class CWalletTx;
-
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
 #define WalletCJLogPrint(wallet, ...)               \
@@ -22,6 +18,11 @@ class CWalletTx;
             wallet->WalletLogPrintf(__VA_ARGS__);   \
         }                                           \
     } while (0)
+
+namespace wallet {
+class CCoinControl;
+class CWallet;
+class CWalletTx;
 
 CAmount GetBalanceAnonymized(const CWallet& wallet, const CCoinControl& coinControl);
 
@@ -37,5 +38,6 @@ struct CoinJoinCredits
 
 CoinJoinCredits CachedTxGetAvailableCoinJoinCredits(const CWallet& wallet, const CWalletTx& wtx)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_COINJOIN_H

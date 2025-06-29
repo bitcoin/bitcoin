@@ -13,13 +13,17 @@ class ChainstateManager;
 class CTxMemPool;
 class CBlockPolicyEstimator;
 struct LLMQContext;
+namespace node {
 struct NodeContext;
+} // namespace node
+namespace wallet {
 struct WalletContext;
+} // namespace wallet
 
 using CoreContext = std::variant<std::monostate,
                                  std::reference_wrapper<ArgsManager>,
-                                 std::reference_wrapper<NodeContext>,
-                                 std::reference_wrapper<WalletContext>,
+                                 std::reference_wrapper<node::NodeContext>,
+                                 std::reference_wrapper<wallet::WalletContext>,
                                  std::reference_wrapper<CTxMemPool>,
                                  std::reference_wrapper<ChainstateManager>,
                                  std::reference_wrapper<CBlockPolicyEstimator>,

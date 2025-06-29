@@ -27,6 +27,8 @@
 #include <string>
 #include <utility>
 
+using node::ReadBlockFromDisk;
+
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
 static const char *MSG_HASHBLOCK     = "hashblock";

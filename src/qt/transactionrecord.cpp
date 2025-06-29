@@ -15,6 +15,11 @@
 
 #include <QDateTime>
 
+using wallet::ISMINE_ALL;
+using wallet::ISMINE_SPENDABLE;
+using wallet::ISMINE_WATCH_ONLY;
+using wallet::isminetype;
+
 /* Return positive answer if transaction should be shown in list.
  */
 bool TransactionRecord::showTransaction()

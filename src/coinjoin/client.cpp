@@ -33,6 +33,13 @@
 #include <memory>
 #include <univalue.h>
 
+using wallet::CCoinControl;
+using wallet::CompactTallyItem;
+using wallet::COutput;
+using wallet::CoinType;
+using wallet::CWallet;
+using wallet::ReserveDestination;
+
 PeerMsgRet CCoinJoinClientQueueManager::ProcessMessage(const CNode& peer, CConnman& connman, PeerManager& peerman,
                                                        std::string_view msg_type, CDataStream& vRecv)
 {
@@ -54,7 +61,7 @@ PeerMsgRet CCoinJoinClientQueueManager::ProcessDSQueue(const CNode& peer, CConnm
     vRecv >> dsq;
 
     {
-        LOCK(cs_main);
+        LOCK(::cs_main);
         peerman.EraseObjectRequest(peer.GetId(), CInv(MSG_DSQ, dsq.GetHash()));
     }
 

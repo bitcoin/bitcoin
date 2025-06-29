@@ -22,6 +22,9 @@
 #include <memory>
 #include <stack>
 
+using node::BlockManager;
+using node::ReadBlockFromDisk;
+
 // Forward declaration to prevent a new circular dependencies through masternode/payments.h
 CAmount PlatformShare(const CAmount masternodeReward);
 

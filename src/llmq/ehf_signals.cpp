@@ -101,7 +101,7 @@ MessageProcessingResult CEHFSignalsHandler::HandleNewRecoveredSig(const CRecover
     }
 
     MessageProcessingResult ret;
-    const auto ehfSignals = mnhfman.GetSignalsStage(WITH_LOCK(cs_main, return m_chainman.ActiveTip()));
+    const auto ehfSignals = mnhfman.GetSignalsStage(WITH_LOCK(::cs_main, return m_chainman.ActiveTip()));
     MNHFTxPayload mnhfPayload;
     for (const auto& deployment : Params().GetConsensus().vDeployments) {
         // skip deployments that do not use dip0023 or that have already been mined
@@ -123,7 +123,7 @@ MessageProcessingResult CEHFSignalsHandler::HandleNewRecoveredSig(const CRecover
         {
             CTransactionRef tx_to_sent = MakeTransactionRef(std::move(tx));
             LogPrintf("CEHFSignalsHandler::HandleNewRecoveredSig Special EHF TX is created hash=%s\n", tx_to_sent->GetHash().ToString());
-            LOCK(cs_main);
+            LOCK(::cs_main);
             const MempoolAcceptResult result = m_chainman.ProcessTransaction(tx_to_sent);
             if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
                 ret.m_transactions.push_back(tx_to_sent->GetHash());

@@ -31,13 +31,13 @@ enum class MemPoolRemovalReason;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
-struct NodeContext;
-enum class MemPoolRemovalReason;
-
 namespace llmq {
 class CChainLockSig;
 struct CInstantSendLock;
 } // namespace llmq
+namespace node {
+struct NodeContext;
+} // namespace node
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
 
@@ -339,7 +339,7 @@ public:
 };
 
 //! Return implementation of Chain interface.
-std::unique_ptr<Chain> MakeChain(NodeContext& node);
+std::unique_ptr<Chain> MakeChain(node::NodeContext& node);
 
 } // namespace interfaces
 

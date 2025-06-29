@@ -49,6 +49,7 @@ using interfaces::WalletTx;
 using interfaces::WalletTxOut;
 using interfaces::WalletTxStatus;
 using interfaces::WalletValueMap;
+using node::NodeContext;
 
 namespace wallet {
 namespace {
@@ -220,7 +221,7 @@ public:
     }
     bool getAddress(const CTxDestination& dest,
         std::string* name,
-        isminetype* is_mine,
+        wallet::isminetype* is_mine,
         std::string* purpose) override
     {
         LOCK(m_wallet->cs_wallet);
@@ -445,22 +446,22 @@ public:
             return GetAvailableBalance(*m_wallet, &coin_control);
         }
     }
-    isminetype txinIsMine(const CTxIn& txin) override
+    wallet::isminetype txinIsMine(const CTxIn& txin) override
     {
         LOCK(m_wallet->cs_wallet);
         return InputIsMine(*m_wallet, txin);
     }
-    isminetype txoutIsMine(const CTxOut& txout) override
+    wallet::isminetype txoutIsMine(const CTxOut& txout) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsMine(txout);
     }
-    CAmount getDebit(const CTxIn& txin, isminefilter filter) override
+    CAmount getDebit(const CTxIn& txin, wallet::isminefilter filter) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->GetDebit(txin, filter);
     }
-    CAmount getCredit(const CTxOut& txout, isminefilter filter) override
+    CAmount getCredit(const CTxOut& txout, wallet::isminefilter filter) override
     {
         LOCK(m_wallet->cs_wallet);
         return OutputGetCredit(*m_wallet, txout, filter);
@@ -667,7 +668,7 @@ public:
 } // namespace wallet
 
 namespace interfaces {
-std::unique_ptr<Wallet> MakeWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(context, wallet) : nullptr; }
+std::unique_ptr<Wallet> MakeWallet(wallet::WalletContext& context, const std::shared_ptr<wallet::CWallet>& wallet) { return wallet ? std::make_unique<wallet::WalletImpl>(context, wallet) : nullptr; }
 std::unique_ptr<WalletLoader> MakeWalletLoader(Chain& chain, ArgsManager& args, NodeContext& node_context,
                                                interfaces::CoinJoin::Loader& coinjoin_loader)
 {

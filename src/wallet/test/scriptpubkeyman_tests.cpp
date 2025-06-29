@@ -10,6 +10,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+using node::NodeContext;
+
+namespace wallet {
 BOOST_FIXTURE_TEST_SUITE(scriptpubkeyman_tests, BasicTestingSetup)
 
 // Test LegacyScriptPubKeyMan::CanProvide behavior, making sure it returns true
@@ -41,3 +44,4 @@ BOOST_AUTO_TEST_CASE(CanProvide)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

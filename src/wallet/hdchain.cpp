@@ -9,6 +9,7 @@
 #include <tinyformat.h>
 #include <util/system.h>
 
+namespace wallet {
 bool CHDChain::SetNull()
 {
     LOCK(cs);
@@ -205,3 +206,4 @@ std::string CHDPubKey::GetKeyPath() const
 {
     return strprintf("m/44'/%d'/%d'/%d/%d", Params().ExtCoinType(), nAccountIndex, nChangeIndex, extPubKey.nChild);
 }
+} // namespace wallet

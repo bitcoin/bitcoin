@@ -19,6 +19,7 @@
 #include <variant>
 #include <vector>
 
+namespace wallet {
 //! State of transaction confirmed in a block.
 struct TxStateConfirmed {
     uint256 confirmed_block_hash;
@@ -310,5 +311,6 @@ public:
     CWalletTx(CWalletTx const &) = delete;
     void operator=(CWalletTx const &x) = delete;
 };
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_TRANSACTION_H

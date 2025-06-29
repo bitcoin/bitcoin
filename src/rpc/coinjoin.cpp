@@ -24,6 +24,14 @@
 
 #include <univalue.h>
 
+using node::NodeContext;
+#ifdef ENABLE_WALLET
+using wallet::CWallet;
+using wallet::GetWalletForJSONRPCRequest;
+using wallet::DEFAULT_DISABLE_WALLET;
+using wallet::WALLET_FLAG_DISABLE_PRIVATE_KEYS;
+#endif // ENABLE_WALLET
+
 #ifdef ENABLE_WALLET
 namespace {
 void ValidateCoinJoinArguments()

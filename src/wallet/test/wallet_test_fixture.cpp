@@ -6,6 +6,7 @@
 
 #include <scheduler.h>
 
+namespace wallet {
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
     : TestingSetup(chainName),
       m_coinjoin_loader{interfaces::MakeCoinJoinLoader(m_node)},
@@ -21,3 +22,4 @@ WalletTestingSetup::~WalletTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
 }
+} // namespace wallet

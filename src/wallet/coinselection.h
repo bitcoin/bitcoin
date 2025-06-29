@@ -12,6 +12,7 @@
 
 #include <optional>
 
+namespace wallet {
 //! lower bound for randomly-chosen target change amount
 static constexpr CAmount CHANGE_LOWER{50000};
 //! upper bound for randomly-chosen target change amount
@@ -299,5 +300,6 @@ std::optional<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& ut
 // Original coin selection algorithm as a fallback
 std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, const CAmount& nTargetValue,
                                               CAmount change_target, FastRandomContext& rng, bool fFullyMixedOnly, CAmount maxTxFee);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_COINSELECTION_H

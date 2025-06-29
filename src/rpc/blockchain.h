@@ -16,16 +16,18 @@
 
 extern RecursiveMutex cs_main;
 
-class BlockManager;
 class CBlock;
 class CBlockIndex;
 class CChainState;
 class UniValue;
-struct NodeContext;
 namespace llmq {
 class CChainLocksHandler;
 class CInstantSendManager;
 } // namespace llmq
+namespace node {
+class BlockManager;
+struct NodeContext;
+} // namespace node
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
 
@@ -41,7 +43,7 @@ double GetDifficulty(const CBlockIndex* blockindex);
 void RPCNotifyBlockChange(const CBlockIndex*);
 
 /** Block description to JSON */
-UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, TxVerbosity verbosity) LOCKS_EXCLUDED(cs_main);
+UniValue blockToJSON(node::BlockManager& blockman, const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, const llmq::CChainLocksHandler& clhandler, const llmq::CInstantSendManager& isman, TxVerbosity verbosity) LOCKS_EXCLUDED(cs_main);
 
 /** Block header to JSON */
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex, const llmq::CChainLocksHandler& clhandler) LOCKS_EXCLUDED(cs_main);
@@ -54,7 +56,7 @@ void CalculatePercentilesBySize(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], s
  * @return a UniValue map containing metadata about the snapshot.
  */
 UniValue CreateUTXOSnapshot(
-    NodeContext& node,
+    node::NodeContext& node,
     CChainState& chainstate,
     CAutoFile& afile,
     const fs::path& path,

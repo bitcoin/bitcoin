@@ -10,6 +10,7 @@
 
 #include <univalue.h>
 
+namespace wallet {
 RPCHelpMan signmessage()
 {
     return RPCHelpMan{"signmessage",
@@ -66,3 +67,4 @@ RPCHelpMan signmessage()
         },
     };
 }
+} // namespace wallet

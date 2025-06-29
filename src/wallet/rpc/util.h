@@ -12,11 +12,13 @@
 #include <vector>
 
 struct bilingual_str;
-class CWallet;
-enum class DatabaseStatus;
 class JSONRPCRequest;
-class LegacyScriptPubKeyMan;
 class UniValue;
+
+namespace wallet {
+class CWallet;
+class LegacyScriptPubKeyMan;
+enum class DatabaseStatus;
 struct WalletContext;
 
 extern const std::string HELP_REQUIRING_PASSPHRASE;
@@ -40,5 +42,6 @@ bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wal
 std::string LabelFromValue(const UniValue& value);
 
 void HandleWalletError(const std::shared_ptr<CWallet> wallet, DatabaseStatus& status, bilingual_str& error);
+} // namespace wallet
 
 #endif // BITCOIN_WALLET_RPC_UTIL_H
