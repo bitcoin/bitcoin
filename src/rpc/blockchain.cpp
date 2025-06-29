@@ -2422,6 +2422,7 @@ static RPCHelpMan scantxoutset()
                                 {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
                                 {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
                                 {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                                {RPCResult::Type::BOOL, "coinbase", "Whether this is a coinbase output"},
                                 {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
                             }},
                     }},
@@ -2525,6 +2526,7 @@ static RPCHelpMan scantxoutset()
             unspent.pushKV("scriptPubKey", HexStr(txo.scriptPubKey));
             unspent.pushKV("desc", descriptors[txo.scriptPubKey]);
             unspent.pushKV("amount", ValueFromAmount(txo.nValue));
+            unspent.pushKV("coinbase", coin.IsCoinBase());
             unspent.pushKV("height", (int32_t)coin.nHeight);
 
             unspents.push_back(unspent);

@@ -7,29 +7,27 @@
 Test that permissions are correctly calculated and applied
 """
 
-from test_framework.address import ADDRESS_BCRT1_P2SH_OP_TRUE
 from test_framework.messages import (
-    tx_from_hex,
+    SEQUENCE_FINAL,
 )
 from test_framework.p2p import P2PDataStore
-from test_framework.script import (
-    CScript,
-    OP_TRUE,
-)
 from test_framework.test_node import ErrorMatch
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
 )
+from test_framework.wallet import MiniWallet
 
 
 class P2PPermissionsTests(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = True
 
     def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.rescan_utxos()
+
         self.check_tx_relay()
 
         self.checkpermission(
@@ -93,8 +91,6 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1", "-bind=127.0.0.1", "-listen=0"], "Cannot set -bind or -whitebind together with -listen=0", match=ErrorMatch.PARTIAL_REGEX)
 
     def check_tx_relay(self):
-        block_op_true = self.nodes[0].getblock(self.generatetoaddress(self.nodes[0], 100, ADDRESS_BCRT1_P2SH_OP_TRUE)[0])
-
         self.log.debug("Create a connection from a forcerelay peer that rebroadcasts raw txs")
         # A test framework p2p connection is needed to send the raw transaction directly. If a full node was used, it could only
         # rebroadcast via the inv-getdata mechanism. However, even for forcerelay connections, a full node would
@@ -103,16 +99,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         p2p_rebroadcast_wallet = self.nodes[1].add_p2p_connection(P2PDataStore())
 
         self.log.debug("Send a tx from the wallet initially")
-        tx = tx_from_hex(
-            self.nodes[0].createrawtransaction(
-                inputs=[{
-                    'txid': block_op_true['tx'][0],
-                    'vout': 0,
-                }], outputs=[{
-                    ADDRESS_BCRT1_P2SH_OP_TRUE: 5,
-                }]),
-        )
-        tx.vin[0].scriptSig = CScript([CScript([OP_TRUE])])
+        tx = self.wallet.create_self_transfer(sequence=SEQUENCE_FINAL)['tx']
         txid = tx.rehash()
 
         self.log.debug("Wait until tx is in node[1]'s mempool")

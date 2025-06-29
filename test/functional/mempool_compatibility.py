@@ -11,6 +11,7 @@ The previous release v0.15.0.0 is required by this test, see test/README.md.
 """
 
 import os
+import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
@@ -19,22 +20,23 @@ from test_framework.wallet import MiniWallet
 class MempoolCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.wallet_names = [None]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_previous_releases()
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, versions=[
-            150000, # oldest version supported by the test framework
+            18020200, # oldest version with getmempoolinfo.loaded (used to avoid intermittent issues)
             None,
         ])
         self.extra_args = [
             [],
             [],
         ]
+        # Delete v18.2.2 cached datadir to avoid making a legacy version try to
+        # make sense of our current database formats
+        shutil.rmtree(os.path.join(self.nodes[0].datadir, self.chain))
         self.start_nodes()
-        self.import_deterministic_coinbase_privkeys()
 
     def run_test(self):
         self.log.info("Test that mempool.dat is compatible between versions")
@@ -48,11 +50,10 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         # unbroadcasted_tx won't pass old_node's `MemPoolAccept::PreChecks`.
         self.connect_nodes(0, 1)
         self.sync_blocks()
-        recipient = old_node.getnewaddress()
         self.stop_node(1)
 
         self.log.info("Add a transaction to mempool on old node and shutdown")
-        old_tx_hash = old_node.sendtoaddress(recipient, 0.0001)
+        old_tx_hash = new_wallet.send_self_transfer(from_node=old_node)["txid"]
         assert old_tx_hash in old_node.getrawmempool()
         self.stop_node(0)
 

@@ -32,6 +32,9 @@ class ScantxoutsetTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.wallet.rescan_utxos()
 
+        self.log.info("Test if we find coinbase outputs.")
+        assert_equal(sum(u["coinbase"] for u in self.nodes[0].scantxoutset("start", [self.wallet.get_descriptor()])["unspents"]), 49)
+
         self.log.info("Create UTXOs...")
         pubk1, spk1, addr1 = getnewdestination("legacy")
         pubk2, spk2, addr2 = getnewdestination("legacy")
