@@ -605,10 +605,9 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK(!IsBadPort(8333));
 
     // Check all ports, there must be 85 bad ports in total.
-    using namespace std::ranges;
     std::list<int> ports(std::numeric_limits<uint16_t>::max());
     std::iota(ports.begin(), ports.end(), 1);
-    BOOST_CHECK_EQUAL(count_if(ports, IsBadPort), 85);
+    BOOST_CHECK_EQUAL(std::ranges::count_if(ports, IsBadPort), 85);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
