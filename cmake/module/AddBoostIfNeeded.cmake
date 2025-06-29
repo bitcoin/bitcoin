@@ -31,6 +31,15 @@ function(add_boost_if_needed)
 
   find_package(Boost 1.73.0 REQUIRED CONFIG)
   mark_as_advanced(Boost_INCLUDE_DIR boost_headers_DIR)
+  # Workaround for a bug in NetBSD pkgsrc.
+  # See: https://github.com/NetBSD/pkgsrc/issues/167.
+  if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
+    get_filename_component(_boost_include_dir "${boost_headers_DIR}/../../../include/" ABSOLUTE)
+    set_target_properties(Boost::headers PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES ${_boost_include_dir}
+    )
+    unset(_boost_include_dir)
+  endif()
   set_target_properties(Boost::headers PROPERTIES IMPORTED_GLOBAL TRUE)
   target_compile_definitions(Boost::headers INTERFACE
     # We don't use multi_index serialization.
