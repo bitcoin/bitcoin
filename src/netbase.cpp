@@ -920,10 +920,14 @@ bool IsBadPort(uint16_t port)
     case 1720:  // h323hostcall
     case 1723:  // pptp
     case 2049:  // nfs
+    case 3306:  // MySQL
+    case 3389:  // RDP / Windows Remote Desktop
     case 3659:  // apple-sasl / PasswordServer
     case 4045:  // lockd
     case 5060:  // sip
     case 5061:  // sips
+    case 5432:  // PostgreSQL
+    case 5900:  // VNC
     case 6000:  // X11
     case 6566:  // sane-port
     case 6665:  // Alternate IRC
@@ -933,6 +937,7 @@ bool IsBadPort(uint16_t port)
     case 6669:  // Alternate IRC
     case 6697:  // IRC + TLS
     case 10080: // Amanda
+    case 27017: // MongoDB
         return true;
     }
     return false;
