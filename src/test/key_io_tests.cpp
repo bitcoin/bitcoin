@@ -9,14 +9,13 @@
 #include <key.h>
 #include <key_io.h>
 #include <script/script.h>
+#include <test/util/json.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
-
-UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(key_io_tests, BasicTestingSetup)
 

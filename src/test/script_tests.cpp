@@ -12,6 +12,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <streams.h>
+#include <test/util/json.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
@@ -36,18 +37,6 @@ static const unsigned int gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
 unsigned int ParseScriptFlags(std::string strFlags);
 std::string FormatScriptFlags(unsigned int flags);
-
-UniValue read_json(const std::string& jsondata)
-{
-    UniValue v;
-
-    if (!v.read(jsondata) || !v.isArray())
-    {
-        BOOST_ERROR("Parse error.");
-        return UniValue(UniValue::VARR);
-    }
-    return v.get_array();
-}
 
 struct ScriptErrorDesc
 {

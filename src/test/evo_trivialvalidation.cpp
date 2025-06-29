@@ -4,6 +4,7 @@
 
 #include <test/data/trivially_invalid.json.h>
 #include <test/data/trivially_valid.json.h>
+#include <test/util/json.h>
 #include <test/util/setup_common.h>
 
 #include <evo/providertx.h>
@@ -12,8 +13,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
-
-extern UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(evo_trivialvalidation, BasicTestingSetup)
 

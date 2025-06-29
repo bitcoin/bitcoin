@@ -10,6 +10,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/data/sighash.json.h>
+#include <test/util/json.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 #include <version.h>
@@ -17,8 +18,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
-
-UniValue read_json(const std::string& jsondata);
 
 // Old script.cpp SignatureHash function
 uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
