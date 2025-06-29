@@ -301,6 +301,8 @@ bool Sock::WaitManyKQueue(std::chrono::milliseconds timeout, EventsPerSock& even
 #ifdef USE_POLL
 bool Sock::WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock)
 {
+    if (events_per_sock.empty()) return true;
+
     std::vector<pollfd> pfds;
     for (const auto& [socket, events] : events_per_sock) {
         pfds.emplace_back();
@@ -341,6 +343,8 @@ bool Sock::WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events
 
 bool Sock::WaitManySelect(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock)
 {
+    if (events_per_sock.empty()) return true;
+
     fd_set recv;
     fd_set send;
     fd_set err;
