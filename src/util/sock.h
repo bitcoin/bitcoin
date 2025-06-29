@@ -31,11 +31,27 @@ enum class SocketEventsMode : int8_t {
     Unknown = -1
 };
 
+struct SocketEventsParams
+{
+    SocketEventsParams() = default;
+    SocketEventsParams(SocketEventsMode event_mode, SOCKET event_fd) :
+        m_event_mode{event_mode},
+        m_event_fd{event_fd}
+    {}
+    ~SocketEventsParams() = default;
+
+public:
+    /* Choice of API to use in Sock::Wait{,Many}() */
+    SocketEventsMode m_event_mode{
 #ifdef USE_POLL
-#define SEM_LT_DEFAULT SocketEventsMode::Poll
+        SocketEventsMode::Poll
 #else
-#define SEM_LT_DEFAULT SocketEventsMode::Select
+        SocketEventsMode::Select
 #endif /* USE_POLL */
+    };
+    /* File descriptor for event triggered SEMs (and INVALID_SOCKET for the rest) */
+    SOCKET m_event_fd{INVALID_SOCKET};
+};
 
 /* Converts SocketEventsMode value to string with additional check to report modes not compiled for as unknown */
 constexpr std::string_view SEMToString(const SocketEventsMode val) {
@@ -197,7 +213,7 @@ public:
      * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
      * @return true if selectable
      */
-    [[nodiscard]] virtual bool IsSelectable(bool is_select = (SEM_LT_DEFAULT == SocketEventsMode::Select)) const;
+    [[nodiscard]] virtual bool IsSelectable(bool is_select = (SocketEventsParams().m_event_mode == SocketEventsMode::Select)) const;
 
     using Event = uint8_t;
 
@@ -221,7 +237,7 @@ public:
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
      * @param[in] requested Wait for those events, bitwise-or of `RECV` and `SEND`.
-     * @param[in] event_mode Wait using the API specified.
+     * @param[in] event_params Wait using the API specified.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
      * indicates which of the requested events occurred (`ERR` will be added, even if
      * not requested, if an exceptional event occurs on the socket).
@@ -230,13 +246,13 @@ public:
      */
     [[nodiscard]] virtual bool Wait(std::chrono::milliseconds timeout,
                                     Event requested,
-                                    SocketEventsMode event_mode = SEM_LT_DEFAULT,
+                                    SocketEventsParams event_params = SocketEventsParams(),
                                     Event* occurred = nullptr) const;
     /**
      * Auxiliary requested/occurred events to wait for in `WaitMany()`.
      */
     struct Events {
-        explicit Events(Event req) : requested{req}, occurred{0} {}
+        explicit Events(Event req, Event ocr = 0) : requested{req}, occurred{ocr} {}
         Event requested;
         Event occurred;
     };
@@ -268,7 +284,7 @@ public:
      */
     [[nodiscard]] virtual bool WaitMany(std::chrono::milliseconds timeout,
                                         EventsPerSock& events_per_sock,
-                                        SocketEventsMode event_mode = SEM_LT_DEFAULT) const;
+                                        SocketEventsParams event_params = SocketEventsParams()) const;
 
     /**
      * As an EventsPerSock map no longer contains a Sock object (it now contains the raw SOCKET file
@@ -283,7 +299,13 @@ public:
      */
     static bool WaitManyInternal(std::chrono::milliseconds timeout,
                                  EventsPerSock& events_per_sock,
-                                 SocketEventsMode event_mode = SEM_LT_DEFAULT);
+                                 SocketEventsParams event_params = SocketEventsParams());
+#ifdef USE_EPOLL
+    static bool WaitManyEPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SOCKET epoll_fd);
+#endif /* USE_EPOLL */
+#ifdef USE_KQUEUE
+    static bool WaitManyKQueue(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SOCKET kqueue_fd);
+#endif /* USE_KQUEUE */
 #ifdef USE_POLL
     static bool WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock);
 #endif /* USE_POLL */

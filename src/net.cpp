@@ -56,14 +56,6 @@
 #include <ifaddrs.h>
 #endif
 
-#ifdef USE_EPOLL
-#include <sys/epoll.h>
-#endif
-
-#ifdef USE_KQUEUE
-#include <sys/event.h>
-#endif
-
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -2375,79 +2367,6 @@ Sock::EventsPerSock CConnman::GenerateWaitSockets(Span<CNode* const> nodes)
     return events_per_sock;
 }
 
-#ifdef USE_KQUEUE
-void CConnman::SocketEventsKqueue(std::set<SOCKET>& recv_set,
-                                  std::set<SOCKET>& send_set,
-                                  std::set<SOCKET>& error_set,
-                                  bool only_poll)
-{
-    std::array<struct kevent, MAX_EVENTS> events{};
-    struct timespec timeout = MillisToTimespec(only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);
-
-    int ret{-1};
-    ToggleWakeupPipe([&](){
-        ret = kevent(Assert(m_edge_trig_events)->GetFileDescriptor(), nullptr, 0, events.data(), events.size(), &timeout);
-    });
-    if (ret == SOCKET_ERROR) {
-        LogPrintf("kevent wait error\n");
-        return;
-    }
-
-    for (int i = 0; i < ret; i++) {
-        auto& event = events[i];
-        if ((event.flags & EV_ERROR) || (event.flags & EV_EOF)) {
-            error_set.insert((SOCKET)event.ident);
-            continue;
-        }
-
-        if (event.filter == EVFILT_READ) {
-            recv_set.insert((SOCKET)event.ident);
-        }
-
-        if (event.filter == EVFILT_WRITE) {
-            send_set.insert((SOCKET)event.ident);
-        }
-    }
-}
-#endif
-
-#ifdef USE_EPOLL
-void CConnman::SocketEventsEpoll(std::set<SOCKET>& recv_set,
-                                 std::set<SOCKET>& send_set,
-                                 std::set<SOCKET>& error_set,
-                                 bool only_poll)
-{
-    std::array<epoll_event, MAX_EVENTS> events{};
-
-    int ret{-1};
-    ToggleWakeupPipe([&](){
-        ret = epoll_wait(Assert(m_edge_trig_events)->GetFileDescriptor(), events.data(), events.size(),
-                         only_poll ? 0 : SELECT_TIMEOUT_MILLISECONDS);
-    });
-
-    if (ret == SOCKET_ERROR) {
-        LogPrintf("epoll_wait error\n");
-        return;
-    }
-
-    for (int i = 0; i < ret; i++) {
-        auto& e = events[i];
-        if((e.events & EPOLLERR) || (e.events & EPOLLHUP)) {
-            error_set.insert((SOCKET)e.data.fd);
-            continue;
-        }
-
-        if (e.events & EPOLLIN) {
-            recv_set.insert((SOCKET)e.data.fd);
-        }
-
-        if (e.events & EPOLLOUT) {
-            send_set.insert((SOCKET)e.data.fd);
-        }
-    }
-}
-#endif
-
 void CConnman::SocketHandler(CMasternodeSync& mn_sync)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
@@ -2480,7 +2399,7 @@ void CConnman::SocketHandler(CMasternodeSync& mn_sync)
         // select(2)). If none are ready, wait for a short while and return
         // empty sets.
         events_per_sock = GenerateWaitSockets(snap.Nodes());
-        if ((is_lt && events_per_sock.empty()) || !Sock::WaitManyInternal(timeout, events_per_sock, socketEventsMode)) {
+        if ((is_lt && events_per_sock.empty()) || !Sock::WaitManyInternal(timeout, events_per_sock, SocketEventsParams{socketEventsMode, GetModeFileDescriptor()})) {
             if (is_lt) {
                 interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
             }

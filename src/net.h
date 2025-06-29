@@ -1623,19 +1623,6 @@ private:
      */
     Sock::EventsPerSock GenerateWaitSockets(Span<CNode* const> nodes);
 
-#ifdef USE_KQUEUE
-    void SocketEventsKqueue(std::set<SOCKET>& recv_set,
-                            std::set<SOCKET>& send_set,
-                            std::set<SOCKET>& error_set,
-                            bool only_poll);
-#endif
-#ifdef USE_EPOLL
-    void SocketEventsEpoll(std::set<SOCKET>& recv_set,
-                           std::set<SOCKET>& send_set,
-                           std::set<SOCKET>& error_set,
-                           bool only_poll);
-#endif
-
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
      */
@@ -1866,6 +1853,14 @@ private:
     SocketEventsMode socketEventsMode;
     std::unique_ptr<EdgeTriggeredEvents> m_edge_trig_events{nullptr};
     std::unique_ptr<WakeupPipe> m_wakeup_pipe{nullptr};
+
+    SOCKET GetModeFileDescriptor()
+    {
+        if (m_edge_trig_events) {
+            return static_cast<SOCKET>(m_edge_trig_events->GetFileDescriptor());
+        }
+        return INVALID_SOCKET;
+    }
 
     template <typename Callable>
     void ToggleWakeupPipe(Callable&& func)
