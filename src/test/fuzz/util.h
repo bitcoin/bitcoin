@@ -91,6 +91,8 @@ public:
 
     bool Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsMode event_mode = SEM_LT_DEFAULT, Event* occurred = nullptr) const override;
 
+    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SocketEventsMode event_mode = SEM_LT_DEFAULT) const override;
+
     bool IsConnected(std::string& errmsg) const override;
 };
 

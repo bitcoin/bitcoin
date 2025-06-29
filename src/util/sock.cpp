@@ -147,19 +147,39 @@ bool Sock::IsSelectable(bool is_select) const
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsMode event_mode, Event* occurred) const
 {
+    EventsPerSock events_per_sock{std::make_pair(m_socket, Events{requested})};
+
+    if (!WaitMany(timeout, events_per_sock)) {
+        return false;
+    }
+
+    if (occurred != nullptr) {
+        *occurred = events_per_sock.begin()->second.occurred;
+    }
+
+    return true;
+}
+
+bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SocketEventsMode event_mode) const
+{
+    return WaitManyInternal(timeout, events_per_sock, event_mode);
+}
+
+bool Sock::WaitManyInternal(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SocketEventsMode event_mode)
+{
     std::string debug_str;
 
     switch (event_mode)
     {
         case SocketEventsMode::Poll:
 #ifdef USE_POLL
-            return WaitPoll(timeout, requested, occurred);
+            return WaitManyPoll(timeout, events_per_sock);
 #else
             debug_str += "Sock::Wait -- Support for poll not compiled in, falling back on ";
             break;
 #endif /* USE_POLL */
         case SocketEventsMode::Select:
-            return WaitSelect(timeout, requested, occurred);
+            return WaitManySelect(timeout, events_per_sock);
         case SocketEventsMode::EPoll:
             debug_str += "Sock::Wait -- Unimplemented for epoll, falling back on ";
             break;
@@ -176,85 +196,95 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, SocketEvents
 #endif /* USE_POLL*/
     LogPrint(BCLog::NET, "%s\n", debug_str);
 #ifdef USE_POLL
-    return WaitPoll(timeout, requested, occurred);
+    return WaitManyPoll(timeout, events_per_sock);
 #else
-    return WaitSelect(timeout, requested, occurred);
+    return WaitManySelect(timeout, events_per_sock);
 #endif /* USE_POLL */
 }
 
 #ifdef USE_POLL
-bool Sock::WaitPoll(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
+bool Sock::WaitManyPoll(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock)
 {
-    pollfd fd;
-    fd.fd = m_socket;
-    fd.events = 0;
-    if (requested & RECV) {
-        fd.events |= POLLIN;
-    }
-    if (requested & SEND) {
-        fd.events |= POLLOUT;
+    std::vector<pollfd> pfds;
+    for (const auto& [socket, events] : events_per_sock) {
+        pfds.emplace_back();
+        auto& pfd = pfds.back();
+        pfd.fd = socket;
+        if (events.requested & RECV) {
+            pfd.events |= POLLIN;
+        }
+        if (events.requested & SEND) {
+            pfd.events |= POLLOUT;
+        }
     }
 
-    if (poll(&fd, 1, count_milliseconds(timeout)) == SOCKET_ERROR) {
+    if (poll(pfds.data(), pfds.size(), count_milliseconds(timeout)) == SOCKET_ERROR) {
         return false;
     }
 
-    if (occurred != nullptr) {
-        *occurred = 0;
-        if (fd.revents & POLLIN) {
-            *occurred |= RECV;
+    assert(pfds.size() == events_per_sock.size());
+    size_t i{0};
+    for (auto& [socket, events] : events_per_sock) {
+        assert(socket == static_cast<SOCKET>(pfds[i].fd));
+        events.occurred = 0;
+        if (pfds[i].revents & POLLIN) {
+            events.occurred |= RECV;
         }
-        if (fd.revents & POLLOUT) {
-            *occurred |= SEND;
+        if (pfds[i].revents & POLLOUT) {
+            events.occurred |= SEND;
         }
-        if (fd.revents & (POLLERR | POLLHUP)) {
-            *occurred |= ERR;
+        if (pfds[i].revents & (POLLERR | POLLHUP)) {
+            events.occurred |= ERR;
         }
+        ++i;
     }
 
     return true;
 }
 #endif /* USE_POLL */
 
-bool Sock::WaitSelect(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
+bool Sock::WaitManySelect(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock)
 {
-    if (!IsSelectableSocket(m_socket, /*is_select=*/true)) {
+    fd_set recv;
+    fd_set send;
+    fd_set err;
+    FD_ZERO(&recv);
+    FD_ZERO(&send);
+    FD_ZERO(&err);
+    SOCKET socket_max{0};
+
+    for (const auto& [sock, events] : events_per_sock) {
+        if (!IsSelectableSocket(sock, /*is_select=*/true)) {
+            return false;
+        }
+        const auto& s = sock;
+        if (events.requested & RECV) {
+            FD_SET(s, &recv);
+        }
+        if (events.requested & SEND) {
+            FD_SET(s, &send);
+        }
+        FD_SET(s, &err);
+        socket_max = std::max(socket_max, s);
+    }
+
+    timeval tv = MillisToTimeval(timeout);
+
+    if (select(socket_max + 1, &recv, &send, &err, &tv) == SOCKET_ERROR) {
         return false;
     }
 
-    fd_set fdset_recv;
-    fd_set fdset_send;
-    fd_set fdset_err;
-    FD_ZERO(&fdset_recv);
-    FD_ZERO(&fdset_send);
-    FD_ZERO(&fdset_err);
-
-    if (requested & RECV) {
-        FD_SET(m_socket, &fdset_recv);
-    }
-
-    if (requested & SEND) {
-        FD_SET(m_socket, &fdset_send);
-    }
-
-    FD_SET(m_socket, &fdset_err);
-
-    timeval timeout_struct = MillisToTimeval(timeout);
-
-    if (select(m_socket + 1, &fdset_recv, &fdset_send, &fdset_err, &timeout_struct) == SOCKET_ERROR) {
-        return false;
-    }
-
-    if (occurred != nullptr) {
-        *occurred = 0;
-        if (FD_ISSET(m_socket, &fdset_recv)) {
-            *occurred |= RECV;
+    for (auto& [sock, events] : events_per_sock) {
+        const auto& s = sock;
+        events.occurred = 0;
+        if (FD_ISSET(s, &recv)) {
+            events.occurred |= RECV;
         }
-        if (FD_ISSET(m_socket, &fdset_send)) {
-            *occurred |= SEND;
+        if (FD_ISSET(s, &send)) {
+            events.occurred |= SEND;
         }
-        if (FD_ISSET(m_socket, &fdset_err)) {
-            *occurred |= ERR;
+        if (FD_ISSET(s, &err)) {
+            events.occurred |= ERR;
         }
     }
 

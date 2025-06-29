@@ -287,6 +287,15 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Socket
     return true;
 }
 
+bool FuzzedSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SocketEventsMode event_mode) const
+{
+    for (auto& [sock, events] : events_per_sock) {
+        (void)sock;
+        events.occurred = m_fuzzed_data_provider.ConsumeBool() ? events.requested : 0;
+    }
+    return true;
+}
+
 bool FuzzedSock::IsConnected(std::string& errmsg) const
 {
     if (m_fuzzed_data_provider.ConsumeBool()) {
