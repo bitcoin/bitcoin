@@ -2669,6 +2669,12 @@ static RPCHelpMan getdescriptoractivity()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if ((request.params[0].isNull() || request.params[0].empty()) &&
+        (request.params[1].isNull() || request.params[1].empty())) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                           "At least 1 blockhash or 1 descriptor must be specified.");
+    }
+
     UniValue ret(UniValue::VOBJ);
     UniValue activity(UniValue::VARR);
     NodeContext& node = EnsureAnyNodeContext(request.context);
