@@ -641,6 +641,9 @@ SIG_ADD_ZERO = {"failure": {"sign": zero_appender(default_sign)}}
 DUST_LIMIT = 600
 MIN_FEE = 50000
 
+TX_MAX_STANDARD_VERSION = 3
+TX_STANDARD_VERSIONS = [1, 2, TX_MAX_STANDARD_VERSION]
+
 # === Actual test cases ===
 
 
@@ -1409,7 +1412,7 @@ class TaprootTest(BitcoinTestFramework):
         while left:
             # Construct CTransaction with random version, nLocktime
             tx = CTransaction()
-            tx.version = random.choice([1, 2, random.getrandbits(32)])
+            tx.version = random.choice(TX_STANDARD_VERSIONS + [0, TX_MAX_STANDARD_VERSION + 1, random.getrandbits(32)])
             min_sequence = (tx.version != 1 and tx.version != 0) * 0x80000000  # The minimum sequence number to disable relative locktime
             if random.choice([True, False]):
                 tx.nLockTime = random.randrange(LOCKTIME_THRESHOLD, self.lastblocktime - 7200)  # all absolute locktimes in the past
@@ -1501,8 +1504,7 @@ class TaprootTest(BitcoinTestFramework):
                 is_standard_tx = (
                     fail_input is None  # Must be valid to be standard
                     and (all(utxo.spender.is_standard for utxo in input_utxos))  # All inputs must be standard
-                    and tx.version >= 1  # The tx version must be standard
-                    and tx.version <= 2)
+                    and tx.version in TX_STANDARD_VERSIONS)  # The tx version must be standard
                 tx.rehash()
                 msg = ','.join(utxo.spender.comment + ("*" if n == fail_input else "") for n, utxo in enumerate(input_utxos))
                 if is_standard_tx:
