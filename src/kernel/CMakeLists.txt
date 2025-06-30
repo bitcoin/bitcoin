@@ -66,6 +66,7 @@ add_library(bitcoinkernel
   ../util/fs.cpp
   ../util/fs_helpers.cpp
   ../util/hasher.cpp
+  ../util/ioprio.cpp
   ../util/moneystr.cpp
   ../util/rbf.cpp
   ../util/serfloat.cpp
