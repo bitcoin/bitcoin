@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
 {
     //TODO: Provide raw data for basic scheme as well
     bls::bls_legacy_scheme.store(true);
-    std::vector<CSimplifiedMNListEntry> entries;
+    std::vector<std::unique_ptr<CSimplifiedMNListEntry>> entries;
     for (size_t i = 1; i < 16; i++) {
         CSimplifiedMNListEntry smle;
         smle.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         smle.keyIDVoting.SetHex(strprintf("%040x", i));
         smle.isValid = true;
 
-        entries.emplace_back(smle);
+        entries.emplace_back(std::make_unique<CSimplifiedMNListEntry>(smle));
     }
 
     std::vector<std::string> expectedHashes = {
@@ -56,13 +56,13 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
     std::vector<std::string> calculatedHashes;
 
     for (auto& smle : entries) {
-        calculatedHashes.emplace_back(smle.CalcHash().ToString());
+        calculatedHashes.emplace_back(smle->CalcHash().ToString());
         //printf("\"%s\",\n", calculatedHashes.back().c_str());
     }
 
     BOOST_CHECK(expectedHashes == calculatedHashes);
 
-    CSimplifiedMNList sml(entries);
+    CSimplifiedMNList sml{std::move(entries)};
 
     std::string expectedMerkleRoot = "0bae2176078cf42fa3e1fda761d4255d1c1c54777c6a793d0ab2b07c85ed4022";
     std::string calculatedMerkleRoot = sml.CalcMerkleRoot(nullptr).ToString();

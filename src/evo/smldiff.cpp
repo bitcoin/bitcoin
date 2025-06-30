@@ -127,11 +127,11 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
     to.ForEachMN(false, [&](const auto& toPtr) {
         auto fromPtr = from.GetMN(toPtr.proTxHash);
         if (fromPtr == nullptr) {
-            CSimplifiedMNListEntry sme(toPtr);
+            CSimplifiedMNListEntry sme{toPtr.to_sml_entry()};
             diffRet.mnList.push_back(std::move(sme));
         } else {
-            CSimplifiedMNListEntry sme1(toPtr);
-            CSimplifiedMNListEntry sme2(*fromPtr);
+            CSimplifiedMNListEntry sme1{toPtr.to_sml_entry()};
+            CSimplifiedMNListEntry sme2(fromPtr->to_sml_entry());
             if ((sme1 != sme2) || (extended && (sme1.scriptPayout != sme2.scriptPayout ||
                                                 sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
                 diffRet.mnList.push_back(std::move(sme1));

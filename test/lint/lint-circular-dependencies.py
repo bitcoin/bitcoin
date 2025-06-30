@@ -37,7 +37,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "evo/chainhelper -> evo/specialtxman -> validation -> evo/chainhelper",
     "evo/deterministicmns -> index/txindex -> validation -> evo/deterministicmns",
     "evo/deterministicmns -> index/txindex -> validation -> txmempool -> evo/deterministicmns",
-    "evo/deterministicmns -> evo/simplifiedmns -> evo/deterministicmns",
     "evo/netinfo -> evo/providertx -> evo/netinfo",
     "evo/smldiff -> llmq/blockprocessor -> llmq/utils -> llmq/snapshot -> evo/smldiff",
     "core_io -> evo/assetlocktx -> llmq/signing -> net_processing -> evo/smldiff -> core_io",
