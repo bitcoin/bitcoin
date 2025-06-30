@@ -47,6 +47,10 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2])), txlist)
         assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2], blockhash)), txlist)
 
+        print(self.nodes[0].gettxoutproof([txid1, txid2], blockhash))
+        print(self.nodes[0].gettxoutproof([txid1, txid2], blockhash, prove_witness=True))
+        assert_equal(self.nodes[0].verifytxoutproof(self.nodes[0].gettxoutproof([txid1, txid2], prove_witness=True), verify_witness=True), txlist)
+
         txin_spent = miniwallet.get_utxo(txid=txid2)  # Get the change from txid2
         tx3 = miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=txin_spent)
         txid3 = tx3['txid']

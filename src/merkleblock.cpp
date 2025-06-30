@@ -27,15 +27,20 @@ std::vector<bool> BytesToBits(const std::vector<unsigned char>& bytes)
     return ret;
 }
 
-CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<Txid>* txids)
+CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<Txid>* txids, const bool prove_witness)
 {
     header = block.GetBlockHeader();
 
     std::vector<bool> vMatch;
     std::vector<uint256> vHashes;
+    std::vector<uint256> wtxids;
 
     vMatch.reserve(block.vtx.size());
     vHashes.reserve(block.vtx.size());
+    if (prove_witness) {
+        wtxids.reserve(block.vtx.size());
+        wtxids.emplace_back();  // generation tx has null wtxid
+    }
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
@@ -49,6 +54,21 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
             vMatch.push_back(false);
         }
         vHashes.push_back(hash);
+        if (prove_witness && i) {
+            wtxids.push_back(block.vtx[i]->GetWitnessHash());
+        }
+    }
+
+    m_prove_gentx = true;
+    if (prove_witness) {
+        if (vMatch[0]) {
+            vMatch[0] = false;  // never useful
+        } else {
+            m_prove_gentx = false;
+        }
+        m_wtxid_tree = CPartialMerkleTree(wtxids, vMatch);
+        m_gentx = block.vtx[0];
+        vMatch[0] = true;  // include the generation tx in the txid merkle tree so we can check the wtxid root
     }
 
     txn = CPartialMerkleTree(vHashes, vMatch);
