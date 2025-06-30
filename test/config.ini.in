@@ -17,6 +17,7 @@ RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 # Which components are enabled. These are commented out by cmake if they were disabled during configuration.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=true
 @BUILD_BITCOIN_CLI_TRUE@ENABLE_CLI=true
+@BUILD_BITCOIN_TX_TRUE@BUILD_BITCOIN_TX=true
 @BUILD_BITCOIN_UTIL_TRUE@ENABLE_BITCOIN_UTIL=true
 @BUILD_BITCOIN_CHAINSTATE_TRUE@ENABLE_BITCOIN_CHAINSTATE=true
 @BUILD_BITCOIN_WALLET_TRUE@ENABLE_WALLET_TOOL=true
