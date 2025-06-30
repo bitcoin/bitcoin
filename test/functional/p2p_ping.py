@@ -7,7 +7,10 @@
 
 import time
 
-from test_framework.messages import msg_pong
+from test_framework.messages import (
+    msg_pong,
+    msg_generic,
+)
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -18,11 +21,6 @@ from test_framework.util import (
 
 PING_INTERVAL = 2 * 60
 TIMEOUT_INTERVAL = 20 * 60
-
-
-class msg_pong_corrupt(msg_pong):
-    def serialize(self):
-        return b""
 
 
 class NodeNoPong(P2PInterface):
@@ -60,7 +58,7 @@ class PingPongTest(BitcoinTestFramework):
 
         self.log.info('Reply without nonce cancels ping')
         with self.nodes[0].assert_debug_log(['pong peer=0: Short payload']):
-            no_pong_node.send_and_ping(msg_pong_corrupt())
+            no_pong_node.send_and_ping(msg_generic(b"pong", b""))
         self.check_peer_info(pingtime=None, minping=None, pingwait=None)
 
         self.log.info('Reply without ping')
