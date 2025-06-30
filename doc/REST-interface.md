@@ -79,6 +79,13 @@ Responds with 404 if the block doesn't exist.
 Given a height: returns hash of block in best-block-chain at height provided.
 Responds with 404 if block not found.
 
+#### Spent transaction outputs
+`GET /rest/spenttxouts/<BLOCK-HASH>.<bin|hex|json>`
+
+Given a block hash: returns a collection of spent transaction output lists,
+one per transaction in the block.
+Responds with 404 if the block doesn't exist or its undo data is not available.
+
 #### Chaininfos
 `GET /rest/chaininfo.json`
 
