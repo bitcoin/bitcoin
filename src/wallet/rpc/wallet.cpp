@@ -462,6 +462,9 @@ static RPCHelpMan unloadwallet()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "RPC endpoint wallet and wallet_name parameter specify different wallets");
         }
     } else {
+        if (request.params[0].isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Either RPC endpoint wallet or wallet_name parameter must be provided");
+        }
         wallet_name = request.params[0].get_str();
     }
 
