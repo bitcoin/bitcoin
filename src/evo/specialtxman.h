@@ -6,9 +6,10 @@
 #define BITCOIN_EVO_SPECIALTXMAN_H
 
 #include <gsl/pointers.h>
-#include <optional>
 #include <sync.h>
 #include <threadsafety.h>
+
+#include <optional>
 
 class BlockValidationState;
 class CBlock;
