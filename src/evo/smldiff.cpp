@@ -18,8 +18,8 @@
 #include <node/blockstorage.h>
 #include <serialize.h>
 #include <univalue.h>
-#include <validation.h>
 #include <util/enumerate.h>
+#include <validation.h>
 
 using node::ReadBlockFromDisk;
 
@@ -68,9 +68,10 @@ bool CSimplifiedMNListDiff::BuildQuorumsDiff(const CBlockIndex* baseBlockIndex, 
 
 bool CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const llmq::CQuorumManager& qman, const CBlockIndex* blockIndex)
 {
-    // Group quorums (indexes corresponding to entries of newQuorums) per CBlockIndex containing the expected CL signature in CbTx.
-    // We want to avoid to load CbTx now, as more than one quorum will target the same block: hence we want to load CbTxs once per block (heavy operation).
-    std::multimap<const CBlockIndex*, uint16_t>  workBaseBlockIndexMap;
+    // Group quorums (indexes corresponding to entries of newQuorums) per CBlockIndex containing the expected CL
+    // signature in CbTx. We want to avoid to load CbTx now, as more than one quorum will target the same block: hence
+    // we want to load CbTxs once per block (heavy operation).
+    std::multimap<const CBlockIndex*, uint16_t> workBaseBlockIndexMap;
 
     for (const auto [idx, e] : enumerate(newQuorums)) {
         // We assume that we have on hand, quorums that correspond to the hashes queried.
@@ -83,10 +84,10 @@ bool CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const llmq::CQuorumManager&
             return false;
         }
 
-        // In case of rotation, all rotated quorums rely on the CL sig expected in the cycleBlock (the block of the first DKG) - 8
-        // In case of non-rotation, quorums rely on the CL sig expected in the block of the DKG - 8
-        const CBlockIndex* pWorkBaseBlockIndex =
-                blockIndex->GetAncestor(quorum->m_quorum_base_block_index->nHeight - quorum->qc->quorumIndex - 8);
+        // In case of rotation, all rotated quorums rely on the CL sig expected in the cycleBlock (the block of the
+        // first DKG) - 8 In case of non-rotation, quorums rely on the CL sig expected in the block of the DKG - 8
+        const CBlockIndex* pWorkBaseBlockIndex = blockIndex->GetAncestor(quorum->m_quorum_base_block_index->nHeight -
+                                                                         quorum->qc->quorumIndex - 8);
 
         workBaseBlockIndexMap.insert(std::make_pair(pWorkBaseBlockIndex, idx));
     }
@@ -102,7 +103,8 @@ bool CSimplifiedMNListDiff::BuildQuorumChainlockInfo(const llmq::CQuorumManager&
         // Get the range of indexes (values) for the current key and merge them into a single std::set
         const auto [it_begin, it_end] = workBaseBlockIndexMap.equal_range(it->first);
         std::set<uint16_t> idx_set;
-        std::transform(it_begin, it_end, std::inserter(idx_set, idx_set.end()), [](const auto& pair) { return pair.second; });
+        std::transform(it_begin, it_end, std::inserter(idx_set, idx_set.end()),
+                       [](const auto& pair) { return pair.second; });
         // Advance the iterator to the next key
         it = it_end;
 
@@ -130,9 +132,9 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
         } else {
             CSimplifiedMNListEntry sme1(toPtr);
             CSimplifiedMNListEntry sme2(*fromPtr);
-            if ((sme1 != sme2) ||
-                (extended && (sme1.scriptPayout != sme2.scriptPayout || sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
-                    diffRet.mnList.push_back(std::move(sme1));
+            if ((sme1 != sme2) || (extended && (sme1.scriptPayout != sme2.scriptPayout ||
+                                                sme1.scriptOperatorPayout != sme2.scriptOperatorPayout))) {
+                diffRet.mnList.push_back(std::move(sme1));
             }
         }
     });
@@ -147,8 +149,9 @@ CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& from, cons
     return diffRet;
 }
 
-bool BuildSimplifiedMNListDiff(CDeterministicMNManager& dmnman, const ChainstateManager& chainman, const llmq::CQuorumBlockProcessor& qblockman,
-                               const llmq::CQuorumManager& qman, const uint256& baseBlockHash, const uint256& blockHash,
+bool BuildSimplifiedMNListDiff(CDeterministicMNManager& dmnman, const ChainstateManager& chainman,
+                               const llmq::CQuorumBlockProcessor& qblockman, const llmq::CQuorumManager& qman,
+                               const uint256& baseBlockHash, const uint256& blockHash,
                                CSimplifiedMNListDiff& mnListDiffRet, std::string& errorRet, bool extended)
 {
     AssertLockHeld(::cs_main);

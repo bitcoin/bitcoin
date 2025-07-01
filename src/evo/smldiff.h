@@ -38,10 +38,7 @@ public:
     uint256 baseBlockHash;
     uint256 blockHash;
 
-    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj)
-    {
-        READWRITE(obj.baseBlockHash, obj.blockHash);
-    }
+    SERIALIZE_METHODS(CGetSimplifiedMNListDiff, obj) { READWRITE(obj.baseBlockHash, obj.blockHash); }
 };
 
 class CSimplifiedMNListDiff
@@ -70,7 +67,8 @@ public:
             READWRITE(obj.nVersion);
         }
         READWRITE(obj.baseBlockHash, obj.blockHash, obj.cbTxMerkleTree, obj.cbTx);
-        if ((s.GetType() & SER_NETWORK) && s.GetVersion() >= BLS_SCHEME_PROTO_VERSION && s.GetVersion() < MNLISTDIFF_VERSION_ORDER) {
+        if ((s.GetType() & SER_NETWORK) && s.GetVersion() >= BLS_SCHEME_PROTO_VERSION &&
+            s.GetVersion() < MNLISTDIFF_VERSION_ORDER) {
             READWRITE(obj.nVersion);
         }
         READWRITE(obj.deletedMNs, obj.mnList);
