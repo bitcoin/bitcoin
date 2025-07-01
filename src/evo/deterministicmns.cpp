@@ -1313,6 +1313,11 @@ bool IsVersionChangeValid(gsl::not_null<const CBlockIndex*> pindexPrev, const ui
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-downgrade");
     }
 
+    if (state_version == ProTxVersion::LegacyBLS && tx_version > ProTxVersion::BasicBLS) {
+        // Nodes using the legacy scheme must first upgrade to the basic scheme before upgrading further
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-upgrade");
+    }
+
     return true;
 }
 
