@@ -395,7 +395,7 @@ void BitcoinApplication::initializeResult(bool success, interfaces::BlockAndHead
 
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
         qInfo() << "Platform customization:" << platformStyle->getName();
-        clientModel = new ClientModel(node(), optionsModel);
+        clientModel = new ClientModel(node(), optionsModel, *platformStyle);
         window->setClientModel(clientModel, &tip_info);
 
         // If '-min' option passed, start window minimized (iconified) or minimized to tray
