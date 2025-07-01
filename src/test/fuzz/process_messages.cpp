@@ -26,7 +26,19 @@
 #include <vector>
 
 namespace {
-const TestingSetup* g_setup;
+TestingSetup* g_setup;
+
+void ResetChainman(TestingSetup& setup)
+{
+    SetMockTime(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+    setup.m_node.chainman.reset();
+    setup.m_make_chainman();
+    setup.LoadVerifyActivateChainstate();
+    for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
+        MineBlock(setup.m_node, {});
+    }
+    setup.m_node.validation_signals->SyncWithValidationInterfaceQueue();
+}
 } // namespace
 
 void initialize_process_messages()
@@ -37,11 +49,7 @@ void initialize_process_messages()
             {}),
     };
     g_setup = testing_setup.get();
-    SetMockTime(WITH_LOCK(g_setup->m_node.chainman->GetMutex(), return g_setup->m_node.chainman->ActiveTip()->Time()));
-    for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
-        MineBlock(g_setup->m_node, {});
-    }
-    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    ResetChainman(*g_setup);
 }
 
 FUZZ_TARGET(process_messages, .init = initialize_process_messages)
@@ -53,6 +61,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     connman.ResetAddrCache();
     connman.ResetMaxOutboundCycle();
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
+    const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
     SetMockTime(1610000000); // any time to successfully reset ibd
     chainman.ResetIbd();
     chainman.DisableNextWrite();
@@ -111,4 +120,8 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     }
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();
+    if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())) {
+        // Reuse the global chainman, but reset it when it is dirty
+        ResetChainman(*g_setup);
+    }
 }
