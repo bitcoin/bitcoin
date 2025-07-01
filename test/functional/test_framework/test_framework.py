@@ -2189,7 +2189,7 @@ class DashTestFramework(BitcoinTestFramework):
             # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
             self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks(nodes))
 
-        self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
+        self.log.info(f"New quorum: height={quorum_info['height']}, quorumHash={new_quorum}, is_mature={not skip_maturity} quorumIndex={quorum_info['quorumIndex']}, minedBlock={quorum_info['minedBlock']}")
 
         for mn in mninfos_valid:
             assert not check_punished(self.nodes[0], mn)
