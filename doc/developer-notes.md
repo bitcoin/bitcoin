@@ -532,7 +532,7 @@ cmake -B build -DCMAKE_C_COMPILER="clang" \
    -DAPPEND_CFLAGS="-fprofile-instr-generate -fcoverage-mapping" \
    -DAPPEND_CXXFLAGS="-fprofile-instr-generate -fcoverage-mapping" \
    -DAPPEND_LDFLAGS="-fprofile-instr-generate -fcoverage-mapping"
-cmake --build build # Use "-j N" here for N parallel jobs.
+cmake --build build # Append "-j N" here for N parallel jobs.
 ```
 
 Generating the raw profile data based on `ctest` and functional tests execution:
@@ -542,8 +542,8 @@ Generating the raw profile data based on `ctest` and functional tests execution:
 mkdir -p build/raw_profile_data
 
 # Run tests to generate profiles
-LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/%m_%p.profraw" ctest --test-dir build # Use "-j N" here for N parallel jobs.
-LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/%m_%p.profraw" build/test/functional/test_runner.py # Use "-j N" here for N parallel jobs
+LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/%m_%p.profraw" ctest --test-dir build # Append "-j N" here for N parallel jobs.
+LLVM_PROFILE_FILE="$(pwd)/build/raw_profile_data/%m_%p.profraw" build/test/functional/test_runner.py # Append "-j N" here for N parallel jobs
 
 # Merge all the raw profile data into a single file
 find build/raw_profile_data -name "*.profraw" | xargs llvm-profdata merge -o build/coverage.profdata
@@ -583,7 +583,7 @@ cmake -B build \
    -DCMAKE_C_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
    -DCMAKE_CXX_FLAGS="-fprofile-instr-generate -fcoverage-mapping" \
    -DBUILD_FOR_FUZZING=ON
-cmake --build build # Use "-j N" here for N parallel jobs.
+cmake --build build # Append "-j N" here for N parallel jobs.
 ```
 
 Running fuzz tests with one or more targets
