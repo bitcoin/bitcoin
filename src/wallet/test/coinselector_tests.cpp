@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         wallet->LoadWallet();
         LOCK(wallet->cs_wallet);
         wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet->SetupDescriptorScriptPubKeyMans();
+        wallet->SetupDescriptorScriptPubKeyMans("", "");
 
         std::vector<COutput> coins;
 
