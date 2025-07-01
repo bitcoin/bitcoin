@@ -129,7 +129,7 @@ using NetInfoList = std::vector<std::reference_wrapper<const NetInfoEntry>>;
 class NetInfoInterface
 {
 public:
-    static std::shared_ptr<NetInfoInterface> MakeNetInfo();
+    static std::shared_ptr<NetInfoInterface> MakeNetInfo(const uint16_t nVersion);
 
 public:
     virtual ~NetInfoInterface() = default;
