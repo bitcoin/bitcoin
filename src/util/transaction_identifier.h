@@ -84,7 +84,7 @@ using Wtxid = transaction_identifier<true>;
 template <typename T>
 concept TxidOrWtxid = std::is_same_v<T, Txid> || std::is_same_v<T, Wtxid>;
 
-class GenTxidVariant : public std::variant<Txid, Wtxid>
+class GenTxid : public std::variant<Txid, Wtxid>
 {
 public:
     using variant::variant;
@@ -96,7 +96,7 @@ public:
         return std::visit([](const auto& id) -> const uint256& { return id.ToUint256(); }, *this);
     }
 
-    friend auto operator<=>(const GenTxidVariant& a, const GenTxidVariant& b)
+    friend auto operator<=>(const GenTxid& a, const GenTxid& b)
     {
         return std::tuple(a.IsWtxid(), a.ToUint256()) <=> std::tuple(b.IsWtxid(), b.ToUint256());
     }

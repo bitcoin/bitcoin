@@ -61,7 +61,7 @@ struct Runner
     /** Which (peer, gtxid) combinations are known to be expired. These need to be accumulated here instead of
      *  checked directly in the GetRequestable return value to avoid introducing a dependency between the various
      *  parallel tests. */
-    std::multiset<std::pair<NodeId, GenTxidVariant>> expired;
+    std::multiset<std::pair<NodeId, GenTxid>> expired;
 };
 
 std::chrono::microseconds TxRequestTest::RandomTime8s() { return std::chrono::microseconds{1 + m_rng.randbits(23)}; }
@@ -110,7 +110,7 @@ public:
     }
 
     /** Schedule a ReceivedInv call at the Scheduler's current time. */
-    void ReceivedInv(NodeId peer, const GenTxidVariant& gtxid, bool pref, std::chrono::microseconds reqtime)
+    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool pref, std::chrono::microseconds reqtime)
     {
         auto& runner = m_runner;
         runner.actions.emplace_back(m_now, [=, &runner]() {
@@ -160,7 +160,7 @@ public:
      * @param offset     Offset with the current time to use (must be <= 0). This allows simulations of time going
      *                   backwards (but note that the ordering of this event only follows the scenario's m_now.
      */
-    void Check(NodeId peer, const std::vector<GenTxidVariant>& expected, size_t candidates, size_t inflight,
+    void Check(NodeId peer, const std::vector<GenTxid>& expected, size_t candidates, size_t inflight,
                size_t completed, const std::string& checkname,
                std::chrono::microseconds offset = std::chrono::microseconds{0})
     {
@@ -169,7 +169,7 @@ public:
         const auto now = m_now;
         assert(offset.count() <= 0);
         runner.actions.emplace_back(m_now, [=, &runner]() {
-            std::vector<std::pair<NodeId, GenTxidVariant>> expired_now;
+            std::vector<std::pair<NodeId, GenTxid>> expired_now;
             auto ret = runner.txrequest.GetRequestable(peer, now + offset, &expired_now);
             for (const auto& entry : expired_now) {
                 runner.expired.insert(entry);
@@ -191,12 +191,12 @@ public:
      *
      * Every expected expiration should be accounted for through exactly one call to this function.
      */
-    void CheckExpired(NodeId peer, GenTxidVariant gtxid)
+    void CheckExpired(NodeId peer, GenTxid gtxid)
     {
         const auto& testname = m_testname;
         auto& runner = m_runner;
         runner.actions.emplace_back(m_now, [=, &runner]() {
-            auto it = runner.expired.find(std::pair<NodeId, GenTxidVariant>{peer, gtxid});
+            auto it = runner.expired.find(std::pair<NodeId, GenTxid>{peer, gtxid});
             BOOST_CHECK_MESSAGE(it != runner.expired.end(), "[" + testname + "] missing expiration");
             if (it != runner.expired.end()) runner.expired.erase(it);
         });
@@ -236,10 +236,10 @@ public:
     }
 
     /** Generate a random GenTxid; the txhash follows NewTxHash; the transaction identifier is random. */
-    GenTxidVariant NewGTxid(const std::vector<std::vector<NodeId>>& orders = {})
+    GenTxid NewGTxid(const std::vector<std::vector<NodeId>>& orders = {})
     {
         const uint256 txhash{NewTxHash(orders)};
-        return m_rng.randbool() ? GenTxidVariant{Wtxid::FromUint256(txhash)} : GenTxidVariant{Txid::FromUint256(txhash)};
+        return m_rng.randbool() ? GenTxid{Wtxid::FromUint256(txhash)} : GenTxid{Txid::FromUint256(txhash)};
     }
 
     /** Generate a new random NodeId to use as peer. The same NodeId is never returned twice

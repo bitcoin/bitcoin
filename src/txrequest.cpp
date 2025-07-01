@@ -60,7 +60,7 @@ using SequenceNumber = uint64_t;
 /** An announcement. This is the data we track for each txid or wtxid that is announced to us by each peer. */
 struct Announcement {
     /** Txid or wtxid that was announced. */
-    const GenTxidVariant m_gtxid;
+    const GenTxid m_gtxid;
     /** For CANDIDATE_{DELAYED,BEST,READY} the reqtime; for REQUESTED the expiry. */
     std::chrono::microseconds m_time;
     /** What peer the request was from. */
@@ -93,7 +93,7 @@ struct Announcement {
     }
 
     /** Construct a new announcement from scratch, initially in CANDIDATE_DELAYED state. */
-    Announcement(const GenTxidVariant& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
+    Announcement(const GenTxid& gtxid, NodeId peer, bool preferred, std::chrono::microseconds reqtime,
                  SequenceNumber sequence)
         : m_gtxid(gtxid), m_time(reqtime), m_peer(peer), m_sequence(sequence), m_preferred(preferred) {}
 };
@@ -481,7 +481,7 @@ private:
     //! - REQUESTED announcements with expiry <= now are turned into COMPLETED.
     //! - CANDIDATE_DELAYED announcements with reqtime <= now are turned into CANDIDATE_{READY,BEST}.
     //! - CANDIDATE_{READY,BEST} announcements with reqtime > now are turned into CANDIDATE_DELAYED.
-    void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxidVariant>>* expired)
+    void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired)
     {
         if (expired) expired->clear();
 
@@ -574,7 +574,7 @@ public:
         }
     }
 
-    void ReceivedInv(NodeId peer, const GenTxidVariant& gtxid, bool preferred,
+    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
                      std::chrono::microseconds reqtime)
     {
         // Bail out if we already have a CANDIDATE_BEST announcement for this (txhash, peer) combination. The case
@@ -594,8 +594,8 @@ public:
     }
 
     //! Find the GenTxids to request now from peer.
-    std::vector<GenTxidVariant> GetRequestable(NodeId peer, std::chrono::microseconds now,
-                                               std::vector<std::pair<NodeId, GenTxidVariant>>* expired)
+    std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
+                                               std::vector<std::pair<NodeId, GenTxid>>* expired)
     {
         // Move time.
         SetTimePoint(now, expired);
@@ -615,7 +615,7 @@ public:
         });
 
         // Convert to GenTxid and return.
-        std::vector<GenTxidVariant> ret;
+        std::vector<GenTxid> ret;
         ret.reserve(selected.size());
         std::transform(selected.begin(), selected.end(), std::back_inserter(ret), [](const Announcement* ann) {
             return ann->m_gtxid;
@@ -729,7 +729,7 @@ void TxRequestTracker::PostGetRequestableSanityCheck(std::chrono::microseconds n
     m_impl->PostGetRequestableSanityCheck(now);
 }
 
-void TxRequestTracker::ReceivedInv(NodeId peer, const GenTxidVariant& gtxid, bool preferred,
+void TxRequestTracker::ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
                                    std::chrono::microseconds reqtime)
 {
     m_impl->ReceivedInv(peer, gtxid, preferred, reqtime);
@@ -745,8 +745,8 @@ void TxRequestTracker::ReceivedResponse(NodeId peer, const uint256& txhash)
     m_impl->ReceivedResponse(peer, txhash);
 }
 
-std::vector<GenTxidVariant> TxRequestTracker::GetRequestable(NodeId peer, std::chrono::microseconds now,
-                                                             std::vector<std::pair<NodeId, GenTxidVariant>>* expired)
+std::vector<GenTxid> TxRequestTracker::GetRequestable(NodeId peer, std::chrono::microseconds now,
+                                                             std::vector<std::pair<NodeId, GenTxid>>* expired)
 {
     return m_impl->GetRequestable(peer, now, expired);
 }

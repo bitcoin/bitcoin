@@ -794,7 +794,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(innerUsage == cachedInnerUsage);
 }
 
-bool CTxMemPool::CompareDepthAndScore(const GenTxidVariant& hasha, const GenTxidVariant& hashb) const
+bool CTxMemPool::CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb) const
 {
     /* Return `true` if hasha should be considered sooner than hashb. Namely when:
      *   a is not in the mempool, but b is
