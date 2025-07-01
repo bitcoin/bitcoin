@@ -46,6 +46,11 @@ const std::string& FormatOutputType(OutputType type)
     assert(false);
 }
 
+std::string FormatAllOutputTypes()
+{
+    return util::Join(OUTPUT_TYPES, ", ", [](const auto& i) { return "\"" + FormatOutputType(i) + "\""; });
+}
+
 CTxDestination AddAndGetDestinationForScript(FlatSigningProvider& keystore, const CScript& script, OutputType type)
 {
     // Add script to keystore

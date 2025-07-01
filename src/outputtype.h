@@ -31,6 +31,7 @@ static constexpr auto OUTPUT_TYPES = std::array{
 
 std::optional<OutputType> ParseOutputType(const std::string& str);
 const std::string& FormatOutputType(OutputType type);
+std::string FormatAllOutputTypes();
 
 /**
  * Get a destination of the requested type (if possible) to the specified script.

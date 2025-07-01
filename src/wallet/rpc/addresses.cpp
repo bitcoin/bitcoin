@@ -27,7 +27,7 @@ RPCHelpMan getnewaddress()
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+                    {"address_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -addresstype"}, "The address type to use. Options are " + FormatAllOutputTypes() + "."},
                 },
                 RPCResult{
                     RPCResult::Type::STR, "address", "The new bitcoin address"
@@ -219,7 +219,7 @@ RPCHelpMan keypoolrefill()
 {
     return RPCHelpMan{"keypoolrefill",
                 "Refills each descriptor keypool in the wallet up to the specified number of new keys.\n"
-                "By default, descriptor wallets have 4 active ranged descriptors (\"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"), each with " + util::ToString(DEFAULT_KEYPOOL_SIZE) + " entries.\n" +
+                "By default, descriptor wallets have 4 active ranged descriptors (" + FormatAllOutputTypes() + "), each with " + util::ToString(DEFAULT_KEYPOOL_SIZE) + " entries.\n" +
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"newsize", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%u, or as set by -keypool", DEFAULT_KEYPOOL_SIZE)}, "The new keypool size"},
