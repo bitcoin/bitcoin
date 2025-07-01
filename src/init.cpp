@@ -675,6 +675,11 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    strprintf("Relay transaction packages that include ephemeral outputs defined by comma-separated options (prefix each by '-' to force off): \"anchor\" to allow minimal anyone-can-spend anchors, \"send\" to allow ordinary output types to be considered ephemeral, and \"dust\" to allow for dust-amount outputs rather than strictly zero-value (default: %s)", "anchor,send,dust"),
                    ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-minrelaycoinblocks=<n>",
+                   strprintf("Minimum \"coin blocks\" (measured in %s per block) that a transaction must be spending to be relayed (default: %s)",
+                             CURRENCY_ATOM,
+                             DEFAULT_MINRELAYCOINBLOCKS),
+                   ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaymaturity=<n>",
                    strprintf("Minimum number of blocks that inputs must mature before being spent in transactions we relay (default: %s)",
                              DEFAULT_MINRELAYMATURITY),

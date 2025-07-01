@@ -145,6 +145,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
 
     if (auto hours = argsman.GetIntArg("-mempoolexpiry")) mempool_opts.expiry = std::chrono::hours{*hours};
 
+    mempool_opts.minrelaycoinblocks = argsman.GetIntArg("-minrelaycoinblocks", mempool_opts.minrelaycoinblocks);
     mempool_opts.minrelaymaturity = argsman.GetIntArg("-minrelaymaturity", mempool_opts.minrelaymaturity);
 
     // incremental relay fee sets the minimum feerate increase necessary for replacement in the mempool
