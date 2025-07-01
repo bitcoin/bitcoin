@@ -54,8 +54,8 @@ In the following instructions, the "Debug" configuration can be specified instea
 
 ```
 cmake -B build --preset vs2022-static          # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
-cmake --build build --config Release           # Use "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+cmake --build build --config Release           # Append "-j N" for N parallel jobs.
+ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 cmake --install build --config Release         # Optional.
 ```
 
@@ -74,8 +74,8 @@ cmake -B build --preset vs2022-static -DVCPKG_INSTALL_OPTIONS="--x-buildtrees-ro
 
 ```
 cmake -B build --preset vs2022 -DBUILD_GUI=OFF # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
-cmake --build build --config Release           # Use "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Use "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
+cmake --build build --config Release           # Append "-j N" for N parallel jobs.
+ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests. Some tests are disabled if Python 3 is not available.
 ```
 
 ## Performance Notes
