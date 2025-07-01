@@ -10,6 +10,7 @@
 #include <primitives/transaction.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/overloaded.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -218,7 +219,7 @@ public:
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
     // memory only
-    enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
+    enum AmountType { DEBIT, CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
     mutable CachableAmount m_amounts[AMOUNTTYPE_ENUM_ELEMENTS];
     /**
      * This flag is true if all m_amounts caches are empty. This is particularly
@@ -315,8 +316,6 @@ public:
     {
         m_amounts[DEBIT].Reset();
         m_amounts[CREDIT].Reset();
-        m_amounts[IMMATURE_CREDIT].Reset();
-        m_amounts[AVAILABLE_CREDIT].Reset();
         fChangeCached = false;
         m_is_cache_empty = true;
     }
@@ -361,6 +360,30 @@ struct WalletTxOrderComparator {
     {
         return a->nOrderPos < b->nOrderPos;
     }
+};
+
+class WalletTXO
+{
+private:
+    const CWalletTx& m_wtx;
+    const CTxOut& m_output;
+    isminetype m_ismine;
+
+public:
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine)
+    : m_wtx(wtx),
+    m_output(output),
+    m_ismine(ismine)
+    {
+        Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
+    }
+
+    const CWalletTx& GetWalletTx() const { return m_wtx; }
+
+    const CTxOut& GetTxOut() const { return m_output; }
+
+    isminetype GetIsMine() const { return m_ismine; }
+    void SetIsMine(isminetype ismine) { m_ismine = ismine; }
 };
 } // namespace wallet
 
