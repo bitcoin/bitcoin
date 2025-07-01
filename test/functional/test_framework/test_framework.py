@@ -555,7 +555,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 bins_missing = True
         if bins_missing:
             raise AssertionError("At least one release binary is missing. "
-                                 "Previous releases binaries can be downloaded via `test/get_previous_releases.py -b`.")
+                                 "Previous releases binaries can be downloaded via `test/get_previous_releases.py`.")
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
