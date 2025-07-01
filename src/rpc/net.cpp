@@ -117,6 +117,148 @@ static UniValue GetServicesNames(ServiceFlags services)
     return servicesNames;
 }
 
+static UniValue BuildPeerInfo(const CNodeStats& stats, const CNodeStateStats& state_stats) {
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("id", stats.nodeid);
+    obj.pushKV("addr", stats.m_addr_name);
+    if (stats.addrBind.IsValid()) {
+        obj.pushKV("addrbind", stats.addrBind.ToStringAddrPort());
+    }
+    if (!(stats.addrLocal.empty())) {
+        obj.pushKV("addrlocal", stats.addrLocal);
+    }
+    obj.pushKV("network", GetNetworkName(stats.m_network));
+    if (stats.m_mapped_as != 0) {
+        obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
+    }
+    ServiceFlags services{state_stats.their_services};
+    obj.pushKV("services", strprintf("%016x", services));
+    obj.pushKV("servicesnames", GetServicesNames(services));
+    obj.pushKV("relaytxes", state_stats.m_relay_txs);
+    obj.pushKV("lastsend", count_seconds(stats.m_last_send));
+    obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
+    obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
+    obj.pushKV("last_block", count_seconds(stats.m_last_block_time));
+    obj.pushKV("bytessent", stats.nSendBytes);
+    obj.pushKV("bytesrecv", stats.nRecvBytes);
+    obj.pushKV("conntime", count_seconds(stats.m_connected));
+    obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(state_stats.time_offset));
+    if (stats.m_last_ping_time > 0us) {
+        obj.pushKV("pingtime", Ticks<SecondsDouble>(stats.m_last_ping_time));
+    }
+    if (stats.m_min_ping_time < std::chrono::microseconds::max()) {
+        obj.pushKV("minping", Ticks<SecondsDouble>(stats.m_min_ping_time));
+    }
+    if (state_stats.m_ping_wait > 0s) {
+        obj.pushKV("pingwait", Ticks<SecondsDouble>(state_stats.m_ping_wait));
+    }
+    obj.pushKV("version", stats.nVersion);
+    // Use the sanitized form of subver here, to avoid tricksy remote peers from
+    // corrupting or modifying the JSON output by putting special characters in
+    // their ver message.
+    obj.pushKV("subver", stats.cleanSubVer);
+    obj.pushKV("inbound", stats.fInbound);
+    obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
+    obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
+    obj.pushKV("startingheight", state_stats.m_starting_height);
+    obj.pushKV("presynced_headers", state_stats.presync_height);
+    obj.pushKV("synced_headers", state_stats.nSyncHeight);
+    obj.pushKV("synced_blocks", state_stats.nCommonHeight);
+    UniValue heights(UniValue::VARR);
+    for (const int height : state_stats.vHeightInFlight) {
+        heights.push_back(height);
+    }
+    obj.pushKV("inflight", std::move(heights));
+    obj.pushKV("addr_relay_enabled", state_stats.m_addr_relay_enabled);
+    obj.pushKV("addr_processed", state_stats.m_addr_processed);
+    obj.pushKV("addr_rate_limited", state_stats.m_addr_rate_limited);
+    UniValue permissions(UniValue::VARR);
+    for (const auto& permission : NetPermissions::ToStrings(stats.m_permission_flags)) {
+        permissions.push_back(permission);
+    }
+    obj.pushKV("permissions", std::move(permissions));
+    obj.pushKV("minfeefilter", ValueFromAmount(state_stats.m_fee_filter_received));
+
+    UniValue sendPerMsgType(UniValue::VOBJ);
+    for (const auto& i : stats.mapSendBytesPerMsgType) {
+        if (i.second > 0)
+            sendPerMsgType.pushKV(i.first, i.second);
+    }
+    obj.pushKV("bytessent_per_msg", std::move(sendPerMsgType));
+
+    UniValue recvPerMsgType(UniValue::VOBJ);
+    for (const auto& i : stats.mapRecvBytesPerMsgType) {
+        if (i.second > 0)
+            recvPerMsgType.pushKV(i.first, i.second);
+    }
+    obj.pushKV("bytesrecv_per_msg", std::move(recvPerMsgType));
+    obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
+    obj.pushKV("transport_protocol_type", TransportTypeAsString(stats.m_transport_type));
+    obj.pushKV("session_id", stats.m_session_id);
+    return obj;
+}
+
+static RPCResult PeerInfoObjectDesc()
+{
+    return RPCResult{RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::NUM, "id", "Peer index"},
+            {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
+            {RPCResult::Type::STR, "addrbind", /*optional=*/true, "(ip:port) Bind address of the connection to the peer"},
+            {RPCResult::Type::STR, "addrlocal", /*optional=*/true, "(ip:port) Local address as reported by the peer"},
+            {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/*append_unroutable=*/true), ", ") + ")"},
+            {RPCResult::Type::NUM, "mapped_as", /*optional=*/true, "Mapped AS (Autonomous System) number at the end of the BGP route to the peer, used for diversifying\n"
+                                                                    "peer selection (only displayed if the -asmap config option is set)"},
+            {RPCResult::Type::STR_HEX, "services", "The services offered"},
+            {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form", {{RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}}},
+            {RPCResult::Type::BOOL, "relaytxes", "Whether we relay transactions to this peer"},
+            {RPCResult::Type::NUM_TIME, "lastsend", "The " + UNIX_EPOCH_TIME + " of the last send"},
+            {RPCResult::Type::NUM_TIME, "lastrecv", "The " + UNIX_EPOCH_TIME + " of the last receive"},
+            {RPCResult::Type::NUM_TIME, "last_transaction", "The " + UNIX_EPOCH_TIME + " of the last valid transaction received from this peer"},
+            {RPCResult::Type::NUM_TIME, "last_block", "The " + UNIX_EPOCH_TIME + " of the last block received from this peer"},
+            {RPCResult::Type::NUM, "bytessent", "The total bytes sent"},
+            {RPCResult::Type::NUM, "bytesrecv", "The total bytes received"},
+            {RPCResult::Type::NUM_TIME, "conntime", "The " + UNIX_EPOCH_TIME + " of the connection"},
+            {RPCResult::Type::NUM, "timeoffset", "The time offset in seconds"},
+            {RPCResult::Type::NUM, "pingtime", /*optional=*/true, "The last ping time in milliseconds (ms), if any"},
+            {RPCResult::Type::NUM, "minping", /*optional=*/true, "The minimum observed ping time in milliseconds (ms), if any"},
+            {RPCResult::Type::NUM, "pingwait", /*optional=*/true, "The duration in milliseconds (ms) of an outstanding ping (if non-zero)"},
+            {RPCResult::Type::NUM, "version", "The peer version, such as 70001"},
+            {RPCResult::Type::STR, "subver", "The string version"},
+            {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
+            {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
+            {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
+            {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
+            {RPCResult::Type::NUM, "presynced_headers", "The current height of header pre-synchronization with this peer, or -1 if no low-work sync is in progress"},
+            {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
+            {RPCResult::Type::NUM, "synced_blocks", "The last block we have in common with this peer"},
+            {RPCResult::Type::ARR, "inflight", "", {
+                                                        {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
+                                                    }},
+            {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
+            {RPCResult::Type::NUM, "addr_processed", "The total number of addresses processed, excluding those dropped due to rate limiting"},
+            {RPCResult::Type::NUM, "addr_rate_limited", "The total number of addresses dropped due to rate limiting"},
+            {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer", {
+                                                                                                                    {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
+                                                                                                                }},
+            {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
+            {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "", {{RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
+                                                                                                "When a message type is not listed in this json object, the bytes sent are 0.\n"
+                                                                                                "Only known message types can appear as keys in the object."}}},
+            {RPCResult::Type::OBJ_DYN, "bytesrecv_per_msg", "", {{RPCResult::Type::NUM, "msg", "The total bytes received aggregated by message type\n"
+                                                                                                "When a message type is not listed in this json object, the bytes received are 0.\n"
+                                                                                                "Only known message types can appear as keys in the object and all bytes received\n"
+                                                                                                "of unknown message types are listed under '" +
+                                                                                                    NET_MESSAGE_TYPE_OTHER + "'."}}},
+            {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
+                                                                                                                    "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
+                                                                                                                    "best capture connection behaviors."},
+            {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
+            {RPCResult::Type::STR, "session_id", "The session ID for this connection, or \"\" if there is none (\"v2\" transport protocol only).\n"},
+        }
+    };
+}
+
 static RPCHelpMan getpeerinfo()
 {
     return RPCHelpMan{
@@ -125,75 +267,7 @@ static RPCHelpMan getpeerinfo()
         {},
         RPCResult{
             RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                {
-                    {
-                    {RPCResult::Type::NUM, "id", "Peer index"},
-                    {RPCResult::Type::STR, "addr", "(host:port) The IP address and port of the peer"},
-                    {RPCResult::Type::STR, "addrbind", /*optional=*/true, "(ip:port) Bind address of the connection to the peer"},
-                    {RPCResult::Type::STR, "addrlocal", /*optional=*/true, "(ip:port) Local address as reported by the peer"},
-                    {RPCResult::Type::STR, "network", "Network (" + Join(GetNetworkNames(/*append_unroutable=*/true), ", ") + ")"},
-                    {RPCResult::Type::NUM, "mapped_as", /*optional=*/true, "Mapped AS (Autonomous System) number at the end of the BGP route to the peer, used for diversifying\n"
-                                                        "peer selection (only displayed if the -asmap config option is set)"},
-                    {RPCResult::Type::STR_HEX, "services", "The services offered"},
-                    {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form",
-                    {
-                        {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
-                    }},
-                    {RPCResult::Type::BOOL, "relaytxes", "Whether we relay transactions to this peer"},
-                    {RPCResult::Type::NUM_TIME, "lastsend", "The " + UNIX_EPOCH_TIME + " of the last send"},
-                    {RPCResult::Type::NUM_TIME, "lastrecv", "The " + UNIX_EPOCH_TIME + " of the last receive"},
-                    {RPCResult::Type::NUM_TIME, "last_transaction", "The " + UNIX_EPOCH_TIME + " of the last valid transaction received from this peer"},
-                    {RPCResult::Type::NUM_TIME, "last_block", "The " + UNIX_EPOCH_TIME + " of the last block received from this peer"},
-                    {RPCResult::Type::NUM, "bytessent", "The total bytes sent"},
-                    {RPCResult::Type::NUM, "bytesrecv", "The total bytes received"},
-                    {RPCResult::Type::NUM_TIME, "conntime", "The " + UNIX_EPOCH_TIME + " of the connection"},
-                    {RPCResult::Type::NUM, "timeoffset", "The time offset in seconds"},
-                    {RPCResult::Type::NUM, "pingtime", /*optional=*/true, "The last ping time in milliseconds (ms), if any"},
-                    {RPCResult::Type::NUM, "minping", /*optional=*/true, "The minimum observed ping time in milliseconds (ms), if any"},
-                    {RPCResult::Type::NUM, "pingwait", /*optional=*/true, "The duration in milliseconds (ms) of an outstanding ping (if non-zero)"},
-                    {RPCResult::Type::NUM, "version", "The peer version, such as 70001"},
-                    {RPCResult::Type::STR, "subver", "The string version"},
-                    {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
-                    {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
-                    {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
-                    {RPCResult::Type::NUM, "startingheight", "The starting height (block) of the peer"},
-                    {RPCResult::Type::NUM, "presynced_headers", "The current height of header pre-synchronization with this peer, or -1 if no low-work sync is in progress"},
-                    {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
-                    {RPCResult::Type::NUM, "synced_blocks", "The last block we have in common with this peer"},
-                    {RPCResult::Type::ARR, "inflight", "",
-                    {
-                        {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
-                    }},
-                    {RPCResult::Type::BOOL, "addr_relay_enabled", "Whether we participate in address relay with this peer"},
-                    {RPCResult::Type::NUM, "addr_processed", "The total number of addresses processed, excluding those dropped due to rate limiting"},
-                    {RPCResult::Type::NUM, "addr_rate_limited", "The total number of addresses dropped due to rate limiting"},
-                    {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
-                    {
-                        {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
-                    }},
-                    {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
-                    {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
-                    {
-                        {RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
-                                                      "When a message type is not listed in this json object, the bytes sent are 0.\n"
-                                                      "Only known message types can appear as keys in the object."}
-                    }},
-                    {RPCResult::Type::OBJ_DYN, "bytesrecv_per_msg", "",
-                    {
-                        {RPCResult::Type::NUM, "msg", "The total bytes received aggregated by message type\n"
-                                                      "When a message type is not listed in this json object, the bytes received are 0.\n"
-                                                      "Only known message types can appear as keys in the object and all bytes received\n"
-                                                      "of unknown message types are listed under '"+NET_MESSAGE_TYPE_OTHER+"'."}
-                    }},
-                    {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
-                                                              "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
-                                                              "best capture connection behaviors."},
-                    {RPCResult::Type::STR, "transport_protocol_type", "Type of transport protocol: \n" + Join(TRANSPORT_TYPE_DOC, ",\n") + ".\n"},
-                    {RPCResult::Type::STR, "session_id", "The session ID for this connection, or \"\" if there is none (\"v2\" transport protocol only).\n"},
-                }},
-            }},
+            { PeerInfoObjectDesc() },
         },
         RPCExamples{
             HelpExampleCli("getpeerinfo", "")
@@ -211,7 +285,6 @@ static RPCHelpMan getpeerinfo()
     UniValue ret(UniValue::VARR);
 
     for (const CNodeStats& stats : vstats) {
-        UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
         bool fStateStats = peerman.GetNodeStateStats(stats.nodeid, statestats);
         // GetNodeStateStats() requires the existence of a CNodeState and a Peer object
@@ -222,84 +295,7 @@ static RPCHelpMan getpeerinfo()
         if (!fStateStats) {
             continue;
         }
-        obj.pushKV("id", stats.nodeid);
-        obj.pushKV("addr", stats.m_addr_name);
-        if (stats.addrBind.IsValid()) {
-            obj.pushKV("addrbind", stats.addrBind.ToStringAddrPort());
-        }
-        if (!(stats.addrLocal.empty())) {
-            obj.pushKV("addrlocal", stats.addrLocal);
-        }
-        obj.pushKV("network", GetNetworkName(stats.m_network));
-        if (stats.m_mapped_as != 0) {
-            obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
-        }
-        ServiceFlags services{statestats.their_services};
-        obj.pushKV("services", strprintf("%016x", services));
-        obj.pushKV("servicesnames", GetServicesNames(services));
-        obj.pushKV("relaytxes", statestats.m_relay_txs);
-        obj.pushKV("lastsend", count_seconds(stats.m_last_send));
-        obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
-        obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
-        obj.pushKV("last_block", count_seconds(stats.m_last_block_time));
-        obj.pushKV("bytessent", stats.nSendBytes);
-        obj.pushKV("bytesrecv", stats.nRecvBytes);
-        obj.pushKV("conntime", count_seconds(stats.m_connected));
-        obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(statestats.time_offset));
-        if (stats.m_last_ping_time > 0us) {
-            obj.pushKV("pingtime", Ticks<SecondsDouble>(stats.m_last_ping_time));
-        }
-        if (stats.m_min_ping_time < std::chrono::microseconds::max()) {
-            obj.pushKV("minping", Ticks<SecondsDouble>(stats.m_min_ping_time));
-        }
-        if (statestats.m_ping_wait > 0s) {
-            obj.pushKV("pingwait", Ticks<SecondsDouble>(statestats.m_ping_wait));
-        }
-        obj.pushKV("version", stats.nVersion);
-        // Use the sanitized form of subver here, to avoid tricksy remote peers from
-        // corrupting or modifying the JSON output by putting special characters in
-        // their ver message.
-        obj.pushKV("subver", stats.cleanSubVer);
-        obj.pushKV("inbound", stats.fInbound);
-        obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
-        obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
-        obj.pushKV("startingheight", statestats.m_starting_height);
-        obj.pushKV("presynced_headers", statestats.presync_height);
-        obj.pushKV("synced_headers", statestats.nSyncHeight);
-        obj.pushKV("synced_blocks", statestats.nCommonHeight);
-        UniValue heights(UniValue::VARR);
-        for (const int height : statestats.vHeightInFlight) {
-            heights.push_back(height);
-        }
-        obj.pushKV("inflight", std::move(heights));
-        obj.pushKV("addr_relay_enabled", statestats.m_addr_relay_enabled);
-        obj.pushKV("addr_processed", statestats.m_addr_processed);
-        obj.pushKV("addr_rate_limited", statestats.m_addr_rate_limited);
-        UniValue permissions(UniValue::VARR);
-        for (const auto& permission : NetPermissions::ToStrings(stats.m_permission_flags)) {
-            permissions.push_back(permission);
-        }
-        obj.pushKV("permissions", std::move(permissions));
-        obj.pushKV("minfeefilter", ValueFromAmount(statestats.m_fee_filter_received));
-
-        UniValue sendPerMsgType(UniValue::VOBJ);
-        for (const auto& i : stats.mapSendBytesPerMsgType) {
-            if (i.second > 0)
-                sendPerMsgType.pushKV(i.first, i.second);
-        }
-        obj.pushKV("bytessent_per_msg", std::move(sendPerMsgType));
-
-        UniValue recvPerMsgType(UniValue::VOBJ);
-        for (const auto& i : stats.mapRecvBytesPerMsgType) {
-            if (i.second > 0)
-                recvPerMsgType.pushKV(i.first, i.second);
-        }
-        obj.pushKV("bytesrecv_per_msg", std::move(recvPerMsgType));
-        obj.pushKV("connection_type", ConnectionTypeAsString(stats.m_conn_type));
-        obj.pushKV("transport_protocol_type", TransportTypeAsString(stats.m_transport_type));
-        obj.pushKV("session_id", stats.m_session_id);
-
-        ret.push_back(std::move(obj));
+        ret.push_back(BuildPeerInfo(stats, statestats));
     }
 
     return ret;
