@@ -6,12 +6,13 @@
 import copy
 from io import BytesIO
 
-from test_framework.test_framework import DashTestFramework
 from test_framework.messages import (
-        CBlock,
-        CFinalCommitmentPayload,
-        from_hex,
+    CBlock,
+    CFinalCommitmentPayload,
+    from_hex,
 )
+
+from test_framework.test_framework import DashTestFramework
 from test_framework.util import assert_equal
 '''
 feature_llmq_dkgerrors.py
