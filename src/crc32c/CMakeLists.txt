@@ -112,7 +112,7 @@ int main() {
 "  HAVE_MM_PREFETCH)
 
 # Check for SSE4.2 support in the compiler.
-set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /arch:AVX")
 else(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -134,10 +134,10 @@ int main() {
   return 0;
 }
 "  HAVE_SSE42)
-set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
+set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
 
 # Check for ARMv8 w/ CRC and CRYPTO extensions support in the compiler.
-set(OLD_CMAKE_REQURED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # TODO(pwnall): Insert correct flag when VS gets ARM CRC32C support.
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} /arch:NOTYET")
@@ -154,7 +154,7 @@ int main() {
   return 0;
 }
 " HAVE_ARM64_CRC32C)
-set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQURED_FLAGS})
+set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
 
 # Check for strong getauxval() support in the system headers.
 check_cxx_source_compiles("
