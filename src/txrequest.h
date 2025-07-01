@@ -132,7 +132,7 @@ public:
      * fetched. The new announcement is given the specified preferred and reqtime values, and takes its is_wtxid
      * from the specified gtxid.
      */
-    void ReceivedInv(NodeId peer, const GenTxidVariant& gtxid, bool preferred,
+    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
                      std::chrono::microseconds reqtime);
 
     /** Deletes all announcements for a given peer.
@@ -163,8 +163,8 @@ public:
      *    from dependent transactions being requested out of order: if multiple dependent transactions are announced
      *    simultaneously by one peer, and end up being requested from them, the requests will happen in announcement order.
      */
-    std::vector<GenTxidVariant> GetRequestable(NodeId peer, std::chrono::microseconds now,
-                                               std::vector<std::pair<NodeId, GenTxidVariant>>* expired = nullptr);
+    std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
+                                               std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
 
     /** Marks a transaction as requested, with a specified expiry.
      *

@@ -526,6 +526,6 @@ public:
 };
 
 /** Convert a TX/WITNESS_TX/WTX CInv to a GenTxid. */
-GenTxidVariant ToGenTxid(const CInv& inv);
+GenTxid ToGenTxid(const CInv& inv);
 
 #endif // BITCOIN_PROTOCOL_H
