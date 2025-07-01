@@ -7,19 +7,29 @@
 #include <test/util/json.h>
 #include <test/util/setup_common.h>
 
+#include <chain.h>
+#include <chainparams.h>
+#include <deploymentstatus.h>
 #include <evo/providertx.h>
 #include <primitives/transaction.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
 
-BOOST_FIXTURE_TEST_SUITE(evo_trivialvalidation, BasicTestingSetup)
+struct TestChain100V19Activation : public TestChain100Setup {
+    TestChain100V19Activation()
+        : TestChain100Setup{CBaseChainParams::REGTEST, {"-testactivationheight=v19@100"}} {}
+};
 
-template<class T>
-void TestTxHelper(const CMutableTransaction& tx, bool is_basic_bls, bool expected_failure, const std::string& expected_error)
+BOOST_FIXTURE_TEST_SUITE(evo_trivialvalidation, TestChain100V19Activation)
+
+template <class T>
+void TestTxHelper(const CMutableTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                  const std::optional<std::string>& expected_error)
 {
-    const bool payload_to_fail = expected_failure && expected_error == "gettxpayload-fail";
+    const bool payload_to_fail = expected_error.has_value() && expected_error.value() == "gettxpayload-fail";
     const auto opt_payload = GetTxPayload<T>(tx, false);
     BOOST_CHECK_EQUAL(opt_payload.has_value(), !payload_to_fail);
 
@@ -27,13 +37,13 @@ void TestTxHelper(const CMutableTransaction& tx, bool is_basic_bls, bool expecte
     if (payload_to_fail) return;
 
     TxValidationState dummy_state;
-    BOOST_CHECK_EQUAL(opt_payload->IsTriviallyValid(is_basic_bls, dummy_state), !expected_failure);
-    if (expected_failure) {
-        BOOST_CHECK_EQUAL(dummy_state.GetRejectReason(), expected_error);
+    BOOST_CHECK_EQUAL(opt_payload->IsTriviallyValid(pindexPrev, dummy_state), !expected_error.has_value());
+    if (expected_error.has_value()) {
+        BOOST_CHECK_EQUAL(dummy_state.GetRejectReason(), expected_error.value());
     }
 }
 
-void trivialvalidation_runner(const std::string& json)
+void trivialvalidation_runner(const CChain& active_chain, const std::string& json)
 {
     const UniValue vectors = read_json(json);
 
@@ -42,21 +52,20 @@ void trivialvalidation_runner(const std::string& json)
         uint256 txHash;
         std::string txType;
         CMutableTransaction tx;
-        std::string expected_err;
+        std::optional<std::string> expected_err;
         try {
             // Additional data
             txHash = uint256S(test[0].get_str());
             BOOST_TEST_MESSAGE("tx: " << test[0].get_str());
             txType = test[1].get_str();
             BOOST_CHECK(test[2].get_str() == "basic" || test[2].get_str() == "legacy");
-            bool is_basic_bls = test[2].get_str() == "basic";
+            // Determine which pindexPrev to supply based on whether we want to validate legacy or basic
+            const CBlockIndex* pindexPrev{(test[2].get_str() == "basic") ? active_chain[100] : active_chain[98]};
+            assert(pindexPrev);
             // Raw transaction
             CDataStream stream(ParseHex(test[3].get_str()), SER_NETWORK, PROTOCOL_VERSION);
             stream >> tx;
-            bool expected = test.size() > 4;
-            if (expected) {
-                expected_err = test[4].get_str();
-            }
+            expected_err = (test.size() > 4) ? std::make_optional(test[4].get_str()) : std::nullopt;
             // Sanity check
             BOOST_CHECK_EQUAL(tx.nVersion, 3);
             BOOST_CHECK_EQUAL(tx.GetHash(), txHash);
@@ -66,25 +75,25 @@ void trivialvalidation_runner(const std::string& json)
             case TRANSACTION_PROVIDER_REGISTER: {
                 BOOST_CHECK_EQUAL(txType, "proregtx");
 
-                TestTxHelper<CProRegTx>(tx, is_basic_bls, expected, expected_err);
+                TestTxHelper<CProRegTx>(tx, pindexPrev, expected_err);
                 break;
             }
             case TRANSACTION_PROVIDER_UPDATE_SERVICE: {
                 BOOST_CHECK_EQUAL(txType, "proupservtx");
 
-                TestTxHelper<CProUpServTx>(tx, is_basic_bls, expected, expected_err);
+                TestTxHelper<CProUpServTx>(tx, pindexPrev, expected_err);
                 break;
             }
             case TRANSACTION_PROVIDER_UPDATE_REGISTRAR: {
                 BOOST_CHECK_EQUAL(txType, "proupregtx");
 
-                TestTxHelper<CProUpRegTx>(tx, is_basic_bls, expected, expected_err);
+                TestTxHelper<CProUpRegTx>(tx, pindexPrev, expected_err);
                 break;
             }
             case TRANSACTION_PROVIDER_UPDATE_REVOKE: {
                 BOOST_CHECK_EQUAL(txType, "prouprevtx");
 
-                TestTxHelper<CProUpRevTx>(tx, is_basic_bls, expected, expected_err);
+                TestTxHelper<CProUpRevTx>(tx, pindexPrev, expected_err);
                 break;
             }
             default:
@@ -97,7 +106,6 @@ void trivialvalidation_runner(const std::string& json)
             continue;
         }
     }
-
 }
 
 BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
@@ -105,10 +113,10 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_valid)
     const std::string json(json_tests::trivially_valid, json_tests::trivially_valid + sizeof(json_tests::trivially_valid));
 
     bls::bls_legacy_scheme.store(true);
-    trivialvalidation_runner(json);
+    trivialvalidation_runner(m_node.chainman->ActiveChain(), json);
 
     bls::bls_legacy_scheme.store(false);
-    trivialvalidation_runner(json);
+    trivialvalidation_runner(m_node.chainman->ActiveChain(), json);
 }
 
 BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
@@ -116,10 +124,10 @@ BOOST_AUTO_TEST_CASE(trivialvalidation_invalid)
     const std::string json(json_tests::trivially_invalid, json_tests::trivially_invalid + sizeof(json_tests::trivially_invalid));
 
     bls::bls_legacy_scheme.store(true);
-    trivialvalidation_runner(json);
+    trivialvalidation_runner(m_node.chainman->ActiveChain(), json);
 
     bls::bls_legacy_scheme.store(false);
-    trivialvalidation_runner(json);
+    trivialvalidation_runner(m_node.chainman->ActiveChain(), json);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

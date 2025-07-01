@@ -686,7 +686,8 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
 
     CProRegTx ptx;
     ptx.nType = mnType;
-    ptx.nVersion = CProRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
+    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProRegTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()),
+                                                                 /*is_basic_override=*/!use_legacy);
     ptx.netInfo = NetInfoInterface::MakeNetInfo(ptx.nVersion);
 
     if (action == ProTxRegisterAction::Fund) {
@@ -1147,7 +1148,8 @@ static RPCHelpMan protx_update_registrar_wrapper(const bool specific_legacy_bls_
     EnsureWalletIsUnlocked(*wallet);
 
     CProUpRegTx ptx;
-    ptx.nVersion = CProUpRegTx::GetMaxVersion(/*is_basic_scheme_active=*/!use_legacy);
+    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpRegTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()),
+                                                                   /*is_basic_override=*/!use_legacy);
 
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
     auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
@@ -1265,9 +1267,8 @@ static RPCHelpMan protx_revoke()
 
     EnsureWalletIsUnlocked(*pwallet);
 
-    const bool isV19active{DeploymentActiveAfter(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip();), Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
     CProUpRevTx ptx;
-    ptx.nVersion = CProUpRevTx::GetMaxVersion(/*is_basic_scheme_active=*/isV19active);
+    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpRevTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()));
 
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
     auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
@@ -1317,7 +1318,7 @@ static RPCHelpMan protx_revoke()
         fSubmit = ParseBoolV(request.params[4], "submit");
     }
 
-    SignSpecialTxPayloadByHash(tx, ptx, keyOperator, !isV19active);
+    SignSpecialTxPayloadByHash(tx, ptx, keyOperator, /*use_legacy=*/ptx.nVersion == ProTxVersion::LegacyBLS);
     SetTxPayload(tx, ptx);
 
     return SignAndSendSpecialTx(request, chain_helper, chainman, tx, fSubmit);

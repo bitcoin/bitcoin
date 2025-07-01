@@ -1284,8 +1284,7 @@ static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not
         state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-payload");
         return std::nullopt;
     }
-    const bool is_basic_scheme_active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V19)};
-    if (!opt_ptx->IsTriviallyValid(is_basic_scheme_active, state)) {
+    if (!opt_ptx->IsTriviallyValid(pindexPrev, state)) {
         // pass the state returned by the function above
         return std::nullopt;
     }
