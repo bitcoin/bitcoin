@@ -153,7 +153,9 @@ private:
     // for multiple CDeterministicMNList until mnMap is actually changed.
     // Calls of AddMN, RemoveMN and (in some cases) UpdateMN reset this cache;
     // it happens also for indirect calls such as ApplyDiff
-    mutable std::shared_ptr<const CSimplifiedMNList> m_cached_sml;
+    // Thread safety: Protected by its own mutex for thread-safe access
+    mutable Mutex m_cached_sml_mutex;
+    mutable std::shared_ptr<const CSimplifiedMNList> m_cached_sml GUARDED_BY(m_cached_sml_mutex);
 
 public:
     CDeterministicMNList() = default;
@@ -163,6 +165,36 @@ public:
         nTotalRegisteredCount(_totalRegisteredCount)
     {
         assert(nHeight >= 0);
+    }
+
+    // Copy constructor
+    CDeterministicMNList(const CDeterministicMNList& other) :
+        blockHash(other.blockHash),
+        nHeight(other.nHeight),
+        nTotalRegisteredCount(other.nTotalRegisteredCount),
+        mnMap(other.mnMap),
+        mnInternalIdMap(other.mnInternalIdMap),
+        mnUniquePropertyMap(other.mnUniquePropertyMap)
+    {
+        LOCK(other.m_cached_sml_mutex);
+        m_cached_sml = other.m_cached_sml;
+    }
+
+    // Assignment operator
+    CDeterministicMNList& operator=(const CDeterministicMNList& other)
+    {
+        if (this != &other) {
+            blockHash = other.blockHash;
+            nHeight = other.nHeight;
+            nTotalRegisteredCount = other.nTotalRegisteredCount;
+            mnMap = other.mnMap;
+            mnInternalIdMap = other.mnInternalIdMap;
+            mnUniquePropertyMap = other.mnUniquePropertyMap;
+
+            LOCK2(m_cached_sml_mutex, other.m_cached_sml_mutex);
+            m_cached_sml = other.m_cached_sml;
+        }
+        return *this;
     }
 
     template <typename Stream, typename Operation>
@@ -205,7 +237,10 @@ public:
         mnMap = MnMap();
         mnUniquePropertyMap = MnUniquePropertyMap();
         mnInternalIdMap = MnInternalIdMap();
-        m_cached_sml = nullptr;
+        {
+            LOCK(m_cached_sml_mutex);
+            m_cached_sml = nullptr;
+        }
     }
 
     [[nodiscard]] size_t GetAllMNsCount() const
@@ -327,6 +362,7 @@ public:
 
     /**
      * Calculates CSimplifiedMNList for current list and cache it
+     * Thread safety: Uses internal mutex for thread-safe cache access
      */
     gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> to_sml() const;
 

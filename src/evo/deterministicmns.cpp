@@ -269,6 +269,7 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
 
 gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> CDeterministicMNList::to_sml() const
 {
+    LOCK(m_cached_sml_mutex);
     if (!m_cached_sml) {
         std::vector<std::unique_ptr<CSimplifiedMNListEntry>> sml_entries;
         sml_entries.reserve(mnMap.size());
@@ -467,7 +468,10 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
 
     mnMap = mnMap.set(dmn->proTxHash, dmn);
     mnInternalIdMap = mnInternalIdMap.set(dmn->GetInternalId(), dmn->proTxHash);
-    m_cached_sml = nullptr;
+    {
+        LOCK(m_cached_sml_mutex);
+        m_cached_sml = nullptr;
+    }
     if (fBumpTotalCount) {
         // nTotalRegisteredCount acts more like a checkpoint, not as a limit,
         nTotalRegisteredCount = std::max(dmn->GetInternalId() + 1, (uint64_t)nTotalRegisteredCount);
@@ -539,8 +543,11 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
 
     dmn->pdmnState = pdmnState;
     mnMap = mnMap.set(oldDmn.proTxHash, dmn);
-    if (m_cached_sml && oldDmn.to_sml_entry() != dmn->to_sml_entry()) {
-        m_cached_sml = nullptr;
+    {
+        LOCK(m_cached_sml_mutex);
+        if (m_cached_sml && oldDmn.to_sml_entry() != dmn->to_sml_entry()) {
+            m_cached_sml = nullptr;
+        }
     }
 }
 
@@ -613,7 +620,10 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 
     mnMap = mnMap.erase(proTxHash);
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
-    m_cached_sml = nullptr;
+    {
+        LOCK(m_cached_sml_mutex);
+        m_cached_sml = nullptr;
+    }
 }
 
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex,
