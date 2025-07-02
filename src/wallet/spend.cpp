@@ -12,6 +12,7 @@
 #include <node/types.h>
 #include <numeric>
 #include <policy/policy.h>
+#include <policy/truc_policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -386,6 +387,14 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 safeTx = false;
             }
 
+            if (nDepth == 0 && params.track_version) {
+                if (coinControl->m_version == TRUC_VERSION) {
+                    if (wtx.tx->version != TRUC_VERSION) continue;
+                } else {
+                    if (wtx.tx->version == TRUC_VERSION) continue;
+                }
+            }
+
             if (only_safe && !safeTx) {
                 continue;
             }
@@ -484,6 +493,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl, CoinFilterParams params)
 {
     params.only_spendable = false;
+    params.track_version = false;
     return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, params);
 }
 
