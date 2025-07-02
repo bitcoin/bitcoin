@@ -12,7 +12,7 @@ Install the required dependencies the usual way you [install software on NetBSD]
 The example commands below use `pkgin`.
 
 ```bash
-pkgin install git cmake pkg-config boost-headers libevent
+pkgin install git cmake pkg-config boost libevent
 ```
 
 NetBSD currently ships with an older version of `gcc` than is needed to build. You should upgrade your `gcc` and then pass this new version to the configure script.
