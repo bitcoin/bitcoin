@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
 #define BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
 
+#include <kernel/mempool_options.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/sign.h>
@@ -51,9 +52,9 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 bool SignSignature(const SigningProvider &provider, const CTransaction& txFrom, CMutableTransaction& txTo,
                    unsigned int nIn, int nHashType, SignatureData& sig_data);
 
-inline bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs) {
+inline bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const kernel::MemPoolOptions& opts={}) {
     std::string reason;
-    return AreInputsStandard(tx, mapInputs, reason, reason);
+    return AreInputsStandard(tx, mapInputs, opts, reason, reason);
 }
 
 #endif // BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H

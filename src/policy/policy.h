@@ -202,7 +202,7 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
 * @param[in] mapInputs       Map of previous transactions that have outputs we're spending
 * @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const kernel::MemPoolOptions& opts, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
 
 /**
 * Check if the transaction is over standard P2WSH resources limit:

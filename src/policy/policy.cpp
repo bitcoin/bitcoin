@@ -283,7 +283,7 @@ static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inpu
  *
  * We also check the total number of non-witness sigops across the whole transaction, as per BIP54.
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const kernel::MemPoolOptions& opts, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects)
 {
     if (tx.IsCoinBase()) {
         return true; // Coinbases don't use vin normally
