@@ -187,8 +187,8 @@ class BytesPerSigOpTest(BitcoinTestFramework):
     def test_legacy_sigops_stdness(self):
         self.log.info("Test a transaction with too many legacy sigops in its inputs is non-standard.")
 
-        # Restart with the default settings
-        self.restart_node(0)
+        # Restart with the test settings
+        self.restart_node(0, extra_args=[f'-maxtxlegacysigops={MAX_STD_LEGACY_SIGOPS}'])
 
         # Create a P2SH script with 15 sigops.
         _, dummy_pubkey = generate_keypair()

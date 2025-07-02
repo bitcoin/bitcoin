@@ -661,6 +661,10 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                              MAX_OP_RETURN_RELAY),
                    ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-maxscriptsize", strprintf("Maximum size of scripts (including the entire witness stack) we relay and mine, in bytes (default: %s)", DEFAULT_SCRIPT_SIZE_POLICY_LIMIT), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-maxtxlegacysigops",
+                   strprintf("Maximum number of legacy sigops allowed in transactions we relay and mine, as measured by BIP54 (default: %s)",
+                             MAX_TX_LEGACY_SIGOPS),
+                   ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempoolfullrbf", strprintf("Accept transaction replace-by-fee without requiring replaceability signaling (default: %u)", (DEFAULT_MEMPOOL_RBF_POLICY == RBFPolicy::Always)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempoolreplacement", strprintf("Set to 0 to disable RBF entirely, \"fee,optin\" to honour RBF opt-out signal, or \"fee,-optin\" to always RBF aka full RBF (default: %s)", "fee,-optin"), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempooltruc", strprintf("Behaviour for transactions requesting TRUC limits: \"reject\" the transactions entirely, \"accept\" them just like any other, or \"enforce\" to impose their requested restrictions (default: %s)", "enforce"), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);

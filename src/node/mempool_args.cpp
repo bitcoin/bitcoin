@@ -190,6 +190,8 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         mempool_opts.dust_relay_multiplier = parsed->second;
     }
 
+    mempool_opts.maxtxlegacysigops = argsman.GetIntArg("-maxtxlegacysigops", mempool_opts.maxtxlegacysigops);
+
     mempool_opts.permitbareanchor = argsman.GetBoolArg("-permitbareanchor", mempool_opts.permitbareanchor);
 
     mempool_opts.permit_bare_pubkey = argsman.GetBoolArg("-permitbarepubkey", DEFAULT_PERMIT_BAREPUBKEY);

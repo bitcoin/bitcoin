@@ -52,7 +52,7 @@ static constexpr unsigned int MAX_P2SH_SIGOPS{15};
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
 static constexpr unsigned int MAX_STANDARD_TX_SIGOPS_COST{MAX_BLOCK_SIGOPS_COST/5};
 /** The maximum number of potentially executed legacy signature operations in a single standard tx */
-static constexpr unsigned int MAX_TX_LEGACY_SIGOPS{2'500};
+static constexpr unsigned int MAX_TX_LEGACY_SIGOPS{std::numeric_limits<unsigned int>::max()};
 /** Default for -incrementalrelayfee, which sets the minimum feerate increase for mempool limiting or replacement **/
 static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{100};
 /** Default for -maxscriptsize */

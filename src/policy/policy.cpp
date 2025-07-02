@@ -237,7 +237,7 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
 /**
  * Check the total number of non-witness sigops across the whole transaction, as per BIP54.
  */
-static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inputs)
+static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inputs, const kernel::MemPoolOptions& opts)
 {
     Assert(!tx.IsCoinBase());
 
@@ -255,7 +255,7 @@ static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inpu
         sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true);
         sigops += prev_txo.scriptPubKey.GetSigOpCount(txin.scriptSig);
 
-        if (sigops > MAX_TX_LEGACY_SIGOPS) {
+        if (sigops > opts.maxtxlegacysigops) {
             return false;
         }
     }
@@ -289,7 +289,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
         return true; // Coinbases don't use vin normally
     }
 
-    if (!CheckSigopsBIP54(tx, mapInputs)) {
+    if (!CheckSigopsBIP54(tx, mapInputs, opts)) {
         MaybeReject("sigops-toomany-overall");
     }
 
