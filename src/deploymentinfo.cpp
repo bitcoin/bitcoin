@@ -17,6 +17,10 @@ const std::array<VBDeploymentInfo,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> Versi
         .name = "taproot",
         .gbt_optional_rule = true,
     },
+    VBDeploymentInfo{
+        .name = "simplicity",
+        .gbt_optional_rule = true,
+    },
 };
 
 std::string DeploymentName(Consensus::BuriedDeployment dep)
