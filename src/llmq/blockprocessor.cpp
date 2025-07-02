@@ -602,15 +602,8 @@ std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsIndexe
             return ret;
         }
 
-        std::vector<const CBlockIndex*> cycleRetTransformed;
-        std::transform(cycleRet.begin(), cycleRet.end(), std::back_inserter(cycleRetTransformed),
-                       [](const CBlockIndex* pindex) { return pindex; });
-
         size_t needToCopy = maxCount - ret.size();
-
-        std::copy_n(cycleRetTransformed.begin(),
-                    std::min(needToCopy, cycleRetTransformed.size()),
-                    std::back_inserter(ret));
+        std::copy_n(cycleRet.begin(), std::min(needToCopy, cycleRet.size()), std::back_inserter(ret));
         cycle++;
     }
 
@@ -623,15 +616,11 @@ std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> CQuorumBlockProce
     std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> ret;
 
     for (const auto& params : Params().GetConsensus().llmqs) {
-        auto& v = ret[params.type];
-        v.reserve(params.signingActiveQuorumCount);
+        auto& commitments = ret[params.type];
         if (IsQuorumRotationEnabled(params, pindex)) {
-            std::vector<const CBlockIndex*> commitments = GetLastMinedCommitmentsPerQuorumIndexUntilBlock(params.type,
-                                                                                                          pindex, 0);
-            std::copy(commitments.begin(), commitments.end(), std::back_inserter(v));
+            commitments = GetLastMinedCommitmentsPerQuorumIndexUntilBlock(params.type, pindex, 0);
         } else {
-            auto commitments = GetMinedCommitmentsUntilBlock(params.type, pindex, params.signingActiveQuorumCount);
-            std::copy(commitments.begin(), commitments.end(), std::back_inserter(v));
+            commitments = GetMinedCommitmentsUntilBlock(params.type, pindex, params.signingActiveQuorumCount);
         }
     }
 
