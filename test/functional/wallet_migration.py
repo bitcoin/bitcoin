@@ -118,17 +118,30 @@ class WalletMigrationTest(BitcoinTestFramework):
         for w in wallets["wallets"]:
             if w["name"] == wallet_name:
                 assert_equal(w["warnings"], ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"])
+
+        # Mock time so that we can check the backup filename.
+        mocked_time = int(time.time())
+        self.master_node.setmocktime(mocked_time)
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
+        self.master_node.setmocktime(0)
         # Update wallet name in case the initial wallet was completely migrated to a watch-only wallet
         # (in which case the wallet name would be suffixed by the 'watchonly' term)
-        wallet_name = migrate_info['wallet_name']
-        wallet = self.master_node.get_wallet_rpc(wallet_name)
+        migrated_wallet_name = migrate_info['wallet_name']
+        wallet = self.master_node.get_wallet_rpc(migrated_wallet_name)
         assert_equal(wallet.getwalletinfo()["descriptors"], True)
-        self.assert_is_sqlite(wallet_name)
+        self.assert_is_sqlite(migrated_wallet_name)
         # Always verify the backup path exist after migration
         assert os.path.exists(migrate_info['backup_path'])
+        if wallet_name == "":
+            backup_prefix = "default_wallet"
+        else:
+            backup_prefix = os.path.basename(os.path.realpath(self.old_node.wallets_path / wallet_name))
+
+        expected_backup_path = self.master_node.wallets_path / f"{backup_prefix}_{mocked_time}.legacy.bak"
+        assert_equal(str(expected_backup_path), migrate_info['backup_path'])
+
         return migrate_info, wallet
 
     def test_basic(self):
