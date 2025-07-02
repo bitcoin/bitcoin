@@ -7,7 +7,7 @@ if ENABLE_FUZZ_BINARY
 noinst_PROGRAMS += test/fuzz/fuzz
 endif
 
-if !ENABLE_FUZZ
+if ENABLE_TESTS
 bin_PROGRAMS += test/test_dash
 endif
 
@@ -406,7 +406,7 @@ endif
 endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
-if !ENABLE_FUZZ
+if ENABLE_TESTS
 UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul
 noinst_PROGRAMS += $(UNIVALUE_TESTS)
 TESTS += $(UNIVALUE_TESTS)
