@@ -64,7 +64,7 @@ static std::vector<std::vector<CDeterministicMNCPtr>> ComputeQuorumMembersByQuar
     const CBlockIndex* pCycleQuorumBaseBlockIndex);
 
 static std::vector<std::vector<CDeterministicMNCPtr>> BuildNewQuorumQuarterMembers(
-    const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& dmnman, CQuorumSnapshotManager& qsnapman,
+    const Consensus::LLMQParams& llmqParams, const CDeterministicMNList& allMns, CQuorumSnapshotManager& qsnapman,
     const CBlockIndex* pCycleQuorumBaseBlockIndex, const PreviousQuorumQuarters& previousQuarters);
 
 static PreviousQuorumQuarters GetPreviousQuorumQuarterMembers(const Consensus::LLMQParams& llmqParams,
