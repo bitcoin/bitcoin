@@ -6,7 +6,6 @@
 #include <fs.h>
 #include <logging.h>
 #include <util/string.h>
-#include <util/system.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 

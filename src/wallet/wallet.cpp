@@ -42,7 +42,6 @@
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/context.h>
-#include <wallet/fees.h>
 #include <warnings.h>
 
 #include <coinjoin/common.h>
