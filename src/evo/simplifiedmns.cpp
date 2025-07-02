@@ -9,7 +9,6 @@
 #include <evo/netinfo.h>
 #include <key_io.h>
 #include <logging.h>
-#include <pubkey.h>
 #include <serialize.h>
 #include <sync.h>
 #include <univalue.h>

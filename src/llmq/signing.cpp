@@ -5,7 +5,6 @@
 #include <llmq/signing.h>
 
 #include <llmq/commitment.h>
-#include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <llmq/signing_shares.h>
 
@@ -16,10 +15,7 @@
 #include <hash.h>
 #include <masternode/node.h>
 #include <net_processing.h>
-#include <netmessagemaker.h>
-#include <scheduler.h>
 #include <streams.h>
-#include <util/irange.h>
 #include <util/thread.h>
 #include <util/time.h>
 #include <util/underlying.h>

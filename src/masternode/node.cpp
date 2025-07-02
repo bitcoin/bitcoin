@@ -12,8 +12,6 @@
 #include <netbase.h>
 #include <protocol.h>
 #include <util/check.h>
-#include <validation.h>
-#include <warnings.h>
 
 namespace {
 bool GetLocal(CService& addr, const CNetAddr* paddrPeer)

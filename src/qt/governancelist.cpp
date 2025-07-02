@@ -7,15 +7,12 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
-#include <clientversion.h>
-#include <coins.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <governance/vote.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
-#include <netbase.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>

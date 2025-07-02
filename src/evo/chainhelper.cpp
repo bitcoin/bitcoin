@@ -4,7 +4,7 @@
 
 #include <evo/chainhelper.h>
 
-#include <consensus/params.h>
+#include <chainparams.h>
 #include <evo/specialtxman.h>
 #include <instantsend/instantsend.h>
 #include <instantsend/lock.h>

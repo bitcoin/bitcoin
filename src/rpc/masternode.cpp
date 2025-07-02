@@ -6,7 +6,6 @@
 #include <evo/assetlocktx.h>
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
-#include <governance/classes.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -15,7 +14,6 @@
 #include <masternode/payments.h>
 #include <net.h>
 #include <netbase.h>
-#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -30,9 +28,6 @@
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
-
-#include <fstream>
-#include <iomanip>
 
 using node::GetTransaction;
 using node::NodeContext;

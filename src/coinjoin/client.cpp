@@ -7,7 +7,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <coinjoin/options.h>
-#include <consensus/validation.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
 #include <masternode/meta.h>
@@ -25,10 +24,9 @@
 #include <version.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinjoin.h>
-#include <wallet/fees.h>
+#include <wallet/coinselection.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
-#include <walletinitinterface.h>
 
 #include <memory>
 #include <univalue.h>

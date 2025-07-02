@@ -4,7 +4,6 @@
 
 #include <bls/bls_worker.h>
 #include <hash.h>
-#include <serialize.h>
 
 #include <util/ranges.h>
 #include <util/system.h>

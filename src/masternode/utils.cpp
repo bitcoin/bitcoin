@@ -11,7 +11,6 @@
 #include <masternode/sync.h>
 #include <net.h>
 #include <shutdown.h>
-#include <validation.h>
 #include <util/ranges.h>
 #include <coinjoin/context.h>
 

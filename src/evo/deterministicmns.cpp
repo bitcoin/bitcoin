@@ -11,7 +11,6 @@
 #include <evo/specialtx.h>
 #include <index/txindex.h>
 
-#include <base58.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/validation.h>

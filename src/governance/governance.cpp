@@ -7,7 +7,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <common/bloom.h>
-#include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
 #include <flat-database.h>

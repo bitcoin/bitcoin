@@ -4,7 +4,6 @@
 
 #include <coinjoin/server.h>
 
-#include <consensus/validation.h>
 #include <core_io.h>
 #include <evo/deterministicmns.h>
 #include <masternode/meta.h>
@@ -21,7 +20,6 @@
 #include <util/ranges.h>
 #include <util/system.h>
 #include <validation.h>
-#include <version.h>
 
 #include <univalue.h>
 

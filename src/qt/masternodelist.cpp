@@ -7,10 +7,8 @@
 
 #include <evo/deterministicmns.h>
 #include <qt/clientmodel.h>
-#include <clientversion.h>
 #include <coins.h>
 #include <qt/guiutil.h>
-#include <netbase.h>
 #include <qt/walletmodel.h>
 
 #include <univalue.h>

@@ -3,14 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <evo/dmnstate.h>
-#include <evo/providertx.h>
 
-#include <chainparams.h>
-#include <consensus/validation.h>
 #include <script/standard.h>
 
 #include <univalue.h>
-#include <messagesigner.h>
 
 std::string CDeterministicMNState::ToString() const
 {

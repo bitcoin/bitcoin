@@ -5,7 +5,6 @@
 
 #include <wallet/bip39.h>
 #include <chainparams.h>
-#include <key_io.h>
 #include <tinyformat.h>
 #include <util/system.h>
 

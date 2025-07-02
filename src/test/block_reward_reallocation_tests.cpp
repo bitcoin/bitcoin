@@ -6,10 +6,7 @@
 
 #include <bls/bls.h>
 #include <chainparams.h>
-#include <consensus/validation.h>
 #include <deploymentstatus.h>
-#include <messagesigner.h>
-#include <netbase.h>
 #include <node/miner.h>
 #include <node/transaction.h>
 #include <script/interpreter.h>

@@ -4,15 +4,12 @@
 
 #include <llmq/ehf_signals.h>
 #include <llmq/quorums.h>
-#include <llmq/signing_shares.h>
 #include <llmq/commitment.h>
-
-#include <evo/mnhftx.h>
-#include <evo/specialtx.h>
 
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <evo/mnhftx.h>
 #include <index/txindex.h> // g_txindex
 #include <primitives/transaction.h>
 #include <validation.h>

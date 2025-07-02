@@ -7,10 +7,10 @@
 #include <llmq/options.h>
 #include <llmq/snapshot.h>
 
+#include <bls/bls.h>
 #include <chainparams.h>
 #include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
-#include <evo/evodb.h>
 #include <masternode/meta.h>
 #include <net.h>
 #include <random.h>

@@ -13,17 +13,13 @@
 #include <index/txindex.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
-#include <messagesigner.h>
-#include <net.h>
 #include <node/context.h>
-#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <timedata.h>
 #include <util/check.h>
 #include <util/strencodings.h>
-#include <util/system.h>
 #include <validation.h>
 #include <wallet/rpc/util.h>
 

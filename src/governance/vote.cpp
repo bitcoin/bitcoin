@@ -2,21 +2,18 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/dmn_types.h>
 #include <governance/vote.h>
 
 #include <bls/bls.h>
 #include <chainparams.h>
-#include <key.h>
+#include <evo/deterministicmns.h>
+#include <evo/dmn_types.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <messagesigner.h>
 #include <net_processing.h>
 #include <timedata.h>
 #include <util/string.h>
-#include <util/system.h>
-
-#include <evo/deterministicmns.h>
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
