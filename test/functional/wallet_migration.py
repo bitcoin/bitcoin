@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Migrating a wallet from legacy to descriptor."""
-
+import os.path
 import random
 import shutil
 import struct
@@ -121,9 +121,14 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Migrate, checking that rescan does not occur
         with self.master_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migrate_info = self.master_node.migratewallet(wallet_name=wallet_name, **kwargs)
+        # Update wallet name in case the initial wallet was completely migrated to a watch-only wallet
+        # (in which case the wallet name would be suffixed by the 'watchonly' term)
+        wallet_name = migrate_info['wallet_name']
         wallet = self.master_node.get_wallet_rpc(wallet_name)
         assert_equal(wallet.getwalletinfo()["descriptors"], True)
         self.assert_is_sqlite(wallet_name)
+        # Always verify the backup path exist after migration
+        assert os.path.exists(migrate_info['backup_path'])
         return migrate_info, wallet
 
     def test_basic(self):
@@ -1024,8 +1029,15 @@ class WalletMigrationTest(BitcoinTestFramework):
         wallet.importaddress(address=p2pk_script.hex())
         # Migrate wallet in the latest node
         res, _ = self.migrate_and_get_rpc("bare_p2pk")
-        wo_wallet = self.master_node.get_wallet_rpc(res['watchonly_name'])
+        wo_wallet = self.master_node.get_wallet_rpc(res['wallet_name'])
         assert_equal(wo_wallet.listdescriptors()['descriptors'][0]['desc'], descsum_create(f'pk({pubkey.hex()})'))
+        assert_equal(wo_wallet.getwalletinfo()["private_keys_enabled"], False)
+
+        # Ensure that migrating a wallet with watch-only scripts does not create a spendable wallet.
+        assert_equal('bare_p2pk_watchonly', res['wallet_name'])
+        assert "bare_p2pk" not in self.master_node.listwallets()
+        assert "bare_p2pk" not in [w["name"] for w in self.master_node.listwalletdir()["wallets"]]
+
         wo_wallet.unloadwallet()
 
     def test_manual_keys_import(self):
@@ -1055,7 +1067,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         res, _ = self.migrate_and_get_rpc("import_pubkeys")
 
         # Same as before, there should be descriptors in the watch-only wallet for the imported pubkey
-        wo_wallet = self.nodes[0].get_wallet_rpc(res['watchonly_name'])
+        wo_wallet = self.nodes[0].get_wallet_rpc(res['wallet_name'])
+        # Assert this is a watch-only wallet
+        assert_equal(wo_wallet.getwalletinfo()["private_keys_enabled"], False)
         # As we imported the pubkey only, there will be no key origin in the following descriptors
         pk_desc = descsum_create(f'pk({pubkey_hex})')
         pkh_desc = descsum_create(f'pkh({pubkey_hex})')
@@ -1066,6 +1080,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Verify all expected descriptors were migrated
         migrated_desc = [item['desc'] for item in wo_wallet.listdescriptors()['descriptors']]
         assert_equal(expected_descs, migrated_desc)
+        # Ensure that migrating a wallet with watch-only scripts does not create a spendable wallet.
+        assert_equal('import_pubkeys_watchonly', res['wallet_name'])
+        assert "import_pubkeys" not in self.master_node.listwallets()
+        assert "import_pubkeys" not in [w["name"] for w in self.master_node.listwalletdir()["wallets"]]
         wo_wallet.unloadwallet()
 
     def test_p2wsh(self):
