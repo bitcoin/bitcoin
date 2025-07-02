@@ -283,21 +283,22 @@ Bitcoin Core's block templates are now for version 3 blocks only, and any mining
 software relying on its `getblocktemplate` must be updated in parallel to use
 libblkmaker either version 0.4.2 or any version from 0.5.1 onward.
 If you are solo mining, this will affect you the moment you upgrade Bitcoin
-Core, which must be done prior to BIP66 achieving its 951/1001 status.
-If you are mining with the stratum mining protocol: this does not affect you.
-If you are mining with the getblocktemplate protocol to a pool: this will affect
-you at the pool operator's discretion, which must be no later than BIP66
-achieving its 951/1001 status.
+Core, which must be done prior to [BIP 66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki)
+achieving its 951/1001 status. If you are mining with the stratum mining protocol: this 
+does not affect you. If you are mining with the getblocktemplate protocol to a pool: this will affect
+you at the pool operator's discretion, which must be no later than [BIP 66]
+(https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki) achieving its 951/1001 status.
 
 The `prioritisetransaction` RPC method has been added to enable miners to
 manipulate the priority of transactions on an individual basis.
 
-Bitcoin Core now supports BIP 22 long polling, so mining software can be
-notified immediately of new templates rather than having to poll periodically.
+Bitcoin Core now supports [BIP 22](https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki)
+long polling, so mining software can be notified immediately of new templates rather than having 
+to poll periodically.
 
-Support for BIP 23 block proposals is now available in Bitcoin Core's
-`getblocktemplate` method. This enables miners to check the basic validity of
-their next block before expending work on it, reducing risks of accidental
+Support for [BIP 23](https://github.com/bitcoin/bips/blob/master/bip-0023.mediawiki) block proposals 
+is now available in Bitcoin Core's `getblocktemplate` method. This enables miners to check the basic 
+validity of their next block before expending work on it, reducing risks of accidental
 hardforks or mining invalid blocks.
 
 Two new options to control mining policy:
@@ -313,17 +314,17 @@ AllowFreeThreshold(), in which case they are relayed subject to the rate limiter
 BIP 66: strict DER encoding for signatures
 ------------------------------------------
 
-Bitcoin Core 0.10 implements BIP 66, which introduces block version 3, and a new
-consensus rule, which prohibits non-DER signatures. Such transactions have been
-non-standard since Bitcoin v0.8.0 (released in February 2013), but were
+Bitcoin Core 0.10 implements [BIP 66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki),
+which introduces block version 3, and a new consensus rule, which prohibits non-DER signatures.
+Such transactions have been non-standard since Bitcoin v0.8.0 (released in February 2013), but were
 technically still permitted inside blocks.
 
 This change breaks the dependency on OpenSSL's signature parsing, and is
 required if implementations would want to remove all of OpenSSL from the
 consensus code.
 
-The same miner-voting mechanism as in BIP 34 is used: when 751 out of a
-sequence of 1001 blocks have version number 3 or higher, the new consensus
+The same miner-voting mechanism as in [BIP 34](https://github.com/bitcoin/bips/blob/master/bip-0034.mediawiki)
+is used: when 751 out of a sequence of 1001 blocks have version number 3 or higher, the new consensus
 rule becomes active for those blocks. When 951 out of a sequence of 1001
 blocks have version number 3 or higher, it becomes mandatory for all blocks.
 
