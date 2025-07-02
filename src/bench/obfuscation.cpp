@@ -15,9 +15,7 @@ static void ObfuscationBench(benchmark::Bench& bench)
     FastRandomContext frc{/*fDeterministic=*/true};
     auto data{frc.randbytes<std::byte>(1024)};
 
-    std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
-    frc.fillrand(key_bytes);
-    const Obfuscation obfuscation{key_bytes};
+    const Obfuscation obfuscation{frc.rand64()};
 
     size_t offset{0};
     bench.batch(data.size()).unit("byte").run([&] {

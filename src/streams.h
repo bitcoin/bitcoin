@@ -376,7 +376,7 @@ protected:
     bool m_was_written{false};
 
 public:
-    explicit AutoFile(std::FILE* file, const Obfuscation& obfuscation = {});
+    explicit AutoFile(std::FILE* file, const Obfuscation& obfuscation = 0);
 
     ~AutoFile()
     {

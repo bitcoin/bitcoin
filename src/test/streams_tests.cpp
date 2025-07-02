@@ -79,6 +79,12 @@ BOOST_AUTO_TEST_CASE(obfuscation_constructors)
 {
     constexpr uint64_t test_key{0x0123456789ABCDEF};
 
+    // Direct uint64_t constructor
+    {
+        const Obfuscation obfuscation{test_key};
+        BOOST_CHECK_EQUAL(obfuscation.Key(), test_key);
+    }
+
     // std::span constructor
     {
         std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
@@ -90,9 +96,7 @@ BOOST_AUTO_TEST_CASE(obfuscation_constructors)
 
 BOOST_AUTO_TEST_CASE(obfuscation_serialize)
 {
-    std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
-    m_rng.fillrand(key_bytes);
-    const Obfuscation original{key_bytes};
+    const Obfuscation original{m_rng.rand64()};
 
     // Serialize
     DataStream ds;
@@ -101,7 +105,7 @@ BOOST_AUTO_TEST_CASE(obfuscation_serialize)
     BOOST_CHECK_EQUAL(ds.size(), 1 + Obfuscation::SIZE_BYTES); // serialized as a vector
 
     // Deserialize
-    Obfuscation recovered{};
+    Obfuscation recovered{0};
     ds >> recovered;
 
     BOOST_CHECK_EQUAL(recovered.Key(), original.Key());
@@ -109,7 +113,7 @@ BOOST_AUTO_TEST_CASE(obfuscation_serialize)
 
 BOOST_AUTO_TEST_CASE(obfuscation_empty)
 {
-    const Obfuscation null_obf{};
+    const Obfuscation null_obf{0};
     BOOST_CHECK(!null_obf);
 
     const Obfuscation non_null_obf{"ff00ff00ff00ff00"_hex};
@@ -131,6 +135,9 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullptr"});
         BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullptr"});
     }
+
+    uint64_t obfuscation;
+    std::memcpy(&obfuscation, key_bytes.data(), Obfuscation::SIZE_BYTES);
     {
 #ifdef __MINGW64__
         // Temporary workaround for https://github.com/bitcoin/bitcoin/issues/30210
@@ -138,7 +145,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #else
         const char* mode = "wbx";
 #endif
-        AutoFile xor_file{raw_file(mode), {key_bytes}};
+        AutoFile xor_file{raw_file(mode), obfuscation}; // uint64_t-to-Obfuscation constructor
         xor_file << test1 << test2;
         BOOST_REQUIRE_EQUAL(xor_file.fclose(), 0);
     }
@@ -152,7 +159,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), {key_bytes}};
+        AutoFile xor_file{raw_file("rb"), obfuscation};
         std::vector<std::byte> read1, read2;
         xor_file >> read1 >> read2;
         BOOST_CHECK_EQUAL(HexStr(read1), HexStr(test1));
@@ -161,7 +168,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), {key_bytes}};
+        AutoFile xor_file{raw_file("rb"), obfuscation};
         std::vector<std::byte> read2;
         // Check that ignore works
         xor_file.ignore(4);
@@ -327,7 +334,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     // Degenerate case
     {
         DataStream ds{};
-        Obfuscation{}(ds);
+        Obfuscation{0}(ds);
         BOOST_CHECK_EQUAL(""s, ds.str());
     }
 
@@ -656,9 +663,7 @@ BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
     const FlatFilePos pos{0, 0};
 
     const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
-    std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
-    m_rng.fillrand(key_bytes);
-    const Obfuscation obfuscation{key_bytes};
+    const Obfuscation obfuscation{m_rng.rand64()};
 
     // Write out the file with random content
     {
@@ -713,9 +718,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
 
     const FlatFileSeq test_buffered{m_args.GetDataDirBase(), "buffered_write_test", node::BLOCKFILE_CHUNK_SIZE};
     const FlatFileSeq test_direct{m_args.GetDataDirBase(), "direct_write_test", node::BLOCKFILE_CHUNK_SIZE};
-    std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
-    m_rng.fillrand(key_bytes);
-    const Obfuscation obfuscation{key_bytes};
+    const Obfuscation obfuscation{m_rng.rand64()};
 
     {
         DataBuffer test_data{m_rng.randbytes<std::byte>(file_size)};

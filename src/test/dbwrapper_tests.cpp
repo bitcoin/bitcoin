@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         constexpr size_t CACHE_SIZE{1_MiB};
         const fs::path path{m_args.GetDataDirBase() / "dbwrapper"};
 
-        Obfuscation obfuscation;
+        uint64_t obfuscation_key;
         std::vector<std::pair<uint8_t, uint256>> key_values{};
 
         // Write values
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
             BOOST_CHECK_EQUAL(obfuscate, !dbw.IsEmpty());
 
             // Ensure that we're doing real obfuscation when obfuscate=true
-            obfuscation = dbwrapper_private::GetObfuscation(dbw);
+            obfuscation_key = dbwrapper_private::GetObfuscation(dbw).Key();
             BOOST_CHECK_EQUAL(obfuscate, dbwrapper_private::GetObfuscation(dbw));
 
             for (uint8_t k{0}; k < 10; ++k) {
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         // Verify that the obfuscation key is never obfuscated
         {
             CDBWrapper dbw{{.path = path, .cache_bytes = CACHE_SIZE, .obfuscate = false}};
-            BOOST_CHECK_EQUAL(obfuscation, dbwrapper_private::GetObfuscation(dbw));
+            BOOST_CHECK_EQUAL(obfuscation_key, dbwrapper_private::GetObfuscation(dbw).Key());
         }
 
         // Read back the values
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
             CDBWrapper dbw{{.path = path, .cache_bytes = CACHE_SIZE, .obfuscate = obfuscate}};
 
             // Ensure obfuscation is read back correctly
-            BOOST_CHECK_EQUAL(obfuscation, dbwrapper_private::GetObfuscation(dbw));
+            BOOST_CHECK_EQUAL(obfuscation_key, dbwrapper_private::GetObfuscation(dbw).Key());
             BOOST_CHECK_EQUAL(obfuscate, dbwrapper_private::GetObfuscation(dbw));
 
             // Verify all written values
