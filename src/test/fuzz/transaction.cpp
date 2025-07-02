@@ -15,6 +15,7 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/random.h>
+#include <test/util/transaction_utils.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/rbf.h>
