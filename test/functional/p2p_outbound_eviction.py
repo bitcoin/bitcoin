@@ -88,6 +88,7 @@ class P2POutEvict(BitcoinTestFramework):
             # Generate an additional block so the peers is 2 blocks behind
             prev_header = from_hex(CBlockHeader(), node.getblockheader(best_block_hash, False))
             best_block_hash = self.generateblock(node, output="raw(42)", transactions=[])["hash"]
+            tip_header = from_hex(CBlockHeader(), node.getblockheader(best_block_hash, False))
             peer.sync_with_ping()
 
             # Advance time but not enough to evict the peer
@@ -100,7 +101,7 @@ class P2POutEvict(BitcoinTestFramework):
 
             # Send a header with the previous tip (so we go back to 1 block behind)
             peer.send_and_ping(msg_headers([prev_header]))
-            prev_prev_hash = tip_header.hash
+            prev_prev_hash = tip_header.hashPrevBlock
 
         self.log.info("Create an outbound connection and take some time to catch up, but do it in time")
         # Check that if the peer manages to catch up within time, the timeouts are removed (and the peer is not disconnected)

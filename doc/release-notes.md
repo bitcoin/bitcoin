@@ -37,6 +37,13 @@ unsupported systems.
 Notable changes
 ===============
 
+### Updated Settings
+
+- The `-maxmempool` and `-dbcache` startup parameters are now capped on
+  32-bit systems to 500MB and 1GiB respectively.
+
+- #32530 node: cap -maxmempool and -dbcache values for 32-bit
+
 ### Wallet
 
 - #31757 wallet: fix crash on double block disconnection
@@ -50,6 +57,8 @@ Notable changes
 - #32483 test: fix two intermittent failures in wallet_basic.py
 - #32630 test: fix sync function in rpc_psbt.py
 - #32765 test: Fix list index out of range error in feature_bip68_sequence.py
+- #32742 test: fix catchup loop in outbound eviction functional test
+- #32833 test: Add msgtype to msg_generic slots
 
 ### Util
 
@@ -66,6 +75,9 @@ Notable changes
 - #32678 guix: warn and abort when SOURCE_DATE_EPOCH is set
 - #32690 depends: fix SHA256SUM command on OpenBSD (use GNU mode output)
 - #32760 depends: capnp 1.2.0
+- #32798 build: add root dir to CMAKE_PREFIX_PATH in toolchain
+- #32805 cmake: Use HINTS instead of PATHS in find_* commands
+- #32814 cmake: Explicitly specify Boost_ROOT for Homebrew's package
 
 ### Gui
 
@@ -106,6 +118,7 @@ Thanks to everyone who directly contributed to this release:
 - benthecarman
 - Brandon Odiwuor
 - davidgumberg
+- dergoegge
 - enirox001
 - fanquake
 - furszy
