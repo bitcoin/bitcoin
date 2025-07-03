@@ -97,7 +97,6 @@ static void OrphanageSinglePeerEviction(benchmark::Bench& bench)
         // Lastly, add the large transaction.
         const auto num_announcements_before_trim{orphanage->CountAnnouncements()};
         assert(orphanage->AddTx(large_tx, peer));
-        orphanage->LimitOrphans();
 
         // If there are multiple peers, note that they all have the same DoS score. We will evict only 1 item at a time for each new DoSiest peer.
         const auto num_announcements_after_trim{orphanage->CountAnnouncements()};
@@ -178,7 +177,6 @@ static void OrphanageMultiPeerEviction(benchmark::Bench& bench)
         const auto num_announcements_before_trim{orphanage->CountAnnouncements()};
         // There is a small gap between the total usage and the max usage. Add a transaction to fill it.
         assert(orphanage->AddTx(last_tx, 0));
-        orphanage->LimitOrphans();
 
         // If there are multiple peers, note that they all have the same DoS score. We will evict only 1 item at a time for each new DoSiest peer.
         const auto num_evicted{num_announcements_before_trim - orphanage->CountAnnouncements() + 1};

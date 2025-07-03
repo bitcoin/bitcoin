@@ -172,11 +172,18 @@ class TxOrphanageImpl final : public TxOrphanage {
     template<typename Tag>
     void Erase(Iter<Tag> it);
 
+    /** Erase by wtxid. */
+    bool EraseTxInternal(const Wtxid& wtxid);
+
     /** Check if there is exactly one announcement with the same wtxid as it. */
     bool IsUnique(Iter<ByWtxid> it) const;
 
     /** Check if the orphanage needs trimming. */
     bool NeedsTrim() const;
+
+    /** Limit the orphanage to MaxGlobalLatencyScore and MaxGlobalUsage. */
+    void LimitOrphans();
+
 public:
     TxOrphanageImpl() = default;
     TxOrphanageImpl(Count max_global_ann, Usage reserved_peer_usage) :
@@ -216,7 +223,6 @@ public:
     bool EraseTx(const Wtxid& wtxid) override;
     void EraseForPeer(NodeId peer) override;
     void EraseForBlock(const CBlock& block) override;
-    void LimitOrphans() override;
     std::vector<std::pair<Wtxid, NodeId>> AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) override;
     bool HaveTxToReconsider(NodeId peer) override;
     std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const override;
@@ -332,6 +338,9 @@ bool TxOrphanageImpl::AddTx(const CTransactionRef& tx, NodeId peer)
                     peer, txid.ToString(), wtxid.ToString());
         Assume(!IsUnique(iter));
     }
+
+    // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
+    LimitOrphans();
     return brand_new;
 }
 
@@ -360,10 +369,13 @@ bool TxOrphanageImpl::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
                 peer, txid.ToString(), wtxid.ToString());
 
     Assume(!IsUnique(iter));
+
+    // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
+    LimitOrphans();
     return true;
 }
 
-bool TxOrphanageImpl::EraseTx(const Wtxid& wtxid)
+bool TxOrphanageImpl::EraseTxInternal(const Wtxid& wtxid)
 {
     auto& index_by_wtxid = m_orphans.get<ByWtxid>();
 
@@ -378,10 +390,19 @@ bool TxOrphanageImpl::EraseTx(const Wtxid& wtxid)
         Erase<ByWtxid>(it++);
         num_ann += 1;
     }
-
     LogDebug(BCLog::TXPACKAGES, "removed orphan tx %s (wtxid=%s) (%u announcements)\n", txid.ToString(), wtxid.ToString(), num_ann);
 
     return true;
+}
+
+bool TxOrphanageImpl::EraseTx(const Wtxid& wtxid)
+{
+    const auto ret = EraseTxInternal(wtxid);
+
+    // Deletions can cause the orphanage's MaxGlobalUsage to decrease, so we may need to trim here.
+    LimitOrphans();
+
+    return ret;
 }
 
 /** Erase all entries by this peer. */
@@ -400,6 +421,9 @@ void TxOrphanageImpl::EraseForPeer(NodeId peer)
     Assume(!m_peer_orphanage_info.contains(peer));
 
     if (num_ann > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d\n", num_ann, peer);
+
+    // Deletions can cause the orphanage's MaxGlobalUsage to decrease, so we may need to trim here.
+    LimitOrphans();
 }
 
 /** If the data structure needs trimming, evicts announcements by selecting the DoSiest peer and evicting its oldest
@@ -565,6 +589,7 @@ bool TxOrphanageImpl::HaveTxToReconsider(NodeId peer)
     auto it = m_orphans.get<ByPeer>().lower_bound(ByPeerView{peer, true, 0});
     return it != m_orphans.get<ByPeer>().end() && it->m_announcer == peer && it->m_reconsider;
 }
+
 void TxOrphanageImpl::EraseForBlock(const CBlock& block)
 {
     std::set<Wtxid> wtxids_to_erase;
@@ -583,13 +608,19 @@ void TxOrphanageImpl::EraseForBlock(const CBlock& block)
 
     unsigned int num_erased{0};
     for (const auto& wtxid : wtxids_to_erase) {
-        num_erased += EraseTx(wtxid) ? 1 : 0;
+        // Don't use EraseTx here because it calls LimitOrphans and announcements deleted in that call are not reflected
+        // in its return result. Waiting until the end to do LimitOrphans helps save repeated computation and allows us
+        // to check that num_erased is what we expect.
+        num_erased += EraseTxInternal(wtxid) ? 1 : 0;
     }
 
     if (num_erased != 0) {
         LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) included or conflicted by block\n", num_erased);
     }
     Assume(wtxids_to_erase.size() == num_erased);
+
+    // Deletions can cause the orphanage's MaxGlobalUsage to decrease, so we may need to trim here.
+    LimitOrphans();
 }
 
 /** Get all children that spend from this tx and were received from nodeid. Sorted from most
@@ -697,6 +728,8 @@ void TxOrphanageImpl::SanityCheck() const
     const auto summed_peer_latency_score = std::accumulate(m_peer_orphanage_info.begin(), m_peer_orphanage_info.end(),
         TxOrphanage::Count{0}, [](TxOrphanage::Count sum, const auto pair) { return sum + pair.second.m_total_latency_score; });
     assert(summed_peer_latency_score >= m_unique_rounded_input_scores + m_orphans.size());
+
+    assert(!NeedsTrim());
 }
 
 TxOrphanage::Count TxOrphanageImpl::MaxGlobalLatencyScore() const { return m_max_global_latency_score; }
