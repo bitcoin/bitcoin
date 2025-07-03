@@ -214,6 +214,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "walletprocesspsbt", 2, "sighashtype", ParamFormat::STRING },
     { "walletprocesspsbt", 3, "bip32derivs" },
     { "walletprocesspsbt", 4, "finalize" },
+    { "walletprocesspsbt", 5, "keypath_only"},
     { "descriptorprocesspsbt", 0, "psbt", ParamFormat::STRING },
     { "descriptorprocesspsbt", 1, "descriptors"},
     { "descriptorprocesspsbt", 2, "sighashtype", ParamFormat::STRING },
