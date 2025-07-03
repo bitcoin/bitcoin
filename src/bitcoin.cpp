@@ -23,7 +23,7 @@ Options:
   -m, --multiprocess     Run multiprocess binaries bitcoin-node, bitcoin-gui.
   -M, --monolithic       Run monolithic binaries bitcoind, bitcoin-qt. (Default behavior)
   -v, --version          Show version information
-  -h, --help             Show this help message
+  -h, --help             Show full help message
 
 Commands:
   gui [ARGS]     Start GUI, equivalent to running 'bitcoin-qt [ARGS]' or 'bitcoin-gui [ARGS]'.
@@ -31,10 +31,10 @@ Commands:
   rpc [ARGS]     Call RPC method, equivalent to running 'bitcoin-cli -named [ARGS]'.
   wallet [ARGS]  Call wallet command, equivalent to running 'bitcoin-wallet [ARGS]'.
   tx [ARGS]      Manipulate hex-encoded transactions, equivalent to running 'bitcoin-tx [ARGS]'.
-  help [-a]      Show this help message. Include -a or --all to show additional commands.
+  help           Show full help message.
 )";
 
-static constexpr auto HELP_EXTRA = R"(
+static constexpr auto HELP_FULL = R"(
 Additional less commonly used commands:
   bench [ARGS]      Run bench command, equivalent to running 'bench_bitcoin [ARGS]'.
   chainstate [ARGS] Run bitcoin kernel chainstate util, equivalent to running 'bitcoin-chainstate [ARGS]'.
@@ -42,11 +42,14 @@ Additional less commonly used commands:
   test-gui [ARGS]   Run GUI unit tests, equivalent to running 'test_bitcoin-qt [ARGS]'.
 )";
 
+static constexpr auto HELP_SHORT = R"(
+Run '%s help' to see additional commands (e.g. for testing and debugging).
+)";
+
 struct CommandLine {
     bool use_multiprocess{false};
     bool show_version{false};
     bool show_help{false};
-    bool show_help_all{false};
     std::string_view command;
     std::vector<const char*> args;
 };
@@ -63,11 +66,17 @@ int main(int argc, char* argv[])
             return EXIT_SUCCESS;
         }
 
+        std::string exe_name{fs::PathToString(fs::PathFromString(argv[0]).filename())};
         std::vector<const char*> args;
         if (cmd.show_help || cmd.command.empty()) {
-            tfm::format(std::cout, HELP_USAGE, argv[0]);
-            if (cmd.show_help_all) tfm::format(std::cout, HELP_EXTRA);
-            return cmd.show_help ? EXIT_SUCCESS : EXIT_FAILURE;
+            tfm::format(std::cout, HELP_USAGE, exe_name);
+            if (cmd.show_help) {
+                tfm::format(std::cout, HELP_FULL);
+                return EXIT_SUCCESS;
+            } else {
+                tfm::format(std::cout, HELP_SHORT, exe_name);
+                return EXIT_FAILURE;
+            }
         } else if (cmd.command == "gui") {
             args.emplace_back(cmd.use_multiprocess ? "bitcoin-gui" : "bitcoin-qt");
         } else if (cmd.command == "node") {
@@ -125,8 +134,6 @@ CommandLine ParseCommandLine(int argc, char* argv[])
             cmd.show_version = true;
         } else if (arg == "-h" || arg == "--help" || arg == "help") {
             cmd.show_help = true;
-        } else if (cmd.show_help && (arg == "-a" || arg == "--all")) {
-            cmd.show_help_all = true;
         } else if (arg.starts_with("-")) {
             throw std::runtime_error(strprintf("Unknown option: %s", arg));
         } else if (!arg.empty()) {
