@@ -154,6 +154,56 @@ KEYS = [
             "6b8747a6bbe4440d7386658476da51f6e49a220508a7ec77fe7bccc3e7baa916",
             "4674bf4d9ebbe01bf0aceaca2472f63198655ecf2df810f8d69b38421972318e",
         ]
+    },
+    {
+        "xprv": "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK",
+        "xpub": "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B",
+        "pubs": [
+            "146846eeb5a7533abb594ba734bc243fc7b6349499b8311c8fc13b0112ba8a77",
+            "45a12d2ce075d947b6232b3e424ffa5d2208b6ff69800a1f2501ac6392499bf8",
+            "f430d7efc4d1ecbac888fb49446ec0b13ec4196512be93054a9b5b30df238910",
+            "d6c658807c2cdc3cd51ab9dcca70cff0bfbe40e41eef129099aeff3d0a21b745",
+        ]
+    },
+    {
+        "xprv": "tprv8ZgxMBicQKsPd1QwsGgzfu2pcPYbBosZhJknqreRHgsWx32nNEhMjGQX2cgFL8n6wz9xdDYwLcs78N4nsCo32cxEX8RBtwGsEGgybLiQJfk",
+        "xpub": "tpubD6NzVbkrYhZ4WUSjkvMb5JgwBR4XM94UGcMa8NgihxfunXHYzdWwum2PCjrug5ze1ky5LMGuN51xYWwYnvxjXMfqRpH2KdCavqWhn68hrEk",
+        "pubs": [
+            "63774080519f6198ed65676bc52ac4757081f4c3f87cffbbb03ac1a5dd888f79",
+            "3698025e167d299d5b77aa89878a933aa4e3d5ca6f11d9edf90f867e62209ed3",
+            "3d4ad1c0b027b478dbb14b1e713157c330a9eb9590cacb0d9d3ae526a08d549d",
+            "d3ed69458296f347e6b686cb83a6daa3f6a0cbc4c06cf1259e866aa3d4ff7f7a",
+        ]
+    },
+    {
+        "xprv": "tprv8ZgxMBicQKsPfHCsTwkiM1KT56RXbGGTqvc2hgqzycpwbHqqpcajQeMRZoBD35kW4RtyCemu6j34Ku5DEspmgjKdt2qe4SvRch5Kk8B8A2v",
+        "xpub": "tpubD6NzVbkrYhZ4YkEfMbRJkQyZe7wTkbTNRECozCtJPtdLRn6cT1QKb8yHjwAPcAr26eHBFYs5iLiFFnCbwPRsncCKUKCfubHDMGKzMVcN1Jg",
+        "pubs": [
+            "3fb32b74f3c6f513d6d6eecd813f061d87aab4c648c03f85b9e473aa618596d1",
+            "c6f4a7067b2559fa9f8b606322d8ccb9723ce2cf4cef84560e1077b9465dd683",
+            "830d968dd4ce2c0b4ed36a33b7d51f7a0fa776777dd80f7581c6d947fbd86f79",
+            "3bb881adb47e76c7f8dd0f022a7bac9ce8902ddeb9f59c89f8f6e1fe571da38a",
+        ]
+    },
+    {
+        "xprv": "tprv8gVCsmRAxVSxyUpsL13Y7ZEWBFPWbgS5E2MmFVNGuANrknvmmn2vWnmHvU8AwEFYzR2ji6EeZLSCLVacsYkvor3Pcb5JY5FGcevqTwYvdYx",
+        "xpub": "tpubDDBF2BTR6s8drwrfDei8WxtckGuSm1cyoKxYY1QaKSBFbHBYQArWhHPA6eJrzZej6nfHGLSURYSLHr7GuYch8aY5n61tGqgn8b4cXrMuoPH",
+        "pubs": [
+            "2e9c2a680c82237bb47e43fbdb3e65d597cf593692cb1ebd466c689b29028350",
+            "81d4a0d5e6a96404a9fcd453a6a93f5413880245ba9229e27a882e11c2e80f3e",
+            "e2fa75d9f4fbf3f97edceedff390ee19a212983f4612227d0abb51912362f8a5",
+            "da2d0d368d68ebededf5bc750f4183551266a6b399b1e9f3184b964528d8bb75",
+        ]
+    },
+    {
+        "xprv": "tprv8ZgxMBicQKsPeonDt8Ka2mrQmHa61hQ5FQCsvWBTpSNzBFgM58cV2EuXNAHF14VawVpznnme3SuTbA62sGriwWyKifJmXntfNeK7zeqMCj1",
+        "xpub": "tpubD6NzVbkrYhZ4YGp1mmzASBWXLK62B2ayphofD2DmEiBP1jw7hXS5CjXPYKt27cwXTfsUKWQK1Fvd5v4EhEcYQvwqHBqBtfhjycPqVaeGgPy",
+        "pubs": [
+            "bc9aa04a045abf2799b3d76e55bf550446a9a04053a7e83699a1f8846781c2d1",
+            "f30f0afeaf2a3f9e8aa829f173e5aea0a8c35131a4abc71d68a1fedf2b83f3ff",
+            "c6fd8ff4c89f7bbf15ac995215f9349c23d00e8d9e9b505e63dcb11763617f34",
+            "5574f27d231c277b3965bbc16921ff79c740fa8c895f8a71dd920f1ff112d9e4",
+        ]
     }
 ]
 
@@ -305,8 +355,8 @@ class WalletTaprootTest(BitcoinTestFramework):
         assert rpc_online.gettransaction(txid)["confirmations"] > 0
         rpc_online.unloadwallet()
 
-    def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change):
-        self.log.info("Testing %s through PSBT" % comment)
+    def do_test_psbt(self, comment, pattern, privmap, treefn, keys_pay, keys_change, avoid_script_path):
+        self.log.info(f"Testing {comment} through PSBT { '(avoid script path)' if avoid_script_path else '' }")
 
         # Create wallets
         wallet_uuid = uuid.uuid4().hex
@@ -346,12 +396,16 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             test_balance = int(psbt_online.getbalance() * 100000000)
             ret_amnt = random.randrange(100000, test_balance)
-            # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
-            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": 200, "change_type": address_type})['psbt']
-            res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
+            fee_rate = 1
+            if not avoid_script_path:
+                # Increase fee_rate to compensate for the wallet's inability to estimate fees for script path spends.
+                fee_rate = 200
+            psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": fee_rate, "change_type": address_type})['psbt']
+            res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=avoid_script_path)
             for wallet in [psbt_offline, key_only_wallet]:
-                res = wallet.walletprocesspsbt(psbt=psbt, finalize=False)
+                res = wallet.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=avoid_script_path)
 
+                retry = False
                 decoded = wallet.decodepsbt(res["psbt"])
                 if pattern.startswith("tr("):
                     for psbtin in decoded["inputs"]:
@@ -359,13 +413,25 @@ class WalletTaprootTest(BitcoinTestFramework):
                         assert "witness_utxo" in psbtin
                         assert "taproot_internal_key" in psbtin
                         assert "taproot_bip32_derivs" in psbtin
-                        assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
+                        if avoid_script_path:
+                            assert "taproot_script_path_sigs" not in psbtin
+                            if  "taproot_key_path_sig" not in psbtin:
+                                retry = True
+                        else:
+                            assert "taproot_key_path_sig" in psbtin or "taproot_script_path_sigs" in psbtin
                         if "taproot_script_path_sigs" in psbtin:
                             assert "taproot_merkle_root" in psbtin
                             assert "taproot_scripts" in psbtin
 
+                if retry:
+                    self.log.debug("Retry with script path")
+                    fee_rate = 200
+                    psbt = psbt_online.walletcreatefundedpsbt([], [{self.boring.getnewaddress(): Decimal(ret_amnt) / 100000000}], None, {"subtractFeeFromOutputs":[0], "fee_rate": fee_rate, "change_type": address_type})['psbt']
+                    res = wallet.walletprocesspsbt(psbt=psbt, finalize=False, keypath_only=False)
+
                 rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
                 res = self.nodes[0].testmempoolaccept([rawtx])
+                self.log.debug(res)
                 assert res[0]["allowed"]
 
             txid = self.nodes[0].sendrawtransaction(rawtx)
@@ -384,10 +450,12 @@ class WalletTaprootTest(BitcoinTestFramework):
 
     def do_test(self, comment, pattern, privmap, treefn):
         nkeys = len(privmap)
-        keys = random.sample(KEYS, nkeys * 4)
+        keys = random.sample(KEYS, nkeys * 6)
         self.do_test_addr(comment, pattern, privmap, treefn, keys[0:nkeys])
         self.do_test_sendtoaddress(comment, pattern, privmap, treefn, keys[0:nkeys], keys[nkeys:2*nkeys])
-        self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys])
+        self.do_test_psbt(comment, pattern, privmap, treefn, keys[2*nkeys:3*nkeys], keys[3*nkeys:4*nkeys], avoid_script_path=False)
+        if 'tr' in pattern:
+            self.do_test_psbt(comment, pattern, privmap, treefn, keys[4*nkeys:5*nkeys], keys[5*nkeys:6*nkeys], avoid_script_path=True)
 
     def run_test(self):
         self.nodes[0].createwallet(wallet_name="boring")
