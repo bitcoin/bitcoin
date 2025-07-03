@@ -799,11 +799,37 @@ static RPCHelpMan createwalletdescriptor()
 
             CExtPubKey xpub;
             if (hdkey.isNull()) {
+                // First consider the HD key from active descriptors
                 std::set<CExtPubKey> active_xpubs = pwallet->GetActiveHDPubKeys();
-                if (active_xpubs.size() != 1) {
+                if (active_xpubs.size() == 1) {
+                    xpub = *active_xpubs.begin();
+                } else if (active_xpubs.size() > 1) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'");
+                } else {
+                    // Look for an unused(KEY) descriptor
+                    std::set<DescriptorScriptPubKeyMan*> spkms{pwallet->GetScriptlessSPKMs()};
+
+                    std::vector<CExtPubKey> wallet_xpubs;
+                    for (auto* spkm : spkms) {
+                        // Retrieve the pubkeys from the descriptor
+                        LOCK(spkm->cs_desc_man);
+                        std::set<CPubKey> pubkeys;
+                        std::set<CExtPubKey> extpubs;
+                        spkm->GetWalletDescriptor().descriptor->GetPubKeys(pubkeys, extpubs);
+
+                        for (const CExtPubKey& xpub : extpubs) {
+                            wallet_xpubs.emplace_back(xpub);
+                        }
+                    }
+
+                    if (wallet_xpubs.empty()) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No HD key found. Please generate one with 'addhdkey' or import an active descriptor.");
+                    } else if (wallet_xpubs.size() > 1) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to determine which HD key to use. Please specify with 'hdkey'");
+                    }
+
+                    xpub = wallet_xpubs[0];
                 }
-                xpub = *active_xpubs.begin();
             } else {
                 xpub = DecodeExtPubKey(hdkey.get_str());
                 if (!xpub.pubkey.IsValid()) {
