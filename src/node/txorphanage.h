@@ -88,9 +88,6 @@ public:
     /** Erase all orphans included in or invalidated by a new block */
     virtual void EraseForBlock(const CBlock& block) = 0;
 
-    /** Limit the orphanage to MaxGlobalLatencyScore and MaxGlobalUsage. */
-    virtual void LimitOrphans() = 0;
-
     /** Add any orphans that list a particular tx as a parent into the from peer's work set */
     virtual std::vector<std::pair<Wtxid, NodeId>> AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) = 0;
 
