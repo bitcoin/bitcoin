@@ -111,11 +111,13 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx);
 
+    bool keypath_only{options.exists("keypath_only") ? options["keypath_only"].get_bool() : false};
+
     // First fill transaction with our data without signing,
     // so external signers are not asked to sign more than once.
     bool complete;
-    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true}, complete);
-    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false}, complete)};
+    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true, .avoid_script_path = keypath_only}, complete);
+    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false, .avoid_script_path = keypath_only}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
@@ -543,6 +545,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                     {"includeWatching", UniValueType(UniValue::VBOOL)},
                     {"include_watching", UniValueType(UniValue::VBOOL)},
                     {"inputs", UniValueType(UniValue::VARR)},
+                    {"keypath_only", UniValueType(UniValue::VBOOL)},
                     {"lockUnspents", UniValueType(UniValue::VBOOL)},
                     {"lock_unspents", UniValueType(UniValue::VBOOL)},
                     {"locktime", UniValueType(UniValue::VNUM)},
@@ -1260,6 +1263,7 @@ RPCHelpMan send()
                           }},
                         },
                     },
+                    {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Only sign the key path (for taproot inputs).\n"},
                     {"locktime", RPCArg::Type::NUM, RPCArg::DefaultHint{"locktime close to block height to prevent fee sniping"}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                     {"psbt", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PSBT, implies add_to_wallet=false."},
