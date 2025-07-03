@@ -170,6 +170,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "walletprocesspsbt", 1, "sign" },
     { "walletprocesspsbt", 3, "bip32derivs" },
     { "walletprocesspsbt", 4, "finalize" },
+    { "walletprocesspsbt", 5, "keypath_only"},
     { "descriptorprocesspsbt", 1, "descriptors"},
     { "descriptorprocesspsbt", 3, "bip32derivs" },
     { "descriptorprocesspsbt", 4, "finalize" },
