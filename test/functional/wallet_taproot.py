@@ -254,6 +254,40 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert psbt_online.gettransaction(txid)['confirmations'] > 0
 
+        if keypath_only:
+            self.log.info("Testing send with keypath_only")
+
+            def assert_no_script_path(psbt):
+                decoded = psbt_online.decodepsbt(psbt)
+                for psbtin in decoded["inputs"]:
+                    assert "taproot_script_path_sigs" not in psbtin
+
+            test_balance = int(psbt_online.getbalance() * 100000000)
+            outputs = {self.boring.getnewaddress(): Decimal(test_balance // 2) / 100000000}
+            res = psbt_online.send(
+                outputs=outputs,
+                options={
+                    "keypath_only": True,
+                    "psbt": True,
+                    "add_to_wallet": False,
+                    "fee_rate": 1,
+                    "subtract_fee_from_outputs": [0],
+                },
+            )
+            assert_equal(res["complete"], False)
+            assert_no_script_path(res["psbt"])
+
+            self.log.info("Testing sendall with keypath_only")
+            res = psbt_online.sendall(
+                recipients=[self.boring.getnewaddress()],
+                keypath_only=True,
+                psbt=True,
+                add_to_wallet=False,
+                fee_rate=1,
+            )
+            assert_equal(res["complete"], False)
+            assert_no_script_path(res["psbt"])
+
         # Cleanup
         psbt = psbt_online.sendall(recipients=[self.boring.getnewaddress()], psbt=True)["psbt"]
         res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)

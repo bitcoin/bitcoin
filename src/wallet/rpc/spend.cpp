@@ -111,11 +111,13 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx, /*version=*/2);
 
+    bool keypath_only{options.exists("keypath_only") ? options["keypath_only"].get_bool() : DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY};
+
     // First fill transaction with our data without signing,
     // so external signers are not asked to sign more than once.
     bool complete;
-    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true}, complete);
-    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false}, complete)};
+    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true, .taproot_keypath_only = keypath_only}, complete);
+    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false, .taproot_keypath_only = keypath_only}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
@@ -499,6 +501,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                     {"includeWatching", UniValueType(UniValue::VBOOL)},
                     {"include_watching", UniValueType(UniValue::VBOOL)},
                     {"inputs", UniValueType(UniValue::VARR)},
+                    {"keypath_only", UniValueType(UniValue::VBOOL)},
                     {"lockUnspents", UniValueType(UniValue::VBOOL)},
                     {"lock_unspents", UniValueType(UniValue::VBOOL)},
                     {"locktime", UniValueType(UniValue::VNUM)},
@@ -1224,6 +1227,7 @@ RPCMethod send()
                           }},
                         },
                     },
+                    {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only sign the key path (for taproot inputs)."},
                     {"locktime", RPCArg::Type::NUM, RPCArg::DefaultHint{"locktime close to block height to prevent fee sniping"}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                     {"psbt", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PSBT, implies add_to_wallet=false."},
@@ -1348,6 +1352,7 @@ RPCMethod sendall()
                         {"send_max", RPCArg::Type::BOOL, RPCArg::Default{false}, "When true, only use UTXOs that can pay for their own fees to maximize the output amount. When 'false' (default), no UTXO is left behind. send_max is incompatible with providing specific inputs."},
                         {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Require inputs with at least this many confirmations."},
                         {"maxconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Require inputs with at most this many confirmations."},
+                        {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only sign the key path (for taproot inputs)."},
                         {"version", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_WALLET_TX_VERSION}, "Transaction version"},
                     },
                     FundTxDoc()
