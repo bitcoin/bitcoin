@@ -71,7 +71,7 @@ It is not necessary to build wallet functionality to run `bitcoind` or  `bitcoin
 
 `sqlite` is required to support for descriptor wallets.
 
-macOS ships with a useable `sqlite` package, meaning you don't need to
+macOS ships with a usable `sqlite` package, meaning you don't need to
 install anything.
 
 ---
