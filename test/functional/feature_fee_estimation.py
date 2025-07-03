@@ -11,6 +11,9 @@ import time
 
 from test_framework.messages import (
     COIN,
+    DEFAULT_BLOCK_RESERVED_WEIGHT,
+    MAX_BLOCK_WEIGHT,
+    WITNESS_SCALE_FACTOR,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -25,6 +28,7 @@ from test_framework.wallet import MiniWallet
 
 MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
+MEMPOOL_FORECASTER_CACHE_LIFE = 7 # Seconds
 
 def small_txpuzzle_randfee(
     wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment, batch_reqs
@@ -87,11 +91,11 @@ def check_raw_estimates(node, fees_seen):
 
 
 def check_smart_estimates(node, fees_seen):
-    """Call estimatesmartfee and verify that the estimates meet certain invariants."""
+    """Call estimatesmartfee in economical mode and verify that the estimates meet certain invariants."""
 
     delta = 1.0e-6  # account for rounding error
     last_feerate = float(max(fees_seen))
-    all_smart_estimates = [node.estimatesmartfee(i) for i in range(1, 26)]
+    all_smart_estimates = [node.estimatesmartfee(i, "economical", True) for i in range(1, 26)]
     mempoolMinFee = node.getmempoolinfo()["mempoolminfee"]
     minRelaytxFee = node.getmempoolinfo()["minrelaytxfee"]
     for i, e in enumerate(all_smart_estimates):  # estimate is for i+1
@@ -129,13 +133,22 @@ def make_tx(wallet, utxo, feerate):
     )
 
 def check_fee_estimates_btw_modes(node, expected_conservative, expected_economical):
-    fee_est_conservative = node.estimatesmartfee(1, estimate_mode="conservative")['feerate']
-    fee_est_economical = node.estimatesmartfee(1, estimate_mode="economical")['feerate']
-    fee_est_default = node.estimatesmartfee(1)['feerate']
+    fee_est_conservative = node.estimatesmartfee(1, estimate_mode="conservative", block_policy_only=True)['feerate']
+    fee_est_economical = node.estimatesmartfee(1, estimate_mode="economical", block_policy_only=True)['feerate']
+    fee_est_default = node.estimatesmartfee(1, estimate_mode="economical", block_policy_only=True)['feerate'] # Default is economical.
     assert_equal(fee_est_conservative, expected_conservative)
     assert_equal(fee_est_economical, expected_economical)
     assert_equal(fee_est_default, expected_economical)
 
+def verify_estimate_response(estimate, feerate, forecaster, errors):
+    if feerate:
+        assert_equal(estimate["feerate"], feerate)
+        assert_equal(estimate["forecaster"], forecaster)
+    assert all(err in estimate["errors"] for err in errors)
+
+def calculate_target_vsize(num_txs):
+    """Helper function to calculate the target vsize for transactions."""
+    return int(((MAX_BLOCK_WEIGHT - DEFAULT_BLOCK_RESERVED_WEIGHT) / WITNESS_SCALE_FACTOR) / num_txs)
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -238,7 +251,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         check_estimates(self.nodes[1], self.fees_per_kb)
 
     def test_feerate_mempoolminfee(self):
-        high_val = 3 * self.nodes[1].estimatesmartfee(1)["feerate"]
+        high_val = 3 * self.nodes[1].estimatesmartfee(1, "economical", True)["feerate"]
         self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}"])
         check_estimates(self.nodes[1], self.fees_per_kb)
         self.restart_node(1)
@@ -299,16 +312,16 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Only 10% of the transactions were really confirmed with a low feerate,
         # the rest needed to be RBF'd. We must return the 90% conf rate feerate.
         high_feerate_kvb = Decimal(high_feerate) / COIN * 10 ** 3
-        est_feerate = node.estimatesmartfee(2)["feerate"]
+        est_feerate = node.estimatesmartfee(2, "economical", True)["feerate"]
         assert_equal(est_feerate, high_feerate_kvb)
 
     def test_old_fee_estimate_file(self):
         # Get the initial fee rate while node is running
-        fee_rate = self.nodes[0].estimatesmartfee(1)["feerate"]
+        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"]
 
         # Restart node to ensure fee_estimate.dat file is read
         self.restart_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"], fee_rate)
 
         fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
 
@@ -319,7 +332,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Start node and ensure the fee_estimates.dat file was not read
         self.start_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["errors"], ["Insufficient data or no feerate found"])
 
 
     def test_estimate_dat_is_flushed_periodically(self):
@@ -376,7 +389,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def test_acceptstalefeeestimates_option(self):
         # Get the initial fee rate while node is running
-        fee_rate = self.nodes[0].estimatesmartfee(1)["feerate"]
+        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"]
 
         self.stop_node(0)
 
@@ -388,42 +401,144 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Restart node with -acceptstalefeeestimates option to ensure fee_estimate.dat file is read
         self.start_node(0,extra_args=["-acceptstalefeeestimates"])
-        assert_equal(self.nodes[0].estimatesmartfee(1)["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["feerate"], fee_rate)
 
-    def clear_estimates(self):
-        self.log.info("Restarting node with fresh estimation")
-        self.stop_node(0)
-        fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
+    def clear_estimates(self, node_index=0):
+        self.log.info(f"Restarting node{node_index} with fresh estimation")
+        self.stop_node(node_index)
+        fee_dat = self.nodes[node_index].chain_path / "fee_estimates.dat"
         os.remove(fee_dat)
-        self.start_node(0)
+        self.start_node(node_index)
+        self.connect_all_nodes()
+        self.sync_blocks()
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", True)["errors"], ["Insufficient data or no feerate found"])
+
+
+    def broadcast_and_mine_blocks(self, fee_rate, blocks, txs):
+        """Helper for broadcasting some number of transactions from node 1 and mining them
+           using node 2 consecutively for some number of blocks.
+        """
+        for _ in range(blocks):
+            for _ in range(txs):
+                self.wallet.send_self_transfer(from_node=self.nodes[1], fee_rate=fee_rate)
+            self.sync_mempools()
+            self.generate(self.nodes[2], 1)
+
+
+    def send_transactions(self, utxos, fee_rate, target_vsize, node):
+        for utxo in utxos:
+            self.wallet.send_self_transfer(
+                from_node=node,
+                utxo_to_spend=utxo,
+                fee_rate=fee_rate,
+                target_vsize=target_vsize,
+            )
+
+    def connect_all_nodes(self):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
-        self.sync_blocks()
-        assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
+        self.connect_nodes(1, 2)
 
-    def broadcast_and_mine(self, broadcaster, miner, feerate, count):
-        """Broadcast and mine some number of transactions with a specified fee rate."""
-        for _ in range(count):
-            self.wallet.send_self_transfer(from_node=broadcaster, fee_rate=feerate)
-        self.sync_mempools()
-        self.generate(miner, 1)
+
+    def clear_mempool(self, node_index, extra_args=None, expected_stderr=''):
+        self.stop_node(node_index, expected_stderr=expected_stderr)
+        node = self.nodes[node_index]
+        os.remove(node.chain_path / "mempool.dat")
+        self.start_node(node_index, extra_args=extra_args)
+
 
     def test_estimation_modes(self):
         low_feerate = Decimal("0.001")
         high_feerate = Decimal("0.005")
         tx_count = 24
         # Broadcast and mine high fee transactions for the first 12 blocks.
-        for _ in range(12):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], high_feerate, tx_count)
+        self.broadcast_and_mine_blocks(high_feerate, blocks=12, txs=tx_count)
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, high_feerate)
 
         # We now track 12 blocks; short horizon stats will start decaying.
         # Broadcast and mine low fee transactions for the next 4 blocks.
-        for _ in range(4):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], low_feerate, tx_count)
+        self.broadcast_and_mine_blocks(low_feerate, blocks=4, txs=tx_count)
         # conservative mode will consider longer time horizons while economical mode does not
         # Check the fee estimates for both modes after mining low fee transactions.
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
+
+
+    def test_estimatesmartfee_default(self):
+        node0, node1 = self.nodes[0], self.nodes[1]
+        # Define how many txs to send from each node
+        txs_node0, txs_node1 = 10, 20
+        vsize_node0 = calculate_target_vsize(txs_node0)
+        vsize_node1 = calculate_target_vsize(txs_node1)
+
+        # Restart node1 with adjusted datacarrier size
+        node1_args = [f"-datacarriersize={vsize_node1}"]
+        self.restart_node(1, node1_args)
+        self.connect_all_nodes()
+
+        # Ensure both mempools start empty
+        assert_equal(node0.getmempoolinfo()['size'], 0)
+        assert_equal(node1.getmempoolinfo()['size'], 0)
+
+        # Expected errors from estimatesmartfee
+        errors = {
+            "mempool": "Mempool Forecast: Forecaster unable to provide a fee rate due to insufficient data",
+            "block": "Block Policy Estimator: Insufficient data or no feerate found",
+            "unreliable": "Mempool is unreliable for fee rate forecasting."
+        }
+
+        self.log.info("Check estimate right after restart (no data)")
+        verify_estimate_response(node0.estimatesmartfee(1), None, None, [errors["unreliable"]])
+
+        self.log.info("Add enough data for block policy estimator (empty mempool)")
+        high_fee = Decimal("0.00009")
+        self.broadcast_and_mine_blocks(high_fee, blocks=6, txs=24)
+        verify_estimate_response(node0.estimatesmartfee(1), high_fee, "Block Policy Estimator", [errors["mempool"]])
+
+        self.log.info("Test mempool estimate when it's lower than block policy")
+        low_fee = Decimal("0.00006")
+        utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(txs_node0)]
+        self.send_transactions(utxos, low_fee, vsize_node0, node0)
+        verify_estimate_response(node0.estimatesmartfee(1), low_fee, "Mempool Forecast", [])
+
+        self.log.info("Verify cached result is returned")
+        mid_fee = Decimal("0.00008")
+        self.send_transactions(utxos, mid_fee, vsize_node0, node0)
+        verify_estimate_response(node0.estimatesmartfee(1), low_fee, "Mempool Forecast", [])
+
+        self.log.info("Force cache refresh by advancing time")
+        node0.setmocktime(int(time.time()) + MEMPOOL_FORECASTER_CACHE_LIFE + 1)
+        verify_estimate_response(node0.estimatesmartfee(1), mid_fee, "Mempool Forecast", [])
+
+        self.log.info("Node1 doesn't see large txs from node0")
+        verify_estimate_response(node1.estimatesmartfee(1), high_fee, "Block Policy Estimator", [errors["mempool"]])
+
+        self.log.info("Node1 shouldn't trust its mempool due to divergence from the network")
+        self.generate(node0, 1, sync_fun=self.no_op)
+        self.sync_blocks()
+        self.wallet.rescan_utxos()
+        node1_fee = Decimal("0.00007")
+        node1_utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(txs_node1)]
+        self.send_transactions(node1_utxos, node1_fee, vsize_node1, node1)
+        verify_estimate_response(node1.estimatesmartfee(1), high_fee, "Block Policy Estimator", [errors["unreliable"]])
+
+        self.log.info("Estimate should come from mempool after consistent, sane data")
+        self.clear_mempool(0)
+        self.clear_mempool(2)
+        warning = "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version."
+        self.clear_mempool(1, node1_args, warning)
+        self.connect_all_nodes()
+        self.broadcast_and_mine_blocks(high_fee, blocks=6, txs=24)
+        self.send_transactions(node1_utxos, node1_fee, vsize_node1, node1)
+        verify_estimate_response(node1.estimatesmartfee(1), node1_fee, "Mempool Forecast", [])
+
+        self.log.info("Fallback to block policy when mempool estimate is too high")
+        insane_fee = Decimal("0.001")
+        self.send_transactions(node1_utxos, insane_fee, vsize_node1, node1)
+        node1.setmocktime(int(time.time()) + MEMPOOL_FORECASTER_CACHE_LIFE + 1)
+        verify_estimate_response(node1.estimatesmartfee(1), high_fee, "Block Policy Estimator", [])
+        self.clear_mempool(0)
+        self.clear_mempool(2)
+        self.clear_mempool(1, None, warning)
 
 
     def run_test(self):
@@ -440,9 +555,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # so the estimates would not be affected by the splitting transactions
         self.start_node(1)
         self.start_node(2)
-        self.connect_nodes(1, 0)
-        self.connect_nodes(0, 2)
-        self.connect_nodes(2, 1)
+        self.connect_all_nodes()
         self.sync_all()
 
         self.log.info("Testing estimates with single transactions.")
@@ -471,6 +584,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.clear_estimates()
         self.log.info("Test estimatesmartfee modes")
         self.test_estimation_modes()
+
+        self.clear_estimates()
+        self.clear_estimates(1)
+        self.log.info("Test estimatesmartfee default")
+        self.test_estimatesmartfee_default()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
