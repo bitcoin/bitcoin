@@ -28,7 +28,7 @@ class CompactBlockInvalidForward(BitcoinTestFramework):
         self.num_nodes = 2
 
     def test_invalid_cb_stall(self):
-        self.log.info("Test that a compact block sent for invalid block results in a disconnect after timeout")
+        self.log.info("Test that a compact block sent for invalid block results in a getdata")
 
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
 
@@ -54,17 +54,13 @@ class CompactBlockInvalidForward(BitcoinTestFramework):
         block.solve()
         test_node.send_without_ping(msg_block(block))
 
-        # No disconnect yet, node1 is waiting on response to getdata
+        # Both peers now have knowledge of the invalid block, and have not disconnected
+        for node in self.nodes:
+            self.wait_until(lambda: len(node.getchaintips()) == 2)
+            assert {"height": 13, "hash": block.hash, "branchlen": 1, "status": "invalid"} in node.getchaintips()
+
         assert_equal(len(self.nodes[1].getpeerinfo()), 1)
 
-        # Make sure node1 has processed the compact block
-        self.wait_until(lambda: len(self.nodes[1].getchaintips()) == 2)
-        assert {"height": 13, "hash": block.hash, "branchlen": 1, "status": "headers-only"} in self.nodes[1].getchaintips()
-
-        # Wait 10m+ more, will disconnect
-        self.nodes[1].setmocktime(now + 200 * 60 * 2 + 11 * 60 )
-
-        self.wait_until(lambda: len(self.nodes[1].getpeerinfo()) == 0)
 
     def run_test(self):
 
