@@ -1,8 +1,8 @@
-Bitcoin Core version 28.2 is now available from:
+Bitcoin Core version 28.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.2/>
+  <https://bitcoincore.org/bin/bitcoin-core-28.x/test.rc1/>
 
-This release includes new features, various bug fixes and performance
+This release includes various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
@@ -37,47 +37,28 @@ unsupported systems.
 Notable changes
 ===============
 
-### Build
-
-- #31407 guix: Notarize MacOS app bundle and codesign all MacOS and Windows binaries
-- #31500 depends: Fix compiling libevent package on NetBSD
-- #31627 depends: Fix spacing issue
-- #32070 build: use make < 3.82 syntax for define directive
-- #32439 guix: accomodate migration to codeberg
-- #32568 depends: use "mkdir -p" when installing xproto
-- #32693 depends: fix cmake compatibility error for freetype
-
 ### Test
 
-- #32286 test: Handle empty string returned by CLI as None in RPC tests
-- #32336 test: Suppress upstream -Wduplicate-decl-specifier in bpfcc
+- #32765 test: Fix list index out of range error in feature_bip68_sequence.py
 
-### Tracing
+### Build
 
-- #31623 tracing: Rename the MIN macro to TRACEPOINT_TEST_MIN in log_raw_p2p_msgs
+- #32678 guix: warn and abort when SOURCE_DATE_EPOCH is set
 
 ### Doc
 
-- #32003 doc: remove note about macOS self-signing
+- #32776 doc: taproot became always active in v24.0
+- #32777 doc: fix Transifex 404s
 
-### Misc
-
-- #31611 doc: upgrade license to 2025
-- #32187 refactor: Remove spurious virtual from final ~CZMQNotificationInterface
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
-- 0xB10C
-- achow101
-- Brandon Odiwuor
 - fanquake
-- Hennadii Stepanov
-- josibake
-- kehiy
-- MarcoFalke
 - Sjors Provoost
+- willcl-ark
+- zaidmstrr
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+[Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
