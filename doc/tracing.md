@@ -368,7 +368,7 @@ serialization of data structures is probably fine, a `sleep(10s)` not.
 TRACEPOINT_SEMAPHORE(example, gated_expensive_argument);
 …
 if (TRACEPOINT_ACTIVE(example, gated_expensive_argument)) {
-    expensive_argument = expensive_calulation();
+    expensive_argument = expensive_calculation();
     TRACEPOINT(example, gated_expensive_argument, expensive_argument);
 }
 ```
