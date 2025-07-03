@@ -17,6 +17,7 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/signalinterrupt.h>
+#include <util/syserror.h>
 #include <util/time.h>
 #include <validation.h>
 
@@ -168,7 +169,8 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
     auto mid = SteadyClock::now();
 
-    AutoFile file{mockable_fopen_function(dump_path + ".new", "wb")};
+    const fs::path file_fspath{dump_path + ".new"};
+    AutoFile file{mockable_fopen_function(file_fspath, "wb")};
     if (file.IsNull()) {
         return false;
     }
@@ -199,9 +201,14 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         LogInfo("Writing %d unbroadcast transactions to file.\n", unbroadcast_txids.size());
         file << unbroadcast_txids;
 
-        if (!skip_file_commit && !file.Commit())
+        if (!skip_file_commit && !file.Commit()) {
+            (void)file.fclose();
             throw std::runtime_error("Commit failed");
-        file.fclose();
+        }
+        if (file.fclose() != 0) {
+            throw std::runtime_error(
+                strprintf("Error closing %s: %s", fs::PathToString(file_fspath), SysErrorString(errno)));
+        }
         if (!RenameOver(dump_path + ".new", dump_path)) {
             throw std::runtime_error("Rename failed");
         }
@@ -213,6 +220,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
                   fs::file_size(dump_path));
     } catch (const std::exception& e) {
         LogInfo("Failed to dump mempool: %s. Continuing anyway.\n", e.what());
+        (void)file.fclose();
         return false;
     }
     return true;

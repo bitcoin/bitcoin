@@ -39,6 +39,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #endif
         AutoFile xor_file{raw_file(mode), xor_pat};
         xor_file << test1 << test2;
+        BOOST_REQUIRE_EQUAL(xor_file.fclose(), 0);
     }
     {
         // Read raw from disk
@@ -379,8 +380,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // by the rewind window (relative to our farthest read position, 40).
     BOOST_CHECK(bf.GetPos() <= 30U);
 
-    // We can explicitly close the file, or the destructor will do it.
-    file.fclose();
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
 
     fs::remove(streams_test_filename);
 }
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     bf.SkipTo(13);
     BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
 
-    file.fclose();
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
     fs::remove(streams_test_filename);
 }
 
@@ -551,6 +551,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             if (maxPos < currentPos)
                 maxPos = currentPos;
         }
+        BOOST_REQUIRE_EQUAL(file.fclose(), 0);
     }
     fs::remove(streams_test_filename);
 }
@@ -566,7 +567,9 @@ BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
 
     // Write out the file with random content
     {
-        AutoFile{test_file.Open(pos, /*read_only=*/false), obfuscation}.write(m_rng.randbytes<std::byte>(file_size));
+        AutoFile f{test_file.Open(pos, /*read_only=*/false), obfuscation};
+        f.write(m_rng.randbytes<std::byte>(file_size));
+        BOOST_REQUIRE_EQUAL(f.fclose(), 0);
     }
     BOOST_CHECK_EQUAL(fs::file_size(test_file.FileName(pos)), file_size);
 
@@ -623,18 +626,21 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
         AutoFile direct_file{test_direct.Open(pos, /*read_only=*/false), obfuscation};
 
         AutoFile buffered_file{test_buffered.Open(pos, /*read_only=*/false), obfuscation};
-        BufferedWriter buffered{buffered_file, buf_size};
+        {
+            BufferedWriter buffered{buffered_file, buf_size};
 
-        for (size_t total_written{0}; total_written < file_size;) {
-            const size_t write_size{Assert(std::min(1 + m_rng.randrange(m_rng.randbool() ? buf_size : 2 * buf_size), file_size - total_written))};
+            for (size_t total_written{0}; total_written < file_size;) {
+                const size_t write_size{Assert(std::min(1 + m_rng.randrange(m_rng.randbool() ? buf_size : 2 * buf_size), file_size - total_written))};
 
-            auto current_span = std::span{test_data}.subspan(total_written, write_size);
-            direct_file.write(current_span);
-            buffered.write(current_span);
+                auto current_span = std::span{test_data}.subspan(total_written, write_size);
+                direct_file.write(current_span);
+                buffered.write(current_span);
 
-            total_written += write_size;
+                total_written += write_size;
+            }
         }
-        // Destructors of AutoFile and BufferedWriter will flush/close here
+        BOOST_REQUIRE_EQUAL(buffered_file.fclose(), 0);
+        BOOST_REQUIRE_EQUAL(direct_file.fclose(), 0);
     }
 
     // Compare the resulting files
@@ -671,12 +677,14 @@ BOOST_AUTO_TEST_CASE(buffered_writer_reader)
     const fs::path test_file{m_args.GetDataDirBase() / "test_buffered_write_read.bin"};
 
     // Write out the values through a precisely sized BufferedWriter
+    AutoFile file{fsbridge::fopen(test_file, "w+b")};
     {
-        AutoFile file{fsbridge::fopen(test_file, "w+b")};
         BufferedWriter f(file, sizeof(v1) + sizeof(v2) + sizeof(v3));
         f << v1 << v2;
         f.write(std::as_bytes(std::span{&v3, 1}));
     }
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+
     // Read back and verify using BufferedReader
     {
         uint32_t _v1{0}, _v2{0}, _v3{0};
