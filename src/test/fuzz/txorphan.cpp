@@ -32,8 +32,9 @@ void initialize_orphanage()
 
 FUZZ_TARGET(txorphan, .init = initialize_orphanage)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    FastRandomContext orphanage_rng{/*fDeterministic=*/true};
+    FastRandomContext orphanage_rng{ConsumeUInt256(fuzzed_data_provider)};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     node::TxOrphanage orphanage;
