@@ -29,6 +29,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.num_nodes = 2
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
+        self.supports_cli = False
         self.extra_args = [
             ["-walletrbf=1"],
             ["-walletrbf=1"]

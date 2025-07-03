@@ -8,6 +8,7 @@ import configparser
 from enum import Enum
 import argparse
 from datetime import datetime, timezone
+import json
 import logging
 import os
 import platform
@@ -595,7 +596,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         node.wait_for_rpc_connection()
 
         if self.options.coveragedir is not None:
-            coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
+            coverage.write_all_rpc_commands(self.options.coveragedir, node._rpc)
 
     def start_nodes(self, extra_args=None, *args, **kwargs):
         """Start multiple bitcoinds"""
@@ -610,7 +611,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         if self.options.coveragedir is not None:
             for node in self.nodes:
-                coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
+                coverage.write_all_rpc_commands(self.options.coveragedir, node._rpc)
 
     def stop_node(self, i, expected_stderr='', wait=0):
         """Stop a bitcoind test node"""
@@ -1083,3 +1084,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
+
+    def convert_to_json_for_cli(self, text):
+        if self.options.usecli:
+            return json.dumps(text)
+        return text

@@ -17,7 +17,6 @@ from test_framework.messages import (
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
-        self.supports_cli = False
         self.extra_args = [[
             "-deprecatedrpc=settxfee"
         ] for i in range(self.num_nodes)]

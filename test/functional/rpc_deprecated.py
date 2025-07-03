@@ -19,7 +19,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         # such RPCs are fully removed. For example:
         #
         # self.log.info("Test generate RPC")
-        # assert_raises_rpc_error(-32, 'The wallet generate rpc method is deprecated', self.nodes[0].rpc.generate, 1)
+        # assert_raises_rpc_error(-32, 'The wallet generate rpc method is deprecated', self.nodes[0].generate, 1)
         #
         # Please ensure that for all the RPC methods tested here, there is
         # at least one other functional test that still tests the RPCs
@@ -32,7 +32,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             self.log.info("Tests for deprecated wallet-related RPC methods (if any)")
             self.log.info("Test settxfee RPC deprecation")
             self.nodes[0].createwallet("settxfeerpc")
-            assert_raises_rpc_error(-32, 'settxfee is deprecated and will be fully removed in v31.0.', self.nodes[0].rpc.settxfee, 0.01)
+            assert_raises_rpc_error(-32, 'settxfee is deprecated and will be fully removed in v31.0.', self.nodes[0].settxfee, 0.01)
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()
