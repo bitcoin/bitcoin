@@ -214,6 +214,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "send", 4, "replaceable"},
     { "send", 4, "solving_data"},
     { "send", 4, "max_tx_weight"},
+    { "send", 4, "keypath_only"},
     { "sendall", 0, "recipients" },
     { "sendall", 1, "conf_target" },
     { "sendall", 3, "fee_rate"},
