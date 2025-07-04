@@ -140,7 +140,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
     }
 
     const CBlockIndex* pindex = chain.Next(pindex_prev);
-    if (pindex) {
+    if (pindex || pindex_prev == chain.Tip()) {
         return pindex;
     }
 
