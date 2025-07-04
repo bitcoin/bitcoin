@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/util.h>
+#include <scheduler.h>
+#include <wallet/context.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
@@ -88,24 +90,24 @@ RPCHelpMan walletpassphrase()
         relock_time = pwallet->nRelockTime;
     }
 
-    // rpcRunLater must be called without cs_wallet held otherwise a deadlock
-    // can occur. The deadlock would happen when RPCRunLater removes the
-    // previous timer (and waits for the callback to finish if already running)
-    // and the callback locks cs_wallet.
-    AssertLockNotHeld(wallet->cs_wallet);
+    // Get wallet scheduler to queue up the relock callback in the future.
+    // Scheduled events don't get destructed until they are executed,
+    // and they are executed in series in a single scheduler thread so
+    // no cs_wallet lock is needed.
+    WalletContext& context = EnsureWalletContext(request.context);
     // Keep a weak pointer to the wallet so that it is possible to unload the
     // wallet before the following callback is called. If a valid shared pointer
     // is acquired in the callback then the wallet is still loaded.
     std::weak_ptr<CWallet> weak_wallet = wallet;
-    pwallet->chain().rpcRunLater(strprintf("lockwallet(%s)", pwallet->GetName()), [weak_wallet, relock_time] {
+    context.scheduler->scheduleFromNow([weak_wallet, relock_time] {
         if (auto shared_wallet = weak_wallet.lock()) {
             LOCK2(shared_wallet->m_relock_mutex, shared_wallet->cs_wallet);
-            // Skip if this is not the most recent rpcRunLater callback.
+            // Skip if this is not the most recent relock callback.
             if (shared_wallet->nRelockTime != relock_time) return;
             shared_wallet->Lock();
             shared_wallet->nRelockTime = 0;
         }
-    }, nSleepTime);
+    }, std::chrono::seconds(nSleepTime));
 
     return UniValue::VNULL;
 },

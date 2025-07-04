@@ -27,7 +27,6 @@ class BanMan;
 class CFeeRate;
 class CNodeStats;
 class Coin;
-class RPCTimerInterface;
 class UniValue;
 class Proxy;
 enum class SynchronizationState;
@@ -204,12 +203,6 @@ public:
 
     //! List rpc commands.
     virtual std::vector<std::string> listRpcCommands() = 0;
-
-    //! Set RPC timer interface if unset.
-    virtual void rpcSetTimerInterfaceIfUnset(RPCTimerInterface* iface) = 0;
-
-    //! Unset RPC timer interface.
-    virtual void rpcUnsetTimerInterface(RPCTimerInterface* iface) = 0;
 
     //! Get unspent output associated with a transaction.
     virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
