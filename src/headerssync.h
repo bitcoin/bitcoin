@@ -31,16 +31,14 @@ struct CompressedHeader {
         hashMerkleRoot.SetNull();
     }
 
-    CompressedHeader(const CBlockHeader& header)
-    {
-        nVersion = header.nVersion;
-        hashMerkleRoot = header.hashMerkleRoot;
-        nTime = header.nTime;
-        nBits = header.nBits;
-        nNonce = header.nNonce;
-    }
+    CompressedHeader(const CBlockHeader& header) : nVersion(header.nVersion),
+                                                   hashMerkleRoot(header.hashMerkleRoot),
+                                                   nTime(header.nTime),
+                                                   nBits(header.nBits),
+                                                   nNonce(header.nNonce) {}
 
-    CBlockHeader GetFullHeader(const uint256& hash_prev_block) {
+    CBlockHeader GetFullHeader(const uint256& hash_prev_block) const
+    {
         CBlockHeader ret;
         ret.nVersion = nVersion;
         ret.hashPrevBlock = hash_prev_block;
@@ -136,37 +134,34 @@ public:
      * minimum_required_work: amount of chain work required to accept the chain
      */
     HeadersSyncState(NodeId id, const Consensus::Params& consensus_params,
-            const CBlockIndex* chain_start, const arith_uint256& minimum_required_work);
+            const CBlockIndex& chain_start, const arith_uint256& minimum_required_work);
 
     /** Result data structure for ProcessNextHeaders. */
     struct ProcessingResult {
-        std::vector<CBlockHeader> pow_validated_headers;
         bool success{false};
         bool request_more{false};
     };
 
     /** Process a batch of headers, once a sync via this mechanism has started
      *
-     * received_headers: headers that were received over the network for processing.
+     * headers: headers that were received over the network for processing.
      *                   Assumes the caller has already verified the headers
      *                   are continuous, and has checked that each header
      *                   satisfies the proof-of-work target included in the
      *                   header (but not necessarily verified that the
      *                   proof-of-work target is correct and passes consensus
      *                   rules).
+     *                   On output, this will be replaced with headers the caller
+     *                   can fully process and validate now (because these
+     *                   returned headers are on a chain with sufficient work).
      * full_headers_message: true if the message was at max capacity,
      *                       indicating more headers may be available
-     * ProcessingResult.pow_validated_headers: will be filled in with any
-     *                       headers that the caller can fully process and
-     *                       validate now (because these returned headers are
-     *                       on a chain with sufficient work)
      * ProcessingResult.success: set to false if an error is detected and the sync is
      *                       aborted; true otherwise.
      * ProcessingResult.request_more: if true, the caller is suggested to call
      *                       NextHeadersRequestLocator and send a getheaders message using it.
      */
-    ProcessingResult ProcessNextHeaders(const std::vector<CBlockHeader>&
-            received_headers, bool full_headers_message);
+    ProcessingResult ProcessNextHeaders(std::vector<CBlockHeader>& headers, bool full_headers_message);
 
     /** Issue the next GETHEADERS message to our peer.
      *
@@ -204,8 +199,8 @@ private:
      * buffer for later processing */
     bool ValidateAndStoreRedownloadedHeader(const CBlockHeader& header);
 
-    /** Return a set of headers that satisfy our proof-of-work threshold */
-    std::vector<CBlockHeader> PopHeadersReadyForAcceptance();
+    /** Populate the given vector with headers that satisfy our proof-of-work threshold */
+    void PopHeadersReadyForAcceptance(std::vector<CBlockHeader>& headers);
 
 private:
     /** NodeId of the peer (used for log messages) **/
@@ -215,7 +210,7 @@ private:
     const Consensus::Params& m_consensus_params;
 
     /** Store the last block in our block index that the peer's chain builds from */
-    const CBlockIndex* m_chain_start{nullptr};
+    const CBlockIndex& m_chain_start;
 
     /** Minimum work that we're looking for on this chain. */
     const arith_uint256 m_minimum_required_work;
