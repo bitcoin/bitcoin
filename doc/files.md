@@ -16,6 +16,8 @@
 
   - [Berkeley DB database based wallets](#berkeley-db-database-based-wallets)
 
+- [Filesystem recommendations](#filesystem-recommendations)
+
 - [Notes](#notes)
 
 ## Data directory location
@@ -122,6 +124,12 @@ Subdirectory | File(s)           | Description
 `./`         | `db.log`          | BDB error file
 `./`         | `wallet.dat`      | Personal wallet (a BDB database) with keys and transactions
 `./`         | `.walletlock`     | BDB wallet lock file
+
+## Filesystem recommendations
+
+When choosing a filesystem for the data directory (`datadir`) or blocks directory (`blocksdir`), some filesystems should be avoided:
+
+- **macOS**: The exFAT filesystem should not be used. There have been multiple reports of database and other corruption when using exFAT on macOS for Bitcoin Core. This appears to be due to filesystem-level issues with exFAT on the macOS operating system. See [Issue #31454](https://github.com/bitcoin/bitcoin/issues/31454) for more details.
 
 ## Notes
 
