@@ -4,7 +4,7 @@
 
 include_guard(GLOBAL)
 
-function(check_linker_supports_pie warnings)
+function(check_linker_supports_pie)
   # Workaround for a bug in the check_pie_supported() function.
   # See:
   # - https://gitlab.kitware.com/cmake/cmake/-/issues/26463
@@ -21,7 +21,7 @@ function(check_linker_supports_pie warnings)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON PARENT_SCOPE)
   elseif(NOT WIN32)
     # The warning is superfluous for Windows.
-    message(WARNING "PIE is not supported at link time. See the configure log for details.")
-    set(${warnings} ${${warnings}} "Position independent code disabled." PARENT_SCOPE)
+    message(AUTHOR_WARNING "PIE is not supported at link time. See the configure log for details.")
+    message(AUTHOR_WARNING "Position independent code disabled.")
   endif()
 endfunction()
