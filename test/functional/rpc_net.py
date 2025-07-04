@@ -178,6 +178,22 @@ class NetTest(BitcoinTestFramework):
                 "version": 0,
             },
         )
+
+        self.log.info("Check getpeerinfo with nodeid filter")
+        all_peers = self.nodes[0].getpeerinfo()
+        # Check that the number of peers returned matches the current connection count
+        assert_equal(len(all_peers), self.nodes[0].getconnectioncount())
+
+        for peer in all_peers:
+            filtered = self.nodes[0].getpeerinfo(peer["id"])
+            assert_equal(len(filtered), 1)
+            assert_equal(filtered[0]["id"], peer["id"])
+            self.log.debug("Filtered peer id {}: OK".format(peer["id"]))
+
+        self.log.info("Check getpeerinfo with nonexistent nodeid filter")
+        nonexistent_id = max(p["id"] for p in all_peers) + 1000
+        assert_equal(self.nodes[0].getpeerinfo(nonexistent_id), [])
+
         no_version_peer.peer_disconnect()
         self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 2)
 
