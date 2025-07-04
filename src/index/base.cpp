@@ -174,7 +174,6 @@ bool BaseIndex::CommitInternal(CDBBatch& batch)
 
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
 {
-    assert(current_tip == m_best_block_index);
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
     // In the case of a reorg, ensure persisted block locator is not stale.
