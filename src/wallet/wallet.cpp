@@ -4174,18 +4174,10 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     std::vector<bilingual_str> warnings;
     bilingual_str error;
 
-    // If the wallet is still loaded, unload it so that nothing else tries to use it while we're changing it
-    bool was_loaded = false;
+    // The only kind of wallets that could be loaded are descriptor ones, which don't need to be migrated.
     if (auto wallet = GetWallet(context, wallet_name)) {
-        if (wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            return util::Error{_("Error: This wallet is already a descriptor wallet")};
-        }
-
-        if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
-            return util::Error{_("Unable to unload the wallet before migrating")};
-        }
-        WaitForDeleteWallet(std::move(wallet));
-        was_loaded = true;
+        assert(wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+        return util::Error{_("Error: This wallet is already a descriptor wallet")};
     } else {
         // Check if the wallet is BDB
         const auto& wallet_path = GetWalletPath(wallet_name);
@@ -4219,10 +4211,10 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
 
-    return MigrateLegacyToDescriptor(std::move(local_wallet), passphrase, context, was_loaded);
+    return MigrateLegacyToDescriptor(std::move(local_wallet), passphrase, context);
 }
 
-util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool was_loaded)
+util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context)
 {
     MigrationResult res;
     bilingual_str error;
@@ -4234,20 +4226,8 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
 
     const std::string wallet_name = local_wallet->GetName();
 
-    // Helper to reload as normal for some of our exit scenarios
-    const auto& reload_wallet = [&](std::shared_ptr<CWallet>& to_reload) {
-        assert(to_reload.use_count() == 1);
-        std::string name = to_reload->GetName();
-        to_reload.reset();
-        to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
-        return to_reload != nullptr;
-    };
-
     // Before anything else, check if there is something to migrate.
     if (local_wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        if (was_loaded) {
-            reload_wallet(local_wallet);
-        }
         return util::Error{_("Error: This wallet is already a descriptor wallet")};
     }
 
@@ -4256,9 +4236,6 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", (wallet_name.empty() ? "default_wallet" : wallet_name), GetTime()));
     fs::path backup_path = this_wallet_dir / backup_filename;
     if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
-        if (was_loaded) {
-            reload_wallet(local_wallet);
-        }
         return util::Error{_("Error: Unable to make a backup of your wallet")};
     }
     res.backup_path = backup_path;
@@ -4267,9 +4244,6 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
 
     // Unlock the wallet if needed
     if (local_wallet->IsLocked() && !local_wallet->Unlock(passphrase)) {
-        if (was_loaded) {
-            reload_wallet(local_wallet);
-        }
         if (passphrase.find('\0') == std::string::npos) {
             return util::Error{Untranslated("Error: Wallet decryption failed, the wallet passphrase was not provided or was incorrect.")};
         } else {
@@ -4306,10 +4280,10 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         }
     }
 
-    // In case of reloading failure, we need to remember the wallet dirs to remove
-    // Set is used as it may be populated with the same wallet directory paths multiple times,
-    // both before and after reloading. This ensures the set is complete even if one of the wallets
-    // fails to reload.
+    // In case of loading failure, we need to remember the wallet dirs to remove
+    // A `set` is used as it may be populated with the same wallet directory paths multiple times,
+    // both before and after loading. This ensures the set is complete even if one of the wallets
+    // fails to load.
     std::set<fs::path> wallet_dirs;
     if (success) {
         Assume(!res.wallet); // We will set it here.
@@ -4321,15 +4295,24 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
             for (const auto& path_to_remove : paths_to_remove) fs::remove_all(path_to_remove);
         }
 
-        // Migration successful, unload all wallets locally, then reload them.
+        // Helper to load all the migrated wallets
+        const auto& load_wallet = [&](std::shared_ptr<CWallet>& to_load) {
+            assert(to_load.use_count() == 1);
+            std::string name = to_load->GetName();
+            to_load.reset();
+            to_load = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
+            return to_load != nullptr;
+        };
+
+        // Migration successful, load all the migrated wallets.
         // Note: We use a pointer to the shared_ptr to avoid increasing its reference count,
-        // as 'reload_wallet' expects to be the sole owner (use_count == 1).
+        // as 'load_wallet' expects to be the sole owner (use_count == 1).
         for (std::shared_ptr<CWallet>* wallet_ptr : {&local_wallet, &res.watchonly_wallet, &res.solvables_wallet}) {
             if (success && *wallet_ptr) {
                 std::shared_ptr<CWallet>& wallet = *wallet_ptr;
                 // Save db path and reload wallet
                 wallet_dirs.insert(fs::PathFromString(wallet->GetDatabase().Filename()).parent_path());
-                success = reload_wallet(wallet);
+                success = load_wallet(wallet);
 
                 // When no wallet is set, set the main wallet.
                 if (!res.wallet) {
@@ -4340,7 +4323,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         }
     }
     if (!success) {
-        // Migration failed, cleanup
+        // Either migration failed or loading of the migrated wallets failed, cleanup either way
         // Before deleting the wallet's directory, copy the backup file to the top-level wallets dir
         fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
         fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
@@ -4379,22 +4362,18 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
 
         // Restore the backup
         // Convert the backup file to the wallet db file by renaming it and moving it into the wallet's directory.
-        // Reload it into memory if the wallet was previously loaded.
         bilingual_str restore_error;
-        const auto& ptr_wallet = RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings, /*load_after_restore=*/was_loaded);
+        const auto& ptr_wallet = RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings, /*load_after_restore=*/false);
         if (!restore_error.empty()) {
             error += restore_error + _("\nUnable to restore backup of wallet.");
             return util::Error{error};
         }
+        // Verify that the legacy wallet is not loaded after restoring from the backup.
+        assert(!ptr_wallet);
 
         // The wallet directory has been restored, but just in case, copy the previously created backup to the wallet dir
         fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
         fs::remove(temp_backup_location);
-
-        // Verify that there is no dangling wallet: when the wallet wasn't loaded before, expect null.
-        // This check is performed after restoration to avoid an early error before saving the backup.
-        bool wallet_reloaded = ptr_wallet != nullptr;
-        assert(was_loaded == wallet_reloaded);
 
         return util::Error{error};
     }
