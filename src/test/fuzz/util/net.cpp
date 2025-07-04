@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <test/fuzz/util/net.h>
 
 #include <compat/compat.h>
@@ -22,6 +24,16 @@
 #include <cstring>
 #include <thread>
 #include <vector>
+
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <sys/socket.h>
+#endif
+
+#ifdef HAVE_SOCKADDR_UN
+#include <sys/un.h>
+#endif
 
 class CNode;
 
@@ -358,10 +370,40 @@ int FuzzedSock::GetSockName(sockaddr* name, socklen_t* name_len) const
         return -1;
     }
     assert(name_len);
-    const auto bytes{ConsumeRandomLengthByteVector(m_fuzzed_data_provider, *name_len)};
-    if (bytes.size() < (int)sizeof(sockaddr)) return -1;
-    std::memcpy(name, bytes.data(), bytes.size());
-    *name_len = bytes.size();
+
+    // Return one of AF_INET, AF_INET6 or AF_UNIX.
+
+    std::vector<int> possible_families;
+    if (static_cast<size_t>(*name_len) >= sizeof(sockaddr_in)) {
+        possible_families.push_back(AF_INET);
+    }
+    if (static_cast<size_t>(*name_len) >= sizeof(sockaddr_in6)) {
+        possible_families.push_back(AF_INET6);
+    }
+#ifdef HAVE_SOCKADDR_UN
+    if (static_cast<size_t>(*name_len) >= sizeof(sockaddr_un)) {
+        possible_families.push_back(AF_UNIX);
+    }
+#endif
+
+    if (possible_families.empty()) { // *name_len is too small.
+        errno = EINVAL;
+        return -1;
+    }
+
+    const int family{possible_families[m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, possible_families.size() - 1)]};
+
+    switch (family) {
+    case AF_INET: *name_len = sizeof(sockaddr_in); break;
+    case AF_INET6: *name_len = sizeof(sockaddr_in6); break;
+#ifdef HAVE_SOCKADDR_UN
+    case AF_UNIX: *name_len = sizeof(sockaddr_un); break;
+#endif
+    }
+
+    std::memcpy(name, ConsumeFixedLengthByteVector(m_fuzzed_data_provider, *name_len).data(), *name_len);
+    name->sa_family = family;
+
     return 0;
 }
 
