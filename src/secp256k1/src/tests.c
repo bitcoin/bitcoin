@@ -7451,6 +7451,10 @@ static void run_ecdsa_wycheproof(void) {
 # include "modules/ellswift/tests_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+# include "modules/silentpayments/tests_impl.h"
+#endif
+
 static void run_secp256k1_memczero_test(void) {
     unsigned char buf1[6] = {1, 2, 3, 4, 5, 6};
     unsigned char buf2[sizeof(buf1)];
@@ -7817,6 +7821,10 @@ int main(int argc, char **argv) {
 
 #ifdef ENABLE_MODULE_ELLSWIFT
     run_ellswift_tests();
+#endif
+
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+    run_silentpayments_tests();
 #endif
 
     /* util tests */
