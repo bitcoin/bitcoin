@@ -134,6 +134,17 @@ if [ -n "$USE_VALGRIND" ]; then
   "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 fi
 
+# Lock down everything to catch tests corrupting the source directory
+if [ "$CI_OS_NAME" == "macos" ]; then
+  chflags -R uchg "${BASE_ROOT_DIR}"
+  chflags -R nouchg "${BASE_BUILD_DIR}"
+  chflags -R nouchg "${BASE_SCRATCH_DIR}"
+else
+  chattr -R +i "${BASE_ROOT_DIR}"
+  chattr -R -i "${BASE_BUILD_DIR}"
+  chattr -R -i "${BASE_SCRATCH_DIR}"
+fi
+
 if [ "$RUN_CHECK_DEPS" = "true" ]; then
   "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" .
 fi
