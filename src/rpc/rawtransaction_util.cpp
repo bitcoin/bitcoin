@@ -318,7 +318,7 @@ void SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
     // Script verification errors
     std::map<int, bilingual_str> input_errors;
 
-    bool complete = SignTransaction(mtx, keystore, coins, *nHashType, input_errors);
+    bool complete = SignTransaction(mtx, keystore, coins, {.sighash_type = *nHashType}, input_errors);
     SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
 }
 
