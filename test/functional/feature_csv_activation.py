@@ -165,7 +165,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
             block = self.create_test_block([])
             test_blocks.append(block)
             self.last_block_time += 600
-            self.tip = block.sha256
+            self.tip = block.hash_int
             self.tipheight += 1
         return test_blocks
 

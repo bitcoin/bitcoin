@@ -50,7 +50,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
             peer.send_without_ping(msg_block(block))
             block_time += 1
             height += 1
-            tip = block.sha256
+            tip = block.hash_int
         peer.sync_with_ping()
 
     def versionbits_in_alert_file(self):

@@ -480,8 +480,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_is_hex_string(header_hex)
 
         header = from_hex(CBlockHeader(), header_hex)
-        header.calc_sha256()
-        assert_equal(header.hash, besthash)
+        assert_equal(header.hash_hex, besthash)
 
         assert 'previousblockhash' not in node.getblockheader(node.getblockhash(0))
         assert 'nextblockhash' not in node.getblockheader(node.getbestblockhash())
@@ -622,9 +621,9 @@ class BlockchainTest(BitcoinTestFramework):
             return b
 
         b1 = solve_and_send_block(int(fork_hash, 16), fork_height+1, fork_block['time'] + 1)
-        b2 = solve_and_send_block(b1.sha256, fork_height+2, b1.nTime + 1)
+        b2 = solve_and_send_block(b1.hash_int, fork_height+2, b1.nTime + 1)
 
-        node.invalidateblock(b2.hash)
+        node.invalidateblock(b2.hash_hex)
 
         def assert_waitforheight(height, timeout=2):
             assert_equal(
@@ -730,19 +729,19 @@ class BlockchainTest(BitcoinTestFramework):
         block = create_block(int(blockhash, 16), create_coinbase(current_height + 1, nValue=100), block_time)
         block.solve()
         node.submitheader(block.serialize().hex())
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash))
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash_hex))
 
         self.log.info("Test getblock when block data is available but undo data isn't")
         # Submits a block building on the header-only block, so it can't be connected and has no undo data
         tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
-        block_noundo = create_block(block.sha256, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
+        block_noundo = create_block(block.hash_int, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
         block_noundo.solve()
         node.submitblock(block_noundo.serialize().hex())
 
-        assert_fee_not_in_block(block_noundo.hash, 2)
-        assert_fee_not_in_block(block_noundo.hash, 3)
-        assert_vin_does_not_contain_prevout(block_noundo.hash, 2)
-        assert_vin_does_not_contain_prevout(block_noundo.hash, 3)
+        assert_fee_not_in_block(block_noundo.hash_hex, 2)
+        assert_fee_not_in_block(block_noundo.hash_hex, 3)
+        assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 2)
+        assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 3)
 
         self.log.info("Test getblock when block is missing")
         move_block_file('blk00000.dat', 'blk00000.dat.bak')
