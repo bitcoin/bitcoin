@@ -221,6 +221,9 @@ public:
 
     /** Make a deep copy of this PubkeyProvider */
     virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
+
+    /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
+    virtual bool CanSelfExpand() const = 0;
 };
 
 class OriginPubkeyProvider final : public PubkeyProvider
@@ -290,6 +293,7 @@ public:
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
     }
+    bool CanSelfExpand() const override { return m_provider->CanSelfExpand(); }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -350,6 +354,7 @@ public:
     {
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
     }
+    bool CanSelfExpand() const final { return true; }
 };
 
 enum class DeriveType {
@@ -572,6 +577,7 @@ public:
     {
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
     }
+    bool CanSelfExpand() const override { return !IsHardened(); }
 };
 
 /** Base class for all Descriptor implementations. */
@@ -800,6 +806,7 @@ public:
     }
     bool IsSingleType() const final { return true; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
+    bool CanSelfExpand() const final { return true; }
 
     std::optional<int64_t> ScriptSize() const override { return GetScriptForDestination(m_destination).size(); }
     std::unique_ptr<DescriptorImpl> Clone() const override
@@ -827,6 +834,7 @@ public:
     }
     bool IsSingleType() const final { return true; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final { return false; }
+    bool CanSelfExpand() const final { return true; }
 
     std::optional<int64_t> ScriptSize() const override { return m_script.size(); }
 
@@ -854,6 +862,7 @@ protected:
 public:
     PKDescriptor(std::unique_ptr<PubkeyProvider> prov, bool xonly = false) : DescriptorImpl(Vector(std::move(prov)), "pk"), m_xonly(xonly) {}
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override { return m_pubkey_args[0]->CanSelfExpand(); }
 
     std::optional<int64_t> ScriptSize() const override {
         return 1 + (m_xonly ? 32 : m_pubkey_args[0]->GetSize()) + 1;
@@ -889,6 +898,7 @@ public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "pkh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override { return m_pubkey_args[0]->CanSelfExpand(); }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 1 + 20 + 1 + 1; }
 
@@ -922,6 +932,7 @@ public:
     WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "wpkh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override { return m_pubkey_args[0]->CanSelfExpand(); }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 20; }
 
@@ -963,6 +974,7 @@ protected:
 public:
     ComboDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "combo") {}
     bool IsSingleType() const final { return false; }
+    bool CanSelfExpand() const override { return m_pubkey_args[0]->CanSelfExpand(); }
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<ComboDescriptor>(m_pubkey_args.at(0)->Clone());
@@ -987,6 +999,13 @@ protected:
 public:
     MultisigDescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), sorted ? "sortedmulti" : "multi"), m_threshold(threshold), m_sorted(sorted) {}
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override {
+        bool can_expand = true;
+        for (const auto& key : m_pubkey_args) {
+            can_expand &= key->CanSelfExpand();
+        }
+        return can_expand;
+    }
 
     std::optional<int64_t> ScriptSize() const override {
         const auto n_keys = m_pubkey_args.size();
@@ -1038,6 +1057,13 @@ protected:
 public:
     MultiADescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), sorted ? "sortedmulti_a" : "multi_a"), m_threshold(threshold), m_sorted(sorted) {}
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override {
+        bool can_expand = true;
+        for (const auto& key : m_pubkey_args) {
+            can_expand &= key->CanSelfExpand();
+        }
+        return can_expand;
+    }
 
     std::optional<int64_t> ScriptSize() const override {
         const auto n_keys = m_pubkey_args.size();
@@ -1084,6 +1110,7 @@ public:
         return OutputType::LEGACY;
     }
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override { return m_subdescriptor_args[0]->CanSelfExpand(); }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 20 + 1; }
 
@@ -1125,6 +1152,7 @@ public:
     WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override { return m_subdescriptor_args[0]->CanSelfExpand(); }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
@@ -1202,6 +1230,13 @@ public:
     }
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override {
+        bool can_expand = m_pubkey_args[0]->CanSelfExpand();
+        for (const auto& sub : m_subdescriptor_args) {
+            can_expand &= sub->CanSelfExpand();
+        }
+        return can_expand;
+    }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
@@ -1329,6 +1364,13 @@ public:
 
     bool IsSolvable() const override { return true; }
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override {
+        bool can_expand = true;
+        for (const auto& key : m_pubkey_args) {
+            can_expand &= key->CanSelfExpand();
+        }
+        return can_expand;
+    }
 
     std::optional<int64_t> ScriptSize() const override { return m_node->ScriptSize(); }
 
@@ -1368,6 +1410,7 @@ public:
     RawTRDescriptor(std::unique_ptr<PubkeyProvider> output_key) : DescriptorImpl(Vector(std::move(output_key)), "rawtr") {}
     std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
     bool IsSingleType() const final { return true; }
+    bool CanSelfExpand() const override { return m_pubkey_args[0]->CanSelfExpand(); }
 
     std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
 
