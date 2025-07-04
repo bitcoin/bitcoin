@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/dmn_types.h>
 #include <evo/dmnstate.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
+#include <index/txindex.h>
 #include <llmq/commitment.h>
 #include <llmq/utils.h>
 
@@ -50,11 +50,15 @@ UniValue CDeterministicMN::ToJson() const
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
 
-    auto [collateralTx, _] = GetTransactionBlock(collateralOutpoint.hash);
-    if (collateralTx) {
-        CTxDestination dest;
-        if (ExtractDestination(collateralTx->vout[collateralOutpoint.n].scriptPubKey, dest)) {
-            obj.pushKV("collateralAddress", EncodeDestination(dest));
+    if (g_txindex) {
+        CTransactionRef collateralTx;
+        uint256 nBlockHash;
+        g_txindex->FindTx(collateralOutpoint.hash, nBlockHash, collateralTx);
+        if (collateralTx) {
+            CTxDestination dest;
+            if (ExtractDestination(collateralTx->vout[collateralOutpoint.n].scriptPubKey, dest)) {
+                obj.pushKV("collateralAddress", EncodeDestination(dest));
+            }
         }
     }
 

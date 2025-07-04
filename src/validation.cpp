@@ -53,7 +53,6 @@
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
-#include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 #include <evo/specialtxman.h>
 #include <llmq/chainlocks.h>
@@ -137,6 +136,13 @@ int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
+
+// Forward declaration to break dependency over node/transaction.h
+namespace node
+{
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
+} // namespace node
+using node::GetTransaction;
 
 const CBlockIndex* CChainState::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
@@ -752,7 +758,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (auto conflictLockOpt = m_chain_helper.ConflictingISLockIfAny(tx); conflictLockOpt.has_value()) {
         auto& [_, conflict_txid] = conflictLockOpt.value();
 
-        if (auto [txConflict, _] = GetTransactionBlock(conflict_txid, &m_pool); txConflict) {
+        uint256 hashBlock;
+        if (auto txConflict = GetTransaction(nullptr, &m_pool, conflict_txid, chainparams.GetConsensus(), hashBlock); txConflict) {
             GetMainSignals().NotifyInstantSendDoubleSpendAttempt(ptx, txConflict);
         }
         LogPrintf("ERROR: AcceptToMemoryPool : Transaction %s conflicts with locked TX %s\n", hash.ToString(), conflict_txid.ToString());

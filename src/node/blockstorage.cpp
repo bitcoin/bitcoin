@@ -8,12 +8,9 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <consensus/validation.h>
-#include <dsnotificationinterface.h>
-#include <evo/deterministicmns.h>
 #include <flatfile.h>
 #include <fs.h>
 #include <hash.h>
-#include <masternode/node.h>
 #include <pow.h>
 #include <shutdown.h>
 #include <streams.h>
@@ -825,8 +822,7 @@ struct CImportingNow {
     }
 };
 
-void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CDSNotificationInterface& dsnfi,
-                  std::vector<fs::path> vImportFiles, CActiveMasternodeManager* const mn_activeman, const ArgsManager& args)
+void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args)
 {
     ScheduleBatchPriority();
 
@@ -898,29 +894,6 @@ void ThreadImport(ChainstateManager& chainman, CDeterministicMNManager& dmnman, 
             return;
         }
     } // End scope of CImportingNow
-
-    // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
-    // but don't call it directly to prevent triggering of other listeners like zmq etc.
-    // GetMainSignals().UpdatedBlockTip(::ChainActive().Tip());
-    dsnfi.InitializeCurrentBlockTip();
-
-    {
-        // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
-        // and reduce further locking overhead for cs_main in other parts of code including GUI
-        LogPrintf("Filling coin cache with masternode UTXOs...\n");
-        LOCK(cs_main);
-        const auto start{SteadyClock::now()};
-        auto mnList = dmnman.GetListAtChainTip();
-        mnList.ForEachMN(false, [&](auto& dmn) {
-            Coin coin;
-            GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
-        });
-        LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
-    }
-
-    if (mn_activeman != nullptr) {
-        mn_activeman->Init(chainman.ActiveTip());
-    }
 
     chainman.ActiveChainstate().LoadMempool(args);
 }

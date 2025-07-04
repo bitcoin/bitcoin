@@ -7,10 +7,10 @@
 #include <bls/bls.h>
 #include <chainparams.h>
 #include <core_io.h>
-#include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <governance/validators.h>
+#include <index/txindex.h>
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
@@ -453,8 +453,12 @@ bool CGovernanceObject::IsCollateralValid(const ChainstateManager& chainman, std
     fMissingConfirmations = false;
     uint256 nExpectedHash = GetHash();
 
-    // RETRIEVE TRANSACTION IN QUESTION
-    auto [txCollateral, nBlockHash] = GetTransactionBlock(m_obj.collateralHash);
+    CTransactionRef txCollateral;
+    uint256 nBlockHash;
+    if (g_txindex) {
+        g_txindex->FindTx(m_obj.collateralHash, nBlockHash, txCollateral);
+    }
+
     if (!txCollateral) {
         strError = strprintf("Can't find collateral tx %s", m_obj.collateralHash.ToString());
         LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);

@@ -18,7 +18,6 @@ class CGovernanceManager;
 class CSpecialTxProcessor;
 class CSporkManager;
 class CTransaction;
-class CTxMemPool;
 class uint256;
 
 namespace Consensus { struct Params; }
@@ -29,8 +28,6 @@ class CQuorumBlockProcessor;
 class CQuorumManager;
 class CQuorumSnapshotManager;
 }
-
-using CTransactionRef = std::shared_ptr<const CTransaction>;
 
 class CChainstateHelper
 {
@@ -65,9 +62,5 @@ public:
     const std::unique_ptr<CMNPaymentsProcessor> mn_payments;
     const std::unique_ptr<CSpecialTxProcessor> special_tx;
 };
-
-/* Retrieve transaction and block from txindex (or mempool) */
-std::pair</*tx=*/CTransactionRef, /*hash_block=*/uint256> GetTransactionBlock(const uint256& hash,
-                                                                              const CTxMemPool* const mempool = nullptr);
 
 #endif // BITCOIN_EVO_CHAINHELPER_H
