@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(reverselock_errors)
     g_debug_lockorder_abort = false;
 
     // Make sure trying to reverse lock a previous lock fails
-    BOOST_CHECK_EXCEPTION(REVERSE_LOCK(lock2, mutex2), std::logic_error, HasReason("lock2 was not most recent critical section locked"));
+    BOOST_CHECK_EXCEPTION(REVERSE_LOCK(lock2, mutex2), std::logic_error, HasReason("mutex2 was not most recent critical section locked"));
     BOOST_CHECK(lock2.owns_lock());
 
     g_debug_lockorder_abort = prev;
