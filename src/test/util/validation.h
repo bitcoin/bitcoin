@@ -20,7 +20,7 @@ class ValidationInterfaceTest
 {
 public:
     static void BlockConnected(
-        ChainstateRole role,
+        const kernel::ChainstateRole& role,
         CValidationInterface& obj,
         const std::shared_ptr<const CBlock>& block,
         const CBlockIndex* pindex);
