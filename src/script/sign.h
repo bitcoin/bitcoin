@@ -27,6 +27,7 @@ struct SignatureData;
 
 struct SignOptions {
     int sighash_type{SIGHASH_DEFAULT};
+    bool avoid_script_path{false};
 };
 
 /** Interface for signature creators. */
@@ -46,9 +47,14 @@ public:
 /** A signature creator for transactions. */
 class MutableTransactionSignatureCreator : public BaseSignatureCreator
 {
+private:
     const CMutableTransaction& m_txto;
     unsigned int nIn;
+
+public:
     SignOptions m_options;
+
+private:
     CAmount amount;
     const MutableTransactionSignatureChecker checker;
     const PrecomputedTransactionData* m_txdata;
