@@ -597,6 +597,9 @@ static bool SignTaproot(const SigningProvider& provider, const BaseSignatureCrea
         }
     }
 
+    const auto mutable_creator = dynamic_cast<const MutableTransactionSignatureCreator*>(&creator);
+    if (mutable_creator && mutable_creator->m_options.avoid_script_path) return false;
+
     // Try script path spending.
     std::vector<std::vector<unsigned char>> smallest_result_stack;
     for (const auto& [key, control_blocks] : sigdata.tr_spenddata.scripts) {
