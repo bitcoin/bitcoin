@@ -9,6 +9,8 @@
 #include <uint256.h>
 #include <util/types.h>
 
+#include <variant>
+
 /** transaction_identifier represents the two canonical transaction identifier
  * types (txid, wtxid).*/
 template <bool has_witness>
@@ -19,9 +21,6 @@ class transaction_identifier
     // Note: Use FromUint256 externally instead.
     transaction_identifier(const uint256& wrapped) : m_wrapped{wrapped} {}
 
-    // TODO: Comparisons with uint256 should be disallowed once we have
-    // converted most of the code to using the new txid types.
-    constexpr int Compare(const uint256& other) const { return m_wrapped.Compare(other); }
     constexpr int Compare(const transaction_identifier<has_witness>& other) const { return m_wrapped.Compare(other.m_wrapped); }
     template <typename Other>
     constexpr int Compare(const Other& other) const
@@ -60,20 +59,32 @@ public:
     constexpr const std::byte* end() const { return reinterpret_cast<const std::byte*>(m_wrapped.end()); }
     template <typename Stream> void Serialize(Stream& s) const { m_wrapped.Serialize(s); }
     template <typename Stream> void Unserialize(Stream& s) { m_wrapped.Unserialize(s); }
-
-    /** Conversion function to `uint256`.
-     *
-     * Note: new code should use `ToUint256`.
-     *
-     * TODO: This should be removed once the majority of the code has switched
-     * to using the Txid and Wtxid types. Until then it makes for a smoother
-     * transition to allow this conversion. */
-    operator const uint256&() const LIFETIMEBOUND { return m_wrapped; }
 };
 
 /** Txid commits to all transaction fields except the witness. */
 using Txid = transaction_identifier<false>;
 /** Wtxid commits to all transaction fields including the witness. */
 using Wtxid = transaction_identifier<true>;
+
+/** A generic txid reference (txid or wtxid). */
+class GenTxid : public std::variant<Txid, Wtxid>
+{
+public:
+    using variant::variant;
+
+    const uint256& ToUint256() const LIFETIMEBOUND {
+        return std::visit([](const auto& id) -> const uint256& { return id.ToUint256(); }, *this);
+    }
+
+    friend bool operator==(const GenTxid& a, const GenTxid& b) {
+        //return a.index() == b.index() && a.ToUint256() == b.ToUint256();
+        return a.ToUint256() == b.ToUint256();
+    }
+
+    friend bool operator<(const GenTxid& a, const GenTxid& b) {
+        //return std::tuple(a.index(), a.ToUint256()) < std::tuple(b.index(), b.ToUint256());
+        return a.ToUint256() < b.ToUint256();
+    }
+};
 
 #endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H

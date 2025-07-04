@@ -817,7 +817,7 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
     std::string hashStr;
     const RESTResponseFormat rf = ParseDataFormat(hashStr, uri_part);
 
-    auto hash{uint256::FromHex(hashStr)};
+    auto hash{Txid::FromHex(hashStr)};
     if (!hash) {
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
     }
