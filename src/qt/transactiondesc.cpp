@@ -103,9 +103,10 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
 {
     int numBlocks;
     interfaces::WalletTxStatus status;
-    interfaces::WalletOrderForm orderForm;
     bool inMempool;
-    interfaces::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, orderForm, inMempool, numBlocks);
+    std::vector<std::string> messages;
+    std::vector<std::string> payment_requests;
+    interfaces::WalletTx wtx = wallet.getWalletTxDetails(rec->hash, status, messages, payment_requests, inMempool, numBlocks);
 
     QString strHTML;
 
@@ -128,11 +129,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     if (wtx.is_coinbase)
     {
         strHTML += "<b>" + tr("Source") + ":</b> " + tr("Generated") + "<br>";
-    }
-    else if (wtx.value_map.count("from") && !wtx.value_map["from"].empty())
-    {
+    } else if (wtx.from) {
         // Online transaction
-        strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(wtx.value_map["from"]) + "<br>";
+        strHTML += "<b>" + tr("From") + ":</b> " + GUIUtil::HtmlEscape(*wtx.from) + "<br>";
     }
     else
     {
@@ -163,10 +162,9 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // To
     //
-    if (wtx.value_map.count("to") && !wtx.value_map["to"].empty())
-    {
+    if (wtx.comment_to) {
         // Online transaction
-        std::string strAddress = wtx.value_map["to"];
+        std::string strAddress = *wtx.comment_to;
         strHTML += "<b>" + tr("To") + ":</b> ";
         CTxDestination dest = DecodeDestination(strAddress);
         std::string name;
@@ -227,8 +225,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
                 if ((toSelf == ISMINE_SPENDABLE) && (fAllFromMe == ISMINE_SPENDABLE))
                     continue;
 
-                if (!wtx.value_map.count("to") || wtx.value_map["to"].empty())
-                {
+                if (!wtx.comment_to) {
                     // Offline transaction
                     CTxDestination address;
                     if (ExtractDestination(txout.scriptPubKey, address))
@@ -288,10 +285,12 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     //
     // Message
     //
-    if (wtx.value_map.count("message") && !wtx.value_map["message"].empty())
-        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["message"], true) + "<br>";
-    if (wtx.value_map.count("comment") && !wtx.value_map["comment"].empty())
-        strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.value_map["comment"], true) + "<br>";
+    if (wtx.message) {
+        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(*wtx.message, true) + "<br>";
+    }
+    if (wtx.comment) {
+        strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(*wtx.comment, true) + "<br>";
+    }
 
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + rec->getTxHash() + "<br>";
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
@@ -299,24 +298,19 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     strHTML += "<b>" + tr("Output index") + ":</b> " + QString::number(rec->getOutputIndex()) + "<br>";
 
     // Message from normal bitcoin:URI (bitcoin:123...?message=example)
-    for (const std::pair<std::string, std::string>& r : orderForm) {
-        if (r.first == "Message")
-            strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
-
-        //
-        // PaymentRequest info:
-        //
-        if (r.first == "PaymentRequest")
-        {
-            QString merchant;
-            if (!GetPaymentRequestMerchant(r.second, merchant)) {
-                merchant.clear();
-            } else {
-                merchant = tr("%1 (Certificate was not verified)").arg(merchant);
-            }
-            if (!merchant.isNull()) {
-                strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
-            }
+    for (const std::string& msg : messages) {
+        strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(msg, true) + "<br>";
+    }
+    // BIP 70 Payment Requests
+    for (const std::string& req : payment_requests) {
+        QString merchant;
+        if (!GetPaymentRequestMerchant(req, merchant)) {
+            merchant.clear();
+        } else {
+            merchant = tr("%1 (Certificate was not verified)").arg(merchant);
+        }
+        if (!merchant.isNull()) {
+            strHTML += "<b>" + tr("Merchant") + ":</b> " + GUIUtil::HtmlEscape(merchant) + "<br>";
         }
     }
 
