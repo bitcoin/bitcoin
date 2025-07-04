@@ -57,16 +57,17 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     # Generate UTXOs to flood the mempool
     # 1 to create a tx initially that will be evicted from the mempool later
     # 75 transactions each with a fee rate higher than the previous one
+    # 1 to create a final middle-sized tx to evict a filler tx and create room (if needed)
     ephemeral_miniwallet = MiniWallet(node, tag_name="fill_mempool_ephemeral_wallet")
-    test_framework.generate(ephemeral_miniwallet, 1 + num_of_batches * tx_batch_size)
+    test_framework.generate(ephemeral_miniwallet, 2 + num_of_batches * tx_batch_size)
 
     # Mine enough blocks so that the UTXOs are allowed to be spent
     test_framework.generate(node, COINBASE_MATURITY - 1)
 
     # Get all UTXOs up front to ensure none of the transactions spend from each other, as that may
     # change their effective feerate and thus the order in which they are selected for eviction.
-    confirmed_utxos = [ephemeral_miniwallet.get_utxo(confirmed_only=True) for _ in range(num_of_batches * tx_batch_size + 1)]
-    assert_equal(len(confirmed_utxos), num_of_batches * tx_batch_size + 1)
+    confirmed_utxos = [ephemeral_miniwallet.get_utxo(confirmed_only=True) for _ in range(num_of_batches * tx_batch_size + 2)]
+    assert_equal(len(confirmed_utxos), num_of_batches * tx_batch_size + 2)
 
     test_framework.log.debug("Create a mempool tx that will be evicted")
     tx_to_be_evicted_id = ephemeral_miniwallet.send_self_transfer(
@@ -92,6 +93,14 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
         send_batch(fee)
     tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync after all evictions
 
+    # If the mempool is almost full (<10k usage bytes left), submit one extra middle-sized tx,
+    # in order to evict a large filler tx and leave some room; this will enable tests to submit
+    # txs with just the mempoolminfee without immediate eviction ("mempool full" error).
+    if node.getmempoolinfo()['usage'] >= 4_990_000:
+        ephemeral_miniwallet.send_self_transfer(from_node=node, fee=num_of_batches * (base_fee / 2),
+                                                utxo_to_spend=confirmed_utxos.pop(0), target_vsize = 32500)
+        assert_greater_than(4_990_000, node.getmempoolinfo()['usage'])
+
     test_framework.log.debug("The tx should be evicted by now")
     # The number of transactions created should be greater than the ones present in the mempool
     assert_greater_than(tx_batch_size * num_of_batches, len(node.getrawmempool()))
@@ -101,6 +110,7 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     test_framework.log.debug("Check that mempoolminfee is larger than minrelaytxfee")
     assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal('0.00001000'))
     assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal('0.00001000'))
+    test_framework.sync_mempools()
 
 def tx_in_orphanage(node, tx: CTransaction) -> bool:
     """Returns true if the transaction is in the orphanage."""
