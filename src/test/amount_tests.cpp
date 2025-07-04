@@ -73,18 +73,20 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(-1), 0) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(0), 0) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(1), 0) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(1), -1000) == CFeeRate(0));
     // default value
     BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
     BOOST_CHECK(CFeeRate(CAmount(0), 1000) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(1), 1000) == CFeeRate(1));
     // lost precision (can only resolve satoshis per kB)
-    BOOST_CHECK(CFeeRate(CAmount(1), 1001) == CFeeRate(0));
-    BOOST_CHECK(CFeeRate(CAmount(2), 1001) == CFeeRate(1));
+    // we no longer lose precision
+    BOOST_CHECK(CFeeRate(CAmount(1), 1001) > CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(2), 1001) > CFeeRate(1));
     // some more integer checks
-    BOOST_CHECK(CFeeRate(CAmount(26), 789) == CFeeRate(32));
-    BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
+    BOOST_CHECK(CFeeRate(CAmount(26), 789) > CFeeRate(32));
+    BOOST_CHECK(CFeeRate(CAmount(27), 789) > CFeeRate(34));
     // Maximum size in bytes, should not crash
-    CFeeRate(MAX_MONEY, std::numeric_limits<uint32_t>::max()).GetFeePerK();
+    CFeeRate(MAX_MONEY, std::numeric_limits<int32_t>::max()).GetFeePerK();
 
     // check multiplication operator
     // check multiplying by zero
