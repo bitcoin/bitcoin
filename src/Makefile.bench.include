@@ -57,8 +57,9 @@ bench_bench_dash_SOURCES = \
 
 nodist_bench_bench_dash_SOURCES = $(GENERATED_BENCH_FILES)
 
-bench_bench_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BOOST_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_dash_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bench_bench_dash_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 bench_bench_dash_LDADD = \
   $(LIBBITCOIN_NODE) \
   $(LIBBITCOIN_WALLET) \
@@ -74,7 +75,11 @@ bench_bench_dash_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE) \
   $(EVENT_PTHREADS_LIBS) \
-  $(EVENT_LIBS)
+  $(EVENT_LIBS) \
+  $(MINIUPNPC_LIBS) \
+  $(NATPMP_LIBS) \
+  $(GMP_LIBS) \
+  $(BACKTRACE_LIB)
 
 if ENABLE_ZMQ
 bench_bench_dash_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
@@ -84,10 +89,8 @@ if ENABLE_WALLET
 bench_bench_dash_SOURCES += bench/coin_selection.cpp
 bench_bench_dash_SOURCES += bench/wallet_balance.cpp
 bench_bench_dash_SOURCES += bench/wallet_create.cpp
+bench_bench_dash_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)
 endif
-
-bench_bench_dash_LDADD += $(BACKTRACE_LIB) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS) $(GMP_LIBS)
-bench_bench_dash_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
@@ -102,13 +105,3 @@ bench: $(BENCH_BINARY) FORCE
 
 bitcoin_bench_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_BENCH) $(bench_bench_dash_OBJECTS) $(BENCH_BINARY)
-
-bench/data/%.raw.h: bench/data/%.raw
-	@$(MKDIR_P) $(@D)
-	@{ \
-	 echo "namespace raw_bench{" && \
-	 echo "static unsigned const char $(*F)_raw[] = {" && \
-	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
-	 echo "};};"; \
-	} > "$@.new" && mv -f "$@.new" "$@"
-	@echo "Generated $@"

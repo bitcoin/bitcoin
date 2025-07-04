@@ -19,23 +19,8 @@
 #include <string>
 #include <vector>
 
-// workaround for libevent versions before 2.1.1,
-// when internal functions didn't have underscores at the end
-#if LIBEVENT_VERSION_NUMBER < 0x02010100
-extern "C" int evhttp_parse_firstline(struct evhttp_request*, struct evbuffer*);
-extern "C" int evhttp_parse_headers(struct evhttp_request*, struct evbuffer*);
-inline int evhttp_parse_firstline_(struct evhttp_request* r, struct evbuffer* b)
-{
-    return evhttp_parse_firstline(r, b);
-}
-inline int evhttp_parse_headers_(struct evhttp_request* r, struct evbuffer* b)
-{
-    return evhttp_parse_headers(r, b);
-}
-#else
 extern "C" int evhttp_parse_firstline_(struct evhttp_request*, struct evbuffer*);
 extern "C" int evhttp_parse_headers_(struct evhttp_request*, struct evbuffer*);
-#endif
 
 std::string RequestMethodString(HTTPRequest::RequestMethod m);
 

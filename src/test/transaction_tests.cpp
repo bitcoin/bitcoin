@@ -18,6 +18,7 @@
 #include <script/script_error.h>
 #include <script/signingprovider.h>
 #include <streams.h>
+#include <test/util/json.h>
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -30,9 +31,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
-
-// In script_tests.cpp
-UniValue read_json(const std::string& jsondata);
 
 static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("P2SH"), (unsigned int) SCRIPT_VERIFY_P2SH},

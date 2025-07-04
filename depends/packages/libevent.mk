@@ -16,6 +16,10 @@ define $(package)_set_vars
   $(package)_config_opts+=-DEVENT__DISABLE_TESTS=ON -DEVENT__LIBRARY_TYPE=STATIC
   $(package)_cppflags += -D_GNU_SOURCE
   $(package)_cppflags_mingw32=-D_WIN32_WINNT=0x0601
+
+  ifeq ($(NO_HARDEN),)
+  $(package)_cppflags+=-D_FORTIFY_SOURCE=3
+  endif
 endef
 
 define $(package)_preprocess_cmds

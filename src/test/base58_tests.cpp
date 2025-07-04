@@ -5,6 +5,7 @@
 #include <test/data/base58_encode_decode.json.h>
 
 #include <base58.h>
+#include <test/util/json.h>
 #include <test/util/setup_common.h> // for InsecureRand*
 #include <util/strencodings.h>
 #include <util/vector.h>
@@ -15,8 +16,6 @@
 #include <string>
 
 using namespace std::literals;
-
-UniValue read_json(const std::string& jsondata);
 
 BOOST_AUTO_TEST_SUITE(base58_tests)
 
