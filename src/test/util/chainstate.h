@@ -77,6 +77,7 @@ CreateAndActivateUTXOSnapshot(
             CBlockIndex *orig_tip = node.chainman->ActiveChainstate().m_chain.Tip();
             uint256 gen_hash = node.chainman->ActiveChainstate().m_chain[0]->GetBlockHash();
             node.chainman->ResetChainstates();
+            Assert(node.chainman->GetAll().size() == 0);
             node.chainman->InitializeChainstate(node.mempool.get());
             Chainstate& chain = node.chainman->ActiveChainstate();
             Assert(chain.LoadGenesisBlock());
