@@ -121,7 +121,7 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
             }
         }
     }
-    quorums_cached = quorums;
+    std::swap(quorums_cached, quorums);
     return std::make_pair(qcHashes_cached, qcIndexedHashes_cached);
 }
 
