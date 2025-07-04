@@ -283,9 +283,13 @@ public:
     std::optional<std::pair<XOnlyPubKey, bool>> CreateTapTweak(const uint256* merkle_root) const;
 
     /** Returns a list of CKeyIDs for the CPubKeys that could have been used to create this XOnlyPubKey.
+     * As the CKeyID is the Hash160(full pubkey), the produced CKeyIDs are for the versions of this
+     * XOnlyPubKey with 0x02 and 0x03 prefixes.
      * This is needed for key lookups since keys are indexed by CKeyID.
      */
     std::vector<CKeyID> GetKeyIDs() const;
+    /** Returns this XOnlyPubKey with 0x02 and 0x03 prefixes */
+    std::vector<CPubKey> GetCPubKeys() const;
 
     CPubKey GetEvenCorrespondingCPubKey() const;
 
