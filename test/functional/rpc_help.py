@@ -18,7 +18,7 @@ def parse_string(s):
     return s[1:-1]
 
 
-def process_mapping(fname):
+def process_mapping(fname, table_name):
     """Find and parse conversion table in implementation file `fname`."""
     cmds = []
     in_rpcs = False
@@ -26,7 +26,7 @@ def process_mapping(fname):
         for line in f:
             line = line.rstrip()
             if not in_rpcs:
-                if line == 'static const CRPCConvertParam vRPCConvertParams[] =':
+                if line == f'static const CRPCConvertParam {table_name}[] =':
                     in_rpcs = True
             else:
                 if line.startswith('};'):
@@ -49,6 +49,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_client_conversion_table()
+        self.test_client_string_conversion_table()
         self.test_categories()
         self.dump_help()
         if self.is_wallet_compiled():
@@ -56,7 +57,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
     def test_client_conversion_table(self):
         file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
-        mapping_client = process_mapping(file_conversion_table)
+        mapping_client = process_mapping(file_conversion_table, "vRPCConvertParams")
         # Ignore echojson in client table
         mapping_client = [m for m in mapping_client if m[0] != 'echojson']
 
@@ -84,6 +85,51 @@ class HelpRpcTest(BitcoinTestFramework):
             if all(convert) != any(convert):
                 # Only allow dummy and psbt to fail consistency check
                 assert argname in ['dummy', "psbt"], ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
+
+    def test_client_string_conversion_table(self):
+        file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
+        string_params_client = process_mapping(file_conversion_table, "vRPCStringParams")
+        mapping_server = self.nodes[0].help("dump_all_command_conversions")
+        server_tuples = {tuple(m[:3]) for m in mapping_server}
+
+        # Filter string parameters based on wallet compilation status
+        if self.is_wallet_compiled():
+            # Check that every entry in vRPCStringParams exists on the server
+            stale_entries = [entry for entry in string_params_client if entry not in server_tuples]
+            if stale_entries:
+                raise AssertionError(f"vRPCStringParams contains entries not present on the server: {stale_entries}")
+            filtered_string_params = string_params_client
+        else:
+            available_string_params = [entry for entry in string_params_client if entry in server_tuples]
+            filtered_string_params = available_string_params
+
+        # Create a set of (method, param_idx, param_name) tuples that are in vRPCStringParams
+        string_params_set = {(entry[0], entry[1], entry[2]) for entry in filtered_string_params}
+
+        # Group all server parameters by parameter name
+        all_methods_by_argname = defaultdict(list)
+        string_handling_by_argname = defaultdict(list)
+
+        for m in mapping_server:
+            method_name = m[0]
+            param_idx = m[1]
+            param_name = m[2]
+            needs_conversion = m[3]
+
+            if needs_conversion:
+                all_methods_by_argname[param_name].append((method_name, param_idx))
+                has_string_handling = (method_name, param_idx, param_name) in string_params_set
+                string_handling_by_argname[param_name].append(has_string_handling)
+
+        # Check for inconsistent string parameter handling
+        for param_name, has_handling_list in string_handling_by_argname.items():
+            all_have_handling = all(has_handling_list)
+            any_have_handling = any(has_handling_list)
+
+            if all_have_handling != any_have_handling:
+                raise AssertionError(
+                    f"Inconsistent string parameter handling for '{param_name}'"
+                )
 
     def test_categories(self):
         node = self.nodes[0]
