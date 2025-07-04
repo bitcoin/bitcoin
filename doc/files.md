@@ -83,7 +83,7 @@ Wallets are SQLite databases.
 
 3. A wallet database path can be specified with the `-wallet` option.
 
-4. `wallet.dat` files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.
+4. `wallet.dat` files must not be shared across different node instances, as that can result in key-reuse and double-spends due to the lack of synchronization between instances.
 
 5. Any copy or backup of the wallet should be done through a `backupwallet` call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.
 
