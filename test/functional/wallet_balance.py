@@ -83,9 +83,9 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance("*"), 50)
         assert_equal(self.nodes[0].getbalance("*", 1), 50)
         assert_equal(self.nodes[0].getbalance(minconf=1), 50)
-        assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 50)
+        assert_equal(self.nodes[0].getbalance(minconf=0), 50)
         assert_equal(self.nodes[0].getbalance("*", 1, True), 50)
-        assert_equal(self.nodes[1].getbalance(minconf=0, include_watchonly=True), 50)
+        assert_equal(self.nodes[1].getbalance(minconf=0), 50)
 
         # Send 40 BTC from 0 to 1 and 60 BTC from 1 to 0.
         txs = create_transactions(self.nodes[0], self.nodes[1].getnewaddress(), 40, [Decimal('0.01')])
@@ -145,14 +145,10 @@ class WalletTest(BitcoinTestFramework):
             # getbalances
             expected_balances_0 = {'mine':      {'immature':          Decimal('0E-8'),
                                                  'trusted':           Decimal('9.99'),  # change from node 0's send
-                                                 'untrusted_pending': Decimal('60.0')},
-                                   'watchonly': {'immature':          Decimal('5000'),
-                                                 'trusted':           Decimal('50.0'),
-                                                 'untrusted_pending': Decimal('0E-8')}}
+                                                 'untrusted_pending': Decimal('60.0')}}
             expected_balances_1 = {'mine':      {'immature':          Decimal('0E-8'),
                                                  'trusted':           Decimal('0E-8'),  # node 1's send had an unsafe input
                                                  'untrusted_pending': Decimal('30.0') - fee_node_1}}  # Doesn't include output of node 0's send since it was spent
-            del expected_balances_0["watchonly"]
             balances_0 = self.nodes[0].getbalances()
             balances_1 = self.nodes[1].getbalances()
             # remove lastprocessedblock keys (they will be tested later)

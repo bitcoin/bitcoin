@@ -27,7 +27,7 @@ class ReceivedByTest(BitcoinTestFramework):
 
     def run_test(self):
         # save the number of coinbase reward addresses so far
-        num_cb_reward_addresses = len(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True))
+        num_cb_reward_addresses = len(self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True))
 
         self.log.info("listreceivedbyaddress Test")
 
@@ -67,7 +67,7 @@ class ReceivedByTest(BitcoinTestFramework):
         # Test Address filtering
         # Only on addr
         expected = {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]}
-        res = self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, include_watchonly=True, address_filter=addr)
+        res = self.nodes[1].listreceivedbyaddress(minconf=0, include_empty=True, address_filter=addr)
         assert_array_result(res, {"address": addr}, expected)
         assert_equal(len(res), 1)
         # Test for regression on CLI calls with address string (#14173)
@@ -75,7 +75,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_array_result(cli_res, {"address": addr}, expected)
         assert_equal(len(cli_res), 1)
         # Error on invalid address
-        assert_raises_rpc_error(-4, "address_filter parameter was invalid", self.nodes[1].listreceivedbyaddress, minconf=0, include_empty=True, include_watchonly=True, address_filter="bamboozling")
+        assert_raises_rpc_error(-4, "address_filter parameter was invalid", self.nodes[1].listreceivedbyaddress, minconf=0, include_empty=True, address_filter="bamboozling")
         # Another address receive money
         res = self.nodes[1].listreceivedbyaddress(0, True, True)
         assert_equal(len(res), 2 + num_cb_reward_addresses)  # Right now 2 entries
