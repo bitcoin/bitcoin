@@ -9,6 +9,7 @@
 #include <llmq/commitment.h>
 #include <llmq/options.h>
 #include <llmq/quorums.h>
+#include <llmq/utils.h>
 #include <node/blockstorage.h>
 
 #include <chain.h>
@@ -74,11 +75,12 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
 
     static Mutex cs_cache;
     static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
+    static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::pair<uint256, int>, StaticSaltedHasher>> qc_hashes_cached
+        GUARDED_BY(cs_cache);
     static QcHashMap qcHashes_cached GUARDED_BY(cs_cache);
     static QcIndexedHashMap qcIndexedHashes_cached GUARDED_BY(cs_cache);
 
     LOCK(cs_cache);
-
     if (quorums == quorums_cached) {
         return std::make_pair(qcHashes_cached, qcIndexedHashes_cached);
     }
@@ -87,6 +89,9 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
     quorums_cached.clear();
     qcHashes_cached.clear();
     qcIndexedHashes_cached.clear();
+    if (qc_hashes_cached.empty()) {
+        llmq::utils::InitQuorumsCache(qc_hashes_cached);
+    }
 
     for (const auto& [llmqType, vecBlockIndexes] : quorums) {
         const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
@@ -96,16 +101,23 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
         vec_hashes.reserve(vecBlockIndexes.size());
         auto& map_indexed_hashes = qcIndexedHashes_cached[llmqType];
         for (const auto& blockIndex : vecBlockIndexes) {
-            const auto [pqc, dummyHash] = quorum_block_processor.GetMinedCommitment(llmqType, blockIndex->GetBlockHash());
-            if (dummyHash == uint256::ZERO) {
-                // this should never happen
-                return std::nullopt;
+            uint256 block_hash{blockIndex->GetBlockHash()};
+
+            std::pair<uint256, int> qc_hash;
+            if (!qc_hashes_cached[llmqType].get(block_hash, qc_hash)) {
+                auto [pqc, dummy_hash] = quorum_block_processor.GetMinedCommitment(llmqType, block_hash);
+                if (dummy_hash == uint256::ZERO) {
+                    // this should never happen
+                    return std::nullopt;
+                }
+                qc_hash.first = ::SerializeHash(pqc);
+                qc_hash.second = rotation_enabled ? pqc.quorumIndex : 0;
+                qc_hashes_cached[llmqType].insert(block_hash, qc_hash);
             }
-            auto qcHash = ::SerializeHash(pqc);
             if (rotation_enabled) {
-                map_indexed_hashes[pqc.quorumIndex] = qcHash;
+                map_indexed_hashes[qc_hash.second] = qc_hash.first;
             } else {
-                vec_hashes.emplace_back(qcHash);
+                vec_hashes.emplace_back(qc_hash.first);
             }
         }
     }
