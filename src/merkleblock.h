@@ -128,6 +128,9 @@ public:
     /** Public only for unit testing */
     CBlockHeader header;
     CPartialMerkleTree txn;
+    bool m_prove_gentx;
+    CPartialMerkleTree m_wtxid_tree;
+    CTransactionRef m_gentx;
 
     /**
      * Public only for unit testing and relay testing (not relayed).
@@ -145,15 +148,50 @@ public:
     CMerkleBlock(const CBlock& block, CBloomFilter& filter) : CMerkleBlock(block, &filter, nullptr) { }
 
     // Create from a CBlock, matching the txids in the set
-    CMerkleBlock(const CBlock& block, const std::set<Txid>& txids) : CMerkleBlock{block, nullptr, &txids} {}
+    CMerkleBlock(const CBlock& block, const std::set<Txid>& txids, bool prove_witness=false) : CMerkleBlock{block, nullptr, &txids, prove_witness} {}
 
     CMerkleBlock() = default;
 
     SERIALIZE_METHODS(CMerkleBlock, obj) { READWRITE(obj.header, obj.txn); }
 
+    template <typename Stream>
+    void SerializeWithWitness(Stream& s) {
+        s << *this;
+        const bool have_witness_proof = (m_gentx != nullptr);
+        if (have_witness_proof) {
+            s << have_witness_proof;
+            s << m_prove_gentx;
+            s << TX_WITH_WITNESS(m_gentx);
+            s << m_wtxid_tree;
+        }
+    }
+
+    template <typename Stream>
+    void UnserializeWithWitness(Stream& s, const bool verify_witness) {
+        s >> *this;
+        bool have_witness_proof;
+        if (s.empty()) {  // Compatibility with txid-only proofs
+            have_witness_proof = false;
+        } else {
+            s >> have_witness_proof;
+        }
+        if (have_witness_proof) {
+            s >> m_prove_gentx;
+        } else {
+            m_prove_gentx = false;
+        }
+        if (have_witness_proof && verify_witness) {
+            s >> TX_WITH_WITNESS(m_gentx);
+            s >> m_wtxid_tree;
+        } else {
+            m_gentx.reset();
+            // m_wtxid_tree is ignored without m_gentx
+        }
+    }
+
 private:
     // Combined constructor to consolidate code
-    CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<Txid>* txids);
+    CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<Txid>* txids, bool prove_witness=false);
 };
 
 #endif // BITCOIN_MERKLEBLOCK_H
