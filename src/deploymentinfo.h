@@ -11,14 +11,15 @@
 #include <optional>
 #include <string>
 
-struct VBDeploymentInfo {
+struct VBDeploymentInfo
+{
     /** Deployment name */
-    const char *name;
+    const char* name;
     /** Whether GBT clients can safely ignore this rule in simplified usage */
     bool gbt_optional_rule;
 };
 
-extern const std::array<VBDeploymentInfo,Consensus::MAX_VERSION_BITS_DEPLOYMENTS> VersionBitsDeploymentInfo;
+extern const std::array<VBDeploymentInfo, Consensus::MAX_VERSION_BITS_DEPLOYMENTS> VersionBitsDeploymentInfo;
 
 std::string DeploymentName(Consensus::BuriedDeployment dep);
 
