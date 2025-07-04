@@ -2108,7 +2108,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.bump_mocktime(1, nodes=nodes)
         self.generate(self.nodes[0], num_blocks, sync_fun=lambda: self.sync_blocks(nodes))
 
-    def mine_quorum(self, llmq_type_name="llmq_test", llmq_type=100, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
+    def mine_quorum(self, llmq_type_name="llmq_test", llmq_type=100, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None, skip_maturity=False):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
         spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
@@ -2185,10 +2185,11 @@ class DashTestFramework(BitcoinTestFramework):
         assert_equal(q, new_quorum)
         quorum_info = self.nodes[0].quorum("info", llmq_type, new_quorum)
 
-        # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
-        self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks(nodes))
+        if not skip_maturity:
+            # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
+            self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks(nodes))
 
-        self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["quorumIndex"], quorum_info["minedBlock"]))
+        self.log.info(f"New quorum: height={quorum_info['height']}, quorumHash={new_quorum}, is_mature={not skip_maturity} quorumIndex={quorum_info['quorumIndex']}, minedBlock={quorum_info['minedBlock']}")
 
         for mn in mninfos_valid:
             assert not check_punished(self.nodes[0], mn)

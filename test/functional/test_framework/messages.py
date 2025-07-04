@@ -1407,6 +1407,34 @@ class CFinalCommitment:
             .format(self.nVersion, self.llmqType, self.quorumHash, self.quorumIndex, repr(self.signers),
                     repr(self.validMembers), self.quorumPublicKey.hex(), self.quorumVvecHash, self.quorumSig.hex(), self.membersSig.hex())
 
+
+class CFinalCommitmentPayload:
+    __slots__ = ("nVersion", "nHeight", "commitment")
+
+    def __init__(self):
+        self.set_null()
+
+    def set_null(self):
+        self.nVersion = 0
+        self.nHeight = 0
+        self.commitment = CFinalCommitment()
+
+    def deserialize(self, f):
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
+        self.nHeight = struct.unpack("<I", f.read(4))[0]
+        self.commitment = CFinalCommitment()
+        self.commitment.deserialize(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<H", self.nVersion)
+        r += struct.pack("<I", self.nHeight)
+        r += self.commitment.serialize()
+        return r
+
+    def __repr__(self):
+        return f"CFinalCommitmentPayload(nVersion={self.nVersion} nHeight={self.nHeight} commitment={self.commitment})"
+
 class CGovernanceObject:
     __slots__ = ("nHashParent", "nRevision", "nTime", "nCollateralHash", "vchData", "nObjectType",
                  "masternodeOutpoint", "vchSig")
