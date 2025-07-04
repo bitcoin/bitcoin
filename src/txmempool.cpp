@@ -661,26 +661,25 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
     }
 }
 
-/**
- * Called when a block is connected. Removes from mempool.
- */
 void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight)
 {
+    // Remove confirmed txs and conflicts when a new block is connected, updating the fee logic
     AssertLockHeld(cs);
     Assume(!m_have_changeset);
     std::vector<RemovedMempoolTransactionInfo> txs_removed_for_block;
-    txs_removed_for_block.reserve(vtx.size());
-    for (const auto& tx : vtx)
-    {
-        txiter it = mapTx.find(tx->GetHash());
-        if (it != mapTx.end()) {
-            setEntries stage;
-            stage.insert(it);
-            txs_removed_for_block.emplace_back(*it);
-            RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+    if (mapTx.size() || mapNextTx.size() || mapDeltas.size()) {
+        txs_removed_for_block.reserve(vtx.size());
+        for (const auto& tx : vtx) {
+            txiter it = mapTx.find(tx->GetHash());
+            if (it != mapTx.end()) {
+                setEntries stage;
+                stage.insert(it);
+                txs_removed_for_block.emplace_back(*it);
+                RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
+            }
+            removeConflicts(*tx);
+            ClearPrioritisation(tx->GetHash());
         }
-        removeConflicts(*tx);
-        ClearPrioritisation(tx->GetHash());
     }
     if (m_opts.signals) {
         m_opts.signals->MempoolTransactionsRemovedForBlock(txs_removed_for_block, nBlockHeight);
