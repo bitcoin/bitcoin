@@ -19,7 +19,7 @@ namespace {
 constexpr int MAX_TXHASHES = 16;
 constexpr int MAX_PEERS = 16;
 
-//! Randomly generated GenTxids used in this test (length is MAX_TXHASHES).
+//! Randomly generated txhashes used in this test (length is MAX_TXHASHES).
 uint256 TXHASHES[MAX_TXHASHES];
 
 //! Precomputed random durations (positive and negative, each ~exponentially distributed).
@@ -204,7 +204,8 @@ public:
         }
 
         // Call TxRequestTracker's implementation.
-        m_tracker.ReceivedInv(peer, is_wtxid ? GenTxid::Wtxid(TXHASHES[txhash]) : GenTxid::Txid(TXHASHES[txhash]), preferred, reqtime);
+        auto gtxid = is_wtxid ? GenTxid{Wtxid::FromUint256(TXHASHES[txhash])} : GenTxid{Txid::FromUint256(TXHASHES[txhash])};
+        m_tracker.ReceivedInv(peer, gtxid, preferred, reqtime);
     }
 
     void RequestedTx(int peer, int txhash, std::chrono::microseconds exptime)
@@ -252,7 +253,8 @@ public:
             for (int peer2 = 0; peer2 < MAX_PEERS; ++peer2) {
                 Announcement& ann2 = m_announcements[txhash][peer2];
                 if (ann2.m_state == State::REQUESTED && ann2.m_time <= m_now) {
-                    expected_expired.emplace_back(peer2, ann2.m_is_wtxid ? GenTxid::Wtxid(TXHASHES[txhash]) : GenTxid::Txid(TXHASHES[txhash]));
+                    auto gtxid = ann2.m_is_wtxid ? GenTxid{Wtxid::FromUint256(TXHASHES[txhash])} : GenTxid{Txid::FromUint256(TXHASHES[txhash])};
+                    expected_expired.emplace_back(peer2, gtxid);
                     ann2.m_state = State::COMPLETED;
                     break;
                 }
@@ -278,7 +280,7 @@ public:
         m_tracker.PostGetRequestableSanityCheck(m_now);
         assert(result.size() == actual.size());
         for (size_t pos = 0; pos < actual.size(); ++pos) {
-            assert(TXHASHES[std::get<1>(result[pos])] == actual[pos].GetHash());
+            assert(TXHASHES[std::get<1>(result[pos])] == actual[pos].ToUint256());
             assert(std::get<2>(result[pos]) == actual[pos].IsWtxid());
         }
     }

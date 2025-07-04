@@ -311,7 +311,7 @@ static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPool
     std::set<std::string> setDepends;
     for (const CTxIn& txin : tx.vin)
     {
-        if (pool.exists(GenTxid::Txid(txin.prevout.hash)))
+        if (pool.exists(txin.prevout.hash))
             setDepends.insert(txin.prevout.hash.ToString());
     }
 
@@ -523,12 +523,12 @@ static RPCHelpMan getmempooldescendants()
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    Txid txid{Txid::FromUint256(ParseHashV(request.params[0], "parameter 1"))};
 
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     LOCK(mempool.cs);
 
-    const auto it{mempool.GetIter(hash)};
+    const auto it{mempool.GetIter(txid)};
     if (!it) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
     }
@@ -1038,7 +1038,7 @@ static RPCHelpMan submitpackage()
                     // Belt-and-suspenders check; everything should be successful here
                     CHECK_NONFATAL(package_result.m_tx_results.size() == txns.size());
                     for (const auto& tx : txns) {
-                        CHECK_NONFATAL(mempool.exists(GenTxid::Txid(tx->GetHash())));
+                        CHECK_NONFATAL(mempool.exists(tx->GetHash()));
                     }
                     break;
                 }
@@ -1062,7 +1062,7 @@ static RPCHelpMan submitpackage()
             size_t num_broadcast{0};
             for (const auto& tx : txns) {
                 // We don't want to re-submit the txn for validation in BroadcastTransaction
-                if (!mempool.exists(GenTxid::Txid(tx->GetHash()))) {
+                if (!mempool.exists(tx->GetHash())) {
                     continue;
                 }
 

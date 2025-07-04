@@ -169,7 +169,7 @@ public:
     std::vector<GenTxid> GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time);
 
     /** Marks a tx as ReceivedResponse in txrequest. */
-    void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
+    void ReceivedNotFound(NodeId nodeid, const std::vector<GenTxid>& gtxids);
 
     /** Look for a child of this transaction in the orphanage to form a 1-parent-1-child package,
      * skipping any combinations that have already been tried. Return the resulting package along with

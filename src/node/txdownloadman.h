@@ -8,6 +8,7 @@
 #include <net.h>
 #include <policy/packages.h>
 #include <txorphanage.h>
+#include <util/transaction_identifier.h>
 
 #include <cstdint>
 #include <memory>
@@ -143,7 +144,7 @@ public:
     std::vector<GenTxid> GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time);
 
     /** Should be called when a notfound for a tx has been received. */
-    void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
+    void ReceivedNotFound(NodeId nodeid, const std::vector<GenTxid>& gtxids);
 
     /** Respond to successful transaction submission to mempool */
     void MempoolAcceptedTx(const CTransactionRef& tx);
