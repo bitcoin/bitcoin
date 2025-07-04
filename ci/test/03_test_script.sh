@@ -115,8 +115,6 @@ PRINT_CCACHE_STATISTICS="ccache --version | head -n 1 && ccache --show-stats"
 
 # Folder where the build is done.
 BASE_BUILD_DIR=${BASE_BUILD_DIR:-$BASE_SCRATCH_DIR/build-$HOST}
-mkdir -p "${BASE_BUILD_DIR}"
-cd "${BASE_BUILD_DIR}"
 
 BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -DCMAKE_INSTALL_PREFIX=$BASE_OUTDIR"
 
@@ -124,9 +122,15 @@ if [[ "${RUN_TIDY}" == "true" ]]; then
   BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 fi
 
-bash -c "cmake -S $BASE_ROOT_DIR $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (cat $(cmake -P "${BASE_ROOT_DIR}/ci/test/GetCMakeLogFiles.cmake")) && false)"
+bash -c "cmake -S $BASE_ROOT_DIR -B ${BASE_BUILD_DIR} $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (cat $(cmake -P "${BASE_ROOT_DIR}/ci/test/GetCMakeLogFiles.cmake")) && false)"
 
-bash -c "cmake --build . $MAKEJOBS --target all $GOAL" || ( echo "Build failure. Verbose build follows." && cmake --build . --target all "$GOAL" --verbose ; false )
+# shellcheck disable=SC2086
+cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target all $GOAL || (
+  echo "Build failure. Verbose build follows."
+  # shellcheck disable=SC2086
+  cmake --build "${BASE_BUILD_DIR}" -j1 --target all $GOAL --verbose
+  false
+)
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
 du -sh "${DEPENDS_DIR}"/*/
@@ -137,11 +141,17 @@ if [ -n "$USE_VALGRIND" ]; then
 fi
 
 if [ "$RUN_CHECK_DEPS" = "true" ]; then
-  "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" .
+  "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" "${BASE_BUILD_DIR}"
 fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
-  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" CTEST_OUTPUT_ON_FAILURE=ON ctest --stop-on-failure "${MAKEJOBS}" --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
+  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
+  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
+  CTEST_OUTPUT_ON_FAILURE=ON \
+  ctest --test-dir "${BASE_BUILD_DIR}" \
+    --stop-on-failure \
+    "${MAKEJOBS}" \
+    --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
 fi
 
 if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
@@ -151,7 +161,16 @@ fi
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   # parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
-  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/functional/test_runner.py --ci "${MAKEJOBS}" --tmpdirprefix "${BASE_SCRATCH_DIR}"/test_runner/ --ansi --combinedlogslen=99999999 --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" "${TEST_RUNNER_EXTRA[@]}" --quiet --failfast
+  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
+  "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
+    --ci "${MAKEJOBS}" \
+    --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" \
+    --ansi \
+    --combinedlogslen=99999999 \
+    --timeout-factor="${TEST_RUNNER_TIMEOUT_FACTOR}" \
+    "${TEST_RUNNER_EXTRA[@]}" \
+    --quiet \
+    --failfast
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
@@ -185,5 +204,11 @@ fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   # shellcheck disable=SC2086
-  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} "${MAKEJOBS}" -l DEBUG "${DIR_FUZZ_IN}" --empty_min_time=60
+  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
+  "${BASE_BUILD_DIR}/test/fuzz/test_runner.py" \
+    ${FUZZ_TESTS_CONFIG} \
+    "${MAKEJOBS}" \
+    -l DEBUG \
+    "${DIR_FUZZ_IN}" \
+    --empty_min_time=60
 fi
