@@ -730,7 +730,7 @@ PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransact
     if (txdata == nullptr) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
     } else {
-        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, {.sighash_type = sighash});
+        MutableTransactionSignatureCreator creator(tx, index, utxo.nValue, txdata, {.sighash_type = sighash, .taproot_keypath_only = options.taproot_keypath_only});
         sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     }
     // Verify that a witness signature was produced in case one was required.
