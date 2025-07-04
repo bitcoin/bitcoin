@@ -48,6 +48,11 @@ struct PSBTFillOptions {
      * Whether to fill in bip32 derivation information if available.
      */
     bool bip32_derivs{true};
+
+    /**
+     * Only sign the key path (for taproot inputs).
+     */
+    bool avoid_script_path{false};
 };
 
 } // namespace common
