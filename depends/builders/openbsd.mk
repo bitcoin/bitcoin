@@ -7,3 +7,7 @@ build_openbsd_DOWNLOAD = curl --location --fail --connect-timeout $(DOWNLOAD_CON
 build_openbsd_TAR = gtar
 # openBSD touch doesn't understand -h
 build_openbsd_TOUCH = touch -m -t 200001011200
+
+# openbsd host on openbsd builder: override openbsd host preferences.
+openbsd_CC = clang
+openbsd_CXX = clang++

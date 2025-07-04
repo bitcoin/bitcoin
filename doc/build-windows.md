@@ -47,9 +47,9 @@ This means you cannot use a directory that is located directly on the host Windo
 
 Build using:
 
-    gmake -C depends HOST=x86_64-w64-mingw32  # Use "-j N" for N parallel jobs.
+    gmake -C depends HOST=x86_64-w64-mingw32  # Append "-j N" for N parallel jobs.
     cmake -B build --toolchain depends/x86_64-w64-mingw32/toolchain.cmake
-    cmake --build build     # Use "-j N" for N parallel jobs.
+    cmake --build build     # Append "-j N" for N parallel jobs.
 
 ## Depends system
 

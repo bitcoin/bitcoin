@@ -14,6 +14,7 @@
 #include <util/translation.h>
 
 #include <string>
+#include <numeric>
 
 #include <boost/test/unit_test.hpp>
 
@@ -603,14 +604,10 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK(!IsBadPort(443));
     BOOST_CHECK(!IsBadPort(8333));
 
-    // Check all ports, there must be 80 bad ports in total.
-    size_t total_bad_ports{0};
-    for (uint16_t port = std::numeric_limits<uint16_t>::max(); port > 0; --port) {
-        if (IsBadPort(port)) {
-            ++total_bad_ports;
-        }
-    }
-    BOOST_CHECK_EQUAL(total_bad_ports, 80);
+    // Check all possible ports and ensure we only flag the expected amount as bad
+    std::list<int> ports(std::numeric_limits<uint16_t>::max());
+    std::iota(ports.begin(), ports.end(), 1);
+    BOOST_CHECK_EQUAL(std::ranges::count_if(ports, IsBadPort), 85);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

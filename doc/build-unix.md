@@ -9,8 +9,8 @@ To Build
 
 ```bash
 cmake -B build
-cmake --build build    # use "-j N" for N parallel jobs
-cmake --install build  # optional
+cmake --build build    # Append "-j N" for N parallel jobs
+cmake --install build  # Optional
 ```
 
 See below for instructions on how to [install the dependencies on popular Linux
