@@ -22,7 +22,7 @@ FUZZ_TARGET(autofile)
     const auto key_bytes{ConsumeFixedLengthByteVector<std::byte>(fuzzed_data_provider, Obfuscation::KEY_SIZE)};
     AutoFile auto_file{
         fuzzed_file_provider.open(),
-        key_bytes,
+        Obfuscation{std::span{key_bytes}.first<Obfuscation::KEY_SIZE>()},
     };
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {

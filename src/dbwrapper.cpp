@@ -174,7 +174,7 @@ void CDBBatch::Clear()
 void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
-    ssValue.Xor(dbwrapper_private::GetObfuscation(parent));
+    dbwrapper_private::GetObfuscation(parent)(ssValue);
     leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
     m_impl_batch->batch.Put(slKey, slValue);
 }
@@ -249,15 +249,14 @@ CDBWrapper::CDBWrapper(const DBParams& params)
         LogPrintf("Finished database compaction of %s\n", fs::PathToString(params.path));
     }
 
-    m_obfuscation = std::vector<uint8_t>(Obfuscation::KEY_SIZE, '\000'); // Needed for unobfuscated Read()/Write() below
+    assert(!m_obfuscation); // Needed for unobfuscated Read()/Write() below
     if (!Read(OBFUSCATION_KEY_KEY, m_obfuscation) && params.obfuscate && IsEmpty()) {
         // Generate, write and read back the new obfuscation key, making sure we don't obfuscate the key itself
         Write(OBFUSCATION_KEY_KEY, FastRandomContext{}.randbytes(Obfuscation::KEY_SIZE));
         Read(OBFUSCATION_KEY_KEY, m_obfuscation);
-        LogInfo("Wrote new obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));
+        LogInfo("Wrote new obfuscation key for %s: %s", fs::PathToString(params.path), m_obfuscation.HexKey());
     }
-    LogInfo("Using obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));
-
+    LogInfo("Using obfuscation key for %s: %s", fs::PathToString(params.path), m_obfuscation.HexKey());
 }
 
 CDBWrapper::~CDBWrapper()
@@ -385,7 +384,7 @@ void CDBIterator::Next() { m_impl_iter->iter->Next(); }
 
 namespace dbwrapper_private {
 
-const std::vector<unsigned char>& GetObfuscation(const CDBWrapper &w)
+const Obfuscation& GetObfuscation(const CDBWrapper& w)
 {
     return w.m_obfuscation;
 }

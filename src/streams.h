@@ -25,7 +25,6 @@
 #include <limits>
 #include <optional>
 #include <string>
-#include <utility>
 #include <vector>
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
@@ -245,21 +244,11 @@ public:
         return (*this);
     }
 
-    template<typename T>
+    template <typename T>
     DataStream& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
         return (*this);
-    }
-
-    /**
-     * XOR the contents of this stream with a certain key.
-     *
-     * @param[in] key    The key used to XOR the data in this stream.
-     */
-    void Xor(const std::vector<unsigned char>& key)
-    {
-        Obfuscation().Xor(MakeWritableByteSpan(*this), MakeByteSpan(key));
     }
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
@@ -382,12 +371,12 @@ class AutoFile
 {
 protected:
     std::FILE* m_file;
-    std::vector<std::byte> m_obfuscation;
+    Obfuscation m_obfuscation;
     std::optional<int64_t> m_position;
     bool m_was_written{false};
 
 public:
-    explicit AutoFile(std::FILE* file, std::vector<std::byte> obfuscation={});
+    explicit AutoFile(std::FILE* file, const Obfuscation& obfuscation = {});
 
     ~AutoFile()
     {
@@ -435,7 +424,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetObfuscation(std::vector<std::byte> obfuscation) { m_obfuscation = obfuscation; }
+    void SetObfuscation(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(std::span<std::byte> dst);

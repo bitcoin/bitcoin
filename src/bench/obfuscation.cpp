@@ -13,11 +13,11 @@ static void ObfuscationBench(benchmark::Bench& bench)
 {
     FastRandomContext frc{/*fDeterministic=*/true};
     auto data{frc.randbytes<std::byte>(1024)};
-    const auto key{frc.randbytes<Obfuscation::KEY_SIZE>()};
+    const Obfuscation obfuscation{frc.randbytes<Obfuscation::KEY_SIZE>()};
 
     size_t offset{0};
     bench.batch(data.size()).unit("byte").run([&] {
-        Obfuscation().Xor(data, key, offset++); // mutated differently each time
+        obfuscation(data, offset++); // mutated differently each time
         ankerl::nanobench::doNotOptimizeAway(data);
     });
 }
