@@ -127,3 +127,17 @@ size_t DataStream::GetMemoryUsage() const noexcept
 {
     return sizeof(*this) + memusage::DynamicUsage(vch);
 }
+
+int64_t AutoFile::size()
+{
+    if (IsNull()) {
+        throw std::ios_base::failure("AutoFile::size: file handle is nullptr");
+    }
+    // Temporarily save the current position
+    int64_t current_pos = tell();
+    seek(current_pos, SEEK_END);
+    int64_t file_size = tell();
+    // Restore the original position
+    seek(current_pos, SEEK_SET);
+    return file_size;
+}
