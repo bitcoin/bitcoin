@@ -6,6 +6,7 @@
 #include <span.h>
 #include <streams.h>
 #include <util/fs_helpers.h>
+#include <util/obfuscation.h>
 
 #include <array>
 
@@ -24,7 +25,7 @@ std::size_t AutoFile::detail_fread(std::span<std::byte> dst)
     size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
     if (!m_obfuscation.empty()) {
         if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::read: position unknown");
-        util::Xor(dst.subspan(0, ret), m_obfuscation, *m_position);
+        Obfuscation().Xor(dst.subspan(0, ret), m_obfuscation, *m_position);
     }
     if (m_position.has_value()) *m_position += ret;
     return ret;
@@ -103,7 +104,7 @@ void AutoFile::write_buffer(std::span<std::byte> src)
     if (!m_file) throw std::ios_base::failure("AutoFile::write_buffer: file handle is nullptr");
     if (m_obfuscation.size()) {
         if (!m_position) throw std::ios_base::failure("AutoFile::write_buffer: obfuscation position unknown");
-        util::Xor(src, m_obfuscation, *m_position); // obfuscate in-place
+        Obfuscation().Xor(src, m_obfuscation, *m_position); // obfuscate in-place
     }
     if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
         throw std::ios_base::failure("AutoFile::write_buffer: write failed");
