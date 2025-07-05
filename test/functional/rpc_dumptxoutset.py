@@ -69,6 +69,17 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         self.check_output_file(expected_path, is_human_readable, expected_digest)
 
+        if {'format'} == set(params) - {'show_header', 'separator'}:
+            # Test backward compatibility
+            def test_dump_file_compat(*a, **ka):
+                os.replace(expected_path, node.chain_path / (filename + ".old"))
+                out2 = node.dumptxoutset(filename, *a, **ka)
+                assert_equal(out, out2)
+                self.check_output_file(expected_path, is_human_readable, expected_digest)
+            test_dump_file_compat(params.get('format'), params.get('show_header'), params.get('separator'))
+            test_dump_file_compat(params.get('format'), params.get('show_header'), separator=params.get('separator'))
+            test_dump_file_compat(params.get('format'), show_header=params.get('show_header'), separator=params.get('separator'))
+
         assert_equal(
             out['txoutset_hash'], 'a0b7baa3bf5ccbd3279728f230d7ca0c44a76e9923fca8f32dbfd08d65ea496a')
         assert_equal(out['nchaintx'], 101)

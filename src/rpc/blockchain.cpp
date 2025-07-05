@@ -2980,21 +2980,22 @@ static RPCHelpMan dumptxoutset()
         "This call may take several minutes. Make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
-            {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the latest valid snapshot block that can currently be loaded with loadtxoutset."},
-            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+            {"type|format", {RPCArg::Type::STR, RPCArg::Type::ARR}, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the latest valid snapshot block that can currently be loaded with loadtxoutset."},
+            {"options|show_header", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, "",
                 {
                     {"format", RPCArg::Type::ARR, RPCArg::DefaultHint{"compact serialized format"},
                                                 "If no argument is provided, a compact binary serialized format is used; otherwise only requested items "
                                                 "available below are written in ASCII format (if an empty array is provided, all items are written in ASCII).",
                                                 ascii_args,
-                                                RPCArgOptions{.oneline_description="format"}},
+                                                RPCArgOptions{.oneline_description="format", .also_positional = true}},
                     {"rollback", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
                         "Height or hash of the block to roll back to before creating the snapshot. Note: The further this number is from the tip, the longer this process will take. Consider setting a higher -rpcclienttimeout value in this case.",
                     RPCArgOptions{.skip_type_check = true, .type_str = {"", "string or numeric"}}},
-                    {"show_header", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to include the header line in non-serialized (ASCII) mode"},
-                    {"separator", RPCArg::Type::STR, RPCArg::Default{","}, "Field separator to use in non-serialized (ASCII) mode"},
+                    {"show_header", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to include the header line in non-serialized (ASCII) mode", RPCArgOptions{.also_positional = true}},
+                    {"separator", RPCArg::Type::STR, RPCArg::Default{","}, "Field separator to use in non-serialized (ASCII) mode", RPCArgOptions{.also_positional = true}},
                 },
             },
+            {"separator", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "", RPCArgOptions{.hidden=true}},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -3020,8 +3021,44 @@ static RPCHelpMan dumptxoutset()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CBlockIndex* tip{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
     const CBlockIndex* target_index{nullptr};
-    const std::string snapshot_type{self.Arg<std::string>("type")};
-    const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
+    std::string snapshot_type;
+    UniValue options{request.params[2].isObject() ? request.params[2] : UniValue::VOBJ};
+
+    const UniValue& hr_format = [&]() -> const UniValue& {
+        if (options["format"].isNull() && request.params[1].isArray()) {
+            // Knots 0.20.0-28.1 compatibility
+            snapshot_type = "latest";
+            return request.params[1];
+        }
+        snapshot_type = self.Arg<std::string>("type");
+        return options["format"];
+    }();
+    const bool is_human_readable = !hr_format.isNull();
+    const bool show_header = [&] {
+        if (!options["show_header"].isNull()) {  // only possible of options is an Object
+            return options["show_header"].get_bool();
+        }
+        if (is_human_readable && request.params[2].isBool()) {
+            // Knots 0.20.0-28.1 compatibility
+            return request.params[2].get_bool();
+        }
+        if (!request.params[2].isNull()) request.params[2].get_obj();  // type check skipped earlier
+        return true;
+    }();
+    const auto separator = [&] {
+        const bool null_separator_in_options{options["separator"].isNull()};
+        if (null_separator_in_options && is_human_readable && request.params[3].isStr()) {
+            return MakeByteSpan(request.params[3].get_str());
+        }
+        if (!request.params[3].isNull()) {
+            throw std::runtime_error(self.ToString());
+        }
+        if (null_separator_in_options) {
+            return MakeByteSpan(",").first(1);
+        }
+        return MakeByteSpan(options["separator"].get_str());
+    }();
+
     if (options.exists("rollback")) {
         if (!snapshot_type.empty() && snapshot_type != "rollback") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid snapshot type \"%s\" specified with rollback option", snapshot_type));
@@ -3039,12 +3076,9 @@ static RPCHelpMan dumptxoutset()
     }
 
     // handle optional ASCII parameters
-    const bool is_human_readable = !options["format"].isNull();
-    const bool show_header = options["show_header"].isNull() || options["show_header"].get_bool();
-    const auto separator = options["separator"].isNull() ? MakeByteSpan(",").first(1) : MakeByteSpan(options["separator"].get_str());
     std::vector<std::pair<std::string, coinascii_cb_t>> requested;
     if (is_human_readable) {
-        const auto& arr = options["format"].get_array();
+        const auto& arr = hr_format.get_array();
         const std::unordered_map<std::string, coinascii_cb_t> ascii_map(std::begin(ascii_types), std::end(ascii_types));
         for (size_t i = 0; i < arr.size(); ++i) {
             const auto it = ascii_map.find(arr[i].get_str());
