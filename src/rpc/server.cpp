@@ -440,6 +440,14 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
         // object, and then pushing the accumulated options as the next
         // positional argument.
         if (named_only) {
+            if (options.empty()) {
+                if (options.isNull()) continue;
+                if (positional_args && positional_args.mapped()->size() > (size_t)hole) {
+                    // some alternative to options is specified positionally; we can't use options at all
+                    options = UniValue::VNULL;
+                    continue;
+                }
+            }
             if (fr != argsIn.end()) {
                 if (options.exists(fr->first)) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " specified multiple times");
@@ -496,6 +504,9 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     }
     // If there are still arguments in the argsIn map, this is an error.
     if (!argsIn.empty()) {
+        if (options.isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both 'options' and named parameter " + argsIn.begin()->first);
+        }
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown named parameter " + argsIn.begin()->first);
     }
     // Return request with named arguments transformed to positional arguments
