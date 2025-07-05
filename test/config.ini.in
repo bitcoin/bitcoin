@@ -3,7 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # These environment variables are set by the build process and read by
-# test/*/test_runner.py and test/util/rpcauth-test.py
+# test/*/test_runner.py
 
 [environment]
 CLIENT_NAME=@CLIENT_NAME@

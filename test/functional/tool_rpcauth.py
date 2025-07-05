@@ -4,24 +4,18 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test share/rpcauth/rpcauth.py
 """
-import re
-import configparser
 import hmac
 import importlib
 import os
+import re
 import sys
 import unittest
 
+from test_framework.test_framework import BitcoinTestFramework
+
+
 class TestRPCAuth(unittest.TestCase):
-    def setUp(self):
-        config = configparser.ConfigParser()
-        config_path = os.path.abspath(
-            os.path.join(os.sep, os.path.abspath(os.path.dirname(__file__)),
-            "../config.ini"))
-        with open(config_path, encoding="utf8") as config_file:
-            config.read_file(config_file)
-        sys.path.insert(0, os.path.dirname(config['environment']['RPCAUTH']))
-        self.rpcauth = importlib.import_module('rpcauth')
+    rpcauth = None
 
     def test_generate_salt(self):
         for i in range(16, 32 + 1):
@@ -43,5 +37,21 @@ class TestRPCAuth(unittest.TestCase):
 
         self.assertEqual(expected_password_hmac, password_hmac)
 
-if __name__ == '__main__':
-    unittest.main()
+
+class RpcAuthTest(BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 0  # No node/datadir needed
+
+    def setup_network(self):
+        pass
+
+    def run_test(self):
+        sys.path.insert(0, os.path.dirname(self.config["environment"]["RPCAUTH"]))
+        TestRPCAuth.rpcauth = importlib.import_module("rpcauth")
+        suite = unittest.TestLoader().loadTestsFromTestCase(TestRPCAuth)
+        result = unittest.TextTestRunner(stream=sys.stdout, verbosity=1, failfast=True).run(suite)
+        assert result.wasSuccessful()
+
+
+if __name__ == "__main__":
+    RpcAuthTest(__file__).main()
