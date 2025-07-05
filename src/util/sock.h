@@ -46,23 +46,24 @@ struct SocketEventsParams
 {
     using wrap_fn = std::function<void(std::function<void()>&&)>;
 
-    SocketEventsParams() = default;
+    SocketEventsParams() = delete;
+    SocketEventsParams(SocketEventsMode event_mode) :
+        m_event_mode{event_mode}
+    {
+        assert(m_event_mode != SocketEventsMode::Unknown);
+    }
     SocketEventsParams(SocketEventsMode event_mode, SOCKET event_fd, wrap_fn wrap_func) :
         m_event_mode{event_mode},
         m_event_fd{event_fd},
         m_wrap_func{wrap_func}
-    {}
+    {
+        assert(m_event_mode != SocketEventsMode::Unknown);
+    }
     ~SocketEventsParams() = default;
 
 public:
     /* Choice of API to use in Sock::Wait{,Many}() */
-    SocketEventsMode m_event_mode{
-#ifdef USE_POLL
-        SocketEventsMode::Poll
-#else
-        SocketEventsMode::Select
-#endif /* USE_POLL */
-    };
+    SocketEventsMode m_event_mode{SocketEventsMode::Unknown};
     /* File descriptor for event triggered SEMs (and INVALID_SOCKET for the rest) */
     SOCKET m_event_fd{INVALID_SOCKET};
     /* Function that wraps itself around WakeMany()'s API call */
@@ -89,6 +90,21 @@ constexpr std::string_view SEMToString(const SocketEventsMode val) {
         default:
             return "unknown";
     };
+}
+
+constexpr std::string_view GetSupportedSocketEventsStr()
+{
+    return "'select'"
+#ifdef USE_POLL
+           ", 'poll'"
+#endif /* USE_POLL */
+#ifdef USE_EPOLL
+           ", 'epoll'"
+#endif /* USE_EPOLL */
+#ifdef USE_KQUEUE
+           ", 'kqueue'"
+#endif /* USE_KQUEUE */
+           ;
 }
 
 /* Converts string to SocketEventsMode value with additional check to report modes not compiled for as unknown */
@@ -229,7 +245,7 @@ public:
      * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
      * @return true if selectable
      */
-    [[nodiscard]] virtual bool IsSelectable(bool is_select = (SocketEventsParams().m_event_mode == SocketEventsMode::Select)) const;
+    [[nodiscard]] virtual bool IsSelectable(bool is_select) const;
 
     using Event = uint8_t;
 
@@ -262,7 +278,7 @@ public:
      */
     [[nodiscard]] virtual bool Wait(std::chrono::milliseconds timeout,
                                     Event requested,
-                                    SocketEventsParams event_params = SocketEventsParams(),
+                                    SocketEventsParams event_params,
                                     Event* occurred = nullptr) const;
     /**
      * Auxiliary requested/occurred events to wait for in `WaitMany()`.
@@ -300,7 +316,7 @@ public:
      */
     [[nodiscard]] virtual bool WaitMany(std::chrono::milliseconds timeout,
                                         EventsPerSock& events_per_sock,
-                                        SocketEventsParams event_params = SocketEventsParams()) const;
+                                        SocketEventsParams event_params) const;
 
     /**
      * As an EventsPerSock map no longer contains a Sock object (it now contains the raw SOCKET file
@@ -315,7 +331,7 @@ public:
      */
     static bool WaitManyInternal(std::chrono::milliseconds timeout,
                                  EventsPerSock& events_per_sock,
-                                 SocketEventsParams event_params = SocketEventsParams());
+                                 SocketEventsParams event_params);
 #ifdef USE_EPOLL
     static bool WaitManyEPoll(std::chrono::milliseconds timeout,
                               EventsPerSock& events_per_sock,
@@ -390,5 +406,7 @@ private:
 
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
+
+extern SocketEventsMode g_socket_events_mode;
 
 #endif // BITCOIN_UTIL_SOCK_H

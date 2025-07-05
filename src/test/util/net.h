@@ -202,7 +202,7 @@ public:
 
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,
-              SocketEventsParams event_params = SocketEventsParams(),
+              SocketEventsParams event_params,
               Event* occurred = nullptr) const override
     {
         if (occurred != nullptr) {
@@ -213,7 +213,7 @@ public:
 
     bool WaitMany(std::chrono::milliseconds timeout,
                   EventsPerSock& events_per_sock,
-                  SocketEventsParams event_params = SocketEventsParams()) const override
+                  SocketEventsParams event_params) const override
     {
         for (auto& [sock, events] : events_per_sock) {
             (void)sock;

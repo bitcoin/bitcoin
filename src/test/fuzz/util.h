@@ -89,9 +89,9 @@ public:
 
     bool IsSelectable(bool is_select) const override;
 
-    bool Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsParams event_params = SocketEventsParams(), Event* occurred = nullptr) const override;
+    bool Wait(std::chrono::milliseconds timeout, Event requested, SocketEventsParams event_params, Event* occurred = nullptr) const override;
 
-    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SocketEventsParams event_params = SocketEventsParams()) const override;
+    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock, SocketEventsParams event_params) const override;
 
     bool IsConnected(std::string& errmsg) const override;
 };

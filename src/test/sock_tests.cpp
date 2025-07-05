@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(wait)
     Sock sock0(s[0]);
     Sock sock1(s[1]);
 
-    std::thread waiter([&sock0]() { (void)sock0.Wait(24h, Sock::RECV); });
+    std::thread waiter([&sock0]() { (void)sock0.Wait(24h, Sock::RECV, SocketEventsParams{::g_socket_events_mode}); });
 
     BOOST_REQUIRE_EQUAL(sock1.Send("a", 1, 0), 1);
 

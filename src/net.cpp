@@ -1928,7 +1928,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
         return;
     }
 
-    if (!sock->IsSelectable()) {
+    if (!sock->IsSelectable(/*is_select=*/::g_socket_events_mode == SocketEventsMode::Select)) {
         LogPrintf("%s: non-selectable socket\n", strDropped);
         return;
     }

@@ -27,6 +27,8 @@
 #include <poll.h>
 #endif
 
+SocketEventsMode g_socket_events_mode{SocketEventsMode::Unknown};
+
 static inline bool IOErrorIsPermanent(int err)
 {
     return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
@@ -157,10 +159,17 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, SocketEvents
 {
     EventsPerSock events_per_sock{std::make_pair(m_socket, Events{requested})};
 
+    // We need to ensure we are only using a level-triggered mode because we are expecting
+    // a direct correlation between the events reported and the one socket we are querying
     if (auto [sem, _, __] = event_params; sem != SocketEventsMode::Poll && sem != SocketEventsMode::Select) {
-        // We need to ensure we are only using a level-triggered mode because we are expecting
-        // a direct correlation between the events reported and the one socket we are querying
-        event_params = SocketEventsParams();
+        // We will use a compatible fallback events mode if we didn't specify a valid option
+        event_params = SocketEventsParams{
+#ifdef USE_POLL
+            SocketEventsMode::Poll
+#else
+            SocketEventsMode::Select
+#endif /* USE_POLL */
+        };
     }
     if (!WaitMany(timeout, events_per_sock, event_params)) {
         return false;
@@ -430,7 +439,7 @@ void Sock::SendComplete(const std::string& data,
         // Wait for a short while (or the socket to become ready for sending) before retrying
         // if nothing was sent.
         const auto wait_time = std::min(deadline - now, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-        (void)Wait(wait_time, SEND);
+        (void)Wait(wait_time, SEND, SocketEventsParams{::g_socket_events_mode});
     }
 }
 
@@ -513,7 +522,7 @@ std::string Sock::RecvUntilTerminator(uint8_t terminator,
 
         // Wait for a short while (or the socket to become ready for reading) before retrying.
         const auto wait_time = std::min(deadline - now, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-        (void)Wait(wait_time, RECV);
+        (void)Wait(wait_time, RECV, SocketEventsParams{::g_socket_events_mode});
     }
 }
 
