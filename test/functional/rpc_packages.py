@@ -44,10 +44,10 @@ class RPCPackagesTest(BitcoinTestFramework):
         be used to test packages where the order does not matter. The ordering of transactions in package_hex and
         testres_expected must match.
         """
-        shuffled_indeces = list(range(len(package_hex)))
-        random.shuffle(shuffled_indeces)
-        shuffled_package = [package_hex[i] for i in shuffled_indeces]
-        shuffled_testres = [testres_expected[i] for i in shuffled_indeces]
+        shuffled_indices = list(range(len(package_hex)))
+        random.shuffle(shuffled_indices)
+        shuffled_package = [package_hex[i] for i in shuffled_indices]
+        shuffled_testres = [testres_expected[i] for i in shuffled_indices]
         assert_equal(shuffled_testres, self.nodes[0].testmempoolaccept(shuffled_package))
 
     def run_test(self):
