@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(xor_roundtrip_random_chunks)
     auto apply_random_xor_chunks{[&](std::span<std::byte> target, std::span<const std::byte, Obfuscation::KEY_SIZE> obfuscation) {
         for (size_t offset{0}; offset < target.size();) {
             const size_t chunk_size{1 + m_rng.randrange(target.size() - offset)};
-            util::Xor(target.subspan(offset, chunk_size), obfuscation, offset);
+            Obfuscation().Xor(target.subspan(offset, chunk_size), obfuscation, offset);
             offset += chunk_size;
         }
     }};
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(xor_bytes_reference)
         std::vector actual{expected};
 
         expected_xor(std::span{expected}.subspan(write_offset), key_bytes, key_offset);
-        util::Xor(std::span{actual}.subspan(write_offset), key_bytes, key_offset);
+        Obfuscation().Xor(std::span{actual}.subspan(write_offset), key_bytes, key_offset);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.begin(), actual.end());
     }

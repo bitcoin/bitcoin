@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 #include <random.h>
-#include <streams.h>
 #include <util/obfuscation.h>
 
 #include <cstddef>
@@ -18,7 +17,7 @@ static void ObfuscationBench(benchmark::Bench& bench)
 
     size_t offset{0};
     bench.batch(data.size()).unit("byte").run([&] {
-        util::Xor(data, key, offset++); // mutated differently each time
+        Obfuscation().Xor(data, key, offset++); // mutated differently each time
         ankerl::nanobench::doNotOptimizeAway(data);
     });
 }
