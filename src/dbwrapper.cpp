@@ -249,11 +249,11 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     }
 
     {
-        m_obfuscation = std::vector<uint8_t>(OBFUSCATION_SIZE_BYTES, '\000'); // Needed for unobfuscated Read() below
+        m_obfuscation = std::vector<uint8_t>(Obfuscation::SIZE_BYTES, '\000'); // Needed for unobfuscated Read() below
         const bool key_missing{!Read(OBFUSCATION_KEY_KEY, m_obfuscation)};
         if (key_missing && params.obfuscate && IsEmpty()) {
             // Initialize non-degenerate obfuscation if it won't upset existing, non-obfuscated data.
-            std::vector<uint8_t> new_key(OBFUSCATION_SIZE_BYTES);
+            std::vector<uint8_t> new_key(Obfuscation::SIZE_BYTES);
             GetRandBytes(new_key);
 
             // Write `new_key` so we don't obfuscate the key with itself
@@ -262,7 +262,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
 
             LogInfo("Wrote new obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));
         }
-        if (m_obfuscation.size() != OBFUSCATION_SIZE_BYTES) {
+        if (m_obfuscation.size() != Obfuscation::SIZE_BYTES) {
             throw dbwrapper_error(strprintf("Invalid obfuscation key for %s: %s!", fs::PathToString(params.path), HexStr(m_obfuscation)));
         }
         LogInfo("Using obfuscation key for %s: %s", fs::PathToString(params.path), HexStr(m_obfuscation));

@@ -1123,7 +1123,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 {
     // Bytes are serialized without length indicator, so this is also the exact
     // size of the XOR-key file.
-    std::array<std::byte, 8> obfuscation{};
+    std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
 
     // Consider this to be the first run if the blocksdir contains only hidden
     // files (those which start with a .). Checking for a fully-empty dir would
@@ -1140,14 +1140,14 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     if (opts.use_xor && first_run) {
         // Only use random fresh key when the boolean option is set and on the
         // very first start of the program.
-        FastRandomContext{}.fillrand(obfuscation);
+        FastRandomContext{}.fillrand(key_bytes);
     }
 
     const fs::path xor_key_path{opts.blocks_dir / "xor.dat"};
     if (fs::exists(xor_key_path)) {
         // A pre-existing xor key file has priority.
         AutoFile xor_key_file{fsbridge::fopen(xor_key_path, "rb")};
-        xor_key_file >> obfuscation;
+        xor_key_file >> key_bytes;
     } else {
         // Create initial or missing xor key file
         AutoFile xor_key_file{fsbridge::fopen(xor_key_path,
@@ -1157,7 +1157,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
             "wbx"
 #endif
         )};
-        xor_key_file << obfuscation;
+        xor_key_file << key_bytes;
         if (xor_key_file.fclose() != 0) {
             throw std::runtime_error{strprintf("Error closing XOR key file %s: %s",
                                                fs::PathToString(xor_key_path),
@@ -1165,15 +1165,15 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         }
     }
     // If the user disabled the key, it must be zero.
-    if (!opts.use_xor && obfuscation != decltype(obfuscation){}) {
+    if (!opts.use_xor && key_bytes != decltype(key_bytes){}) {
         throw std::runtime_error{
             strprintf("The blocksdir XOR-key can not be disabled when a random key was already stored! "
                       "Stored key: '%s', stored path: '%s'.",
-                      HexStr(obfuscation), fs::PathToString(xor_key_path)),
+                      HexStr(key_bytes), fs::PathToString(xor_key_path)),
         };
     }
-    LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(obfuscation));
-    return std::vector<std::byte>{obfuscation.begin(), obfuscation.end()};
+    LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(key_bytes));
+    return std::vector<std::byte>{key_bytes.begin(), key_bytes.end()};
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)

@@ -20,10 +20,10 @@ BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 // Test that obfuscation can be properly reverted even with random chunk sizes.
 BOOST_AUTO_TEST_CASE(xor_roundtrip_random_chunks)
 {
-    auto apply_random_xor_chunks{[&](std::span<std::byte> target, std::span<const std::byte, sizeof(uint64_t)> obfuscation) {
+    auto apply_random_xor_chunks{[&](std::span<std::byte> target, std::span<const std::byte, Obfuscation::SIZE_BYTES> obfuscation) {
         for (size_t offset{0}; offset < target.size();) {
             const size_t chunk_size{1 + m_rng.randrange(target.size() - offset)};
-            util::Xor(target.subspan(offset, chunk_size), obfuscation, offset);
+            Obfuscation().Xor(target.subspan(offset, chunk_size), obfuscation, offset);
             offset += chunk_size;
         }
     }};
@@ -33,12 +33,12 @@ BOOST_AUTO_TEST_CASE(xor_roundtrip_random_chunks)
         const std::vector original{m_rng.randbytes<std::byte>(write_size)};
         std::vector roundtrip{original};
 
-        std::array<std::byte, sizeof(uint64_t)> key_bytes{};
+        std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
         if (m_rng.randbool()) m_rng.fillrand(key_bytes);
         apply_random_xor_chunks(roundtrip, key_bytes);
 
         const bool key_all_zeros{std::ranges::all_of(
-            std::span{key_bytes}.first(std::min(write_size, key_bytes.size())), [](auto b) { return b == std::byte{0}; })};
+            std::span{key_bytes}.first(std::min(write_size, Obfuscation::SIZE_BYTES)), [](auto b) { return b == std::byte{0}; })};
         BOOST_CHECK(key_all_zeros ? original == roundtrip : original != roundtrip);
 
         apply_random_xor_chunks(roundtrip, key_bytes);
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(xor_roundtrip_random_chunks)
 // with random offsets to ensure proper handling of key wrapping.
 BOOST_AUTO_TEST_CASE(xor_bytes_reference)
 {
-    auto expected_xor{[](std::span<std::byte> target, std::span<const std::byte, sizeof(uint64_t)> obfuscation, size_t key_offset) {
+    auto expected_xor{[](std::span<std::byte> target, std::span<const std::byte, Obfuscation::SIZE_BYTES> obfuscation, size_t key_offset) {
         for (auto& b : target) {
             b ^= obfuscation[key_offset++ % obfuscation.size()];
         }
@@ -58,16 +58,16 @@ BOOST_AUTO_TEST_CASE(xor_bytes_reference)
 
     for (size_t test{0}; test < 100; ++test) {
         const size_t write_size{1 + m_rng.randrange(100U)};
-        const size_t key_offset{m_rng.randrange(3 * 8U)}; // Make sure the key can wrap around
-        const size_t write_offset{std::min(write_size, m_rng.randrange(sizeof(uint64_t) * 2))}; // Write unaligned data
+        const size_t key_offset{m_rng.randrange(3 * Obfuscation::SIZE_BYTES)}; // Make sure the key can wrap around
+        const size_t write_offset{std::min(write_size, m_rng.randrange(Obfuscation::SIZE_BYTES * 2))}; // Write unaligned data
 
-        std::array<std::byte, sizeof(uint64_t)> key_bytes{};
+        std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
         if (m_rng.randbool()) m_rng.fillrand(key_bytes);
         std::vector expected{m_rng.randbytes<std::byte>(write_size)};
         std::vector actual{expected};
 
         expected_xor(std::span{expected}.subspan(write_offset), key_bytes, key_offset);
-        util::Xor(std::span{actual}.subspan(write_offset), key_bytes, key_offset);
+        Obfuscation().Xor(std::span{actual}.subspan(write_offset), key_bytes, key_offset);
 
         BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.begin(), actual.end());
     }
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
     const FlatFilePos pos{0, 0};
 
     const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
-    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(Obfuscation::SIZE_BYTES)};
 
     // Write out the file with random content
     {
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
 
     const FlatFileSeq test_buffered{m_args.GetDataDirBase(), "buffered_write_test", node::BLOCKFILE_CHUNK_SIZE};
     const FlatFileSeq test_direct{m_args.GetDataDirBase(), "direct_write_test", node::BLOCKFILE_CHUNK_SIZE};
-    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(Obfuscation::SIZE_BYTES)};
 
     {
         DataBuffer test_data{m_rng.randbytes<std::byte>(file_size)};
