@@ -6,19 +6,28 @@
 #define BITCOIN_OBFUSCATION_H
 
 #include <span.h>
+#include <tinyformat.h>
+
+#include <stdexcept>
 
 class Obfuscation
 {
 public:
     static constexpr size_t SIZE_BYTES{sizeof(uint64_t)};
 
-    void Xor(std::span<std::byte> write, std::span<const std::byte> key, size_t key_offset = 0)
+    Obfuscation() : m_key{SIZE_BYTES, std::byte{0}} {}
+    Obfuscation(std::span<const std::byte, SIZE_BYTES> key_bytes) : m_key{key_bytes.begin(), key_bytes.end()} {}
+
+    uint64_t Key() const { return ToUint64(); }
+    operator bool() const { return Key() != 0; }
+
+    void operator()(std::span<std::byte> write, size_t key_offset = 0) const
     {
-        assert(key.size() == SIZE_BYTES);
+        assert(m_key.size() == SIZE_BYTES);
         key_offset %= SIZE_BYTES;
 
         for (size_t i = 0, j = key_offset; i != write.size(); i++) {
-            write[i] ^= key[j++];
+            write[i] ^= m_key[j++];
 
             // This potentially acts on very many bytes of data, so it's
             // important that we calculate `j`, i.e. the `key` index in this
@@ -27,6 +36,29 @@ public:
             if (j == SIZE_BYTES)
                 j = 0;
         }
+    }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_key;
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_key;
+        if (m_key.size() != SIZE_BYTES) throw std::logic_error(strprintf("Obfuscation key size should be exactly %s bytes long", SIZE_BYTES));
+    }
+
+private:
+    std::vector<std::byte> m_key;
+
+    uint64_t ToUint64() const
+    {
+        uint64_t key{};
+        std::memcpy(&key, m_key.data(), SIZE_BYTES);
+        return key;
     }
 };
 

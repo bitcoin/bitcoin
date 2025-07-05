@@ -17,10 +17,11 @@ static void ObfuscationBench(benchmark::Bench& bench)
 
     std::array<std::byte, Obfuscation::SIZE_BYTES> key_bytes{};
     frc.fillrand(key_bytes);
+    const Obfuscation obfuscation{key_bytes};
 
     size_t offset{0};
     bench.batch(data.size()).unit("byte").run([&] {
-        Obfuscation().Xor(data, key_bytes, offset++); // mutated differently each time
+        obfuscation(data, offset++); // mutated differently each time
         ankerl::nanobench::doNotOptimizeAway(data);
     });
 }

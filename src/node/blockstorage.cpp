@@ -1173,7 +1173,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         };
     }
     LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(key_bytes));
-    return std::vector<std::byte>{key_bytes.begin(), key_bytes.end()};
+    return Obfuscation{key_bytes};
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
