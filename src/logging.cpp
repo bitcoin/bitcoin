@@ -258,17 +258,20 @@ static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
 {
     if (level_str == "trace") {
         return BCLog::Level::Trace;
-    } else if (level_str == "debug") {
-        return BCLog::Level::Debug;
-    } else if (level_str == "info") {
-        return BCLog::Level::Info;
-    } else if (level_str == "warning") {
-        return BCLog::Level::Warning;
-    } else if (level_str == "error") {
-        return BCLog::Level::Error;
-    } else {
-        return std::nullopt;
     }
+    if (level_str == "debug") {
+        return BCLog::Level::Debug;
+    }
+    if (level_str == "info") {
+        return BCLog::Level::Info;
+    }
+    if (level_str == "warning") {
+        return BCLog::Level::Warning;
+    }
+    if (level_str == "error") {
+        return BCLog::Level::Error;
+    }
+    return std::nullopt;
 }
 
 std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
