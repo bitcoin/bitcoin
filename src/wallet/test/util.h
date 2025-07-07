@@ -66,17 +66,17 @@ private:
     MockableData& m_records;
     bool m_pass;
 
-    bool ReadKey(DataStream&& key, DataStream& value) override;
-    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite=true) override;
-    bool EraseKey(DataStream&& key) override;
-    bool HasKey(DataStream&& key) override;
-    bool ErasePrefix(std::span<const std::byte> prefix) override;
-
 public:
     explicit MockableBatch(MockableData& records, bool pass) : m_records(records), m_pass(pass) {}
     ~MockableBatch() = default;
 
     void Close() override {}
+
+    bool ReadKey(DataStream&& key, DataStream& value) override;
+    bool WriteKey(DataStream&& key, DataStream&& value, bool overwrite=true) override;
+    bool EraseKey(DataStream&& key) override;
+    bool HasKey(DataStream&& key) override;
+    bool ErasePrefix(std::span<const std::byte> prefix) override;
 
     std::unique_ptr<DatabaseCursor> GetNewCursor() override
     {
@@ -99,7 +99,7 @@ public:
     MockableData m_records;
     bool m_pass{true};
 
-    MockableDatabase(MockableData records = {}) : WalletDatabase(), m_records(records) {}
+    MockableDatabase() : WalletDatabase() {}
     ~MockableDatabase() = default;
 
     void Open() override {}
@@ -114,7 +114,7 @@ public:
     std::unique_ptr<DatabaseBatch> MakeBatch() override { return std::make_unique<MockableBatch>(m_records, m_pass); }
 };
 
-std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records = {});
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase();
 MockableDatabase& GetMockableDatabase(CWallet& wallet);
 
 DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success);
