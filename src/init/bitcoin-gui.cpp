@@ -8,6 +8,7 @@
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
 #include <interfaces/node.h>
+#include <interfaces/tracing.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
 #include <util/check.h>
@@ -33,6 +34,7 @@ public:
         return MakeWalletLoader(chain, *Assert(m_node.args));
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
+    std::unique_ptr<interfaces::Tracing> makeTracing() override { return interfaces::MakeTracing(m_node); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
     // bitcoin-gui accepts -ipcbind option even though it does not use it
     // directly. It just returns true here to accept the option because

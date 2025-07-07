@@ -998,6 +998,25 @@ public:
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
     NodeContext& m_node;
 };
+
+class TracingImpl : public interfaces::Tracing
+{
+public:
+    explicit TracingImpl(NodeContext& node) : m_node(node) {}
+
+    std::unique_ptr<Handler> traceUtxoCache(std::unique_ptr<interfaces::UtxoCacheTrace> callback) override
+    {
+        auto& traces{*Assert(m_node.kernel_traces)};
+        LOCK(traces.mutex);
+        auto it{traces.utxo_cache.emplace(traces.utxo_cache.end(), std::move(callback))};
+        return interfaces::MakeCleanupHandler([&traces, it] {
+            LOCK(traces.mutex);
+            traces.utxo_cache.erase(it);
+        });
+    }
+
+    NodeContext& m_node;
+};
 } // namespace
 } // namespace node
 
@@ -1005,4 +1024,5 @@ namespace interfaces {
 std::unique_ptr<Node> MakeNode(node::NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
 std::unique_ptr<Chain> MakeChain(node::NodeContext& context) { return std::make_unique<node::ChainImpl>(context); }
 std::unique_ptr<Mining> MakeMining(node::NodeContext& context) { return std::make_unique<node::MinerImpl>(context); }
+std::unique_ptr<Tracing> MakeTracing(node::NodeContext& context) { return std::make_unique<node::TracingImpl>(context); }
 } // namespace interfaces

@@ -368,6 +368,16 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
   install_binary_component(bitcoin-node)
+
+  add_executable(bitcoin-trace
+    bitcoin-trace.cpp
+    init/basic.cpp
+  )
+  target_link_libraries(bitcoin-trace
+    core_interface
+    bitcoin_common
+    bitcoin_ipc
+  )
 endif()
 
 if(ENABLE_IPC AND BUILD_TESTS)

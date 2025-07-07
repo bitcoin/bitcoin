@@ -109,6 +109,12 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
            (uint32_t)it->second.coin.nHeight,
            (int64_t)it->second.coin.out.nValue,
            (bool)it->second.coin.IsCoinBase());
+    if (m_traces) {
+        LOCK(m_traces->mutex);
+        for (const auto& trace : m_traces->utxo_cache) {
+            trace->add(interfaces::UtxoInfo{outpoint.hash, outpoint.n, it->second.coin.nHeight, it->second.coin.out.nValue, it->second.coin.IsCoinBase()});
+        }
+    }
 }
 
 void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin) {
@@ -138,6 +144,12 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
            (uint32_t)it->second.coin.nHeight,
            (int64_t)it->second.coin.out.nValue,
            (bool)it->second.coin.IsCoinBase());
+    if (m_traces) {
+        LOCK(m_traces->mutex);
+        for (const auto& trace : m_traces->utxo_cache) {
+            trace->spend(interfaces::UtxoInfo{outpoint.hash, outpoint.n, it->second.coin.nHeight, it->second.coin.out.nValue, it->second.coin.IsCoinBase()});
+        }
+    }
     if (moveout) {
         *moveout = std::move(it->second.coin);
     }
@@ -283,6 +295,12 @@ void CCoinsViewCache::Uncache(const COutPoint& hash)
                (uint32_t)it->second.coin.nHeight,
                (int64_t)it->second.coin.out.nValue,
                (bool)it->second.coin.IsCoinBase());
+        if (m_traces) {
+            LOCK(m_traces->mutex);
+            for (const auto& trace : m_traces->utxo_cache) {
+                trace->uncache(interfaces::UtxoInfo{hash.hash, hash.n, it->second.coin.nHeight, it->second.coin.out.nValue, it->second.coin.IsCoinBase()});
+            }
+        }
         cacheCoins.erase(it);
     }
 }
