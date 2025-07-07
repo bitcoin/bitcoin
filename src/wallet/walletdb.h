@@ -69,6 +69,7 @@ extern const std::string FLAGS;
 extern const std::string HDCHAIN;
 extern const std::string KEY;
 extern const std::string KEYMETA;
+extern const std::string LAST_DECRYPTED_FEATURES;
 extern const std::string LAST_OPENED_FEATURES;
 extern const std::string LOCKED_UTXO;
 extern const std::string MASTER_KEY;
@@ -266,6 +267,8 @@ public:
 
     bool WriteLastOpenedVersion();
     bool WriteLastOpenedFeatures();
+    // Write the current wallet client features to the LAST_DECRYPTED_FEATURES record
+    bool WriteLastDecryptedFeatures();
 
     DBErrors LoadWallet(CWallet* pwallet);
 
