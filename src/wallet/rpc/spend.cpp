@@ -8,6 +8,7 @@
 #include <key_io.h>
 #include <node/types.h>
 #include <policy/policy.h>
+#include <policy/truc_policy.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/util.h>
 #include <script/script.h>
@@ -717,6 +718,12 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         coinControl.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
     }
 
+    if (tx.version == TRUC_VERSION) {
+        if (!coinControl.m_max_tx_weight.has_value() || coinControl.m_max_tx_weight.value() > TRUC_MAX_WEIGHT) {
+            coinControl.m_max_tx_weight = TRUC_MAX_WEIGHT;
+        }
+    }
+
     if (recipients.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -1316,6 +1323,7 @@ RPCHelpMan send()
             if (options.exists("max_tx_weight")) {
                 coin_control.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
             }
+
             SetOptionsInputWeights(options["inputs"], options);
             // Clear tx.vout since it is not meant to be used now that we are passing outputs directly.
             // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
@@ -1455,6 +1463,12 @@ RPCHelpMan sendall()
                 }
             }
 
+            if (coin_control.m_version == TRUC_VERSION) {
+                coin_control.m_max_tx_weight = TRUC_MAX_WEIGHT;
+            } else {
+                coin_control.m_max_tx_weight = MAX_STANDARD_TX_WEIGHT;
+            }
+
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
             FeeCalculation fee_calc_out;
@@ -1497,6 +1511,10 @@ RPCHelpMan sendall()
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }
+                    // we are spending an unconfirmed TRUC transaction, so lower max weight
+                    if (output.depth == 0 && coin_control.m_version == TRUC_VERSION) {
+                        coin_control.m_max_tx_weight = TRUC_CHILD_MAX_WEIGHT;
+                    }
                     CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL);
                     rawTx.vin.push_back(input);
                     total_input_value += output.txout.nValue;
@@ -1529,7 +1547,7 @@ RPCHelpMan sendall()
             }
 
             // If this transaction is too large, e.g. because the wallet has many UTXOs, it will be rejected by the node's mempool.
-            if (tx_size.weight > MAX_STANDARD_TX_WEIGHT) {
+            if (tx_size.weight > coin_control.m_max_tx_weight) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Transaction too large.");
             }
 
