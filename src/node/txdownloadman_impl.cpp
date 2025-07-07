@@ -83,7 +83,7 @@ void TxDownloadManager::CheckIsEmpty(NodeId nodeid) const
 {
     m_impl->CheckIsEmpty(nodeid);
 }
-std::vector<TxOrphanage::OrphanTxBase> TxDownloadManager::GetOrphanTransactions() const
+std::vector<TxOrphanage::OrphanInfo> TxDownloadManager::GetOrphanTransactions() const
 {
     return m_impl->GetOrphanTransactions();
 }
@@ -576,7 +576,7 @@ void TxDownloadManagerImpl::CheckIsEmpty()
     assert(m_txrequest.Size() == 0);
     assert(m_num_wtxid_peers == 0);
 }
-std::vector<TxOrphanage::OrphanTxBase> TxDownloadManagerImpl::GetOrphanTransactions() const
+std::vector<TxOrphanage::OrphanInfo> TxDownloadManagerImpl::GetOrphanTransactions() const
 {
     return m_orphanage->GetOrphanTransactions();
 }
