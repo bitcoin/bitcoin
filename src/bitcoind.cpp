@@ -15,6 +15,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
 #include <kernel/context.h>
+#include <kernel/traces.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <node/warnings.h>
@@ -190,6 +191,7 @@ static bool AppInit(NodeContext& node)
         }
 
         node.warnings = std::make_unique<node::Warnings>();
+        node.kernel_traces = std::make_unique<kernel::Traces>();
 
         node.kernel = std::make_unique<kernel::Context>();
         node.ecc_context = std::make_unique<ECC_Context>();

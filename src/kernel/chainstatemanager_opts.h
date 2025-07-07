@@ -24,6 +24,7 @@ class ValidationSignals;
 static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
 
 namespace kernel {
+struct Traces;
 
 /**
  * An options struct for `ChainstateManager`, more ergonomically referred to as
@@ -44,6 +45,7 @@ struct ChainstateManagerOpts {
     CoinsViewOptions coins_view{};
     Notifications& notifications;
     ValidationSignals* signals{nullptr};
+    Traces* traces{nullptr};
     //! Number of script check worker threads. Zero means no parallel verification.
     int worker_threads_num{0};
     size_t script_execution_cache_bytes{DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES};

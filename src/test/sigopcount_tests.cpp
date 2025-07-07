@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
     // Create utxo set
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, m_node.kernel_traces.get());
     // Create key
     CKey key = GenerateRandomKey();
     CPubKey pubkey = key.GetPubKey();

@@ -248,7 +248,7 @@ FUZZ_TARGET(coinscache_sim)
         ++current_height;
         // Make sure there is always at least one CCoinsViewCache.
         if (caches.empty()) {
-            caches.emplace_back(new CCoinsViewCache(&bottom, /*deterministic=*/true));
+            caches.emplace_back(new CCoinsViewCache(&bottom, /*traces=*/nullptr, /*deterministic=*/true));
             sim_caches[caches.size()].Wipe();
         }
 
@@ -376,7 +376,7 @@ FUZZ_TARGET(coinscache_sim)
             [&]() { // Add a cache level (if not already at the max).
                 if (caches.size() != MAX_CACHES) {
                     // Apply to real caches.
-                    caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
+                    caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*traces=*/nullptr, /*deterministic=*/true));
                     // Apply to simulation data.
                     sim_caches[caches.size()].Wipe();
                 }

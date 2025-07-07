@@ -2802,7 +2802,7 @@ static RPCHelpMan getdescriptoractivity()
         const CTxMemPool& mempool = EnsureMemPool(node);
         LOCK(::cs_main);
         LOCK(mempool.cs);
-        const CCoinsViewCache& coins_view = &active_chainstate.CoinsTip();
+        const CCoinsViewCache& coins_view{active_chainstate.CoinsTip()};
 
         for (const CTxMemPoolEntry& e : mempool.entryAll()) {
             const auto& tx = e.GetSharedTx();

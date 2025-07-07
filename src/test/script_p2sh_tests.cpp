@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(switchover)
 BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
     CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins(&coinsDummy, m_node.kernel_traces.get());
     FillableSigningProvider keystore;
     CKey key[6];
     for (int i = 0; i < 6; i++)

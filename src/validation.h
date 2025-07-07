@@ -57,6 +57,7 @@ struct LockPoints;
 struct AssumeutxoData;
 namespace node {
 class SnapshotMetadata;
+struct Traces;
 } // namespace node
 namespace Consensus {
 struct Params;
@@ -491,7 +492,7 @@ public:
     CoinsViews(DBParams db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
-    void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void InitCache(kernel::Traces* traces) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 enum class CoinsCacheSizeState

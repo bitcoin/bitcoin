@@ -46,7 +46,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
 {
     bool good_data{true};
 
-    CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
+    CCoinsViewCache coins_view_cache{&backend_coins_view, /*traces=*/nullptr, /*deterministic=*/true};
     if (is_db) coins_view_cache.SetBestBlock(uint256::ONE);
     COutPoint random_out_point;
     Coin random_coin;

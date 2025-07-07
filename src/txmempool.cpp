@@ -704,7 +704,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     uint64_t innerUsage = 0;
     uint64_t prev_ancestor_count{0};
 
-    CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip));
+    CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip), active_coins_tip.m_traces);
 
     for (const auto& it : GetSortedDepthAndScore()) {
         checkTotal += it->GetTxSize();

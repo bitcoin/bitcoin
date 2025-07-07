@@ -34,6 +34,7 @@ class WalletLoader;
 } // namespace interfaces
 namespace kernel {
 struct Context;
+struct Traces;
 }
 namespace util {
 class SignalInterrupt;
@@ -90,6 +91,7 @@ struct NodeContext {
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
     std::thread background_init_thread;
+    std::unique_ptr<kernel::Traces> kernel_traces;
 
     //! Declare default constructor and destructor that are not inline, so code
     //! instantiating the NodeContext struct doesn't need to #include class

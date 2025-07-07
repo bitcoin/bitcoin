@@ -445,7 +445,7 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
     }
     // - Populate a CoinsViewCache with the unspent output
     CCoinsView coins_view;
-    CCoinsViewCache coins_cache(&coins_view);
+    CCoinsViewCache coins_cache(&coins_view, m_node.kernel_traces.get());
     for (const auto& input_transaction : input_transactions) {
         AddCoins(coins_cache, *input_transaction.get(), input_height);
     }
