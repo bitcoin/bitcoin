@@ -945,9 +945,28 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
-static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
-                                 interfaces::Chain& chain, const uint256& block_hash, int block_height)
+void MaybeDiscourageFeeSniping(const CWallet &wallet,
+                               CMutableTransaction& tx,
+                               const CCoinControl coin_control)
 {
+    AssertLockHeld(wallet.cs_wallet);
+
+    if (coin_control.m_locktime) {
+        tx.nLockTime = coin_control.m_locktime.value();
+        // If we have a locktime set, we can't use anti-fee-sniping
+        return;
+    }
+
+    for (const auto& tx_in : tx.vin) {
+        std::optional<uint32_t> sequence = coin_control.GetSequence(tx_in.prevout);
+        if (sequence) {
+            // If an input has a preset sequence, we can't do anti-fee-sniping
+            return;
+        }
+    }
+
+    FastRandomContext rng_fast;
+
     // All inputs must be added by now
     assert(!tx.vin.empty());
     // Discourage fee sniping.
@@ -970,7 +989,8 @@ static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng
     // enough, that fee sniping isn't a problem yet, but by implementing a fix
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
-    if (IsCurrentForAntiFeeSniping(chain, block_hash)) {
+    const int block_height{wallet.GetLastBlockHeight()};
+    if (IsCurrentForAntiFeeSniping(wallet.chain(), wallet.GetLastBlockHash())) {
         tx.nLockTime = block_height;
 
         // Secondly occasionally randomly pick a nLockTime even further back, so
@@ -1217,23 +1237,18 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             });
     }
 
-    // The sequence number is set to non-maxint so that DiscourageFeeSniping
-    // works.
+    // The sequence number is set to non-maxint so that discouraging
+    // fee sniping works.
     //
     // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
     // we use the highest possible value in that range (maxint-2)
     // to avoid conflicting with other possible uses of nSequence,
     // and in the spirit of "smallest possible change from prior
     // behavior."
-    bool use_anti_fee_sniping = true;
     const uint32_t default_sequence{coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL};
     txNew.vin.reserve(selected_coins.size());
     for (const auto& coin : selected_coins) {
         std::optional<uint32_t> sequence = coin_control.GetSequence(coin->outpoint);
-        if (sequence) {
-            // If an input has a preset sequence, we can't do anti-fee-sniping
-            use_anti_fee_sniping = false;
-        }
         txNew.vin.emplace_back(coin->outpoint, CScript{}, sequence.value_or(default_sequence));
 
         auto scripts = coin_control.GetScripts(coin->outpoint);
@@ -1244,14 +1259,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             txNew.vin.back().scriptWitness = *scripts.second;
         }
     }
-    if (coin_control.m_locktime) {
-        txNew.nLockTime = coin_control.m_locktime.value();
-        // If we have a locktime set, we can't use anti-fee-sniping
-        use_anti_fee_sniping = false;
-    }
-    if (use_anti_fee_sniping) {
-        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
-    }
+    MaybeDiscourageFeeSniping(wallet, txNew, coin_control);
 
     // Calculate the transaction fee
     TxSize tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), &wallet, &coin_control);

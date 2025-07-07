@@ -109,6 +109,10 @@ const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& 
  */
 std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+void MaybeDiscourageFeeSniping(const CWallet &wallet,
+                               CMutableTransaction& tx,
+                               const CCoinControl coin_control) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
 struct SelectionFilter {
     CoinEligibilityFilter filter;
     bool allow_mixed_output_types{true};
