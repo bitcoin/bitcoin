@@ -576,7 +576,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         std::string strAddress{};
         if (strMode == "addr" || strMode == "full" || strMode == "info" || strMode == "json" || strMode == "recent" ||
             strMode == "evo") {
-            for (const NetInfoEntry& entry : dmn.pdmnState->netInfo.GetEntries()) {
+            for (const NetInfoEntry& entry : dmn.pdmnState->netInfo->GetEntries()) {
                 strAddress += entry.ToStringAddrPort() + " ";
             }
             if (!strAddress.empty()) strAddress.pop_back(); // Remove trailing space
@@ -623,7 +623,7 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                 strOutpoint.find(strFilter) == std::string::npos) return;
             UniValue objMN(UniValue::VOBJ);
             objMN.pushKV("proTxHash", dmn.proTxHash.ToString());
-            objMN.pushKV("address", dmn.pdmnState->netInfo.GetPrimary().ToStringAddrPort());
+            objMN.pushKV("address", dmn.pdmnState->netInfo->GetPrimary().ToStringAddrPort());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
             objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));

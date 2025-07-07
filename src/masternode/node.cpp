@@ -146,7 +146,7 @@ void CActiveMasternodeManager::InitInternal(const CBlockIndex* pindex)
 
     LogPrintf("CActiveMasternodeManager::Init -- proTxHash=%s, proTx=%s\n", dmn->proTxHash.ToString(), dmn->ToString());
 
-    if (m_info.service != dmn->pdmnState->netInfo.GetPrimary()) {
+    if (m_info.service != dmn->pdmnState->netInfo->GetPrimary()) {
         m_state = MasternodeState::SOME_ERROR;
         m_error = "Local address does not match the address from ProTx";
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", m_error);
@@ -201,7 +201,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
             // MN operator key changed or revoked
             return reset(MasternodeState::OPERATOR_KEY_CHANGED);
         }
-        if (newDmn->pdmnState->netInfo.GetPrimary() != oldDmn->pdmnState->netInfo.GetPrimary()) {
+        if (newDmn->pdmnState->netInfo->GetPrimary() != oldDmn->pdmnState->netInfo->GetPrimary()) {
             // MN IP changed
             return reset(MasternodeState::PROTX_IP_CHANGED);
         }

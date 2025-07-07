@@ -18,13 +18,41 @@
 #include <univalue.h>
 #include <util/underlying.h>
 
+#include <gsl/pointers.h>
+
+class CBlockIndex;
 class TxValidationState;
 
 namespace ProTxVersion {
 enum : uint16_t {
     LegacyBLS = 1,
     BasicBLS  = 2,
+    ExtAddr   = 3,
 };
+
+/** Get highest permissible ProTx version based on flags set. */
+[[nodiscard]] constexpr uint16_t GetMax(const bool is_basic_scheme_active, const bool is_extended_addr)
+{
+    if (is_basic_scheme_active) {
+        if (is_extended_addr) {
+            // Requires *both* forks to be active to use extended addresses. is_basic_scheme_active could
+            // be set to false due to RPC specialization, so we must evaluate is_extended_addr *last* to
+            // avoid accidentally upgrading a legacy BLS node to basic BLS due to v23 activation.
+            return ProTxVersion::ExtAddr;
+        }
+        return ProTxVersion::BasicBLS;
+    }
+    return ProTxVersion::LegacyBLS;
+}
+
+/** Get highest permissible ProTx version based on deployment status
+ *  Note: The override is needed because some RPCs need to use deployment status information for everything *except*
+ *        the BLS version upgrade since they are specializations for a specific BLS version. This is a one-off.
+ *  TODO: Resolve this oddity. Consider deprecating legacy BLS-only RPCs so we can remove them eventually.
+ */
+template <typename T>
+[[nodiscard]] uint16_t GetMaxFromDeployment(gsl::not_null<const CBlockIndex*> pindexPrev,
+                                            std::optional<bool> is_basic_override = std::nullopt);
 } // namespace ProTxVersion
 
 class CProRegTx
@@ -32,16 +60,11 @@ class CProRegTx
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_REGISTER;
 
-    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
-    {
-        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
-    }
-
     uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     MnType nType{MnType::Regular};
     uint16_t nMode{0};                                     // only 0 supported for now
     COutPoint collateralOutpoint{uint256(), (uint32_t)-1}; // if hash is null, we refer to a ProRegTx output
-    MnNetInfo netInfo;
+    std::shared_ptr<NetInfoInterface> netInfo{nullptr};
     uint160 platformNodeID{};
     uint16_t platformP2PPort{0};
     uint16_t platformHTTPPort{0};
@@ -58,7 +81,8 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
+        if (obj.nVersion == 0 ||
+            obj.nVersion > ProTxVersion::GetMax(/*is_basic_scheme_active=*/true, /*is_extended_addr=*/true)) {
             // unknown version, bail out early
             return;
         }
@@ -67,7 +91,8 @@ public:
                 obj.nType,
                 obj.nMode,
                 obj.collateralOutpoint,
-                obj.netInfo,
+                NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.netInfo),
+                                  obj.nVersion >= ProTxVersion::ExtAddr),
                 obj.keyIDOwner,
                 CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.pubKeyOperator), (obj.nVersion == ProTxVersion::LegacyBLS)),
                 obj.keyIDVoting,
@@ -94,7 +119,7 @@ public:
 
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
 };
 
 class CProUpServTx
@@ -102,15 +127,10 @@ class CProUpServTx
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_SERVICE;
 
-    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
-    {
-        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
-    }
-
     uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     MnType nType{MnType::Regular};
     uint256 proTxHash;
-    MnNetInfo netInfo;
+    std::shared_ptr<NetInfoInterface> netInfo{nullptr};
     uint160 platformNodeID{};
     uint16_t platformP2PPort{0};
     uint16_t platformHTTPPort{0};
@@ -123,7 +143,8 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
+        if (obj.nVersion == 0 ||
+            obj.nVersion > ProTxVersion::GetMax(/*is_basic_scheme_active=*/true, /*is_extended_addr=*/true)) {
             // unknown version, bail out early
             return;
         }
@@ -133,7 +154,8 @@ public:
         }
         READWRITE(
                 obj.proTxHash,
-                obj.netInfo,
+                NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.netInfo),
+                                  obj.nVersion >= ProTxVersion::ExtAddr),
                 obj.scriptOperatorPayout,
                 obj.inputsHash
         );
@@ -154,18 +176,13 @@ public:
 
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
 };
 
 class CProUpRegTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
-
-    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
-    {
-        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
-    }
 
     uint16_t nVersion{ProTxVersion::LegacyBLS}; // message version
     uint256 proTxHash;
@@ -181,7 +198,8 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
+        if (obj.nVersion == 0 ||
+            obj.nVersion > ProTxVersion::GetMax(/*is_basic_scheme_active=*/true, /*is_extended_addr=*/true)) {
             // unknown version, bail out early
             return;
         }
@@ -204,18 +222,13 @@ public:
 
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
 };
 
 class CProUpRevTx
 {
 public:
     static constexpr auto SPECIALTX_TYPE = TRANSACTION_PROVIDER_UPDATE_REVOKE;
-
-    [[nodiscard]] static constexpr uint16_t GetMaxVersion(const bool is_basic_scheme_active)
-    {
-        return is_basic_scheme_active ? ProTxVersion::BasicBLS : ProTxVersion::LegacyBLS;
-    }
 
     // these are just informational and do not have any effect on the revocation
     enum {
@@ -237,7 +250,8 @@ public:
         READWRITE(
                 obj.nVersion
         );
-        if (obj.nVersion == 0 || obj.nVersion > GetMaxVersion(/*is_basic_scheme_active=*/true)) {
+        if (obj.nVersion == 0 ||
+            obj.nVersion > ProTxVersion::GetMax(/*is_basic_scheme_active=*/true, /*is_extended_addr=*/true)) {
             // unknown version, bail out early
             return;
         }
@@ -257,7 +271,7 @@ public:
 
     [[nodiscard]] UniValue ToJson() const;
 
-    bool IsTriviallyValid(bool is_basic_scheme_active, TxValidationState& state) const;
+    bool IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const;
 };
 
 template <typename ProTx>
@@ -266,9 +280,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, TxValida
     if (uint256 inputsHash = CalcTxInputsHash(tx); inputsHash != proTx.inputsHash) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-inputs-hash");
     }
-
     return true;
 }
-
 
 #endif // BITCOIN_EVO_PROVIDERTX_H

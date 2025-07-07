@@ -62,45 +62,24 @@ public:
         // only non-initial values
         assert(_internalId != std::numeric_limits<uint64_t>::max());
     }
-
     template <typename Stream>
-    CDeterministicMN(deserialize_type, Stream& s, const uint8_t format_version)
-    {
-        SerializationOp(s, CSerActionUnserialize(), format_version);
-    }
+    CDeterministicMN(deserialize_type, Stream& s) { s >> *this; }
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, const uint8_t format_version)
+    SERIALIZE_METHODS(CDeterministicMN, obj)
     {
-        // We no longer support EvoDB formats below MN_VERSION_FORMAT
-        if (format_version < MN_VERSION_FORMAT) {
-            throw std::ios_base::failure("EvoDb too old, run Dash Core with -reindex to rebuild");
-        }
-        READWRITE(proTxHash);
-        READWRITE(VARINT(internalId));
-        READWRITE(collateralOutpoint);
-        READWRITE(nOperatorReward);
-        READWRITE(pdmnState);
+        READWRITE(obj.proTxHash);
+        READWRITE(VARINT(obj.internalId));
+        READWRITE(obj.collateralOutpoint);
+        READWRITE(obj.nOperatorReward);
+        READWRITE(obj.pdmnState);
         // We can't know if we are serialising for the Disk or for the Network here (s.GetType() is not accessible)
         // Therefore if s.GetVersion() == CLIENT_VERSION -> Then we know we are serialising for the Disk
         // Otherwise, we can safely check with protocol versioning logic so we won't break old clients
         if (s.GetVersion() == CLIENT_VERSION || s.GetVersion() >= DMN_TYPE_PROTO_VERSION) {
-            READWRITE(nType);
+            READWRITE(obj.nType);
         } else {
-            nType = MnType::Regular;
+            SER_READ(obj, obj.nType = MnType::Regular);
         }
-    }
-
-    template<typename Stream>
-    void Serialize(Stream& s) const
-    {
-        const_cast<CDeterministicMN*>(this)->SerializationOp(s, CSerActionSerialize(), MN_CURRENT_FORMAT);
-    }
-
-    template <typename Stream>
-    void Unserialize(Stream& s, const uint8_t format_version = MN_CURRENT_FORMAT)
-    {
-        SerializationOp(s, CSerActionUnserialize(), format_version);
     }
 
     [[nodiscard]] uint64_t GetInternalId() const;
@@ -193,25 +172,34 @@ public:
     void Serialize(Stream& s) const
     {
         const_cast<CDeterministicMNList*>(this)->SerializationOpBase(s, CSerActionSerialize());
+
         // Serialize the map as a vector
         WriteCompactSize(s, mnMap.size());
-        for (const auto& p : mnMap) {
-            s << *p.second;
+        for (const auto& [_, dmn] : mnMap) {
+            s << *dmn;
         }
     }
 
-    template<typename Stream>
-    void Unserialize(Stream& s, const uint8_t format_version = CDeterministicMN::MN_CURRENT_FORMAT) {
-        mnMap = MnMap();
-        mnUniquePropertyMap = MnUniquePropertyMap();
-        mnInternalIdMap = MnInternalIdMap();
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        Clear();
 
         SerializationOpBase(s, CSerActionUnserialize());
 
-        size_t cnt = ReadCompactSize(s);
-        for (size_t i = 0; i < cnt; i++) {
-            AddMN(std::make_shared<CDeterministicMN>(deserialize, s, format_version), false);
+        for (size_t to_read = ReadCompactSize(s); to_read > 0; --to_read) {
+            AddMN(std::make_shared<CDeterministicMN>(deserialize, s), /*fBumpTotalCount=*/false);
         }
+    }
+
+    void Clear()
+    {
+        blockHash = uint256{};
+        nHeight = -1;
+        nTotalRegisteredCount = 0;
+        mnMap = MnMap();
+        mnUniquePropertyMap = MnUniquePropertyMap();
+        mnInternalIdMap = MnInternalIdMap();
     }
 
     [[nodiscard]] size_t GetAllMNsCount() const
@@ -397,6 +385,8 @@ private:
         DMNL_NO_TEMPLATE(CBLSPublicKey);
         DMNL_NO_TEMPLATE(MnNetInfo);
         DMNL_NO_TEMPLATE(NetInfoEntry);
+        DMNL_NO_TEMPLATE(NetInfoInterface);
+        DMNL_NO_TEMPLATE(std::shared_ptr<NetInfoInterface>);
 #undef DMNL_NO_TEMPLATE
         return ::SerializeHash(v);
     }
@@ -483,46 +473,39 @@ public:
     void Serialize(Stream& s) const
     {
         s << addedMNs;
+
         WriteCompactSize(s, updatedMNs.size());
-        for (const auto& p : updatedMNs) {
-            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, p.first);
-            s << p.second;
+        for (const auto& [internalId, pdmnState] : updatedMNs) {
+            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, internalId);
+            s << pdmnState;
         }
+
         WriteCompactSize(s, removedMns.size());
-        for (const auto& p : removedMns) {
-            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, p);
+        for (const auto& internalId : removedMns) {
+            WriteVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s, internalId);
         }
     }
 
     template <typename Stream>
-    void Unserialize(Stream& s, const uint8_t format_version = CDeterministicMN::MN_CURRENT_FORMAT)
+    void Unserialize(Stream& s)
     {
         updatedMNs.clear();
         removedMns.clear();
 
-        size_t tmp;
-        uint64_t tmp2;
-        tmp = ReadCompactSize(s);
-        for (size_t i = 0; i < tmp; i++) {
-            CDeterministicMN mn(0);
-            mn.Unserialize(s, format_version);
-            auto dmn = std::make_shared<CDeterministicMN>(mn);
-            addedMNs.push_back(dmn);
+        for (size_t to_read = ReadCompactSize(s); to_read > 0; --to_read) {
+            addedMNs.push_back(std::make_shared<CDeterministicMN>(deserialize, s));
         }
-        tmp = ReadCompactSize(s);
-        for (size_t i = 0; i < tmp; i++) {
-            CDeterministicMNStateDiff diff;
-            // CDeterministicMNState hold new fields {nConsecutivePayments, platformNodeID, platformP2PPort, platformHTTPPort} but no migration is needed here since:
-            // CDeterministicMNStateDiff is always serialised using a bitmask.
-            // Because the new field have a new bit guide value then we are good to continue
-            tmp2 = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
-            s >> diff;
-            updatedMNs.emplace(tmp2, std::move(diff));
+
+        for (size_t to_read = ReadCompactSize(s); to_read > 0; --to_read) {
+            uint64_t internalId = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
+            // CDeterministicMNState can have newer fields but doesn't need migration logic here as CDeterministicMNStateDiff
+            // is always serialised using a bitmask and new fields have a new bit guide value, so we are good to continue.
+            updatedMNs.emplace(internalId, CDeterministicMNStateDiff(deserialize, s));
         }
-        tmp = ReadCompactSize(s);
-        for (size_t i = 0; i < tmp; i++) {
-            tmp2 = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
-            removedMns.emplace(tmp2);
+
+        for (size_t to_read = ReadCompactSize(s); to_read > 0; --to_read) {
+            uint64_t internalId = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
+            removedMns.emplace(internalId);
         }
     }
 

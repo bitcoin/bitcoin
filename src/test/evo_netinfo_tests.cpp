@@ -9,6 +9,7 @@
 #include <evo/netinfo.h>
 #include <netbase.h>
 #include <streams.h>
+#include <util/pointer.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -212,6 +213,29 @@ BOOST_AUTO_TEST_CASE(cservice_compatible)
     netInfo.Clear();
     BOOST_CHECK_EQUAL(netInfo.AddEntry("[2606:4700:4700::1111]:9999"), NetInfoStatus::BadInput);
     BOOST_CHECK(CheckIfSerSame(service, netInfo));
+}
+
+BOOST_AUTO_TEST_CASE(interface_equality)
+{
+    // We also check for symmetry as NetInfoInterface, MnNetInfo and NetInfoEntry
+    // define their operator!= as the inverse of operator==
+    std::shared_ptr<NetInfoInterface> ptr_lhs{nullptr}, ptr_rhs{nullptr};
+
+    // Equal initialization state (uninitialized)
+    BOOST_CHECK(util::shared_ptr_equal(ptr_lhs, ptr_rhs) && !util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+
+    // Unequal initialization state (lhs initialized, rhs unchanged)
+    ptr_lhs = std::make_shared<MnNetInfo>();
+    BOOST_CHECK(!util::shared_ptr_equal(ptr_lhs, ptr_rhs) && util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+
+    // Equal initialization state (lhs unchanged, rhs initialized), same values
+    ptr_rhs = std::make_shared<MnNetInfo>();
+    BOOST_CHECK(ptr_lhs->IsEmpty() && ptr_rhs->IsEmpty());
+    BOOST_CHECK(util::shared_ptr_equal(ptr_lhs, ptr_rhs) && !util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
+
+    // Equal initialization state, same type, differing values
+    BOOST_CHECK_EQUAL(ptr_rhs->AddEntry("1.1.1.1:9999"), NetInfoStatus::Success);
+    BOOST_CHECK(!util::shared_ptr_equal(ptr_lhs, ptr_rhs) && util::shared_ptr_not_equal(ptr_lhs, ptr_rhs));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

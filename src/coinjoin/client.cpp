@@ -193,7 +193,7 @@ void CCoinJoinClientSession::ProcessMessage(CNode& peer, CChainState& active_cha
     if (!m_mn_sync.IsBlockchainSynced()) return;
 
     if (!mixingMasternode) return;
-    if (mixingMasternode->pdmnState->netInfo.GetPrimary() != peer.addr) return;
+    if (mixingMasternode->pdmnState->netInfo->GetPrimary() != peer.addr) return;
 
     if (msg_type == NetMsgType::DSSTATUSUPDATE) {
         CCoinJoinStatusUpdate psssup;
@@ -1113,7 +1113,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
 
         m_clientman.AddUsedMasternode(dsq.masternodeOutpoint);
 
-        if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->netInfo.GetPrimary())) {
+        if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->netInfo->GetPrimary())) {
             WalletCJLogPrint(m_wallet, /* Continued */
                              "CCoinJoinClientSession::JoinExistingQueue -- skipping connection, masternode=%s\n", dmn->proTxHash.ToString());
             continue;
@@ -1185,7 +1185,7 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
             continue;
         }
 
-        if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->netInfo.GetPrimary())) {
+        if (connman.IsMasternodeOrDisconnectRequested(dmn->pdmnState->netInfo->GetPrimary())) {
             WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::StartNewQueue -- skipping connection, masternode=%s\n",
                              dmn->proTxHash.ToString());
             nTries++;
@@ -1225,7 +1225,7 @@ bool CCoinJoinClientSession::ProcessPendingDsaRequest(CConnman& connman)
 
     CService mn_addr;
     if (auto dmn = m_dmnman.GetListAtChainTip().GetMN(pendingDsaRequest.GetProTxHash())) {
-        mn_addr = Assert(dmn->pdmnState)->netInfo.GetPrimary();
+        mn_addr = Assert(dmn->pdmnState)->netInfo->GetPrimary();
     } else {
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::%s -- cannot find address to connect, masternode=%s\n", __func__,
             pendingDsaRequest.GetProTxHash().ToString());
@@ -1827,7 +1827,7 @@ void CCoinJoinClientSession::RelayIn(const CCoinJoinEntry& entry, CConnman& conn
 {
     if (!mixingMasternode) return;
 
-    connman.ForNode(mixingMasternode->pdmnState->netInfo.GetPrimary(), [&entry, &connman, this](CNode* pnode) {
+    connman.ForNode(mixingMasternode->pdmnState->netInfo->GetPrimary(), [&entry, &connman, this](CNode* pnode) {
         WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::RelayIn -- found master, relaying message to %s\n",
                          pnode->addr.ToStringAddrPort());
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
@@ -1883,7 +1883,7 @@ void CCoinJoinClientSession::GetJsonInfo(UniValue& obj) const
         assert(mixingMasternode->pdmnState);
         obj.pushKV("protxhash", mixingMasternode->proTxHash.ToString());
         obj.pushKV("outpoint", mixingMasternode->collateralOutpoint.ToStringShort());
-        obj.pushKV("service", mixingMasternode->pdmnState->netInfo.GetPrimary().ToStringAddrPort());
+        obj.pushKV("service", mixingMasternode->pdmnState->netInfo->GetPrimary().ToStringAddrPort());
     }
     obj.pushKV("denomination", ValueFromAmount(CoinJoin::DenominationToAmount(nSessionDenom)));
     obj.pushKV("state", GetStateString());

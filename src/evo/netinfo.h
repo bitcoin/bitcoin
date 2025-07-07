@@ -71,6 +71,8 @@ public:
         m_type = NetInfoType::Service;
         m_data = service;
     }
+    template <typename Stream>
+    NetInfoEntry(deserialize_type, Stream& s) { s >> *this; }
 
     ~NetInfoEntry() = default;
 
@@ -124,7 +126,33 @@ template<> struct is_serializable_enum<NetInfoEntry::NetInfoType> : std::true_ty
 
 using NetInfoList = std::vector<std::reference_wrapper<const NetInfoEntry>>;
 
-class MnNetInfo
+class NetInfoInterface
+{
+public:
+    static std::shared_ptr<NetInfoInterface> MakeNetInfo(const uint16_t nVersion);
+
+public:
+    virtual ~NetInfoInterface() = default;
+
+    virtual NetInfoStatus AddEntry(const std::string& service) = 0;
+    virtual NetInfoList GetEntries() const = 0;
+
+    virtual const CService& GetPrimary() const = 0;
+    virtual bool CanStorePlatform() const = 0;
+    virtual bool IsEmpty() const = 0;
+    virtual NetInfoStatus Validate() const = 0;
+    virtual std::string ToString() const = 0;
+
+    virtual void Clear() = 0;
+
+    bool operator==(const NetInfoInterface& rhs) const { return typeid(*this) == typeid(rhs) && this->IsEqual(rhs); }
+    bool operator!=(const NetInfoInterface& rhs) const { return !(*this == rhs); }
+
+private:
+    virtual bool IsEqual(const NetInfoInterface& rhs) const = 0;
+};
+
+class MnNetInfo final : public NetInfoInterface
 {
 private:
     NetInfoEntry m_addr{};
@@ -134,10 +162,10 @@ private:
 
 public:
     MnNetInfo() = default;
-    ~MnNetInfo() = default;
+    template <typename Stream>
+    MnNetInfo(deserialize_type, Stream& s) { s >> *this; }
 
-    bool operator==(const MnNetInfo& rhs) const { return m_addr == rhs.m_addr; }
-    bool operator!=(const MnNetInfo& rhs) const { return !(*this == rhs); }
+    ~MnNetInfo() = default;
 
     template <typename Stream>
     void Serialize(Stream& s) const
@@ -162,15 +190,64 @@ public:
         m_addr = NetInfoEntry{service};
     }
 
-    NetInfoStatus AddEntry(const std::string& service);
-    NetInfoList GetEntries() const;
+    NetInfoStatus AddEntry(const std::string& service) override;
+    NetInfoList GetEntries() const override;
 
-    const CService& GetPrimary() const;
-    bool IsEmpty() const { return *this == MnNetInfo(); }
-    NetInfoStatus Validate() const;
-    std::string ToString() const;
+    const CService& GetPrimary() const override;
+    bool IsEmpty() const override { return m_addr.IsEmpty(); }
+    bool CanStorePlatform() const override { return false; }
+    NetInfoStatus Validate() const override;
+    std::string ToString() const override;
 
-    void Clear() { m_addr.Clear(); }
+    void Clear() override { m_addr.Clear(); }
+
+private:
+    // operator== and operator!= are defined by the parent which then leverage the child's IsEqual() override
+    // IsEqual() should only be called by NetInfoInterface::operator== otherwise static_cast assumption could fail
+    bool IsEqual(const NetInfoInterface& rhs) const override
+    {
+        ASSERT_IF_DEBUG(typeid(*this) == typeid(rhs));
+        const auto& rhs_obj{static_cast<const MnNetInfo&>(rhs)};
+        return m_addr == rhs_obj.m_addr;
+    }
+};
+
+class NetInfoSerWrapper
+{
+private:
+    std::shared_ptr<NetInfoInterface>& m_data;
+    const bool m_is_extended{false};
+
+public:
+    NetInfoSerWrapper() = delete;
+    NetInfoSerWrapper(const NetInfoSerWrapper&) = delete;
+    NetInfoSerWrapper(std::shared_ptr<NetInfoInterface>& data, const bool is_extended) :
+        m_data{data},
+        m_is_extended{is_extended}
+    {
+        // TODO: Remove when extended addresses implementation is added in
+        assert(!m_is_extended);
+    }
+
+    ~NetInfoSerWrapper() = default;
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        if (const auto ptr{std::dynamic_pointer_cast<MnNetInfo>(m_data)}) {
+            s << *ptr;
+        } else {
+            // NetInfoInterface::MakeNetInfo() supplied an unexpected implementation or we didn't call it and
+            // are left with a nullptr. Neither should happen.
+            assert(false);
+        }
+    }
+
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        m_data = std::make_shared<MnNetInfo>(deserialize, s);
+    }
 };
 
 #endif // BITCOIN_EVO_NETINFO_H
