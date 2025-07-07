@@ -439,6 +439,9 @@ private:
     //! Set of both spent and unspent transaction outputs owned by this wallet
     std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher> m_txos GUARDED_BY(cs_wallet);
 
+    //! Features of the last client to decrypt this wallet
+    std::optional<uint64_t> m_last_decrypted_features;
+
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
      * block locator and m_last_block_processed, and registering for
@@ -1071,6 +1074,9 @@ public:
     //! Find the private key for the given key id from the wallet's descriptors, if available
     //! Returns nullopt when no descriptor has the key or if the wallet is locked.
     std::optional<CKey> GetKey(const CKeyID& keyid) const;
+
+    //! Set the features of the last client to decrypt this wallet
+    void SetLastDecryptedFeatures(uint64_t features);
 };
 
 /**
