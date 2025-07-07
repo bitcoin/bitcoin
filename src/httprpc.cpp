@@ -9,8 +9,10 @@
 #include <httpserver.h>
 #include <logging.h>
 #include <netaddress.h>
+#include <node/context.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <scheduler.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/strencodings.h>
@@ -26,6 +28,8 @@
 #include <string>
 #include <vector>
 
+using node::NodeContext;
+using http_bitcoin::HTTPRequest;
 using util::SplitString;
 using util::TrimStringView;
 
@@ -38,22 +42,16 @@ static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 class HTTPRPCTimer : public RPCTimerBase
 {
 public:
-    HTTPRPCTimer(struct event_base* eventBase, std::function<void()>& func, int64_t millis) :
-        ev(eventBase, false, func)
+    HTTPRPCTimer(NodeContext* context, std::function<void()>& func, int64_t millis)
     {
-        struct timeval tv;
-        tv.tv_sec = millis/1000;
-        tv.tv_usec = (millis%1000)*1000;
-        ev.trigger(&tv);
+        context->scheduler->scheduleFromNow(func, std::chrono::milliseconds(millis));
     }
-private:
-    HTTPEvent ev;
 };
 
 class HTTPRPCTimerInterface : public RPCTimerInterface
 {
 public:
-    explicit HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
+    explicit HTTPRPCTimerInterface(const std::any& context) : m_context(std::any_cast<NodeContext*>(context))
     {
     }
     const char* Name() override
@@ -62,10 +60,10 @@ public:
     }
     RPCTimerBase* NewTimer(std::function<void()>& func, int64_t millis) override
     {
-        return new HTTPRPCTimer(base, func, millis);
+        return new HTTPRPCTimer(m_context, func, millis);
     }
 private:
-    struct event_base* base;
+    NodeContext* m_context;
 };
 
 
@@ -83,7 +81,7 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
     Assume(jreq.m_json_version != JSONRPCVersion::V2);
 
     // Send error reply from json-rpc error object
-    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
+    HTTPStatusCode nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
 
     if (code == RPC_INVALID_REQUEST)
@@ -143,7 +141,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 {
     // JSONRPC handles only POST
-    if (req->GetRequestMethod() != HTTPRequest::POST) {
+    if (req->GetRequestMethod() != HTTPRequestMethod::POST) {
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return false;
     }
@@ -378,9 +376,7 @@ bool StartHTTPRPC(const std::any& context)
     if (g_wallet_init_interface.HasWalletSupport()) {
         RegisterHTTPHandler("/wallet/", false, handle_rpc);
     }
-    struct event_base* eventBase = EventBase();
-    assert(eventBase);
-    httpRPCTimerInterface = std::make_unique<HTTPRPCTimerInterface>(eventBase);
+    httpRPCTimerInterface = std::make_unique<HTTPRPCTimerInterface>(context);
     RPCSetTimerInterface(httpRPCTimerInterface.get());
     return true;
 }
