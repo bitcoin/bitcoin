@@ -17,7 +17,7 @@ def run(cmd, **kwargs):
 
 
 def main():
-    print("Running test-one-commit on ...")
+    print("Running tests on commit ...")
     run(["git", "log", "-1"])
 
     num_procs = int(run(["nproc"], stdout=subprocess.PIPE).stdout)
