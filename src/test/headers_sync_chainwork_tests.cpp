@@ -182,18 +182,35 @@ static void HappyPath(const CBlockIndex* chain_start,
     HeadersSyncState hss{CreateState(chain_start)};
 
     // Sufficient work transitions us from PRESYNC to REDOWNLOAD:
+    const auto genesis_hash{Params().GenesisBlock().GetHash()};
     CHECK_RESULT(hss.ProcessNextHeaders(first_chain, /*full_headers_message=*/true),
         hss, /*exp_state=*/State::REDOWNLOAD,
         /*exp_success*/true, /*exp_request_more=*/true,
         /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
-        /*exp_locator_hash=*/Params().GenesisBlock().GetHash());
+        /*exp_locator_hash=*/genesis_hash);
 
-    CHECK_RESULT(hss.ProcessNextHeaders(first_chain, /*full_headers_message=*/true),
-        // Nothing left for the sync logic to do:
+    // Process only so that the internal threshold isn't met, meaning validated
+    // headers shouldn't be returned yet:
+    CHECK_RESULT(hss.ProcessNextHeaders({first_chain.begin(), REDOWNLOAD_BUFFER_SIZE}, true),
+        // Not done:
+        hss, /*exp_state=*/State::REDOWNLOAD,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/first_chain[REDOWNLOAD_BUFFER_SIZE - 1].GetHash());
+
+    CHECK_RESULT(hss.ProcessNextHeaders({first_chain.begin() + REDOWNLOAD_BUFFER_SIZE, 1}, true),
+        hss, /*exp_state=*/State::REDOWNLOAD,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*exp_headers_size=*/1, /*exp_pow_validated_prev=*/genesis_hash,
+        /*exp_locator_hash=*/first_chain[REDOWNLOAD_BUFFER_SIZE].GetHash());
+
+    // Feed in remaining headers, meeting the work threshold again and
+    // completing the REDOWNLOAD phase.
+    CHECK_RESULT(hss.ProcessNextHeaders({first_chain.begin() + REDOWNLOAD_BUFFER_SIZE + 1, first_chain.end()}, true),
         hss, /*exp_state=*/State::FINAL,
         /*exp_success*/true, /*exp_request_more=*/false,
-        // All headers should be ready for acceptance:
-        /*exp_headers_size=*/first_chain.size(), /*exp_pow_validated_prev=*/Params().GenesisBlock().GetHash(),
+        // All headers except the one already returned above:
+        /*exp_headers_size=*/first_chain.size() - 1, /*exp_pow_validated_prev=*/first_chain.front().GetHash(),
         /*exp_locator_hash=*/std::nullopt);
 }
 
