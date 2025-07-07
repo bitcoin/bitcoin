@@ -80,7 +80,23 @@ void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
 
 std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
 {
-    return std::make_unique<MockableDatabase>(dynamic_cast<MockableDatabase&>(database).m_records);
+    std::unique_ptr<DatabaseBatch> batch_orig = database.MakeBatch();
+    std::unique_ptr<DatabaseCursor> cursor_orig = batch_orig->GetNewCursor();
+
+    std::unique_ptr<WalletDatabase> new_db = std::make_unique<MockableDatabase>();
+    std::unique_ptr<DatabaseBatch> new_db_batch = new_db->MakeBatch();
+    MockableBatch* batch_new = dynamic_cast<MockableBatch*>(new_db_batch.get());
+    Assert(batch_new);
+
+    while (true) {
+        DataStream key, value;
+        DatabaseCursor::Status status = cursor_orig->Next(key, value);
+        Assert(status != DatabaseCursor::Status::FAIL);
+        if (status != DatabaseCursor::Status::MORE) break;
+        batch_new->WriteKey(std::move(key), std::move(value));
+    }
+
+    return new_db;
 }
 
 std::string getnewaddress(CWallet& w)
@@ -183,9 +199,9 @@ bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
     return true;
 }
 
-std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase(MockableData records)
+std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase()
 {
-    return std::make_unique<MockableDatabase>(records);
+    return std::make_unique<MockableDatabase>();
 }
 
 MockableDatabase& GetMockableDatabase(CWallet& wallet)
