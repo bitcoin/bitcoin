@@ -40,15 +40,31 @@ class CreateTxWalletTest(BitcoinTestFramework):
 
     def test_anti_fee_sniping(self):
         self.log.info('Check that we have some (old) blocks and that anti-fee-sniping is disabled')
+
+        # sendtoaddress RPC
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
+        assert_equal(tx['locktime'], 0)
+
+        # send RPC
+        outputs = [{self.nodes[0].getnewaddress(): 1}]
+        res = self.nodes[0].send(outputs=outputs)
+        assert(res["complete"])
+        tx = self.nodes[0].gettransaction(txid=res['txid'], verbose=True)['decoded']
         assert_equal(tx['locktime'], 0)
 
         self.log.info('Check that anti-fee-sniping is enabled when we mine a recent block')
         self.generate(self.nodes[0], 1)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
+        assert 0 < tx['locktime'] <= 201
+
+        # send RPC
+        outputs = [{self.nodes[0].getnewaddress(): 1}]
+        res = self.nodes[0].send(outputs=outputs)
+        assert(res["complete"])
+        tx = self.nodes[0].gettransaction(txid=res['txid'], verbose=True)['decoded']
         assert 0 < tx['locktime'] <= 201
 
     def test_tx_size_too_large(self):
