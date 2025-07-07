@@ -839,7 +839,7 @@ static std::vector<RPCResult> OrphanDescription()
     };
 }
 
-static UniValue OrphanToJSON(const node::TxOrphanage::OrphanTxBase& orphan)
+static UniValue OrphanToJSON(const node::TxOrphanage::OrphanInfo& orphan)
 {
     UniValue o(UniValue::VOBJ);
     o.pushKV("txid", orphan.tx->GetHash().ToString());
@@ -895,7 +895,7 @@ static RPCHelpMan getorphantxs()
         {
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             PeerManager& peerman = EnsurePeerman(node);
-            std::vector<node::TxOrphanage::OrphanTxBase> orphanage = peerman.GetOrphanTransactions();
+            std::vector<node::TxOrphanage::OrphanInfo> orphanage = peerman.GetOrphanTransactions();
 
             int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0, /*allow_bool*/false)};
 
