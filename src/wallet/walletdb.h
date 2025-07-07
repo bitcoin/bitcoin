@@ -263,6 +263,8 @@ public:
     bool WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal);
     bool EraseActiveScriptPubKeyMan(uint8_t type, bool internal);
 
+    bool WriteLastOpenedVersion();
+
     DBErrors LoadWallet(CWallet* pwallet);
 
     //! Delete records of the given types
