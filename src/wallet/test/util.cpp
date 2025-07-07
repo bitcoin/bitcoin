@@ -98,6 +98,30 @@ std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
         batch_new->WriteKey(std::move(key), std::move(value));
     }
 
+    std::unique_ptr<DatabaseCursor> txs_cursor_orig = batch_orig->GetNewTransactionsCursor();
+    SQLiteCursor* txs_cursor = dynamic_cast<SQLiteCursor*>(txs_cursor_orig.get());
+    while (true) {
+        Txid txid;
+        DataStream ser_tx;
+        std::optional<std::string> comment;
+        std::optional<std::string> comment_to;
+        std::optional<Txid> replaces;
+        std::optional<Txid> replaced_by;
+        uint32_t timesmart;
+        uint32_t timereceived;
+        int64_t order_pos;
+        std::vector<std::string> messages;
+        std::vector<std::string> payment_requests;
+        int32_t state_type;
+        std::vector<unsigned char> state_data;
+
+        DatabaseCursor::Status status = txs_cursor->NextTx(txid, ser_tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data);
+        Assert(status != DatabaseCursor::Status::FAIL);
+        if (status == DatabaseCursor::Status::DONE) break;
+
+        batch_new->WriteTx(txid, ser_tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data);
+    }
+
     return new_db;
 }
 
