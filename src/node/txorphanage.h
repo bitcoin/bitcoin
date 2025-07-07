@@ -41,13 +41,13 @@ public:
     using Count = unsigned int;
 
     /** Allows providing orphan information externally */
-    struct OrphanTxBase {
+    struct OrphanInfo {
         CTransactionRef tx;
         /** Peers added with AddTx or AddAnnouncer. */
         std::set<NodeId> announcers;
 
         // Constructor with moved announcers
-        OrphanTxBase(CTransactionRef tx, std::set<NodeId>&& announcers) :
+        OrphanInfo(CTransactionRef tx, std::set<NodeId>&& announcers) :
             tx(std::move(tx)),
             announcers(std::move(announcers))
         {}
@@ -99,7 +99,7 @@ public:
     virtual std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const = 0;
 
     /** Get all orphan transactions */
-    virtual std::vector<OrphanTxBase> GetOrphanTransactions() const = 0;
+    virtual std::vector<OrphanInfo> GetOrphanTransactions() const = 0;
 
     /** Get the total usage (weight) of all orphans. If an orphan has multiple announcers, its usage is
      * only counted once within this total. */
