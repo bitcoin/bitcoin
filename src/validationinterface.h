@@ -115,7 +115,6 @@ protected:
     virtual void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) {}
     /**
      * Notifies listeners of a block being connected.
-     * Provides a vector of transactions evicted from the mempool as a result.
      *
      * Called on a background thread.
      */
