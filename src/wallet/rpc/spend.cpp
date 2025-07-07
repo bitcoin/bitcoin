@@ -97,17 +97,8 @@ std::set<int> InterpretSubtractFeeFromOutputInstructions(const UniValue& sffo_in
 
 static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx)
 {
-    bool can_anti_fee_snipe = !options.exists("locktime");
-
-    for (const CTxIn& tx_in : rawTx.vin) {
-        // Checks sequence values consistent with DiscourageFeeSniping
-        can_anti_fee_snipe &= (tx_in.nSequence == CTxIn::MAX_SEQUENCE_NONFINAL || tx_in.nSequence == MAX_BIP125_RBF_SEQUENCE);
-    }
-
-    if (can_anti_fee_snipe) {
-        LOCK(pwallet->cs_wallet);
-        FastRandomContext rng_fast;
-        DiscourageFeeSniping(rawTx, rng_fast, pwallet->chain(), pwallet->GetLastBlockHash(), pwallet->GetLastBlockHeight());
+    if (!options.exists("locktime")) {
+        MaybeDiscourageFeeSniping2(*pwallet, rawTx);
     }
 
     // Make a blank psbt

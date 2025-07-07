@@ -104,6 +104,9 @@ const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& 
  */
 std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+void MaybeDiscourageFeeSniping2(const CWallet &wallet,
+                               CMutableTransaction& tx);
+
 struct SelectionFilter {
     CoinEligibilityFilter filter;
     bool allow_mixed_output_types{true};
@@ -212,12 +215,6 @@ struct CreatedTransactionResult
     CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
         : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
 };
-
-/**
- * Set a height-based locktime for new transactions (uses the height of the
- * current chain tip unless we are not synced with the current chain
- */
-void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
