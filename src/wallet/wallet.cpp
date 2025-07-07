@@ -641,6 +641,16 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
             if (Unlock(plain_master_key)) {
                 // Now that we've unlocked, upgrade the descriptor cache
                 UpgradeDescriptorCache();
+
+                if (!m_last_decrypted_features || *m_last_decrypted_features != WALLET_CLIENT_FEATURES) {
+                    // Write the current wallet client features to LAST_DECRYPTED_FEATURES.
+                    // This must be done after all automatic upgrades so that those upgrades can be
+                    // performed in an upgrade-downgrade-upgrade scenario.
+                    WalletBatch batch(GetDatabase());
+                    batch.WriteLastDecryptedFeatures();
+                    SetLastDecryptedFeatures(WALLET_CLIENT_FEATURES);
+                }
+
                 return true;
             }
         }
@@ -4605,4 +4615,8 @@ void CWallet::DisconnectChainNotifications()
     }
 }
 
+void CWallet::SetLastDecryptedFeatures(uint64_t features)
+{
+    m_last_decrypted_features = features;
+}
 } // namespace wallet
