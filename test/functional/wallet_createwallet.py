@@ -16,6 +16,7 @@ from test_framework.wallet_util import generate_keypair, WalletUnlock
 
 
 EMPTY_PASSPHRASE_MSG = "Empty string given as passphrase, wallet will not be encrypted."
+WALLET_CLIENT_VERSION = 0x40000000
 
 
 class CreateWalletTest(BitcoinTestFramework):
@@ -170,12 +171,9 @@ class CreateWalletTest(BitcoinTestFramework):
         with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Last client version = ", "Wallet file version = "]):
             node.createwallet("version_check")
         wallet = node.get_wallet_rpc("version_check")
-        wallet_version = wallet.getwalletinfo()["walletversion"]
-        client_version = node.getnetworkinfo()["version"]
         wallet.unloadwallet()
         with node.assert_debug_log(
-            expected_msgs=[f"Last client version = {client_version}", f"Wallet file version = {wallet_version}"],
-            unexpected_msgs=["Wallet file version = 10500"]
+            expected_msgs=[f"Last client version = {WALLET_CLIENT_VERSION}"]
         ):
             node.loadwallet("version_check")
 
