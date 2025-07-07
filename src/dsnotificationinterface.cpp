@@ -106,7 +106,7 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
 {
     assert(m_cj_ctx && m_llmq_ctx);
 
-    m_llmq_ctx->isman->TransactionAddedToMempool(m_peerman, ptx);
+    m_llmq_ctx->isman->TransactionAddedToMempool(ptx);
     m_llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
     m_cj_ctx->dstxman->TransactionAddedToMempool(ptx);
 }

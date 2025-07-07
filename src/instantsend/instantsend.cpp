@@ -409,7 +409,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
     ResolveBlockConflicts(hash, *islock);
 
     if (found_transaction) {
-        RemoveMempoolConflictsForLock(peerman, hash, *islock);
+        RemoveMempoolConflictsForLock(hash, *islock);
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about lock %s for tx %s\n", __func__,
                  hash.ToString(), tx->GetHash().ToString());
         GetMainSignals().NotifyTransactionLock(tx, islock);
@@ -428,7 +428,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
     }
 }
 
-void CInstantSendManager::TransactionAddedToMempool(PeerManager& peerman, const CTransactionRef& tx)
+void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
     if (!IsInstantSendEnabled() || !m_mn_sync.IsBlockchainSynced() || tx->vin.empty()) {
         return;
@@ -459,7 +459,7 @@ void CInstantSendManager::TransactionAddedToMempool(PeerManager& peerman, const 
         // TX is not locked, so make sure it is tracked
         AddNonLockedTx(tx, nullptr);
     } else {
-        RemoveMempoolConflictsForLock(peerman, ::SerializeHash(*islock), *islock);
+        RemoveMempoolConflictsForLock(::SerializeHash(*islock), *islock);
     }
 }
 
@@ -691,8 +691,7 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
     }
 }
 
-void CInstantSendManager::RemoveMempoolConflictsForLock(PeerManager& peerman, const uint256& hash,
-                                                        const instantsend::InstantSendLock& islock)
+void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const instantsend::InstantSendLock& islock)
 {
     std::unordered_map<uint256, CTransactionRef, StaticSaltedHasher> toDelete;
 
@@ -717,11 +716,8 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(PeerManager& peerman, co
         }
     }
 
-    if (!toDelete.empty()) {
-        for (const auto& p : toDelete) {
-            RemoveConflictedTx(*p.second);
-        }
-        peerman.AskPeersForTransaction(islock.txid, /*is_masternode=*/m_signer != nullptr);
+    for (const auto& p : toDelete) {
+        RemoveConflictedTx(*p.second);
     }
 }
 
