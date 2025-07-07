@@ -1682,6 +1682,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
             if (queue.pindex)
                 stats.vHeightInFlight.push_back(queue.pindex->nHeight);
         }
+        stats.m_last_block_announcement = NodeSeconds{std::chrono::seconds{state->m_last_block_announcement}};
     }
 
     PeerRef peer = GetPeerRef(nodeid);
