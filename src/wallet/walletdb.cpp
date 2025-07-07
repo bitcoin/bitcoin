@@ -42,6 +42,7 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string LAST_DECRYPTED_FEATURES{"lastdecryptedfeatures"};
 const std::string LAST_OPENED_FEATURES{"lastopenedfeatures"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
@@ -1157,6 +1158,11 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         if (uint64_t features; m_batch->Read(DBKeys::LAST_OPENED_FEATURES, features)) {
             last_client_features = features;
         }
+
+        // Features of last client to decrypt this wallet
+        if (uint64_t last_decrypted; m_batch->Read(DBKeys::LAST_DECRYPTED_FEATURES, last_decrypted)) {
+            pwallet->SetLastDecryptedFeatures(last_decrypted);
+        }
     }
 
     try {
@@ -1235,6 +1241,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         pwallet->mapMasterKeys.clear();
     }
 
+    // Discard stale decryption features before updating the version, so that a locked
+    // reload cannot restore the features recorded before a downgrade.
+    if (last_client < VERSION_LAST_CLIENT_FEATURES && m_batch->Exists(DBKeys::LAST_DECRYPTED_FEATURES)) {
+        if (!EraseIC(DBKeys::LAST_DECRYPTED_FEATURES)) {
+            pwallet->WalletLogPrintf("Error: Unable to erase last decrypted client features.\n");
+            return DBErrors::LOAD_FAIL;
+        }
+    }
 
     // Record the current client version as the last version to successfully open this wallet file
     // This must always be done after all automatic upgrades so that those upgrades can be performed
@@ -1321,6 +1335,11 @@ bool WalletBatch::WriteLastOpenedVersion()
 bool WalletBatch::WriteLastOpenedFeatures()
 {
     return WriteIC(DBKeys::LAST_OPENED_FEATURES, WALLET_CLIENT_FEATURES);
+}
+
+bool WalletBatch::WriteLastDecryptedFeatures()
+{
+    return WriteIC(DBKeys::LAST_DECRYPTED_FEATURES, WALLET_CLIENT_FEATURES);
 }
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
