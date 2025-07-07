@@ -56,6 +56,18 @@ enum WalletFlags : uint64_t {
     WALLET_FLAG_EXTERNAL_SIGNER = (1ULL << 35),
 };
 
+// Version numbers for the wallet client that opens a wallet
+// These numbers will be written as the last client version in the "version" record and can be used to detect
+// when an upgrade-downgrade-upgrade was performed. However, we should prefer to use LastClientFeatures rather
+// than new version numbers.
+// New version numbers must be greater than 299900 which is guaranteed by setting bit 30
+enum WalletClientVersion : int32_t {
+    // OR with all versions to set bit 30
+    VERSION_MASK = (1ULL << 30),
+
+    VERSION_LATEST = VERSION_MASK
+};
+
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
 
