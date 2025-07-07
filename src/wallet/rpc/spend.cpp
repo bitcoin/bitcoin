@@ -146,9 +146,6 @@ static void PreventOutdatedOptions(const UniValue& options)
     if (options.exists("changePosition")) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Use change_position instead of changePosition");
     }
-    if (options.exists("includeWatching")) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use include_watching instead of includeWatching");
-    }
     if (options.exists("lockUnspents")) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Use lock_unspents instead of lockUnspents");
     }
@@ -516,126 +513,118 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
     std::optional<unsigned int> change_position;
     bool lockUnspents = false;
     if (!options.isNull()) {
-      if (options.type() == UniValue::VBOOL) {
-        // backward compatibility bool only fallback
-        coinControl.fAllowWatchOnly = options.get_bool();
-      }
-      else {
-        RPCTypeCheckObj(options,
-            {
-                {"add_inputs", UniValueType(UniValue::VBOOL)},
-                {"include_unsafe", UniValueType(UniValue::VBOOL)},
-                {"add_to_wallet", UniValueType(UniValue::VBOOL)},
-                {"changeAddress", UniValueType(UniValue::VSTR)},
-                {"change_address", UniValueType(UniValue::VSTR)},
-                {"changePosition", UniValueType(UniValue::VNUM)},
-                {"change_position", UniValueType(UniValue::VNUM)},
-                {"change_type", UniValueType(UniValue::VSTR)},
-                {"includeWatching", UniValueType(UniValue::VBOOL)},
-                {"include_watching", UniValueType(UniValue::VBOOL)},
-                {"inputs", UniValueType(UniValue::VARR)},
-                {"lockUnspents", UniValueType(UniValue::VBOOL)},
-                {"lock_unspents", UniValueType(UniValue::VBOOL)},
-                {"locktime", UniValueType(UniValue::VNUM)},
-                {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
-                {"feeRate", UniValueType()}, // will be checked by AmountFromValue() below
-                {"psbt", UniValueType(UniValue::VBOOL)},
-                {"solving_data", UniValueType(UniValue::VOBJ)},
-                {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
-                {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
-                {"replaceable", UniValueType(UniValue::VBOOL)},
-                {"conf_target", UniValueType(UniValue::VNUM)},
-                {"estimate_mode", UniValueType(UniValue::VSTR)},
-                {"minconf", UniValueType(UniValue::VNUM)},
-                {"maxconf", UniValueType(UniValue::VNUM)},
-                {"input_weights", UniValueType(UniValue::VARR)},
-                {"max_tx_weight", UniValueType(UniValue::VNUM)},
-            },
-            true, true);
+        if (options.type() == UniValue::VBOOL) {
+            // backward compatibility bool only fallback, does nothing
+        } else {
+            RPCTypeCheckObj(options,
+                {
+                    {"add_inputs", UniValueType(UniValue::VBOOL)},
+                    {"include_unsafe", UniValueType(UniValue::VBOOL)},
+                    {"add_to_wallet", UniValueType(UniValue::VBOOL)},
+                    {"changeAddress", UniValueType(UniValue::VSTR)},
+                    {"change_address", UniValueType(UniValue::VSTR)},
+                    {"changePosition", UniValueType(UniValue::VNUM)},
+                    {"change_position", UniValueType(UniValue::VNUM)},
+                    {"change_type", UniValueType(UniValue::VSTR)},
+                    {"includeWatching", UniValueType(UniValue::VBOOL)},
+                    {"include_watching", UniValueType(UniValue::VBOOL)},
+                    {"inputs", UniValueType(UniValue::VARR)},
+                    {"lockUnspents", UniValueType(UniValue::VBOOL)},
+                    {"lock_unspents", UniValueType(UniValue::VBOOL)},
+                    {"locktime", UniValueType(UniValue::VNUM)},
+                    {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
+                    {"feeRate", UniValueType()}, // will be checked by AmountFromValue() below
+                    {"psbt", UniValueType(UniValue::VBOOL)},
+                    {"solving_data", UniValueType(UniValue::VOBJ)},
+                    {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
+                    {"subtract_fee_from_outputs", UniValueType(UniValue::VARR)},
+                    {"replaceable", UniValueType(UniValue::VBOOL)},
+                    {"conf_target", UniValueType(UniValue::VNUM)},
+                    {"estimate_mode", UniValueType(UniValue::VSTR)},
+                    {"minconf", UniValueType(UniValue::VNUM)},
+                    {"maxconf", UniValueType(UniValue::VNUM)},
+                    {"input_weights", UniValueType(UniValue::VARR)},
+                    {"max_tx_weight", UniValueType(UniValue::VNUM)},
+                },
+                true, true);
 
-        if (options.exists("add_inputs")) {
-            coinControl.m_allow_other_inputs = options["add_inputs"].get_bool();
-        }
-
-        if (options.exists("changeAddress") || options.exists("change_address")) {
-            const std::string change_address_str = (options.exists("change_address") ? options["change_address"] : options["changeAddress"]).get_str();
-            CTxDestination dest = DecodeDestination(change_address_str);
-
-            if (!IsValidDestination(dest)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
+            if (options.exists("add_inputs")) {
+                coinControl.m_allow_other_inputs = options["add_inputs"].get_bool();
             }
 
-            coinControl.destChange = dest;
-        }
-
-        if (options.exists("changePosition") || options.exists("change_position")) {
-            int pos = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).getInt<int>();
-            if (pos < 0 || (unsigned int)pos > recipients.size()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
-            }
-            change_position = (unsigned int)pos;
-        }
-
-        if (options.exists("change_type")) {
             if (options.exists("changeAddress") || options.exists("change_address")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both change address and address type options");
+                const std::string change_address_str = (options.exists("change_address") ? options["change_address"] : options["changeAddress"]).get_str();
+                CTxDestination dest = DecodeDestination(change_address_str);
+
+                if (!IsValidDestination(dest)) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
+                }
+
+                coinControl.destChange = dest;
             }
-            if (std::optional<OutputType> parsed = ParseOutputType(options["change_type"].get_str())) {
-                coinControl.m_change_type.emplace(parsed.value());
-            } else {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown change type '%s'", options["change_type"].get_str()));
+
+            if (options.exists("changePosition") || options.exists("change_position")) {
+                int pos = (options.exists("change_position") ? options["change_position"] : options["changePosition"]).getInt<int>();
+                if (pos < 0 || (unsigned int)pos > recipients.size()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
+                }
+                change_position = (unsigned int)pos;
             }
-        }
 
-        const UniValue include_watching_option = options.exists("include_watching") ? options["include_watching"] : options["includeWatching"];
-        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(include_watching_option, wallet);
-
-        if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
-            lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
-        }
-
-        if (options.exists("include_unsafe")) {
-            coinControl.m_include_unsafe_inputs = options["include_unsafe"].get_bool();
-        }
-
-        if (options.exists("feeRate")) {
-            if (options.exists("fee_rate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both fee_rate (" + CURRENCY_ATOM + "/vB) and feeRate (" + CURRENCY_UNIT + "/kvB)");
+            if (options.exists("change_type")) {
+                if (options.exists("changeAddress") || options.exists("change_address")) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both change address and address type options");
+                }
+                if (std::optional<OutputType> parsed = ParseOutputType(options["change_type"].get_str())) {
+                    coinControl.m_change_type.emplace(parsed.value());
+                } else {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown change type '%s'", options["change_type"].get_str()));
+                }
             }
-            if (options.exists("conf_target")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
+
+            if (options.exists("lockUnspents") || options.exists("lock_unspents")) {
+                lockUnspents = (options.exists("lock_unspents") ? options["lock_unspents"] : options["lockUnspents"]).get_bool();
             }
-            if (options.exists("estimate_mode")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
+
+            if (options.exists("include_unsafe")) {
+                coinControl.m_include_unsafe_inputs = options["include_unsafe"].get_bool();
             }
-            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
-            coinControl.fOverrideFeeRate = true;
-        }
 
-        if (options.exists("replaceable")) {
-            coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
-        }
-
-        if (options.exists("minconf")) {
-            coinControl.m_min_depth = options["minconf"].getInt<int>();
-
-            if (coinControl.m_min_depth < 0) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
+            if (options.exists("feeRate")) {
+                if (options.exists("fee_rate")) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both fee_rate (" + CURRENCY_ATOM + "/vB) and feeRate (" + CURRENCY_UNIT + "/kvB)");
+                }
+                if (options.exists("conf_target")) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
+                }
+                if (options.exists("estimate_mode")) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
+                }
+                coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
+                coinControl.fOverrideFeeRate = true;
             }
-        }
 
-        if (options.exists("maxconf")) {
-            coinControl.m_max_depth = options["maxconf"].getInt<int>();
-
-            if (coinControl.m_max_depth < coinControl.m_min_depth) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("maxconf can't be lower than minconf: %d < %d", coinControl.m_max_depth, coinControl.m_min_depth));
+            if (options.exists("replaceable")) {
+                coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
             }
+
+            if (options.exists("minconf")) {
+                coinControl.m_min_depth = options["minconf"].getInt<int>();
+
+                if (coinControl.m_min_depth < 0) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconf");
+                }
+            }
+
+            if (options.exists("maxconf")) {
+                coinControl.m_max_depth = options["maxconf"].getInt<int>();
+
+                if (coinControl.m_max_depth < coinControl.m_min_depth) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("maxconf can't be lower than minconf: %d < %d", coinControl.m_max_depth, coinControl.m_min_depth));
+                }
+            }
+            SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
         }
-        SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
-      }
-    } else {
-        // if options is null and not a bool
-        coinControl.fAllowWatchOnly = ParseIncludeWatchonly(NullUniValue, wallet);
     }
 
     if (options.exists("solving_data")) {
@@ -757,13 +746,12 @@ RPCHelpMan fundrawtransaction()
                 "Note that all inputs selected must be of standard form and P2SH scripts must be\n"
                 "in the wallet using importdescriptors (to calculate fees).\n"
                 "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
-                "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only.\n"
                 "Note that if specifying an exact fee rate, the resulting transaction may have a higher fee rate\n"
                 "if the transaction has unconfirmed inputs. This is because the wallet will attempt to make the\n"
                 "entire package have the given fee rate, not the resulting transaction.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
-                    {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "For backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}",
+                    {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         Cat<std::vector<RPCArg>>(
                         {
                             {"add_inputs", RPCArg::Type::BOOL, RPCArg::Default{true}, "For a transaction with existing inputs, automatically include more if they are not enough."},
@@ -775,9 +763,7 @@ RPCHelpMan fundrawtransaction()
                             {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"automatic"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
-                            {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
-                                                          "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                                          "e.g. with 'importdescriptors'."},
+                            {"includeWatching", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
@@ -1081,7 +1067,6 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
     CCoinControl coin_control;
-    coin_control.fAllowWatchOnly = pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     // optional parameters
     coin_control.m_signal_bip125_rbf = true;
     std::vector<CTxOut> outputs;
@@ -1240,9 +1225,7 @@ RPCHelpMan send()
                     {"change_position", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                     {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if change_address is not specified. Options are \"legacy\", \"p2sh-segwit\", \"bech32\" and \"bech32m\"."},
                     {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
-                    {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
-                                          "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                          "e.g. with 'importdescriptors'."},
+                    {"include_watching", RPCArg::Type::BOOL, RPCArg::Default{"false"}, "(DEPRECATED) No longer used"},
                     {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Specify inputs instead of adding them automatically.",
                         {
                           {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "", {
@@ -1360,9 +1343,7 @@ RPCHelpMan sendall()
                     {
                         {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns the serialized transaction without broadcasting or adding it to the wallet"},
                         {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
-                        {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch-only.\n"
-                                              "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
-                                              "e.g. with 'importdescriptors'."},
+                        {"include_watching", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                         {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Use exactly the specified inputs to build the transaction. Specifying inputs is incompatible with the send_max, minconf, and maxconf options.",
                             {
                                 {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
@@ -1443,8 +1424,6 @@ RPCHelpMan sendall()
 
             SetFeeEstimateMode(*pwallet, coin_control, options["conf_target"], options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
 
-            coin_control.fAllowWatchOnly = ParseIncludeWatchonly(options["include_watching"], *pwallet);
-
             if (options.exists("minconf")) {
                 if (options["minconf"].getInt<int>() < 0)
                 {
@@ -1491,7 +1470,7 @@ RPCHelpMan sendall()
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not available. UTXO (%s:%d) was already spent.", input.prevout.hash.ToString(), input.prevout.n));
                     }
                     const CWalletTx* tx{pwallet->GetWalletTx(input.prevout.hash)};
-                    if (!tx || input.prevout.n >= tx->tx->vout.size() || !(pwallet->IsMine(tx->tx->vout[input.prevout.n]) & (coin_control.fAllowWatchOnly ? ISMINE_ALL : ISMINE_SPENDABLE))) {
+                    if (!tx || input.prevout.n >= tx->tx->vout.size() || !(pwallet->IsMine(tx->tx->vout[input.prevout.n]) & ISMINE_SPENDABLE)) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not found. UTXO (%s:%d) is not part of wallet.", input.prevout.hash.ToString(), input.prevout.n));
                     }
                     total_input_value += tx->tx->vout[input.prevout.n].nValue;
@@ -1720,7 +1699,7 @@ RPCHelpMan walletcreatefundedpsbt()
                             {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"automatic"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
-                            {"includeWatching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only"},
+                            {"includeWatching", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                             {"lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},

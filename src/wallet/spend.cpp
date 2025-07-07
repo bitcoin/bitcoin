@@ -54,7 +54,7 @@ static bool IsSegwit(const Descriptor& desc) {
 static bool UseMaxSig(const std::optional<CTxIn>& txin, const CCoinControl* coin_control) {
     // Use max sig if watch only inputs were used or if this particular input is an external input
     // to ensure a sufficient fee is attained for the requested feerate.
-    return coin_control && (coin_control->fAllowWatchOnly || (txin && coin_control->IsExternalSelected(txin->prevout)));
+    return coin_control && txin && coin_control->IsExternalSelected(txin->prevout);
 }
 
 /** Get the size of an input (in witness units) once it's signed.
@@ -429,7 +429,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         // Because CalculateMaximumSignedInputSize infers a solvable descriptor to get the satisfaction size,
         // it is safe to assume that this input is solvable if input_bytes is greater than -1.
         bool solvable = input_bytes > -1;
-        bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
+        bool spendable = (mine & ISMINE_SPENDABLE) != ISMINE_NO;
 
         // Filter by spendable outputs only
         if (!spendable && params.only_spendable) continue;
