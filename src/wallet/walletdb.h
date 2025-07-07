@@ -271,14 +271,8 @@ public:
 
     DBErrors LoadWallet(CWallet* pwallet);
 
-    /**
-     * Write the given `client_version` to m_batch, indicating the last version
-     * of client software to load this wallet.
-     *
-     * @param[in]   client_version  `CLIENT_VERSION` outside of test code.
-     * @return      A bool indicating whether or not the write succeeded.
-     */
-    bool WriteVersion(int client_version) { return m_batch->Write(DBKeys::VERSION, client_version); }
+    //! Write the current client version in the VERSION record
+    bool WriteLastOpenedVersion();
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);
