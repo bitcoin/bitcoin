@@ -925,11 +925,17 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         // If no solution is found, return the first detailed error (if any).
         // future: add "error level" so the worst one can be picked instead.
         std::vector<util::Result<SelectionResult>> res_detailed_errors;
+        CoinSelectionParams temp_selection_params = coin_selection_params;
         for (const auto& select_filter : ordered_filters) {
             auto it = filtered_groups.find(select_filter.filter);
             if (it == filtered_groups.end()) continue;
+            if (temp_selection_params.m_version == TRUC_VERSION && (select_filter.filter.conf_mine == 0 || select_filter.filter.conf_theirs == 0)) {
+                if (temp_selection_params.m_max_tx_weight > (TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR)) {
+                    temp_selection_params.m_max_tx_weight = TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR;
+                }
+            }
             if (auto res{AttemptSelection(wallet.chain(), value_to_select, it->second,
-                                          coin_selection_params, select_filter.allow_mixed_output_types)}) {
+                                          temp_selection_params, select_filter.allow_mixed_output_types)}) {
                 return res; // result found
             } else {
                 // If any specific error message appears here, then something particularly wrong might have happened.
@@ -1052,6 +1058,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
     coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
     coin_selection_params.m_max_tx_weight = coin_control.m_max_tx_weight.value_or(MAX_STANDARD_TX_WEIGHT);
+    if (coin_control.m_version) coin_selection_params.m_version = coin_control.m_version.value();
     int minimum_tx_weight = MIN_STANDARD_TX_NONWITNESS_SIZE * WITNESS_SCALE_FACTOR;
     if (coin_selection_params.m_max_tx_weight.value() < minimum_tx_weight || coin_selection_params.m_max_tx_weight.value() > MAX_STANDARD_TX_WEIGHT) {
         return util::Error{strprintf(_("Maximum transaction weight must be between %d and %d"), minimum_tx_weight, MAX_STANDARD_TX_WEIGHT)};

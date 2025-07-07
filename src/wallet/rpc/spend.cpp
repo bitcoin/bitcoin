@@ -8,6 +8,7 @@
 #include <key_io.h>
 #include <node/types.h>
 #include <policy/policy.h>
+#include <policy/truc_policy.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/util.h>
 #include <script/script.h>
@@ -704,6 +705,12 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         coinControl.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
     }
 
+    if (tx.version == TRUC_VERSION) {
+        if (!coinControl.m_max_tx_weight.has_value() || coinControl.m_max_tx_weight.value() > TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR) {
+            coinControl.m_max_tx_weight = TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR;
+        }
+    }
+
     if (recipients.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -1303,6 +1310,13 @@ RPCHelpMan send()
             if (options.exists("max_tx_weight")) {
                 coin_control.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
             }
+
+            if (rawTx.version == TRUC_VERSION) {
+                if (!coin_control.m_max_tx_weight.has_value() || coin_control.m_max_tx_weight.value() > TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR) {
+                    coin_control.m_max_tx_weight = TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR;
+                }
+            }
+
             SetOptionsInputWeights(options["inputs"], options);
             // Clear tx.vout since it is not meant to be used now that we are passing outputs directly.
             // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
