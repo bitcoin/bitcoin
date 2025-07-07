@@ -52,6 +52,12 @@ class CreateTxWalletTest(BitcoinTestFramework):
         tx = self.nodes[0].gettransaction(txid=res['txid'], verbose=True)['decoded']
         assert_equal(tx['locktime'], 0)
 
+        # sendall RPC (don't actually empty the wallet)
+        res = self.nodes[0].sendall(recipients=[self.nodes[0].getnewaddress()], add_to_wallet=False)
+        assert(res["complete"])
+        tx = self.nodes[0].decoderawtransaction(res['hex'])
+        assert_equal(tx['locktime'], 0)
+
         self.log.info('Check that anti-fee-sniping is enabled when we mine a recent block')
         self.generate(self.nodes[0], 1)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
@@ -63,6 +69,12 @@ class CreateTxWalletTest(BitcoinTestFramework):
         res = self.nodes[0].send(outputs=outputs)
         assert(res["complete"])
         tx = self.nodes[0].gettransaction(txid=res['txid'], verbose=True)['decoded']
+        assert 0 < tx['locktime'] <= 201
+
+        # sendall RPC
+        res = self.nodes[0].sendall(recipients=[self.nodes[0].getnewaddress()], add_to_wallet=False)
+        assert(res["complete"])
+        tx = self.nodes[0].decoderawtransaction(res['hex'])
         assert 0 < tx['locktime'] <= 201
 
     def test_tx_size_too_large(self):

@@ -1377,7 +1377,7 @@ RPCHelpMan sendall()
                                 },
                             },
                         },
-                        {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
+                        {"locktime", RPCArg::Type::NUM, RPCArg::DefaultHint{"Approximately the current height"}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                         {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                         {"psbt", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PSBT, implies add_to_wallet=false."},
                         {"send_max", RPCArg::Type::BOOL, RPCArg::Default{false}, "When true, only use UTXOs that can pay for their own fees to maximize the output amount. When 'false' (default), no UTXO is left behind. send_max is incompatible with providing specific inputs."},
@@ -1508,10 +1508,19 @@ RPCHelpMan sendall()
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }
-                    CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL);
+                    CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL);
                     rawTx.vin.push_back(input);
                     total_input_value += output.txout.nValue;
                 }
+            }
+
+            if (!options["locktime"].isNull()) {
+                coin_control.m_locktime = options["locktime"].getInt<int>();
+                coin_control.m_use_anti_fee_sniping = false;
+            }
+
+            if (rawTx.vin.size()) {
+                MaybeDiscourageFeeSniping(*pwallet, rawTx, coin_control);
             }
 
             std::vector<COutPoint> outpoints_spent;
