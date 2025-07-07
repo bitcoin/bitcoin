@@ -3099,7 +3099,7 @@ std::shared_ptr<CWallet> CWallet::CreateNew(WalletContext& context, const std::s
     }
 
     // Initialize version key.
-    if(!WalletBatch(walletInstance->GetDatabase()).WriteVersion(CLIENT_VERSION)) {
+    if(!WalletBatch(walletInstance->GetDatabase()).WriteLastOpenedVersion()) {
         error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
         return nullptr;
     }
