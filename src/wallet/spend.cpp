@@ -1432,8 +1432,9 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
     assert(tx.vout.empty());
 
     // Set the user desired locktime
-    coinControl.m_locktime = tx.nLockTime;
-
+    if (!coinControl.m_use_anti_fee_sniping) {
+        coinControl.m_locktime = tx.nLockTime;
+    }
     // Set the user desired version
     coinControl.m_version = tx.version;
 
