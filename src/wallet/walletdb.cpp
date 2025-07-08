@@ -42,6 +42,7 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string LAST_OPENED_FEATURES{"lastopenedfeatures"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
@@ -1136,6 +1137,12 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     bool has_last_client = m_batch->Read(DBKeys::VERSION, last_client);
     if (has_last_client) pwallet->WalletLogPrintf("Last client version = %d\n", last_client);
 
+    // Features of last client to open this wallet
+    std::optional<uint64_t> last_client_features;
+    if (uint64_t features; m_batch->Read(DBKeys::LAST_OPENED_FEATURES, features)) {
+        last_client_features = features;
+    }
+
     try {
         if ((result = LoadMinVersion(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
 
@@ -1221,6 +1228,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (!has_last_client || last_client != VERSION_LATEST) {
         m_batch->Write(DBKeys::VERSION, VERSION_LATEST);
     }
+    // Record the current client features as the features of the last client to successfully open this wallet file.
+    if (!last_client_features || *last_client_features != WALLET_CLIENT_FEATURES) {
+        m_batch->Write(DBKeys::LAST_OPENED_FEATURES, WALLET_CLIENT_FEATURES);
+    }
 
     return result;
 }
@@ -1287,6 +1298,11 @@ bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
     return std::all_of(types.begin(), types.end(), [&](const std::string& type) {
         return m_batch->ErasePrefix(DataStream() << type);
     });
+}
+
+bool WalletBatch::WriteLastOpenedFeatures()
+{
+    return WriteIC(DBKeys::LAST_OPENED_FEATURES, WALLET_CLIENT_FEATURES);
 }
 
 bool WalletBatch::TxnBegin()
