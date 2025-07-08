@@ -5,8 +5,10 @@
 #ifndef BITCOIN_GOVERNANCE_VOTE_H
 #define BITCOIN_GOVERNANCE_VOTE_H
 
+#include <hash.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
+#include <util/string.h>
 
 class CActiveMasternodeManager;
 class CBLSPublicKey;
@@ -100,7 +102,13 @@ public:
     bool Sign(const CActiveMasternodeManager& mn_activeman);
     bool CheckSignature(const CBLSPublicKey& pubKey) const;
     bool IsValid(const CDeterministicMNList& tip_mn_list, bool useVotingKey) const;
-    std::string GetSignatureString() const;
+    std::string GetSignatureString() const
+    {
+        return masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+                                 ::ToString(nVoteSignal) + "|" +
+                                 ::ToString(nVoteOutcome) + "|" +
+                                 ::ToString(nTime);
+    }
     void Relay(PeerManager& peerman, const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list) const;
 
     const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
@@ -112,7 +120,10 @@ public:
     */
 
     uint256 GetHash() const;
-    uint256 GetSignatureHash() const;
+    uint256 GetSignatureHash() const
+    {
+        return SerializeHash(*this);
+    }
 
     std::string ToString(const CDeterministicMNList& tip_mn_list) const;
 

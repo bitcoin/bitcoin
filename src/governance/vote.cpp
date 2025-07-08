@@ -140,10 +140,6 @@ uint256 CGovernanceVote::GetHash() const
     return hash;
 }
 
-uint256 CGovernanceVote::GetSignatureHash() const
-{
-    return SerializeHash(*this);
-}
 
 bool CGovernanceVote::CheckSignature(const CKeyID& keyID) const
 {
@@ -218,13 +214,6 @@ bool CGovernanceVote::IsValid(const CDeterministicMNList& tip_mn_list, bool useV
     }
 }
 
-std::string CGovernanceVote::GetSignatureString() const
-{
-    return masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
-                             ::ToString(nVoteSignal) + "|" +
-                             ::ToString(nVoteOutcome) + "|" +
-                             ::ToString(nTime);
-}
 
 bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 {
