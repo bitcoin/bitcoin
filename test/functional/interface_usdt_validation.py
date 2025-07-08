@@ -85,13 +85,10 @@ class ValidationTracepointTest(BitcoinTestFramework):
                     self.sigops,
                     self.duration)
 
-        # The handle_* function is a ctypes callback function called from C. When
-        # we assert in the handle_* function, the AssertError doesn't propagate
-        # back to Python. The exception is ignored. We manually count and assert
-        # that the handle_* functions succeeded.
         BLOCKS_EXPECTED = 2
         blocks_checked = 0
         expected_blocks = dict()
+        events = []
 
         self.log.info("hook into the validation:block_connected tracepoint")
         ctx = USDT(path=str(self.options.bitcoind))
@@ -101,7 +98,7 @@ class ValidationTracepointTest(BitcoinTestFramework):
                   usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
 
         def handle_blockconnected(_, data, __):
-            nonlocal expected_blocks, blocks_checked
+            nonlocal events, blocks_checked
             event = ctypes.cast(data, ctypes.POINTER(Block)).contents
             self.log.info(f"handle_blockconnected(): {event}")
             block_hash = bytes(event.hash[::-1]).hex()
@@ -126,11 +123,23 @@ class ValidationTracepointTest(BitcoinTestFramework):
             expected_blocks[block_hash] = self.nodes[0].getblock(block_hash, 2)
 
         bpf.perf_buffer_poll(timeout=200)
-        bpf.cleanup()
 
-        self.log.info(f"check that we traced {BLOCKS_EXPECTED} blocks")
+        self.log.info(f"check that we correctly traced {BLOCKS_EXPECTED} blocks")
+        for event in events:
+            block_hash = bytes(event.hash[::-1]).hex()
+            block = expected_blocks[block_hash]
+            assert_equal(block["hash"], block_hash)
+            assert_equal(block["height"], event.height)
+            assert_equal(len(block["tx"]), event.transactions)
+            assert_equal(len([tx["vin"] for tx in block["tx"]]), event.inputs)
+            assert_equal(0, event.sigops)  # no sigops in coinbase tx
+            # only plausibility checks
+            assert event.duration > 0
+            del expected_blocks[block_hash]
         assert_equal(BLOCKS_EXPECTED, blocks_checked)
         assert_equal(0, len(expected_blocks))
+
+        bpf.cleanup()
 
 
 if __name__ == '__main__':

@@ -107,6 +107,30 @@ static void PrevectorAssignTo(benchmark::Bench& bench)
     });
 }
 
+template <typename T>
+static void PrevectorFillVectorDirect(benchmark::Bench& bench)
+{
+    bench.run([&] {
+        std::vector<prevector<28, T>> vec;
+        for (size_t i = 0; i < 260; ++i) {
+            vec.emplace_back();
+        }
+    });
+}
+
+
+template <typename T>
+static void PrevectorFillVectorIndirect(benchmark::Bench& bench)
+{
+    bench.run([&] {
+        std::vector<prevector<28, T>> vec;
+        for (size_t i = 0; i < 260; ++i) {
+            // force allocation
+            vec.emplace_back(29, T{});
+        }
+    });
+}
+
 #define PREVECTOR_TEST(name)                                         \
     static void Prevector##name##Nontrivial(benchmark::Bench& bench) \
     {                                                                \
@@ -126,3 +150,5 @@ PREVECTOR_TEST(Deserialize)
 
 BENCHMARK(PrevectorAssign)
 BENCHMARK(PrevectorAssignTo)
+PREVECTOR_TEST(FillVectorDirect)
+PREVECTOR_TEST(FillVectorIndirect)

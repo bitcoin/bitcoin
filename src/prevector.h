@@ -286,8 +286,10 @@ public:
         fill(item_ptr(0), other.begin(),  other.end());
     }
 
-    prevector(prevector<N, T, Size, Diff>&& other) {
-        swap(other);
+    prevector(prevector<N, T, Size, Diff>&& other) noexcept
+        : _union(std::move(other._union)), _size(other._size)
+    {
+        other._size = 0;
     }
 
     prevector& operator=(const prevector<N, T, Size, Diff>& other) {
@@ -298,8 +300,13 @@ public:
         return *this;
     }
 
-    prevector& operator=(prevector<N, T, Size, Diff>&& other) {
-        swap(other);
+    prevector& operator=(prevector<N, T, Size, Diff>&& other) noexcept {
+        if (!is_direct()) {
+            free(_union.indirect_contents.indirect);
+        }
+        _union = std::move(other._union);
+        _size = other._size;
+        other._size = 0;
         return *this;
     }
 

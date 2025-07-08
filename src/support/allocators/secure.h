@@ -18,27 +18,14 @@
 // out of memory and clears its contents before deletion.
 //
 template <typename T>
-struct secure_allocator : public std::allocator<T> {
-    using base = std::allocator<T>;
-    using traits = std::allocator_traits<base>;
-    using size_type = typename traits::size_type;
-    using difference_type = typename traits::difference_type;
-    using pointer = typename traits::pointer;
-    using const_pointer = typename traits::const_pointer;
-    using value_type = typename traits::value_type;
-    secure_allocator() noexcept {}
-    secure_allocator(const secure_allocator& a) noexcept : base(a) {}
-    template <typename U>
-    secure_allocator(const secure_allocator<U>& a) noexcept : base(a)
-    {
-    }
-    ~secure_allocator() noexcept {}
-    template <typename _Other>
-    struct rebind {
-        typedef secure_allocator<_Other> other;
-    };
+struct secure_allocator {
+    using value_type = T;
 
-    T* allocate(std::size_t n, const void* hint = nullptr)
+    secure_allocator() = default;
+    template <typename U>
+    secure_allocator(const secure_allocator<U>&) noexcept {}
+
+    T* allocate(std::size_t n)
     {
         T* allocation = static_cast<T*>(LockedPoolManager::Instance().alloc(sizeof(T) * n));
         if (!allocation) {
@@ -53,6 +40,17 @@ struct secure_allocator : public std::allocator<T> {
             memory_cleanse(p, sizeof(T) * n);
         }
         LockedPoolManager::Instance().free(p);
+    }
+
+    template <typename U>
+    friend bool operator==(const secure_allocator&, const secure_allocator<U>&) noexcept
+    {
+        return true;
+    }
+    template <typename U>
+    friend bool operator!=(const secure_allocator&, const secure_allocator<U>&) noexcept
+    {
+        return false;
     }
 };
 
