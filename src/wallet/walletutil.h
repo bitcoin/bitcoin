@@ -64,7 +64,18 @@ enum WalletFlags : uint64_t {
 enum WalletClientVersion : int32_t {
     MIN_VERSION = (1L << 19),
 
-    VERSION_LATEST = MIN_VERSION
+    // The wallet client supports the records for LastClientFeatures
+    VERSION_LAST_CLIENT_FEATURES = MIN_VERSION + 1,
+
+    VERSION_LATEST = VERSION_LAST_CLIENT_FEATURES
+};
+
+enum LastClientFeatures : uint64_t {
+    // Flags indicating the automatic upgrade features supported by the wallet client that last opened a wallet file
+    // New automatic upgrades must define a flag here so that upgrade-downgrade-upgrade can be detected to determine whether
+    // an automatic upgrade should be performed.
+
+    WALLET_CLIENT_FEATURES = 0
 };
 
 //! Get the path of the wallet directory.
