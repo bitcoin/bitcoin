@@ -518,8 +518,8 @@ class WalletMigrationTest(BitcoinTestFramework):
     def test_nonexistent(self):
         self.log.info("Check migratewallet errors for nonexistent wallets")
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
-        assert_raises_rpc_error(-8, "RPC endpoint wallet and wallet_name parameter specify different wallets", default.migratewallet, "someotherwallet")
-        assert_raises_rpc_error(-8, "Either RPC endpoint wallet or wallet_name parameter must be provided", self.master_node.migratewallet)
+        assert_raises_rpc_error(-8, "The RPC endpoint wallet and the wallet name parameter specify different wallets", default.migratewallet, "someotherwallet")
+        assert_raises_rpc_error(-8, "Either the RPC endpoint wallet or the wallet name parameter must be provided", self.master_node.migratewallet)
         assert_raises_rpc_error(-4, "Error: Wallet does not exist", self.master_node.migratewallet, "notawallet")
 
     def test_unloaded_by_path(self):
