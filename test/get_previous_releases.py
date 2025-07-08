@@ -285,7 +285,12 @@ def main(args) -> int:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        epilog='''
+        HOST can be set to any of the `host-platform-triplet`s from
+        depends/README.md for which a release exists.
+        ''',
+    )
     parser.add_argument('-r', '--remove-dir', action='store_true',
                         help='remove existing directory.')
     parser.add_argument('-t', '--target-dir', action='store',
