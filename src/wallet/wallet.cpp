@@ -1406,6 +1406,17 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
                 CWalletTx& wtx = wallet_it->second;
                 if (wtx.isUnconfirmed()) {
                     wtx.v3_spend = tx->GetHash();
+                    // Find all wallet transactions that spend utxos from this tx
+                    for (long unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+                        for (auto range = mapTxSpends.equal_range(COutPoint(wtx.tx->GetHash(), i)); range.first != range.second; range.first++) {
+                            const Txid& spent_id = range.first->second;
+                            // Skip the recently added tx
+                            if (spent_id == txid) continue;
+                            RecursiveUpdateTxState(/*batch=*/nullptr, spent_id, [&txid](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+                                return wtx.mempool_conflicts.insert(txid).second ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -1471,6 +1482,15 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
                 CWalletTx& wtx = wallet_it->second;
                 if (wtx.v3_spend == tx->GetHash()) {
                     wtx.v3_spend = std::nullopt;
+                    // Find all wallet transactions that spend utxos from this tx
+                    for (long unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+                        for (auto range = mapTxSpends.equal_range(COutPoint(wtx.tx->GetHash(), i)); range.first != range.second; range.first++) {
+                            const Txid& spent_id = range.first->second;
+                            RecursiveUpdateTxState(/*batch=*/nullptr, spent_id, [&txid](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+                                return wtx.mempool_conflicts.erase(txid) ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
+                            });
+                        }
+                    }
                 }
             }
         }
