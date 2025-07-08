@@ -34,11 +34,6 @@ static GlobalMutex g_rpc_warmup_mutex;
 static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(g_rpc_warmup_mutex) = true;
 static std::string rpcWarmupStatus GUARDED_BY(g_rpc_warmup_mutex) = "RPC server started";
-/* Timer-creating functions */
-static RPCTimerInterface* timerInterface = nullptr;
-/* Map of name to timer. */
-static GlobalMutex g_deadline_timers_mutex;
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers GUARDED_BY(g_deadline_timers_mutex);
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler);
 
 struct RPCCommandExecutionInfo
@@ -301,7 +296,6 @@ void StopRPC()
     assert(!g_rpc_running);
     std::call_once(g_rpc_stop_flag, [&]() {
         LogDebug(BCLog::RPC, "Stopping RPC\n");
-        WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
         DeleteAuthCookie();
         LogDebug(BCLog::RPC, "RPC stopped.\n");
     });
@@ -541,33 +535,6 @@ UniValue CRPCTable::dumpArgMap(const JSONRPCRequest& args_request) const
         }
     }
     return ret;
-}
-
-void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)
-{
-    if (!timerInterface)
-        timerInterface = iface;
-}
-
-void RPCSetTimerInterface(RPCTimerInterface *iface)
-{
-    timerInterface = iface;
-}
-
-void RPCUnsetTimerInterface(RPCTimerInterface *iface)
-{
-    if (timerInterface == iface)
-        timerInterface = nullptr;
-}
-
-void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds)
-{
-    if (!timerInterface)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
-    LOCK(g_deadline_timers_mutex);
-    deadlineTimers.erase(name);
-    LogDebug(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
-    deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
 CRPCTable tableRPC;
