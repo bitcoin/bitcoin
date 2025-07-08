@@ -107,20 +107,26 @@ class InternalTestMixin:
         # Just here to silence unrecognized argument error, we actually read the value in the if-main at the bottom.
         parser.add_argument("--internal_test", dest="internal_never_read", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF")
 
-class TestWrongRpcPortStartupFailure(InternalTestMixin, BitcoinTestFramework):
+class InternalDurationTestMixin(InternalTestMixin):
     def add_options(self, parser):
+        # Receives the previously measured duration for node startup + RPC connection establishment.
         parser.add_argument("--internal_node_start_duration", dest="node_start_duration", help="ONLY TO BE USED WHEN TEST RELAUNCHES ITSELF", type=float)
         InternalTestMixin.add_options(self, parser)
 
+    def get_reasonable_rpc_timeout(self):
+        # 2 * the measured test startup duration should be enough.
+        # Divide by timeout_factor to counter multiplication in BitcoinTestFramework.
+        return max(3, 2 * self.options.node_start_duration) / self.options.timeout_factor
+
+class TestWrongRpcPortStartupFailure(InternalDurationTestMixin, BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         # Override RPC listen port to something TestNode isn't expecting so that
         # we are unable to establish an RPC connection.
         self.extra_args = [[f"-rpcport={rpc_port(2)}"]]
         # Override the timeout to avoid waiting unnecessarily long to realize
-        # nothing is on that port. Divide by timeout_factor to counter
-        # multiplication in base, 2 * node_start_duration should be enough.
-        self.rpc_timeout = max(3, 2 * self.options.node_start_duration) / self.options.timeout_factor
+        # nothing is on that port.
+        self.rpc_timeout = self.get_reasonable_rpc_timeout()
 
     def run_test(self):
         assert False, "Should have failed earlier during startup."
