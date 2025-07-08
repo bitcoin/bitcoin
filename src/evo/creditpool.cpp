@@ -189,7 +189,9 @@ CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CB
 
     CAmount currentLimit = blockData.credit_pool;
     const CAmount latelyUnlocked = prev.latelyUnlocked + blockData.unlocked - distantUnlocked;
-    if (DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_WITHDRAWALS)) {
+    if (DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_V23)) {
+        currentLimit = std::max(CAmount(0), std::min(currentLimit, LimitAmountV23 - latelyUnlocked));
+    } else if (DeploymentActiveAt(*block_index, Params().GetConsensus(), Consensus::DEPLOYMENT_WITHDRAWALS)) {
         currentLimit = std::min(currentLimit, LimitAmountV22);
     } else {
         // Unlock limits in pre-v22 are max(100, min(.10 * assetlockpool, 1000)) inside window
