@@ -390,6 +390,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             if (nDepth == 0 && params.track_version) {
                 if (coinControl->m_version == TRUC_VERSION) {
                     if (wtx.tx->version != TRUC_VERSION) continue;
+                    if (wtx.v3_spend.has_value()) continue; // this unconfirmed v3 transaction already has a child
                 } else {
                     if (wtx.tx->version == TRUC_VERSION) continue;
                 }
