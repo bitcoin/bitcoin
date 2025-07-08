@@ -92,31 +92,18 @@ template <typename PARENT>
 class LOCKABLE AnnotatedMixin : public PARENT
 {
 public:
-    ~AnnotatedMixin() {
-        DeleteLock((void*)this);
-    }
+    AnnotatedMixin();
+    ~AnnotatedMixin();
 
-    void lock() EXCLUSIVE_LOCK_FUNCTION()
-    {
-        PARENT::lock();
-    }
-
-    void unlock() UNLOCK_FUNCTION()
-    {
-        PARENT::unlock();
-    }
-
-    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
-    {
-        return PARENT::try_lock();
-    }
-
+    void lock() EXCLUSIVE_LOCK_FUNCTION();
+    void unlock() UNLOCK_FUNCTION();
+    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true);
     using unique_lock = std::unique_lock<PARENT>;
 #ifdef __clang__
     //! For negative capabilities in the Clang Thread Safety Analysis.
     //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
     //! with the ! operator, to indicate that a mutex should not be held.
-    const AnnotatedMixin& operator!() const { return *this; }
+    const AnnotatedMixin& operator!() const;
 #endif // __clang__
 };
 
@@ -153,61 +140,18 @@ class SCOPED_LOCKABLE UniqueLock : public MutexType::unique_lock
 {
 private:
     using Base = typename MutexType::unique_lock;
-
-    void Enter(const char* pszName, const char* pszFile, int nLine)
-    {
-        EnterCritical(pszName, pszFile, nLine, Base::mutex());
-#ifdef DEBUG_LOCKCONTENTION
-        if (Base::try_lock()) return;
-        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
-#endif
-        Base::lock();
-    }
-
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine)
-    {
-        EnterCritical(pszName, pszFile, nLine, Base::mutex(), true);
-        if (Base::try_lock()) {
-            return true;
-        }
-        LeaveCritical();
-        return false;
-    }
+    void Enter(const char* pszName, const char* pszFile, int nLine);
+    bool TryEnter(const char* pszName, const char* pszFile, int nLine);
 
 public:
-    UniqueLock(MutexType& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock)
-    {
-        if (fTry)
-            TryEnter(pszName, pszFile, nLine);
-        else
-            Enter(pszName, pszFile, nLine);
-    }
-
-    UniqueLock(MutexType* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
-    {
-        if (!pmutexIn) return;
-
-        *static_cast<Base*>(this) = Base(*pmutexIn, std::defer_lock);
-        if (fTry)
-            TryEnter(pszName, pszFile, nLine);
-        else
-            Enter(pszName, pszFile, nLine);
-    }
-
-    ~UniqueLock() UNLOCK_FUNCTION()
-    {
-        if (Base::owns_lock())
-            LeaveCritical();
-    }
-
-    operator bool()
-    {
-        return Base::owns_lock();
-    }
+    UniqueLock(MutexType& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn);
+    UniqueLock(MutexType* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(pmutexIn);
+    ~UniqueLock() UNLOCK_FUNCTION();
+    operator bool();
 
 protected:
     // needed for reverse_lock
-    UniqueLock() = default;
+    UniqueLock();
 
 public:
     /**
