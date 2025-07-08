@@ -31,6 +31,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         self.test_confirmed_and_unconfirmed(node, wallet)
         self.test_receive_then_spend(node, wallet)
         self.test_no_address(node, wallet)
+        self.test_no_args_passed(node)
 
     def test_no_activity(self, node):
         self.log.info("Test that no activity is found for an unused address")
@@ -230,6 +231,19 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         # sPK lacks address.
         assert_equal(list(a2['output_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
         assert a2['amount'] == Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+
+    def test_no_args_passed(self, node):
+        rpc_help_output = node.help('getdescriptoractivity')
+
+        if self.options.usecli:
+            rpc_help_output = rpc_help_output.splitlines()[0]
+
+        self.log.info("Test that calling getdescriptoractivity with no arguments returns the RPC help for the command")
+        assert_raises_rpc_error(-1, rpc_help_output, node.getdescriptoractivity)
+
+        self.log.info("Test that calling getdescriptoractivity with one required array missing raises also its RPC help")
+        assert_raises_rpc_error(-1, rpc_help_output, node.getdescriptoractivity, [])
+
 
 
 if __name__ == '__main__':
