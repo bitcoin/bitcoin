@@ -63,7 +63,7 @@ class NetTest(DashTestFramework):
         self.test_getpeerinfo()
         self.test_getnettotals()
         self.test_getnetworkinfo()
-        self.test_getaddednodeinfo()
+        self.test_addnode_getaddednodeinfo()
         self.test_service_flags()
         self.test_getnodeaddresses()
         self.test_addpeeraddress()
@@ -233,8 +233,8 @@ class NetTest(DashTestFramework):
         assert_equal(self.nodes[1].getnetworkinfo()['connections_mn_in'], 0)
         assert_equal(self.nodes[1].getnetworkinfo()['connections_mn_out'], 0)
 
-    def test_getaddednodeinfo(self):
-        self.log.info("Test getaddednodeinfo")
+    def test_addnode_getaddednodeinfo(self):
+        self.log.info("Test addnode and getaddednodeinfo")
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
         # add a node (node2) to node0
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
@@ -251,6 +251,8 @@ class NetTest(DashTestFramework):
         # check that node can be removed
         self.nodes[0].addnode(node=ip_port, command='remove')
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
+        # check that an invalid command returns an error
+        assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
         # check that trying to remove the node again returns an error
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
         # check that a non-existent node returns an error
