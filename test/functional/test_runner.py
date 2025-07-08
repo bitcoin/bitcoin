@@ -109,6 +109,7 @@ BASE_SCRIPTS = [
     'rpc_psbt.py',
     'wallet_fundrawtransaction.py',
     'wallet_bumpfee.py',
+    'wallet_v3_txs.py',
     'wallet_backup.py',
     'feature_segwit.py --v2transport',
     'feature_segwit.py --v1transport',
