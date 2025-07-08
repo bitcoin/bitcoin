@@ -30,6 +30,7 @@
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
+#include <policy/truc_policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
@@ -1388,6 +1389,22 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
                 return wtx.mempool_conflicts.insert(txid).second ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
             });
         }
+
+    }
+
+    if (tx->version == TRUC_VERSION) {
+        // Unconfirmed TRUC transactions are only allowed a 1-parent-1-child topology.
+        // For any unconfirmed v3 parents (there should be a maximum of 1 except in reorgs),
+        // record this child so the wallet doesn't try to spend any other outputs
+        for (const CTxIn& tx_in : tx->vin) {
+            auto parent_it = mapWallet.find(tx_in.prevout.hash);
+            if (parent_it != mapWallet.end()) {
+                CWalletTx& parent_wtx = parent_it->second;
+                if (parent_wtx.isUnconfirmed()) {
+                    parent_wtx.truc_child_in_mempool = tx->GetHash();
+                }
+            }
+        }
     }
 }
 
@@ -1439,6 +1456,22 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
             RecursiveUpdateTxState(/*batch=*/nullptr, spent_id, [&txid](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
                 return wtx.mempool_conflicts.erase(txid) ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
             });
+        }
+    }
+
+    if (tx->version == TRUC_VERSION) {
+        // If this tx has a parent, unset its truc_child_in_mempool to make it possible
+        // to spend from the parent again. If this tx was replaced by another
+        // child of the same parent, transactionAddedToMempool
+        // will update truc_child_in_mempool
+        for (const CTxIn& tx_in : tx->vin) {
+            auto parent_it = mapWallet.find(tx_in.prevout.hash);
+            if (parent_it != mapWallet.end()) {
+                CWalletTx& parent_wtx = parent_it->second;
+                if (parent_wtx.truc_child_in_mempool == tx->GetHash()) {
+                    parent_wtx.truc_child_in_mempool = std::nullopt;
+                }
+            }
         }
     }
 }
