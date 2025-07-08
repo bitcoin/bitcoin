@@ -16,7 +16,7 @@ from test_framework.wallet_util import generate_keypair, WalletUnlock
 
 
 EMPTY_PASSPHRASE_MSG = "Empty string given as passphrase, wallet will not be encrypted."
-WALLET_CLIENT_VERSION = 0x80000
+WALLET_CLIENT_VERSION = 0x80001
 
 
 class CreateWalletTest(BitcoinTestFramework):

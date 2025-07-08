@@ -68,6 +68,7 @@ extern const std::string FLAGS;
 extern const std::string HDCHAIN;
 extern const std::string KEY;
 extern const std::string KEYMETA;
+extern const std::string LAST_OPENED_FEATURES;
 extern const std::string LOCKED_UTXO;
 extern const std::string MASTER_KEY;
 extern const std::string MINVERSION;
@@ -266,11 +267,14 @@ public:
 
     //! Write the current client version in the VERSION record
     bool WriteLastOpenedVersion();
+    //! Write the current client features in the LAST_OPENED_FEATURES record
+    bool WriteLastOpenedFeatures();
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);
 
     bool WriteWalletFlags(uint64_t flags);
+
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction
