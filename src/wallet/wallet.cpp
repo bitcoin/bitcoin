@@ -1234,6 +1234,23 @@ bool CWallet::TransactionCanBeAbandoned(const Txid& hashTx) const
     return wtx && !wtx->isAbandoned() && GetTxDepthInMainChain(*wtx) == 0 && !wtx->InMempool();
 }
 
+void CWallet::UpdateTrucSiblingConflicts(const CWalletTx& parent_wtx, const Txid& child_txid, bool add_conflict) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
+{
+    // Find all other txs in our wallet that spend utxos from this parent
+    // so that we can mark them as mempool-conflicted by this new tx.
+    for (long unsigned int i = 0; i < parent_wtx.tx->vout.size(); i++) {
+        for (auto range = mapTxSpends.equal_range(COutPoint(parent_wtx.tx->GetHash(), i)); range.first != range.second; range.first++) {
+            const Txid& sibling_txid = range.first->second;
+            // Skip the child_tx itself
+            if (sibling_txid == child_txid) continue;
+            RecursiveUpdateTxState(/*batch=*/nullptr, sibling_txid, [&child_txid, add_conflict](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+                return add_conflict ? (wtx.mempool_conflicts.insert(child_txid).second ? TxUpdate::CHANGED : TxUpdate::UNCHANGED)
+                                    : (wtx.mempool_conflicts.erase(child_txid) ? TxUpdate::CHANGED : TxUpdate::UNCHANGED);
+            });
+        }
+    }
+}
+
 void CWallet::MarkInputsDirty(const CTransactionRef& tx)
 {
     for (const CTxIn& txin : tx->vin) {
@@ -1402,6 +1419,9 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
                 CWalletTx& parent_wtx = parent_it->second;
                 if (parent_wtx.isUnconfirmed()) {
                     parent_wtx.truc_child_in_mempool = tx->GetHash();
+                    // Even though these siblings do not spend the same utxos, they can't
+                    // be present in the mempool at the same time because of TRUC policy rules
+                    UpdateTrucSiblingConflicts(parent_wtx, txid, /*add_conflict=*/true);
                 }
             }
         }
@@ -1470,6 +1490,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
                 CWalletTx& parent_wtx = parent_it->second;
                 if (parent_wtx.truc_child_in_mempool == tx->GetHash()) {
                     parent_wtx.truc_child_in_mempool = std::nullopt;
+                    UpdateTrucSiblingConflicts(parent_wtx, txid, /*add_conflict=*/false);
                 }
             }
         }

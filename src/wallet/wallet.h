@@ -453,6 +453,9 @@ private:
     // Update last block processed in memory only
     void SetLastBlockProcessedInMem(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    //! Update mempool conflicts for TRUC sibling transactions
+    void UpdateTrucSiblingConflicts(const CWalletTx& parent_wtx, const Txid& child_txid, bool add_conflict) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
 public:
     /**
      * Main wallet lock.
