@@ -42,6 +42,7 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string LAST_OPENED_FEATURES{"lastopenedfeatures"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
@@ -1143,6 +1144,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     bool has_last_client = m_batch->Read(DBKeys::VERSION, last_client);
     if (has_last_client) pwallet->WalletLogPrintf("Last client version = %d\n", last_client);
 
+    std::optional<uint64_t> last_client_features;
+    if (last_client >= VERSION_LAST_CLIENT_FEATURES) {
+        // Features of last client to open this wallet
+        if (uint64_t features; m_batch->Read(DBKeys::LAST_OPENED_FEATURES, features)) {
+            last_client_features = features;
+        }
+    }
+
     try {
         // Load wallet flags, so they are known when processing other records.
         // The FLAGS key is absent during wallet creation.
@@ -1229,6 +1238,13 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             return DBErrors::CORRUPT;
         }
     }
+    // Record the current client features as the features of the last client to successfully open this wallet file.
+    if (!last_client_features || *last_client_features != WALLET_CLIENT_FEATURES) {
+        if (!WriteLastOpenedFeatures()) {
+            pwallet->WalletLogPrintf("Error: Unable to write the last opened version. Wallet corrupt.\n");
+            return DBErrors::CORRUPT;
+        }
+    }
 
     return result;
 }
@@ -1293,6 +1309,11 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 bool WalletBatch::WriteLastOpenedVersion()
 {
     return WriteIC(DBKeys::VERSION, VERSION_LATEST);
+}
+
+bool WalletBatch::WriteLastOpenedFeatures()
+{
+    return WriteIC(DBKeys::LAST_OPENED_FEATURES, WALLET_CLIENT_FEATURES);
 }
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
