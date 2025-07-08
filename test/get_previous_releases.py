@@ -211,7 +211,7 @@ def download_binary(tag, args) -> int:
 
     Path(archive).unlink()
 
-    if tag >= "v23" and platform == "arm64-apple-darwin":
+    if tag >= "v23" and args.host == "arm64-apple-darwin":
         # Starting with v23 there are arm64 binaries for ARM (e.g. M1, M2) macs, but they have to be signed to run
         binary_path = f'{os.getcwd()}/{tag}/bin/'
 
