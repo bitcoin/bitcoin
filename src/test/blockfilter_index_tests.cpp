@@ -16,6 +16,7 @@
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+#include <future>
 
 using node::BlockAssembler;
 using node::BlockManager;
@@ -303,6 +304,83 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 
     filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
     BOOST_CHECK(filter_index == nullptr);
+}
+
+class IndexReorgCrash : public BaseIndex
+{
+private:
+    std::unique_ptr<BaseIndex::DB> m_db;
+    std::shared_future<void> m_blocker;
+    int m_blocking_height;
+
+public:
+    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker,
+                             int blocking_height) : BaseIndex(std::move(chain), "test index"), m_blocker(blocker),
+                                                    m_blocking_height(blocking_height)
+    {
+        const fs::path path = gArgs.GetDataDirNet() / "index";
+        fs::create_directories(path);
+        m_db = std::make_unique<BaseIndex::DB>(path / "db", /*n_cache_size=*/0, /*f_memory=*/true, /*f_wipe=*/false);
+    }
+
+    bool AllowPrune() const override { return false; }
+    BaseIndex::DB& GetDB() const override { return *m_db; }
+
+    bool CustomAppend(const interfaces::BlockInfo& block) override
+    {
+        // Simulate a delay so new blocks can get connected during the initial sync
+        if (block.height == m_blocking_height) m_blocker.wait();
+
+        // Move mock time forward so the best index gets updated only when we are not at the blocking height
+        if (block.height == m_blocking_height - 1 || block.height > m_blocking_height) {
+            SetMockTime(GetTime<std::chrono::seconds>() + 31s);
+        }
+
+        return true;
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
+{
+    // Enable mock time
+    SetMockTime(GetTime<std::chrono::minutes>());
+
+    std::promise<void> promise;
+    std::shared_future<void> blocker(promise.get_future());
+    int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
+
+    IndexReorgCrash index(interfaces::MakeChain(m_node), blocker, blocking_height);
+    BOOST_REQUIRE(index.Init());
+    BOOST_REQUIRE(index.StartBackgroundSync());
+
+    auto func_wait_until = [&](int height, std::chrono::milliseconds timeout) {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        while (index.GetSummary().best_block_height < height) {
+            if (std::chrono::steady_clock::now() > deadline) {
+                BOOST_FAIL(strprintf("Timeout waiting for index height %d (current: %d)", height, index.GetSummary().best_block_height));
+                return;
+            }
+            std::this_thread::sleep_for(100ms);
+        }
+    };
+
+    // Wait until the index is one block before the fork point
+    func_wait_until(blocking_height - 1, /*timeout=*/5s);
+
+    // Create a fork to trigger the reorg
+    std::vector<std::shared_ptr<CBlock>> fork;
+    const CBlockIndex* prev_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->pprev);
+    BOOST_REQUIRE(BuildChain(prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
+
+    for (const auto& block : fork) {
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    }
+
+    // Unblock the index thread so it can process the reorg
+    promise.set_value();
+    // Wait for the index to reach the new tip
+    func_wait_until(blocking_height + 2, 5s);
+    index.Stop();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
