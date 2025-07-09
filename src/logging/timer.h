@@ -41,11 +41,7 @@ public:
 
     ~Timer()
     {
-        if (m_message_on_completion) {
-            this->Log(strprintf("%s completed", m_title));
-        } else {
-            this->Log("completed");
-        }
+        this->Log(m_message_on_completion ? strprintf("%s completed", m_title) : "completed");
     }
 
     void Log(const std::string& msg)
