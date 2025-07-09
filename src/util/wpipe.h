@@ -21,6 +21,10 @@ class EdgeTriggeredEvents;
  */
 class WakeupPipe
 {
+private:
+    /* Iterate through m_pipe and ::close() them */
+    void Close();
+
 public:
     explicit WakeupPipe(EdgeTriggeredEvents* edge_trig_events);
     ~WakeupPipe();

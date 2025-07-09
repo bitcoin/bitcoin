@@ -198,14 +198,26 @@ public:
 
     bool SetNonBlocking() const override { return true; }
 
-    bool IsSelectable() const override { return true; }
+    bool IsSelectable(bool is_select) const override { return true; }
 
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,
+              SocketEventsParams event_params,
               Event* occurred = nullptr) const override
     {
         if (occurred != nullptr) {
             *occurred = requested;
+        }
+        return true;
+    }
+
+    bool WaitMany(std::chrono::milliseconds timeout,
+                  EventsPerSock& events_per_sock,
+                  SocketEventsParams event_params) const override
+    {
+        for (auto& [sock, events] : events_per_sock) {
+            (void)sock;
+            events.occurred = events.requested;
         }
         return true;
     }

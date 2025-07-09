@@ -160,7 +160,7 @@ bool Session::Accept(Connection& conn)
 
     while (!*m_interrupt) {
         Sock::Event occurred;
-        if (!conn.sock->Wait(MAX_WAIT_FOR_IO, Sock::RECV, &occurred)) {
+        if (!conn.sock->Wait(MAX_WAIT_FOR_IO, Sock::RECV, SocketEventsParams{::g_socket_events_mode}, &occurred)) {
             errmsg = "wait on socket failed";
             break;
         }

@@ -118,16 +118,6 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 static constexpr bool DEFAULT_V2_TRANSPORT{true};
 
-#if defined USE_KQUEUE
-#define DEFAULT_SOCKETEVENTS "kqueue"
-#elif defined USE_EPOLL
-#define DEFAULT_SOCKETEVENTS "epoll"
-#elif defined USE_POLL
-#define DEFAULT_SOCKETEVENTS "poll"
-#else
-#define DEFAULT_SOCKETEVENTS "select"
-#endif
-
 typedef int64_t NodeId;
 
 struct AddedNodeParams {
@@ -1619,55 +1609,9 @@ private:
     /**
      * Generate a collection of sockets to check for IO readiness.
      * @param[in] nodes Select from these nodes' sockets.
-     * @param[out] recv_set Sockets to check for read readiness.
-     * @param[out] send_set Sockets to check for write readiness.
-     * @param[out] error_set Sockets to check for errors.
-     * @return true if at least one socket is to be checked (the returned set is not empty)
+     * @return sockets to check for readiness
      */
-    bool GenerateSelectSet(const std::vector<CNode*>& nodes,
-                           std::set<SOCKET>& recv_set,
-                           std::set<SOCKET>& send_set,
-                           std::set<SOCKET>& error_set);
-
-    /**
-     * Check which sockets are ready for IO.
-     * @param[in] nodes Select from these nodes' sockets (in supported event methods).
-     * @param[in] only_poll Permit zero timeout polling
-     * @param[out] recv_set Sockets which are ready for read.
-     * @param[out] send_set Sockets which are ready for write.
-     * @param[out] error_set Sockets which have errors.
-     * This calls `GenerateSelectSet()` to gather a list of sockets to check.
-     */
-    void SocketEvents(const std::vector<CNode*>& nodes,
-                      std::set<SOCKET>& recv_set,
-                      std::set<SOCKET>& send_set,
-                      std::set<SOCKET>& error_set,
-                      bool only_poll);
-
-#ifdef USE_KQUEUE
-    void SocketEventsKqueue(std::set<SOCKET>& recv_set,
-                            std::set<SOCKET>& send_set,
-                            std::set<SOCKET>& error_set,
-                            bool only_poll);
-#endif
-#ifdef USE_EPOLL
-    void SocketEventsEpoll(std::set<SOCKET>& recv_set,
-                           std::set<SOCKET>& send_set,
-                           std::set<SOCKET>& error_set,
-                           bool only_poll);
-#endif
-#ifdef USE_POLL
-    void SocketEventsPoll(const std::vector<CNode*>& nodes,
-                          std::set<SOCKET>& recv_set,
-                          std::set<SOCKET>& send_set,
-                          std::set<SOCKET>& error_set,
-                          bool only_poll);
-#endif
-    void SocketEventsSelect(const std::vector<CNode*>& nodes,
-                            std::set<SOCKET>& recv_set,
-                            std::set<SOCKET>& send_set,
-                            std::set<SOCKET>& error_set,
-                            bool only_poll);
+    Sock::EventsPerSock GenerateWaitSockets(Span<CNode* const> nodes);
 
     /**
      * Check connected and listening sockets for IO readiness and process them accordingly.
@@ -1676,20 +1620,16 @@ private:
 
     /**
      * Do the read/write for connected sockets that are ready for IO.
-     * @param[in] recv_set Sockets that are ready for read.
-     * @param[in] send_set Sockets that are ready for send.
-     * @param[in] error_set Sockets that have an exceptional condition (error).
+     * @param[in] events_per_sock Sockets that are ready for IO.
      */
-    void SocketHandlerConnected(const std::set<SOCKET>& recv_set,
-                                const std::set<SOCKET>& send_set,
-                                const std::set<SOCKET>& error_set)
+    void SocketHandlerConnected(const Sock::EventsPerSock& events_per_sock)
         EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc);
 
     /**
      * Accept incoming connections, one from each read-ready listening socket.
-     * @param[in] recv_set Sockets that are ready for read.
+     * @param[in] events_per_sock Sockets that are ready for IO.
      */
-    void SocketHandlerListening(const std::set<SOCKET>& recv_set, CMasternodeSync& mn_sync)
+    void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock, CMasternodeSync& mn_sync)
         EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     void ThreadSocketHandler(CMasternodeSync& mn_sync)
@@ -1904,15 +1844,22 @@ private:
     std::unique_ptr<EdgeTriggeredEvents> m_edge_trig_events{nullptr};
     std::unique_ptr<WakeupPipe> m_wakeup_pipe{nullptr};
 
-    template <typename Callable>
-    void ToggleWakeupPipe(Callable&& func)
+    SOCKET GetModeFileDescriptor()
+    {
+        if (m_edge_trig_events) {
+            return static_cast<SOCKET>(m_edge_trig_events->GetFileDescriptor());
+        }
+        return INVALID_SOCKET;
+    }
+
+    SocketEventsParams::wrap_fn ToggleWakeupPipe = [&](std::function<void()>&& func)
     {
         if (m_wakeup_pipe) {
             m_wakeup_pipe->Toggle(func);
         } else {
             func();
         }
-    }
+    };
 
     Mutex cs_sendable_receivable_nodes;
     std::unordered_map<NodeId, CNode*> mapReceivableNodes GUARDED_BY(cs_sendable_receivable_nodes);

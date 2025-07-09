@@ -480,21 +480,6 @@ static void OnRPCStopped()
     LogPrint(BCLog::RPC, "RPC stopped.\n");
 }
 
-std::string GetSupportedSocketEventsStr()
-{
-    std::string strSupportedModes = "'select'";
-#ifdef USE_POLL
-    strSupportedModes += ", 'poll'";
-#endif
-#ifdef USE_EPOLL
-    strSupportedModes += ", 'epoll'";
-#endif
-#ifdef USE_KQUEUE
-    strSupportedModes += ", 'kqueue'";
-#endif
-    return strSupportedModes;
-}
-
 void SetupServerArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
@@ -1642,6 +1627,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+    std::string sem_str = args.GetArg("-socketevents", DEFAULT_SOCKETEVENTS);
+    ::g_socket_events_mode = SEMFromString(sem_str);
+    if (::g_socket_events_mode == SocketEventsMode::Unknown) {
+        return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), sem_str, GetSupportedSocketEventsStr()));
+    }
+
     assert(!node.banman);
     node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist", &uiInterface, args.GetIntArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
@@ -2420,6 +2411,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.m_added_nodes = args.GetArgs("-addnode");
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
+    connOptions.socketEventsMode = ::g_socket_events_mode;
 
     // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
     const uint16_t default_bind_port =
@@ -2526,13 +2518,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogPrintf("-dnsseed is ignored when -connect is used and -proxy is specified\n");
         }
     }
-
-    std::string sem_str = args.GetArg("-socketevents", DEFAULT_SOCKETEVENTS);
-    const auto sem = SEMFromString(sem_str);
-    if (sem == SocketEventsMode::Unknown) {
-        return InitError(strprintf(_("Invalid -socketevents ('%s') specified. Only these modes are supported: %s"), sem_str, GetSupportedSocketEventsStr()));
-    }
-    connOptions.socketEventsMode = sem;
 
     const std::string& i2psam_arg = args.GetArg("-i2psam", "");
     if (!i2psam_arg.empty()) {
