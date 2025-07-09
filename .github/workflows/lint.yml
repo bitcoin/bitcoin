@@ -31,7 +31,8 @@ jobs:
       - name: Run linters
         run: |
           export BUILD_TARGET="linux64"
-          source ./ci/dash/matrix.sh
-          source ./ci/lint/04_install.sh
-          source ./ci/lint/06_script.sh
+          export CHECK_DOC=1
+          export COMMIT_RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha || github.sha }}"
+          export PULL_REQUEST="${{ github.event_name == 'pull_request_target' && 'true' || 'false' }}"
+          ./ci/dash/lint.sh
         shell: bash
