@@ -13,6 +13,7 @@
 #include <crypto/muhash.h>
 #include <dbwrapper.h>
 #include <index/base.h>
+#include <index/db_key.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
 #include <kernel/coinstats.h>
@@ -28,7 +29,6 @@
 #include <validation.h>
 
 #include <compare>
-#include <ios>
 #include <limits>
 #include <span>
 #include <string>
@@ -40,8 +40,6 @@ using kernel::CCoinsStats;
 using kernel::GetBogoSize;
 using kernel::RemoveCoinHash;
 
-static constexpr uint8_t DB_BLOCK_HASH{'s'};
-static constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
 static constexpr uint8_t DB_MUHASH{'M'};
 
 namespace {
@@ -85,47 +83,6 @@ struct DBVal {
         SER_READ(obj, obj.total_coinbase_amount = UintToArith256(coinbase));
     }
 };
-
-struct DBHeightKey {
-    int height;
-
-    explicit DBHeightKey(int height_in) : height(height_in) {}
-
-    template <typename Stream>
-    void Serialize(Stream& s) const
-    {
-        ser_writedata8(s, DB_BLOCK_HEIGHT);
-        ser_writedata32be(s, height);
-    }
-
-    template <typename Stream>
-    void Unserialize(Stream& s)
-    {
-        const uint8_t prefix{ser_readdata8(s)};
-        if (prefix != DB_BLOCK_HEIGHT) {
-            throw std::ios_base::failure("Invalid format for coinstatsindex DB height key");
-        }
-        height = ser_readdata32be(s);
-    }
-};
-
-struct DBHashKey {
-    uint256 block_hash;
-
-    explicit DBHashKey(const uint256& hash_in) : block_hash(hash_in) {}
-
-    SERIALIZE_METHODS(DBHashKey, obj)
-    {
-        uint8_t prefix{DB_BLOCK_HASH};
-        READWRITE(prefix);
-        if (prefix != DB_BLOCK_HASH) {
-            throw std::ios_base::failure("Invalid format for coinstatsindex DB hash key");
-        }
-
-        READWRITE(obj.block_hash);
-    }
-};
-
 }; // namespace
 
 std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
@@ -257,29 +214,6 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     return true;
 }
 
-[[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
-                                                     const std::string& index_name, int height)
-{
-    DBHeightKey key{height};
-    db_it.Seek(key);
-
-    if (!db_it.GetKey(key) || key.height != height) {
-        LogError("unexpected key in %s: expected (%c, %d)",
-                 index_name, DB_BLOCK_HEIGHT, height);
-        return false;
-    }
-
-    std::pair<uint256, DBVal> value;
-    if (!db_it.GetValue(value)) {
-        LogError("unable to read value in %s at key (%c, %d)",
-                 index_name, DB_BLOCK_HEIGHT, height);
-        return false;
-    }
-
-    batch.Write(DBHashKey(value.first), value.second);
-    return true;
-}
-
 bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
 {
     CDBBatch batch(*m_db);
@@ -287,7 +221,7 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
 
     // During a reorg, copy the block's hash digest from the height index to the hash index,
     // ensuring it's still accessible after the height index entry is overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, block.height)) {
+    if (!CopyHeightIndexToHashIndex<DBVal>(*db_it, batch, m_name, block.height)) {
         return false;
     }
 
