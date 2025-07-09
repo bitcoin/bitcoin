@@ -32,13 +32,27 @@ jobs:
         run: |
           export BUILD_TARGET="linux64"
           export CHECK_DOC=1
+          
+          # Determine if this is a PR and set commit range accordingly
           if [ "${{ github.event_name }}" = "pull_request_target" ]; then
             export COMMIT_RANGE="$(git merge-base origin/develop HEAD)..HEAD"
             export PULL_REQUEST="true"
+          elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" != "refs/heads/develop" ] && [ "${{ github.ref }}" != "refs/heads/master" ]; then
+            # For push events on feature branches, check against develop
+            export COMMIT_RANGE="$(git merge-base origin/develop HEAD)..HEAD"
+            export PULL_REQUEST="true"
           else
-            export COMMIT_RANGE="SKIP_EMPTY_NOT_A_PR"
+            # For pushes to develop/master or other events
+            export COMMIT_RANGE="HEAD~..HEAD"
             export PULL_REQUEST="false"
           fi
+          
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
           echo "COMMIT_RANGE=${COMMIT_RANGE}"
+          echo "PULL_REQUEST=${PULL_REQUEST}"
+          echo "Running git log for commit range:"
+          git log --oneline ${COMMIT_RANGE} || echo "Could not show commit range"
+          
           ./ci/dash/lint.sh
         shell: bash
