@@ -92,16 +92,16 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "If not specified, payoutAddress is the one that is going to be used.\n"
                 "The private key belonging to this address must be known in your wallet."}
         },
-        {"ipAndPort",
-            {"ipAndPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+        {"coreP2PAddrs",
+            {"coreP2PAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
                 "Array of addresses in the form \"ADDR:PORT\". Must be unique on the network.\n"
                 "Can be set to an empty string, which will require a ProUpServTx afterwards.",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
                 }}
         },
-        {"ipAndPort_update",
-            {"ipAndPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+        {"coreP2PAddrs_update",
+            {"coreP2PAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
                 "Array of addresses in the form \"ADDR:PORT\". Must be unique on the network.",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
@@ -403,7 +403,7 @@ static RPCHelpMan protx_register_fund_wrapper(const bool legacy)
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("collateralAddress"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             legacy ? GetRpcArg("operatorPubKey_register_legacy") : GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -454,7 +454,7 @@ static RPCHelpMan protx_register_wrapper(bool legacy)
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             legacy ? GetRpcArg("operatorPubKey_register_legacy") : GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -506,7 +506,7 @@ static RPCHelpMan protx_register_prepare_wrapper(const bool legacy)
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             legacy ? GetRpcArg("operatorPubKey_register_legacy") : GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -557,7 +557,7 @@ static RPCHelpMan protx_register_fund_evo()
             HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("collateralAddress"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -596,7 +596,7 @@ static RPCHelpMan protx_register_evo()
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -634,7 +634,7 @@ static RPCHelpMan protx_register_prepare_evo()
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -919,7 +919,7 @@ static RPCHelpMan protx_update_service()
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            GetRpcArg("ipAndPort_update"),
+            GetRpcArg("coreP2PAddrs_update"),
             GetRpcArg("operatorKey"),
             GetRpcArg("operatorPayoutAddress"),
             GetRpcArg("feeSourceAddress"),
@@ -952,7 +952,7 @@ static RPCHelpMan protx_update_service_evo()
             HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            GetRpcArg("ipAndPort_update"),
+            GetRpcArg("coreP2PAddrs_update"),
             GetRpcArg("operatorKey"),
             GetRpcArg("platformNodeID"),
             GetRpcArg("platformP2PPort"),
