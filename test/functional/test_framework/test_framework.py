@@ -1954,7 +1954,7 @@ class DashTestFramework(BitcoinTestFramework):
             except:
                 return False
         self.log.info(f"Expecting ChainLock for {block_hash}")
-        if self.wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1, do_assert=expected) and not expected:
+        if self.wait_until(check_chainlocked_block, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=15, expected=True):
@@ -1962,7 +1962,7 @@ class DashTestFramework(BitcoinTestFramework):
             self.wait_for_chainlocked_block(node, block_hash, expected=expected, timeout=timeout)
 
     def wait_for_best_chainlock(self, node, block_hash, timeout=15):
-        self.wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout, sleep=0.1)
+        self.wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout)
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
