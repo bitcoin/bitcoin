@@ -6,6 +6,7 @@
 #define BITCOIN_POLICY_RBF_H
 
 #include <consensus/amount.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <threadsafety.h>
 #include <txmempool.h>
@@ -68,7 +69,8 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx);
  */
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx, CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
-                                                  CTxMemPool::setEntries& all_conflicts)
+                                                  CTxMemPool::setEntries& all_conflicts,
+                                                  const ignore_rejects_type& ignore_rejects=empty_ignore_rejects)
     EXCLUSIVE_LOCKS_REQUIRED(pool.cs);
 
 /** The replacement transaction may only include an unconfirmed input if that input was included in

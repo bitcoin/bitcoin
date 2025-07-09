@@ -15,6 +15,7 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/random.h>
+#include <test/util/transaction_utils.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/rbf.h>
@@ -90,7 +91,8 @@ FUZZ_TARGET(transaction, .init = initialize_transaction)
     CCoinsView coins_view;
     const CCoinsViewCache coins_view_cache(&coins_view);
     (void)AreInputsStandard(tx, coins_view_cache);
-    (void)IsWitnessStandard(tx, coins_view_cache);
+    std::string reject_reason;
+    (void)IsWitnessStandard(tx, coins_view_cache, "fuzz", reject_reason);
 
     if (tx.GetTotalSize() < 250'000) { // Avoid high memory usage (with msan) due to json encoding
         {
