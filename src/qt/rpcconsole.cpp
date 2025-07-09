@@ -32,6 +32,7 @@
 #include <QAbstractItemModel>
 #include <QDateTime>
 #include <QFont>
+#include <QFontMetrics>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QLatin1String>
@@ -689,6 +690,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         connect(model, &ClientModel::mempoolSizeChanged, this, &RPCConsole::setMempoolSize);
 
         // set up peer table
+        clientModel->getPeerTableModel()->updatePalette();
         ui->peerWidget->setModel(model->peerTableSortProxy());
         ui->peerWidget->verticalHeader()->hide();
         ui->peerWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -696,11 +698,19 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
         if (!ui->peerWidget->horizontalHeader()->restoreState(m_peer_widget_header_state)) {
+            const QFontMetrics fm = ui->peerWidget->fontMetrics();
+            ui->peerWidget->setColumnWidth(PeerTableModel::NetNodeId, GUIUtil::TextWidth(fm, QStringLiteral("99999")));
+            ui->peerWidget->setColumnWidth(PeerTableModel::Age, GUIUtil::TextWidth(fm, GUIUtil::FormatPeerAge(std::chrono::hours{23976 /* 999 days */})));
+            ui->peerWidget->setColumnWidth(PeerTableModel::Direction, DIRECTION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
+            ui->peerWidget->setColumnWidth(PeerTableModel::ConnectionType, GUIUtil::TextWidth(fm, GUIUtil::ConnectionTypeToQString(ConnectionType::ADDR_FETCH /* TODO: Find the WIDEST string? */, /*prepend_direction=*/false)));
+            const auto bytesize_width = GUIUtil::TextWidth(fm, GUIUtil::formatBytes(999'000'000'000) + QStringLiteral("xx"));
+            ui->peerWidget->setColumnWidth(PeerTableModel::Network, GUIUtil::TextWidth(fm, qvariant_cast<QString>(model->peerTableSortProxy()->headerData(PeerTableModel::ColumnIndex::Network, Qt::Horizontal, Qt::DisplayRole)) /* TODO: Find the WIDEST string? */ + QStringLiteral("x")));
             ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Sent, bytesize_width);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Received, bytesize_width);
         }
-        ui->peerWidget->horizontalHeader()->setSectionResizeMode(PeerTableModel::Age, QHeaderView::ResizeToContents);
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
         ui->peerWidget->setItemDelegateForColumn(PeerTableModel::NetNodeId, new PeerIdViewDelegate(this));
 
@@ -733,7 +743,6 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
             ui->banlistWidget->setColumnWidth(BanTableModel::Address, BANSUBNET_COLUMN_WIDTH);
             ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
         }
-        ui->banlistWidget->horizontalHeader()->setSectionResizeMode(BanTableModel::Address, QHeaderView::ResizeToContents);
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
         // create ban table context menu
@@ -946,6 +955,10 @@ void RPCConsole::changeEvent(QEvent* e)
                 QTextDocument::ImageResource,
                 QUrl(ICON_MAPPING[i].url),
                 platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(QSize(consoleFontSize * 2, consoleFontSize * 2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+        }
+
+        if (clientModel && clientModel->getPeerTableModel()) {
+            clientModel->getPeerTableModel()->updatePalette();
         }
     }
 
