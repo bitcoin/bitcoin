@@ -7,9 +7,15 @@ import argparse
 import json
 import sys
 
+from test_framework.util import mock_signer_log
+
 def enumerate(args):
     sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"},
         {"fingerprint": "00000002", "type": "trezor", "model": "trezor_one"}]))
+
+
+log = mock_signer_log("multiple_external_signers")
+log.debug("Started")
 
 parser = argparse.ArgumentParser(prog='./multi_signers.py', description='External multi-signer mock')
 
@@ -28,3 +34,5 @@ if not sys.stdin.isatty():
 args = parser.parse_args()
 
 args.func(args)
+
+log.debug("Finished")
