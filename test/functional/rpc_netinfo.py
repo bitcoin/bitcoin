@@ -20,6 +20,8 @@ from test_framework.test_node import TestNode
 from _decimal import Decimal
 from random import randint
 
+# See CMainParams in src/chainparams.cpp
+DEFAULT_PORT_MAINNET_CORE_P2P = 9999
 # See CRegTestParams in src/chainparams.cpp
 DEFAULT_PORT_PLATFORM_P2P = 22200
 DEFAULT_PORT_PLATFORM_HTTP = 22201
@@ -59,7 +61,7 @@ class Node:
                 mn_visible = True
         return mn_visible
 
-    def register_mn(self, test: BitcoinTestFramework, submit: bool, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_http = None) -> str:
+    def register_mn(self, test: BitcoinTestFramework, submit: bool, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_http = None, code = None, msg = None) -> str:
         assert self.mn.nodeIdx is not None
 
         if self.mn.evo and (not addrs_platform_http or not addrs_platform_p2p):
@@ -69,11 +71,16 @@ class Node:
         self.platform_nodeid = hash160(b'%d' % randint(1, 65535)).hex()
         protx_output = self.mn.register(self.node, submit=submit, coreP2PAddrs=addrs_core_p2p, operator_reward=0,
                                         platform_node_id=self.platform_nodeid, platform_p2p_port=addrs_platform_p2p,
-                                        platform_http_port=addrs_platform_http)
-        assert protx_output is not None
+                                        platform_http_port=addrs_platform_http, expected_assert_code=code, expected_assert_msg=msg)
 
-        if not submit:
+        # If we expected error, make sure the transaction didn't succeed
+        if code and msg:
+            assert protx_output is None
             return ""
+        else:
+            assert protx_output is not None
+            if not submit:
+                return ""
 
         # Bury ProTx transaction and check if masternode is online
         self.mn.set_params(proTxHash=protx_output, operator_reward=0)
@@ -157,6 +164,7 @@ class NetInfoTest(BitcoinTestFramework):
 
         self.log.info("Test input validation for masternode address fields")
         self.test_validation_common()
+        self.test_validation_legacy()
 
         self.log.info("Test output masternode address fields for consistency")
         self.test_deprecation()
@@ -182,6 +190,27 @@ class NetInfoTest(BitcoinTestFramework):
                                   -8, "platformHTTPPort must be a valid port [1-65535]")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, "65536",
                                   -8, "platformHTTPPort must be a valid port [1-65535]")
+
+    def test_validation_legacy(self):
+        # Using mainnet P2P port gets refused
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{DEFAULT_PORT_MAINNET_CORE_P2P}",
+                                  DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, f"Error setting coreP2PAddrs[0] to '127.0.0.1:{DEFAULT_PORT_MAINNET_CORE_P2P}' (invalid port)")
+
+        # Arrays of addresses are recognized by coreP2PAddrs (but get refused for too many entries)
+        self.node_evo.register_mn(self, False, [f"127.0.0.1:{self.node_evo.mn.nodePort}", f"127.0.0.2:{self.node_evo.mn.nodePort}"],
+                                  DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, f"Error setting coreP2PAddrs[1] to '127.0.0.2:{self.node_evo.mn.nodePort}' (too many entries)")
+
+        # platformP2PPort and platformHTTPPort doesn't accept non-numeric inputs
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}", DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, f"platformP2PPort must be a 32bit integer (not '127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}')")
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", [f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}"], DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, "Invalid param for platformP2PPort, must be number")
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, f"127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}",
+                                  -8, f"platformHTTPPort must be a 32bit integer (not '127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}')")
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, [f"127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}"],
+                                  -8, "Invalid param for platformHTTPPort, must be number")
 
     def test_deprecation(self):
         # netInfo is represented with JSON in CProRegTx, CProUpServTx, CDeterministicMNState and CSimplifiedMNListEntry,
