@@ -746,6 +746,22 @@ def mock_signer_perform_pre_checks():
             sys.stdout.write(mock_result[2:])
             sys.exit(int(mock_result[0]))
 
+def mock_signer_log(mock_name):
+    """
+    Injects debug logging into test_framework.log. Because stdout can't be used,
+    as it would break the mock signer, the log lines can only be retrieved via
+    combine_logs.py.
+    """
+    fh = logging.FileHandler('test_framework.log', encoding='utf-8')
+    fh.setFormatter(log_formatter())
+    fh.setLevel(logging.DEBUG)
+
+    log = logging.getLogger(f"TestFramework.mock_{mock_name}")
+    log.setLevel(logging.DEBUG)
+    log.addHandler(fh)
+
+    return log
+
 def log_formatter():
     # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
     class MicrosecondFormatter(logging.Formatter):
