@@ -94,10 +94,17 @@ jobs:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}
 
+  lint:
+    name: Lint
+    uses: ./.github/workflows/lint.yml
+    needs: [container]
+    with:
+      container-path: ${{ needs.container.outputs.path }}
+
   src-arm-linux:
     name: arm-linux-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-arm-linux]
+    needs: [container, depends-arm-linux, lint]
     with:
       build-target: arm-linux
       container-path: ${{ needs.container.outputs.path }}
@@ -106,7 +113,7 @@ jobs:
   src-linux64:
     name: linux64-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
+    needs: [container, depends-linux64, lint]
     if: ${{ vars.SKIP_LINUX64 == '' }}
     with:
       build-target: linux64
@@ -116,7 +123,7 @@ jobs:
   src-linux64_fuzz:
     name: linux64_fuzz-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
+    needs: [container, depends-linux64, lint]
     if: ${{ vars.SKIP_LINUX64_FUZZ == '' }}
     with:
       build-target: linux64_fuzz
@@ -126,7 +133,7 @@ jobs:
   src-linux64_multiprocess:
     name: linux64_multiprocess-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64_multiprocess]
+    needs: [container, depends-linux64_multiprocess, lint]
     if: ${{ vars.SKIP_LINUX64_MULTIPROCESS == '' }}
     with:
       build-target: linux64_multiprocess
@@ -136,7 +143,7 @@ jobs:
   src-linux64_nowallet:
     name: linux64_nowallet-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64_nowallet]
+    needs: [container, depends-linux64_nowallet, lint]
     with:
       build-target: linux64_nowallet
       container-path: ${{ needs.container.outputs.path }}
@@ -145,7 +152,7 @@ jobs:
   src-linux64_sqlite:
     name: linux64_sqlite-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
+    needs: [container, depends-linux64, lint]
     if: ${{ vars.SKIP_LINUX64_SQLITE == '' }}
     with:
       build-target: linux64_sqlite
@@ -155,7 +162,7 @@ jobs:
   src-linux64_tsan:
     name: linux64_tsan-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64_multiprocess]
+    needs: [container, depends-linux64_multiprocess, lint]
     if: ${{ vars.SKIP_LINUX64_TSAN == '' }}
     with:
       build-target: linux64_tsan
@@ -165,7 +172,7 @@ jobs:
   src-linux64_ubsan:
     name: linux64_ubsan-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
+    needs: [container, depends-linux64, lint]
     if: ${{ vars.SKIP_LINUX64_UBSAN == '' }}
     with:
       build-target: linux64_ubsan
@@ -175,7 +182,7 @@ jobs:
   src-mac:
     name: mac-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-mac]
+    needs: [container, depends-mac, lint]
     with:
       build-target: mac
       container-path: ${{ needs.container.outputs.path }}
@@ -184,7 +191,7 @@ jobs:
   src-win64:
     name: win64-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-win64]
+    needs: [container, depends-win64, lint]
     with:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}

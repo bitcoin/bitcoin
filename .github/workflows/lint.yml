@@ -1,0 +1,44 @@
+name: Lint
+
+on:
+  workflow_call:
+    inputs:
+      container-path:
+        description: "Path to built container at registry"
+        required: true
+        type: string
+
+jobs:
+  lint:
+    name: Run linters
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ inputs.container-path }}
+      options: --user root
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 50
+
+      - name: Initial setup
+        run: |
+          git config --global --add safe.directory "$PWD"
+          git fetch -fu origin master:master
+          export COMMIT_RANGE="HEAD~..HEAD"
+          echo "COMMIT_RANGE=${COMMIT_RANGE}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Install lint dependencies
+        run: |
+          export CI_RETRY_EXE="retry --"
+          source ./ci/lint/04_install.sh
+        shell: bash
+
+      - name: Run linters
+        run: |
+          export LC_ALL=C.UTF-8
+          export CI_RETRY_EXE="retry --"
+          source ./ci/lint/06_script.sh
+        shell: bash
