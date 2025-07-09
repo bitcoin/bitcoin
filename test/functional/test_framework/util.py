@@ -5,6 +5,7 @@
 """Helpful routines for regression testing."""
 
 from base64 import b64encode
+from datetime import datetime, timezone
 from decimal import Decimal
 from subprocess import CalledProcessError
 import hashlib
@@ -744,3 +745,14 @@ def mock_signer_perform_pre_checks():
         if mock_result[0]:
             sys.stdout.write(mock_result[2:])
             sys.exit(int(mock_result[0]))
+
+def log_formatter():
+    # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
+    class MicrosecondFormatter(logging.Formatter):
+        def formatTime(self, record, _=None):
+            dt = datetime.fromtimestamp(record.created, timezone.utc)
+            return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+    return MicrosecondFormatter(
+        fmt='%(asctime)sZ %(name)s (%(levelname)s): %(message)s',
+    )

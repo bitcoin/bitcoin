@@ -7,7 +7,6 @@
 import configparser
 from enum import Enum
 import argparse
-from datetime import datetime, timezone
 import logging
 import os
 import platform
@@ -36,6 +35,7 @@ from .util import (
     get_binary_paths,
     get_datadir_path,
     initialize_datadir,
+    log_formatter,
     p2p_port,
     wait_until_helper_internal,
     wallet_importprivkey,
@@ -759,17 +759,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
         ch.setLevel(ll)
 
-        # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
-        class MicrosecondFormatter(logging.Formatter):
-            def formatTime(self, record, _=None):
-                dt = datetime.fromtimestamp(record.created, timezone.utc)
-                return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')
-
-        formatter = MicrosecondFormatter(
-            fmt='%(asctime)sZ %(name)s (%(levelname)s): %(message)s',
-        )
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
+        fh.setFormatter(log_formatter())
+        ch.setFormatter(log_formatter())
         # add the handlers to the logger
         self.log.addHandler(fh)
         self.log.addHandler(ch)
