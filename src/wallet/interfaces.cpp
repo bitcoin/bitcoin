@@ -21,6 +21,7 @@
 #include <util/ui_change_type.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/dump.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
 #include <wallet/types.h>
@@ -151,7 +152,18 @@ public:
         return m_wallet->ChangeWalletPassphrase(old_wallet_passphrase, new_wallet_passphrase);
     }
     void abortRescan() override { m_wallet->AbortRescan(); }
-    bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
+    bool canBackupToDbDump() override {
+        return (m_wallet->GetDatabase().Format() != "bdb");
+    }
+    bool backupWallet(const std::string& filename, const WalletBackupFormat format, bilingual_str& error) override {
+        switch (format) {
+            case WalletBackupFormat::DbDump:
+                return DumpWallet(m_wallet->GetDatabase(), error, filename);
+            case WalletBackupFormat::Raw:
+                return m_wallet->BackupWallet(filename);
+        }
+        return false;
+    }
     std::string getWalletName() override { return m_wallet->GetName(); }
     util::Result<CTxDestination> getNewDestination(const OutputType type, const std::string& label) override
     {
