@@ -128,6 +128,10 @@ public:
     /** Public only for unit testing */
     CBlockHeader header;
     CPartialMerkleTree txn;
+    /** Only used by subclass WtxidInBlockMerkleProof */
+    bool m_prove_gentx;  //!< if m_gentx doesn't commit to a witness tree, this indicates the gentx should be included in the proven tx list
+    CTransactionRef m_gentx;
+    CPartialMerkleTree m_wtxid_tree;
 
     /**
      * Public only for unit testing and relay testing (not relayed).
@@ -145,15 +149,43 @@ public:
     CMerkleBlock(const CBlock& block, CBloomFilter& filter) : CMerkleBlock(block, &filter, nullptr) { }
 
     // Create from a CBlock, matching the txids in the set
-    CMerkleBlock(const CBlock& block, const std::set<Txid>& txids) : CMerkleBlock{block, nullptr, &txids} {}
+    CMerkleBlock(const CBlock& block, const std::set<Txid>& txids, bool prove_witness=false) : CMerkleBlock{block, nullptr, &txids, prove_witness} {}
 
     CMerkleBlock() {}
 
-    SERIALIZE_METHODS(CMerkleBlock, obj) { READWRITE(obj.header, obj.txn); }
+    SERIALIZE_METHODS(CMerkleBlock, obj) {
+        SER_WRITE(obj, assert(!obj.m_gentx));
+        READWRITE(obj.header, obj.txn);
+        SER_READ(obj, obj.m_gentx.reset());
+        SER_READ(obj, obj.m_wtxid_tree = CPartialMerkleTree());
+    }
+
+    template<typename Stream>
+    void SerializeWithWitness(Stream& s) { SerializationWithWitnessOps(*this, s, ActionSerialize{}); }
+    template<typename Stream>
+    void UnserializeWithWitness(Stream& s) { SerializationWithWitnessOps(*this, s, ActionUnserialize{}); }
+    template<typename Stream, typename Type, typename Operation>
+    static void SerializationWithWitnessOps(Type& obj, Stream& s, Operation ser_action) {
+        // versions are negative to be strictly incompatible with block versions
+        // -1 indicates a non-witness block, proving both the generation tx and txid(s) in the main merkle tree
+        // -2 indicates a witness block, providing the generation tx in the main merkle tree, and txid(s) in the witness tree
+        int32_t version;
+        SER_WRITE(obj, version = obj.m_wtxid_tree.GetNumTransactions() ? -2 : -1);
+        READWRITE(version);
+
+        SER_WRITE(obj, assert(obj.m_gentx));
+        READWRITE(obj.header, obj.txn);
+        READWRITE(TX_WITH_WITNESS(obj.m_gentx));
+        if (version == -1) {
+            READWRITE(obj.m_prove_gentx);
+        } else {
+            READWRITE(obj.m_wtxid_tree);
+        }
+    }
 
 private:
     // Combined constructor to consolidate code
-    CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<Txid>* txids);
+    CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<Txid>* txids, bool prove_witness=false);
 };
 
 #endif // BITCOIN_MERKLEBLOCK_H
