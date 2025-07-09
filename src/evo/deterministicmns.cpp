@@ -1292,6 +1292,30 @@ static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not
     return opt_ptx;
 }
 
+/**
+ * Validates potential changes to masternode state version by ProTx transaction version
+ * @param[in]  pindexPrev    Previous block index to validate DEPLOYMENT_V23 activation
+ * @param[in]  state_version Current masternode state version
+ * @param[in]  tx_version    Proposed transaction version
+ * @param[out] state         This may be set to an Error state if any error occurred processing them
+ * @returns                  true if version change is valid or DEPLOYMENT_V23 is not active
+ */
+bool IsVersionChangeValid(gsl::not_null<const CBlockIndex*> pindexPrev, const uint16_t state_version, const uint16_t tx_version,
+                          TxValidationState& state)
+{
+    if (!DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V23)) {
+        // New restrictions only apply after v23 deployment
+        return true;
+    }
+
+    if (state_version >= ProTxVersion::BasicBLS && tx_version == ProTxVersion::LegacyBLS) {
+        // Don't allow legacy scheme versioned transactions after upgrading to basic scheme
+        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-downgrade");
+    }
+
+    return true;
+}
+
 bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state, const CCoinsViewCache& view, bool check_sigs)
 {
     const auto opt_ptx = GetValidatedPayload<CProRegTx>(tx, pindexPrev, state);
@@ -1439,6 +1463,11 @@ bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, g
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
     }
 
+    if (!IsVersionChangeValid(pindexPrev, dmn->pdmnState->nVersion, opt_ptx->nVersion, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
     // don't allow updating to addresses already used by other MNs
     for (const NetInfoEntry& entry : opt_ptx->netInfo->GetEntries()) {
         if (const auto& service_opt{entry.GetAddrPort()}; service_opt.has_value()) {
@@ -1501,6 +1530,11 @@ bool CheckProUpRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gs
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
     }
 
+    if (!IsVersionChangeValid(pindexPrev, dmn->pdmnState->nVersion, opt_ptx->nVersion, state)) {
+        // pass the state returned by the function above
+        return false;
+    }
+
     // don't allow reuse of payee key for other keys (don't allow people to put the payee key onto an online server)
     if (payoutDest == CTxDestination(PKHash(dmn->pdmnState->keyIDOwner)) || payoutDest == CTxDestination(PKHash(opt_ptx->keyIDVoting))) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-payee-reuse");
@@ -1558,6 +1592,11 @@ bool CheckProUpRevTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gs
     auto dmn = mnList.GetMN(opt_ptx->proTxHash);
     if (!dmn) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-hash");
+    }
+
+    if (!IsVersionChangeValid(pindexPrev, dmn->pdmnState->nVersion, opt_ptx->nVersion, state)) {
+        // pass the state returned by the function above
+        return false;
     }
 
     if (!CheckInputsHash(tx, *opt_ptx, state)) {
