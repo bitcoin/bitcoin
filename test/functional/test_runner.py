@@ -383,6 +383,10 @@ NON_SCRIPTS = [
     "combine_logs.py",
     "create_cache.py",
     "test_runner.py",
+    "mock_external_signer.py",
+    "mock_invalid_external_signer.py",
+    "mock_multiple_external_signers.py",
+    "mock_no_external_signer.py",
 ]
 
 def main():
