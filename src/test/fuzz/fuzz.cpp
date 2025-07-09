@@ -94,6 +94,7 @@ const std::function<std::string()> G_TEST_GET_FULL_NAME{[]{
 
 static void initialize()
 {
+    CheckGlobals check{};
     // By default, make the RNG deterministic with a fixed seed. This will affect all
     // randomness during the fuzz test, except:
     // - GetStrongRandBytes(), which is used for the creation of private key material.
