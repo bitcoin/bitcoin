@@ -16,6 +16,7 @@ import pathlib
 import platform
 import random
 import re
+import sys
 import time
 
 from . import coverage
@@ -619,3 +620,19 @@ def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
     }]
     import_res = wallet_rpc.importdescriptors(req)
     assert_equal(import_res[0]["success"], True)
+
+def mock_signer_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mocks', 'signer.py')
+    return sys.executable + " " + path
+
+def mock_no_connected_signer_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mocks', 'no_signer.py')
+    return sys.executable + " " + path
+
+def mock_invalid_signer_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mocks', 'invalid_signer.py')
+    return sys.executable + " " + path
+
+def mock_multi_signers_path():
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mocks', 'multi_signers.py')
+    return sys.executable + " " + path
