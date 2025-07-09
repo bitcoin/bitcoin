@@ -1121,10 +1121,10 @@ static const struct {
       {"/rest/mempool/", rest_mempool},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
+      {"/rest/spenttxouts/", rest_spent_txouts},
       {"/rest/deploymentinfo/", rest_deploymentinfo},
       {"/rest/deploymentinfo", rest_deploymentinfo},
       {"/rest/blockhashbyheight/", rest_blockhash_by_height},
-      {"/rest/spenttxouts/", rest_spent_txouts},
 };
 
 void StartREST(const std::any& context)
