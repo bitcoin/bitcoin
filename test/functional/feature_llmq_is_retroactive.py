@@ -24,6 +24,16 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # -whitelist is needed to avoid the trickling logic on node0
         self.set_dash_test_params(5, 4, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"]])
 
+    def wait_for_tx(self, txid, node, expected=True, timeout=60):
+        def check_tx():
+            try:
+                self.bump_mocktime(1)
+                return node.getrawtransaction(txid)
+            except:
+                return False
+        if self.wait_until(check_tx, timeout=timeout, sleep=1, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
     def run_test(self):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         # Turn mempool IS signing off

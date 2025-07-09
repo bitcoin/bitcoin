@@ -1903,17 +1903,6 @@ class DashTestFramework(BitcoinTestFramework):
         ret = {**decoded, **ret}
         return ret
 
-    # TODO: move it to feature_llmq_is_retroactive.py
-    def wait_for_tx(self, txid, node, expected=True, timeout=60):
-        def check_tx():
-            try:
-                self.bump_mocktime(1)
-                return node.getrawtransaction(txid)
-            except:
-                return False
-        if self.wait_until(check_tx, timeout=timeout, sleep=1, do_assert=expected) and not expected:
-            raise AssertionError("waiting unexpectedly succeeded")
-
     def create_isdlock(self, hextx):
         tx = tx_from_hex(hextx)
         tx.rehash()
