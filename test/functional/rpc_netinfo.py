@@ -155,6 +155,35 @@ class NetInfoTest(BitcoinTestFramework):
 
         self.node_simple: TestNode = self.nodes[1]
 
+        self.log.info("Test input validation for masternode address fields")
+        self.test_validation_common()
+
+        self.log.info("Test output masternode address fields for consistency")
+        self.test_deprecation()
+
+    def test_validation_common(self):
+        # Arrays of addresses with invalid inputs get refused
+        self.node_evo.register_mn(self, False, [[f"127.0.0.1:{self.node_evo.mn.nodePort}"]],
+                                  DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, "Invalid param for coreP2PAddrs[0], must be string")
+        self.node_evo.register_mn(self, False, [f"127.0.0.1:{self.node_evo.mn.nodePort}", ""],
+                                  DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, "Invalid param for coreP2PAddrs[1], cannot be empty string")
+        self.node_evo.register_mn(self, False, [f"127.0.0.1:{self.node_evo.mn.nodePort}", self.node_evo.mn.nodePort],
+                                  DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, "Invalid param for coreP2PAddrs[1], must be string")
+
+        # platformP2PPort and platformHTTPPort must be within acceptable range (i.e. a valid port number)
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", "0", DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, "platformP2PPort must be a valid port [1-65535]")
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", "65536", DEFAULT_PORT_PLATFORM_HTTP,
+                                  -8, "platformP2PPort must be a valid port [1-65535]")
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, "0",
+                                  -8, "platformHTTPPort must be a valid port [1-65535]")
+        self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, "65536",
+                                  -8, "platformHTTPPort must be a valid port [1-65535]")
+
+    def test_deprecation(self):
         # netInfo is represented with JSON in CProRegTx, CProUpServTx, CDeterministicMNState and CSimplifiedMNListEntry,
         # so we need to test calls that rely on these underlying implementations. Start by collecting RPC responses.
         self.log.info("Collect JSON RPC responses from node")
