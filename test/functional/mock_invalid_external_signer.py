@@ -7,7 +7,10 @@ import sys
 import argparse
 import json
 
-from test_framework.util import mock_signer_perform_pre_checks
+from test_framework.util import (
+    mock_signer_perform_pre_checks,
+    mock_signer_log,
+)
 
 def enumerate(args):
     sys.stdout.write(json.dumps([{"fingerprint": "b3c19bfc", "type": "trezor", "model": "trezor_t"}]))
@@ -29,6 +32,10 @@ def getdescriptors(args):
             "wpkh([b3c19bfc/84'/1'/" + args.account + "']" + xpub_wpkh + "/1/*)#rawj6535"
         ]
     }))
+
+
+log = mock_signer_log("invalid_external_signer")
+log.debug("Started")
 
 parser = argparse.ArgumentParser(prog='./invalid_signer.py', description='External invalid signer mock')
 parser.add_argument('--fingerprint')
@@ -55,3 +62,5 @@ args = parser.parse_args()
 mock_signer_perform_pre_checks()
 
 args.func(args)
+
+log.debug("Finished")
