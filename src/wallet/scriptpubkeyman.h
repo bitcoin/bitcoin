@@ -205,6 +205,9 @@ public:
      */
     virtual std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) { return {}; }
 
+    /* Determines if address is derived from active key manager */
+    virtual bool IsKeyActive(const CScript& script) const = 0;
+
     /** Sets up the key generation stuff, i.e. generates new HD seeds and sets them as active.
       * Returns false if already setup or setup fails, true if setup is successful
       * Set force=true to make it re-setup if already setup, used for upgrades
@@ -318,6 +321,7 @@ public:
 
     // ScriptPubKeyMan overrides
     bool CheckDecryptionKey(const CKeyingMaterial& master_key) override;
+    [[nodiscard]] bool IsKeyActive(const CScript& script) const override;
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
     uint256 GetID() const override { return uint256::ONE; }
@@ -654,6 +658,8 @@ public:
     bool TopUp(unsigned int size = 0) override;
 
     std::vector<WalletDestination> MarkUnusedAddresses(const CScript& script) override;
+
+    [[nodiscard]] bool IsKeyActive(const CScript& script) const override { return IsMine(script); }
 
     bool IsHDEnabled() const override;
 

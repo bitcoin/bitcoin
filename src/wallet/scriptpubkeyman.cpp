@@ -402,6 +402,23 @@ std::vector<WalletDestination> LegacyScriptPubKeyMan::MarkUnusedAddresses(const 
     return result;
 }
 
+bool LegacyDataSPKM::IsKeyActive(const CScript& script) const
+{
+    LOCK(cs_KeyStore);
+
+    if (!IsMine(script)) return false; // Not in the keystore at all
+
+    for (const auto& key_id : GetAffectedKeys(script, *this)) {
+        const auto it = mapKeyMetadata.find(key_id);
+        if (it == mapKeyMetadata.end()) return false; // This key must be really old
+
+        if (!it->second.hd_seed_id.IsNull() && it->second.hd_seed_id == m_hd_chain.seed_id) return true;
+    }
+
+    // Imported or dumped for a new keypool
+    return false;
+}
+
 void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
 {
     LOCK(cs_KeyStore);
@@ -1511,6 +1528,7 @@ void LegacyScriptPubKeyMan::LearnRelatedScripts(const CPubKey& key, OutputType t
 
 void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
 {
+    if (!g_implicit_segwit) return;
     // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
     LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
 }
