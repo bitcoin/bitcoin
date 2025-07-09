@@ -25,14 +25,20 @@ jobs:
       - name: Initial setup
         run: |
           git config --global --add safe.directory "$PWD"
-          git fetch -fu origin master:master
+          git fetch -fu origin develop:develop
         shell: bash
 
       - name: Run linters
         run: |
           export BUILD_TARGET="linux64"
           export CHECK_DOC=1
-          export COMMIT_RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha || github.sha }}"
-          export PULL_REQUEST="${{ github.event_name == 'pull_request_target' && 'true' || 'false' }}"
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            export COMMIT_RANGE="$(git merge-base origin/develop HEAD)..HEAD"
+            export PULL_REQUEST="true"
+          else
+            export COMMIT_RANGE="SKIP_EMPTY_NOT_A_PR"
+            export PULL_REQUEST="false"
+          fi
+          echo "COMMIT_RANGE=${COMMIT_RANGE}"
           ./ci/dash/lint.sh
         shell: bash
