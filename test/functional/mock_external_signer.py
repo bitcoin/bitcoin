@@ -8,7 +8,11 @@ import sys
 import argparse
 import json
 
-from test_framework.util import mock_signer_perform_pre_checks, mock_signer_psbt_path
+from test_framework.util import (
+    mock_signer_perform_pre_checks,
+    mock_signer_psbt_path,
+    mock_signer_log,
+)
 
 def enumerate(args):
     sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}]))
@@ -64,6 +68,10 @@ def signtx(args):
     else:
         sys.stdout.write(json.dumps({"psbt": args.psbt}))
 
+
+log = mock_signer_log("external_signer")
+log.debug("Started")
+
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 parser.add_argument('--fingerprint')
 parser.add_argument('--chain', default='main')
@@ -98,3 +106,5 @@ args = parser.parse_args()
 mock_signer_perform_pre_checks()
 
 args.func(args)
+
+log.debug("Finished")

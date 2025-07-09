@@ -7,8 +7,14 @@ import argparse
 import json
 import sys
 
+from test_framework.util import mock_signer_log
+
 def enumerate(args):
     sys.stdout.write(json.dumps([]))
+
+
+log = mock_signer_log("no_external_signer")
+log.debug("Started")
 
 parser = argparse.ArgumentParser(prog='./no_signer.py', description='No external signer connected mock')
 
@@ -27,3 +33,5 @@ if not sys.stdin.isatty():
 args = parser.parse_args()
 
 args.func(args)
+
+log.debug("Finished")
