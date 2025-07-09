@@ -219,10 +219,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_WITHDRAWALS].useEHF = true;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000a39050764808db046f5c"); // 2216986
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000aa587876325b0a1080c8"); // 2301632
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000000000000010b1135dc743f27f6fc8a138c6420a9d963fc676f96c2048f4"); // 2216986
+        consensus.defaultAssumeValid = uint256S("0x000000000000000630fdfb37764bc6df460d301effa5e0fd4e8ef9ba821f36da"); // 2301632
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -417,10 +417,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_WITHDRAWALS].useEHF = true;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000031f769ba78b4bee"); // 1189000
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000003472e1b8bd6a3b7"); // 1254997
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000001690314036dfbbecbdf382b230ead8e9c584241290a51f9f05a87a9cf7e"); // 1189000
+        consensus.defaultAssumeValid = uint256S("0x000001d20827f1394354452ba2e836de387e4fbf2d1d35b3281adbb14adf89a1"); // 1254997
 
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
