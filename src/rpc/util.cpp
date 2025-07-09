@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <ranges>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -48,12 +49,9 @@ const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hu
 
 std::string GetAllOutputTypes()
 {
-    std::vector<std::string> ret;
     using U = std::underlying_type_t<TxoutType>;
-    for (U i = (U)TxoutType::NONSTANDARD; i <= (U)TxoutType::WITNESS_UNKNOWN; ++i) {
-        ret.emplace_back(GetTxnOutputType(static_cast<TxoutType>(i)));
-    }
-    return Join(ret, ", ");
+    auto view{std::views::iota((U)TxoutType::NONSTANDARD, (U)TxoutType::WITNESS_UNKNOWN + 1)};
+    return Join(view, ", ", [](U i) { return GetTxnOutputType(static_cast<TxoutType>(i)); });
 }
 
 void RPCTypeCheckObj(const UniValue& o,
@@ -1234,11 +1232,8 @@ std::string RPCArg::ToStringObj(const bool oneline) const
     case Type::BOOL:
         return res + "bool";
     case Type::ARR:
-        res += "[";
-        for (const auto& i : m_inner) {
-            res += i.ToString(oneline) + ",";
-        }
-        return res + "...]";
+        // NOLINTNEXTLINE(misc-no-recursion)
+        return tfm::format("%s[%s,...]", res, Join(m_inner, ",", [&](const auto& arg) { return arg.ToString(oneline); }));
     case Type::OBJ:
     case Type::OBJ_NAMED_PARAMS:
     case Type::OBJ_USER_KEYS:
@@ -1284,11 +1279,8 @@ std::string RPCArg::ToString(const bool oneline) const
         }
     }
     case Type::ARR: {
-        std::string res;
-        for (const auto& i : m_inner) {
-            res += i.ToString(oneline) + ",";
-        }
-        return "[" + res + "...]";
+        // NOLINTNEXTLINE(misc-no-recursion)
+        return tfm::format("[%s,...]", Join(m_inner, ",", [&](const RPCArg& i) { return i.ToString(oneline); }));
     }
     } // no default case, so the compiler can warn about missing cases
     NONFATAL_UNREACHABLE();
