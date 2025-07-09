@@ -39,6 +39,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # 3 nodes should be enough to create an IS lock even if nodes 4 and 5 (which have no tx itself)
         # are the only "neighbours" in intra-quorum connections for one of them.
+        self.bump_mocktime(30)
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Have to disable ChainLocks to avoid signing a block with a "safe" tx too early
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4000000000)
@@ -59,8 +60,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # 3 nodes should be enough to create an IS lock even if nodes 4 and 5 (which have no tx itself)
         # are the only "neighbours" in intra-quorum connections for one of them.
+        self.bump_mocktime(30)
         self.wait_for_instantlock(txid, self.nodes[0])
-        self.bump_mocktime(1)
         block = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
@@ -180,10 +181,10 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # Make sure nodes 1 and 2 received the TX
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
+        self.bump_mocktime(30)
         # Make sure signing is done on nodes 1 and 2 (it's async)
-        time.sleep(5)
         # node 3 fully reconnected but the signing session is already timed out on it, so no IS lock
-        self.wait_for_instantlock(txid, self.nodes[0], False, 1)
+        self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         if do_cycle_llmqs:
             self.cycle_llmqs()
             self.wait_for_instantlock(txid, self.nodes[0], False, 5)
