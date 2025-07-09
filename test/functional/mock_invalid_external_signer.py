@@ -3,19 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import os
 import sys
 import argparse
 import json
 
-def perform_pre_checks():
-    mock_result_path = os.path.join(os.getcwd(), "mock_result")
-    if os.path.isfile(mock_result_path):
-        with open(mock_result_path, "r", encoding="utf8") as f:
-            mock_result = f.read()
-        if mock_result[0]:
-            sys.stdout.write(mock_result[2:])
-            sys.exit(int(mock_result[0]))
+from test_framework.util import mock_signer_perform_pre_checks
 
 def enumerate(args):
     sys.stdout.write(json.dumps([{"fingerprint": "b3c19bfc", "type": "trezor", "model": "trezor_t"}]))
@@ -60,6 +52,6 @@ if not sys.stdin.isatty():
 
 args = parser.parse_args()
 
-perform_pre_checks()
+mock_signer_perform_pre_checks()
 
 args.func(args)
