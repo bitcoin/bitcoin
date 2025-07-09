@@ -34,11 +34,6 @@ class TxValidationState;
 
 extern RecursiveMutex cs_main;
 
-namespace llmq {
-class CFinalCommitment;
-class CQuorumSnapshotManager;
-} // namespace llmq
-
 class CDeterministicMN
 {
 private:
@@ -563,19 +558,11 @@ public:
     ~CDeterministicMNManager() = default;
 
     bool ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, BlockValidationState& state,
-                      const CCoinsViewCache& view, llmq::CQuorumSnapshotManager& qsnapman,
                       const CDeterministicMNList& newList, std::optional<MNListUpdates>& updatesRet)
         EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
     bool UndoBlock(gsl::not_null<const CBlockIndex*> pindex, std::optional<MNListUpdates>& updatesRet) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void UpdatedBlockTip(gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
-    // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindexPrev,
-                               BlockValidationState& state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet,
-                               llmq::CQuorumSnapshotManager& qsnapman, bool debugLogs) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void HandleQuorumCommitment(const llmq::CFinalCommitment& qc, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex,
-                                CDeterministicMNList& mnList, llmq::CQuorumSnapshotManager& qsnapman, bool debugLogs);
 
     CDeterministicMNList GetListForBlock(gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs) {
         LOCK(cs);

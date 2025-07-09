@@ -31,6 +31,7 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
 #include <evo/simplifiedmns.h>
+#include <evo/specialtxman.h>
 #include <governance/governance.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
@@ -73,12 +74,10 @@ BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node,
       m_cpoolman(*Assert(node.cpoolman)),
       m_chain_helper(chainstate.ChainHelper()),
       m_chainstate(chainstate),
-      m_dmnman(*Assert(node.dmnman)),
       m_evoDb(*Assert(node.evodb)),
       m_mnhfman(*Assert(node.mnhf_manager)),
       m_clhandler(*Assert(Assert(node.llmq_ctx)->clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
-      m_qsnapman(*Assert(Assert(node.llmq_ctx)->qsnapman)),
       chainparams(params),
       m_mempool(mempool),
       m_quorum_block_processor(*Assert(Assert(node.llmq_ctx)->quorum_block_processor)),
@@ -120,6 +119,66 @@ void BlockAssembler::resetBlock()
     nBlockTx = 0;
     nFees = 0;
 }
+
+// Helper to calculate best chainlock
+static bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_handler, const CBlockIndex* pindexPrev,
+                                  uint32_t& bestCLHeightDiff, CBLSSignature& bestCLSignature)
+{
+    auto best_clsig = chainlock_handler.GetBestChainLock();
+    if (best_clsig.getHeight() < Params().GetConsensus().DeploymentHeight(Consensus::DEPLOYMENT_V19)) {
+        // We don't want legacy BLS ChainLocks in CbTx (can happen on regtest/devenets)
+        best_clsig = llmq::CChainLockSig{};
+    }
+    if (best_clsig.getHeight() == pindexPrev->nHeight) {
+        // Our best CL is the newest one possible
+        bestCLHeightDiff = 0;
+        bestCLSignature = best_clsig.getSig();
+        return true;
+    }
+
+    auto prevBlockCoinbaseChainlock = GetNonNullCoinbaseChainlock(pindexPrev);
+    if (prevBlockCoinbaseChainlock.has_value()) {
+        // Previous block Coinbase contains a non-null CL: We must insert the same sig or a better (newest) one
+        if (best_clsig.IsNull()) {
+            // We don't know any CL, therefore inserting the CL of the previous block
+            bestCLHeightDiff = prevBlockCoinbaseChainlock->second + 1;
+            bestCLSignature = prevBlockCoinbaseChainlock->first;
+            return true;
+        }
+
+        // We check if our best CL is newer than the one from previous block Coinbase
+        int curCLHeight = best_clsig.getHeight();
+        int prevCLHeight = pindexPrev->nHeight - static_cast<int>(prevBlockCoinbaseChainlock->second) - 1;
+        if (curCLHeight < prevCLHeight) {
+            // Our best CL isn't newer: inserting CL from previous block
+            bestCLHeightDiff = prevBlockCoinbaseChainlock->second + 1;
+            bestCLSignature = prevBlockCoinbaseChainlock->first;
+        }
+        else {
+            // Our best CL is newer
+            bestCLHeightDiff = pindexPrev->nHeight - best_clsig.getHeight();
+            bestCLSignature = best_clsig.getSig();
+        }
+
+        return true;
+    }
+    else {
+        // Previous block Coinbase has no CL. We can either insert null or any valid CL
+        if (best_clsig.IsNull()) {
+            // We don't know any CL, therefore inserting a null CL
+            bestCLHeightDiff = 0;
+            bestCLSignature.Reset();
+            return false;
+        }
+
+        // Inserting our best CL
+        bestCLHeightDiff = pindexPrev->nHeight - best_clsig.getHeight();
+        bestCLSignature = chainlock_handler.GetBestChainLock().getSig();
+
+        return true;
+    }
+}
+
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 {
@@ -229,7 +288,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
         BlockValidationState state;
         CDeterministicMNList mn_list;
-        if (!m_dmnman.BuildNewListFromBlock(*pblock, pindexPrev, state, m_chainstate.CoinsTip(), mn_list, m_qsnapman, true)) {
+        if (!m_chain_helper.special_tx->BuildNewListFromBlock(*pblock, pindexPrev, m_chainstate.CoinsTip(), true, state, mn_list)) {
             throw std::runtime_error(strprintf("%s: BuildNewListFromBlock failed: %s", __func__, state.ToString()));
         }
         if (!CalcCbTxMerkleRootMNList(cbTx.merkleRootMNList, CSimplifiedMNList(mn_list), state)) {

@@ -48,12 +48,14 @@
 #include <bls/bls.h>
 #include <coinjoin/context.h>
 #include <evo/cbtx.h>
+#include <evo/chainhelper.h>
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+#include <evo/specialtxman.h>
 #include <flat-database.h>
 #include <governance/governance.h>
 #include <llmq/context.h>
@@ -514,7 +516,7 @@ CBlock TestChainSetup::CreateBlock(
         Assert(cbTx.has_value());
         BlockValidationState state;
         CDeterministicMNList mn_list;
-        if (!m_node.dmnman->BuildNewListFromBlock(block, chainstate.m_chain.Tip(), state, chainstate.CoinsTip(), mn_list, *m_node.llmq_ctx->qsnapman, true)) {
+        if (!chainstate.ChainHelper().special_tx->BuildNewListFromBlock(block, chainstate.m_chain.Tip(), chainstate.CoinsTip(), true, state, mn_list)) {
             Assert(false);
         }
         if (!CalcCbTxMerkleRootMNList(cbTx->merkleRootMNList, CSimplifiedMNList(mn_list), state)) {
