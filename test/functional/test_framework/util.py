@@ -732,3 +732,15 @@ def mock_invalid_signer_path():
 def mock_multi_signers_path():
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mock_multiple_external_signers.py')
     return sys.executable + " " + path
+
+def mock_signer_psbt_path(node_cwd):
+    return os.path.join(node_cwd, "mock_psbt")
+
+def mock_signer_perform_pre_checks():
+    mock_result_path = os.path.join(os.getcwd(), "mock_result")
+    if os.path.isfile(mock_result_path):
+        with open(mock_result_path, "r", encoding="utf8") as f:
+            mock_result = f.read()
+        if mock_result[0]:
+            sys.stdout.write(mock_result[2:])
+            sys.exit(int(mock_result[0]))

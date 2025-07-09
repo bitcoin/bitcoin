@@ -17,6 +17,7 @@ from test_framework.util import (
     mock_invalid_signer_path,
     mock_multi_signers_path,
     mock_no_connected_signer_path,
+    mock_signer_psbt_path,
     mock_signer_path,
 )
 
@@ -156,7 +157,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
         assert hww.testmempoolaccept([mock_tx])[0]["allowed"]
 
-        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w", encoding="utf8") as f:
+        with open(mock_signer_psbt_path(self.nodes[1].cwd), "w", encoding="utf8") as f:
             f.write(mock_psbt_signed["psbt"])
 
         self.log.info('Test send using hww1')
@@ -181,7 +182,7 @@ class WalletSignerTest(BitcoinTestFramework):
         mock_psbt_bumped = mock_wallet.psbtbumpfee(orig_tx_id)["psbt"]
         mock_psbt_bumped_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt_bumped, sign=True, sighashtype="ALL", bip32derivs=True)
 
-        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w", encoding="utf8") as f:
+        with open(mock_signer_psbt_path(self.nodes[1].cwd), "w", encoding="utf8") as f:
             f.write(mock_psbt_bumped_signed["psbt"])
 
         self.log.info('Test bumpfee using hww1')
