@@ -497,69 +497,6 @@ static RPCHelpMan unloadwallet()
     };
 }
 
-static RPCHelpMan upgradewallet()
-{
-    return RPCHelpMan{
-        "upgradewallet",
-        "Upgrade the wallet. Upgrades to the latest version if no version number is specified.\n"
-        "New keys may be generated and a new wallet backup will need to be made.",
-        {
-            {"version", RPCArg::Type::NUM, RPCArg::Default{int{FEATURE_LATEST}}, "The version number to upgrade to. Default is the latest wallet version."}
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "wallet_name", "Name of wallet this operation was performed on"},
-                {RPCResult::Type::NUM, "previous_version", "Version of wallet before this operation"},
-                {RPCResult::Type::NUM, "current_version", "Version of wallet after this operation"},
-                {RPCResult::Type::STR, "result", /*optional=*/true, "Description of result, if no error"},
-                {RPCResult::Type::STR, "error", /*optional=*/true, "Error message (if there is one)"}
-            },
-        },
-        RPCExamples{
-            HelpExampleCli("upgradewallet", "169900")
-            + HelpExampleRpc("upgradewallet", "169900")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
-
-    EnsureWalletIsUnlocked(*pwallet);
-
-    int version = 0;
-    if (!request.params[0].isNull()) {
-        version = request.params[0].getInt<int>();
-    }
-    bilingual_str error;
-    const int previous_version{pwallet->GetVersion()};
-    const bool wallet_upgraded{pwallet->UpgradeWallet(version, error)};
-    const int current_version{pwallet->GetVersion()};
-    std::string result;
-
-    if (wallet_upgraded) {
-        if (previous_version == current_version) {
-            result = "Already at latest version. Wallet version unchanged.";
-        } else {
-            result = strprintf("Wallet upgraded successfully from version %i to version %i.", previous_version, current_version);
-        }
-    }
-
-    UniValue obj(UniValue::VOBJ);
-    obj.pushKV("wallet_name", pwallet->GetName());
-    obj.pushKV("previous_version", previous_version);
-    obj.pushKV("current_version", current_version);
-    if (!result.empty()) {
-        obj.pushKV("result", result);
-    } else {
-        CHECK_NONFATAL(!error.empty());
-        obj.pushKV("error", error.original);
-    }
-    return obj;
-},
-    };
-}
-
 RPCHelpMan simulaterawtransaction()
 {
     return RPCHelpMan{
@@ -1042,7 +979,6 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &simulaterawtransaction},
         {"wallet", &sendall},
         {"wallet", &unloadwallet},
-        {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},
 #ifdef ENABLE_EXTERNAL_SIGNER
         {"wallet", &walletdisplayaddress},
