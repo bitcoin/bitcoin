@@ -84,11 +84,11 @@ constexpr static struct {
               {0, 3509685}, {0, 635871},  {0, 2645814}, {0, 1788871}, {0, 2263667}};
 constexpr static size_t blockinfo_size = sizeof(BLOCKINFO) / sizeof(BLOCKINFO[0]);
 
-static CBlockIndex CreateBlockIndex(int nHeight, CBlockIndex* active_chain_tip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static std::unique_ptr<CBlockIndex> CreateBlockIndex(int nHeight, CBlockIndex* active_chain_tip) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    CBlockIndex index;
-    index.nHeight = nHeight;
-    index.pprev = active_chain_tip;
+    auto index{std::make_unique<CBlockIndex>()};
+    index->nHeight = nHeight;
+    index->pprev = active_chain_tip;
     return index;
 }
 
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     {
         CBlockIndex* active_chain_tip = m_node.chainman->ActiveChain().Tip();
-        BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, CreateBlockIndex(active_chain_tip->nHeight + 2, active_chain_tip))); // Sequence locks pass on 2nd block
+        BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, *CreateBlockIndex(active_chain_tip->nHeight + 2, active_chain_tip))); // Sequence locks pass on 2nd block
     }
 
     // relative time locked
@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i)->nTime += SEQUENCE_LOCK_TIME; // Trick the MedianTimePast
     {
         CBlockIndex* active_chain_tip = m_node.chainman->ActiveChain().Tip();
-        BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, CreateBlockIndex(active_chain_tip->nHeight + 1, active_chain_tip)));
+        BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, *CreateBlockIndex(active_chain_tip->nHeight + 1, active_chain_tip)));
     }
 
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {

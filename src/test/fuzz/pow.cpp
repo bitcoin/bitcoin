@@ -25,7 +25,7 @@ FUZZ_TARGET(pow, .init = initialize_pow)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const Consensus::Params& consensus_params = Params().GetConsensus();
-    std::vector<CBlockIndex> blocks;
+    std::vector<std::unique_ptr<CBlockIndex>> blocks;
     const uint32_t fixed_time = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     const uint32_t fixed_bits = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0, 10000) {
@@ -33,9 +33,10 @@ FUZZ_TARGET(pow, .init = initialize_pow)
         if (!block_header) {
             continue;
         }
-        CBlockIndex current_block{*block_header};
+        CBlockIndex& current_block{
+            *blocks.emplace_back(std::make_unique<CBlockIndex>(*block_header))};
         {
-            CBlockIndex* previous_block = blocks.empty() ? nullptr : &PickValue(fuzzed_data_provider, blocks);
+            CBlockIndex* previous_block = blocks.empty() ? nullptr : PickValue(fuzzed_data_provider, blocks).get();
             const int current_height = (previous_block != nullptr && previous_block->nHeight != std::numeric_limits<int>::max()) ? previous_block->nHeight + 1 : 0;
             if (fuzzed_data_provider.ConsumeBool()) {
                 current_block.pprev = previous_block;
@@ -57,7 +58,6 @@ FUZZ_TARGET(pow, .init = initialize_pow)
             } else {
                 current_block.nChainWork = ConsumeArithUInt256(fuzzed_data_provider);
             }
-            blocks.push_back(current_block);
         }
         {
             (void)GetBlockProof(current_block);
@@ -67,9 +67,9 @@ FUZZ_TARGET(pow, .init = initialize_pow)
             }
         }
         {
-            const CBlockIndex* to = &PickValue(fuzzed_data_provider, blocks);
-            const CBlockIndex* from = &PickValue(fuzzed_data_provider, blocks);
-            const CBlockIndex* tip = &PickValue(fuzzed_data_provider, blocks);
+            const auto& to = PickValue(fuzzed_data_provider, blocks);
+            const auto& from = PickValue(fuzzed_data_provider, blocks);
+            const auto& tip = PickValue(fuzzed_data_provider, blocks);
             try {
                 (void)GetBlockProofEquivalentTime(*to, *from, *tip, consensus_params);
             } catch (const uint_error&) {
