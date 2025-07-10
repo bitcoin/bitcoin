@@ -55,7 +55,7 @@ public:
     //! Calls `<command> getdescriptors --account <account>`
     //! @param[in] account  which BIP32 account to use (e.g. `m/44'/0'/account'`)
     //! @returns see doc/external-signer.md
-    UniValue GetDescriptors(const int account);
+    UniValue GetDescriptors(int account);
 
     //! Sign PartiallySignedTransaction on the device.
     //! Calls `<command> signtransaction` and passes the PSBT via stdin.

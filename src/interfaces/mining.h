@@ -71,7 +71,7 @@ public:
      * On testnet this will additionally return a template with difficulty 1 if
      * the tip is more than 20 minutes old.
      */
-    virtual std::unique_ptr<BlockTemplate> waitNext(const node::BlockWaitOptions options = {}) = 0;
+    virtual std::unique_ptr<BlockTemplate> waitNext(node::BlockWaitOptions options = {}) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
