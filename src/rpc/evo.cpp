@@ -1269,13 +1269,15 @@ static RPCHelpMan protx_revoke()
     EnsureWalletIsUnlocked(*pwallet);
 
     CProUpRevTx ptx;
-    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpRevTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()));
-
     ptx.proTxHash = ParseHashV(request.params[0], "proTxHash");
+
     auto dmn = dmnman.GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("masternode %s not found", ptx.proTxHash.ToString()));
     }
+
+    ptx.nVersion = ProTxVersion::GetMaxFromDeployment<CProUpRevTx>(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()),
+                                                                   /*is_basic_override=*/dmn->pdmnState->nVersion >= ProTxVersion::BasicBLS);
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[1].get_str(), "operatorKey");
 
