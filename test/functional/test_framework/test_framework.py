@@ -545,18 +545,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 extra_args[i] = extra_args[i] + ["-whitelist=noban,in,out@127.0.0.1"]
         if versions is None:
             versions = [None] * num_nodes
-        bin_dirs = [bin_dir_from_version(v) for v in versions]
-        # Fail test if any of the needed release binaries is missing
-        bins_missing = False
-        for bin_path in (argv[0] for bin_dir in bin_dirs
-                                 for binaries in (self.get_binaries(bin_dir),)
-                                 for argv in (binaries.node_argv(), binaries.rpc_argv())):
-            if shutil.which(bin_path) is None:
-                self.log.error(f"Binary not found: {bin_path}")
-                bins_missing = True
-        if bins_missing:
-            raise AssertionError("At least one release binary is missing. "
-                                 "Previous releases binaries can be downloaded via `test/get_previous_releases.py`.")
+        bin_dirs = []
+        for v in versions:
+            bin_dir = bin_dir_from_version(v)
+
+            # Fail test if any of the needed release binaries is missing
+            for bin_path in (argv[0] for binaries in (self.get_binaries(bin_dir),)
+                                     for argv in (binaries.node_argv(), binaries.rpc_argv())):
+
+                if shutil.which(bin_path) is None:
+                    self.log.error(f"Binary not found: {bin_path}")
+                    if v is None:
+                        raise AssertionError("At least one binary is missing, did you compile?")
+                    raise AssertionError("At least one release binary is missing. "
+                                         "Previous releases binaries can be downloaded via `test/get_previous_releases.py`.")
+
+            bin_dirs.append(bin_dir)
+
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
