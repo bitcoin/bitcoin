@@ -137,8 +137,6 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 10'000)
                 {
                     CCoinsCacheEntry coins_cache_entry;
-                    const auto dirty{fuzzed_data_provider.ConsumeBool()};
-                    const auto fresh{fuzzed_data_provider.ConsumeBool()};
                     if (fuzzed_data_provider.ConsumeBool()) {
                         coins_cache_entry.coin = random_coin;
                     } else {
@@ -150,8 +148,11 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                         coins_cache_entry.coin = *opt_coin;
                     }
                     auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
-                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
-                    if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
+                    const auto dirty{fuzzed_data_provider.ConsumeBool()};
+                    if (dirty) {
+                        const auto fresh{fuzzed_data_provider.ConsumeBool()};
+                        CCoinsCacheEntry::SetDirty(*it, sentinel, fresh);
+                    }
                     usage += it->second.coin.DynamicMemoryUsage();
                 }
                 bool expected_code_path = false;
@@ -164,9 +165,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                     coins_view_cache.BatchWrite(cursor, best_block);
                     expected_code_path = true;
                 } catch (const std::logic_error& e) {
-                    if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}
-                        || e.what() == std::string{"A FRESH coin was not removed when it was spent"}
-                        || e.what() == std::string{"A non-DIRTY coin was returned from the cursor in BatchWrite"}) {
+                    if (e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"}) {
                         expected_code_path = true;
                     }
                 }

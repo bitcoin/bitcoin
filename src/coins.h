@@ -109,7 +109,7 @@ struct CCoinsCacheEntry
 private:
     /**
      * These are used to create a doubly linked list of flagged entries.
-     * They are set in SetDirty, SetFresh, and unset in SetClean.
+     * They are set in SetDirty and unset in SetClean.
      * A flagged entry is any entry that is either DIRTY, FRESH, or both.
      *
      * DIRTY entries are tracked so that only modified entries can be passed to
@@ -167,8 +167,10 @@ public:
         SetClean();
     }
 
-    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh = false) noexcept
+    {
+        AddFlags(fresh ? FRESH | DIRTY : DIRTY, pair, sentinel);
+    }
 
     void SetClean() noexcept
     {
