@@ -33,6 +33,7 @@ namespace Ui {
 
 QT_BEGIN_NAMESPACE
 class QDateTime;
+class QLabel;
 class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
@@ -77,6 +78,8 @@ public:
 
     QString tabTitle(TabTypes tab_type) const;
     QKeySequence tabShortcut(TabTypes tab_type) const;
+
+    QLabel *m_label_softwareexpiry;
 
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event) override;
