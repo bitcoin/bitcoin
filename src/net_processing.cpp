@@ -1866,6 +1866,12 @@ PeerRef PeerManagerImpl::RemovePeer(NodeId id)
     return ret;
 }
 
+int PeerManagerImpl::GetNumberOfPeersWithValidatedDownloads() const
+{
+    AssertLockHeld(m_chainman.GetMutex());
+    return m_peers_downloading_from;
+}
+
 bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const
 {
     {
@@ -1925,12 +1931,6 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
         .median_outbound_time_offset = m_outbound_time_offsets.Median(),
         .ignores_incoming_txs = m_opts.ignore_incoming_txs,
     };
-}
-
-int PeerManagerImpl::GetNumberOfPeersWithValidatedDownloads() const
-{
-    AssertLockHeld(m_chainman.GetMutex());
-    return m_peers_downloading_from;
 }
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
