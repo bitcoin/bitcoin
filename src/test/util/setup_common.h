@@ -73,7 +73,7 @@ struct BasicTestingSetup {
         m_rng.Reseed(GetRandHash());
     }
 
-    explicit BasicTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
+    explicit BasicTestingSetup(ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~BasicTestingSetup();
 
     fs::path m_path_root;
@@ -109,7 +109,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
     bool m_block_tree_db_in_memory{true};
     std::function<void()> m_make_chainman{};
 
-    explicit ChainTestingSetup(const ChainType chainType = ChainType::MAIN, TestOpts = {});
+    explicit ChainTestingSetup(ChainType chainType = ChainType::MAIN, TestOpts = {});
     ~ChainTestingSetup();
 
     // Supplies a chainstate, if one is needed
@@ -120,7 +120,7 @@ struct ChainTestingSetup : public BasicTestingSetup {
  */
 struct TestingSetup : public ChainTestingSetup {
     explicit TestingSetup(
-        const ChainType chainType = ChainType::MAIN,
+        ChainType chainType = ChainType::MAIN,
         TestOpts = {});
 };
 
@@ -145,7 +145,7 @@ class CScript;
  */
 struct TestChain100Setup : public TestingSetup {
     TestChain100Setup(
-        const ChainType chain_type = ChainType::REGTEST,
+        ChainType chain_type = ChainType::REGTEST,
         TestOpts = {});
 
     /**

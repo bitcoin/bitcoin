@@ -95,7 +95,7 @@ public:
     virtual std::string getWalletName() = 0;
 
     // Get a new address.
-    virtual util::Result<CTxDestination> getNewDestination(const OutputType type, const std::string& label) = 0;
+    virtual util::Result<CTxDestination> getNewDestination(OutputType type, const std::string& label) = 0;
 
     //! Get public key.
     virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
@@ -130,7 +130,7 @@ public:
     virtual util::Result<void> displayAddress(const CTxDestination& dest) = 0;
 
     //! Lock coin.
-    virtual bool lockCoin(const COutPoint& output, const bool write_to_db) = 0;
+    virtual bool lockCoin(const COutPoint& output, bool write_to_db) = 0;
 
     //! Unlock coin.
     virtual bool unlockCoin(const COutPoint& output) = 0;

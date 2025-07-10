@@ -421,7 +421,7 @@ private:
     size_t m_bytes_sent GUARDED_BY(m_send_mutex) {0};
 
 public:
-    explicit V1Transport(const NodeId node_id) noexcept;
+    explicit V1Transport(NodeId node_id) noexcept;
 
     bool ReceivedMessageComplete() const override EXCLUSIVE_LOCKS_REQUIRED(!m_recv_mutex)
     {
@@ -1294,7 +1294,7 @@ public:
      * @param[in] network        Select only addresses of this network (nullopt = all).
      * @param[in] filtered       Select only addresses that are considered high quality (false = all).
      */
-    std::vector<CAddress> GetAddressesUnsafe(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
+    std::vector<CAddress> GetAddressesUnsafe(size_t max_addresses, size_t max_pct, std::optional<Network> network, bool filtered = true) const;
     /**
      * Return addresses from the per-requestor cache. If no cache entry exists, it is populated with
      * randomly selected addresses. This function can be used in untrusted contexts.
