@@ -17,6 +17,7 @@
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/string.h>
+#include <util/time.h>
 #include <util/vector.h>
 
 #include <functional>
@@ -228,29 +229,28 @@ std::unique_ptr<T> MakeNoLogFileContext(const std::string& chain_name = CBaseCha
 
 class CTxMemPoolEntry;
 
-struct TestMemPoolEntryHelper
-{
+struct TestMemPoolEntryHelper {
     // Default values
     CAmount nFee;
-    int64_t nTime;
+    NodeSeconds time{};
     unsigned int nHeight;
     bool spendsCoinbase;
     unsigned int sigOpCount;
     LockPoints lp;
 
     TestMemPoolEntryHelper() :
-        nFee(0), nTime(0), nHeight(1),
+        nFee(0), nHeight(1),
         spendsCoinbase(false), sigOpCount(1) { }
 
     CTxMemPoolEntry FromTx(const CMutableTransaction& tx) const;
     CTxMemPoolEntry FromTx(const CTransactionRef& tx) const;
 
     // Change the default value
-    TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
-    TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
-    TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
-    TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
+    TestMemPoolEntryHelper& Fee(CAmount _fee) { nFee = _fee; return *this; }
+    TestMemPoolEntryHelper& Time(NodeSeconds tp) { time = tp; return *this; }
+    TestMemPoolEntryHelper& Height(unsigned int _height) { nHeight = _height; return *this; }
+    TestMemPoolEntryHelper& SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
+    TestMemPoolEntryHelper& SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
 };
 
 CBlock getBlock13b8a();
