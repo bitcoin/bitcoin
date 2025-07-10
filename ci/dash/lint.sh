@@ -12,7 +12,7 @@ set -e
 source ./ci/dash/matrix.sh
 
 # Check commit scripts for PRs
-if [ "$PULL_REQUEST" != "false" ]; then 
+if [ "$PULL_REQUEST" != "false" ]; then
     test/lint/commit-script-check.sh "$COMMIT_RANGE"
 fi
 
