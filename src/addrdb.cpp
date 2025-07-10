@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -155,7 +155,7 @@ bool CBanDB::Write(const banmap_t& banSet)
 bool CBanDB::Read(banmap_t& banSet)
 {
     if (fs::exists(m_banlist_dat)) {
-        LogPrintf("banlist.dat ignored because it can only be read by " CLIENT_NAME " version 22.x. Remove %s to silence this warning.\n", fs::quoted(fs::PathToString(m_banlist_dat)));
+        LogWarning("banlist.dat ignored because it can only be read by " CLIENT_NAME " version 22.x. Remove %s to silence this warning.", fs::quoted(fs::PathToString(m_banlist_dat)));
     }
     // If the JSON banlist does not exist, then recreate it
     if (!fs::exists(m_banlist_json)) {
@@ -167,7 +167,7 @@ bool CBanDB::Read(banmap_t& banSet)
 
     if (!common::ReadSettings(m_banlist_json, settings, errors)) {
         for (const auto& err : errors) {
-            LogPrintf("Cannot load banlist %s: %s\n", fs::PathToString(m_banlist_json), err);
+            LogWarning("Cannot load banlist %s: %s", fs::PathToString(m_banlist_json), err);
         }
         return false;
     }
@@ -175,7 +175,7 @@ bool CBanDB::Read(banmap_t& banSet)
     try {
         BanMapFromJson(settings[JSON_KEY], banSet);
     } catch (const std::runtime_error& e) {
-        LogPrintf("Cannot parse banlist %s: %s\n", fs::PathToString(m_banlist_json), e.what());
+        LogWarning("Cannot parse banlist %s: %s", fs::PathToString(m_banlist_json), e.what());
         return false;
     }
 
@@ -204,11 +204,11 @@ util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgro
     const auto path_addr{args.GetDataDirNet() / "peers.dat"};
     try {
         DeserializeFileDB(path_addr, *addrman);
-        LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman->Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+        LogInfo("Loaded %i addresses from peers.dat  %dms", addrman->Size(), Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
     } catch (const DbNotFoundError&) {
         // Addrman can be in an inconsistent state after failure, reset it
         addrman = std::make_unique<AddrMan>(netgroupman, deterministic, /*consistency_check_ratio=*/check_addrman);
-        LogPrintf("Creating peers.dat because the file was not found (%s)\n", fs::quoted(fs::PathToString(path_addr)));
+        LogInfo("Creating peers.dat because the file was not found (%s)", fs::quoted(fs::PathToString(path_addr)));
         DumpPeerAddresses(args, *addrman);
     } catch (const InvalidAddrManVersionError&) {
         if (!RenameOver(path_addr, (fs::path)path_addr + ".bak")) {
@@ -216,7 +216,7 @@ util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgro
         }
         // Addrman can be in an inconsistent state after failure, reset it
         addrman = std::make_unique<AddrMan>(netgroupman, deterministic, /*consistency_check_ratio=*/check_addrman);
-        LogPrintf("Creating new peers.dat because the file version was not compatible (%s). Original backed up to peers.dat.bak\n", fs::quoted(fs::PathToString(path_addr)));
+        LogWarning("Creating new peers.dat because the file version was not compatible (%s). Original backed up to peers.dat.bak", fs::quoted(fs::PathToString(path_addr)));
         DumpPeerAddresses(args, *addrman);
     } catch (const std::exception& e) {
         return util::Error{strprintf(_("Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start."),
@@ -236,7 +236,7 @@ std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
     std::vector<CAddress> anchors;
     try {
         DeserializeFileDB(anchors_db_path, CAddress::V2_DISK(anchors));
-        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), fs::quoted(fs::PathToString(anchors_db_path.filename())));
+        LogInfo("Loaded %i addresses from %s", anchors.size(), fs::quoted(fs::PathToString(anchors_db_path.filename())));
     } catch (const std::exception&) {
         anchors.clear();
     }
