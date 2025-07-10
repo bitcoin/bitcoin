@@ -24,14 +24,14 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # -whitelist is needed to avoid the trickling logic on node0
         self.set_dash_test_params(5, 4, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"]])
 
+    # random delay before tx is actually send by network could take up to 30 seconds
     def wait_for_tx(self, txid, node, expected=True, timeout=60):
         def check_tx():
             try:
-                self.bump_mocktime(1)
                 return node.getrawtransaction(txid)
             except:
                 return False
-        if self.wait_until(check_tx, timeout=timeout, sleep=1, do_assert=expected) and not expected:
+        if self.wait_until(check_tx, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def run_test(self):
@@ -80,6 +80,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # Make sure nodes 1 and 2 received the TX before we continue,
         # otherwise it might announce the TX to node 3 when reconnecting
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         self.reconnect_isolated_node(3, 0)
@@ -112,6 +113,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # Make sure nodes 1 and 2 received the TX before we continue,
         # otherwise it might announce the TX to node 3 when reconnecting
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         self.reconnect_isolated_node(3, 0)
@@ -150,6 +152,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendrawtransaction(rawtx)
         txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make sure nodes 1 and 2 received the TX before we continue
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         # Make sure signing is done on nodes 1 and 2 (it's async)
@@ -189,6 +192,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_mnauth(self.nodes[3], 2)
         self.nodes[0].sendrawtransaction(rawtx)
         # Make sure nodes 1 and 2 received the TX
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         self.bump_mocktime(30)
