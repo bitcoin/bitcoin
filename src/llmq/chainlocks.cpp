@@ -506,7 +506,7 @@ void CChainLocksHandler::EnforceBestChainLock()
         lastNotifyChainLockBlockIndex = currentBestChainLockBlockIndex;
     }
 
-    GetMainSignals().NotifyChainLock(currentBestChainLockBlockIndex, clsig);
+    GetMainSignals().NotifyChainLock(currentBestChainLockBlockIndex, clsig, clsig->ToString());
     uiInterface.NotifyChainLock(clsig->getBlockHash().ToString(), clsig->getHeight());
     ::g_stats_client->gauge("chainlocks.blockHeight", clsig->getHeight(), 1.0f);
 }

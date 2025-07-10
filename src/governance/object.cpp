@@ -162,7 +162,8 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     fileVotes.AddVote(vote);
     fDirtyCache = true;
     // SEND NOTIFICATION TO SCRIPT/ZMQ
-    GetMainSignals().NotifyGovernanceVote(tip_mn_list, std::make_shared<const CGovernanceVote>(vote));
+    GetMainSignals().NotifyGovernanceVote(std::make_shared<CDeterministicMNList>(tip_mn_list),
+                                          std::make_shared<const CGovernanceVote>(vote), vote.GetHash().ToString());
     return true;
 }
 

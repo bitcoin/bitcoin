@@ -53,7 +53,7 @@ bool CZMQAbstractNotifier::NotifyTransactionLock(const CTransactionRef &/*transa
     return true;
 }
 
-bool CZMQAbstractNotifier::NotifyGovernanceVote(const CDeterministicMNList& /*tip_mn_list*/, const std::shared_ptr<const CGovernanceVote> & /*vote*/)
+bool CZMQAbstractNotifier::NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& /*tip_mn_list*/, const std::shared_ptr<const CGovernanceVote> & /*vote*/)
 {
     return true;
 }

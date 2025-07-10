@@ -264,7 +264,7 @@ bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransa
     return SendZmqMessage(MSG_HASHTXLOCK, data, 32);
 }
 
-bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote)
+bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote)
 {
     uint256 hash = vote->GetHash();
     LogPrint(BCLog::ZMQ, "Publish hashgovernancevote %s to %s\n", hash.GetHex(), this->address);
@@ -435,10 +435,10 @@ bool CZMQPublishRawTransactionLockSigNotifier::NotifyTransactionLock(const CTran
     return SendZmqMessage(MSG_RAWTXLOCKSIG, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const CDeterministicMNList& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote)
+bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote)
 {
     uint256 nHash = vote->GetHash();
-    LogPrint(BCLog::ZMQ, "Publish rawgovernanceobject %s with vote %d to %s\n", nHash.ToString(), vote->ToString(tip_mn_list), this->address);
+    LogPrint(BCLog::ZMQ, "Publish rawgovernanceobject %s with vote %d to %s\n", nHash.ToString(), vote->ToString(*tip_mn_list), this->address);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << *vote;
     return SendZmqMessage(MSG_RAWGVOTE, &(*ss.begin()), ss.size());
