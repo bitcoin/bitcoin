@@ -10,7 +10,7 @@
 #include <consensus/params.h>
 #include <net_types.h>
 #include <primitives/transaction.h>
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 #include <txmempool.h>
 #include <unordered_lru_cache.h>
 

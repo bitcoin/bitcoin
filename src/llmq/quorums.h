@@ -13,7 +13,7 @@
 #include <gsl/pointers.h>
 #include <protocol.h>
 #include <saltedhasher.h>
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 #include <unordered_lru_cache.h>
 #include <util/time.h>
 
