@@ -144,7 +144,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # UTXOs to be spent by the ultimate child transaction
         parent_utxos = []
 
-        evicted_vsize = 2000
+        evicted_vsize = 200
         # Mempool transaction which is evicted due to being at the "bottom" of the mempool when the
         # mempool overflows and evicts by descendant score. It's important that the eviction doesn't
         # happen in the middle of package evaluation, as it can invalidate the coins cache.
