@@ -6,8 +6,8 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
+#include <attributes.h>
 #include <consensus/amount.h>
-#include <prevector.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -260,7 +260,7 @@ public:
         return vin.empty() && vout.empty();
     }
 
-    const uint256& GetHash() const { return hash; }
+    const uint256& GetHash() const LIFETIMEBOUND { return hash; }
 
     // Return sum of txouts.
     CAmount GetValueOut() const;
