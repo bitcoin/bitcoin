@@ -112,7 +112,7 @@ bool BaseIndex::Init()
         // best chain, we will rewind to the fork point during index sync
         const CBlockIndex* locator_index{m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0))};
         if (!locator_index) {
-            return InitError(Untranslated(strprintf("%s: best block of the index not found. Please rebuild the index.", GetName())));
+            return InitError(Untranslated(strprintf("best block of %s not found. Please rebuild the index.", GetName())));
         }
         SetBestBlockIndex(locator_index);
     }
@@ -156,8 +156,8 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
     CBlock block;
     if (!block_data) { // disk lookup if block data wasn't provided
         if (!m_chainstate->m_blockman.ReadBlock(block, *pindex)) {
-            FatalErrorf("%s: Failed to read block %s from disk",
-                        __func__, pindex->GetBlockHash().ToString());
+            FatalErrorf("Failed to read block %s from disk",
+                        pindex->GetBlockHash().ToString());
             return false;
         }
         block_info.data = &block;
@@ -166,16 +166,16 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
     CBlockUndo block_undo;
     if (CustomOptions().connect_undo_data) {
         if (pindex->nHeight > 0 && !m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
-            FatalErrorf("%s: Failed to read undo block data %s from disk",
-                        __func__, pindex->GetBlockHash().ToString());
+            FatalErrorf("Failed to read undo block data %s from disk",
+                        pindex->GetBlockHash().ToString());
             return false;
         }
         block_info.undo_data = &block_undo;
     }
 
     if (!CustomAppend(block_info)) {
-        FatalErrorf("%s: Failed to write block %s to index database",
-                    __func__, pindex->GetBlockHash().ToString());
+        FatalErrorf("Failed to write block %s to index database",
+                    pindex->GetBlockHash().ToString());
         return false;
     }
 
@@ -190,7 +190,7 @@ void BaseIndex::Sync()
         std::chrono::steady_clock::time_point last_locator_write_time{0s};
         while (true) {
             if (m_interrupt) {
-                LogPrintf("%s: m_interrupt set; exiting ThreadSync\n", GetName());
+                LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
 
                 SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. If it fails, the error will be already be
@@ -221,7 +221,7 @@ void BaseIndex::Sync()
                 }
             }
             if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
-                FatalErrorf("%s: Failed to rewind index %s to a previous chain tip", __func__, GetName());
+                FatalErrorf("Failed to rewind %s to a previous chain tip", GetName());
                 return;
             }
             pindex = pindex_next;
@@ -231,7 +231,7 @@ void BaseIndex::Sync()
 
             auto current_time{std::chrono::steady_clock::now()};
             if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
-                LogPrintf("Syncing %s with block chain from height %d\n",
+                LogInfo("Syncing %s with block chain from height %d",
                           GetName(), pindex->nHeight);
                 last_log_time = current_time;
             }
@@ -246,9 +246,9 @@ void BaseIndex::Sync()
     }
 
     if (pindex) {
-        LogPrintf("%s is enabled at height %d\n", GetName(), pindex->nHeight);
+        LogInfo("%s is enabled at height %d", GetName(), pindex->nHeight);
     } else {
-        LogPrintf("%s is enabled\n", GetName());
+        LogInfo("%s is enabled", GetName());
     }
 }
 
@@ -266,7 +266,7 @@ bool BaseIndex::Commit()
         }
     }
     if (!ok) {
-        LogError("%s: Failed to commit latest %s state\n", __func__, GetName());
+        LogError("Failed to commit latest %s state", GetName());
         return false;
     }
     return true;
@@ -284,8 +284,8 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
         interfaces::BlockInfo block_info = kernel::MakeBlockInfo(iter_tip);
         if (CustomOptions().disconnect_data) {
             if (!m_chainstate->m_blockman.ReadBlock(block, *iter_tip)) {
-                LogError("%s: Failed to read block %s from disk",
-                             __func__, iter_tip->GetBlockHash().ToString());
+                LogError("Failed to read block %s from disk",
+                         iter_tip->GetBlockHash().ToString());
                 return false;
             }
             block_info.data = &block;
@@ -336,8 +336,8 @@ void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const 
     const CBlockIndex* best_block_index = m_best_block_index.load();
     if (!best_block_index) {
         if (pindex->nHeight != 0) {
-            FatalErrorf("%s: First block connected is not the genesis block (height=%d)",
-                       __func__, pindex->nHeight);
+            FatalErrorf("First block connected is not the genesis block (height=%d)",
+                       pindex->nHeight);
             return;
         }
     } else {
@@ -347,15 +347,15 @@ void BaseIndex::BlockConnected(ChainstateRole role, const std::shared_ptr<const 
         // in the ValidationInterface queue backlog even after the sync thread has caught up to the
         // new chain tip. In this unlikely event, log a warning and let the queue clear.
         if (best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
-            LogPrintf("%s: WARNING: Block %s does not connect to an ancestor of "
-                      "known best chain (tip=%s); not updating index\n",
-                      __func__, pindex->GetBlockHash().ToString(),
+            LogWarning("Block %s does not connect to an ancestor of "
+                      "known best chain (tip=%s); not updating index",
+                      pindex->GetBlockHash().ToString(),
                       best_block_index->GetBlockHash().ToString());
             return;
         }
         if (best_block_index != pindex->pprev && !Rewind(best_block_index, pindex->pprev)) {
-            FatalErrorf("%s: Failed to rewind index %s to a previous chain tip",
-                       __func__, GetName());
+            FatalErrorf("Failed to rewind %s to a previous chain tip",
+                       GetName());
             return;
         }
     }
@@ -390,8 +390,8 @@ void BaseIndex::ChainStateFlushed(ChainstateRole role, const CBlockLocator& loca
     }
 
     if (!locator_tip_index) {
-        FatalErrorf("%s: First block (hash=%s) in locator was not found",
-                   __func__, locator_tip_hash.ToString());
+        FatalErrorf("First block (hash=%s) in locator was not found",
+                   locator_tip_hash.ToString());
         return;
     }
 
@@ -402,9 +402,9 @@ void BaseIndex::ChainStateFlushed(ChainstateRole role, const CBlockLocator& loca
     // event, log a warning and let the queue clear.
     const CBlockIndex* best_block_index = m_best_block_index.load();
     if (best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
-        LogPrintf("%s: WARNING: Locator contains block (hash=%s) not on known best "
-                  "chain (tip=%s); not writing index locator\n",
-                  __func__, locator_tip_hash.ToString(),
+        LogWarning("Locator contains block (hash=%s) not on known best "
+                  "chain (tip=%s); not writing index locator",
+                  locator_tip_hash.ToString(),
                   best_block_index->GetBlockHash().ToString());
         return;
     }
@@ -434,7 +434,7 @@ bool BaseIndex::BlockUntilSyncedToCurrentChain() const
         }
     }
 
-    LogPrintf("%s: %s is catching up on block notifications\n", __func__, GetName());
+    LogInfo("%s is catching up on block notifications", GetName());
     m_chain->context()->validation_signals->SyncWithValidationInterfaceQueue();
     return true;
 }
