@@ -107,7 +107,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
                     // wallet(s) having loaded it while we were processing
                     // mempool transactions; consider these as valid, instead of
                     // failed, but mark them as 'already there'
-                    if (pool.exists(GenTxid::Txid(tx->GetHash()))) {
+                    if (pool.exists(tx->GetHash())) {
                         ++already_there;
                     } else {
                         ++failed;
@@ -119,7 +119,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             if (active_chainstate.m_chainman.m_interrupt)
                 return false;
         }
-        std::map<uint256, CAmount> mapDeltas;
+        std::map<Txid, CAmount> mapDeltas;
         file >> mapDeltas;
 
         if (opts.apply_fee_delta_priority) {
@@ -128,7 +128,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
         }
 
-        std::set<uint256> unbroadcast_txids;
+        std::set<Txid> unbroadcast_txids;
         file >> unbroadcast_txids;
         if (opts.apply_unbroadcast_set) {
             unbroadcast = unbroadcast_txids.size();
@@ -151,9 +151,9 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 {
     auto start = SteadyClock::now();
 
-    std::map<uint256, CAmount> mapDeltas;
+    std::map<Txid, CAmount> mapDeltas;
     std::vector<TxMempoolInfo> vinfo;
-    std::set<uint256> unbroadcast_txids;
+    std::set<Txid> unbroadcast_txids;
 
     static Mutex dump_mutex;
     LOCK(dump_mutex);

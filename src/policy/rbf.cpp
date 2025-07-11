@@ -32,7 +32,7 @@ RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 
     // If this transaction is not in our mempool, then we can't be sure
     // we will know about all its inputs.
-    if (!pool.exists(GenTxid::Txid(tx.GetHash()))) {
+    if (!pool.exists(tx.GetHash())) {
         return RBFTransactionState::UNKNOWN;
     }
 
@@ -62,7 +62,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                                                   CTxMemPool::setEntries& all_conflicts)
 {
     AssertLockHeld(pool.cs);
-    const uint256 txid = tx.GetHash();
+    const Txid txid = tx.GetHash();
     uint64_t nConflictingCount = 0;
     for (const auto& mi : iters_conflicting) {
         nConflictingCount += mi->GetCountWithDescendants();
@@ -89,7 +89,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
                                                const CTxMemPool::setEntries& iters_conflicting)
 {
     AssertLockHeld(pool.cs);
-    std::set<uint256> parents_of_conflicts;
+    std::set<Txid> parents_of_conflicts;
     for (const auto& mi : iters_conflicting) {
         for (const CTxIn& txin : mi->GetTx().vin) {
             parents_of_conflicts.insert(txin.prevout.hash);
@@ -107,7 +107,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
         if (!parents_of_conflicts.count(tx.vin[j].prevout.hash)) {
             // Rather than check the UTXO set - potentially expensive - it's cheaper to just check
             // if the new input refers to a tx that's in the mempool.
-            if (pool.exists(GenTxid::Txid(tx.vin[j].prevout.hash))) {
+            if (pool.exists(tx.vin[j].prevout.hash)) {
                 return strprintf("replacement %s adds unconfirmed input, idx %d",
                                  tx.GetHash().ToString(), j);
             }
@@ -118,7 +118,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
 
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
                                                    const std::set<Txid>& direct_conflicts,
-                                                   const uint256& txid)
+                                                   const Txid& txid)
 {
     for (CTxMemPool::txiter ancestorIt : ancestors) {
         const Txid& hashAncestor = ancestorIt->GetTx().GetHash();
@@ -133,7 +133,7 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
 
 std::optional<std::string> PaysMoreThanConflicts(const CTxMemPool::setEntries& iters_conflicting,
                                                  CFeeRate replacement_feerate,
-                                                 const uint256& txid)
+                                                 const Txid& txid)
 {
     for (const auto& mi : iters_conflicting) {
         // Don't allow the replacement to reduce the feerate of the mempool.
@@ -161,7 +161,7 @@ std::optional<std::string> PaysForRBF(CAmount original_fees,
                                       CAmount replacement_fees,
                                       size_t replacement_vsize,
                                       CFeeRate relay_fee,
-                                      const uint256& txid)
+                                      const Txid& txid)
 {
     // Rule #3: The replacement fees must be greater than or equal to fees of the
     // transactions it replaces, otherwise the bandwidth used by those conflicting transactions
