@@ -18,18 +18,50 @@ void ProcessNetInfoCore(T1& ptx, const UniValue& input, const bool optional)
 {
     CHECK_NONFATAL(ptx.netInfo);
 
-    if (!input.isStr()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid param for ipAndPort, must be string");
-    }
-    if (!optional && input.get_str().empty()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Empty param for ipAndPort not allowed");
-    }
-    if (!input.get_str().empty()) {
-        if (auto entryRet = ptx.netInfo->AddEntry(input.get_str()); entryRet != NetInfoStatus::Success) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                               strprintf("Error setting ipAndPort to '%s' (%s)", input.get_str(), NISToString(entryRet)));
+    if (input.isStr()) {
+        const std::string& entry = input.get_str();
+        if (entry.empty()) {
+            if (!optional) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Empty param for ipAndPort not allowed");
+            }
+            return; // Nothing to do
         }
+        if (auto entryRet = ptx.netInfo->AddEntry(entry); entryRet != NetInfoStatus::Success) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               strprintf("Error setting ipAndPort[0] to '%s' (%s)", entry, NISToString(entryRet)));
+        }
+        return; // Parsing complete
     }
+
+    if (input.isArray()) {
+        const UniValue& entries = input.get_array();
+        if (entries.empty()) {
+            if (!optional) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Empty params for ipAndPort not allowed");
+            }
+            return; // Nothing to do
+        }
+        for (size_t idx{0}; idx < entries.size(); idx++) {
+            const UniValue& entry_uv{entries[idx]};
+            if (!entry_uv.isStr()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   strprintf("Invalid param for ipAndPort[%d], must be string", idx));
+            }
+            const std::string& entry = entry_uv.get_str();
+            if (entry.empty()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   strprintf("Invalid param for ipAndPort[%d], cannot be empty string", idx));
+            }
+            if (auto entryRet = ptx.netInfo->AddEntry(entry); entryRet != NetInfoStatus::Success) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Error setting ipAndPort[%d] to '%s' (%s)", idx,
+                                                                    entry, NISToString(entryRet)));
+            }
+        }
+        return; // Parsing complete
+    }
+
+    // Invalid input
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid param for ipAndPort, must be string or array");
 }
 template void ProcessNetInfoCore(CProRegTx& ptx, const UniValue& input, const bool optional);
 template void ProcessNetInfoCore(CProUpServTx& ptx, const UniValue& input, const bool optional);

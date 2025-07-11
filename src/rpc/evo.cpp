@@ -93,13 +93,19 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "The private key belonging to this address must be known in your wallet."}
         },
         {"ipAndPort",
-            {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "IP and port in the form \"IP:PORT\". Must be unique on the network.\n"
-                "Can be set to an empty string, which will require a ProUpServTx afterwards."}
+            {"ipAndPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\". Must be unique on the network.\n"
+                "Can be set to an empty string, which will require a ProUpServTx afterwards.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
         {"ipAndPort_update",
-            {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "IP and port in the form \"IP:PORT\". Must be unique on the network."}
+            {"ipAndPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\". Must be unique on the network.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
         {"operatorKey",
             {"operatorKey", RPCArg::Type::STR, RPCArg::Optional::NO,

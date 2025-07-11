@@ -23,7 +23,7 @@ import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from typing import List, Optional
+from typing import List, Optional, Union
 from .address import ADDRESS_BCRT1_P2SH_OP_TRUE
 from .authproxy import JSONRPCException
 from test_framework.masternodes import check_banned, check_punished
@@ -1216,7 +1216,7 @@ class MasternodeInfo:
         return test.nodes[self.nodeIdx]
 
     def register(self, node: TestNode, submit: bool, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
-                 ipAndPort: Optional[str] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
+                 ipAndPort: Union[str, List[str], None] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
                  operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
                  platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None,
                  expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
@@ -1236,7 +1236,7 @@ class MasternodeInfo:
         args = [
             collateral_txid or self.collateral_txid,
             collateral_vout or self.collateral_vout,
-            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            ipAndPort or [f'127.0.0.1:{self.nodePort}'],
             ownerAddr or self.ownerAddr,
             pubKeyOperator or self.pubKeyOperator,
             votingAddr or self.votingAddr,
@@ -1271,7 +1271,7 @@ class MasternodeInfo:
 
         return ret
 
-    def register_fund(self, node: TestNode, submit: bool, collateral_address: Optional[str] = None, ipAndPort: Optional[str] = None,
+    def register_fund(self, node: TestNode, submit: bool, collateral_address: Optional[str] = None, ipAndPort: Union[str, List[str], None] = None,
                       ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
                       operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
                       platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None,
@@ -1299,7 +1299,7 @@ class MasternodeInfo:
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
             collateral_address or self.collateral_address,
-            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            ipAndPort or [f'127.0.0.1:{self.nodePort}'],
             ownerAddr or self.ownerAddr,
             pubKeyOperator or self.pubKeyOperator,
             votingAddr or self.votingAddr,
@@ -1410,7 +1410,7 @@ class MasternodeInfo:
 
         return ret
 
-    def update_service(self, node: TestNode, submit: bool, ipAndPort: Optional[str] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
+    def update_service(self, node: TestNode, submit: bool, ipAndPort: Union[str, List[str], None] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
                        platform_http_port: Optional[int] = None, address_operator: Optional[str] = None, fundsAddr: Optional[str] = None,
                        expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
         if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
@@ -1442,7 +1442,7 @@ class MasternodeInfo:
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
             self.proTxHash,
-            ipAndPort or f'127.0.0.1:{self.nodePort}',
+            ipAndPort or [f'127.0.0.1:{self.nodePort}'],
             self.keyOperator,
         ]
         address_funds = fundsAddr or self.fundsAddr
@@ -1643,7 +1643,7 @@ class DashTestFramework(BitcoinTestFramework):
         mn.bury_tx(self, genIdx=0, txid=collateral_txid, depth=1)
         collateral_vout = mn.get_collateral_vout(self.nodes[0], collateral_txid)
 
-        ipAndPort = '127.0.0.1:%d' % node_p2p_port
+        ipAndPort = ['127.0.0.1:%d' % node_p2p_port]
         operatorReward = idx
 
         # platform_node_id, platform_p2p_port and platform_http_port are ignored for regular masternodes
@@ -1709,7 +1709,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
 
         port = p2p_port(len(self.nodes) + idx)
-        ipAndPort = '127.0.0.1:%d' % port
+        ipAndPort = ['127.0.0.1:%d' % port]
         operatorReward = idx
 
         submit = (idx % 4) < 2
