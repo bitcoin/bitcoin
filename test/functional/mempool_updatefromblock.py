@@ -205,7 +205,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         assert_raises_rpc_error(-26, "too-long-mempool-chain, too many unconfirmed ancestors [limit: 100]", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
 
         # Mine a block with all but last transaction, non-standardly long chain
-        self.generateblock(self.nodes[0], output="raw(42)", transactions=[tx["hex"] for tx in chain[:-1]])
+        self.generateblock(self.nodes[0], transactions=[tx["hex"] for tx in chain[:-1]])
         assert_equal(self.nodes[0].getrawmempool(), [])
 
         # Last tx fits now
