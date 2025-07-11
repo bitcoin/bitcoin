@@ -8,6 +8,7 @@
 #include <key_io.h>
 #include <node/types.h>
 #include <policy/policy.h>
+#include <policy/truc_policy.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/util.h>
 #include <script/script.h>
@@ -704,6 +705,12 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         coinControl.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
     }
 
+    if (tx.version == TRUC_VERSION) {
+        if (!coinControl.m_max_tx_weight.has_value() || coinControl.m_max_tx_weight.value() > TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR) {
+            coinControl.m_max_tx_weight = TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR;
+        }
+    }
+
     if (recipients.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
@@ -1295,7 +1302,7 @@ RPCHelpMan send()
                     ParseOutputs(outputs),
                     InterpretSubtractFeeFromOutputInstructions(options["subtract_fee_from_outputs"], outputs.getKeys())
             );
-            CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf);
+            CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf, DEFAULT_RAWTX_VERSION);
             CCoinControl coin_control;
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
@@ -1303,6 +1310,13 @@ RPCHelpMan send()
             if (options.exists("max_tx_weight")) {
                 coin_control.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
             }
+
+            if (rawTx.version == TRUC_VERSION) {
+                if (!coin_control.m_max_tx_weight.has_value() || coin_control.m_max_tx_weight.value() > TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR) {
+                    coin_control.m_max_tx_weight = TRUC_MAX_VSIZE * WITNESS_SCALE_FACTOR;
+                }
+            }
+
             SetOptionsInputWeights(options["inputs"], options);
             // Clear tx.vout since it is not meant to be used now that we are passing outputs directly.
             // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
@@ -1455,7 +1469,7 @@ RPCHelpMan sendall()
                 throw JSONRPCError(RPC_WALLET_ERROR, "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
             }
 
-            CMutableTransaction rawTx{ConstructTransaction(options["inputs"], recipient_key_value_pairs, options["locktime"], rbf)};
+            CMutableTransaction rawTx{ConstructTransaction(options["inputs"], recipient_key_value_pairs, options["locktime"], rbf, DEFAULT_RAWTX_VERSION)};
             LOCK(pwallet->cs_wallet);
 
             CAmount total_input_value(0);
@@ -1746,7 +1760,7 @@ RPCHelpMan walletcreatefundedpsbt()
 
     const UniValue &replaceable_arg = options["replaceable"];
     const bool rbf{replaceable_arg.isNull() ? wallet.m_signal_rbf : replaceable_arg.get_bool()};
-    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf, DEFAULT_RAWTX_VERSION);
     UniValue outputs(UniValue::VOBJ);
     outputs = NormalizeOutputs(request.params[1]);
     std::vector<CRecipient> recipients = CreateRecipients(
