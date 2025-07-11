@@ -35,6 +35,12 @@ from test_framework.script import (
     hash160,
 )
 
+# Maximum number of potentially executed legacy signature operations in validating a transaction.
+MAX_STD_LEGACY_SIGOPS = 2_500
+
+# Maximum number of sigops per standard P2SH redeemScript.
+MAX_STD_P2SH_SIGOPS = 15
+
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
 # non-witness size of at least 65 bytes (MIN_STANDARD_TX_NONWITNESS_SIZE in
 # src/policy/policy.h). Considering a Tx with the smallest possible single
