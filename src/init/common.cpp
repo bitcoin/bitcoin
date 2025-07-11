@@ -115,9 +115,10 @@ bool StartLogging(const ArgsManager& args)
     }
 
     if (!LogInstance().m_log_timestamps)
-        LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
-    LogPrintf("Default data directory %s\n", fs::PathToString(GetDefaultDataDir()));
-    LogPrintf("Using data directory %s\n", fs::PathToString(gArgs.GetDataDirNet()));
+        LogInfo("Startup time: %s", FormatISO8601DateTime(GetTime()));
+    LogInfo("Default data directory %s", fs::PathToString(GetDefaultDataDir()));
+    LogInfo("Using data directory %s", fs::PathToString(gArgs.GetDataDirNet()));
+    LogInfo("Using blocks directory %s", fs::PathToString(gArgs.GetBlocksDirPath()));
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = args.GetConfigFilePath();
