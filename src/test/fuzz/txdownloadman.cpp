@@ -173,9 +173,8 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
     // Initialize txdownloadman
     bilingual_str error;
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
-    const auto max_orphan_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 300);
     FastRandomContext det_rand{true};
-    node::TxDownloadManager txdownloadman{node::TxDownloadOptions{pool, det_rand, max_orphan_count, true}};
+    node::TxDownloadManager txdownloadman{node::TxDownloadOptions{pool, det_rand, true}};
 
     std::chrono::microseconds time{244466666};
 
@@ -278,14 +277,9 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
 // peer without tracking anything (this is only for the txdownload_impl target).
 static bool HasRelayPermissions(NodeId peer) { return peer == 0; }
 
-static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl, size_t max_orphan_count)
+static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl)
 {
-    const TxOrphanage& orphanage = txdownload_impl.m_orphanage;
-
-    // Orphanage usage should never exceed what is allowed
-    Assert(orphanage.Size() <= max_orphan_count);
-    txdownload_impl.m_orphanage.SanityCheck();
-
+    txdownload_impl.m_orphanage->SanityCheck();
     // We should never have more than the maximum in-flight requests out for a peer.
     for (NodeId peer = 0; peer < NUM_PEERS; ++peer) {
         if (!HasRelayPermissions(peer)) {
@@ -304,9 +298,8 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
     // Initialize a TxDownloadManagerImpl
     bilingual_str error;
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
-    const auto max_orphan_count = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 300);
     FastRandomContext det_rand{true};
-    node::TxDownloadManagerImpl txdownload_impl{node::TxDownloadOptions{pool, det_rand, max_orphan_count, true}};
+    node::TxDownloadManagerImpl txdownload_impl{node::TxDownloadOptions{pool, det_rand, true}};
 
     std::chrono::microseconds time{244466666};
 
@@ -350,7 +343,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 block.vtx.push_back(rand_tx);
                 txdownload_impl.BlockConnected(std::make_shared<CBlock>(block));
                 // Block transactions must be removed from orphanage
-                Assert(!txdownload_impl.m_orphanage.HaveTx(rand_tx->GetWitnessHash()));
+                Assert(!txdownload_impl.m_orphanage->HaveTx(rand_tx->GetWitnessHash()));
             },
             [&] {
                 txdownload_impl.BlockDisconnected();
@@ -402,7 +395,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                     const auto& package = maybe_package->m_txns;
                     // Parent is in m_lazy_recent_rejects_reconsiderable and child is in m_orphanage
                     Assert(txdownload_impl.RecentRejectsReconsiderableFilter().contains(rand_tx->GetWitnessHash().ToUint256()));
-                    Assert(txdownload_impl.m_orphanage.HaveTx(maybe_package->m_txns.back()->GetWitnessHash()));
+                    Assert(txdownload_impl.m_orphanage->HaveTx(maybe_package->m_txns.back()->GetWitnessHash()));
                     // Package has not been rejected
                     Assert(!txdownload_impl.RecentRejectsReconsiderableFilter().contains(GetPackageHash(package)));
                     // Neither is in m_lazy_recent_rejects
@@ -437,7 +430,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
         if (fuzzed_data_provider.ConsumeBool()) time_skip *= -1;
         time += time_skip;
     }
-    CheckInvariants(txdownload_impl, max_orphan_count);
+    CheckInvariants(txdownload_impl);
     // Disconnect everybody, check that all data structures are empty.
     for (NodeId nodeid = 0; nodeid < NUM_PEERS; ++nodeid) {
         txdownload_impl.DisconnectedPeer(nodeid);
