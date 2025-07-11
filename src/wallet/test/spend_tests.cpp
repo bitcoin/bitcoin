@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <script/solver.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
