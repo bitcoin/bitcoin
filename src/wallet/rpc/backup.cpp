@@ -89,7 +89,8 @@ RPCHelpMan importprivkey()
         "\nAdds a private key (as returned by dumpprivkey) to your wallet. Requires a new wallet backup.\n"
         "Hint: use importmulti to import more than one private key.\n"
     "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
-    "may report that the imported key exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n",
+    "may report that the imported key exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
+    "Note: This command is only compatible with legacy wallets. Use \"importdescriptors\" with \"combo(X)\" for descriptor wallets.\n",
         {
             {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The private key (see dumpprivkey)"},
             {"label", RPCArg::Type::STR, RPCArg::DefaultHint{"current label if address exists, otherwise \"\""}, "An optional label"},
@@ -209,7 +210,8 @@ RPCHelpMan importaddress()
     "If you have the full public key, you should call importpubkey instead of this.\n"
     "Hint: use importmulti to import more than one address.\n"
     "\nNote: If you import a non-standard raw script in hex form, outputs sending to it will be treated\n"
-    "as change, and not show up in many RPCs.\n",
+    "as change, and not show up in many RPCs.\n"
+    "Note: This command is only compatible with legacy wallets. Use \"importdescriptors\" for descriptor wallets.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Dash address (or hex-encoded script)"},
             {"label", RPCArg::Type::STR, RPCArg::Default{""}, "An optional label"},
@@ -400,7 +402,8 @@ RPCHelpMan importpubkey()
         "\nAdds a public key (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
         "Hint: use importmulti to import more than one public key.\n"
     "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
-    "may report that the imported pubkey exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n",
+    "may report that the imported pubkey exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
+    "Note: This command is only compatible with legacy wallets. Use \"importdescriptors\" with \"combo(X)\" for descriptor wallets.\n",
         {
             {"pubkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The hex-encoded public key"},
             {"label", RPCArg::Type::STR, RPCArg::Default{""}, "An optional label"},
@@ -480,7 +483,8 @@ RPCHelpMan importwallet()
 {
     return RPCHelpMan{"importwallet",
         "\nImports keys from a wallet dump file (see dumpwallet). Requires a new wallet backup to include imported keys.\n"
-        "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
+        "Note: Use \"getwalletinfo\" to query the scanning progress.\n"
+        "Note: This command is only compatible with legacy wallets.\n",
         {
             {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet file"},
         },
@@ -820,7 +824,8 @@ RPCHelpMan dumpprivkey()
 {
     return RPCHelpMan{"dumpprivkey",
         "\nReveals the private key corresponding to 'address'.\n"
-        "Then the importprivkey can be used with this output\n",
+        "Then the importprivkey can be used with this output\n"
+        "Note: This command is only compatible with legacy wallets.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Dash address for the private key"},
         },
@@ -915,7 +920,8 @@ RPCHelpMan dumpwallet()
         "\nDumps all wallet keys in a human-readable format to a server-side file. This does not allow overwriting existing files.\n"
         "Imported scripts are included in the dumpfile too, their corresponding addresses will be added automatically by importwallet.\n"
         "Note that if your wallet contains keys which are not derived from your HD seed (e.g. imported keys), these are not covered by\n"
-        "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n",
+        "only backing up the seed itself, and must be backed up too (e.g. ensure you back up the whole dumpfile).\n"
+        "Note: This command is only compatible with legacy wallets.\n",
         {
             {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The filename with path (absolute path recommended)"},
         },
@@ -1467,7 +1473,8 @@ RPCHelpMan importmulti()
         "If an address/script is imported without all of the private keys required to spend from that address, it will be watchonly. The 'watchonly' option must be set to true in this case or a warning will be returned.\n"
         "Conversely, if all the private keys are provided and the address/script is spendable, the watchonly option must be set to false, or a warning will be returned.\n"
         "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
-        "may report that the imported keys, addresses or scripts exists but related transactions are still missing.\n",
+        "may report that the imported keys, addresses or scripts exists but related transactions are still missing.\n"
+        "Note: This command is only compatible with legacy wallets. Use \"importdescriptors\" for descriptor wallets.\n",
         {
             {"requests", RPCArg::Type::ARR, RPCArg::Optional::NO, "Data to be imported",
                 {
