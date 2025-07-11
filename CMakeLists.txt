@@ -185,10 +185,8 @@ string(APPEND CMAKE_CXX_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
 string(APPEND CMAKE_CXX_CREATE_SHARED_LIBRARY " ${APPEND_LDFLAGS}")
 string(APPEND CMAKE_CXX_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
 
-set(configure_warnings)
-
 include(CheckLinkerSupportsPIE)
-check_linker_supports_pie(configure_warnings)
+check_linker_supports_pie()
 
 # The core_interface library aims to encapsulate common build flags.
 # It is a usage requirement for all targets except for secp256k1, which
@@ -591,9 +589,7 @@ set(Python3_FIND_UNVERSIONED_NAMES FIRST CACHE STRING "")
 mark_as_advanced(Python3_FIND_FRAMEWORK Python3_FIND_UNVERSIONED_NAMES)
 find_package(Python3 3.10 COMPONENTS Interpreter)
 if(NOT TARGET Python3::Interpreter)
-  list(APPEND configure_warnings
-    "Minimum required Python not found."
-  )
+  message(AUTHOR_WARNING "Minimum required Python not found.")
 endif()
 
 target_compile_definitions(core_interface INTERFACE ${DEPENDS_COMPILE_DEFINITIONS})
@@ -702,13 +698,6 @@ flags_summary()
 message("Treat compiler warnings as errors ..... ${WERROR}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")
-if(configure_warnings)
-    message("  ******\n")
-    foreach(warning IN LISTS configure_warnings)
-      message(WARNING "${warning}")
-    endforeach()
-    message("  ******\n")
-endif()
 
 # We want all build properties to be encapsulated properly.
 include(WarnAboutGlobalProperties)
