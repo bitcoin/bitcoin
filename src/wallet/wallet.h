@@ -942,9 +942,6 @@ public:
         LogInfo("%s %s", GetDisplayName(), tfm::format(wallet_fmt, params...));
     };
 
-    /** Upgrade the wallet */
-    bool UpgradeWallet(int version, bilingual_str& error);
-
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
     std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
     bool IsActiveScriptPubKeyMan(const ScriptPubKeyMan& spkm) const;
