@@ -317,6 +317,12 @@ void SetRPCWarmupStatus(const std::string& newStatus)
     rpcWarmupStatus = newStatus;
 }
 
+void SetRPCWarmupStarting()
+{
+    LOCK(g_rpc_warmup_mutex);
+    fRPCInWarmup = true;
+}
+
 void SetRPCWarmupFinished()
 {
     LOCK(g_rpc_warmup_mutex);

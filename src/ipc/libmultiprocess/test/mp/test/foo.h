@@ -1,10 +1,12 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef MP_TEST_FOO_H
 #define MP_TEST_FOO_H
 
+#include <cassert>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -75,7 +77,11 @@ public:
     FooMessage passMessage(FooMessage foo) { foo.message += " call"; return foo; }
     void passMutable(FooMutable& foo) { foo.message += " call"; }
     FooEnum passEnum(FooEnum foo) { return foo; }
+    int passFn(std::function<int()> fn) { return fn(); }
     std::shared_ptr<FooCallback> m_callback;
+    void callFn() { assert(m_fn); m_fn(); }
+    void callFnAsync() { assert(m_fn); m_fn(); }
+    std::function<void()> m_fn;
 };
 
 } // namespace test
