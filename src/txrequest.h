@@ -133,7 +133,7 @@ public:
      * from the specified gtxid.
      */
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-        std::chrono::microseconds reqtime);
+                     std::chrono::microseconds reqtime);
 
     /** Deletes all announcements for a given peer.
      *
@@ -158,14 +158,13 @@ public:
      *    exists, and for which the specified peer is the best choice among all (reqtime <= now) CANDIDATE
      *    announcements with the same txhash (subject to preferredness rules, and tiebreaking using a deterministic
      *    salted hash of peer and txhash).
-     *  - The selected announcements are converted to GenTxids using their is_wtxid flag, and returned in
-     *    announcement order (even if multiple were added at the same time, or when the clock went backwards while
-     *    they were being added). This is done to minimize disruption from dependent transactions being requested
-     *    out of order: if multiple dependent transactions are announced simultaneously by one peer, and end up
-     *    being requested from them, the requests will happen in announcement order.
+     *  - The selected announcements are returned in announcement order (even if multiple were added at the same
+     *    time, or when the clock went backwards while they were being added). This is done to minimize disruption
+     *    from dependent transactions being requested out of order: if multiple dependent transactions are announced
+     *    simultaneously by one peer, and end up being requested from them, the requests will happen in announcement order.
      */
     std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
-        std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
+                                               std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
 
     /** Marks a transaction as requested, with a specified expiry.
      *

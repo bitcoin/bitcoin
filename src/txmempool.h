@@ -19,9 +19,10 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <util/epochguard.h>
+#include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>
-#include <util/feefrac.h>
+#include <util/transaction_identifier.h>
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>
@@ -406,6 +407,11 @@ private:
                                                               const Limits& limits
                                                               ) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it)
+    {
+        return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
+    }
+
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
     std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs);
@@ -442,7 +448,7 @@ public:
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid=false);
+    bool CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb) const;
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
@@ -474,7 +480,8 @@ public:
     const CTransaction* GetConflictTx(const COutPoint& prevout) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Returns an iterator to the given hash, if found */
-    std::optional<txiter> GetIter(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::optional<txiter> GetIter(const Txid& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::optional<txiter> GetIter(const Wtxid& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Translate a set of hashes into a set of pool iterators to avoid repeated lookups.
      * Does not require that all of the hashes correspond to actual transactions in the mempool,
@@ -620,27 +627,38 @@ public:
         return m_total_fee;
     }
 
-    bool exists(const GenTxid& gtxid) const
+    bool exists(const Txid& txid) const
     {
         LOCK(cs);
-        if (gtxid.IsWtxid()) {
-            return (mapTx.get<index_by_wtxid>().count(gtxid.GetHash()) != 0);
-        }
-        return (mapTx.count(gtxid.GetHash()) != 0);
+        return (mapTx.count(txid) != 0);
+    }
+
+    bool exists(const Wtxid& wtxid) const
+    {
+        LOCK(cs);
+        return (mapTx.get<index_by_wtxid>().count(wtxid) != 0);
     }
 
     const CTxMemPoolEntry* GetEntry(const Txid& txid) const LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     CTransactionRef get(const uint256& hash) const;
-    txiter get_iter_from_wtxid(const uint256& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
+
+    template <TxidOrWtxid T>
+    TxMempoolInfo info(const T& id) const
     {
-        AssertLockHeld(cs);
-        return mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid));
+        LOCK(cs);
+        auto i{GetIter(id)};
+        return i.has_value() ? GetInfo(*i) : TxMempoolInfo{};
     }
-    TxMempoolInfo info(const GenTxid& gtxid) const;
 
     /** Returns info for a transaction if its entry_sequence < last_sequence */
-    TxMempoolInfo info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const;
+    template <TxidOrWtxid T>
+    TxMempoolInfo info_for_relay(const T& id, uint64_t last_sequence) const
+    {
+        LOCK(cs);
+        auto i{GetIter(id)};
+        return (i.has_value() && i.value()->GetSequence() < last_sequence) ? GetInfo(*i) : TxMempoolInfo{};
+    }
 
     std::vector<CTxMemPoolEntryRef> entryAll() const EXCLUSIVE_LOCKS_REQUIRED(cs);
     std::vector<TxMempoolInfo> infoAll() const;
@@ -653,7 +671,7 @@ public:
         LOCK(cs);
         // Sanity check the transaction is in the mempool & insert into
         // unbroadcast set.
-        if (exists(GenTxid::Txid(txid))) m_unbroadcast_txids.insert(txid);
+        if (exists(Txid::FromUint256(txid))) m_unbroadcast_txids.insert(txid);
     };
 
     /** Removes a transaction from the unbroadcast set */
