@@ -31,9 +31,12 @@
 #include <util/any.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <validation.h>
 
 #include <any>
+#include <map>
+#include <ranges>
 #include <vector>
 
 #include <univalue.h>
@@ -45,14 +48,11 @@ using util::SplitString;
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 static constexpr unsigned int MAX_REST_HEADERS_RESULTS = 2000;
 
-static const struct {
-    RESTResponseFormat rf;
-    const char* name;
-} rf_names[] = {
-      {RESTResponseFormat::UNDEF, ""},
-      {RESTResponseFormat::BINARY, "bin"},
-      {RESTResponseFormat::HEX, "hex"},
-      {RESTResponseFormat::JSON, "json"},
+const std::map<std::string, RESTResponseFormat> RF_NAMES{
+    {"", RESTResponseFormat::UNDEF},
+    {"bin", RESTResponseFormat::BINARY},
+    {"hex", RESTResponseFormat::HEX},
+    {"json", RESTResponseFormat::JSON},
 };
 
 struct CCoin {
@@ -148,12 +148,9 @@ RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq
     }
 
     // Match format string to available formats
-    const std::string suffix(param, pos_format + 1);
-    for (const auto& rf_name : rf_names) {
-        if (suffix == rf_name.name) {
-            param.erase(pos_format);
-            return rf_name.rf;
-        }
+    if (auto it{RF_NAMES.find(param.substr(pos_format + 1))}; it != RF_NAMES.end()) {
+        param.erase(pos_format);
+        return it->second;
     }
 
     // If no suffix is found, return RESTResponseFormat::UNDEF and original string without query string
@@ -162,19 +159,8 @@ RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq
 
 static std::string AvailableDataFormatsString()
 {
-    std::string formats;
-    for (const auto& rf_name : rf_names) {
-        if (strlen(rf_name.name) > 0) {
-            formats.append(".");
-            formats.append(rf_name.name);
-            formats.append(", ");
-        }
-    }
-
-    if (formats.length() > 0)
-        return formats.substr(0, formats.length() - 2);
-
-    return formats;
+    auto view{RF_NAMES | std::views::keys | std::views::filter(std::not_fn(&std::string::empty))};
+    return util::Join(view, ", ", [](const std::string& s) { return "." + s; });
 }
 
 static bool CheckWarmup(HTTPRequest* req)

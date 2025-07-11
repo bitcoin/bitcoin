@@ -11,9 +11,11 @@
 #include <cstdint>
 #include <cstring>
 #include <locale>
+#include <ranges>
 #include <sstream>
 #include <string>      // IWYU pragma: export
 #include <string_view> // IWYU pragma: export
+#include <type_traits>
 #include <vector>
 
 namespace util {
@@ -189,22 +191,27 @@ std::vector<T> Split(const std::span<const char>& sp, char sep)
  */
 template <typename C, typename S, typename UnaryOp>
 // NOLINTNEXTLINE(misc-no-recursion)
-auto Join(const C& container, const S& separator, UnaryOp unary_op)
+auto Join(C&& container, const S& separator, UnaryOp unary_op)
 {
-    decltype(unary_op(*container.begin())) ret;
-    bool first{true};
-    for (const auto& item : container) {
-        if (!first) ret += separator;
-        ret += unary_op(item);
-        first = false;
+    using T = std::invoke_result_t<UnaryOp, std::ranges::range_reference_t<C>>;
+
+    auto it{std::ranges::begin(container)};
+    const auto end{std::ranges::end(container)};
+
+    if (it == end) return T{};
+
+    T ret{unary_op(*it)};
+    for (++it; it != end; ++it) {
+        ret += separator;
+        ret += unary_op(*it);
     }
     return ret;
 }
 
 template <typename C, typename S>
-auto Join(const C& container, const S& separator)
+auto Join(C&& container, const S& separator)
 {
-    return Join(container, separator, [](const auto& i) { return i; });
+    return Join(std::forward<C>(container), separator, [](const auto& i) { return i; });
 }
 
 /**
