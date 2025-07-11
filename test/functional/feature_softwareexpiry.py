@@ -3,6 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import platform
+import re
+import time
+
 from test_framework.blocktools import (
     NORMAL_GBT_REQUEST_PARAMS,
     create_block,
@@ -13,16 +17,45 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-ONE_WEEK = 604800
+PRERELEASE_WARNING = 'This is a pre-release test build - use at your own risk - do not use for mining or merchant applications'
+
+SECONDS_PER_WEEK = 604800
+SOFTWARE_EXPIRY_WARN_PERIOD = SECONDS_PER_WEEK * 4
 EXPIRED_BLOCKS_ACCEPTED = 144
 
 class SoftwareExpiryTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
+    def get_warnings(self, node):
+        warnings = node.getnetworkinfo()['warnings']
+        try:
+            warnings.remove(PRERELEASE_WARNING)
+        except ValueError:
+            pass
+        return warnings
+
+    def check_warning(self, node, alerts_path, re_warning_stderr_prefix, re_expected_warning):
+        warnings = "\n".join(self.get_warnings(node))
+        assert re.match(re_expected_warning, warnings)
+        node.stderr.seek(0)
+        stderr = node.stderr.read().decode('utf-8').strip()
+        assert re.match(re_warning_stderr_prefix + re_expected_warning, stderr)
+        assert alerts_path.exists()
+        with open(alerts_path, 'r', encoding='utf8') as f:
+            alerts_data = f.read()
+            if platform.system() == 'Windows':
+                # The echo command on Windows includes the quotes and space in the output
+                assert alerts_data[0] == '"' and alerts_data[-3:] == "\" \n"
+                alerts_data = alerts_data[1:-3]
+            assert re.match('^' + re_expected_warning, alerts_data)
+        alerts_path.unlink()
+        return stderr
+
     def run_test(self):
         nodes = self.nodes
         addr = nodes[0].get_deterministic_priv_key().address  # what address is irrelevant
+        alerts_path = self.nodes[0].datadir_path / 'alerts'
 
         def setmocktime(t):
             self.mocktime = t
@@ -31,12 +64,34 @@ class SoftwareExpiryTest(BitcoinTestFramework):
 
         blocktime = nodes[0].getblock(nodes[0].getbestblockhash(), 1)['time']
         self.mocktime = blocktime + 300
-        expirytime = self.mocktime + ONE_WEEK + 1
-        self.restart_node(0, extra_args=[f'-mocktime={self.mocktime}', f'-softwareexpiry={expirytime}'])
+        expirytime = self.mocktime + SOFTWARE_EXPIRY_WARN_PERIOD + 60
+        self.restart_node(0, extra_args=[
+            f'-mocktime={self.mocktime}',
+            f'-softwareexpiry={expirytime}',
+            f"-alertnotify=echo %s >> {alerts_path}",
+        ])
         self.restart_node(1, extra_args=[f'-mocktime={self.mocktime}',])
         self.connect_nodes(1, 0)
 
-        self.log.info("Checking everything works normal exactly at expiry time")
+        self.log.info("Everything normal and no alerts over 4 weeks prior to expiry")
+        nodes[0].mockscheduler(5)
+        time.sleep(1)
+        block = create_block(tmpl=nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
+        block.solve()
+        nodes[0].submitblock(block.serialize().hex())
+        self.sync_blocks(nodes)
+        assert_equal(self.get_warnings(nodes[0]), [])
+        nodes[0].stderr.seek(0)
+        assert_equal(nodes[0].stderr.read().decode('utf-8').strip(), '')
+        assert not alerts_path.exists()
+
+        self.log.info("Once we're within 4 weeks, warnings should trigger")
+        nodes[0].mockscheduler(60)
+        time.sleep(1)
+        re_expected_warning = r'This software expires soon, and may fall out of consensus. Before .*, you must choose to upgrade or override this expiration.$'
+        stderr = self.check_warning(nodes[0], alerts_path, r'^Warning: ', re_expected_warning)
+
+        self.log.info("Checking everything still works normal exactly at expiry time")
         setmocktime(expirytime)
         block = create_block(tmpl=nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         block.solve()
@@ -61,15 +116,29 @@ class SoftwareExpiryTest(BitcoinTestFramework):
 
         self.log.info("Restarting the node should fail")
         assert self.mocktime > expirytime
-        self.stop_node(0)
+        self.stop_node(0, expected_stderr=stderr)
         msg = 'Error: This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration.'
         nodes[0].assert_start_raises_init_error(extra_args=[f'-mocktime={self.mocktime}', f'-softwareexpiry={expirytime}'], expected_msg=msg)
 
         self.log.info("Restarting the node with a later expiry should succeed and accept the newer block")
         expirytime = nodes[1].getblock(new_blockhash, 1)['time']
-        self.restart_node(0, extra_args=[f'-mocktime={self.mocktime}', f'-softwareexpiry={expirytime}'])
+        assert expirytime - SOFTWARE_EXPIRY_WARN_PERIOD < self.mocktime <= expirytime
+        self.restart_node(0, extra_args=[
+            f'-mocktime={self.mocktime}',
+            f'-softwareexpiry={expirytime}',
+            f"-alertnotify=echo %s >> {alerts_path}",
+        ])
         self.connect_nodes(1, 0)
+        nodes[0].mockscheduler(5)
+        time.sleep(1)
         self.sync_blocks(nodes)
+
+        # But we're still close enough to get warned
+        stderr = self.check_warning(nodes[0], alerts_path, r'^Warning: ', re_expected_warning)
+
+        self.stop_node(0, expected_stderr=stderr)
+        self.log.info("Checking no unexpected alerts were triggered")
+        assert not alerts_path.exists()
 
 
 if __name__ == "__main__":

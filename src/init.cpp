@@ -35,6 +35,7 @@
 #include <interfaces/node.h>
 #include <kernel/caches.h>
 #include <kernel/context.h>
+#include <kernel/warning.h>
 #include <key.h>
 #include <logging.h>
 #include <mapport.h>
@@ -2072,6 +2073,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     SetRPCWarmupFinished();
 
     uiInterface.InitMessage(_("Done loading"));
+
+    if (g_software_expiry) {
+        scheduler.scheduleFromNow([&node] {
+            auto msg = strprintf(_("This software expires soon, and may fall out of consensus. Before %s, you must choose to upgrade or override this expiration."), FormatISO8601Date(g_software_expiry));
+            node.chainman->GetNotifications().warningSet(kernel::Warning::SOFTWARE_EXPIRY, msg);
+            // TODO: Make this a modal dialog (but DON'T block the scheduler thread!)
+            uiInterface.ThreadSafeMessageBox(msg, "Warning", CClientUIInterface::ICON_WARNING | CClientUIInterface::BTN_OK);
+        }, std::chrono::seconds{std::max<int64_t>(1, g_software_expiry - SOFTWARE_EXPIRY_WARN_PERIOD - GetTime())});
+    }
 
     for (const auto& client : node.chain_clients) {
         client->start(scheduler);
