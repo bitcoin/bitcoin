@@ -186,10 +186,11 @@ public:
         m_tracker.ForgetTxHash(TXHASHES[txhash]);
     }
 
-    void ReceivedInv(int peer, int txhash, bool is_wtxid, bool preferred, std::chrono::microseconds reqtime)
+    void ReceivedInv(int peer, int txhash, bool is_wtxid, bool preferred, std::chrono::microseconds recvtime, std::chrono::microseconds delay)
     {
         // Apply to naive structure: if no announcement for txidnum/peer combination
         // already, create a new CANDIDATE; otherwise do nothing.
+        auto reqtime = recvtime+delay;
         Announcement& ann = m_announcements[txhash][peer];
         if (ann.m_state == State::NOTHING) {
             ann.m_preferred = preferred;
@@ -205,7 +206,7 @@ public:
 
         // Call TxRequestTracker's implementation.
         auto gtxid = is_wtxid ? GenTxid{Wtxid::FromUint256(TXHASHES[txhash])} : GenTxid{Txid::FromUint256(TXHASHES[txhash])};
-        m_tracker.ReceivedInv(peer, gtxid, preferred, reqtime);
+        m_tracker.ReceivedInv(peer, gtxid, preferred, recvtime, delay);
     }
 
     void RequestedTx(int peer, int txhash, std::chrono::microseconds exptime)
@@ -360,7 +361,7 @@ FUZZ_TARGET(txrequest)
             peer = it == buffer.end() ? 0 : *(it++) % MAX_PEERS;
             txidnum = it == buffer.end() ? 0 : *(it++);
             tester.ReceivedInv(peer, txidnum % MAX_TXHASHES, (txidnum / MAX_TXHASHES) & 1, cmd & 1,
-                std::chrono::microseconds::min());
+                std::chrono::microseconds::min(), std::chrono::microseconds::min());
             break;
         case 7: // Received delayed preferred inv
         case 8: // Same, but non-preferred.
@@ -368,7 +369,7 @@ FUZZ_TARGET(txrequest)
             txidnum = it == buffer.end() ? 0 : *(it++);
             delaynum = it == buffer.end() ? 0 : *(it++);
             tester.ReceivedInv(peer, txidnum % MAX_TXHASHES, (txidnum / MAX_TXHASHES) & 1, cmd & 1,
-                tester.Now() + DELAYS[delaynum]);
+                tester.Now(), DELAYS[delaynum]);
             break;
         case 9: // Requested tx from peer
             peer = it == buffer.end() ? 0 : *(it++) % MAX_PEERS;

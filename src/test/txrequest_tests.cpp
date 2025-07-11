@@ -110,11 +110,11 @@ public:
     }
 
     /** Schedule a ReceivedInv call at the Scheduler's current time. */
-    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool pref, std::chrono::microseconds reqtime)
+    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool pref, std::chrono::microseconds recvtime, std::chrono::microseconds delay)
     {
         auto& runner = m_runner;
         runner.actions.emplace_back(m_now, [=, &runner]() {
-            runner.txrequest.ReceivedInv(peer, gtxid, pref, reqtime);
+            runner.txrequest.ReceivedInv(peer, gtxid, pref, recvtime, delay);
             runner.txrequest.SanityCheck();
         });
     }
@@ -273,7 +273,7 @@ void TxRequestTest::BuildSingleTest(Scenario& scenario, int config)
     scenario.SetTestName(strprintf("Single(config=%i)", config));
 
     // Receive an announcement, either immediately requestable or delayed.
-    scenario.ReceivedInv(peer, gtxid, preferred, immediate ? MIN_TIME : scenario.Now() + delay);
+    scenario.ReceivedInv(peer, gtxid, preferred, immediate ? MIN_TIME : scenario.Now(), delay);
     if (immediate) {
         scenario.Check(peer, {gtxid}, 1, 0, 0, "s1");
     } else {
@@ -334,14 +334,14 @@ void TxRequestTest::BuildPriorityTest(Scenario& scenario, int config)
     auto gtxid = prio1 ? scenario.NewGTxid({{peer1, peer2}}) : scenario.NewGTxid({{peer2, peer1}});
     bool pref1 = config & 2, pref2 = config & 4;
 
-    scenario.ReceivedInv(peer1, gtxid, pref1, MIN_TIME);
+    scenario.ReceivedInv(peer1, gtxid, pref1, MIN_TIME, NO_TIME);
     scenario.Check(peer1, {gtxid}, 1, 0, 0, "p1");
     if (m_rng.randbool()) {
         scenario.AdvanceTime(RandomTime8s());
         scenario.Check(peer1, {gtxid}, 1, 0, 0, "p2");
     }
 
-    scenario.ReceivedInv(peer2, gtxid, pref2, MIN_TIME);
+    scenario.ReceivedInv(peer2, gtxid, pref2, MIN_TIME, NO_TIME);
     bool stage2_prio =
         // At this point, peer2 will be given priority if:
         // - It is preferred and peer1 is not
@@ -417,16 +417,17 @@ void TxRequestTest::BuildBigPriorityTest(Scenario& scenario, int peers)
 
     // Decide reqtimes in opposite order of the expected request order. This means that as time passes we expect the
     // to-be-requested-from-peer will change every time a subsequent reqtime is passed.
-    std::map<NodeId, std::chrono::microseconds> reqtimes;
-    auto reqtime = scenario.Now();
+    std::map<NodeId, std::chrono::microseconds> reqdelays;
+    auto recvtime = scenario.Now();
+    auto reqdelay{0us};
     for (int i = peers - 1; i >= 0; --i) {
-        reqtime += RandomTime8s();
-        reqtimes[request_order[i]] = reqtime;
+        reqdelay += RandomTime8s();
+        reqdelays[request_order[i]] = reqdelay;
     }
 
     // Actually announce from all peers simultaneously (but in announce_order).
     for (const auto peer : announce_order) {
-        scenario.ReceivedInv(peer, gtxid, preferred[peer], reqtimes[peer]);
+        scenario.ReceivedInv(peer, gtxid, preferred[peer], recvtime, reqdelays[peer]);
     }
     for (const auto peer : announce_order) {
         scenario.Check(peer, {}, 1, 0, 0, "b1");
@@ -434,11 +435,13 @@ void TxRequestTest::BuildBigPriorityTest(Scenario& scenario, int peers)
 
     // Let time pass and observe the to-be-requested-from peer change, from nonpreferred to preferred, and from
     // high priority to low priority within each class.
+    auto time_offset{0us};
     for (int i = peers - 1; i >= 0; --i) {
-        scenario.AdvanceTime(reqtimes[request_order[i]] - scenario.Now() - MICROSECOND);
+        scenario.AdvanceTime(reqdelays[request_order[i]] - time_offset - MICROSECOND);
         scenario.Check(request_order[i], {}, 1, 0, 0, "b2");
         scenario.AdvanceTime(MICROSECOND);
         scenario.Check(request_order[i], {gtxid}, 1, 0, 0, "b3");
+        time_offset = reqdelays[request_order[i]];
     }
 
     // Peers now in random order go offline, or send NOTFOUNDs. At every point in time the new to-be-requested-from
@@ -479,18 +482,20 @@ void TxRequestTest::BuildRequestOrderTest(Scenario& scenario, int config)
     auto gtxid1 = scenario.NewGTxid();
     auto gtxid2 = scenario.NewGTxid();
 
-    auto reqtime2 = scenario.Now() + RandomTime8s();
-    auto reqtime1 = reqtime2 + RandomTime8s();
+    auto recvtime2 = scenario.Now();
+    auto delay2 = RandomTime8s();
+    auto recvtime1 = recvtime2 + delay2;
+    auto delay1 = RandomTime8s();
 
-    scenario.ReceivedInv(peer, gtxid1, config & 1, reqtime1);
+    scenario.ReceivedInv(peer, gtxid1, config & 1, recvtime1, delay1);
     // Simulate time going backwards by giving the second announcement an earlier reqtime.
-    scenario.ReceivedInv(peer, gtxid2, config & 2, reqtime2);
+    scenario.ReceivedInv(peer, gtxid2, config & 2, recvtime2, delay2);
 
-    scenario.AdvanceTime(reqtime2 - MICROSECOND - scenario.Now());
+    scenario.AdvanceTime(delay2 - MICROSECOND);
     scenario.Check(peer, {}, 2, 0, 0, "o1");
     scenario.AdvanceTime(MICROSECOND);
     scenario.Check(peer, {gtxid2}, 2, 0, 0, "o2");
-    scenario.AdvanceTime(reqtime1 - MICROSECOND - scenario.Now());
+    scenario.AdvanceTime(delay1 - MICROSECOND);
     scenario.Check(peer, {gtxid2}, 2, 0, 0, "o3");
     scenario.AdvanceTime(MICROSECOND);
     // Even with time going backwards in between announcements, the return value of GetRequestable is in
@@ -516,24 +521,24 @@ void TxRequestTest::BuildWtxidTest(Scenario& scenario, int config)
     auto txid{Txid::FromUint256(txhash)};
     auto wtxid{Wtxid::FromUint256(txhash)};
 
-    auto reqtimeT = m_rng.randbool() ? MIN_TIME : scenario.Now() + RandomTime8s();
-    auto reqtimeW = m_rng.randbool() ? MIN_TIME : scenario.Now() + RandomTime8s();
+    auto [recvtimeT, delayT] = m_rng.randbool() ? std::make_pair(MIN_TIME, NO_TIME) : std::make_pair(scenario.Now(), RandomTime8s());
+    auto [recvtimeW, delayW] = m_rng.randbool() ? std::make_pair(MIN_TIME, NO_TIME) : std::make_pair(scenario.Now(), RandomTime8s());
 
     // Announce txid first or wtxid first.
     if (config & 1) {
-        scenario.ReceivedInv(peerT, txid, config & 2, reqtimeT);
+        scenario.ReceivedInv(peerT, txid, config & 2, recvtimeT, delayT);
         if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
-        scenario.ReceivedInv(peerW, wtxid, !(config & 2), reqtimeW);
+        scenario.ReceivedInv(peerW, wtxid, !(config & 2), recvtimeW, delayW);
     } else {
-        scenario.ReceivedInv(peerW, wtxid, !(config & 2), reqtimeW);
+        scenario.ReceivedInv(peerW, wtxid, !(config & 2), recvtimeW, delayW);
         if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
-        scenario.ReceivedInv(peerT, txid, config & 2, reqtimeT);
+        scenario.ReceivedInv(peerT, txid, config & 2, recvtimeT, delayT);
     }
 
     // Let time pass if needed, and check that the preferred announcement (txid or wtxid)
     // is correctly to-be-requested (and with the correct wtxidness).
-    auto max_reqtime = std::max(reqtimeT, reqtimeW);
-    if (max_reqtime > scenario.Now()) scenario.AdvanceTime(max_reqtime - scenario.Now());
+    auto max_delay = std::max(delayT, delayW);
+    if (max_delay > NO_TIME) scenario.AdvanceTime(max_delay);
     if (config & 2) {
         scenario.Check(peerT, {txid}, 1, 0, 0, "w1");
         scenario.Check(peerW, {}, 1, 0, 0, "w2");
@@ -583,10 +588,11 @@ void TxRequestTest::BuildTimeBackwardsTest(Scenario& scenario)
     auto gtxid = scenario.NewGTxid({{peer1, peer2}});
 
     // Announce from peer2.
-    auto reqtime = scenario.Now() + RandomTime8s();
-    scenario.ReceivedInv(peer2, gtxid, true, reqtime);
+    auto recvtime = scenario.Now();
+    auto delay = RandomTime8s();
+    scenario.ReceivedInv(peer2, gtxid, true, recvtime, delay);
     scenario.Check(peer2, {}, 1, 0, 0, "r1");
-    scenario.AdvanceTime(reqtime - scenario.Now());
+    scenario.AdvanceTime(delay);
     scenario.Check(peer2, {gtxid}, 1, 0, 0, "r2");
     // Check that if the clock goes backwards by 1us, the transaction would stop being requested.
     scenario.Check(peer2, {}, 1, 0, 0, "r3", -MICROSECOND);
@@ -595,7 +601,7 @@ void TxRequestTest::BuildTimeBackwardsTest(Scenario& scenario)
 
     // Announce from peer1.
     if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
-    scenario.ReceivedInv(peer1, gtxid, true, MAX_TIME);
+    scenario.ReceivedInv(peer1, gtxid, true, MAX_TIME - delay, delay);
     scenario.Check(peer2, {gtxid}, 1, 0, 0, "r5");
     scenario.Check(peer1, {}, 1, 0, 0, "r6");
 
@@ -630,12 +636,12 @@ void TxRequestTest::BuildWeirdRequestsTest(Scenario& scenario)
     auto gtxid2 = scenario.NewGTxid({{peer2, peer1}});
 
     // Announce gtxid1 by peer1.
-    scenario.ReceivedInv(peer1, gtxid1, true, MIN_TIME);
+    scenario.ReceivedInv(peer1, gtxid1, true, MIN_TIME, NO_TIME);
     scenario.Check(peer1, {gtxid1}, 1, 0, 0, "q1");
 
     // Announce gtxid2 by peer2.
     if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
-    scenario.ReceivedInv(peer2, gtxid2, true, MIN_TIME);
+    scenario.ReceivedInv(peer2, gtxid2, true, MIN_TIME, NO_TIME);
     scenario.Check(peer1, {gtxid1}, 1, 0, 0, "q2");
     scenario.Check(peer2, {gtxid2}, 1, 0, 0, "q3");
 
@@ -659,7 +665,7 @@ void TxRequestTest::BuildWeirdRequestsTest(Scenario& scenario)
     scenario.Check(peer2, {gtxid2}, 1, 0, 0, "q9");
 
     // Also announce gtxid1 from peer2 now, so that the txhash isn't forgotten when the peer1 request expires.
-    scenario.ReceivedInv(peer2, gtxid1, true, MIN_TIME);
+    scenario.ReceivedInv(peer2, gtxid1, true, MIN_TIME, NO_TIME);
     scenario.Check(peer1, {}, 0, 1, 0, "q10");
     scenario.Check(peer2, {gtxid2}, 2, 0, 0, "q11");
 
@@ -677,7 +683,7 @@ void TxRequestTest::BuildWeirdRequestsTest(Scenario& scenario)
 
     // Now announce gtxid2 from peer1.
     if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
-    scenario.ReceivedInv(peer1, gtxid2, true, MIN_TIME);
+    scenario.ReceivedInv(peer1, gtxid2, true, MIN_TIME, NO_TIME);
     scenario.Check(peer1, {}, 1, 0, 1, "q16");
     scenario.Check(peer2, {gtxid2, gtxid1}, 2, 0, 0, "q17");
 

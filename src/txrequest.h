@@ -132,8 +132,8 @@ public:
      * fetched. The new announcement is given the specified preferred and reqtime values, and takes its is_wtxid
      * from the specified gtxid.
      */
-    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-                     std::chrono::microseconds reqtime);
+    void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred, std::chrono::microseconds recvtime,
+                     std::chrono::microseconds delay);
 
     /** Deletes all announcements for a given peer.
      *

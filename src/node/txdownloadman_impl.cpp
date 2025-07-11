@@ -218,7 +218,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     const bool overloaded = !info.m_relay_permissions && m_txrequest.CountInFlight(peer) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
 
-    m_txrequest.ReceivedInv(peer, gtxid, info.m_preferred, now + delay);
+    m_txrequest.ReceivedInv(peer, gtxid, info.m_preferred, now, delay);
 
     return false;
 }
@@ -255,7 +255,7 @@ bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<
     // Treat finding orphan resolution candidate as equivalent to the peer announcing all missing parents.
     // In the future, orphan resolution may include more explicit steps
     for (const auto& parent_txid : unique_parents) {
-        m_txrequest.ReceivedInv(nodeid, parent_txid, info.m_preferred, now + delay);
+        m_txrequest.ReceivedInv(nodeid, parent_txid, info.m_preferred, now, delay);
     }
     LogDebug(BCLog::TXPACKAGES, "added peer=%d as a candidate for resolving orphan %s\n", nodeid, wtxid.ToString());
     return true;
