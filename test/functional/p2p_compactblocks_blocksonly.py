@@ -36,7 +36,6 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         blockhash = self.generate(self.nodes[2], 1, sync_fun=self.no_op)[0]
         block_hex = self.nodes[2].getblock(blockhash=blockhash, verbosity=0)
         block = from_hex(CBlock(), block_hex)
-        block.rehash()
         return block
 
     def run_test(self):
@@ -73,14 +72,14 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         # A -blocksonly node should not request BIP152 high bandwidth mode upon
         # receiving a new valid block at the tip.
         p2p_conn_blocksonly.send_and_ping(msg_block(block0))
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block0.sha256)
+        assert_equal(self.nodes[0].getbestblockhash(), block0.hash_hex)
         assert_equal(p2p_conn_blocksonly.message_count['sendcmpct'], 1)
         assert_equal(p2p_conn_blocksonly.last_message['sendcmpct'].announce, False)
 
         # A normal node participating in transaction relay should request BIP152
         # high bandwidth mode upon receiving a new valid block at the tip.
         p2p_conn_high_bw.send_and_ping(msg_block(block0))
-        assert_equal(int(self.nodes[1].getbestblockhash(), 16), block0.sha256)
+        assert_equal(self.nodes[1].getbestblockhash(), block0.hash_hex)
         p2p_conn_high_bw.wait_until(lambda: p2p_conn_high_bw.message_count['sendcmpct'] == 2)
         assert_equal(p2p_conn_high_bw.last_message['sendcmpct'].announce, True)
 
@@ -94,25 +93,25 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         block1 = self.build_block_on_tip()
 
         p2p_conn_blocksonly.send_and_ping(msg_headers(headers=[CBlockHeader(block1)]))
-        assert_equal(p2p_conn_blocksonly.last_message['getdata'].inv, [CInv(MSG_BLOCK | MSG_WITNESS_FLAG, block1.sha256)])
+        assert_equal(p2p_conn_blocksonly.last_message['getdata'].inv, [CInv(MSG_BLOCK | MSG_WITNESS_FLAG, block1.hash_int)])
 
         p2p_conn_high_bw.send_and_ping(msg_headers(headers=[CBlockHeader(block1)]))
-        assert_equal(p2p_conn_high_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.sha256)])
+        assert_equal(p2p_conn_high_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.hash_int)])
 
         self.log.info("Test that getdata(CMPCT) is still sent on BIP152 low bandwidth connections"
                       " when no -blocksonly nodes are involved")
 
         p2p_conn_low_bw.send_and_ping(msg_headers(headers=[CBlockHeader(block1)]))
-        assert_equal(p2p_conn_low_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.sha256)])
+        assert_equal(p2p_conn_low_bw.last_message['getdata'].inv, [CInv(MSG_CMPCT_BLOCK, block1.hash_int)])
 
         self.log.info("Test that -blocksonly nodes still serve compact blocks")
 
         def test_for_cmpctblock(block):
             if 'cmpctblock' not in p2p_conn_blocksonly.last_message:
                 return False
-            return p2p_conn_blocksonly.last_message['cmpctblock'].header_and_shortids.header.rehash() == block.sha256
+            return p2p_conn_blocksonly.last_message['cmpctblock'].header_and_shortids.header.hash_int == block.hash_int
 
-        p2p_conn_blocksonly.send_without_ping(msg_getdata([CInv(MSG_CMPCT_BLOCK, block0.sha256)]))
+        p2p_conn_blocksonly.send_without_ping(msg_getdata([CInv(MSG_CMPCT_BLOCK, block0.hash_int)]))
         p2p_conn_blocksonly.wait_until(lambda: test_for_cmpctblock(block0))
 
         # Request BIP152 high bandwidth mode from the -blocksonly node.

@@ -95,7 +95,6 @@ def finish_block(block, signet_solution, grind_cmd):
         newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
         newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
-        block.rehash()
     return block
 
 def new_block(tmpl, reward_spk, *, blocktime=None, poolid=None):
@@ -482,15 +481,15 @@ def do_generate(args):
         # report
         bstr = "block" if gen.is_mine else "backup block"
 
-        next_delta = gen.next_block_delta(block.nBits, block.hash)
+        next_delta = gen.next_block_delta(block.nBits, block.hash_hex)
         next_delta += block.nTime - time.time()
-        next_is_mine = gen.next_block_is_mine(block.hash)
+        next_is_mine = gen.next_block_is_mine(block.hash_hex)
 
-        logging.debug("Block hash %s payout to %s", block.hash, reward_addr)
+        logging.debug("Block hash %s payout to %s", block.hash_hex, reward_addr)
         logging.info("Mined %s at height %d; next in %s (%s)", bstr, tmpl["height"], seconds_to_hms(next_delta), ("mine" if next_is_mine else "backup"))
         if r != "":
-            logging.warning("submitblock returned %s for height %d hash %s", r, tmpl["height"], block.hash)
-        lastheader = block.hash
+            logging.warning("submitblock returned %s for height %d hash %s", r, tmpl["height"], block.hash_hex)
+        lastheader = block.hash_hex
 
 def do_calibrate(args):
     if args.nbits is not None and args.seconds is not None:

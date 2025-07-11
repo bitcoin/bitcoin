@@ -62,11 +62,11 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         for _ in range(NUM_BLOCKS):
             blocks.append(create_block(tip, create_coinbase(height), block_time))
             blocks[-1].solve()
-            tip = blocks[-1].sha256
+            tip = blocks[-1].hash_int
             block_time += 1
             height += 1
-            block_dict[blocks[-1].sha256] = blocks[-1]
-        stall_block = blocks[0].sha256
+            block_dict[blocks[-1].hash_int] = blocks[-1]
+        stall_block = blocks[0].hash_int
 
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in blocks[:NUM_BLOCKS-1]]

@@ -129,7 +129,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
             block = create_block(hashprev = hashPrevBlock, tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
             block.solve()
             new_blocks.append(block)
-            hashPrevBlock = block.sha256
+            hashPrevBlock = block.hash_int
 
         headers_message = msg_headers(headers=new_blocks)
         p2p.send_and_ping(headers_message)
