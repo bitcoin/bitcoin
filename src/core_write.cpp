@@ -181,6 +181,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     entry.pushKV("locktime", (int64_t)tx.nLockTime);
 
     UniValue vin{UniValue::VARR};
+    vin.reserve(tx.vin.size());
 
     // If available, use Undo data to calculate the fee. Note that txundo == nullptr
     // for coinbase transactions and for transactions where undo data is unavailable.
@@ -203,6 +204,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         }
         if (!tx.vin[i].scriptWitness.IsNull()) {
             UniValue txinwitness(UniValue::VARR);
+            txinwitness.reserve(tx.vin[i].scriptWitness.stack.size());
             for (const auto& item : tx.vin[i].scriptWitness.stack) {
                 txinwitness.push_back(HexStr(item));
             }
@@ -232,6 +234,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     entry.pushKV("vin", std::move(vin));
 
     UniValue vout(UniValue::VARR);
+    vout.reserve(tx.vout.size());
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const CTxOut& txout = tx.vout[i];
 
