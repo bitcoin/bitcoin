@@ -41,6 +41,30 @@ def process_mapping(fname):
     assert not in_rpcs and cmds
     return cmds
 
+def process_string_param_table(fname, table_name):
+    """Find and parse string parameter table in implementation file `fname`."""
+    cmds = []
+    in_rpcs = False
+    with open(fname, "r", encoding="utf8") as f:
+        for line in f:
+            line = line.rstrip()
+            if not in_rpcs:
+                if line == f'static const CRPCStringParam {table_name}[] =':
+                    in_rpcs = True
+            else:
+                if line.startswith('};'):
+                    in_rpcs = False
+                elif '{' in line and '"' in line:
+                    # Match four fields: { "method", idx, "param", true/false }
+                    m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *, *(true|false) *},', line)
+                    assert m, 'No match to string param table expression: %s' % line
+                    name = parse_string(m.group(1))
+                    idx = int(m.group(2))
+                    argname = parse_string(m.group(3))
+                    is_optional = m.group(4) == "true"
+                    cmds.append((name, idx, argname, is_optional))
+    assert not in_rpcs and cmds
+    return cmds
 
 class HelpRpcTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -49,6 +73,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_client_conversion_table()
+        self.test_client_string_conversion_table()
         self.test_categories()
         self.dump_help()
         if self.is_wallet_compiled():
@@ -84,6 +109,33 @@ class HelpRpcTest(BitcoinTestFramework):
             if all(convert) != any(convert):
                 # Only allow dummy and psbt to fail consistency check
                 assert argname in ['dummy', "psbt"], ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
+
+    def test_client_string_conversion_table(self):
+        file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
+        string_params_client = process_string_param_table(file_conversion_table, "vRPCStringParams")
+
+        # Convert to 3-tuples for consistency with server data
+        client_string_param_keys = [(entry[0], entry[1], entry[2]) for entry in string_params_client]
+
+        mapping_server = self.nodes[0].help("dump_all_command_conversions")
+        server_tuples = {tuple(m[:3]) for m in mapping_server}
+
+        # Filter string parameters based on wallet compilation status
+        if self.is_wallet_compiled():
+            # Check that every entry in vRPCStringParams exists on the server
+            stale_entries = [entry for entry in client_string_param_keys if entry not in server_tuples]
+            if stale_entries:
+                raise AssertionError(f"vRPCStringParams contains entries not present on the server: {stale_entries}")
+            filtered_string_params = client_string_param_keys
+        else:
+            available_string_params = [entry for entry in client_string_param_keys if entry in server_tuples]
+            filtered_string_params = available_string_params
+
+        # Validate that all entries are legitimate server parameters
+        server_method_param_tuples = {(m[0], m[1], m[2]) for m in mapping_server}
+        invalid_entries = [entry for entry in filtered_string_params if entry not in server_method_param_tuples]
+        if invalid_entries:
+            raise AssertionError(f"vRPCStringParams contains invalid entries: {invalid_entries}")
 
     def test_categories(self):
         node = self.nodes[0]
@@ -127,7 +179,6 @@ class HelpRpcTest(BitcoinTestFramework):
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
         self.restart_node(0, extra_args=['-nowallet=1'])
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
-
 
 if __name__ == '__main__':
     HelpRpcTest(__file__).main()
