@@ -80,7 +80,10 @@ static RPCHelpMan estimatesmartfee()
             UniValue errors(UniValue::VARR);
             FeeCalculation feeCalc;
             CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
-            if (feeRate != CFeeRate(0)) {
+            // Return the maximum of minrelaytxfee, mempoolminfee and estimateSmartFee fee rate when
+            //  a) estimateSmartFee successfully recommended a fee rate
+            //  b) fee rate estimator has recorded enough blocks to be able to provide an estimate for conf_target.
+            if (feeRate != CFeeRate(0) || (unsigned int)feeCalc.returnedTarget >= conf_target) {
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
                 feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
