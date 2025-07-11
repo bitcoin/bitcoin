@@ -47,11 +47,7 @@ endfunction()
 # For Qt-specific commands and variables, please consult:
 #  - https://cmake.org/cmake/help/latest/manual/cmake-qt.7.html
 #  - https://doc.qt.io/qt-5/cmake-manual.html
-
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOMOC_MOC_OPTIONS "-p${CMAKE_CURRENT_SOURCE_DIR}")
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOUIC_SEARCH_PATHS forms)
 
 configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
@@ -119,6 +115,11 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   $<$<PLATFORM_ID:Windows>:winshutdownmonitor.h>
   bitcoin.qrc
   ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_locale.qrc
+)
+set_target_properties(bitcoinqt PROPERTIES
+  AUTOMOC ON
+  AUTORCC ON
+  AUTOUIC ON
 )
 target_compile_definitions(bitcoinqt
   PUBLIC

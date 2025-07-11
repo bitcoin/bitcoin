@@ -12,6 +12,12 @@ add_library(test_bitcoinqt STATIC EXCLUDE_FROM_ALL
   util.cpp
 )
 
+set_target_properties(test_bitcoinqt PROPERTIES
+  AUTOMOC ON
+  AUTORCC ON
+  AUTOUIC ON
+)
+
 target_compile_definitions(test_bitcoinqt
   PUBLIC
     QT_NO_KEYWORDS
