@@ -142,7 +142,8 @@ public:
         return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
     }
     int32_t GetTxWeight() const { return nTxWeight; }
-    std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
+    std::chrono::seconds GetTime() const { return duration_cast<std::chrono::seconds>(std::chrono::microseconds{nTime}); }
+    std::chrono::microseconds GetTimeUs() const { return std::chrono::microseconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
     uint64_t GetSequence() const { return entry_sequence; }
     int64_t GetSigOpCost() const { return sigOpCost; }

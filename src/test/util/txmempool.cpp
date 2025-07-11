@@ -37,7 +37,7 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) co
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx) const
 {
-    return CTxMemPoolEntry{tx, nFee, TicksSinceEpoch<std::chrono::seconds>(time), nHeight, m_sequence, spendsCoinbase, sigOpCost, lp};
+    return CTxMemPoolEntry{tx, nFee, TicksSinceEpoch<std::chrono::microseconds>(time), nHeight, m_sequence, spendsCoinbase, sigOpCost, lp};
 }
 
 std::optional<std::string> CheckPackageMempoolAcceptResult(const Package& txns,
