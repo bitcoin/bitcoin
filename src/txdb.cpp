@@ -12,6 +12,7 @@
 #include <random.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/vector.h>
 
 #include <cassert>
@@ -93,7 +94,6 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
 bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) {
     CDBBatch batch(*m_db);
     size_t count = 0;
-    size_t changed = 0;
     assert(!hashBlock.IsNull());
 
     uint256 old_tip = GetBestBlock();
@@ -116,22 +116,17 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
     batch.Erase(DB_BEST_BLOCK);
     batch.Write(DB_HEAD_BLOCKS, Vector(hashBlock, old_tip));
 
-    for (auto it{cursor.Begin()}; it != cursor.End();) {
-        if (it->second.IsDirty()) {
-            CoinEntry entry(&it->first);
-            if (it->second.coin.IsSpent()) {
-                batch.Erase(entry);
-            } else {
-                batch.Write(entry, it->second.coin);
-            }
-
-            changed++;
+    for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {
+        Assume(it->second.IsDirty());
+        CoinEntry entry(&it->first);
+        if (it->second.coin.IsSpent()) {
+            batch.Erase(entry);
+        } else {
+            batch.Write(entry, it->second.coin);
         }
         count++;
-        it = cursor.NextAndMaybeErase(*it);
         if (batch.ApproximateSize() > m_options.batch_write_bytes) {
             LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
-
             m_db->WriteBatch(batch);
             batch.Clear();
             if (m_options.simulate_crash_ratio) {
@@ -150,7 +145,7 @@ bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashB
 
     LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
     bool ret = m_db->WriteBatch(batch);
-    LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
+    LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs to coin database...", count);
     return ret;
 }
 
