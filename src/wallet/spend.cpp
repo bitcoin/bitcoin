@@ -329,18 +329,18 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     // Cache for whether each tx passes the tx level checks (first bool), and whether the transaction is "safe" (second bool)
     std::unordered_map<uint256, std::pair<bool, bool>, SaltedTxidHasher> tx_safe_cache;
     for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
-        const CWalletTx& wtx = txo.GetWalletTx();
         const CTxOut& output = txo.GetTxOut();
 
         if (tx_safe_cache.contains(outpoint.hash) && !tx_safe_cache.at(outpoint.hash).first) {
             continue;
         }
 
-        int nDepth = wallet.GetTxDepthInMainChain(wtx);
+        int nDepth = wallet.GetTxStateDepthInMainChain(txo.GetState());
 
         // Perform tx level checks if we haven't already come across outputs from this tx before.
         if (!tx_safe_cache.contains(outpoint.hash)) {
             tx_safe_cache[outpoint.hash] = {false, false};
+            const CWalletTx& wtx = *wallet.GetWalletTx(outpoint.hash);
 
             if (wallet.IsTxImmatureCoinBase(wtx) && !params.include_immature_coinbase)
                 continue;
@@ -411,6 +411,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (wallet.IsLockedCoin(outpoint) && params.skip_locked)
             continue;
 
+        Assert(nDepth >= 0);
+        Assert(!wallet.IsSpent(outpoint, /*min_depth=*/1));
+
         if (wallet.IsSpent(outpoint))
             continue;
 
@@ -421,7 +424,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             continue;
         }
 
-        bool tx_from_me = CachedTxIsFromMe(wallet, wtx, ISMINE_ALL);
+        bool tx_from_me = txo.GetTxFromMe();
 
         std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
@@ -451,7 +454,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         }
 
         result.Add(GetOutputType(type, is_from_p2sh),
-                   COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate));
+                   COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, tx_safe, txo.GetTxTime(), tx_from_me, feerate));
 
         outpoints.push_back(outpoint);
 
