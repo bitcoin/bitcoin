@@ -463,8 +463,10 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
                 pindex->m_chain_tx_count = pindex->nTx;
             }
         }
-        if (!(pindex->nStatus & BLOCK_FAILED_MASK) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_MASK)) {
-            pindex->nStatus |= BLOCK_FAILED_CHILD;
+        if (!(pindex->nStatus & BLOCK_FAILED_VALID) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_VALID)) {
+            // if BLOCK_FAILED_CHILD already exists in disk, clear it
+            // and reset it to BLOCK_FAILED_VALID which is used everywhere now
+            pindex->nStatus = (pindex->nStatus & ~BLOCK_FAILED_CHILD) | BLOCK_FAILED_VALID;
             m_dirty_blockindex.insert(pindex);
         }
         if (pindex->pprev) {
