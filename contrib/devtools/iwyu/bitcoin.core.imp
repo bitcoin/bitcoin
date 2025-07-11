@@ -1,3 +1,12 @@
-# Nothing for now.
 [
+  # Compiler intrinsics.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1764.
+  { "include": [ "<emmintrin.h>", "private", "<immintrin.h>", "public" ] },
+  { "include": [ "<smmintrin.h>", "private", "<immintrin.h>", "public" ] },
+  { "include": [ "<tmmintrin.h>", "private", "<immintrin.h>", "public" ] },
+
+  # Fixed in https://github.com/include-what-you-use/include-what-you-use/pull/1706.
+  { "symbol": ["SEEK_CUR", "private", "<cstdio>", "public"] },
+  { "symbol": ["SEEK_END", "private", "<cstdio>", "public"] },
+  { "symbol": ["SEEK_SET", "private", "<cstdio>", "public"] },
 ]
