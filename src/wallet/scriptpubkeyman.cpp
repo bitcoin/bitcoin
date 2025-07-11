@@ -1173,7 +1173,7 @@ bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
     LOCK(cs_desc_man);
     return m_wallet_descriptor.descriptor->IsSingleType() &&
            m_wallet_descriptor.descriptor->IsRange() &&
-           (HavePrivateKeys() || m_wallet_descriptor.next_index < m_wallet_descriptor.range_end);
+           (HavePrivateKeys() || m_wallet_descriptor.next_index < m_wallet_descriptor.range_end || m_wallet_descriptor.descriptor->CanSelfExpand());
 }
 
 bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
