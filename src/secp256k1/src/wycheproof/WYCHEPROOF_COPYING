@@ -1,12 +1,12 @@
 * The file `ecdsa_secp256k1_sha256_bitcoin_test.json` in this directory
-  comes from Google's project Wycheproof with git commit
-  `b063b4aedae951c69df014cd25fa6d69ae9e8cb9`, see
-  https://github.com/google/wycheproof/blob/b063b4aedae951c69df014cd25fa6d69ae9e8cb9/testvectors_v1/ecdsa_secp256k1_sha256_bitcoin_test.json
+  comes from project Wycheproof with git commit
+  `df4e933efef449fc88af0c06e028d425d84a9495`, see
+  https://github.com/C2SP/wycheproof/blob/df4e933efef449fc88af0c06e028d425d84a9495/testvectors_v1/ecdsa_secp256k1_sha256_bitcoin_test.json
 
 * The file `ecdh_secp256k1_test.json` in this directory
-  comes from Google's project Wycheproof with git commit
-  `d9f6ec7d8bd8c96da05368999094e4a75ba5cb3d`, see
-  https://github.com/google/wycheproof/blob/d9f6ec7d8bd8c96da05368999094e4a75ba5cb3d/testvectors_v1/ecdh_secp256k1_test.json
+  comes from project Wycheproof with git commit
+  `df4e933efef449fc88af0c06e028d425d84a9495`, see
+  https://github.com/C2SP/wycheproof/blob/df4e933efef449fc88af0c06e028d425d84a9495/testvectors_v1/ecdh_secp256k1_test.json
 
 * The file `ecdsa_secp256k1_sha256_bitcoin_test.h` is generated from
   `ecdsa_secp256k1_sha256_bitcoin_test.json` using the script
