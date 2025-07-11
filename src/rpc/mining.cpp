@@ -167,7 +167,7 @@ static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const
         CHECK_NONFATAL(block_template);
 
         std::shared_ptr<const CBlock> block_out;
-        if (!GenerateBlock(chainman, block_template->getBlock(), nMaxTries, block_out, /*process_new_block=*/true)) {
+        if (!GenerateBlock(chainman, CBlock{block_template->getBlock()}, nMaxTries, block_out, /*process_new_block=*/true)) {
             break;
         }
 
@@ -420,6 +420,7 @@ static RPCHelpMan getmininginfo()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::NUM, "blocks", "The current block"},
+                        {RPCResult::Type::NUM, "currentblocksize", /*optional=*/true, "The block size (including reserved weight for block header, txs count and coinbase tx) of the last assembled block (only present if a block was ever assembled, and blockmaxsize is configured)"},
                         {RPCResult::Type::NUM, "currentblockweight", /*optional=*/true, "The block weight (including reserved weight for block header, txs count and coinbase tx) of the last assembled block (only present if a block was ever assembled)"},
                         {RPCResult::Type::NUM, "currentblocktx", /*optional=*/true, "The number of block transactions (excluding coinbase) of the last assembled block (only present if a block was ever assembled)"},
                         {RPCResult::Type::STR_HEX, "bits", "The current nBits, compact representation of the block difficulty target"},
@@ -460,6 +461,7 @@ static RPCHelpMan getmininginfo()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("blocks",           active_chain.Height());
+    if (BlockAssembler::m_last_block_size) obj.pushKV("currentblocksize", *BlockAssembler::m_last_block_size);
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
@@ -603,6 +605,8 @@ static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
     }
     return s;
 }
+
+static UniValue TemplateToJSON(const Consensus::Params&, const ChainstateManager&, const BlockTemplate*, const CBlockIndex*, const std::set<std::string>& setClientRules, unsigned int nTransactionsUpdatedLast);
 
 static RPCHelpMan getblocktemplate()
 {
@@ -854,11 +858,15 @@ static RPCHelpMan getblocktemplate()
         pindexPrev = pindexPrevNew;
     }
     CHECK_NONFATAL(pindexPrev);
-    CBlock block{block_template->getBlock()};
 
-    // Update nTime
-    UpdateTime(&block, consensusParams, pindexPrev);
-    block.nNonce = 0;
+    return TemplateToJSON(consensusParams, chainman, &*block_template, pindexPrev, setClientRules, nTransactionsUpdatedLast);
+},
+    };
+}
+
+static UniValue TemplateToJSON(const Consensus::Params& consensusParams, const ChainstateManager& chainman, const BlockTemplate* block_template, const CBlockIndex* const pindexPrev, const std::set<std::string>& setClientRules, const unsigned int nTransactionsUpdatedLast) {
+    CHECK_NONFATAL(block_template);
+    const CBlock& block = block_template->getBlock();
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
@@ -867,8 +875,8 @@ static RPCHelpMan getblocktemplate()
 
     UniValue transactions(UniValue::VARR);
     std::map<uint256, int64_t> setTxIndex;
-    std::vector<CAmount> tx_fees{block_template->getTxFees()};
-    std::vector<CAmount> tx_sigops{block_template->getTxSigops()};
+    const std::vector<CAmount>& tx_fees{block_template->getTxFees()};
+    const std::vector<CAmount>& tx_sigops{block_template->getTxSigops()};
 
     int i = 0;
     for (const auto& it : block.vtx) {
@@ -908,7 +916,12 @@ static RPCHelpMan getblocktemplate()
 
     UniValue aux(UniValue::VOBJ);
 
-    arith_uint256 hashTarget = arith_uint256().SetCompact(block.nBits);
+    CBlockHeader block_header{block};
+    // Update nTime (and potentially nBits)
+    UpdateTime(&block_header, consensusParams, pindexPrev);
+    block_header.nNonce = 0;
+
+    arith_uint256 hashTarget = arith_uint256().SetCompact(block_header.nBits);
 
     UniValue aMutable(UniValue::VARR);
     aMutable.push_back("time");
@@ -938,7 +951,7 @@ static RPCHelpMan getblocktemplate()
                 break;
             case ThresholdState::LOCKED_IN:
                 // Ensure bit is set in block version
-                block.nVersion |= chainman.m_versionbitscache.Mask(consensusParams, pos);
+                block_header.nVersion |= chainman.m_versionbitscache.Mask(consensusParams, pos);
                 [[fallthrough]];
             case ThresholdState::STARTED:
             {
@@ -947,7 +960,7 @@ static RPCHelpMan getblocktemplate()
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
                         // If the client doesn't support this, don't indicate it in the [default] version
-                        block.nVersion &= ~chainman.m_versionbitscache.Mask(consensusParams, pos);
+                        block_header.nVersion &= ~chainman.m_versionbitscache.Mask(consensusParams, pos);
                     }
                 }
                 break;
@@ -967,7 +980,7 @@ static RPCHelpMan getblocktemplate()
             }
         }
     }
-    result.pushKV("version", block.nVersion);
+    result.pushKV("version", block_header.nVersion);
     result.pushKV("rules", std::move(aRules));
     result.pushKV("vbavailable", std::move(vbavailable));
     result.pushKV("vbrequired", int(0));
@@ -976,7 +989,7 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
     result.pushKV("coinbasevalue", (int64_t)block.vtx[0]->vout[0].nValue);
-    result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", pindexPrev->GetBlockHash().GetHex() + ToString(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
     result.pushKV("mutable", std::move(aMutable));
@@ -994,8 +1007,8 @@ static RPCHelpMan getblocktemplate()
     if (!fPreSegWit) {
         result.pushKV("weightlimit", (int64_t)MAX_BLOCK_WEIGHT);
     }
-    result.pushKV("curtime", block.GetBlockTime());
-    result.pushKV("bits", strprintf("%08x", block.nBits));
+    result.pushKV("curtime", block_header.GetBlockTime());
+    result.pushKV("bits", strprintf("%08x", block_header.nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
 
     if (consensusParams.signet_blocks) {
@@ -1007,8 +1020,6 @@ static RPCHelpMan getblocktemplate()
     }
 
     return result;
-},
-    };
 }
 
 class submitblock_StateCatcher final : public CValidationInterface
