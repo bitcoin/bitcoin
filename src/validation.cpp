@@ -4312,7 +4312,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     if (IsThisSoftwareExpired(block.nTime)) {
         // Wait an extra day before we start rejecting blocks
         CBlockIndex const *blockindex_old = pindexPrev;
-        for (int i = 0; i < 144; ++i) {
+        for (int i{std::min<int>(144, pindexPrev->nHeight)}; i; --i) {
             assert(blockindex_old);
             blockindex_old = blockindex_old->pprev;
         }
