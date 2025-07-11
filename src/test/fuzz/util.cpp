@@ -31,12 +31,12 @@ CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::option
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, max.value_or(MAX_MONEY));
 }
 
-int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept
+std::chrono::seconds ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept
 {
     // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) disables mocktime.
     static const int64_t time_min{ParseISO8601DateTime("2000-01-01T00:00:01Z").value()};
     static const int64_t time_max{ParseISO8601DateTime("2100-12-31T23:59:59Z").value()};
-    return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.value_or(time_min), max.value_or(time_max));
+    return std::chrono::seconds{fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.value_or(time_min), max.value_or(time_max))};
 }
 
 CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<Txid>>& prevout_txids, const int max_num_in, const int max_num_out) noexcept
