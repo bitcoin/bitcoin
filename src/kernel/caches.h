@@ -16,6 +16,9 @@ static constexpr size_t MAX_BLOCK_DB_CACHE{2_MiB};
 //! Max memory allocated to coin DB specific cache (bytes)
 static constexpr size_t MAX_COINS_DB_CACHE{8_MiB};
 
+//! The batch size of DEFAULT_KERNEL_CACHE
+static constexpr size_t DEFAULT_DB_CACHE_BATCH{16_MiB};
+
 namespace kernel {
 struct CacheSizes {
     size_t block_tree_db;
