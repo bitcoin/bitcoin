@@ -50,9 +50,6 @@ public:
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
     int input_bytes;
 
-    /** Whether we have the private keys to spend this output */
-    bool spendable;
-
     /** Whether we know how to spend this output, ignoring the lack of keys */
     bool solvable;
 
@@ -75,12 +72,11 @@ public:
     /** The fee necessary to bump this UTXO's ancestor transactions to the target feerate */
     CAmount ancestor_bump_fees{0};
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool solvable, bool safe, int64_t time, bool from_me, const std::optional<CFeeRate> feerate = std::nullopt)
         : outpoint{outpoint},
           txout{txout},
           depth{depth},
           input_bytes{input_bytes},
-          spendable{spendable},
           solvable{solvable},
           safe{safe},
           time{time},
@@ -93,8 +89,8 @@ public:
         }
     }
 
-    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool spendable, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
-        : COutput(outpoint, txout, depth, input_bytes, spendable, solvable, safe, time, from_me)
+    COutput(const COutPoint& outpoint, const CTxOut& txout, int depth, int input_bytes, bool solvable, bool safe, int64_t time, bool from_me, const CAmount fees)
+        : COutput(outpoint, txout, depth, input_bytes, solvable, safe, time, from_me)
     {
         // if input_bytes is unknown, then fees should be 0, if input_bytes is known, then the fees should be a positive integer or 0 (input_bytes known and fees = 0 only happens in the tests)
         assert((input_bytes < 0 && fees == 0) || (input_bytes > 0 && fees >= 0));
