@@ -61,7 +61,7 @@ class SigningProvider;
 enum class MemPoolRemovalReason;
 enum class SigningResult;
 namespace common {
-enum class PSBTError;
+enum class PSBTResult;
 } // namespace common
 namespace interfaces {
 class Wallet;
@@ -679,7 +679,7 @@ public:
      * @param[in] finalize whether to create the final scriptSig or scriptWitness if possible
      * return error
      */
-    std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbtx,
+    std::optional<common::PSBTResult> FillPSBT(PartiallySignedTransaction& psbtx,
                   bool& complete,
                   std::optional<int> sighash_type = std::nullopt,
                   bool sign = true,

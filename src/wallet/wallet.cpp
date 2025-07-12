@@ -85,7 +85,7 @@ struct KeyOriginInfo;
 
 using common::AmountErrMsg;
 using common::AmountHighWarn;
-using common::PSBTError;
+using common::PSBTResult;
 using interfaces::FoundBlock;
 using kernel::ChainstateRole;
 using util::ReplaceAll;
@@ -2135,7 +2135,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint,
     return false;
 }
 
-std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, std::optional<int> sighash_type, bool sign, bool bip32derivs, size_t * n_signed, bool finalize) const
+std::optional<PSBTResult> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, std::optional<int> sighash_type, bool sign, bool bip32derivs, size_t * n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
