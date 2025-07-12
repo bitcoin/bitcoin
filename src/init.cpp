@@ -840,6 +840,7 @@ void InitParameterInteraction(ArgsManager& args)
     if (args.GetBoolArg("-corepolicy", DEFAULT_COREPOLICY)) {
         args.SoftSetArg("-acceptnonstddatacarrier", "1");
         args.SoftSetArg("-bytespersigopstrict", "0");
+        args.SoftSetArg("-permitbaredatacarrier", "1");
         args.SoftSetArg("-permitbarepubkey", "1");
         args.SoftSetArg("-permitbaremultisig", "1");
         args.SoftSetArg("-rejectparasites", "0");
