@@ -68,9 +68,9 @@ static constexpr bool DEFAULT_REJECT_TOKENS{false};
 
 // NOTE: Changes to these three require manually adjusting doc in init.cpp
 /** Default for -permitephemeral=send */
-static constexpr bool DEFAULT_PERMITEPHEMERAL_SEND{true};
+static constexpr bool DEFAULT_PERMITEPHEMERAL_SEND{false};
 /** Default for -permitephemeral=dust */
-static constexpr bool DEFAULT_PERMITEPHEMERAL_DUST{true};
+static constexpr bool DEFAULT_PERMITEPHEMERAL_DUST{false};
 /** Default for -permitephemeral=anchor */
 static constexpr bool DEFAULT_PERMITEPHEMERAL_ANCHOR{true};
 
