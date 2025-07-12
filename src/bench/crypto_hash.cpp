@@ -59,7 +59,7 @@ static void HASH_1MB_SHA3_256(benchmark::Bench& bench)
 static void HASH_SHA256_32b(benchmark::Bench& bench)
 {
     std::vector<uint8_t> in(32,0);
-    bench.run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CSHA256()
             .Write(in.data(), in.size())
             .Finalize(in.data());
@@ -69,7 +69,7 @@ static void HASH_SHA256_32b(benchmark::Bench& bench)
 static void HASH_SHA256D64_1024(benchmark::Bench& bench)
 {
     std::vector<uint8_t> in(64 * 1024, 0);
-    bench.minEpochIterations(1000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         SHA256D64(in.data(), in.data(), 1024);
     });
 }
@@ -194,7 +194,7 @@ static void HASH_DSHA256_0032b_single(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(32,0);
-    bench.minEpochIterations(100000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CHash256().Write(in).Finalize(hash);
     });
 }
@@ -203,7 +203,7 @@ static void HASH_DSHA256_0080b_single(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(80,0);
-    bench.minEpochIterations(100000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CHash256().Write(in).Finalize(hash);
     });
 }
@@ -212,7 +212,7 @@ static void HASH_DSHA256_0128b_single(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(128,0);
-    bench.minEpochIterations(100000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CHash256().Write(in).Finalize(hash);
     });
 }
@@ -221,7 +221,7 @@ static void HASH_DSHA256_0512b_single(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(512,0);
-    bench.minEpochIterations(100000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CHash256().Write(in).Finalize(hash);
     });
 }
@@ -230,7 +230,7 @@ static void HASH_DSHA256_1024b_single(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(1024,0);
-    bench.minEpochIterations(100000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CHash256().Write(in).Finalize(hash);
     });
 }
@@ -239,7 +239,7 @@ static void HASH_DSHA256_2048b_single(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(2048,0);
-    bench.minEpochIterations(100000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CHash256().Write(in).Finalize(hash);
     });
 }
@@ -249,7 +249,7 @@ static void HASH_X11_0032b_single(benchmark::Bench& bench)
 {
     uint256 hash;
     std::vector<uint8_t> in(32,0);
-    bench.minEpochIterations(10000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
@@ -258,7 +258,7 @@ static void HASH_X11_0080b_single(benchmark::Bench& bench)
 {
     uint256 hash;
     std::vector<uint8_t> in(80,0);
-    bench.minEpochIterations(10000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
@@ -267,7 +267,7 @@ static void HASH_X11_0128b_single(benchmark::Bench& bench)
 {
     uint256 hash;
     std::vector<uint8_t> in(128,0);
-    bench.minEpochIterations(10000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
@@ -276,7 +276,7 @@ static void HASH_X11_0512b_single(benchmark::Bench& bench)
 {
     uint256 hash;
     std::vector<uint8_t> in(512,0);
-    bench.minEpochIterations(10000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
@@ -285,7 +285,7 @@ static void HASH_X11_1024b_single(benchmark::Bench& bench)
 {
     uint256 hash;
     std::vector<uint8_t> in(1024,0);
-    bench.minEpochIterations(10000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
@@ -294,7 +294,7 @@ static void HASH_X11_2048b_single(benchmark::Bench& bench)
 {
     uint256 hash;
     std::vector<uint8_t> in(2048,0);
-    bench.minEpochIterations(10000).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
