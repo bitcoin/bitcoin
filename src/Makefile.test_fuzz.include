@@ -22,8 +22,3 @@ libtest_fuzz_a_SOURCES = \
   test/fuzz/util.cpp \
   test/fuzz/util/net.cpp \
   $(TEST_FUZZ_H)
-
-LIBTEST_FUZZ += $(LIBBITCOIN_NODE)
-LIBTEST_FUZZ += $(LIBBITCOIN_COMMON)
-LIBTEST_FUZZ += $(LIBBITCOIN_UTIL)
-LIBTEST_FUZZ += $(LIBBITCOIN_CRYPTO_BASE)
