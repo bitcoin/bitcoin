@@ -847,6 +847,7 @@ void InitParameterInteraction(ArgsManager& args)
         args.SoftSetArg("-datacarriercost", "0.25");
         args.SoftSetArg("-datacarrierfullcount", "0");
         args.SoftSetArg("-datacarriersize", "83");
+        args.SoftSetArg("-maxtxlegacysigops", strprintf("%s", std::numeric_limits<unsigned int>::max()));
         args.SoftSetArg("-maxscriptsize", strprintf("%s", std::numeric_limits<unsigned int>::max()));
         args.SoftSetArg("-mempooltruc", "enforce");
         args.SoftSetArg("-permitephemeral", "anchor,send,dust");
