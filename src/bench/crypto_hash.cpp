@@ -24,7 +24,7 @@ static void HASH_1MB_RIPEMD160(benchmark::Bench& bench)
 {
     uint8_t hash[CRIPEMD160::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CRIPEMD160().Write(in.data(), in.size()).Finalize(hash);
     });
 }
@@ -33,7 +33,7 @@ static void HASH_1MB_SHA1(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA1::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CSHA1().Write(in.data(), in.size()).Finalize(hash);
     });
 }
@@ -42,7 +42,7 @@ static void HASH_1MB_SHA256(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CSHA256().Write(in.data(), in.size()).Finalize(hash);
     });
 }
@@ -51,7 +51,7 @@ static void HASH_1MB_SHA3_256(benchmark::Bench& bench)
 {
     uint8_t hash[SHA3_256::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         SHA3_256().Write(in).Finalize(hash);
     });
 }
@@ -78,7 +78,7 @@ static void HASH_1MB_SHA512(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA512::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CSHA512().Write(in.data(), in.size()).Finalize(hash);
     });
 }
@@ -175,7 +175,7 @@ static void HASH_1MB_DSHA256(benchmark::Bench& bench)
 {
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         CHash256().Write(in).Finalize(hash);
     });
 }
@@ -184,7 +184,7 @@ static void HASH_1MB_X11(benchmark::Bench& bench)
 {
     uint256 hash;
     std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").minEpochIterations(10).run([&] {
+    bench.batch(in.size()).unit("byte").run([&] {
         hash = HashX11(in.begin(), in.end());
     });
 }
