@@ -8,6 +8,7 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
+#include <util/trace.h>
 
 #include <map>
 #include <mutex>
@@ -18,6 +19,12 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+TRACEPOINT_SEMAPHORE(sync, enter);
+TRACEPOINT_SEMAPHORE(sync, locked);
+TRACEPOINT_SEMAPHORE(sync, unlock);
+TRACEPOINT_SEMAPHORE(sync, mutex_ctor);
+TRACEPOINT_SEMAPHORE(sync, mutex_dtor);
 
 #ifdef DEBUG_LOCKORDER
 //
@@ -329,7 +336,13 @@ void UniqueLock<MutexType>::Enter()
     if (Base::try_lock()) return;
     LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
 #endif
+    if constexpr (std::is_same_v<MutexType, Mutex>) {
+        TRACEPOINT(sync, enter, Base::mutex(), m_pszName, m_pszFile, m_nLine);
+    }
     Base::lock();
+    if constexpr (std::is_same_v<MutexType, Mutex>) {
+        TRACEPOINT(sync, locked, Base::mutex(), m_pszName, m_pszFile, m_nLine);
+    }
 }
 
 template<typename MutexType>
@@ -370,8 +383,12 @@ UniqueLock<MutexType>::UniqueLock(MutexType* pmutexIn, const char* pszName, cons
 template<typename MutexType>
 UniqueLock<MutexType>::~UniqueLock() UNLOCK_FUNCTION()
 {
-    if (Base::owns_lock())
+    if (Base::owns_lock()) {
         LeaveCritical();
+        if constexpr (std::is_same_v<MutexType, Mutex>) {
+            TRACEPOINT(sync, unlock, Base::mutex(), m_pszFile, m_nLine);
+        }
+    }
 }
 
 template<typename MutexType>
@@ -389,12 +406,20 @@ template class UniqueLock<AnnotatedMixin<std::recursive_mutex>>;
 template class UniqueLock<GlobalMutex>;
 
 template <typename PARENT>
-AnnotatedMixin<PARENT>::AnnotatedMixin() = default;
+AnnotatedMixin<PARENT>::AnnotatedMixin()
+{
+    if constexpr (std::is_same_v<PARENT, std::mutex>) {
+        TRACEPOINT(sync, mutex_ctor, this);
+    }
+}
 
 template <typename PARENT>
 AnnotatedMixin<PARENT>::~AnnotatedMixin()
 {
     DeleteLock((void*) this);
+    if constexpr (std::is_same_v<PARENT, std::mutex>) {
+        TRACEPOINT(sync, mutex_dtor, this);
+    }
 }
 
 template <typename PARENT>
