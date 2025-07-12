@@ -8,6 +8,7 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
+#include <util/trace.h>
 
 #include <map>
 #include <mutex>
@@ -18,6 +19,12 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+TRACEPOINT_SEMAPHORE(sync, enter);
+TRACEPOINT_SEMAPHORE(sync, locked);
+TRACEPOINT_SEMAPHORE(sync, unlock);
+TRACEPOINT_SEMAPHORE(sync, mutex_ctor);
+TRACEPOINT_SEMAPHORE(sync, mutex_dtor);
 
 #ifdef DEBUG_LOCKORDER
 //
@@ -320,3 +327,130 @@ bool LockStackEmpty()
 bool g_debug_lockorder_abort = true;
 
 #endif /* DEBUG_LOCKORDER */
+
+template <typename MutexType>
+void UniqueLock<MutexType>::Enter()
+{
+    EnterCritical(m_pszName, m_pszFile, m_nLine, Base::mutex());
+#ifdef DEBUG_LOCKCONTENTION
+    if (Base::try_lock()) return;
+    LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
+#endif
+    if constexpr (std::is_same_v<MutexType, Mutex>) {
+        TRACEPOINT(sync, enter, Base::mutex(), m_pszName, m_pszFile, m_nLine);
+    }
+    Base::lock();
+    if constexpr (std::is_same_v<MutexType, Mutex>) {
+        TRACEPOINT(sync, locked, Base::mutex(), m_pszName, m_pszFile, m_nLine);
+    }
+}
+
+template<typename MutexType>
+bool UniqueLock<MutexType>::TryEnter()
+{
+    EnterCritical(m_pszName, m_pszFile, m_nLine, Base::mutex(), true);
+    if (Base::try_lock()) {
+        return true;
+    }
+    LeaveCritical();
+    return false;
+}
+
+template<typename MutexType>
+UniqueLock<MutexType>::UniqueLock(MutexType& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry) EXCLUSIVE_LOCK_FUNCTION(mutexIn) : Base(mutexIn, std::defer_lock), m_pszName(pszName), m_pszFile(pszFile), m_nLine(nLine)
+{
+    if (fTry)
+        TryEnter();
+    else
+        Enter();
+}
+
+template<typename MutexType>
+UniqueLock<MutexType>::UniqueLock(MutexType* pmutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry) EXCLUSIVE_LOCK_FUNCTION(pmutexIn)
+{
+    if (!pmutexIn) return;
+
+    *static_cast<Base*>(this) = Base(*pmutexIn, std::defer_lock);
+    m_pszName = pszName;
+    m_pszFile = pszFile;
+    m_nLine = nLine;
+    if (fTry)
+        TryEnter();
+    else
+        Enter();
+}
+
+template<typename MutexType>
+UniqueLock<MutexType>::~UniqueLock() UNLOCK_FUNCTION()
+{
+    if (Base::owns_lock()) {
+        LeaveCritical();
+        if constexpr (std::is_same_v<MutexType, Mutex>) {
+            TRACEPOINT(sync, unlock, Base::mutex(), m_pszFile, m_nLine);
+        }
+    }
+}
+
+template<typename MutexType>
+UniqueLock<MutexType>::operator bool()
+{
+    return Base::owns_lock();
+}
+
+template<typename MutexType>
+UniqueLock<MutexType>::UniqueLock() = default;
+
+// explicitly instantiate UniqueLock
+template class UniqueLock<AnnotatedMixin<std::mutex>>;
+template class UniqueLock<AnnotatedMixin<std::recursive_mutex>>;
+template class UniqueLock<GlobalMutex>;
+
+template <typename PARENT>
+AnnotatedMixin<PARENT>::AnnotatedMixin()
+{
+    if constexpr (std::is_same_v<PARENT, std::mutex>) {
+        TRACEPOINT(sync, mutex_ctor, this);
+    }
+}
+
+template <typename PARENT>
+AnnotatedMixin<PARENT>::~AnnotatedMixin()
+{
+    DeleteLock((void*) this);
+    if constexpr (std::is_same_v<PARENT, std::mutex>) {
+        TRACEPOINT(sync, mutex_dtor, this);
+    }
+}
+
+template <typename PARENT>
+void AnnotatedMixin<PARENT>::lock() EXCLUSIVE_LOCK_FUNCTION()
+{
+    PARENT::lock();
+}
+
+template <typename PARENT>
+void AnnotatedMixin<PARENT>::unlock() UNLOCK_FUNCTION()
+{
+    PARENT::unlock();
+}
+
+template <typename PARENT>
+bool AnnotatedMixin<PARENT>::try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
+{
+    return PARENT::try_lock();
+}
+
+#ifdef __clang__
+//! For negative capabilities in the Clang Thread Safety Analysis.
+//! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
+//! with the ! operator, to indicate that a mutex should not be held.
+template <typename PARENT>
+const AnnotatedMixin<PARENT>& AnnotatedMixin<PARENT>::operator!() const
+{
+    return *this;
+}
+#endif  // __clang__
+
+// explicitly instantiate AnnotatedMixin
+template class AnnotatedMixin<std::mutex>;
+template class AnnotatedMixin<std::recursive_mutex>;
