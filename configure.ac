@@ -242,16 +242,6 @@ AC_ARG_ENABLE([threadlocal],
   [use_thread_local=$enableval],
   [use_thread_local=auto])
 
-AC_ARG_ENABLE([asm],
-  [AS_HELP_STRING([--disable-asm],
-  [disable assembly routines (enabled by default)])],
-  [use_asm=$enableval],
-  [use_asm=yes])
-
-if test "$use_asm" = "yes"; then
-  AC_DEFINE([USE_ASM], [1], [Define this symbol to build in assembly routines])
-fi
-
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
   [disable ZMQ notifications])],
@@ -556,8 +546,6 @@ enable_sse41=no
 enable_avx2=no
 enable_x86_shani=no
 
-if test "$use_asm" = "yes"; then
-
 dnl Check for optional instruction set support. Enabling these does _not_ imply that all code will
 dnl be compiled with them, rather that specific objects/libs may use them after checking for runtime
 dnl compatibility.
@@ -695,8 +683,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  [ AC_MSG_RESULT([no])]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
-
-fi
 
 CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO -DGSL_NO_IOSTREAMS"
 
@@ -1843,7 +1829,6 @@ AM_CONDITIONAL([ENABLE_AVX2], [test "$enable_avx2" = "yes"])
 AM_CONDITIONAL([ENABLE_X86_SHANI], [test "$enable_x86_shani" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_CRC], [test "$enable_arm_crc" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_SHANI], [test "$enable_arm_shani" = "yes"])
-AM_CONDITIONAL([USE_ASM], [test "$use_asm" = "yes"])
 AM_CONDITIONAL([WORDS_BIGENDIAN], [test "$ac_cv_c_bigendian" = "yes"])
 AM_CONDITIONAL([USE_NATPMP], [test "$use_natpmp" = "yes"])
 AM_CONDITIONAL([USE_UPNP], [test "$use_upnp" = "yes"])
@@ -1988,7 +1973,6 @@ echo "  with fuzz binary    = $enable_fuzz_binary"
 echo "  with bench          = $use_bench"
 echo "  with upnp           = $use_upnp"
 echo "  with natpmp         = $use_natpmp"
-echo "  use asm             = $use_asm"
 echo "  USDT tracing        = $use_usdt"
 echo "  sanitizers          = $use_sanitizers"
 echo "  debug enabled       = $enable_debug"

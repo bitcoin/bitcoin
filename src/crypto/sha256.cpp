@@ -22,12 +22,10 @@
 #endif
 
 #if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
-#if defined(USE_ASM)
 namespace sha256_sse4
 {
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
 }
-#endif
 #endif
 
 namespace sha256d64_sse41
@@ -570,7 +568,7 @@ bool SelfTest() {
 }
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
-#if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
+#if (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
 /** Check whether the OS has enabled AVX registers. */
 bool AVXEnabled()
 {
@@ -593,7 +591,7 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
     TransformD64_8way = nullptr;
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
-#if defined(USE_ASM) && defined(HAVE_GETCPUID)
+#if defined(HAVE_GETCPUID)
     bool have_sse4 = false;
     bool have_xsave = false;
     bool have_avx = false;
@@ -650,7 +648,7 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
         ret += ",avx2(8way)";
     }
 #endif
-#endif // defined(USE_ASM) && defined(HAVE_GETCPUID)
+#endif // defined(HAVE_GETCPUID)
 
 #if defined(ENABLE_ARM_SHANI)
     bool have_arm_shani = false;
