@@ -124,9 +124,13 @@ if [[ "${RUN_TIDY}" == "true" ]]; then
   BITCOIN_CONFIG_ALL="$BITCOIN_CONFIG_ALL -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 fi
 
-bash -c "cmake -S $BASE_ROOT_DIR $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (cat $(cmake -P "${BASE_ROOT_DIR}/ci/test/GetCMakeLogFiles.cmake")) && false)"
+bash -c "cmake -S $BASE_ROOT_DIR -B $BASE_BUILD_DIR $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (cat $(cmake -P "${BASE_ROOT_DIR}/ci/test/GetCMakeLogFiles.cmake")) && false)"
 
-bash -c "cmake --build . $MAKEJOBS --target all $GOAL" || ( echo "Build failure. Verbose build follows." && cmake --build . --target all "$GOAL" --verbose ; false )
+if [ "${RUN_TIDY}" = "true" ]; then
+  bash -c "cmake --build . $MAKEJOBS --target codegen" || ( echo "Build failure. Verbose build follows." && cmake --build . --target codegen --verbose ; false )
+else
+  bash -c "cmake --build . $MAKEJOBS --target all $GOAL" || ( echo "Build failure. Verbose build follows." && cmake --build . --target all "$GOAL" --verbose ; false )
+fi
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
 du -sh "${DEPENDS_DIR}"/*/
