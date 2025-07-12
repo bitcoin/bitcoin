@@ -124,13 +124,21 @@ fi
 
 bash -c "cmake -S $BASE_ROOT_DIR -B ${BASE_BUILD_DIR} $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( (cat $(cmake -P "${BASE_ROOT_DIR}/ci/test/GetCMakeLogFiles.cmake")) && false)"
 
-# shellcheck disable=SC2086
-cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target all $GOAL || (
-  echo "Build failure. Verbose build follows."
+if [ "${RUN_TIDY}" = "true" ]; then
+  cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target codegen || (
+    echo "Build failure. Verbose build follows."
+    cmake --build "${BASE_BUILD_DIR}" -j1 --target codegen --verbose
+    false
+  )
+else
   # shellcheck disable=SC2086
-  cmake --build "${BASE_BUILD_DIR}" -j1 --target all $GOAL --verbose
-  false
-)
+  cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target all $GOAL || (
+    echo "Build failure. Verbose build follows."
+    # shellcheck disable=SC2086
+    cmake --build "${BASE_BUILD_DIR}" -j1 --target all $GOAL --verbose
+    false
+  )
+fi
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
 du -sh "${DEPENDS_DIR}"/*/
