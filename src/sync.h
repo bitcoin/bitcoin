@@ -55,7 +55,7 @@ LEAVE_CRITICAL_SECTION(mutex); // no RAII
 
 #ifdef DEBUG_LOCKORDER
 template <typename MutexType>
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry = false);
+void EnterCritical(const char* m_pszName, const char* m_pszFile, int m_nLine, MutexType* cs, bool fTry = false);
 void LeaveCritical();
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line);
 template <typename MutexType>
@@ -138,10 +138,14 @@ inline void AssertLockNotHeldInline(const char* name, const char* file, int line
 template <typename MutexType>
 class SCOPED_LOCKABLE UniqueLock : public MutexType::unique_lock
 {
+    const char* m_pszName;
+    const char* m_pszFile;
+    int m_nLine;
+
 private:
     using Base = typename MutexType::unique_lock;
-    void Enter(const char* pszName, const char* pszFile, int nLine);
-    bool TryEnter(const char* pszName, const char* pszFile, int nLine);
+    void Enter();
+    bool TryEnter();
 
 public:
     UniqueLock(MutexType& mutexIn, const char* pszName, const char* pszFile, int nLine, bool fTry = false) EXCLUSIVE_LOCK_FUNCTION(mutexIn);
