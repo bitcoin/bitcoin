@@ -30,7 +30,7 @@ std::string FeeModes(const std::string& delimiter);
 std::string FeeModeInfo(std::pair<std::string, FeeEstimateMode>& mode);
 std::string FeeModesDetail(std::string default_info);
 std::string InvalidEstimateModeErrorMessage();
-bilingual_str PSBTErrorString(PSBTResult result);
+bilingual_str PSBTResultString(PSBTResult result);
 bilingual_str TransactionErrorString(const node::TransactionError error);
 bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind);
 bilingual_str InvalidPortErrMsg(const std::string& optname, const std::string& strPort);

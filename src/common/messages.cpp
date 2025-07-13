@@ -104,7 +104,7 @@ bool FeeModeFromString(std::string_view mode_string, FeeEstimateMode& fee_estima
     return false;
 }
 
-bilingual_str PSBTErrorString(PSBTResult result)
+bilingual_str PSBTResultString(PSBTResult result)
 {
     switch (result) {
         case PSBTResult::MISSING_INPUTS:
