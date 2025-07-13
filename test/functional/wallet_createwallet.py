@@ -26,6 +26,11 @@ class CreateWalletTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.generate(node, 1) # Leave IBD for sethdseed
 
+        self.log.info("Run createwallet with invalid parameters.")
+        # Run createwallet with invalid parameters. This must not prevent a new wallet with the same name from being created with the correct parameters.
+        assert_raises_rpc_error(-4, "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.",
+            self.nodes[0].createwallet, wallet_name='w0',  descriptors=True, disable_private_keys=True, passphrase="passphrase")
+
         self.nodes[0].createwallet(wallet_name='w0')
         w0 = node.get_wallet_rpc('w0')
         address1 = w0.getnewaddress()
