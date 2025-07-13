@@ -116,8 +116,8 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     bool complete;
     pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true);
     const auto err{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/true, /*bip32derivs=*/false)};
-    if (err) {
-        throw JSONRPCPSBTError(*err);
+    if (err != PSBTResult::OK) {
+        throw JSONRPCPSBTError(err);
     }
 
     CMutableTransaction mtx;
@@ -1139,7 +1139,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
         const auto err{pwallet->FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/true)};
-        CHECK_NONFATAL(!err);
+        CHECK_NONFATAL(err == PSBTResult::OK);
         CHECK_NONFATAL(!complete);
         DataStream ssTx{};
         ssTx << psbtx;
@@ -1636,8 +1636,8 @@ RPCMethod walletprocesspsbt()
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
     const auto err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs, nullptr, finalize)};
-    if (err) {
-        throw JSONRPCPSBTError(*err);
+    if (err != PSBTResult::OK) {
+        throw JSONRPCPSBTError(err);
     }
 
     UniValue result(UniValue::VOBJ);
@@ -1778,8 +1778,8 @@ RPCMethod walletcreatefundedpsbt()
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
     bool complete = true;
     const auto err{wallet.FillPSBT(psbtx, complete, std::nullopt, /*sign=*/false, /*bip32derivs=*/bip32derivs)};
-    if (err) {
-        throw JSONRPCPSBTError(*err);
+    if (err != PSBTResult::OK) {
+        throw JSONRPCPSBTError(err);
     }
 
     // Serialize the PSBT

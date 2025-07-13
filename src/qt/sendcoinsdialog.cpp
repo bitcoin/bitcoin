@@ -445,7 +445,7 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
 }
 
 bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, CMutableTransaction& mtx, bool& complete) {
-    std::optional<PSBTResult> result;
+    PSBTResult result;
     try {
         result = model->wallet().fillPSBT(std::nullopt, /*sign=*/true, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete);
     } catch (const std::runtime_error& e) {
@@ -464,7 +464,7 @@ bool SendCoinsDialog::signWithExternalSigner(PartiallySignedTransaction& psbtx, 
         QMessageBox::critical(nullptr, msg, msg);
         return false;
     }
-    if (result) {
+    if (result != PSBTResult::OK) {
         qWarning() << "Failed to sign PSBT";
         processSendCoinsReturn(WalletModel::TransactionCreationFailed);
         return false;
@@ -506,7 +506,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         // Fill without signing
         const auto err{model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
         assert(!complete);
-        assert(!err);
+        assert(err == PSBTResult::OK);
 
         // Copy PSBT to clipboard and offer to save
         presentPSBT(psbtx);
@@ -522,7 +522,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             // from being called prematurely and is not expensive.
             const auto err{model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, /*n_signed=*/nullptr, psbtx, complete)};
             assert(!complete);
-            assert(!err);
+            assert(err == PSBTResult::OK);
             send_failure = !signWithExternalSigner(psbtx, mtx, complete);
             // Don't broadcast when user rejects it on the device or there's a failure:
             broadcast = complete && !send_failure;
