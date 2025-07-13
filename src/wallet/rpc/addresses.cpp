@@ -342,6 +342,29 @@ class DescribeWalletAddressVisitor
 public:
     const SigningProvider * const provider;
 
+    void ProcessSubScript(const CScript& subscript, UniValue& obj) const
+    {
+        // Always present: script type and redeemscript
+        std::vector<std::vector<unsigned char>> solutions_data;
+        TxoutType whichType = Solver(subscript, solutions_data);
+        obj.pushKV("script", GetTxnOutputType(whichType));
+        obj.pushKV("hex", HexStr(subscript));
+
+        if (whichType == TxoutType::MULTISIG) {
+            // Also report some information on multisig scripts (which do not have a corresponding address).
+            UniValue pubkeys(UniValue::VARR);
+            UniValue addresses(UniValue::VARR);
+            for (size_t i = 1; i < solutions_data.size() - 1; ++i) {
+                CPubKey pubkey(solutions_data[i]);
+                pubkeys.push_back(HexStr(pubkey));
+                addresses.push_back(EncodeDestination(PKHash(pubkey)));
+            }
+            obj.pushKV("pubkeys", std::move(pubkeys));
+            obj.pushKV("addresses", std::move(addresses));
+            obj.pushKV("sigsrequired", solutions_data[0][0]);
+        }
+    }
+
     explicit DescribeWalletAddressVisitor(const SigningProvider * const _provider) : provider(_provider) {}
 
     UniValue operator()(const CNoDestination &dest) const { return UniValue(UniValue::VOBJ); }
@@ -362,24 +385,7 @@ public:
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
         if (provider && provider->GetCScript(scriptID, subscript)) {
-            // Always present: script type and redeemscript
-            std::vector<std::vector<unsigned char>> solutions_data;
-            TxoutType whichType = Solver(subscript, solutions_data);
-            obj.pushKV("script", GetTxnOutputType(whichType));
-            obj.pushKV("hex", HexStr(subscript));
-            if (whichType == TxoutType::MULTISIG) {
-                // Also report some information on multisig scripts (which do not have a corresponding address).
-                UniValue pubkeys(UniValue::VARR);
-                UniValue addresses(UniValue::VARR);
-                for (size_t i = 1; i < solutions_data.size() - 1; ++i) {
-                    CPubKey pubkey(solutions_data[i]);
-                    pubkeys.push_back(HexStr(pubkey));
-                    addresses.push_back(EncodeDestination(PKHash(pubkey)));
-                }
-                obj.pushKV("pubkeys", std::move(pubkeys));
-                obj.pushKV("addresses", std::move(addresses));
-                obj.pushKV("sigsrequired", solutions_data[0][0]);
-            }
+            ProcessSubScript(subscript, obj);
         }
         return obj;
     }
