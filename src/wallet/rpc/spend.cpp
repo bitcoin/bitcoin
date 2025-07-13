@@ -520,19 +520,6 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
         setSubtractFeeFromOutputs.insert(pos);
     }
 
-    // Fetch specified UTXOs from the UTXO set to get the scriptPubKeys and values of the outputs being selected
-    // and to match with the given solving_data. Only used for non-wallet outputs.
-    std::map<COutPoint, Coin> coins;
-    for (const CTxIn& txin : tx.vin) {
-        coins[txin.prevout]; // Create empty map entry keyed by prevout.
-    }
-    wallet.chain().findCoins(coins);
-    for (const auto& coin : coins) {
-        if (!coin.second.out.IsNull()) {
-            coinControl.SelectExternal(coin.first, coin.second.out);
-        }
-    }
-
     bilingual_str error;
 
     if (!FundTransaction(wallet, tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {

@@ -1091,13 +1091,27 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
 
     coinControl.fAllowOtherInputs = true;
 
-    for (const CTxIn& txin : tx.vin) {
-        coinControl.Select(txin.prevout);
-    }
-
     // Acquire the locks to prevent races to the new locked unspents between the
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).
     LOCK(wallet.cs_wallet);
+
+    // Fetch specified UTXOs from the UTXO set to get the scriptPubKeys and values of the outputs being selected
+    // and to match with the given solving_data. Only used for non-wallet outputs.
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : tx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    wallet.chain().findCoins(coins);
+
+    for (const CTxIn& txin : tx.vin) {
+        // if it's not in the wallet and corresponding UTXO is found than select as external output
+        const auto& outPoint = txin.prevout;
+        if (wallet.mapWallet.find(outPoint.hash) == wallet.mapWallet.end() && !coins[outPoint].out.IsNull()) {
+            coinControl.SelectExternal(outPoint, coins[outPoint].out);
+        } else {
+            coinControl.Select(outPoint);
+        }
+    }
 
     FeeCalculation fee_calc_out;
     std::optional<CreatedTransactionResult> txr = CreateTransaction(wallet, vecSend, nChangePosInOut, error, coinControl, fee_calc_out, false, tx.vExtraPayload.size());
