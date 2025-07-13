@@ -296,7 +296,6 @@ public:
         bilingual_str& fail_reason) override
     {
         LOCK(m_wallet->cs_wallet);
-        ReserveDestination m_dest(m_wallet.get());
         CTransactionRef tx;
         FeeCalculation fee_calc_out;
         if (!CreateTransaction(*m_wallet, recipients, tx, fee, change_pos,
@@ -310,7 +309,6 @@ public:
         WalletOrderForm order_form) override
     {
         LOCK(m_wallet->cs_wallet);
-        ReserveDestination m_dest(m_wallet.get());
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
     bool transactionCanBeAbandoned(const uint256& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
