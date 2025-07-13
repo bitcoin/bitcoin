@@ -870,6 +870,6 @@ BOOST_AUTO_TEST_CASE(waste_test)
     add_coin(2 * COIN, 2, selection, fee, fee + large_fee_diff);
     BOOST_CHECK_EQUAL(target_waste2, GetSelectionWaste(selection, change_cost, target));
 }
-} // namespace wallet
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

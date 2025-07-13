@@ -315,6 +315,6 @@ BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
         BOOST_CHECK(vecOutputs.size() == 0);
     }
 }
-} // namespace wallet
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet
