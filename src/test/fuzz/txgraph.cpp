@@ -5,6 +5,7 @@
 #include <cluster_linearize.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/util/cluster_linearize.h>
 #include <test/util/random.h>
 #include <txgraph.h>
 #include <util/bitset.h>
@@ -730,16 +731,38 @@ FUZZ_TARGET(txgraph)
             } else if (command-- == 0) {
                 // DoWork.
                 uint64_t iters = provider.ConsumeIntegralInRange<uint64_t>(0, alt ? 10000 : 255);
-                if (real->DoWork(iters)) {
-                    for (unsigned level = 0; level < sims.size(); ++level) {
-                        // DoWork() will not optimize oversized levels.
-                        if (sims[level].IsOversized()) continue;
-                        // DoWork() will not touch the main level if a builder is present.
-                        if (level == 0 && !block_builders.empty()) continue;
-                        // If neither of the two above conditions holds, and DoWork() returned
-                        // then the level is optimal.
+                bool ret = real->DoWork(iters);
+                uint64_t iters_for_optimal{0};
+                for (unsigned level = 0; level < sims.size(); ++level) {
+                    // DoWork() will not optimize oversized levels, or the main level if a builder
+                    // is present. Note that this impacts the DoWork() return value, as true means
+                    // that non-optimal clusters may remain within such oversized or builder-having
+                    // levels.
+                    if (sims[level].IsOversized()) continue;
+                    if (level == 0 && !block_builders.empty()) continue;
+                    // If neither of the two above conditions holds, and DoWork() returned true,
+                    // then the level is optimal.
+                    if (ret) {
                         sims[level].real_is_optimal = true;
                     }
+                    // Compute how many iterations would be needed to make everything optimal.
+                    for (auto component : sims[level].GetComponents()) {
+                        auto iters_opt_this_cluster = MaxOptimalLinearizationIters(component.Count());
+                        if (iters_opt_this_cluster > acceptable_iters) {
+                            // If the number of iterations required to linearize this cluster
+                            // optimally exceeds acceptable_iters, DoWork() may process it in two
+                            // stages: once to acceptable, and once to optimal.
+                            iters_for_optimal += iters_opt_this_cluster + acceptable_iters;
+                        } else {
+                            iters_for_optimal += iters_opt_this_cluster;
+                        }
+                    }
+                }
+                if (!ret) {
+                    // DoWork can only have more work left if the requested number of iterations
+                    // was insufficient to linearize everything optimally within the levels it is
+                    // allowed to touch.
+                    assert(iters <= iters_for_optimal);
                 }
                 break;
             } else if (sims.size() == 2 && !sims[0].IsOversized() && !sims[1].IsOversized() && command-- == 0) {
