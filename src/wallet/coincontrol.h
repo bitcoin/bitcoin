@@ -109,7 +109,7 @@ public:
         setSelected.insert(output);
     }
 
-    void Select(const COutPoint& outpoint, const CTxOut& txout)
+    void SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
     {
         setSelected.insert(outpoint);
         m_external_txouts.emplace(outpoint, txout);

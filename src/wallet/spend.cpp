@@ -507,7 +507,7 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
             // even if some non-mixed inputs were manually selected via CoinControl
             if (!wallet.IsFullyMixed(outpoint)) continue;
         }
-        if (input_bytes <= 0) {
+        if (input_bytes == -1) {
             return std::nullopt; // Not solvable, can't estimate size for fee
         }
 
@@ -891,7 +891,7 @@ static bool CreateTransactionInternal(
 
     // Calculate the transaction fee
     int nBytes = CalculateMaximumSignedTxSize(CTransaction(txNew), &wallet, &coin_control);
-    if (nBytes < 0) {
+    if (nBytes == -1) {
         error = _("Missing solving data for estimating transaction size");
         return false;
     }
