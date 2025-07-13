@@ -679,7 +679,7 @@ public:
      * @param[in] finalize whether to create the final scriptSig or scriptWitness if possible
      * return error
      */
-    std::optional<common::PSBTResult> FillPSBT(PartiallySignedTransaction& psbtx,
+    common::PSBTResult FillPSBT(PartiallySignedTransaction& psbtx,
                   bool& complete,
                   std::optional<int> sighash_type = std::nullopt,
                   bool sign = true,

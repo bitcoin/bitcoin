@@ -202,7 +202,7 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual std::optional<common::PSBTResult> fillPSBT(std::optional<int> sighash_type,
+    virtual common::PSBTResult fillPSBT(std::optional<int> sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,
