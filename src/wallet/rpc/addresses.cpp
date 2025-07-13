@@ -350,7 +350,20 @@ public:
         obj.pushKV("script", GetTxnOutputType(whichType));
         obj.pushKV("hex", HexStr(subscript));
 
-        if (whichType == TxoutType::MULTISIG) {
+        CTxDestination embedded;
+        if (ExtractDestination(subscript, embedded)) {
+            // Only when the script corresponds to an address.
+            UniValue subobj(UniValue::VOBJ);
+            UniValue detail = DescribeAddress(embedded);
+            subobj.pushKVs(detail);
+            UniValue wallet_detail = std::visit(*this, embedded);
+            subobj.pushKVs(wallet_detail);
+            subobj.pushKV("address", EncodeDestination(embedded));
+            subobj.pushKV("scriptPubKey", HexStr(subscript));
+            // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
+            if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
+            obj.pushKV("embedded", std::move(subobj));
+        } else if (whichType == TxoutType::MULTISIG) {
             // Also report some information on multisig scripts (which do not have a corresponding address).
             UniValue pubkeys(UniValue::VARR);
             UniValue addresses(UniValue::VARR);
@@ -435,6 +448,11 @@ RPCHelpMan getaddressinfo()
                 }},
                 {RPCResult::Type::NUM, "sigsrequired", /* optional */ true, "The number of signatures required to spend multisig output (only if script is multisig)."},
                 {RPCResult::Type::STR_HEX, "pubkey", /* optional */ true, "The hex value of the raw public key, for single-key addresses."},
+                {RPCResult::Type::OBJ, "embedded", /*optional=*/true, "Information about the address embedded in P2SH, if relevant and known.",
+                {
+                    {RPCResult::Type::ELISION, "", "Includes all getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath, hdseedid)\n"
+                    "and relation to the wallet (ismine, iswatchonly)."},
+                }},
                 {RPCResult::Type::BOOL, "iscompressed", /* optional */ true, "If the pubkey is compressed."},
                 {RPCResult::Type::NUM_TIME, "timestamp", /* optional */ true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
                 {RPCResult::Type::STR_HEX, "hdchainid", /* optional */ true, "The ID of the HD chain."},
