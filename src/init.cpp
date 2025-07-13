@@ -839,6 +839,8 @@ void InitParameterInteraction(ArgsManager& args)
 {
     if (args.GetBoolArg("-corepolicy", DEFAULT_COREPOLICY)) {
         args.SoftSetArg("-acceptnonstddatacarrier", "1");
+        args.SoftSetArg("-blockreconstructionextratxn", "100");
+        args.SoftSetArg("-blockreconstructionextratxnsize", strprintf("%s", std::numeric_limits<size_t>::max() / 1000000 + 1));
         args.SoftSetArg("-bytespersigopstrict", "0");
         args.SoftSetArg("-permitbaredatacarrier", "1");
         args.SoftSetArg("-permitbarepubkey", "1");
