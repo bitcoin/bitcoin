@@ -164,3 +164,4 @@ original wallet can be found in the wallet directory with the name `<name>-<time
 
 The backup can be restored using the methods discussed in the
 [Restoring the Wallet From a Backup](#16-restoring-the-wallet-from-a-backup) section.
+> **Note:** After migration, the original legacy wallet file itself remains unchanged on disk as a backup.
