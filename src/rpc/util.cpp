@@ -36,7 +36,7 @@
 #include <utility>
 
 using common::PSBTResult;
-using common::PSBTErrorString;
+using common::PSBTResultString;
 using common::TransactionErrorString;
 using node::TransactionError;
 using util::Join;
@@ -405,7 +405,7 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
 
 UniValue JSONRPCPSBTError(PSBTResult result)
 {
-    return JSONRPCError(RPCErrorFromPSBTError(result), PSBTErrorString(result).original);
+    return JSONRPCError(RPCErrorFromPSBTError(result), PSBTResultString(result).original);
 }
 
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)
