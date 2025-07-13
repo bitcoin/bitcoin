@@ -379,7 +379,7 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
     return unsigned_target;
 }
 
-RPCErrorCode RPCErrorFromPSBTError(PSBTResult result)
+RPCErrorCode RPCErrorFromPSBTResult(PSBTResult result)
 {
     switch (result) {
         case PSBTResult::UNSUPPORTED:
@@ -405,7 +405,7 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
 
 UniValue JSONRPCPSBTError(PSBTResult result)
 {
-    return JSONRPCError(RPCErrorFromPSBTError(result), PSBTResultString(result).original);
+    return JSONRPCError(RPCErrorFromPSBTResult(result), PSBTResultString(result).original);
 }
 
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)
