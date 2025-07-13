@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-2025 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -152,7 +152,7 @@ if res:
 elif res.status_code == 404:
     print('The specified faucet URL does not exist. Please check for any server issues/typo.')
 elif res.status_code == 429:
-    print('The script does not allow for repeated transactions as the global faucet is rate-limited to 1 request/IP/day. You can access the faucet website to get more coins manually')
+    print('The script does not allow for repeated transactions as the global faucet is rate-limited to 1 request/IP/day. You can access the faucet website to get more coins manually.')
 else:
     print(f'Returned Error Code {res.status_code}\n{res.text}\n')
     print('Please check the provided arguments for their validity and/or any possible typo.')
