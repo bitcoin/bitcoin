@@ -107,6 +107,13 @@ bool WalletBatch::EraseTx(Txid hash)
     return EraseIC(std::make_pair(DBKeys::TX, hash.ToUint256()));
 }
 
+bool WalletBatch::CreateTxsTable()
+{
+    SQLiteBatch* batch = dynamic_cast<SQLiteBatch*>(m_batch.get());
+    if (!batch) return true;
+    return batch->CreateTxsTable();
+}
+
 bool WalletBatch::WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite)
 {
     return WriteIC(std::make_pair(DBKeys::KEYMETA, pubkey), meta, overwrite);
