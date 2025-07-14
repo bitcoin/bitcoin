@@ -399,20 +399,20 @@ void CQuorumManager::CheckQuorumConnections(CConnman& connman, const Consensus::
 CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, bool populate_cache) const
 {
     const uint256& quorumHash{pQuorumBaseBlockIndex->GetBlockHash()};
-    uint256 minedBlockHash;
-    CFinalCommitmentPtr qc = quorumBlockProcessor.GetMinedCommitment(llmqType, quorumHash, minedBlockHash);
-    if (qc == nullptr) {
+
+    auto [qc, minedBlockHash] = quorumBlockProcessor.GetMinedCommitment(llmqType, quorumHash);
+    if (minedBlockHash == uint256::ZERO) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- No mined commitment for llmqType[%d] nHeight[%d] quorumHash[%s]\n", __func__, ToUnderlying(llmqType), pQuorumBaseBlockIndex->nHeight, pQuorumBaseBlockIndex->GetBlockHash().ToString());
         return nullptr;
     }
-    assert(qc->quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
+    assert(qc.quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
 
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt.has_value());
     auto quorum = std::make_shared<CQuorum>(llmq_params_opt.value(), blsWorker);
-    auto members = utils::GetAllQuorumMembers(qc->llmqType, m_dmnman, m_qsnapman, pQuorumBaseBlockIndex);
+    auto members = utils::GetAllQuorumMembers(qc.llmqType, m_dmnman, m_qsnapman, pQuorumBaseBlockIndex);
 
-    quorum->Init(std::move(qc), pQuorumBaseBlockIndex, minedBlockHash, members);
+    quorum->Init(std::make_unique<CFinalCommitment>(std::move(qc)), pQuorumBaseBlockIndex, minedBlockHash, members);
 
     if (populate_cache && llmq_params_opt->size == 1) {
         WITH_LOCK(cs_map_quorums, mapQuorumsCache[llmqType].insert(quorumHash, quorum));

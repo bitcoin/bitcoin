@@ -298,12 +298,11 @@ bool BuildQuorumRotationInfo(CDeterministicMNManager& dmnman, CQuorumSnapshotMan
                                                                                                       blockIndex, 0);
 
     for (const auto& obj : qdata) {
-        uint256 minedBlockHash;
-        llmq::CFinalCommitmentPtr qc = qblockman.GetMinedCommitment(llmqType, obj->GetBlockHash(), minedBlockHash);
-        if (qc == nullptr) {
+        auto [qc, minedBlockHash] = qblockman.GetMinedCommitment(llmqType, obj->GetBlockHash());
+        if (minedBlockHash == uint256::ZERO) {
             return false;
         }
-        response.lastCommitmentPerIndex.push_back(*qc);
+        response.lastCommitmentPerIndex.emplace_back(std::move(qc));
 
         int quorumCycleStartHeight = obj->nHeight - (obj->nHeight % llmq_params_opt->dkgInterval);
         snapshotHeightsNeeded.insert(quorumCycleStartHeight - cycleLength);
