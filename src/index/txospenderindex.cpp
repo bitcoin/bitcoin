@@ -17,6 +17,24 @@ constexpr uint8_t DB_TXOSPENDERINDEX{'s'};
 
 std::unique_ptr<TxoSpenderIndex> g_txospenderindex;
 
+struct DBKey {
+    uint64_t hash;
+    FlatFilePos pos;
+
+    explicit DBKey(const uint64_t& hash_in, const FlatFilePos& pos_in) : hash(hash_in), pos(pos_in) {}
+
+    SERIALIZE_METHODS(DBKey, obj)
+    {
+        uint8_t prefix{DB_TXOSPENDERINDEX};
+        READWRITE(prefix);
+        if (prefix != DB_TXOSPENDERINDEX) {
+            throw std::ios_base::failure("Invalid format for spender index DB key");
+        }
+        READWRITE(obj.hash);
+        READWRITE(obj.pos);
+    }
+};
+
 TxoSpenderIndex::TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
     : BaseIndex(std::move(chain), "txospenderindex")
 {
@@ -40,115 +58,75 @@ interfaces::Chain::NotifyOptions TxoSpenderIndex::CustomOptions()
     return options;
 }
 
-uint64_t TxoSpenderIndex::CreateKey(const COutPoint& vout) const
+uint64_t CreateKeyPrefix(std::pair<uint64_t, uint64_t> siphash_key, const COutPoint& vout)
 {
-    return SipHashUint256Extra(m_siphash_key.first, m_siphash_key.second, vout.hash.ToUint256(), vout.n);
+    return SipHashUint256Extra(siphash_key.first, siphash_key.second, vout.hash.ToUint256(), vout.n);
 }
 
-bool TxoSpenderIndex::WriteSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items)
+DBKey CreateKey(std::pair<uint64_t, uint64_t> siphash_key, const COutPoint& vout, const FlatFilePos& pos)
+{
+    return DBKey(CreateKeyPrefix(siphash_key, vout), pos);
+}
+
+bool TxoSpenderIndex::WriteSpenderInfos(const std::vector<std::pair<COutPoint, FlatFilePos>>& items)
 {
     CDBBatch batch(*m_db);
     for (const auto& [outpoint, pos] : items) {
-        std::vector<CDiskTxPos> positions;
-        std::pair<uint8_t, uint64_t> key{DB_TXOSPENDERINDEX, CreateKey(outpoint)};
-        if (m_db->Exists(key)) {
-            if (!m_db->Read(key, positions)) {
-                LogError("Cannot read current state; tx spender index may be corrupted\n");
-            }
-        }
-        if (std::find(positions.begin(), positions.end(), pos) == positions.end()) {
-            positions.push_back(pos);
-            batch.Write(key, positions);
-        }
+        DBKey key(CreateKey(m_siphash_key, outpoint, pos));
+        // key is hash(spent outpoint) | disk pos, value is empty
+        batch.Write(key, "");
     }
     return m_db->WriteBatch(batch);
 }
 
 
-bool TxoSpenderIndex::EraseSpenderInfos(const std::vector<COutPoint>& items)
+bool TxoSpenderIndex::EraseSpenderInfos(const std::vector<std::pair<COutPoint, FlatFilePos>>& items)
 {
     CDBBatch batch(*m_db);
-    for (const auto& outpoint : items) {
-        std::vector<CDiskTxPos> positions;
-        std::pair<uint8_t, uint64_t> key{DB_TXOSPENDERINDEX, CreateKey(outpoint)};
-        if (!m_db->Read(key, positions)) {
-            LogWarning("Could not read expected entry");
-            continue;
-        }
-        if (positions.size() > 1) {
-            // there are collisions: find the position of the tx that spends the outpoint we want to erase
-            // this is expensive but extremely uncommon
-            size_t index = std::numeric_limits<size_t>::max();
-            for (size_t i = 0; i < positions.size(); i++) {
-                CTransactionRef tx;
-                if (!ReadTransaction(positions[i], tx)) continue;
-                for (const auto& input : tx->vin) {
-                    if (input.prevout == outpoint) {
-                        index = i;
-                        break;
-                    }
-                }
-            }
-            if (index != std::numeric_limits<size_t>::max()) {
-                // remove it from the list
-                positions.erase(positions.begin() + index);
-                batch.Write(key, positions);
-            }
-        } else {
-            batch.Erase(key);
-        }
+    for (const auto& [outpoint, pos] : items) {
+        batch.Erase(CreateKey(m_siphash_key, outpoint, pos));
     }
     return m_db->WriteBatch(batch);
 }
 
-bool TxoSpenderIndex::CustomAppend(const interfaces::BlockInfo& block)
+std::vector<std::pair<COutPoint, FlatFilePos>> BuildSpenderPositions(const interfaces::BlockInfo& block)
 {
-    std::vector<std::pair<COutPoint, CDiskTxPos>> items;
+    std::vector<std::pair<COutPoint, FlatFilePos>> items;
     items.reserve(block.data->vtx.size());
 
-    CDiskTxPos pos({block.file_number, block.data_pos}, GetSizeOfCompactSize(block.data->vtx.size()));
+    FlatFilePos pos{block.file_number, block.data_pos};
+    pos.nPos += 80; // skip block header
+    pos.nPos += GetSizeOfCompactSize(block.data->vtx.size());
     for (const auto& tx : block.data->vtx) {
         if (!tx->IsCoinBase()) {
             for (const auto& input : tx->vin) {
                 items.emplace_back(input.prevout, pos);
             }
         }
-        pos.nTxOffset += ::GetSerializeSize(TX_WITH_WITNESS(*tx));
+        pos.nPos += ::GetSerializeSize(TX_WITH_WITNESS(*tx));
     }
 
-    return WriteSpenderInfos(items);
+    return items;
+}
+
+
+bool TxoSpenderIndex::CustomAppend(const interfaces::BlockInfo& block)
+{
+    return WriteSpenderInfos(BuildSpenderPositions(block));
 }
 
 bool TxoSpenderIndex::CustomRemove(const interfaces::BlockInfo& block)
 {
-    assert(block.data);
-    std::vector<COutPoint> items;
-    items.reserve(block.data->vtx.size());
-    for (const auto& tx : block.data->vtx) {
-        if (tx->IsCoinBase()) {
-            continue;
-        }
-        for (const auto& input : tx->vin) {
-            items.emplace_back(input.prevout);
-        }
-    }
-    if (!EraseSpenderInfos(items)) {
-        LogError("Failed to erase indexed data for disconnected block %s from disk\n", block.hash.ToString());
-        return false;
-    }
-    return true;
+    return EraseSpenderInfos(BuildSpenderPositions(block));
 }
 
-bool TxoSpenderIndex::ReadTransaction(const CDiskTxPos& tx_pos, CTransactionRef& tx) const
+bool TxoSpenderIndex::ReadTransaction(const FlatFilePos& tx_pos, CTransactionRef& tx) const
 {
     AutoFile file{m_chainstate->m_blockman.OpenBlockFile(tx_pos, true)};
     if (file.IsNull()) {
         return false;
     }
-    CBlockHeader header;
     try {
-        file >> header;
-        file.seek(tx_pos.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
         return true;
     } catch (const std::exception& e) {
@@ -159,15 +137,15 @@ bool TxoSpenderIndex::ReadTransaction(const CDiskTxPos& tx_pos, CTransactionRef&
 
 CTransactionRef TxoSpenderIndex::FindSpender(const COutPoint& txo) const
 {
-    std::vector<CDiskTxPos> positions;
-    // read all tx position candidates from the db. there may be index collisions, in which case the db will return more than one tx position
-    if (!m_db->Read(std::pair{DB_TXOSPENDERINDEX, CreateKey(txo)}, positions)) {
-        return nullptr;
-    }
-    // loop until we find a tx that spends our outpoint
-    for (const auto& postx : positions) {
-        CTransactionRef tx;
-        if (ReadTransaction(postx, tx)) {
+    uint64_t prefix = CreateKeyPrefix(m_siphash_key, txo);
+    std::unique_ptr<CDBIterator> it(m_db->NewIterator());
+    DBKey key(prefix, FlatFilePos());
+    CTransactionRef tx;
+
+    // find all keys that start with the outpoint hash, load the transaction at the location specified in the key
+    // and return it if it does spend the provided outpoint
+    for (it->Seek(std::pair{DB_TXOSPENDERINDEX, prefix}); it->Valid() && it->GetKey(key) && key.hash == prefix; it->Next()) {
+        if (ReadTransaction(key.pos, tx)) {
             for (const auto& input : tx->vin) {
                 if (input.prevout == txo) {
                     return tx;

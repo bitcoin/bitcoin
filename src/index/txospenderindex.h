@@ -20,11 +20,10 @@ class TxoSpenderIndex final : public BaseIndex
 private:
     std::unique_ptr<BaseIndex::DB> m_db;
     std::pair<uint64_t, uint64_t> m_siphash_key;
-    uint64_t CreateKey(const COutPoint& vout) const;
     bool AllowPrune() const override { return true; }
-    bool WriteSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items);
-    bool EraseSpenderInfos(const std::vector<COutPoint>& items);
-    bool ReadTransaction(const CDiskTxPos& pos, CTransactionRef& tx) const;
+    bool WriteSpenderInfos(const std::vector<std::pair<COutPoint, FlatFilePos>>& items);
+    bool EraseSpenderInfos(const std::vector<std::pair<COutPoint, FlatFilePos>>& items);
+    bool ReadTransaction(const FlatFilePos& pos, CTransactionRef& tx) const;
 
 protected:
     interfaces::Chain::NotifyOptions CustomOptions() override;
