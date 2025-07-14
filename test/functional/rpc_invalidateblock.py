@@ -102,6 +102,14 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 3)
         assert_equal(self.nodes[0].getblockchaininfo()['headers'], 3)
 
+        # Reconsider the header
+        self.nodes[0].reconsiderblock(block.hash)
+        # Since header doesn't have block data, it can't be chain tip
+        # Check if it's possible for an ancestor (with block data) to be the chain tip
+        assert_equal(self.nodes[0].getbestblockhash(), blockhash_6)
+        assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 6)
+        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 7)
+
         self.log.info("Verify that we reconsider all ancestors as well")
         blocks = self.generatetodescriptor(self.nodes[1], 10, ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR, sync_fun=self.no_op)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
@@ -127,14 +135,6 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
         # Should report consistent blockchain info
         assert_equal(self.nodes[1].getblockchaininfo()["headers"], self.nodes[1].getblockchaininfo()["blocks"])
-
-        # Reconsider the header
-        self.nodes[0].reconsiderblock(block.hash)
-        # Since header doesn't have block data, it can't be chain tip
-        # Check if it's possible for an ancestor (with block data) to be the chain tip
-        assert_equal(self.nodes[0].getbestblockhash(), blockhash_6)
-        assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 6)
-        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 7)
 
         self.log.info("Verify that invalidating an unknown block throws an error")
         assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
