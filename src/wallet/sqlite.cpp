@@ -65,6 +65,12 @@ concept ColumnBlob = requires(T a, T::element_type* data, size_t size)
     T(data, size);
 };
 
+template <typename T>
+concept ColumnSpanBlob = requires(T a, std::span<const std::byte> s)
+{
+    T(s);
+};
+
 /** RAII class that encapsulates a sqlite3_stmt */
 class SQLiteStatement
 {
@@ -152,6 +158,16 @@ public:
                 reinterpret_cast<T::element_type*>(sqlite3_column_blob(m_stmt, col)),
                 static_cast<size_t>(sqlite3_column_bytes(m_stmt, col))
             );
+        } else if constexpr (ColumnSpanBlob<T>) {
+            const std::byte* data = reinterpret_cast<const std::byte*>(sqlite3_column_blob(m_stmt, col));
+            size_t size = static_cast<size_t>(sqlite3_column_bytes(m_stmt, col));
+            if (!data || !size) return std::nullopt;
+            return T({data, size});
+        } else if constexpr (std::is_same_v<T, std::vector<unsigned char>>) {
+            const unsigned char* data = reinterpret_cast<const unsigned char*>(sqlite3_column_blob(m_stmt, col));
+            size_t size = static_cast<size_t>(sqlite3_column_bytes(m_stmt, col));
+            if (!data || !size) return std::nullopt;
+            return T(data, data + size);
         } else {
             static_assert(ALWAYS_FALSE<T>);
         }
