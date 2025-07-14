@@ -342,13 +342,12 @@ public:
         }
         return {};
     }
-    std::vector<WalletTx> getWalletTxs() override
+    std::set<WalletTx> getWalletTxs() override
     {
         LOCK(m_wallet->cs_wallet);
-        std::vector<WalletTx> result;
-        result.reserve(m_wallet->mapWallet.size());
+        std::set<WalletTx> result;
         for (const auto& entry : m_wallet->mapWallet) {
-            result.emplace_back(MakeWalletTx(*m_wallet, entry.second));
+            result.emplace(MakeWalletTx(*m_wallet, entry.second));
         }
         return result;
     }

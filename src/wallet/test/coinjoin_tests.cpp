@@ -164,7 +164,7 @@ public:
 
     CWalletTx& AddTxToChain(uint256 nTxHash)
     {
-        std::map<uint256, CWalletTx>::iterator it;
+        decltype(wallet->mapWallet)::iterator it;
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
