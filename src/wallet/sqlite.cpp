@@ -14,6 +14,7 @@
 #include <util/log.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
+#include <util/types.h>
 #include <wallet/db.h>
 
 #include <sqlite3.h>
@@ -78,6 +79,12 @@ static bool BindBlobToStatement(sqlite3_stmt* stmt,
     return true;
 }
 
+template <typename T>
+concept ColumnBlob = requires(T a, T::element_type* data, size_t size)
+{
+    T(data, size);
+};
+
 /** RAII class that encapsulates a sqlite3_stmt */
 class SQLiteStatement
 {
@@ -121,9 +128,19 @@ public:
         return BindBlobToStatement(m_stmt, index, data, description);
     }
 
-    std::span<const std::byte> Column(int col)
+    template<typename T>
+    T Column(int col)
     {
-        return SpanFromBlob(m_stmt, col);
+        Assert(col < sqlite3_column_count(m_stmt));
+        if constexpr (std::integral<T> && sizeof(T) <= 4) {
+            return sqlite3_column_int(m_stmt, col);
+        } else if constexpr (std::integral<T> && std::is_signed_v<T> && sizeof(T) <= 8) {
+            return static_cast<int64_t>(sqlite3_column_int64(m_stmt, col));
+        } else if constexpr (ColumnBlob<T>) {
+            return T(SpanFromBlob(m_stmt, col));
+        } else {
+            static_assert(ALWAYS_FALSE<T>);
+        }
     }
 };
 
