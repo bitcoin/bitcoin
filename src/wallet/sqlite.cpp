@@ -616,7 +616,7 @@ bool SQLiteBatch::HasKey(DataStream&& key)
 
 DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
 {
-    int res = sqlite3_step(m_cursor_stmt);
+    int res = m_cursor_stmt->Step();
     if (res == SQLITE_DONE) {
         return Status::DONE;
     }
@@ -629,35 +629,34 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
     value.clear();
 
     // Leftmost column in result is index 0
-    key.write(SpanFromBlob(m_cursor_stmt, 0));
-    value.write(SpanFromBlob(m_cursor_stmt, 1));
+    key.write(m_cursor_stmt->Column<std::span<const std::byte>>(0));
+    value.write(m_cursor_stmt->Column<std::span<const std::byte>>(1));
     return Status::MORE;
 }
 
-SQLiteCursor::~SQLiteCursor()
+SQLiteCursor::SQLiteCursor(sqlite3& db, const std::string& stmt_text)
+    : m_cursor_stmt{std::make_unique<SQLiteStatement>(db, stmt_text)}
+{}
+
+SQLiteCursor::SQLiteCursor(sqlite3& db, const std::string& stmt_text, std::vector<std::byte> start_range, std::vector<std::byte> end_range)
+    : m_cursor_stmt{std::make_unique<SQLiteStatement>(db, stmt_text)},
+    m_prefix_range_start(std::move(start_range)),
+    m_prefix_range_end(std::move(end_range))
 {
-    sqlite3_clear_bindings(m_cursor_stmt);
-    sqlite3_reset(m_cursor_stmt);
-    int res = sqlite3_finalize(m_cursor_stmt);
-    if (res != SQLITE_OK) {
-        LogWarning("Cursor closed but could not finalize cursor statement: %s",
-                   sqlite3_errstr(res));
+    if (!m_cursor_stmt->Bind(1, m_prefix_range_start, "prefix_start")) {
+        throw std::runtime_error("Unable to bind prefix start to prefix cursor");
+    }
+    if (!m_prefix_range_end.empty() && !m_cursor_stmt->Bind(2, m_prefix_range_end, "prefix_end")) {
+        throw std::runtime_error("Unable to bind prefix end to prefix cursor");
     }
 }
+
+SQLiteCursor::~SQLiteCursor() = default;
 
 std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewCursor()
 {
     if (!m_database.m_db) return nullptr;
-    auto cursor = std::make_unique<SQLiteCursor>();
-
-    const char* stmt_text = "SELECT key, value FROM main";
-    int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, &cursor->m_cursor_stmt, nullptr);
-    if (res != SQLITE_OK) {
-        throw std::runtime_error(strprintf(
-            "%s: Failed to setup cursor SQL statement: %s\n", __func__, sqlite3_errstr(res)));
-    }
-
-    return cursor;
+    return std::make_unique<SQLiteCursor>(*m_database.m_db, "SELECT key, value FROM main");
 }
 
 std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(std::span<const std::byte> prefix)
@@ -683,23 +682,9 @@ std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(std::span<const 
         end_range.clear();
     }
 
-    auto cursor = std::make_unique<SQLiteCursor>(start_range, end_range);
-    if (!cursor) return nullptr;
-
     const char* stmt_text = end_range.empty() ? "SELECT key, value FROM main WHERE key >= ?" :
                             "SELECT key, value FROM main WHERE key >= ? AND key < ?";
-    int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, &cursor->m_cursor_stmt, nullptr);
-    if (res != SQLITE_OK) {
-        throw std::runtime_error(strprintf(
-            "SQLiteDatabase: Failed to setup cursor SQL statement: %s\n", sqlite3_errstr(res)));
-    }
-
-    if (!BindBlobToStatement(cursor->m_cursor_stmt, 1, cursor->m_prefix_range_start, "prefix_start")) return nullptr;
-    if (!end_range.empty()) {
-        if (!BindBlobToStatement(cursor->m_cursor_stmt, 2, cursor->m_prefix_range_end, "prefix_end")) return nullptr;
-    }
-
-    return cursor;
+    return std::make_unique<SQLiteCursor>(*m_database.m_db, stmt_text, start_range, end_range);
 }
 
 bool SQLiteBatch::TxnBegin()
