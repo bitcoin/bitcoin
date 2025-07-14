@@ -238,6 +238,11 @@ public:
     // Write only the canonical witness tx and all of the tx metadata (single tx record)
     bool WriteTxMetadata(const CWalletTx& wtx);
 
+    bool SQLWriteTx(const CWalletTx& wtx);
+    bool SQLUpdateFullTx(const CWalletTx& wtx);
+    bool SQLUpdateTxReplacedBy(const CWalletTx& wtx);
+    bool SQLUpdateTxState(const CWalletTx& wtx);
+    bool HasTxsTable() const;
     bool CreateTxsTable();
 
     bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
