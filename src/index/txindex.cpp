@@ -81,7 +81,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
 
     AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, true)};
     if (file.IsNull()) {
-        LogError("%s: OpenBlockFile failed\n", __func__);
+        LogError("OpenBlockFile failed");
         return false;
     }
     CBlockHeader header;
@@ -90,11 +90,11 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
         file.seek(postx.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
-        LogError("%s: Deserialize or I/O error - %s\n", __func__, e.what());
+        LogError("Deserialize or I/O error - %s", e.what());
         return false;
     }
     if (tx->GetHash() != tx_hash) {
-        LogError("%s: txid mismatch\n", __func__);
+        LogError("txid mismatch");
         return false;
     }
     block_hash = header.GetHash();
