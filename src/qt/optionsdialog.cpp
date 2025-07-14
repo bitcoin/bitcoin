@@ -376,6 +376,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectunknownscripts);
     FixTabOrder(rejectunknownscripts);
 
+    rejectunknownwitness = new QCheckBox(groupBox_Spamfiltering);
+    rejectunknownwitness->setText(tr("Reject unknown witness script versions"));
+    rejectunknownwitness->setToolTip(tr("Some attempts to spam Bitcoin intentionally use undefined witness script formats reserved for future use. By enabling this option, your node will reject transactions using these undefined/future versions. Note that if you send to many addressses in a single transaction, the entire transaction may be rejected if any single one of them attempts to use an undefined format."));
+    verticalLayout_Spamfiltering->addWidget(rejectunknownwitness);
+    FixTabOrder(rejectunknownwitness);
+
     rejectparasites = new QCheckBox(groupBox_Spamfiltering);
     rejectparasites->setText(tr("Reject parasite transactions"));
     rejectparasites->setToolTip(tr("With this option enabled, transactions related to parasitic overlay protocols will be ignored. Parasites are transactions using Bitcoin as a technical infrastructure to animate other protocols, unrelated to ordinary money transfers."));
@@ -518,6 +524,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 
 
     connect(rejectunknownscripts, &QAbstractButton::toggled, [this, dustdynamic_enable_toggled](const bool state){
+        rejectunknownwitness->setEnabled(state);
         rejectbarepubkey->setEnabled(state);
         rejectbaremultisig->setEnabled(state);
         rejectparasites->setEnabled(state);
@@ -834,6 +841,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
 
     mapper->addMapping(rejectunknownscripts, OptionsModel::rejectunknownscripts);
+    mapper->addMapping(rejectunknownwitness, OptionsModel::rejectunknownwitness);
     mapper->addMapping(rejectparasites, OptionsModel::rejectparasites);
     mapper->addMapping(rejecttokens, OptionsModel::rejecttokens);
     mapper->addMapping(rejectspkreuse, OptionsModel::rejectspkreuse);

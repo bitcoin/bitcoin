@@ -87,6 +87,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::incrementalrelayfee: return "incrementalrelayfee";
     case OptionsModel::mempoolexpiry: return "mempoolexpiry";
     case OptionsModel::rejectunknownscripts: return "rejectunknownscripts";
+    case OptionsModel::rejectunknownwitness: return "rejectunknownwitness";
     case OptionsModel::rejectparasites: return "rejectparasites";
     case OptionsModel::rejecttokens: return "rejecttokens";
     case OptionsModel::rejectspkreuse: return "rejectspkreuse";
@@ -704,6 +705,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(std::chrono::duration_cast<std::chrono::hours>(node().mempool().m_opts.expiry).count());
     case rejectunknownscripts:
         return node().mempool().m_opts.require_standard;
+    case rejectunknownwitness:
+        return !node().mempool().m_opts.acceptunknownwitness;
     case rejectparasites:
         return node().mempool().m_opts.reject_parasites;
     case rejecttokens:
@@ -1184,6 +1187,14 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         }
         break;
     }
+    case rejectunknownwitness:
+        if (changed()) {
+            // This option is inverted
+            const bool new_value = ! value.toBool();
+            node().updateRwSetting("acceptunknownwitness" + suffix, new_value);
+            node().mempool().m_opts.acceptunknownwitness = new_value;
+        }
+        break;
     case rejectparasites:
     {
         if (changed()) {
