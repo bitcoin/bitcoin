@@ -51,10 +51,16 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key)
     return Vector(std::move(p2pkh));
 }
 
-CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script)
+CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType type)
 {
     // Add script to keystore
     keystore.AddCScript(script);
+    ScriptHash sh(script);
     // Note that scripts over 520 bytes are not yet supported.
-    return ScriptHash(script);
+    switch (type) {
+    case OutputType::LEGACY:
+        keystore.AddCScript(GetScriptForDestination(sh));
+        return sh;
+    default: assert(false);
+    }
 }

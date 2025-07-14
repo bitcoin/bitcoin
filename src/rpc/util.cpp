@@ -291,8 +291,7 @@ CTxDestination AddAndGetMultisigDestination(const int required, const std::vecto
         throw JSONRPCError(RPC_INVALID_PARAMETER, (strprintf("redeemScript exceeds size limit: %d > %d", script_out.size(), MAX_SCRIPT_ELEMENT_SIZE)));
     }
 
-    // Make the address (simpler implementation in compare to bitcoin)
-    return AddAndGetDestinationForScript(keystore, script_out);
+    return AddAndGetDestinationForScript(keystore, script_out, OutputType::LEGACY);
 }
 
 class DescribeAddressVisitor
