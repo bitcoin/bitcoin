@@ -469,10 +469,8 @@ public:
         const bool m_allow_replacement;
         /** When true, allow sibling eviction. This only occurs in single transaction package settings. */
         const bool m_allow_sibling_eviction;
-        /** When true, the mempool will not be trimmed when any transactions are submitted in
-         * Finalize(). Instead, limits should be enforced at the end to ensure the package is not
-         * partially submitted.
-         */
+        /** Used to skip the LimitMempoolSize() call within AcceptSingleTransaction(). This should be used when multiple
+         * AcceptSubPackage calls are expected and the mempool will be trimmed at the end of AcceptPackage(). */
         const bool m_package_submission;
         /** When true, use package feerates instead of individual transaction feerates for fee-based
          * policies such as mempool min fee and min relay fee.
@@ -548,7 +546,7 @@ public:
                             /* m_test_accept */ package_args.m_test_accept,
                             /* m_allow_replacement */ true,
                             /* m_allow_sibling_eviction */ true,
-                            /* m_package_submission */ true, // do not LimitMempoolSize in Finalize()
+                            /* m_package_submission */ true, // trim at the end of AcceptPackage()
                             /* m_package_feerates */ false, // only 1 transaction
                             /* m_client_maxfeerate */ package_args.m_client_maxfeerate,
                             /* m_allow_carveouts */ false,
