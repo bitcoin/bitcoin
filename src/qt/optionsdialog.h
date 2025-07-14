@@ -124,6 +124,7 @@ private:
     QCheckBox *walletrbf;
 
     QSpinBox *blockreconstructionextratxn;
+    QDoubleSpinBox *blockreconstructionextratxnsize;
 
     QValueComboBox *mempoolreplacement;
     QValueComboBox *mempooltruc;

@@ -306,6 +306,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     blockreconstructionextratxn->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(ui->verticalLayout_Network, blockreconstructionextratxn, tr("Keep at most %s extra transactions in memory for compact block reconstruction"));
 
+    blockreconstructionextratxnsize = new QDoubleSpinBox(ui->tabNetwork);
+    blockreconstructionextratxnsize->setDecimals(0);
+    blockreconstructionextratxnsize->setMinimum(0);
+    blockreconstructionextratxnsize->setMaximum(std::numeric_limits<size_t>::max() / 1'000'000);
+    CreateOptionUI(ui->verticalLayout_Network, blockreconstructionextratxnsize, tr("Limit extra transactions for compact block reconstruction to %s MB"));
+
     ui->verticalLayout_Network->addItem(spacer);
 
     prevwidget = ui->peerbloomfilters;
@@ -802,6 +808,7 @@ void OptionsDialog::setMapper()
     }
 
     mapper->addMapping(blockreconstructionextratxn, OptionsModel::blockreconstructionextratxn);
+    mapper->addMapping(blockreconstructionextratxnsize, OptionsModel::blockreconstructionextratxnsize);
 
     /* Mempool tab */
 

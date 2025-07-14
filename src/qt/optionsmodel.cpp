@@ -110,6 +110,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::blockprioritysize: return "blockprioritysize";
     case OptionsModel::blockmaxweight: return "blockmaxweight";
     case OptionsModel::blockreconstructionextratxn: return "blockreconstructionextratxn";
+    case OptionsModel::blockreconstructionextratxnsize: return "blockreconstructionextratxnsize";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -753,6 +754,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(gArgs.GetIntArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT) / 1000);
     case blockreconstructionextratxn:
         return qlonglong(gArgs.GetIntArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN));
+    case blockreconstructionextratxnsize:
+        return qlonglong(gArgs.GetIntArg("-blockreconstructionextratxnsize", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN_SIZE / 1'000'000));
     default:
         return QVariant();
     }
@@ -1375,6 +1378,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             std::string strNv = value.toString().toStdString();
             gArgs.ForceSetArg("-blockreconstructionextratxn", strNv);
             gArgs.ModifyRWConfigFile("blockreconstructionextratxn", strNv);
+            setRestartRequired(true);
+        }
+        break;
+    case blockreconstructionextratxnsize:
+        if (changed()) {
+            update(value.toLongLong());
+            gArgs.ForceSetArg("-blockreconstructionextratxnsize", value.toString().toStdString());
             setRestartRequired(true);
         }
         break;
