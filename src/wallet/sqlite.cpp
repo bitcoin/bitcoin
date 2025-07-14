@@ -78,6 +78,55 @@ static bool BindBlobToStatement(sqlite3_stmt* stmt,
     return true;
 }
 
+/** RAII class that encapsulates a sqlite3_stmt */
+class SQLiteStatement
+{
+private:
+    sqlite3& m_db;
+    sqlite3_stmt* m_stmt{nullptr};
+
+public:
+    explicit SQLiteStatement(sqlite3& db, const std::string& stmt_text)
+        : m_db(db)
+    {
+        const char *tail{nullptr};
+        const char *text = stmt_text.c_str();
+        int res = sqlite3_prepare_v2(&m_db, text, -1, &m_stmt, &tail);
+        if (res != SQLITE_OK) {
+            throw std::runtime_error(strprintf(
+                "SQLiteStatement: Failed to prepare SQL statement '%s': %s\n", stmt_text, sqlite3_errstr(res)));
+        }
+        // Statements are pre-made and should never have more than one
+        Assert(tail == text + stmt_text.size());
+    }
+
+    ~SQLiteStatement()
+    {
+        sqlite3_finalize(m_stmt);
+    }
+
+    int Step()
+    {
+        return sqlite3_step(m_stmt);
+    }
+
+    void Reset()
+    {
+        sqlite3_clear_bindings(m_stmt);
+        sqlite3_reset(m_stmt);
+    }
+
+    bool Bind(int index, std::span<const std::byte> data, const std::string& description)
+    {
+        return BindBlobToStatement(m_stmt, index, data, description);
+    }
+
+    std::span<const std::byte> Column(int col)
+    {
+        return SpanFromBlob(m_stmt, col);
+    }
+};
+
 static std::optional<int> ReadPragmaInteger(sqlite3* db, const std::string& key, const std::string& description, bilingual_str& error)
 {
     std::string stmt_text = strprintf("PRAGMA %s", key);
