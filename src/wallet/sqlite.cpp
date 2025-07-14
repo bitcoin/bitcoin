@@ -508,6 +508,26 @@ bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
     return true;
 }
 
+bool SQLiteBatch::ExecStatement(SQLiteStatement* stmt)
+{
+    if (!m_database.m_db) return false;
+    assert(stmt);
+
+    // Acquire semaphore if not previously acquired when creating a transaction.
+    if (!m_txn) m_database.m_write_semaphore.acquire();
+
+    // Execute
+    int res = stmt->Step();
+    stmt->Reset();
+    if (res != SQLITE_DONE) {
+        LogError("Unable to execute statement: %s\n", sqlite3_errstr(res));
+    }
+
+    if (!m_txn) m_database.m_write_semaphore.release();
+
+    return res == SQLITE_DONE;
+}
+
 bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
 {
     if (!m_database.m_db) return false;
@@ -524,53 +544,27 @@ bool SQLiteBatch::WriteKey(DataStream&& key, DataStream&& value, bool overwrite)
     // Insert index 1 is key, 2 is value
     if (!stmt->Bind(1, key, "key")) return false;
     if (!stmt->Bind(2, value, "value")) return false;
-
-    // Acquire semaphore if not previously acquired when creating a transaction.
-    if (!m_txn) m_database.m_write_semaphore.acquire();
-
-    // Execute
-    int res = stmt->Step();
-    stmt->Reset();
-    if (res != SQLITE_DONE) {
-        LogWarning("Unable to execute write statement: %s", sqlite3_errstr(res));
-    }
-
-    if (!m_txn) m_database.m_write_semaphore.release();
-
-    return res == SQLITE_DONE;
-}
-
-bool SQLiteBatch::ExecStatement(SQLiteStatement* stmt, std::span<const std::byte> blob)
-{
-    if (!m_database.m_db) return false;
-    assert(stmt);
-
-    // Bind: leftmost parameter in statement is index 1
-    if (!stmt->Bind(1, blob, "key")) return false;
-
-    // Acquire semaphore if not previously acquired when creating a transaction.
-    if (!m_txn) m_database.m_write_semaphore.acquire();
-
-    // Execute
-    int res = stmt->Step();
-    stmt->Reset();
-    if (res != SQLITE_DONE) {
-        LogWarning("Unable to execute exec statement: %s", sqlite3_errstr(res));
-    }
-
-    if (!m_txn) m_database.m_write_semaphore.release();
-
-    return res == SQLITE_DONE;
+    return ExecStatement(stmt);
 }
 
 bool SQLiteBatch::EraseKey(DataStream&& key)
 {
-    return ExecStatement(m_delete_stmt.get(), key);
+    if (!m_database.m_db) return false;
+    assert(m_delete_stmt);
+
+    // Bind: leftmost parameter in statement is index 1
+    if (!m_delete_stmt->Bind(1, key, "key")) return false;
+    return ExecStatement(m_delete_stmt.get());
 }
 
 bool SQLiteBatch::ErasePrefix(std::span<const std::byte> prefix)
 {
-    return ExecStatement(m_delete_prefix_stmt.get(), prefix);
+    if (!m_database.m_db) return false;
+    assert(m_delete_prefix_stmt);
+
+    // Bind: leftmost parameter in statement is index 1
+    if (!m_delete_prefix_stmt->Bind(1, prefix, "key")) return false;
+    return ExecStatement(m_delete_prefix_stmt.get());
 }
 
 bool SQLiteBatch::HasKey(DataStream&& key)
