@@ -101,6 +101,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::rejectbarepubkey: return "rejectbarepubkey";
     case OptionsModel::rejectbaremultisig: return "rejectbaremultisig";
     case OptionsModel::maxscriptsize: return "maxscriptsize";
+    case OptionsModel::maxtxlegacysigops: return "maxtxlegacysigops";
     case OptionsModel::datacarriercost: return "datacarriercost";
     case OptionsModel::datacarriersize: return "datacarriersize";
     case OptionsModel::rejectnonstddatacarrier: return "rejectnonstddatacarrier";
@@ -733,6 +734,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return !node().mempool().m_opts.permit_bare_multisig;
     case maxscriptsize:
         return ::g_script_size_policy_limit;
+    case maxtxlegacysigops:
+        return node().mempool().m_opts.maxtxlegacysigops;
     case datacarriercost:
         return double(::g_weight_per_data_byte) / WITNESS_SCALE_FACTOR;
     case datacarriersize:
@@ -1297,6 +1300,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             const auto nv = value.toLongLong();
             update(nv);
             ::g_script_size_policy_limit = nv;
+        }
+        break;
+    case maxtxlegacysigops:
+        if (changed()) {
+            const auto nv = value.toLongLong();
+            update(nv);
+            node().mempool().m_opts.maxtxlegacysigops = nv;
         }
         break;
     case datacarriercost:

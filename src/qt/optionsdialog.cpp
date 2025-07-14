@@ -445,6 +445,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     maxscriptsize->setToolTip(tr("There may be rare smart contracts that require a large amount of code, but more often a larger code segment is actually just spam finding new ways to try to evade filtering. 1650 bytes is sometimes considered the high end of what might be normal, usually for N-of-20 multisig."));
     CreateOptionUI(verticalLayout_Spamfiltering, maxscriptsize, tr("Ignore transactions with smart contract code larger than %s bytes."));
 
+    maxtxlegacysigops = new QSpinBox(groupBox_Spamfiltering);
+    maxtxlegacysigops->setMinimum(1);
+    maxtxlegacysigops->setMaximum(1000000);
+    maxtxlegacysigops->setToolTip(tr("Each signature operation in scripts to spend pre-segwit coins require calculations to be performed on the entire transaction. These \"legacy sigops\" can add up quickly, and there is typically only one per coin spent."));
+    CreateOptionUI(verticalLayout_Spamfiltering, maxtxlegacysigops, tr("Ignore transactions with more than %s \"legacy\" signature operations."));
+
     datacarriersize = new QSpinBox(groupBox_Spamfiltering);
     datacarriersize->setMinimum(0);
     datacarriersize->setMaximum(std::numeric_limits<int>::max());
@@ -531,6 +537,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
         rejecttokens->setEnabled(state);
         setSiblingsEnabled(dustrelayfee, state);
         setSiblingsEnabled(maxscriptsize, state);
+        setSiblingsEnabled(maxtxlegacysigops, state);
         setSiblingsEnabled(dustdynamic_multiplier, state);
         dustdynamic_enable_toggled(state && dustdynamic_enable->isChecked());
     });
@@ -855,6 +862,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(rejectbarepubkey, OptionsModel::rejectbarepubkey);
     mapper->addMapping(rejectbaremultisig, OptionsModel::rejectbaremultisig);
     mapper->addMapping(maxscriptsize, OptionsModel::maxscriptsize);
+    mapper->addMapping(maxtxlegacysigops, OptionsModel::maxtxlegacysigops);
     mapper->addMapping(datacarriercost, OptionsModel::datacarriercost);
     mapper->addMapping(datacarriersize, OptionsModel::datacarriersize);
     mapper->addMapping(rejectnonstddatacarrier, OptionsModel::rejectnonstddatacarrier);

@@ -147,6 +147,7 @@ private:
     QCheckBox *rejectbarepubkey;
     QCheckBox *rejectbaremultisig;
     QSpinBox *maxscriptsize;
+    QSpinBox *maxtxlegacysigops;
     QSpinBox *datacarriersize;
     QDoubleSpinBox *datacarriercost;
     QCheckBox *rejectnonstddatacarrier;
