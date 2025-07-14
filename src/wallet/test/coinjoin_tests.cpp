@@ -150,7 +150,7 @@ public:
         reserver.reserve();
         CWallet::ScanResult result = wallet->ScanForWalletTransactions(/*start_block=*/wallet->chain().getBlockHash(0),
                                                                        /*start_height=*/0, /*max_height=*/{}, reserver,
-                                                                       /*fUpdate=*/true);
+                                                                       /*fUpdate=*/true, /*save_progress=*/false);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
     }
 
@@ -315,6 +315,6 @@ BOOST_FIXTURE_TEST_CASE(CTransactionBuilderTest, CTransactionBuilderTestSetup)
         BOOST_CHECK(vecOutputs.size() == 0);
     }
 }
-} // namespace wallet
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

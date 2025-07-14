@@ -60,6 +60,6 @@ BOOST_AUTO_TEST_CASE(bip39_vectors)
         BOOST_CHECK(EncodeExtKey(key) == test[3].get_str());
     }
 }
-} // namespace wallet
 
 BOOST_AUTO_TEST_SUITE_END()
+} // namespace wallet

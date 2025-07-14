@@ -69,14 +69,13 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
 
     SelectionResult result(selection_target, SelectionAlgorithm::BNB);
     CAmount curr_value = 0;
-
-    std::vector<bool> curr_selection; // select the utxo at this index
-    curr_selection.reserve(utxo_pool.size());
+    std::vector<size_t> curr_selection; // selected utxo indexes
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
     for (const OutputGroup& utxo : utxo_pool) {
-        // Assert that this utxo is not negative. It should never be negative, effective value calculation should have removed it
+        // Assert that this utxo is not negative. It should never be negative,
+        // effective value calculation should have removed it
         assert(utxo.GetSelectionAmount() > 0);
         curr_available_value += utxo.GetSelectionAmount();
     }
@@ -88,15 +87,15 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     std::sort(utxo_pool.begin(), utxo_pool.end(), descending);
 
     CAmount curr_waste = 0;
-    std::vector<bool> best_selection;
+    std::vector<size_t> best_selection;
     CAmount best_waste = MAX_MONEY;
 
     // Depth First search loop for choosing the UTXOs
-    for (size_t i = 0; i < TOTAL_TRIES; ++i) {
+    for (size_t curr_try = 0, utxo_pool_index = 0; curr_try < TOTAL_TRIES; ++curr_try, ++utxo_pool_index) {
         // Conditions for starting a backtrack
         bool backtrack = false;
-        if (curr_value + curr_available_value < selection_target ||                // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > selection_target + cost_of_change ||    // Selected value is out of range, go back and try other branch
+        if (curr_value + curr_available_value < selection_target || // Cannot possibly reach target with the amount remaining in the curr_available_value.
+            curr_value > selection_target + cost_of_change || // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && (utxo_pool.at(0).fee - utxo_pool.at(0).long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
         } else if (curr_value >= selection_target) {       // Selected value is within range
@@ -107,45 +106,44 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
             // explore any more UTXOs to avoid burning money like that.
             if (curr_waste <= best_waste) {
                 best_selection = curr_selection;
-                best_selection.resize(utxo_pool.size());
                 best_waste = curr_waste;
             }
             curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
             backtrack = true;
         }
 
-        // Backtracking, moving backwards
-        if (backtrack) {
-            // Walk backwards to find the last included UTXO that still needs to have its omission branch traversed.
-            while (!curr_selection.empty() && !curr_selection.back()) {
-                curr_selection.pop_back();
-                curr_available_value += utxo_pool.at(curr_selection.size()).GetSelectionAmount();
-            }
-
+        if (backtrack) { // Backtracking, moving backwards
             if (curr_selection.empty()) { // We have walked back to the first utxo and no branch is untraversed. All solutions searched
                 break;
             }
 
+            // Add omitted UTXOs back to lookahead before traversing the omission branch of last included UTXO.
+            for (--utxo_pool_index; utxo_pool_index > curr_selection.back(); --utxo_pool_index) {
+                curr_available_value += utxo_pool.at(utxo_pool_index).GetSelectionAmount();
+            }
+
             // Output was included on previous iterations, try excluding now.
-            curr_selection.back() = false;
-            OutputGroup& utxo = utxo_pool.at(curr_selection.size() - 1);
+            assert(utxo_pool_index == curr_selection.back());
+            OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
             curr_value -= utxo.GetSelectionAmount();
             curr_waste -= utxo.fee - utxo.long_term_fee;
+            curr_selection.pop_back();
         } else { // Moving forwards, continuing down this branch
-            OutputGroup& utxo = utxo_pool.at(curr_selection.size());
+            OutputGroup& utxo = utxo_pool.at(utxo_pool_index);
 
             // Remove this utxo from the curr_available_value utxo amount
             curr_available_value -= utxo.GetSelectionAmount();
 
-            // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded. Since the ratio of fee to
-            // long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
-            if (!curr_selection.empty() && !curr_selection.back() &&
-                utxo.GetSelectionAmount() == utxo_pool.at(curr_selection.size() - 1).GetSelectionAmount() &&
-                utxo.fee == utxo_pool.at(curr_selection.size() - 1).fee) {
-                curr_selection.push_back(false);
-            } else {
+            if (curr_selection.empty() ||
+                // The previous index is included and therefore not relevant for exclusion shortcut
+                (utxo_pool_index - 1) == curr_selection.back() ||
+                // Avoid searching a branch if the previous UTXO has the same value and same waste and was excluded.
+                // Since the ratio of fee to long term fee is the same, we only need to check if one of those values match in order to know that the waste is the same.
+                utxo.GetSelectionAmount() != utxo_pool.at(utxo_pool_index - 1).GetSelectionAmount() ||
+                utxo.fee != utxo_pool.at(utxo_pool_index - 1).fee)
+            {
                 // Inclusion branch first (Largest First Exploration)
-                curr_selection.push_back(true);
+                curr_selection.push_back(utxo_pool_index);
                 curr_value += utxo.GetSelectionAmount();
                 curr_waste += utxo.fee - utxo.long_term_fee;
             }
@@ -158,10 +156,8 @@ std::optional<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_poo
     }
 
     // Set output set
-    for (size_t i = 0; i < best_selection.size(); ++i) {
-        if (best_selection.at(i)) {
-            result.AddInput(utxo_pool.at(i));
-        }
+    for (const size_t& i : best_selection) {
+        result.AddInput(utxo_pool.at(i));
     }
     result.ComputeAndSetWaste(CAmount{0});
     assert(best_waste == result.GetWaste());
@@ -400,24 +396,18 @@ std::optional<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, 
  ******************************************************************************/
 
 void OutputGroup::Insert(const COutput& output, size_t ancestors, size_t descendants, bool positive_only) {
-    // Compute the effective value first
-    const CAmount coin_fee = output.input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.input_bytes);
-    const CAmount ev = output.txout.nValue - coin_fee;
-
     // Filter for positive only here before adding the coin
-    if (positive_only && ev <= 0) return;
+    if (positive_only && output.GetEffectiveValue() <= 0) return;
 
     m_outputs.push_back(output);
     COutput& coin = m_outputs.back();
 
-    coin.fee = coin_fee;
-    fee += coin.fee;
+    fee += coin.GetFee();
 
     coin.long_term_fee = coin.input_bytes < 0 ? 0 : m_long_term_feerate.GetFee(coin.input_bytes);
     long_term_fee += coin.long_term_fee;
 
-    coin.effective_value = ev;
-    effective_value += coin.effective_value;
+    effective_value += coin.GetEffectiveValue();
 
     m_from_me &= coin.from_me;
     m_value += coin.txout.nValue;
@@ -452,8 +442,8 @@ CAmount GetSelectionWaste(const std::set<COutput>& inputs, CAmount change_cost, 
     CAmount waste = 0;
     CAmount selected_effective_value = 0;
     for (const COutput& coin : inputs) {
-        waste += coin.fee - coin.long_term_fee;
-        selected_effective_value += use_effective_value ? coin.effective_value : coin.txout.nValue;
+        waste += coin.GetFee() - coin.long_term_fee;
+        selected_effective_value += use_effective_value ? coin.GetEffectiveValue() : coin.txout.nValue;
     }
 
     if (change_cost) {

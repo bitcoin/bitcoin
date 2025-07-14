@@ -142,15 +142,10 @@ static RPCHelpMan masternode_outputs()
     if (!wallet) return NullUniValue;
 
     // Find possible candidates
-    std::vector<COutput> vPossibleCoins;
-    CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_MASTERNODE_COLLATERAL;
-    {
-        LOCK(wallet->cs_wallet);
-        AvailableCoins(*wallet, vPossibleCoins, &coin_control);
-    }
+    CCoinControl coin_control(CoinType::ONLY_MASTERNODE_COLLATERAL);
+
     UniValue outputsArr(UniValue::VARR);
-    for (const auto& out : vPossibleCoins) {
+    for (const auto& out : WITH_LOCK(wallet->cs_wallet, return AvailableCoinsListUnspent(*wallet, &coin_control).coins)) {
         outputsArr.push_back(out.outpoint.ToStringShort());
     }
 

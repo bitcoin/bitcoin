@@ -14,5 +14,5 @@ export TEST_RUNNER_EXTRA="--previous-releases --coverage --extended --exclude fe
 export RUN_UNIT_TESTS_SEQUENTIAL="true"
 export RUN_UNIT_TESTS="false"
 export GOAL="install"
-export PREVIOUS_RELEASES_TO_DOWNLOAD="v0.15.0.0 v0.16.1.1 v0.17.0.3 v18.2.2 v19.3.0 v20.0.1"
+export PREVIOUS_RELEASES_TO_DOWNLOAD="v0.12.1.5 v0.15.0.0 v0.16.1.1 v0.17.0.3 v18.2.2 v19.3.0 v20.0.1"
 export BITCOIN_CONFIG="--enable-zmq --with-libs=no --enable-reduce-exports --disable-fuzz-binary LDFLAGS=-static-libstdc++ --with-boost-process"

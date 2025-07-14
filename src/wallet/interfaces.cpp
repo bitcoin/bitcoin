@@ -129,7 +129,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     result.txout = wtx.tx->vout[n];
     result.time = wtx.GetTxTime();
     result.depth_in_main_chain = depth;
-    result.is_spent = wallet.IsSpent(wtx.GetHash(), n);
+    result.is_spent = wallet.IsSpent(COutPoint(wtx.GetHash(), n));
     return result;
 }
 
@@ -140,7 +140,7 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
     result.txout = output.txout;
     result.time = output.time;
     result.depth_in_main_chain = output.depth;
-    result.is_spent = wallet.IsSpent(output.outpoint.hash, output.outpoint.n);
+    result.is_spent = wallet.IsSpent(output.outpoint);
     return result;
 }
 
@@ -272,7 +272,7 @@ public:
     bool isLockedCoin(const COutPoint& output) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->IsLockedCoin(output.hash, output.n);
+        return m_wallet->IsLockedCoin(output);
     }
     std::vector<COutPoint> listLockedCoins() override
     {
@@ -628,10 +628,13 @@ public:
         options.require_existing = true;
         return MakeWallet(m_context, LoadWallet(m_context, name, true /* load_on_start */, options, status, error, warnings));
     }
-    std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) override
+    BResult<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
-        return MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings));
+        bilingual_str error;
+        BResult<std::unique_ptr<Wallet>> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings))};
+        if (!wallet) return error;
+        return wallet;
     }
     std::string getWalletDir() override
     {

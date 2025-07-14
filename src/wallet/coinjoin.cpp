@@ -49,21 +49,17 @@ bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::ve
 {
     LOCK(cs_wallet);
 
-    CAmount nValueTotal{0};
-
-    std::set<uint256> setRecentTxIds;
-    std::vector<COutput> vCoins;
-
     vecTxDSInRet.clear();
-
     if (!CoinJoin::IsValidDenomination(nDenom)) {
         return false;
     }
-    CAmount nDenomAmount = CoinJoin::DenominationToAmount(nDenom);
 
-    CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(*this, vCoins, &coin_control);
+    CAmount nDenomAmount{CoinJoin::DenominationToAmount(nDenom)};
+    CAmount nValueTotal{0};
+    CCoinControl coin_control(CoinType::ONLY_READY_TO_MIX);
+    std::set<uint256> setRecentTxIds;
+    std::vector<COutput> vCoins{AvailableCoinsListUnspent(*this, &coin_control).coins};
+
     WalletCJLogPrint(this, "CWallet::%s -- vCoins.size(): %d\n", __func__, vCoins.size());
 
     Shuffle(vCoins.rbegin(), vCoins.rend(), FastRandomContext());
@@ -96,7 +92,7 @@ struct CompareByPriority
     bool operator()(const COutput& t1,
                     const COutput& t2) const
     {
-        return CoinJoin::CalculateAmountPriority(t1.effective_value) > CoinJoin::CalculateAmountPriority(t2.effective_value);
+        return CoinJoin::CalculateAmountPriority(t1.GetEffectiveValue()) > CoinJoin::CalculateAmountPriority(t2.GetEffectiveValue());
     }
 };
 
@@ -104,13 +100,13 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
 {
     LOCK(cs_wallet);
 
-    CAmount nValueTotal{0};
     setAmountsRet.clear();
 
-    std::vector<COutput> vCoins;
-    CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_READY_TO_MIX;
-    AvailableCoins(*this, vCoins, &coin_control);
+    CAmount nValueTotal{0};
+    CCoinControl coin_control(CoinType::ONLY_READY_TO_MIX);
+    // CompareByPriority() cares about effective value, which is only calculable when supplied a feerate
+    std::vector<COutput> vCoins{AvailableCoins(*this, &coin_control, /*feerate=*/CFeeRate(0)).coins};
+
     // larger denoms first
     std::sort(vCoins.rbegin(), vCoins.rend(), CompareByPriority());
 
@@ -172,7 +168,8 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
             auto itTallyItem = mapTally.find(txdest);
             if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && int64_t(itTallyItem->second.outpoints.size()) >= nMaxOupointsPerAddress) continue;
 
-            if(IsSpent(outpoint.hash, i) || IsLockedCoin(outpoint.hash, i)) continue;
+            COutPoint target_outpoint(outpoint.hash, i);
+            if(IsSpent(target_outpoint) || IsLockedCoin(target_outpoint)) continue;
 
             if(fSkipDenominated && CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue)) continue;
 
@@ -184,7 +181,7 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
                 // otherwise they will just lead to higher fee / lower priority
                 if(wtx.tx->vout[i].nValue <= nSmallestDenom/10) continue;
                 // ignore mixed
-                if (IsFullyMixed(COutPoint(outpoint.hash, i))) continue;
+                if (IsFullyMixed(target_outpoint)) continue;
             }
 
             if (itTallyItem == mapTally.end()) {
@@ -231,13 +228,10 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
     LOCK(cs_wallet);
 
-    std::vector<COutput> vCoins;
-    CCoinControl coin_control;
+    CCoinControl coin_control(CoinType::ONLY_COINJOIN_COLLATERAL);
     coin_control.m_include_unsafe_inputs = !fOnlyConfirmed;
-    coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
-    AvailableCoins(*this, vCoins, &coin_control);
 
-    return !vCoins.empty();
+    return !AvailableCoinsListUnspent(*this, &coin_control).coins.empty();
 }
 
 int CWallet::CountInputsWithAmount(CAmount nInputAmount) const
@@ -512,7 +506,7 @@ CAmount CachedTxGetAnonymizedCredit(const CWallet& wallet, const CWalletTx& wtx,
             continue;
         }
 
-        if (wallet.IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+        if (wallet.IsSpent(outpoint) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
 
         if (wallet.IsFullyMixed(outpoint)) {
             nCredit += OutputGetCredit(wallet, txout, ISMINE_SPENDABLE);
@@ -552,7 +546,7 @@ CoinJoinCredits CachedTxGetAvailableCoinJoinCredits(const CWallet& wallet, const
         const CTxOut &txout = wtx.tx->vout[i];
         const COutPoint outpoint = COutPoint(hashTx, i);
 
-        if (wallet.IsSpent(hashTx, i) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+        if (wallet.IsSpent(outpoint) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
         const CAmount credit = OutputGetCredit(wallet, txout, ISMINE_SPENDABLE);
 
         if (wallet.IsFullyMixed(outpoint)) {

@@ -156,9 +156,9 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
             chainstate->CoinsErrorCatcher().AddReadErrCallback(coins_error_cb);
         }
 
-        // If necessary, upgrade from older database format.
+        // Refuse to load unsupported database format.
         // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-        if (!chainstate->CoinsDB().Upgrade()) {
+        if (chainstate->CoinsDB().NeedsUpgrade()) {
             return ChainstateLoadingError::ERROR_CHAINSTATE_UPGRADE_FAILED;
         }
 

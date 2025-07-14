@@ -1557,12 +1557,8 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
 {
     AssertLockHeld(m_wallet->cs_wallet);
 
-    std::vector<COutput> vCoins;
-    CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_COINJOIN_COLLATERAL;
-
-    AvailableCoins(*m_wallet, vCoins, &coin_control);
-
+    CCoinControl coin_control(CoinType::ONLY_COINJOIN_COLLATERAL);
+    std::vector<COutput> vCoins{AvailableCoinsListUnspent(*m_wallet, &coin_control).coins};
     if (vCoins.empty()) {
         strReason = strprintf("%s requires a collateral transaction and could not locate an acceptable input!", gCoinJoinName);
         return false;

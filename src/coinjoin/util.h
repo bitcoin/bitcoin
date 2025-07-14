@@ -5,6 +5,7 @@
 #ifndef BITCOIN_COINJOIN_UTIL_H
 #define BITCOIN_COINJOIN_UTIL_H
 
+#include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
 class CTransactionBuilder;

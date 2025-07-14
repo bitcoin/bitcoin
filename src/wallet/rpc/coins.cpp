@@ -347,11 +347,11 @@ RPCHelpMan lockunspent()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
         }
 
-        if (pwallet->IsSpent(outpt.hash, outpt.n)) {
+        if (pwallet->IsSpent(outpt)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
         }
 
-        const bool is_locked = pwallet->IsLockedCoin(outpt.hash, outpt.n);
+        const bool is_locked = pwallet->IsLockedCoin(outpt);
 
         if (fUnlock && !is_locked) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected locked output");
@@ -603,8 +603,7 @@ RPCHelpMan listunspent()
     CAmount nMaximumAmount = MAX_MONEY;
     CAmount nMinimumSumAmount = MAX_MONEY;
     uint64_t nMaximumCount = 0;
-    CCoinControl coinControl;
-    coinControl.nCoinType = CoinType::ALL_COINS;
+    CCoinControl coinControl(CoinType::ALL_COINS);
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -660,7 +659,7 @@ RPCHelpMan listunspent()
         coinControl.m_include_unsafe_inputs = include_unsafe;
 
         LOCK(pwallet->cs_wallet);
-        AvailableCoins(*pwallet, vecOutputs, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount);
+        vecOutputs = AvailableCoinsListUnspent(*pwallet, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount).coins;
     }
 
     LOCK(pwallet->cs_wallet);
@@ -671,7 +670,7 @@ RPCHelpMan listunspent()
         CTxDestination address;
         const CScript& scriptPubKey = out.txout.scriptPubKey;
         bool fValidAddress = ExtractDestination(scriptPubKey, address);
-        bool reused = avoid_reuse && pwallet->IsSpentKey(out.outpoint.hash, out.outpoint.n);
+        bool reused = avoid_reuse && pwallet->IsSpentKey(scriptPubKey);
 
         if (destinations.size() && (!fValidAddress || !destinations.count(address)))
             continue;

@@ -67,14 +67,20 @@ int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wall
     return CalculateMaximumSignedTxSize(tx, wallet, txouts, use_max_sig);
 }
 
-void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount)
+CoinsResult AvailableCoins(const CWallet& wallet,
+                           const CCoinControl* coinControl,
+                           std::optional<CFeeRate> feerate,
+                           const CAmount& nMinimumAmount,
+                           const CAmount& nMaximumAmount,
+                           const CAmount& nMinimumSumAmount,
+                           const uint64_t nMaximumCount,
+                           bool only_spendable)
 {
     AssertLockHeld(wallet.cs_wallet);
 
-    vCoins.clear();
     CoinType nCoinType = coinControl ? coinControl->nCoinType : CoinType::ALL_COINS;
 
-    CAmount nTotal = 0;
+    CoinsResult result;
     // Either the WALLET_FLAG_AVOID_REUSE flag is not set (in which case we always allow), or we default to avoiding, and only in the case where
     // a coin control object is provided, and has the avoid address reuse flag set to false, do we allow already used addresses
     bool allow_used_addresses = !wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) || (coinControl && !coinControl->m_avoid_address_reuse);
@@ -110,30 +116,33 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
         bool tx_from_me = CachedTxIsFromMe(wallet, wtx, ISMINE_ALL);
 
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+            const CTxOut& output = wtx.tx->vout[i];
+            const COutPoint outpoint(wtxid, i);
+
             bool found = false;
             switch (nCoinType) {
                 case CoinType::ONLY_FULLY_MIXED: {
-                    found = CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue) &&
-                            wallet.IsFullyMixed(COutPoint(wtxid, i));
+                    found = CoinJoin::IsDenominatedAmount(output.nValue) &&
+                            wallet.IsFullyMixed(outpoint);
                     break;
                 }
                 case CoinType::ONLY_READY_TO_MIX: {
-                    found = CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue) &&
-                            !wallet.IsFullyMixed(COutPoint(wtxid, i));
+                    found = CoinJoin::IsDenominatedAmount(output.nValue) &&
+                            !wallet.IsFullyMixed(outpoint);
                     break;
                 }
                 case CoinType::ONLY_NONDENOMINATED: {
                     // NOTE: do not use collateral amounts
-                    found = !CoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue) &&
-                            !CoinJoin::IsDenominatedAmount(wtx.tx->vout[i].nValue);
+                    found = !CoinJoin::IsCollateralAmount(output.nValue) &&
+                            !CoinJoin::IsDenominatedAmount(output.nValue);
                     break;
                 }
                 case CoinType::ONLY_MASTERNODE_COLLATERAL: {
-                    found = dmn_types::IsCollateralAmount(wtx.tx->vout[i].nValue);
+                    found = dmn_types::IsCollateralAmount(output.nValue);
                     break;
                 }
                 case CoinType::ONLY_COINJOIN_COLLATERAL: {
-                    found = CoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue);
+                    found = CoinJoin::IsCollateralAmount(output.nValue);
                     break;
                 }
                 case CoinType::ALL_COINS: {
@@ -144,70 +153,76 @@ void AvailableCoins(const CWallet& wallet, std::vector<COutput>& vCoins, const C
             if(!found) continue;
 
             // Only consider selected coins if add_inputs is false
-            if (coinControl && !coinControl->m_add_inputs && !coinControl->IsSelected(COutPoint(wtxid, i))) {
+            if (coinControl && !coinControl->m_add_inputs && !coinControl->IsSelected(outpoint)) {
                 continue;
             }
 
-            if (wtx.tx->vout[i].nValue < nMinimumAmount || wtx.tx->vout[i].nValue > nMaximumAmount)
+            if (output.nValue < nMinimumAmount || output.nValue > nMaximumAmount)
                 continue;
 
-            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, i)))
+            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(outpoint))
                 continue;
 
-            if (wallet.IsLockedCoin(wtxid, i) && nCoinType != CoinType::ONLY_MASTERNODE_COLLATERAL)
+            if (wallet.IsLockedCoin(outpoint) && nCoinType != CoinType::ONLY_MASTERNODE_COLLATERAL)
                 continue;
 
-            if (wallet.IsSpent(wtxid, i))
+            if (wallet.IsSpent(outpoint))
                 continue;
 
-            isminetype mine = wallet.IsMine(wtx.tx->vout[i]);
+            isminetype mine = wallet.IsMine(output);
 
             if (mine == ISMINE_NO) {
                 continue;
             }
 
-            if (!allow_used_addresses && wallet.IsSpentKey(wtxid, i)) {
+            if (!allow_used_addresses && wallet.IsSpentKey(output.scriptPubKey)) {
                 continue;
             }
 
-            std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(wtx.tx->vout[i].scriptPubKey);
+            std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
-            bool solvable = provider ? IsSolvable(*provider, wtx.tx->vout[i].scriptPubKey) : false;
+            bool solvable = provider ? IsSolvable(*provider, output.scriptPubKey) : false;
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
-            int input_bytes = GetTxSpendSize(wallet, wtx, i, (coinControl && coinControl->fAllowWatchOnly));
 
-            vCoins.emplace_back(COutPoint(wtx.GetHash(), i), wtx.tx->vout.at(i), nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me);
+            // Filter by spendable outputs only
+            if (!spendable && only_spendable) continue;
+
+            int input_bytes = GetTxSpendSize(wallet, wtx, i, (coinControl && coinControl->fAllowWatchOnly));
+            result.coins.emplace_back(outpoint, output, nDepth, input_bytes, spendable, solvable, safeTx, wtx.GetTxTime(), tx_from_me, feerate);
+            result.total_amount += output.nValue;
 
             // Checks the sum amount of all UTXO's.
             if (nMinimumSumAmount != MAX_MONEY) {
-                nTotal += wtx.tx->vout[i].nValue;
-
-                if (nTotal >= nMinimumSumAmount) {
-                    return;
+                if (result.total_amount >= nMinimumSumAmount) {
+                    return result;
                 }
             }
 
             // Checks the maximum number of UTXO's.
-            if (nMaximumCount > 0 && vCoins.size() >= nMaximumCount) {
-                return;
+            if (nMaximumCount > 0 && result.coins.size() >= nMaximumCount) {
+                return result;
             }
         }
     }
+
+    return result;
+}
+
+CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const uint64_t nMaximumCount)
+{
+    return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, /*only_spendable=*/false);
 }
 
 CAmount GetAvailableBalance(const CWallet& wallet, const CCoinControl* coinControl)
 {
     LOCK(wallet.cs_wallet);
-
-    CAmount balance = 0;
-    std::vector<COutput> vCoins;
-    AvailableCoins(wallet, vCoins, coinControl);
-    for (const COutput& out : vCoins) {
-        if (out.spendable) {
-            balance += out.txout.nValue;
-        }
-    }
-    return balance;
+    return AvailableCoins(wallet, coinControl,
+            /*feerate=*/ std::nullopt,
+            /*nMinimumAmount=*/ 1,
+            /*nMaximumAmount=*/ MAX_MONEY,
+            /*nMinimumSumAmount=*/ MAX_MONEY,
+            /*nMaximumCount=*/ 0
+    ).total_amount;
 }
 
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const CTransaction& tx, int output)
@@ -239,11 +254,8 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     AssertLockHeld(wallet.cs_wallet);
 
     std::map<CTxDestination, std::vector<COutput>> result;
-    std::vector<COutput> availableCoins;
 
-    AvailableCoins(wallet, availableCoins);
-
-    for (const COutput& coin : availableCoins) {
+    for (const COutput& coin : AvailableCoinsListUnspent(wallet).coins) {
         CTxDestination address;
         if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable)) &&
             ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
@@ -475,12 +487,11 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
         }
 
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
-        COutput output(outpoint, wtx.tx->vout.at(outpoint.n), /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false);
-        output.effective_value = output.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(output.input_bytes);
+        COutput output(outpoint, wtx.tx->vout.at(outpoint.n), /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
         if (coin_selection_params.m_subtract_fee_outputs) {
             value_to_select -= output.txout.nValue;
         } else {
-            value_to_select -= output.effective_value;
+            value_to_select -= output.GetEffectiveValue();
         }
         preset_coins.insert(outpoint);
         /* Set ancestors and descendants to 0 as they don't matter for preset inputs since no actual selection is being done.
@@ -780,11 +791,16 @@ static bool CreateTransactionInternal(
     CAmount selection_target = recipients_sum + not_input_fees;
 
     // Get available coins
-    std::vector<COutput> vAvailableCoins;
-    AvailableCoins(wallet, vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
+    auto res_available_coins = AvailableCoins(wallet,
+                                              &coin_control,
+                                              coin_selection_params.m_effective_feerate,
+                                              1,            /*nMinimumAmount*/
+                                              MAX_MONEY,    /*nMaximumAmount*/
+                                              MAX_MONEY,    /*nMinimumSumAmount*/
+                                              0);           /*nMaximumCount*/
 
     // Choose coins to use
-    std::optional<SelectionResult> result = SelectCoins(wallet, vAvailableCoins, /* nTargetValue */ selection_target, coin_control, coin_selection_params);
+    std::optional<SelectionResult> result = SelectCoins(wallet, res_available_coins.coins, /* nTargetValue */ selection_target, coin_control, coin_selection_params);
     if (!result) {
         if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
             error = _("Unable to locate enough non-denominated funds for this transaction.");

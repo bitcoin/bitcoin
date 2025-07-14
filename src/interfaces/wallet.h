@@ -12,6 +12,7 @@
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
 #include <util/message.h>
+#include <util/result.h>
 #include <util/ui_change_type.h>
 
 #include <cstdint>
@@ -357,7 +358,7 @@ public:
    virtual std::string getWalletDir() = 0;
 
    //! Restore backup wallet
-   virtual std::unique_ptr<Wallet> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+   virtual BResult<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) = 0;
 
    //! Return available wallets in wallet directory.
    virtual std::vector<std::string> listWalletDir() = 0;

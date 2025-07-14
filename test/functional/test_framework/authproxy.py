@@ -74,7 +74,8 @@ class AuthServiceProxy():
         self.ensure_ascii = ensure_ascii  # can be toggled on the fly by tests
         self.__url = urllib.parse.urlparse(service_url)
         user = None if self.__url.username is None else self.__url.username.encode('utf8')
-        passwd = None if self.__url.password is None else self.__url.password.encode('utf8')
+        # v0.12.1.x and lower used URL unsafe Base64 for their passwords, quote it
+        passwd = None if self.__url.password is None else urllib.parse.unquote(self.__url.password).encode('utf8')
         authpair = user + b':' + passwd
         self.__auth_header = b'Basic ' + base64.b64encode(authpair)
         # clamp the socket timeout, since larger values can cause an
@@ -131,6 +132,8 @@ class AuthServiceProxy():
             params = dict(args=args, **argsn)
         else:
             params = args or argsn
+            # v0.12.2.x and lower cannot make sense of objects, only arrays. If passing no arguments, use array.
+            params = [] if len(params) == 0 and isinstance(params, dict) else params
         return {'version': '1.1',
                 'method': self._service_name,
                 'params': params,

@@ -273,10 +273,7 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
     coinControl.destChange = fundDest;
     coinControl.fRequireAllInputs = false;
 
-    std::vector<COutput> vecOutputs;
-    AvailableCoins(wallet, vecOutputs);
-
-    for (const auto& out : vecOutputs) {
+    for (const auto& out : AvailableCoinsListUnspent(wallet).coins) {
         CTxDestination txDest;
         if (ExtractDestination(out.txout.scriptPubKey, txDest) && txDest == fundDest) {
             coinControl.Select(out.outpoint);
@@ -804,7 +801,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         // referencing external collateral
 
         const bool unlockOnError = [&]() {
-            if (LOCK(pwallet->cs_wallet); !pwallet->IsLockedCoin(ptx.collateralOutpoint.hash, ptx.collateralOutpoint.n)) {
+            if (LOCK(pwallet->cs_wallet); !pwallet->IsLockedCoin(ptx.collateralOutpoint)) {
                 pwallet->LockCoin(ptx.collateralOutpoint);
                 return true;
             }
