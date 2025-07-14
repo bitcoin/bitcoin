@@ -387,6 +387,17 @@ void SQLiteDatabase::Open(int additional_flags)
         throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check main table existence: %s\n", sqlite3_errstr(ret)));
     }
 
+    // Then check that the transactions table exists
+    SQLiteStatement check_txs_stmt(*m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='transactions'");
+    ret = check_txs_stmt.Step();
+    if (ret == SQLITE_DONE) {
+        m_has_txs_table = false;
+    } else if (ret == SQLITE_ROW) {
+        m_has_txs_table = true;
+    } else {
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check transactions table existence: %s\n", sqlite3_errstr(ret)));
+    }
+
     // Do the db setup things because the table doesn't exist only when we are creating a new wallet
     if (!table_exists) {
         ret = sqlite3_exec(m_db, "CREATE TABLE main(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)", nullptr, nullptr, nullptr);
@@ -402,6 +413,12 @@ void SQLiteDatabase::Open(int additional_flags)
         // Set the user version
         SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
                   "Failed to set the wallet schema version");
+    }
+
+    if (!m_has_txs_table) {
+        if (!CreateTxsTable()) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to create new transactions database: %s\n", sqlite3_errstr(ret)));
+        }
     }
 }
 
@@ -463,6 +480,21 @@ std::unique_ptr<DatabaseBatch> SQLiteDatabase::MakeBatch()
 {
     // We ignore flush_on_close because we don't do manual flushing for SQLite
     return std::make_unique<SQLiteBatch>(*this);
+}
+
+bool SQLiteDatabase::HasTxsTable() const
+{
+    return m_has_txs_table;
+}
+
+bool SQLiteDatabase::CreateTxsTable()
+{
+    int ret = sqlite3_exec(m_db, "CREATE TABLE transactions(txid BLOB PRIMARY KEY NOT NULL, tx BLOB NOT NULL, comment STRING, comment_to STRING, replaces BLOB, replaced_by BLOB, timesmart INTEGER, timereceived INTEGER, order_pos INTEGER, messages BLOB, payment_requests BLOB, state_type INTEGER, state_data BLOB)", nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        return false;
+    }
+    m_has_txs_table = true;
+    return true;
 }
 
 SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
@@ -610,6 +642,14 @@ bool SQLiteBatch::HasKey(DataStream&& key)
     int res = m_read_stmt->Step();
     m_read_stmt->Reset();
     return res == SQLITE_ROW;
+}
+
+bool SQLiteBatch::CreateTxsTable()
+{
+    if (m_database.HasTxsTable()) return true;
+    if (!m_database.CreateTxsTable()) return false;
+    SetupSQLStatements();
+    return true;
 }
 
 DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
