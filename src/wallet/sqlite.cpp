@@ -247,6 +247,13 @@ void SQLiteBatch::SetupSQLStatements()
     m_overwrite_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT or REPLACE into main values(?, ?)");
     m_delete_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE key = ?");
     m_delete_prefix_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "DELETE FROM main WHERE instr(key, ?) = 1");
+
+    if (m_database.HasTxsTable()) {
+        m_insert_tx_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "INSERT or REPLACE INTO transactions (txid, tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        m_update_full_tx_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "UPDATE transactions SET comment = ?, comment_to = ?, replaces = ?, replaced_by = ? , timesmart = ?, timereceived = ?, order_pos = ?, messages= ?, payment_requests = ?, state_type =?, state_data = ? WHERE txid = ?");
+        m_update_tx_replaced_by_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "UPDATE transactions SET replaced_by = ? WHERE txid = ?");
+        m_update_tx_state_stmt = std::make_unique<SQLiteStatement>(*m_database.m_db, "UPDATE transactions SET state_type = ?, state_data = ? WHERE txid = ?");
+    }
 }
 
 SQLiteDatabase::~SQLiteDatabase()
@@ -534,6 +541,10 @@ void SQLiteBatch::Close()
     m_overwrite_stmt.reset();
     m_delete_stmt.reset();
     m_delete_prefix_stmt.reset();
+    m_insert_tx_stmt.reset();
+    m_update_full_tx_stmt.reset();
+    m_update_tx_replaced_by_stmt.reset();
+    m_update_tx_state_stmt.reset();
 
     if (force_conn_refresh) {
         m_database.Close();
@@ -650,6 +661,109 @@ bool SQLiteBatch::CreateTxsTable()
     if (!m_database.CreateTxsTable()) return false;
     SetupSQLStatements();
     return true;
+}
+
+bool SQLiteBatch::WriteTx(
+    const Txid& txid,
+    const std::span<std::byte>& serialized_tx,
+    const std::optional<std::string>& comment,
+    const std::optional<std::string>& comment_to,
+    const std::optional<Txid>& replaces,
+    const std::optional<Txid>& replaced_by,
+    uint32_t timesmart,
+    uint32_t timereceived,
+    int64_t order_pos,
+    const std::vector<std::string>& messages,
+    const std::vector<std::string>& payment_requests,
+    int32_t state_type,
+    const std::vector<unsigned char>& state_data
+)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    // Lifetime of DataStream needs to be until the statement is executed.
+    DataStream ser_messages, ser_payment_reqs;
+
+    if (!m_insert_tx_stmt->Bind(1, txid, "txid")) return false;
+    if (!m_insert_tx_stmt->Bind(2, serialized_tx, "tx")) return false;
+    if (comment && !m_insert_tx_stmt->Bind(3, *comment, "comment")) return false;
+    if (comment_to && !m_insert_tx_stmt->Bind(4, *comment_to, "comment_to")) return false;
+    if (replaces && !m_insert_tx_stmt->Bind(5, *replaces, "replaces")) return false;
+    if (replaced_by && !m_insert_tx_stmt->Bind(6, *replaced_by, "replaced_by")) return false;
+    if (!m_insert_tx_stmt->Bind(7, timesmart, "timesmart")) return false;
+    if (!m_insert_tx_stmt->Bind(8, timereceived, "timereceived")) return false;
+    if (!m_insert_tx_stmt->Bind(9, order_pos, "order_pos")) return false;
+    if (!messages.empty()) {
+        ser_messages << messages;
+        if (!m_insert_tx_stmt->Bind(10, ser_messages, "messages")) return false;
+    }
+    if (!payment_requests.empty()) {
+        ser_payment_reqs << payment_requests;
+        if (!m_insert_tx_stmt->Bind(11, ser_payment_reqs, "payment_requests")) return false;
+    }
+    if (!m_insert_tx_stmt->Bind(12, state_type, "state_type")) return false;
+    if (!m_insert_tx_stmt->Bind(13, state_data, "state_data")) return false;
+    return ExecStatement(m_insert_tx_stmt.get());
+}
+
+bool SQLiteBatch::UpdateFullTx(
+    const Txid& txid,
+    const std::optional<std::string>& comment,
+    const std::optional<std::string>& comment_to,
+    const std::optional<Txid>& replaces,
+    const std::optional<Txid>& replaced_by,
+    uint32_t timesmart,
+    uint32_t timereceived,
+    int64_t order_pos,
+    const std::vector<std::string>& messages,
+    const std::vector<std::string>& payment_requests,
+    int32_t state_type,
+    const std::vector<unsigned char>& state_data
+)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    // Lifetime of DataStream needs to be until the statement is executed.
+    DataStream ser_messages, ser_payment_reqs;
+
+    if (comment && !m_update_full_tx_stmt->Bind(1, *comment, "comment")) return false;
+    if (comment_to && !m_update_full_tx_stmt->Bind(2, *comment_to, "comment_to")) return false;
+    if (replaces && !m_update_full_tx_stmt->Bind(3, *replaces, "replaces")) return false;
+    if (replaced_by && !m_update_full_tx_stmt->Bind(4, *replaced_by, "replaced_by")) return false;
+    if (!m_update_full_tx_stmt->Bind(5, timesmart, "timesmart")) return false;
+    if (!m_update_full_tx_stmt->Bind(6, timereceived, "timereceived")) return false;
+    if (!m_update_full_tx_stmt->Bind(7, order_pos, "order_pos")) return false;
+    if (!messages.empty()) {
+        ser_messages << messages;
+        if (!m_update_full_tx_stmt->Bind(8, ser_messages, "messages")) return false;
+    }
+    if (!payment_requests.empty()) {
+        ser_payment_reqs << payment_requests;
+        if (!m_update_full_tx_stmt->Bind(9, ser_payment_reqs, "payment_requests")) return false;
+    }
+    if (!m_update_full_tx_stmt->Bind(10, state_type, "state_type")) return false;
+    if (!m_update_full_tx_stmt->Bind(11, state_data, "state_data")) return false;
+    if (!m_update_full_tx_stmt->Bind(12, txid, "txid")) return false;
+    return ExecStatement(m_update_full_tx_stmt.get());
+}
+
+bool SQLiteBatch::UpdateTxReplacedBy(const Txid& txid, const Txid& replaced_by)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    if (!m_update_tx_replaced_by_stmt->Bind(1, replaced_by, "replaced_by")) return false;
+    if (!m_update_tx_replaced_by_stmt->Bind(2, txid, "txid")) return false;
+    return ExecStatement(m_update_tx_replaced_by_stmt.get());
+}
+
+bool SQLiteBatch::UpdateTxState(const Txid& txid, int32_t state_type, const std::vector<unsigned char>& state_data)
+{
+    if (!m_database.HasTxsTable()) return true;
+
+    if (!m_update_tx_state_stmt->Bind(1, state_type, "state_type")) return false;
+    if (!m_update_tx_state_stmt->Bind(2, state_data, "state_data")) return false;
+    if (!m_update_tx_state_stmt->Bind(3, txid, "txid")) return false;
+    return ExecStatement(m_update_tx_state_stmt.get());
 }
 
 DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)

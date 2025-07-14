@@ -6,8 +6,10 @@
 #define BITCOIN_WALLET_SQLITE_H
 
 #include <sync.h>
+#include <primitives/transaction_identifier.h>
 #include <wallet/db.h>
 
+#include <optional>
 #include <semaphore>
 
 struct bilingual_str;
@@ -58,6 +60,10 @@ private:
     std::unique_ptr<SQLiteStatement> m_overwrite_stmt{nullptr};
     std::unique_ptr<SQLiteStatement> m_delete_stmt{nullptr};
     std::unique_ptr<SQLiteStatement> m_delete_prefix_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_insert_tx_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_update_full_tx_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_update_tx_replaced_by_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_update_tx_state_stmt{nullptr};
 
     /** Whether this batch has started a database transaction and whether it owns SQLiteDatabase::m_write_semaphore.
      * If the batch starts a db tx, it acquires the semaphore and sets this to true, keeping the semaphore
@@ -87,6 +93,34 @@ public:
     ~SQLiteBatch() override;
 
     void SetExecHandler(std::unique_ptr<SQliteExecHandler>&& handler) { m_exec_handler = std::move(handler); }
+
+    bool WriteTx(const Txid& txid,
+                 const std::span<std::byte>& serialized_tx,
+                 const std::optional<std::string>& comment,
+                 const std::optional<std::string>& comment_to,
+                 const std::optional<Txid>& replaces,
+                 const std::optional<Txid>& replaced_by,
+                 uint32_t timesmart,
+                 uint32_t timereceived,
+                 int64_t order_pos,
+                 const std::vector<std::string>& messages,
+                 const std::vector<std::string>& payment_requests,
+                 int32_t state_type,
+                 const std::vector<unsigned char>& state_data);
+    bool UpdateFullTx(const Txid& txid,
+                      const std::optional<std::string>& comment,
+                      const std::optional<std::string>& comment_to,
+                      const std::optional<Txid>& replaces,
+                      const std::optional<Txid>& replaced_by,
+                      uint32_t timesmart,
+                      uint32_t timereceived,
+                      int64_t order_pos,
+                      const std::vector<std::string>& messages,
+                      const std::vector<std::string>& payment_requests,
+                      int32_t state_type,
+                      const std::vector<unsigned char>& state_data);
+    bool UpdateTxReplacedBy(const Txid& txid, const Txid& replaced_by);
+    bool UpdateTxState(const Txid& txid, int32_t state_type, const std::vector<unsigned char>& state_data);
 
     void Close() override;
 
