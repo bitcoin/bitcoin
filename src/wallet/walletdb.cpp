@@ -107,6 +107,71 @@ bool WalletBatch::EraseTx(Txid hash)
     return EraseIC(std::make_pair(DBKeys::TX, hash.ToUint256()));
 }
 
+bool WalletBatch::SQLWriteTx(const CWalletTx& wtx)
+{
+    SQLiteBatch* batch = dynamic_cast<SQLiteBatch*>(m_batch.get());
+    if (!batch) return true;
+    DataStream stream;
+    stream << TX_WITH_WITNESS(wtx.tx);
+    return batch->WriteTx(
+        wtx.GetHash(),
+        stream,
+        wtx.m_comment,
+        wtx.m_comment_to,
+        wtx.m_replaces_txid,
+        wtx.m_replaced_by_txid,
+        wtx.nTimeSmart,
+        wtx.nTimeReceived,
+        wtx.nOrderPos,
+        wtx.m_messages,
+        wtx.m_payment_requests,
+        GetTxStateType(wtx.m_state),
+        GetTxStateData(wtx.m_state)
+    );
+}
+
+bool WalletBatch::SQLUpdateFullTx(const CWalletTx& wtx)
+{
+    SQLiteBatch* batch = dynamic_cast<SQLiteBatch*>(m_batch.get());
+    if (!batch) return true;
+    return batch->UpdateFullTx(
+        wtx.GetHash(),
+        wtx.m_comment,
+        wtx.m_comment_to,
+        wtx.m_replaces_txid,
+        wtx.m_replaced_by_txid,
+        wtx.nTimeSmart,
+        wtx.nTimeReceived,
+        wtx.nOrderPos,
+        wtx.m_messages,
+        wtx.m_payment_requests,
+        GetTxStateType(wtx.m_state),
+        GetTxStateData(wtx.m_state)
+    );
+}
+
+bool WalletBatch::SQLUpdateTxReplacedBy(const CWalletTx& wtx)
+{
+    SQLiteBatch* batch = dynamic_cast<SQLiteBatch*>(m_batch.get());
+    if (!batch) return true;
+    if (!wtx.m_replaced_by_txid) return false;
+    return batch->UpdateTxReplacedBy(wtx.GetHash(), *wtx.m_replaced_by_txid);
+}
+
+bool WalletBatch::SQLUpdateTxState(const CWalletTx& wtx)
+{
+    SQLiteBatch* batch = dynamic_cast<SQLiteBatch*>(m_batch.get());
+    if (!batch) return true;
+    return batch->UpdateTxState(wtx.GetHash(), GetTxStateType(wtx.m_state), GetTxStateData(wtx.m_state));
+}
+
+bool WalletBatch::HasTxsTable() const
+{
+    SQLiteBatch* batch = dynamic_cast<SQLiteBatch*>(m_batch.get());
+    if (!batch) return false;
+    return batch->HasTxsTable();
+}
+
 bool WalletBatch::CreateTxsTable()
 {
     SQLiteBatch* batch = dynamic_cast<SQLiteBatch*>(m_batch.get());
