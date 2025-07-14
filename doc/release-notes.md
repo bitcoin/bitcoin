@@ -44,6 +44,7 @@ Notable changes
 ### Build
 
 - #32678 guix: warn and abort when SOURCE_DATE_EPOCH is set
+- #32943 depends: Force CMAKE_EXPORT_NO_PACKAGE_REGISTRY=TRUE
 
 ### Doc
 
@@ -56,6 +57,7 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 - fanquake
+- Hennadii Stepanov
 - Sjors Provoost
 - willcl-ark
 - zaidmstrr
