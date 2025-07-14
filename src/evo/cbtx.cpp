@@ -96,15 +96,14 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
         vec_hashes.reserve(vecBlockIndexes.size());
         auto& map_indexed_hashes = qcIndexedHashes_cached[llmqType];
         for (const auto& blockIndex : vecBlockIndexes) {
-            uint256 dummyHash;
-            llmq::CFinalCommitmentPtr pqc = quorum_block_processor.GetMinedCommitment(llmqType, blockIndex->GetBlockHash(), dummyHash);
-            if (pqc == nullptr) {
+            const auto [pqc, dummyHash] = quorum_block_processor.GetMinedCommitment(llmqType, blockIndex->GetBlockHash());
+            if (dummyHash == uint256::ZERO) {
                 // this should never happen
                 return std::nullopt;
             }
-            auto qcHash = ::SerializeHash(*pqc);
+            auto qcHash = ::SerializeHash(pqc);
             if (rotation_enabled) {
-                map_indexed_hashes[pqc->quorumIndex] = qcHash;
+                map_indexed_hashes[pqc.quorumIndex] = qcHash;
             } else {
                 vec_hashes.emplace_back(qcHash);
             }

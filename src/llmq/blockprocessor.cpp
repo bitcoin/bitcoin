@@ -479,6 +479,17 @@ CFinalCommitmentPtr CQuorumBlockProcessor::GetMinedCommitment(Consensus::LLMQTyp
     return std::make_unique<CFinalCommitment>(p.first);
 }
 
+std::pair<CFinalCommitment, uint256> CQuorumBlockProcessor::GetMinedCommitment(Consensus::LLMQType llmqType,
+                                                                               const uint256& quorumHash) const
+{
+    auto key = std::make_pair(DB_MINED_COMMITMENT, std::make_pair(llmqType, quorumHash));
+    std::pair<CFinalCommitment, uint256> ret;
+    if (!m_evoDb.Read(key, ret)) {
+        return {CFinalCommitment{}, uint256::ZERO};
+    }
+    return ret;
+}
+
 // The returned quorums are in reversed order, so the most recent one is at index 0
 std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsUntilBlock(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindex, size_t maxCount) const
 {
