@@ -53,6 +53,13 @@ static int TraceSqlCallback(unsigned code, void* context, void* param1, void* pa
 }
 
 template <typename T>
+concept BindBlob = requires(T a)
+{
+    { a.data() } -> std::convertible_to<const void*>;
+    { a.size() } -> std::convertible_to<size_t>;
+};
+
+template <typename T>
 concept ColumnBlob = requires(T a, T::element_type* data, size_t size)
 {
     T(data, size);
@@ -92,13 +99,24 @@ public:
         sqlite3_reset(m_stmt);
     }
 
-    bool Bind(int index, std::span<const std::byte> data, const std::string& description)
+    template<typename T>
+    bool Bind(int index, T& data, const std::string& description)
     {
-        // Pass a pointer to the empty string "" below instead of passing the
-        // blob.data() pointer if the blob.data() pointer is null. Passing a null
-        // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
-        // instead of the empty blob value X'', which would mess up SQL comparisons.
-        int res = sqlite3_bind_blob(m_stmt, index, data.data() ? static_cast<const void*>(data.data()) : "", data.size(), SQLITE_STATIC);
+        int res = SQLITE_ERROR;
+        if constexpr (std::is_same_v<T, std::string>) { // Check for string first since strings also satisfy BindBlob
+            res = sqlite3_bind_text(m_stmt, index, data.data(), data.size(), SQLITE_STATIC);
+        } else if constexpr (BindBlob<T>) {
+            // Pass a pointer to the empty string "" below instead of passing the
+            // blob.data() pointer if the blob.data() pointer is null. Passing a null
+            // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
+            // instead of the empty blob value X'', which would mess up SQL comparisons.
+            res = sqlite3_bind_blob(m_stmt, index, data.data() ? static_cast<const void*>(data.data()) : "", data.size(), SQLITE_STATIC);
+        } else if constexpr (std::integral<T> ) {
+            res = sqlite3_bind_int64(m_stmt, index, static_cast<sqlite3_int64>(data));
+        } else {
+            static_assert(ALWAYS_FALSE<T>);
+        }
+
         if (res != SQLITE_OK) {
             LogWarning("Unable to bind %s to statement: %s", description, sqlite3_errstr(res));
             Reset();
