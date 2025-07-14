@@ -457,19 +457,32 @@ std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vec
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
     {
-        SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         for (const COutput& out : vCoins) {
             if (!out.spendable) continue;
             /* Set ancestors and descendants to 0 as these don't matter for preset inputs as no actual selection is being done.
              * positive_only is set to false because we want to include all preset inputs, even if they are dust.
              */
             preset_inputs.Insert(out, /*ancestors=*/ 0, /*descendants=*/ 0, /*positive_only=*/ false);
-            result.AddInput(preset_inputs);
-            if (!coin_control.fRequireAllInputs && result.GetSelectedValue() >= nTargetValue) {
-                // stop when we added at least one input and enough inputs to have at least nTargetValue funds
-                result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
-                return result;
+        }
+        SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
+        bool all_inputs{coin_control.fRequireAllInputs};
+        if (!all_inputs) {
+            // Calculate the smallest set of inputs required to meet nTargetValue
+            bool success{false};
+            OutputGroup preset_candidates(coin_selection_params);
+            for (const auto& output : preset_inputs.m_outputs) {
+                preset_candidates.Insert(output, /*ancestors=*/0, /*descendants=*/0, /*positive_only=*/false);
+                if (preset_candidates.GetSelectionAmount() >= nTargetValue) {
+                    result.AddInput(preset_candidates);
+                    success = true;
+                    break;
+                }
             }
+            // Couldn't meet target, add all inputs
+            if (!success) all_inputs = true;
+        }
+        if (all_inputs) {
+            result.AddInput(preset_inputs);
         }
         if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
         result.ComputeAndSetWaste(coin_selection_params.m_cost_of_change);
