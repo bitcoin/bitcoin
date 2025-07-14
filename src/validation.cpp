@@ -1470,6 +1470,10 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     // Limit the mempool, if appropriate.
     if (!args.m_package_submission && !args.m_bypass_limits) {
         LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+        // If mempool contents change, then the m_view cache is dirty. Given this isn't a package
+        // submission, we won't be using the cache anymore, but clear it anyway for clarity.
+        CleanupTemporaryCoins();
+
         if (!m_pool.exists(ws.m_hash)) {
             // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
             ws.m_state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool full");
@@ -1831,6 +1835,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
     // Make sure we haven't exceeded max mempool size.
     // Package transactions that were submitted to mempool or already in mempool may be evicted.
+    // If mempool contents change, then the m_view cache is dirty. It has already been cleared above.
     LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
 
     for (const auto& tx : package) {
