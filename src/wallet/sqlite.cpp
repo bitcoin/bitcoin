@@ -116,8 +116,8 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
 {
     {
         LOCK(g_sqlite_mutex);
-        LogPrintf("Using SQLite Version %s\n", SQLiteDatabaseVersion());
-        LogPrintf("Using wallet %s\n", fs::PathToString(m_dir_path));
+        LogInfo("Using SQLite Version %s", SQLiteDatabaseVersion());
+        LogInfo("Using wallet %s", fs::PathToString(m_dir_path));
 
         if (++g_sqlite_count == 1) {
             // Setup logging

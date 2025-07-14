@@ -32,7 +32,7 @@ SignatureCache::SignatureCache(const size_t max_size_bytes)
     m_salted_hasher_schnorr.Write(PADDING_SCHNORR, 32);
 
     const auto [num_elems, approx_size_bytes] = setValid.setup_bytes(max_size_bytes);
-    LogPrintf("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements\n",
+    LogInfo("Using %zu MiB out of %zu MiB requested for signature cache, able to store %zu elements",
               approx_size_bytes >> 20, max_size_bytes >> 20, num_elems);
 }
 
