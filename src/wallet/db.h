@@ -118,6 +118,7 @@ public:
 
     virtual std::unique_ptr<DatabaseCursor> GetNewCursor() = 0;
     virtual std::unique_ptr<DatabaseCursor> GetNewPrefixCursor(std::span<const std::byte> prefix) = 0;
+    virtual std::unique_ptr<DatabaseCursor> GetNewTransactionsCursor() = 0;
     virtual bool TxnBegin() = 0;
     virtual bool TxnCommit() = 0;
     virtual bool TxnAbort() = 0;

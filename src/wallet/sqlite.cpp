@@ -786,9 +786,60 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
     return Status::MORE;
 }
 
+DatabaseCursor::Status SQLiteCursor::NextTx(
+    Txid& txid,
+    DataStream& ser_tx,
+    std::optional<std::string>& comment,
+    std::optional<std::string>& comment_to,
+    std::optional<Txid>& replaces,
+    std::optional<Txid>& replaced_by,
+    uint32_t& timesmart,
+    uint32_t& timereceived,
+    int64_t& order_pos,
+    std::vector<std::string>& messages,
+    std::vector<std::string>& payment_requests,
+    int32_t& state_type,
+    std::vector<unsigned char>& state_data
+)
+{
+    int res = m_cursor_stmt->Step();
+    if (res == SQLITE_DONE) {
+        return Status::DONE;
+    }
+    if (res != SQLITE_ROW) {
+        LogWarning("Unable to execute cursor step: %s", sqlite3_errstr(res));
+        return Status::FAIL;
+    }
+
+    // Leftmost column in result is index 0
+    txid = *m_cursor_stmt->Column<Txid>(0);
+    ser_tx.write(*m_cursor_stmt->Column<std::span<const std::byte>>(1));
+    comment = m_cursor_stmt->Column<std::string>(2);
+    comment_to = m_cursor_stmt->Column<std::string>(3);
+    replaces = m_cursor_stmt->Column<Txid>(4);
+    replaced_by = m_cursor_stmt->Column<Txid>(5);
+    timesmart = *m_cursor_stmt->Column<uint32_t>(6);
+    timereceived = *m_cursor_stmt->Column<uint32_t>(7);
+    order_pos = *m_cursor_stmt->Column<int64_t>(8);
+
+    std::optional<DataStream> messages_data = m_cursor_stmt->Column<DataStream>(9);
+    if (messages_data) {
+        *messages_data >> messages;
+    }
+    std::optional<DataStream> pay_reqs_data = m_cursor_stmt->Column<DataStream>(10);
+    if (pay_reqs_data) {
+        *pay_reqs_data >> payment_requests;
+    }
+
+    state_type = *m_cursor_stmt->Column<int32_t>(11);
+    state_data = *m_cursor_stmt->Column<std::vector<unsigned char>>(12);
+    return Status::MORE;
+}
+
 SQLiteCursor::SQLiteCursor(sqlite3& db, const std::string& stmt_text)
-    : m_cursor_stmt{std::make_unique<SQLiteStatement>(db, stmt_text)}
-{}
+{
+    m_cursor_stmt = std::make_unique<SQLiteStatement>(db, stmt_text);
+}
 
 SQLiteCursor::SQLiteCursor(sqlite3& db, const std::string& stmt_text, std::vector<std::byte> start_range, std::vector<std::byte> end_range)
     : m_cursor_stmt{std::make_unique<SQLiteStatement>(db, stmt_text)},
@@ -837,6 +888,13 @@ std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewPrefixCursor(std::span<const 
     const char* stmt_text = end_range.empty() ? "SELECT key, value FROM main WHERE key >= ?" :
                             "SELECT key, value FROM main WHERE key >= ? AND key < ?";
     return std::make_unique<SQLiteCursor>(*m_database.m_db, stmt_text, start_range, end_range);
+}
+
+std::unique_ptr<DatabaseCursor> SQLiteBatch::GetNewTransactionsCursor()
+{
+    if (!m_database.m_db) return nullptr;
+    const char* stmt_text = "SELECT txid, tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data FROM transactions ORDER BY order_pos";
+    return std::make_unique<SQLiteCursor>(*m_database.m_db, stmt_text);
 }
 
 bool SQLiteBatch::TxnBegin()
