@@ -361,22 +361,15 @@ void SQLiteDatabase::Open(int additional_flags)
 
     // Make the table for our key-value pairs
     // First check that the main table exists
-    sqlite3_stmt* check_main_stmt{nullptr};
-    ret = sqlite3_prepare_v2(m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'", -1, &check_main_stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to prepare statement to check table existence: %s\n", sqlite3_errstr(ret)));
-    }
-    ret = sqlite3_step(check_main_stmt);
-    if (sqlite3_finalize(check_main_stmt) != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to finalize statement checking table existence: %s\n", sqlite3_errstr(ret)));
-    }
+    SQLiteStatement check_main_stmt(*m_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='main'");
+    ret = check_main_stmt.Step();
     bool table_exists;
     if (ret == SQLITE_DONE) {
         table_exists = false;
     } else if (ret == SQLITE_ROW) {
         table_exists = true;
     } else {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check table existence: %s\n", sqlite3_errstr(ret)));
+        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to execute statement to check main table existence: %s\n", sqlite3_errstr(ret)));
     }
 
     // Do the db setup things because the table doesn't exist only when we are creating a new wallet
