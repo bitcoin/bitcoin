@@ -45,6 +45,7 @@
 #include <queue>
 #include <thread>
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 class AddrMan;
@@ -1228,6 +1229,8 @@ public:
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
+    bool GetNodeStatsById(NodeId nodeid, CNodeStats& stats) const;
+    bool GetNodeStatsByIds(const std::vector<NodeId>& ids, std::vector<CNodeStats>& out_stats)  const;
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(const CSubNet& subnet);
     bool DisconnectNode(const CNetAddr& addr);
@@ -1444,6 +1447,7 @@ private:
 
     mutable Mutex m_added_nodes_mutex;
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
+    std::unordered_map<NodeId, CNode*> m_node_id_map GUARDED_BY(m_nodes_mutex);
     std::list<CNode*> m_nodes_disconnected;
     mutable RecursiveMutex m_nodes_mutex;
     std::atomic<NodeId> nLastNodeId{0};

@@ -1843,6 +1843,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
+        m_node_id_map[pnode->GetId()] = pnode;
     }
     LogDebug(BCLog::NET, "connection from %s accepted\n", addr.ToStringAddrPort());
     TRACEPOINT(net, inbound_connection,
@@ -1924,6 +1925,7 @@ void CConnman::DisconnectNodes()
             {
                 // remove from m_nodes
                 m_nodes.erase(remove(m_nodes.begin(), m_nodes.end(), pnode), m_nodes.end());
+                m_node_id_map.erase(pnode->GetId());
 
                 // Add to reconnection list if appropriate. We don't reconnect right here, because
                 // the creation of a connection is a blocking operation (up to several seconds),
@@ -3010,6 +3012,7 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
+        m_node_id_map[pnode->GetId()] = pnode;
 
         // update connection count by network
         if (pnode->IsManualOrFullOutboundConn()) ++m_network_conn_counts[pnode->addr.GetNetwork()];
@@ -3615,6 +3618,38 @@ std::map<CNetAddr, LocalServiceInfo> CConnman::getNetLocalAddresses() const
 uint32_t CConnman::GetMappedAS(const CNetAddr& addr) const
 {
     return m_netgroupman.GetMappedAS(addr);
+}
+
+bool CConnman::GetNodeStatsById(NodeId id, CNodeStats& stats) const
+{
+    LOCK(m_nodes_mutex);
+    const auto it = m_node_id_map.find(id);
+    if (it == m_node_id_map.end()) return false;
+
+    CNode* pnode = it->second;
+    pnode->CopyStats(stats);
+    stats.m_mapped_as = GetMappedAS(pnode->addr);
+    return true;
+}
+
+bool CConnman::GetNodeStatsByIds(const std::vector<NodeId>& ids, std::vector<CNodeStats>& out_stats) const
+{
+    if (ids.empty()) return false;
+    out_stats.clear();
+    out_stats.reserve(ids.size());
+
+    LOCK(m_nodes_mutex);
+    for (NodeId id : ids) {
+        auto it = m_node_id_map.find(id);
+        if (it == m_node_id_map.end()) continue;
+
+        CNode* pnode = it->second;
+        CNodeStats stats;
+        pnode->CopyStats(stats);
+        stats.m_mapped_as = GetMappedAS(pnode->addr);
+        out_stats.emplace_back(std::move(stats));
+    }
+    return !out_stats.empty();
 }
 
 void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
