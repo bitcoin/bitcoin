@@ -147,6 +147,7 @@ public:
     bool TxnAbort() override;
     bool HasActiveTxn() override { return m_txn; }
 
+    bool HasTxsTable() const;
     bool CreateTxsTable();
 };
 

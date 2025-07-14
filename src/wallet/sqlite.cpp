@@ -766,6 +766,11 @@ bool SQLiteBatch::UpdateTxState(const Txid& txid, int32_t state_type, const std:
     return ExecStatement(m_update_tx_state_stmt.get());
 }
 
+bool SQLiteBatch::HasTxsTable() const
+{
+    return m_database.HasTxsTable();
+}
+
 DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
 {
     int res = m_cursor_stmt->Step();
