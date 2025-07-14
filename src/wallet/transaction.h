@@ -305,6 +305,45 @@ public:
         Assert(m_txs.contains(GetWitnessHash()));
     }
 
+    template <typename Stream>
+    CWalletTx(
+        deserialize_type, Stream& stx,
+        const TxState& state,
+        const std::optional<std::string>& comment,
+        const std::optional<std::string>& comment_to,
+        const std::optional<Txid>& replaces,
+        const std::optional<Txid>& replaced_by,
+        uint32_t timesmart,
+        uint32_t timereceived,
+        int64_t order_pos,
+        const std::vector<std::string>& messages,
+        const std::vector<std::string>& payment_requests,
+        const std::map<Wtxid, CTransactionRef>& variants
+    ) : m_comment(comment),
+        m_comment_to(comment_to),
+        m_replaces_txid(replaces),
+        m_replaced_by_txid(replaced_by),
+        m_messages(messages),
+        m_payment_requests(payment_requests),
+        nTimeReceived(timereceived),
+        nTimeSmart(timesmart),
+        nOrderPos(order_pos),
+        m_state(state)
+    {
+        CTransactionRef canonical_tx;
+        stx >> TX_WITH_WITNESS(canonical_tx);
+        m_canonical_wtxid = canonical_tx->GetWitnessHash();
+        m_txs.emplace(m_canonical_wtxid, std::move(canonical_tx));
+
+        const Txid& canonical_txid = GetHash();
+        for (const auto& [wtxid, tx] : variants) {
+            if (tx->GetHash() != canonical_txid) throw std::runtime_error("variant txid does not match wallet txid");
+        }
+        // Merge witness variants
+        m_txs.insert(variants.begin(), variants.end());
+        Assert(m_txs.contains(GetWitnessHash()));
+    }
+
     TxState m_state;
 
     // Set of mempool transactions that conflict
