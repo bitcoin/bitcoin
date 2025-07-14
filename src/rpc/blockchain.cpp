@@ -60,6 +60,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <string_view>
 #include <vector>
 
 using kernel::CCoinsStats;
@@ -2319,7 +2320,7 @@ static RPCHelpMan scantxoutset()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue result(UniValue::VOBJ);
-    const auto action{self.Arg<std::string>("action")};
+    const auto action{self.Arg<std::string_view>("action")};
     if (action == "status") {
         CoinsViewScanReserver reserver;
         if (reserver.reserve()) {
@@ -3055,7 +3056,7 @@ static RPCHelpMan dumptxoutset()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CBlockIndex* tip{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
     const CBlockIndex* target_index{nullptr};
-    const std::string snapshot_type{self.Arg<std::string>("type")};
+    const auto snapshot_type{self.Arg<std::string_view>("type")};
     const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
     if (options.exists("rollback")) {
         if (!snapshot_type.empty() && snapshot_type != "rollback") {
@@ -3346,7 +3347,7 @@ static RPCHelpMan loadtxoutset()
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
-    const fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(self.Arg<std::string>("path")))};
+    const fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(self.Arg<std::string_view>("path")))};
 
     FILE* file{fsbridge::fopen(path, "rb")};
     AutoFile afile{file};

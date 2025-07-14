@@ -333,7 +333,7 @@ static RPCHelpMan addnode()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const auto command{self.Arg<std::string>("command")};
+    const auto command{self.Arg<std::string_view>("command")};
     if (command != "onetry" && command != "add" && command != "remove") {
         throw std::runtime_error(
             self.ToString());
@@ -342,7 +342,7 @@ static RPCHelpMan addnode()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
 
-    const auto node_arg{self.Arg<std::string>("node")};
+    const auto node_arg{self.Arg<std::string_view>("node")};
     bool node_v2transport = connman.GetLocalServices() & NODE_P2P_V2;
     bool use_v2transport = self.MaybeArg<bool>("v2transport").value_or(node_v2transport);
 
@@ -353,13 +353,13 @@ static RPCHelpMan addnode()
     if (command == "onetry")
     {
         CAddress addr;
-        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grant_outbound=*/{}, node_arg.c_str(), ConnectionType::MANUAL, use_v2transport);
+        connman.OpenNetworkConnection(addr, /*fCountFailure=*/false, /*grant_outbound=*/{}, std::string{node_arg}.c_str(), ConnectionType::MANUAL, use_v2transport);
         return UniValue::VNULL;
     }
 
     if (command == "add")
     {
-        if (!connman.AddNode({node_arg, use_v2transport})) {
+        if (!connman.AddNode({std::string{node_arg}, use_v2transport})) {
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
         }
     }

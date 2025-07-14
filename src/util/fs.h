@@ -14,6 +14,7 @@
 #include <ios>
 #include <ostream>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <type_traits>
 #include <utility>
@@ -72,7 +73,7 @@ public:
     path filename() const { return std::filesystem::path::filename(); }
 };
 
-static inline path u8path(const std::string& utf8_str)
+static inline path u8path(std::string_view utf8_str)
 {
     return std::filesystem::path(std::u8string{utf8_str.begin(), utf8_str.end()});
 }

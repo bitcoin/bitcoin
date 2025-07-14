@@ -181,7 +181,7 @@ static UniValue generateBlocks(ChainstateManager& chainman, Mining& miner, const
     return blockHashes;
 }
 
-static bool getScriptFromDescriptor(const std::string& descriptor, CScript& script, std::string& error)
+static bool getScriptFromDescriptor(std::string_view descriptor, CScript& script, std::string& error)
 {
     FlatSigningProvider key_provider;
     const auto descs = Parse(descriptor, key_provider, error, /* require_checksum = */ false);
@@ -241,7 +241,7 @@ static RPCHelpMan generatetodescriptor()
 
     CScript coinbase_output_script;
     std::string error;
-    if (!getScriptFromDescriptor(self.Arg<std::string>("descriptor"), coinbase_output_script, error)) {
+    if (!getScriptFromDescriptor(self.Arg<std::string_view>("descriptor"), coinbase_output_script, error)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 

@@ -43,6 +43,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
+#include <string_view>
 #include <thread>
 #include <unordered_set>
 #include <vector>
@@ -1222,7 +1223,7 @@ public:
     int GetExtraBlockRelayCount() const;
 
     bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
-    bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool RemoveAddedNode(std::string_view node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
 

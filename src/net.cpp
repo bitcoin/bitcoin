@@ -39,11 +39,12 @@
 
 #include <algorithm>
 #include <array>
-#include <cstring>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <optional>
+#include <string_view>
 #include <unordered_map>
 
 TRACEPOINT_SEMAPHORE(net, closed_connection);
@@ -3562,11 +3563,11 @@ bool CConnman::AddNode(const AddedNodeParams& add)
     return true;
 }
 
-bool CConnman::RemoveAddedNode(const std::string& strNode)
+bool CConnman::RemoveAddedNode(std::string_view node)
 {
     LOCK(m_added_nodes_mutex);
     for (auto it = m_added_node_params.begin(); it != m_added_node_params.end(); ++it) {
-        if (strNode == it->m_added_node) {
+        if (node == it->m_added_node) {
             m_added_node_params.erase(it);
             return true;
         }

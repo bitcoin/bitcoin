@@ -19,6 +19,7 @@
 #include <wallet/walletutil.h>
 
 #include <optional>
+#include <string_view>
 
 
 namespace wallet {
@@ -456,7 +457,7 @@ static RPCHelpMan unloadwallet()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string>("wallet_name"))};
+    const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string_view>("wallet_name"))};
 
     WalletContext& context = EnsureWalletContext(request.context);
     std::shared_ptr<CWallet> wallet = GetWallet(context, wallet_name);
@@ -613,7 +614,7 @@ static RPCHelpMan migratewallet()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string>("wallet_name"))};
+            const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string_view>("wallet_name"))};
 
             SecureString wallet_pass;
             wallet_pass.reserve(100);
