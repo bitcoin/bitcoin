@@ -128,14 +128,20 @@ public:
     }
 
     template<typename T>
-    T Column(int col)
+    std::optional<T> Column(int col)
     {
+        int column_type = sqlite3_column_type(m_stmt, col);
+        if (column_type == SQLITE_NULL) {
+            return std::nullopt;
+        }
+
         if constexpr (std::integral<T> && sizeof(T) <= 4) {
             return sqlite3_column_int(m_stmt, col);
         } else if constexpr (std::integral<T> && sizeof(T) <= 8) {
             return static_cast<int64_t>(sqlite3_column_int64(m_stmt, col));
         } else if constexpr (std::is_same_v<T, std::string>) {
             const char* text = (const char*)sqlite3_column_text(m_stmt, col);
+            if (!text) return std::nullopt;
             size_t size = sqlite3_column_bytes(m_stmt, col);
             std::string str_text(text, size);
             return str_text;
@@ -159,7 +165,7 @@ static std::optional<int> ReadPragmaInteger(sqlite3* db, const std::string& key,
         error = Untranslated(strprintf("SQLiteDatabase: Failed to fetch %s: %s", description, sqlite3_errstr(ret)));
         return std::nullopt;
     }
-    int result = pragma_read_stmt.Column<int>(0);
+    int result = *pragma_read_stmt.Column<int>(0);
     return result;
 }
 
@@ -276,7 +282,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
             error = strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret));
             break;
         }
-        std::string str_msg(integrity_check_stmt.Column<std::string>(0));
+        std::string str_msg(*integrity_check_stmt.Column<std::string>(0));
         if (str_msg == "ok") {
             continue;
         }
@@ -512,7 +518,7 @@ bool SQLiteBatch::ReadKey(DataStream&& key, DataStream& value)
     }
     // Leftmost column in result is index 0
     value.clear();
-    value.write(m_read_stmt->Column<std::span<const std::byte>>(0));
+    value.write(*m_read_stmt->Column<std::span<const std::byte>>(0));
 
     m_read_stmt->Reset();
     return true;
@@ -604,8 +610,8 @@ DatabaseCursor::Status SQLiteCursor::Next(DataStream& key, DataStream& value)
     value.clear();
 
     // Leftmost column in result is index 0
-    key.write(m_cursor_stmt->Column<std::span<const std::byte>>(0));
-    value.write(m_cursor_stmt->Column<std::span<const std::byte>>(1));
+    key.write(*m_cursor_stmt->Column<std::span<const std::byte>>(0));
+    value.write(*m_cursor_stmt->Column<std::span<const std::byte>>(1));
     return Status::MORE;
 }
 
