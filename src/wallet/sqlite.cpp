@@ -26,12 +26,6 @@
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
-static std::span<const std::byte> SpanFromBlob(sqlite3_stmt* stmt, int col)
-{
-    return {reinterpret_cast<const std::byte*>(sqlite3_column_blob(stmt, col)),
-            static_cast<size_t>(sqlite3_column_bytes(stmt, col))};
-}
-
 static void ErrorLogCallback(void* arg, int code, const char* msg)
 {
     // From sqlite3_config() documentation for the SQLITE_CONFIG_LOG option:
@@ -56,26 +50,6 @@ static int TraceSqlCallback(unsigned code, void* context, void* param1, void* pa
         if (expanded) sqlite3_free(expanded);
     }
     return SQLITE_OK;
-}
-
-static bool BindBlobToStatement(sqlite3_stmt* stmt,
-                                int index,
-                                std::span<const std::byte> blob,
-                                const std::string& description)
-{
-    // Pass a pointer to the empty string "" below instead of passing the
-    // blob.data() pointer if the blob.data() pointer is null. Passing a null
-    // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
-    // instead of the empty blob value X'', which would mess up SQL comparisons.
-    int res = sqlite3_bind_blob(stmt, index, blob.data() ? static_cast<const void*>(blob.data()) : "", blob.size(), SQLITE_STATIC);
-    if (res != SQLITE_OK) {
-        LogPrintf("Unable to bind %s to statement: %s\n", description, sqlite3_errstr(res));
-        sqlite3_clear_bindings(stmt);
-        sqlite3_reset(stmt);
-        return false;
-    }
-
-    return true;
 }
 
 template <typename T>
@@ -121,7 +95,18 @@ public:
 
     bool Bind(int index, std::span<const std::byte> data, const std::string& description)
     {
-        return BindBlobToStatement(m_stmt, index, data, description);
+        // Pass a pointer to the empty string "" below instead of passing the
+        // blob.data() pointer if the blob.data() pointer is null. Passing a null
+        // data pointer to bind_blob would cause sqlite to bind the SQL NULL value
+        // instead of the empty blob value X'', which would mess up SQL comparisons.
+        int res = sqlite3_bind_blob(m_stmt, index, data.data() ? static_cast<const void*>(data.data()) : "", data.size(), SQLITE_STATIC);
+        if (res != SQLITE_OK) {
+            LogPrintf("Unable to bind %s to statement: %s\n", description, sqlite3_errstr(res));
+            Reset();
+            return false;
+        }
+
+        return true;
     }
 
     template<typename T>
@@ -137,7 +122,10 @@ public:
             std::string str_text(text, size);
             return str_text;
         } else if constexpr (ColumnBlob<T>) {
-            return T(SpanFromBlob(m_stmt, col));
+            return T(
+                reinterpret_cast<T::element_type*>(sqlite3_column_blob(m_stmt, col)),
+                static_cast<size_t>(sqlite3_column_bytes(m_stmt, col))
+            );
         } else {
             static_assert(ALWAYS_FALSE<T>);
         }
