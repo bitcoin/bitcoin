@@ -75,8 +75,9 @@ enum LastClientFeatures : uint64_t {
     // Flags indicating the automatic upgrade features supported by the wallet client that last opened a wallet file
     // New automatic upgrades must define a flag here so that upgrade-downgrade-upgrade can be detected to determine whether
     // an automatic upgrade should be performed.
+    WALLET_CLIENT_TRANSACTIONS_TABLE = 1 << 0,
 
-    WALLET_CLIENT_FEATURES = 0
+    WALLET_CLIENT_FEATURES = WALLET_CLIENT_TRANSACTIONS_TABLE
 };
 
 //! Get the path of the wallet directory.

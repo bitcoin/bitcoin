@@ -1067,10 +1067,12 @@ static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) E
     return result;
 }
 
-static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_unordered) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+static DBErrors LoadTxRecords(CWallet* pwallet, WalletBatch& wbatch, bool& any_unordered, std::optional<uint64_t> last_client_features) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
     DBErrors result = DBErrors::LOAD_OK;
+
+    DatabaseBatch& batch = wbatch.GetDatabaseBatch();
 
     // Load tx record
     any_unordered = false;
@@ -1104,6 +1106,15 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
         return result;
     });
     result = std::max(result, tx_res.m_result);
+
+    if (!last_client_features || !(*last_client_features & WALLET_CLIENT_TRANSACTIONS_TABLE)) {
+        // Upgrade the wallet to use the database as a SQL database by rewriting all txs into the transactions table
+        pwallet->WalletLogPrintf("Performing automatic upgrade to using transactions table\n");
+        wbatch.CreateTxsTable();
+        for (const auto& [_, tx] : pwallet->mapWallet) {
+            wbatch.SQLWriteTx(tx);
+        }
+    }
 
     // Load locked utxo record
     LoadResult locked_utxo_res = LoadRecords(pwallet, batch, DBKeys::LOCKED_UTXO,
@@ -1243,7 +1254,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         result = std::max(LoadDecryptionKeys(pwallet, *m_batch), result);
 
         // Load tx records
-        result = std::max(LoadTxRecords(pwallet, *m_batch, any_unordered), result);
+        result = std::max(LoadTxRecords(pwallet, *this, any_unordered, last_client_features), result);
     } catch (std::runtime_error& e) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.
