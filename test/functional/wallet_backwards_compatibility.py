@@ -375,7 +375,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         assert_raises_rpc_error(-4, "Wallet corrupted", n.loadwallet, wallet_name)
                         continue
 
-                    n.loadwallet(wallet_name)
+                    if wallet_name != "miniscript" and n.version not in [310000, 310100] and self.major_version_at_least(node, 24) and n == node_master:
+                        with n.assert_debug_log(expected_msgs=["Performing automatic upgrade to using transactions table"], unexpected_msgs=["CREATE TABLE transactions"]):
+                            n.loadwallet(wallet_name)
+                    else:
+                        n.loadwallet(wallet_name)
                     wallet = n.get_wallet_rpc(wallet_name)
                     info = wallet.getwalletinfo()
                     if wallet_name == "w1":
@@ -455,7 +459,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             old_flags = self.inspect_sqlite_db(backup_path, get_flags)
 
             # Restore the wallet to master
-            load_res = node_master.restorewallet(wallet_name, backup_path)
+            with node_master.assert_debug_log(expected_msgs=["CREATE TABLE transactions", "Performing automatic upgrade to using transactions table"]):
+                load_res = node_master.restorewallet(wallet_name, backup_path)
+
             # There should be no warnings
             assert "warnings" not in load_res
 
