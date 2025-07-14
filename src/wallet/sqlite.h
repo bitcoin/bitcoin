@@ -72,7 +72,8 @@ private:
     bool m_txn{false};
 
     void SetupSQLStatements();
-    bool ExecStatement(SQLiteStatement* stmt, std::span<const std::byte> blob);
+    bool ExecStatement(SQLiteStatement* stmt);
+    bool ExecEraseStatement(SQLiteStatement* stmt, std::span<const std::byte> blob);
 
 protected:
     bool ReadKey(DataStream&& key, DataStream& value) override;
