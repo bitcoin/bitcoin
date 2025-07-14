@@ -164,8 +164,12 @@ class WalletTest(BitcoinTestFramework):
             assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('0'))
             # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
             # TODO: fix getbalance tracking of coin spentness depth
+            # Current behavior (incorrect): returns 0 because coins are spent, regardless of when they were received
             assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('0'))
             assert_equal(self.nodes[1].getbalance(minconf=1), Decimal('0'))
+            # Expected behavior (when fixed): should return balance of coins that had >= minconf when they existed
+            # assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('50'))  # Original coinbase had >1 confirmation when spent
+            # assert_equal(self.nodes[1].getbalance(minconf=1), Decimal('50'))  # Original coinbase had >1 confirmation when spent
 
         test_balances(fee_node_1=Decimal('0.01'))
 
@@ -194,8 +198,10 @@ class WalletTest(BitcoinTestFramework):
 
         # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
         # TODO: fix getbalance tracking of coin spentness depth
-        # getbalance with minconf=3 should still show the old balance
+        # Current behavior (incorrect): getbalance with minconf=3 returns 0 because coins are spent
         assert_equal(self.nodes[1].getbalance(minconf=3), Decimal('0'))
+        # Expected behavior (when fixed): should show the old balance since those coins had >=3 confirmations when they existed
+        # assert_equal(self.nodes[1].getbalance(minconf=3), Decimal('29.98'))  # The balance before spending
 
         # getbalance with minconf=2 will show the new balance.
         assert_equal(self.nodes[1].getbalance(minconf=2), Decimal('0'))
@@ -277,6 +283,85 @@ class WalletTest(BitcoinTestFramework):
         tx_info = self.nodes[1].gettransaction(txid)
         assert_equal(tx_info['lastprocessedblock']['height'], prev_height)
         assert_equal(tx_info['lastprocessedblock']['hash'], prev_hash)
+
+        self.test_minconf_spentness_tracking()
+
+    def test_minconf_spentness_tracking(self):
+        """Test getbalance minconf parameter behavior with spent coins.
+
+        This test demonstrates the current incorrect behavior where getbalance
+        with minconf excludes coins that were spent, even if those coins had
+        sufficient confirmations when they existed.
+
+        Expected behavior: getbalance(minconf=N) should return the balance
+        considering only coins that had N or more confirmations, regardless
+        of whether they were later spent.
+        """
+        self.log.info("Test getbalance minconf behavior with spent coins")
+
+        # Create a new wallet for clean testing
+        self.nodes[0].createwallet("minconf_test")
+        wallet = self.nodes[0].get_wallet_rpc("minconf_test")
+
+        # Get some coins to the test wallet
+        test_addr = wallet.getnewaddress()
+        # Use the default wallet to send to our test wallet
+        default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        default.sendtoaddress(test_addr, 10)
+
+        # Generate 1 block to confirm the transaction
+        self.generate(self.nodes[0], 1)
+
+        # At this point, the wallet has 10 BTC with 1 confirmation
+        assert_equal(wallet.getbalance(minconf=0), Decimal('10'))
+        assert_equal(wallet.getbalance(minconf=1), Decimal('10'))
+
+        # Generate more blocks to age the coins
+        self.generate(self.nodes[0], 5)
+
+        # Now the coins have 6 confirmations
+        assert_equal(wallet.getbalance(minconf=6), Decimal('10'))
+        assert_equal(wallet.getbalance(minconf=5), Decimal('10'))
+        assert_equal(wallet.getbalance(minconf=1), Decimal('10'))
+
+        # Spend the coins
+        spend_addr = self.nodes[1].getnewaddress()
+        wallet.sendtoaddress(spend_addr, Decimal('9.99'))  # Leave some for fees
+
+        # Generate blocks to confirm the spending transaction
+        self.generate(self.nodes[0], 2)
+
+        # Current behavior (incorrect): All getbalance calls return 0
+        # because the coins are spent, regardless of their confirmation history
+        current_balance_minconf_1 = wallet.getbalance(minconf=1)
+        current_balance_minconf_5 = wallet.getbalance(minconf=5)
+        current_balance_minconf_6 = wallet.getbalance(minconf=6)
+
+        self.log.info(f"Current behavior - minconf=1: {current_balance_minconf_1}")
+        self.log.info(f"Current behavior - minconf=5: {current_balance_minconf_5}")
+        self.log.info(f"Current behavior - minconf=6: {current_balance_minconf_6}")
+
+        # These assertions document the current incorrect behavior
+        # minconf=1 includes change from the spending transaction (not the original coin)
+        assert current_balance_minconf_1 > Decimal('0')  # Change from spending transaction
+        # minconf=5,6 exclude everything because spent coins are not considered regardless of their history
+        assert_equal(current_balance_minconf_5, Decimal('0'))
+        assert_equal(current_balance_minconf_6, Decimal('0'))
+
+        # Expected behavior (when fixed):
+        # - minconf=1,5,6 should return 10 because the original coins had >=6 confirmations
+        # - minconf=7+ should return 0 because the original coins never had that many confirmations
+        #
+        # Uncomment these when the bug is fixed:
+        # assert_equal(wallet.getbalance(minconf=1), Decimal('10'))
+        # assert_equal(wallet.getbalance(minconf=5), Decimal('10'))
+        # assert_equal(wallet.getbalance(minconf=6), Decimal('10'))
+        # assert_equal(wallet.getbalance(minconf=7), Decimal('0'))
+
+        self.log.info("minconf spentness tracking test completed (showing current incorrect behavior)")
+
+        # Clean up
+        wallet.unloadwallet()
 
         self.log.info("Test that the balance is updated by an import that makes an untracked output in an existing tx \"mine\"")
         default = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
