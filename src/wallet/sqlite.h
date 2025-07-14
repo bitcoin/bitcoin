@@ -12,7 +12,6 @@
 
 struct bilingual_str;
 
-struct sqlite3_stmt;
 struct sqlite3;
 
 namespace wallet {
@@ -54,11 +53,11 @@ private:
     SQLiteDatabase& m_database;
     std::unique_ptr<SQliteExecHandler> m_exec_handler{std::make_unique<SQliteExecHandler>()};
 
-    sqlite3_stmt* m_read_stmt{nullptr};
-    sqlite3_stmt* m_insert_stmt{nullptr};
-    sqlite3_stmt* m_overwrite_stmt{nullptr};
-    sqlite3_stmt* m_delete_stmt{nullptr};
-    sqlite3_stmt* m_delete_prefix_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_read_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_insert_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_overwrite_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_delete_stmt{nullptr};
+    std::unique_ptr<SQLiteStatement> m_delete_prefix_stmt{nullptr};
 
     /** Whether this batch has started a database transaction and whether it owns SQLiteDatabase::m_write_semaphore.
      * If the batch starts a db tx, it acquires the semaphore and sets this to true, keeping the semaphore
@@ -73,7 +72,7 @@ private:
     bool m_txn{false};
 
     void SetupSQLStatements();
-    bool ExecStatement(sqlite3_stmt* stmt, std::span<const std::byte> blob);
+    bool ExecStatement(SQLiteStatement* stmt, std::span<const std::byte> blob);
 
 protected:
     bool ReadKey(DataStream&& key, DataStream& value) override;
@@ -84,7 +83,7 @@ protected:
 
 public:
     explicit SQLiteBatch(SQLiteDatabase& database);
-    ~SQLiteBatch() override { Close(); }
+    ~SQLiteBatch() override;
 
     void SetExecHandler(std::unique_ptr<SQliteExecHandler>&& handler) { m_exec_handler = std::move(handler); }
 
