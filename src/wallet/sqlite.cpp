@@ -131,6 +131,11 @@ public:
             return sqlite3_column_int(m_stmt, col);
         } else if constexpr (std::integral<T> && sizeof(T) <= 8) {
             return static_cast<int64_t>(sqlite3_column_int64(m_stmt, col));
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            const char* text = (const char*)sqlite3_column_text(m_stmt, col);
+            size_t size = sqlite3_column_bytes(m_stmt, col);
+            std::string str_text(text, size);
+            return str_text;
         } else if constexpr (ColumnBlob<T>) {
             return T(SpanFromBlob(m_stmt, col));
         } else {
@@ -267,15 +272,9 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
         return false;
     }
 
-    sqlite3_stmt* stmt{nullptr};
-    int ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        sqlite3_finalize(stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to prepare statement to verify database: %s"), sqlite3_errstr(ret));
-        return false;
-    }
+    SQLiteStatement integrity_check_stmt(m_db, "PRAGMA integrity_check");
     while (true) {
-        ret = sqlite3_step(stmt);
+        int ret = integrity_check_stmt.Step();
         if (ret == SQLITE_DONE) {
             break;
         }
@@ -283,12 +282,7 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
             error = strprintf(_("SQLiteDatabase: Failed to execute statement to verify database: %s"), sqlite3_errstr(ret));
             break;
         }
-        const char* msg = (const char*)sqlite3_column_text(stmt, 0);
-        if (!msg) {
-            error = strprintf(_("SQLiteDatabase: Failed to read database verification error: %s"), sqlite3_errstr(ret));
-            break;
-        }
-        std::string str_msg(msg);
+        std::string str_msg(integrity_check_stmt.Column<std::string>(0));
         if (str_msg == "ok") {
             continue;
         }
@@ -297,7 +291,6 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
         }
         error += Untranslated(strprintf("%s\n", str_msg));
     }
-    sqlite3_finalize(stmt);
     return error.empty();
 }
 
