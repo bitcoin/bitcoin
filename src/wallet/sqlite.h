@@ -105,6 +105,8 @@ public:
     bool TxnCommit() override;
     bool TxnAbort() override;
     bool HasActiveTxn() override { return m_txn; }
+
+    bool CreateTxsTable();
 };
 
 /** An instance of this class represents one SQLite3 database.
@@ -113,6 +115,8 @@ class SQLiteDatabase : public WalletDatabase
 {
 private:
     friend class SQLiteBatch;
+
+    bool m_has_txs_table{false};
 
     const fs::path m_dir_path;
 
@@ -182,6 +186,9 @@ public:
 
     sqlite3* m_db{nullptr};
     bool m_use_unsafe_sync;
+
+    bool HasTxsTable() const;
+    bool CreateTxsTable();
 };
 
 /** An in-memory SQLiteDatabase. Used as a temporary build artifact where no
