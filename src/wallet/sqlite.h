@@ -17,22 +17,22 @@ struct sqlite3;
 
 namespace wallet {
 class SQLiteDatabase;
+class SQLiteStatement;
 
 /** RAII class that provides a database cursor */
 class SQLiteCursor : public DatabaseCursor
 {
+private:
+    std::unique_ptr<SQLiteStatement> m_cursor_stmt{nullptr};
 public:
-    sqlite3_stmt* m_cursor_stmt{nullptr};
     // Copies of the prefix things for the prefix cursor.
     // Prevents SQLite from accessing temp variables for the prefix things.
     std::vector<std::byte> m_prefix_range_start;
     std::vector<std::byte> m_prefix_range_end;
 
-    explicit SQLiteCursor() = default;
-    explicit SQLiteCursor(std::vector<std::byte> start_range, std::vector<std::byte> end_range)
-        : m_prefix_range_start(std::move(start_range)),
-        m_prefix_range_end(std::move(end_range))
-    {}
+    explicit SQLiteCursor(sqlite3* db, const std::string& stmt_text);
+    explicit SQLiteCursor(sqlite3* db, const std::string& stmt_text, std::vector<std::byte> start_range, std::vector<std::byte> end_range);
+
     ~SQLiteCursor() override;
 
     Status Next(DataStream& key, DataStream& value) override;
