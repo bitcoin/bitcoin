@@ -1090,6 +1090,64 @@ static std::map<Wtxid, CTransactionRef> ReadWtxVariants(DatabaseBatch& batch, co
     return variants;
 }
 
+static LoadResult LoadTxsTable(CWallet* pwallet, WalletBatch& wbatch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    LoadResult result;
+
+    if (!wbatch.HasTxsTable()) {
+        return result;
+    }
+
+    DatabaseBatch& batch = wbatch.GetDatabaseBatch();
+
+    std::unique_ptr<DatabaseCursor> dbcursor = batch.GetNewTransactionsCursor();
+    SQLiteCursor* cursor = dynamic_cast<SQLiteCursor*>(dbcursor.get());
+    if (!cursor) {
+        pwallet->WalletLogPrintf("Error getting database cursor for 'transactions' table\n");
+        result.m_result = DBErrors::CORRUPT;
+        return result;
+    }
+
+    while (true) {
+        Txid txid;
+        DataStream ser_tx;
+        std::optional<std::string> comment;
+        std::optional<std::string> comment_to;
+        std::optional<Txid> replaces;
+        std::optional<Txid> replaced_by;
+        uint32_t timesmart;
+        uint32_t timereceived;
+        int64_t order_pos;
+        std::vector<std::string> messages;
+        std::vector<std::string> payment_requests;
+        int32_t state_type;
+        std::vector<unsigned char> state_data;
+
+        DatabaseCursor::Status status = cursor->NextTx(txid, ser_tx, comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, state_type, state_data);
+        if (status == DatabaseCursor::Status::DONE) {
+            break;
+        } else if (status == DatabaseCursor::Status::FAIL) {
+            pwallet->WalletLogPrintf("Error reading next 'transactions' table record for wallet database\n");
+            result.m_result = DBErrors::CORRUPT;
+            return result;
+        }
+
+        CWalletTx wtx{deserialize, ser_tx, ConstructTxState(state_type, state_data), comment, comment_to, replaces, replaced_by, timesmart, timereceived, order_pos, messages, payment_requests, ReadWtxVariants(batch, txid)};
+
+        if (wtx.GetHash() != txid) {
+            result.m_result = DBErrors::CORRUPT;
+            return result;
+        }
+
+        if (!pwallet->LoadToWallet(std::move(wtx))) {
+            // Use std::max as fill_wtx may have already set result to CORRUPT
+            result.m_result = std::max(result.m_result, DBErrors::NEED_RESCAN);
+        }
+        ++result.m_records;
+    }
+    return result;
+}
+
 static DBErrors LoadTxRecords(CWallet* pwallet, WalletBatch& wbatch, bool& any_unordered, std::optional<uint64_t> last_client_features) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
@@ -1097,43 +1155,57 @@ static DBErrors LoadTxRecords(CWallet* pwallet, WalletBatch& wbatch, bool& any_u
 
     DatabaseBatch& batch = wbatch.GetDatabaseBatch();
 
-    // Load tx record
-    any_unordered = false;
-    LoadResult tx_res = LoadRecords(pwallet, batch, DBKeys::TX,
-        [&any_unordered, &batch] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
-        DBErrors result = DBErrors::LOAD_OK;
-        Txid hash;
-        key >> hash;
-        try {
-            CWalletTx wtx{deserialize, value, ReadWtxVariants(batch, hash)};
-            if (wtx.GetHash() != hash) {
-                result = std::max(result, DBErrors::NEED_RESCAN);
-            }
+    if (!last_client_features || !(*last_client_features & WALLET_CLIENT_TRANSACTIONS_TABLE)) {
+        // Read tx records
+        std::unordered_map<Txid, CWalletTx, SaltedTxidHasher> txs;
+        LoadResult tx_res = LoadRecords(pwallet, batch, DBKeys::TX,
+            [&txs, &any_unordered, &batch] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+            DBErrors result = DBErrors::LOAD_OK;
+            Txid hash;
+            key >> hash;
 
-            if (wtx.nOrderPos == -1) {
-                any_unordered = true;
-            }
+            try {
+                CWalletTx wtx{deserialize, value, ReadWtxVariants(batch, hash)};
+                if (wtx.GetHash() != hash) {
+                    result = DBErrors::NEED_RESCAN;
+                }
 
-            if (!pwallet->LoadToWallet(std::move(wtx))) {
-                err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
+                // For descriptor wallets, do not load the transactions into the wallet
+                // Instead place them into txs so that they can be upgraded to the transactions table
+                if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                    txs.emplace(wtx.GetHash(), std::move(wtx));
+                } else {
+                    if (wtx.nOrderPos == -1) {
+                        any_unordered = true;
+                    }
+
+                    if (!pwallet->LoadToWallet(std::move(wtx))) {
+                        err = "Error: Corrupt transaction found. This can be fixed by removing transactions from wallet and rescanning.";
+                        return DBErrors::CORRUPT;
+                    }
+                }
+            } catch (const std::exception& e) {
+                err = strprintf("Error: Corrupt tx record found: %s" ,e.what());
                 return DBErrors::CORRUPT;
             }
-        } catch (const std::exception& e) {
-            err = strprintf("Error: Corrupt tx record found: %s" ,e.what());
-            return DBErrors::CORRUPT;
-        }
-        return result;
-    });
-    result = std::max(result, tx_res.m_result);
+            return result;
+        });
+        result = std::max(result, tx_res.m_result);
 
-    if (!last_client_features || !(*last_client_features & WALLET_CLIENT_TRANSACTIONS_TABLE)) {
-        // Upgrade the wallet to use the database as a SQL database by rewriting all txs into the transactions table
-        pwallet->WalletLogPrintf("Performing automatic upgrade to using transactions table\n");
-        wbatch.CreateTxsTable();
-        for (const auto& [_, tx] : pwallet->mapWallet) {
-            wbatch.SQLWriteTx(tx);
+        if (result != DBErrors::CORRUPT && pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            // Upgrade the wallet to use the database as a SQL database by rewriting all txs into the transactions table
+            pwallet->WalletLogPrintf("Performing automatic upgrade to using transactions table\n");
+            wbatch.CreateTxsTable();
+            for (const auto& [_, tx] : txs) {
+                wbatch.SQLWriteTx(tx);
+            }
         }
     }
+
+    // Load the transactions table
+    // Note that we do not need to handle or set any_unordered for this upgrade. All descriptor wallets will have tx records which have nOrderPos set.
+    LoadResult tx_table_res = LoadTxsTable(pwallet, wbatch);
+    result = std::max(result, tx_table_res.m_result);
 
     // Load locked utxo record
     LoadResult locked_utxo_res = LoadRecords(pwallet, batch, DBKeys::LOCKED_UTXO,
