@@ -81,6 +81,8 @@ class NetTest(BitcoinTestFramework):
 
         self.test_connection_count()
         self.test_getpeerinfo()
+        self.test_getpeerbyid()
+        self.test_listpeersbyids()
         self.test_getnettotals()
         self.test_getnetworkinfo()
         self.test_addnode_getaddednodeinfo()
@@ -180,6 +182,85 @@ class NetTest(BitcoinTestFramework):
         )
         no_version_peer.peer_disconnect()
         self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 2)
+
+    def test_getpeerbyid(self):
+        self.log.info("Test getpeerbyid")
+        node = self.nodes[0]
+        peer = node.add_p2p_connection(P2PInterface())
+        self.wait_until(lambda: node.getpeerinfo(), timeout=5)
+        peer_info = node.getpeerinfo()[0]
+        peer_id = peer_info["id"]
+
+        self.log.info("Check valid peer_id returns correct peer info")
+        result = node.getpeerbyid(peer_id)
+        assert isinstance(result, dict)
+        assert_equal(result["id"], peer_id)
+        assert_equal(result["addr"], peer_info["addr"])
+        assert "inbound" in result
+        assert "services" in result
+        assert "lastrecv" in result
+        assert "bytessent" in result
+        assert result["id"] == peer_id
+
+        self.log.info("Check invalid peer_id inputs: negative and nonexistent")
+        assert_raises_rpc_error(-8, "must be non-negative", node.getpeerbyid, -1)
+        nonexistent_id = peer_id + 1000
+        assert_raises_rpc_error(-29, f"peer_id={nonexistent_id} not found or no longer connected", node.getpeerbyid, nonexistent_id)
+
+        peer.peer_disconnect()
+        self.wait_until(lambda: len(node.getpeerinfo()) == 2)
+
+    def test_listpeersbyids(self):
+        self.log.info("Test listpeersbyids")
+        node = self.nodes[0]
+        peer = node.add_p2p_connection(P2PInterface())
+        self.wait_until(lambda: node.getpeerinfo(), timeout=5)
+        peer_id = node.getpeerinfo()[0]["id"]
+
+        self.log.info("Check valid input, deduplication, and empty input handling")
+        res = node.listpeersbyids([peer_id])
+        assert isinstance(res, list)
+        assert isinstance(res[0], dict)
+        assert res[0]["id"] == peer_id
+        assert node.listpeersbyids([peer_id], False)[0]["id"] == peer_id
+        assert node.listpeersbyids([peer_id, peer_id]) == node.listpeersbyids([peer_id])
+        assert len(node.listpeersbyids([peer_id] * 100)) == 1
+        assert all(p["id"] == peer_id for p in node.listpeersbyids([peer_id, peer_id, peer_id]))
+        assert node.listpeersbyids([]) == []
+        assert_raises_rpc_error(-8, "non-empty array", node.listpeersbyids, [], True)
+
+        self.log.info("Check deduplication and multiple valid peers")
+        peer2 = node.add_p2p_connection(P2PInterface())
+        self.wait_until(lambda: len(node.getpeerinfo()) >= 2, timeout=5)
+        peerinfo = node.getpeerinfo()
+        peer2_id = [p["id"] for p in peerinfo if p["id"] != peer_id][0]
+        res = node.listpeersbyids([peer_id, peer2_id])
+        assert set(p["id"] for p in res) == {peer_id, peer2_id}
+        assert len(res) == 2
+        self.log.info("Check non-strict and strict mode behavior with bad peer IDs")
+        bad_inputs = [-1, "invalid", None]
+        for bad_id in bad_inputs:
+            assert node.listpeersbyids([bad_id]) == []
+            assert_raises_rpc_error(-8, "numeric and non-negative", node.listpeersbyids, [bad_id], True)
+
+        self.log.info("Check handling of missing and mixed peer IDs in strict and non-strict mode")
+        assert node.listpeersbyids([9999], False) == []
+        assert_raises_rpc_error(-29, "not found or are no longer connected", node.listpeersbyids, [9999], True)
+        assert len(node.listpeersbyids([peer_id, 9999], False)) == 1
+        assert_raises_rpc_error(-29, "not found or are no longer connected", node.listpeersbyids, [peer_id, 9999], True)
+
+        self.log.info("Check mixed valid and invalid peer IDs")
+        for extra in [["x"], ["x", peer_id]]:
+            assert len(node.listpeersbyids([peer_id] + extra, False)) == 1
+            assert_raises_rpc_error(-8, "numeric and non-negative", node.listpeersbyids, [peer_id] + extra, True)
+
+        self.log.info("Check handling of non-array input")
+        assert_raises_rpc_error(-3, "not of expected type array", lambda: node.listpeersbyids("not-an-array", True))
+
+        # Disconnect test peers to leave clean state
+        peer.peer_disconnect()
+        peer2.peer_disconnect()
+        self.wait_until(lambda: len(node.getpeerinfo()) == 2)
 
     def test_getnettotals(self):
         self.log.info("Test getnettotals")

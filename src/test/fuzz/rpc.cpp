@@ -185,6 +185,8 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "waitforblock",
     "waitforblockheight",
     "waitfornewblock",
+    "getpeerbyid",
+    "listpeersbyids",
 };
 
 std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, bool& good_data)

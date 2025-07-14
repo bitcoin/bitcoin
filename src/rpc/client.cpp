@@ -310,6 +310,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "stop", 0, "wait" },
     { "addnode", 2, "v2transport" },
     { "addconnection", 2, "v2transport" },
+    { "getpeerbyid", 0, "peer_id" },
+    { "listpeersbyids", 0, "peer_ids" },
+    { "listpeersbyids", 1, "strict" },
 };
 // clang-format on
 

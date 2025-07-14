@@ -259,6 +259,145 @@ static RPCResult PeerInfoObjectDesc()
     };
 }
 
+static RPCHelpMan listpeersbyids()
+{
+    return RPCHelpMan{
+        "listpeersbyids",
+        "Return information about the specified connected peers.\n"
+        "\n"
+        "Peer IDs must be numeric and non-negative. Duplicate IDs are ignored and the list is automatically sorted.\n"
+        "\n"
+        "If \"strict\" is true, the call fails if any peer ID is invalid or not connected.\n"
+        "If false, such peer IDs are silently skipped.\n",
+        {
+            {
+                "peer_ids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The peer IDs to query.",
+                {
+                    {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "A peer ID."}
+                }
+            },
+            {
+                "strict", RPCArg::Type::BOOL, RPCArg::Default{false},
+                "If true, fail if any peer ID is invalid or not connected."
+            },
+        },
+        {
+            RPCResult{
+                RPCResult::Type::ARR, "", "Peer information objects for the specified peer IDs.",
+                { PeerInfoObjectDesc() }
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("listpeersbyids", "[1,2,3]") +
+            HelpExampleCli("listpeersbyids", "[1,2,3] true") +
+            HelpExampleRpc("listpeersbyids", "[1,2,3]") +
+            HelpExampleRpc("listpeersbyids", "[1,2,3], true")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const bool strict = self.Arg<bool>("strict");
+    const UniValue& ids_param = self.Arg<UniValue>("peer_ids");
+
+    // Error message constants
+    const std::string ERR_NON_EMPTY_ARRAY = "\"peer_ids\" must be a non-empty array";
+    const std::string ERR_INVALID_ID      = "All peer IDs must be numeric and non-negative";
+    const std::string ERR_NOT_CONNECTED   = "One or more peer IDs were not found or are no longer connected";
+
+    // Throw helper
+    const auto fail_if = [strict](bool condition, int code, const std::string& message) {
+        if (strict && condition) {
+            throw JSONRPCError(code, message);
+        }
+    };
+
+    fail_if(!ids_param.isArray() || ids_param.empty(), RPC_INVALID_PARAMETER, ERR_NON_EMPTY_ARRAY);
+
+    std::set<NodeId> peer_ids_set;
+    const std::vector<UniValue>& values = ids_param.getValues();
+    for (const UniValue& val : values) {
+        if (!val.isNum()) {
+            fail_if(true, RPC_INVALID_PARAMETER, ERR_INVALID_ID);
+            continue;
+        }
+
+        const NodeId id = val.getInt<NodeId>();
+        if (id < 0) {
+            fail_if(true, RPC_INVALID_PARAMETER, ERR_INVALID_ID);
+            continue;
+        }
+
+        peer_ids_set.insert(id);
+    }
+
+    const std::vector<NodeId> peer_ids(peer_ids_set.begin(), peer_ids_set.end());
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CConnman& connman = EnsureConnman(node);
+    const PeerManager& peerman = EnsurePeerman(node);
+
+    std::vector<CNodeStats> stats_list;
+    UniValue result(UniValue::VARR);
+
+    const bool got_stats = connman.GetNodeStatsByIds(peer_ids, stats_list);
+    fail_if(!got_stats, RPC_CLIENT_NODE_NOT_CONNECTED, ERR_NOT_CONNECTED);
+
+    for (const CNodeStats& stats : stats_list) {
+        CNodeStateStats state_stats;
+        if (peerman.GetNodeStateStats(stats.nodeid, state_stats)) {
+            result.push_back(BuildPeerInfo(stats, state_stats));
+        } else {
+            fail_if(true, RPC_CLIENT_NODE_NOT_CONNECTED, ERR_NOT_CONNECTED);
+        }
+    }
+
+    fail_if(result.size() != peer_ids.size(), RPC_CLIENT_NODE_NOT_CONNECTED, ERR_NOT_CONNECTED);
+
+    return result;
+},
+    };
+}
+
+static RPCHelpMan getpeerbyid()
+{
+    return RPCHelpMan{
+        "getpeerbyid",
+        "Returns information about the specified connected peer.\n",
+        {
+            {"peer_id", RPCArg::Type::NUM, RPCArg::Optional::NO, "The peer ID to query."}
+        },
+        PeerInfoObjectDesc(),
+        RPCExamples{
+            HelpExampleCli("getpeerbyid", "5") +
+            HelpExampleRpc("getpeerbyid", "5")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const NodeId peer_id = self.Arg<UniValue>("peer_id").getInt<NodeId>();
+
+    if (peer_id < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid peer_id: must be non-negative");
+    }
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CConnman& connman = EnsureConnman(node);
+    const PeerManager& peerman = EnsurePeerman(node);
+
+    CNodeStats stats;
+    CNodeStateStats state_stats;
+
+    const bool found = connman.GetNodeStatsById(peer_id, stats) &&
+                       peerman.GetNodeStateStats(peer_id, state_stats);
+
+    if (!found) {
+        throw JSONRPCError(
+            RPC_CLIENT_NODE_NOT_CONNECTED,
+            strprintf("Peer with peer_id=%d not found or no longer connected", peer_id));
+    }
+
+    return BuildPeerInfo(stats, state_stats);
+},
+    };
+}
+
 static RPCHelpMan getpeerinfo()
 {
     return RPCHelpMan{
@@ -1205,6 +1344,8 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"network", &setnetworkactive},
         {"network", &getnodeaddresses},
         {"network", &getaddrmaninfo},
+        {"network", &getpeerbyid},
+        {"network", &listpeersbyids},
         {"hidden", &addconnection},
         {"hidden", &addpeeraddress},
         {"hidden", &sendmsgtopeer},
