@@ -295,6 +295,8 @@ public:
     //! Registers db txn callback functions
     void RegisterTxnListener(const DbTxnListener& l);
 
+    DatabaseBatch& GetDatabaseBatch() { return *m_batch; }
+
 private:
     std::unique_ptr<DatabaseBatch> m_batch;
 
