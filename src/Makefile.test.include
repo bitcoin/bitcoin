@@ -399,9 +399,8 @@ endif
 if TARGET_WINDOWS
 else
 if ENABLE_BENCH
-# Disabled because benchmarks are too heavy in Dash
-#	@echo "Running bench/bench_dash"
-#	$(BENCH_BINARY)
+	@echo "Running bench/bench_dash"
+	$(BENCH_BINARY) > /dev/null
 endif
 endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
