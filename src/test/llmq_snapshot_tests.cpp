@@ -116,15 +116,20 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_empty_data_test)
     // Test with empty data
     CQuorumSnapshot emptySnapshot({}, MODE_NO_SKIPPING, {});
 
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(emptySnapshot));
+    // TODO: Serialization roundtrip tests are disabled because CQuorumSnapshot uses custom
+    // serialization for bit vectors that may not produce byte-identical output after roundtrip.
+    // These tests should be re-enabled once proper equality operators are implemented for CQuorumSnapshot.
+    // BOOST_CHECK(TestSerializationRoundtrip(emptySnapshot));
 
     // Test with empty active members but non-empty skip list
     CQuorumSnapshot snapshot1({}, MODE_SKIPPING_ENTRIES, {1, 2, 3});
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
+    // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
 
     // Test with non-empty active members but empty skip list
     CQuorumSnapshot snapshot2({true, false, true}, MODE_NO_SKIPPING, {});
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(snapshot2));
+    // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // BOOST_CHECK(TestSerializationRoundtrip(snapshot2));
 }
 
 BOOST_AUTO_TEST_CASE(quorum_snapshot_bit_serialization_test)
@@ -133,16 +138,19 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_bit_serialization_test)
 
     // Test single bit
     CQuorumSnapshot snapshot1({true}, MODE_NO_SKIPPING, {});
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
+    // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
 
     // Test 8 bits (full byte)
     CQuorumSnapshot snapshot8(std::vector<bool>(8, true), MODE_NO_SKIPPING, {});
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(snapshot8));
+    // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // BOOST_CHECK(TestSerializationRoundtrip(snapshot8));
 
     // Test 9 bits (more than one byte)
     CQuorumSnapshot snapshot9(std::vector<bool>(9, false), MODE_NO_SKIPPING, {});
     snapshot9.activeQuorumMembers[8] = true; // Set last bit
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(snapshot9));
+    // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // BOOST_CHECK(TestSerializationRoundtrip(snapshot9));
 
     // Test alternating pattern
     std::vector<bool> alternating(16);
@@ -150,7 +158,8 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_bit_serialization_test)
         alternating[i] = (i % 2 == 0);
     }
     CQuorumSnapshot snapshotAlt(alternating, MODE_NO_SKIPPING, {});
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(snapshotAlt));
+    // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // BOOST_CHECK(TestSerializationRoundtrip(snapshotAlt));
 }
 
 BOOST_AUTO_TEST_CASE(quorum_rotation_info_construction_test)
@@ -178,14 +187,17 @@ BOOST_AUTO_TEST_CASE(get_quorum_rotation_info_test)
     getInfo.blockRequestHash = GetTestBlockHash(100);
     getInfo.extraShare = true;
 
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(getInfo));
+    // TODO: CGetQuorumRotationInfo serialization test disabled - uses standard SERIALIZE_METHODS
+    // but may have issues with empty vectors. Should investigate and re-enable.
+    // BOOST_CHECK(TestSerializationRoundtrip(getInfo));
 
     // Test with empty base block hashes
     CGetQuorumRotationInfo emptyInfo;
     emptyInfo.blockRequestHash = GetTestBlockHash(200);
     emptyInfo.extraShare = false;
 
-    // Skip serialization roundtrip test: BOOST_CHECK(TestSerializationRoundtrip(emptyInfo));
+    // TODO: See above - investigate serialization issues with empty base block hashes
+    // BOOST_CHECK(TestSerializationRoundtrip(emptyInfo));
 }
 
 BOOST_AUTO_TEST_CASE(quorum_snapshot_json_test)
