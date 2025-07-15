@@ -615,7 +615,7 @@ private:
     /** Handle a transaction whose result was MempoolAcceptResult::ResultType::VALID.
      * Updates m_txrequest, m_orphanage, and vExtraTxnForCompact. Also queues the tx for relay. */
     void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_mempool.cs, g_msgproc_mutex, m_tx_download_mutex);
 
     /** Handle the results of package validation: calls ProcessValidTx and ProcessInvalidTx for
      * individual transactions, and caches rejection for the package as a group.
@@ -772,6 +772,9 @@ private:
     node::TxDownloadManager m_txdownloadman GUARDED_BY(m_tx_download_mutex);
 
     std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
+
+    /** Collection of first announcement times of received but not yet validated transactions. */
+    std::map<uint256, std::chrono::microseconds> m_first_inv_times;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -3043,8 +3046,15 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
 void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
 {
     AssertLockNotHeld(m_peer_mutex);
+    AssertLockNotHeld(m_mempool.cs);
     AssertLockHeld(g_msgproc_mutex);
     AssertLockHeld(m_tx_download_mutex);
+
+    // Move the first inv time of this valid transaction to its MempoolEntry
+    if (auto it = m_first_inv_times.find(tx->GetWitnessHash().ToUint256()); it != m_first_inv_times.end()) {
+        WITH_LOCK(m_mempool.cs, const_cast<CTxMemPoolEntry*>(m_mempool.GetEntry(tx->GetHash()))->SetFirstInvTime(it->second.count()));
+        m_first_inv_times.erase(it);
+    }
 
     m_txdownloadman.MempoolAcceptedTx(tx);
 
@@ -4292,6 +4302,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK2(cs_main, m_tx_download_mutex);
 
+        if (auto first_inv_time = m_txdownloadman.GetFirstInvTime(wtxid); first_inv_time.has_value()) {
+            // FIXME: We are currently removing this when a transasction is accepted to the mempool, but we should
+            // also remote it if the transaction is rejected for any reason, so it does not linger
+            m_first_inv_times.emplace(wtxid, first_inv_time.value());
+        }
         const auto& [should_validate, package_to_validate] = m_txdownloadman.ReceivedTx(pfrom.GetId(), ptx);
         if (!should_validate) {
             if (pfrom.HasPermission(NetPermissionFlags::ForceRelay)) {

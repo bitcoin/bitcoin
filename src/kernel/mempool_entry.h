@@ -149,6 +149,7 @@ public:
     std::optional<std::chrono::microseconds> GetFirstInvTime() const {
         return nFirstInvTime.has_value() ? std::optional{std::chrono::microseconds{nFirstInvTime.value()}} : std::nullopt;
     }
+    void SetFirstInvTime(int64_t time) {nFirstInvTime = std::optional{time};}
     unsigned int GetHeight() const { return entryHeight; }
     uint64_t GetSequence() const { return entry_sequence; }
     int64_t GetSigOpCost() const { return sigOpCost; }
