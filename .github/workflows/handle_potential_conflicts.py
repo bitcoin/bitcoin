@@ -35,13 +35,20 @@ def get_pr_json(pr_num):
     try:
         response = requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}')
         response.raise_for_status()
-        return response.json()
+        pr_data = response.json()
+
+        # Check if we got an error response
+        if 'message' in pr_data and 'head' not in pr_data:
+            print(f"Warning: GitHub API error for PR {pr_num}: {pr_data.get('message', 'Unknown error')}", file=sys.stderr)
+            return None
+
+        return pr_data
     except requests.RequestException as e:
-        print(f"Error fetching PR {pr_num}: {e}", file=sys.stderr)
-        sys.exit(1)
+        print(f"Warning: Error fetching PR {pr_num}: {e}", file=sys.stderr)
+        return None
     except json.JSONDecodeError as e:
-        print(f"Error parsing JSON for PR {pr_num}: {e}", file=sys.stderr)
-        sys.exit(1)
+        print(f"Warning: Error parsing JSON for PR {pr_num}: {e}", file=sys.stderr)
+        return None
 
 def set_github_output(name, value):
     """Set GitHub Actions output"""
@@ -87,6 +94,10 @@ def main():
     our_pr_num = j_input['pull_number']
     our_pr_json = get_pr_json(our_pr_num)
 
+    if our_pr_json is None:
+        print(f"Error: Failed to fetch PR {our_pr_num}", file=sys.stderr)
+        sys.exit(1)
+
     if 'head' not in our_pr_json or 'label' not in our_pr_json['head']:
         print(f"Error: Invalid PR data structure for PR {our_pr_num}", file=sys.stderr)
         sys.exit(1)
@@ -107,6 +118,10 @@ def main():
         print(f"Debug: Checking PR #{conflict_pr_num}", file=sys.stderr)
 
         conflict_pr_json = get_pr_json(conflict_pr_num)
+
+        if conflict_pr_json is None:
+            print(f"Warning: Failed to fetch PR {conflict_pr_num}, skipping", file=sys.stderr)
+            continue
 
         if 'head' not in conflict_pr_json or 'label' not in conflict_pr_json['head']:
             print(f"Warning: Invalid PR data structure for PR {conflict_pr_num}, skipping", file=sys.stderr)
