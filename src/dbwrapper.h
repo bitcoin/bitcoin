@@ -193,9 +193,6 @@ private:
     //! the key under which the obfuscation key is stored
     static const std::string OBFUSCATE_KEY_KEY;
 
-    //! the length of the obfuscate key in number of bytes
-    static const unsigned int OBFUSCATE_KEY_NUM_BYTES;
-
     std::vector<unsigned char> CreateObfuscateKey() const;
 
     //! path to filesystem storage

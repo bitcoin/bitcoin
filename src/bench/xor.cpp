@@ -6,6 +6,7 @@
 #include <random.h>
 #include <span.h>
 #include <streams.h>
+#include <util/obfuscation.h>
 
 #include <cstddef>
 #include <vector>
@@ -14,7 +15,7 @@ static void Xor(benchmark::Bench& bench)
 {
     FastRandomContext frc{/*fDeterministic=*/true};
     auto data{frc.randbytes<std::byte>(1024)};
-    auto key{frc.randbytes<std::byte>(31)};
+    auto key{frc.randbytes<std::byte>(Obfuscation::KEY_SIZE)};
 
     bench.batch(data.size()).unit("byte").run([&] {
         util::Xor(data, key);
