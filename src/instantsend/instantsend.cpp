@@ -440,6 +440,26 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
 ////////////////
 
 
+CInstantSendManager::CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CQuorumManager& _qman,
+                                         CSigningManager& _sigman, CSigSharesManager& _shareman,
+                                         CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
+                                         bool is_masternode, bool unitTests, bool fWipe) :
+    db{unitTests, fWipe},
+    clhandler{_clhandler},
+    m_chainstate{chainstate},
+    qman{_qman},
+    sigman{_sigman},
+    shareman{_shareman},
+    spork_manager{sporkman},
+    mempool{_mempool},
+    m_mn_sync{mn_sync},
+    m_is_masternode{is_masternode}
+{
+    workInterrupt.reset();
+}
+
+CInstantSendManager::~CInstantSendManager() = default;
+
 void CInstantSendManager::Start(PeerManager& peerman)
 {
     // can't start new thread if we have one running already
