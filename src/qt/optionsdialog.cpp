@@ -397,6 +397,17 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     minrelaytxfee = new BitcoinAmountField(groupBox_Spamfiltering);
     CreateOptionUI(verticalLayout_Spamfiltering, minrelaytxfee, tr("Ignore transactions offering miners less than %s per kvB in transaction fees."));
 
+    minrelaycoinblocks = new BitcoinAmountField(groupBox_Spamfiltering);
+    minrelaycoinblocks->SetMaxValue(std::numeric_limits<CAmount>::max());
+    minrelaycoinblocks->setToolTip(tr("This effectively acts as a rate limit. When bitcoins are spent, they reset to zero \"coinblocks\" (aka coin age) and slowly build up more coinblocks based on their value each block afterward. Small coins take longer than large amounts."));
+    CreateOptionUI(verticalLayout_Spamfiltering, minrelaycoinblocks, tr("Delay accepting transactions spending coins that have been at rest less than %s per block."));
+
+    minrelaymaturity = new QSpinBox(groupBox_Spamfiltering);
+    minrelaymaturity->setMinimum(0);
+    minrelaymaturity->setMaximum(std::numeric_limits<int>::max());
+    minrelaymaturity->setToolTip(tr("This effectively acts as a rate limit. When bitcoins are spent, they reset to zero blocks and slowly mature each block afterward, regardless of their value."));
+    CreateOptionUI(verticalLayout_Spamfiltering, minrelaymaturity, tr("Delay accepting transactions spending coins that have been at rest fewer than %s blocks."));
+
     bytespersigop = new QSpinBox(groupBox_Spamfiltering);
     bytespersigop->setMinimum(1);
     bytespersigop->setMaximum(std::numeric_limits<int>::max());
@@ -879,6 +890,8 @@ void OptionsDialog::setMapper()
     mapper->addMapping(rejecttokens, OptionsModel::rejecttokens);
     mapper->addMapping(rejectspkreuse, OptionsModel::rejectspkreuse);
     mapper->addMapping(minrelaytxfee, OptionsModel::minrelaytxfee);
+    mapper->addMapping(minrelaycoinblocks, OptionsModel::minrelaycoinblocks);
+    mapper->addMapping(minrelaymaturity, OptionsModel::minrelaymaturity);
     mapper->addMapping(bytespersigop, OptionsModel::bytespersigop);
     mapper->addMapping(bytespersigopstrict, OptionsModel::bytespersigopstrict);
     mapper->addMapping(limitancestorcount, OptionsModel::limitancestorcount);

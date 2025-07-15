@@ -92,6 +92,8 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::rejecttokens: return "rejecttokens";
     case OptionsModel::rejectspkreuse: return "rejectspkreuse";
     case OptionsModel::minrelaytxfee: return "minrelaytxfee";
+    case OptionsModel::minrelaycoinblocks: return "minrelaycoinblocks";
+    case OptionsModel::minrelaymaturity: return "minrelaymaturity";
     case OptionsModel::bytespersigop: return "bytespersigop";
     case OptionsModel::bytespersigopstrict: return "bytespersigopstrict";
     case OptionsModel::limitancestorcount: return "limitancestorcount";
@@ -731,6 +733,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return f_rejectspkreuse;
     case minrelaytxfee:
         return qlonglong(node().mempool().m_opts.min_relay_feerate.GetFeePerK());
+    case minrelaycoinblocks:
+        return qlonglong(node().mempool().m_opts.minrelaycoinblocks);
+    case minrelaymaturity:
+        return node().mempool().m_opts.minrelaymaturity;
     case bytespersigop:
         return nBytesPerSigOp;
     case bytespersigopstrict:
@@ -1250,6 +1256,20 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             CAmount nNv = value.toLongLong();
             gArgs.ModifyRWConfigFile("minrelaytxfee", FormatMoney(nNv));
             node().mempool().m_opts.min_relay_feerate = CFeeRate(nNv);
+        }
+        break;
+    case minrelaycoinblocks:
+        if (changed()) {
+            uint64_t nNv = value.toLongLong();
+            update(nNv);
+            node().mempool().m_opts.minrelaycoinblocks = nNv;
+        }
+        break;
+    case minrelaymaturity:
+        if (changed()) {
+            int nNv = value.toInt();
+            update(nNv);
+            node().mempool().m_opts.minrelaymaturity = nNv;
         }
         break;
     case bytespersigop:
