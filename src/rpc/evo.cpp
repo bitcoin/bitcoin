@@ -63,6 +63,7 @@ using wallet::DEFAULT_DISABLE_WALLET;
 using wallet::GetWalletForJSONRPCRequest;
 using wallet::HELP_REQUIRING_PASSPHRASE;
 using wallet::isminetype;
+using wallet::RANDOM_CHANGE_POSITION;
 #endif // ENABLE_WALLET
 
 static RPCArg GetRpcArg(const std::string& strParamName)
@@ -286,16 +287,14 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("No funds at specified address %s", EncodeDestination(fundDest)));
     }
 
-    CTransactionRef newTx;
-    CAmount nFee;
-    int nChangePos = -1;
     bilingual_str strFailReason;
-
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(wallet, vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, fee_calc_out, false,
-                           tx.vExtraPayload.size())) {
+    auto txr = CreateTransaction(wallet, vecSend, RANDOM_CHANGE_POSITION, strFailReason, coinControl, fee_calc_out,
+                                 true, tx.vExtraPayload.size());
+    if (!txr) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason.original);
     }
+    CTransactionRef newTx = txr->tx;
 
     tx.vin = newTx->vin;
     tx.vout = newTx->vout;
