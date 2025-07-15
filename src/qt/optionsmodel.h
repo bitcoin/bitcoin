@@ -101,6 +101,8 @@ public:
         limitdescendantsize,
         rejectbarepubkey,       // bool
         rejectbaremultisig,     // bool
+        rejectbareanchor,       // bool
+        rejectbaredatacarrier,  // bool
         maxscriptsize,
         maxtxlegacysigops,
         datacarriercost,        // double

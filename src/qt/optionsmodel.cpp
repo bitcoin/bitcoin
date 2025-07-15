@@ -100,6 +100,8 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::limitdescendantsize: return "limitdescendantsize";
     case OptionsModel::rejectbarepubkey: return "rejectbarepubkey";
     case OptionsModel::rejectbaremultisig: return "rejectbaremultisig";
+    case OptionsModel::rejectbareanchor: return "rejectbareanchor";
+    case OptionsModel::rejectbaredatacarrier: return "rejectbaredatacarrier";
     case OptionsModel::maxscriptsize: return "maxscriptsize";
     case OptionsModel::maxtxlegacysigops: return "maxtxlegacysigops";
     case OptionsModel::datacarriercost: return "datacarriercost";
@@ -732,6 +734,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return !node().mempool().m_opts.permit_bare_pubkey;
     case rejectbaremultisig:
         return !node().mempool().m_opts.permit_bare_multisig;
+    case rejectbareanchor:
+        return !node().mempool().m_opts.permitbareanchor;
+    case rejectbaredatacarrier:
+        return !node().mempool().m_opts.permitbaredatacarrier;
     case maxscriptsize:
         return ::g_script_size_policy_limit;
     case maxtxlegacysigops:
@@ -1293,6 +1299,22 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             const bool fNewValue = ! value.toBool();
             node().mempool().m_opts.permit_bare_multisig = fNewValue;
             gArgs.ModifyRWConfigFile("permitbaremultisig", strprintf("%d", fNewValue));
+        }
+        break;
+    case rejectbareanchor:
+        if (changed()) {
+            // The config and internal option is inverted
+            const bool nv = ! value.toBool();
+            node().mempool().m_opts.permitbareanchor = nv;
+            node().updateRwSetting("permitbareanchor", nv);
+        }
+        break;
+    case rejectbaredatacarrier:
+        if (changed()) {
+            // The config and internal option is inverted
+            const bool nv = ! value.toBool();
+            node().mempool().m_opts.permitbaredatacarrier = nv;
+            node().updateRwSetting("permitbaredatacarrier", nv);
         }
         break;
     case maxscriptsize:

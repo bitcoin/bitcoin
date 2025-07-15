@@ -439,6 +439,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectbaremultisig);
     FixTabOrder(rejectbaremultisig);
 
+    rejectbareanchor = new QCheckBox(groupBox_Spamfiltering);
+    rejectbareanchor->setText(tr("Reject transactions that only have an anchor"));
+    rejectbareanchor->setToolTip(tr("Anchors are a way to allow fee-bumping smart contract transactions long after they have been created. With this option set, your node will refuse to relay or mine transactions that have only an anchor but no real sends."));
+    verticalLayout_Spamfiltering->addWidget(rejectbareanchor);
+    FixTabOrder(rejectbareanchor);
+
     maxscriptsize = new QSpinBox(groupBox_Spamfiltering);
     maxscriptsize->setMinimum(0);
     maxscriptsize->setMaximum(std::numeric_limits<int>::max());
@@ -479,6 +485,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 
     dustrelayfee = new BitcoinAmountField(groupBox_Spamfiltering);
     CreateOptionUI(verticalLayout_Spamfiltering, dustrelayfee, tr("Ignore transactions with values that would cost more to spend at a fee rate of %s per kvB (\"dust\")."));
+
+    rejectbaredatacarrier = new QCheckBox(groupBox_Spamfiltering);
+    rejectbaredatacarrier->setText(tr("Reject \"transactions\" that are only arbitrary data"));
+    rejectbaredatacarrier->setToolTip(tr("With this option set, arbitrary data will only be permitted as defined above in addition to an otherwise-valid transaction. If there are no real recipients, the transaction will be rejected no matter how little data it includes."));
+    verticalLayout_Spamfiltering->addWidget(rejectbaredatacarrier);
+    FixTabOrder(rejectbaredatacarrier);
 
 
     dustdynamic_enable = new QCheckBox(groupBox_Spamfiltering);
@@ -533,6 +545,8 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
         rejectunknownwitness->setEnabled(state);
         rejectbarepubkey->setEnabled(state);
         rejectbaremultisig->setEnabled(state);
+        rejectbareanchor->setEnabled(state);
+        rejectbaredatacarrier->setEnabled(state);
         rejectparasites->setEnabled(state);
         rejecttokens->setEnabled(state);
         setSiblingsEnabled(dustrelayfee, state);
@@ -861,6 +875,8 @@ void OptionsDialog::setMapper()
     mapper->addMapping(limitdescendantsize, OptionsModel::limitdescendantsize);
     mapper->addMapping(rejectbarepubkey, OptionsModel::rejectbarepubkey);
     mapper->addMapping(rejectbaremultisig, OptionsModel::rejectbaremultisig);
+    mapper->addMapping(rejectbareanchor, OptionsModel::rejectbareanchor);
+    mapper->addMapping(rejectbaredatacarrier, OptionsModel::rejectbaredatacarrier);
     mapper->addMapping(maxscriptsize, OptionsModel::maxscriptsize);
     mapper->addMapping(maxtxlegacysigops, OptionsModel::maxtxlegacysigops);
     mapper->addMapping(datacarriercost, OptionsModel::datacarriercost);
