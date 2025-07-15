@@ -5,12 +5,21 @@
 #include <init/common.h>
 #include <logging.h>
 #include <logging/timer.h>
+#include <scheduler.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <tinyformat.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/string.h>
 
 #include <chrono>
 #include <fstream>
+#include <future>
+#include <ios>
 #include <iostream>
+#include <source_location>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -86,25 +95,34 @@ BOOST_AUTO_TEST_CASE(logging_timer)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
-    LogInstance().LogPrintStr("foo1: bar1", "fn1", "src1", 1, BCLog::LogFlags::NET, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo2: bar2", "fn2", "src2", 2, BCLog::LogFlags::NET, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo3: bar3", "fn3", "src3", 3, BCLog::LogFlags::ALL, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo4: bar4", "fn4", "src4", 4, BCLog::LogFlags::ALL, BCLog::Level::Info);
-    LogInstance().LogPrintStr("foo5: bar5", "fn5", "src5", 5, BCLog::LogFlags::NONE, BCLog::Level::Debug);
-    LogInstance().LogPrintStr("foo6: bar6", "fn6", "src6", 6, BCLog::LogFlags::NONE, BCLog::Level::Info);
+
+    struct Case {
+        std::string msg;
+        BCLog::LogFlags category;
+        BCLog::Level level;
+        std::string prefix;
+        std::source_location loc;
+    };
+
+    std::vector<Case> cases = {
+        {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", std::source_location::current()},
+        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", std::source_location::current()},
+        {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
+        {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", std::source_location::current()},
+        {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", std::source_location::current()},
+        {"foo6: bar6", BCLog::NONE, BCLog::Level::Info, "", std::source_location::current()},
+    };
+
+    std::vector<std::string> expected;
+    for (auto& [msg, category, level, prefix, loc] : cases) {
+        expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name(), prefix, msg));
+        LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
+    }
     std::ifstream file{tmp_log_path};
     std::vector<std::string> log_lines;
     for (std::string log; std::getline(file, log);) {
         log_lines.push_back(log);
     }
-    std::vector<std::string> expected = {
-        "[src1:1] [fn1] [net] foo1: bar1",
-        "[src2:2] [fn2] [net:info] foo2: bar2",
-        "[src3:3] [fn3] [debug] foo3: bar3",
-        "[src4:4] [fn4] foo4: bar4",
-        "[src5:5] [fn5] [debug] foo5: bar5",
-        "[src6:6] [fn6] foo6: bar6",
-    };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
@@ -274,6 +292,183 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         BOOST_CHECK(http_it != category_levels.end());
         BOOST_CHECK_EQUAL(http_it->second, BCLog::Level::Info);
     }
+}
+
+void MockForwardAndSync(CScheduler& scheduler, std::chrono::seconds duration)
+{
+    scheduler.MockForward(duration);
+    std::promise<void> promise;
+    scheduler.scheduleFromNow([&promise] { promise.set_value(); }, 0ms);
+    promise.get_future().wait();
+}
+
+BOOST_AUTO_TEST_CASE(logging_log_rate_limiter)
+{
+    CScheduler scheduler{};
+    scheduler.m_service_thread = std::thread([&scheduler] { scheduler.serviceQueue(); });
+    uint64_t max_bytes{1024};
+    auto reset_window{1min};
+    auto sched_func = [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); };
+    BCLog::LogRateLimiter limiter{sched_func, max_bytes, reset_window};
+
+    using Status = BCLog::LogRateLimiter::Status;
+    auto source_loc_1{std::source_location::current()};
+    auto source_loc_2{std::source_location::current()};
+
+    // A fresh limiter should not have any suppressions
+    BOOST_CHECK(!limiter.SuppressionsActive());
+
+    // Resetting an unused limiter is fine
+    limiter.Reset();
+    BOOST_CHECK(!limiter.SuppressionsActive());
+
+    // No suppression should happen until more than max_bytes have been consumed
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_1, std::string(max_bytes - 1, 'a')), Status::UNSUPPRESSED);
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_1, "a"), Status::UNSUPPRESSED);
+    BOOST_CHECK(!limiter.SuppressionsActive());
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_1, "a"), Status::NEWLY_SUPPRESSED);
+    BOOST_CHECK(limiter.SuppressionsActive());
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_1, "a"), Status::STILL_SUPPRESSED);
+    BOOST_CHECK(limiter.SuppressionsActive());
+
+    // Location 2  should not be affected by location 1's suppression
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_2, std::string(max_bytes, 'a')), Status::UNSUPPRESSED);
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_2, "a"), Status::NEWLY_SUPPRESSED);
+    BOOST_CHECK(limiter.SuppressionsActive());
+
+    // After reset_window time has passed, all suppressions should be cleared.
+    MockForwardAndSync(scheduler, reset_window);
+
+    BOOST_CHECK(!limiter.SuppressionsActive());
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_1, std::string(max_bytes, 'a')), Status::UNSUPPRESSED);
+    BOOST_CHECK_EQUAL(limiter.Consume(source_loc_2, std::string(max_bytes, 'a')), Status::UNSUPPRESSED);
+
+    scheduler.stop();
+}
+
+BOOST_AUTO_TEST_CASE(logging_log_limit_stats)
+{
+    BCLog::LogLimitStats counter{BCLog::RATELIMIT_MAX_BYTES};
+
+    // Check that counter gets initialized correctly.
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+
+    const uint64_t MESSAGE_SIZE{512 * 1024};
+    BOOST_CHECK(counter.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+
+    BOOST_CHECK(counter.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE * 2);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+
+    // Consuming more bytes after already having consumed 1MB should fail.
+    BOOST_CHECK(!counter.Consume(500));
+    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), 0ull);
+    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 500ull);
+}
+
+void LogFromLocation(int location, std::string message)
+{
+    switch (location) {
+    case 0:
+        LogInfo("%s\n", message);
+        break;
+    case 1:
+        LogInfo("%s\n", message);
+        break;
+    case 2:
+        LogPrintLevel(BCLog::LogFlags::NONE, BCLog::Level::Info, "%s\n", message);
+        break;
+    case 3:
+        LogPrintLevel(BCLog::LogFlags::ALL, BCLog::Level::Info, "%s\n", message);
+        break;
+    }
+}
+
+void LogFromLocationAndExpect(int location, std::string message, std::string expect)
+{
+    ASSERT_DEBUG_LOG(expect);
+    LogFromLocation(location, message);
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
+{
+    bool prev_log_timestamps = LogInstance().m_log_timestamps;
+    LogInstance().m_log_timestamps = false;
+    bool prev_log_sourcelocations = LogInstance().m_log_sourcelocations;
+    LogInstance().m_log_sourcelocations = false;
+    bool prev_log_threadnames = LogInstance().m_log_threadnames;
+    LogInstance().m_log_threadnames = false;
+
+    CScheduler scheduler{};
+    scheduler.m_service_thread = std::thread([&] { scheduler.serviceQueue(); });
+    auto sched_func = [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); };
+    auto limiter = std::make_unique<BCLog::LogRateLimiter>(sched_func, 1024 * 1024, 20s);
+    LogInstance().SetRateLimiting(std::move(limiter));
+
+    // Log 1024-character lines (1023 plus newline) to make the math simple.
+    std::string log_message(1023, 'a');
+
+    std::string utf8_path{LogInstance().m_file_path.utf8string()};
+    const char* log_path{utf8_path.c_str()};
+
+    // Use GetFileSize because fs::file_size may require a flush to be accurate.
+    std::streamsize log_file_size{static_cast<std::streamsize>(GetFileSize(log_path))};
+
+    // Logging 1 MiB should be allowed.
+    for (int i = 0; i < 1024; ++i) {
+        LogFromLocation(0, log_message);
+    }
+    BOOST_CHECK_MESSAGE(log_file_size < GetFileSize(log_path), "should be able to log 1 MiB from location 0");
+
+    log_file_size = GetFileSize(log_path);
+
+    BOOST_CHECK_NO_THROW(LogFromLocationAndExpect(0, log_message, "Excessive logging detected"));
+    BOOST_CHECK_MESSAGE(log_file_size < GetFileSize(log_path), "the start of the suppression period should be logged");
+
+    log_file_size = GetFileSize(log_path);
+    for (int i = 0; i < 1024; ++i) {
+        LogFromLocation(0, log_message);
+    }
+
+    BOOST_CHECK_MESSAGE(log_file_size == GetFileSize(log_path), "all further logs from location 0 should be dropped");
+
+    BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Excessive logging detected"), std::runtime_error);
+    BOOST_CHECK_MESSAGE(log_file_size < GetFileSize(log_path), "location 1 should be unaffected by other locations");
+
+    log_file_size = GetFileSize(log_path);
+    {
+        ASSERT_DEBUG_LOG("Restarting logging");
+        MockForwardAndSync(scheduler, 1min);
+    }
+
+    BOOST_CHECK_MESSAGE(log_file_size < GetFileSize(log_path), "the end of the suppression period should be logged");
+
+    BOOST_CHECK_THROW(LogFromLocationAndExpect(1, log_message, "Restarting logging"), std::runtime_error);
+
+    // Attempt to log 1MiB from location 2 and 1MiB from location 3. These exempt locations should be allowed to log
+    // without limit.
+    log_file_size = GetFileSize(log_path);
+    for (int i = 0; i < 1024; ++i) {
+        BOOST_CHECK_THROW(LogFromLocationAndExpect(2, log_message, "Excessive logging detected"), std::runtime_error);
+    }
+
+    BOOST_CHECK_MESSAGE(log_file_size < GetFileSize(log_path), "location 2 should be exempt from rate limiting");
+
+    log_file_size = GetFileSize(log_path);
+    for (int i = 0; i < 1024; ++i) {
+        BOOST_CHECK_THROW(LogFromLocationAndExpect(3, log_message, "Excessive logging detected"), std::runtime_error);
+    }
+
+    BOOST_CHECK_MESSAGE(log_file_size < GetFileSize(log_path), "location 3 should be exempt from rate limiting");
+
+    LogInstance().m_log_timestamps = prev_log_timestamps;
+    LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
+    LogInstance().m_log_threadnames = prev_log_threadnames;
+    scheduler.stop();
+    LogInstance().SetRateLimiting(nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

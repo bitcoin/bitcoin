@@ -592,7 +592,7 @@ mark_as_advanced(Python3_FIND_FRAMEWORK Python3_FIND_UNVERSIONED_NAMES)
 find_package(Python3 3.10 COMPONENTS Interpreter)
 if(NOT TARGET Python3::Interpreter)
   list(APPEND configure_warnings
-    "Minimum required Python not found. Rpcauth tests are disabled."
+    "Minimum required Python not found."
   )
 endif()
 
@@ -635,8 +635,6 @@ add_subdirectory(test)
 add_subdirectory(doc)
 
 add_subdirectory(src)
-
-include(cmake/tests.cmake)
 
 include(Maintenance)
 setup_split_debug_script()

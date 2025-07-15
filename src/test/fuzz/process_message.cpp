@@ -44,6 +44,7 @@ void initialize_process_message()
             /*chain_type=*/ChainType::REGTEST,
             {.extra_args = {"-txreconciliation"}});
     g_setup = testing_setup.get();
+    SetMockTime(WITH_LOCK(g_setup->m_node.chainman->GetMutex(), return g_setup->m_node.chainman->ActiveTip()->Time()));
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         MineBlock(g_setup->m_node, {});
     }

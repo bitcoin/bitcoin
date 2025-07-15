@@ -1,6 +1,5 @@
 {
   "version": 3,
-  "cmakeMinimumRequired": {"major": 3, "minor": 21, "patch": 0},
   "configurePresets": [
     {
       "name": "vs2022",
@@ -62,6 +61,7 @@
       "name": "dev-mode",
       "displayName": "Developer mode, with all features/dependencies enabled",
       "binaryDir": "${sourceDir}/build_dev_mode",
+      "errors": {"dev": true},
       "cacheVariables": {
         "BUILD_BENCH": "ON",
         "BUILD_CLI": "ON",

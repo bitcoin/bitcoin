@@ -5,6 +5,16 @@
 """Useful Script constants and utils."""
 import unittest
 
+from copy import deepcopy
+
+from test_framework.messages import (
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxInWitness,
+    CTxOut,
+    sha256,
+)
 from test_framework.script import (
     CScript,
     OP_0,
@@ -14,12 +24,15 @@ from test_framework.script import (
     OP_CHECKMULTISIG,
     OP_CHECKSIG,
     OP_DUP,
+    OP_ELSE,
+    OP_ENDIF,
     OP_EQUAL,
     OP_EQUALVERIFY,
     OP_HASH160,
+    OP_IF,
     OP_RETURN,
+    OP_TRUE,
     hash160,
-    sha256,
 )
 
 # To prevent a "tx-size-small" policy rule error, a transaction has to have a
@@ -129,6 +142,45 @@ def check_script(script):
     if isinstance(script, bytes) or isinstance(script, CScript):
         return script
     assert False
+
+
+class ValidWitnessMalleatedTx:
+    """
+    Creates a valid witness malleation transaction test case:
+    - Parent transaction with a script supporting 2 branches
+    - 2 child transactions with the same txid but different wtxids
+    """
+    def __init__(self):
+        hashlock = hash160(b'Preimage')
+        self.witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
+
+    def build_parent_tx(self, funding_txid, amount):
+        # Create an unsigned parent transaction paying to the witness script.
+        witness_program = sha256(self.witness_script)
+        script_pubkey = CScript([OP_0, witness_program])
+
+        parent = CTransaction()
+        parent.vin.append(CTxIn(COutPoint(int(funding_txid, 16), 0), b""))
+        parent.vout.append(CTxOut(int(amount), script_pubkey))
+        return parent
+
+    def build_malleated_children(self, signed_parent_txid, amount):
+        # Create 2 valid children that differ only in witness data.
+        # 1. Create a new transaction with witness solving first branch
+        child_witness_script = CScript([OP_TRUE])
+        child_witness_program = sha256(child_witness_script)
+        child_script_pubkey = CScript([OP_0, child_witness_program])
+
+        child_one = CTransaction()
+        child_one.vin.append(CTxIn(COutPoint(int(signed_parent_txid, 16), 0), b""))
+        child_one.vout.append(CTxOut(int(amount), child_script_pubkey))
+        child_one.wit.vtxinwit.append(CTxInWitness())
+        child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', self.witness_script]
+
+        # 2. Create another identical transaction with witness solving second branch
+        child_two = deepcopy(child_one)
+        child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', self.witness_script]
+        return child_one, child_two
 
 
 class TestFrameworkScriptUtil(unittest.TestCase):

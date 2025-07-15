@@ -1090,7 +1090,7 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
 
         // child1 has been replaced
-        BOOST_CHECK(!m_node.mempool->exists(GenTxid::Txid(tx_child_1->GetHash())));
+        BOOST_CHECK(!m_node.mempool->exists(tx_child_1->GetHash()));
     }
 
     // Test package rbf.

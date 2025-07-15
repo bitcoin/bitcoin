@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,6 +21,7 @@
 #include <util/time.h>
 #include <validation.h>
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <memory>
@@ -33,11 +34,6 @@ static GlobalMutex g_rpc_warmup_mutex;
 static std::atomic<bool> g_rpc_running{false};
 static bool fRPCInWarmup GUARDED_BY(g_rpc_warmup_mutex) = true;
 static std::string rpcWarmupStatus GUARDED_BY(g_rpc_warmup_mutex) = "RPC server started";
-/* Timer-creating functions */
-static RPCTimerInterface* timerInterface = nullptr;
-/* Map of name to timer. */
-static GlobalMutex g_deadline_timers_mutex;
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers GUARDED_BY(g_deadline_timers_mutex);
 static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& request, UniValue& result, bool last_handler);
 
 struct RPCCommandExecutionInfo
@@ -79,15 +75,13 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
     for (const auto& entry : mapCommands)
         vCommands.emplace_back(entry.second.front()->category + entry.first, entry.second.front());
-    sort(vCommands.begin(), vCommands.end());
+    std::ranges::sort(vCommands);
 
     JSONRPCRequest jreq = helpreq;
     jreq.mode = JSONRPCRequest::GET_HELP;
     jreq.params = UniValue();
 
-    for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
-    {
-        const CRPCCommand *pcmd = command.second;
+    for (const auto& [_, pcmd] : vCommands) {
         std::string strMethod = pcmd->name;
         if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
@@ -97,11 +91,8 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
             UniValue unused_result;
             if (setDone.insert(pcmd->unique_id).second)
                 pcmd->actor(jreq, unused_result, /*last_handler=*/true);
-        }
-        catch (const std::exception& e)
-        {
-            // Help text is returned in an exception
-            std::string strHelp = std::string(e.what());
+        } catch (const HelpResult& e) {
+            std::string strHelp{e.what()};
             if (strCommand == "")
             {
                 if (strHelp.find('\n') != std::string::npos)
@@ -305,7 +296,6 @@ void StopRPC()
     assert(!g_rpc_running);
     std::call_once(g_rpc_stop_flag, [&]() {
         LogDebug(BCLog::RPC, "Stopping RPC\n");
-        WITH_LOCK(g_deadline_timers_mutex, deadlineTimers.clear());
         DeleteAuthCookie();
         LogDebug(BCLog::RPC, "RPC stopped.\n");
     });
@@ -545,33 +535,6 @@ UniValue CRPCTable::dumpArgMap(const JSONRPCRequest& args_request) const
         }
     }
     return ret;
-}
-
-void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)
-{
-    if (!timerInterface)
-        timerInterface = iface;
-}
-
-void RPCSetTimerInterface(RPCTimerInterface *iface)
-{
-    timerInterface = iface;
-}
-
-void RPCUnsetTimerInterface(RPCTimerInterface *iface)
-{
-    if (timerInterface == iface)
-        timerInterface = nullptr;
-}
-
-void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nSeconds)
-{
-    if (!timerInterface)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "No timer handler registered for RPC");
-    LOCK(g_deadline_timers_mutex);
-    deadlineTimers.erase(name);
-    LogDebug(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
-    deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
 CRPCTable tableRPC;

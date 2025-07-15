@@ -144,7 +144,7 @@ RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq
 
     // No format string is found
     if (pos_format == std::string::npos) {
-        return rf_names[0].rf;
+        return RESTResponseFormat::UNDEF;
     }
 
     // Match format string to available formats
@@ -157,7 +157,7 @@ RESTResponseFormat ParseDataFormat(std::string& param, const std::string& strReq
     }
 
     // If no suffix is found, return RESTResponseFormat::UNDEF and original string without query string
-    return rf_names[0].rf;
+    return RESTResponseFormat::UNDEF;
 }
 
 static std::string AvailableDataFormatsString()

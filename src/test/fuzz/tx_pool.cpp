@@ -44,6 +44,7 @@ void initialize_tx_pool()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
+    SetMockTime(WITH_LOCK(g_setup->m_node.chainman->GetMutex(), return g_setup->m_node.chainman->ActiveTip()->Time()));
 
     BlockAssembler::Options options;
     options.coinbase_output_script = P2WSH_OP_TRUE;
@@ -315,8 +316,8 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         node.validation_signals->SyncWithValidationInterfaceQueue();
         node.validation_signals->UnregisterSharedValidationInterface(txr);
 
-        bool txid_in_mempool = tx_pool.exists(GenTxid::Txid(tx->GetHash()));
-        bool wtxid_in_mempool = tx_pool.exists(GenTxid::Wtxid(tx->GetWitnessHash()));
+        bool txid_in_mempool = tx_pool.exists(tx->GetHash());
+        bool wtxid_in_mempool = tx_pool.exists(tx->GetWitnessHash());
         CheckATMPInvariants(res, txid_in_mempool, wtxid_in_mempool);
 
         Assert(accepted != added.empty());

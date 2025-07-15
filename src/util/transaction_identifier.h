@@ -9,6 +9,11 @@
 #include <uint256.h>
 #include <util/types.h>
 
+#include <compare>
+#include <concepts>
+#include <tuple>
+#include <variant>
+
 /** transaction_identifier represents the two canonical transaction identifier
  * types (txid, wtxid).*/
 template <bool has_witness>
@@ -75,5 +80,26 @@ public:
 using Txid = transaction_identifier<false>;
 /** Wtxid commits to all transaction fields including the witness. */
 using Wtxid = transaction_identifier<true>;
+
+template <typename T>
+concept TxidOrWtxid = std::is_same_v<T, Txid> || std::is_same_v<T, Wtxid>;
+
+class GenTxid : public std::variant<Txid, Wtxid>
+{
+public:
+    using variant::variant;
+
+    bool IsWtxid() const { return std::holds_alternative<Wtxid>(*this); }
+
+    const uint256& ToUint256() const LIFETIMEBOUND
+    {
+        return std::visit([](const auto& id) -> const uint256& { return id.ToUint256(); }, *this);
+    }
+
+    friend auto operator<=>(const GenTxid& a, const GenTxid& b)
+    {
+        return std::tuple(a.IsWtxid(), a.ToUint256()) <=> std::tuple(b.IsWtxid(), b.ToUint256());
+    }
+};
 
 #endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H

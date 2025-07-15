@@ -154,7 +154,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256>& vHashes
     for (const auto& txid : descendants_to_remove) {
         // This txid may have been removed already in a prior call to removeRecursive.
         // Therefore we ensure it is not yet removed already.
-        if (const std::optional<txiter> txiter = GetIter(txid)) {
+        if (const std::optional<txiter> txiter = GetIter(Txid::FromUint256(txid))) {
             removeRecursive((*txiter)->GetTx(), MemPoolRemovalReason::SIZELIMIT);
         }
     }
@@ -794,7 +794,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(innerUsage == cachedInnerUsage);
 }
 
-bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb, bool wtxid)
+bool CTxMemPool::CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb) const
 {
     /* Return `true` if hasha should be considered sooner than hashb. Namely when:
      *   a is not in the mempool, but b is
@@ -802,14 +802,14 @@ bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb
      *   both are in the mempool and a has a higher score than b
      */
     LOCK(cs);
-    indexed_transaction_set::const_iterator j = wtxid ? get_iter_from_wtxid(hashb) : mapTx.find(hashb);
-    if (j == mapTx.end()) return false;
-    indexed_transaction_set::const_iterator i = wtxid ? get_iter_from_wtxid(hasha) : mapTx.find(hasha);
-    if (i == mapTx.end()) return true;
-    uint64_t counta = i->GetCountWithAncestors();
-    uint64_t countb = j->GetCountWithAncestors();
+    auto j{std::visit([&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(cs) { return GetIter(id); }, hashb)};
+    if (!j.has_value()) return false;
+    auto i{std::visit([&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(cs) { return GetIter(id); }, hasha)};
+    if (!i.has_value()) return true;
+    uint64_t counta = i.value()->GetCountWithAncestors();
+    uint64_t countb = j.value()->GetCountWithAncestors();
     if (counta == countb) {
-        return CompareTxMemPoolEntryByScore()(*i, *j);
+        return CompareTxMemPoolEntryByScore()(*i.value(), *j.value());
     }
     return counta < countb;
 }
@@ -842,10 +842,6 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
     }
     std::sort(iters.begin(), iters.end(), DepthAndScoreComparator());
     return iters;
-}
-
-static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
-    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
 }
 
 std::vector<CTxMemPoolEntryRef> CTxMemPool::entryAll() const
@@ -888,26 +884,6 @@ CTransactionRef CTxMemPool::get(const uint256& hash) const
     if (i == mapTx.end())
         return nullptr;
     return i->GetSharedTx();
-}
-
-TxMempoolInfo CTxMemPool::info(const GenTxid& gtxid) const
-{
-    LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
-    if (i == mapTx.end())
-        return TxMempoolInfo();
-    return GetInfo(i);
-}
-
-TxMempoolInfo CTxMemPool::info_for_relay(const GenTxid& gtxid, uint64_t last_sequence) const
-{
-    LOCK(cs);
-    indexed_transaction_set::const_iterator i = (gtxid.IsWtxid() ? get_iter_from_wtxid(gtxid.GetHash()) : mapTx.find(gtxid.GetHash()));
-    if (i != mapTx.end() && i->GetSequence() < last_sequence) {
-        return GetInfo(i);
-    } else {
-        return TxMempoolInfo();
-    }
 }
 
 void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta)
@@ -984,11 +960,18 @@ const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
     return it == mapNextTx.end() ? nullptr : it->second;
 }
 
-std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const uint256& txid) const
+std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Txid& txid) const
 {
-    auto it = mapTx.find(txid);
+    auto it = mapTx.find(txid.ToUint256());
     if (it != mapTx.end()) return it;
     return std::nullopt;
+}
+
+std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Wtxid& wtxid) const
+{
+    AssertLockHeld(cs);
+    auto it{mapTx.project<0>(mapTx.get<index_by_wtxid>().find(wtxid))};
+    return it != mapTx.end() ? std::make_optional(it) : std::nullopt;
 }
 
 CTxMemPool::setEntries CTxMemPool::GetIterSet(const std::set<Txid>& hashes) const
@@ -1007,7 +990,7 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256
     std::vector<txiter> ret;
     ret.reserve(txids.size());
     for (const auto& txid : txids) {
-        const auto it{GetIter(txid)};
+        const auto it{GetIter(Txid::FromUint256(txid))};
         if (!it) return {};
         ret.push_back(*it);
     }
@@ -1017,7 +1000,7 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GetIterVec(const std::vector<uint256
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
     for (unsigned int i = 0; i < tx.vin.size(); i++)
-        if (exists(GenTxid::Txid(tx.vin[i].prevout.hash)))
+        if (exists(tx.vin[i].prevout.hash))
             return false;
     return true;
 }
@@ -1187,7 +1170,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         if (pvNoSpendsRemaining) {
             for (const CTransaction& tx : txn) {
                 for (const CTxIn& txin : tx.vin) {
-                    if (exists(GenTxid::Txid(txin.prevout.hash))) continue;
+                    if (exists(txin.prevout.hash)) continue;
                     pvNoSpendsRemaining->push_back(txin.prevout);
                 }
             }

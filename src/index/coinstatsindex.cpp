@@ -126,12 +126,12 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
         uint256 expected_block_hash{*Assert(block.prev_hash)};
         if (read_out.first != expected_block_hash) {
-            LogPrintf("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
+            LogWarning("previous block header belongs to unexpected block %s; expected %s",
                       read_out.first.ToString(), expected_block_hash.ToString());
 
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
-                LogError("%s: previous block header not found; expected %s\n",
-                             __func__, expected_block_hash.ToString());
+                LogError("previous block header not found; expected %s",
+                          expected_block_hash.ToString());
                 return false;
             }
         }
@@ -236,15 +236,15 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     db_it.Seek(key);
 
     if (!db_it.GetKey(key) || key.height != height) {
-        LogError("%s: unexpected key in %s: expected (%c, %d)\n",
-                 __func__, index_name, DB_BLOCK_HEIGHT, height);
+        LogError("unexpected key in %s: expected (%c, %d)",
+                 index_name, DB_BLOCK_HEIGHT, height);
         return false;
     }
 
     std::pair<uint256, DBVal> value;
     if (!db_it.GetValue(value)) {
-        LogError("%s: unable to read value in %s at key (%c, %d)\n",
-                 __func__, index_name, DB_BLOCK_HEIGHT, height);
+        LogError("unable to read value in %s at key (%c, %d)",
+                 index_name, DB_BLOCK_HEIGHT, height);
         return false;
     }
 
@@ -325,8 +325,8 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
         // exist. Any other errors indicate database corruption or a disk
         // failure, and starting the index would cause further corruption.
         if (m_db->Exists(DB_MUHASH)) {
-            LogError("%s: Cannot read current %s state; index may be corrupted\n",
-                         __func__, GetName());
+            LogError("Cannot read current %s state; index may be corrupted",
+                      GetName());
             return false;
         }
     }
@@ -334,16 +334,16 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
     if (block) {
         DBVal entry;
         if (!LookUpOne(*m_db, *block, entry)) {
-            LogError("%s: Cannot read current %s state; index may be corrupted\n",
-                         __func__, GetName());
+            LogError("Cannot read current %s state; index may be corrupted",
+                      GetName());
             return false;
         }
 
         uint256 out;
         m_muhash.Finalize(out);
         if (entry.muhash != out) {
-            LogError("%s: Cannot read current %s state; index may be corrupted\n",
-                         __func__, GetName());
+            LogError("Cannot read current %s state; index may be corrupted",
+                      GetName());
             return false;
         }
 
@@ -397,12 +397,12 @@ bool CoinStatsIndex::ReverseBlock(const interfaces::BlockInfo& block)
 
         uint256 expected_block_hash{*block.prev_hash};
         if (read_out.first != expected_block_hash) {
-            LogPrintf("WARNING: previous block header belongs to unexpected block %s; expected %s\n",
+            LogWarning("previous block header belongs to unexpected block %s; expected %s",
                       read_out.first.ToString(), expected_block_hash.ToString());
 
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
-                LogError("%s: previous block header not found; expected %s\n",
-                             __func__, expected_block_hash.ToString());
+                LogError("previous block header not found; expected %s",
+                          expected_block_hash.ToString());
                 return false;
             }
         }

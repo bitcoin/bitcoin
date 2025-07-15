@@ -1052,7 +1052,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
 
     // Option to startup with mocktime set (used for regression testing):
-    SetMockTime(args.GetIntArg("-mocktime", 0)); // SetMockTime(0) is a no-op
+    if (const auto mocktime{args.GetIntArg("-mocktime")}) {
+        SetMockTime(std::chrono::seconds{*mocktime});
+    }
 
     if (args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         g_local_services = ServiceFlags(g_local_services | NODE_BLOOM);
@@ -1377,6 +1379,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
     }, std::chrono::minutes{5});
+
+    LogInstance().SetRateLimiting(std::make_unique<BCLog::LogRateLimiter>(
+        [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); },
+        BCLog::RATELIMIT_MAX_BYTES,
+        1h));
 
     assert(!node.validation_signals);
     node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(scheduler));

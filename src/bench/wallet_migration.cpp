@@ -66,7 +66,7 @@ static void WalletMigration(benchmark::Bench& bench)
 
     bench.epochs(/*numEpochs=*/1).epochIterations(/*numIters=*/1) // run the migration exactly once
          .run([&] {
-             auto res{MigrateLegacyToDescriptor(std::move(wallet), /*passphrase=*/"", *loader->context(), /*was_loaded=*/false)};
+             auto res{MigrateLegacyToDescriptor(std::move(wallet), /*passphrase=*/"", *loader->context())};
              assert(res);
              assert(res->wallet);
              assert(res->watchonly_wallet);

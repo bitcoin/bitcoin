@@ -72,6 +72,7 @@ void initialize_chain()
     const auto params{CreateChainParams(ArgsManager{}, ChainType::REGTEST)};
     static const auto chain{CreateBlockChain(2 * COINBASE_MATURITY, *params)};
     g_chain = &chain;
+    SetMockTime(chain.back()->Time());
 
     // Make sure we can generate a valid snapshot.
     sanity_check_snapshot();
