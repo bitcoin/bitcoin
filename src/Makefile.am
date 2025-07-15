@@ -233,6 +233,7 @@ BITCOIN_CORE_H = \
   instantsend/db.h \
   instantsend/instantsend.h \
   instantsend/lock.h \
+  instantsend/signing.h \
   key.h \
   key_io.h \
   limitedmap.h \
