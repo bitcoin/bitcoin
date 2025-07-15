@@ -618,7 +618,10 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
                 strOutpoint.find(strFilter) == std::string::npos) return;
             UniValue objMN(UniValue::VOBJ);
             objMN.pushKV("proTxHash", dmn.proTxHash.ToString());
-            objMN.pushKV("address", dmn.pdmnState->netInfo->GetPrimary().ToStringAddrPort());
+            if (IsDeprecatedRPCEnabled("service")) {
+                objMN.pushKV("address", dmn.pdmnState->netInfo->GetPrimary().ToStringAddrPort());
+            }
+            objMN.pushKV("addresses", dmn.pdmnState->netInfo->ToJson());
             objMN.pushKV("payee", payeeStr);
             objMN.pushKV("status", dmnToStatus(dmn));
             objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));

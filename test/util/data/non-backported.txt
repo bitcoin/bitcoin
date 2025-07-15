@@ -24,6 +24,7 @@ src/qt/governancelist.*
 src/qt/masternodelist.*
 src/rpc/coinjoin.cpp
 src/rpc/evo.cpp
+src/rpc/evo_util.*
 src/rpc/governance.cpp
 src/rpc/masternode.cpp
 src/rpc/quorums.cpp

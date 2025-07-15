@@ -28,7 +28,7 @@ class RPCMasternodeTest(DashTestFramework):
             mn: MasternodeInfo = self.mninfo[idx]
             for member in quorum_info["members"]:
                 if member["proTxHash"] == mn.proTxHash:
-                    assert_equal(member["service"], f'127.0.0.1:{mn.nodePort}')
+                    assert_equal(member['addresses'][0], f'127.0.0.1:{mn.nodePort}')
 
 if __name__ == '__main__':
     RPCMasternodeTest().main()

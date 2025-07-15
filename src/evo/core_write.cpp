@@ -67,7 +67,10 @@
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     ret.pushKV("collateralIndex", (int)collateralOutpoint.n);
-    ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
+    if (IsServiceDeprecatedRPCEnabled()) {
+        ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
+    }
+    ret.pushKV("addresses", netInfo->ToJson());
     ret.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     ret.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
@@ -114,7 +117,10 @@
     ret.pushKV("version", nVersion);
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("proTxHash", proTxHash.ToString());
-    ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
+    if (IsServiceDeprecatedRPCEnabled()) {
+        ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
+    }
+    ret.pushKV("addresses", netInfo->ToJson());
     if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
         ret.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }

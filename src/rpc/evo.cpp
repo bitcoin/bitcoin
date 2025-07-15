@@ -23,6 +23,7 @@
 #include <netbase.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <rpc/evo_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -91,14 +92,20 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "If not specified, payoutAddress is the one that is going to be used.\n"
                 "The private key belonging to this address must be known in your wallet."}
         },
-        {"ipAndPort",
-            {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "IP and port in the form \"IP:PORT\". Must be unique on the network.\n"
-                "Can be set to an empty string, which will require a ProUpServTx afterwards."}
+        {"coreP2PAddrs",
+            {"coreP2PAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\". Must be unique on the network.\n"
+                "Can be set to an empty string, which will require a ProUpServTx afterwards.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
-        {"ipAndPort_update",
-            {"ipAndPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "IP and port in the form \"IP:PORT\". Must be unique on the network."}
+        {"coreP2PAddrs_update",
+            {"coreP2PAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\". Must be unique on the network.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
         {"operatorKey",
             {"operatorKey", RPCArg::Type::STR, RPCArg::Optional::NO,
@@ -228,11 +235,6 @@ static CBLSPublicKey ParseBLSPubKey(const std::string& hexKey, const std::string
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid BLS public key, not %s", paramName, hexKey));
     }
     return pubKey;
-}
-
-static bool ValidatePlatformPort(const int32_t port)
-{
-    return port >= 1 && port <= std::numeric_limits<uint16_t>::max();
 }
 
 template <typename SpecialTxPayload>
@@ -398,7 +400,7 @@ static RPCHelpMan protx_register_fund_wrapper(const bool legacy)
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("collateralAddress"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             legacy ? GetRpcArg("operatorPubKey_register_legacy") : GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -449,7 +451,7 @@ static RPCHelpMan protx_register_wrapper(bool legacy)
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             legacy ? GetRpcArg("operatorPubKey_register_legacy") : GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -501,7 +503,7 @@ static RPCHelpMan protx_register_prepare_wrapper(const bool legacy)
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             legacy ? GetRpcArg("operatorPubKey_register_legacy") : GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -552,7 +554,7 @@ static RPCHelpMan protx_register_fund_evo()
             HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("collateralAddress"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -591,7 +593,7 @@ static RPCHelpMan protx_register_evo()
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -629,7 +631,7 @@ static RPCHelpMan protx_register_prepare_evo()
         {
             GetRpcArg("collateralHash"),
             GetRpcArg("collateralIndex"),
-            GetRpcArg("ipAndPort"),
+            GetRpcArg("coreP2PAddrs"),
             GetRpcArg("ownerAddress"),
             GetRpcArg("operatorPubKey_register"),
             GetRpcArg("votingAddress_register"),
@@ -710,11 +712,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         paramIdx += 2;
     }
 
-    if (!request.params[paramIdx].get_str().empty()) {
-        if (auto entryRet = ptx.netInfo->AddEntry(request.params[paramIdx].get_str()); entryRet != NetInfoStatus::Success) {
-            throw std::runtime_error(strprintf("%s (%s)", NISToString(entryRet), request.params[paramIdx].get_str()));
-        }
-    }
+    ProcessNetInfoCore(ptx, request.params[paramIdx], /*optional=*/true);
 
     ptx.keyIDOwner = ParsePubKeyIDFromAddress(request.params[paramIdx + 1].get_str(), "owner address");
     ptx.pubKeyOperator.Set(ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address", use_legacy), use_legacy);
@@ -746,17 +744,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         }
         ptx.platformNodeID.SetHex(request.params[paramIdx + 6].get_str());
 
-        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 7], "platformP2PPort");
-        if (!ValidatePlatformPort(requestedPlatformP2PPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformP2PPort must be a valid port [1-65535]");
-        }
-        ptx.platformP2PPort = static_cast<uint16_t>(requestedPlatformP2PPort);
-
-        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 8], "platformHTTPPort");
-        if (!ValidatePlatformPort(requestedPlatformHTTPPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformHTTPPort must be a valid port [1-65535]");
-        }
-        ptx.platformHTTPPort = static_cast<uint16_t>(requestedPlatformHTTPPort);
+        ProcessNetInfoPlatform(ptx, request.params[paramIdx + 7], request.params[paramIdx + 8]);
 
         paramIdx += 3;
     }
@@ -928,7 +916,7 @@ static RPCHelpMan protx_update_service()
         + HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            GetRpcArg("ipAndPort_update"),
+            GetRpcArg("coreP2PAddrs_update"),
             GetRpcArg("operatorKey"),
             GetRpcArg("operatorPayoutAddress"),
             GetRpcArg("feeSourceAddress"),
@@ -961,7 +949,7 @@ static RPCHelpMan protx_update_service_evo()
             HELP_REQUIRING_PASSPHRASE,
         {
             GetRpcArg("proTxHash"),
-            GetRpcArg("ipAndPort_update"),
+            GetRpcArg("coreP2PAddrs_update"),
             GetRpcArg("operatorKey"),
             GetRpcArg("platformNodeID"),
             GetRpcArg("platformP2PPort"),
@@ -1015,9 +1003,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
                                                                     /*is_basic_override=*/dmn->pdmnState->nVersion > ProTxVersion::LegacyBLS);
     ptx.netInfo = NetInfoInterface::MakeNetInfo(ptx.nVersion);
 
-    if (auto entryRet = ptx.netInfo->AddEntry(request.params[1].get_str()); entryRet != NetInfoStatus::Success) {
-        throw std::runtime_error(strprintf("%s (%s)", NISToString(entryRet), request.params[1].get_str()));
-    }
+    ProcessNetInfoCore(ptx, request.params[1], /*optional=*/false);
 
     CBLSSecretKey keyOperator = ParseBLSSecretKey(request.params[2].get_str(), "operatorKey");
 
@@ -1028,17 +1014,7 @@ static UniValue protx_update_service_common_wrapper(const JSONRPCRequest& reques
         }
         ptx.platformNodeID.SetHex(request.params[paramIdx].get_str());
 
-        int32_t requestedPlatformP2PPort = ParseInt32V(request.params[paramIdx + 1], "platformP2PPort");
-        if (!ValidatePlatformPort(requestedPlatformP2PPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformP2PPort must be a valid port [1-65535]");
-        }
-        ptx.platformP2PPort = static_cast<uint16_t>(requestedPlatformP2PPort);
-
-        int32_t requestedPlatformHTTPPort = ParseInt32V(request.params[paramIdx + 2], "platformHTTPPort");
-        if (!ValidatePlatformPort(requestedPlatformHTTPPort)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "platformHTTPPort must be a valid port [1-65535]");
-        }
-        ptx.platformHTTPPort = static_cast<uint16_t>(requestedPlatformHTTPPort);
+        ProcessNetInfoPlatform(ptx, request.params[paramIdx + 1], request.params[paramIdx + 2]);
 
         paramIdx += 3;
     }

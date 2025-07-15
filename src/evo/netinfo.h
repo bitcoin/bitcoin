@@ -13,6 +13,8 @@
 
 class CService;
 
+class UniValue;
+
 enum class NetInfoStatus : uint8_t {
     // Managing entries
     BadInput,
@@ -50,6 +52,9 @@ constexpr std::string_view NISToString(const NetInfoStatus code)
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
+
+/* Identical to IsDeprecatedRPCEnabled("service"). For use outside of RPC code. */
+bool IsServiceDeprecatedRPCEnabled();
 
 class NetInfoEntry
 {
@@ -141,6 +146,7 @@ public:
     virtual bool CanStorePlatform() const = 0;
     virtual bool IsEmpty() const = 0;
     virtual NetInfoStatus Validate() const = 0;
+    virtual UniValue ToJson() const = 0;
     virtual std::string ToString() const = 0;
 
     virtual void Clear() = 0;
@@ -197,6 +203,7 @@ public:
     bool IsEmpty() const override { return m_addr.IsEmpty(); }
     bool CanStorePlatform() const override { return false; }
     NetInfoStatus Validate() const override;
+    UniValue ToJson() const override;
     std::string ToString() const override;
 
     void Clear() override { m_addr.Clear(); }

@@ -300,6 +300,7 @@ BITCOIN_CORE_H = \
   randomenv.h \
   rpc/blockchain.h \
   rpc/client.h \
+  rpc/evo_util.h \
   rpc/index_util.h \
   rpc/mempool.h \
   rpc/mining.h \
@@ -801,6 +802,7 @@ libbitcoin_common_a_SOURCES = \
   policy/policy.cpp \
   protocol.cpp \
   psbt.cpp \
+  rpc/evo_util.cpp \
   rpc/rawtransaction_util.cpp \
   rpc/util.cpp \
   saltedhasher.cpp \
