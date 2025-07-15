@@ -40,6 +40,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <undo.h>
@@ -60,6 +61,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -924,7 +926,7 @@ static RPCHelpMan pruneblockchain()
     };
 }
 
-CoinStatsHashType ParseHashType(const std::string& hash_type_input)
+CoinStatsHashType ParseHashType(std::string_view hash_type_input)
 {
     if (hash_type_input == "hash_serialized_3") {
         return CoinStatsHashType::HASH_SERIALIZED;
@@ -1026,7 +1028,7 @@ static RPCHelpMan gettxoutsetinfo()
     UniValue ret(UniValue::VOBJ);
 
     const CBlockIndex* pindex{nullptr};
-    const CoinStatsHashType hash_type{request.params[0].isNull() ? CoinStatsHashType::HASH_SERIALIZED : ParseHashType(request.params[0].get_str())};
+    const CoinStatsHashType hash_type{ParseHashType(self.Arg<std::string_view>("hash_type"))};
     bool index_requested = request.params[2].isNull() || request.params[2].get_bool();
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -2487,7 +2489,8 @@ static RPCHelpMan scanblocks()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue ret(UniValue::VOBJ);
-    if (request.params[0].get_str() == "status") {
+    auto action{self.Arg<std::string_view>("action")};
+    if (action == "status") {
         BlockFiltersScanReserver reserver;
         if (reserver.reserve()) {
             // no scan in progress
@@ -2496,7 +2499,7 @@ static RPCHelpMan scanblocks()
         ret.pushKV("progress", g_scanfilter_progress.load());
         ret.pushKV("current_height", g_scanfilter_progress_height.load());
         return ret;
-    } else if (request.params[0].get_str() == "abort") {
+    } else if (action == "abort") {
         BlockFiltersScanReserver reserver;
         if (reserver.reserve()) {
             // reserve was possible which means no scan was running
@@ -2505,12 +2508,12 @@ static RPCHelpMan scanblocks()
         // set the abort flag
         g_scanfilter_should_abort_scan = true;
         return true;
-    } else if (request.params[0].get_str() == "start") {
+    } else if (action == "start") {
         BlockFiltersScanReserver reserver;
         if (!reserver.reserve()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan already in progress, use action \"abort\" or \"status\"");
         }
-        const std::string filtertype_name{request.params[4].isNull() ? "basic" : request.params[4].get_str()};
+        auto filtertype_name{self.Arg<std::string_view>("filtertype")};
 
         BlockFilterType filtertype;
         if (!BlockFilterTypeByName(filtertype_name, filtertype)) {
@@ -2522,7 +2525,7 @@ static RPCHelpMan scanblocks()
 
         BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
         if (!index) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Index is not enabled for filtertype " + filtertype_name);
+            throw JSONRPCError(RPC_MISC_ERROR, tfm::format("Index is not enabled for filtertype %s", filtertype_name));
         }
 
         NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -2621,9 +2624,8 @@ static RPCHelpMan scanblocks()
         ret.pushKV("to_height", start_index->nHeight); // start_index is always the last scanned block here
         ret.pushKV("relevant_blocks", std::move(blocks));
         ret.pushKV("completed", completed);
-    }
-    else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", request.params[0].get_str()));
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid action '%s'", action));
     }
     return ret;
 },
@@ -2888,10 +2890,7 @@ static RPCHelpMan getblockfilter()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 block_hash = ParseHashV(request.params[0], "blockhash");
-    std::string filtertype_name = BlockFilterTypeName(BlockFilterType::BASIC);
-    if (!request.params[1].isNull()) {
-        filtertype_name = request.params[1].get_str();
-    }
+    auto filtertype_name{self.Arg<std::string_view>("filtertype")};
 
     BlockFilterType filtertype;
     if (!BlockFilterTypeByName(filtertype_name, filtertype)) {
@@ -2900,7 +2899,7 @@ static RPCHelpMan getblockfilter()
 
     BlockFilterIndex* index = GetBlockFilterIndex(filtertype);
     if (!index) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Index is not enabled for filtertype " + filtertype_name);
+        throw JSONRPCError(RPC_MISC_ERROR, tfm::format("Index is not enabled for filtertype %s", filtertype_name));
     }
 
     const CBlockIndex* block_index;
@@ -3046,10 +3045,10 @@ static RPCHelpMan dumptxoutset()
     }
 
     const ArgsManager& args{EnsureAnyArgsman(request.context)};
-    const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str()));
+    const fs::path path = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(self.Arg<std::string_view>("path")));
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
-    const fs::path temppath = fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(request.params[0].get_str() + ".incomplete"));
+    const fs::path temppath = path + ".incomplete";
 
     if (fs::exists(path)) {
         throw JSONRPCError(
