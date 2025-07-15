@@ -1246,7 +1246,7 @@ public:
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
-    bool DisconnectNode(const std::string& node);
+    bool DisconnectNode(std::string_view node);
     bool DisconnectNode(const CSubNet& subnet);
     bool DisconnectNode(const CNetAddr& addr);
     bool DisconnectNode(NodeId id);
@@ -1378,7 +1378,7 @@ private:
      * @param[in] host String of the form "host[:port]", e.g. "localhost" or "localhost:8333" or "1.2.3.4:8333".
      * @return true if connected to `host`.
      */
-    bool AlreadyConnectedToHost(const std::string& host) const;
+    bool AlreadyConnectedToHost(std::string_view host) const;
 
     /**
      * Determine whether we're already connected to a given address:port.

@@ -4,6 +4,7 @@
 
 #include <mutex>
 #include <set>
+#include <string_view>
 
 #include <blockfilter.h>
 #include <crypto/siphash.h>
@@ -151,7 +152,8 @@ const std::string& BlockFilterTypeName(BlockFilterType filter_type)
     return it != g_filter_types.end() ? it->second : unknown_retval;
 }
 
-bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type) {
+bool BlockFilterTypeByName(std::string_view name, BlockFilterType& filter_type)
+{
     for (const auto& entry : g_filter_types) {
         if (entry.second == name) {
             filter_type = entry.first;

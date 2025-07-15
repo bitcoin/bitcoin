@@ -332,7 +332,7 @@ bool IsLocal(const CService& addr)
     return mapLocalHost.count(addr) > 0;
 }
 
-bool CConnman::AlreadyConnectedToHost(const std::string& host) const
+bool CConnman::AlreadyConnectedToHost(std::string_view host) const
 {
     LOCK(m_nodes_mutex);
     return std::ranges::any_of(m_nodes, [&host](CNode* node) { return node->m_addr_name == host; });
@@ -3626,7 +3626,7 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     }
 }
 
-bool CConnman::DisconnectNode(const std::string& strNode)
+bool CConnman::DisconnectNode(std::string_view strNode)
 {
     LOCK(m_nodes_mutex);
     auto it = std::ranges::find_if(m_nodes, [&strNode](CNode* node) { return node->m_addr_name == strNode; });

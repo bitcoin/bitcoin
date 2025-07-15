@@ -12,6 +12,7 @@
 #define BITCOIN_COMMON_MESSAGES_H
 
 #include <string>
+#include <string_view>
 
 struct bilingual_str;
 
@@ -23,7 +24,7 @@ enum class TransactionError;
 
 namespace common {
 enum class PSBTError;
-bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
+bool FeeModeFromString(std::string_view mode_string, FeeEstimateMode& fee_estimate_mode);
 std::string StringForFeeReason(FeeReason reason);
 std::string FeeModes(const std::string& delimiter);
 std::string FeeModeInfo(std::pair<std::string, FeeEstimateMode>& mode);

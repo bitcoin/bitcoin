@@ -10,6 +10,7 @@
 #include <ios>
 #include <set>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -99,7 +100,7 @@ enum class BlockFilterType : uint8_t
 const std::string& BlockFilterTypeName(BlockFilterType filter_type);
 
 /** Find a filter type by its human-readable name. */
-bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type);
+bool BlockFilterTypeByName(std::string_view name, BlockFilterType& filter_type);
 
 /** Get a list of known filter types. */
 const std::set<BlockFilterType>& AllBlockFilterTypes();

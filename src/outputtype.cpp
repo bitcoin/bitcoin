@@ -20,7 +20,7 @@ static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
 static const std::string OUTPUT_TYPE_STRING_BECH32M = "bech32m";
 static const std::string OUTPUT_TYPE_STRING_UNKNOWN = "unknown";
 
-std::optional<OutputType> ParseOutputType(const std::string& type)
+std::optional<OutputType> ParseOutputType(std::string_view type)
 {
     if (type == OUTPUT_TYPE_STRING_LEGACY) {
         return OutputType::LEGACY;
