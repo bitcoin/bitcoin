@@ -301,6 +301,15 @@ public:
         return ret;
     }
 
+    /** Generate fixed-size random bytes. */
+    template <size_t N, BasicByte B = std::byte>
+    std::array<B, N> randbytes() noexcept
+    {
+        std::array<B, N> ret;
+        Impl().fillrand(MakeWritableByteSpan(ret));
+        return ret;
+    }
+
     /** Generate a random 32-bit integer. */
     uint32_t rand32() noexcept { return Impl().template randbits<32>(); }
 
