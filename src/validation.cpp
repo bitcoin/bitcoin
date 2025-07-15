@@ -2600,6 +2600,14 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(m_chainman.time_forks),
              Ticks<MillisecondsDouble>(m_chainman.time_forks) / m_chainman.num_blocks_total);
 
+    {
+        static bool script_check_started{fScriptChecks}; // Only log if we start off with disabled script checks
+        if (fScriptChecks && !script_check_started) {
+            script_check_started = true;
+            LogInfo("Started signature validation at block %s.", block_hash.ToString());
+        }
+    }
+
     CBlockUndo blockundo;
 
     // Precomputed transaction data pointers must not be invalidated
