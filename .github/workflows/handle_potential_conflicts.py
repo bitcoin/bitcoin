@@ -76,15 +76,12 @@ def main():
         sys.exit(1)
 
     conflict_input = sys.argv[1]
-    print(f"Debug: Input received: {conflict_input}", file=sys.stderr)
 
     try:
         j_input = hjson.loads(conflict_input)
     except Exception as e:
         print(f"Error parsing input JSON: {e}", file=sys.stderr)
         sys.exit(1)
-
-    print(f"Debug: Parsed input: {j_input}", file=sys.stderr)
 
     # Validate required fields
     if 'pull_number' not in j_input:
@@ -118,7 +115,6 @@ def main():
             continue
 
         conflict_pr_num = conflict['number']
-        print(f"Debug: Checking PR #{conflict_pr_num}", file=sys.stderr)
 
         conflict_pr_json = get_pr_json(conflict_pr_num)
 
@@ -131,7 +127,6 @@ def main():
             continue
 
         conflict_pr_label = conflict_pr_json['head']['label']
-        print(f"Debug: PR #{conflict_pr_num} label: {conflict_pr_label}", file=sys.stderr)
 
         if conflict_pr_json.get('mergeable_state') == "dirty":
             print(f'PR #{conflict_pr_num} needs rebase. Skipping conflict check', file=sys.stderr)
@@ -144,7 +139,6 @@ def main():
         # Get repository from environment
         repo = os.environ.get('GITHUB_REPOSITORY', 'dashpay/dash')
         merge_check_url = f'https://github.com/{repo}/branches/pre_mergeable/{our_pr_label}...{conflict_pr_label}'
-        print(f"Debug: Checking mergeability at: {merge_check_url}", file=sys.stderr)
 
         try:
             pre_mergeable = requests.get(merge_check_url)
@@ -164,15 +158,7 @@ def main():
                 'url': conflict_pr_json.get('html_url', f'https://github.com/dashpay/dash/pull/{conflict_pr_num}')
             })
         else:
-            print(f"Warning: Unexpected response for PR {conflict_pr_num} mergeability check.", file=sys.stderr)
-            print(f"URL: {pre_mergeable.url}", file=sys.stderr)
-            print(f"Response length: {len(pre_mergeable.text)} characters", file=sys.stderr)
-            # Search for the text we're looking for
-            if "Can't automatic" in pre_mergeable.text:
-                idx = pre_mergeable.text.find("Can't automatic")
-                print(f"Found 'Can't automatic' at position {idx}", file=sys.stderr)
-                print(f"Context: {pre_mergeable.text[idx-20:idx+100]}", file=sys.stderr)
-            print(f"Response snippet: {pre_mergeable.text[:500]}", file=sys.stderr)
+            print(f"Warning: Unexpected response for PR {conflict_pr_num} mergeability check. URL: {pre_mergeable.url}", file=sys.stderr)
 
     print(f"Not conflicting PRs: {good}", file=sys.stderr)
     print(f"Conflicting PRs: {bad}", file=sys.stderr)
