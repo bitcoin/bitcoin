@@ -32,11 +32,6 @@ fs::path GetWalletDir()
     return path;
 }
 
-bool IsFeatureSupported(int wallet_version, int feature_version)
-{
-    return wallet_version >= feature_version;
-}
-
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& addr_type, bool internal)
 {
     int64_t creation_time = GetTime();
