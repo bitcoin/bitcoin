@@ -1,4 +1,4 @@
-# Dash Core version v22.1.3
+# Dash Core version v22.1.2
 
 This is a new minor version release, bringing various bugfixes and performance improvements.
 This release is **optional** for all nodes, although recommended.
@@ -26,27 +26,39 @@ likely require a reindex.
 
 # Release Notes
 
-Bug Fixes
-----------
-
-- Fixed crash when processing invalid masternode payment destinations, replacing unsafe assertion with proper error handling (dash#6740).
-
-RPC and Logging Improvements
+Quorum Rotation Improvements
 ----------------------------
 
-- Fixed misleading error logs that were triggered by legitimate RPC queries for non-existent transaction data, reducing log noise and preventing false alarms (dash#6744).
+- Optimized `quorum rotationinfo` RPC and `GETQUORUMROTATIONINFO` P2P message by constructing diffs progressively from oldest to newest, reducing redundancy and improving efficiency (dash#6622).
+- Fixed incorrect `baseBlockHash` handling, eliminating unnecessary quorum changes in responses and improving result accuracy and compactness (dash#6625).
+
+Deployment and CI Fixes
+-----------------------
+
+- Pinned QEMU version to avoid segmentation faults during container builds (dash#6586).
 
 Performance Improvements
 ------------------------
 
-- Optimized versionbits calculation to avoid unnecessary computations during block operations, significantly improving performance during blockchain reorganizations (dash#6632).
+- Improved the performance of deterministic masternode list management, significantly speeding up RPC calls such as `protx diff` (dash#6581).
 
-Documentation Updates
----------------------
+Coinjoin Tests Stability
+------------------------
 
-- Updated translation documentation with current Transifex links and fixed typos to help contributors properly access translation resources (dash#6739).
+- Resolved potential deadlock in `coinjoin_tests.cpp` by ensuring wallet transaction scans occur outside critical wallet lock scope (dash#6593).
 
-# v22.1.3 Change log
+Minor Build and Test Fixes
+--------------------------
+
+- Fixed assertion edge case for coinbase transactions (cbtx) in simplified masternode list diff outputs, specifically affecting debug builds (dash#6585).
+- Updated copyright notices to 2025 in COPYING file and Debian packaging metadata (dash#6599).
+
+P2P Changes
+-----------
+
+- `cycleHash` field in `isdlock` message will now represent a DKG cycle starting block of the signing quorum instead of a DKG cycle starting block corresponding to the current chain height. While this is fully backwards compatible with older versions of Dash Core, other implementations might not be expecting this, so the P2P protocol version was bumped to 70237. (#6608)
+
+# v22.1.2 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -54,9 +66,11 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- Jorge Maldonado Ventura
+- Kittywhiskers Van Gogh
 - Konstantin Akimov
+- Odysseas Gabrielides
 - PastaPastaPasta
+- UdjinM6
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
@@ -65,7 +79,6 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
-- [v22.1.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.2.md) released Apr/15/2025
 - [v22.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.1.md) released Feb/17/2025
 - [v22.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.0.md) released Feb/10/2025
 - [v22.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.0.0.md) released Dec/12/2024
@@ -122,4 +135,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v22.1.2...dashpay:v22.1.3
+[set-of-changes]: https://github.com/dashpay/dash/compare/v22.1.1...dashpay:v22.1.2
