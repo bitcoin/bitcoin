@@ -79,16 +79,17 @@ private:
     const CTransactionRef tx;
     mutable Parents m_parents;
     mutable Children m_children;
-    const CAmount nFee;             //!< Cached to avoid expensive parent-transaction lookups
-    const int32_t nTxWeight;         //!< ... and avoid recomputing tx weight (also used for GetTxSize())
-    const size_t nUsageSize;        //!< ... and total memory usage
-    const int64_t nTime;            //!< Local time when entering the mempool
-    const uint64_t entry_sequence;  //!< Sequence number used to determine whether this transaction is too recent for relay
-    const unsigned int entryHeight; //!< Chain height when entering the mempool
-    const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
-    const int64_t sigOpCost;        //!< Total sigop cost
-    CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
-    mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
+    const CAmount nFee;                     //!< Cached to avoid expensive parent-transaction lookups
+    const int32_t nTxWeight;                //!< ... and avoid recomputing tx weight (also used for GetTxSize())
+    const size_t nUsageSize;                //!< ... and total memory usage
+    const int64_t nTime;                    //!< Local time when entering the mempool
+    std::optional<int64_t> nFirstInvTime;   //!< First time we heard of this transaction
+    const uint64_t entry_sequence;          //!< Sequence number used to determine whether this transaction is too recent for relay
+    const unsigned int entryHeight;         //!< Chain height when entering the mempool
+    const bool spendsCoinbase;              //!< keep track of transactions that spend a coinbase
+    const int64_t sigOpCost;                //!< Total sigop cost
+    CAmount m_modified_fee;                 //!< Used for determining the priority of the transaction for mining in a block
+    mutable LockPoints lockPoints;          //!< Track the height and time at which tx was final
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
@@ -115,6 +116,7 @@ public:
           nTxWeight{GetTransactionWeight(*tx)},
           nUsageSize{RecursiveDynamicUsage(tx)},
           nTime{time},
+          nFirstInvTime{},
           entry_sequence{entry_sequence},
           entryHeight{entry_height},
           spendsCoinbase{spends_coinbase},
@@ -144,6 +146,9 @@ public:
     int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return duration_cast<std::chrono::seconds>(std::chrono::microseconds{nTime}); }
     std::chrono::microseconds GetTimeUs() const { return std::chrono::microseconds{nTime}; }
+    std::optional<std::chrono::microseconds> GetFirstInvTime() const {
+        return nFirstInvTime.has_value() ? std::optional{std::chrono::microseconds{nFirstInvTime.value()}} : std::nullopt;
+    }
     unsigned int GetHeight() const { return entryHeight; }
     uint64_t GetSequence() const { return entry_sequence; }
     int64_t GetSigOpCost() const { return sigOpCost; }
