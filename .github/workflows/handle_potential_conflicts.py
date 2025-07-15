@@ -32,8 +32,11 @@ except ImportError:
     sys.exit(1)
 
 def get_pr_json(pr_num):
+    # Get repository from environment or default to dashpay/dash
+    repo = os.environ.get('GITHUB_REPOSITORY', 'dashpay/dash')
+
     try:
-        response = requests.get(f'https://api.github.com/repos/dashpay/dash/pulls/{pr_num}')
+        response = requests.get(f'https://api.github.com/repos/{repo}/pulls/{pr_num}')
         response.raise_for_status()
         pr_data = response.json()
 
@@ -138,8 +141,11 @@ def main():
             print(f'PR #{conflict_pr_num} is a draft. Skipping conflict check', file=sys.stderr)
             continue
 
+        # Get repository from environment
+        repo = os.environ.get('GITHUB_REPOSITORY', 'dashpay/dash')
+
         try:
-            pre_mergeable = requests.get(f'https://github.com/dashpay/dash/branches/pre_mergeable/{our_pr_label}...{conflict_pr_label}')
+            pre_mergeable = requests.get(f'https://github.com/{repo}/branches/pre_mergeable/{our_pr_label}...{conflict_pr_label}')
             pre_mergeable.raise_for_status()
         except requests.RequestException as e:
             print(f"Error checking mergeability for PR {conflict_pr_num}: {e}", file=sys.stderr)
