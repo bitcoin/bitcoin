@@ -57,7 +57,7 @@ public:
 class CZMQPublishHashTransactionLockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override;
+    bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock) override;
 };
 
 class CZMQPublishHashGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
@@ -120,13 +120,13 @@ public:
 class CZMQPublishRawTransactionLockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override;
+    bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock) override;
 };
 
 class CZMQPublishRawTransactionLockSigNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override;
+    bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock) override;
 };
 
 class CZMQPublishRawGovernanceVoteNotifier : public CZMQAbstractPublishNotifier

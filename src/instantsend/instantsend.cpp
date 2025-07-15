@@ -113,7 +113,7 @@ PeerMsgRet CInstantSendManager::ProcessMessage(const CNode& pfrom, PeerManager& 
                                                CDataStream& vRecv)
 {
     if (IsInstantSendEnabled() && msg_type == NetMsgType::ISDLOCK) {
-        const auto islock = std::make_shared<CInstantSendLock>();
+        const auto islock = std::make_shared<instantsend::InstantSendLock>();
         vRecv >> *islock;
         return ProcessMessageInstantSendLock(pfrom, peerman, islock);
     }
@@ -125,7 +125,7 @@ bool ShouldReportISLockTiming() {
 }
 
 PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, PeerManager& peerman,
-                                                              const llmq::CInstantSendLockPtr& islock)
+                                                              const instantsend::InstantSendLockPtr& islock)
 {
     auto hash = ::SerializeHash(*islock);
 
@@ -245,7 +245,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks(PeerManager& peerman)
 
 std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPendingInstantSendLocks(
     const Consensus::LLMQParams& llmq_params, PeerManager& peerman, int signOffset,
-    const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
+    const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
 {
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
     std::unordered_map<uint256, CRecoveredSig, StaticSaltedHasher> recSigs;
@@ -354,7 +354,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
 }
 
 void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerman, const uint256& hash,
-                                                 const CInstantSendLockPtr& islock)
+                                                 const instantsend::InstantSendLockPtr& islock)
 {
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: processing islock, peer=%d\n", __func__,
              islock->txid.ToString(), hash.ToString(), from);
@@ -440,7 +440,7 @@ void CInstantSendManager::TransactionAddedToMempool(PeerManager& peerman, const 
         return;
     }
 
-    CInstantSendLockPtr islock{nullptr};
+    instantsend::InstantSendLockPtr islock{nullptr};
     {
         LOCK(cs_pendingLocks);
         auto it = pendingNoTxInstantSendLocks.begin();
@@ -475,7 +475,7 @@ void CInstantSendManager::TransactionRemovedFromMempool(const CTransactionRef& t
         return;
     }
 
-    CInstantSendLockPtr islock = db.GetInstantSendLockByTxid(tx->GetHash());
+    instantsend::InstantSendLockPtr islock = db.GetInstantSendLockByTxid(tx->GetHash());
 
     if (islock == nullptr) {
         return;
@@ -610,7 +610,7 @@ void CInstantSendManager::RemoveConflictedTx(const CTransaction& tx)
     }
 }
 
-void CInstantSendManager::TruncateRecoveredSigsForInputs(const llmq::CInstantSendLock& islock)
+void CInstantSendManager::TruncateRecoveredSigsForInputs(const instantsend::InstantSendLock& islock)
 {
     auto ids = GetIdsFromLockable(islock.inputs);
     if (m_signer) {
@@ -621,7 +621,7 @@ void CInstantSendManager::TruncateRecoveredSigsForInputs(const llmq::CInstantSen
     }
 }
 
-void CInstantSendManager::TryEmplacePendingLock(const uint256& hash, const NodeId id, const CInstantSendLockPtr& islock)
+void CInstantSendManager::TryEmplacePendingLock(const uint256& hash, const NodeId id, const instantsend::InstantSendLockPtr& islock)
 {
     if (db.KnownInstantSendLock(hash)) return;
     LOCK(cs_pendingLocks);
@@ -695,7 +695,7 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 }
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(PeerManager& peerman, const uint256& hash,
-                                                        const CInstantSendLock& islock)
+                                                        const instantsend::InstantSendLock& islock)
 {
     std::unordered_map<uint256, CTransactionRef, StaticSaltedHasher> toDelete;
 
@@ -728,7 +728,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(PeerManager& peerman, co
     }
 }
 
-void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const llmq::CInstantSendLock& islock)
+void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const instantsend::InstantSendLock& islock)
 {
     // Lets first collect all non-locked TXs which conflict with the given ISLOCK
     std::unordered_map<const CBlockIndex*, std::unordered_map<uint256, CTransactionRef, StaticSaltedHasher>> conflicts;
@@ -816,7 +816,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
     }
 }
 
-void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const llmq::CInstantSendLock& islock)
+void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const instantsend::InstantSendLock& islock)
 {
     LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: Removing ISLOCK and its chained children\n", __func__,
               islock.txid.ToString(), islockHash.ToString());
@@ -839,7 +839,7 @@ bool CInstantSendManager::AlreadyHave(const CInv& inv) const
             || db.KnownInstantSendLock(inv.hash);
 }
 
-bool CInstantSendManager::GetInstantSendLockByHash(const uint256& hash, llmq::CInstantSendLock& ret) const
+bool CInstantSendManager::GetInstantSendLockByHash(const uint256& hash, instantsend::InstantSendLock& ret) const
 {
     if (!IsInstantSendEnabled()) {
         return false;
@@ -864,7 +864,7 @@ bool CInstantSendManager::GetInstantSendLockByHash(const uint256& hash, llmq::CI
     return true;
 }
 
-CInstantSendLockPtr CInstantSendManager::GetInstantSendLockByTxid(const uint256& txid) const
+instantsend::InstantSendLockPtr CInstantSendManager::GetInstantSendLockByTxid(const uint256& txid) const
 {
     if (!IsInstantSendEnabled()) {
         return nullptr;
@@ -901,7 +901,7 @@ bool CInstantSendManager::IsWaitingForTx(const uint256& txHash) const
     return false;
 }
 
-CInstantSendLockPtr CInstantSendManager::GetConflictingLock(const CTransaction& tx) const
+instantsend::InstantSendLockPtr CInstantSendManager::GetConflictingLock(const CTransaction& tx) const
 {
     if (!IsInstantSendEnabled()) {
         return nullptr;

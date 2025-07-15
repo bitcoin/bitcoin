@@ -12,8 +12,8 @@
 
 static const std::string_view ISLOCK_REQUESTID_PREFIX = "islock";
 
-namespace llmq {
-uint256 CInstantSendLock::GetRequestId() const
+namespace instantsend {
+uint256 InstantSendLock::GetRequestId() const
 {
     CHashWriter hw(SER_GETHASH, 0);
     hw << ISLOCK_REQUESTID_PREFIX;
@@ -25,7 +25,7 @@ uint256 CInstantSendLock::GetRequestId() const
  * Handles trivial ISLock verification
  * @return returns false if verification failed, otherwise true
  */
-bool CInstantSendLock::TriviallyValid() const
+bool InstantSendLock::TriviallyValid() const
 {
     if (txid.IsNull() || inputs.empty()) {
         return false;
@@ -41,4 +41,4 @@ bool CInstantSendLock::TriviallyValid() const
 
     return true;
 }
-} // namespace llmq
+} // namespace instantsend

@@ -53,9 +53,9 @@ private:
      * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the islock.
      * When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
      */
-    std::unordered_map<uint256, llmq::CInstantSendLock, StaticSaltedHasher> creatingInstantSendLocks GUARDED_BY(cs_creating);
+    std::unordered_map<uint256, InstantSendLock, StaticSaltedHasher> creatingInstantSendLocks GUARDED_BY(cs_creating);
     // maps from txid to the in-progress islock
-    std::unordered_map<uint256, llmq::CInstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks GUARDED_BY(cs_creating);
+    std::unordered_map<uint256, InstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks GUARDED_BY(cs_creating);
 
 public:
     explicit InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
@@ -70,7 +70,7 @@ public:
     void ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
 
-    void ClearLockFromQueue(const llmq::CInstantSendLockPtr& islock)
+    void ClearLockFromQueue(const InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
 
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override

@@ -657,7 +657,7 @@ public:
     {
         m_notifications->notifyChainLock(pindexChainLock, clsig);
     }
-    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override
+    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const instantsend::InstantSendLock>& islock) override
     {
         m_notifications->notifyTransactionLock(tx, islock);
     }

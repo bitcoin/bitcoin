@@ -50,7 +50,7 @@ void CInstantSendDb::Upgrade(bool unitTests)
     }
 }
 
-void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const llmq::CInstantSendLock& islock)
+void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const InstantSendLock& islock)
 {
     LOCK(cs_db);
     CDBBatch batch(*db);
@@ -61,14 +61,14 @@ void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const llmq::CI
     }
     db->WriteBatch(batch);
 
-    islockCache.insert(hash, std::make_shared<llmq::CInstantSendLock>(islock));
+    islockCache.insert(hash, std::make_shared<InstantSendLock>(islock));
     txidCache.insert(islock.txid, hash);
     for (const auto& in : islock.inputs) {
         outpointCache.insert(in, hash);
     }
 }
 
-void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, llmq::CInstantSendLockPtr islock, bool keep_cache)
+void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, InstantSendLockPtr islock, bool keep_cache)
 {
     AssertLockHeld(cs_db);
     if (!islock) {
@@ -120,7 +120,7 @@ void CInstantSendDb::WriteInstantSendLockArchived(CDBBatch& batch, const uint256
     batch.Write(std::make_tuple(DB_ARCHIVED_BY_HASH, hash), true);
 }
 
-std::unordered_map<uint256, llmq::CInstantSendLockPtr, StaticSaltedHasher> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
+std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
 {
     LOCK(cs_db);
     if (nUntilHeight <= best_confirmed_height) {
@@ -137,7 +137,7 @@ std::unordered_map<uint256, llmq::CInstantSendLockPtr, StaticSaltedHasher> CInst
     it->Seek(firstKey);
 
     CDBBatch batch(*db);
-    std::unordered_map<uint256, llmq::CInstantSendLockPtr, StaticSaltedHasher> ret;
+    std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> ret;
     while (it->Valid()) {
         decltype(firstKey) curKey;
         if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_MINED_BY_HEIGHT_AND_HASH) {
@@ -267,22 +267,22 @@ size_t CInstantSendDb::GetInstantSendLockCount() const
     return cnt;
 }
 
-llmq::CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHashInternal(const uint256& hash, bool use_cache) const
+InstantSendLockPtr CInstantSendDb::GetInstantSendLockByHashInternal(const uint256& hash, bool use_cache) const
 {
     AssertLockHeld(cs_db);
     if (hash.IsNull()) {
         return nullptr;
     }
 
-    llmq::CInstantSendLockPtr ret;
+    InstantSendLockPtr ret;
     if (use_cache && islockCache.get(hash, ret)) {
         return ret;
     }
 
-    ret = std::make_shared<llmq::CInstantSendLock>();
+    ret = std::make_shared<InstantSendLock>();
     bool exists = db->Read(std::make_tuple(DB_ISLOCK_BY_HASH, hash), *ret);
     if (!exists || (::SerializeHash(*ret) != hash)) {
-        ret = std::make_shared<llmq::CInstantSendLock>();
+        ret = std::make_shared<InstantSendLock>();
         exists = db->Read(std::make_tuple(DB_ISLOCK_BY_HASH, hash), *ret);
         if (!exists || (::SerializeHash(*ret) != hash)) {
             ret = nullptr;
@@ -305,13 +305,13 @@ uint256 CInstantSendDb::GetInstantSendLockHashByTxidInternal(const uint256& txid
     return islockHash;
 }
 
-llmq::CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByTxid(const uint256& txid) const
+InstantSendLockPtr CInstantSendDb::GetInstantSendLockByTxid(const uint256& txid) const
 {
     LOCK(cs_db);
     return GetInstantSendLockByHashInternal(GetInstantSendLockHashByTxidInternal(txid));
 }
 
-llmq::CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByInput(const COutPoint& outpoint) const
+InstantSendLockPtr CInstantSendDb::GetInstantSendLockByInput(const COutPoint& outpoint) const
 {
     LOCK(cs_db);
     uint256 islockHash;

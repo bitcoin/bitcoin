@@ -253,7 +253,7 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
     return SendZmqMessage(MSG_HASHTX, data, 32);
 }
 
-bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
+bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock)
 {
     uint256 hash = transaction->GetHash();
     LogPrint(BCLog::ZMQ, "Publish hashtxlock %s to %s\n", hash.GetHex(), this->address);
@@ -415,7 +415,7 @@ bool CZMQPublishSequenceNotifier::NotifyTransactionRemoval(const CTransaction &t
     return SendSequenceMsg(*this, hash, /* Mempool (R)emoval */ 'R', mempool_sequence);
 }
 
-bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
+bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock)
 {
     uint256 hash = transaction->GetHash();
     LogPrint(BCLog::ZMQ, "Publish rawtxlock %s to %s\n", hash.GetHex(), this->address);
@@ -424,7 +424,7 @@ bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransac
     return SendZmqMessage(MSG_RAWTXLOCK, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawTransactionLockSigNotifier::NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
+bool CZMQPublishRawTransactionLockSigNotifier::NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock)
 {
     uint256 hash = transaction->GetHash();
     LogPrint(BCLog::ZMQ, "Publish rawtxlocksig %s to %s\n", hash.GetHex(), this->address);

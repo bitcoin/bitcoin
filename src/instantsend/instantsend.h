@@ -61,9 +61,9 @@ private:
 
     mutable Mutex cs_pendingLocks;
     // Incoming and not verified yet
-    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks GUARDED_BY(cs_pendingLocks);
+    std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks GUARDED_BY(cs_pendingLocks);
     // Tried to verify but there is no tx yet
-    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingNoTxInstantSendLocks GUARDED_BY(cs_pendingLocks);
+    std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher> pendingNoTxInstantSendLocks GUARDED_BY(cs_pendingLocks);
 
     // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking
     // of child TXs
@@ -95,15 +95,15 @@ public:
     void InterruptWorkerThread() { workInterrupt(); };
 
 private:
-    PeerMsgRet ProcessMessageInstantSendLock(const CNode& pfrom, PeerManager& peerman, const CInstantSendLockPtr& islock);
+    PeerMsgRet ProcessMessageInstantSendLock(const CNode& pfrom, PeerManager& peerman, const instantsend::InstantSendLockPtr& islock);
     bool ProcessPendingInstantSendLocks(PeerManager& peerman)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(
         const Consensus::LLMQParams& llmq_params, PeerManager& peerman, int signOffset,
-        const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
+        const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
-    void ProcessInstantSendLock(NodeId from, PeerManager& peerman, const uint256& hash, const CInstantSendLockPtr& islock)
+    void ProcessInstantSendLock(NodeId from, PeerManager& peerman, const uint256& hash, const instantsend::InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined)
@@ -112,11 +112,11 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
     void RemoveConflictedTx(const CTransaction& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
-    void TruncateRecoveredSigsForInputs(const CInstantSendLock& islock);
+    void TruncateRecoveredSigsForInputs(const instantsend::InstantSendLock& islock);
 
-    void RemoveMempoolConflictsForLock(PeerManager& peerman, const uint256& hash, const CInstantSendLock& islock)
+    void RemoveMempoolConflictsForLock(PeerManager& peerman, const uint256& hash, const instantsend::InstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
-    void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock)
+    void ResolveBlockConflicts(const uint256& islockHash, const instantsend::InstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     void WorkThreadMain(PeerManager& peerman)
@@ -128,7 +128,7 @@ private:
 public:
     bool IsLocked(const uint256& txHash) const;
     bool IsWaitingForTx(const uint256& txHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
-    CInstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
+    instantsend::InstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
 
     PeerMsgRet ProcessMessage(const CNode& pfrom, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
 
@@ -140,17 +140,17 @@ public:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
 
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
-    bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret) const
+    bool GetInstantSendLockByHash(const uint256& hash, instantsend::InstantSendLock& ret) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
-    CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid) const;
+    instantsend::InstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid) const;
 
     void NotifyChainLock(const CBlockIndex* pindexChainLock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
     void UpdatedBlockTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
 
-    void RemoveConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
-    void TryEmplacePendingLock(const uint256& hash, const NodeId id, const CInstantSendLockPtr& islock)
+    void RemoveConflictingLock(const uint256& islockHash, const instantsend::InstantSendLock& islock);
+    void TryEmplacePendingLock(const uint256& hash, const NodeId id, const instantsend::InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
 
     size_t GetInstantSendLockCount() const;

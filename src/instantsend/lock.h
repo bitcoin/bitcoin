@@ -15,8 +15,8 @@
 
 class COutPoint;
 
-namespace llmq {
-struct CInstantSendLock {
+namespace instantsend {
+struct InstantSendLock {
     static constexpr uint8_t CURRENT_VERSION{1};
 
     uint8_t nVersion{CURRENT_VERSION};
@@ -25,9 +25,9 @@ struct CInstantSendLock {
     uint256 cycleHash;
     CBLSLazySignature sig;
 
-    CInstantSendLock() = default;
+    InstantSendLock() = default;
 
-    SERIALIZE_METHODS(CInstantSendLock, obj)
+    SERIALIZE_METHODS(InstantSendLock, obj)
     {
         READWRITE(obj.nVersion);
         READWRITE(obj.inputs);
@@ -40,7 +40,7 @@ struct CInstantSendLock {
     bool TriviallyValid() const;
 };
 
-using CInstantSendLockPtr = std::shared_ptr<CInstantSendLock>;
-} // namespace llmq
+using InstantSendLockPtr = std::shared_ptr<InstantSendLock>;
+} // namespace instantsend
 
 #endif // BITCOIN_INSTANTSEND_LOCK_H

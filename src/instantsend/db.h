@@ -36,7 +36,7 @@ private:
     int best_confirmed_height GUARDED_BY(cs_db) {0};
 
     std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db) {nullptr};
-    mutable unordered_lru_cache<uint256, llmq::CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache GUARDED_BY(cs_db);
+    mutable unordered_lru_cache<uint256, InstantSendLockPtr, StaticSaltedHasher, 10000> islockCache GUARDED_BY(cs_db);
     mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache GUARDED_BY(cs_db);
 
     mutable unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache GUARDED_BY(cs_db);
@@ -51,7 +51,7 @@ private:
      * @param islock The InstantSend Lock object itself
      * @param keep_cache Should we still keep corresponding entries in the cache or not
      */
-    void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, llmq::CInstantSendLockPtr islock, bool keep_cache = true) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, InstantSendLockPtr islock, bool keep_cache = true) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
     /**
      * Marks an InstantSend Lock as archived.
      * @param batch Object used to batch many calls together
@@ -69,7 +69,7 @@ private:
     /**
      * See GetInstantSendLockByHash
      */
-    llmq::CInstantSendLockPtr GetInstantSendLockByHashInternal(const uint256& hash, bool use_cache = true) const EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    InstantSendLockPtr GetInstantSendLockByHashInternal(const uint256& hash, bool use_cache = true) const EXCLUSIVE_LOCKS_REQUIRED(cs_db);
 
     /**
      * See GetInstantSendLockHashByTxid
@@ -88,7 +88,7 @@ public:
      * @param hash The hash of the InstantSend Lock
      * @param islock The InstantSend Lock object itself
      */
-    void WriteNewInstantSendLock(const uint256& hash, const llmq::CInstantSendLock& islock) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+    void WriteNewInstantSendLock(const uint256& hash, const InstantSendLock& islock) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /**
      * This method updates a DB entry for an InstantSend Lock from being not included in a block to being included in a block
      * @param hash The hash of the InstantSend Lock
@@ -100,7 +100,7 @@ public:
      * @param nUntilHeight Removes all IS Locks confirmed up until nUntilHeight
      * @return returns an unordered_map of the hash of the IS Locks and a pointer object to the IS Locks for all IS Locks which were removed
      */
-    std::unordered_map<uint256, llmq::CInstantSendLockPtr, StaticSaltedHasher> RemoveConfirmedInstantSendLocks(int nUntilHeight) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+    std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> RemoveConfirmedInstantSendLocks(int nUntilHeight) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /**
      * Removes IS Locks from the archive if the tx was confirmed 100 blocks before nUntilHeight
      * @param nUntilHeight the height from which to base the remove of archive IS Locks
@@ -120,7 +120,7 @@ public:
      * @param use_cache Should we try using the cache first or not
      * @return A Pointer object to the IS Lock, returns nullptr if it doesn't exist
      */
-    llmq::CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash, bool use_cache = true) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db)
+    InstantSendLockPtr GetInstantSendLockByHash(const uint256& hash, bool use_cache = true) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db)
     {
         LOCK(cs_db);
         return GetInstantSendLockByHashInternal(hash, use_cache);
@@ -140,13 +140,13 @@ public:
      * @param txid The txid for which the IS Lock Pointer is being returned
      * @return Returns the IS Lock Pointer associated with the txid, returns nullptr if it doesn't exist
      */
-    llmq::CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+    InstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /**
      * Gets an IS Lock pointer from an input given
      * @param outpoint Since all inputs are really just outpoints that are being spent
      * @return IS Lock Pointer associated with that input.
      */
-    llmq::CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+    InstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /**
      * Called when a ChainLock invalidated a IS Lock, removes any chained/children IS Locks and the invalidated IS Lock
      * @param islockHash IS Lock hash which has been invalidated

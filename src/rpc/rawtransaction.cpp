@@ -456,7 +456,7 @@ static RPCHelpMan getislocks()
     for (const auto idx : irange::range(txids.size())) {
         const uint256 txid(ParseHashV(txids[idx], "txid"));
 
-        if (const llmq::CInstantSendLockPtr islock = llmq_ctx.isman->GetInstantSendLockByTxid(txid); islock != nullptr) {
+        if (const instantsend::InstantSendLockPtr islock = llmq_ctx.isman->GetInstantSendLockByTxid(txid); islock != nullptr) {
             UniValue objIS(UniValue::VOBJ);
             objIS.pushKV("txid", islock->txid.ToString());
             UniValue inputs(UniValue::VARR);

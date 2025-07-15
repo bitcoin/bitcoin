@@ -66,7 +66,7 @@ void InstantSendSigner::ClearInputsFromQueue(const std::unordered_set<uint256, S
     }
 }
 
-void InstantSendSigner::ClearLockFromQueue(const llmq::CInstantSendLockPtr& islock)
+void InstantSendSigner::ClearLockFromQueue(const InstantSendLockPtr& islock)
 {
     LOCK(cs_creating);
     creatingInstantSendLocks.erase(islock->GetRequestId());
@@ -228,7 +228,7 @@ bool InstantSendSigner::CheckCanLock(const COutPoint& outpoint, bool printDebug,
 
 void InstantSendSigner::HandleNewInstantSendLockRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
-    llmq::CInstantSendLockPtr islock;
+    InstantSendLockPtr islock;
 
     {
         LOCK(cs_creating);
@@ -237,7 +237,7 @@ void InstantSendSigner::HandleNewInstantSendLockRecoveredSig(const llmq::CRecove
             return;
         }
 
-        islock = std::make_shared<llmq::CInstantSendLock>(std::move(it->second));
+        islock = std::make_shared<InstantSendLock>(std::move(it->second));
         creatingInstantSendLocks.erase(it);
         txToCreatingInstantSendLocks.erase(islock->txid);
     }
@@ -353,10 +353,10 @@ void InstantSendSigner::TrySignInstantSendLock(const CTransaction& tx)
         }
     }
 
-    LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: got all recovered sigs, creating CInstantSendLock\n", __func__,
+    LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: got all recovered sigs, creating InstantSendLock\n", __func__,
             tx.GetHash().ToString());
 
-    llmq::CInstantSendLock islock;
+    InstantSendLock islock;
     islock.txid = tx.GetHash();
     for (const auto& in : tx.vin) {
         islock.inputs.emplace_back(in.prevout);

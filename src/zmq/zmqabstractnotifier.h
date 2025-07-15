@@ -14,20 +14,18 @@ class CDeterministicMNList;
 class CGovernanceVote;
 class CTransaction;
 class CZMQAbstractNotifier;
-
-typedef std::shared_ptr<const CTransaction> CTransactionRef;
-
-namespace Governance
-{
-    class Object;
-} //namespace Governance
-
+namespace Governance {
+class Object;
+} // namespace Governance
+namespace instantsend {
+struct InstantSendLock;
+} // namespace instantsend
 namespace llmq {
-    class CChainLockSig;
-    struct CInstantSendLock;
-    class CRecoveredSig;
+class CChainLockSig;
+class CRecoveredSig;
 } // namespace llmq
 
+using CTransactionRef = std::shared_ptr<const CTransaction>;
 using CZMQNotifierFactory = std::unique_ptr<CZMQAbstractNotifier> (*)();
 
 class CZMQAbstractNotifier
@@ -71,7 +69,7 @@ public:
     // Notifies of transactions added to mempool or appearing in blocks
     virtual bool NotifyTransaction(const CTransaction &transaction);
     virtual bool NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig);
-    virtual bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock);
+    virtual bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object);
     virtual bool NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx);

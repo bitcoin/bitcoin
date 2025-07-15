@@ -24,10 +24,10 @@ uint256 CalculateRequestId(const std::vector<COutPoint>& inputs)
 BOOST_AUTO_TEST_CASE(getrequestid)
 {
     // Create an empty InstantSendLock
-    llmq::CInstantSendLock islock;
+    instantsend::InstantSendLock islock;
 
     // Compute expected hash for an empty inputs vector.
-    // Note: CInstantSendLock::GetRequestId() serializes the prefix "islock"
+    // Note: InstantSendLock::GetRequestId() serializes the prefix "islock"
     // followed by the 'inputs' vector.
     {
         const uint256 expected = CalculateRequestId(islock.inputs);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
     // Convert hex string to a byte vector and deserialize.
     std::vector<unsigned char> islockData = ParseHex(islockHex);
     CDataStream ss(islockData, SER_NETWORK, PROTOCOL_VERSION);
-    llmq::CInstantSendLock islock;
+    instantsend::InstantSendLock islock;
     ss >> islock;
 
     // Verify the calculated signHash

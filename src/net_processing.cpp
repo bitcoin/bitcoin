@@ -2866,7 +2866,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
 
         if (!push && inv.type == MSG_ISDLOCK) {
-            llmq::CInstantSendLock o;
+            instantsend::InstantSendLock o;
             if (m_llmq_ctx->isman->GetInstantSendLockByHash(inv.hash, o)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, o));
                 push = true;
