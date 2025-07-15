@@ -341,7 +341,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     mempooltruc = new QValueComboBox(tabMempool);
     mempooltruc->addItem(QString("do not relay or mine at all"), QVariant("reject"));
     mempooltruc->addItem(QString("handle the same as other transactions"), QVariant("accept"));
-    mempooltruc->addItem(QString("impose stricter limits requested (DRAFT)"), QVariant("enforce"));
+    mempooltruc->addItem(QString("impose stricter limits requested"), QVariant("enforce"));
     mempooltruc->setToolTip(tr("Some transactions signal a request to limit both themselves and other related transactions to more restrictive expectations. Specifically, this would disallow more than 1 unconfirmed predecessor or spending transaction, as well as smaller size limits (see BIP 431 for details), regardless of what policy you have configured."));
     CreateOptionUI(verticalLayout_Mempool, mempooltruc, tr("Transactions requesting more restrictive policy limits (TRUC): %s"));
 
