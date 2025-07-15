@@ -133,7 +133,6 @@ BITCOIN_TESTS =\
   test/llmq_hash_tests.cpp \
   test/llmq_params_tests.cpp \
   test/llmq_snapshot_tests.cpp \
-  test/llmq_test_utils.h \
   test/llmq_utils_tests.cpp \
   test/logging_tests.cpp \
   test/dbwrapper_tests.cpp \
