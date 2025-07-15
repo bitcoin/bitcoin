@@ -166,6 +166,9 @@ public:
     /** Returns next orphan tx to consider, or nullptr if none exist. */
     CTransactionRef GetTxToReconsider(NodeId nodeid);
 
+    /** Returns the timestamp of the first received announcement of this transaction, or nullopt if it cannot be found. */
+    std::optional<int64_t> GetFirstInvTime(const uint256& txhash);
+
     /** Check that all data structures are empty. */
     void CheckIsEmpty() const;
 

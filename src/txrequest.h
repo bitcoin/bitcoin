@@ -205,6 +205,9 @@ public:
     /** Access to the internal priority computation (testing only) */
     uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const;
 
+     /** Returns the timestamp of the first received announcement for the given transaction, or nullopt if not found. */
+    std::optional<int64_t> GetFirstInvTime(const uint256& txhash);
+
     /** Run internal consistency check (testing only). */
     void SanityCheck() const;
 

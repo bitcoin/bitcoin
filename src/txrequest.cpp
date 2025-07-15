@@ -714,6 +714,13 @@ public:
         return uint64_t{m_computer(txhash, peer, preferred)};
     }
 
+    std::optional<int64_t> GetFirstInvTime(const uint256& txhash)
+    {
+        auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
+        if (it != m_index.get<ByTxHash>().end() && it->m_txhash == txhash) return std::optional{it->m_first_inv_time.count()};
+        return std::nullopt;
+    }
+
 };
 
 TxRequestTracker::TxRequestTracker(bool deterministic) :
@@ -760,4 +767,9 @@ std::vector<GenTxid> TxRequestTracker::GetRequestable(NodeId peer, std::chrono::
 uint64_t TxRequestTracker::ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const
 {
     return m_impl->ComputePriority(txhash, peer, preferred);
+}
+
+std::optional<int64_t> TxRequestTracker::GetFirstInvTime(const uint256& txhash)
+{
+    return m_impl->GetFirstInvTime(txhash);
 }

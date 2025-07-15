@@ -75,6 +75,9 @@ CTransactionRef TxDownloadManager::GetTxToReconsider(NodeId nodeid)
 {
     return m_impl->GetTxToReconsider(nodeid);
 }
+std::optional<int64_t> TxDownloadManager::GetFirstInvTime(const uint256& txhash) {
+    return m_impl->GetFirstInvTime(txhash);
+}
 void TxDownloadManager::CheckIsEmpty() const
 {
     m_impl->CheckIsEmpty();
@@ -567,6 +570,10 @@ bool TxDownloadManagerImpl::HaveMoreWork(NodeId nodeid)
 CTransactionRef TxDownloadManagerImpl::GetTxToReconsider(NodeId nodeid)
 {
     return m_orphanage.GetTxToReconsider(nodeid);
+}
+
+std::optional<int64_t> TxDownloadManagerImpl::GetFirstInvTime(const uint256& txhash) {
+    return m_txrequest.GetFirstInvTime(txhash);
 }
 
 void TxDownloadManagerImpl::CheckIsEmpty(NodeId nodeid)
