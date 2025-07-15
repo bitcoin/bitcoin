@@ -1284,7 +1284,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             // The config and internal option is inverted
             const bool nv = ! value.toBool();
             node().mempool().m_opts.permit_bare_pubkey = nv;
-            node().updateRwSetting("permitbaremultisig", nv);
+            node().updateRwSetting("permitbarepubkey", nv);
         }
         break;
     case rejectbaremultisig:
