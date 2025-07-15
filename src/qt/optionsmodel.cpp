@@ -100,6 +100,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::limitdescendantsize: return "limitdescendantsize";
     case OptionsModel::rejectbarepubkey: return "rejectbarepubkey";
     case OptionsModel::rejectbaremultisig: return "rejectbaremultisig";
+    case OptionsModel::permitephemeral: return "permitephemeral";
     case OptionsModel::rejectbareanchor: return "rejectbareanchor";
     case OptionsModel::rejectbaredatacarrier: return "rejectbaredatacarrier";
     case OptionsModel::maxscriptsize: return "maxscriptsize";
@@ -266,6 +267,18 @@ static QString CanonicalMempoolTRUC(const OptionsModel& model)
     case TRUCPolicy::Enforce: return "enforce";
     }
     assert(0);
+}
+
+static QString CanonicalPermitEphemeral(const OptionsModel& model)
+{
+    const auto& opts = model.node().mempool().m_opts;
+    if (!(opts.permitephemeral_anchor || opts.permitephemeral_send)) {
+        return "reject";
+    }
+    return
+        QString(opts.permitephemeral_anchor ? "" : "-") + "anchor," +
+        (opts.permitephemeral_send ? "" : "-") + "send," +
+        (opts.permitephemeral_dust ? "" : "-") + "dust";
 }
 
 OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent) :
@@ -734,6 +747,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return !node().mempool().m_opts.permit_bare_pubkey;
     case rejectbaremultisig:
         return !node().mempool().m_opts.permit_bare_multisig;
+    case permitephemeral:
+        return CanonicalPermitEphemeral(*this);
     case rejectbareanchor:
         return !node().mempool().m_opts.permitbareanchor;
     case rejectbaredatacarrier:
@@ -1301,6 +1316,15 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             gArgs.ModifyRWConfigFile("permitbaremultisig", strprintf("%d", fNewValue));
         }
         break;
+    case permitephemeral:
+    {
+        if (changed()) {
+            std::string nv = value.toString().toStdString();
+            ApplyPermitEphemeralOption(nv, node().mempool().m_opts);
+            update(nv);
+        }
+        break;
+    }
     case rejectbareanchor:
         if (changed()) {
             // The config and internal option is inverted

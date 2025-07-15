@@ -439,6 +439,17 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     verticalLayout_Spamfiltering->addWidget(rejectbaremultisig);
     FixTabOrder(rejectbaremultisig);
 
+    permitephemeral = new QValueComboBox(tabMempool);
+    permitephemeral->addItem(QString("(no exception allowed)"), QVariant("reject"));
+    permitephemeral->addItem(QString("anchor (recommended)"), QVariant("anchor,-send,-dust"));
+    permitephemeral->addItem(QString("zero-value anchor/send"), QVariant("anchor,send,-dust"));
+    permitephemeral->addItem(QString("zero-value send-only"), QVariant("-anchor,send,-dust"));
+    permitephemeral->addItem(QString("dust send"), QVariant("-anchor,send,dust"));
+    permitephemeral->addItem(QString("dust"), QVariant("anchor,send,dust"));
+    permitephemeral->addItem(QString("dust anchor"), QVariant("anchor,-send,dust"));
+    permitephemeral->setToolTip(tr("For some smart contracts, it is impractical to increase the fee after the transaction is created. For this reason, they may use zero-value \"anchors\" to chain two transactions together, the subsequent transaction simply covering the fee for both. Ordinarily, these anchors might be rejected as dust, so it may make sense to make an exception when they are sent together. Variants of this can however be abused for anti-fungibility attacks and possibly spam."));
+    CreateOptionUI(verticalLayout_Spamfiltering, permitephemeral, tr("Allow transactions to have at most one ephemeral %s output"));
+
     rejectbareanchor = new QCheckBox(groupBox_Spamfiltering);
     rejectbareanchor->setText(tr("Reject transactions that only have an anchor"));
     rejectbareanchor->setToolTip(tr("Anchors are a way to allow fee-bumping smart contract transactions long after they have been created. With this option set, your node will refuse to relay or mine transactions that have only an anchor but no real sends."));
@@ -545,6 +556,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
         rejectunknownwitness->setEnabled(state);
         rejectbarepubkey->setEnabled(state);
         rejectbaremultisig->setEnabled(state);
+        permitephemeral->setEnabled(state);
         rejectbareanchor->setEnabled(state);
         rejectbaredatacarrier->setEnabled(state);
         rejectparasites->setEnabled(state);
@@ -884,6 +896,14 @@ void OptionsDialog::setMapper()
     mapper->addMapping(rejectnonstddatacarrier, OptionsModel::rejectnonstddatacarrier);
     mapper->addMapping(dustrelayfee, OptionsModel::dustrelayfee);
 
+    QVariant current_permitephemeral = model->data(model->index(OptionsModel::permitephemeral, 0), Qt::EditRole);
+    int current_permitephemeral_index = permitephemeral->findData(current_permitephemeral);
+    if (current_permitephemeral_index == -1) {
+        permitephemeral->addItem(current_permitephemeral.toString(), current_permitephemeral);
+        current_permitephemeral_index = permitephemeral->count() - 1;
+    }
+    permitephemeral->setCurrentIndex(current_permitephemeral_index);
+
     QVariant current_dustdynamic = model->data(model->index(OptionsModel::dustdynamic, 0), Qt::EditRole);
     const util::Result<std::pair<int32_t, int>> parsed_dustdynamic = ParseDustDynamicOpt(current_dustdynamic.toString().toStdString(), std::numeric_limits<unsigned int>::max());
     if (parsed_dustdynamic) {
@@ -1077,6 +1097,7 @@ void OptionsDialog::on_okButton_clicked()
 
     model->setData(model->index(OptionsModel::mempoolreplacement, 0), mempoolreplacement->itemData(mempoolreplacement->currentIndex()));
     model->setData(model->index(OptionsModel::mempooltruc, 0), mempooltruc->itemData(mempooltruc->currentIndex()));
+    model->setData(model->index(OptionsModel::permitephemeral, 0), permitephemeral->itemData(permitephemeral->currentIndex()));
 
     if (dustdynamic_enable->isChecked()) {
         if (dustdynamic_target->isChecked()) {
