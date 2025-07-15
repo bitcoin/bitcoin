@@ -493,6 +493,7 @@ libbitcoin_node_a_SOURCES = \
   instantsend/db.cpp \
   instantsend/instantsend.cpp \
   instantsend/lock.cpp \
+  instantsend/signing.cpp \
   llmq/blockprocessor.cpp \
   llmq/chainlocks.cpp \
   llmq/clsig.cpp \
