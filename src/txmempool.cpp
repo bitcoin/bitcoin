@@ -962,9 +962,9 @@ const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
 
 std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Txid& txid) const
 {
+    AssertLockHeld(cs);
     auto it = mapTx.find(txid.ToUint256());
-    if (it != mapTx.end()) return it;
-    return std::nullopt;
+    return it != mapTx.end() ? std::make_optional(it) : std::nullopt;
 }
 
 std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Wtxid& wtxid) const
