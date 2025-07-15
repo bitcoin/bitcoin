@@ -5,7 +5,6 @@
 #ifndef BITCOIN_INSTANTSEND_SIGNING_H
 #define BITCOIN_INSTANTSEND_SIGNING_H
 
-#include <instantsend/instantsend.h>
 #include <instantsend/lock.h>
 #include <llmq/signing.h>
 
@@ -65,33 +64,40 @@ public:
                                CTxMemPool& mempool, const CMasternodeSync& mn_sync);
     ~InstantSendSigner();
 
+    void Start();
+    void Stop();
+
+    void ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
+
+    void ClearLockFromQueue(const llmq::CInstantSendLockPtr& islock)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
+
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !m_isman.cs_pendingLocks);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+
+    void ProcessPendingRetryLockTxs(const std::vector<CTransactionRef>& retryTxs)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+    void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
 
 private:
-    bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
-    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash,
-                      const Consensus::Params& params) const;
+    [[nodiscard]] bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
+    [[nodiscard]] bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash,
+                                    const Consensus::Params& params) const;
 
     void HandleNewInputLockRecoveredSig(const llmq::CRecoveredSig& recoveredSig, const uint256& txid)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
     void HandleNewInstantSendLockRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !m_isman.cs_pendingLocks);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
 
-    bool IsInstantSendMempoolSigningEnabled() const;
+    [[nodiscard]] bool IsInstantSendMempoolSigningEnabled() const;
 
-    void ProcessPendingRetryLockTxs()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests, !m_isman.cs_nonLocked, !m_isman.cs_pendingRetry);
-    void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
-
-    bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType,
-                           const Consensus::Params& params)
+    [[nodiscard]] bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType,
+                                         const Consensus::Params& params)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
     void TrySignInstantSendLock(const CTransaction& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
-
-    friend class ::llmq::CInstantSendManager;
 };
 } // namespace instantsend
 

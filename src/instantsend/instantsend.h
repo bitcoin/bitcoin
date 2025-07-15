@@ -120,11 +120,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     void WorkThreadMain(PeerManager& peerman)
-        NO_THREAD_SAFETY_ANALYSIS;
-        // Needed as compiler cannot differentiate between negative capability against member and against
-        // member accessed through reference.
-        // TODO: Remove this, it's terrible.
-        // EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     void HandleFullyConfirmedBlock(const CBlockIndex* pindex)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
@@ -154,6 +150,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
 
     void RemoveConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
+    void TryEmplacePendingLock(const uint256& hash, const NodeId id, const CInstantSendLockPtr& islock)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
 
     size_t GetInstantSendLockCount() const;
 
@@ -164,8 +162,6 @@ public:
      * allows ChainLocks to continue even while this spork is disabled.
      */
     bool RejectConflictingBlocks() const;
-
-    friend class ::instantsend::InstantSendSigner;
 };
 } // namespace llmq
 
