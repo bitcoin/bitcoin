@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests_deterministic)
     BOOST_CHECK_EQUAL(ctx1.rand32(), ctx2.rand32());
     BOOST_CHECK_EQUAL(ctx1.rand64(), ctx2.rand64());
     BOOST_CHECK_EQUAL(ctx1.randbits(3), ctx2.randbits(3));
-    BOOST_CHECK(ctx1.randbytes(17) == ctx2.randbytes(17));
+    BOOST_CHECK(std::ranges::equal(ctx1.randbytes<std::byte>(17), ctx2.randbytes<17>())); // check vector/array behavior symmetry
     BOOST_CHECK(ctx1.rand256() == ctx2.rand256());
     BOOST_CHECK_EQUAL(ctx1.randbits(7), ctx2.randbits(7));
     BOOST_CHECK(ctx1.randbytes(128) == ctx2.randbytes(128));
