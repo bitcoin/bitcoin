@@ -143,9 +143,11 @@ def main():
 
         # Get repository from environment
         repo = os.environ.get('GITHUB_REPOSITORY', 'dashpay/dash')
+        merge_check_url = f'https://github.com/{repo}/branches/pre_mergeable/{our_pr_label}...{conflict_pr_label}'
+        print(f"Debug: Checking mergeability at: {merge_check_url}", file=sys.stderr)
 
         try:
-            pre_mergeable = requests.get(f'https://github.com/{repo}/branches/pre_mergeable/{our_pr_label}...{conflict_pr_label}')
+            pre_mergeable = requests.get(merge_check_url)
             pre_mergeable.raise_for_status()
         except requests.RequestException as e:
             print(f"Error checking mergeability for PR {conflict_pr_num}: {e}", file=sys.stderr)
@@ -161,7 +163,9 @@ def main():
                 'url': conflict_pr_json.get('html_url', f'https://github.com/dashpay/dash/pull/{conflict_pr_num}')
             })
         else:
-            print(f"Warning: Unexpected response for PR {conflict_pr_num} mergeability check. Response snippet: {pre_mergeable.text[:200]}", file=sys.stderr)
+            print(f"Warning: Unexpected response for PR {conflict_pr_num} mergeability check.", file=sys.stderr)
+            print(f"URL: {pre_mergeable.url}", file=sys.stderr)
+            print(f"Response snippet: {pre_mergeable.text[:500]}", file=sys.stderr)
 
     print(f"Not conflicting PRs: {good}", file=sys.stderr)
     print(f"Conflicting PRs: {bad}", file=sys.stderr)
