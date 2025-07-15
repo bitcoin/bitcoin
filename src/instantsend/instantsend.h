@@ -5,18 +5,16 @@
 #ifndef BITCOIN_INSTANTSEND_INSTANTSEND_H
 #define BITCOIN_INSTANTSEND_INSTANTSEND_H
 
-#include <llmq/signing.h>
-
-#include <consensus/params.h>
-#include <instantsend/db.h>
-#include <instantsend/lock.h>
 #include <net_types.h>
 #include <primitives/transaction.h>
+#include <protocol.h>
+#include <sync.h>
 #include <util/threadinterrupt.h>
-#include <txmempool.h>
-#include <unordered_lru_cache.h>
+#include <threadsafety.h>
 
-#include <gsl/pointers.h>
+#include <instantsend/db.h>
+#include <instantsend/lock.h>
+#include <unordered_lru_cache.h>
 
 #include <atomic>
 #include <unordered_map>
@@ -24,18 +22,22 @@
 
 class CBlockIndex;
 class CChainState;
-class CConnman;
-class CDBWrapper;
+class CDataStream;
 class CMasternodeSync;
+class CNode;
 class CSporkManager;
+class CTxMemPool;
 class PeerManager;
-
+namespace Consensus {
+struct LLMQParams;
+} // namespace Consensus
 namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
 
-namespace llmq
-{
+using NodeId = int64_t;
+
+namespace llmq {
 class CChainLocksHandler;
 class CQuorumManager;
 class CSigningManager;

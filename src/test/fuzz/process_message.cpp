@@ -23,7 +23,6 @@
 #include <validationinterface.h>
 #include <version.h>
 
-#include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/dkgsessionmgr.h>

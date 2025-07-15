@@ -9,7 +9,6 @@
 #include <consensus/validation.h>
 #include <evo/evodb.h>
 #include <governance/governance.h>
-#include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>

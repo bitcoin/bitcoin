@@ -6,24 +6,18 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
-#include <dbwrapper.h>
-#include <index/txindex.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <stats/client.h>
 #include <txmempool.h>
-#include <util/irange.h>
-#include <util/ranges.h>
 #include <util/thread.h>
 #include <validation.h>
 
 #include <bls/bls_batchverifier.h>
-#include <instantsend/lock.h>
 #include <instantsend/signing.h>
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
-#include <llmq/signing_shares.h>
 #include <masternode/sync.h>
 #include <spork.h>
 
