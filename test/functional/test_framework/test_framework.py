@@ -1786,14 +1786,11 @@ class DashTestFramework(BitcoinTestFramework):
         force_finish_mnsync(self.nodes[mnidx])
 
     def setup_nodes(self):
-        extra_args = [[]] * self.num_nodes
-        if hasattr(self, "extra_args"):
-            extra_args = self.extra_args
         self.log.info("Creating and starting controller node")
         num_simple_nodes = self.num_nodes - self.mn_count
         self.log.info("Creating and starting %s simple nodes", num_simple_nodes)
         for i in range(0, num_simple_nodes):
-            self.create_simple_node(extra_args)
+            self.create_simple_node(self.extra_args)
         if self.requires_wallet:
             self.import_deterministic_coinbase_privkeys()
         required_balance = EVONODE_COLLATERAL * self.evo_count
