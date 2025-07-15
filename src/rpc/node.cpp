@@ -21,6 +21,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <scheduler.h>
+#include <tinyformat.h>
 #include <univalue.h>
 #include <util/any.h>
 #include <util/check.h>
@@ -30,6 +31,7 @@
 #ifdef HAVE_MALLOC_INFO
 #include <malloc.h>
 #endif
+#include <string_view>
 
 using node::NodeContext;
 
@@ -176,7 +178,7 @@ static RPCHelpMan getmemoryinfo()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::string mode = request.params[0].isNull() ? "stats" : request.params[0].get_str();
+    auto mode{self.Arg<std::string_view>("mode")};
     if (mode == "stats") {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("locked", RPCLockedMemoryInfo());
@@ -188,7 +190,7 @@ static RPCHelpMan getmemoryinfo()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "mallocinfo mode not available");
 #endif
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown mode " + mode);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, tfm::format("unknown mode %s", mode));
     }
 },
     };
@@ -385,7 +387,7 @@ static RPCHelpMan getindexinfo()
                 [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue result(UniValue::VOBJ);
-    const std::string index_name = request.params[0].isNull() ? "" : request.params[0].get_str();
+    const std::string index_name{self.MaybeArg<std::string_view>("index_name").value_or("")};
 
     if (g_txindex) {
         result.pushKVs(SummaryToJSON(g_txindex->GetSummary(), index_name));
