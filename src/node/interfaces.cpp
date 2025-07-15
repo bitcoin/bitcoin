@@ -11,8 +11,10 @@
 #include <coinjoin/common.h>
 #include <deploymentstatus.h>
 #include <evo/deterministicmns.h>
+#include <governance/exceptions.h>
 #include <governance/governance.h>
 #include <governance/object.h>
+#include <governance/vote.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/coinjoin.h>
@@ -138,6 +140,19 @@ public:
         if (context().govman != nullptr) {
             return context().govman->IsValid();
         }
+        return false;
+    }
+    bool processVoteAndRelay(const CGovernanceVote& vote, std::string& error) override
+    {
+        if (context().govman != nullptr && context().connman != nullptr && context().peerman != nullptr) {
+            CGovernanceException exception;
+            bool result = context().govman->ProcessVoteAndRelay(vote, exception, *context().connman, *context().peerman);
+            if (!result) {
+                error = exception.GetMessage();
+            }
+            return result;
+        }
+        error = "Governance manager not available";
         return false;
     }
     void setContext(NodeContext* context) override

@@ -47,6 +47,7 @@
 #include <coinjoin/common.h>
 #include <coinjoin/options.h>
 #include <evo/providertx.h>
+#include <governance/vote.h>
 
 #include <univalue.h>
 
@@ -2061,6 +2062,33 @@ bool CWallet::SignSpecialTxPayload(const uint256& hash, const CKeyID& keyid, std
         }
     }
     return false;
+}
+
+bool CWallet::SignGovernanceVote(const CKeyID& keyID, CGovernanceVote& vote) const
+{
+    // Special implementation for testnet (Harden Spork6 that has not been deployed to other networks)
+    if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {
+        std::vector<unsigned char> signature;
+        if (!SignSpecialTxPayload(vote.GetSignatureHash(), keyID, signature)) {
+            LogPrintf("SignGovernanceVote -- SignHash() failed\n");
+            return false;
+        }
+        vote.SetSignature(signature);
+        return true;
+    } // end of testnet implementation
+
+    std::string strMessage{vote.GetSignatureString()};
+    std::string signature;
+    SigningResult err = SignMessage(strMessage, PKHash{keyID}, signature);
+    if (err != SigningResult::OK) {
+        LogPrintf("SignGovernanceVote failed due to: %s\n", SigningResultString(err));
+        return false;
+    }
+    const auto opt_decoded = DecodeBase64(signature);
+    CHECK_NONFATAL(opt_decoded.has_value()); // DecodeBase64 should not fail
+
+    vote.SetSignature(std::vector<unsigned char>(opt_decoded->data(), opt_decoded->data() + opt_decoded->size()));
+    return true;
 }
 
 void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)

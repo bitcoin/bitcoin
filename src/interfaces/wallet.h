@@ -120,6 +120,9 @@ public:
     //! Sign message
     virtual SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) = 0;
 
+    //! Sign special transaction payload
+    virtual bool signSpecialTxPayload(const uint256& hash, const CKeyID& keyid, std::vector<unsigned char>& vchSig) = 0;
+
     //! Return whether wallet has private key.
     virtual bool isSpendable(const CScript& script) = 0;
     virtual bool isSpendable(const CTxDestination& dest) = 0;

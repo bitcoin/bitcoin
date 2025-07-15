@@ -73,9 +73,45 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>10</width>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_mn_count">
+           <property name="text">
+            <string>Masternode Count:</string>
+           </property>
+           <property name="toolTip">
+            <string>Number of masternodes this wallet can vote with (masternodes for which this wallet holds the voting key)</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="mnCountLabel">
+           <property name="text">
+            <string notr="true">0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
              <height>20</height>
             </size>
            </property>

@@ -6,6 +6,7 @@
 #define BITCOIN_QT_GOVERNANCELIST_H
 
 #include <governance/object.h>
+#include <governance/vote.h>
 #include <primitives/transaction.h>
 #include <qt/bitcoinunits.h>
 #include <sync.h>
@@ -18,6 +19,8 @@
 #include <QTimer>
 #include <QWidget>
 
+#include <map>
+
 inline constexpr int GOVERNANCELIST_UPDATE_SECONDS = 10;
 
 namespace Ui {
@@ -27,6 +30,7 @@ class GovernanceList;
 class CDeterministicMNList;
 class ClientModel;
 class ProposalModel;
+class WalletModel;
 
 /** Governance Manager page widget */
 class GovernanceList : public QWidget
@@ -37,9 +41,11 @@ public:
     explicit GovernanceList(QWidget* parent = nullptr);
     ~GovernanceList() override;
     void setClientModel(ClientModel* clientModel);
+    void setWalletModel(WalletModel* walletModel);
 
 private:
     ClientModel* clientModel{nullptr};
+    WalletModel* walletModel{nullptr};
 
     std::unique_ptr<Ui::GovernanceList> ui;
     ProposalModel* proposalModel;
@@ -48,12 +54,25 @@ private:
     QMenu* proposalContextMenu;
     QTimer* timer;
 
+    // Voting-related members
+    std::map<uint256, CKeyID> votableMasternodes; // proTxHash -> voting keyID
+
+    void updateVotingCapability();
+    bool canVote() const { return !votableMasternodes.empty(); }
+    void voteForProposal(vote_outcome_enum_t outcome);
+
 private Q_SLOTS:
     void updateDisplayUnit();
     void updateProposalList();
     void updateProposalCount() const;
+    void updateMasternodeCount() const;
     void showProposalContextMenu(const QPoint& pos);
     void showAdditionalInfo(const QModelIndex& index);
+
+    // Voting slots
+    void voteYes();
+    void voteNo();
+    void voteAbstain();
 };
 
 class Proposal : public QObject
