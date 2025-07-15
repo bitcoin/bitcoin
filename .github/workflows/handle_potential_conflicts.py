@@ -155,7 +155,7 @@ def main():
             conflict_details.append({
                 'number': conflict_pr_num,
                 'title': conflict_pr_json.get('title', 'Unknown'),
-                'url': conflict_pr_json.get('html_url', f'https://github.com/dashpay/dash/pull/{conflict_pr_num}')
+                'url': conflict_pr_json.get('html_url', f'https://github.com/{repo}/pull/{conflict_pr_num}')
             })
         else:
             print(f"Warning: Unexpected response for PR {conflict_pr_num} mergeability check. URL: {pre_mergeable.url}", file=sys.stderr)
