@@ -155,7 +155,8 @@ def main():
 
         if "These branches can be automatically merged." in pre_mergeable.text:
             good.append(conflict_pr_num)
-        elif "Can't automatically merge" in pre_mergeable.text:
+        elif "Can't automatic" in pre_mergeable.text or "octicon octicon-x" in pre_mergeable.text:
+            # Check for partial text or the X icon which indicates conflicts
             bad.append(conflict_pr_num)
             conflict_details.append({
                 'number': conflict_pr_num,
