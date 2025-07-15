@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_LLMQ_TEST_UTILS_H
-#define BITCOIN_TEST_LLMQ_TEST_UTILS_H
+#ifndef BITCOIN_TEST_UTIL_LLMQ_TESTS_H
+#define BITCOIN_TEST_UTIL_LLMQ_TESTS_H
 
 #include <llmq/params.h>
 #include <llmq/commitment.h>
@@ -113,4 +113,4 @@ inline uint256 GetTestBlockHash(uint32_t n)
 } // namespace testutils
 } // namespace llmq
 
-#endif // BITCOIN_TEST_LLMQ_TEST_UTILS_H
+#endif // BITCOIN_TEST_UTIL_LLMQ_TESTS_H

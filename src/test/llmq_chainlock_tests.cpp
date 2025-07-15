@@ -1,12 +1,13 @@
-// Copyright (c) 2024 The Dash Core developers
+// Copyright (c) 2025 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/llmq_test_utils.h>
+#include <test/util/llmq_tests.h>
 #include <test/util/setup_common.h>
 
 #include <llmq/clsig.h>
 #include <streams.h>
+#include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(chainlock_tostring_test)
     BOOST_CHECK(!str.empty());
 
     // ToString should contain height and hash info
-    BOOST_CHECK(str.find(std::to_string(height)) != std::string::npos);
+    BOOST_CHECK(str.find(strprintf("%d", height)) != std::string::npos);
     BOOST_CHECK(str.find(blockHash.ToString().substr(0, 10)) != std::string::npos);
 }
 

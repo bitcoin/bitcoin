@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/llmq_test_utils.h>
+#include <test/util/llmq_tests.h>
 #include <test/util/setup_common.h>
 
 #include <llmq/commitment.h>
@@ -226,16 +226,16 @@ BOOST_AUTO_TEST_CASE(commitment_verify_null_edge_cases)
     BOOST_CHECK(!commitment.IsNull());
 
     // Reset and test quorumVvecHash
-    commitment = CFinalCommitment();
+    commitment = CFinalCommitment{};
     commitment.quorumVvecHash = GetTestQuorumHash(2);
     BOOST_CHECK(!commitment.IsNull());
 
     // Reset and test signatures
-    commitment = CFinalCommitment();
+    commitment = CFinalCommitment{};
     commitment.membersSig = CreateRandomBLSSignature();
     BOOST_CHECK(!commitment.IsNull());
 
-    commitment = CFinalCommitment();
+    commitment = CFinalCommitment{};
     commitment.quorumSig = CreateRandomBLSSignature();
     BOOST_CHECK(!commitment.IsNull());
 }

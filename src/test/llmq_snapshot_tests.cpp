@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/llmq_test_utils.h>
+#include <test/util/llmq_tests.h>
 #include <test/util/setup_common.h>
 
 #include <llmq/snapshot.h>
@@ -119,16 +119,19 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_empty_data_test)
     // TODO: Serialization roundtrip tests are disabled because CQuorumSnapshot uses custom
     // serialization for bit vectors that may not produce byte-identical output after roundtrip.
     // These tests should be re-enabled once proper equality operators are implemented for CQuorumSnapshot.
+    // TODO: Enable serialization roundtrip test once CQuorumSnapshot serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(emptySnapshot));
 
     // Test with empty active members but non-empty skip list
     CQuorumSnapshot snapshot1({}, MODE_SKIPPING_ENTRIES, {1, 2, 3});
     // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // TODO: Enable serialization roundtrip test once CQuorumSnapshot serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
 
     // Test with non-empty active members but empty skip list
     CQuorumSnapshot snapshot2({true, false, true}, MODE_NO_SKIPPING, {});
     // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // TODO: Enable serialization roundtrip test once CQuorumSnapshot serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(snapshot2));
 }
 
@@ -139,17 +142,20 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_bit_serialization_test)
     // Test single bit
     CQuorumSnapshot snapshot1({true}, MODE_NO_SKIPPING, {});
     // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // TODO: Enable serialization roundtrip test once CQuorumSnapshot serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(snapshot1));
 
     // Test 8 bits (full byte)
     CQuorumSnapshot snapshot8(std::vector<bool>(8, true), MODE_NO_SKIPPING, {});
     // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // TODO: Enable serialization roundtrip test once CQuorumSnapshot serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(snapshot8));
 
     // Test 9 bits (more than one byte)
     CQuorumSnapshot snapshot9(std::vector<bool>(9, false), MODE_NO_SKIPPING, {});
     snapshot9.activeQuorumMembers[8] = true; // Set last bit
     // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // TODO: Enable serialization roundtrip test once CQuorumSnapshot serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(snapshot9));
 
     // Test alternating pattern
@@ -159,6 +165,7 @@ BOOST_AUTO_TEST_CASE(quorum_snapshot_bit_serialization_test)
     }
     CQuorumSnapshot snapshotAlt(alternating, MODE_NO_SKIPPING, {});
     // TODO: See above - custom bit vector serialization prevents byte-identical roundtrip
+    // TODO: Enable serialization roundtrip test once CQuorumSnapshot serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(snapshotAlt));
 }
 
@@ -189,6 +196,7 @@ BOOST_AUTO_TEST_CASE(get_quorum_rotation_info_test)
 
     // TODO: CGetQuorumRotationInfo serialization test disabled - uses standard SERIALIZE_METHODS
     // but may have issues with empty vectors. Should investigate and re-enable.
+    // TODO: Enable serialization roundtrip test once CGetQuorumsBaseBlockInfo serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(getInfo));
 
     // Test with empty base block hashes
@@ -197,6 +205,7 @@ BOOST_AUTO_TEST_CASE(get_quorum_rotation_info_test)
     emptyInfo.extraShare = false;
 
     // TODO: See above - investigate serialization issues with empty base block hashes
+    // TODO: Enable serialization roundtrip test once CGetQuorumsBaseBlockInfo serialization is fixed
     // BOOST_CHECK(TestSerializationRoundtrip(emptyInfo));
 }
 
