@@ -494,17 +494,21 @@ void TxOrphanageImpl::LimitOrphans()
         // The number of inner loop iterations is bounded by the total number of announcements.
         const auto& dos_threshold = heap_peer_dos.empty() ? FeeFrac{1, 1} : heap_peer_dos.front().second;
         auto it_ann = m_orphans.get<ByPeer>().lower_bound(ByPeerView{worst_peer, false, 0});
+        unsigned int num_erased_this_round{0};
+        unsigned int starting_num_ann{it_worst_peer->second.m_count_announcements};
         while (NeedsTrim()) {
             if (!Assume(it_ann->m_announcer == worst_peer)) break;
             if (!Assume(it_ann != m_orphans.get<ByPeer>().end())) break;
 
             Erase<ByPeer>(it_ann++);
             num_erased += 1;
+            num_erased_this_round += 1;
 
             // If we erased the last orphan from this peer, it_worst_peer will be invalidated.
             it_worst_peer = m_peer_orphanage_info.find(worst_peer);
             if (it_worst_peer == m_peer_orphanage_info.end() || it_worst_peer->second.GetDosScore(max_ann, max_mem) <= dos_threshold) break;
         }
+        LogDebug(BCLog::TXPACKAGES, "peer=%d orphanage overflow, removed %u of %u announcements\n", worst_peer, num_erased_this_round, starting_num_ann);
 
         if (!NeedsTrim()) break;
 
