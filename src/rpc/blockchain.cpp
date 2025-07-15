@@ -54,9 +54,8 @@
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
-
+#include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
-#include <llmq/instantsend.h>
 
 #include <stdint.h>
 

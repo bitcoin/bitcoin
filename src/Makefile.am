@@ -230,6 +230,7 @@ BITCOIN_CORE_H = \
   interfaces/ipc.h \
   interfaces/node.h \
   interfaces/wallet.h \
+  instantsend/instantsend.h \
   key.h \
   key_io.h \
   limitedmap.h \
@@ -243,7 +244,6 @@ BITCOIN_CORE_H = \
   llmq/dkgsessionhandler.h \
   llmq/dkgsessionmgr.h \
   llmq/ehf_signals.h \
-  llmq/instantsend.h \
   llmq/options.h \
   llmq/params.h \
   llmq/quorums.h \
@@ -488,6 +488,7 @@ libbitcoin_node_a_SOURCES = \
   index/coinstatsindex.cpp \
   index/txindex.cpp \
   init.cpp \
+  instantsend/instantsend.cpp \
   llmq/blockprocessor.cpp \
   llmq/chainlocks.cpp \
   llmq/clsig.cpp \
@@ -498,7 +499,6 @@ libbitcoin_node_a_SOURCES = \
   llmq/dkgsessionhandler.cpp \
   llmq/dkgsessionmgr.cpp \
   llmq/ehf_signals.cpp \
-  llmq/instantsend.cpp \
   llmq/options.cpp \
   llmq/quorums.cpp \
   llmq/signing.cpp \

@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <hash.h>
-#include <llmq/instantsend.h>
+#include <instantsend/instantsend.h>
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <string_view>

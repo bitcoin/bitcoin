@@ -15,10 +15,10 @@
 #include <deploymentinfo.h>
 #include <deploymentstatus.h>
 #include <key_io.h>
+#include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/context.h>
 #include <llmq/chainlocks.h>
-#include <llmq/instantsend.h>
 #include <evo/evodb.h>
 #include <net.h>
 #include <node/context.h>

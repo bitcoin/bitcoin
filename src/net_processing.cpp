@@ -62,13 +62,13 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <evo/simplifiedmns.h>
+#include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/context.h>
 #include <llmq/dkgsession.h>
 #include <llmq/dkgsessionmgr.h>
-#include <llmq/instantsend.h>
 #include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>

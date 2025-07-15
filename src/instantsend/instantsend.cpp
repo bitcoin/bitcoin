@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/instantsend.h>
+#include <instantsend/instantsend.h>
 
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>

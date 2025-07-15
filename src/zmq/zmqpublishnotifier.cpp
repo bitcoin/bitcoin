@@ -9,16 +9,15 @@
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <streams.h>
-#include <zmq/zmqutil.h>
 
 #include <governance/common.h>
 #include <governance/vote.h>
-
+#include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
-#include <llmq/instantsend.h>
 #include <llmq/signing.h>
 
 #include <zmq.h>
+#include <zmq/zmqutil.h>
 
 #include <cstdarg>
 #include <cstddef>

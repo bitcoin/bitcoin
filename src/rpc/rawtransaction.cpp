@@ -50,10 +50,9 @@
 
 #include <evo/cbtx.h>
 #include <evo/specialtx.h>
-
+#include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
-#include <llmq/instantsend.h>
 
 #include <numeric>
 #include <stdint.h>

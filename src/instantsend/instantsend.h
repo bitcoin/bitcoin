@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_INSTANTSEND_H
-#define BITCOIN_LLMQ_INSTANTSEND_H
+#ifndef BITCOIN_INSTANTSEND_INSTANTSEND_H
+#define BITCOIN_INSTANTSEND_INSTANTSEND_H
 
 #include <llmq/signing.h>
 
@@ -370,4 +370,4 @@ public:
 };
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_INSTANTSEND_H
+#endif // BITCOIN_INSTANTSEND_INSTANTSEND_H
