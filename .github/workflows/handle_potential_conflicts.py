@@ -165,6 +165,12 @@ def main():
         else:
             print(f"Warning: Unexpected response for PR {conflict_pr_num} mergeability check.", file=sys.stderr)
             print(f"URL: {pre_mergeable.url}", file=sys.stderr)
+            print(f"Response length: {len(pre_mergeable.text)} characters", file=sys.stderr)
+            # Search for the text we're looking for
+            if "Can't automatic" in pre_mergeable.text:
+                idx = pre_mergeable.text.find("Can't automatic")
+                print(f"Found 'Can't automatic' at position {idx}", file=sys.stderr)
+                print(f"Context: {pre_mergeable.text[idx-20:idx+100]}", file=sys.stderr)
             print(f"Response snippet: {pre_mergeable.text[:500]}", file=sys.stderr)
 
     print(f"Not conflicting PRs: {good}", file=sys.stderr)
