@@ -1,13 +1,15 @@
-#include <boost/test/unit_test.hpp>
+#include <consensus/consensus.h>
 #include <hash.h>
-#include <instantsend/instantsend.h>
+#include <instantsend/lock.h>
+#include <llmq/signing.h>
 #include <primitives/transaction.h>
 #include <streams.h>
-#include <string_view>
 #include <uint256.h>
-
-// For constructing dummy outpoints using uint256S.
 #include <util/strencodings.h>
+
+#include <string_view>
+
+#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(evo_islock_tests)
 

@@ -8,6 +8,7 @@
 #include <llmq/signing.h>
 
 #include <consensus/params.h>
+#include <instantsend/lock.h>
 #include <net_types.h>
 #include <primitives/transaction.h>
 #include <util/threadinterrupt.h>
@@ -34,33 +35,6 @@ class CChainLocksHandler;
 class CQuorumManager;
 class CSigningManager;
 class CSigSharesManager;
-
-struct CInstantSendLock
-{
-    static constexpr uint8_t CURRENT_VERSION{1};
-
-    uint8_t nVersion{CURRENT_VERSION};
-    std::vector<COutPoint> inputs;
-    uint256 txid;
-    uint256 cycleHash;
-    CBLSLazySignature sig;
-
-    CInstantSendLock() = default;
-
-    SERIALIZE_METHODS(CInstantSendLock, obj)
-    {
-        READWRITE(obj.nVersion);
-        READWRITE(obj.inputs);
-        READWRITE(obj.txid);
-        READWRITE(obj.cycleHash);
-        READWRITE(obj.sig);
-    }
-
-    uint256 GetRequestId() const;
-    bool TriviallyValid() const;
-};
-
-using CInstantSendLockPtr = std::shared_ptr<CInstantSendLock>;
 
 class CInstantSendDb
 {

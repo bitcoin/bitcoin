@@ -50,6 +50,7 @@
 
 #include <evo/cbtx.h>
 #include <evo/specialtx.h>
+#include <instantsend/lock.h>
 #include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>

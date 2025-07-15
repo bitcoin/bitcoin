@@ -4,26 +4,27 @@
 
 #include <instantsend/instantsend.h>
 
-#include <llmq/chainlocks.h>
-#include <llmq/commitment.h>
-#include <llmq/quorums.h>
-#include <llmq/signing_shares.h>
-
-#include <bls/bls_batchverifier.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
 #include <index/txindex.h>
-#include <masternode/sync.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
-#include <spork.h>
 #include <stats/client.h>
 #include <txmempool.h>
 #include <util/irange.h>
 #include <util/ranges.h>
 #include <util/thread.h>
 #include <validation.h>
+
+#include <bls/bls_batchverifier.h>
+#include <instantsend/lock.h>
+#include <llmq/chainlocks.h>
+#include <llmq/commitment.h>
+#include <llmq/quorums.h>
+#include <llmq/signing_shares.h>
+#include <masternode/sync.h>
+#include <spork.h>
 
 #include <cxxtimer.hpp>
 
@@ -38,11 +39,8 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
 } // namespace node
 using node::GetTransaction;
 
-namespace llmq
-{
-
+namespace llmq {
 static const std::string_view INPUTLOCK_REQUESTID_PREFIX = "inlock";
-static const std::string_view ISLOCK_REQUESTID_PREFIX = "islock";
 
 static const std::string_view DB_ISLOCK_BY_HASH = "is_i";
 static const std::string_view DB_HASH_BY_TXID = "is_tx";
@@ -52,14 +50,6 @@ static const std::string_view DB_ARCHIVED_BY_HEIGHT_AND_HASH = "is_a1";
 static const std::string_view DB_ARCHIVED_BY_HASH = "is_a2";
 
 static const std::string_view DB_VERSION = "is_v";
-
-uint256 CInstantSendLock::GetRequestId() const
-{
-    CHashWriter hw(SER_GETHASH, 0);
-    hw << ISLOCK_REQUESTID_PREFIX;
-    hw << inputs;
-    return hw.GetHash();
-}
 
 ////////////////
 
@@ -836,27 +826,6 @@ PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom
     LOCK(cs_pendingLocks);
     pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom.GetId(), islock));
     return {};
-}
-
-/**
- * Handles trivial ISLock verification
- * @return returns false if verification failed, otherwise true
- */
-bool CInstantSendLock::TriviallyValid() const
-{
-    if (txid.IsNull() || inputs.empty()) {
-        return false;
-    }
-
-    // Check that each input is unique
-    std::set<COutPoint> dups;
-    for (const auto& o : inputs) {
-        if (!dups.emplace(o).second) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 bool CInstantSendManager::ProcessPendingInstantSendLocks(PeerManager& peerman)

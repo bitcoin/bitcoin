@@ -12,7 +12,7 @@
 
 #include <governance/common.h>
 #include <governance/vote.h>
-#include <instantsend/instantsend.h>
+#include <instantsend/lock.h>
 #include <llmq/chainlocks.h>
 #include <llmq/signing.h>
 
