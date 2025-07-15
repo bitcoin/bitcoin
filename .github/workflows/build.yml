@@ -94,6 +94,13 @@ jobs:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}
 
+  lint:
+    name: Lint
+    uses: ./.github/workflows/lint.yml
+    needs: [container]
+    with:
+      container-path: ${{ needs.container.outputs.path }}
+
   src-arm-linux:
     name: arm-linux-build
     uses: ./.github/workflows/build-src.yml
@@ -126,7 +133,7 @@ jobs:
   src-linux64_multiprocess:
     name: linux64_multiprocess-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64_multiprocess]
+    needs: [container, depends-linux64_multiprocess, lint]
     if: ${{ vars.SKIP_LINUX64_MULTIPROCESS == '' }}
     with:
       build-target: linux64_multiprocess
@@ -193,7 +200,7 @@ jobs:
   test-linux64:
     name: linux64-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64]
+    needs: [container-slim, src-linux64, lint]
     with:
       bundle-key: ${{ needs.src-linux64.outputs.key }}
       build-target: linux64
@@ -202,7 +209,7 @@ jobs:
   test-linux64_multiprocess:
     name: linux64_multiprocess-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_multiprocess]
+    needs: [container-slim, src-linux64_multiprocess, lint]
     with:
       bundle-key: ${{ needs.src-linux64_multiprocess.outputs.key }}
       build-target: linux64_multiprocess
@@ -211,7 +218,7 @@ jobs:
   test-linux64_nowallet:
     name: linux64_nowallet-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_nowallet]
+    needs: [container-slim, src-linux64_nowallet, lint]
     with:
       bundle-key: ${{ needs.src-linux64_nowallet.outputs.key }}
       build-target: linux64_nowallet
@@ -220,7 +227,7 @@ jobs:
   test-linux64_sqlite:
     name: linux64_sqlite-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_sqlite]
+    needs: [container-slim, src-linux64_sqlite, lint]
     with:
       bundle-key: ${{ needs.src-linux64_sqlite.outputs.key }}
       build-target: linux64_sqlite
@@ -229,7 +236,7 @@ jobs:
   test-linux64_tsan:
     name: linux64_tsan-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_tsan]
+    needs: [container-slim, src-linux64_tsan, lint]
     with:
       bundle-key: ${{ needs.src-linux64_tsan.outputs.key }}
       build-target: linux64_tsan
@@ -238,7 +245,7 @@ jobs:
   test-linux64_ubsan:
     name: linux64_ubsan-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_ubsan]
+    needs: [container-slim, src-linux64_ubsan, lint]
     with:
       bundle-key: ${{ needs.src-linux64_ubsan.outputs.key }}
       build-target: linux64_ubsan
