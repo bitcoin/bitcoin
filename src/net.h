@@ -1240,7 +1240,7 @@ public:
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
-    bool DisconnectNode(const std::string& node);
+    bool DisconnectNode(std::string_view node);
     bool DisconnectNode(const CSubNet& subnet);
     bool DisconnectNode(const CNetAddr& addr);
     bool DisconnectNode(NodeId id);
@@ -1366,7 +1366,7 @@ private:
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
 
     CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const std::string& addrName);
+    CNode* FindNode(std::string_view addrName);
     CNode* FindNode(const CService& addr);
 
     /**
