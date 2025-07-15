@@ -83,14 +83,14 @@ SHA256_SUMS = {
     "33930d432593e49d58a9bff4c30078823e9af5d98594d2935862788ce8a20aec": {"tag": "v25.0", "archive": "bitcoin-25.0-x86_64-linux-gnu.tar.gz"},
     "7154b35ecc8247589070ae739b7c73c4dee4794bea49eb18dc66faed65b819e7": {"tag": "v25.0", "archive": "bitcoin-25.0-win64.zip"},
 
-    "7fa582d99a25c354d23e371a5848bd9e6a79702870f9cbbf1292b86e647d0f4e": {"tag": "v28.0", "archive": "bitcoin-28.0-aarch64-linux-gnu.tar.gz"},
-    "e004b7910bedd6dd18b6c52b4eef398d55971da666487a82cd48708d2879727e": {"tag": "v28.0", "archive": "bitcoin-28.0-arm-linux-gnueabihf.tar.gz"},
-    "c8108f30dfcc7ddffab33f5647d745414ef9d3298bfe67d243fe9b9cb4df4c12": {"tag": "v28.0", "archive": "bitcoin-28.0-arm64-apple-darwin.tar.gz"},
-    "756df50d8f0c2a3d4111389a7be5f4849e0f5014dd5bfcbc37a8c3aaaa54907b": {"tag": "v28.0", "archive": "bitcoin-28.0-powerpc64-linux-gnu.tar.gz"},
-    "6ee1a520b638132a16725020146abea045db418ce91c02493f02f541cd53062a": {"tag": "v28.0", "archive": "bitcoin-28.0-riscv64-linux-gnu.tar.gz"},
-    "77e931bbaaf47771a10c376230bf53223f5380864bad3568efc7f4d02e40a0f7": {"tag": "v28.0", "archive": "bitcoin-28.0-x86_64-apple-darwin.tar.gz"},
-    "7fe294b02b25b51acb8e8e0a0eb5af6bbafa7cd0c5b0e5fcbb61263104a82fbc": {"tag": "v28.0", "archive": "bitcoin-28.0-x86_64-linux-gnu.tar.gz"},
-    "85282f4ec1bcb0cfe8db0f195e8e0f6fb77cfbe89242a81fff2bc2e9292f7acf": {"tag": "v28.0", "archive": "bitcoin-28.0-win64.zip"},
+    "10581b6d4aeb091c08c9e69eb4e4ced000038c009286dc1edb8a876656ccf6df": {"tag": "v28.2", "archive": "bitcoin-28.2-aarch64-linux-gnu.tar.gz"},
+    "c08135c249688438b1ed6f48a2f192ffaae7c7111ffee5cfad59fdae355bb47f": {"tag": "v28.2", "archive": "bitcoin-28.2-arm-linux-gnueabihf.tar.gz"},
+    "c0270ed50effc174f7ff3332dba5183a8693999dac2ba78b37d8c8797b3ea2b2": {"tag": "v28.2", "archive": "bitcoin-28.2-arm64-apple-darwin.tar.gz"},
+    "21c54bc7520e873c8b52c817af257a8a4aee15d81bb2492e5bd51af055ae4469": {"tag": "v28.2", "archive": "bitcoin-28.2-powerpc64-linux-gnu.tar.gz"},
+    "8ad2bf5dd0a7fd04afa9cd2b1309621f8662f00c799f1971cd44ba9eb9d18ef1": {"tag": "v28.2", "archive": "bitcoin-28.2-riscv64-linux-gnu.tar.gz"},
+    "866a4b703a2095301151c17dcc753e19e4dba61ec68d19709ec4f81ff4320103": {"tag": "v28.2", "archive": "bitcoin-28.2-x86_64-apple-darwin.tar.gz"},
+    "98add5f220c01b387343b70edeb6273403fe081e22cd85fda132704cdcaa98aa": {"tag": "v28.2", "archive": "bitcoin-28.2-x86_64-linux-gnu.tar.gz"},
+    "da0869639c323bbf6f264f1829083b9514e10179b90c34b09d8cbcab8a1897e3": {"tag": "v28.2", "archive": "bitcoin-28.2-win64.zip"},
 }
 
 
@@ -211,8 +211,9 @@ def download_binary(tag, args) -> int:
 
     Path(archive).unlink()
 
-    if tag >= "v23" and platform == "arm64-apple-darwin":
-        # Starting with v23 there are arm64 binaries for ARM (e.g. M1, M2) macs, but they have to be signed to run
+    if tag >= "v23" and tag < "v28.2" and args.host == "arm64-apple-darwin":
+        # Starting with v23 there are arm64 binaries for ARM (e.g. M1, M2) mac.
+        # Until v28.2 they had to be signed to run.
         binary_path = f'{os.getcwd()}/{tag}/bin/'
 
         for arm_binary in os.listdir(binary_path):
@@ -284,7 +285,12 @@ def main(args) -> int:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        epilog='''
+        HOST can be set to any of the `host-platform-triplet`s from
+        depends/README.md for which a release exists.
+        ''',
+    )
     parser.add_argument('-r', '--remove-dir', action='store_true',
                         help='remove existing directory.')
     parser.add_argument('-t', '--target-dir', action='store',
