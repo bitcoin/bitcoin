@@ -19,6 +19,7 @@ using wallet::CRecipient;
 using wallet::CWallet;
 using wallet::FEATURE_COMPRPUBKEY;
 using wallet::GetDiscardRate;
+using wallet::RANDOM_CHANGE_POSITION;
 using wallet::WalletBatch;
 
 inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
@@ -266,7 +267,7 @@ bool CTransactionBuilder::IsDust(CAmount nAmount) const
 bool CTransactionBuilder::Commit(bilingual_str& strResult)
 {
     CAmount nFeeRet = 0;
-    int nChangePosRet = -1;
+    int nChangePosRet{RANDOM_CHANGE_POSITION};
 
     // Transform the outputs to the format CWallet::CreateTransaction requires
     std::vector<CRecipient> vecSend;
@@ -294,13 +295,13 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     CAmount nAmountLeft = GetAmountLeft();
     bool fDust = IsDust(nAmountLeft);
     // If there is a either remainder which is considered to be dust (will be added to fee in this case) or no amount left there should be no change output, return if there is a change output.
-    if (nChangePosRet != -1 && fDust) {
+    if (nChangePosRet != RANDOM_CHANGE_POSITION && fDust) {
         strResult = Untranslated(strprintf("Unexpected change output %s at position %d", tx->vout[nChangePosRet].ToString(), nChangePosRet));
         return false;
     }
 
     // If there is a remainder which is not considered to be dust it should end up in a change output, return if not.
-    if (nChangePosRet == -1 && !fDust) {
+    if (nChangePosRet == RANDOM_CHANGE_POSITION && !fDust) {
         strResult = Untranslated(strprintf("Change output missing: %d", nAmountLeft));
         return false;
     }

@@ -182,7 +182,7 @@ public:
     {
         CompactTallyItem tallyItem;
         ReserveDestination reserveDest(wallet.get());
-        int nChangePosRet = -1;
+        int nChangePosRet{RANDOM_CHANGE_POSITION};
         bilingual_str strError;
         CCoinControl coinControl;
         coinControl.m_feerate = CFeeRate(1000);
@@ -205,7 +205,7 @@ public:
             }
             AddTxToChain(tx->GetHash());
             for (uint32_t n = 0; n < tx->vout.size(); ++n) {
-                if (nChangePosRet != -1 && int(n) == nChangePosRet) {
+                if (nChangePosRet != RANDOM_CHANGE_POSITION && int(n) == nChangePosRet) {
                     // Skip the change output to only return the requested coins
                     continue;
                 }

@@ -1037,14 +1037,14 @@ public:
 
     bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
-        return CreateTransaction(vecEntries, {}, -1, fCreateShouldSucceed, changeTest);
+        return CreateTransaction(vecEntries, {}, RANDOM_CHANGE_POSITION, fCreateShouldSucceed, changeTest);
     }
     bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
-        return CreateTransaction(vecEntries, strErrorExpected, -1, fCreateShouldSucceed, changeTest);
+        return CreateTransaction(vecEntries, strErrorExpected, RANDOM_CHANGE_POSITION, fCreateShouldSucceed, changeTest);
     }
 
-    bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, int nChangePosRequest = -1, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
+    bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, int nChangePosRequest = RANDOM_CHANGE_POSITION, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
         CTransactionRef tx;
         int nChangePos = nChangePosRequest;
@@ -1080,18 +1080,18 @@ public:
         }
         // Verify there is no change output if there wasn't any expected
         bool fChangeTestPassed = changeTest == ChangeTest::Skip ||
-                                 (changeTest == ChangeTest::ChangeExpected && nChangePos != -1) ||
-                                 (changeTest == ChangeTest::NoChangeExpected && nChangePos == -1);
+                                 (changeTest == ChangeTest::ChangeExpected && nChangePos != RANDOM_CHANGE_POSITION) ||
+                                 (changeTest == ChangeTest::NoChangeExpected && nChangePos == RANDOM_CHANGE_POSITION);
         BOOST_CHECK(fChangeTestPassed);
         if (!fChangeTestPassed) {
             return false;
         }
         // Verify the change is at the requested position if there was a request
-        if (nChangePosRequest != -1 && !CheckEqual(nChangePosRequest, nChangePos)) {
+        if (nChangePosRequest != RANDOM_CHANGE_POSITION && !CheckEqual(nChangePosRequest, nChangePos)) {
             return false;
         }
         // Verify the number of requested outputs does match the resulting outputs
-        return CheckEqual(vecEntries.size(), tx->vout.size() - (nChangePos != -1 ? 1 : 0));
+        return CheckEqual(vecEntries.size(), tx->vout.size() - (nChangePos != RANDOM_CHANGE_POSITION ? 1 : 0));
     }
 
     std::vector<CRecipient> GetRecipients(const std::vector<std::pair<CAmount, bool>>& vecEntries)
@@ -1108,7 +1108,7 @@ public:
     std::vector<COutPoint> GetCoins(const std::vector<std::pair<CAmount, bool>>& vecEntries)
     {
         CTransactionRef tx;
-        int nChangePosRet = -1;
+        int nChangePosRet{RANDOM_CHANGE_POSITION};
         bilingual_str strError;
         CCoinControl coinControl;
         FeeCalculation fee_calc_out;
@@ -1134,7 +1134,7 @@ public:
         std::vector<COutPoint> vecOutpoints;
         size_t n;
         for (n = 0; n < tx->vout.size(); ++n) {
-            if (nChangePosRet != -1 && int(n) == nChangePosRet) {
+            if (nChangePosRet != RANDOM_CHANGE_POSITION && int(n) == nChangePosRet) {
                 // Skip the change output to only return the requested coins
                 continue;
             }
