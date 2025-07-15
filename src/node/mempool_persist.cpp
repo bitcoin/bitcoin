@@ -83,24 +83,30 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             ++txns_tried;
 
             CTransactionRef tx;
-            int64_t nTime;
+            int64_t nTimeUs;
+            int64_t nFirstInvTime;
             int64_t nFeeDelta;
             file >> TX_WITH_WITNESS(tx);
-            file >> nTime;
+            file >> nTimeUs;
+            file >> nFirstInvTime;
             file >> nFeeDelta;
 
             if (opts.use_current_time) {
-                nTime = TicksSinceEpoch<std::chrono::seconds>(now);
+                nTimeUs = TicksSinceEpoch<std::chrono::microseconds>(now);
+                nFirstInvTime = 0;
             }
 
             CAmount amountdelta = nFeeDelta;
             if (amountdelta && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
-            if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
+            if (nTimeUs > TicksSinceEpoch<std::chrono::microseconds>(now - pool.m_opts.expiry)) {
                 LOCK(cs_main);
-                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
+                const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTimeUs, /*bypass_limits=*/false, /*test_accept=*/false);
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+                    if (nFirstInvTime != 0) {
+                        WITH_LOCK(pool.cs, const_cast<CTxMemPoolEntry*>(pool.GetEntry(tx->GetHash()))->SetFirstInvTime(nFirstInvTime));
+                    }
                     ++count;
                 } else {
                     // mempool may contain the transaction already, e.g. from
@@ -191,7 +197,8 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         LogInfo("Writing %u mempool transactions to file...\n", mempool_transactions_to_write);
         for (const auto& i : vinfo) {
             file << TX_WITH_WITNESS(*(i.tx));
-            file << int64_t{count_seconds(i.m_time)};
+            file << int64_t{count_microseconds(i.m_time_us)};
+            file << int64_t{count_microseconds(i.m_first_inv_time.value_or(0s))};
             file << int64_t{i.nFeeDelta};
             mapDeltas.erase(i.tx->GetHash());
         }

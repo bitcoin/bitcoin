@@ -194,6 +194,12 @@ struct TxMempoolInfo
     /** Time the transaction entered the mempool. */
     std::chrono::seconds m_time;
 
+    /** Time the transaction entered the mempool, in microseconds. */
+    std::chrono::microseconds m_time_us;
+
+    /** Time of the first announcement receive for this transaction, in microseconds. */
+    std::optional<std::chrono::microseconds> m_first_inv_time;
+
     /** Fee of the transaction. */
     CAmount fee;
 
@@ -409,7 +415,7 @@ private:
 
     static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it)
     {
-        return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
+        return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetTimeUs(), it->GetFirstInvTime(), it->GetFee(), it->GetTxSize(), it->GetModifiedFee() - it->GetFee()};
     }
 
 public:
