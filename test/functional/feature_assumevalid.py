@@ -153,12 +153,12 @@ class AssumeValidTest(BitcoinTestFramework):
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
         p2p1.send_header_for_blocks(self.blocks[0:2000])
         p2p1.send_header_for_blocks(self.blocks[2000:])
-
-        # Send all blocks to node1. All blocks will be accepted.
-        for i in range(2202):
-            p2p1.send_without_ping(msg_block(self.blocks[i]))
-        # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
-        p2p1.sync_with_ping(timeout=960)
+        with self.nodes[1].assert_debug_log(expected_msgs=['Disabling signature validations at block #1', 'Enabling signature validations at block #103']):
+            # Send all blocks to node1. All blocks will be accepted.
+            for i in range(2202):
+                p2p1.send_without_ping(msg_block(self.blocks[i]))
+            # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
+            p2p1.sync_with_ping(timeout=960)
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
 
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
