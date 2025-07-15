@@ -11,6 +11,7 @@
 #include <streams.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/obfuscation.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
@@ -256,7 +257,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     }
 
     // The base-case obfuscation key, which is a noop.
-    obfuscate_key = std::vector<unsigned char>(OBFUSCATE_KEY_NUM_BYTES, '\000');
+    obfuscate_key = std::vector<unsigned char>(Obfuscation::KEY_SIZE, '\000');
 
     bool key_exists = Read(OBFUSCATE_KEY_KEY, obfuscate_key);
 
@@ -323,15 +324,13 @@ size_t CDBWrapper::DynamicMemoryUsage() const
 // past the null-terminator.
 const std::string CDBWrapper::OBFUSCATE_KEY_KEY("\000obfuscate_key", 14);
 
-const unsigned int CDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
-
 /**
  * Returns a string (consisting of 8 random bytes) suitable for use as an
  * obfuscating XOR key.
  */
 std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
 {
-    std::vector<uint8_t> ret(OBFUSCATE_KEY_NUM_BYTES);
+    std::vector<uint8_t> ret(Obfuscation::KEY_SIZE);
     GetRandBytes(ret);
     return ret;
 }

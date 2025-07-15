@@ -8,6 +8,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/fs.h>
+#include <util/obfuscation.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
@@ -563,7 +564,7 @@ BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
     const FlatFilePos pos{0, 0};
 
     const FlatFileSeq test_file{m_args.GetDataDirBase(), "buffered_file_test_random", node::BLOCKFILE_CHUNK_SIZE};
-    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(Obfuscation::KEY_SIZE)};
 
     // Write out the file with random content
     {
@@ -618,7 +619,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
 
     const FlatFileSeq test_buffered{m_args.GetDataDirBase(), "buffered_write_test", node::BLOCKFILE_CHUNK_SIZE};
     const FlatFileSeq test_direct{m_args.GetDataDirBase(), "direct_write_test", node::BLOCKFILE_CHUNK_SIZE};
-    const std::vector obfuscation{m_rng.randbytes<std::byte>(8)};
+    const std::vector obfuscation{m_rng.randbytes<std::byte>(Obfuscation::KEY_SIZE)};
 
     {
         DataBuffer test_data{m_rng.randbytes<std::byte>(file_size)};
