@@ -52,9 +52,9 @@ static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
 
 static const std::map<std::string, unsigned int>& mapFlagNames = g_verify_flag_names;
 
-unsigned int ParseScriptFlags(std::string strFlags)
+script_verify_flags ParseScriptFlags(std::string strFlags)
 {
-    unsigned int flags = SCRIPT_VERIFY_NONE;
+    script_verify_flags flags = SCRIPT_VERIFY_NONE;
     if (strFlags.empty() || strFlags == "NONE") return flags;
 
     std::vector<std::string> words = SplitString(strFlags, ',');
@@ -72,7 +72,7 @@ unsigned int ParseScriptFlags(std::string strFlags)
 // Check that all flags in STANDARD_SCRIPT_VERIFY_FLAGS are present in mapFlagNames.
 bool CheckMapFlagNames()
 {
-    unsigned int standard_flags_missing{STANDARD_SCRIPT_VERIFY_FLAGS};
+    script_verify_flags standard_flags_missing{STANDARD_SCRIPT_VERIFY_FLAGS};
     for (const auto& pair : mapFlagNames) {
         standard_flags_missing &= ~(pair.second);
     }
@@ -83,7 +83,7 @@ bool CheckMapFlagNames()
 * Check that the input scripts of a transaction are valid/invalid as expected.
 */
 bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& map_prevout_scriptPubKeys,
-    const std::map<COutPoint, int64_t>& map_prevout_values, unsigned int flags,
+    const std::map<COutPoint, int64_t>& map_prevout_values, script_verify_flags flags,
     const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid)
 {
     bool tx_valid = true;
@@ -117,18 +117,18 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
  * CLEANSTACK must be used WITNESS and P2SH
  */
 
-unsigned int TrimFlags(unsigned int flags)
+script_verify_flags TrimFlags(script_verify_flags flags)
 {
     // WITNESS requires P2SH
-    if (!(flags & SCRIPT_VERIFY_P2SH)) flags &= ~(unsigned int)SCRIPT_VERIFY_WITNESS;
+    if (!(flags & SCRIPT_VERIFY_P2SH)) flags &= ~SCRIPT_VERIFY_WITNESS;
 
     // CLEANSTACK requires WITNESS (and transitively CLEANSTACK requires P2SH)
-    if (!(flags & SCRIPT_VERIFY_WITNESS)) flags &= ~(unsigned int)SCRIPT_VERIFY_CLEANSTACK;
+    if (!(flags & SCRIPT_VERIFY_WITNESS)) flags &= ~SCRIPT_VERIFY_CLEANSTACK;
     Assert(IsValidFlagCombination(flags));
     return flags;
 }
 
-unsigned int FillFlags(unsigned int flags)
+script_verify_flags FillFlags(script_verify_flags flags)
 {
     // CLEANSTACK implies WITNESS
     if (flags & SCRIPT_VERIFY_CLEANSTACK) flags |= SCRIPT_VERIFY_WITNESS;
@@ -143,11 +143,11 @@ unsigned int FillFlags(unsigned int flags)
 // that are valid and without duplicates. For example: if flags=1111 and the 4 possible flags are
 // 0001, 0010, 0100, and 1000, this should return the set {0111, 1011, 1101, 1110}.
 // Assumes that mapFlagNames contains all script verify flags.
-std::set<unsigned int> ExcludeIndividualFlags(unsigned int flags)
+std::set<script_verify_flags> ExcludeIndividualFlags(script_verify_flags flags)
 {
-    std::set<unsigned int> flags_combos;
+    std::set<script_verify_flags> flags_combos;
     for (const auto& pair : mapFlagNames) {
-        const unsigned int flags_excluding_one = TrimFlags(flags & ~(pair.second));
+        script_verify_flags flags_excluding_one = TrimFlags(flags & ~(pair.second));
         if (flags != flags_excluding_one) {
             flags_combos.insert(flags_excluding_one);
         }
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             BOOST_CHECK(state.IsValid());
 
             PrecomputedTransactionData txdata(tx);
-            unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+            script_verify_flags verify_flags = ParseScriptFlags(test[2].get_str());
 
             // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
             if (~verify_flags != FillFlags(~verify_flags)) {
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             // Backwards compatibility of script verification flags: Removing any flag(s) should not invalidate a valid transaction
             for (const auto& [name, flag] : mapFlagNames) {
                 // Removing individual flags
-                unsigned int flags = TrimFlags(~(verify_flags | flag));
+                script_verify_flags flags = TrimFlags(~(verify_flags | flag));
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/true)) {
                     BOOST_ERROR("Tx unexpectedly failed with flag " << name << " unset: " << strTest);
                 }
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             }
 
             PrecomputedTransactionData txdata(tx);
-            unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+            script_verify_flags verify_flags = ParseScriptFlags(test[2].get_str());
 
             // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
             if (verify_flags != FillFlags(verify_flags)) {
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
             // Backwards compatibility of script verification flags: Adding any flag(s) should not validate an invalid transaction
             for (const auto& [name, flag] : mapFlagNames) {
-                unsigned int flags = FillFlags(verify_flags | flag);
+                script_verify_flags flags = FillFlags(verify_flags | flag);
                 // Adding individual flags
                 if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags, txdata, strTest, /*expect_valid=*/false)) {
                     BOOST_ERROR("Tx unexpectedly passed with flag " << name << " set: " << strTest);
@@ -453,7 +453,7 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
 }
 
-static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, uint32_t flags, bool success)
+static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, script_verify_flags flags, bool success)
 {
     ScriptError error;
     CTransaction inputi(input);

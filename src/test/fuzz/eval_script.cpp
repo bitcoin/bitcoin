@@ -12,7 +12,7 @@
 FUZZ_TARGET(eval_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+    const script_verify_flags flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const std::vector<uint8_t> script_bytes = [&] {
         if (fuzzed_data_provider.remaining_bytes() != 0) {
             return fuzzed_data_provider.ConsumeRemainingBytes<uint8_t>();

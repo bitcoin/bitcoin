@@ -119,7 +119,7 @@ FUZZ_TARGET(script, .init = initialize_script)
         }
         const std::vector<std::string> random_string_vector = ConsumeRandomLengthStringVector(fuzzed_data_provider);
         const uint32_t u32{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-        const uint32_t flags{u32 | SCRIPT_VERIFY_P2SH};
+        const script_verify_flags flags{u32 | SCRIPT_VERIFY_P2SH};
         {
             CScriptWitness wit;
             for (const auto& s : random_string_vector) {
