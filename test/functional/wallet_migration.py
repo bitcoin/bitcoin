@@ -131,6 +131,24 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert os.path.exists(migrate_info['backup_path'])
         return migrate_info, wallet
 
+    def test_crosschain(self):
+        self.log.info("Temporarily switch old node to a different network")
+        self.stop_node(1)
+        self.old_node.chain = "signet"
+        self.old_node.replace_in_config([("regtest=", "signet="), ("[regtest]", "[signet]")])
+        # Disable network sync and prevent disk space warning on small (tmp)fs
+        self.start_node(1, extra_args=self.old_node.extra_args + ["-maxconnections=0", "-prune=550"])
+
+        wallet_name = "crosschain"
+        self.create_legacy_wallet(wallet_name)
+        assert_raises_rpc_error(-4, "Wallet loading failed. Wallet files should not be reused across chains.", lambda: self.migrate_and_get_rpc(wallet_name))
+
+        self.stop_node(1)
+        self.old_node.chain = "regtest"
+        self.old_node.replace_in_config([("signet=", "regtest="), ("[signet]", "[regtest]")])
+        self.start_node(1)
+        self.connect_nodes(1, 0)
+
     def test_basic(self):
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
 
@@ -1379,6 +1397,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generate(self.master_node, 101)
 
         # TODO: Test the actual records in the wallet for these tests too. The behavior may be correct, but the data written may not be what we actually want
+        self.test_crosschain()
         self.test_basic()
         self.test_multisig()
         self.test_other_watchonly()
