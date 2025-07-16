@@ -47,7 +47,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             ["-blockfilterindex", "-peerblockfilters"],
-            ["-blockfilterindex"],
+            ["-blockfilterindex", "-peerblockfilters=0"],
         ]
 
     def run_test(self):
@@ -264,7 +264,7 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         self.log.info("Test -peerblockfilters without -blockfilterindex raises an error")
         self.stop_node(0)
-        self.nodes[0].extra_args = ["-peerblockfilters"]
+        self.nodes[0].extra_args = ["-peerblockfilters", "-blockfilterindex=0"]
         msg = "Error: Cannot set -peerblockfilters without -blockfilterindex."
         self.nodes[0].assert_start_raises_init_error(expected_msg=msg)
 

@@ -81,7 +81,7 @@ class RpcMiscTest(BitcoinTestFramework):
         assert_equal(node.echoipc("hello"), "hello")
 
         self.log.info("test getindexinfo")
-        self.restart_node(0, ["-txindex=0"])
+        self.restart_node(0, ["-txindex=0", "-blockfilterindex=0", "-peerblockfilters=0"])
         # Without any indices running the RPC returns an empty object
         assert_equal(node.getindexinfo(), {})
 

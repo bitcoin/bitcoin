@@ -15,7 +15,7 @@ class GetBlockFilterTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-blockfilterindex"], []]
+        self.extra_args = [["-blockfilterindex"], ["-blockfilterindex=0", "-peerblockfilters=0"]]
 
     def run_test(self):
         # Create two chains by disconnecting nodes 0 & 1, mining, then reconnecting
@@ -55,7 +55,7 @@ class GetBlockFilterTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Unknown filtertype", self.nodes[0].getblockfilter, genesis_hash, "unknown")
 
         # Test getblockfilter fails on node without compact block filter index
-        self.restart_node(0, extra_args=["-blockfilterindex=0"])
+        self.restart_node(0, extra_args=["-blockfilterindex=0", "-peerblockfilters=0"])
         for filter_type in FILTER_TYPES:
             assert_raises_rpc_error(-1, "Index is not enabled for filtertype {}".format(filter_type),
                                     self.nodes[0].getblockfilter, genesis_hash, filter_type)
