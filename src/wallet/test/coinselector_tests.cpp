@@ -297,6 +297,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
+    coin_selection_params_bnb.m_subtract_fee_outputs = true;
+
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), /*coinjoin_loader=*/nullptr, "", m_args, CreateMockWalletDatabase());
         wallet->LoadWallet();
@@ -314,7 +316,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coins.clear();
         add_coin(coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate);
         coins.at(0).input_bytes = 40;
-        coin_selection_params_bnb.m_subtract_fee_outputs = true;
         const auto result9 = SelectCoinsBnB(GroupCoins(coins), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
         BOOST_CHECK(result9);
         BOOST_CHECK_EQUAL(result9->GetSelectedValue(), 1 * CENT);
