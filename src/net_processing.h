@@ -81,6 +81,8 @@ public:
         uint32_t max_extra_txs{DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN};
         //! Whether all P2P messages are captured to disk
         bool capture_messages{false};
+        //! Whether this node enable package relay and enforces package-related protocol
+        bool m_enable_package_relay{false};
         //! Whether or not the internal RNG behaves deterministically (this is
         //! a test-only option).
         bool deterministic_rng{false};

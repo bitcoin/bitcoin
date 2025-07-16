@@ -278,6 +278,8 @@ struct Peer {
 
     /** Whether this peer relays txs via wtxid */
     std::atomic<bool> m_wtxid_relay{false};
+    /**Whether this peer relays packages */
+    std::atomic<bool> m_package_relay{false};
     /** The feerate in the most recent BIP133 `feefilter` message sent to the peer.
      *  It is *not* a p2p protocol violation for the peer to send us
      *  transactions with a lower fee rate than this. See BIP133. */
@@ -3556,6 +3558,19 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         if (greatest_common_version >= WTXID_RELAY_VERSION) {
             MakeAndPushMessage(pfrom, NetMsgType::WTXIDRELAY);
+            if (m_opts.m_enable_package_relay) {
+                WITH_LOCK(m_tx_download_mutex, m_txdownloadman.ReceivedVersion(peer->m_id));
+                if (!m_opts.ignore_incoming_txs) {
+                // Always send a sendpackages for each version we support if:
+                    // - Protocol version is at least WTXID_RELAY_VERSION
+                    // - We have package relay enabled
+                    // - We are not in blocksonly mode.
+                    {
+                        LOCK(m_tx_download_mutex);
+                        MakeAndPushMessage(pfrom, NetMsgType::SENDPACKAGES, uint64_t{m_txdownloadman.GetSupportedVersions()});
+                    }
+                }
+            }
         }
 
         // Signal ADDRv2 support (BIP155).
@@ -3752,6 +3767,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             });
         }
 
+        {
+            LOCK(m_tx_download_mutex);
+            if (m_opts.m_enable_package_relay && ReceivedVerack(peer->m_id, pfrom.m_relays_txs, peer->m_wtxid_relay)) {
+                peer->m_package_relay = true;
+            }
+        }
+
         pfrom.fSuccessfullyConnected = true;
         return;
     }
@@ -3776,6 +3798,23 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // save whether peer selects us as BIP152 high-bandwidth peer
         // (receiving sendcmpct(1) signals high-bandwidth, sendcmpct(0) low-bandwidth)
         pfrom.m_bip152_highbandwidth_from = sendcmpct_hb;
+        return;
+    }
+
+    if (msg_type == NetMsgType::SENDPACKAGES) {
+        if (m_opts.m_enable_package_relay) {
+            if (pfrom.fSuccessfullyConnected) {
+                // Disconnect peers that send a SENDPACKAGES message after VERACK
+                LogDebug(BCLog::NET, "sendpackages received after verack from peer=%d; disconnecting\n", pfrom.GetId());
+                pfrom.fDisconnect = true;
+                return;
+            }
+            uint64_t sendpackages_versions;
+            vRecv >> sendpackages_versions;
+            WITH_LOCK(m_tx_download_mutex, m_txdownloadman.ReceivedSendpackages(peer->m_id, node::PackageRelayVersions{sendpackages_versions}));
+        } else {
+            LogDebug(BCLog::NET, "sendpackages from peer=%d ignored, as our node does not have package relay enabled\n", pfrom.GetId());
+        }
         return;
     }
 
