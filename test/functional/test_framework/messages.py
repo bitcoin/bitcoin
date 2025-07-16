@@ -80,6 +80,8 @@ MAX_OP_RETURN_RELAY = 100_000
 
 DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
 
+PKG_RELAY_PKGTXNS = 1
+
 MAGIC_BYTES = {
     "mainnet": b"\xf9\xbe\xb4\xd9",
     "testnet4": b"\x1c\x16\x3f\x28",
@@ -1902,6 +1904,26 @@ class msg_sendtxrcncl:
     def __repr__(self):
         return "msg_sendtxrcncl(version=%lu, salt=%lu)" %\
             (self.version, self.salt)
+
+class msg_sendpackages:
+    __slots__ = ("versions")
+    msgtype = b"sendpackages"
+
+    def __init__(self):
+        self.versions = 0
+
+    def deserialize(self, f):
+        # self.versions = struct.unpack("<Q", f.read(8))[0]
+        self.versions = int.from_bytes(f.read(8), "little")
+
+    def serialize(self):
+        r = b""
+        # r += struct.pack("<Q", self.versions)
+        r += self.versions.to_bytes(8, "little")
+        return r
+
+    def __repr__(self):
+        return "msg_sendpackages(versions={})".format(self.versions)
 
 class TestFrameworkScript(unittest.TestCase):
     def test_addrv2_encode_decode(self):

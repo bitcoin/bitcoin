@@ -176,6 +176,7 @@ BASE_SCRIPTS = [
     'wallet_txn_clone.py --segwit',
     'rpc_getchaintips.py',
     'rpc_misc.py',
+    'p2p_sendpackages.py',
     'p2p_1p1c_network.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
