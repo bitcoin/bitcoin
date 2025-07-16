@@ -96,7 +96,7 @@ bool CSimplifiedMNList::operator==(const CSimplifiedMNList& rhs) const
             );
 }
 
-bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, std::shared_ptr<const CSimplifiedMNList> sml,
+bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> sml,
                               BlockValidationState& state)
 {
     try {
@@ -105,7 +105,7 @@ bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, std::shared_ptr<const CSim
         int64_t nTime1 = GetTimeMicros();
 
         static Mutex cached_mutex;
-        static std::shared_ptr<const CSimplifiedMNList> cached_sml GUARDED_BY(cached_mutex){
+        static gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> cached_sml GUARDED_BY(cached_mutex){
             std::make_shared<const CSimplifiedMNList>()};
         static uint256 merkleRootCached GUARDED_BY(cached_mutex);
         static bool mutatedCached GUARDED_BY(cached_mutex){false};

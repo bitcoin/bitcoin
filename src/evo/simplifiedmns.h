@@ -9,6 +9,7 @@
 #include <evo/dmn_types.h>
 #include <evo/netinfo.h>
 #include <evo/providertx.h>
+#include <gsl/pointers.h>
 #include <merkleblock.h>
 #include <netaddress.h>
 #include <pubkey.h>
@@ -107,7 +108,7 @@ public:
     bool operator==(const CSimplifiedMNList& rhs) const;
 };
 
-bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, std::shared_ptr<const CSimplifiedMNList> sml,
+bool CalcCbTxMerkleRootMNList(uint256& merkleRootRet, gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> sml,
                               BlockValidationState& state);
 
 #endif // BITCOIN_EVO_SIMPLIFIEDMNS_H
