@@ -8,7 +8,7 @@
 
 #include <compat/compat.h>
 #include <sync.h>
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 
 #include <deque>
 #include <memory>

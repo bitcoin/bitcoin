@@ -12,7 +12,7 @@
 #include <saltedhasher.h>
 #include <serialize.h>
 #include <sync.h>
-#include <threadinterrupt.h>
+#include <util/threadinterrupt.h>
 #include <uint256.h>
 
 #include <atomic>

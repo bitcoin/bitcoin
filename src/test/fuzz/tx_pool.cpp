@@ -334,7 +334,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
             tx_pool.RollingFeeUpdate();
         }
         if (fuzzed_data_provider.ConsumeBool()) {
-            const auto& txid = fuzzed_data_provider.ConsumeBool() ?
+            const auto txid = fuzzed_data_provider.ConsumeBool() ?
                                    mut_tx.GetHash() :
                                    PickValue(fuzzed_data_provider, txids);
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);

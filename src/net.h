@@ -28,12 +28,12 @@
 #include <span.h>
 #include <streams.h>
 #include <sync.h>
-#include <threadinterrupt.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/edge.h>
 #include <util/sock.h>
 #include <util/system.h>
+#include <util/threadinterrupt.h>
 #include <util/wpipe.h>
 #include <consensus/params.h>
 

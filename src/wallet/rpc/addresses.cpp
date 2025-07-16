@@ -194,7 +194,8 @@ RPCHelpMan addmultisigaddress()
         "Each key is a Dash address or hex-encoded public key.\n"
         "This functionality is only intended for use with non-watchonly addresses.\n"
         "See `importaddress` for watchonly p2sh address support.\n"
-        "If 'label' is specified, assign address to that label.\n",
+        "If 'label' is specified, assign address to that label.\n"
+        "Note: This command is only compatible with legacy wallets.\n",
         {
             {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys or addresses."},
             {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The Dash addresses or hex-encoded public keys",

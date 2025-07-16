@@ -10,6 +10,7 @@
 #endif
 
 #include <attributes.h>
+#include <clientversion.h>
 #include <tinyformat.h>
 
 #include <stdexcept>
@@ -20,8 +21,10 @@ class NonFatalCheckError : public std::runtime_error
 };
 
 #define format_internal_error(msg, file, line, func, report)                                    \
-    strprintf("Internal bug detected: \"%s\"\n%s:%d (%s)\nPlease report this issue here: %s\n", \
-              msg, file, line, func, report)
+    strprintf("Internal bug detected: \"%s\"\n%s:%d (%s)\n"                                     \
+              "%s %s\n"                                                                           \
+              "Please report this issue here: %s\n",                                             \
+              msg, file, line, func, PACKAGE_NAME, FormatFullVersion(), report)
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>

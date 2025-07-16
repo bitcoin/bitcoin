@@ -128,7 +128,7 @@ RPC interface will be abused.
     Instead, expose it only on the host system's localhost, for example:
     `-p 127.0.0.1:8332:8332`
 
-- **Secure authentication:** By default, Dash Core generates unique
+- **Secure authentication:** By default, when no `rpcpassword` is specified, Dash Core generates unique
   login credentials each time it restarts and puts them into a file
   readable only by the user that started Dash Core, allowing any of
   that user's RPC clients with read access to the file to login
