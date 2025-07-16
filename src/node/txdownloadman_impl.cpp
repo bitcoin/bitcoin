@@ -88,6 +88,25 @@ std::vector<TxOrphanage::OrphanTxBase> TxDownloadManager::GetOrphanTransactions(
     return m_impl->GetOrphanTransactions();
 }
 
+PackageRelayVersions TxDownloadManager::GetSupportedVersions() const {
+    return m_impl->GetSupportedVersions();
+}
+
+void TxDownloadManager::ReceivedVersion(NodeId nodeid) {
+    m_impl->ReceivedVersion(nodeid);
+}
+
+void TxDownloadManager::ReceivedSendpackages(NodeId nodeid, PackageRelayVersions version) {
+    m_impl->ReceivedSendpackages(nodeid, version);
+}
+
+std::optional<PackageRelayVersions> TxDownloadManager::UpdateRegistrationState(NodeId nodeid, bool txrelay, bool wtxidrelay) {
+    return m_impl->UpdateRegistrationState(nodeid, txrelay, wtxidrelay);
+}
+
+bool TxDownloadManager::NodeSupportsVersion(const NodeId& nodeid, const PackageRelayVersions& versions) {
+    return m_impl->NodeSupportsVersion(nodeid, versions);
+}
 // TxDownloadManagerImpl
 void TxDownloadManagerImpl::ActiveTipChange()
 {
@@ -157,6 +176,10 @@ void TxDownloadManagerImpl::ConnectedPeer(NodeId nodeid, const TxDownloadConnect
 
 void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
 {
+    if (auto it{m_registration_states.find(nodeid)}; it != m_registration_states.end()) {
+        m_registration_states.erase(it);
+    }
+
     m_orphanage->EraseForPeer(nodeid);
     m_txrequest.DisconnectedPeer(nodeid);
 
@@ -583,5 +606,44 @@ void TxDownloadManagerImpl::CheckIsEmpty()
 std::vector<TxOrphanage::OrphanTxBase> TxDownloadManagerImpl::GetOrphanTransactions() const
 {
     return m_orphanage->GetOrphanTransactions();
+}
+
+PackageRelayVersions TxDownloadManagerImpl::GetSupportedVersions() const {
+    return PKG_RELAY_PKGTXNS;
+}
+
+void TxDownloadManagerImpl::ReceivedVersion(NodeId nodeid) {
+    if (m_registration_states.find(nodeid) != m_registration_states.end()) return;
+    m_registration_states.insert(std::make_pair(nodeid, RegistrationState{}));
+}
+
+void TxDownloadManagerImpl::ReceivedSendpackages(NodeId nodeid, PackageRelayVersions version) {
+    const auto it = m_registration_states.find(nodeid);
+    if (it == m_registration_states.end()) return;
+    it->second.m_sendpackages_received = true;
+    // Ignore versions we don't understand. Relay packages of versions that we both support.
+    it->second.m_versions_in_common = PackageRelayVersions(GetSupportedVersions() & version);
+}
+
+std::optional<PackageRelayVersions> TxDownloadManagerImpl::UpdateRegistrationState(NodeId nodeid, bool txrelay, bool wtxidrelay) {
+    const auto& it = m_registration_states.find(nodeid);
+    if (it == m_registration_states.end()) return std::nullopt;
+    it->second.m_txrelay = txrelay;
+    it->second.m_wtxid_relay = wtxidrelay;
+    const bool final_state = it->second.CanRelayPackages();
+    PackageRelayVersions version = it->second.m_versions_in_common;
+    m_registration_states.erase(it);
+    if (final_state) {
+        m_package_relay_versions.insert(std::make_pair(nodeid, version));
+        return version;
+    }
+    return std::nullopt;
+}
+bool TxDownloadManagerImpl::NodeSupportsVersion(const NodeId& nodeid, const PackageRelayVersions& versions) {
+    auto node_versions = m_package_relay_versions.find(nodeid);
+    if (m_package_relay_versions.find(nodeid) != m_package_relay_versions.end()) {
+        return node_versions->second & versions;
+    }
+    return false;
 }
 } // namespace node

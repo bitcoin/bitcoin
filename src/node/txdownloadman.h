@@ -17,8 +17,16 @@ class CRollingBloomFilter;
 class CTxMemPool;
 class GenTxid;
 class TxRequestTracker;
+
 namespace node {
 class TxDownloadManagerImpl;
+
+enum PackageRelayVersions : uint64_t {
+    PKG_RELAY_NONE = 0,
+    PKG_RELAY_PKGTXNS = (1 << 0),
+};
+
+static constexpr bool DEFAULT_ENABLE_PACKAGE_RELAY{false};
 
 /** Maximum number of in-flight transaction requests from a peer. It is not a hard limit, but the threshold at which
  *  point the OVERLOADED_PEER_TX_DELAY kicks in. */
@@ -171,6 +179,16 @@ public:
 
     /** Wrapper for TxOrphanage::GetOrphanTransactions */
     std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
+
+    /**Which package relay versions we support*/
+    PackageRelayVersions GetSupportedVersions() const;
+    /**Whether the node supports the given versions*/
+    bool NodeSupportsVersion(const NodeId& nodeid, const PackageRelayVersions& versions);
+
+    // The following are used for package relay negotiation
+    void ReceivedVersion(NodeId nodeid);
+    void ReceivedSendpackages(NodeId nodeid, PackageRelayVersions version);
+    std::optional<PackageRelayVersions> UpdateRegistrationState(NodeId nodeid, bool txrelay, bool wtxidrelay);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H

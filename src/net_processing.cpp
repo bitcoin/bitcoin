@@ -316,6 +316,14 @@ struct Peer {
 
         /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
         std::atomic<CAmount> m_fee_filter_received{0};
+
+        /** What package versions we agreed to relay. */
+        std::atomic<node::PackageRelayVersions> m_package_versions_supported;
+
+        /** Whether or not the peer supports this version of package relay. */
+        bool SupportsVersion(node::PackageRelayVersions version) {
+            return m_package_versions_supported & version;
+        }
     };
 
     /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
@@ -1073,6 +1081,9 @@ private:
     void PushAddress(Peer& peer, const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     void LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block);
+
+    // Finalize the registration state
+    bool ReceivedVerack(NodeId nodeid, bool txrelay, bool wtxidrelay) EXCLUSIVE_LOCKS_REQUIRED(m_tx_download_mutex, !m_peer_mutex);
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -3432,6 +3443,17 @@ void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer
     } else {
         LogInfo("%s", msg);
     }
+}
+
+bool PeerManagerImpl::ReceivedVerack(NodeId nodeid, bool txrelay, bool wtxidrelay) {
+    if (auto version = m_txdownloadman.UpdateRegistrationState(nodeid, txrelay, wtxidrelay)) {
+        PeerRef peer = GetPeerRef(nodeid);
+        if (auto peer_tx_relay = peer->GetTxRelay()) {
+            peer_tx_relay->m_package_versions_supported = *version;
+        }
+        return true;
+    }
+    return false;
 }
 
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,

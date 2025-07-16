@@ -18,6 +18,21 @@
 class CTxMemPool;
 namespace node {
 class TxDownloadManagerImpl {
+    struct RegistrationState {
+        // All of the following bools will need to be true
+        /** Whether this peer allows transaction relay from us. */
+        bool m_txrelay{true};
+        // Whether this peer sent a BIP339 wtxidrelay message.
+        bool m_wtxid_relay{false};
+        /** Whether this peer says they can do package relay. */
+        bool m_sendpackages_received{false};
+        /** Versions of package relay supported by this node.
+         * This is a subset of PACKAGE_RELAY_SUPPORTED_VERSIONS. */
+        PackageRelayVersions m_versions_in_common{PKG_RELAY_NONE};
+        bool CanRelayPackages() {
+            return m_txrelay && m_wtxid_relay && m_sendpackages_received && m_versions_in_common != PKG_RELAY_NONE;
+        }
+    };
 public:
     TxDownloadOptions m_opts;
 
@@ -141,6 +156,13 @@ public:
      * all peers we are connected to (no block-relay-only and temporary connections). */
     std::map<NodeId, PeerInfo> m_peer_info;
 
+    /** Stores relevant information about the peer prior to verack. Upon completion of version
+     * handshake, we use this information to decide whether we relay packages with this peer. */
+    std::map<NodeId, RegistrationState> m_registration_states;
+
+    /** Only contains nodes that support some type of package relay. */
+    std::map<NodeId, PackageRelayVersions> m_package_relay_versions;
+
     /** Number of wtxid relay peers we have in m_peer_info. */
     uint32_t m_num_wtxid_peers{0};
 
@@ -189,6 +211,16 @@ public:
     void CheckIsEmpty(NodeId nodeid);
 
     std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
+
+    PackageRelayVersions GetSupportedVersions() const;
+
+    void ReceivedVersion(NodeId nodeid);
+
+    void ReceivedSendpackages(NodeId nodeid, PackageRelayVersions version);
+
+    std::optional<PackageRelayVersions> UpdateRegistrationState(NodeId nodeid, bool txrelay, bool wtxidrelay);
+
+    bool NodeSupportsVersion(const NodeId& nodeid, const PackageRelayVersions& versions);
 
 protected:
     /** Helper for getting deduplicated vector of Txids in vin. */
