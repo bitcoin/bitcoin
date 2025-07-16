@@ -12,6 +12,7 @@ TEST_UTIL_H = \
     test/util/chainstate.h \
     test/util/json.h \
     test/util/index.h \
+    test/util/llmq_tests.h \
     test/util/logging.h \
     test/util/mining.h \
     test/util/net.h \
