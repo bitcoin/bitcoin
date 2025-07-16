@@ -191,9 +191,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         current_info = node.getmempoolinfo()
         mempoolmin_feerate = current_info["mempoolminfee"]
 
-        # Mempool transaction which is evicted due to being at the "bottom" of the mempool when the
-        # mempool overflows and evicts by descendant score. It's important that the eviction doesn't
-        # happen in the middle of package evaluation, as it can invalidate the coins cache.
+        # Mempool transaction is replaced by a package transaction.
         double_spent_utxo = self.wallet.get_utxo(confirmed_only=True)
         replaced_tx = self.wallet.send_self_transfer(
             from_node=node,
@@ -205,8 +203,8 @@ class MempoolLimitTest(BitcoinTestFramework):
         assert replaced_tx["txid"] in node.getrawmempool()
 
         # This parent spends the above mempool transaction that exists when its inputs are first
-        # looked up, but disappears later. It is rejected for being too low fee (but eligible for
-        # reconsideration), and its inputs are cached. When the mempool transaction is evicted, its
+        # looked up, but will disappear if the replacement occurs. It is rejected for being too low fee (but eligible for
+        # reconsideration), and its inputs are cached. When the mempool transaction is replaced, its
         # coin is no longer available, but the cache could still contain the tx.
         cpfp_parent = self.wallet.create_self_transfer(
             utxo_to_spend=replaced_tx["new_utxo"],
