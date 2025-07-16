@@ -15,11 +15,6 @@
 using node::ReadBlockFromDisk;
 
 namespace llmq {
-static bool ChainLocksSigningEnabled(const CSporkManager& sporkman)
-{
-    return sporkman.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 0;
-}
-
 void CChainLocksHandler::TrySignChainTip(const llmq::CInstantSendManager& isman)
 {
     Cleanup();
@@ -36,7 +31,8 @@ void CChainLocksHandler::TrySignChainTip(const llmq::CInstantSendManager& isman)
         return;
     }
 
-    if (!ChainLocksSigningEnabled(spork_manager)) {
+    if (spork_manager.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) != 0) {
+        // ChainLocks signing not enabled
         return;
     }
 
