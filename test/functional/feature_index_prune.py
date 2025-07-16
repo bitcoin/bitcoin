@@ -22,7 +22,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.extra_args = [
             ["-fastprune", "-prune=1", "-blockfilterindex=1"] + DEPLOYMENT_ARGS,
-            ["-fastprune", "-prune=1", "-coinstatsindex=1"] + DEPLOYMENT_ARGS,
+            ["-fastprune", "-prune=1", "-coinstatsindex=1", "-blockfilterindex=0", "-peerblockfilters=0"] + DEPLOYMENT_ARGS,
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"] + DEPLOYMENT_ARGS,
             [] + DEPLOYMENT_ARGS,
         ]
