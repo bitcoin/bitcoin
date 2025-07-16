@@ -91,4 +91,24 @@ template <typename DBVal>
     return true;
 }
 
+template <typename DBVal>
+static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockRef& block, DBVal& result)
+{
+    // First check if the result is stored under the height index and the value
+    // there matches the block hash. This should be the case if the block is on
+    // the active chain.
+    std::pair<uint256, DBVal> read_out;
+    if (!db.Read(DBHeightKey(block.height), read_out)) {
+        return false;
+    }
+    if (read_out.first == block.hash) {
+        result = std::move(read_out.second);
+        return true;
+    }
+
+    // If value at the height index corresponds to an different block, the
+    // result will be stored in the hash index.
+    return db.Read(DBHashKey(block.hash), result);
+}
+
 #endif // BITCOIN_INDEX_DB_KEY_H
