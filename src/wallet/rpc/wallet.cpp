@@ -679,13 +679,20 @@ static RPCHelpMan unloadwallet()
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
     }
 
-    // Release the "main" shared pointer and prevent further notifications.
-    // Note that any attempt to load the same wallet would fail until the wallet
-    // is destroyed (see CheckUniqueFileid).
     std::vector<bilingual_str> warnings;
-    std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
-    if (!RemoveWallet(context, wallet, load_on_start, warnings)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Requested wallet already unloaded");
+    {
+        WalletRescanReserver reserver(*wallet);
+        if (!reserver.reserve()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+        }
+
+        // Release the "main" shared pointer and prevent further notifications.
+        // Note that any attempt to load the same wallet would fail until the wallet
+        // is destroyed (see CheckUniqueFileid).
+        std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
+        if (!RemoveWallet(context, wallet, load_on_start, warnings)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Requested wallet already unloaded");
+        }
     }
 
     UnloadWallet(std::move(wallet));
