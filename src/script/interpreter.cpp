@@ -1426,7 +1426,7 @@ public:
         // Serialize the nSequence
         if (nInput != nIn && (fHashSingle || fHashNone))
             // let the others update at will
-            ::Serialize(s, (int)0);
+            ::Serialize(s, int{0});
         else
             ::Serialize(s, txTo.vin[nInput].nSequence);
     }

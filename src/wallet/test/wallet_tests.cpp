@@ -713,10 +713,10 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
     std::vector<unsigned char> malformed_record;
     CVectorWriter vw(0, 0, malformed_record, 0);
     vw << std::string("notadescriptor");
-    vw << (uint64_t)0;
-    vw << (int32_t)0;
-    vw << (int32_t)0;
-    vw << (int32_t)1;
+    vw << uint64_t{0};
+    vw << int32_t{0};
+    vw << int32_t{0};
+    vw << int32_t{1};
 
     SpanReader vr{0, 0, malformed_record};
     WalletDescriptor w_desc;

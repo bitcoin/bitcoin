@@ -342,7 +342,7 @@ public:
         collection_flags.setup(size);
         epoch_flags.resize(size);
         // Set to 45% as described above
-        epoch_size = std::max((uint32_t)1, (45 * size) / 100);
+        epoch_size = std::max(uint32_t{1}, (45 * size) / 100);
         // Initially set to wait for a whole epoch
         epoch_heuristic_counter = epoch_size;
         return size;

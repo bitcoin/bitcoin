@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         COutPoint outp{txid, 0};
         newcoin.nHeight = 1;
         newcoin.out.nValue = InsecureRand32();
-        newcoin.out.scriptPubKey.assign((uint32_t)56, 1);
+        newcoin.out.scriptPubKey.assign(uint32_t{56}, 1);
         coins_view.AddCoin(outp, std::move(newcoin), false);
 
         return outp;
