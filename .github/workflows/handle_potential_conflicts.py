@@ -60,7 +60,7 @@ def set_github_output(name, value):
         return
 
     try:
-        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+        with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf8') as f:
             # For multiline values, use the delimiter syntax
             if '\n' in str(value):
                 delimiter = f"EOF_{uuid.uuid4()}"
