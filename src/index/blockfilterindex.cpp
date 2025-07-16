@@ -297,24 +297,6 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     return true;
 }
 
-static bool LookupOne(const CDBWrapper& db, const CBlockIndex* block_index, DBVal& result)
-{
-    // First check if the result is stored under the height index and the value there matches the
-    // block hash. This should be the case if the block is on the active chain.
-    std::pair<uint256, DBVal> read_out;
-    if (!db.Read(DBHeightKey(block_index->nHeight), read_out)) {
-        return false;
-    }
-    if (read_out.first == block_index->GetBlockHash()) {
-        result = std::move(read_out.second);
-        return true;
-    }
-
-    // If value at the height index corresponds to an different block, the result will be stored in
-    // the hash index.
-    return db.Read(DBHashKey(block_index->GetBlockHash()), result);
-}
-
 static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start_height,
                         const CBlockIndex* stop_index, std::vector<DBVal>& results)
 {
@@ -377,7 +359,7 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
 bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const
 {
     DBVal entry;
-    if (!LookupOne(*m_db, block_index, entry)) {
+    if (!LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
         return false;
     }
 
@@ -400,7 +382,7 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
     }
 
     DBVal entry;
-    if (!LookupOne(*m_db, block_index, entry)) {
+    if (!LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
         return false;
     }
 
