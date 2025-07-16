@@ -2513,14 +2513,14 @@ bool DescriptorScriptPubKeyMan::GetMnemonicString(SecureString& mnemonic_out, Se
         if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
             return DecryptSecret(encryption_key, crypted_mnemonic, pubkey.GetHash(), mnemonic_v);
         })) {
-            LogPrintf("can't decrypt mnemonic pubkey %s crypted: %s\n", pubkey.GetHash().ToString(), HexStr(crypted_mnemonic));
+            WalletLogPrintf("%s: ERROR: can't decrypt mnemonic pubkey %s crypted: %s\n", __func__, pubkey.GetHash().ToString(), HexStr(crypted_mnemonic));
             return false;
         }
         if (!crypted_mnemonic_passphrase.empty()) {
             if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
                 return DecryptSecret(encryption_key, crypted_mnemonic_passphrase, pubkey.GetHash(), mnemonic_passphrase_v);
             })) {
-                LogPrintf("can't decrypt mnemonic-passphrase\n");
+                WalletLogPrintf("%s: ERROR: can't decrypt mnemonic passphrase\n", __func__);
                 return false;
             }
         }

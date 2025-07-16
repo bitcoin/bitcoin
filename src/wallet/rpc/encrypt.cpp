@@ -253,7 +253,7 @@ RPCHelpMan encryptwallet()
     }
 
     if (pwallet->IsHDEnabled()) {
-        return "wallet encrypted; If you will forget passphrase you will lose access to your funds. Be sure that you have backup of your seed or mnemonic.";
+        return "wallet encrypted; If you forget the passphrase, you will lose access to your funds. Make sure that you have backup of your seed or mnemonic.";
     }
     return "wallet encrypted; The keypool has been flushed. You need to make a new backup.";
 },
