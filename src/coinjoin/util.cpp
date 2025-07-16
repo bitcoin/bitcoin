@@ -19,6 +19,7 @@ using wallet::CRecipient;
 using wallet::CWallet;
 using wallet::FEATURE_COMPRPUBKEY;
 using wallet::GetDiscardRate;
+using wallet::RANDOM_CHANGE_POSITION;
 using wallet::WalletBatch;
 
 inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeNew)
@@ -127,7 +128,7 @@ CTransactionBuilder::CTransactionBuilder(CWallet& wallet, const CompactTallyItem
     // Change always goes back to origin
     coinControl.destChange = tallyItemIn.txdest;
     // Only allow tallyItems inputs for tx creation
-    coinControl.fAllowOtherInputs = false;
+    coinControl.m_allow_other_inputs = false;
     // Create dummy tx to calculate the exact required fees upfront for accurate amount and fee calculations
     CMutableTransaction dummyTx;
     // Select all tallyItem outputs in the coinControl so that CreateTransaction knows what to use
@@ -147,7 +148,7 @@ CTransactionBuilder::CTransactionBuilder(CWallet& wallet, const CompactTallyItem
         dummyBatch.TxnAbort();
         dummyScript = ::GetScriptForDestination(PKHash(dummyPubkey));
         // Calculate required bytes for the dummy signed tx with tallyItem's inputs only
-        nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), &m_wallet, false);
+        nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), &m_wallet, /*coin_control=*/nullptr);
     }
     // Calculate the output size
     nBytesOutput = ::GetSerializeSize(CTxOut(0, dummyScript), PROTOCOL_VERSION);
@@ -266,7 +267,7 @@ bool CTransactionBuilder::IsDust(CAmount nAmount) const
 bool CTransactionBuilder::Commit(bilingual_str& strResult)
 {
     CAmount nFeeRet = 0;
-    int nChangePosRet = -1;
+    int nChangePosRet{RANDOM_CHANGE_POSITION};
 
     // Transform the outputs to the format CWallet::CreateTransaction requires
     std::vector<CRecipient> vecSend;
@@ -282,7 +283,11 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     {
         LOCK2(m_wallet.cs_wallet, ::cs_main);
         FeeCalculation fee_calc_out;
-        if (!CreateTransaction(m_wallet, vecSend, tx, nFeeRet, nChangePosRet, strResult, coinControl, fee_calc_out)) {
+        if (auto txr = wallet::CreateTransaction(m_wallet, vecSend, nChangePosRet, strResult, coinControl, fee_calc_out)) {
+            tx = txr->tx;
+            nFeeRet = txr->fee;
+            nChangePosRet = txr->change_pos;
+        } else {
             return false;
         }
     }
@@ -290,13 +295,13 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     CAmount nAmountLeft = GetAmountLeft();
     bool fDust = IsDust(nAmountLeft);
     // If there is a either remainder which is considered to be dust (will be added to fee in this case) or no amount left there should be no change output, return if there is a change output.
-    if (nChangePosRet != -1 && fDust) {
+    if (nChangePosRet != RANDOM_CHANGE_POSITION && fDust) {
         strResult = Untranslated(strprintf("Unexpected change output %s at position %d", tx->vout[nChangePosRet].ToString(), nChangePosRet));
         return false;
     }
 
     // If there is a remainder which is not considered to be dust it should end up in a change output, return if not.
-    if (nChangePosRet == -1 && !fDust) {
+    if (nChangePosRet == RANDOM_CHANGE_POSITION && !fDust) {
         strResult = Untranslated(strprintf("Change output missing: %d", nAmountLeft));
         return false;
     }

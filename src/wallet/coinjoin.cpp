@@ -149,7 +149,7 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
 
         if (!setWalletTxesCounted.emplace(outpoint.hash).second) continue;
 
-        std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
+        const auto it = mapWallet.find(outpoint.hash);
         if (it == mapWallet.end()) continue;
 
         const CWalletTx& wtx = (*it).second;

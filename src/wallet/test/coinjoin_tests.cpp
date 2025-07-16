@@ -164,7 +164,7 @@ public:
 
     CWalletTx& AddTxToChain(uint256 nTxHash)
     {
-        std::map<uint256, CWalletTx>::iterator it;
+        decltype(wallet->mapWallet)::iterator it;
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -182,8 +182,7 @@ public:
     {
         CompactTallyItem tallyItem;
         ReserveDestination reserveDest(wallet.get());
-        CAmount nFeeRet;
-        int nChangePosRet = -1;
+        int nChangePosRet{RANDOM_CHANGE_POSITION};
         bilingual_str strError;
         CCoinControl coinControl;
         coinControl.m_feerate = CFeeRate(1000);
@@ -194,14 +193,19 @@ public:
         for (CAmount nAmount : vecAmounts) {
             CTransactionRef tx;
             FeeCalculation fee_calc_out;
-            BOOST_CHECK(CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
+            {
+                auto txr = CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, nChangePosRet, strError, coinControl, fee_calc_out);
+                BOOST_CHECK(txr.has_value());
+                tx = txr->tx;
+                nChangePosRet = txr->change_pos;
+            }
             {
                 LOCK2(wallet->cs_wallet, ::cs_main);
                 wallet->CommitTransaction(tx, {}, {});
             }
             AddTxToChain(tx->GetHash());
             for (uint32_t n = 0; n < tx->vout.size(); ++n) {
-                if (nChangePosRet != -1 && int(n) == nChangePosRet) {
+                if (nChangePosRet != RANDOM_CHANGE_POSITION && int(n) == nChangePosRet) {
                     // Skip the change output to only return the requested coins
                     continue;
                 }

@@ -26,19 +26,17 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // instead of the miner.
     auto check_tx = [&wallet](CAmount leftover_input_amount) {
         CRecipient recipient{GetScriptForRawPubKey({}), 500 * COIN - leftover_input_amount, true /* subtract fee */};
-        CTransactionRef tx;
-        CAmount fee;
-        int change_pos = -1;
         bilingual_str error;
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
         FeeCalculation fee_calc;
-        BOOST_CHECK(CreateTransaction(*wallet, {recipient}, tx, fee, change_pos, error, coin_control, fee_calc));
-        BOOST_CHECK_EQUAL(tx->vout.size(), 1);
-        BOOST_CHECK_EQUAL(tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - fee);
-        BOOST_CHECK_GT(fee, 0);
-        return fee;
+        std::optional<CreatedTransactionResult> txr = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, error, coin_control, fee_calc);
+        BOOST_CHECK(txr.has_value());
+        BOOST_CHECK_EQUAL(txr->tx->vout.size(), 1);
+        BOOST_CHECK_EQUAL(txr->tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - txr->fee);
+        BOOST_CHECK_GT(txr->fee, 0);
+        return txr->fee;
     };
 
     // Send full input amount to recipient, check that only nonzero fee is

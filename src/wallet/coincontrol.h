@@ -9,9 +9,14 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
+#include <script/keyorigin.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 
 #include <optional>
+#include <algorithm>
+#include <map>
+#include <set>
 
 namespace wallet {
 enum class CoinType : uint8_t
@@ -39,13 +44,12 @@ class CCoinControl
 public:
     //! Custom change destination, if not set an address is generated
     CTxDestination destChange = CNoDestination();
-    //! If false, only selected inputs are used
-    bool m_add_inputs = true;
     //! If false, only safe inputs will be used
     bool m_include_unsafe_inputs = false;
-    //! If false, allows unselected inputs, but requires all selected inputs be used if fAllowOtherInputs is true (default)
-    bool fAllowOtherInputs = false;
-    //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with fAllowOtherInputs
+    //! If true, the selection process can add extra unselected inputs from the wallet
+    //! while requires all selected inputs be used
+    bool m_allow_other_inputs = false;
+    //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with m_allow_other_inputs
     bool fRequireAllInputs = true;
     //! Includes watch only addresses which are solvable
     bool fAllowWatchOnly = false;
@@ -67,6 +71,8 @@ public:
     int m_min_depth = DEFAULT_MIN_DEPTH;
     //! Maximum chain depth value for coin availability
     int m_max_depth = DEFAULT_MAX_DEPTH;
+    //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
+    FlatSigningProvider m_external_provider;
     //! Controls which types of coins are allowed to be used (default: ALL_COINS)
     CoinType nCoinType = CoinType::ALL_COINS;
 
@@ -82,9 +88,30 @@ public:
         return (setSelected.count(output) > 0);
     }
 
+    bool IsExternalSelected(const COutPoint& output) const
+    {
+        return (m_external_txouts.count(output) > 0);
+    }
+
+    bool GetExternalOutput(const COutPoint& outpoint, CTxOut& txout) const
+    {
+        const auto ext_it = m_external_txouts.find(outpoint);
+        if (ext_it == m_external_txouts.end()) {
+            return false;
+        }
+        txout = ext_it->second;
+        return true;
+    }
+
     void Select(const COutPoint& output)
     {
         setSelected.insert(output);
+    }
+
+    void SelectExternal(const COutPoint& outpoint, const CTxOut& txout)
+    {
+        setSelected.insert(outpoint);
+        m_external_txouts.emplace(outpoint, txout);
     }
 
     void UnSelect(const COutPoint& output)
@@ -102,8 +129,24 @@ public:
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
 
-    // Dash-specific helpers
+    void SetInputWeight(const COutPoint& outpoint, int64_t weight)
+    {
+        m_input_weights[outpoint] = weight;
+    }
 
+    bool HasInputWeight(const COutPoint& outpoint) const
+    {
+        return m_input_weights.count(outpoint) > 0;
+    }
+
+    int64_t GetInputWeight(const COutPoint& outpoint) const
+    {
+        auto it = m_input_weights.find(outpoint);
+        assert(it != m_input_weights.end());
+        return it->second;
+    }
+
+    // Dash-specific helpers
     void UseCoinJoin(bool fUseCoinJoin)
     {
         nCoinType = fUseCoinJoin ? CoinType::ONLY_FULLY_MIXED : CoinType::ALL_COINS;
@@ -116,6 +159,9 @@ public:
 
 private:
     std::set<COutPoint> setSelected;
+    std::map<COutPoint, CTxOut> m_external_txouts;
+    //! Map of COutPoints to the maximum weight for that input
+    std::map<COutPoint, int64_t> m_input_weights;
 };
 } // namespace wallet
 

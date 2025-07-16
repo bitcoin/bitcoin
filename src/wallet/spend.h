@@ -10,21 +10,21 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <optional>
+
 namespace wallet {
+//! Special value for setting a random position for change output
+constexpr int RANDOM_CHANGE_POSITION{-1};
+
 /** Get the marginal bytes if spending the specified output from this transaction.
- * use_max_sig indicates whether to use the maximum sized, 72 byte signature when calculating the
- * size of the input spend. This should only be set when watch-only outputs are allowed */
-int GetTxSpendSize(const CWallet& wallet, const CWalletTx& wtx, unsigned int out, bool use_max_sig = false);
+ * Use CoinControl to determine whether to expect signature grinding when calculating the size of the input spend. */
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, const CCoinControl* coin_control = nullptr);
+int CalculateMaximumSignedInputSize(const CTxOut& txout, const COutPoint outpoint, const SigningProvider* pwallet, const CCoinControl* coin_control = nullptr);
 
-// Get the marginal bytes of spending the specified output
-int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, bool use_max_sig = false);
-
-/** Calculate the size of the transaction assuming all signatures are max size
-* Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
-* NOTE: this requires that all inputs must be in mapWallet (eg the tx should
-* be IsAllFromMe). */
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
-int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
+/** Calculate the size of the transaction using CoinControl to determine
+ * whether to expect signature grinding when calculating the size of the input spend. */
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const CCoinControl* coin_control = nullptr) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
+int64_t CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control = nullptr);
 
 struct CoinsResult {
     std::vector<COutput> coins;
@@ -95,12 +95,22 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+struct CreatedTransactionResult
+{
+    CTransactionRef tx;
+    CAmount fee;
+    int change_pos;
+
+    CreatedTransactionResult(CTransactionRef tx, CAmount fee, int change_pos)
+        : tx(tx), fee(fee), change_pos(change_pos) {}
+};
+
 /**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
- * @note passing nChangePosInOut as -1 will result in setting a random position
+ * @note passing change_pos as -1 will result in setting a random position
  */
-bool CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, int nExtraPayloadSize = 0);
+std::optional<CreatedTransactionResult> CreateTransaction(CWallet& wallet, const std::vector<CRecipient>& vecSend, int change_pos, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true, int nExtraPayloadSize = 0);
 
 /**
  * Insert additional inputs into the transaction by

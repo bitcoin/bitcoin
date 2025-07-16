@@ -554,12 +554,14 @@ public:
     CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
-        CAmount fee;
-        int changePos = -1;
         bilingual_str error;
         CCoinControl dummy;
         FeeCalculation fee_calc_out;
-        BOOST_CHECK(CreateTransaction(*wallet, {recipient}, tx, fee, changePos, error, dummy, fee_calc_out));
+        {
+            std::optional<CreatedTransactionResult> txr = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, error, dummy, fee_calc_out);
+            BOOST_CHECK(txr.has_value());
+            tx = txr->tx;
+        }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
@@ -866,16 +868,16 @@ BOOST_FIXTURE_TEST_CASE(ZapSelectTx, TestChain100Setup)
 
     {
         auto block_hash = block_tx.GetHash();
-        auto prev_hash = m_coinbase_txns[0]->GetHash();
+        auto prev_tx = m_coinbase_txns[0];
 
         LOCK(wallet->cs_wallet);
-        BOOST_CHECK(wallet->HasWalletSpend(prev_hash));
+        BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
         BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 1u);
 
         std::vector<uint256> vHashIn{ block_hash }, vHashOut;
         BOOST_CHECK_EQUAL(wallet->ZapSelectTx(vHashIn, vHashOut), DBErrors::LOAD_OK);
 
-        BOOST_CHECK(!wallet->HasWalletSpend(prev_hash));
+        BOOST_CHECK(!wallet->HasWalletSpend(prev_tx));
         BOOST_CHECK_EQUAL(wallet->mapWallet.count(block_hash), 0u);
     }
 
@@ -1035,22 +1037,29 @@ public:
 
     bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
-        return CreateTransaction(vecEntries, {}, -1, fCreateShouldSucceed, changeTest);
+        return CreateTransaction(vecEntries, {}, RANDOM_CHANGE_POSITION, fCreateShouldSucceed, changeTest);
     }
     bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
-        return CreateTransaction(vecEntries, strErrorExpected, -1, fCreateShouldSucceed, changeTest);
+        return CreateTransaction(vecEntries, strErrorExpected, RANDOM_CHANGE_POSITION, fCreateShouldSucceed, changeTest);
     }
 
-    bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, int nChangePosRequest = -1, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
+    bool CreateTransaction(const std::vector<std::pair<CAmount, bool>>& vecEntries, std::string strErrorExpected, int nChangePosRequest = RANDOM_CHANGE_POSITION, bool fCreateShouldSucceed = true, ChangeTest changeTest = ChangeTest::Skip)
     {
         CTransactionRef tx;
-        CAmount nFeeRet;
         int nChangePos = nChangePosRequest;
         bilingual_str strError;
 
         FeeCalculation fee_calc_out;
-        bool fCreationSucceeded = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), tx, nFeeRet, nChangePos, strError, coinControl, fee_calc_out);
+        bool fCreationSucceeded{false};
+        {
+            auto txr = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePos, strError, coinControl, fee_calc_out);
+            if (txr.has_value()) {
+                fCreationSucceeded = true;
+                tx = txr->tx;
+                nChangePos = txr->change_pos;
+            }
+        }
         bool fHitMaxTries = strError.original == strExceededMaxTries;
         // This should never happen.
         if (fHitMaxTries) {
@@ -1071,18 +1080,18 @@ public:
         }
         // Verify there is no change output if there wasn't any expected
         bool fChangeTestPassed = changeTest == ChangeTest::Skip ||
-                                 (changeTest == ChangeTest::ChangeExpected && nChangePos != -1) ||
-                                 (changeTest == ChangeTest::NoChangeExpected && nChangePos == -1);
+                                 (changeTest == ChangeTest::ChangeExpected && nChangePos != RANDOM_CHANGE_POSITION) ||
+                                 (changeTest == ChangeTest::NoChangeExpected && nChangePos == RANDOM_CHANGE_POSITION);
         BOOST_CHECK(fChangeTestPassed);
         if (!fChangeTestPassed) {
             return false;
         }
         // Verify the change is at the requested position if there was a request
-        if (nChangePosRequest != -1 && !CheckEqual(nChangePosRequest, nChangePos)) {
+        if (nChangePosRequest != RANDOM_CHANGE_POSITION && !CheckEqual(nChangePosRequest, nChangePos)) {
             return false;
         }
         // Verify the number of requested outputs does match the resulting outputs
-        return CheckEqual(vecEntries.size(), tx->vout.size() - (nChangePos != -1 ? 1 : 0));
+        return CheckEqual(vecEntries.size(), tx->vout.size() - (nChangePos != RANDOM_CHANGE_POSITION ? 1 : 0));
     }
 
     std::vector<CRecipient> GetRecipients(const std::vector<std::pair<CAmount, bool>>& vecEntries)
@@ -1099,12 +1108,16 @@ public:
     std::vector<COutPoint> GetCoins(const std::vector<std::pair<CAmount, bool>>& vecEntries)
     {
         CTransactionRef tx;
-        CAmount nFeeRet;
-        int nChangePosRet = -1;
+        int nChangePosRet{RANDOM_CHANGE_POSITION};
         bilingual_str strError;
         CCoinControl coinControl;
         FeeCalculation fee_calc_out;
-        BOOST_CHECK(wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), tx, nFeeRet, nChangePosRet, strError, coinControl, fee_calc_out));
+        {
+            auto txr = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePosRet, strError, coinControl, fee_calc_out);
+            BOOST_CHECK(txr.has_value());
+            tx = txr->tx;
+            nChangePosRet = txr->change_pos;
+        }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
         {
@@ -1121,7 +1134,7 @@ public:
         std::vector<COutPoint> vecOutpoints;
         size_t n;
         for (n = 0; n < tx->vout.size(); ++n) {
-            if (nChangePosRet != -1 && int(n) == nChangePosRet) {
+            if (nChangePosRet != RANDOM_CHANGE_POSITION && int(n) == nChangePosRet) {
                 // Skip the change output to only return the requested coins
                 continue;
             }
@@ -1431,20 +1444,18 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     }
 
     // Create two conflicting transactions, add one to the wallet and mine the other one.
-    CTransactionRef tx1;
-    CTransactionRef tx2;
-    CAmount fee;
-    int changePos = -1;
     bilingual_str error;
     CCoinControl dummy;
     FeeCalculation fee_calc_out;
-    BOOST_CHECK(CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
-                                  tx1, fee, changePos, error, dummy, fee_calc_out));
-    BOOST_CHECK(CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
-                                  tx2, fee, changePos, error, dummy, fee_calc_out));
-    wallet->CommitTransaction(tx1, {}, {});
+    auto txr1 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
+                                  RANDOM_CHANGE_POSITION, error, dummy, fee_calc_out);
+    BOOST_CHECK(txr1.has_value());
+    auto txr2 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
+                                  RANDOM_CHANGE_POSITION, error, dummy, fee_calc_out);
+    BOOST_CHECK(txr2.has_value());
+    wallet->CommitTransaction(txr1->tx, {}, {});
     BOOST_CHECK_EQUAL(GetAvailableBalance(*wallet), 0);
-    CreateAndProcessBlock({CMutableTransaction(*tx2)}, GetScriptForRawPubKey({}));
+    CreateAndProcessBlock({CMutableTransaction(*txr2->tx)}, GetScriptForRawPubKey({}));
     {
         LOCK(wallet->cs_wallet);
         wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
@@ -1457,10 +1468,10 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
     {
         LOCK(wallet->cs_wallet);
-        const auto& conflicts = wallet->GetConflicts(tx2->GetHash());
+        const auto& conflicts = wallet->GetConflicts(txr2->tx->GetHash());
         BOOST_CHECK_EQUAL(conflicts.size(), 2);
-        BOOST_CHECK_EQUAL(conflicts.count(tx1->GetHash()), 1);
-        BOOST_CHECK_EQUAL(conflicts.count(tx2->GetHash()), 1);
+        BOOST_CHECK_EQUAL(conflicts.count(txr1->tx->GetHash()), 1);
+        BOOST_CHECK_EQUAL(conflicts.count(txr2->tx->GetHash()), 1);
     }
 
     // Committed tx is the one that should be marked as "conflicting".
