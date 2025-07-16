@@ -2421,7 +2421,7 @@ bool DescriptorScriptPubKeyMan::AddKey(const CKeyID& key_id, const CKey& key, co
     return true;
 }
 
-bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key, const std::vector<unsigned char>& mnemonic,const std::vector<unsigned char>& mnemonic_passphrase)
+bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key, const std::vector<unsigned char>& crypted_mnemonic,const std::vector<unsigned char>& crypted_mnemonic_passphrase)
 {
     LOCK(cs_desc_man);
     if (!m_map_keys.empty()) {
@@ -2429,7 +2429,7 @@ bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKe
     }
 
     m_map_crypted_keys[key_id] = make_pair(pubkey, crypted_key);
-    m_crypted_mnemonics[key_id] = make_pair(mnemonic, mnemonic_passphrase);
+    m_crypted_mnemonics[key_id] = make_pair(crypted_mnemonic, crypted_mnemonic_passphrase);
     return true;
 }
 
