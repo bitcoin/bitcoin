@@ -2870,10 +2870,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
             LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                SecureString mnemonic = gArgs.GetArg("-mnemonic", "").c_str();
-                SecureString mnemonic_passphrase = gArgs.GetArg("-mnemonicpassphrase", "").c_str();
-                gArgs.ForceRemoveArg("mnemonic");
-                gArgs.ForceRemoveArg("mnemonicpassphrase");
+                SecureString mnemonic = args.GetArg("-mnemonic", "").c_str();
+                SecureString mnemonic_passphrase = args.GetArg("-mnemonicpassphrase", "").c_str();
+                args.ForceRemoveArg("mnemonic");
+                args.ForceRemoveArg("mnemonicpassphrase");
                 walletInstance->SetupDescriptorScriptPubKeyMans(mnemonic, mnemonic_passphrase);
                 // SetupDescriptorScriptPubKeyMans already calls SetupGeneration for us so we don't need to call SetupGeneration separately
             } else { // Top up the keypool
@@ -3831,7 +3831,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const SecureString& mnemonic_arg, 
 
     // Make a seed
     // TODO: remove duplicated code with CHDChain::SetMnemonic
-    const SecureString mnemonic = mnemonic_arg.empty() ? CMnemonic::Generate(gArgs.GetIntArg("-mnemonicbits", CHDChain::DEFAULT_MNEMONIC_BITS)) : mnemonic_arg;
+    const SecureString mnemonic = mnemonic_arg.empty() ? CMnemonic::Generate(m_args.GetIntArg("-mnemonicbits", CHDChain::DEFAULT_MNEMONIC_BITS)) : mnemonic_arg;
     if (!CMnemonic::Check(mnemonic)) {
         throw std::runtime_error(std::string(__func__) + ": invalid mnemonic: `" + std::string(mnemonic.c_str()) + "`");
     }
