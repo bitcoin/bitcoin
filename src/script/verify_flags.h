@@ -9,7 +9,7 @@
 #include <compare>
 #include <cstdint>
 
-enum class script_verify_flag_name : uint32_t;
+enum class script_verify_flag_name : uint8_t;
 
 class script_verify_flags
 {
@@ -22,7 +22,7 @@ public:
     consteval explicit(false) script_verify_flags(value_type f) : m_value{f} { if (f != 0) throw 0; }
 
     // implicit construction from a hard-coded SCRIPT_VERIFY_* constant is also okay
-    constexpr explicit(false) script_verify_flags(script_verify_flag_name f) : m_value{static_cast<value_type>(f)} { }
+    constexpr explicit(false) script_verify_flags(script_verify_flag_name f) : m_value{value_type{1} << static_cast<uint8_t>(f)} { }
 
     // rule of 5
     constexpr script_verify_flags(const script_verify_flags&) = default;
