@@ -1170,18 +1170,22 @@ public:
     // Addrman functions
     /**
      * Return all or many randomly selected addresses, optionally by network.
+     * This function does not use an address response cache and should only be
+     * used in trusted contexts.
      *
      * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all). Value must be from 0 to 100.
      * @param[in] network        Select only addresses of this network (nullopt = all).
      * @param[in] filtered       Select only addresses that are considered high quality (false = all).
      */
-    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
+    std::vector<CAddress> GetAddressesUncached(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
     /**
-     * Cache is used to minimize topology leaks, so it should
-     * be used for all non-trusted calls, for example, p2p.
+     * Return all or many addresses, using the address response cache.
+     * Cache is used to minimize topology leaks, so it should be used for all
+     * non-trusted calls, for example, p2p.
+     *
      * A non-malicious call (from RPC or a peer with addr permission) should
-     * call the function without a parameter to avoid using the cache.
+     * instead use GetAddressesUncached to avoid using the cache.
      */
     std::vector<CAddress> GetAddresses(CNode& requestor, size_t max_addresses, size_t max_pct);
 
