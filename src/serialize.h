@@ -825,13 +825,6 @@ template<typename Stream, typename A, typename B, typename C> void Serialize(Str
 template<typename Stream, typename A, typename B, typename C> void Unserialize(Stream& is, std::basic_string<A, B, C>& str);
 
 /**
- *  SecureString
- */
-/*
-template<typename Stream, typename C> void Serialize(Stream& os, const SecureString& str);
-template<typename Stream, typename C> void Unserialize(Stream& is, SecureString& str);
-*/
-/**
  * prevector
  * prevectors of unsigned char are a special case and are intended to be serialized as a single opaque blob.
  */
