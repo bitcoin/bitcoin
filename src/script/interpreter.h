@@ -154,7 +154,7 @@ using enum script_verify_flag_name;
 static constexpr int MAX_SCRIPT_VERIFY_FLAGS_BITS = static_cast<int>(SCRIPT_VERIFY_END_MARKER);
 
 // assert there is still a spare bit
-static_assert(0 < MAX_SCRIPT_VERIFY_FLAGS_BITS && MAX_SCRIPT_VERIFY_FLAGS_BITS <= 31);
+static_assert(0 < MAX_SCRIPT_VERIFY_FLAGS_BITS && MAX_SCRIPT_VERIFY_FLAGS_BITS <= 63);
 
 static constexpr script_verify_flags::value_type MAX_SCRIPT_VERIFY_FLAGS = ((script_verify_flags::value_type{1} << MAX_SCRIPT_VERIFY_FLAGS_BITS) - 1);
 
