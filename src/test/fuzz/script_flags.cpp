@@ -22,12 +22,12 @@ FUZZ_TARGET(script_flags)
     try {
         const CTransaction tx(deserialize, TX_WITH_WITNESS, ds);
 
-        unsigned int verify_flags;
+        script_verify_flags verify_flags;
         ds >> verify_flags;
 
         if (!IsValidFlagCombination(verify_flags)) return;
 
-        unsigned int fuzzed_flags;
+        script_verify_flags fuzzed_flags;
         ds >> fuzzed_flags;
 
         std::vector<CTxOut> spent_outputs;

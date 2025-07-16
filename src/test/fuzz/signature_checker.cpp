@@ -51,7 +51,7 @@ public:
 FUZZ_TARGET(signature_checker)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+    const script_verify_flags flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const SigVersion sig_version = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
     const auto script_1{ConsumeScript(fuzzed_data_provider)};
     const auto script_2{ConsumeScript(fuzzed_data_provider)};
