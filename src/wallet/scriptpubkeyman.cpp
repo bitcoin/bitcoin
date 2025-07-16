@@ -13,6 +13,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <wallet/bip39.h>
 #include <wallet/scriptpubkeyman.h>
 
 namespace wallet {
@@ -1849,6 +1850,7 @@ bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master
             keyFail = true;
             break;
         }
+        // TODO: test for mnemonics
         keyPass = true;
         if (m_decryption_thoroughly_checked)
             break;
@@ -1875,15 +1877,34 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
     {
         const CKey &key = key_in.second;
         CPubKey pubkey = key.GetPubKey();
+        assert(pubkey.GetID() == key_in.first);
+        const auto mnemonic_in = m_mnemonics.find(key_in.first);
         CKeyingMaterial secret(key.begin(), key.end());
         std::vector<unsigned char> crypted_secret;
         if (!EncryptSecret(master_key, secret, pubkey.GetHash(), crypted_secret)) {
             return false;
         }
+        std::vector<unsigned char> crypted_mnemonic;
+        std::vector<unsigned char> crypted_mnemonic_passphrase;
+        if (mnemonic_in != m_mnemonics.end()) {
+            const Mnemonic mnemonic = mnemonic_in->second;
+
+            CKeyingMaterial mnemonic_secret(mnemonic.first.begin(), mnemonic.first.end());
+            CKeyingMaterial mnemonic_passphrase_secret(mnemonic.second.begin(), mnemonic.second.end());
+            if (!EncryptSecret(master_key, mnemonic_secret, pubkey.GetHash(), crypted_mnemonic)) {
+                return false;
+            }
+            if (!EncryptSecret(master_key, mnemonic_passphrase_secret, pubkey.GetHash(), crypted_mnemonic_passphrase)) {
+                return false;
+            }
+        }
+
         m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        m_crypted_mnemonics[pubkey.GetID()] = make_pair(crypted_mnemonic, crypted_mnemonic_passphrase);
+        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret, crypted_mnemonic, crypted_mnemonic_passphrase);
     }
     m_map_keys.clear();
+    m_mnemonics.clear();
     return true;
 }
 
@@ -2008,12 +2029,12 @@ void DescriptorScriptPubKeyMan::AddDescriptorKey(const CKey& key, const CPubKey 
 {
     LOCK(cs_desc_man);
     WalletBatch batch(m_storage.GetDatabase());
-    if (!AddDescriptorKeyWithDB(batch, key, pubkey)) {
+    if (!AddDescriptorKeyWithDB(batch, key, pubkey, "", "")) {
         throw std::runtime_error(std::string(__func__) + ": writing descriptor private key failed");
     }
 }
 
-bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey)
+bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey, const SecureString& mnemonic, const SecureString& mnemonic_passphrase)
 {
     AssertLockHeld(cs_desc_man);
     assert(!m_storage.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
@@ -2030,22 +2051,37 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
         }
 
         std::vector<unsigned char> crypted_secret;
+        std::vector<unsigned char> crypted_mnemonic;
+        std::vector<unsigned char> crypted_mnemonic_passphrase;
         CKeyingMaterial secret(key.begin(), key.end());
+        CKeyingMaterial mnemonic_secret(mnemonic.begin(), mnemonic.end());
+        CKeyingMaterial mnemonic_passphrase_secret(mnemonic_passphrase.begin(), mnemonic_passphrase.end());
         if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
-                return EncryptSecret(encryption_key, secret, pubkey.GetHash(), crypted_secret);
+                if (!EncryptSecret(encryption_key, secret, pubkey.GetHash(), crypted_secret)) return false;
+                if (!mnemonic.empty()) {
+                    if (!EncryptSecret(encryption_key, mnemonic_secret, pubkey.GetHash(), crypted_mnemonic)) {
+                        return false;
+                    }
+                    if (!EncryptSecret(encryption_key, mnemonic_passphrase_secret, pubkey.GetHash(), crypted_mnemonic_passphrase)) {
+                        return false;
+                    }
+                }
+                return true;
             })) {
             return false;
         }
 
         m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        return batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        m_crypted_mnemonics[pubkey.GetID()] = make_pair(crypted_mnemonic, crypted_mnemonic_passphrase);
+        return batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret, crypted_mnemonic, crypted_mnemonic_passphrase);
     } else {
         m_map_keys[pubkey.GetID()] = key;
-        return batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey());
+        m_mnemonics[pubkey.GetID()] = make_pair(mnemonic, mnemonic_passphrase);
+        return batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey(), mnemonic, mnemonic_passphrase);
     }
 }
 
-bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, bool internal)
+bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_key, const SecureString& secure_mnemonic, const SecureString& secure_mnemonic_passphrase, bool internal)
 {
     LOCK(cs_desc_man);
     assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
@@ -2053,6 +2089,16 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     // Ignore when there is already a descriptor
     if (m_wallet_descriptor.descriptor) {
         return false;
+    }
+
+    if (!secure_mnemonic.empty()) {
+        // TODO: remove duplicated code with AddKey()
+        SecureVector seed_key_tmp;
+        CMnemonic::ToSeed(secure_mnemonic, secure_mnemonic_passphrase, seed_key_tmp);
+
+        CExtKey master_key_tmp;
+        master_key_tmp.SetSeed(MakeByteSpan(seed_key_tmp));
+        assert(master_key == master_key_tmp);
     }
 
     int64_t creation_time = GetTime();
@@ -2075,7 +2121,7 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
 
     // Store the master private key, and descriptor
     WalletBatch batch(m_storage.GetDatabase());
-    if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
+    if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey(), secure_mnemonic, secure_mnemonic_passphrase)) {
         throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
     }
     if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
@@ -2356,14 +2402,26 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
     }
 }
 
-bool DescriptorScriptPubKeyMan::AddKey(const CKeyID& key_id, const CKey& key)
+bool DescriptorScriptPubKeyMan::AddKey(const CKeyID& key_id, const CKey& key, const SecureString& mnemonic, const SecureString& mnemonic_passphrase)
 {
     LOCK(cs_desc_man);
+    if (!mnemonic.empty()) {
+        // TODO: remove duplicated code with AddKey()
+        SecureVector seed_key_tmp;
+        CMnemonic::ToSeed(mnemonic, mnemonic_passphrase, seed_key_tmp);
+
+        CExtKey master_key_tmp;
+        master_key_tmp.SetSeed(MakeByteSpan(seed_key_tmp));
+        assert(key == master_key_tmp.key);
+    }
+
     m_map_keys[key_id] = key;
+    m_mnemonics[key_id] = make_pair(mnemonic, mnemonic_passphrase);
+
     return true;
 }
 
-bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key)
+bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKey& pubkey, const std::vector<unsigned char>& crypted_key, const std::vector<unsigned char>& crypted_mnemonic,const std::vector<unsigned char>& crypted_mnemonic_passphrase)
 {
     LOCK(cs_desc_man);
     if (!m_map_keys.empty()) {
@@ -2371,6 +2429,7 @@ bool DescriptorScriptPubKeyMan::AddCryptedKey(const CKeyID& key_id, const CPubKe
     }
 
     m_map_crypted_keys[key_id] = make_pair(pubkey, crypted_key);
+    m_crypted_mnemonics[key_id] = make_pair(crypted_mnemonic, crypted_mnemonic_passphrase);
     return true;
 }
 
@@ -2412,7 +2471,6 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out, const bool
 
     FlatSigningProvider provider;
     provider.keys = GetKeys();
-
     if (priv) {
         // For the private version, always return the master key to avoid
         // exposing child private keys. The risk implications of exposing child
@@ -2421,6 +2479,65 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out, const bool
     }
 
     return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, &m_wallet_descriptor.cache);
+}
+
+bool DescriptorScriptPubKeyMan::GetMnemonicString(SecureString& mnemonic_out, SecureString& mnemonic_passphrase_out) const
+{
+    LOCK(cs_desc_man);
+
+    mnemonic_out.clear();
+    mnemonic_passphrase_out.clear();
+
+    if (m_mnemonics.empty() && m_crypted_mnemonics.empty()) {
+        WalletLogPrintf("%s: Descriptor wallet has no mnemonic defined\n", __func__);
+        return false;
+    }
+    if (m_storage.IsLocked(false)) return false;
+
+    if (m_mnemonics.size() + m_crypted_mnemonics.size() > 1) {
+        WalletLogPrintf("%s: ERROR: One descriptor has multiple mnemonics. Can't match it\n", __func__);
+        return false;
+    }
+    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked(true)) {
+        if (!m_crypted_mnemonics.empty() && m_map_crypted_keys.size() != 1) {
+            WalletLogPrintf("%s: ERROR: can't choose encryption key for mnemonic out of %lld\n", __func__, m_map_crypted_keys.size());
+            return false;
+        }
+        const CPubKey& pubkey = m_map_crypted_keys.begin()->second.first;
+        const auto mnemonic = m_crypted_mnemonics.begin()->second;
+        const std::vector<unsigned char>& crypted_mnemonic = mnemonic.first;
+        const std::vector<unsigned char>& crypted_mnemonic_passphrase = mnemonic.second;
+
+        SecureVector mnemonic_v;
+        SecureVector mnemonic_passphrase_v;
+        if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+            return DecryptSecret(encryption_key, crypted_mnemonic, pubkey.GetHash(), mnemonic_v);
+        })) {
+            WalletLogPrintf("%s: ERROR: can't decrypt mnemonic pubkey %s crypted: %s\n", __func__, pubkey.GetHash().ToString(), HexStr(crypted_mnemonic));
+            return false;
+        }
+        if (!crypted_mnemonic_passphrase.empty()) {
+            if (!m_storage.WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                return DecryptSecret(encryption_key, crypted_mnemonic_passphrase, pubkey.GetHash(), mnemonic_passphrase_v);
+            })) {
+                WalletLogPrintf("%s: ERROR: can't decrypt mnemonic passphrase\n", __func__);
+                return false;
+            }
+        }
+
+        std::copy(mnemonic_v.begin(), mnemonic_v.end(), std::back_inserter(mnemonic_out));
+        std::copy(mnemonic_passphrase_v.begin(), mnemonic_passphrase_v.end(), std::back_inserter(mnemonic_passphrase_out));
+
+        return true;
+    }
+    if (m_mnemonics.empty()) return false;
+
+    const auto mnemonic_it = m_mnemonics.begin();
+
+    mnemonic_out = mnemonic_it->second.first;
+    mnemonic_passphrase_out = mnemonic_it->second.second;
+
+    return true;
 }
 
 void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()

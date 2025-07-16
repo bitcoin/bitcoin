@@ -50,7 +50,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
             spk_man->GenerateNewHDChain(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"");
         }
     } else {
-        wallet_instance->SetupDescriptorScriptPubKeyMans();
+        wallet_instance->SetupDescriptorScriptPubKeyMans("", "");
     }
 
     tfm::format(std::cout, "Topping up keypool...\n");
