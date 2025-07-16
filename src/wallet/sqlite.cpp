@@ -336,7 +336,7 @@ void SQLiteDatabase::Open()
     }
 }
 
-bool SQLiteDatabase::Rewrite(const char* skip)
+bool SQLiteDatabase::Rewrite()
 {
     // Rewrite the database using the VACUUM command: https://sqlite.org/lang_vacuum.html
     int ret = sqlite3_exec(m_db, "VACUUM", nullptr, nullptr, nullptr);
