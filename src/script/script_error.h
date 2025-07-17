@@ -6,7 +6,10 @@
 #ifndef BITCOIN_SCRIPT_SCRIPT_ERROR_H
 #define BITCOIN_SCRIPT_SCRIPT_ERROR_H
 
+#include <bit>
 #include <string>
+
+#include <util/check.h>
 
 enum ScriptErrorType
 {
@@ -86,6 +89,37 @@ enum ScriptErrorType
 };
 
 #define SCRIPT_ERR_LAST SCRIPT_ERR_ERROR_COUNT
+
+/** An error encountered during Script execution.
+ *
+ * Contains the error type and the Script verification flag responsible for the error. If the error
+ * is not tied to any verification flag, SCRIPT_VERIFICATION_NONE is used. The verification flag is
+ * always unique (i.e. it always has at most a single bit set).
+ */
+class ScriptError
+{
+public:
+    //! Construct a Script error from a type and verification flag. Flag must be unique (i.e. no more than one bit set).
+    explicit ScriptError(ScriptErrorType t, uint32_t f): type{t}, flag{f}
+    {
+        Assume(std::popcount(flag) <= 1);
+    }
+
+    ScriptErrorType Type() const
+    {
+        return type;
+    }
+
+    //! Get the verification flag responsible for the error. Guaranteed to be unique (i.e. no more than one bit set).
+    uint32_t Flag() const
+    {
+        return flag;
+    }
+
+private:
+    ScriptErrorType type;
+    uint32_t flag;
+};
 
 std::string ScriptErrorString(const ScriptErrorType error);
 

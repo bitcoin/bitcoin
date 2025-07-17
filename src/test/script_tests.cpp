@@ -979,25 +979,25 @@ BOOST_AUTO_TEST_CASE(script_PushData)
     static const unsigned char pushdata2[] = { OP_PUSHDATA2, 1, 0, 0x5a };
     static const unsigned char pushdata4[] = { OP_PUSHDATA4, 1, 0, 0, 0, 0x5a };
 
-    ScriptErrorType err;
+    ScriptError err{SCRIPT_ERR_OK, SCRIPT_VERIFY_NONE};
     std::vector<std::vector<unsigned char> > directStack;
     BOOST_CHECK(EvalScript(directStack, CScript(direct, direct + sizeof(direct)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
-    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+    BOOST_CHECK_MESSAGE(err.Type() == SCRIPT_ERR_OK, ScriptErrorString(err.Type()));
 
     std::vector<std::vector<unsigned char> > pushdata1Stack;
     BOOST_CHECK(EvalScript(pushdata1Stack, CScript(pushdata1, pushdata1 + sizeof(pushdata1)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
     BOOST_CHECK(pushdata1Stack == directStack);
-    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+    BOOST_CHECK_MESSAGE(err.Type() == SCRIPT_ERR_OK, ScriptErrorString(err.Type()));
 
     std::vector<std::vector<unsigned char> > pushdata2Stack;
     BOOST_CHECK(EvalScript(pushdata2Stack, CScript(pushdata2, pushdata2 + sizeof(pushdata2)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
     BOOST_CHECK(pushdata2Stack == directStack);
-    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+    BOOST_CHECK_MESSAGE(err.Type()== SCRIPT_ERR_OK, ScriptErrorString(err.Type()));
 
     std::vector<std::vector<unsigned char> > pushdata4Stack;
     BOOST_CHECK(EvalScript(pushdata4Stack, CScript(pushdata4, pushdata4 + sizeof(pushdata4)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
     BOOST_CHECK(pushdata4Stack == directStack);
-    BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
+    BOOST_CHECK_MESSAGE(err.Type() == SCRIPT_ERR_OK, ScriptErrorString(err.Type()));
 
     const std::vector<unsigned char> pushdata1_trunc{OP_PUSHDATA1, 1};
     const std::vector<unsigned char> pushdata2_trunc{OP_PUSHDATA2, 1, 0};
@@ -1005,11 +1005,11 @@ BOOST_AUTO_TEST_CASE(script_PushData)
 
     std::vector<std::vector<unsigned char>> stack_ignore;
     BOOST_CHECK(!EvalScript(stack_ignore, CScript(pushdata1_trunc.begin(), pushdata1_trunc.end()), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
-    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_BAD_OPCODE);
+    BOOST_CHECK_EQUAL(err.Type(), SCRIPT_ERR_BAD_OPCODE);
     BOOST_CHECK(!EvalScript(stack_ignore, CScript(pushdata2_trunc.begin(), pushdata2_trunc.end()), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
-    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_BAD_OPCODE);
+    BOOST_CHECK_EQUAL(err.Type(), SCRIPT_ERR_BAD_OPCODE);
     BOOST_CHECK(!EvalScript(stack_ignore, CScript(pushdata4_trunc.begin(), pushdata4_trunc.end()), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
-    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_BAD_OPCODE);
+    BOOST_CHECK_EQUAL(err.Type(), SCRIPT_ERR_BAD_OPCODE);
 }
 
 BOOST_AUTO_TEST_CASE(script_cltv_truncated)
@@ -1017,9 +1017,9 @@ BOOST_AUTO_TEST_CASE(script_cltv_truncated)
     const auto script_cltv_trunc = CScript() << OP_CHECKLOCKTIMEVERIFY;
 
     std::vector<std::vector<unsigned char>> stack_ignore;
-    ScriptErrorType err;
+    ScriptError err{SCRIPT_ERR_OK, SCRIPT_VERIFY_NONE};
     BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, BaseSignatureChecker(), SigVersion::BASE, &err));
-    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_INVALID_STACK_OPERATION);
+    BOOST_CHECK_EQUAL(err.Type(), SCRIPT_ERR_INVALID_STACK_OPERATION);
 }
 
 static CScript
@@ -1600,7 +1600,7 @@ static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
             // "final": true tests are valid for all flags. Others are only valid with flags that are
             // a subset of test_flags.
             if (fin || ((flags & test_flags) == flags)) {
-                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
+                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck);
                 BOOST_CHECK(ret);
             }
         }
@@ -1617,7 +1617,7 @@ static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
             // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
             if ((flags & test_flags) == test_flags) {
-                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
+                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck);
                 BOOST_CHECK(!ret);
             }
         }
