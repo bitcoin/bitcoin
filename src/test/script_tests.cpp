@@ -45,7 +45,7 @@ std::string FormatScriptFlags(unsigned int flags);
 
 struct ScriptErrorDesc
 {
-    ScriptError err;
+    ScriptErrorType err;
     const char *name;
 };
 
@@ -95,7 +95,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
 
-static std::string FormatScriptError(ScriptError err)
+static std::string FormatScriptError(ScriptErrorType err)
 {
     for (const auto& se : script_errors)
         if (se.err == err)
@@ -104,7 +104,7 @@ static std::string FormatScriptError(ScriptError err)
     return "";
 }
 
-static ScriptError ParseScriptError(const std::string& name)
+static ScriptErrorType ParseScriptError(const std::string& name)
 {
     for (const auto& se : script_errors)
         if (se.name == name)
@@ -121,11 +121,11 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
         flags |= SCRIPT_VERIFY_P2SH;
         flags |= SCRIPT_VERIFY_WITNESS;
     }
-    ScriptError err;
+    ScriptErrorType err;
     const CTransaction txCredit{BuildCreditingTransaction(scriptPubKey, nValue)};
     CMutableTransaction tx = BuildSpendingTransaction(scriptSig, scriptWitness, txCredit);
     BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message);
-    BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError)scriptError) + " expected: " + message);
+    BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptErrorType)scriptError) + " expected: " + message);
 
     // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
     for (int i = 0; i < 16; ++i) {
@@ -227,7 +227,7 @@ private:
     std::vector<unsigned char> push;
     std::string comment;
     uint32_t flags;
-    ScriptError scriptError{SCRIPT_ERR_OK};
+    ScriptErrorType scriptError{SCRIPT_ERR_OK};
     CAmount nValue;
 
     void DoPush()
@@ -268,7 +268,7 @@ public:
         spendTx = BuildSpendingTransaction(CScript(), CScriptWitness(), *creditTx);
     }
 
-    TestBuilder& ScriptErr(ScriptError err)
+    TestBuilder& ScriptErr(ScriptErrorType err)
     {
         scriptError = err;
         return *this;
@@ -979,7 +979,7 @@ BOOST_AUTO_TEST_CASE(script_PushData)
     static const unsigned char pushdata2[] = { OP_PUSHDATA2, 1, 0, 0x5a };
     static const unsigned char pushdata4[] = { OP_PUSHDATA4, 1, 0, 0, 0, 0x5a };
 
-    ScriptError err;
+    ScriptErrorType err;
     std::vector<std::vector<unsigned char> > directStack;
     BOOST_CHECK(EvalScript(directStack, CScript(direct, direct + sizeof(direct)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
@@ -1017,7 +1017,7 @@ BOOST_AUTO_TEST_CASE(script_cltv_truncated)
     const auto script_cltv_trunc = CScript() << OP_CHECKLOCKTIMEVERIFY;
 
     std::vector<std::vector<unsigned char>> stack_ignore;
-    ScriptError err;
+    ScriptErrorType err;
     BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, BaseSignatureChecker(), SigVersion::BASE, &err));
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_INVALID_STACK_OPERATION);
 }
@@ -1056,7 +1056,7 @@ sign_multisig(const CScript& scriptPubKey, const CKey& key, const CTransaction& 
 
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
 {
-    ScriptError err;
+    ScriptErrorType err;
     CKey key1 = GenerateRandomKey();
     CKey key2 = GenerateRandomKey(/*compressed=*/false);
     CKey key3 = GenerateRandomKey();
@@ -1085,7 +1085,7 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
 
 BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
 {
-    ScriptError err;
+    ScriptErrorType err;
     CKey key1 = GenerateRandomKey();
     CKey key2 = GenerateRandomKey(/*compressed=*/false);
     CKey key3 = GenerateRandomKey();
@@ -1317,7 +1317,7 @@ BOOST_AUTO_TEST_CASE(sign_paytoanchor)
 
 BOOST_AUTO_TEST_CASE(script_standard_push)
 {
-    ScriptError err;
+    ScriptErrorType err;
     for (int i=0; i<67000; i++) {
         CScript script;
         script << i;

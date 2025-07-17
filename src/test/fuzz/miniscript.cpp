@@ -291,7 +291,7 @@ const struct CheckerContext: BaseSignatureChecker {
         return it->second.first == sig;
     }
     bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion,
-                               ScriptExecutionData&, ScriptError*) const override {
+                               ScriptExecutionData&, ScriptErrorType*) const override {
         XOnlyPubKey pk{pubkey};
         auto it = TEST_DATA.schnorr_sigs.find(pk);
         if (it == TEST_DATA.schnorr_sigs.end()) return false;
@@ -1126,26 +1126,26 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         // Test non-malleable satisfaction.
         witness_nonmal.stack.insert(witness_nonmal.stack.end(), std::make_move_iterator(stack_nonmal.begin()), std::make_move_iterator(stack_nonmal.end()));
         SatisfactionToWitness(script_ctx, witness_nonmal, script, builder);
-        ScriptError serror;
+        ScriptErrorType serror;
         bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness_nonmal, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
         // Non-malleable satisfactions are guaranteed to be valid if ValidSatisfactions().
         if (node->ValidSatisfactions()) assert(res);
         // More detailed: non-malleable satisfactions must be valid, or could fail with ops count error (if CheckOpsLimit failed),
         // or with a stack size error (if CheckStackSize check failed).
         assert(res ||
-               (!node->CheckOpsLimit() && serror == ScriptError::SCRIPT_ERR_OP_COUNT) ||
-               (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
+               (!node->CheckOpsLimit() && serror == ScriptErrorType::SCRIPT_ERR_OP_COUNT) ||
+               (!node->CheckStackSize() && serror == ScriptErrorType::SCRIPT_ERR_STACK_SIZE));
     }
 
     if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
         // Test malleable satisfaction only if it's different from the non-malleable one.
         witness_mal.stack.insert(witness_mal.stack.end(), std::make_move_iterator(stack_mal.begin()), std::make_move_iterator(stack_mal.end()));
         SatisfactionToWitness(script_ctx, witness_mal, script, builder);
-        ScriptError serror;
+        ScriptErrorType serror;
         bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness_mal, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
         // Malleable satisfactions are not guaranteed to be valid under any conditions, but they can only
         // fail due to stack or ops limits.
-        assert(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE);
+        assert(res || serror == ScriptErrorType::SCRIPT_ERR_OP_COUNT || serror == ScriptErrorType::SCRIPT_ERR_STACK_SIZE);
     }
 
     if (node->IsSane()) {

@@ -47,7 +47,7 @@ FUZZ_TARGET(script_flags)
             const CTxOut& prevout = txdata.m_spent_outputs.at(i);
             const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
 
-            ScriptError serror;
+            ScriptErrorType serror;
             const bool ret = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror);
             assert(ret == (serror == SCRIPT_ERR_OK));
 
@@ -59,7 +59,7 @@ FUZZ_TARGET(script_flags)
             }
             if (!IsValidFlagCombination(verify_flags)) return;
 
-            ScriptError serror_fuzzed;
+            ScriptErrorType serror_fuzzed;
             const bool ret_fuzzed = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror_fuzzed);
             assert(ret_fuzzed == (serror_fuzzed == SCRIPT_ERR_OK));
 

@@ -7,7 +7,7 @@
 
 #include <string>
 
-std::string ScriptErrorString(const ScriptError serror)
+std::string ScriptErrorString(const ScriptErrorType serror)
 {
     switch (serror)
     {

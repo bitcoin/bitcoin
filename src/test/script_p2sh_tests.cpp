@@ -36,7 +36,7 @@ static std::vector<unsigned char> Serialize(const CScript& s)
     return sSerialized;
 }
 
-static bool Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, ScriptError& err)
+static bool Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, ScriptErrorType& err)
 {
     // Create dummy to/from transactions:
     CMutableTransaction txFrom;
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(sign)
 
 BOOST_AUTO_TEST_CASE(norecurse)
 {
-    ScriptError err;
+    ScriptErrorType err;
     // Make sure only the outer pay-to-script-hash does the
     // extra-validation thing:
     CScript invalidAsScript;
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(switchover)
 {
     // Test switch over code
     CScript notValid;
-    ScriptError err;
+    ScriptErrorType err;
     notValid << OP_11 << OP_12 << OP_EQUALVERIFY;
     CScript scriptSig;
     scriptSig << Serialize(notValid);

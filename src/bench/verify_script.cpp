@@ -53,7 +53,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
 
     // Benchmark.
     bench.run([&] {
-        ScriptError err;
+        ScriptErrorType err;
         bool success = VerifyScript(
             txSpend.vin[0].scriptSig,
             txCredit.vout[0].scriptPubKey,
@@ -81,7 +81,7 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
     }
     bench.run([&] {
         auto stack_copy = stack;
-        ScriptError error;
+        ScriptErrorType error;
         bool ret = EvalScript(stack_copy, script, 0, BaseSignatureChecker(), SigVersion::BASE, &error);
         assert(ret);
     });
