@@ -8,7 +8,7 @@
 
 #include <string>
 
-enum ScriptError
+enum ScriptErrorType
 {
     SCRIPT_ERR_OK = 0,
     SCRIPT_ERR_UNKNOWN_ERROR,
@@ -87,6 +87,6 @@ enum ScriptError
 
 #define SCRIPT_ERR_LAST SCRIPT_ERR_ERROR_COUNT
 
-std::string ScriptErrorString(const ScriptError error);
+std::string ScriptErrorString(const ScriptErrorType error);
 
 #endif // BITCOIN_SCRIPT_SCRIPT_ERROR_H

@@ -273,7 +273,7 @@ public:
     }
 
     bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion,
-                               ScriptExecutionData&, ScriptError*) const override {
+                               ScriptExecutionData&, ScriptErrorType*) const override {
         XOnlyPubKey pk{pubkey};
         auto it = g_testdata->schnorr_signatures.find(pk);
         if (it == g_testdata->schnorr_signatures.end()) return false;
@@ -387,24 +387,24 @@ void TestSatisfy(const KeyConverter& converter, const std::string& testcase, con
                 assert(wit_size <= *node->GetWitnessSize());
 
                 // Test non-malleable satisfaction.
-                ScriptError serror;
+                ScriptErrorType serror;
                 bool res = VerifyScript(CScript(), script_pubkey, &witness_nonmal, STANDARD_SCRIPT_VERIFY_FLAGS, checker, &serror);
                 // Non-malleable satisfactions are guaranteed to be valid if ValidSatisfactions().
                 if (node->ValidSatisfactions()) BOOST_CHECK(res);
                 // More detailed: non-malleable satisfactions must be valid, or could fail with ops count error (if CheckOpsLimit failed),
                 // or with a stack size error (if CheckStackSize check fails).
                 BOOST_CHECK(res ||
-                            (!node->CheckOpsLimit() && serror == ScriptError::SCRIPT_ERR_OP_COUNT) ||
-                            (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
+                            (!node->CheckOpsLimit() && serror == ScriptErrorType::SCRIPT_ERR_OP_COUNT) ||
+                            (!node->CheckStackSize() && serror == ScriptErrorType::SCRIPT_ERR_STACK_SIZE));
             }
 
             if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
                 // Test malleable satisfaction only if it's different from the non-malleable one.
-                ScriptError serror;
+                ScriptErrorType serror;
                 bool res = VerifyScript(CScript(), script_pubkey, &witness_mal, STANDARD_SCRIPT_VERIFY_FLAGS, checker, &serror);
                 // Malleable satisfactions are not guaranteed to be valid under any conditions, but they can only
                 // fail due to stack or ops limits.
-                BOOST_CHECK(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE);
+                BOOST_CHECK(res || serror == ScriptErrorType::SCRIPT_ERR_OP_COUNT || serror == ScriptErrorType::SCRIPT_ERR_STACK_SIZE);
             }
 
             if (node->IsSane()) {

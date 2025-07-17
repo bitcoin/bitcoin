@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 {
     unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
-    ScriptError err;
+    ScriptErrorType err;
     CKey key[4];
     CAmount amount = 0;
     for (int i = 0; i < 4; i++)

@@ -16,14 +16,14 @@ typedef std::vector<unsigned char> valtype;
 
 namespace {
 
-inline bool set_success(ScriptError* ret)
+inline bool set_success(ScriptErrorType* ret)
 {
     if (ret)
         *ret = SCRIPT_ERR_OK;
     return true;
 }
 
-inline bool set_error(ScriptError* ret, const ScriptError serror)
+inline bool set_error(ScriptErrorType* ret, const ScriptErrorType serror)
 {
     if (ret)
         *ret = serror;
@@ -169,7 +169,7 @@ bool static IsValidSignatureEncoding(const std::vector<unsigned char> &sig) {
     return true;
 }
 
-bool static IsLowDERSignature(const valtype &vchSig, ScriptError* serror) {
+bool static IsLowDERSignature(const valtype &vchSig, ScriptErrorType* serror) {
     if (!IsValidSignatureEncoding(vchSig)) {
         return set_error(serror, SCRIPT_ERR_SIG_DER);
     }
@@ -197,7 +197,7 @@ bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
     return true;
 }
 
-bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror) {
+bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptErrorType* serror) {
     // Empty signature. Not strictly DER encoded, but allowed to provide a
     // compact way to provide an invalid signature for use with CHECK(MULTI)SIG
     if (vchSig.size() == 0) {
@@ -214,7 +214,7 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
     return true;
 }
 
-bool static CheckPubKeyEncoding(const valtype &vchPubKey, unsigned int flags, const SigVersion &sigversion, ScriptError* serror) {
+bool static CheckPubKeyEncoding(const valtype &vchPubKey, unsigned int flags, const SigVersion &sigversion, ScriptErrorType* serror) {
     if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsCompressedOrUncompressedPubKey(vchPubKey)) {
         return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
     }
@@ -317,7 +317,7 @@ public:
 };
 }
 
-static bool EvalChecksigPreTapscript(const valtype& vchSig, const valtype& vchPubKey, CScript::const_iterator pbegincodehash, CScript::const_iterator pend, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror, bool& fSuccess)
+static bool EvalChecksigPreTapscript(const valtype& vchSig, const valtype& vchPubKey, CScript::const_iterator pbegincodehash, CScript::const_iterator pend, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptErrorType* serror, bool& fSuccess)
 {
     assert(sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0);
 
@@ -343,7 +343,7 @@ static bool EvalChecksigPreTapscript(const valtype& vchSig, const valtype& vchPu
     return true;
 }
 
-static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror, bool& success)
+static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptErrorType* serror, bool& success)
 {
     assert(sigversion == SigVersion::TAPSCRIPT);
 
@@ -388,7 +388,7 @@ static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, Scr
  * A return value of false means the script fails entirely. When true is returned, the
  * success variable indicates whether the signature check itself succeeded.
  */
-static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::const_iterator pbegincodehash, CScript::const_iterator pend, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror, bool& success)
+static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::const_iterator pbegincodehash, CScript::const_iterator pend, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptErrorType* serror, bool& success)
 {
     switch (sigversion) {
     case SigVersion::BASE:
@@ -403,7 +403,7 @@ static bool EvalChecksig(const valtype& sig, const valtype& pubkey, CScript::con
     assert(false);
 }
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror)
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptErrorType* serror)
 {
     static const CScriptNum bnZero(0);
     static const CScriptNum bnOne(1);
@@ -1233,7 +1233,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     return set_success(serror);
 }
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror)
+bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptErrorType* serror)
 {
     ScriptExecutionData execdata;
     return EvalScript(stack, script, flags, checker, sigversion, execdata, serror);
@@ -1670,7 +1670,7 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey_in, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror) const
+bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey_in, SigVersion sigversion, ScriptExecutionData& execdata, ScriptErrorType* serror) const
 {
     assert(sigversion == SigVersion::TAPROOT || sigversion == SigVersion::TAPSCRIPT);
     // Schnorr signatures have 32-byte public keys. The caller is responsible for enforcing this.
@@ -1785,7 +1785,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 template class GenericTransactionSignatureChecker<CTransaction>;
 template class GenericTransactionSignatureChecker<CMutableTransaction>;
 
-static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, const CScript& exec_script, unsigned int flags, SigVersion sigversion, const BaseSignatureChecker& checker, ScriptExecutionData& execdata, ScriptError* serror)
+static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, const CScript& exec_script, unsigned int flags, SigVersion sigversion, const BaseSignatureChecker& checker, ScriptExecutionData& execdata, ScriptErrorType* serror)
 {
     std::vector<valtype> stack{stack_span.begin(), stack_span.end()};
 
@@ -1870,7 +1870,7 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
     return q.CheckTapTweak(p, merkle_root, control[0] & 1);
 }
 
-static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
+static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptErrorType* serror, bool is_p2sh)
 {
     CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
     std::span stack{witness.stack};
@@ -1955,7 +1955,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     // There is intentionally no return statement here, to be able to use "control reaches end of non-void function" warnings to detect gaps in the logic above.
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptErrorType* serror)
 {
     static const CScriptWitness emptyWitness;
     if (witness == nullptr) {
