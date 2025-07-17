@@ -6,9 +6,12 @@
 #define BITCOIN_CRYPTO_MUHASH_H
 
 #include <serialize.h>
-#include <uint256.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <span>
+
+class uint256;
 
 class Num3072
 {

@@ -4,8 +4,9 @@
 
 #include <crypto/hkdf_sha256_32.h>
 
+#include <crypto/hmac_sha256.h>
+
 #include <cassert>
-#include <cstring>
 
 CHKDF_HMAC_SHA256_L32::CHKDF_HMAC_SHA256_L32(const unsigned char* ikm, size_t ikmlen, const std::string& salt)
 {

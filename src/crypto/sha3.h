@@ -5,10 +5,9 @@
 #ifndef BITCOIN_CRYPTO_SHA3_H
 #define BITCOIN_CRYPTO_SHA3_H
 
-#include <span.h>
-
 #include <cstdint>
 #include <cstdlib>
+#include <span>
 
 //! The Keccak-f[1600] transform.
 void KeccakF(uint64_t (&st)[25]);
