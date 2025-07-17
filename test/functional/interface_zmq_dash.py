@@ -293,6 +293,7 @@ class DashZMQTest (DashTestFramework):
         assert_equal(['None'], self.nodes[0].getislocks([rpc_raw_tx_1['txid']]))
         # Send the first transaction and wait for the InstantLock
         rpc_raw_tx_1_hash = self.nodes[0].sendrawtransaction(rpc_raw_tx_1['hex'])
+        self.bump_mocktime(30)
         self.wait_for_instantlock(rpc_raw_tx_1_hash, self.nodes[0])
         # Validate hashtxlock
         zmq_tx_lock_hash = self.subscribers[ZMQPublisher.hash_tx_lock].receive().read(32).hex()
@@ -345,6 +346,7 @@ class DashZMQTest (DashTestFramework):
             pass
         # Now send the tx itself
         self.test_node.send_tx(from_hex(msg_tx(),rpc_raw_tx_3['hex']))
+        self.bump_mocktime(30)
         self.wait_for_instantlock(rpc_raw_tx_3['txid'], self.nodes[0])
         # Validate hashtxlock
         zmq_tx_lock_hash = self.subscribers[ZMQPublisher.hash_tx_lock].receive().read(32).hex()
@@ -378,6 +380,7 @@ class DashZMQTest (DashTestFramework):
         }
         proposal_hex = ''.join(format(x, '02x') for x in json.dumps(proposal_data).encode())
         collateral = self.nodes[0].gobject("prepare", "0", proposal_rev, proposal_time, proposal_hex)
+        self.bump_mocktime(30)
         self.wait_for_instantlock(collateral, self.nodes[0])
         self.generate(self.nodes[0], 6, sync_fun=lambda: self.sync_blocks())
         rpc_proposal_hash = self.nodes[0].gobject("submit", "0", proposal_rev, proposal_time, proposal_hex, collateral)

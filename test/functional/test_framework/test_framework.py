@@ -1898,16 +1898,6 @@ class DashTestFramework(BitcoinTestFramework):
         ret = {**decoded, **ret}
         return ret
 
-    def wait_for_tx(self, txid, node, expected=True, timeout=60):
-        def check_tx():
-            try:
-                self.bump_mocktime(1)
-                return node.getrawtransaction(txid)
-            except:
-                return False
-        if self.wait_until(check_tx, timeout=timeout, sleep=1, do_assert=expected) and not expected:
-            raise AssertionError("waiting unexpectedly succeeded")
-
     def create_isdlock(self, hextx):
         tx = tx_from_hex(hextx)
         tx.rehash()
@@ -1930,15 +1920,19 @@ class DashTestFramework(BitcoinTestFramework):
 
         return isdlock
 
+    # due to privacy reasons random delay is used before sending transaction by network
+    # most times is just 2-5 seconds, but once in 1000 it's up to 1000 seconds.
+    # it's recommended to bump mocktime for 30 seconds before wait_for_instantlock
     def wait_for_instantlock(self, txid, node, expected=True, timeout=60):
+
         def check_instantlock():
-            self.bump_mocktime(1)
             try:
                 return node.getrawtransaction(txid, True)["instantlock"]
             except:
                 return False
+
         self.log.info(f"Expecting InstantLock for {txid}")
-        if self.wait_until(check_instantlock, timeout=timeout, sleep=1, do_assert=expected) and not expected:
+        if self.wait_until(check_instantlock, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
@@ -1949,7 +1943,7 @@ class DashTestFramework(BitcoinTestFramework):
             except:
                 return False
         self.log.info(f"Expecting ChainLock for {block_hash}")
-        if self.wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1, do_assert=expected) and not expected:
+        if self.wait_until(check_chainlocked_block, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=15, expected=True):
@@ -1957,7 +1951,7 @@ class DashTestFramework(BitcoinTestFramework):
             self.wait_for_chainlocked_block(node, block_hash, expected=expected, timeout=timeout)
 
     def wait_for_best_chainlock(self, node, block_hash, timeout=15):
-        self.wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout, sleep=0.1)
+        self.wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout)
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():

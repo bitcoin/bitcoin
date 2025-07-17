@@ -42,9 +42,9 @@ class InstantSendTest(DashTestFramework):
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
         is_id = self.nodes[0].sendtoaddress(sender_addr, 1)
+        self.bump_mocktime(30)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
-        self.bump_mocktime(1)
         self.generate(self.nodes[0], 2)
 
         # create doublespending transaction, but don't relay it
@@ -58,6 +58,7 @@ class InstantSendTest(DashTestFramework):
         connected_nodes = self.nodes.copy()
         del connected_nodes[self.isolated_idx]
         self.sync_mempools(connected_nodes)
+        self.bump_mocktime(30)
         for node in connected_nodes:
             self.wait_for_instantlock(is_id, node)
         # send doublespend transaction to isolated node
@@ -101,9 +102,9 @@ class InstantSendTest(DashTestFramework):
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
         is_id = self.nodes[0].sendtoaddress(sender_addr, 1)
+        self.bump_mocktime(30)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
-        self.bump_mocktime(1)
         self.generate(self.nodes[0], 2)
 
         # create doublespending transaction, but don't relay it
@@ -124,18 +125,19 @@ class InstantSendTest(DashTestFramework):
         receiver_addr = receiver.getnewaddress()
         is_id = sender.sendtoaddress(receiver_addr, 0.9)
         # wait for the transaction to propagate
+        self.bump_mocktime(30)
         self.sync_mempools()
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
         assert dblspnd_txid not in set(isolated.getrawmempool())
         # send coins back to the controller node without waiting for confirmations
         sentback_id = receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
+        self.bump_mocktime(30)
         self.sync_mempools()
         for node in self.nodes:
             self.wait_for_instantlock(sentback_id, node)
         assert_equal(receiver.getwalletinfo()["balance"], 0)
         # mine more blocks
-        self.bump_mocktime(1)
         self.generate(self.nodes[0], 2)
 
 if __name__ == '__main__':

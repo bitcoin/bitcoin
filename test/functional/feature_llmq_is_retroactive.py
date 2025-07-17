@@ -24,6 +24,16 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # -whitelist is needed to avoid the trickling logic on node0
         self.set_dash_test_params(5, 4, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"]])
 
+    # random delay before tx is actually send by network could take up to 30 seconds
+    def wait_for_tx(self, txid, node, expected=True, timeout=60):
+        def check_tx():
+            try:
+                return node.getrawtransaction(txid)
+            except:
+                return False
+        if self.wait_until(check_tx, timeout=timeout, do_assert=expected) and not expected:
+            raise AssertionError("waiting unexpectedly succeeded")
+
     def run_test(self):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         # Turn mempool IS signing off
@@ -39,6 +49,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # 3 nodes should be enough to create an IS lock even if nodes 4 and 5 (which have no tx itself)
         # are the only "neighbours" in intra-quorum connections for one of them.
+        self.bump_mocktime(30)
         self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         # Have to disable ChainLocks to avoid signing a block with a "safe" tx too early
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4000000000)
@@ -59,8 +70,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # 3 nodes should be enough to create an IS lock even if nodes 4 and 5 (which have no tx itself)
         # are the only "neighbours" in intra-quorum connections for one of them.
+        self.bump_mocktime(30)
         self.wait_for_instantlock(txid, self.nodes[0])
-        self.bump_mocktime(1)
         block = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
         self.wait_for_chainlocked_block_all_nodes(block)
 
@@ -69,6 +80,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # Make sure nodes 1 and 2 received the TX before we continue,
         # otherwise it might announce the TX to node 3 when reconnecting
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         self.reconnect_isolated_node(3, 0)
@@ -101,6 +113,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         # Make sure nodes 1 and 2 received the TX before we continue,
         # otherwise it might announce the TX to node 3 when reconnecting
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         self.reconnect_isolated_node(3, 0)
@@ -139,6 +152,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         txid = self.nodes[0].sendrawtransaction(rawtx)
         txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make sure nodes 1 and 2 received the TX before we continue
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
         # Make sure signing is done on nodes 1 and 2 (it's async)
@@ -178,12 +192,13 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_mnauth(self.nodes[3], 2)
         self.nodes[0].sendrawtransaction(rawtx)
         # Make sure nodes 1 and 2 received the TX
+        self.bump_mocktime(30)
         self.wait_for_tx(txid, self.nodes[1])
         self.wait_for_tx(txid, self.nodes[2])
+        self.bump_mocktime(30)
         # Make sure signing is done on nodes 1 and 2 (it's async)
-        time.sleep(5)
         # node 3 fully reconnected but the signing session is already timed out on it, so no IS lock
-        self.wait_for_instantlock(txid, self.nodes[0], False, 1)
+        self.wait_for_instantlock(txid, self.nodes[0], False, 5)
         if do_cycle_llmqs:
             self.cycle_llmqs()
             self.wait_for_instantlock(txid, self.nodes[0], False, 5)

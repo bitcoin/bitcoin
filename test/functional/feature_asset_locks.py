@@ -378,6 +378,7 @@ class AssetLocksTest(DashTestFramework):
         txid = self.send_tx(asset_unlock_tx)
         assert_equal(node.getmempoolentry(txid)['fees']['base'], Decimal("0.0007"))
         is_id = node_wallet.sendtoaddress(node_wallet.getnewaddress(), 1)
+        self.bump_mocktime(30)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
 

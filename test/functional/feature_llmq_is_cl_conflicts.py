@@ -96,6 +96,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx4_txid = self.nodes[0].sendrawtransaction(rawtx4)
 
         # wait for transactions to propagate
+        self.bump_mocktime(30)
         self.sync_mempools()
         for node in self.nodes:
             self.wait_for_instantlock(rawtx1_txid, node)
@@ -156,6 +157,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         rawtx5 = self.nodes[0].signrawtransactionwithwallet(rawtx5)['hex']
         rawtx5_txid = self.nodes[0].sendrawtransaction(rawtx5)
         # wait for the transaction to propagate
+        self.bump_mocktime(30)
         self.sync_mempools()
         for node in self.nodes:
             self.wait_for_instantlock(rawtx5_txid, node)
