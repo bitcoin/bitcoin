@@ -144,23 +144,30 @@ if [ "$RUN_CHECK_DEPS" = "true" ]; then
   "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" "${BASE_BUILD_DIR}"
 fi
 
+UNIT_TEST_CMD=":"  # no-op by default
+
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
-  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
-  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
-  CTEST_OUTPUT_ON_FAILURE=ON \
-  ctest --test-dir "${BASE_BUILD_DIR}" \
+  UNIT_TEST_CMD="ctest --test-dir '${BASE_BUILD_DIR}' \
     --stop-on-failure \
-    "${MAKEJOBS}" \
-    --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
+    '${MAKEJOBS}' \
+    --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))"
 fi
 
 if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
-  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" "${BASE_OUTDIR}"/bin/test_bitcoin --catch_system_errors=no -l test_suite
+  # filter stderr from successful lines (and empty lines), so that the functional test framework does not scream
+  UNIT_TEST_CMD="'${BASE_OUTDIR}/bin/test_bitcoin' --catch_system_errors=no -l test_suite 2> >(grep -v '*** No errors detected' | grep -v '^$' )"
 fi
 
-if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
+if [ "$RUN_FUNCTIONAL_TESTS" = "true" ] || [ "$UNIT_TEST_CMD" != ":" ]; then
   # parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
+  TEST_RUNNER_EXTRA+=("--bash-cmd-extra-tests=${UNIT_TEST_CMD}")
+  if [ "$RUN_FUNCTIONAL_TESTS" != "true" ]; then
+    # limit to just the unit test command
+    TEST_RUNNER_EXTRA+=("tool_extra_cmd.py")
+  fi
+  DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
+  CTEST_OUTPUT_ON_FAILURE=ON \
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
   "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
     --ci "${MAKEJOBS}" \
