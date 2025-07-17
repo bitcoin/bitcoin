@@ -249,6 +249,28 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         # All coins should be recovered
         assert_equal(balance_after, node.getbalance())
 
+        self.log.info("Test upgradetohd with user defined mnemonic")
+        custom_mnemonic = "similar behave slot swim scissors throw planet view ghost laugh drift calm"
+        # this address belongs to custom mnemonic with no passphrase
+        custom_address_1 = "yLpq97zZUsFQ2rdMqhcPKkYT36MoPK4Hob"
+        # this address belongs to custom mnemonic with passphrase "custom-passphrase"
+        custom_address_2 = "yYBPeZQcqgQHu9dxA5pKBWtYbK2hwfFHxf"
+        node.sendtoaddress(custom_address_1, 11)
+        node.sendtoaddress(custom_address_2, 12)
+        self.generate(node, 1)
+
+        node.createwallet("wallet-11", blank=True)
+        w11 = node.get_wallet_rpc("wallet-11")
+        w11.upgradetohd(custom_mnemonic)
+        assert_equal(11, w11.getbalance())
+        w11.unloadwallet()
+
+        node.createwallet("wallet-12", blank=True)
+        w12 = node.get_wallet_rpc("wallet-12")
+        w12.upgradetohd(custom_mnemonic, "custom-passphrase")
+        assert_equal(12, w12.getbalance())
+        w12.unloadwallet()
+
 
 if __name__ == '__main__':
     WalletUpgradeToHDTest().main ()
