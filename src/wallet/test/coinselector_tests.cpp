@@ -126,9 +126,9 @@ static CAmount make_hard_case(int utxos, std::vector<COutput>& utxo_pool)
     utxo_pool.clear();
     CAmount target = 0;
     for (int i = 0; i < utxos; ++i) {
-        target += (CAmount)1 << (utxos+i);
-        add_coin((CAmount)1 << (utxos+i), 2*i, utxo_pool);
-        add_coin(((CAmount)1 << (utxos+i)) + ((CAmount)1 << (utxos-1-i)), 2*i + 1, utxo_pool);
+        target += CAmount{1} << (utxos+i);
+        add_coin(CAmount{1} << (utxos+i), 2*i, utxo_pool);
+        add_coin((CAmount{1} << (utxos+i)) + (CAmount{1} << (utxos-1-i)), 2*i + 1, utxo_pool);
     }
     return target;
 }
@@ -298,6 +298,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
+    coin_selection_params_bnb.m_subtract_fee_outputs = true;
+
     {
         std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), /*coinjoin_loader=*/nullptr, "", m_args, CreateMockWalletDatabase());
         wallet->LoadWallet();
@@ -315,7 +317,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coins.clear();
         add_coin(coins, *wallet, 1 * CENT, coin_selection_params_bnb.m_effective_feerate);
         coins.at(0).input_bytes = 40;
-        coin_selection_params_bnb.m_subtract_fee_outputs = true;
         const auto result9 = SelectCoinsBnB(GroupCoins(coins), 1 * CENT, coin_selection_params_bnb.m_cost_of_change);
         BOOST_CHECK(result9);
         BOOST_CHECK_EQUAL(result9->GetSelectedValue(), 1 * CENT);

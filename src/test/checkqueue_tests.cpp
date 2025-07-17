@@ -193,7 +193,7 @@ static void Correct_Queue_range(std::vector<size_t> range)
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Zero)
 {
     std::vector<size_t> range;
-    range.push_back((size_t)0);
+    range.push_back(size_t{0});
     Correct_Queue_range(range);
 }
 /** Test that 1 check is correct
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_Zero)
 BOOST_AUTO_TEST_CASE(test_CheckQueue_Correct_One)
 {
     std::vector<size_t> range;
-    range.push_back((size_t)1);
+    range.push_back(size_t{1});
     Correct_Queue_range(range);
 }
 /** Test that MAX check is correct

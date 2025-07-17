@@ -56,7 +56,7 @@ public:
 
     bool Condition(int32_t version) const
     {
-        uint32_t mask = ((uint32_t)1) << m_bit;
+        uint32_t mask = (uint32_t{1}) << m_bit;
         return (((version & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (version & mask) != 0);
     }
 
