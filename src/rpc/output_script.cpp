@@ -64,7 +64,7 @@ static RPCHelpMan validateaddress()
         ret.pushKV("address", currentAddress);
 
         CScript scriptPubKey = GetScriptForDestination(dest);
-        ret.pushKV("scriptPubKey", HexStr(scriptPubKey));;
+        ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
 
         UniValue detail = DescribeAddress(dest);
         ret.pushKVs(detail);
