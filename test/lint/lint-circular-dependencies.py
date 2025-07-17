@@ -16,6 +16,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "node/blockstorage -> validation -> node/blockstorage",
     "node/utxo_snapshot -> validation -> node/utxo_snapshot",
     "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel",
+    "qt/freespacechecker -> qt/intro -> qt/freespacechecker",
     "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel",
     "qt/sendcoinsdialog -> qt/walletmodel -> qt/sendcoinsdialog",
     "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel",
