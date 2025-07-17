@@ -128,7 +128,9 @@ bool AddWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet)
     }
     wallet->ConnectScriptPubKeyManNotifiers();
     wallet->AutoLockMasternodeCollaterals();
-    wallet->coinjoin_loader().AddWallet(wallet);
+    if (wallet->coinjoin_available()) {
+        wallet->coinjoin_loader().AddWallet(wallet);
+    }
     wallet->NotifyCanGetAddressesChanged();
     return true;
 }
@@ -149,7 +151,9 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
         context.wallets.erase(i);
     }
 
-    wallet->coinjoin_loader().RemoveWallet(name);
+    if (wallet->coinjoin_available()) {
+        wallet->coinjoin_loader().RemoveWallet(name);
+    }
 
     // Write the wallet setting
     UpdateWalletSetting(chain, name, load_on_start, warnings);

@@ -6,6 +6,7 @@
 
 #include <fs.h>
 #include <test/util/setup_common.h>
+#include <util/string.h>
 
 #include <algorithm>
 #include <chrono>
@@ -42,35 +43,73 @@ void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& bench
 
 } // namespace
 
-benchmark::BenchRunner::BenchmarkMap& benchmark::BenchRunner::benchmarks()
+namespace benchmark {
+
+// map a label to one or multiple priority levels
+std::map<std::string, uint8_t> map_label_priority = {
+    {"high", PriorityLevel::HIGH},
+    {"low", PriorityLevel::LOW},
+    {"all", 0xff}
+};
+
+std::string ListPriorities()
 {
-    static std::map<std::string, BenchFunction> benchmarks_map;
+    using item_t = std::pair<std::string, uint8_t>;
+    auto sort_by_priority = [](item_t a, item_t b){ return a.second < b.second; };
+    std::set<item_t, decltype(sort_by_priority)> sorted_priorities(map_label_priority.begin(), map_label_priority.end(), sort_by_priority);
+    return Join(sorted_priorities, ',', [](const auto& entry){ return entry.first; });
+}
+
+uint8_t StringToPriority(const std::string& str)
+{
+    auto it = map_label_priority.find(str);
+    if (it == map_label_priority.end()) throw std::runtime_error(strprintf("Unknown priority level %s", str));
+    return it->second;
+}
+
+BenchRunner::BenchmarkMap& BenchRunner::benchmarks()
+{
+    static BenchmarkMap benchmarks_map;
     return benchmarks_map;
 }
 
-benchmark::BenchRunner::BenchRunner(std::string name, benchmark::BenchFunction func)
+BenchRunner::BenchRunner(std::string name, BenchFunction func, PriorityLevel level)
 {
-    benchmarks().insert(std::make_pair(name, func));
+    benchmarks().insert(std::make_pair(name, std::make_pair(func, level)));
 }
 
-void benchmark::BenchRunner::RunAll(const Args& args)
+void BenchRunner::RunAll(const Args& args)
 {
     std::regex reFilter(args.regex_filter);
     std::smatch baseMatch;
 
+    if (args.sanity_check) {
+        std::cout << "Running with -sanity-check option, output is being suppressed as benchmark results will be useless." << std::endl;
+    }
+
     std::vector<ankerl::nanobench::Result> benchmarkResults;
-    for (const auto& p : benchmarks()) {
-        if (!std::regex_match(p.first, baseMatch, reFilter)) {
+    for (const auto& [name, bench_func] : benchmarks()) {
+        const auto& [func, priority_level] = bench_func;
+
+        if (!(priority_level & args.priority)) {
+            continue;
+        }
+
+        if (!std::regex_match(name, baseMatch, reFilter)) {
             continue;
         }
 
         if (args.is_list_only) {
-            std::cout << p.first << std::endl;
+            std::cout << name << std::endl;
             continue;
         }
 
         Bench bench;
-        bench.name(p.first);
+        if (args.sanity_check) {
+            bench.epochs(1).epochIterations(1);
+            bench.output(nullptr);
+        }
+        bench.name(name);
         if (args.min_time > 0ms) {
             // convert to nanos before dividing to reduce rounding errors
             std::chrono::nanoseconds min_time_ns = args.min_time;
@@ -78,11 +117,11 @@ void benchmark::BenchRunner::RunAll(const Args& args)
         }
 
         if (args.asymptote.empty()) {
-            p.second(bench);
+            func(bench);
         } else {
             for (auto n : args.asymptote) {
                 bench.complexityN(n);
-                p.second(bench);
+                func(bench);
             }
             std::cout << bench.complexityBigO() << std::endl;
         }
@@ -97,3 +136,5 @@ void benchmark::BenchRunner::RunAll(const Args& args)
                                                                "{{/result}}");
     GenerateTemplateResults(benchmarkResults, args.output_json, ankerl::nanobench::templates::json());
 }
+
+} // namespace benchmark

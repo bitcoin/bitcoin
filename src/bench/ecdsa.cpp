@@ -8,6 +8,8 @@
 
 static void ECDSASign(benchmark::Bench& bench)
 {
+    ECC_Start();
+
     std::vector<CKey> keys;
     std::vector<uint256> hashes;
     for (size_t i = 0; i < 100; i++) {
@@ -24,10 +26,14 @@ static void ECDSASign(benchmark::Bench& bench)
         keys[i].Sign(hashes[i], sig);
         i = (i + 1) % keys.size();
     });
+
+    ECC_Stop();
 }
 
 static void ECDSAVerify(benchmark::Bench& bench)
 {
+    ECC_Start();
+
     std::vector<CPubKey> keys;
     std::vector<uint256> hashes;
     std::vector<std::vector<unsigned char>> sigs;
@@ -47,10 +53,14 @@ static void ECDSAVerify(benchmark::Bench& bench)
         keys[i].Verify(hashes[i], sigs[i]);
         i = (i + 1) % keys.size();
     });
+
+    ECC_Stop();
 }
 
 static void ECDSAVerify_LargeBlock(benchmark::Bench& bench)
 {
+    ECC_Start();
+
     std::vector<CPubKey> keys;
     std::vector<uint256> hashes;
     std::vector<std::vector<unsigned char>> sigs;
@@ -70,6 +80,8 @@ static void ECDSAVerify_LargeBlock(benchmark::Bench& bench)
             keys[i].Verify(hashes[i], sigs[i]);
         }
     });
+
+    ECC_Stop();
 }
 
 BENCHMARK(ECDSASign)

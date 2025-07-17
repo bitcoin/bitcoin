@@ -113,6 +113,10 @@ static void BLSDKG_GenerateContributions(benchmark::Bench& bench, uint32_t epoch
     blsWorker.Start();
     std::vector<CBLSId> ids;
     std::vector<Member> members;
+    if (!bench.output()) {
+        epoch_iters = 1;
+        quorumSize = 1;
+    }
     for (const int i : irange::range(quorumSize)) {
         uint256 id;
         WriteLE64(id.begin(), i + 1);
@@ -136,6 +140,10 @@ static void BLSDKG_GenerateContributions(benchmark::Bench& bench, uint32_t epoch
 
 static void BLSDKG_InitDKG(benchmark::Bench& bench, uint32_t epoch_iters, int quorumSize)
 {
+    if (!bench.output()) {
+        epoch_iters = 1;
+        quorumSize = 1;
+    }
     bench.minEpochIterations(epoch_iters).run([&] {
         DKG d(quorumSize);
     });
@@ -151,6 +159,12 @@ static void BLSDKG_InitDKG(benchmark::Bench& bench, uint32_t epoch_iters, int qu
 #define BENCH_BuildQuorumVerificationVectors(name, quorumSize, epoch_iters) \
     static void BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize(benchmark::Bench& bench) \
     { \
+        if (!bench.output()) { \
+            std::unique_ptr<DKG> ptr = std::make_unique<DKG>(1); \
+            ptr->Bench_BuildQuorumVerificationVectors(bench, 1); \
+            ptr.reset(); \
+            return; \
+        } \
         std::unique_ptr<DKG> ptr = std::make_unique<DKG>(quorumSize); \
         ptr->Bench_BuildQuorumVerificationVectors(bench, epoch_iters); \
         ptr.reset(); \
@@ -160,9 +174,15 @@ static void BLSDKG_InitDKG(benchmark::Bench& bench, uint32_t epoch_iters, int qu
 #define BENCH_VerifyContributionShares(name, quorumSize, invalidCount, aggregated, epoch_iters) \
     static void BLSDKG_VerifyContributionShares_##name##_##quorumSize(benchmark::Bench& bench) \
     { \
-      std::unique_ptr<DKG> ptr = std::make_unique<DKG>(quorumSize); \
-      ptr->Bench_VerifyContributionShares(bench, invalidCount, aggregated, epoch_iters); \
-      ptr.reset(); \
+        if (!bench.output()) { \
+            std::unique_ptr<DKG> ptr = std::make_unique<DKG>(1); \
+            ptr->Bench_VerifyContributionShares(bench, invalidCount, aggregated, 1); \
+            ptr.reset(); \
+            return; \
+        } \
+        std::unique_ptr<DKG> ptr = std::make_unique<DKG>(quorumSize); \
+        ptr->Bench_VerifyContributionShares(bench, invalidCount, aggregated, epoch_iters); \
+        ptr.reset(); \
     } \
     BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize)
 

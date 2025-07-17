@@ -7,6 +7,7 @@
 #include <random.h>
 #include <util/time.h>
 
+#include <atomic>
 #include <iostream>
 
 static void BuildTestVectors(size_t count, size_t invalidCount,
@@ -48,7 +49,7 @@ static void BLS_PubKeyAggregate_Normal(benchmark::Bench& bench)
     CBLSPublicKey pubKey2 = secKey2.GetPublicKey();
 
     // Benchmark.
-    bench.minEpochIterations(100).run([&] {
+    bench.minEpochIterations(bench.output() ? 100 : 1).run([&] {
         pubKey1.AggregateInsecure(pubKey2);
     });
 }
@@ -125,10 +126,10 @@ static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench, uint3
     std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
-    BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
+    BuildTestVectors(bench.output() ? txCount : 1, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
-    bench.minEpochIterations(epoch_iters).run([&] {
+    bench.minEpochIterations(bench.output() ? epoch_iters : 1).run([&] {
         for (size_t i = 0; i < pubKeys.size(); i++) {
             bool ok = sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
             assert(ok);
@@ -153,10 +154,10 @@ static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench
     std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
-    BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
+    BuildTestVectors(bench.output() ? txCount : 1, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
-    bench.minEpochIterations(epoch_iters).run([&] {
+    bench.minEpochIterations(bench.output() ? epoch_iters : 1).run([&] {
         CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
         bool ok = aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
         assert(ok);
@@ -180,12 +181,12 @@ static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& be
     std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
-    BuildTestVectors(txCount, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
+    BuildTestVectors(bench.output() ? txCount : 1, 0, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     CBLSSignature aggSig = CBLSSignature::AggregateInsecure(sigs);
 
     // Benchmark.
-    bench.minEpochIterations(epoch_iters).run([&] {
+    bench.minEpochIterations(bench.output() ? epoch_iters : 1).run([&] {
         bool ok = aggSig.VerifyInsecureAggregated(pubKeys, msgHashes);
         assert(ok);
     });
@@ -223,7 +224,7 @@ static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& ben
     }
 
     // Benchmark.
-    bench.minEpochIterations(10).run([&] {
+    bench.minEpochIterations(bench.output() ? 10 : 1).run([&] {
         std::vector<CBLSPublicKey> nonvalidatedPubKeys;
         std::vector<uint256> nonvalidatedHashes;
         nonvalidatedPubKeys.reserve(pubKeys.size());
@@ -254,13 +255,13 @@ static void BLS_Verify_Batched(benchmark::Bench& bench)
     std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
-    BuildTestVectors(1000, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
+    BuildTestVectors(bench.output() ? 1000 : 1, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     // Benchmark.
     size_t i = 0;
     size_t j = 0;
     size_t batchSize = 16;
-    bench.minEpochIterations(1000).run([&] {
+    bench.minEpochIterations(bench.output() ? 1000 : 1).run([&] {
         j++;
         if ((j % batchSize) != 0) {
             return;
@@ -310,20 +311,20 @@ static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
     std::vector<CBLSSignature> sigs;
     std::vector<uint256> msgHashes;
     std::vector<bool> invalid;
-    BuildTestVectors(1000, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
+    BuildTestVectors(bench.output() ? 1000 : 1, 10, pubKeys, secKeys, sigs, msgHashes, invalid);
 
     std::list<std::pair<size_t, std::future<bool>>> futures;
 
-    volatile bool cancel = false;
-    auto cancelCond = [&]() {
-        return cancel;
+    std::atomic<bool> cancel{false};
+    auto cancelCond = [&]() -> bool {
+        return cancel.load();
     };
 
     CBLSWorker blsWorker;
     blsWorker.Start();
 
     // Benchmark.
-    bench.minEpochIterations(1000).run([&] {
+    bench.minEpochIterations(bench.output() ? 1000 : 1).run([&] {
         if (futures.size() < 100) {
             while (futures.size() < 10000) {
                 size_t i = 0;
@@ -348,7 +349,7 @@ static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
         }
     });
 
-    cancel = true;
+    cancel.store(true);
     while (blsWorker.IsAsyncVerifyInProgress())
     {
         UninterruptibleSleep(std::chrono::milliseconds{100});
