@@ -81,8 +81,7 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
     }
     bench.run([&] {
         auto stack_copy = stack;
-        ScriptErrorType error;
-        bool ret = EvalScript(stack_copy, script, 0, BaseSignatureChecker(), SigVersion::BASE, &error);
+        bool ret = EvalScript(stack_copy, script, 0, BaseSignatureChecker(), SigVersion::BASE);
         assert(ret);
     });
 }
