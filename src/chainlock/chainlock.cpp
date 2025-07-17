@@ -627,23 +627,16 @@ void CChainLocksHandler::Cleanup()
             }
         }
     }
-    // need mempool.cs due to GetTransaction calls
-    LOCK2(::cs_main, mempool.cs);
-    LOCK(cs);
 
-    for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
-        const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
-        if (InternalHasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-            for (const auto& txid : *it->second) {
-                txFirstSeenTime.erase(txid);
-            }
-            it = blockTxs.erase(it);
-        } else if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-            it = blockTxs.erase(it);
-        } else {
-            ++it;
+    LOCK(cs);
+    for (const auto& tx : CleanupSigner()) {
+        for (const auto& txid : *tx) {
+            txFirstSeenTime.erase(txid);
         }
     }
+
+    // need mempool.cs due to GetTransaction calls
+    LOCK2(::cs_main, mempool.cs);
     for (auto it = txFirstSeenTime.begin(); it != txFirstSeenTime.end(); ) {
         uint256 hashBlock;
         if (auto tx = GetTransaction(nullptr, &mempool, it->first, Params().GetConsensus(), hashBlock); !tx) {
@@ -663,9 +656,27 @@ void CChainLocksHandler::Cleanup()
     }
 }
 
+std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> CChainLocksHandler::CleanupSigner()
+{
+    AssertLockHeld(cs);
+    std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> removed;
+    LOCK(::cs_main);
+    for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
+        const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
+        if (InternalHasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            removed.push_back(it->second);
+            it = blockTxs.erase(it);
+        } else if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            it = blockTxs.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return removed;
+}
+
 bool AreChainLocksEnabled(const CSporkManager& sporkman)
 {
     return sporkman.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
 }
-
 } // namespace llmq

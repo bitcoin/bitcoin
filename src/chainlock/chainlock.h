@@ -125,6 +125,8 @@ private:
     BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> CleanupSigner()
+        EXCLUSIVE_LOCKS_REQUIRED(cs);
 };
 
 bool AreChainLocksEnabled(const CSporkManager& sporkman);
