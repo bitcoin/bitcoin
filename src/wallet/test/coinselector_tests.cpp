@@ -925,7 +925,7 @@ BOOST_AUTO_TEST_CASE(minimum_inputs_test)
     wallet->LoadWallet();
     LOCK(wallet->cs_wallet);
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-    wallet->SetupDescriptorScriptPubKeyMans();
+    wallet->SetupDescriptorScriptPubKeyMans("", "");
 
     // Create coins (denominations) for a target that can be met without consuming all the coins
     std::vector<COutput> coins{};
