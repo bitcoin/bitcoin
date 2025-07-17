@@ -497,8 +497,8 @@ void TxOrphanageImpl::LimitOrphans()
         unsigned int num_erased_this_round{0};
         unsigned int starting_num_ann{it_worst_peer->second.m_count_announcements};
         while (NeedsTrim()) {
-            if (!Assume(it_ann->m_announcer == worst_peer)) break;
             if (!Assume(it_ann != m_orphans.get<ByPeer>().end())) break;
+            if (!Assume(it_ann->m_announcer == worst_peer)) break;
 
             Erase<ByPeer>(it_ann++);
             num_erased += 1;
@@ -537,7 +537,7 @@ std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(cons
 
                 // Belt and suspenders, each entry in m_outpoint_to_orphan_wtxids should always have at least 1 announcement.
                 auto it = index_by_wtxid.lower_bound(ByWtxidView{wtxid, MIN_PEER});
-                if (!Assume(it != index_by_wtxid.end())) continue;
+                if (!Assume(it != index_by_wtxid.end() && it->m_tx->GetWitnessHash() == wtxid)) continue;
 
                 // Select a random peer to assign orphan processing, reducing wasted work if the orphan is still missing
                 // inputs. However, we don't want to create an issue in which the assigned peer can purposefully stop us
