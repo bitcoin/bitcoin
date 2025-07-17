@@ -15,6 +15,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    get_mnemonic,
 )
 
 
@@ -31,25 +32,6 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.start_nodes()
         self.nodes[0].createwallet(self.default_wallet_name, blank=True, load_on_startup=True)
         self.nodes[0].importprivkey(privkey=self.nodes[0].get_deterministic_priv_key().key, label='coinbase', rescan=True)
-
-    # TODO: remove duplicated code with wallet_mnemonicbits.py
-    def get_mnemonic(self, node):
-        if not self.options.descriptors:
-            return node.dumphdinfo()["mnemonic"]
-
-        mnemonic = None
-        descriptors = node.listdescriptors(True)['descriptors']
-        for desc in descriptors:
-            if desc['desc'][:4] == 'pkh(':
-                if mnemonic is None:
-                    mnemonic = desc['mnemonic']
-                else:
-                    assert_equal(mnemonic, desc['mnemonic'])
-            elif desc['desc'][:6] == 'combo(':
-                assert 'mnemonic' not in desc
-            else:
-                raise AssertionError(f"Unknown descriptor type: {desc['desc']}")
-        return mnemonic
 
     def recover_non_hd(self):
         self.log.info("Recover non-HD wallet to check different upgrade paths")
@@ -68,7 +50,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         assert 'hdchainid' not in node.getwalletinfo()
         balance_before = node.getbalance()
         assert node.upgradetohd()
-        mnemonic = self.get_mnemonic(node)
+        mnemonic = get_mnemonic(node)
         if not self.options.descriptors:
             chainid = node.getwalletinfo()['hdchainid']
             assert_equal(len(chainid), 64)
@@ -104,7 +86,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.log.info("No mnemonic, no mnemonic passphrase, no wallet passphrase, should result in completely different keys")
         assert node.upgradetohd()
-        assert mnemonic != self.get_mnemonic(node)
+        assert mnemonic != get_mnemonic(node)
         if not self.options.descriptors:
             assert chainid != node.getwalletinfo()['hdchainid']
         assert_equal(balance_non_HD, node.getbalance())
@@ -119,7 +101,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=['-keypool=10'])
         assert node.upgradetohd("", "", "", True)
         # Completely different keys, no HD coins should be recovered
-        assert mnemonic != self.get_mnemonic(node)
+        assert mnemonic != get_mnemonic(node)
         if not self.options.descriptors:
             assert chainid != node.getwalletinfo()['hdchainid']
         assert_equal(balance_non_HD, node.getbalance())
@@ -129,7 +111,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.log.info("Same mnemonic, another mnemonic passphrase, no wallet passphrase, should result in a different set of keys")
         new_mnemonic_passphrase = "somewords"
         assert node.upgradetohd(mnemonic, new_mnemonic_passphrase)
-        assert_equal(mnemonic, self.get_mnemonic(node))
+        assert_equal(mnemonic, get_mnemonic(node))
         if not self.options.descriptors:
             new_chainid = node.getwalletinfo()['hdchainid']
             assert chainid != new_chainid
@@ -144,7 +126,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.log.info("Same mnemonic, another mnemonic passphrase, no wallet passphrase, should result in a different set of keys (again)")
         assert node.upgradetohd(mnemonic, new_mnemonic_passphrase)
-        assert_equal(mnemonic, self.get_mnemonic(node))
+        assert_equal(mnemonic, get_mnemonic(node))
         if not self.options.descriptors:
             assert_equal(new_chainid, node.getwalletinfo()['hdchainid'])
         assert_equal(balance_non_HD, node.getbalance())
@@ -158,7 +140,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.log.info("Same mnemonic, no mnemonic passphrase, no wallet passphrase, should recover all coins after rescan")
         assert node.upgradetohd(mnemonic)
-        assert_equal(mnemonic, self.get_mnemonic(node))
+        assert_equal(mnemonic, get_mnemonic(node))
         if not self.options.descriptors:
             assert_equal(chainid, node.getwalletinfo()['hdchainid'])
         node.keypoolrefill(5)
@@ -171,7 +153,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.log.info("Same mnemonic, no mnemonic passphrase, no wallet passphrase, large enough keepool, should recover all coins with no extra rescan")
         self.restart_node(0, extra_args=['-keypool=10'])
         assert node.upgradetohd(mnemonic)
-        assert_equal(mnemonic, self.get_mnemonic(node))
+        assert_equal(mnemonic, get_mnemonic(node))
         if not self.options.descriptors:
             assert_equal(chainid, node.getwalletinfo()['hdchainid'])
         # All coins should be recovered
@@ -182,7 +164,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.log.info("Same mnemonic, no mnemonic passphrase, no wallet passphrase, large enough keepool, rescan is skipped initially, should recover all coins after rescanblockchain")
         self.restart_node(0, extra_args=['-keypool=10'])
         assert node.upgradetohd(mnemonic, "", "", False)
-        assert_equal(mnemonic, self.get_mnemonic(node))
+        assert_equal(mnemonic, get_mnemonic(node))
         if not self.options.descriptors:
             assert_equal(chainid, node.getwalletinfo()['hdchainid'])
         assert balance_after != node.getbalance()
@@ -200,7 +182,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         self.start_node(0, extra_args=['-rescan'])
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", node.dumphdinfo)
         node.walletpassphrase(walletpass, 100)
-        assert_equal(mnemonic, self.get_mnemonic(node))
+        assert_equal(mnemonic, get_mnemonic(node))
         if not self.options.descriptors:
             assert_equal(chainid, node.getwalletinfo()['hdchainid'])
         # Note: wallet encryption results in additional keypool topup,
@@ -237,7 +219,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         else:
             assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", node.listdescriptors, True)
         node.walletpassphrase(walletpass, 100)
-        assert_equal(mnemonic, self.get_mnemonic(node))
+        assert_equal(mnemonic, get_mnemonic(node))
         if not self.options.descriptors:
             assert_equal(chainid, node.getwalletinfo()['hdchainid'])
         # Note: wallet encryption results in additional keypool topup,

@@ -7,6 +7,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    get_mnemonic,
 )
 
 class WalletMnemonicbitsTest(BitcoinTestFramework):
@@ -17,24 +18,6 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def get_mnemonic(self, node):
-        if not self.options.descriptors:
-            return node.dumphdinfo()["mnemonic"]
-
-        mnemonic = None
-        descriptors = node.listdescriptors(True)['descriptors']
-        for desc in descriptors:
-            if desc['desc'][:4] == 'pkh(':
-                if mnemonic is None:
-                    mnemonic = desc['mnemonic']
-                else:
-                    assert_equal(mnemonic, desc['mnemonic'])
-            elif desc['desc'][:6] == 'combo(':
-                assert 'mnemonic' not in desc
-            else:
-                raise AssertionError(f"Unknown descriptor type: {desc['desc']}")
-        return mnemonic
-
     def run_test(self):
         self.log.info("Test -mnemonicbits")
 
@@ -43,7 +26,7 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(['-mnemonicbits=123'], "Error: Invalid '-mnemonicbits'. Allowed values: 128, 160, 192, 224, 256.")
         self.start_node(0)
 
-        mnemonic_pre = self.get_mnemonic(self.nodes[0])
+        mnemonic_pre = get_mnemonic(self.nodes[0])
 
 
         self.nodes[0].encryptwallet('pass')
@@ -91,11 +74,11 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
         self.nodes[0].createwallet("wallet_256", blank=True, descriptors=self.options.descriptors)  # blank wallet
         self.nodes[0].get_wallet_rpc("wallet_256").upgradetohd()
 
-        assert_equal(len(self.get_mnemonic(self.nodes[0].get_wallet_rpc(self.default_wallet_name)).split()), 12)  # 12 words by default
-        assert_equal(len(self.get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_160")).split()), 15)              # 15 words
-        assert_equal(len(self.get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_192")).split()), 18)              # 18 words
-        assert_equal(len(self.get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_224")).split()), 21)              # 21 words
-        assert_equal(len(self.get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_256")).split()), 24)              # 24 words
+        assert_equal(len(get_mnemonic(self.nodes[0].get_wallet_rpc(self.default_wallet_name)).split()), 12)  # 12 words by default
+        assert_equal(len(get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_160")).split()), 15)              # 15 words
+        assert_equal(len(get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_192")).split()), 18)              # 18 words
+        assert_equal(len(get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_224")).split()), 21)              # 21 words
+        assert_equal(len(get_mnemonic(self.nodes[0].get_wallet_rpc("wallet_256")).split()), 24)              # 24 words
 
 
 if __name__ == '__main__':

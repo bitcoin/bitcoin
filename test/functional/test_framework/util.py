@@ -536,6 +536,29 @@ def force_finish_mnsync(node):
     while not node.mnsync("status")['IsSynced']:
         node.mnsync("next")
 
+
+def get_mnemonic(node):
+    """
+    Return mnemonic if known from legacy HD wallets and Descriptor Wallets
+    Raises exception if there is none.
+    """
+    if not node.getwalletinfo()['descriptors']:
+        return node.dumphdinfo()["mnemonic"]
+
+    mnemonic = None
+    descriptors = node.listdescriptors(True)['descriptors']
+    for desc in descriptors:
+        if desc['desc'][:4] == 'pkh(':
+            if mnemonic is None:
+                mnemonic = desc['mnemonic']
+            else:
+                assert_equal(mnemonic, desc['mnemonic'])
+        elif desc['desc'][:6] == 'combo(':
+            assert 'mnemonic' not in desc
+        else:
+            raise AssertionError(f"Unknown descriptor type: {desc['desc']}")
+    return mnemonic
+
 # Transaction/Block functions
 #############################
 
