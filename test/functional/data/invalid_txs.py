@@ -301,9 +301,10 @@ class NonStandardScriptAndInvalidScript(BadTxTemplate):
 
 
 class InvalidScriptAndNonStandardScript(BadTxTemplate):
-    """A transaction containing a Script with first a standardness error and then a consensus error should return the consensus error."""
-    reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
-    expect_disconnect = True
+    """A transaction containing a Script with first a standardness error and then a consensus error should return the standardness error."""
+    reject_reason = "non-mandatory-script-verify-flag (Using OP_CODESEPARATOR in non-witness script)"
+    block_reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
+    expect_disconnect = False
     valid_in_block = False
 
     def get_tx(self):

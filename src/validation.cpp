@@ -2112,10 +2112,10 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
     AddCoins(inputs, tx, nHeight);
 }
 
-std::optional<std::pair<ScriptErrorType, std::string>> CScriptCheck::operator()() {
+std::optional<std::pair<ScriptError, std::string>> CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
-    ScriptErrorType error{SCRIPT_ERR_UNKNOWN_ERROR};
+    ScriptError error{SCRIPT_ERR_UNKNOWN_ERROR, SCRIPT_VERIFY_NONE};
     if (VerifyScript(scriptSig, m_tx_out.scriptPubKey, witness, nFlags, CachingTransactionSignatureChecker(ptxTo, nIn, m_tx_out.nValue, cacheStore, *m_signature_cache, *txdata), &error)) {
         return std::nullopt;
     } else {
@@ -2211,34 +2211,20 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
         if (pvChecks) {
             pvChecks->emplace_back(std::move(check));
         } else if (auto result = check(); result.has_value()) {
-            if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
-                // Check whether the failure was caused by a
-                // non-mandatory script verification check, such as
-                // non-standard DER encodings or non-null dummy
-                // arguments; if so, ensure we return NOT_STANDARD
-                // instead of CONSENSUS to avoid downstream users
-                // splitting the network between upgraded and
-                // non-upgraded nodes by banning CONSENSUS-failing
-                // data providers.
-                CScriptCheck check2(txdata.m_spent_outputs[i], tx, validation_cache.m_signature_cache, i,
-                        flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
-                auto mandatory_result = check2();
-                if (!mandatory_result.has_value()) {
-                    return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(result->first)), result->second);
-                } else {
-                    // If the second check failed, it failed due to a mandatory script verification
-                    // flag, but the first check might have failed on a non-mandatory script
-                    // verification flag.
-                    //
-                    // Avoid reporting a mandatory script check failure with a non-mandatory error
-                    // string by reporting the error from the second check.
-                    result = mandatory_result;
-                }
+            // Check whether the failure was caused by a
+            // non-mandatory script verification check, such as
+            // non-standard DER encodings or non-null dummy
+            // arguments; if so, ensure we return NOT_STANDARD
+            // instead of CONSENSUS to avoid downstream users
+            // splitting the network between upgraded and
+            // non-upgraded nodes by banning CONSENSUS-failing
+            // data providers.
+            if (result->first.Flag() & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
+                return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(result->first.Type())), result->second);
             }
-
             // MANDATORY flag failures correspond to
             // TxValidationResult::TX_CONSENSUS.
-            return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(result->first.Type())), result->second);
         }
     }
 
@@ -2711,7 +2697,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (control) {
         auto parallel_result = control->Complete();
         if (parallel_result.has_value() && state.IsValid()) {
-            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(parallel_result->first)), parallel_result->second);
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(parallel_result->first.Type())), parallel_result->second);
         }
     }
     if (!state.IsValid()) {
