@@ -49,16 +49,25 @@ Notable changes
 - #31757 wallet: fix crash on double block disconnection
 - #32553 wallet: Fix logging of wallet version
 
+### P2P
+
+- #32826 p2p: add more bad ports
+
 ### Test
 
 - #32286 test: Handle empty string returned by CLI as None in RPC tests
 - #32312 test: Fix feature_pruning test after nTime typo fix
 - #32336 test: Suppress upstream -Wduplicate-decl-specifier in bpfcc
+- #32463 test: fix an incorrect feature_fee_estimation.py subtest
 - #32483 test: fix two intermittent failures in wallet_basic.py
 - #32630 test: fix sync function in rpc_psbt.py
 - #32765 test: Fix list index out of range error in feature_bip68_sequence.py
 - #32742 test: fix catchup loop in outbound eviction functional test
+- #32823 test: Fix wait_for_getheaders() call in test_outbound_eviction_blocks_relay_only()
 - #32833 test: Add msgtype to msg_generic slots
+- #32841 feature_taproot: sample tx version border values more
+- #32850 test: check P2SH sigop count for coinbase tx
+- #32859 test: correctly detect nonstd TRUC tx vsize in feature_taproot
 
 ### Util
 
@@ -74,10 +83,14 @@ Notable changes
 - #32568 depends: use "mkdir -p" when installing xproto
 - #32678 guix: warn and abort when SOURCE_DATE_EPOCH is set
 - #32690 depends: fix SHA256SUM command on OpenBSD (use GNU mode output)
+- #32716 depends: Override host compilers for FreeBSD and OpenBSD
 - #32760 depends: capnp 1.2.0
 - #32798 build: add root dir to CMAKE_PREFIX_PATH in toolchain
 - #32805 cmake: Use HINTS instead of PATHS in find_* commands
 - #32814 cmake: Explicitly specify Boost_ROOT for Homebrew's package
+- #32837 depends: fix libevent _WIN32_WINNT usage
+- #32943 depends: Force CMAKE_EXPORT_NO_PACKAGE_REGISTRY=TRUE
+- #32954 cmake: Drop no longer necessary "cmakeMinimumRequired" object
 
 ### Gui
 
@@ -98,6 +111,8 @@ Notable changes
 - #32719 doc, windows: CompanyName "Bitcoin" => "Bitcoin Core project"
 - #32776 doc: taproot became always active in v24.0
 - #32777 doc: fix Transifex 404s
+- #32846 doc: clarify that the "-j N" goes after the "--build build" part
+- #32858 doc: Add workaround for vcpkg issue with paths with embedded spaces
 
 ### CI
 
@@ -116,16 +131,21 @@ Thanks to everyone who directly contributed to this release:
 
 - achow101
 - benthecarman
+- bigspider
 - Brandon Odiwuor
+- brunoerg
+- darosior
 - davidgumberg
 - dergoegge
 - enirox001
 - fanquake
 - furszy
+- instagibbs
 - Hennadii Stepanov
 - hodlinator
 - ismaelsadeeq
 - jb55
+- jlopp
 - josibake
 - laanwj
 - luisschwab
@@ -133,7 +153,9 @@ Thanks to everyone who directly contributed to this release:
 - Martin Zumsande
 - monlovesmango
 - nervana21
+- pablomartin4btc
 - rkrux
+- ryanofsky
 - Sjors
 - theStack
 - willcl-ark
