@@ -198,10 +198,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.warning("Test Skipped: %s" % e.message)
             self.success = TestStatus.SKIPPED
         except subprocess.CalledProcessError as e:
-            self.log.exception("Called Process failed with '{}'".format(e.output))
-            self.success = TestStatus.FAILED
-        except KeyboardInterrupt:
-            self.log.warning("Exiting after keyboard interrupt")
+            self.log.exception(f"Called Process failed with stdout='{e.stdout}'; stderr='{e.stderr}';")
             self.success = TestStatus.FAILED
         except BaseException:
             self.log.exception("Unexpected exception")
