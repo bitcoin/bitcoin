@@ -23,10 +23,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: check for potential conflicts
+        id: check_conflicts
         uses: PastaPastaPasta/potential-conflicts-checker-action@v0.1.10
         with:
           ghToken: "${{ secrets.GITHUB_TOKEN }}"
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: validate potential conflicts
+        id: validate_conflicts
         run: pip3 install hjson && .github/workflows/handle_potential_conflicts.py "$conflicts"
+        continue-on-error: true
+      - name: Post conflict comment
+        if: steps.validate_conflicts.outputs.has_conflicts == 'true'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-id: conflict-prediction
+          message: |
+            ## ⚠️ Potential Merge Conflicts Detected
+
+            This PR has potential conflicts with the following open PRs:
+
+            ${{ steps.validate_conflicts.outputs.conflict_details }}
+
+            Please coordinate with the authors of these PRs to avoid merge conflicts.
+      - name: Remove conflict comment if no conflicts
+        if: steps.validate_conflicts.outputs.has_conflicts == 'false'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message-id: conflict-prediction
+          message: |
+            ## ✅ No Merge Conflicts Detected
+
+            This PR currently has no conflicts with other open PRs.
+      - name: Fail if conflicts exist
+        if: steps.validate_conflicts.outputs.has_conflicts == 'true'
+        run: exit 1
