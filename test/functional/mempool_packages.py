@@ -17,12 +17,15 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
+from test_framework.blocktools import create_empty_fork
 
 # custom limits for node1
 CUSTOM_ANCESTOR_LIMIT = 5
 CUSTOM_DESCENDANT_LIMIT = 10
 assert CUSTOM_DESCENDANT_LIMIT >= CUSTOM_ANCESTOR_LIMIT
 
+# Number of blocks to create in temporary blockchain branch for reorg testing
+FORK_LENGTH = 10
 
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -37,6 +40,12 @@ class MempoolPackagesTest(BitcoinTestFramework):
                 "-limitdescendantcount={}".format(CUSTOM_DESCENDANT_LIMIT),
             ],
         ]
+
+    def trigger_reorg(self, fork_blocks, node):
+        """Trigger reorg of the fork blocks."""
+        for block in fork_blocks:
+            node.submitblock(block.serialize().hex())
+        assert_equal(node.getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
@@ -257,11 +266,19 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(entry1['fees']['base'], entry0['fees']['base'])
             assert_equal(entry1['vsize'], entry0['vsize'])
             assert_equal(entry1['depends'], entry0['depends'])
+
         # Test reorg handling
         # First, the basics:
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=FORK_LENGTH)
+        mempool0 = self.nodes[0].getrawmempool(False)
         self.generate(self.nodes[0], 1)
-        self.nodes[1].invalidateblock(self.nodes[0].getbestblockhash())
-        self.nodes[1].reconsiderblock(self.nodes[0].getbestblockhash())
+        self.trigger_reorg(fork_blocks, self.nodes[0])
+
+        # Check if the txs are returned to the mempool
+        assert_equal(self.nodes[0].getrawmempool(), mempool0)
+
+        # Clean-up the mempool
+        self.generate(self.nodes[0], 1)
 
         # Now test the case where node1 has a transaction T in its mempool that
         # depends on transactions A and B which are in a mined block, and the
@@ -275,6 +292,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Mine them in the next block, then generate a new tx8 that spends
         # Tx1 and Tx7, and add to node1's mempool, then disconnect the
         # last block.
+
+        # Prep for fork
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=FORK_LENGTH)
 
         # Create tx0 with 2 outputs
         tx0 = self.wallet.send_self_transfer_multi(from_node=self.nodes[0], num_outputs=2)
@@ -293,8 +313,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.sync_mempools()
 
         # Now try to disconnect the tip on each node...
-        self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
-        self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+        self.trigger_reorg(fork_blocks, self.nodes[0])
+        self.trigger_reorg(fork_blocks, self.nodes[1])
         self.sync_blocks()
 
 if __name__ == '__main__':
