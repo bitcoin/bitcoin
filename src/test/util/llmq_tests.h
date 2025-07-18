@@ -88,14 +88,14 @@ inline bool TestSerializationRoundtrip(const T& obj)
 {
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << obj;
-    
+
     T deserialized;
     ss >> deserialized;
-    
+
     // Re-serialize and compare
     CDataStream ss2(SER_NETWORK, PROTOCOL_VERSION);
     ss2 << deserialized;
-    
+
     return ss.str() == ss2.str();
 }
 
