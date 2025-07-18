@@ -11,6 +11,7 @@
 #include <script/signingprovider.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/transaction_utils.h>
 #include <txorphanage.h>
 
@@ -110,9 +111,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
-    // Freeze time for length of test
-    auto now{GetTime<std::chrono::seconds>()};
-    SetMockTime(now);
+    ElapseTime elapse_time{};
 
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
@@ -209,12 +208,12 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 1);
 
     // One second shy of expiration
-    SetMockTime(now + ORPHAN_TX_EXPIRE_TIME - 1s);
+    elapse_time(ORPHAN_TX_EXPIRE_TIME - 1s);
     orphanage.LimitOrphans(1, rng);
     BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 1);
 
     // Jump one more second, orphan should be timed out on limiting
-    SetMockTime(now + ORPHAN_TX_EXPIRE_TIME);
+    elapse_time(ORPHAN_TX_EXPIRE_TIME);
     BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 1);
     orphanage.LimitOrphans(1, rng);
     BOOST_CHECK_EQUAL(orphanage.CountOrphans(), 0);
