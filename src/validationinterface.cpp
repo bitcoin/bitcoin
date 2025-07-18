@@ -269,7 +269,7 @@ void CMainSignals::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDo
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyHeaderTip(pindexNew, fInitialDownload); });
 }
 
-void CMainSignals::NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) {
+void CMainSignals::NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const instantsend::InstantSendLock>& islock) {
     auto event = [tx, islock, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyTransactionLock(tx, islock); });
     };

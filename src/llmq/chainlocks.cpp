@@ -3,9 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/chainlocks.h>
-#include <llmq/quorums.h>
-#include <llmq/instantsend.h>
-#include <llmq/signing_shares.h>
 
 #include <chain.h>
 #include <chainparams.h>
@@ -22,6 +19,10 @@
 #include <util/underlying.h>
 #include <validation.h>
 #include <validationinterface.h>
+
+#include <instantsend/instantsend.h>
+#include <llmq/quorums.h>
+#include <llmq/signing_shares.h>
 
 using node::ReadBlockFromDisk;
 

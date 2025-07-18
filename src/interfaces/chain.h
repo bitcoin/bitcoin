@@ -31,9 +31,11 @@ enum class MemPoolRemovalReason;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+namespace instantsend {
+struct InstantSendLock;
+} // namespace instantsend
 namespace llmq {
 class CChainLockSig;
-struct CInstantSendLock;
 } // namespace llmq
 namespace node {
 struct NodeContext;
@@ -266,7 +268,7 @@ public:
         virtual void updatedBlockTip() {}
         virtual void chainStateFlushed(const CBlockLocator& locator) {}
         virtual void notifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {}
-        virtual void notifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) {}
+        virtual void notifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const instantsend::InstantSendLock>& islock) {}
     };
 
     //! Register handler for notifications.

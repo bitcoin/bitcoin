@@ -23,8 +23,8 @@
 #include <evo/deterministicmns.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
+#include <instantsend/instantsend.h>
 #include <llmq/context.h>
-#include <llmq/instantsend.h>
 
 #include <boost/test/unit_test.hpp>
 

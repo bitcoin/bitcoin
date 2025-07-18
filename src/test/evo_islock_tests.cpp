@@ -1,13 +1,19 @@
-#include <boost/test/unit_test.hpp>
+// Copyright (c) 2025 The Dash Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <consensus/consensus.h>
 #include <hash.h>
-#include <llmq/instantsend.h>
+#include <instantsend/lock.h>
+#include <llmq/signing.h>
 #include <primitives/transaction.h>
 #include <streams.h>
-#include <string_view>
 #include <uint256.h>
-
-// For constructing dummy outpoints using uint256S.
 #include <util/strencodings.h>
+
+#include <string_view>
+
+#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(evo_islock_tests)
 
@@ -22,10 +28,10 @@ uint256 CalculateRequestId(const std::vector<COutPoint>& inputs)
 BOOST_AUTO_TEST_CASE(getrequestid)
 {
     // Create an empty InstantSendLock
-    llmq::CInstantSendLock islock;
+    instantsend::InstantSendLock islock;
 
     // Compute expected hash for an empty inputs vector.
-    // Note: CInstantSendLock::GetRequestId() serializes the prefix "islock"
+    // Note: InstantSendLock::GetRequestId() serializes the prefix "islock"
     // followed by the 'inputs' vector.
     {
         const uint256 expected = CalculateRequestId(islock.inputs);
@@ -70,7 +76,7 @@ BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
     // Convert hex string to a byte vector and deserialize.
     std::vector<unsigned char> islockData = ParseHex(islockHex);
     CDataStream ss(islockData, SER_NETWORK, PROTOCOL_VERSION);
-    llmq::CInstantSendLock islock;
+    instantsend::InstantSendLock islock;
     ss >> islock;
 
     // Verify the calculated signHash

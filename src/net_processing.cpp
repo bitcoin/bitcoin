@@ -62,13 +62,14 @@
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <evo/simplifiedmns.h>
+#include <instantsend/lock.h>
+#include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/context.h>
 #include <llmq/dkgsession.h>
 #include <llmq/dkgsessionmgr.h>
-#include <llmq/instantsend.h>
 #include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
@@ -2865,7 +2866,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
 
         if (!push && inv.type == MSG_ISDLOCK) {
-            llmq::CInstantSendLock o;
+            instantsend::InstantSendLock o;
             if (m_llmq_ctx->isman->GetInstantSendLockByHash(inv.hash, o)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::ISDLOCK, o));
                 push = true;

@@ -14,6 +14,8 @@ src/evo/*.cpp
 src/evo/*.h
 src/governance/*.cpp
 src/governance/*.h
+src/instantsend/*.cpp
+src/instantsend/*.h
 src/llmq/*.cpp
 src/llmq/*.h
 src/masternode/*.cpp

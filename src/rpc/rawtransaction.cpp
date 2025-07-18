@@ -50,10 +50,10 @@
 
 #include <evo/cbtx.h>
 #include <evo/specialtx.h>
-
+#include <instantsend/lock.h>
+#include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
-#include <llmq/instantsend.h>
 
 #include <numeric>
 #include <stdint.h>
@@ -456,7 +456,7 @@ static RPCHelpMan getislocks()
     for (const auto idx : irange::range(txids.size())) {
         const uint256 txid(ParseHashV(txids[idx], "txid"));
 
-        if (const llmq::CInstantSendLockPtr islock = llmq_ctx.isman->GetInstantSendLockByTxid(txid); islock != nullptr) {
+        if (const instantsend::InstantSendLockPtr islock = llmq_ctx.isman->GetInstantSendLockByTxid(txid); islock != nullptr) {
             UniValue objIS(UniValue::VOBJ);
             objIS.pushKV("txid", islock->txid.ToString());
             UniValue inputs(UniValue::VARR);

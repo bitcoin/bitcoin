@@ -16,8 +16,8 @@
 #include <univalue.h>
 #include <validation.h>
 
+#include <instantsend/instantsend.h>
 #include <llmq/context.h>
-#include <llmq/instantsend.h>
 
 using node::NodeContext;
 

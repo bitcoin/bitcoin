@@ -20,9 +20,9 @@
 #include <interfaces/coinjoin.h>
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
+#include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
-#include <llmq/instantsend.h>
 #include <mapport.h>
 #include <masternode/sync.h>
 #include <net.h>
@@ -657,7 +657,7 @@ public:
     {
         m_notifications->notifyChainLock(pindexChainLock, clsig);
     }
-    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override
+    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const instantsend::InstantSendLock>& islock) override
     {
         m_notifications->notifyTransactionLock(tx, islock);
     }

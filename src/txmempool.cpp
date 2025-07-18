@@ -25,7 +25,7 @@
 #include <evo/assetlocktx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
-#include <llmq/instantsend.h>
+#include <instantsend/instantsend.h>
 
 #include <cmath>
 #include <optional>

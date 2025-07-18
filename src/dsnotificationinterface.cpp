@@ -16,12 +16,11 @@
 
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
-
+#include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>
-#include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 
 CDSNotificationInterface::CDSNotificationInterface(CConnman& connman,

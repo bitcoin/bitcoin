@@ -7,13 +7,13 @@
 #include <dbwrapper.h>
 #include <validation.h>
 
+#include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>
-#include <llmq/instantsend.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>

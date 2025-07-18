@@ -3426,7 +3426,7 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, bilingual_str& error
 }
 #endif // USE_BDB
 
-void CWallet::notifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
+void CWallet::notifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const instantsend::InstantSendLock>& islock)
 {
     LOCK(cs_wallet);
     // Only notify UI if this transaction is in this wallet
