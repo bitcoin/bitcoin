@@ -348,25 +348,25 @@ BOOST_AUTO_TEST_CASE(logging_log_rate_limiter)
 
 BOOST_AUTO_TEST_CASE(logging_log_limit_stats)
 {
-    BCLog::LogLimitStats counter{BCLog::RATELIMIT_MAX_BYTES};
+    BCLog::LogRateLimiter::Stats stats(BCLog::RATELIMIT_MAX_BYTES);
 
-    // Check that counter gets initialized correctly.
-    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES);
-    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+    // Check that stats gets initialized correctly.
+    BOOST_CHECK_EQUAL(stats.m_available_bytes, BCLog::RATELIMIT_MAX_BYTES);
+    BOOST_CHECK_EQUAL(stats.m_dropped_bytes, uint64_t{0});
 
-    const uint64_t MESSAGE_SIZE{512 * 1024};
-    BOOST_CHECK(counter.Consume(MESSAGE_SIZE));
-    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE);
-    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+    const uint64_t MESSAGE_SIZE{BCLog::RATELIMIT_MAX_BYTES / 2};
+    BOOST_CHECK(stats.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(stats.m_available_bytes, BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE);
+    BOOST_CHECK_EQUAL(stats.m_dropped_bytes, uint64_t{0});
 
-    BOOST_CHECK(counter.Consume(MESSAGE_SIZE));
-    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE * 2);
-    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 0ull);
+    BOOST_CHECK(stats.Consume(MESSAGE_SIZE));
+    BOOST_CHECK_EQUAL(stats.m_available_bytes, BCLog::RATELIMIT_MAX_BYTES - MESSAGE_SIZE * 2);
+    BOOST_CHECK_EQUAL(stats.m_dropped_bytes, uint64_t{0});
 
-    // Consuming more bytes after already having consumed 1MB should fail.
-    BOOST_CHECK(!counter.Consume(500));
-    BOOST_CHECK_EQUAL(counter.GetAvailableBytes(), 0ull);
-    BOOST_CHECK_EQUAL(counter.GetDroppedBytes(), 500ull);
+    // Consuming more bytes after already having consumed RATELIMIT_MAX_BYTES should fail.
+    BOOST_CHECK(!stats.Consume(500));
+    BOOST_CHECK_EQUAL(stats.m_available_bytes, uint64_t{0});
+    BOOST_CHECK_EQUAL(stats.m_dropped_bytes, uint64_t{500});
 }
 
 void LogFromLocation(int location, std::string message)

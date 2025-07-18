@@ -384,10 +384,10 @@ BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(
     const std::string& str)
 {
     StdLockGuard scoped_lock(m_mutex);
-    auto& counter{m_source_locations.try_emplace(source_loc, m_max_bytes).first->second};
-    Status status{counter.GetDroppedBytes() > 0 ? Status::STILL_SUPPRESSED : Status::UNSUPPRESSED};
+    auto& stats{m_source_locations.try_emplace(source_loc, m_max_bytes).first->second};
+    Status status{stats.m_dropped_bytes > 0 ? Status::STILL_SUPPRESSED : Status::UNSUPPRESSED};
 
-    if (!counter.Consume(str.size()) && status == Status::UNSUPPRESSED) {
+    if (!stats.Consume(str.size()) && status == Status::UNSUPPRESSED) {
         status = Status::NEWLY_SUPPRESSED;
         m_suppression_active = true;
     }
@@ -549,18 +549,17 @@ void BCLog::LogRateLimiter::Reset()
         source_locations.swap(m_source_locations);
         m_suppression_active = false;
     }
-    for (const auto& [source_loc, counter] : source_locations) {
-        uint64_t dropped_bytes{counter.GetDroppedBytes()};
-        if (dropped_bytes == 0) continue;
+    for (const auto& [source_loc, stats] : source_locations) {
+        if (stats.m_dropped_bytes == 0) continue;
         LogPrintLevel_(
             LogFlags::ALL, Level::Info, /*should_ratelimit=*/false,
             "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.\n",
             source_loc.file_name(), source_loc.line(), source_loc.function_name(),
-            dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
+            stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
     }
 }
 
-bool BCLog::LogLimitStats::Consume(uint64_t bytes)
+bool BCLog::LogRateLimiter::Stats::Consume(uint64_t bytes)
 {
     if (bytes > m_available_bytes) {
         m_dropped_bytes += bytes;
