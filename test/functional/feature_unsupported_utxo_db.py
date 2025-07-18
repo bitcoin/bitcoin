@@ -20,6 +20,7 @@ class UnsupportedUtxoDbTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_previous_releases()
+        self.skip_if_platform_not_linux()
 
     def setup_network(self):
         self.add_nodes(
