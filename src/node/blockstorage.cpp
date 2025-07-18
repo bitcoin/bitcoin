@@ -31,6 +31,7 @@
 #include <util/batchpriority.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
@@ -1177,7 +1178,8 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
-    : m_prune_mode{opts.prune_target > 0},
+    : m_blocks_dir_lock{DirectoryLock(opts.blocks_dir, "blocks")},
+      m_prune_mode{opts.prune_target > 0},
       m_xor_key{InitBlocksdirXorKey(opts)},
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
