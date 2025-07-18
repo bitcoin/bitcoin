@@ -304,7 +304,7 @@ SetType ReadTopologicalSet(const DepGraph<SetType>& depgraph, const SetType& tod
     try {
         reader >> VARINT(mask);
     } catch(const std::ios_base::failure&) {}
-    mask += non_empty;
+    if (mask != uint64_t(-1)) mask += non_empty;
 
     SetType ret;
     for (auto i : todo) {
