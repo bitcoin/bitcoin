@@ -1715,6 +1715,10 @@ uint64_t CWallet::GetWalletFlags() const
     return m_wallet_flags;
 }
 
+void CWallet::LoadHmacBIP388(std::string policy_name, std::string hmac) {
+    m_bip388 = {.name = policy_name, .hmac = hmac};
+}
+
 void CWallet::MaybeUpdateBirthTime(int64_t time)
 {
     int64_t birthtime = m_birth_time.load();
@@ -2585,6 +2589,34 @@ util::Result<void> CWallet::DisplayAddress(const CTxDestination& dest)
         return signer_spk_man->DisplayAddress(dest, *signer);
     }
     return util::Error{_("There is no ScriptPubKeyManager for this address")};
+}
+
+util::Result<std::string> CWallet::RegisterPolicy(std::optional<std::string> name)
+{
+    for (const auto& spk_man : GetActiveScriptPubKeyMans()) {
+        auto signer_spk_man = dynamic_cast<ExternalSignerScriptPubKeyMan *>(spk_man);
+        if (signer_spk_man == nullptr) {
+            continue;
+        }
+        auto signer{ExternalSignerScriptPubKeyMan::GetExternalSigner()};
+        if (!signer) throw std::runtime_error(util::ErrorString(signer).original);
+
+        // TODO: use wallet name as default
+        const std::string policy_name{name.has_value() ? *name : "Core"};
+
+        util::Result<std::string> res{signer_spk_man->RegisterPolicy(*signer, policy_name)};
+
+        if (res) {
+            // Store hmac in wallet
+            WalletBatch batch(GetDatabase());
+            // TODO: don't ignore failure
+            batch.WriteHmacBip388(policy_name, *res);
+            LoadHmacBIP388(policy_name, *res);
+        }
+
+        return res;
+    }
+    return util::Error{_("Could not find ExternalSignerScriptPubKeyMananager")};
 }
 
 bool CWallet::LockCoin(const COutPoint& output, WalletBatch* batch)

@@ -56,6 +56,7 @@ static RPCHelpMan getwalletinfo()
                         }, /*skip_type_check=*/true},
                         {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for output script management"},
                         {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
+                        {RPCResult::Type::STR, "bip388_hmac", /*optional=*/true, "BIP388 HMAC provided by the external signer"},
                         {RPCResult::Type::BOOL, "blank", "Whether this wallet intentionally does not contain any keys, scripts, or descriptors"},
                         {RPCResult::Type::NUM_TIME, "birthtime", /*optional=*/true, "The start time for blocks scanning. It could be modified by (re)importing any descriptor with an earlier timestamp."},
                         {RPCResult::Type::ARR, "flags", "The flags currently set on the wallet",
@@ -108,6 +109,9 @@ static RPCHelpMan getwalletinfo()
     }
     obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
     obj.pushKV("external_signer", pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+    if (pwallet->GetHmacBIP388()) {
+        obj.pushKV("bip388_hmac", pwallet->GetHmacBIP388()->hmac);
+    }
     obj.pushKV("blank", pwallet->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET));
     if (int64_t birthtime = pwallet->GetBirthTime(); birthtime != UNKNOWN_TIME) {
         obj.pushKV("birthtime", birthtime);
@@ -926,6 +930,45 @@ static RPCHelpMan createwalletdescriptor()
     };
 }
 
+#ifdef ENABLE_EXTERNAL_SIGNER
+RPCHelpMan registerpolicy()
+{
+    return RPCHelpMan{
+        "registerpolicy",
+        "Register BIP388 policy on an external signer and store the result.",
+        {
+            {"policy_name", RPCArg::Type::STR, RPCArg::DefaultHint{"wallet name"}, "Policy name to display on the device"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ,"","",
+            {
+                {RPCResult::Type::STR, "hmac", "The hmac (stored in the wallet)"},
+            }
+        },
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return UniValue::VNULL;
+            CWallet* const pwallet = wallet.get();
+
+            LOCK(pwallet->cs_wallet);
+
+            std::optional<std::string> policy_name;
+            if (!request.params[0].isNull()) {
+                policy_name = std::string_view{request.params[0].get_str()};
+            }
+            util::Result<std::string> res = pwallet->RegisterPolicy(policy_name);
+            if (!res) throw JSONRPCError(RPC_MISC_ERROR, util::ErrorString(res).original);
+
+            UniValue result(UniValue::VOBJ);
+            result.pushKV("hmac", *res);
+            return result;
+        }
+    };
+}
+#endif // ENABLE_EXTERNAL_SIGNER
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -936,6 +979,7 @@ RPCHelpMan keypoolrefill();
 RPCHelpMan getaddressesbylabel();
 RPCHelpMan listlabels();
 #ifdef ENABLE_EXTERNAL_SIGNER
+RPCHelpMan registerpolicy();
 RPCHelpMan walletdisplayaddress();
 #endif // ENABLE_EXTERNAL_SIGNER
 
@@ -1045,6 +1089,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &upgradewallet},
         {"wallet", &walletcreatefundedpsbt},
 #ifdef ENABLE_EXTERNAL_SIGNER
+        {"wallet", &registerpolicy},
         {"wallet", &walletdisplayaddress},
 #endif // ENABLE_EXTERNAL_SIGNER
         {"wallet", &walletlock},

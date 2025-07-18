@@ -58,6 +58,7 @@ extern const std::string ACTIVEEXTERNALSPK;
 extern const std::string ACTIVEINTERNALSPK;
 extern const std::string BESTBLOCK;
 extern const std::string BESTBLOCK_NOMERKLE;
+extern const std::string BIP388_HMAC;
 extern const std::string CRYPTED_KEY;
 extern const std::string CSCRIPT;
 extern const std::string DEFAULTKEY;
@@ -268,6 +269,8 @@ public:
     bool EraseRecords(const std::unordered_set<std::string>& types);
 
     bool WriteWalletFlags(const uint64_t flags);
+    bool WriteHmacBip388(std::string policy_name, std::string hmac);
+
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction
