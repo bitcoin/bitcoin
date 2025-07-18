@@ -134,7 +134,8 @@ def download_binary(tag, args) -> int:
         if platform in ["arm-linux-gnueabihf"]:
             platform = "RPi2"
         elif platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
-            platform = "osx"
+            print(f"Binaries not available for {tag} on {platform}")
+            return 1
         elif platform in ["i686-pc-linux-gnu"]:
             platform = "linux32"
         elif platform in ["x86_64-linux-gnu"]:
