@@ -130,8 +130,6 @@ def download_binary(tag, args) -> int:
         platform = "win32"
     elif platform in ["x86_64-w64-mingw32"]:
         platform = "win64"
-    elif tag < "v20" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
-        platform = "osx64"
     elif tag < "v0.12.2.3":
         if platform in ["arm-linux-gnueabihf"]:
             platform = "RPi2"
@@ -141,6 +139,8 @@ def download_binary(tag, args) -> int:
             platform = "linux32"
         elif platform in ["x86_64-linux-gnu"]:
             platform = "linux64"
+    elif tag < "v20" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
+        platform = "osx64"
     tarball = 'dashcore-{tag}-{platform}.tar.gz'.format(
         tag=tag[1:], platform=platform)
     tarballUrl = 'https://github.com/dashpay/dash/{bin_path}/{tarball}'.format(
