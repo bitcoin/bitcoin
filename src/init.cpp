@@ -1384,7 +1384,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     LogInstance().SetRateLimiting(std::make_unique<BCLog::LogRateLimiter>(
         [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); },
         BCLog::RATELIMIT_MAX_BYTES,
-        1h));
+        BCLog::RATELIMIT_WINDOW));
 
     assert(!node.validation_signals);
     node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<SerialTaskRunner>(scheduler));
