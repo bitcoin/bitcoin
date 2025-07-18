@@ -190,7 +190,7 @@ class P2POutEvict(BitcoinTestFramework):
 
         self.log.info("Mine a new block and keep the unprotected honest peer on sync, all the rest off-sync")
         # Mine a block so all peers become outdated
-        target_hash = prev_header.rehash()
+        target_hash = prev_header.hash_int
         tip_hash = self.generateblock(node, output="raw(42)", transactions=[])["hash"]
         tip_header = from_hex(CBlockHeader(), node.getblockheader(tip_hash, False))
         tip_headers_message = msg_headers([tip_header])
@@ -235,7 +235,7 @@ class P2POutEvict(BitcoinTestFramework):
         cur_mock_time += (CHAIN_SYNC_TIMEOUT + 1)
         node.setmocktime(cur_mock_time)
         peer.sync_with_ping()
-        peer.wait_for_getheaders(block_hash=tip_header.rehash())
+        peer.wait_for_getheaders(block_hash=tip_header.hash_int)
         cur_mock_time += (HEADERS_RESPONSE_TIME + 1)
         node.setmocktime(cur_mock_time)
         self.log.info("Test that the peer gets evicted")

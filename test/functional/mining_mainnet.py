@@ -66,12 +66,11 @@ class MiningMainnetTest(BitcoinTestFramework):
         block.vtx[0].nLockTime = 0
         block.vtx[0].vin[0].nSequence = SEQUENCE_FINAL
         block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
         block_hex = block.serialize(with_witness=False).hex()
         self.log.debug(block_hex)
         assert_equal(node.submitblock(block_hex), None)
         prev_hash = node.getbestblockhash()
-        assert_equal(prev_hash, block.hash)
+        assert_equal(prev_hash, block.hash_hex)
         return prev_hash
 
 

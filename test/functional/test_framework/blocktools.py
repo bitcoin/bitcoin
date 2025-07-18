@@ -111,7 +111,6 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
                 tx = tx_from_hex(tx)
             block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
-    block.calc_sha256()
     return block
 
 def get_witness_script(witness_root, witness_nonce):
@@ -135,7 +134,6 @@ def add_witness_commitment(block, nonce=0):
     # witness commitment is the last OP_RETURN output in coinbase
     block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce)))
     block.hashMerkleRoot = block.calc_merkle_root()
-    block.rehash()
 
 
 def script_BIP34_coinbase_height(height):

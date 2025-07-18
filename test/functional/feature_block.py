@@ -280,7 +280,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b12, b13, b14], success=False, reject_reason='bad-cb-amount', reconnect=True)
 
         # New tip should be b13.
-        assert_equal(node.getbestblockhash(), b13.hash)
+        assert_equal(node.getbestblockhash(), b13.hash_hex)
 
         # Add a block with MAX_BLOCK_SIGOPS and one with one more sigop
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -609,11 +609,11 @@ class FullBlockTest(BitcoinTestFramework):
         # The next few blocks are going to be created "by hand" since they'll do funky things, such as having
         # the first transaction be non-coinbase, etc.  The purpose of b44 is to make sure this works.
         self.log.info("Build block 44 manually")
-        height = self.block_heights[self.tip.sha256] + 1
+        height = self.block_heights[self.tip.hash_int] + 1
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         b44 = CBlock()
         b44.nTime = self.tip.nTime + 1
-        b44.hashPrevBlock = self.tip.sha256
+        b44.hashPrevBlock = self.tip.hash_int
         b44.nBits = REGTEST_N_BITS
         b44.vtx.append(coinbase)
         tx = self.create_and_sign_transaction(out[14], 1)
@@ -621,7 +621,7 @@ class FullBlockTest(BitcoinTestFramework):
         b44.hashMerkleRoot = b44.calc_merkle_root()
         b44.solve()
         self.tip = b44
-        self.block_heights[b44.sha256] = height
+        self.block_heights[b44.hash_int] = height
         self.blocks[44] = b44
         self.send_blocks([b44], True)
 
@@ -629,12 +629,12 @@ class FullBlockTest(BitcoinTestFramework):
         non_coinbase = self.create_tx(out[15], 0, 1)
         b45 = CBlock()
         b45.nTime = self.tip.nTime + 1
-        b45.hashPrevBlock = self.tip.sha256
+        b45.hashPrevBlock = self.tip.hash_int
         b45.nBits = REGTEST_N_BITS
         b45.vtx.append(non_coinbase)
         b45.hashMerkleRoot = b45.calc_merkle_root()
         b45.solve()
-        self.block_heights[b45.sha256] = self.block_heights[self.tip.sha256] + 1
+        self.block_heights[b45.hash_int] = self.block_heights[self.tip.hash_int] + 1
         self.tip = b45
         self.blocks[45] = b45
         self.send_blocks([b45], success=False, reject_reason='bad-cb-missing', reconnect=True)
@@ -643,12 +643,12 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b46 = CBlock()
         b46.nTime = b44.nTime + 1
-        b46.hashPrevBlock = b44.sha256
+        b46.hashPrevBlock = b44.hash_int
         b46.nBits = REGTEST_N_BITS
         b46.vtx = []
         b46.hashMerkleRoot = 0
         b46.solve()
-        self.block_heights[b46.sha256] = self.block_heights[b44.sha256] + 1
+        self.block_heights[b46.hash_int] = self.block_heights[b44.hash_int] + 1
         self.tip = b46
         assert 46 not in self.blocks
         self.blocks[46] = b46
@@ -658,10 +658,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b47 = self.next_block(47)
         target = uint256_from_compact(b47.nBits)
-        while b47.sha256 <= target:
+        while b47.hash_int <= target:
             # Rehash nonces until an invalid too-high-hash block is found.
             b47.nNonce += 1
-            b47.rehash()
         self.send_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
@@ -719,8 +718,7 @@ class FullBlockTest(BitcoinTestFramework):
         # valid timestamp
         self.move_tip(53)
         b55 = self.next_block(55, spend=out[15])
-        b55.nTime = b35.nTime
-        self.update_block(55, [])
+        self.update_block(55, [], nTime=b35.nTime)
         self.send_blocks([b55], True)
         self.save_spendable_output()
 
@@ -733,10 +731,10 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Accept a previously rejected future block at a later time")
         node.setmocktime(int(time.time()) + 2*60*60)
         self.move_tip(48)
-        self.block_heights[b48.sha256] = self.block_heights[b44.sha256] + 1 # b48 is a parent of b44
+        self.block_heights[b48.hash_int] = self.block_heights[b44.hash_int] + 1 # b48 is a parent of b44
         b48p = self.next_block("48p")
         self.send_blocks([b48, b48p], success=True) # Reorg to the longer chain
-        node.invalidateblock(b48p.hash) # mark b48p as invalid
+        node.invalidateblock(b48p.hash_hex) # mark b48p as invalid
         node.setmocktime(0)
 
         # Test Merkle tree malleability
@@ -780,7 +778,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.blocks[56] = b56
         assert_equal(len(b56.vtx), 3)
         b56 = self.update_block(56, [tx1])
-        assert_equal(b56.hash, b57.hash)
+        assert_equal(b56.hash_hex, b57.hash_hex)
         self.send_blocks([b56], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
 
         # b57p2 - a good block with 6 tx'es, don't submit until end
@@ -798,7 +796,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(55)
         b56p2 = copy.deepcopy(b57p2)
         self.blocks["b56p2"] = b56p2
-        assert_equal(b56p2.hash, b57p2.hash)
+        assert_equal(b56p2.hash_hex, b57p2.hash_hex)
         assert_equal(len(b56p2.vtx), 6)
         b56p2 = self.update_block("b56p2", [tx3, tx4])
         self.send_blocks([b56p2], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
@@ -956,7 +954,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip('dup_2')
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
-        assert_equal(b64.hash, b64a.hash)
+        assert_equal(b64.hash_hex, b64a.hash_hex)
         assert_equal(b64.get_weight(), MAX_BLOCK_WEIGHT)
         self.blocks[64] = b64
         b64 = self.update_block(64, [])
@@ -1060,12 +1058,12 @@ class FullBlockTest(BitcoinTestFramework):
         b72 = self.update_block(72, [tx1, tx2])  # now tip is 72
         b71 = copy.deepcopy(b72)
         b71.vtx.append(tx2)   # add duplicate tx2
-        self.block_heights[b71.sha256] = self.block_heights[b69.sha256] + 1  # b71 builds off b69
+        self.block_heights[b71.hash_int] = self.block_heights[b69.hash_int] + 1  # b71 builds off b69
         self.blocks[71] = b71
 
         assert_equal(len(b71.vtx), 4)
         assert_equal(len(b72.vtx), 3)
-        assert_equal(b72.sha256, b71.sha256)
+        assert_equal(b72.hash_int, b71.hash_int)
 
         self.move_tip(71)
         self.send_blocks([b71], success=False, reject_reason='bad-txns-duplicate', reconnect=True)
@@ -1370,7 +1368,7 @@ class FullBlockTest(BitcoinTestFramework):
             base_block_hash = self.genesis_hash
             block_time = int(time.time()) + 1
         else:
-            base_block_hash = self.tip.sha256
+            base_block_hash = self.tip.hash_int
             block_time = self.tip.nTime + 1
         # First create the coinbase
         height = self.block_heights[base_block_hash] + 1
@@ -1388,7 +1386,7 @@ class FullBlockTest(BitcoinTestFramework):
         # Block is created. Find a valid nonce.
         block.solve()
         self.tip = block
-        self.block_heights[block.sha256] = height
+        self.block_heights[block.hash_int] = height
         assert number not in self.blocks
         self.blocks[number] = block
         return block
@@ -1408,17 +1406,19 @@ class FullBlockTest(BitcoinTestFramework):
         self.tip = self.blocks[number]
 
     # adds transactions to the block and updates state
-    def update_block(self, block_number, new_transactions):
+    def update_block(self, block_number, new_transactions, *, nTime=None):
         block = self.blocks[block_number]
         self.add_transactions_to_block(block, new_transactions)
-        old_sha256 = block.sha256
+        old_hash_int = block.hash_int
+        if nTime is not None:
+            block.nTime = nTime
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
         # Update the internal state just like in next_block
         self.tip = block
-        if block.sha256 != old_sha256:
-            self.block_heights[block.sha256] = self.block_heights[old_sha256]
-            del self.block_heights[old_sha256]
+        if block.hash_int != old_hash_int:
+            self.block_heights[block.hash_int] = self.block_heights[old_hash_int]
+            del self.block_heights[old_hash_int]
         self.blocks[block_number] = block
         return block
 
