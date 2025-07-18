@@ -130,7 +130,7 @@ def download_binary(tag, args) -> int:
         platform = "win32"
     elif platform in ["x86_64-w64-mingw32"]:
         platform = "win64"
-    elif tag < "v0.12.2.3":
+    elif tag < "v0.12.3":
         if platform in ["arm-linux-gnueabihf"]:
             platform = "RPi2"
         elif platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
