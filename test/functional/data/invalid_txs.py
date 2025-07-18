@@ -275,8 +275,33 @@ def getDisabledOpcodeTemplate(opcode):
         'valid_in_block' : False
         })
 
-class NonStandardAndInvalid(BadTxTemplate):
-    """A non-standard transaction which is also consensus-invalid should return the consensus error."""
+
+class NonStandardTxAndInvalidScript(BadTxTemplate):
+    """A non-standard transaction with an invalid Script should return the standardness error."""
+    reject_reason = "tx-size-small"
+    expect_disconnect = False
+    valid_in_block = True
+
+    def get_tx(self):
+        return create_tx_with_script(
+            self.spend_tx, 0, script_sig=b'\x00' * 2 + b'\xab\x6a',
+            amount=(self.spend_avail // 2))
+
+
+class NonStandardScriptAndInvalidScript(BadTxTemplate):
+    """A transaction containing a Script with first a consensus error and then a standardness error should return the consensus error."""
+    reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
+    expect_disconnect = True
+    valid_in_block = False
+
+    def get_tx(self):
+        return create_tx_with_script(
+            self.spend_tx, 0, script_sig=b'\x00' * 3 + b'\x6a\xab',
+            amount=(self.spend_avail // 2))
+
+
+class InvalidScriptAndNonStandardScript(BadTxTemplate):
+    """A transaction containing a Script with first a standardness error and then a consensus error should return the consensus error."""
     reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
     expect_disconnect = True
     valid_in_block = False
