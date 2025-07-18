@@ -4,11 +4,22 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Helpful routines for mempool testing."""
 from decimal import Decimal
+import random
 
 from .blocktools import (
     COINBASE_MATURITY,
 )
-from .messages import CTransaction
+from .messages import (
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxInWitness,
+    CTxOut,
+)
+from .script import (
+    CScript,
+    OP_RETURN,
+)
 from .util import (
     assert_equal,
     assert_greater_than,
@@ -18,8 +29,6 @@ from .util import (
 from .wallet import (
     MiniWallet,
 )
-
-ORPHAN_TX_EXPIRE_TIME = 1200
 
 def assert_mempool_contents(test_framework, node, expected=None, sync=True):
     """Assert that all transactions in expected are in the mempool,
@@ -106,3 +115,13 @@ def tx_in_orphanage(node, tx: CTransaction) -> bool:
     """Returns true if the transaction is in the orphanage."""
     found = [o for o in node.getorphantxs(verbosity=1) if o["txid"] == tx.txid_hex and o["wtxid"] == tx.wtxid_hex]
     return len(found) == 1
+
+def create_large_orphan():
+    """Create huge orphan transaction"""
+    tx = CTransaction()
+    # Nonexistent UTXO
+    tx.vin = [CTxIn(COutPoint(random.randrange(1 << 256), random.randrange(1, 100)))]
+    tx.wit.vtxinwit = [CTxInWitness()]
+    tx.wit.vtxinwit[0].scriptWitness.stack = [CScript(b'X' * 390000)]
+    tx.vout = [CTxOut(100, CScript([OP_RETURN, b'a' * 20]))]
+    return tx

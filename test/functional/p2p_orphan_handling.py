@@ -5,10 +5,14 @@
 
 import time
 
-from test_framework.mempool_util import tx_in_orphanage
+from test_framework.mempool_util import (
+    create_large_orphan,
+    tx_in_orphanage,
+)
 from test_framework.messages import (
     CInv,
     CTxInWitness,
+    DEFAULT_ANCESTOR_LIMIT,
     MSG_TX,
     MSG_WITNESS_TX,
     MSG_WTX,
@@ -43,14 +47,7 @@ from test_framework.wallet import (
 # for one peer and y seconds for another, use specific values instead.
 TXREQUEST_TIME_SKIP = NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY + OVERLOADED_PEER_TX_DELAY + 1
 
-DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100
-
 def cleanup(func):
-    # Time to fastfoward (using setmocktime) in between subtests to ensure they do not interfere with
-    # one another, in seconds. Equal to 12 hours, which is enough to expire anything that may exist
-    # (though nothing should since state should be cleared) in p2p data structures.
-    LONG_TIME_SKIP = 12 * 60 * 60
-
     def wrapper(self):
         try:
             func(self)
@@ -58,10 +55,13 @@ def cleanup(func):
             # Clear mempool
             self.generate(self.nodes[0], 1)
             self.nodes[0].disconnect_p2ps()
-            self.nodes[0].bumpmocktime(LONG_TIME_SKIP)
             # Check that mempool and orphanage have been cleared
             self.wait_until(lambda: len(self.nodes[0].getorphantxs()) == 0)
             assert_equal(0, len(self.nodes[0].getrawmempool()))
+
+            self.restart_node(0, extra_args=["-persistmempool=0"])
+            # Allow use of bumpmocktime again
+            self.nodes[0].setmocktime(int(time.time()))
             self.wallet.rescan_utxos(include_mempool=True)
     return wrapper
 
@@ -593,46 +593,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert_equal(node.getmempoolentry(tx_child["txid"])["wtxid"], tx_child["wtxid"])
         self.wait_until(lambda: len(node.getorphantxs()) == 0)
 
-    @cleanup
-    def test_max_orphan_amount(self):
-        self.log.info("Check that we never exceed our storage limits for orphans")
-
-        node = self.nodes[0]
-        self.generate(self.wallet, 1)
-        peer_1 = node.add_p2p_connection(P2PInterface())
-
-        self.log.info("Check that orphanage is empty on start of test")
-        assert len(node.getorphantxs()) == 0
-
-        self.log.info("Filling up orphanage with " + str(DEFAULT_MAX_ORPHAN_TRANSACTIONS) + "(DEFAULT_MAX_ORPHAN_TRANSACTIONS) orphans")
-        orphans = []
-        parent_orphans = []
-        for _ in range(DEFAULT_MAX_ORPHAN_TRANSACTIONS):
-            tx_parent_1 = self.wallet.create_self_transfer()
-            tx_child_1 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_1["new_utxo"])
-            parent_orphans.append(tx_parent_1["tx"])
-            orphans.append(tx_child_1["tx"])
-            peer_1.send_without_ping(msg_tx(tx_child_1["tx"]))
-
-        peer_1.sync_with_ping()
-        orphanage = node.getorphantxs()
-        self.wait_until(lambda: len(node.getorphantxs()) == DEFAULT_MAX_ORPHAN_TRANSACTIONS)
-
-        for orphan in orphans:
-            assert tx_in_orphanage(node, orphan)
-
-        self.log.info("Check that we do not add more than the max orphan amount")
-        tx_parent_1 = self.wallet.create_self_transfer()
-        tx_child_1 = self.wallet.create_self_transfer(utxo_to_spend=tx_parent_1["new_utxo"])
-        peer_1.send_and_ping(msg_tx(tx_child_1["tx"]))
-        parent_orphans.append(tx_parent_1["tx"])
-        orphanage = node.getorphantxs()
-        assert_equal(len(orphanage), DEFAULT_MAX_ORPHAN_TRANSACTIONS)
-
-        self.log.info("Clearing the orphanage")
-        for index, parent_orphan in enumerate(parent_orphans):
-            peer_1.send_and_ping(msg_tx(parent_orphan))
-        self.wait_until(lambda: len(node.getorphantxs()) == 0)
 
     @cleanup
     def test_orphan_handling_prefer_outbound(self):
@@ -670,6 +630,72 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.nodes[0].bumpmocktime(GETDATA_TX_INTERVAL)
         peer_inbound.sync_with_ping()
         peer_inbound.wait_for_parent_requests([parent_tx.txid_int])
+
+    @cleanup
+    def test_maximal_package_protected(self):
+        self.log.info("Test that a node only announcing a maximally sized ancestor package is protected in orphanage")
+        self.nodes[0].setmocktime(int(time.time()))
+        node = self.nodes[0]
+
+        peer_normal = node.add_p2p_connection(P2PInterface())
+        peer_doser = node.add_p2p_connection(P2PInterface())
+
+        # Each of the num_peers peers creates a distinct set of orphans
+        large_orphans = [create_large_orphan() for _ in range(60)]
+
+        # Check to make sure these are orphans, within max standard size (to be accepted into the orphanage)
+        for large_orphan in large_orphans:
+            testres = node.testmempoolaccept([large_orphan.serialize().hex()])
+            assert not testres[0]["allowed"]
+            assert_equal(testres[0]["reject-reason"], "missing-inputs")
+
+        num_individual_dosers = 20
+        self.log.info(f"Connect {num_individual_dosers} peers and send a very large orphan from each one")
+        # This test assumes that unrequested transactions are processed (skipping inv and
+        # getdata steps because they require going through request delays)
+        # Connect 20 peers and have each of them send a large orphan.
+        for large_orphan in large_orphans[:num_individual_dosers]:
+            peer_doser_individual = node.add_p2p_connection(P2PInterface())
+            peer_doser_individual.send_and_ping(msg_tx(large_orphan))
+            node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY + 1)
+            peer_doser_individual.wait_for_getdata([large_orphan.vin[0].prevout.hash])
+
+        # Make sure that these transactions are going through the orphan handling codepaths.
+        # Subsequent rounds will not wait for getdata because the time mocking will cause the
+        # normal package request to time out.
+        self.wait_until(lambda: len(node.getorphantxs()) == num_individual_dosers)
+
+        # Now honest peer will send a maximally sized ancestor package of 24 orphans chaining
+        # off of a single missing transaction, with a total vsize 404,000Wu
+        ancestor_package = self.wallet.create_self_transfer_chain(chain_length=DEFAULT_ANCESTOR_LIMIT - 1)
+        sum_ancestor_package_vsize = sum([tx["tx"].get_vsize() for tx in ancestor_package])
+        final_tx = self.wallet.create_self_transfer(utxo_to_spend=ancestor_package[-1]["new_utxo"], target_vsize=101000 - sum_ancestor_package_vsize)
+        ancestor_package.append(final_tx)
+
+        # Peer sends all but first tx to fill up orphange with their orphans
+        for orphan in ancestor_package[1:]:
+            peer_normal.send_and_ping(msg_tx(orphan["tx"]))
+
+        orphan_set = node.getorphantxs()
+        for orphan in ancestor_package[1:]:
+            assert orphan["txid"] in orphan_set
+
+        # Wait for ultimate parent request (the root ancestor transaction)
+        parent_txid_int = ancestor_package[0]["tx"].txid_int
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+
+        self.wait_until(lambda: "getdata" in peer_normal.last_message and parent_txid_int in [inv.hash for inv in peer_normal.last_message.get("getdata").inv])
+
+        self.log.info("Send another round of very large orphans from a DoSy peer")
+        for large_orphan in large_orphans[num_individual_dosers:]:
+            peer_doser.send_and_ping(msg_tx(large_orphan))
+
+        self.log.info("Provide the top ancestor. The whole package should be re-evaluated after enough time.")
+        peer_normal.send_and_ping(msg_tx(ancestor_package[0]["tx"]))
+
+        # Wait until all transactions have been processed. When the last tx is accepted, it's
+        # guaranteed to have all ancestors.
+        self.wait_until(lambda: node.getmempoolentry(final_tx["txid"])["ancestorcount"] == DEFAULT_ANCESTOR_LIMIT)
 
     @cleanup
     def test_announcers_before_and_after(self):
@@ -820,10 +846,10 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_same_txid_orphan()
         self.test_same_txid_orphan_of_orphan()
         self.test_orphan_txid_inv()
-        self.test_max_orphan_amount()
         self.test_orphan_handling_prefer_outbound()
         self.test_announcers_before_and_after()
         self.test_parents_change()
+        self.test_maximal_package_protected()
 
 
 if __name__ == '__main__':
