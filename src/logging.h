@@ -104,7 +104,7 @@ namespace BCLog {
     };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
-    constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes that can be logged within one window
+    constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the specified time-window
 
     //! Keeps track of an individual source location and how many available bytes are left for logging from it.
     class LogLimitStats
