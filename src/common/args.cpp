@@ -273,7 +273,7 @@ fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value)
 {
     if (IsArgNegated(arg)) return fs::path{};
     std::string path_str = GetArg(arg, "");
-    if (path_str.empty()) return default_value;
+    if (path_str.empty() || path_str == "1") return default_value;
     fs::path result = fs::PathFromString(path_str).lexically_normal();
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();

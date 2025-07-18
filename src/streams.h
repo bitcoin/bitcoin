@@ -466,6 +466,9 @@ public:
     /** Find position within the file. Will throw if unknown. */
     int64_t tell();
 
+    /** Return the size of the file. Will throw if unknown. */
+    int64_t size();
+
     /** Wrapper around FileCommit(). */
     bool Commit();
 
