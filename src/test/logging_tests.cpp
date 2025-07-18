@@ -307,13 +307,15 @@ BOOST_AUTO_TEST_CASE(logging_log_rate_limiter)
     CScheduler scheduler{};
     scheduler.m_service_thread = std::thread([&scheduler] { scheduler.serviceQueue(); });
     uint64_t max_bytes{1024};
-    auto reset_window{1min};
-    auto sched_func = [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); };
+    std::chrono::minutes reset_window{1};
+    BCLog::LogRateLimiter::SchedulerFunction sched_func{[&scheduler](std::function<void()> func, std::chrono::milliseconds window) {
+        scheduler.scheduleEvery(std::move(func), window);
+    }};
     BCLog::LogRateLimiter limiter{sched_func, max_bytes, reset_window};
 
     using Status = BCLog::LogRateLimiter::Status;
-    auto source_loc_1{std::source_location::current()};
-    auto source_loc_2{std::source_location::current()};
+    std::source_location source_loc_1{std::source_location::current()};
+    std::source_location source_loc_2{std::source_location::current()};
 
     // A fresh limiter should not have any suppressions
     BOOST_CHECK(!limiter.SuppressionsActive());
@@ -331,7 +333,7 @@ BOOST_AUTO_TEST_CASE(logging_log_rate_limiter)
     BOOST_CHECK_EQUAL(limiter.Consume(source_loc_1, "a"), Status::STILL_SUPPRESSED);
     BOOST_CHECK(limiter.SuppressionsActive());
 
-    // Location 2  should not be affected by location 1's suppression
+    // Location 2 should not be affected by location 1's suppression
     BOOST_CHECK_EQUAL(limiter.Consume(source_loc_2, std::string(max_bytes, 'a')), Status::UNSUPPRESSED);
     BOOST_CHECK_EQUAL(limiter.Consume(source_loc_2, "a"), Status::NEWLY_SUPPRESSED);
     BOOST_CHECK(limiter.SuppressionsActive());
