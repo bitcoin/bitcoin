@@ -871,10 +871,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             if (!strErr.empty())
                 pwallet->WalletLogPrintf("%s\n", strErr);
         }
-
-        // Store initial external keypool size since we mostly use external keys in mixing
-        pwallet->nKeysLeftSinceAutoBackup = pwallet->KeypoolCountExternalKeys();
-        pwallet->WalletLogPrintf("nKeysLeftSinceAutoBackup: %d\n", pwallet->nKeysLeftSinceAutoBackup);
     } catch (...) {
         result = DBErrors::CORRUPT;
     }
@@ -923,6 +919,10 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     // upgrading, we don't want to make it worse.
     if (result != DBErrors::LOAD_OK)
         return result;
+
+    // Store initial external keypool size since we mostly use external keys in mixing
+    pwallet->nKeysLeftSinceAutoBackup = pwallet->KeypoolCountExternalKeys();
+    pwallet->WalletLogPrintf("nKeysLeftSinceAutoBackup: %d\n", pwallet->nKeysLeftSinceAutoBackup);
 
     // Last client version to open this wallet
     int last_client = CLIENT_VERSION;
