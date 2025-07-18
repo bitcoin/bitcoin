@@ -107,44 +107,28 @@ namespace BCLog {
     constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
     constexpr auto RATELIMIT_WINDOW{1h}; // time window after which log ratelimit stats are reset
 
-    //! Keeps track of an individual source location and how many available bytes are left for logging from it.
-    class LogLimitStats
-    {
-    private:
-        //! Remaining bytes in the current window interval.
-        uint64_t m_available_bytes;
-        //! Number of bytes that were not consumed within the current window.
-        uint64_t m_dropped_bytes{0};
-
-    public:
-        LogLimitStats(uint64_t max_bytes) : m_available_bytes{max_bytes} {}
-        //! Consume bytes from the window if enough bytes are available.
-        //!
-        //! Returns whether enough bytes were available.
-        bool Consume(uint64_t bytes);
-
-        uint64_t GetAvailableBytes() const
-        {
-            return m_available_bytes;
-        }
-
-        uint64_t GetDroppedBytes() const
-        {
-            return m_dropped_bytes;
-        }
-    };
-
-    /**
-     * Fixed window rate limiter for logging.
-     */
+    //! Fixed window rate limiter for logging.
     class LogRateLimiter
     {
+    public:
+        //! Keeps track of an individual source location and how many available bytes are left for logging from it.
+        struct Stats {
+            //! Remaining bytes
+            uint64_t m_available_bytes;
+            //! Number of bytes that were consumed but didn't fit in the available bytes.
+            uint64_t m_dropped_bytes{0};
+
+            Stats(uint64_t max_bytes) : m_available_bytes{max_bytes} {}
+            //! Updates internal accounting and returns true if enough available_bytes were remaining
+            bool Consume(uint64_t bytes);
+        };
+
     private:
         mutable StdMutex m_mutex;
 
-        //! Counters for each source location that has attempted to log something.
-        std::unordered_map<std::source_location, LogLimitStats, SourceLocationHasher, SourceLocationEqual> m_source_locations GUARDED_BY(m_mutex);
-        //! True if at least one log location is suppressed. Cached view on m_source_locations for performance reasons.
+        //! Stats for each source location that has attempted to log something.
+        std::unordered_map<std::source_location, Stats, SourceLocationHasher, SourceLocationEqual> m_source_locations GUARDED_BY(m_mutex);
+        //! Whether any log locations are suppressed. Cached view on m_source_locations for performance reasons.
         std::atomic<bool> m_suppression_active{false};
 
     public:
@@ -155,7 +139,7 @@ namespace BCLog {
          *                          reset_window interval.
          * @param max_bytes         Maximum number of bytes that can be logged for each source
          *                          location.
-         * @param reset_window      Time window after which the byte counters are reset.
+         * @param reset_window      Time window after which the stats are reset.
          */
         LogRateLimiter(SchedulerFunction scheduler_func, uint64_t max_bytes, std::chrono::seconds reset_window);
         //! Maximum number of bytes logged per location per window.
