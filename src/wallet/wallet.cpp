@@ -3228,7 +3228,24 @@ bool CWallet::UpgradeToHD(const SecureString& secureMnemonic, const SecureString
     SetMinVersion(FEATURE_HD);
 
     if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        if (IsCrypted()) {
+            if (secureWalletPassphrase.empty()) {
+                error = Untranslated("Error: Wallet encrypted but supplied empty wallet passphrase");
+                return false;
+            }
+
+            // Unlock the wallet
+            if (!Unlock(secureWalletPassphrase)) {
+                error = Untranslated("Error: The wallet passphrase entered was incorrect");
+                return false;
+            }
+        }
         SetupDescriptorScriptPubKeyMans(secureMnemonic, secureMnemonicPassphrase);
+
+        if (IsCrypted()) {
+            // Relock the wallet
+            Lock();
+        }
     } else {
         if (!GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
             error = Untranslated("Failed to generate HD wallet");
