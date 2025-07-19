@@ -36,6 +36,14 @@ Responds with 404 if the transaction doesn't exist.
 By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.
 
+`GET /rest/txfromblock/<BLOCK-HASH>-<TX-OFFSET>.<bin|hex|json>`
+
+Given a block hash and transaction offset within it: returns a transaction in binary, hex-encoded binary, or JSON formats.
+Responds with 404 if the transaction doesn't exist.
+
+By default, this endpoint will read also the leading transactions, before reading and returning the requested one.
+To read the requested transaction directly, enable the transaction locations' index via "locationsindex=1" command line / configuration option.
+
 #### Blocks
 - `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
 - `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
