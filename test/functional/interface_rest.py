@@ -472,5 +472,22 @@ class RESTTest (BitcoinTestFramework):
         resp = self.test_rest_request(f"/deploymentinfo/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
 
+        self.log.info("Test the /txfromblock URI")
+        block_count = self.nodes[0].getblockcount()
+        for height in range(0, block_count + 1):
+            blockhash = self.nodes[0].getblockhash(height)
+            block = self.nodes[0].getblock(blockhash, 2)
+            txs = block["tx"]
+            self.log.debug("Checking block: %s (%d txs)", blockhash, len(txs))
+            for i, tx in enumerate(txs):
+                self.log.debug("Checking tx #%d: %s", i, tx["txid"])
+                tx_bytes = self.test_rest_request(f"/txfromblock/{blockhash}-{i}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
+                assert tx_bytes.hex() == tx["hex"]
+                tx_hex = self.test_rest_request(f"/txfromblock/{blockhash}-{i}", req_type=ReqType.HEX, ret_type=RetType.BYTES).decode().strip()
+                assert tx_hex == tx["hex"]
+                tx_json = self.test_rest_request(f"/txfromblock/{blockhash}-{i}", req_type=ReqType.JSON, ret_type=RetType.JSON)
+                assert tx_json["txid"] == tx["txid"]
+                assert tx_json["hex"] == tx["hex"]
+
 if __name__ == '__main__':
     RESTTest(__file__).main()
