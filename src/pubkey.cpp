@@ -197,21 +197,24 @@ constexpr XOnlyPubKey XOnlyPubKey::NUMS_H{
     []() consteval { return XOnlyPubKey{"50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"_hex_u8}; }(),
 };
 
-std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
+std::array<CKeyID, 2> XOnlyPubKey::GetKeyIDs() const
 {
-    std::vector<CKeyID> out;
     // For now, use the old full pubkey-based key derivation logic. As it is indexed by
     // Hash160(full pubkey), we need to return both a version prefixed with 0x02, and one
     // with 0x03.
     unsigned char b[33] = {0x02};
     std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
-    CPubKey fullpubkey;
-    fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
+
+    CPubKey full_pubkey;
+    full_pubkey.Set(std::cbegin(b), std::cend(b));
+    CKeyID id_even{full_pubkey.GetID()};
+
     b[0] = 0x03;
-    fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
-    return out;
+    full_pubkey.Set(std::cbegin(b), std::cend(b));
+    CKeyID id_odd{full_pubkey.GetID()};
+
+    // Return [0] = even-Y, [1] = odd-Y
+    return std::array<CKeyID, 2>{ id_even, id_odd };
 }
 
 CPubKey XOnlyPubKey::GetEvenCorrespondingCPubKey() const
