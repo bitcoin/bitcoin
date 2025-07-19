@@ -199,9 +199,9 @@ bool WalletBatch::WriteOrderPosNext(int64_t nOrderPosNext)
     return WriteIC(DBKeys::ORDERPOSNEXT, nOrderPosNext);
 }
 
-bool WalletBatch::WriteMinVersion(int nVersion)
+bool WalletBatch::WriteLatestLegacyWalletVersion()
 {
-    return WriteIC(DBKeys::MINVERSION, nVersion);
+    return WriteIC(DBKeys::MINVERSION, LATEST_LEGACY_WALLET_VERSION);
 }
 
 bool WalletBatch::WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal)
@@ -440,19 +440,6 @@ bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
         return false;
     }
     return true;
-}
-
-static DBErrors LoadMinVersion(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
-{
-    AssertLockHeld(pwallet->cs_wallet);
-    int nMinVersion = 0;
-    if (batch.Read(DBKeys::MINVERSION, nMinVersion)) {
-        pwallet->WalletLogPrintf("Wallet file version = %d\n", nMinVersion);
-        if (nMinVersion > FEATURE_LATEST)
-            return DBErrors::TOO_NEW;
-        pwallet->LoadMinVersion(nMinVersion);
-    }
-    return DBErrors::LOAD_OK;
 }
 
 static DBErrors LoadWalletFlags(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
@@ -1137,8 +1124,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (has_last_client) pwallet->WalletLogPrintf("Last client version = %d\n", last_client);
 
     try {
-        if ((result = LoadMinVersion(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
-
         // Load wallet flags, so they are known when processing other records.
         // The FLAGS key is absent during wallet creation.
         if ((result = LoadWalletFlags(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;

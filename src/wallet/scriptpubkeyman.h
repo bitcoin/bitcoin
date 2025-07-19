@@ -47,8 +47,10 @@ public:
     virtual WalletDatabase& GetDatabase() const = 0;
     virtual bool IsWalletFlagSet(uint64_t) const = 0;
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
-    virtual bool CanSupportFeature(enum WalletFeature) const = 0;
-    virtual void SetMinVersion(enum WalletFeature, WalletBatch* = nullptr) = 0;
+    //! Sets the wallet version field, which was used only by legacy wallets.
+    //! This field is retained for backward compatibility so that
+    //! newly created wallets can be opened by older software versions.
+    virtual void SetLatestLegacyWalletVersion(WalletBatch* = nullptr) = 0;
     //! Pass the encryption key to cb().
     virtual bool WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb) const = 0;
     virtual bool HasEncryptionKeys() const = 0;
@@ -117,9 +119,6 @@ public:
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
     virtual bool CanGetAddresses(bool internal = false) const { return false; }
-
-    /** Upgrades the wallet to the specified version */
-    virtual bool Upgrade(int prev_version, int new_version, bilingual_str& error) { return true; }
 
     virtual bool HavePrivateKeys() const { return false; }
     virtual bool HaveCryptedKeys() const { return false; }
