@@ -126,4 +126,15 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
 
 // NOLINTEND(bugprone-lambda-function-name)
 
+#if defined(__has_feature)
+#    if __has_feature(address_sanitizer)
+#       include <sanitizer/asan_interface.h>
+#    endif
+#endif
+
+#ifndef ASAN_POISON_MEMORY_REGION
+#   define ASAN_POISON_MEMORY_REGION(addr, size) ((void)(addr), (void)(size))
+#   define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void)(addr), (void)(size))
+#endif
+
 #endif // BITCOIN_UTIL_CHECK_H
