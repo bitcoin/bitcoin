@@ -1,0 +1,45 @@
+name: 'Configure Docker'
+description: 'Set up Docker Buildx and optionally login to Docker Hub'
+inputs:
+  registry-username:
+    description: 'Registry username'
+    required: false
+  registry-password:
+    description: 'Registry password'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Check whether to log in to container registry
+      shell: bash
+      run: |
+        # Log in if registry, username and password are present
+        if [[ -n "${{ env.REGISTRY }}" && -n "${{ inputs.registry-username }}" && -n "${{ inputs.registry-password }}" ]]; then
+          echo "REGISTRY_LOGIN=true" >> $GITHUB_ENV
+        else
+          echo "REGISTRY_LOGIN=false" >> $GITHUB_ENV
+        fi
+
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      if: ${{ env.REGISTRY_LOGIN == 'true' }}
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ inputs.registry-username }}
+        password: ${{ inputs.registry-password }}
+
+    - name: Set docker build args
+      shell: bash
+      run: |
+        source ${{ env.FILE_ENV }} # This is used to get the container name
+        if [[ "${{ env.REGISTRY_LOGIN }}" == "true" ]]; then
+          echo "Logged in to container registry. Setting --cache-from and --cache-to."
+          echo "DOCKER_BUILD_CACHE_ARG=--cache-from=type=registry,ref=${{ env.REGISTRY}}/${{ env.REGISTRY_ORG }}/${{ env.REGISTRY_REPO}}:$CONTAINER_NAME --cache-to=type=registry,ref=${{ env.REGISTRY}}/${{ env.REGISTRY_ORG }}/${{ env.REGISTRY_REPO}}:$CONTAINER_NAME,mode=max --load" >> $GITHUB_ENV
+        else
+          echo "Not logged in to container registry. Setting --cache-from only."
+          echo "DOCKER_BUILD_CACHE_ARG=--cache-from=type=registry,ref=${{ env.REGISTRY}}/${{ env.REGISTRY_ORG }}/${{ env.REGISTRY_REPO}}:$CONTAINER_NAME --load" >> $GITHUB_ENV
+        fi

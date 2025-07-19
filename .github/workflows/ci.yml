@@ -19,7 +19,9 @@ concurrency:
 
 env:
   CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
-  MAKEJOBS: '-j10'
+  REGISTRY: ${{ vars.REGISTRY || 'quay.io' }}
+  REGISTRY_ORG: ${{ vars.REGISTRY_ORG || 'bitcoincore' }}
+  REGISTRY_REPO: ${{ vars.REGISTRY_REPO || 'bitcoin-ci' }}
 
 defaults:
   run:
@@ -284,7 +286,8 @@ jobs:
 
   windows-cross:
     name: 'Linux->Windows cross, no tests'
-    runs-on: ubuntu-latest
+    # We hardcode the repo name here, otherwise PRs, which originate "from a fork", will NOT use cirrus runners.
+    runs-on: ${{ (github.repository == 'bitcoin/bitcoin' || vars.USE_CIRRUS_RUNNERS == 'true') && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     env:
@@ -297,34 +300,41 @@ jobs:
 
       - name: Set CI directories
         run: |
-          echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> "$GITHUB_ENV"
           echo "BASE_ROOT_DIR=${{ runner.temp }}" >> "$GITHUB_ENV"
           echo "DEPENDS_DIR=${{ runner.temp }}/depends" >> "$GITHUB_ENV"
           echo "BASE_BUILD_DIR=${{ runner.temp }}/build" >> "$GITHUB_ENV"
 
-      - name: Depends cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DEPENDS_DIR }}/built
-          key: ${{ github.job }}-depends-${{ hashFiles('depends/**', 'ci/test/00_setup_env_win64.sh') }}
+      - name: Set cache paths
+        shell: bash
+        run: |
+          echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> $GITHUB_ENV
+          echo "DEPENDS_DIR=${{ runner.temp }}/depends" >> $GITHUB_ENV
+          echo "SOURCES_PATH=${{ runner.temp }}/depends/sources" >> $GITHUB_ENV
+          echo "BASE_CACHE=${{ runner.temp }}/depends/built" >> $GITHUB_ENV
+          echo "DEPENDS_HASH=$(git rev-parse HEAD:depends)" >> $GITHUB_ENV
 
-      - name: Restore Ccache cache
-        id: ccache-cache
-        uses: actions/cache/restore@v4
+      - name: Restore caches
+        id: restore-cache
+        # TODO: previously this also hashed "ci/test/00_setup_env_win64.sh"
+        uses: ./.github/actions/restore-caches
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-ccache-
+          job-id: ${{ github.job }}
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+        with:
+          registry-username: ${{ vars.REGISTRY_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_TOKEN }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
 
-      - name: Save Ccache cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+      - name: Save caches
+        uses: ./.github/actions/save-caches
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          job-id: ${{ github.job }}
+          depends-sources-cache-hit: ${{ steps.restore-cache.depends-sources-cache-hit }}
+          depends-built-cache-hit: ${{ steps.restore-cache.depends-built-cache-hit }}
 
       - name: Upload built executables
         uses: actions/upload-artifact@v4
@@ -406,44 +416,191 @@ jobs:
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
 
-  asan-lsan-ubsan-integer-no-depends-usdt:
-    name: 'ASan + LSan + UBSan + integer, no depends, USDT'
-    runs-on: ubuntu-24.04 # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
+  ci-matrix:
+    name: ${{ matrix.name }}
+    runs-on: ${{ (github.repository == 'bitcoin/bitcoin' || vars.USE_CIRRUS_RUNNERS == 'true') && matrix.cirrus-runner || matrix.fallback-runner }}
+
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
-    timeout-minutes: 120
+    timeout-minutes: ${{ matrix.timeout-minutes }}
+
     env:
-      FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
+      FILE_ENV: ${{ matrix.file-env }}
       DANGER_CI_ON_HOST_FOLDERS: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: '32 bit ARM, unit tests, no functional tests'
+            id: '32bit-arm'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-arm64:24.04-md'
+            fallback-runner: 'ubuntu-24.04-arm'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_arm.sh'
+            build-dir-suffix: 'arm'
+
+          - name: 'ASan + LSan + UBSan + integer, no depends, USDT'
+            id: 'asan-usdt'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_asan.sh'
+            build-dir-suffix: 'asan'
+
+          - name: 'macOS-cross, gui, no tests'
+            id: 'macos-cross-gui'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_mac_cross.sh'
+            build-dir-suffix: 'mac-cross'
+
+          - name: 'No wallet, libbitcoinkernel'
+            id: 'libbitcoinkernel-nowallet'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_nowallet_libbitcoinkernel.sh'
+            build-dir-suffix: 'libbitcoinkernel'
+
+          - name: 'multiprocess, i686, DEBUG'
+            id: 'multiprocess-i686-debug'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_i686_multiprocess.sh'
+            build-dir-suffix: 'multiprocess'
+
+          - name: 'fuzzer,address,undefined,integer, no depends'
+            id: 'fuzzer-no-depends'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 240
+            file-env: './ci/test/00_setup_env_native_fuzz.sh'
+            build-dir-suffix: 'fuzzer'
+
+          - name: 'previous releases, depends DEBUG'
+            id: 'previous-releases-depends-debug'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_previous_releases.sh'
+            build-dir-suffix: 'prev-rel'
+
+          - name: 'CentOS, depends, gui'
+            id: 'centos-depends-gui'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_centos.sh'
+            build-dir-suffix: 'centos'
+
+          - name: 'tidy'
+            id: 'tidy'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_tidy.sh'
+            build-dir-suffix: 'tidy'
+
+          - name: 'TSan, depends, gui'
+            id: 'tsan-depends-gui'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_tsan.sh'
+            build-dir-suffix: 'tidy'
+
+          - name: 'MSan, depends'
+            id: 'msan-depends'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 300
+            file-env: './ci/test/00_setup_env_native_msan.sh'
+            build-dir-suffix: 'msan'
+
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set CI directories
         run: |
-          echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> "$GITHUB_ENV"
           echo "BASE_ROOT_DIR=${{ runner.temp }}" >> "$GITHUB_ENV"
-          echo "BASE_BUILD_DIR=${{ runner.temp }}/build-asan" >> "$GITHUB_ENV"
+          echo "BASE_BUILD_DIR=${{ runner.temp }}/build-${{ matrix.build-dir-suffix }}" >> "$GITHUB_ENV"
 
-      - name: Restore Ccache cache
-        id: ccache-cache
-        uses: actions/cache/restore@v4
+      - name: Set cache paths
+        shell: bash
+        run: |
+          echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> $GITHUB_ENV
+          echo "DEPENDS_DIR=${{ runner.temp }}/depends" >> $GITHUB_ENV
+          echo "SOURCES_PATH=${{ runner.temp }}/depends/sources" >> $GITHUB_ENV
+          echo "BASE_CACHE=${{ runner.temp }}/depends/built" >> $GITHUB_ENV
+          echo "DEPENDS_HASH=$(git rev-parse HEAD:depends)" >> $GITHUB_ENV
+
+      - name: Restore caches
+        id: restore-cache
+        uses: ./.github/actions/restore-caches
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-ccache-
+          job-id: ${{ matrix.id }}
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+        with:
+          registry-username: ${{ vars.REGISTRY_USERNAME }}
+          registry-password: ${{ secrets.REGISTRY_TOKEN }}
 
       - name: Enable bpfcc script
+        if: ${{ matrix.name == 'ASan + LSan + UBSan + integer, no depends, USDT' }}
         # In the image build step, no external environment variables are available,
         # so any settings will need to be written to the settings env file:
         run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
 
+      - name: Set mmap_rnd_bits
+        if: ${{ matrix.name == 'TSan, depends, gui' || matrix.name == 'MSan, depends' }}
+        # Prevents crashes due to high ASLR entropy
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+
       - name: CI script
         run: ./ci/test_run_all.sh
 
-      - name: Save Ccache cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
+      - name: Save caches
+        uses: ./.github/actions/save-caches
         with:
-          path: ${{ env.CCACHE_DIR }}
-          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
+          job-id: ${{ matrix.id }}
+          depends-sources-cache-hit: ${{ steps.restore-cache.outputs.depends-sources-cache-hit }}
+          depends-built-cache-hit: ${{ steps.restore-cache.outputs.depends-built-cache-hit }}
+
+  lint:
+    name: 'lint'
+    runs-on: ${{ (github.repository == 'bitcoin/bitcoin' || vars.USE_CIRRUS_RUNNERS == 'true') && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 20
+    env:
+      CONTAINER_NAME: "bitcoin-linter"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        if: ${{ github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && vars.REGISTRY_USERNAME != '' }}
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ vars.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: CI script
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/master" && -n "${{ vars.REGISTRY_USERNAME }}" && -n "${{ secrets.REGISTRY_TOKEN }}" ]]; then
+            DOCKER_BUILD_CACHE_ARGS="--cache-from=type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.REGISTRY_REPO }}:${{ env.CONTAINER_NAME }} --cache-to=type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.REGISTRY_REPO }}:${{ env.CONTAINER_NAME }},mode=max --load"
+          else
+            DOCKER_BUILD_CACHE_ARGS="--cache-from=type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_ORG }}/${{ env.REGISTRY_REPO }}:${{ env.CONTAINER_NAME }} --load"
+          fi
+          docker buildx build -t ${{ env.CONTAINER_NAME }} $DOCKER_BUILD_CACHE_ARGS --file "./ci/lint_imagefile" .
+          docker run --rm -v $(pwd):/bitcoin ${{ env.CONTAINER_NAME }}

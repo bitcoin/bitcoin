@@ -133,6 +133,12 @@ cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target all $GOAL || (
 )
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
+if [ "$CI" = "true" ]; then
+  hit_rate=$(ccache -s | grep "Hits:" | head -1 | sed 's/.*(\(.*\)%).*/\1/')
+  if [ "${hit_rate%.*}" -lt 90 ]; then
+      echo "::notice title=low ccache hitrate::Ccache hit-rate in $CONTAINER_NAME was $hit_rate%"
+  fi
+fi
 du -sh "${DEPENDS_DIR}"/*/
 du -sh "${PREVIOUS_RELEASES_DIR}"
 
@@ -150,7 +156,7 @@ if [ "$RUN_UNIT_TESTS" = "true" ]; then
   CTEST_OUTPUT_ON_FAILURE=ON \
   ctest --test-dir "${BASE_BUILD_DIR}" \
     --stop-on-failure \
-    "${MAKEJOBS}" \
+    "${TESTJOBS}" \
     --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
 fi
 
@@ -163,7 +169,7 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
   "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
-    --ci "${MAKEJOBS}" \
+    --ci "${TESTJOBS}" \
     --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" \
     --ansi \
     --combinedlogslen=99999999 \
