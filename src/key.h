@@ -128,6 +128,8 @@ public:
     //! Generate a new private key using a cryptographic PRNG.
     void MakeNewKey(bool fCompressed);
 
+    bool TweakAdd(const unsigned char* tweak32);
+
     /**
      * Convert the private key to a CPrivKey (serialized OpenSSL private key data).
      * This is expensive.
@@ -287,6 +289,19 @@ public:
 
     friend KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const;
     [[nodiscard]] bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256& aux) const;
+
+    /**
+      * data() is provided as a read-only method for passing a KeyPair object to secp256k1 functions
+      * expecting a `secp256k1_keypair`. This avoids needing to create a temporary `secp256k1_keypair`
+      * object by allowing the KeyPair to be passed directly in the following manner:
+      *
+      *     reinterpret_cast<const secp256k1_keypair*>(keypair.data())
+      *
+      * Recall that `secp256k1_keypair` is an opaque data type, so this method should only be used
+      * for passing a KeyPair object as a secp256k1_keypair and should never be used to access the
+      * underlying keypair bytes directly.
+      */
+    const unsigned char* data() const { return IsValid() ? m_keypair->data() : nullptr; }
 
     //! Check whether this keypair is valid.
     bool IsValid() const { return !!m_keypair; }

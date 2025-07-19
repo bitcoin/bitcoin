@@ -273,6 +273,23 @@ std::optional<std::pair<XOnlyPubKey, bool>> XOnlyPubKey::CreateTapTweak(const ui
     return ret;
 }
 
+bool CPubKey::TweakAdd(const unsigned char* tweak32)
+{
+    secp256k1_pubkey original_pubkey;
+    int return_val = secp256k1_ec_pubkey_parse(secp256k1_context_static, &original_pubkey, data(), size());
+    assert(return_val);
+
+    return_val = secp256k1_ec_pubkey_tweak_add(secp256k1_context_static, &original_pubkey, tweak32);
+    assert(return_val);
+
+    unsigned char pubkey_bytes[COMPRESSED_SIZE];
+    size_t publen = COMPRESSED_SIZE;
+    return_val = secp256k1_ec_pubkey_serialize(secp256k1_context_static, pubkey_bytes, &publen, &original_pubkey, SECP256K1_EC_COMPRESSED);
+    assert(return_val);
+
+    Set(pubkey_bytes, pubkey_bytes + publen);
+    return IsValid();
+}
 
 bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {
     if (!IsValid())

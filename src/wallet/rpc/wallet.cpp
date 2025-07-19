@@ -358,6 +358,7 @@ static RPCHelpMan createwallet()
             {"descriptors", RPCArg::Type::BOOL, RPCArg::Default{true}, "If set, must be \"true\""},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
+            {"silent_payments", RPCArg::Type::BOOL, RPCArg::Default{false}, "Enable creating and receiving with a silent payments address. Will disable fast rescans with block filters"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -410,6 +411,12 @@ static RPCHelpMan createwallet()
 #else
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
 #endif
+    }
+    if (self.Arg<bool>("silent_payments")) {
+        if (!(flags & WALLET_FLAG_DESCRIPTORS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet with silent payments must also be a descriptor wallet");
+        }
+        flags |= WALLET_FLAG_SILENT_PAYMENTS;
     }
 
     DatabaseOptions options;
@@ -835,7 +842,7 @@ static RPCHelpMan createwalletdescriptor()
         "The address type must be one that the wallet does not already have a descriptor for."
         + HELP_REQUIRING_PASSPHRASE,
         {
-            {"type", RPCArg::Type::STR, RPCArg::Optional::NO, "The address type the descriptor will produce. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", and \"bech32m\"."},
+            {"type", RPCArg::Type::STR, RPCArg::Optional::NO, "The address type the descriptor will produce. Options are \"legacy\", \"p2sh-segwit\", \"bech32\", \"bech32m\", and \"silent-payments\"."},
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", {
                 {"internal", RPCArg::Type::BOOL, RPCArg::DefaultHint{"Both external and internal will be generated unless this parameter is specified"}, "Whether to only make one descriptor that is internal (if parameter is true) or external (if parameter is false)"},
                 {"hdkey", RPCArg::Type::STR, RPCArg::DefaultHint{"The HD key used by all other active descriptors"}, "The HD key that the wallet knows the private key of, listed using 'gethdkeys', to use for this descriptor's key"},
@@ -901,7 +908,8 @@ static RPCHelpMan createwalletdescriptor()
             std::vector<std::reference_wrapper<DescriptorScriptPubKeyMan>> spkms;
             WalletBatch batch{pwallet->GetDatabase()};
             for (bool internal : internals) {
-                WalletDescriptor w_desc = GenerateWalletDescriptor(xpub, *output_type, internal);
+                std::vector<CKey> keys;
+                WalletDescriptor w_desc = GenerateWalletDescriptor(active_hdkey, *output_type, internal, keys);
                 uint256 w_id = DescriptorID(*w_desc.descriptor);
                 if (!pwallet->GetScriptPubKeyMan(w_id)) {
                     spkms.emplace_back(pwallet->SetupDescriptorScriptPubKeyMan(batch, active_hdkey, *output_type, internal));

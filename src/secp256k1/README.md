@@ -22,6 +22,7 @@ Features:
 * Optional module for Schnorr signatures according to [BIP-340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki).
 * Optional module for ElligatorSwift key exchange according to [BIP-324](https://github.com/bitcoin/bips/blob/master/bip-0324.mediawiki).
 * Optional module for MuSig2 Schnorr multi-signatures according to [BIP-327](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki).
+* Optional module for Silent Payments send and receive according to [BIP-352](https://github.com/bitcoin/bips/blob/master/bip-0352.mediawiki).
 
 Implementation details
 ----------------------
@@ -108,8 +109,8 @@ Building with Autotools
 
 To compile optional modules (such as Schnorr signatures), you need to run `./configure` with additional flags (such as `--enable-module-schnorrsig`). Run `./configure --help` to see the full list of available flags.
 
-Building with CMake (experimental)
-----------------------------------
+Building with CMake
+-------------------
 
 To maintain a pristine source tree, CMake encourages to perform an out-of-source build by using a separate dedicated build tree.
 
@@ -151,8 +152,10 @@ Usage examples can be found in the [examples](examples) directory. To compile th
   * [Schnorr signatures example](examples/schnorr.c)
   * [Deriving a shared secret (ECDH) example](examples/ecdh.c)
   * [ElligatorSwift key exchange example](examples/ellswift.c)
+  * [MuSig2 Schnorr multi-signatures example](examples/musig.c)
+  * [Silent Payments send and receive example](examples/silentpayments.c)
 
-To compile the Schnorr signature and ECDH examples, you also need to configure with `--enable-module-schnorrsig` and `--enable-module-ecdh`.
+To compile the examples, make sure the corresponding modules are enabled.
 
 Benchmark
 ------------
