@@ -183,21 +183,20 @@ function(add_boost_test source_file)
 
   file(READ "${source_file}" source_file_content)
   string(REGEX
-    MATCH "(BOOST_FIXTURE_TEST_SUITE|BOOST_AUTO_TEST_SUITE)\\(([A-Za-z0-9_]+)"
+    MATCHALL "(BOOST_FIXTURE_TEST_SUITE|BOOST_AUTO_TEST_SUITE)\\(([A-Za-z0-9_]+)"
     test_suite_macro "${source_file_content}"
   )
-  string(REGEX
+  list(TRANSFORM test_suite_macro
     REPLACE "(BOOST_FIXTURE_TEST_SUITE|BOOST_AUTO_TEST_SUITE)\\(" ""
-    test_suite_name "${test_suite_macro}"
   )
-  if(test_suite_name)
+  foreach(test_suite_name IN LISTS test_suite_macro)
     add_test(NAME ${test_suite_name}
       COMMAND test_bitcoin --run_test=${test_suite_name} --catch_system_error=no --log_level=test_suite -- DEBUG_LOG_OUT
     )
     set_property(TEST ${test_suite_name} PROPERTY
       SKIP_REGULAR_EXPRESSION "no test cases matching filter"
     )
-  endif()
+  endforeach()
 endfunction()
 
 function(add_all_test_targets)

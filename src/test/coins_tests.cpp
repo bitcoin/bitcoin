@@ -104,8 +104,6 @@ public:
 
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
-
 static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
 
 struct CacheTest : BasicTestingSetup {
@@ -283,15 +281,28 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
 }
 }; // struct CacheTest
 
+BOOST_FIXTURE_TEST_SUITE(coins_tests_base, BasicTestingSetup)
+
 // Run the above simulation for multiple base types.
-BOOST_FIXTURE_TEST_CASE(coins_cache_simulation_test, CacheTest)
+BOOST_FIXTURE_TEST_CASE(coins_cache_base_simulation_test, CacheTest)
 {
     CCoinsViewTest base{m_rng};
     SimulationTest(&base, false);
+}
 
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(coins_tests_dbbase, BasicTestingSetup)
+
+BOOST_FIXTURE_TEST_CASE(coins_cache_dbbase_simulation_test, CacheTest)
+{
     CCoinsViewDB db_base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
     SimulationTest(&db_base, true);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
 
 struct UpdateTest : BasicTestingSetup {
 // Store of all necessary tx and undo data for next test
