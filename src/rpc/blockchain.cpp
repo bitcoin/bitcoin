@@ -2193,18 +2193,30 @@ static const auto scan_action_arg_desc = RPCArg{
         "\"status\" for progress report (in %) of the current scan"
 };
 
+static const auto obj_with_output_descriptor = RPCArg{
+    "", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with output descriptor and metadata",
+        {
+            {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "An output descriptor"},
+            {"range", RPCArg::Type::RANGE, RPCArg::Default{1000}, "The range of HD chain indexes to explore (either end or [begin,end])"},
+        }
+};
+
+static const auto output_descriptor = RPCArg{
+    "descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"
+};
+
+static const auto scanobjects_oneline_description = RPCArgOptions{
+    .oneline_description="[scanobjects,...]"
+};
+
 static const auto scan_objects_arg_desc = RPCArg{
     "scanobjects", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "Array of scan objects. Required for \"start\" action\n"
         "Every scan object is either a string descriptor or an object:",
     {
-        {"descriptor", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "An output descriptor"},
-        {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "An object with output descriptor and metadata",
-            {
-                {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "An output descriptor"},
-                {"range", RPCArg::Type::RANGE, RPCArg::Default{1000}, "The range of HD chain indexes to explore (either end or [begin,end])"},
-            }},
+        output_descriptor,
+        obj_with_output_descriptor
     },
-    RPCArgOptions{.oneline_description="[scanobjects,...]"},
+    scanobjects_oneline_description,
 };
 
 static const auto scan_result_abort = RPCResult{
@@ -2632,10 +2644,13 @@ static RPCHelpMan getdescriptoractivity()
         "This command pairs well with the `relevant_blocks` output of `scanblocks()`.\n"
         "This call may take several minutes. If you encounter timeouts, try specifying no RPC timeout (bitcoin-cli -rpcclienttimeout=0)",
         {
-            RPCArg{"blockhashes", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The list of blockhashes to examine for activity. Order doesn't matter. Must be along main chain or an error is thrown.\n", {
+            RPCArg{"blockhashes", RPCArg::Type::ARR, RPCArg::Optional::NO, "The list of blockhashes to examine for activity. Order doesn't matter. Must be along main chain or an error is thrown.\n", {
                 {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A valid blockhash"},
             }},
-            scan_objects_arg_desc,
+            RPCArg{"scanobjects", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of scan objects. Every scan object is either a string descriptor or an object:", {
+                output_descriptor,
+                obj_with_output_descriptor},
+                scanobjects_oneline_description},
             {"include_mempool", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to include unconfirmed activity"},
         },
         RPCResult{
