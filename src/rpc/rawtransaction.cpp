@@ -2102,7 +2102,9 @@ RPCHelpMan descriptorprocesspsbt()
     if (complete) {
         CMutableTransaction mtx;
         PartiallySignedTransaction psbtx_copy = psbtx;
-        CHECK_NONFATAL(FinalizeAndExtractPSBT(psbtx_copy, mtx));
+        if (!FinalizeAndExtractPSBT(psbtx_copy, mtx)) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Failed to finalize PSBT. The transaction is not fully signed, or one or more signatures are invalid.");
+        }
         DataStream ssTx_final;
         ssTx_final << TX_WITH_WITNESS(mtx);
         result.pushKV("hex", HexStr(ssTx_final));
