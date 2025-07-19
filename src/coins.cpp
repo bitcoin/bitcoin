@@ -51,10 +51,6 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
         if (auto coin{base->GetCoin(outpoint)}) {
             ret->second.coin = std::move(*coin);
             cachedCoinsUsage += ret->second.coin.DynamicMemoryUsage();
-            if (ret->second.coin.IsSpent()) { // TODO GetCoin cannot return spent coins
-                // The parent only has an empty entry for this outpoint; we can consider our version as fresh.
-                CCoinsCacheEntry::SetFresh(*ret, m_sentinel);
-            }
         } else {
             cacheCoins.erase(ret);
             return cacheCoins.end();
@@ -99,8 +95,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
         fresh = !it->second.IsDirty();
     }
     it->second.coin = std::move(coin);
-    CCoinsCacheEntry::SetDirty(*it, m_sentinel);
-    if (fresh) CCoinsCacheEntry::SetFresh(*it, m_sentinel);
+    CCoinsCacheEntry::SetDirty(*it, m_sentinel, fresh);
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
     TRACEPOINT(utxocache, add,
            outpoint.hash.data(),
@@ -203,11 +198,10 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
                     entry.coin = it->second.coin;
                 }
                 cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
-                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel);
                 // We can mark it FRESH in the parent if it was FRESH in the child
                 // Otherwise it might have just been flushed from the parent's cache
                 // and already exist in the grandparent
-                if (it->second.IsFresh()) CCoinsCacheEntry::SetFresh(*itUs, m_sentinel);
+                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel, it->second.IsFresh());
             }
         } else {
             // Found the entry in the parent cache
@@ -321,8 +315,8 @@ void CCoinsViewCache::SanityCheck() const
         if (entry.IsDirty()) attr |= 1;
         if (entry.IsFresh()) attr |= 2;
         if (entry.coin.IsSpent()) attr |= 4;
-        // Only 5 combinations are possible.
-        assert(attr != 2 && attr != 4 && attr != 7);
+        // Only 4 combinations are possible.
+        assert(attr != 2 && attr != 4 && attr != 6 && attr != 7);
 
         // Recompute cachedCoinsUsage.
         recomputed_usage += entry.coin.DynamicMemoryUsage();
