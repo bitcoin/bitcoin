@@ -56,7 +56,71 @@ add_custom_command(
   VERBATIM
 )
 
+set(ICON_PATH "res/rendered_icons")
+set(ICO_SPECS
+  256 64 48 32 20 16
+)
+set(ICNS_SPECS
+  256 512 1024 32 16
+)
+set(EXTRA_ICON_SPECS
+  1024
+)
+
+set(ICON_SPECS ${ICO_SPECS} ${ICNS_SPECS} ${EXTRA_ICON_SPECS})
+list(REMOVE_DUPLICATES ICON_SPECS)
+set(bitcoin_svg "res/src/bitcoin.svg")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${ICON_PATH}")
+foreach(size IN LISTS ICON_SPECS)
+  set(png "${ICON_PATH}/bitcoin${size}.png")
+  add_custom_command(
+    OUTPUT ${png}
+    COMMAND "${RSVG_CONVERT}" -f png -d ${size} -p ${size} --output "${png}" "${CMAKE_CURRENT_SOURCE_DIR}/${bitcoin_svg}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${bitcoin_svg}"
+    COMMENT "Generating ${png} from ${bitcoin_svg}"
+    VERBATIM
+  )
+
+  # NOTE: ImageMagick will never convert transparent PNGs to 8-bit ICOs, but GIF is fine
+  set(gif "${ICON_PATH}/bitcoin${size}d8.gif")
+  add_custom_command(
+    OUTPUT ${gif}
+    COMMAND "${IMAGEMAGICK_CONVERT}" "${png}" -colors 256 -channel A -threshold 50% "${gif}"
+    DEPENDS "${png}"
+    COMMENT "Generating ${gif} from ${png}"
+    VERBATIM
+  )
+endforeach()
+
+set(bitcoin_icns "${ICON_PATH}/bitcoin.icns")
+set(ICNS_SRC_FILES ${ICNS_SPECS})
+list(TRANSFORM ICNS_SRC_FILES PREPEND "${ICON_PATH}/bitcoin")
+list(TRANSFORM ICNS_SRC_FILES APPEND ".png")
+add_custom_command(
+  OUTPUT "${bitcoin_icns}"
+  COMMAND "${PNG2ICNS}" "${bitcoin_icns}" ${ICNS_SRC_FILES}
+  DEPENDS ${ICNS_SRC_FILES}
+  COMMENT "Generating ${bitcoin_icns} from individual images"
+  VERBATIM
+)
+add_custom_target(generate_icns DEPENDS "${bitcoin_icns}")
+
+set(bitcoin_ico "${ICON_PATH}/bitcoin.ico")
+set(ICO_SRC_FILES ${ICO_SPECS})
+list(TRANSFORM ICO_SRC_FILES PREPEND "${ICON_PATH}/bitcoin")
+list(TRANSFORM ICO_SRC_FILES APPEND ".png")
+list(PREPEND ICO_SRC_FILES "${ICON_PATH}/bitcoin32d8.gif")
+add_custom_command(
+  OUTPUT "${bitcoin_ico}"
+  COMMAND "${IMAGEMAGICK_CONVERT}" ${ICO_SRC_FILES} "${bitcoin_ico}"
+  DEPENDS ${ICO_SRC_FILES}
+  COMMENT "Generating ${bitcoin_ico} from individual images"
+  VERBATIM
+)
+add_custom_target(generate_ico DEPENDS "${bitcoin_ico}")
+
 configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
+configure_file(bitcoin_rendered.qrc bitcoin_rendered.qrc USE_SOURCE_PERMISSIONS COPYONLY)
 configure_file(font.qrc font.qrc USE_SOURCE_PERMISSIONS COPYONLY)
 
 # The bitcoinqt sources have to include headers in
@@ -126,6 +190,7 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   $<$<PLATFORM_ID:Windows>:winshutdownmonitor.h>
   bitcoin.qrc
   ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_locale.qrc
+  ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_rendered.qrc
   ${CMAKE_CURRENT_BINARY_DIR}/font.qrc
 )
 target_compile_definitions(bitcoinqt
@@ -243,7 +308,14 @@ add_executable(bitcoin-qt
   ../init/bitcoin-qt.cpp
 )
 
-add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  add_dependencies(bitcoin-qt generate_ico)
+endif()
+
+if(WIN32)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/res/bitcoin-qt-res.rc ${CMAKE_CURRENT_BINARY_DIR}/res/bitcoin-qt-res.rc USE_SOURCE_PERMISSIONS @ONLY)
+  add_windows_resources(bitcoin-qt ${CMAKE_CURRENT_BINARY_DIR}/res/bitcoin-qt-res.rc)
+endif()
 
 target_link_libraries(bitcoin-qt
   core_interface

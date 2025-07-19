@@ -73,10 +73,19 @@ function(add_macos_deploy_target)
     file(CONFIGURE OUTPUT ${macos_app}/Contents/PkgInfo CONTENT "APPL????")
     # Populate Contents/Resources subdirectory.
     file(CONFIGURE OUTPUT ${macos_app}/Contents/Resources/empty.lproj CONTENT "")
-    configure_file(${PROJECT_SOURCE_DIR}/src/qt/res/icons/bitcoin.icns ${macos_app}/Contents/Resources/bitcoin.icns NO_SOURCE_PERMISSIONS COPYONLY)
     file(CONFIGURE OUTPUT ${macos_app}/Contents/Resources/Base.lproj/InfoPlist.strings
       CONTENT "{ CFBundleDisplayName = \"@CLIENT_NAME@\"; CFBundleName = \"@CLIENT_NAME@\"; }"
     )
+
+    set(bitcoin_icns ${PROJECT_BINARY_DIR}/src/qt/res/rendered_icons/bitcoin.icns)
+    set(bitcoin_icns_dest ${macos_app}/Contents/Resources/bitcoin.icns)
+    add_custom_command(
+      OUTPUT ${bitcoin_icns_dest}
+      COMMAND ${CMAKE_COMMAND} -E copy ${bitcoin_icns} ${bitcoin_icns_dest}
+      DEPENDS generate_icns
+      VERBATIM
+    )
+    add_custom_target(bitcoin_icns_deployed DEPENDS "${bitcoin_icns_dest}")
 
     add_custom_command(
       OUTPUT ${PROJECT_BINARY_DIR}/${macos_app}/Contents/MacOS/Bitcoin-Qt
@@ -124,6 +133,7 @@ function(add_macos_deploy_target)
       )
     endif()
     add_dependencies(deploydir bitcoin-qt)
+    add_dependencies(deploydir bitcoin_icns_deployed)
     add_dependencies(deploy deploydir)
   endif()
 endfunction()

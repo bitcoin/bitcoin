@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/icons">
+        <file alias="bitcoin">res/rendered_icons/bitcoin1024.png</file>
+    </qresource>
+</RCC>
