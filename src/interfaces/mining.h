@@ -33,25 +33,25 @@ class BlockTemplate
 public:
     virtual ~BlockTemplate() = default;
 
-    virtual CBlockHeader getBlockHeader() = 0;
+    virtual const CBlockHeader& getBlockHeader() const = 0;
     // Block contains a dummy coinbase transaction that should not be used.
-    virtual CBlock getBlock() = 0;
+    virtual const CBlock& getBlock() const = 0;
 
     // Fees per transaction, not including coinbase transaction.
-    virtual std::vector<CAmount> getTxFees() = 0;
+    virtual const std::vector<CAmount>& getTxFees() const = 0;
     // Sigop cost per transaction, not including coinbase transaction.
-    virtual std::vector<int64_t> getTxSigops() = 0;
+    virtual const std::vector<int64_t>& getTxSigops() const = 0;
 
-    virtual CTransactionRef getCoinbaseTx() = 0;
-    virtual std::vector<unsigned char> getCoinbaseCommitment() = 0;
-    virtual int getWitnessCommitmentIndex() = 0;
+    virtual CTransactionRef getCoinbaseTx() const = 0;
+    virtual const std::vector<unsigned char>& getCoinbaseCommitment() const = 0;
+    virtual int getWitnessCommitmentIndex() const = 0;
 
     /**
      * Compute merkle path to the coinbase transaction
      *
      * @return merkle path ordered from the deepest
      */
-    virtual std::vector<uint256> getCoinbaseMerklePath() = 0;
+    virtual std::vector<uint256> getCoinbaseMerklePath() const = 0;
 
     /**
      * Construct and broadcast the block.
