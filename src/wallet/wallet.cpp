@@ -10,7 +10,6 @@
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
-#include <consensus/validation.h>
 #include <crypto/common.h>
 #include <fs.h>
 #include <interfaces/chain.h>
@@ -19,7 +18,6 @@
 #include <key_io.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/descriptor.h>
@@ -28,10 +26,8 @@
 #include <script/signingprovider.h>
 #include <support/cleanse.h>
 #include <txmempool.h>
-#include <util/bip32.h>
 #include <util/check.h>
 #include <util/error.h>
-#include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -40,11 +36,9 @@
 #endif
 #include <wallet/bip39.h> // TODO(refactor): move dependency it to scriptpubkeyman.cpp
 #include <wallet/coincontrol.h>
-#include <wallet/coinselection.h>
 #include <wallet/context.h>
 #include <warnings.h>
 
-#include <coinjoin/common.h>
 #include <coinjoin/options.h>
 #include <evo/providertx.h>
 #include <governance/vote.h>
