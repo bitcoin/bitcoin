@@ -150,8 +150,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                         coins_cache_entry.coin = *opt_coin;
                     }
                     auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
-                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
-                    if (fresh) CCoinsCacheEntry::SetFresh(*it, sentinel);
+                    if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel, fresh);
                     usage += it->second.coin.DynamicMemoryUsage();
                 }
                 bool expected_code_path = false;
