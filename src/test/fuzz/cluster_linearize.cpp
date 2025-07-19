@@ -24,29 +24,22 @@
  *          possibly by comparison with other implementations (at the end of the line ->).
  *   <<---: The right side is implemented using the left side.
  *
- *   +-----------------------+
- *   | SearchCandidateFinder | <<---------------------\
- *   +-----------------------+                        |
- *     |                                            +-----------+
- *     |                                            | Linearize |
- *     |                                            +-----------+
- *     |        +-------------------------+           |  |
- *     |        | AncestorCandidateFinder | <<--------/  |
- *     |        +-------------------------+              |
- *     |          |                     ^                |        ^^  PRODUCTION CODE
- *     |          |                     |                |        ||
+ *                                                  +-----------+
+ *                                                  | Linearize |
+ *                                                  +-----------+
+ *                                                       |
+ *                                                       |        ^^  PRODUCTION CODE
+ *                                                       |        ||
  *  ==============================================================================================
- *     |          |                     |                |        ||
- *     | clusterlin_ancestor_finder*    |                |        vv  TEST CODE
- *     |                                |                |
- *     |-clusterlin_search_finder*      |                |-clusterlin_linearize*
- *     |                                |                |
- *     v                                |                v
- *   +-----------------------+          |           +-----------------+
+ *                                                       |        ||
+ *                                                       |        vv  TEST CODE
+ *                                                       |
+ *                                                       |-clusterlin_linearize*
+ *                                                       |
+ *                                                       v
+ *   +-----------------------+                      +-----------------+
  *   | SimpleCandidateFinder | <<-------------------| SimpleLinearize |
- *   +-----------------------+          |           +-----------------+
- *                  |                   |                |
- *                  +-------------------/                |
+ *   +-----------------------+                      +-----------------+
  *                  |                                    |
  *                  |-clusterlin_simple_finder*          |-clusterlin_simple_linearize*
  *                  v                                    v
@@ -78,11 +71,8 @@ using namespace cluster_linearize;
 
 namespace {
 
-/** A simple finder class for candidate sets.
- *
- * This class matches SearchCandidateFinder in interface and behavior, though with fewer
- * optimizations.
- */
+/** A simple finder class for candidate sets (topologically-valid subsets with high feerate), only
+ *  used by SimpleLinearize below. */
 template<typename SetType>
 class SimpleCandidateFinder
 {
@@ -153,7 +143,8 @@ public:
 /** A very simple finder class for optimal candidate sets, which tries every subset.
  *
  * It is even simpler than SimpleCandidateFinder, and exists just to help test the correctness of
- * SimpleCandidateFinder, which is then used to test the correctness of SearchCandidateFinder.
+ * SimpleCandidateFinder, so that it can be used in SimpleLinearize, which is then used to test the
+ * correctness of Linearize.
  */
 template<typename SetType>
 class ExhaustiveCandidateFinder
@@ -204,8 +195,8 @@ public:
 /** A simple linearization algorithm.
  *
  * This matches Linearize() in interface and behavior, though with fewer optimizations, lacking
- * the ability to pass in an existing linearization, and using just SimpleCandidateFinder rather
- * than AncestorCandidateFinder and SearchCandidateFinder.
+ * the ability to pass in an existing linearization, and linearizing by simply finding the
+ * consecutive remaining highest-feerate topological subset using SimpleCandidateFinder.
  */
 template<typename SetType>
 std::pair<std::vector<DepGraphIndex>, bool> SimpleLinearize(const DepGraph<SetType>& depgraph, uint64_t max_iterations)
@@ -712,68 +703,17 @@ FUZZ_TARGET(clusterlin_chunking)
     assert(todo.None());
 }
 
-FUZZ_TARGET(clusterlin_ancestor_finder)
-{
-    // Verify that AncestorCandidateFinder works as expected.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    AncestorCandidateFinder anc_finder(depgraph);
-    auto todo = depgraph.Positions();
-    while (todo.Any()) {
-        // Call the ancestor finder's FindCandidateSet for what remains of the graph.
-        assert(!anc_finder.AllDone());
-        assert(todo.Count() == anc_finder.NumRemaining());
-        auto best_anc = anc_finder.FindCandidateSet();
-        // Sanity check the result.
-        assert(best_anc.transactions.Any());
-        assert(best_anc.transactions.IsSubsetOf(todo));
-        assert(depgraph.FeeRate(best_anc.transactions) == best_anc.feerate);
-        assert(depgraph.IsConnected(best_anc.transactions));
-        // Check that it is topologically valid.
-        for (auto i : best_anc.transactions) {
-            assert((depgraph.Ancestors(i) & todo).IsSubsetOf(best_anc.transactions));
-        }
-
-        // Compute all remaining ancestor sets.
-        std::optional<SetInfo<TestBitSet>> real_best_anc;
-        for (auto i : todo) {
-            SetInfo info(depgraph, todo & depgraph.Ancestors(i));
-            if (!real_best_anc.has_value() || info.feerate > real_best_anc->feerate) {
-                real_best_anc = info;
-            }
-        }
-        // The set returned by anc_finder must equal the real best ancestor sets.
-        assert(real_best_anc.has_value());
-        assert(*real_best_anc == best_anc);
-
-        // Find a non-empty topologically valid subset of transactions to remove from the graph.
-        // Using an empty set would mean the next iteration is identical to the current one, and
-        // could cause an infinite loop.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-        todo -= del_set;
-        anc_finder.MarkDone(del_set);
-    }
-    assert(anc_finder.AllDone());
-    assert(anc_finder.NumRemaining() == 0);
-}
-
 static constexpr auto MAX_SIMPLE_ITERATIONS = 300000;
 
 FUZZ_TARGET(clusterlin_simple_finder)
 {
     // Verify that SimpleCandidateFinder works as expected by sanity checking the results
     // and comparing them (if claimed to be optimal) against the sets found by
-    // ExhaustiveCandidateFinder and AncestorCandidateFinder.
+    // ExhaustiveCandidateFinder.
     //
     // Note that SimpleCandidateFinder is only used in tests; the purpose of this fuzz test is to
-    // establish confidence in SimpleCandidateFinder, so that it can be used to test
-    // SearchCandidateFinder below.
+    // establish confidence in SimpleCandidateFinder, so that it can be used in SimpleLinearize,
+    // which is then used to test Linearize below.
 
     // Retrieve a depgraph from the fuzz input.
     SpanReader reader(buffer);
@@ -786,14 +726,11 @@ FUZZ_TARGET(clusterlin_simple_finder)
     // AncestorCandidateFinder it is being tested against.
     SimpleCandidateFinder smp_finder(depgraph);
     ExhaustiveCandidateFinder exh_finder(depgraph);
-    AncestorCandidateFinder anc_finder(depgraph);
 
     auto todo = depgraph.Positions();
     while (todo.Any()) {
         assert(!smp_finder.AllDone());
         assert(!exh_finder.AllDone());
-        assert(!anc_finder.AllDone());
-        assert(anc_finder.NumRemaining() == todo.Count());
 
         // Call SimpleCandidateFinder.
         auto [found, iterations_done] = smp_finder.FindCandidateSet(MAX_SIMPLE_ITERATIONS);
@@ -820,10 +757,6 @@ FUZZ_TARGET(clusterlin_simple_finder)
 
         // Perform further quality checks only if SimpleCandidateFinder claims an optimal result.
         if (optimal) {
-            // Compare with AncestorCandidateFinder.
-            auto anc = anc_finder.FindCandidateSet();
-            assert(anc.feerate <= found.feerate);
-
             if (todo.Count() <= 12) {
                 // Compare with ExhaustiveCandidateFinder. This quickly gets computationally
                 // expensive for large clusters (O(2^n)), so only do it for sufficiently small ones.
@@ -844,119 +777,10 @@ FUZZ_TARGET(clusterlin_simple_finder)
         todo -= del_set;
         smp_finder.MarkDone(del_set);
         exh_finder.MarkDone(del_set);
-        anc_finder.MarkDone(del_set);
     }
 
     assert(smp_finder.AllDone());
     assert(exh_finder.AllDone());
-    assert(anc_finder.AllDone());
-    assert(anc_finder.NumRemaining() == 0);
-}
-
-FUZZ_TARGET(clusterlin_search_finder)
-{
-    // Verify that SearchCandidateFinder works as expected by sanity checking the results
-    // and comparing with the results from SimpleCandidateFinder and AncestorCandidateFinder,
-    // if the result is claimed to be optimal.
-
-    // Retrieve an RNG seed, a depgraph, and whether to make it connected, from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    uint64_t rng_seed{0};
-    uint8_t make_connected{1};
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> make_connected;
-    } catch (const std::ios_base::failure&) {}
-    // The most complicated graphs are connected ones (other ones just split up). Optionally force
-    // the graph to be connected.
-    if (make_connected) MakeConnected(depgraph);
-
-    // Instantiate the candidate finders.
-    SearchCandidateFinder src_finder(depgraph, rng_seed);
-    SimpleCandidateFinder smp_finder(depgraph);
-    AncestorCandidateFinder anc_finder(depgraph);
-
-    auto todo = depgraph.Positions();
-    while (todo.Any()) {
-        assert(!src_finder.AllDone());
-        assert(!smp_finder.AllDone());
-        assert(!anc_finder.AllDone());
-        assert(anc_finder.NumRemaining() == todo.Count());
-
-        // For each iteration, read an iteration count limit from the fuzz input.
-        uint64_t max_iterations = 1;
-        try {
-            reader >> VARINT(max_iterations);
-        } catch (const std::ios_base::failure&) {}
-        max_iterations &= 0xfffff;
-
-        // Read an initial subset from the fuzz input (allowed to be empty).
-        auto init_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/false);
-        SetInfo init_best(depgraph, init_set);
-
-        // Call the search finder's FindCandidateSet for what remains of the graph.
-        auto [found, iterations_done] = src_finder.FindCandidateSet(max_iterations, init_best);
-        bool optimal = iterations_done < max_iterations;
-
-        // Sanity check the result.
-        assert(iterations_done <= max_iterations);
-        assert(found.transactions.Any());
-        assert(found.transactions.IsSubsetOf(todo));
-        assert(depgraph.FeeRate(found.transactions) == found.feerate);
-        if (!init_best.feerate.IsEmpty()) assert(found.feerate >= init_best.feerate);
-        // Check that it is topologically valid.
-        for (auto i : found.transactions) {
-            assert(found.transactions.IsSupersetOf(depgraph.Ancestors(i) & todo));
-        }
-
-        // At most 2^(N-1) iterations can be required: the maximum number of non-empty topological
-        // subsets a (connected) cluster with N transactions can have. Even when the cluster is no
-        // longer connected after removing certain transactions, this holds, because the connected
-        // components are searched separately.
-        assert(iterations_done <= (uint64_t{1} << (todo.Count() - 1)));
-        // Additionally, test that no more than sqrt(2^N)+1 iterations are required. This is just
-        // an empirical bound that seems to hold, without proof. Still, add a test for it so we
-        // can learn about counterexamples if they exist.
-        if (iterations_done >= 1 && todo.Count() <= 63) {
-            Assume((iterations_done - 1) * (iterations_done - 1) <= uint64_t{1} << todo.Count());
-        }
-
-        // Perform quality checks only if SearchCandidateFinder claims an optimal result.
-        if (optimal) {
-            // Optimal sets are always connected.
-            assert(depgraph.IsConnected(found.transactions));
-
-            // Compare with SimpleCandidateFinder.
-            auto [simple, simple_iters] = smp_finder.FindCandidateSet(MAX_SIMPLE_ITERATIONS);
-            assert(found.feerate >= simple.feerate);
-            if (simple_iters < MAX_SIMPLE_ITERATIONS) {
-                assert(found.feerate == simple.feerate);
-            }
-
-            // Compare with AncestorCandidateFinder;
-            auto anc = anc_finder.FindCandidateSet();
-            assert(found.feerate >= anc.feerate);
-
-            // Compare with a non-empty topological set read from the fuzz input (comparing with an
-            // empty set is not interesting).
-            auto read_topo = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-            assert(found.feerate >= depgraph.FeeRate(read_topo));
-        }
-
-        // Find a non-empty topologically valid subset of transactions to remove from the graph.
-        // Using an empty set would mean the next iteration is identical to the current one, and
-        // could cause an infinite loop.
-        auto del_set = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-        todo -= del_set;
-        src_finder.MarkDone(del_set);
-        smp_finder.MarkDone(del_set);
-        anc_finder.MarkDone(del_set);
-    }
-
-    assert(src_finder.AllDone());
-    assert(smp_finder.AllDone());
-    assert(anc_finder.AllDone());
-    assert(anc_finder.NumRemaining() == 0);
 }
 
 FUZZ_TARGET(clusterlin_linearization_chunking)
@@ -1166,23 +990,14 @@ FUZZ_TARGET(clusterlin_linearize)
     }
 
     // If the iteration count is sufficiently high, an optimal linearization must be found.
-    // Each linearization step can use up to 2^(k-1) iterations, with steps k=1..n. That sum is
-    // 2^n - 1.
+    // Note that these are not absolute bounds, as the linearization algorithm can in theory
+    // (without randomization of its steps) run forever before finding an optimal result. This is
+    // just a conservative overestimate based on observed cases, but if it is exceeded, the
+    // numbers can safely be adjusted to account for that.
     const uint64_t n = depgraph.TxCount();
-    if (n <= 19 && iter_count > (uint64_t{1} << n)) {
+    const uint64_t max_iters = 50 * (1 + 2 * (1 + n) * n);
+    if (iter_count >= max_iters) {
         assert(optimal);
-    }
-    // Additionally, if the assumption of sqrt(2^k)+1 iterations per step holds, plus ceil(k/4)
-    // start-up cost per step, plus ceil(n^2/64) start-up cost overall, we can compute the upper
-    // bound for a whole linearization (summing for k=1..n) using the Python expression
-    // [sum((k+3)//4 + int(math.sqrt(2**k)) + 1 for k in range(1, n + 1)) + (n**2 + 63) // 64 for n in range(0, 35)]:
-    static constexpr uint64_t MAX_OPTIMAL_ITERS[] = {
-        0, 4, 8, 12, 18, 26, 37, 51, 70, 97, 133, 182, 251, 346, 480, 666, 927, 1296, 1815, 2545,
-        3576, 5031, 7087, 9991, 14094, 19895, 28096, 39690, 56083, 79263, 112041, 158391, 223936,
-        316629, 447712
-    };
-    if (n < std::size(MAX_OPTIMAL_ITERS) && iter_count >= MAX_OPTIMAL_ITERS[n]) {
-        Assume(optimal);
     }
 
     // If Linearize claims optimal result, run quality tests.
@@ -1196,9 +1011,20 @@ FUZZ_TARGET(clusterlin_linearize)
         // If SimpleLinearize finds the optimal result too, they must be equal (if not,
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
+
         // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
         // chunking is claimed to be optimal, which implies minimal chunks).
         if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
+
+        // Redo with a different RNG seed, to verify determinism of the optimal chunk order.
+        auto [lin2, opt2] = Linearize(depgraph, max_iters, rng_seed ^ 0x98be53902f516285, old_linearization);
+        assert(opt2);
+        LinearizationChunking linchunk1(depgraph, linearization);
+        LinearizationChunking linchunk2(depgraph, lin2);
+        assert(linchunk1.NumChunksLeft() == linchunk2.NumChunksLeft());
+        for (size_t i = 0; i < linchunk1.NumChunksLeft(); ++i) {
+            assert(linchunk1.GetChunk(i) == linchunk2.GetChunk(i));
+        }
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
