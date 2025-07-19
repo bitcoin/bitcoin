@@ -52,10 +52,12 @@ from test_framework.script import (
     OP_16,
     OP_2DROP,
     OP_2DUP,
+    OP_3DUP,
     OP_CHECKMULTISIG,
     OP_CHECKMULTISIGVERIFY,
     OP_CHECKSIG,
     OP_CHECKSIGADD,
+    OP_CHECKSIGFROMSTACK,
     OP_CHECKSIGVERIFY,
     OP_CODESEPARATOR,
     OP_DROP,
@@ -81,6 +83,7 @@ from test_framework.script import (
     TaggedHash,
     TaprootSignatureMsg,
     is_op_success,
+    OP_SUCCESS_OVERRIDES,
     taproot_construct,
 )
 from test_framework.script_util import (
@@ -409,7 +412,7 @@ DEFAULT_CONTEXT = {
     # The annex (only when mode=="taproot").
     "annex": None,
     # The codeseparator position (only when mode=="taproot").
-    "codeseppos": -1,
+    "codeseppos": 0xffffffff,
     # The redeemscript to add to the scriptSig (if P2SH; None implies not P2SH).
     "script_p2sh": None,
     # The script to add to the witness in (if P2WSH; None implies P2WPKH)
@@ -755,6 +758,8 @@ def spenders_taproot_active():
         add_spender(spenders, "sighash/codesep_pk", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, **SIGHASH_BITFLIP, **ERR_SCHNORR_SIG)
         add_spender(spenders, "sighash/branched_codesep/left", tap=tap, leaf="branched_codesep", key=secs[0], codeseppos=3, **common, inputs=[getter("sign"), b'\x01'], **SIGHASH_BITFLIP, **ERR_SCHNORR_SIG)
         add_spender(spenders, "sighash/branched_codesep/right", tap=tap, leaf="branched_codesep", key=secs[1], codeseppos=6, **common, inputs=[getter("sign"), b''], **SIGHASH_BITFLIP, **ERR_SCHNORR_SIG)
+        add_spender(spenders, "sighash/codesep_pk_wrongpos1", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, failure={"codeseppos": 1}, **ERR_SCHNORR_SIG)
+        add_spender(spenders, "sighash/codesep_pk_wrongpos2", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, failure={"codeseppos": 0xfffffffe}, **ERR_SCHNORR_SIG)
 
     # Reusing the scripts above, test that various features affect the sighash.
     add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, standard=False, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SCHNORR_SIG)
@@ -1057,6 +1062,13 @@ def spenders_taproot_active():
 
     # == Test for sigops ratio limit ==
 
+    # BIP348 CSFS signatures are embedded directly into the tapleaves vs the witness stack
+    # since they do not introspect directly
+    CSFS_MSG = b'\x00\x00'
+    # Signature should pass even if random unknown key is used, just use real privkey
+    # to pass in case it's the defined pubkey
+    CSFS_SIG = sign_schnorr(secs[1], CSFS_MSG)
+
     # Given a number n, and a public key pk, functions that produce a (CScript, sigops). Each script takes as
     # input a valid signature with the passed pk followed by a dummy push of bytes that are to be dropped, and
     # will execute sigops signature checks.
@@ -1073,7 +1085,15 @@ def spenders_taproot_active():
         lambda n, pk: (CScript([OP_DROP, OP_0, pk, OP_CHECKSIG, OP_NOT, OP_VERIFY, pk] + [OP_2DUP, OP_CHECKSIG, OP_VERIFY] * n + [OP_CHECKSIG]), n + 1),
         # n OP_CHECKSIGADDs and 1 OP_CHECKSIG, but also an OP_CHECKSIGADD with an empty signature.
         lambda n, pk: (CScript([OP_DROP, OP_0, OP_10, pk, OP_CHECKSIGADD, OP_10, OP_EQUALVERIFY, pk] + [OP_2DUP, OP_16, OP_SWAP, OP_CHECKSIGADD, b'\x11', OP_EQUALVERIFY] * n + [OP_CHECKSIG]), n + 1),
+        # n OP_CHECKSIGFROMSTACKs, dropping the signature given, and just validate against embedded sigs
+        lambda n, pk: (CScript([OP_2DROP, CSFS_SIG, CSFS_MSG, pk] + [OP_3DUP, OP_CHECKSIGFROMSTACK, OP_DROP] * n + [OP_2DROP]), n),
+        # 1 CHECKSIGVERIFY followed by n OP_CHECKSIGFROMSTACKs, all signatures non-empty and validated
+        lambda n, pk: (CScript([OP_DROP, pk, OP_CHECKSIGVERIFY, CSFS_SIG, CSFS_MSG, pk] + [OP_3DUP, OP_CHECKSIGFROMSTACK, OP_DROP] * n + [OP_2DROP]), n+1),
+        # 1 empty CHECKSIG followed by 1 empty OP_CHECKSIGFROMSTACKs, then finally n OP_CHECKSIGFROMSTACKs
+        lambda n, pk: (CScript([OP_2DROP, OP_0, pk, OP_CHECKSIG, OP_DROP, OP_0, CSFS_MSG, pk, OP_CHECKSIGFROMSTACK, OP_DROP, CSFS_SIG, CSFS_MSG, pk] + [OP_3DUP, OP_CHECKSIGFROMSTACK, OP_DROP] * n + [OP_2DROP]), n),
+
     ]
+
     for annex in [None, bytes([ANNEX_TAG]) + random.randbytes(random.randrange(1000))]:
         for hashtype in [SIGHASH_DEFAULT, SIGHASH_ALL]:
             for pubkey in [pubs[1], random.randbytes(random.choice([x for x in range(2, 81) if x != 32]))]:
@@ -1146,6 +1166,8 @@ def spenders_taproot_active():
     for opval in range(76, 0x100):
         opcode = CScriptOp(opval)
         if not is_op_success(opcode):
+            continue
+        if opcode in OP_SUCCESS_OVERRIDES:
             continue
         scripts = [
             ("bare_success", CScript([opcode])),
@@ -1232,6 +1254,67 @@ def spenders_taproot_nonstandard():
     add_spender(spenders, "inactive/scriptpath_invalid_unkleaf", key=sec, tap=tap, leaf="future_leaf", standard=False, inputs=[getter("sign")], sighash=bitflipper(default_sighash))
     add_spender(spenders, "inactive/scriptpath_valid_opsuccess", key=sec, tap=tap, leaf="op_success", standard=False, inputs=[getter("sign")])
     add_spender(spenders, "inactive/scriptpath_valid_opsuccess", key=sec, tap=tap, leaf="op_success", standard=False, inputs=[getter("sign")], sighash=bitflipper(default_sighash))
+
+    return spenders
+
+def bip348_csfs_spenders():
+    secs = [generate_privkey() for _ in range(2)]
+    pubs = [compute_xonly_pubkey(sec)[0] for sec in secs]
+
+    CSFS_MSG = random.randbytes(random.randrange(0, 520))
+
+    # Grow, shrink the message being signed, and pick random bytes
+    TRUNC_CSFS_MSG = CSFS_MSG[:] if len(CSFS_MSG) > 0 else None
+    if TRUNC_CSFS_MSG is not None:
+        prune_index = random.randrange(len(TRUNC_CSFS_MSG))
+        TRUNC_CSFS_MSG = TRUNC_CSFS_MSG[:prune_index] + TRUNC_CSFS_MSG[prune_index+1:]
+    extendable_length = 520 - len(CSFS_MSG)
+    EXTEND_CSFS_MSG = None
+    if extendable_length > 0:
+        EXTEND_CSFS_MSG = CSFS_MSG + random.randbytes(random.randrange(1, extendable_length))
+    OTHER_CSFS_MSG = CSFS_MSG
+
+    while OTHER_CSFS_MSG == CSFS_MSG:
+        OTHER_CSFS_MSG = random.randbytes(random.randrange(0, 520))
+
+    UNK_PUBKEY = random.randbytes(random.randrange(1, 520))
+    while len(UNK_PUBKEY) == 32:
+        UNK_PUBKEY = random.randbytes(random.randrange(1, 520))
+
+    # Sigops ratio test is included elsewhere to mix and match with other sigops
+    scripts = [
+        ("simple_csfs", CScript([CSFS_MSG, pubs[0], OP_CHECKSIGFROMSTACK, OP_1, OP_EQUAL])),
+        ("simple_fail_csfs", CScript([CSFS_MSG, pubs[0], OP_CHECKSIGFROMSTACK, OP_0, OP_EQUAL])),
+        ("unk_pubkey_csfs", CScript([CSFS_MSG, UNK_PUBKEY, OP_CHECKSIGFROMSTACK])),
+        ("onearg_csfs", CScript([pubs[0], OP_CHECKSIGFROMSTACK])),
+        ("twoargs_csfs", CScript([CSFS_MSG, pubs[0], OP_CHECKSIGFROMSTACK])),
+        ("empty_pk_csfs", CScript([CSFS_MSG, OP_0, OP_CHECKSIGFROMSTACK, OP_0, OP_EQUAL])),
+    ]
+
+    tap = taproot_construct(pubs[0], scripts)
+
+    spenders = []
+
+    # "sighash" is actually the bip340 message being directly verified against
+    add_spender(spenders, comment="bip348_csfs/simple", tap=tap, leaf="simple_csfs", key=secs[0], inputs=[getter("sign")], sighash=CSFS_MSG, failure={"sighash": OTHER_CSFS_MSG}, **ERR_SCHNORR_SIG)
+    if TRUNC_CSFS_MSG is not None:
+        add_spender(spenders, comment="bip348_csfs/trunc_msg", tap=tap, leaf="onearg_csfs", key=secs[0], inputs=[getter("sign"), CSFS_MSG], standard=len(CSFS_MSG)<=80, sighash=CSFS_MSG, failure={"inputs": [getter("sign"), TRUNC_CSFS_MSG]}, **ERR_SCHNORR_SIG)
+    if EXTEND_CSFS_MSG is not None:
+        add_spender(spenders, comment="bip348_csfs/extend_msg", tap=tap, leaf="onearg_csfs", key=secs[0], inputs=[getter("sign"), CSFS_MSG], standard=len(CSFS_MSG)<=80, sighash=CSFS_MSG, failure={"inputs": [getter("sign"), EXTEND_CSFS_MSG]}, **ERR_SCHNORR_SIG)
+
+    # Empty signature pushes zero onto stack and continues, unless the pubkey is empty
+    add_spender(spenders, comment="bip348_csfs/simple_fail", tap=tap, leaf="simple_fail_csfs", inputs=[b''], failure={"leaf": "empty_pk_csfs", "inputs": [OTHER_CSFS_MSG]}, **ERR_PUBKEYTYPE)
+
+    # Unknown pubkey of non-zero size is unconditionally valid regardless of signature (but signature must exist)
+    add_spender(spenders, comment="bip348_csfs/unk_pubkey", tap=tap, leaf="unk_pubkey_csfs", standard=False, key=secs[0], inputs=[getter("sign")], sighash=CSFS_MSG, failure={"inputs": []}, **ERR_INVALID_STACK_OPERATION)
+
+    # You need three args for CSFS regardless of what is passed
+    add_spender(spenders, comment="bip348_csfs/onearg", tap=tap, leaf="onearg_csfs", key=secs[0], inputs=[getter("sign"), CSFS_MSG], standard=len(CSFS_MSG)<=80, sighash=CSFS_MSG, failure={"inputs": []}, **ERR_INVALID_STACK_OPERATION)
+    add_spender(spenders, comment="bip348_csfs/twoarg", tap=tap, leaf="twoargs_csfs", key=secs[0], inputs=[getter("sign")], sighash=CSFS_MSG, failure={"inputs": []}, **ERR_INVALID_STACK_OPERATION)
+
+    # If a known pubkey's signature is not 64 bytes or empty it MUST fail immediately
+    add_spender(spenders, comment="bip348_csfs/simple_65_sig", tap=tap, leaf="simple_csfs", key=secs[0], inputs=[getter("sign")], sighash=CSFS_MSG, failure={"leaf": "simple_fail_csfs", "inputs": [zero_appender(getter("sign"))]}, **ERR_SCHNORR_SIG)
+    add_spender(spenders, comment="bip348_csfs/simple_63_sig", tap=tap, leaf="simple_csfs", key=secs[0], inputs=[getter("sign")], sighash=CSFS_MSG, failure={"leaf": "simple_fail_csfs", "inputs": [byte_popper(getter("sign"))]}, **ERR_SCHNORR_SIG)
 
     return spenders
 
@@ -1796,6 +1879,7 @@ class TaprootTest(BitcoinTestFramework):
         # to allow for increased coverage across input types.
         # See sample_spenders for a minimal example
         consensus_spenders = sample_spenders()
+        consensus_spenders += bip348_csfs_spenders()
         consensus_spenders += spenders_taproot_active()
         self.test_spenders(self.nodes[0], consensus_spenders, input_counts=[1, 2, 2, 2, 2, 3])
 
