@@ -1945,7 +1945,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     bool banned = m_banman && m_banman->IsBanned(addr);
     if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && banned)
     {
-        LogPrint(BCLog::NET, "%s (banned)\n", strDropped);
+        LogPrint(BCLog::NET_NETCONN, "%s (banned)\n", strDropped);
         return;
     }
 
@@ -1953,7 +1953,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     bool discouraged = m_banman && m_banman->IsDiscouraged(addr);
     if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
     {
-        LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToStringAddrPort());
+        LogPrint(BCLog::NET_NETCONN, "connection from %s dropped (discouraged)\n", addr.ToStringAddrPort());
         return;
     }
 
@@ -1966,7 +1966,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     {
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
-            LogPrint(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
+            LogPrint(BCLog::NET_NETCONN, "failed to find an eviction candidate - connection dropped (full)\n");
             return;
         }
         nInbound--;
@@ -1974,7 +1974,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     // don't accept incoming connections until blockchain is synced
     if (fMasternodeMode && !mn_sync.IsBlockchainSynced()) {
-        LogPrint(BCLog::NET, "AcceptConnection -- blockchain is not synced yet, skipping inbound connection attempt\n");
+        LogPrint(BCLog::NET_NETCONN, "AcceptConnection -- blockchain is not synced yet, skipping inbound connection attempt\n");
         return;
     }
 
@@ -2092,7 +2092,7 @@ void CConnman::DisconnectNodes()
             // Disconnect any connected nodes
             for (CNode* pnode : m_nodes) {
                 if (!pnode->fDisconnect) {
-                    LogPrint(BCLog::NET, "Network not active, dropping peer=%d\n", pnode->GetId());
+                    LogPrint(BCLog::NET_NETCONN, "Network not active, dropping peer=%d\n", pnode->GetId());
                     pnode->fDisconnect = true;
                 }
             }
