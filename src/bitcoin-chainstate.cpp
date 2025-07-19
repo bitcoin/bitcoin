@@ -119,11 +119,8 @@ int main(int argc, char* argv[])
     const node::BlockManager::Options blockman_opts{
         .chainparams = chainman_opts.chainparams,
         .blocks_dir = abs_datadir / "blocks",
+        .block_tree_dir = abs_datadir / "blocks" / "index",
         .notifications = chainman_opts.notifications,
-        .block_tree_db_params = DBParams{
-            .path = abs_datadir / "blocks" / "index",
-            .cache_bytes = cache_sizes.block_tree_db,
-        },
     };
     util::SignalInterrupt interrupt;
     ChainstateManager chainman{interrupt, chainman_opts, blockman_opts};
