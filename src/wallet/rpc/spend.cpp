@@ -1561,7 +1561,7 @@ RPCHelpMan sendall()
             const bool lock_unspents{options.exists("lock_unspents") ? options["lock_unspents"].get_bool() : false};
             if (lock_unspents) {
                 for (const CTxIn& txin : rawTx.vin) {
-                    pwallet->LockCoin(txin.prevout);
+                    pwallet->LockCoin(txin.prevout, /*persist=*/false);
                 }
             }
 
