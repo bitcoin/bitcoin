@@ -164,7 +164,7 @@ public:
      *    simultaneously by one peer, and end up being requested from them, the requests will happen in announcement order.
      */
     std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
-                                               std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
+                                        std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
 
     /** Marks a transaction as requested, with a specified expiry.
      *
