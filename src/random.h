@@ -95,7 +95,7 @@ void RandAddPeriodic() noexcept;
  *
  * Thread-safe.
  */
-void RandAddEvent(const uint32_t event_info) noexcept;
+void RandAddEvent(uint32_t event_info) noexcept;
 
 
 /* =========================== BASE RANDOMNESS GENERATION FUNCTIONS ===========================

@@ -53,7 +53,7 @@ constexpr int MAX_DEPTH{2};
  * Whether the buffer, if it represents a valid descriptor, contains a derivation path deeper than
  * a given maximum depth. Note this may also be hit for deriv paths in origins.
  */
-bool HasDeepDerivPath(const FuzzBufferType& buff, const int max_depth = MAX_DEPTH);
+bool HasDeepDerivPath(const FuzzBufferType& buff, int max_depth = MAX_DEPTH);
 
 //! Default maximum number of sub-fragments.
 constexpr int MAX_SUBS{1'000};
@@ -64,8 +64,8 @@ constexpr size_t MAX_NESTED_SUBS{10'000};
  * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
  * sub-fragments than the given maximum.
  */
-bool HasTooManySubFrag(const FuzzBufferType& buff, const int max_subs = MAX_SUBS,
-                       const size_t max_nested_subs = MAX_NESTED_SUBS);
+bool HasTooManySubFrag(const FuzzBufferType& buff, int max_subs = MAX_SUBS,
+                       size_t max_nested_subs = MAX_NESTED_SUBS);
 
 //! Default maximum number of wrappers per fragment.
 constexpr int MAX_WRAPPERS{100};
@@ -74,6 +74,6 @@ constexpr int MAX_WRAPPERS{100};
  * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
  * wrappers than the given maximum.
  */
-bool HasTooManyWrappers(const FuzzBufferType& buff, const int max_wrappers = MAX_WRAPPERS);
+bool HasTooManyWrappers(const FuzzBufferType& buff, int max_wrappers = MAX_WRAPPERS);
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
