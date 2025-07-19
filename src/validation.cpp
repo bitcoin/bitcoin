@@ -469,10 +469,8 @@ public:
         const bool m_allow_replacement;
         /** When true, allow sibling eviction. This only occurs in single transaction package settings. */
         const bool m_allow_sibling_eviction;
-        /** When true, the mempool will not be trimmed when any transactions are submitted in
-         * Finalize(). Instead, limits should be enforced at the end to ensure the package is not
-         * partially submitted.
-         */
+        /** Used to skip the LimitMempoolSize() call within AcceptSingleTransaction(). This should be used when multiple
+         * AcceptSubPackage calls are expected and the mempool will be trimmed at the end of AcceptPackage(). */
         const bool m_package_submission;
         /** When true, use package feerates instead of individual transaction feerates for fee-based
          * policies such as mempool min fee and min relay fee.
@@ -548,7 +546,7 @@ public:
                             /* m_test_accept */ package_args.m_test_accept,
                             /* m_allow_replacement */ true,
                             /* m_allow_sibling_eviction */ true,
-                            /* m_package_submission */ true, // do not LimitMempoolSize in Finalize()
+                            /* m_package_submission */ true, // trim at the end of AcceptPackage()
                             /* m_package_feerates */ false, // only 1 transaction
                             /* m_client_maxfeerate */ package_args.m_client_maxfeerate,
                             /* m_allow_carveouts */ false,
@@ -725,8 +723,27 @@ private:
 
 private:
     CTxMemPool& m_pool;
+
+    /** Holds a cached view of available coins from the UTXO set, mempool, and artificial temporary coins (to enable package validation).
+     * The view doesn't track whether a coin previously existed but has now been spent. We detect conflicts in other ways:
+     * - conflicts within a transaction are checked in CheckTransaction (bad-txns-inputs-duplicate)
+     * - conflicts within a package are checked in IsWellFormedPackage (conflict-in-package)
+     * - conflicts with an existing mempool transaction are found in CTxMemPool::GetConflictTx and replacements are allowed
+     * The temporary coins should persist between individual transaction checks so that package validation is possible,
+     * but must be cleaned up when we finish validating a subpackage, whether accepted or rejected. The cache must also
+     * be cleared when mempool contents change (when a changeset is applied or when the mempool trims itself) because it
+     * can return cached coins that no longer exist in the backend. Use CleanupTemporaryCoins() anytime you are finished
+     * with a SubPackageState or call LimitMempoolSize().
+     */
     CCoinsViewCache m_view;
+
+    // These are the two possible backends for m_view.
+    /** When m_view is connected to m_viewmempool as its backend, it can pull coins from the mempool and from the UTXO
+     * set. This is also where temporary coins are stored. */
     CCoinsViewMemPool m_viewmempool;
+    /** When m_view is connected to m_dummy, it can no longer look up coins from the mempool or UTXO set (meaning no disk
+     * operations happen), but can still return coins it accessed previously. Useful for keeping track of which coins
+     * were pulled from disk. */
     CCoinsView m_dummy;
 
     Chainstate& m_active_chainstate;
@@ -1470,6 +1487,10 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     // Limit the mempool, if appropriate.
     if (!args.m_package_submission && !args.m_bypass_limits) {
         LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+        // If mempool contents change, then the m_view cache is dirty. Given this isn't a package
+        // submission, we won't be using the cache anymore, but clear it anyway for clarity.
+        CleanupTemporaryCoins();
+
         if (!m_pool.exists(ws.m_hash)) {
             // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
             ws.m_state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "mempool full");
@@ -1647,7 +1668,8 @@ void MemPoolAccept::CleanupTemporaryCoins()
     // (3) Confirmed coins don't need to be removed. The chainstate has not changed (we are
     // holding cs_main and no blocks have been processed) so the confirmed tx cannot disappear like
     // a mempool tx can. The coin may now be spent after we submitted a tx to mempool, but
-    // we have already checked that the package does not have 2 transactions spending the same coin.
+    // we have already checked that the package does not have 2 transactions spending the same coin
+    // and we check whether a mempool transaction spends conflicting coins (CTxMemPool::GetConflictTx).
     // Keeping them in m_view is an optimization to not re-fetch confirmed coins if we later look up
     // inputs for this transaction again.
     for (const auto& outpoint : m_viewmempool.GetNonBaseCoins()) {
@@ -1831,6 +1853,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 
     // Make sure we haven't exceeded max mempool size.
     // Package transactions that were submitted to mempool or already in mempool may be evicted.
+    // If mempool contents change, then the m_view cache is dirty. It has already been cleared above.
     LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
 
     for (const auto& tx : package) {
