@@ -35,9 +35,9 @@ public:
     /** Open the database if it is not already opened. */
     void Open() override;
 
-    /** Rewrite the entire database on disk, with the exception of key pszSkip if non-zero
+    /** Rewrite the entire database on disk
      */
-    bool Rewrite(const char* pszSkip = nullptr) override { return false; }
+    bool Rewrite() override { return false; }
 
     /** Back up the entire database to a file.
      */

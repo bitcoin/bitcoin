@@ -2266,7 +2266,7 @@ DBErrors CWallet::LoadWallet()
     DBErrors nLoadWalletRet = WalletBatch(GetDatabase()).LoadWallet(this);
     if (nLoadWalletRet == DBErrors::NEED_REWRITE)
     {
-        if (GetDatabase().Rewrite("\x04pool"))
+        if (GetDatabase().Rewrite())
         {
             for (const auto& spk_man_pair : m_spk_managers) {
                 spk_man_pair.second->RewriteDB();
