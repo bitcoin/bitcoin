@@ -48,11 +48,7 @@ public:
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override
     {
-        if (auto it{map_.find(outpoint)}; it != map_.end()) {
-            if (!it->second.IsSpent() || m_rng.randbool()) {
-                return it->second; // TODO spent coins shouldn't be returned
-            }
-        }
+        if (auto it{map_.find(outpoint)}; it != map_.end() && !it->second.IsSpent()) return it->second;
         return std::nullopt;
     }
 

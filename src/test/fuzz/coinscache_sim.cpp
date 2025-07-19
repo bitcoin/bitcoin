@@ -138,8 +138,6 @@ struct CacheLevel
 /** Class for the base of the hierarchy (roughly simulating a memory-backed CCoinsViewDB).
  *
  * The initial state consists of the empty UTXO set.
- * Coins whose output index is 4 (mod 5) have GetCoin() always succeed after being spent.
- * This exercises code paths with spent, non-DIRTY cache entries.
  */
 class CoinsViewBottom final : public CCoinsView
 {
@@ -148,14 +146,11 @@ class CoinsViewBottom final : public CCoinsView
 public:
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const final
     {
-        // TODO GetCoin shouldn't return spent coins
-        if (auto it = m_data.find(outpoint); it != m_data.end()) return it->second;
+        if (auto it{m_data.find(outpoint)}; it != m_data.end()) {
+            assert(!it->second.IsSpent());
+            return it->second;
+        }
         return std::nullopt;
-    }
-
-    bool HaveCoin(const COutPoint& outpoint) const final
-    {
-        return m_data.count(outpoint);
     }
 
     uint256 GetBestBlock() const final { return {}; }
@@ -167,7 +162,7 @@ public:
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {
             if (it->second.IsDirty()) {
-                if (it->second.coin.IsSpent() && (it->first.n % 5) != 4) {
+                if (it->second.coin.IsSpent()) {
                     m_data.erase(it->first);
                 } else if (cursor.WillErase(*it)) {
                     m_data[it->first] = std::move(it->second.coin);
