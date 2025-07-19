@@ -42,6 +42,8 @@ const std::string FLAGS{"flags"};
 const std::string HDCHAIN{"hdchain"};
 const std::string KEYMETA{"keymeta"};
 const std::string KEY{"key"};
+const std::string LAST_DECRYPTED_FEATURES{"lastdecryptedfeatures"};
+const std::string LAST_OPENED_FEATURES{"lastopenedfeatures"};
 const std::string LOCKED_UTXO{"lockedutxo"};
 const std::string MASTER_KEY{"mkey"};
 const std::string MINVERSION{"minversion"};
@@ -791,7 +793,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             value >> desc;
         } catch (const std::ios_base::failure& e) {
             strErr = strprintf("Error: Unrecognized descriptor found in wallet %s. ", pwallet->GetName());
-            strErr += (last_client > CLIENT_VERSION) ? "The wallet might had been created on a newer version. " :
+            strErr += (last_client > VERSION_LATEST) ? "The wallet might had been created on a newer version. " :
                     "The database might be corrupted or the software version is not compatible with one of your wallet descriptors. ";
             strErr += "Please try running the latest software version";
             // Also include error details
@@ -1132,9 +1134,22 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     LOCK(pwallet->cs_wallet);
 
     // Last client version to open this wallet
-    int last_client = CLIENT_VERSION;
+    int last_client = VERSION_LATEST;
     bool has_last_client = m_batch->Read(DBKeys::VERSION, last_client);
     if (has_last_client) pwallet->WalletLogPrintf("Last client version = %d\n", last_client);
+
+    std::optional<uint64_t> last_client_features;
+    if (last_client >= VERSION_LAST_CLIENT_FEATURES) {
+        // Features of last client to open this wallet
+        if (uint64_t features; m_batch->Read(DBKeys::LAST_OPENED_FEATURES, features)) {
+            last_client_features = features;
+        }
+
+        // Features of last client to decrypt this wallet
+        if (uint64_t last_decrypted; m_batch->Read(DBKeys::LAST_DECRYPTED_FEATURES, last_decrypted)) {
+            pwallet->SetLastDecryptedFeatures(last_decrypted);
+        }
+    }
 
     try {
         if ((result = LoadMinVersion(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
@@ -1188,9 +1203,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (result != DBErrors::LOAD_OK)
         return result;
 
-    if (!has_last_client || last_client != CLIENT_VERSION) // Update
-        m_batch->Write(DBKeys::VERSION, CLIENT_VERSION);
-
     if (any_unordered)
         result = pwallet->ReorderTransactions();
 
@@ -1215,6 +1227,18 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             }
         }
         pwallet->mapMasterKeys.clear();
+    }
+
+
+    // Record the current client version as the last version to successfully open this wallet file
+    // This must always be done after all automatic upgrades so that those upgrades can be performed
+    // in an upgrade-downgrade-upgrade scenario.
+    if (!has_last_client || last_client != VERSION_LATEST) {
+        m_batch->Write(DBKeys::VERSION, VERSION_LATEST);
+    }
+    // Record the current client features as the features of the last client to successfully open this wallet file.
+    if (!last_client_features || *last_client_features != WALLET_CLIENT_FEATURES) {
+        m_batch->Write(DBKeys::LAST_OPENED_FEATURES, WALLET_CLIENT_FEATURES);
     }
 
     return result;
@@ -1277,11 +1301,21 @@ bool WalletBatch::WriteWalletFlags(const uint64_t flags)
     return WriteIC(DBKeys::FLAGS, flags);
 }
 
+bool WalletBatch::WriteLastDecryptedFeatures()
+{
+    return WriteIC(DBKeys::LAST_DECRYPTED_FEATURES, WALLET_CLIENT_FEATURES);
+}
+
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
 {
     return std::all_of(types.begin(), types.end(), [&](const std::string& type) {
         return m_batch->ErasePrefix(DataStream() << type);
     });
+}
+
+bool WalletBatch::WriteLastOpenedFeatures()
+{
+    return WriteIC(DBKeys::LAST_OPENED_FEATURES, WALLET_CLIENT_FEATURES);
 }
 
 bool WalletBatch::TxnBegin()
