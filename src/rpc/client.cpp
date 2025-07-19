@@ -279,6 +279,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gethdkeys", 0, "active_only" },
     { "gethdkeys", 0, "options" },
     { "gethdkeys", 0, "private" },
+    { "derivehdkey", 1, "options" },
+    { "derivehdkey", 1, "private" },
     { "createwalletdescriptor", 1, "options" },
     { "createwalletdescriptor", 1, "internal" },
     // Echo with conversion (For testing only)
@@ -311,6 +313,26 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "addnode", 2, "v2transport" },
     { "addconnection", 2, "v2transport" },
 };
+
+/**
+ * Specify a (method, idx, name) here if the argument is a string RPC
+ * parameter that should be recognized as a known parameter name but NOT
+ * converted from JSON. This is primarily used for Base64-encoded parameters
+ * that might contain '=' padding characters which could interfere with
+ * named parameter parsing.
+ *
+ * @note Parameter indexes start from 0.
+ */
+static const CRPCConvertParam vRPCStringParams[] =
+{
+    { "finalizepsbt", 0, "psbt"},
+    { "decodepsbt", 0, "psbt"},
+    { "analyzepsbt", 0, "psbt"},
+    { "walletprocesspsbt", 0, "psbt"},
+    { "descriptorprocesspsbt", 0, "psbt"},
+    { "utxoupdatepsbt", 0, "psbt"},
+    { "verifymessage", 1, "signature"},
+};
 // clang-format on
 
 /** Parse string to UniValue or throw runtime_error if string contains invalid JSON */
@@ -326,6 +348,7 @@ class CRPCConvertTable
 private:
     std::set<std::pair<std::string, int>> members;
     std::set<std::pair<std::string, std::string>> membersByName;
+    std::set<std::pair<std::string, std::string>> stringParams;
 
 public:
     CRPCConvertTable();
@@ -341,6 +364,23 @@ public:
     {
         return membersByName.count({method, param_name}) > 0 ? Parse(arg_value) : arg_value;
     }
+
+    /** Return true if parameter is in the string parameters table (vRPCStringParams)*/
+    bool IsStringParam(const std::string& method, const std::string& param) const
+    {
+        return stringParams.count({method, param}) > 0;
+    }
+
+    /** Return true if the RPC method has any entries in the vRPCStringParams table */
+    bool HasBase64Method(const std::string& method) const
+    {
+        for (const auto& entry : stringParams) {
+            if (entry.first == method) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 CRPCConvertTable::CRPCConvertTable()
@@ -348,6 +388,10 @@ CRPCConvertTable::CRPCConvertTable()
     for (const auto& cp : vRPCConvertParams) {
         members.emplace(cp.methodName, cp.paramIdx);
         membersByName.emplace(cp.methodName, cp.paramName);
+    }
+
+    for (const auto& cp : vRPCStringParams) {
+        stringParams.emplace(cp.methodName, cp.paramName);
     }
 }
 
@@ -380,6 +424,18 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         std::string name{s.substr(0, pos)};
         std::string_view value{s.substr(pos+1)};
 
+        if (rpcCvtTable.HasBase64Method(strMethod)) {
+            // If this method has Base64 parameters, check if this specific parameter is known
+            if (rpcCvtTable.IsStringParam(strMethod, name)) {
+                // Pass only the value as positional
+                positional_args.push_back(rpcCvtTable.ArgToUniValue(value, strMethod, positional_args.size()));
+                continue;
+            } else {
+                // If parameter is unknown for a given known string method, then treat the whole string as positional
+                positional_args.push_back(rpcCvtTable.ArgToUniValue(s, strMethod, positional_args.size()));
+                continue;
+            }
+        }
         // Intentionally overwrite earlier named values with later ones as a
         // convenience for scripts and command line users that want to merge
         // options.
