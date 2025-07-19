@@ -14,11 +14,6 @@
 namespace bech32
 {
 
-namespace
-{
-
-typedef std::vector<uint8_t> data;
-
 /** The Bech32 and Bech32m character set for encoding. */
 const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
@@ -33,6 +28,11 @@ const int8_t CHARSET_REV[128] = {
     -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
 };
+
+namespace
+{
+
+typedef std::vector<uint8_t> data;
 
 /** We work with the finite field GF(1024) defined as a degree 2 extension of the base field GF(32)
  * The defining polynomial of the extension is x^2 + 9x + 23.
