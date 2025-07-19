@@ -16,6 +16,7 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/obfuscation.h>
 #include <util/signalinterrupt.h>
 #include <util/syserror.h>
 #include <util/time.h>
@@ -59,15 +60,17 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     try {
         uint64_t version;
         file >> version;
-        std::vector<std::byte> xor_key;
+
         if (version == MEMPOOL_DUMP_VERSION_NO_XOR_KEY) {
-            // Leave XOR-key empty
+            file.SetObfuscation({});
         } else if (version == MEMPOOL_DUMP_VERSION) {
-            file >> xor_key;
+            Obfuscation obfuscation;
+            file >> obfuscation;
+            file.SetObfuscation(obfuscation);
         } else {
             return false;
         }
-        file.SetXor(xor_key);
+
         uint64_t total_txns_to_load;
         file >> total_txns_to_load;
         uint64_t txns_tried = 0;
@@ -179,12 +182,13 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         const uint64_t version{pool.m_opts.persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
         file << version;
 
-        std::vector<std::byte> xor_key(8);
         if (!pool.m_opts.persist_v1_dat) {
-            FastRandomContext{}.fillrand(xor_key);
-            file << xor_key;
+            const Obfuscation obfuscation{FastRandomContext{}.randbytes<Obfuscation::KEY_SIZE>()};
+            file << obfuscation;
+            file.SetObfuscation(obfuscation);
+        } else {
+            file.SetObfuscation({});
         }
-        file.SetXor(xor_key);
 
         uint64_t mempool_transactions_to_write(vinfo.size());
         file << mempool_transactions_to_write;

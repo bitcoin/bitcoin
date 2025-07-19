@@ -6,11 +6,11 @@
 #include <span.h>
 #include <streams.h>
 #include <util/fs_helpers.h>
+#include <util/obfuscation.h>
 
 #include <array>
 
-AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
-    : m_file{file}, m_xor{std::move(data_xor)}
+AutoFile::AutoFile(std::FILE* file, const Obfuscation& obfuscation) : m_file{file}, m_obfuscation{obfuscation}
 {
     if (!IsNull()) {
         auto pos{std::ftell(m_file)};
@@ -21,12 +21,12 @@ AutoFile::AutoFile(std::FILE* file, std::vector<std::byte> data_xor)
 std::size_t AutoFile::detail_fread(std::span<std::byte> dst)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::read: file handle is nullptr");
-    size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
-    if (!m_xor.empty()) {
-        if (!m_position.has_value()) throw std::ios_base::failure("AutoFile::read: position unknown");
-        util::Xor(dst.subspan(0, ret), m_xor, *m_position);
+    const size_t ret = std::fread(dst.data(), 1, dst.size(), m_file);
+    if (m_obfuscation) {
+        if (!m_position) throw std::ios_base::failure("AutoFile::read: position unknown");
+        m_obfuscation(dst.subspan(0, ret), *m_position);
     }
-    if (m_position.has_value()) *m_position += ret;
+    if (m_position) *m_position += ret;
     return ret;
 }
 
@@ -81,7 +81,7 @@ void AutoFile::ignore(size_t nSize)
 void AutoFile::write(std::span<const std::byte> src)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
-    if (m_xor.empty()) {
+    if (!m_obfuscation) {
         if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
             throw std::ios_base::failure("AutoFile::write: write failed");
         }
@@ -101,9 +101,9 @@ void AutoFile::write(std::span<const std::byte> src)
 void AutoFile::write_buffer(std::span<std::byte> src)
 {
     if (!m_file) throw std::ios_base::failure("AutoFile::write_buffer: file handle is nullptr");
-    if (m_xor.size()) {
+    if (m_obfuscation) {
         if (!m_position) throw std::ios_base::failure("AutoFile::write_buffer: obfuscation position unknown");
-        util::Xor(src, m_xor, *m_position); // obfuscate in-place
+        m_obfuscation(src, *m_position); // obfuscate in-place
     }
     if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
         throw std::ios_base::failure("AutoFile::write_buffer: write failed");

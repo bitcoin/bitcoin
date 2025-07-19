@@ -235,7 +235,7 @@ private:
 
     const bool m_prune_mode;
 
-    const std::vector<std::byte> m_xor_key;
+    const Obfuscation m_obfuscation;
 
     /** Dirty block index entries. */
     std::set<CBlockIndex*> m_dirty_blockindex;

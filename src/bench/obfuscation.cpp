@@ -4,21 +4,22 @@
 
 #include <bench/bench.h>
 #include <random.h>
-#include <span.h>
-#include <streams.h>
+#include <util/obfuscation.h>
 
 #include <cstddef>
 #include <vector>
 
-static void Xor(benchmark::Bench& bench)
+static void ObfuscationBench(benchmark::Bench& bench)
 {
     FastRandomContext frc{/*fDeterministic=*/true};
     auto data{frc.randbytes<std::byte>(1024)};
-    auto key{frc.randbytes<std::byte>(31)};
+    const Obfuscation obfuscation{frc.randbytes<Obfuscation::KEY_SIZE>()};
 
+    size_t offset{0};
     bench.batch(data.size()).unit("byte").run([&] {
-        util::Xor(data, key);
+        obfuscation(data, offset++); // mutated differently each time
+        ankerl::nanobench::doNotOptimizeAway(data);
     });
 }
 
-BENCHMARK(Xor, benchmark::PriorityLevel::HIGH);
+BENCHMARK(ObfuscationBench, benchmark::PriorityLevel::HIGH);

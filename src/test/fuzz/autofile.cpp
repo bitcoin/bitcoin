@@ -4,9 +4,10 @@
 
 #include <span.h>
 #include <streams.h>
-#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
+#include <util/obfuscation.h>
 
 #include <array>
 #include <cstddef>
@@ -18,9 +19,10 @@ FUZZ_TARGET(autofile)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedFileProvider fuzzed_file_provider{fuzzed_data_provider};
+    const auto key_bytes{ConsumeFixedLengthByteVector<std::byte>(fuzzed_data_provider, Obfuscation::KEY_SIZE)};
     AutoFile auto_file{
         fuzzed_file_provider.open(),
-        ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider),
+        Obfuscation{std::span{key_bytes}.first<Obfuscation::KEY_SIZE>()},
     };
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {
