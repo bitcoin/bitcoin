@@ -24,6 +24,11 @@ class SigningProvider;
 struct bilingual_str;
 struct CMutableTransaction;
 
+struct SignOptions {
+    int sighash_type{SIGHASH_DEFAULT};
+    bool avoid_script_path{false};
+};
+
 /** Interface for signature creators. */
 class BaseSignatureCreator {
 public:
@@ -38,16 +43,21 @@ public:
 /** A signature creator for transactions. */
 class MutableTransactionSignatureCreator : public BaseSignatureCreator
 {
+private:
     const CMutableTransaction& m_txto;
     unsigned int nIn;
-    int nHashType;
+
+public:
+    SignOptions m_options;
+
+private:
     CAmount amount;
     const MutableTransactionSignatureChecker checker;
     const PrecomputedTransactionData* m_txdata;
 
 public:
-    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, int hash_type);
-    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, int hash_type);
+    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const SignOptions options);
+    MutableTransactionSignatureCreator(const CMutableTransaction& tx LIFETIMEBOUND, unsigned int input_idx, const CAmount& amount, const PrecomputedTransactionData* txdata, const SignOptions options);
     const BaseSignatureChecker& Checker() const override { return checker; }
     bool CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CreateSchnorrSig(const SigningProvider& provider, std::vector<unsigned char>& sig, const XOnlyPubKey& pubkey, const uint256* leaf_hash, const uint256* merkle_root, SigVersion sigversion) const override;
@@ -105,6 +115,6 @@ void UpdateInput(CTxIn& input, const SignatureData& data);
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);
 
 /** Sign the CMutableTransaction */
-bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* provider, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors);
+bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* provider, const std::map<COutPoint, Coin>& coins, const SignOptions options, std::map<int, bilingual_str>& input_errors);
 
 #endif // BITCOIN_SCRIPT_SIGN_H
