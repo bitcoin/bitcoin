@@ -567,6 +567,8 @@ bool TxOrphanageImpl::HaveTxToReconsider(NodeId peer)
 }
 void TxOrphanageImpl::EraseForBlock(const CBlock& block)
 {
+    if (m_orphans.empty()) return;
+
     std::set<Wtxid> wtxids_to_erase;
     for (const CTransactionRef& ptx : block.vtx) {
         const CTransaction& block_tx = *ptx;
