@@ -19,9 +19,8 @@ export CI_CONTAINER_CAP="--cap-add SYS_PTRACE"  # If run with (ASan + LSan), the
 export BITCOIN_CONFIG="\
  -DBUILD_FOR_FUZZING=ON \
  -DSANITIZERS=fuzzer,address,undefined,float-divide-by-zero,integer \
- -DCMAKE_C_COMPILER=clang-${APT_LLVM_V} \
- -DCMAKE_CXX_COMPILER=clang++-${APT_LLVM_V} \
+ -DCMAKE_C_COMPILER=clang \
+ -DCMAKE_CXX_COMPILER=clang++ \
  -DCMAKE_C_FLAGS='-ftrivial-auto-var-init=pattern' \
  -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern' \
 "
-export LLVM_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-${APT_LLVM_V}"

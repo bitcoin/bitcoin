@@ -26,8 +26,8 @@ export GOAL="install"
 export BITCOIN_CONFIG="\
  -DWITH_USDT=ON -DWITH_ZMQ=ON -DBUILD_GUI=ON \
  -DSANITIZERS=address,float-divide-by-zero,integer,undefined \
- -DCMAKE_C_COMPILER=clang-${APT_LLVM_V} \
- -DCMAKE_CXX_COMPILER=clang++-${APT_LLVM_V} \
+ -DCMAKE_C_COMPILER=clang \
+ -DCMAKE_CXX_COMPILER=clang++ \
  -DCMAKE_C_FLAGS='-ftrivial-auto-var-init=pattern' \
  -DCMAKE_CXX_FLAGS='-ftrivial-auto-var-init=pattern' \
  -DAPPEND_CXXFLAGS='-std=c++23' \
