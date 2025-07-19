@@ -14,6 +14,7 @@
 #include <flatfile.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
+#include <index/locationsindex.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -501,8 +502,13 @@ static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const 
     if (!maybe_chainman) return false;
     ChainstateManager& chainman = *maybe_chainman;
 
+    const LocationsIndex* locations_index = g_locations_index.get();
+    if (locations_index && !locations_index->BlockUntilSyncedToCurrentChain()) {
+        RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Locations index is still syncing");
+    }
+
     FlatFilePos block_pos{};
-    {
+    if (!locations_index) {
         LOCK(cs_main);
         const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*block_hash)};
         if (pindex == nullptr) {
@@ -519,10 +525,16 @@ static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const 
 
     CTransactionRef tx{};
     std::vector<std::byte> tx_bytes{};
-    // Read full block and skip irrelevant transactions
-    bool success = chainman.m_blockman.ReadTxFromBlock(tx, block_pos, index);
+    bool success{false};
+    if (!locations_index) {
+        // Read full block and skip irrelevant transactions
+        success = chainman.m_blockman.ReadTxFromBlock(tx, block_pos, index);
+    } else {
+        success = locations_index->ReadRawTransaction(*block_hash, index, tx_bytes);
+    }
+
     if (!success) {
-        return RESTERR(req, HTTP_NOT_FOUND, strprintf("Failed to read transaction #%d from block %s", index, (*block_hash).ToString()));
+        return RESTERR(req, HTTP_NOT_FOUND, strprintf("Failed to read transaction #%d from block %s", index, block_hash->ToString()));
     }
 
     DataStream serialized{};

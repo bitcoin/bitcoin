@@ -41,6 +41,10 @@ To query for a confirmed transaction, enable the transaction index via "txindex=
 Given a block hash and transaction offset within it: returns a transaction in binary, hex-encoded binary, or JSON formats.
 Responds with 404 if the transaction doesn't exist.
 
+By default, this endpoint will also deserialize the leading transactions, before reading and returning the requested one
+(which results in wasted deserialization work if the transaction is not in the beginning of the block).
+To read the requested transaction directly, enable the transaction locations' index via "locationsindex=1" command line / configuration option.
+
 #### Blocks
 - `GET /rest/block/<BLOCK-HASH>.<bin|hex|json>`
 - `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
