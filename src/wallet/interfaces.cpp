@@ -35,7 +35,7 @@
 #include <utility>
 #include <vector>
 
-using common::PSBTError;
+using common::PSBTResult;
 using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
@@ -383,7 +383,7 @@ public:
         }
         return {};
     }
-    std::optional<PSBTError> fillPSBT(std::optional<int> sighash_type,
+    PSBTResult fillPSBT(std::optional<int> sighash_type,
         bool sign,
         bool bip32derivs,
         size_t* n_signed,

@@ -84,7 +84,7 @@ struct KeyOriginInfo;
 
 using common::AmountErrMsg;
 using common::AmountHighWarn;
-using common::PSBTError;
+using common::PSBTResult;
 using interfaces::FoundBlock;
 using util::ReplaceAll;
 using util::ToString;
@@ -2090,7 +2090,7 @@ bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint,
     return false;
 }
 
-std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, std::optional<int> sighash_type, bool sign, bool bip32derivs, size_t * n_signed, bool finalize) const
+PSBTResult CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, std::optional<int> sighash_type, bool sign, bool bip32derivs, size_t * n_signed, bool finalize) const
 {
     if (n_signed) {
         *n_signed = 0;
@@ -2124,7 +2124,7 @@ std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bo
     for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
         int n_signed_this_spkm = 0;
         const auto error{spk_man->FillPSBT(psbtx, txdata, sighash_type, sign, bip32derivs, &n_signed_this_spkm, finalize)};
-        if (error) {
+        if (error != PSBTResult::OK) {
             return error;
         }
 
@@ -2141,7 +2141,7 @@ std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bo
         complete &= PSBTInputSignedAndVerified(psbtx, i, &txdata);
     }
 
-    return {};
+    return PSBTResult::OK;
 }
 
 SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
