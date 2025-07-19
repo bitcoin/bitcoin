@@ -353,9 +353,9 @@ public:
 };
 
 enum class DeriveType {
-    NO,
-    UNHARDENED,
-    HARDENED,
+    NON_RANGED,
+    UNHARDENED_RANGED,
+    HARDENED_RANGED,
 };
 
 /** An object representing a parsed extended public key in a descriptor. */
@@ -395,7 +395,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
 
     bool IsHardened() const
     {
-        if (m_derive == DeriveType::HARDENED) return true;
+        if (m_derive == DeriveType::HARDENED_RANGED) return true;
         for (auto entry : m_path) {
             if (entry >> 31) return true;
         }
@@ -404,7 +404,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
 
 public:
     BIP32PubkeyProvider(uint32_t exp_index, const CExtPubKey& extkey, KeyPath path, DeriveType derive, bool apostrophe) : PubkeyProvider(exp_index), m_root_extkey(extkey), m_path(std::move(path)), m_derive(derive), m_apostrophe(apostrophe) {}
-    bool IsRange() const override { return m_derive != DeriveType::NO; }
+    bool IsRange() const override { return m_derive != DeriveType::NON_RANGED; }
     size_t GetSize() const override { return 33; }
     std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
     {
@@ -412,8 +412,8 @@ public:
         CKeyID keyid = m_root_extkey.pubkey.GetID();
         std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
         info.path = m_path;
-        if (m_derive == DeriveType::UNHARDENED) info.path.push_back((uint32_t)pos);
-        if (m_derive == DeriveType::HARDENED) info.path.push_back(((uint32_t)pos) | 0x80000000L);
+        if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.push_back((uint32_t)pos);
+        if (m_derive == DeriveType::HARDENED_RANGED) info.path.push_back(((uint32_t)pos) | 0x80000000L);
 
         // Derive keys or fetch them from cache
         CExtPubKey final_extkey = m_root_extkey;
@@ -422,19 +422,19 @@ public:
         bool der = true;
         if (read_cache) {
             if (!read_cache->GetCachedDerivedExtPubKey(m_expr_index, pos, final_extkey)) {
-                if (m_derive == DeriveType::HARDENED) return std::nullopt;
+                if (m_derive == DeriveType::HARDENED_RANGED) return std::nullopt;
                 // Try to get the derivation parent
                 if (!read_cache->GetCachedParentExtPubKey(m_expr_index, parent_extkey)) return std::nullopt;
                 final_extkey = parent_extkey;
-                if (m_derive == DeriveType::UNHARDENED) der = parent_extkey.Derive(final_extkey, pos);
+                if (m_derive == DeriveType::UNHARDENED_RANGED) der = parent_extkey.Derive(final_extkey, pos);
             }
         } else if (IsHardened()) {
             CExtKey xprv;
             CExtKey lh_xprv;
             if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return std::nullopt;
             parent_extkey = xprv.Neuter();
-            if (m_derive == DeriveType::UNHARDENED) der = xprv.Derive(xprv, pos);
-            if (m_derive == DeriveType::HARDENED) der = xprv.Derive(xprv, pos | 0x80000000UL);
+            if (m_derive == DeriveType::UNHARDENED_RANGED) der = xprv.Derive(xprv, pos);
+            if (m_derive == DeriveType::HARDENED_RANGED) der = xprv.Derive(xprv, pos | 0x80000000UL);
             final_extkey = xprv.Neuter();
             if (lh_xprv.key.IsValid()) {
                 last_hardened_extkey = lh_xprv.Neuter();
@@ -444,8 +444,8 @@ public:
                 if (!parent_extkey.Derive(parent_extkey, entry)) return std::nullopt;
             }
             final_extkey = parent_extkey;
-            if (m_derive == DeriveType::UNHARDENED) der = parent_extkey.Derive(final_extkey, pos);
-            assert(m_derive != DeriveType::HARDENED);
+            if (m_derive == DeriveType::UNHARDENED_RANGED) der = parent_extkey.Derive(final_extkey, pos);
+            assert(m_derive != DeriveType::HARDENED_RANGED);
         }
         if (!der) return std::nullopt;
 
@@ -454,7 +454,7 @@ public:
 
         if (write_cache) {
             // Only cache parent if there is any unhardened derivation
-            if (m_derive != DeriveType::HARDENED) {
+            if (m_derive != DeriveType::HARDENED_RANGED) {
                 write_cache->CacheParentExtPubKey(m_expr_index, parent_extkey);
                 // Cache last hardened xpub if we have it
                 if (last_hardened_extkey.pubkey.IsValid()) {
@@ -474,7 +474,7 @@ public:
         std::string ret = EncodeExtPubKey(m_root_extkey) + FormatHDKeypath(m_path, /*apostrophe=*/use_apostrophe);
         if (IsRange()) {
             ret += "/*";
-            if (m_derive == DeriveType::HARDENED) ret += use_apostrophe ? '\'' : 'h';
+            if (m_derive == DeriveType::HARDENED_RANGED) ret += use_apostrophe ? '\'' : 'h';
         }
         return ret;
     }
@@ -489,13 +489,13 @@ public:
         out = EncodeExtKey(key) + FormatHDKeypath(m_path, /*apostrophe=*/m_apostrophe);
         if (IsRange()) {
             out += "/*";
-            if (m_derive == DeriveType::HARDENED) out += m_apostrophe ? '\'' : 'h';
+            if (m_derive == DeriveType::HARDENED_RANGED) out += m_apostrophe ? '\'' : 'h';
         }
         return true;
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache) const override
     {
-        if (m_derive == DeriveType::HARDENED) {
+        if (m_derive == DeriveType::HARDENED_RANGED) {
             out = ToString(StringType::PUBLIC, /*normalized=*/true);
 
             return true;
@@ -547,7 +547,7 @@ public:
         out = "[" + origin_str + "]" + EncodeExtPubKey(xpub) + FormatHDKeypath(end_path);
         if (IsRange()) {
             out += "/*";
-            assert(m_derive == DeriveType::UNHARDENED);
+            assert(m_derive == DeriveType::UNHARDENED_RANGED);
         }
         return true;
     }
@@ -556,8 +556,8 @@ public:
         CExtKey extkey;
         CExtKey dummy;
         if (!GetDerivedExtKey(arg, extkey, dummy)) return;
-        if (m_derive == DeriveType::UNHARDENED && !extkey.Derive(extkey, pos)) return;
-        if (m_derive == DeriveType::HARDENED && !extkey.Derive(extkey, pos | 0x80000000UL)) return;
+        if (m_derive == DeriveType::UNHARDENED_RANGED && !extkey.Derive(extkey, pos)) return;
+        if (m_derive == DeriveType::HARDENED_RANGED && !extkey.Derive(extkey, pos | 0x80000000UL)) return;
         out.keys.emplace(extkey.key.GetPubKey().GetID(), extkey.key);
     }
     std::optional<CPubKey> GetRootPubKey() const override
@@ -1560,14 +1560,14 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
         return {};
     }
     std::vector<KeyPath> paths;
-    DeriveType type = DeriveType::NO;
+    DeriveType type = DeriveType::NON_RANGED;
     if (std::ranges::equal(split.back(), std::span{"*"}.first(1))) {
         split.pop_back();
-        type = DeriveType::UNHARDENED;
+        type = DeriveType::UNHARDENED_RANGED;
     } else if (std::ranges::equal(split.back(), std::span{"*'"}.first(2)) || std::ranges::equal(split.back(), std::span{"*h"}.first(2))) {
         apostrophe = std::ranges::equal(split.back(), std::span{"*'"}.first(2));
         split.pop_back();
-        type = DeriveType::HARDENED;
+        type = DeriveType::HARDENED_RANGED;
     }
     if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return {};
     if (extkey.key.IsValid()) {
