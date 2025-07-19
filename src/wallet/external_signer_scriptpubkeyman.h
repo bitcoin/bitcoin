@@ -36,6 +36,13 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
   */
  util::Result<void> DisplayAddress(const CTxDestination& dest, const ExternalSigner& signer) const;
 
+  /**
+  * Register BIP388 wallet policy.
+  * @returns hmac or an error message
+  */
+ util::Result<std::string> RegisterPolicy(const ExternalSigner& signer,
+                                          std::string name) const;
+
   std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type = std::nullopt, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
 };
 } // namespace wallet

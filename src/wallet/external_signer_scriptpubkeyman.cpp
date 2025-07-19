@@ -78,6 +78,36 @@ util::Result<void> ExternalSignerScriptPubKeyMan::DisplayAddress(const CTxDestin
     return util::Result<void>();
 }
 
+util::Result<std::string> ExternalSignerScriptPubKeyMan::RegisterPolicy(const ExternalSigner& signer,
+                                                                        std::string name) const
+{
+    // TODO: derive policy from descriptor (fail if not possible)
+    const std::string descriptor_template{"wsh(multi(@0,@1))"};
+
+    // TODO: extract key information
+    const std::vector<std::string> keys_info{
+            "[00000001/47h/1h/0h]tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H",
+            "[00000001/47h/1h/0h]tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
+    };
+
+    const UniValue& result{signer.RegisterPolicy(
+        name,
+        descriptor_template,
+        keys_info
+    )};
+
+    const UniValue& error = result.find_value("error");
+    if (error.isStr()) return util::Error{strprintf(_("Signer returned error: %s"), error.getValStr())};
+
+    const UniValue& ret_hmac = result.find_value("hmac");
+    if (!ret_hmac.isStr()) return util::Error{_("Signer did not return hmac")};
+    const std::string hmac{ret_hmac.getValStr()};
+
+    // TODO: check it's a valid hex string
+
+    return util::Result<std::string>(hmac);
+}
+
 // If sign is true, transaction must previously have been filled
 std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
