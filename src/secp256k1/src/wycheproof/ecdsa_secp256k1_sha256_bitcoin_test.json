@@ -10,7 +10,7 @@
   "notes" : {
     "ArithmeticError" : {
       "bugType" : "EDGE_CASE",
-      "description" : "Some implementations of ECDSA have arithmetic errors that occur when intermediate results have extreme values. This test vector has been constructed to test such occurences.",
+      "description" : "Some implementations of ECDSA have arithmetic errors that occur when intermediate results have extreme values. This test vector has been constructed to test such occurrences.",
       "cves" : [
         "CVE-2017-18146"
       ]
@@ -95,7 +95,7 @@
     },
     "SignatureMalleabilityBitcoin" : {
       "bugType" : "SIGNATURE_MALLEABILITY",
-      "description" : "\"BitCoins\"-curves are curves where signature malleability can be a serious issue. An implementation should only accept a signature s where s < n/2. If an implementation is not meant for uses cases that require signature malleability then this implemenation should be tested with another set of test vectors.",
+      "description" : "\"BitCoins\"-curves are curves where signature malleability can be a serious issue. An implementation should only accept a signature s where s < n/2. If an implementation is not meant for uses cases that require signature malleability then this implementation should be tested with another set of test vectors.",
       "effect" : "In bitcoin exchanges, it may be used to make a double deposits or double withdrawals",
       "links" : [
         "https://en.bitcoin.it/wiki/Transaction_malleability",
