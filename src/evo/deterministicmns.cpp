@@ -785,11 +785,8 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
 
     if (tipIndex) {
         // always keep a snapshot for the tip
-        if (snapshot.GetBlockHash() == tipIndex->GetBlockHash()) {
-            auto hash = snapshot.GetBlockHash();
-            if (mnListsCache.find(hash) == mnListsCache.end()) {
-                mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
-            }
+        if (const auto snapshot_hash = snapshot.GetBlockHash(); snapshot_hash == tipIndex->GetBlockHash()) {
+            mnListsCache.emplace(snapshot_hash, snapshot);
         } else {
             // keep snapshots for yet alive quorums
             if (ranges::any_of(Params().GetConsensus().llmqs,
@@ -799,7 +796,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
                                           (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >=
                                            tipIndex->nHeight);
                                })) {
-                mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
+                mnListsCache.emplace(snapshot_hash, snapshot);
             }
         }
     }
