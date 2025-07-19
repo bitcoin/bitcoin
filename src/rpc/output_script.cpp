@@ -22,6 +22,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -130,20 +131,17 @@ static RPCHelpMan createmultisig()
             }
 
             // Get the output type
-            OutputType output_type = OutputType::LEGACY;
-            if (!request.params[2].isNull()) {
-                std::optional<OutputType> parsed = ParseOutputType(request.params[2].get_str());
-                if (!parsed) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));
-                } else if (parsed.value() == OutputType::BECH32M) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "createmultisig cannot create bech32m multisig addresses");
-                }
-                output_type = parsed.value();
+            auto address_type{self.Arg<std::string_view>("address_type")};
+            auto output_type{ParseOutputType(address_type)};
+            if (!output_type) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", address_type));
+            } else if (output_type.value() == OutputType::BECH32M) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "createmultisig cannot create bech32m multisig addresses");
             }
 
             FlatSigningProvider keystore;
             CScript inner;
-            const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type, keystore, inner);
+            const CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, output_type.value(), keystore, inner);
 
             // Make the descriptor
             std::unique_ptr<Descriptor> descriptor = InferDescriptor(GetScriptForDestination(dest), keystore);
@@ -154,7 +152,7 @@ static RPCHelpMan createmultisig()
             result.pushKV("descriptor", descriptor->ToString());
 
             UniValue warnings(UniValue::VARR);
-            if (descriptor->GetOutputType() != output_type) {
+            if (descriptor->GetOutputType() != output_type.value()) {
                 // Only warns if the user has explicitly chosen an address type we cannot generate
                 warnings.push_back("Unable to make chosen address type, please ensure no uncompressed public keys are present.");
             }

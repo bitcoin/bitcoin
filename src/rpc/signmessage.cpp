@@ -38,11 +38,9 @@ static RPCHelpMan verifymessage()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            std::string strAddress = self.Arg<std::string>("address");
-            std::string strSign = self.Arg<std::string>("signature");
-            std::string strMessage = self.Arg<std::string>("message");
-
-            switch (MessageVerify(strAddress, strSign, strMessage)) {
+            switch (MessageVerify(std::string{self.Arg<std::string_view>("address")},
+                                  std::string{self.Arg<std::string_view>("signature")},
+                                  std::string{self.Arg<std::string_view>("message")})) {
             case MessageVerificationResult::ERR_INVALID_ADDRESS:
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             case MessageVerificationResult::ERR_ADDRESS_NO_KEY:

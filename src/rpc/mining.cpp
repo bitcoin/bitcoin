@@ -241,7 +241,7 @@ static RPCHelpMan generatetodescriptor()
 
     CScript coinbase_output_script;
     std::string error;
-    if (!getScriptFromDescriptor(self.Arg<std::string>("descriptor"), coinbase_output_script, error)) {
+    if (!getScriptFromDescriptor(std::string{self.Arg<std::string_view>("descriptor")}, coinbase_output_script, error)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
