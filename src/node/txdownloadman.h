@@ -170,7 +170,7 @@ public:
     void CheckIsEmpty(NodeId nodeid) const;
 
     /** Wrapper for TxOrphanage::GetOrphanTransactions */
-    std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
+    std::vector<TxOrphanage::OrphanInfo> GetOrphanTransactions() const;
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H
