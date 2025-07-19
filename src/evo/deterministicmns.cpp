@@ -311,16 +311,14 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
     newState->nPoSePenalty += penalty;
     newState->nPoSePenalty = std::min(maxPenalty, newState->nPoSePenalty);
 
-    if (debugLogs && dmn->pdmnState->nPoSePenalty != maxPenalty) {
-        LogPrintf("CDeterministicMNList::%s -- punished MN %s, penalty %d->%d (max=%d)\n",
-                  __func__, proTxHash.ToString(), dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
-    }
-
-    if (newState->nPoSePenalty >= maxPenalty && !newState->IsBanned()) {
-        newState->BanIfNotBanned(nHeight);
+    if (!dmn->pdmnState->IsBanned()) {
+        if (newState->nPoSePenalty >= maxPenalty) {
+            newState->BanIfNotBanned(nHeight);
+        }
         if (debugLogs) {
-            LogPrintf("CDeterministicMNList::%s -- banned MN %s at height %d\n",
-                      __func__, proTxHash.ToString(), nHeight);
+            LogPrintf("CDeterministicMNList::%s -- %s MN %s at height %d, penalty %d->%d (max=%d)\n", __func__,
+                      newState->IsBanned() ? "banned" : "punished", proTxHash.ToString(), nHeight,
+                      dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
         }
     }
     UpdateMN(proTxHash, newState);
