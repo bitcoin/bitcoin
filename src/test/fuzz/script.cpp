@@ -131,7 +131,7 @@ FUZZ_TARGET(script, .init = initialize_script)
     }
 
     (void)GetOpName(ConsumeOpcodeType(fuzzed_data_provider));
-    (void)ScriptErrorString(static_cast<ScriptError>(fuzzed_data_provider.ConsumeIntegralInRange<int>(0, SCRIPT_ERR_ERROR_COUNT)));
+    (void)ScriptErrorString(static_cast<ScriptErrorType>(fuzzed_data_provider.ConsumeIntegralInRange<int>(0, SCRIPT_ERR_ERROR_COUNT)));
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
