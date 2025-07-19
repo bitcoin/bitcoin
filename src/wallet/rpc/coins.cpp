@@ -331,16 +331,12 @@ RPCHelpMan lockunspent()
         outputs.push_back(outpt);
     }
 
-    std::unique_ptr<WalletBatch> batch = nullptr;
-    // Unlock is always persistent
-    if (fUnlock || persistent) batch = std::make_unique<WalletBatch>(pwallet->GetDatabase());
-
     // Atomically set (un)locked status for the outputs.
     for (const COutPoint& outpt : outputs) {
         if (fUnlock) {
-            if (!pwallet->UnlockCoin(outpt, batch.get())) throw JSONRPCError(RPC_WALLET_ERROR, "Unlocking coin failed");
+            if (!pwallet->UnlockCoin(outpt)) throw JSONRPCError(RPC_WALLET_ERROR, "Unlocking coin failed");
         } else {
-            if (!pwallet->LockCoin(outpt, batch.get())) throw JSONRPCError(RPC_WALLET_ERROR, "Locking coin failed");
+            if (!pwallet->LockCoin(outpt, persistent)) throw JSONRPCError(RPC_WALLET_ERROR, "Locking coin failed");
         }
     }
 
