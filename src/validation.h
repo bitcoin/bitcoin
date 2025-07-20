@@ -27,6 +27,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/hasher.h>
@@ -504,13 +505,12 @@ enum class CoinsCacheSizeState
     OK = 0
 };
 
-constexpr int64_t LargeCoinsCacheThreshold(int64_t nTotalSpace) noexcept
+constexpr int64_t LargeCoinsCacheThreshold(int64_t total_space) noexcept
 {
-    //! No need to periodic flush if at least this much space still available.
-    constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 10 * 1024 * 1024;  // 10MB
-    int64_t large_threshold =
-        std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE_BYTES);
-    return large_threshold;
+    // No periodic flush needed if at least this much space is free
+    constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES{int64_t(10_MiB)};
+    return std::max((total_space * 9) / 10,
+                    total_space - MAX_BLOCK_COINSDB_USAGE_BYTES);
 }
 
 /**
