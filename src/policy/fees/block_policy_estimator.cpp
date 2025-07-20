@@ -578,7 +578,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator() = default;
 
-void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/)
+void CBlockPolicyEstimator::TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/, const std::map<COutPoint, Coin>& /*unused*/)
 {
     processTransaction(tx);
 }
