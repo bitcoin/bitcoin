@@ -131,7 +131,7 @@ set(nsis_wizard_input "${ICON_PATH}/bitcoin290.png")
 set(nsis_wizard_bmp "${ICON_PATH}/nsis-wizard.bmp")
 add_custom_command(
   OUTPUT "${nsis_wizard_bmp}"
-  COMMAND "${IMAGEMAGICK_CONVERT}" ${nsis_wizard_input} -crop 164x290+62+0 -border 0x12 -strip BMP3:${nsis_wizard_bmp}
+  COMMAND "${IMAGEMAGICK_CONVERT}" ${nsis_wizard_input} -crop 164x290+62+0 -border 0x12 -colorspace HSL -channel Saturation -separate -negate -auto-level -strip BMP3:${nsis_wizard_bmp}
   DEPENDS ${nsis_wizard_input}
   COMMENT "Generating ${nsis_wizard_bmp} from ${nsis_wizard_input}"
   VERBATIM
