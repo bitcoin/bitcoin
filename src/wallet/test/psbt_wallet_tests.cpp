@@ -7,6 +7,8 @@
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <wallet/wallet.h>
+#include <common/messages.h>
+#include <common/types.h>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/setup_common.h>
@@ -152,6 +154,30 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
 
     BOOST_CHECK(ParseHDKeypath("m/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
     BOOST_CHECK(!ParseHDKeypath("m/4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
+}
+
+
+BOOST_AUTO_TEST_CASE(test_error_messages)
+{
+    struct ErrorTestCase {
+        PSBTError error;
+        std::string expected_message;
+    };
+
+    std::vector<ErrorTestCase> test_cases = {
+        {PSBTError::MISSING_INPUTS, "Inputs missing or spent"},
+        {PSBTError::SIGHASH_MISMATCH, "Specified sighash value does not match value stored in PSBT"},
+        {PSBTError::EXTERNAL_SIGNER_NOT_FOUND, "External signer not found"},
+        {PSBTError::EXTERNAL_SIGNER_FAILED, "External signer failed to sign"},
+        {PSBTError::UNSUPPORTED, "Signer does not support PSBT"},
+        {PSBTError::INCOMPLETE, "Input needs additional signatures or other data"},
+        {PSBTError::OK, "No errors"}
+    };
+
+    for (const auto& test_case : test_cases) {
+        bilingual_str error_msg = PSBTErrorString(test_case.error);
+        BOOST_CHECK_EQUAL(error_msg.original, test_case.expected_message);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
