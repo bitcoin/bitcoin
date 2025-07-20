@@ -100,8 +100,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     }
     it->second.coin = std::move(coin);
-    CCoinsCacheEntry::SetDirty(*it, m_sentinel);
-    if (fresh) CCoinsCacheEntry::SetFresh(*it, m_sentinel);
+    CCoinsCacheEntry::SetDirty(*it, m_sentinel, fresh);
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
     TRACEPOINT(utxocache, add,
            outpoint.hash.data(),
@@ -207,11 +206,10 @@ void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& ha
                     entry.coin = it->second.coin;
                 }
                 cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
-                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel);
                 // We can mark it FRESH in the parent if it was FRESH in the child
                 // Otherwise it might have just been flushed from the parent's cache
                 // and already exist in the grandparent
-                if (it->second.IsFresh()) CCoinsCacheEntry::SetFresh(*itUs, m_sentinel);
+                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel, it->second.IsFresh());
             }
         } else {
             // Found the entry in the parent cache

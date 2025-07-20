@@ -109,8 +109,8 @@ struct CCoinsCacheEntry
 private:
     /**
      * These are used to create a doubly linked list of flagged entries.
-     * They are set in SetDirty, SetFresh, and unset in SetClean.
-     * A flagged entry is any entry that is either DIRTY, FRESH, or both.
+     * They are set in SetDirty and unset in SetClean.
+     * A flagged entry is any entry that is DIRTY or DIRTY-and-FRESH.
      *
      * DIRTY entries are tracked so that only modified entries can be passed to
      * the parent cache for batch writing. This is a performance optimization
@@ -167,9 +167,34 @@ public:
         SetClean();
     }
 
-    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
+    /**
+     * Mark an entry as dirty, and optionally fresh.
+     *
+     * Entries must be marked dirty if they differ from the parent view.
+     * This can include being newly created, being spent, or becoming unspent from a reorg.
+     * Failure to mark a coin as dirty when it is potentially different from the parent view will cause a consensus
+     * failure, since the coin's state won't get written to the parent when the cache is flushed.
+     *
+     * Entries should be marked fresh if they are newly created in the cache and do not yet exist in the parent view.
+     * Marking a coin as fresh when it exists unspent in the parent view will cause a consensus failure, since it
+     * might not be deleted from the parent when this cache is flushed.
+     *
+     * @param pair The coins cache entry to mark dirty.
+     * @param sentinel The sentinel of the linked list of dirty entries.
+     * @param fresh Whether to also mark the entry as fresh.
+     */
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh = false) noexcept
+    {
+        AddFlags(fresh ? DIRTY | FRESH : DIRTY, pair, sentinel);
+    }
 
+    /**
+     * Clear the dirty and fresh state from an entry.
+     *
+     * This must be done only after the entry's state is written up to the parent view.
+     * Failure to clean an entry after it is written to the parent will cause a consensus failure, since an entry still
+     * marked as fresh will be deleted in the cache when it is spent before that spentness is written to the parent.
+     */
     void SetClean() noexcept
     {
         if (!m_flags) return;
@@ -181,14 +206,14 @@ public:
     bool IsDirty() const noexcept { return m_flags & DIRTY; }
     bool IsFresh() const noexcept { return m_flags & FRESH; }
 
-    //! Only call Next when this entry is DIRTY, FRESH, or both
+    //! Only call Next when this entry is DIRTY or DIRTY-and-FRESH
     CoinsCachePair* Next() const noexcept
     {
         Assume(m_flags);
         return m_next;
     }
 
-    //! Only call Prev when this entry is DIRTY, FRESH, or both
+    //! Only call Prev when this entry is DIRTY or DIRTY-and-FRESH
     CoinsCachePair* Prev() const noexcept
     {
         Assume(m_flags);
