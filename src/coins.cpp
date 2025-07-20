@@ -322,8 +322,8 @@ void CCoinsViewCache::SanityCheck() const
         if (entry.IsDirty()) attr |= 1;
         if (entry.IsFresh()) attr |= 2;
         if (entry.coin.IsSpent()) attr |= 4;
-        // Only 5 combinations are possible.
-        assert(attr != 2 && attr != 4 && attr != 7);
+        // Only 4 combinations are possible.
+        assert(attr != 2 && attr != 4 && attr != 6 && attr != 7);
 
         // Recompute cachedCoinsUsage.
         recomputed_usage += entry.coin.DynamicMemoryUsage();
