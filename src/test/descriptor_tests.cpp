@@ -511,6 +511,26 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
     BOOST_CHECK_EQUAL(desc->ToString(), expected_desc + "#" + checksum);
 }
 
+void CheckSilentPayments(const std::string& desc, const std::string& expected_private_string, const std::string& expected_public_string, const std::string& expected_norm_string, int flags = 0)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    auto parsed_desc = Parse(desc, keys, error, false);
+    BOOST_CHECK_MESSAGE(parsed_desc.at(0), error);
+
+    if (~flags & MISSING_PRIVKEYS) {
+        std::string private_string;
+        BOOST_CHECK(parsed_desc.at(0)->ToPrivateString(keys, private_string));
+        BOOST_CHECK_MESSAGE(EqualDescriptor(private_string, expected_private_string), "Private: " + private_string + " Expected: " + expected_private_string);
+    }
+
+    std::string public_string = parsed_desc.at(0)->ToString();
+    std::string norm_string;
+    BOOST_CHECK(parsed_desc.at(0)->ToNormalizedString(keys, norm_string));
+
+    BOOST_CHECK_MESSAGE(EqualDescriptor(public_string, expected_public_string), "Public: " + public_string + " Expected: " + expected_public_string);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(norm_string, expected_norm_string), "Normalized: " + norm_string + " Expected: " + expected_norm_string);
+}
 }
 
 BOOST_FIXTURE_TEST_SUITE(descriptor_tests, BasicTestingSetup)
@@ -1078,9 +1098,33 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckInferDescriptor("76a914a31725c74421fadc50d35520ab8751ed120af80588ac", "pkh(04c56fe4a92d401bcbf1b3dfbe4ac3dac5602ca155a3681497f02c1b9a733b92d704e2da6ec4162e4846af9236ef4171069ac8b7f8234a8405b6cadd96f34f5a31)", {}, {{"04c56fe4a92d401bcbf1b3dfbe4ac3dac5602ca155a3681497f02c1b9a733b92d704e2da6ec4162e4846af9236ef4171069ac8b7f8234a8405b6cadd96f34f5a31", ""}});
     // Infer pk() from p2pk with uncompressed key
     CheckInferDescriptor("4104032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220ac", "pk(04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220)", {}, {{"04032540df1d3c7070a8ab3a9cdd304dfc7fd1e6541369c53c4c3310b2537d91059afc8b8e7673eb812a32978dabb78c40f2e423f7757dca61d11838c7aeeb5220", ""}});
+
+    // Silent Payments
+
     // addr(<silent-payment-address>) is not valid, since a silent payment address is instructions on how to create a scriptPubKey and not simply an encoding of a scriptPubKey
     CheckUnparsable("addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)",
                     "addr(sp1qq0x6hdljmnnml0v2pw2hp3harecjuhtyq30f66630v74qu39rhpqgqe8qutscuwc7a0yef8rln58pw2qnh90z2c9r5au4hlhgarl5asecqeww2rq)", "silent-payments address is not valid for addr()");
+
+    CheckSilentPayments("sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)");
+    CheckSilentPayments("sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd,032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0)",
+                        MISSING_PRIVKEYS);
+    CheckSilentPayments("sp(xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi)",
+                        "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,[3442193e]L52XzL2cMkHxqxBXRyEpnPQZGUs3uKiL3R11XbAdHigRzDozKZeW)",
+                        "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,[3442193e]0339a36013301597daef41fbe593a02cc513d0b55527ec2df1050e2e8ff49c85c2)",
+                        "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,[3442193e]0339a36013301597daef41fbe593a02cc513d0b55527ec2df1050e2e8ff49c85c2)");
+    CheckSilentPayments("sp(xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt/1h,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]L5DHzMBY8jmSGNXzcYsjJxHactLCWWpm37HMTKzVeDtA8YX96GzR)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]0338b91904e0fea043ee1ea3429cad94b4b6f0eacc1ff3db5e5e2b0483b29570dc)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]0338b91904e0fea043ee1ea3429cad94b4b6f0eacc1ff3db5e5e2b0483b29570dc)");
+
+    CheckUnparsable("sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd)", "sp(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd)", "sp(): expected ',', got ')'");
+    CheckUnparsable("sp(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)", "sp(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204,Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn)", "sp(): requires the scan priv key");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
