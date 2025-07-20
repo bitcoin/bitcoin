@@ -58,10 +58,10 @@ add_custom_command(
 
 set(ICON_PATH "res/rendered_icons")
 set(ICO_SPECS
-  256 64 48 32 20 16
+  256 64 48 32 24 20 16
 )
 set(ICNS_SPECS
-  256 512 1024 32 16
+  1024 512 256 128 32 16
 )
 set(EXTRA_ICON_SPECS
   1024 290
