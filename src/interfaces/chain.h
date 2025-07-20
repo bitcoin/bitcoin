@@ -306,7 +306,7 @@ public:
     {
     public:
         virtual ~Notifications() = default;
-        virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
+        virtual void transactionAddedToMempool(const CTransactionRef& tx, const std::map<COutPoint, Coin>& spent_coins) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
         virtual void blockConnected(const kernel::ChainstateRole& role, const BlockInfo& block) {}
         virtual void blockDisconnected(const BlockInfo& block) {}
