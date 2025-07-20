@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_WALLETUTIL_H
 #define BITCOIN_WALLET_WALLETUTIL_H
 
+#include <common/bip352.h>
 #include <script/descriptor.h>
 #include <util/fs.h>
 
@@ -123,6 +124,8 @@ public:
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtKey& master_key, const OutputType& output_type, bool internal, std::vector<CKey>& out_keys);
+
+std::optional<std::pair<std::vector<XOnlyPubKey>, bip352::PublicData>> GetSilentPaymentsData(const CTransaction& tx, const std::map<COutPoint, Coin>& spent_coins);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H

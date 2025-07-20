@@ -8,6 +8,7 @@
 #include <common/args.h>
 #include <key_io.h>
 #include <logging.h>
+#include <script/solver.h>
 
 namespace wallet {
 fs::path GetWalletDir()
@@ -112,6 +113,32 @@ WalletDescriptor GenerateWalletDescriptor(const CExtKey& master_key, const Outpu
     assert(addr_type != OutputType::SILENT_PAYMENTS || out_keys.size() == 1);
     WalletDescriptor w_desc(std::move(desc.at(0)), creation_time, 0, 0, 0);
     return w_desc;
+}
+
+std::optional<std::pair<std::vector<XOnlyPubKey>, bip352::PublicData>> GetSilentPaymentsData(const CTransaction& tx, const std::map<COutPoint, Coin>& spent_coins)
+{
+    std::vector<XOnlyPubKey> output_keys;
+    for (const CTxOut& txout : tx.vout) {
+        std::vector<std::vector<unsigned char>> solutions;
+        TxoutType type = Solver(txout.scriptPubKey, solutions);
+        if (type == TxoutType::WITNESS_V1_TAPROOT) {
+            XOnlyPubKey xonlypubkey{solutions[0]};
+            if (xonlypubkey.IsFullyValid()) {
+                output_keys.emplace_back(std::move(xonlypubkey));
+            }
+        } else if (type == TxoutType::WITNESS_UNKNOWN) {
+            // Cannot have outputs with unknown witness versions
+            return std::nullopt;
+        }
+    }
+
+    // Must have at least one taproot output
+    if (output_keys.size() == 0) return std::nullopt;
+
+    auto public_data = bip352::GetSilentPaymentsPublicData(tx.vin, spent_coins);
+    if (!public_data.has_value()) return std::nullopt;
+
+    return std::make_pair(output_keys, std::move(public_data.value()));
 }
 
 } // namespace wallet
