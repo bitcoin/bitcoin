@@ -229,6 +229,25 @@ perf report -i /path/to/datadir/test.perf.data --stdio | c++filt
 valgrind --leak-check=full ./src/dashd
 ```
 
+### GitHub CI Debugging with `gh` CLI
+
+```bash
+# Get detailed check info with JSON output
+gh pr checks <PR_NUMBER> --json name,state,link,description
+
+# Filter for failed or pending checks
+gh pr checks <PR_NUMBER> --json name,state,link --jq '.[] | select(.state == "FAILURE" or .state == "PENDING")'
+
+# View logs from a specific CI job
+gh api repos/dashpay/dash/actions/jobs/<JOB_ID>/logs
+
+# Filter failed jobs and steps from a run
+gh run view <RUN_ID> --json jobs --jq '.jobs[] | select(.conclusion == "failure") | {name, conclusion}'
+
+# Example: Get lint failure logs for PR 6691
+# gh api repos/dashpay/dash/actions/jobs/46274126203/logs
+```
+
 ## Branch Structure
 
 - `master`: Stable releases
