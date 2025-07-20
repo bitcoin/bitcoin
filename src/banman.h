@@ -65,9 +65,16 @@ class BanMan
 public:
     ~BanMan();
     BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
+    //! Ban a node address
     void Ban(const CNetAddr& net_addr, int64_t ban_time_offset = 0, bool since_unix_epoch = false) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+
+    //! Ban a subnet
     void Ban(const CSubNet& sub_net, int64_t ban_time_offset = 0, bool since_unix_epoch = false) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+
+    //! Discourage a node address
     void Discourage(const CNetAddr& net_addr) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+
+    //! Clear all banned addresses and subnets
     void ClearBanned() EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
     //! Return whether net_addr is banned
@@ -79,9 +86,16 @@ public:
     //! Return whether net_addr is discouraged.
     bool IsDiscouraged(const CNetAddr& net_addr) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
+    //! Unban a node address
     bool Unban(const CNetAddr& net_addr) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+
+    //! Unban a subnet
     bool Unban(const CSubNet& sub_net) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+
+    //! Get the list of all banned addresses and subnets
     void GetBanned(banmap_t& banmap) EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
+
+    //! Dump the banlist to disk
     void DumpBanlist() EXCLUSIVE_LOCKS_REQUIRED(!m_banned_mutex);
 
 private:
