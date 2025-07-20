@@ -102,7 +102,6 @@ using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
  * - unspent, FRESH, DIRTY (e.g. a new coin created in the cache)
  * - unspent, not FRESH, DIRTY (e.g. a coin changed in the cache during a reorg)
  * - unspent, not FRESH, not DIRTY (e.g. an unspent coin fetched from the parent cache)
- * - spent, FRESH, not DIRTY (e.g. a spent coin fetched from the parent cache)
  * - spent, not FRESH, DIRTY (e.g. a coin is spent and spentness needs to be flushed to the parent)
  */
 struct CCoinsCacheEntry
@@ -110,19 +109,13 @@ struct CCoinsCacheEntry
 private:
     /**
      * These are used to create a doubly linked list of flagged entries.
-     * They are set in SetDirty, SetFresh, and unset in SetClean.
-     * A flagged entry is any entry that is either DIRTY, FRESH, or both.
+     * They are set in SetDirty and unset in SetClean.
+     * A flagged entry is any entry that is DIRTY or DIRTY-and-FRESH.
      *
      * DIRTY entries are tracked so that only modified entries can be passed to
      * the parent cache for batch writing. This is a performance optimization
      * compared to giving all entries in the cache to the parent and having the
      * parent scan for only modified entries.
-     *
-     * FRESH-but-not-DIRTY coins can not occur in practice, since that would
-     * mean a spent coin exists in the parent CCoinsView and not in the child
-     * CCoinsViewCache. Nevertheless, if a spent coin is retrieved from the
-     * parent cache, the FRESH-but-not-DIRTY coin will be tracked by the linked
-     * list and deleted when Sync or Flush is called on the CCoinsViewCache.
      */
     CoinsCachePair* m_prev{nullptr};
     CoinsCachePair* m_next{nullptr};
@@ -174,8 +167,10 @@ public:
         SetClean();
     }
 
-    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh = false) noexcept
+    {
+        AddFlags(fresh ? DIRTY | FRESH : DIRTY, pair, sentinel);
+    }
 
     void SetClean() noexcept
     {
@@ -188,14 +183,14 @@ public:
     bool IsDirty() const noexcept { return m_flags & DIRTY; }
     bool IsFresh() const noexcept { return m_flags & FRESH; }
 
-    //! Only call Next when this entry is DIRTY, FRESH, or both
+    //! Only call Next when this entry is DIRTY or DIRTY-and-FRESH
     CoinsCachePair* Next() const noexcept
     {
         Assume(m_flags);
         return m_next;
     }
 
-    //! Only call Prev when this entry is DIRTY, FRESH, or both
+    //! Only call Prev when this entry is DIRTY or DIRTY-and-FRESH
     CoinsCachePair* Prev() const noexcept
     {
         Assume(m_flags);

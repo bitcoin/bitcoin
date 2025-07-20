@@ -634,8 +634,7 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CoinsCachePair& sentinel, cons
     auto [iter, inserted] = map.emplace(OUTPOINT, std::move(entry));
     assert(inserted);
     if (cache_coin.IsDirty()) {
-        CCoinsCacheEntry::SetDirty(*iter, sentinel);
-        if (cache_coin.IsDirtyFresh()) CCoinsCacheEntry::SetFresh(*iter, sentinel);
+        CCoinsCacheEntry::SetDirty(*iter, sentinel, cache_coin.IsDirtyFresh());
     }
     return iter->second.coin.DynamicMemoryUsage();
 }
