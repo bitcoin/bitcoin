@@ -35,6 +35,7 @@
 #include <util/translation.h>
 #include <versionbits.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <map>
@@ -502,6 +503,15 @@ enum class CoinsCacheSizeState
     LARGE = 1,
     OK = 0
 };
+
+constexpr int64_t LargeCoinsCacheThreshold(int64_t nTotalSpace) noexcept
+{
+    //! No need to periodic flush if at least this much space still available.
+    constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES = 10 * 1024 * 1024;  // 10MB
+    int64_t large_threshold =
+        std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE_BYTES);
+    return large_threshold;
+}
 
 /**
  * Chainstate stores and provides an API to update our local knowledge of the
