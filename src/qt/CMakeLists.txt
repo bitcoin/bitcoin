@@ -64,7 +64,7 @@ set(ICNS_SPECS
   256 512 1024 32 16
 )
 set(EXTRA_ICON_SPECS
-  1024
+  1024 290
 )
 
 set(ICON_SPECS ${ICO_SPECS} ${ICNS_SPECS} ${EXTRA_ICON_SPECS})
@@ -118,6 +118,17 @@ add_custom_command(
   VERBATIM
 )
 add_custom_target(generate_ico DEPENDS "${bitcoin_ico}")
+
+set(nsis_wizard_input "${ICON_PATH}/bitcoin290.png")
+set(nsis_wizard_bmp "${ICON_PATH}/nsis-wizard.bmp")
+add_custom_command(
+  OUTPUT "${nsis_wizard_bmp}"
+  COMMAND "${IMAGEMAGICK_CONVERT}" ${nsis_wizard_input} -crop 164x290+62+0 -border 0x12 -strip BMP3:${nsis_wizard_bmp}
+  DEPENDS ${nsis_wizard_input}
+  COMMENT "Generating ${nsis_wizard_bmp} from ${nsis_wizard_input}"
+  VERBATIM
+)
+add_custom_target(generate_nsis_images DEPENDS "${nsis_wizard_bmp}")
 
 configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
 configure_file(bitcoin_rendered.qrc bitcoin_rendered.qrc USE_SOURCE_PERMISSIONS COPYONLY)
