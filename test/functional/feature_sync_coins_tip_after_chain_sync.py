@@ -51,7 +51,7 @@ class SyncCoinsTipAfterChainSyncTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         # Set maxtipage to 1 to get us out of IBD after 1 block past our mocktime
-        self.extra_args = [[f"-maxtipage=1"]]
+        self.extra_args = [["-maxtipage=1"]]
 
     def run_test(self):
         NUM_BLOCKS = 3
