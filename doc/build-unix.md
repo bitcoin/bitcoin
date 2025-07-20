@@ -79,9 +79,10 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 GUI dependencies:
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
-the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
+the necessary parts of Qt and some image processing tools, and pass `-DBUILD_GUI=ON` to cmake.
+Skip if you don't intend to use the GUI.
 
-    sudo apt-get install qtbase5-dev qttools5-dev qttools5-dev-tools
+    sudo apt-get install qtbase5-dev qttools5-dev qttools5-dev-tools librsvg2-bin imagemagick
 
 Additionally, to support Wayland protocol for modern desktop environments:
 
@@ -131,9 +132,10 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 GUI dependencies:
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
-the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
+the necessary parts of Qt and some image processing tools, and pass `-DBUILD_GUI=ON` to cmake.
+Skip if you don't intend to use the GUI.
 
-    sudo dnf install qt5-qttools-devel qt5-qtbase-devel
+    sudo dnf install qt5-qttools-devel qt5-qtbase-devel librsvg2-tools ImageMagick
 
 Additionally, to support Wayland protocol for modern desktop environments:
 
@@ -187,8 +189,8 @@ Setup and Build Example: Arch Linux
 -----------------------------------
 This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
-    pacman --sync --needed cmake boost gcc git libevent make python sqlite
-    git clone https://github.com/bitcoin/bitcoin.git
+    pacman --sync --needed cmake boost gcc git libevent make python sqlite librsvg imagemagick
+    git clone https://github.com/bitcoinknots/bitcoin.git
     cd bitcoin/
     cmake -B build
     cmake --build build
