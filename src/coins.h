@@ -121,21 +121,6 @@ private:
     CoinsCachePair* m_next{nullptr};
     uint8_t m_flags{0};
 
-    //! Adding a flag requires a reference to the sentinel of the flagged pair linked list.
-    static void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
-    {
-        Assume(flags & (DIRTY | FRESH));
-        if (!pair.second.m_flags) {
-            Assume(!pair.second.m_prev && !pair.second.m_next);
-            pair.second.m_prev = sentinel.second.m_prev;
-            pair.second.m_next = &sentinel;
-            sentinel.second.m_prev = &pair;
-            pair.second.m_prev->second.m_next = &pair;
-        }
-        Assume(pair.second.m_prev && pair.second.m_next);
-        pair.second.m_flags |= flags;
-    }
-
 public:
     Coin coin; // The actual cached data.
 
@@ -169,7 +154,16 @@ public:
 
     static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh = false) noexcept
     {
-        AddFlags(fresh ? DIRTY | FRESH : DIRTY, pair, sentinel);
+        if (!pair.second.m_flags) {
+            Assume(!pair.second.m_prev && !pair.second.m_next);
+            pair.second.m_prev = sentinel.second.m_prev;
+            pair.second.m_next = &sentinel;
+            sentinel.second.m_prev = &pair;
+            pair.second.m_prev->second.m_next = &pair;
+        }
+        Assume(pair.second.m_prev && pair.second.m_next);
+        pair.second.m_flags |= DIRTY;
+        if (fresh) pair.second.m_flags |= FRESH;
     }
 
     void SetClean() noexcept
