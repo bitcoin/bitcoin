@@ -502,7 +502,7 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                     BanMan* banman, ChainstateManager& chainman,
-                    CTxMemPool* pool, node::Warnings& warnings, Options opts);
+                    CTxMemPool* mempool, node::Warnings& warnings, Options opts);
 
     /** Overridden from CValidationInterface. */
     void ActiveTipChange(const CBlockIndex& new_tip, bool) override
@@ -758,7 +758,7 @@ private:
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
-    CTxMemPool* m_mempool;
+    CTxMemPool* const m_mempool;
 
     /** Synchronizes tx download including TxRequestTracker, rejection filters, and TxOrphanage.
      * Lock invariants:
@@ -897,6 +897,7 @@ private:
     /* Mark a block as in flight
      * Returns false, still setting pit, if the block was already in flight from the same peer
      * pit will only be valid as long as the same cs_main lock is being held
+     * pit requires m_mempool to exist
      */
     bool BlockRequested(NodeId nodeid, const CBlockIndex& block, std::list<QueuedBlock>::iterator** pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1236,7 +1237,7 @@ bool PeerManagerImpl::BlockRequested(NodeId nodeid, const CBlockIndex& block, st
     RemoveBlockRequest(hash, nodeid);
 
     std::list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(),
-            {&block, std::unique_ptr<PartiallyDownloadedBlock>(pit ? new PartiallyDownloadedBlock(m_mempool) : nullptr)});
+            {&block, std::unique_ptr<PartiallyDownloadedBlock>{pit ? new PartiallyDownloadedBlock{Assert(m_mempool)} : nullptr}});
     if (state->vBlocksInFlight.size() == 1) {
         // We're starting a block download (batch) from this peer.
         state->m_downloading_since = GetTime<std::chrono::microseconds>();
@@ -1257,7 +1258,7 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
     // mempool will not contain the transactions necessary to reconstruct the
     // compact block.
     if (m_opts.ignore_incoming_txs) return;
-
+    if (!m_mempool) return;
     CNodeState* nodestate = State(nodeid);
     PeerRef peer{GetPeerRef(nodeid)};
     if (!nodestate || !nodestate->m_provides_cmpctblocks) {
@@ -1910,14 +1911,14 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
 
 std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrman,
                                                BanMan* banman, ChainstateManager& chainman,
-                                               CTxMemPool* pool, node::Warnings& warnings, Options opts)
+                                               CTxMemPool* mempool, node::Warnings& warnings, Options opts)
 {
-    return std::make_unique<PeerManagerImpl>(connman, addrman, banman, chainman, pool, warnings, opts);
+    return std::make_unique<PeerManagerImpl>(connman, addrman, banman, chainman, mempool, warnings, opts);
 }
 
 PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
-                                 CTxMemPool* pool, node::Warnings& warnings, Options opts)
+                                 CTxMemPool* mempool, node::Warnings& warnings, Options opts)
     : m_rng{opts.deterministic_rng},
       m_fee_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}, m_rng},
       m_chainparams(chainman.GetParams()),
@@ -1925,8 +1926,8 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
-      m_mempool(pool),
-      m_txdownloadman(node::TxDownloadOptions{*pool, m_rng, opts.deterministic_rng}),
+      m_mempool(mempool),
+      m_txdownloadman(node::TxDownloadOptions{*mempool, m_rng, opts.deterministic_rng}),
       m_warnings{warnings},
       m_opts{opts}
 {
@@ -2786,6 +2787,7 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
             }
             if (vGetData.size() > 0) {
                 if (!m_opts.ignore_incoming_txs &&
+                        m_mempool &&
                         nodestate->m_provides_cmpctblocks &&
                         vGetData.size() == 1 &&
                         mapBlocksInFlight.size() == 1 &&
@@ -3559,11 +3561,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // Only initialize the Peer::TxRelay m_relay_txs data structure if:
         // - this isn't an outbound block-relay-only connection, and
         // - this isn't an outbound feeler connection, and
+        // - the mempool exists, and
         // - fRelay=true (the peer wishes to receive transaction announcements)
         //   or we're offering NODE_BLOOM to this peer. NODE_BLOOM means that
         //   the peer may turn on transaction relay later.
         if (!pfrom.IsBlockOnlyConn() &&
             !pfrom.IsFeelerConn() &&
+            m_mempool &&
             (fRelay || (peer->m_our_services & NODE_BLOOM))) {
             auto* const tx_relay = peer->SetTxRelay();
             {
@@ -4299,7 +4303,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
-                if (!m_mempool->exists(tx.GetHash())) {
+                if (!Assert(m_mempool)->exists(tx.GetHash())) {
                     LogPrintf("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
                               tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
                 } else {
@@ -5455,6 +5459,7 @@ bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
     // block-relay-only peers may never send txs to us
     if (peer.IsBlockOnlyConn()) return true;
     if (peer.IsFeelerConn()) return true;
+    if (!m_mempool) return true;
     // In -blocksonly mode, peers need the 'relay' permission to send txs to us
     if (m_opts.ignore_incoming_txs && !peer.HasPermission(NetPermissionFlags::Relay)) return true;
     return false;
