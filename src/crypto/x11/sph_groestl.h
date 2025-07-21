@@ -73,7 +73,6 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
 	union {
@@ -86,7 +85,6 @@ typedef struct {
 	sph_u64 count;
 #else
 	sph_u32 count_high, count_low;
-#endif
 #endif
 } sph_groestl_small_context;
 
@@ -113,7 +111,6 @@ typedef sph_groestl_small_context sph_groestl256_context;
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[128];    /* first field, for alignment */
 	size_t ptr;
 	union {
@@ -126,7 +123,6 @@ typedef struct {
 	sph_u64 count;
 #else
 	sph_u32 count_high, count_low;
-#endif
 #endif
 } sph_groestl_big_context;
 

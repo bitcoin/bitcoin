@@ -74,7 +74,6 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[144];    /* first field, for alignment */
 	size_t ptr, lim;
 	union {
@@ -83,7 +82,6 @@ typedef struct {
 #endif
 		sph_u32 narrow[50];
 	} u;
-#endif
 } sph_keccak_context;
 
 /**

@@ -81,12 +81,10 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
 	sph_u64 h0, h1, h2, h3, h4, h5, h6, h7;
 	sph_u64 bcount;
-#endif
 } sph_skein_big_context;
 
 /**

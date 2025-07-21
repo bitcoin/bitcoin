@@ -76,12 +76,10 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 h[8];
 	sph_u32 count0, count1;
-#endif
 } sph_shavite_small_context;
 
 /**
@@ -107,12 +105,10 @@ typedef sph_shavite_small_context sph_shavite256_context;
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[128];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 h[16];
 	sph_u32 count0, count1, count2, count3;
-#endif
 } sph_shavite_big_context;
 
 /**

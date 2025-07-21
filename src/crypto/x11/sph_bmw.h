@@ -78,7 +78,6 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 H[16];
@@ -86,7 +85,6 @@ typedef struct {
 	sph_u64 bit_count;
 #else
 	sph_u32 bit_count_high, bit_count_low;
-#endif
 #endif
 } sph_bmw_small_context;
 
@@ -115,12 +113,10 @@ typedef sph_bmw_small_context sph_bmw256_context;
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[128];    /* first field, for alignment */
 	size_t ptr;
 	sph_u64 H[16];
 	sph_u64 bit_count;
-#endif
 } sph_bmw_big_context;
 
 /**

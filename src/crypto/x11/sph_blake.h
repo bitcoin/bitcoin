@@ -79,13 +79,11 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 H[8];
 	sph_u32 S[4];
 	sph_u32 T0, T1;
-#endif
 } sph_blake_small_context;
 
 /**
@@ -113,13 +111,11 @@ typedef sph_blake_small_context sph_blake256_context;
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[128];    /* first field, for alignment */
 	size_t ptr;
 	sph_u64 H[8];
 	sph_u64 S[4];
 	sph_u64 T0, T1;
-#endif
 } sph_blake_big_context;
 
 /**

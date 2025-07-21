@@ -74,11 +74,9 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[32];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 V[3][8];
-#endif
 } sph_luffa224_context;
 
 /**
@@ -91,22 +89,18 @@ typedef sph_luffa224_context sph_luffa256_context;
  * This structure is a context for Luffa-384 computations.
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[32];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 V[4][8];
-#endif
 } sph_luffa384_context;
 
 /**
  * This structure is a context for Luffa-512 computations.
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[32];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 V[5][8];
-#endif
 } sph_luffa512_context;
 
 /**

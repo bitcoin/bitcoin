@@ -75,12 +75,10 @@ extern "C"{
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 state[16];
 	sph_u32 count_low, count_high;
-#endif
 } sph_simd_small_context;
 
 /**
@@ -95,12 +93,10 @@ typedef struct {
  * <code>memcpy()</code>).
  */
 typedef struct {
-#ifndef DOXYGEN_IGNORE
 	unsigned char buf[128];    /* first field, for alignment */
 	size_t ptr;
 	sph_u32 state[32];
 	sph_u32 count_low, count_high;
-#endif
 } sph_simd_big_context;
 
 /**
