@@ -910,7 +910,7 @@ namespace {
  * Only message types that are actually implemented in this codebase need to be listed, as other
  * messages get ignored anyway - whether we know how to decode them or not.
  */
-const std::array<std::string, 34> V2_MESSAGE_IDS = {
+const std::array<std::string, 35> V2_MESSAGE_IDS = {
     "", // 12 bytes follow encoding the message type like in V1
     NetMsgType::ADDR,
     NetMsgType::BLOCK,
@@ -941,6 +941,7 @@ const std::array<std::string, 34> V2_MESSAGE_IDS = {
     NetMsgType::CFCHECKPT,
     NetMsgType::ADDRV2,
     NetMsgType::SENDPACKAGES,
+    NetMsgType::PKGTXNS,
     // Unimplemented message types that are assigned in BIP324:
     "",
     "",
