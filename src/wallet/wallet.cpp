@@ -1710,6 +1710,10 @@ uint64_t CWallet::GetWalletFlags() const
     return m_wallet_flags;
 }
 
+void CWallet::LoadHmacBIP388(std::string policy_name, std::string hmac) {
+    m_bip388 = {.name = policy_name, .hmac = hmac};
+}
+
 void CWallet::MaybeUpdateBirthTime(int64_t time)
 {
     int64_t birthtime = m_birth_time.load();

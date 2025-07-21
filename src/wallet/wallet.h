@@ -385,6 +385,13 @@ private:
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
 
+    /** BIP388 registered hmac */
+    struct BIP388 {
+        std::string name;
+        std::string hmac;
+    };
+    std::optional<BIP388> m_bip388;
+
     bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& strPurpose);
 
     //! Unsets a wallet flag and saves it to disk
@@ -930,6 +937,11 @@ public:
     bool LoadWalletFlags(uint64_t flags);
     //! Retrieve all of the wallet's flags
     uint64_t GetWalletFlags() const;
+
+    std::optional<BIP388> GetHmacBIP388() const { return m_bip388; }
+
+    //! Load BIP388 registered hmac
+    void LoadHmacBIP388(std::string policy_name, std::string hmac);
 
     /** Returns a bracketed wallet name for displaying in logs, will return [default wallet] if the wallet has no name */
     std::string GetDisplayName() const override
