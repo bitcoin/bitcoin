@@ -15,6 +15,8 @@
 #include <unordered_set>
 #include <vector>
 
+using TransactionCompression = DefaultFormatter;
+
 /** Default maximum number of transactions in a package. */
 static constexpr uint32_t MAX_PACKAGE_COUNT{25};
 /** Default maximum total weight of transactions in a package in weight
@@ -50,6 +52,20 @@ enum class PackageValidationResult {
 using Package = std::vector<CTransactionRef>;
 
 class PackageValidationState : public ValidationState<PackageValidationResult> {};
+
+class PackageToSend {
+public:
+    Package txns;
+
+    PackageToSend() = default;
+    explicit PackageToSend(const Package& package) :
+        txns(package) {}
+
+    SERIALIZE_METHODS(PackageToSend, obj)
+    {
+        READWRITE(TX_WITH_WITNESS(Using<VectorFormatter<TransactionCompression>>(obj.txns)));
+    }
+};
 
 /** If any direct dependencies exist between transactions (i.e. a child spending the output of a
  * parent), checks that all parents appear somewhere in the list before their respective children.
