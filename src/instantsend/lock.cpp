@@ -6,9 +6,10 @@
 
 #include <hash.h>
 #include <primitives/transaction.h>
+#include <util/hasher.h>
 
-#include <set>
 #include <string>
+#include <unordered_set>
 
 static constexpr std::string_view ISLOCK_REQUESTID_PREFIX{"islock"};
 
@@ -32,13 +33,7 @@ bool InstantSendLock::TriviallyValid() const
     }
 
     // Check that each input is unique
-    std::set<COutPoint> dups;
-    for (const auto& o : inputs) {
-        if (!dups.emplace(o).second) {
-            return false;
-        }
-    }
-
-    return true;
+    const std::unordered_set<COutPoint, SaltedOutpointHasher> inputs_set{inputs.begin(), inputs.end()};
+    return inputs_set.size() == inputs.size();
 }
 } // namespace instantsend
