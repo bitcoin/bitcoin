@@ -9,13 +9,13 @@
 #include <primitives/block.h>
 #include <util/system.h>
 
-static const std::string_view DB_ARCHIVED_BY_HASH = "is_a2";
-static const std::string_view DB_ARCHIVED_BY_HEIGHT_AND_HASH = "is_a1";
-static const std::string_view DB_HASH_BY_OUTPOINT = "is_in";
-static const std::string_view DB_HASH_BY_TXID = "is_tx";
-static const std::string_view DB_ISLOCK_BY_HASH = "is_i";
-static const std::string_view DB_MINED_BY_HEIGHT_AND_HASH = "is_m";
-static const std::string_view DB_VERSION = "is_v";
+static constexpr std::string_view DB_ARCHIVED_BY_HASH{"is_a2"};
+static constexpr std::string_view DB_ARCHIVED_BY_HEIGHT_AND_HASH{"is_a1"};
+static constexpr std::string_view DB_HASH_BY_OUTPOINT{"is_in"};
+static constexpr std::string_view DB_HASH_BY_TXID{"is_tx"};
+static constexpr std::string_view DB_ISLOCK_BY_HASH{"is_i"};
+static constexpr std::string_view DB_MINED_BY_HEIGHT_AND_HASH{"is_m"};
+static constexpr std::string_view DB_VERSION{"is_v"};
 
 namespace instantsend {
 namespace {

@@ -28,7 +28,7 @@ using node::fReindex;
 using node::GetTransaction;
 
 namespace instantsend {
-static const std::string_view INPUTLOCK_REQUESTID_PREFIX = "inlock";
+static constexpr std::string_view INPUTLOCK_REQUESTID_PREFIX{"inlock"};
 
 InstantSendSigner::InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
                                      llmq::CInstantSendManager& isman, llmq::CSigningManager& sigman,

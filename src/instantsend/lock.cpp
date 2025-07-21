@@ -10,7 +10,7 @@
 #include <set>
 #include <string>
 
-static const std::string_view ISLOCK_REQUESTID_PREFIX = "islock";
+static constexpr std::string_view ISLOCK_REQUESTID_PREFIX{"islock"};
 
 namespace instantsend {
 uint256 InstantSendLock::GetRequestId() const

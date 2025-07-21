@@ -34,7 +34,7 @@ using node::fReindex;
 using node::GetTransaction;
 
 namespace llmq {
-static const std::string_view INPUTLOCK_REQUESTID_PREFIX = "inlock";
+static constexpr std::string_view INPUTLOCK_REQUESTID_PREFIX{"inlock"};
 
 namespace {
 template <typename T>
