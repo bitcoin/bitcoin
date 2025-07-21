@@ -575,6 +575,9 @@ public:
     /** Display address on an external signer. */
     util::Result<void> DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    /** Register BIP388 on an external signer. Store and return the resulting hmac. */
+    util::Result<std::string> RegisterPolicy(std::optional<std::string> name) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     bool IsLockedCoin(const COutPoint& output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void LoadLockedCoin(const COutPoint& coin, bool persistent) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool LockCoin(const COutPoint& output, bool persist) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
