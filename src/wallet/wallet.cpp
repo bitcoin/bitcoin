@@ -4018,6 +4018,19 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
+    // Set the last opened version and features
+    if (!local_wallet_batch.WriteLastOpenedVersion()) {
+        return util::Error{_("Error: Unable to write last opened version")};
+    }
+    if (!local_wallet_batch.WriteLastOpenedFeatures()) {
+        return util::Error{_("Error: Unable to write last opened features")};
+    }
+    if (HasEncryptionKeys()) {
+        if (!local_wallet_batch.WriteLastDecryptedFeatures()) {
+            return util::Error{_("Error: Unable to write last decrypted features")};
+        }
+    }
+
     // Get best block locator so that we can copy it to the watchonly and solvables
     // Note: The best block locator was introduced in #152 so ancient wallets do not have it
     CBlockLocator best_block_locator;
