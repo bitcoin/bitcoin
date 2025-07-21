@@ -106,8 +106,8 @@ void InstantSendSigner::HandleNewInputLockRecoveredSig(const llmq::CRecoveredSig
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    uint256 hashBlock{};
-    const auto tx = GetTransaction(nullptr, &m_mempool, txid, Params().GetConsensus(), hashBlock);
+    uint256 _hashBlock{};
+    const auto tx = GetTransaction(nullptr, &m_mempool, txid, Params().GetConsensus(), _hashBlock);
     if (!tx) {
         return;
     }
