@@ -72,6 +72,12 @@ class WalletFastRescanTest(BitcoinTestFramework):
             w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
         txids_fast_nonactive = self.get_wallet_txids(node, 'rescan_fast_nonactive')
 
+        self.log.info("Verify that fast rescan is disabled for silent_payments enabled wallets")
+        node.createwallet(wallet_name='silent_payments_slow_rescan', disable_private_keys=True, blank=True, descriptors=True, silent_payments=True)
+        w = node.get_wallet_rpc('silent_payments_slow_rescan')
+        with node.assert_debug_log(['slow variant inspecting all blocks']):
+            w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
+
         self.restart_node(0, [f'-keypool={KEYPOOL_SIZE}', '-blockfilterindex=0'])
         self.log.info("Import wallet backup w/o block filter index")
         with node.assert_debug_log(['slow variant inspecting all blocks']):
