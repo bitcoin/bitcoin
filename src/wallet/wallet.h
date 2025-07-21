@@ -574,6 +574,28 @@ public:
     /** Display address on an external signer. */
     util::Result<void> DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    /** Determine if the SPKM descriptor is compatible with BIP388 */
+    bool IsCandidateForBIP388Policy(DescriptorScriptPubKeyMan& spkm) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /**
+     * Derive a BIP388 policy from a pair of descriptor scriptpubkey manangers.
+     *
+     * Ignores trivial single sig policies: pkh(KEY), wpkh(KEY), sh(wpkh(KEY))
+     * and tr(KEY)
+     *
+     * If no SKPM pair is provided, look for the first suitable pair.
+     *
+     * @param[in] spk_pair The receive and change SKPM to use.
+     *
+     * @return a string containing the BIP388 policy and array of strings
+     *         containing the key information. An error if no suitable
+     *         descriptors were found.
+     */
+    util::Result<std::pair<std::string, std::vector<std::string>>> DerivePolicy(const std::optional<std::pair<DescriptorScriptPubKeyMan&, DescriptorScriptPubKeyMan&>>& spk_pair) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    /** Register BIP388 on an external signer. Store and return the resulting hmac. */
+    util::Result<std::string> RegisterPolicy(const std::optional<std::string>& name) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     bool IsLockedCoin(const COutPoint& output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void LoadLockedCoin(const COutPoint& coin, bool persistent) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool LockCoin(const COutPoint& output, bool persist) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
