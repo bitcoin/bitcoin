@@ -236,24 +236,6 @@ static const sph_u32 RC44[8] = {
 #define SUB_CRUMBW(a0, a1, a2, a3)   SUB_CRUMB_GEN(a0, a1, a2, a3, 64)
 
 
-#if 0
-
-#define ROL32W(x, n)   SPH_T64( \
-                       (((x) << (n)) \
-                       & ~((SPH_C64(0xFFFFFFFF) >> (32 - (n))) << 32)) \
-                       | (((x) >> (32 - (n))) \
-                       & ~((SPH_C64(0xFFFFFFFF) >> (n)) << (n))))
-
-#define MIX_WORDW(u, v)   do { \
-		(v) ^= (u); \
-		(u) = ROL32W((u), 2) ^ (v); \
-		(v) = ROL32W((v), 14) ^ (u); \
-		(u) = ROL32W((u), 10) ^ (v); \
-		(v) = ROL32W((v), 1); \
-	} while (0)
-
-#endif
-
 #define MIX_WORDW(u, v)   do { \
 		sph_u32 ul, uh, vl, vh; \
 		(v) ^= (u); \

@@ -1227,39 +1227,6 @@ sph_bswap64(sph_u64 x)
 
 #endif
 
-/*
- * Disabled code. Apparently, Microsoft Visual C 2005 is smart enough
- * to generate proper opcodes for endianness swapping with the pure C
- * implementation below.
- *
-
-#elif SPH_I386_MSVC && !SPH_NO_ASM
-
-static __inline sph_u32 __declspec(naked) __fastcall
-sph_bswap32(sph_u32 x)
-{
-	__asm {
-		bswap  ecx
-		mov    eax,ecx
-		ret
-	}
-}
-
-#if SPH_64
-
-static SPH_INLINE sph_u64
-sph_bswap64(sph_u64 x)
-{
-	return ((sph_u64)sph_bswap32((sph_u32)x) << 32)
-		| (sph_u64)sph_bswap32((sph_u32)(x >> 32));
-}
-
-#endif
-
- *
- * [end of disabled code]
- */
-
 #else
 
 static SPH_INLINE sph_u32
@@ -1564,25 +1531,6 @@ sph_dec32le(const void *src)
 		__asm__ __volatile__ (
 			"lda [%1]0x88,%0" : "=r" (tmp) : "r" (src));
 		return tmp;
-/*
- * On PowerPC, this turns out not to be worth the effort: the inline
- * assembly makes GCC optimizer uncomfortable, which tends to nullify
- * the decoding gains.
- *
- * For most hash functions, using this inline assembly trick changes
- * hashing speed by less than 5% and often _reduces_ it. The biggest
- * gains are for MD4 (+11%) and CubeHash (+30%). For all others, it is
- * less then 10%. The speed gain on CubeHash is probably due to the
- * chronic shortage of registers that CubeHash endures; for the other
- * functions, the generic code appears to be efficient enough already.
- *
-#elif (SPH_PPC32_GCC || SPH_PPC64_GCC) && !SPH_NO_ASM
-		sph_u32 tmp;
-
-		__asm__ __volatile__ (
-			"lwbrx %0,0,%1" : "=r" (tmp) : "r" (src));
-		return tmp;
- */
 #else
 		return sph_bswap32(*(const sph_u32 *)src);
 #endif
@@ -1622,15 +1570,6 @@ sph_dec32le_aligned(const void *src)
 
 	__asm__ __volatile__ ("lda [%1]0x88,%0" : "=r" (tmp) : "r" (src));
 	return tmp;
-/*
- * Not worth it generally.
- *
-#elif (SPH_PPC32_GCC || SPH_PPC64_GCC) && !SPH_NO_ASM
-	sph_u32 tmp;
-
-	__asm__ __volatile__ ("lwbrx %0,0,%1" : "=r" (tmp) : "r" (src));
-	return tmp;
- */
 #else
 	return sph_bswap32(*(const sph_u32 *)src);
 #endif
@@ -1881,20 +1820,6 @@ sph_dec64le(const void *src)
 		__asm__ __volatile__ (
 			"ldxa [%1]0x88,%0" : "=r" (tmp) : "r" (src));
 		return tmp;
-/*
- * Not worth it generally.
- *
-#elif SPH_PPC32_GCC && !SPH_NO_ASM
-		return (sph_u64)sph_dec32le_aligned(src)
-			| ((sph_u64)sph_dec32le_aligned(
-				(const char *)src + 4) << 32);
-#elif SPH_PPC64_GCC && !SPH_NO_ASM
-		sph_u64 tmp;
-
-		__asm__ __volatile__ (
-			"ldbrx %0,0,%1" : "=r" (tmp) : "r" (src));
-		return tmp;
- */
 #else
 		return sph_bswap64(*(const sph_u64 *)src);
 #endif
@@ -1942,18 +1867,6 @@ sph_dec64le_aligned(const void *src)
 
 	__asm__ __volatile__ ("ldxa [%1]0x88,%0" : "=r" (tmp) : "r" (src));
 	return tmp;
-/*
- * Not worth it generally.
- *
-#elif SPH_PPC32_GCC && !SPH_NO_ASM
-	return (sph_u64)sph_dec32le_aligned(src)
-		| ((sph_u64)sph_dec32le_aligned((const char *)src + 4) << 32);
-#elif SPH_PPC64_GCC && !SPH_NO_ASM
-	sph_u64 tmp;
-
-	__asm__ __volatile__ ("ldbrx %0,0,%1" : "=r" (tmp) : "r" (src));
-	return tmp;
- */
 #else
 	return sph_bswap64(*(const sph_u64 *)src);
 #endif
