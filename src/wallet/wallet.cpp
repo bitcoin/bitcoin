@@ -4016,6 +4016,13 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
+    // Set the client features
+    local_wallet_batch.WriteLastOpenedVersion();
+    local_wallet_batch.WriteLastOpenedFeatures();
+    if (HasEncryptionKeys()) {
+        local_wallet_batch.WriteLastDecryptedFeatures();
+    }
+
     // Get best block locator so that we can copy it to the watchonly and solvables
     // Note: The best block locator was introduced in #152 so ancient wallets do not have it
     CBlockLocator best_block_locator;
