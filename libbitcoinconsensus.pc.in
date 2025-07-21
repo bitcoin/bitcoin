@@ -8,4 +8,4 @@ Description: Library for the Bitcoin consensus protocol.
 Version: @CLIENT_VERSION_STRING@
 Libs: -L${libdir} -lbitcoinconsensus
 Libs.private: -L${libdir} @LIBS_PRIVATE@
-Cflags: -I${includedir}
+Cflags: -I${includedir} @MAYBE_DEFINE_STATIC_LIBBITCOINCONSENSUS@

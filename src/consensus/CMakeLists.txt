@@ -53,6 +53,9 @@ if(NOT BUILD_SHARED_LIBS)
   list(TRANSFORM all_consensus_static_link_libs PREPEND "-l")
   # LIBS_PRIVATE is substituted in the pkg-config file.
   list(JOIN all_consensus_static_link_libs " " LIBS_PRIVATE)
+  set(MAYBE_DEFINE_STATIC_LIBBITCOINCONSENSUS "-DSTATIC_LIBBITCOINCONSENSUS")
+else()
+  set(MAYBE_DEFINE_STATIC_LIBBITCOINCONSENSUS )
 endif()
 
 configure_file(${PROJECT_SOURCE_DIR}/libbitcoinconsensus.pc.in ${PROJECT_BINARY_DIR}/libbitcoinconsensus.pc @ONLY)
