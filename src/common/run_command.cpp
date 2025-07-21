@@ -8,6 +8,7 @@
 
 #include <tinyformat.h>
 #include <univalue.h>
+#include <logging.h>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 #include <util/subprocess.h>
@@ -24,11 +25,15 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 
     if (str_command.empty()) return UniValue::VNULL;
 
+    LogWarning("cmd='%s'; std_in='%s'", str_command, str_std_in);
     auto c = sp::Popen(str_command, sp::input{sp::PIPE}, sp::output{sp::PIPE}, sp::error{sp::PIPE}, sp::close_fds{true});
     if (!str_std_in.empty()) {
+        LogWarning("(send)");
         c.send(str_std_in);
     }
+    LogWarning("(comm)");
     auto [out_res, err_res] = c.communicate();
+    LogWarning("done");
     stdout_stream.str(std::string{out_res.buf.begin(), out_res.buf.end()});
     stderr_stream.str(std::string{err_res.buf.begin(), err_res.buf.end()});
 
