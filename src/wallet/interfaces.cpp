@@ -237,6 +237,11 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->DisplayAddress(dest);
     }
+    util::Result<std::string> registerPolicy(const std::optional<std::string>& name) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->RegisterPolicy(name);
+    }
     bool lockCoin(const COutPoint& output, const bool write_to_db) override
     {
         LOCK(m_wallet->cs_wallet);
