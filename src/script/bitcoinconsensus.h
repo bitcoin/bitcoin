@@ -8,19 +8,18 @@
 
 #include <stdint.h>
 
-#if defined(BUILD_BITCOIN_INTERNAL)
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-  #if defined(_WIN32)
-    #if defined(HAVE_DLLEXPORT_ATTRIBUTE)
-      #define EXPORT_SYMBOL __declspec(dllexport)
-    #else
-      #define EXPORT_SYMBOL
-    #endif
-  #elif defined(HAVE_DEFAULT_VISIBILITY_ATTRIBUTE)
+#if defined(STATIC_LIBBITCOINCONSENSUS)
+  // No export/import for static libraries
+#elif defined(_WIN32)
+  #if defined(BUILD_BITCOIN_INTERNAL)
+    #define EXPORT_SYMBOL __declspec (dllexport)
+  #else
+    #define EXPORT_SYMBOL __declspec (dllimport)
+  #endif
+#elif defined(BUILD_BITCOIN_INTERNAL)
+  #if defined(__GNUC__) && (__GNUC__ >= 4)
     #define EXPORT_SYMBOL __attribute__ ((visibility ("default")))
   #endif
-#elif defined(MSC_VER) && !defined(STATIC_LIBBITCOINCONSENSUS)
-  #define EXPORT_SYMBOL __declspec(dllimport)
 #endif
 
 #ifndef EXPORT_SYMBOL
