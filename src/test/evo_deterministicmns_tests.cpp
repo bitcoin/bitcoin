@@ -12,8 +12,8 @@
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
-#include <llmq/context.h>
 #include <instantsend/instantsend.h>
+#include <llmq/context.h>
 #include <messagesigner.h>
 #include <netbase.h>
 #include <node/transaction.h>
