@@ -304,6 +304,13 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+/** BIP388 registered hmac */
+struct BIP388 {
+    std::string name;
+    std::string fingerprint;
+    std::string hmac;
+};
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -382,6 +389,8 @@ private:
 
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
+
+    std::vector<BIP388> m_bip388;
 
     bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::optional<AddressPurpose>& strPurpose);
 
@@ -916,6 +925,11 @@ public:
     bool LoadWalletFlags(uint64_t flags);
     //! Retrieve all of the wallet's flags
     uint64_t GetWalletFlags() const;
+
+    std::vector<BIP388> GetHmacs() const { return m_bip388; }
+
+    //! Load BIP388 registered hmac
+    void LoadHmacBIP388(const std::string& policy_name, const std::string& fingerprint, const std::string& hmac);
 
     /** Return wallet name for use in logs, will return "default wallet" if the wallet has no name. */
     std::string LogName() const override
