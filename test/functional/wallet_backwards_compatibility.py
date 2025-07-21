@@ -24,8 +24,16 @@ from test_framework.descriptors import descsum_create
 
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
 )
+
+SQLITE3_IMPORTED = False
+try:
+    import sqlite3 # type: ignore[import]
+    SQLITE3_IMPORTED = True
+except ImportError:
+    pass
 
 LAST_KEYPOOL_INDEX = 9 # Index of the last derived address with the keypool size of 10
 
@@ -49,6 +57,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
         self.skip_if_no_previous_releases()
+
+        if not SQLITE3_IMPORTED:
+            self.log.warning("sqlite3 module not available, skipping tests that inspect the database")
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
@@ -150,8 +161,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         bad_deriv_wallet_master.unloadwallet()
 
         # If we have sqlite3, verify that there are no keymeta records
-        try:
-            import sqlite3
+        if SQLITE3_IMPORTED:
             wallet_db = node_master.wallets_path / wallet_name / "wallet.dat"
             conn = sqlite3.connect(wallet_db)
             with conn:
@@ -159,8 +169,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 keymeta_rec = conn.execute("SELECT value FROM main where key >= x'076b65796d657461' AND key < x'076b65796d657462'").fetchone()
                 assert_equal(keymeta_rec, None)
             conn.close()
-        except ImportError:
-            self.log.warning("sqlite3 module not available, skipping lack of keymeta records check")
 
     def test_ignore_legacy_during_startup(self, legacy_nodes, node_master):
         self.log.info("Test that legacy wallets are ignored during startup on v29+")
@@ -342,6 +350,14 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             # Remove the wallet from old node
             wallet_prev.unloadwallet()
 
+            # Open backup with sqlite and check flags
+            if SQLITE3_IMPORTED:
+                conn = sqlite3.connect(backup_path)
+                with conn:
+                    flags_rec = conn.execute("SELECT value FROM main WHERE key = x'05666c616773'").fetchone()
+                    old_flags = int.from_bytes(flags_rec[0], byteorder="little")
+                conn.close()
+
             # Restore the wallet to master
             load_res = node_master.restorewallet(wallet_name, backup_path)
 
@@ -377,6 +393,23 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                 wallet.getnewaddress(address_type="bech32m")
 
             wallet.unloadwallet()
+
+            # Open the wallet with sqlite and inspect the flags and records
+            if SQLITE3_IMPORTED:
+                conn = sqlite3.connect(down_backup_path)
+                with conn:
+                    flags_rec = conn.execute("SELECT value FROM main WHERE key = x'05666c616773'").fetchone()
+                    new_flags = int.from_bytes(flags_rec[0], byteorder="little")
+                    diff_flags = new_flags & ~old_flags
+
+                    # Check for last hardened xpubs if the flag is newly set
+                    if diff_flags & (1 << 2):
+                        self.log.debug("Checking descriptor cache was upgraded")
+                        # Fetch all records with the walletdescriptorlhcache prefix
+                        lh_cache_recs = conn.execute("SELECT value FROM main where key >= x'1777616c6c657464657363726970746f726c686361636865' AND key < x'1777616c6c657464657363726970746f726c686361636866'").fetchall()
+                        assert_greater_than(len(lh_cache_recs), 0)
+
+                conn.close()
 
             # Check that no automatic upgrade broke downgrading the wallet
             target_dir = node.wallets_path / down_wallet_name
