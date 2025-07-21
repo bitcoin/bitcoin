@@ -280,40 +280,6 @@ fft64(unsigned char *x, size_t xs, s32 *q)
 	} while (0)
 
 /*
- * alpha^(127*i) mod 257
- */
-static const unsigned short yoff_s_n[] = {
-	  1,  98,  95,  58,  30, 113,  23, 198, 129,  49, 176,  29,
-	 15, 185, 140,  99, 193, 153,  88, 143, 136, 221,  70, 178,
-	225, 205,  44, 200,  68, 239,  35,  89, 241, 231,  22, 100,
-	 34, 248, 146, 173, 249, 244,  11,  50,  17, 124,  73, 215,
-	253, 122, 134,  25, 137,  62, 165, 236, 255,  61,  67, 141,
-	197,  31, 211, 118, 256, 159, 162, 199, 227, 144, 234,  59,
-	128, 208,  81, 228, 242,  72, 117, 158,  64, 104, 169, 114,
-	121,  36, 187,  79,  32,  52, 213,  57, 189,  18, 222, 168,
-	 16,  26, 235, 157, 223,   9, 111,  84,   8,  13, 246, 207,
-	240, 133, 184,  42,   4, 135, 123, 232, 120, 195,  92,  21,
-	  2, 196, 190, 116,  60, 226,  46, 139
-};
-
-/*
- * alpha^(127*i) + alpha^(125*i) mod 257
- */
-static const unsigned short yoff_s_f[] = {
-	  2, 156, 118, 107,  45, 212, 111, 162,  97, 249, 211,   3,
-	 49, 101, 151, 223, 189, 178, 253, 204,  76,  82, 232,  65,
-	 96, 176, 161,  47, 189,  61, 248, 107,   0, 131, 133, 113,
-	 17,  33,  12, 111, 251, 103,  57, 148,  47,  65, 249, 143,
-	189,   8, 204, 230, 205, 151, 187, 227, 247, 111, 140,   6,
-	 77,  10,  21, 149, 255, 101, 139, 150, 212,  45, 146,  95,
-	160,   8,  46, 254, 208, 156, 106,  34,  68,  79,   4,  53,
-	181, 175,  25, 192, 161,  81,  96, 210,  68, 196,   9, 150,
-	  0, 126, 124, 144, 240, 224, 245, 146,   6, 154, 200, 109,
-	210, 192,   8, 114,  68, 249,  53,  27,  52, 106,  70,  30,
-	 10, 146, 117, 251, 180, 247, 236, 108
-};
-
-/*
  * beta^(255*i) mod 257
  */
 static const unsigned short yoff_b_n[] = {
@@ -371,45 +337,6 @@ static const unsigned short yoff_b_f[] = {
 
 #define INNER(l, h, mm)   (((u32)((l) * (mm)) & 0xFFFFU) \
                           + ((u32)((h) * (mm)) << 16))
-
-#define W_SMALL(sb, o1, o2, mm) \
-	(INNER(q[8 * (sb) + 2 * 0 + o1], q[8 * (sb) + 2 * 0 + o2], mm), \
-	 INNER(q[8 * (sb) + 2 * 1 + o1], q[8 * (sb) + 2 * 1 + o2], mm), \
-	 INNER(q[8 * (sb) + 2 * 2 + o1], q[8 * (sb) + 2 * 2 + o2], mm), \
-	 INNER(q[8 * (sb) + 2 * 3 + o1], q[8 * (sb) + 2 * 3 + o2], mm)
-
-#define WS_0_0   W_SMALL( 4,    0,    1, 185)
-#define WS_0_1   W_SMALL( 6,    0,    1, 185)
-#define WS_0_2   W_SMALL( 0,    0,    1, 185)
-#define WS_0_3   W_SMALL( 2,    0,    1, 185)
-#define WS_0_4   W_SMALL( 7,    0,    1, 185)
-#define WS_0_5   W_SMALL( 5,    0,    1, 185)
-#define WS_0_6   W_SMALL( 3,    0,    1, 185)
-#define WS_0_7   W_SMALL( 1,    0,    1, 185)
-#define WS_1_0   W_SMALL(15,    0,    1, 185)
-#define WS_1_1   W_SMALL(11,    0,    1, 185)
-#define WS_1_2   W_SMALL(12,    0,    1, 185)
-#define WS_1_3   W_SMALL( 8,    0,    1, 185)
-#define WS_1_4   W_SMALL( 9,    0,    1, 185)
-#define WS_1_5   W_SMALL(13,    0,    1, 185)
-#define WS_1_6   W_SMALL(10,    0,    1, 185)
-#define WS_1_7   W_SMALL(14,    0,    1, 185)
-#define WS_2_0   W_SMALL(17, -128,  -64, 233)
-#define WS_2_1   W_SMALL(18, -128,  -64, 233)
-#define WS_2_2   W_SMALL(23, -128,  -64, 233)
-#define WS_2_3   W_SMALL(20, -128,  -64, 233)
-#define WS_2_4   W_SMALL(22, -128,  -64, 233)
-#define WS_2_5   W_SMALL(21, -128,  -64, 233)
-#define WS_2_6   W_SMALL(16, -128,  -64, 233)
-#define WS_2_7   W_SMALL(19, -128,  -64, 233)
-#define WS_3_0   W_SMALL(30, -191, -127, 233)
-#define WS_3_1   W_SMALL(24, -191, -127, 233)
-#define WS_3_2   W_SMALL(25, -191, -127, 233)
-#define WS_3_3   W_SMALL(31, -191, -127, 233)
-#define WS_3_4   W_SMALL(27, -191, -127, 233)
-#define WS_3_5   W_SMALL(29, -191, -127, 233)
-#define WS_3_6   W_SMALL(28, -191, -127, 233)
-#define WS_3_7   W_SMALL(26, -191, -127, 233)
 
 #define W_BIG(sb, o1, o2, mm) \
 	(INNER(q[16 * (sb) + 2 * 0 + o1], q[16 * (sb) + 2 * 0 + o2], mm), \
@@ -535,55 +462,11 @@ static const unsigned short yoff_b_f[] = {
 
 #if SPH_SIMD_NOCOPY
 
-#define DECL_STATE_SMALL
-#define READ_STATE_SMALL(sc)
-#define WRITE_STATE_SMALL(sc)
 #define DECL_STATE_BIG
 #define READ_STATE_BIG(sc)
 #define WRITE_STATE_BIG(sc)
 
 #else
-
-#define DECL_STATE_SMALL   \
-	u32 A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3, D0, D1, D2, D3;
-
-#define READ_STATE_SMALL(sc)   do { \
-		A0 = (sc)->state[ 0]; \
-		A1 = (sc)->state[ 1]; \
-		A2 = (sc)->state[ 2]; \
-		A3 = (sc)->state[ 3]; \
-		B0 = (sc)->state[ 4]; \
-		B1 = (sc)->state[ 5]; \
-		B2 = (sc)->state[ 6]; \
-		B3 = (sc)->state[ 7]; \
-		C0 = (sc)->state[ 8]; \
-		C1 = (sc)->state[ 9]; \
-		C2 = (sc)->state[10]; \
-		C3 = (sc)->state[11]; \
-		D0 = (sc)->state[12]; \
-		D1 = (sc)->state[13]; \
-		D2 = (sc)->state[14]; \
-		D3 = (sc)->state[15]; \
-	} while (0)
-
-#define WRITE_STATE_SMALL(sc)   do { \
-		(sc)->state[ 0] = A0; \
-		(sc)->state[ 1] = A1; \
-		(sc)->state[ 2] = A2; \
-		(sc)->state[ 3] = A3; \
-		(sc)->state[ 4] = B0; \
-		(sc)->state[ 5] = B1; \
-		(sc)->state[ 6] = B2; \
-		(sc)->state[ 7] = B3; \
-		(sc)->state[ 8] = C0; \
-		(sc)->state[ 9] = C1; \
-		(sc)->state[10] = C2; \
-		(sc)->state[11] = C3; \
-		(sc)->state[12] = D0; \
-		(sc)->state[13] = D1; \
-		(sc)->state[14] = D2; \
-		(sc)->state[15] = D3; \
-	} while (0)
 
 #define DECL_STATE_BIG   \
 	u32 A0, A1, A2, A3, A4, A5, A6, A7; \
@@ -671,17 +554,6 @@ static const unsigned short yoff_b_f[] = {
 		B ## n = tA ## n; \
 	} while (0)
 
-#define STEP_SMALL(w0, w1, w2, w3, fun, r, s, pp4b)   do { \
-		u32 tA0 = ROL32(A0, r); \
-		u32 tA1 = ROL32(A1, r); \
-		u32 tA2 = ROL32(A2, r); \
-		u32 tA3 = ROL32(A3, r); \
-		STEP_ELT(0, w0, fun, s, pp4b); \
-		STEP_ELT(1, w1, fun, s, pp4b); \
-		STEP_ELT(2, w2, fun, s, pp4b); \
-		STEP_ELT(3, w3, fun, s, pp4b); \
-	} while (0)
-
 #define STEP_BIG(w0, w1, w2, w3, w4, w5, w6, w7, fun, r, s, pp8b)   do { \
 		u32 tA0 = ROL32(A0, r); \
 		u32 tA1 = ROL32(A1, r); \
@@ -699,54 +571,6 @@ static const unsigned short yoff_b_f[] = {
 		STEP_ELT(5, w5, fun, s, pp8b); \
 		STEP_ELT(6, w6, fun, s, pp8b); \
 		STEP_ELT(7, w7, fun, s, pp8b); \
-	} while (0)
-
-#define M3_0_0   0_
-#define M3_1_0   1_
-#define M3_2_0   2_
-#define M3_3_0   0_
-#define M3_4_0   1_
-#define M3_5_0   2_
-#define M3_6_0   0_
-#define M3_7_0   1_
-
-#define M3_0_1   1_
-#define M3_1_1   2_
-#define M3_2_1   0_
-#define M3_3_1   1_
-#define M3_4_1   2_
-#define M3_5_1   0_
-#define M3_6_1   1_
-#define M3_7_1   2_
-
-#define M3_0_2   2_
-#define M3_1_2   0_
-#define M3_2_2   1_
-#define M3_3_2   2_
-#define M3_4_2   0_
-#define M3_5_2   1_
-#define M3_6_2   2_
-#define M3_7_2   0_
-
-#define STEP_SMALL_(w, fun, r, s, pp4b)   STEP_SMALL w, fun, r, s, pp4b)
-
-#define ONE_ROUND_SMALL(ri, isp, p0, p1, p2, p3)   do { \
-		STEP_SMALL_(WS_ ## ri ## 0, \
-			IF,  p0, p1, XCAT(PP4_, M3_0_ ## isp)); \
-		STEP_SMALL_(WS_ ## ri ## 1, \
-			IF,  p1, p2, XCAT(PP4_, M3_1_ ## isp)); \
-		STEP_SMALL_(WS_ ## ri ## 2, \
-			IF,  p2, p3, XCAT(PP4_, M3_2_ ## isp)); \
-		STEP_SMALL_(WS_ ## ri ## 3, \
-			IF,  p3, p0, XCAT(PP4_, M3_3_ ## isp)); \
-		STEP_SMALL_(WS_ ## ri ## 4, \
-			MAJ, p0, p1, XCAT(PP4_, M3_4_ ## isp)); \
-		STEP_SMALL_(WS_ ## ri ## 5, \
-			MAJ, p1, p2, XCAT(PP4_, M3_5_ ## isp)); \
-		STEP_SMALL_(WS_ ## ri ## 6, \
-			MAJ, p2, p3, XCAT(PP4_, M3_6_ ## isp)); \
-		STEP_SMALL_(WS_ ## ri ## 7, \
-			MAJ, p3, p0, XCAT(PP4_, M3_7_ ## isp)); \
 	} while (0)
 
 #define M7_0_0   0_
@@ -812,292 +636,6 @@ static const unsigned short yoff_b_f[] = {
 #define A1   state[ 1]
 #define A2   state[ 2]
 #define A3   state[ 3]
-#define B0   state[ 4]
-#define B1   state[ 5]
-#define B2   state[ 6]
-#define B3   state[ 7]
-#define C0   state[ 8]
-#define C1   state[ 9]
-#define C2   state[10]
-#define C3   state[11]
-#define D0   state[12]
-#define D1   state[13]
-#define D2   state[14]
-#define D3   state[15]
-
-#define STEP2_ELT(n, w, fun, s, ppb)   do { \
-		u32 tt = T32(D ## n + (w) + fun(A ## n, B ## n, C ## n)); \
-		A ## n = T32(ROL32(tt, s) + tA[(ppb) ^ n]); \
-		D ## n = C ## n; \
-		C ## n = B ## n; \
-		B ## n = tA[n]; \
-	} while (0)
-
-#define STEP2_SMALL(w0, w1, w2, w3, fun, r, s, pp4b)   do { \
-		u32 tA[4]; \
-		tA[0] = ROL32(A0, r); \
-		tA[1] = ROL32(A1, r); \
-		tA[2] = ROL32(A2, r); \
-		tA[3] = ROL32(A3, r); \
-		STEP2_ELT(0, w0, fun, s, pp4b); \
-		STEP2_ELT(1, w1, fun, s, pp4b); \
-		STEP2_ELT(2, w2, fun, s, pp4b); \
-		STEP2_ELT(3, w3, fun, s, pp4b); \
-	} while (0)
-
-static void
-one_round_small(u32 *state, u32 *w, int isp, int p0, int p1, int p2, int p3)
-{
-	static const int pp4k[] = { 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2 };
-
-	STEP2_SMALL(w[ 0], w[ 1], w[ 2], w[ 3], IF,  p0, p1, pp4k[isp + 0]);
-	STEP2_SMALL(w[ 4], w[ 5], w[ 6], w[ 7], IF,  p1, p2, pp4k[isp + 1]);
-	STEP2_SMALL(w[ 8], w[ 9], w[10], w[11], IF,  p2, p3, pp4k[isp + 2]);
-	STEP2_SMALL(w[12], w[13], w[14], w[15], IF,  p3, p0, pp4k[isp + 3]);
-	STEP2_SMALL(w[16], w[17], w[18], w[19], MAJ, p0, p1, pp4k[isp + 4]);
-	STEP2_SMALL(w[20], w[21], w[22], w[23], MAJ, p1, p2, pp4k[isp + 5]);
-	STEP2_SMALL(w[24], w[25], w[26], w[27], MAJ, p2, p3, pp4k[isp + 6]);
-	STEP2_SMALL(w[28], w[29], w[30], w[31], MAJ, p3, p0, pp4k[isp + 7]);
-}
-
-static void
-compress_small(sph_simd_small_context *sc, int last)
-{
-	unsigned char *x;
-	s32 q[128];
-	int i;
-	u32 w[32];
-	u32 state[16];
-	size_t u;
-
-	static const size_t wsp[32] = {
-		 4 << 3,  6 << 3,  0 << 3,  2 << 3,
-		 7 << 3,  5 << 3,  3 << 3,  1 << 3,
-		15 << 3, 11 << 3, 12 << 3,  8 << 3,
-		 9 << 3, 13 << 3, 10 << 3, 14 << 3,
-		17 << 3, 18 << 3, 23 << 3, 20 << 3,
-		22 << 3, 21 << 3, 16 << 3, 19 << 3,
-		30 << 3, 24 << 3, 25 << 3, 31 << 3,
-		27 << 3, 29 << 3, 28 << 3, 26 << 3
-	};
-
-	x = sc->buf;
-	FFT128(0, 1, 0, ll);
-	if (last) {
-		for (i = 0; i < 128; i ++) {
-			s32 tq;
-
-			tq = q[i] + yoff_s_f[i];
-			tq = REDS2(tq);
-			tq = REDS1(tq);
-			tq = REDS1(tq);
-			q[i] = (tq <= 128 ? tq : tq - 257);
-		}
-	} else {
-		for (i = 0; i < 128; i ++) {
-			s32 tq;
-
-			tq = q[i] + yoff_s_n[i];
-			tq = REDS2(tq);
-			tq = REDS1(tq);
-			tq = REDS1(tq);
-			q[i] = (tq <= 128 ? tq : tq - 257);
-		}
-	}
-
-	for (i = 0; i < 16; i += 4) {
-		state[i + 0] = sc->state[i + 0]
-			^ sph_dec32le_aligned(x + 4 * (i + 0));
-		state[i + 1] = sc->state[i + 1]
-			^ sph_dec32le_aligned(x + 4 * (i + 1));
-		state[i + 2] = sc->state[i + 2]
-			^ sph_dec32le_aligned(x + 4 * (i + 2));
-		state[i + 3] = sc->state[i + 3]
-			^ sph_dec32le_aligned(x + 4 * (i + 3));
-	}
-
-#define WSREAD(sb, o1, o2, mm)   do { \
-		for (u = 0; u < 32; u += 4) { \
-			size_t v = wsp[(u >> 2) + (sb)]; \
-			w[u + 0] = INNER(q[v + 2 * 0 + (o1)], \
-				q[v + 2 * 0 + (o2)], mm); \
-			w[u + 1] = INNER(q[v + 2 * 1 + (o1)], \
-				q[v + 2 * 1 + (o2)], mm); \
-			w[u + 2] = INNER(q[v + 2 * 2 + (o1)], \
-				q[v + 2 * 2 + (o2)], mm); \
-			w[u + 3] = INNER(q[v + 2 * 3 + (o1)], \
-				q[v + 2 * 3 + (o2)], mm); \
-		} \
-	} while (0)
-
-	WSREAD( 0,    0,    1, 185);
-	one_round_small(state, w, 0,  3, 23, 17, 27);
-	WSREAD( 8,    0,    1, 185);
-	one_round_small(state, w, 2, 28, 19, 22,  7);
-	WSREAD(16, -128,  -64, 233);
-	one_round_small(state, w, 1, 29,  9, 15,  5);
-	WSREAD(24, -191, -127, 233);
-	one_round_small(state, w, 0,  4, 13, 10, 25);
-
-#undef WSREAD
-
-	STEP_SMALL(sc->state[ 0], sc->state[ 1], sc->state[ 2], sc->state[ 3],
-		IF,  4, 13, PP4_2_);
-	STEP_SMALL(sc->state[ 4], sc->state[ 5], sc->state[ 6], sc->state[ 7],
-		IF, 13, 10, PP4_0_);
-	STEP_SMALL(sc->state[ 8], sc->state[ 9], sc->state[10], sc->state[11],
-		IF, 10, 25, PP4_1_);
-	STEP_SMALL(sc->state[12], sc->state[13], sc->state[14], sc->state[15],
-		IF, 25,  4, PP4_2_);
-
-	memcpy(sc->state, state, sizeof state);
-}
-
-#undef A0
-#undef A1
-#undef A2
-#undef A3
-#undef B0
-#undef B1
-#undef B2
-#undef B3
-#undef C0
-#undef C1
-#undef C2
-#undef C3
-#undef D0
-#undef D1
-#undef D2
-#undef D3
-
-#else
-
-#if SPH_SIMD_NOCOPY
-#define A0   (sc->state[ 0])
-#define A1   (sc->state[ 1])
-#define A2   (sc->state[ 2])
-#define A3   (sc->state[ 3])
-#define B0   (sc->state[ 4])
-#define B1   (sc->state[ 5])
-#define B2   (sc->state[ 6])
-#define B3   (sc->state[ 7])
-#define C0   (sc->state[ 8])
-#define C1   (sc->state[ 9])
-#define C2   (sc->state[10])
-#define C3   (sc->state[11])
-#define D0   (sc->state[12])
-#define D1   (sc->state[13])
-#define D2   (sc->state[14])
-#define D3   (sc->state[15])
-#endif
-
-static void
-compress_small(sph_simd_small_context *sc, int last)
-{
-	unsigned char *x;
-	s32 q[128];
-	int i;
-	DECL_STATE_SMALL
-#if SPH_SIMD_NOCOPY
-	sph_u32 saved[16];
-#endif
-
-#if SPH_SIMD_NOCOPY
-	memcpy(saved, sc->state, sizeof saved);
-#endif
-	x = sc->buf;
-	FFT128(0, 1, 0, ll);
-	if (last) {
-		for (i = 0; i < 128; i ++) {
-			s32 tq;
-
-			tq = q[i] + yoff_s_f[i];
-			tq = REDS2(tq);
-			tq = REDS1(tq);
-			tq = REDS1(tq);
-			q[i] = (tq <= 128 ? tq : tq - 257);
-		}
-	} else {
-		for (i = 0; i < 128; i ++) {
-			s32 tq;
-
-			tq = q[i] + yoff_s_n[i];
-			tq = REDS2(tq);
-			tq = REDS1(tq);
-			tq = REDS1(tq);
-			q[i] = (tq <= 128 ? tq : tq - 257);
-		}
-	}
-	READ_STATE_SMALL(sc);
-	A0 ^= sph_dec32le_aligned(x +  0);
-	A1 ^= sph_dec32le_aligned(x +  4);
-	A2 ^= sph_dec32le_aligned(x +  8);
-	A3 ^= sph_dec32le_aligned(x + 12);
-	B0 ^= sph_dec32le_aligned(x + 16);
-	B1 ^= sph_dec32le_aligned(x + 20);
-	B2 ^= sph_dec32le_aligned(x + 24);
-	B3 ^= sph_dec32le_aligned(x + 28);
-	C0 ^= sph_dec32le_aligned(x + 32);
-	C1 ^= sph_dec32le_aligned(x + 36);
-	C2 ^= sph_dec32le_aligned(x + 40);
-	C3 ^= sph_dec32le_aligned(x + 44);
-	D0 ^= sph_dec32le_aligned(x + 48);
-	D1 ^= sph_dec32le_aligned(x + 52);
-	D2 ^= sph_dec32le_aligned(x + 56);
-	D3 ^= sph_dec32le_aligned(x + 60);
-	ONE_ROUND_SMALL(0_, 0,  3, 23, 17, 27);
-	ONE_ROUND_SMALL(1_, 2, 28, 19, 22,  7);
-	ONE_ROUND_SMALL(2_, 1, 29,  9, 15,  5);
-	ONE_ROUND_SMALL(3_, 0,  4, 13, 10, 25);
-#if SPH_SIMD_NOCOPY
-	STEP_SMALL(saved[ 0], saved[ 1], saved[ 2], saved[ 3],
-		IF,  4, 13, PP4_2_);
-	STEP_SMALL(saved[ 4], saved[ 5], saved[ 6], saved[ 7],
-		IF, 13, 10, PP4_0_);
-	STEP_SMALL(saved[ 8], saved[ 9], saved[10], saved[11],
-		IF, 10, 25, PP4_1_);
-	STEP_SMALL(saved[12], saved[13], saved[14], saved[15],
-		IF, 25,  4, PP4_2_);
-#else
-	STEP_SMALL(sc->state[ 0], sc->state[ 1], sc->state[ 2], sc->state[ 3],
-		IF,  4, 13, PP4_2_);
-	STEP_SMALL(sc->state[ 4], sc->state[ 5], sc->state[ 6], sc->state[ 7],
-		IF, 13, 10, PP4_0_);
-	STEP_SMALL(sc->state[ 8], sc->state[ 9], sc->state[10], sc->state[11],
-		IF, 10, 25, PP4_1_);
-	STEP_SMALL(sc->state[12], sc->state[13], sc->state[14], sc->state[15],
-		IF, 25,  4, PP4_2_);
-	WRITE_STATE_SMALL(sc);
-#endif
-}
-
-#if SPH_SIMD_NOCOPY
-#undef A0
-#undef A1
-#undef A2
-#undef A3
-#undef B0
-#undef B1
-#undef B2
-#undef B3
-#undef C0
-#undef C1
-#undef C2
-#undef C3
-#undef D0
-#undef D1
-#undef D2
-#undef D3
-#endif
-
-#endif
-
-#if SPH_SMALL_FOOTPRINT_SIMD
-
-#define A0   state[ 0]
-#define A1   state[ 1]
-#define A2   state[ 2]
-#define A3   state[ 3]
 #define A4   state[ 4]
 #define A5   state[ 5]
 #define A6   state[ 6]
@@ -1127,9 +665,6 @@ compress_small(sph_simd_small_context *sc, int last)
 #define D6   state[30]
 #define D7   state[31]
 
-/*
- * Not needed -- already defined for SIMD-224 / SIMD-256
- *
 #define STEP2_ELT(n, w, fun, s, ppb)   do { \
 		u32 tt = T32(D ## n + (w) + fun(A ## n, B ## n, C ## n)); \
 		A ## n = T32(ROL32(tt, s) + tA[(ppb) ^ n]); \
@@ -1137,7 +672,6 @@ compress_small(sph_simd_small_context *sc, int last)
 		C ## n = B ## n; \
 		B ## n = tA[n]; \
 	} while (0)
- */
 
 #define STEP2_BIG(w0, w1, w2, w3, w4, w5, w6, w7, fun, r, s, pp8b)   do { \
 		u32 tA[8]; \
@@ -1520,31 +1054,6 @@ compress_big(sph_simd_big_context *sc, int last)
 
 #endif
 
-static const u32 IV224[] = {
-	C32(0x33586E9F), C32(0x12FFF033), C32(0xB2D9F64D), C32(0x6F8FEA53),
-	C32(0xDE943106), C32(0x2742E439), C32(0x4FBAB5AC), C32(0x62B9FF96),
-	C32(0x22E7B0AF), C32(0xC862B3A8), C32(0x33E00CDC), C32(0x236B86A6),
-	C32(0xF64AE77C), C32(0xFA373B76), C32(0x7DC1EE5B), C32(0x7FB29CE8)
-};
-
-static const u32 IV256[] = {
-	C32(0x4D567983), C32(0x07190BA9), C32(0x8474577B), C32(0x39D726E9),
-	C32(0xAAF3D925), C32(0x3EE20B03), C32(0xAFD5E751), C32(0xC96006D3),
-	C32(0xC2C2BA14), C32(0x49B3BCB4), C32(0xF67CAF46), C32(0x668626C9),
-	C32(0xE2EAA8D2), C32(0x1FF47833), C32(0xD0C661A5), C32(0x55693DE1)
-};
-
-static const u32 IV384[] = {
-	C32(0x8A36EEBC), C32(0x94A3BD90), C32(0xD1537B83), C32(0xB25B070B),
-	C32(0xF463F1B5), C32(0xB6F81E20), C32(0x0055C339), C32(0xB4D144D1),
-	C32(0x7360CA61), C32(0x18361A03), C32(0x17DCB4B9), C32(0x3414C45A),
-	C32(0xA699A9D2), C32(0xE39E9664), C32(0x468BFE77), C32(0x51D062F8),
-	C32(0xB9E3BFE8), C32(0x63BECE2A), C32(0x8FE506B9), C32(0xF8CC4AC2),
-	C32(0x7AE11542), C32(0xB1AADDA1), C32(0x64B06794), C32(0x28D2F462),
-	C32(0xE64071EC), C32(0x1DEB91A8), C32(0x8AC8DB23), C32(0x3F782AB5),
-	C32(0x039B5CB8), C32(0x71DDD962), C32(0xFADE2CEA), C32(0x1416DF71)
-};
-
 static const u32 IV512[] = {
 	C32(0x0BA16B95), C32(0x72F999AD), C32(0x9FECC2AE), C32(0xBA3264FC),
 	C32(0x5E894929), C32(0x8E9F30E5), C32(0x2F1DAA37), C32(0xF0F2C558),
@@ -1557,17 +1066,6 @@ static const u32 IV512[] = {
 };
 
 static void
-init_small(void *cc, const u32 *iv)
-{
-	sph_simd_small_context *sc;
-
-	sc = cc;
-	memcpy(sc->state, iv, sizeof sc->state);
-	sc->count_low = sc->count_high = 0;
-	sc->ptr = 0;
-}
-
-static void
 init_big(void *cc, const u32 *iv)
 {
 	sph_simd_big_context *sc;
@@ -1576,31 +1074,6 @@ init_big(void *cc, const u32 *iv)
 	memcpy(sc->state, iv, sizeof sc->state);
 	sc->count_low = sc->count_high = 0;
 	sc->ptr = 0;
-}
-
-static void
-update_small(void *cc, const void *data, size_t len)
-{
-	sph_simd_small_context *sc;
-
-	sc = cc;
-	while (len > 0) {
-		size_t clen;
-
-		clen = (sizeof sc->buf) - sc->ptr;
-		if (clen > len)
-			clen = len;
-		memcpy(sc->buf + sc->ptr, data, clen);
-		data = (const unsigned char *)data + clen;
-		len -= clen;
-		if ((sc->ptr += clen) == sizeof sc->buf) {
-			compress_small(sc, 0);
-			sc->ptr = 0;
-			sc->count_low = T32(sc->count_low + 1);
-			if (sc->count_low == 0)
-				sc->count_high ++;
-		}
-	}
 }
 
 static void
@@ -1629,17 +1102,6 @@ update_big(void *cc, const void *data, size_t len)
 }
 
 static void
-encode_count_small(unsigned char *dst,
-	u32 low, u32 high, size_t ptr, unsigned n)
-{
-	low = T32(low << 9);
-	high = T32(high << 9) + (low >> 23);
-	low += (ptr << 3) + n;
-	sph_enc32le(dst, low);
-	sph_enc32le(dst + 4, high);
-}
-
-static void
 encode_count_big(unsigned char *dst,
 	u32 low, u32 high, size_t ptr, unsigned n)
 {
@@ -1648,28 +1110,6 @@ encode_count_big(unsigned char *dst,
 	low += (ptr << 3) + n;
 	sph_enc32le(dst, low);
 	sph_enc32le(dst + 4, high);
-}
-
-static void
-finalize_small(void *cc, unsigned ub, unsigned n, void *dst, size_t dst_len)
-{
-	sph_simd_small_context *sc;
-	unsigned char *d;
-	size_t u;
-
-	sc = cc;
-	if (sc->ptr > 0 || n > 0) {
-		memset(sc->buf + sc->ptr, 0,
-			(sizeof sc->buf) - sc->ptr);
-		sc->buf[sc->ptr] = ub & (0xFF << (8 - n));
-		compress_small(sc, 0);
-	}
-	memset(sc->buf, 0, sizeof sc->buf);
-	encode_count_small(sc->buf, sc->count_low, sc->count_high, sc->ptr, n);
-	compress_small(sc, 1);
-	d = dst;
-	for (d = dst, u = 0; u < dst_len; u ++)
-		sph_enc32le(d + (u << 2), sc->state[u]);
 }
 
 static void
@@ -1692,81 +1132,6 @@ finalize_big(void *cc, unsigned ub, unsigned n, void *dst, size_t dst_len)
 	d = dst;
 	for (d = dst, u = 0; u < dst_len; u ++)
 		sph_enc32le(d + (u << 2), sc->state[u]);
-}
-
-void
-sph_simd224_init(void *cc)
-{
-	init_small(cc, IV224);
-}
-
-void
-sph_simd224(void *cc, const void *data, size_t len)
-{
-	update_small(cc, data, len);
-}
-
-void
-sph_simd224_close(void *cc, void *dst)
-{
-	sph_simd224_addbits_and_close(cc, 0, 0, dst);
-}
-
-void
-sph_simd224_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	finalize_small(cc, ub, n, dst, 7);
-	sph_simd224_init(cc);
-}
-
-void
-sph_simd256_init(void *cc)
-{
-	init_small(cc, IV256);
-}
-
-void
-sph_simd256(void *cc, const void *data, size_t len)
-{
-	update_small(cc, data, len);
-}
-
-void
-sph_simd256_close(void *cc, void *dst)
-{
-	sph_simd256_addbits_and_close(cc, 0, 0, dst);
-}
-
-void
-sph_simd256_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	finalize_small(cc, ub, n, dst, 8);
-	sph_simd256_init(cc);
-}
-
-void
-sph_simd384_init(void *cc)
-{
-	init_big(cc, IV384);
-}
-
-void
-sph_simd384(void *cc, const void *data, size_t len)
-{
-	update_big(cc, data, len);
-}
-
-void
-sph_simd384_close(void *cc, void *dst)
-{
-	sph_simd384_addbits_and_close(cc, 0, 0, dst);
-}
-
-void
-sph_simd384_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	finalize_big(cc, ub, n, dst, 12);
-	sph_simd384_init(cc);
 }
 
 void
