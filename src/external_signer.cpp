@@ -71,6 +71,15 @@ UniValue ExternalSigner::GetDescriptors(const int account)
     return RunCommandParseJSON(m_command + " --fingerprint " + m_fingerprint + NetworkArg() + " getdescriptors --account " + strprintf("%d", account));
 }
 
+UniValue ExternalSigner::RegisterPolicy(const std::string& name, const std::string& descriptor_template, const std::vector<std::string>& keys_info) const
+{
+    std::string key_args;
+    for (const std::string& key_info : keys_info) {
+        key_args.append(" --key " + key_info);
+    }
+    return RunCommandParseJSON(m_command + " --fingerprint " + m_fingerprint + NetworkArg() + " register --name " + name + " --desc " + descriptor_template + key_args);
+}
+
 bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::string& error)
 {
     // Serialize the PSBT
