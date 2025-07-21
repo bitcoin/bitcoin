@@ -72,6 +72,15 @@ struct PackageToValidate {
         m_senders{parent_sender, child_sender}
     {}
 
+    explicit PackageToValidate(const Package& txns,
+                               NodeId sender) :
+        m_txns{txns}
+    {
+        for (unsigned int i = 0; i < txns.size(); i++) {
+            m_senders.push_back(sender);
+        }
+    }
+
     // Move ctor
     PackageToValidate(PackageToValidate&& other) : m_txns{std::move(other.m_txns)}, m_senders{std::move(other.m_senders)} {}
     // Copy ctor
