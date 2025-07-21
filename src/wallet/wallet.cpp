@@ -1831,7 +1831,9 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
     ScanResult result;
 
     std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
-    if (chain().hasBlockFilterIndex(BlockFilterType::BASIC)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
+    if (chain().hasBlockFilterIndex(BlockFilterType::BASIC) && !IsWalletFlagSet(WALLET_FLAG_SILENT_PAYMENTS)) {
+        fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
+    }
 
     WalletLogPrintf("Rescan started from block %s... (%s)\n", start_block.ToString(),
                     fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
