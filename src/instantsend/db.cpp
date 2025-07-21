@@ -19,7 +19,8 @@ static const std::string_view DB_VERSION = "is_v";
 
 namespace instantsend {
 namespace {
-static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockKey(std::string_view k, int nHeight, const uint256& islockHash)
+static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockKey(std::string_view k, int nHeight,
+                                                                         const uint256& islockHash)
 {
     return std::make_tuple(std::string{k}, htobe32_internal(std::numeric_limits<uint32_t>::max() - nHeight), islockHash);
 }
@@ -221,7 +222,8 @@ void CInstantSendDb::WriteBlockInstantSendLocks(const gsl::not_null<std::shared_
     db->WriteBatch(batch);
 }
 
-void CInstantSendDb::RemoveBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected)
+void CInstantSendDb::RemoveBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock,
+                                                 gsl::not_null<const CBlockIndex*> pindexDisconnected)
 {
     LOCK(cs_db);
     CDBBatch batch(*db);
@@ -241,7 +243,8 @@ void CInstantSendDb::RemoveBlockInstantSendLocks(const gsl::not_null<std::shared
 bool CInstantSendDb::KnownInstantSendLock(const uint256& islockHash) const
 {
     LOCK(cs_db);
-    return GetInstantSendLockByHashInternal(islockHash) != nullptr || db->Exists(std::make_tuple(DB_ARCHIVED_BY_HASH, islockHash));
+    return GetInstantSendLockByHashInternal(islockHash) != nullptr ||
+           db->Exists(std::make_tuple(DB_ARCHIVED_BY_HASH, islockHash));
 }
 
 size_t CInstantSendDb::GetInstantSendLockCount() const
@@ -354,7 +357,8 @@ std::vector<uint256> CInstantSendDb::GetInstantSendLocksByParent(const uint256& 
     return result;
 }
 
-std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid, int nHeight)
+std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid,
+                                                                   int nHeight)
 {
     LOCK(cs_db);
     std::vector<uint256> result;

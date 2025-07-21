@@ -89,7 +89,7 @@ MessageProcessingResult InstantSendSigner::HandleNewRecoveredSig(const llmq::CRe
     }
     if (!txid.IsNull()) {
         HandleNewInputLockRecoveredSig(recoveredSig, txid);
-    } else if (/*isInstantSendLock=*/ WITH_LOCK(cs_creating, return creatingInstantSendLocks.count(recoveredSig.getId()))) {
+    } else if (/*isInstantSendLock=*/WITH_LOCK(cs_creating, return creatingInstantSendLocks.count(recoveredSig.getId()))) {
         HandleNewInstantSendLockRecoveredSig(recoveredSig);
     }
     return {};
@@ -154,8 +154,7 @@ void InstantSendSigner::ProcessPendingRetryLockTxs(const std::vector<CTransactio
             if (!CheckCanLock(*tx, false, Params().GetConsensus())) {
                 continue;
             }
-            LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: retrying to lock\n", __func__,
-                     tx->GetHash().ToString());
+            LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: retrying to lock\n", __func__, tx->GetHash().ToString());
         }
 
         ProcessTx(*tx, false, Params().GetConsensus());
@@ -178,7 +177,8 @@ bool InstantSendSigner::CheckCanLock(const CTransaction& tx, bool printDebug, co
                           [&](const auto& in) { return CheckCanLock(in.prevout, printDebug, tx.GetHash(), params); });
 }
 
-bool InstantSendSigner::CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, const Consensus::Params& params) const
+bool InstantSendSigner::CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash,
+                                     const Consensus::Params& params) const
 {
     int nInstantSendConfirmationsRequired = params.nInstantSendConfirmationsRequired;
 
@@ -201,8 +201,8 @@ bool InstantSendSigner::CheckCanLock(const COutPoint& outpoint, bool printDebug,
     // this relies on enabled txindex and won't work if we ever try to remove the requirement for txindex for masternodes
     if (!tx) {
         if (printDebug) {
-            LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: failed to find parent TX %s\n", __func__,
-                     txHash.ToString(), outpoint.hash.ToString());
+            LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: failed to find parent TX %s\n", __func__, txHash.ToString(),
+                     outpoint.hash.ToString());
         }
         return false;
     }
@@ -215,7 +215,8 @@ bool InstantSendSigner::CheckCanLock(const COutPoint& outpoint, bool printDebug,
         nTxAge = m_chainstate.m_chain.Height() - pindexMined->nHeight + 1;
     }
 
-    if (nTxAge < nInstantSendConfirmationsRequired && !m_clhandler.HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
+    if (nTxAge < nInstantSendConfirmationsRequired &&
+        !m_clhandler.HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
         if (printDebug) {
             LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: outpoint %s too new and not ChainLocked. nTxAge=%d, nInstantSendConfirmationsRequired=%d\n", __func__,
                      txHash.ToString(), outpoint.ToStringShort(), nTxAge, nInstantSendConfirmationsRequired);
@@ -243,8 +244,8 @@ void InstantSendSigner::HandleNewInstantSendLockRecoveredSig(const llmq::CRecove
     }
 
     if (islock->txid != recoveredSig.getMsgHash()) {
-        LogPrintf("%s -- txid=%s: islock conflicts with %s, dropping own version\n", __func__,
-                islock->txid.ToString(), recoveredSig.getMsgHash().ToString());
+        LogPrintf("%s -- txid=%s: islock conflicts with %s, dropping own version\n", __func__, islock->txid.ToString(),
+                  recoveredSig.getMsgHash().ToString());
         return;
     }
 
@@ -263,16 +264,15 @@ void InstantSendSigner::ProcessTx(const CTransaction& tx, bool fRetroactive, con
     }
 
     if (!CheckCanLock(tx, true, params)) {
-        LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: CheckCanLock returned false\n", __func__,
-                  tx.GetHash().ToString());
+        LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: CheckCanLock returned false\n", __func__, tx.GetHash().ToString());
         return;
     }
 
     auto conflictingLock = m_isman.GetConflictingLock(tx);
     if (conflictingLock != nullptr) {
         auto conflictingLockHash = ::SerializeHash(*conflictingLock);
-        LogPrintf("%s -- txid=%s: conflicts with islock %s, txid=%s\n", __func__,
-                  tx.GetHash().ToString(), conflictingLockHash.ToString(), conflictingLock->txid.ToString());
+        LogPrintf("%s -- txid=%s: conflicts with islock %s, txid=%s\n", __func__, tx.GetHash().ToString(),
+                  conflictingLockHash.ToString(), conflictingLock->txid.ToString());
         return;
     }
 
@@ -291,7 +291,8 @@ void InstantSendSigner::ProcessTx(const CTransaction& tx, bool fRetroactive, con
     TrySignInstantSendLock(tx);
 }
 
-bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroactive, Consensus::LLMQType llmqType, const Consensus::Params& params)
+bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroactive, Consensus::LLMQType llmqType,
+                                          const Consensus::Params& params)
 {
     std::vector<uint256> ids;
     ids.reserve(tx.vin.size());
@@ -313,8 +314,8 @@ bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroact
 
         // don't even try the actual signing if any input is conflicting
         if (m_sigman.IsConflicting(params.llmqTypeDIP0024InstantSend, id, tx.GetHash())) {
-            LogPrintf("%s -- txid=%s: m_sigman.IsConflicting returned true. id=%s\n", __func__,
-                      tx.GetHash().ToString(), id.ToString());
+            LogPrintf("%s -- txid=%s: m_sigman.IsConflicting returned true. id=%s\n", __func__, tx.GetHash().ToString(),
+                      id.ToString());
             return false;
         }
     }
@@ -324,15 +325,15 @@ bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroact
         return true;
     }
 
-    LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: trying to vote on %d inputs\n", __func__,
-             tx.GetHash().ToString(), tx.vin.size());
+    LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: trying to vote on %d inputs\n", __func__, tx.GetHash().ToString(),
+             tx.vin.size());
 
     for (const auto i : irange::range(tx.vin.size())) {
         const auto& in = tx.vin[i];
         auto& id = ids[i];
         WITH_LOCK(cs_inputReqests, inputRequestIds.emplace(id));
-        LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: trying to vote on input %s with id %s. fRetroactive=%d\n", __func__,
-                 tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString(), fRetroactive);
+        LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: trying to vote on input %s with id %s. fRetroactive=%d\n",
+                 __func__, tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString(), fRetroactive);
         if (m_sigman.AsyncSignIfMember(llmqType, m_shareman, id, tx.GetHash(), {}, fRetroactive)) {
             LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: voted on input %s with id %s\n", __func__,
                      tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
@@ -354,7 +355,7 @@ void InstantSendSigner::TrySignInstantSendLock(const CTransaction& tx)
     }
 
     LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: got all recovered sigs, creating InstantSendLock\n", __func__,
-            tx.GetHash().ToString());
+             tx.GetHash().ToString());
 
     InstantSendLock islock;
     islock.txid = tx.GetHash();
@@ -373,8 +374,8 @@ void InstantSendSigner::TrySignInstantSendLock(const CTransaction& tx)
     const auto quorum = llmq::SelectQuorumForSigning(llmq_params_opt.value(), m_chainstate.m_chain, m_qman, id);
 
     if (!quorum) {
-        LogPrint(BCLog::INSTANTSEND, "%s -- failed to select quorum. islock id=%s, txid=%s\n",
-                 __func__, id.ToString(), tx.GetHash().ToString());
+        LogPrint(BCLog::INSTANTSEND, "%s -- failed to select quorum. islock id=%s, txid=%s\n", __func__, id.ToString(),
+                 tx.GetHash().ToString());
         return;
     }
 

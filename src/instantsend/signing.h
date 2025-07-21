@@ -50,8 +50,8 @@ private:
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
-     * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the islock.
-     * When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
+     * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the
+     * islock. When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
      */
     std::unordered_map<uint256, InstantSendLock, StaticSaltedHasher> creatingInstantSendLocks GUARDED_BY(cs_creating);
     // maps from txid to the in-progress islock

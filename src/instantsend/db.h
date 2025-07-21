@@ -33,9 +33,9 @@ private:
 
     static constexpr int CURRENT_VERSION{1};
 
-    int best_confirmed_height GUARDED_BY(cs_db) {0};
+    int best_confirmed_height GUARDED_BY(cs_db){0};
 
-    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db) {nullptr};
+    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
     mutable unordered_lru_cache<uint256, InstantSendLockPtr, StaticSaltedHasher, 10000> islockCache GUARDED_BY(cs_db);
     mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache GUARDED_BY(cs_db);
 

@@ -9,8 +9,8 @@
 #include <primitives/transaction.h>
 #include <protocol.h>
 #include <sync.h>
-#include <util/threadinterrupt.h>
 #include <threadsafety.h>
+#include <util/threadinterrupt.h>
 
 #include <instantsend/db.h>
 #include <instantsend/lock.h>
@@ -67,8 +67,8 @@ private:
     // Tried to verify but there is no tx yet
     std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher> pendingNoTxInstantSendLocks GUARDED_BY(cs_pendingLocks);
 
-    // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking
-    // of child TXs
+    // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS
+    // locking of child TXs
     struct NonLockedTxInfo {
         const CBlockIndex* pindexMined;
         CTransactionRef tx;
