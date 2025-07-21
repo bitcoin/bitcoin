@@ -353,6 +353,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
 {
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: processing islock, peer=%d\n",
              __func__, islock->txid.ToString(), hash.ToString(), from);
+
     if (m_signer) {
         m_signer->ClearLockFromQueue(islock);
     }
@@ -360,24 +361,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
         return;
     }
 
-    uint256 hashBlock{};
-    const auto tx = GetTransaction(nullptr, &mempool, islock->txid, Params().GetConsensus(), hashBlock);
-    const CBlockIndex* pindexMined{nullptr};
-    // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
-    if (tx && !hashBlock.IsNull()) {
-        pindexMined = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(hashBlock));
-
-        // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
-        // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
-        if (pindexMined != nullptr && clhandler.HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
-            LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txlock=%s, islock=%s: dropping islock as it already got a ChainLock in block %s, peer=%d\n", __func__,
-                     islock->txid.ToString(), hash.ToString(), hashBlock.ToString(), from);
-            return;
-        }
-    }
-
-    const auto sameTxIsLock = db.GetInstantSendLockByTxid(islock->txid);
-    if (sameTxIsLock != nullptr) {
+    if (const auto sameTxIsLock = db.GetInstantSendLockByTxid(islock->txid)) {
         // can happen, nothing to do
         return;
     }
@@ -389,15 +373,32 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
         }
     }
 
-    if (tx == nullptr) {
-        // put it in a separate pending map and try again later
-        LOCK(cs_pendingLocks);
-        pendingNoTxInstantSendLocks.try_emplace(hash, std::make_pair(from, islock));
-    } else {
+    uint256 hashBlock{};
+    const auto tx = GetTransaction(nullptr, &mempool, islock->txid, Params().GetConsensus(), hashBlock);
+    const CBlockIndex* pindexMined{nullptr};
+    const bool found_transaction{tx != nullptr};
+    // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
+    if (found_transaction && !hashBlock.IsNull()) {
+        pindexMined = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(hashBlock));
+
+        // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
+        // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
+        if (pindexMined != nullptr && clhandler.HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
+            LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txlock=%s, islock=%s: dropping islock as it already got a ChainLock in block %s, peer=%d\n", __func__,
+                     islock->txid.ToString(), hash.ToString(), hashBlock.ToString(), from);
+            return;
+        }
+    }
+
+    if (found_transaction) {
         db.WriteNewInstantSendLock(hash, islock);
         if (pindexMined) {
             db.WriteInstantSendLockMined(hash, pindexMined->nHeight);
         }
+    } else {
+        // put it in a separate pending map and try again later
+        LOCK(cs_pendingLocks);
+        pendingNoTxInstantSendLocks.try_emplace(hash, std::make_pair(from, islock));
     }
 
     // This will also add children TXs to pendingRetryTxs
@@ -405,26 +406,24 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
     // We don't need the recovered sigs for the inputs anymore. This prevents unnecessary propagation of these sigs.
     // We only need the ISLOCK from now on to detect conflicts
     TruncateRecoveredSigsForInputs(*islock);
-
-    CInv inv(MSG_ISDLOCK, hash);
-    if (tx != nullptr) {
-        peerman.RelayInvFiltered(inv, *tx, ISDLOCK_PROTO_VERSION);
-    } else {
-        // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
-        // with the TX taken into account.
-        peerman.RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
-    }
-
     ResolveBlockConflicts(hash, *islock);
 
-    if (tx != nullptr) {
+    if (found_transaction) {
         RemoveMempoolConflictsForLock(peerman, hash, *islock);
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about lock %s for tx %s\n", __func__,
                  hash.ToString(), tx->GetHash().ToString());
         GetMainSignals().NotifyTransactionLock(tx, islock);
         // bump mempool counter to make sure newly locked txes are picked up by getblocktemplate
         mempool.AddTransactionsUpdated(1);
+    }
+
+    CInv inv(MSG_ISDLOCK, hash);
+    if (found_transaction) {
+        peerman.RelayInvFiltered(inv, *tx, ISDLOCK_PROTO_VERSION);
     } else {
+        // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
+        // with the TX taken into account.
+        peerman.RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
         peerman.AskPeersForTransaction(islock->txid, /*is_masternode=*/m_signer != nullptr);
     }
 }
