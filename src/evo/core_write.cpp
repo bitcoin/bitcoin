@@ -8,6 +8,8 @@
 #include <evo/mnhftx.h>
 #include <evo/netinfo.h>
 #include <evo/providertx.h>
+#include <evo/simplifiedmns.h>
+#include <evo/smldiff.h>
 #include <llmq/commitment.h>
 
 #include <univalue.h>
@@ -148,4 +150,98 @@
     ret.pushKV("height", int(nHeight));
     ret.pushKV("commitment", commitment.ToJson());
     return ret;
+}
+
+[[nodiscard]] UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("nVersion", nVersion);
+    obj.pushKV("nType", ToUnderlying(nType));
+    obj.pushKV("proRegTxHash", proRegTxHash.ToString());
+    obj.pushKV("confirmedHash", confirmedHash.ToString());
+    if (IsServiceDeprecatedRPCEnabled()) {
+        obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
+    }
+    obj.pushKV("addresses", netInfo->ToJson());
+    obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
+    obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
+    obj.pushKV("isValid", isValid);
+    if (nType == MnType::Evo) {
+        obj.pushKV("platformHTTPPort", platformHTTPPort);
+        obj.pushKV("platformNodeID", platformNodeID.ToString());
+    }
+
+    if (extended) {
+        CTxDestination dest;
+        if (ExtractDestination(scriptPayout, dest)) {
+            obj.pushKV("payoutAddress", EncodeDestination(dest));
+        }
+        if (ExtractDestination(scriptOperatorPayout, dest)) {
+            obj.pushKV("operatorPayoutAddress", EncodeDestination(dest));
+        }
+    }
+    return obj;
+}
+
+[[nodiscard]] UniValue CSimplifiedMNListDiff::ToJson(bool extended) const
+{
+    UniValue obj(UniValue::VOBJ);
+
+    obj.pushKV("nVersion", nVersion);
+    obj.pushKV("baseBlockHash", baseBlockHash.ToString());
+    obj.pushKV("blockHash", blockHash.ToString());
+
+    CDataStream ssCbTxMerkleTree(SER_NETWORK, PROTOCOL_VERSION);
+    ssCbTxMerkleTree << cbTxMerkleTree;
+    obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree));
+
+    obj.pushKV("cbTx", EncodeHexTx(*cbTx));
+
+    UniValue deletedMNsArr(UniValue::VARR);
+    for (const auto& h : deletedMNs) {
+        deletedMNsArr.push_back(h.ToString());
+    }
+    obj.pushKV("deletedMNs", deletedMNsArr);
+
+    UniValue mnListArr(UniValue::VARR);
+    for (const auto& e : mnList) {
+        mnListArr.push_back(e.ToJson(extended));
+    }
+    obj.pushKV("mnList", mnListArr);
+
+    UniValue deletedQuorumsArr(UniValue::VARR);
+    for (const auto& e : deletedQuorums) {
+        UniValue eObj(UniValue::VOBJ);
+        eObj.pushKV("llmqType", e.first);
+        eObj.pushKV("quorumHash", e.second.ToString());
+        deletedQuorumsArr.push_back(eObj);
+    }
+    obj.pushKV("deletedQuorums", deletedQuorumsArr);
+
+    UniValue newQuorumsArr(UniValue::VARR);
+    for (const auto& e : newQuorums) {
+        newQuorumsArr.push_back(e.ToJson());
+    }
+    obj.pushKV("newQuorums", newQuorumsArr);
+
+    // Do not assert special tx type here since this can be called prior to DIP0003 activation
+    if (const auto opt_cbTxPayload = GetTxPayload<CCbTx>(*cbTx, /*assert_type=*/false)) {
+        obj.pushKV("merkleRootMNList", opt_cbTxPayload->merkleRootMNList.ToString());
+        if (opt_cbTxPayload->nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
+            obj.pushKV("merkleRootQuorums", opt_cbTxPayload->merkleRootQuorums.ToString());
+        }
+    }
+
+    UniValue quorumsCLSigsArr(UniValue::VARR);
+    for (const auto& [signature, quorumsIndexes] : quorumsCLSigs) {
+        UniValue j(UniValue::VOBJ);
+        UniValue idxArr(UniValue::VARR);
+        for (const auto& idx : quorumsIndexes) {
+            idxArr.push_back(idx);
+        }
+        j.pushKV(signature.ToString(), idxArr);
+        quorumsCLSigsArr.push_back(j);
+    }
+    obj.pushKV("quorumsCLSigs", quorumsCLSigsArr);
+    return obj;
 }

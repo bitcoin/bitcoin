@@ -7,6 +7,7 @@
 #include <evo/dmnstate.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
+#include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 #include <index/txindex.h>
 
@@ -34,6 +35,14 @@ uint64_t CDeterministicMN::GetInternalId() const
     // can't get it if it wasn't set yet
     assert(internalId != std::numeric_limits<uint64_t>::max());
     return internalId;
+}
+
+CSimplifiedMNListEntry CDeterministicMN::to_sml_entry() const
+{
+    const CDeterministicMNState& state{*pdmnState};
+    return CSimplifiedMNListEntry(proTxHash, state.confirmedHash, state.netInfo, state.pubKeyOperator,
+                                  state.keyIDVoting, !state.IsBanned(), state.platformHTTPPort, state.platformNodeID,
+                                  state.scriptPayout, state.scriptOperatorPayout, state.nVersion, nType);
 }
 
 std::string CDeterministicMN::ToString() const
@@ -258,6 +267,22 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
     return result;
 }
 
+gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> CDeterministicMNList::to_sml() const
+{
+    LOCK(m_cached_sml_mutex);
+    if (!m_cached_sml) {
+        std::vector<std::unique_ptr<CSimplifiedMNListEntry>> sml_entries;
+        sml_entries.reserve(mnMap.size());
+
+        ForEachMN(false, [&sml_entries](auto& dmn) {
+            sml_entries.emplace_back(std::make_unique<CSimplifiedMNListEntry>(dmn.to_sml_entry()));
+        });
+        m_cached_sml = std::make_shared<CSimplifiedMNList>(std::move(sml_entries));
+    }
+
+    return m_cached_sml;
+}
+
 int CDeterministicMNList::CalcMaxPoSePenalty() const
 {
     // Maximum PoSe penalty is dynamic and equals the number of registered MNs
@@ -443,6 +468,7 @@ void CDeterministicMNList::AddMN(const CDeterministicMNCPtr& dmn, bool fBumpTota
 
     mnMap = mnMap.set(dmn->proTxHash, dmn);
     mnInternalIdMap = mnInternalIdMap.set(dmn->GetInternalId(), dmn->proTxHash);
+    InvalidateSMLCache();
     if (fBumpTotalCount) {
         // nTotalRegisteredCount acts more like a checkpoint, not as a limit,
         nTotalRegisteredCount = std::max(dmn->GetInternalId() + 1, (uint64_t)nTotalRegisteredCount);
@@ -514,6 +540,10 @@ void CDeterministicMNList::UpdateMN(const CDeterministicMN& oldDmn, const std::s
 
     dmn->pdmnState = pdmnState;
     mnMap = mnMap.set(oldDmn.proTxHash, dmn);
+    LOCK(m_cached_sml_mutex);
+    if (m_cached_sml && oldDmn.to_sml_entry() != dmn->to_sml_entry()) {
+        m_cached_sml = nullptr;
+    }
 }
 
 void CDeterministicMNList::UpdateMN(const uint256& proTxHash, const std::shared_ptr<const CDeterministicMNState>& pdmnState)
@@ -585,6 +615,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
 
     mnMap = mnMap.erase(proTxHash);
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
+    InvalidateSMLCache();
 }
 
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex,
@@ -604,6 +635,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
     int nHeight = pindex->nHeight;
 
     try {
+        newList.to_sml(); // to populate the SML cache
+
         LOCK(cs);
 
         oldList = GetListForBlockInternal(pindex->pprev);
@@ -619,6 +652,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
 
         diff.nHeight = pindex->nHeight;
         mnListDiffsCache.emplace(pindex->GetBlockHash(), diff);
+        mnListsCache.emplace(newList.GetBlockHash(), newList);
     } catch (const std::exception& e) {
         LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-dmn-block");
@@ -751,8 +785,8 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
 
     if (tipIndex) {
         // always keep a snapshot for the tip
-        if (snapshot.GetBlockHash() == tipIndex->GetBlockHash()) {
-            mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
+        if (const auto snapshot_hash = snapshot.GetBlockHash(); snapshot_hash == tipIndex->GetBlockHash()) {
+            mnListsCache.emplace(snapshot_hash, snapshot);
         } else {
             // keep snapshots for yet alive quorums
             if (ranges::any_of(Params().GetConsensus().llmqs,
@@ -762,7 +796,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
                                           (snapshot.GetHeight() + params.dkgInterval * (params.keepOldConnections + 1) >=
                                            tipIndex->nHeight);
                                })) {
-                mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
+                mnListsCache.emplace(snapshot_hash, snapshot);
             }
         }
     }

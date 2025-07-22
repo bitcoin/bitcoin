@@ -195,6 +195,7 @@ BITCOIN_CORE_H = \
   evo/netinfo.h \
   evo/providertx.h \
   evo/simplifiedmns.h \
+  evo/smldiff.h \
   evo/specialtx.h \
   evo/specialtxman.h \
   dsnotificationinterface.h \
@@ -472,6 +473,7 @@ libbitcoin_node_a_SOURCES = \
   evo/mnhftx.cpp \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
+  evo/smldiff.cpp \
   evo/specialtx.cpp \
   evo/specialtxman.cpp \
   flatfile.cpp \

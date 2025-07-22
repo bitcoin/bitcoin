@@ -30,6 +30,8 @@ class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
 class CEvoDB;
+class CSimplifiedMNList;
+class CSimplifiedMNListEntry;
 class TxValidationState;
 
 extern RecursiveMutex cs_main;
@@ -79,6 +81,7 @@ public:
 
     [[nodiscard]] uint64_t GetInternalId() const;
 
+    [[nodiscard]] CSimplifiedMNListEntry to_sml_entry() const;
     [[nodiscard]] std::string ToString() const;
     [[nodiscard]] UniValue ToJson() const;
 };
@@ -145,6 +148,22 @@ private:
     // we keep track of this as checking for duplicates would otherwise be painfully slow
     MnUniquePropertyMap mnUniquePropertyMap;
 
+    // This SML could be null
+    // This cache is used to improve performance and meant to be reused
+    // for multiple CDeterministicMNList until mnMap is actually changed.
+    // Calls of AddMN, RemoveMN and (in some cases) UpdateMN reset this cache;
+    // it happens also for indirect calls such as ApplyDiff
+    // Thread safety: Protected by its own mutex for thread-safe access
+    mutable Mutex m_cached_sml_mutex;
+    mutable std::shared_ptr<const CSimplifiedMNList> m_cached_sml GUARDED_BY(m_cached_sml_mutex);
+
+    // Private helper method to invalidate SML cache
+    void InvalidateSMLCache()
+    {
+        LOCK(m_cached_sml_mutex);
+        m_cached_sml = nullptr;
+    }
+
 public:
     CDeterministicMNList() = default;
     explicit CDeterministicMNList(const uint256& _blockHash, int _height, uint32_t _totalRegisteredCount) :
@@ -153,6 +172,36 @@ public:
         nTotalRegisteredCount(_totalRegisteredCount)
     {
         assert(nHeight >= 0);
+    }
+
+    // Copy constructor
+    CDeterministicMNList(const CDeterministicMNList& other) :
+        blockHash(other.blockHash),
+        nHeight(other.nHeight),
+        nTotalRegisteredCount(other.nTotalRegisteredCount),
+        mnMap(other.mnMap),
+        mnInternalIdMap(other.mnInternalIdMap),
+        mnUniquePropertyMap(other.mnUniquePropertyMap)
+    {
+        LOCK(other.m_cached_sml_mutex);
+        m_cached_sml = other.m_cached_sml;
+    }
+
+    // Assignment operator
+    CDeterministicMNList& operator=(const CDeterministicMNList& other)
+    {
+        if (this != &other) {
+            blockHash = other.blockHash;
+            nHeight = other.nHeight;
+            nTotalRegisteredCount = other.nTotalRegisteredCount;
+            mnMap = other.mnMap;
+            mnInternalIdMap = other.mnInternalIdMap;
+            mnUniquePropertyMap = other.mnUniquePropertyMap;
+
+            LOCK2(m_cached_sml_mutex, other.m_cached_sml_mutex);
+            m_cached_sml = other.m_cached_sml;
+        }
+        return *this;
     }
 
     template <typename Stream, typename Operation>
@@ -195,6 +244,7 @@ public:
         mnMap = MnMap();
         mnUniquePropertyMap = MnUniquePropertyMap();
         mnInternalIdMap = MnInternalIdMap();
+        InvalidateSMLCache();
     }
 
     [[nodiscard]] size_t GetAllMNsCount() const
@@ -313,6 +363,12 @@ public:
      * @param nCount the number of payees to return. "nCount = max()"" means "all", use it to avoid calling GetValidWeightedMNsCount twice.
      */
     [[nodiscard]] std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindexPrev, int nCount = std::numeric_limits<int>::max()) const;
+
+    /**
+     * Calculates CSimplifiedMNList for current list and cache it
+     * Thread safety: Uses internal mutex for thread-safe cache access
+     */
+    gsl::not_null<std::shared_ptr<const CSimplifiedMNList>> to_sml() const;
 
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change

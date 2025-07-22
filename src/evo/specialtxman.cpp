@@ -609,7 +609,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
 
         if (opt_cbTx.has_value()) {
             uint256 calculatedMerkleRoot;
-            if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, CSimplifiedMNList{std::move(mn_list)}, state)) {
+            if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, mn_list.to_sml(), state)) {
                 // pass the state returned by the function above
                 return false;
             }

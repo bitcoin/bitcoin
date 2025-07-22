@@ -8,6 +8,12 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <evo/deterministicmns.h>
+#include <evo/providertx.h>
+#include <evo/simplifiedmns.h>
+#include <evo/specialtx.h>
+#include <instantsend/instantsend.h>
+#include <llmq/context.h>
 #include <messagesigner.h>
 #include <netbase.h>
 #include <node/transaction.h>
@@ -20,13 +26,9 @@
 #include <txmempool.h>
 #include <validation.h>
 
-#include <evo/deterministicmns.h>
-#include <evo/providertx.h>
-#include <evo/specialtx.h>
-#include <instantsend/instantsend.h>
-#include <llmq/context.h>
-
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 using node::GetTransaction;
 
@@ -836,6 +838,98 @@ void FuncVerifyDB(TestChainSetup& setup)
                                        chainman.ActiveChainstate().CoinsTip(), *(setup.m_node.evodb), 4, 2));
 }
 
+static CDeterministicMNCPtr create_mock_mn(uint64_t internal_id)
+{
+    // Create a mock MN
+    CKey ownerKey;
+    ownerKey.MakeNewKey(true);
+    CBLSSecretKey operatorKey;
+    operatorKey.MakeNewKey();
+
+    auto dmnState = std::make_shared<CDeterministicMNState>();
+    dmnState->confirmedHash = GetRandHash();
+    dmnState->keyIDOwner = ownerKey.GetPubKey().GetID();
+    dmnState->pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
+    dmnState->keyIDVoting = ownerKey.GetPubKey().GetID();
+    dmnState->netInfo = NetInfoInterface::MakeNetInfo(
+        ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false));
+    BOOST_CHECK_EQUAL(dmnState->netInfo->AddEntry("1.1.1.1:1"), NetInfoStatus::Success);
+
+    auto dmn = std::make_shared<CDeterministicMN>(internal_id, MnType::Regular);
+    dmn->proTxHash = GetRandHash();
+    dmn->collateralOutpoint = COutPoint(GetRandHash(), 0);
+    dmn->nOperatorReward = 0;
+    dmn->pdmnState = dmnState;
+
+    return dmn;
+}
+
+static void SmlCache(TestChainSetup& setup)
+{
+    BOOST_CHECK(setup.m_node.dmnman != nullptr);
+
+    // Create empty list and verify SML cache
+    CDeterministicMNList emptyList(uint256(), 0, 0);
+    auto sml_empty = emptyList.to_sml();
+
+    // Should return the same cached object
+    BOOST_CHECK(sml_empty == emptyList.to_sml());
+
+    // Should contain empty list
+    BOOST_CHECK_EQUAL(sml_empty->mnList.size(), 0);
+
+    // Copy list should return the same cached object
+    CDeterministicMNList mn_list_1(emptyList);
+    BOOST_CHECK(sml_empty == mn_list_1.to_sml());
+
+    // Assigning list should return the same cached object
+    CDeterministicMNList mn_list_2 = emptyList;
+    BOOST_CHECK(sml_empty == mn_list_2.to_sml());
+
+    auto dmn = create_mock_mn(1);
+
+    // Add MN - should invalidate cache
+    mn_list_1.AddMN(dmn, true);
+    auto sml_add = mn_list_1.to_sml();
+
+    // Cache should be invalidated, so different pointer but equal content after regeneration
+    BOOST_CHECK(sml_empty != sml_add); // Different pointer (cache invalidated)
+
+    BOOST_CHECK_EQUAL(sml_add->mnList.size(), 1); // Should contain the added MN
+
+    {
+        // Remove MN - should invalidate cache
+        CDeterministicMNList mn_list(mn_list_1);
+        BOOST_CHECK(mn_list_1.to_sml() == mn_list.to_sml());
+
+        mn_list.RemoveMN(dmn->proTxHash);
+        auto sml_remove = mn_list.to_sml();
+
+        // Cache should be invalidated
+        BOOST_CHECK(sml_remove != sml_add);
+        BOOST_CHECK(sml_remove != sml_empty);
+        BOOST_CHECK_EQUAL(sml_remove->mnList.size(), 0); // Should be empty after removal
+    }
+
+    // Start with a list containing one MN mn_list_1
+    // Test 1: Update with same SML entry data - cache should NOT be invalidated
+    auto unchangedState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
+    unchangedState->nPoSePenalty += 10;
+    mn_list_1.UpdateMN(*dmn, unchangedState);
+
+    // Cache should NOT be invalidated since SML entry didn't change
+    BOOST_CHECK(sml_add == mn_list_1.to_sml()); // Same pointer (cache preserved)
+
+    // Test 2: Update with different SML entry data - cache SHOULD be invalidated
+    auto changedState = std::make_shared<CDeterministicMNState>(*unchangedState);
+    changedState->pubKeyOperator.Set(CBLSPublicKey{}, bls::bls_legacy_scheme.load());
+    mn_list_1.UpdateMN(*dmn, changedState);
+
+    // Cache should be invalidated since SML entry changed
+    BOOST_CHECK(sml_add != mn_list_1.to_sml());
+    BOOST_CHECK_EQUAL(mn_list_1.to_sml()->mnList.size(), 1); // Still one MN but with updated data
+}
+
 BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 
 struct TestChainDIP3BeforeActivationSetup : public TestChainSetup {
@@ -936,6 +1030,18 @@ BOOST_AUTO_TEST_CASE(verify_db_legacy)
 {
     TestChainDIP3Setup setup;
     FuncVerifyDB(setup);
+}
+
+BOOST_AUTO_TEST_CASE(test_sml_cache_legacy)
+{
+    TestChainDIP3Setup setup;
+    SmlCache(setup);
+}
+
+BOOST_AUTO_TEST_CASE(test_sml_cache_basic)
+{
+    TestChainV19Setup setup;
+    SmlCache(setup);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

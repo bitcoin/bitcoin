@@ -5,7 +5,7 @@
 #ifndef BITCOIN_LLMQ_SNAPSHOT_H
 #define BITCOIN_LLMQ_SNAPSHOT_H
 
-#include <evo/simplifiedmns.h>
+#include <evo/smldiff.h>
 #include <llmq/commitment.h>
 #include <llmq/params.h>
 #include <saltedhasher.h>
