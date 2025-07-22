@@ -88,7 +88,8 @@ bool BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFi
     for (const CBlockIndex* bi : blockinfo) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, bi->GetBlockHash()), CDiskBlockIndex{bi});
     }
-    return WriteBatch(batch, true);
+    WriteBatch(batch, true);
+    return true;
 }
 
 bool BlockTreeDB::WriteFlag(const std::string& name, bool fValue)

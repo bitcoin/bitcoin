@@ -263,7 +263,7 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
         return false;
     }
 
-    if (!m_db->WriteBatch(batch)) return false;
+    m_db->WriteBatch(batch);
 
     if (!ReverseBlock(block)) {
         return false; // failure cause logged internally

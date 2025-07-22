@@ -338,7 +338,7 @@ bool BlockFilterIndex::CustomRemove(const interfaces::BlockInfo& block)
     // But since this creates new references to the filter, the position should get updated here
     // atomically as well in case Commit fails.
     batch.Write(DB_FILTER_POS, m_next_filter_pos);
-    if (!m_db->WriteBatch(batch)) return false;
+    m_db->WriteBatch(batch);
 
     // Update cached header to the previous block hash
     m_last_header = *Assert(ReadFilterHeader(block.height - 1, *Assert(block.prev_hash)));
