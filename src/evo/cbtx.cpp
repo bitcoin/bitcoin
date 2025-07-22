@@ -43,23 +43,6 @@ bool CheckCbTx(const CCbTx& cbTx, const CBlockIndex* pindexPrev, TxValidationSta
     return true;
 }
 
-bool CheckCbTxMerkleRoots(const CBlock& block, const CCbTx& cbTx, const CBlockIndex* pindex,
-                          const llmq::CQuorumBlockProcessor& quorum_block_processor, BlockValidationState& state)
-{
-    if (pindex && cbTx.nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
-        uint256 calculatedMerkleRoot;
-        if (!CalcCbTxMerkleRootQuorums(block, pindex->pprev, quorum_block_processor, calculatedMerkleRoot, state)) {
-            // pass the state returned by the function above
-            return false;
-        }
-        if (calculatedMerkleRoot != cbTx.merkleRootQuorums) {
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-quorummerkleroot");
-        }
-    }
-
-    return true;
-}
-
 using QcHashMap = std::map<Consensus::LLMQType, std::vector<uint256>>;
 using QcIndexedHashMap = std::map<Consensus::LLMQType, std::map<int16_t, uint256>>;
 
