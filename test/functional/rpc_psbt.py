@@ -822,6 +822,7 @@ class PSBTTest(BitcoinTestFramework):
 
         self.test_utxo_conversion()
         self.test_psbt_incomplete_after_invalid_modification()
+        self.test_psbt_incomplete_needs_additional_signature()
 
         self.test_input_confs_control()
 
@@ -1211,6 +1212,55 @@ class PSBTTest(BitcoinTestFramework):
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
+
+    def test_psbt_incomplete_needs_additional_signature(self):
+        self.log.info("Test that PSBT is incomplete when it needs additional signatures")
+        
+        funding_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)  # Has coins
+        signer_wallet = self.nodes[1].get_wallet_rpc(self.default_wallet_name)   # Has keys for signing
+        
+        # Create a watch-only wallet for multisig (following existing pattern)
+        self.nodes[2].createwallet(wallet_name='wmulti_incomplete_test', disable_private_keys=True)
+        watch_wallet = self.nodes[2].get_wallet_rpc('wmulti_incomplete_test')
+        
+        # Get public keys from different wallets
+        pubkey1 = funding_wallet.getaddressinfo(funding_wallet.getnewaddress())['pubkey']
+        pubkey2 = signer_wallet.getaddressinfo(signer_wallet.getnewaddress())['pubkey']  
+        # Use the default wallet on node 2 for the third pubkey
+        node2_default_wallet = self.nodes[2].get_wallet_rpc(self.default_wallet_name)
+        pubkey3 = node2_default_wallet.getaddressinfo(node2_default_wallet.getnewaddress())['pubkey']
+        
+        # Create 2-of-3 multisig using the watch-only wallet
+        multisig_info = watch_wallet.createmultisig(2, [pubkey1, pubkey2, pubkey3])
+        multisig_addr = multisig_info["address"]
+        
+        # Import the multisig descriptor into the watch-only wallet
+        import_res = watch_wallet.importdescriptors([{
+            "desc": multisig_info["descriptor"], 
+            "timestamp": "now"
+        }])
+        assert_equal(import_res[0]["success"], True)
+        
+        # Fund the multisig address using the funding wallet
+        txid = funding_wallet.sendtoaddress(multisig_addr, 1.0)
+        self.generate(self.nodes[0], 1)
+        
+        # Find the multisig UTXO
+        utxos = watch_wallet.listunspent(addresses=[multisig_addr])
+        assert_greater_than(len(utxos), 0)
+        utxo = utxos[0]
+        
+        # Create a PSBT that spends from the multisig UTXO
+        dest_addr = funding_wallet.getnewaddress()
+        psbt = watch_wallet.createpsbt(
+            [{"txid": utxo["txid"], "vout": utxo["vout"]}], 
+            [{dest_addr: 0.99}]  # Leave some for fees
+        )
+        
+        # Sign with only one wallet (funding_wallet has pubkey1)
+        # This should provide only 1 signature for a 2-of-3 multisig
+        partially_signed = funding_wallet.walletprocesspsbt(psbt, finalize=False)
+        assert_equal(partially_signed["complete"], False)
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()
