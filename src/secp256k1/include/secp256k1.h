@@ -121,45 +121,57 @@ typedef int (*secp256k1_nonce_function)(
 #endif
 
 /* Symbol visibility. */
-#if defined(_WIN32)
-  /* GCC for Windows (e.g., MinGW) accepts the __declspec syntax
-   * for MSVC compatibility. A __declspec declaration implies (but is not
-   * exactly equivalent to) __attribute__ ((visibility("default"))), and so we
-   * actually want __declspec even on GCC, see "Microsoft Windows Function
-   * Attributes" in the GCC manual and the recommendations in
-   * https://gcc.gnu.org/wiki/Visibility. */
-# if defined(SECP256K1_BUILD)
-#  if defined(DLL_EXPORT) || defined(SECP256K1_DLL_EXPORT)
-    /* Building libsecp256k1 as a DLL.
-     * 1. If using Libtool, it defines DLL_EXPORT automatically.
-     * 2. In other cases, SECP256K1_DLL_EXPORT must be defined. */
-#   define SECP256K1_API extern __declspec (dllexport)
-#  else
-    /* Building libsecp256k1 as a static library on Windows.
-     * No declspec is needed, and so we would want the non-Windows-specific
-     * logic below take care of this case. However, this may result in setting
-     * __attribute__ ((visibility("default"))), which is supposed to be a noop
-     * on Windows but may trigger warnings when compiling with -flto due to a
-     * bug in GCC, see
-     * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116478 . */
-#   define SECP256K1_API extern
-#  endif
-  /* The user must define SECP256K1_STATIC when consuming libsecp256k1 as a static
-   * library on Windows. */
-# elif !defined(SECP256K1_STATIC)
-   /* Consuming libsecp256k1 as a DLL. */
-#  define SECP256K1_API extern __declspec (dllimport)
-# endif
+#if !defined(SECP256K1_API) && defined(SECP256K1_NO_API_VISIBILITY_ATTRIBUTES)
+     /* The user has requested that we don't specify visibility attributes in
+      * the public API.
+      *
+      * Since all our non-API declarations use the static qualifier, this means
+      * that the user can use -fvisibility=<value> to set the visibility of the
+      * API symbols. For instance, -fvisibility=hidden can be useful *even for
+      * the API symbols*, e.g., when building a static library which is linked
+      * into a shared library, and the latter should not re-export the
+      * libsecp256k1 API.
+      *
+      * While visibility is a concept that applies only to shared libraries,
+      * setting visibility will still make a difference when building a static
+      * library: the visibility settings will be stored in the static library,
+      * solely for the potential case that the static library will be linked into
+      * a shared library. In that case, the stored visibility settings will
+      * resurface and be honored for the shared library. */
+#    define SECP256K1_API extern
 #endif
-#ifndef SECP256K1_API
-/* All cases not captured by the Windows-specific logic. */
-# if defined(__GNUC__) && (__GNUC__ >= 4) && defined(SECP256K1_BUILD)
-   /* Building libsecp256k1 using GCC or compatible. */
-#  define SECP256K1_API extern __attribute__ ((visibility ("default")))
-# else
-   /* Fall back to standard C's extern. */
-#  define SECP256K1_API extern
-# endif
+#if !defined(SECP256K1_API)
+#    if defined(SECP256K1_BUILD)
+         /* On Windows, assume a shared library only if explicitly requested.
+          *   1. If using Libtool, it defines DLL_EXPORT automatically.
+          *   2. In other cases, SECP256K1_DLL_EXPORT must be defined. */
+#        if defined(_WIN32) && (defined(SECP256K1_DLL_EXPORT) || defined(DLL_EXPORT))
+             /* GCC for Windows (e.g., MinGW) accepts the __declspec syntax for
+              * MSVC compatibility. A __declspec declaration implies (but is not
+              * exactly equivalent to) __attribute__ ((visibility("default"))),
+              * and so we actually want __declspec even on GCC, see "Microsoft
+              * Windows Function Attributes" in the GCC manual and the
+              * recommendations in https://gcc.gnu.org/wiki/Visibility . */
+#            define SECP256K1_API extern __declspec(dllexport)
+         /* Avoid __attribute__ ((visibility("default"))) on Windows to get rid
+          * of warnings when compiling with -flto due to a bug in GCC, see
+          * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116478 . */
+#        elif !defined(_WIN32) && defined (__GNUC__) && (__GNUC__ >= 4)
+#            define SECP256K1_API extern __attribute__ ((visibility("default")))
+#        else
+#            define SECP256K1_API extern
+#        endif
+#    else
+         /* On Windows, SECP256K1_STATIC must be defined when consuming
+          * libsecp256k1 as a static library. Note that SECP256K1_STATIC is a
+          * "consumer-only" macro, and it has no meaning when building
+          * libsecp256k1. */
+#        if defined(_WIN32) && !defined(SECP256K1_STATIC)
+#            define SECP256K1_API extern __declspec(dllimport)
+#        else
+#            define SECP256K1_API extern
+#        endif
+#    endif
 #endif
 
 /* Warning attributes
