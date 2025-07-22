@@ -587,9 +587,8 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         LogPrint(BCLog::BENCHMARK, "      - m_qblockman: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4),
                  nTimeQuorum * 0.000001);
 
-
-        if (opt_cbTx.has_value() && pindex->pprev) {
-            CDeterministicMNList mn_list;
+        CDeterministicMNList mn_list;
+        if (DeploymentActiveAt(*pindex, m_consensus_params, Consensus::DEPLOYMENT_DIP0003)) {
             if (!BuildNewListFromBlock(block, pindex->pprev, view, true, state, mn_list)) {
                 // pass the state returned by the function above
                 return false;
@@ -600,6 +599,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
                 // pass the state returned by the function above
                 return false;
             }
+        }
 
             int64_t nTime5_1 = GetTimeMicros();
             nTimeDMN += nTime5_1 - nTime5;
@@ -607,6 +607,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             LogPrint(BCLog::BENCHMARK, "      - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime5_1 - nTime5),
                      nTimeDMN * 0.000001);
 
+        if (opt_cbTx.has_value()) {
             uint256 calculatedMerkleRoot;
             if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, CSimplifiedMNList{std::move(mn_list)}, state)) {
                 // pass the state returned by the function above
