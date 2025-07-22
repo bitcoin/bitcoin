@@ -5,18 +5,18 @@
 #ifndef BITCOIN_TEST_UTIL_LLMQ_TESTS_H
 #define BITCOIN_TEST_UTIL_LLMQ_TESTS_H
 
-#include <llmq/params.h>
-#include <llmq/commitment.h>
-#include <llmq/clsig.h>
+#include <arith_uint256.h>
 #include <bls/bls.h>
 #include <consensus/params.h>
+#include <llmq/clsig.h>
+#include <llmq/commitment.h>
+#include <llmq/params.h>
 #include <primitives/transaction.h>
-#include <uint256.h>
-#include <arith_uint256.h>
 #include <random.h>
-#include <streams.h>
 #include <serialize.h>
+#include <streams.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 
 #include <vector>
 
@@ -83,7 +83,7 @@ inline std::vector<bool> CreateBitVector(size_t size, const std::vector<size_t>&
 }
 
 // Serialization round-trip test helper
-template<typename T>
+template <typename T>
 inline bool TestSerializationRoundtrip(const T& obj)
 {
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -100,15 +100,9 @@ inline bool TestSerializationRoundtrip(const T& obj)
 }
 
 // Helper to create deterministic test data
-inline uint256 GetTestQuorumHash(uint32_t n)
-{
-    return ArithToUint256(arith_uint256(n));
-}
+inline uint256 GetTestQuorumHash(uint32_t n) { return ArithToUint256(arith_uint256(n)); }
 
-inline uint256 GetTestBlockHash(uint32_t n)
-{
-    return ArithToUint256(arith_uint256(n) << 32);
-}
+inline uint256 GetTestBlockHash(uint32_t n) { return ArithToUint256(arith_uint256(n) << 32); }
 
 } // namespace testutils
 } // namespace llmq
