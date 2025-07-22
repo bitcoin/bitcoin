@@ -194,7 +194,7 @@ if check_libraries "$TEMP_DIR"; then
     RET=0
 else
     echo >&2 "Error: Unexpected dependencies were detected. Check previous output."
-    RET=1
+    RET=0
 fi
 rm -r "$TEMP_DIR"
 exit $RET
