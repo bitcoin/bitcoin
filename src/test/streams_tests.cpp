@@ -58,19 +58,24 @@ BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
 
 BOOST_AUTO_TEST_CASE(obfuscation_serialize)
 {
-    const Obfuscation original{m_rng.randbytes<Obfuscation::KEY_SIZE>()};
+    Obfuscation obfuscation{};
+    BOOST_CHECK(!obfuscation);
 
-    // Serialization
-    DataStream ds;
-    ds << original;
+    // Test loading a key.
+    std::vector key_in{m_rng.randbytes<std::byte>(Obfuscation::KEY_SIZE)};
+    DataStream ds_in;
+    ds_in << key_in;
+    BOOST_CHECK_EQUAL(ds_in.size(), 1 + Obfuscation::KEY_SIZE); // serialized as a vector
+    ds_in >> obfuscation;
 
-    BOOST_CHECK_EQUAL(ds.size(), 1 + Obfuscation::KEY_SIZE); // serialized as a vector
+    // Test saving the key.
+    std::vector<std::byte> key_out;
+    DataStream ds_out;
+    ds_out << obfuscation;
+    ds_out >> key_out;
 
-    // Deserialization
-    Obfuscation recovered{};
-    ds >> recovered;
-
-    BOOST_CHECK_EQUAL(recovered.HexKey(), original.HexKey());
+    // Make sure saved key is the same.
+    BOOST_CHECK_EQUAL_COLLECTIONS(key_in.begin(), key_in.end(), key_out.begin(), key_out.end());
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_empty)
