@@ -9,7 +9,6 @@
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <deploymentstatus.h>
-#include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
 #include <llmq/blockprocessor.h>
@@ -22,6 +21,9 @@
 #include <validation.h>
 
 using node::ReadBlockFromDisk;
+
+// Forward declaration
+std::optional<std::pair<CBLSSignature, uint32_t>> GetNonNullCoinbaseChainlock(const CBlockIndex* pindex);
 
 CSimplifiedMNListDiff::CSimplifiedMNListDiff() = default;
 
