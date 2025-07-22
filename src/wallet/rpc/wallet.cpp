@@ -948,6 +948,7 @@ RPCHelpMan importdescriptors();
 RPCHelpMan listdescriptors();
 RPCHelpMan backupwallet();
 RPCHelpMan restorewallet();
+RPCHelpMan exposesecret();
 
 // coins
 RPCHelpMan getreceivedbyaddress();
@@ -1002,6 +1003,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &createwallet},
         {"wallet", &createwalletdescriptor},
         {"wallet", &restorewallet},
+        {"wallet", &exposesecret},
         {"wallet", &encryptwallet},
         {"wallet", &getaddressesbylabel},
         {"wallet", &getaddressinfo},

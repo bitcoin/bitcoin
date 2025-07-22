@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bech32.h>
 #include <chain.h>
 #include <clientversion.h>
 #include <core_io.h>
@@ -19,6 +20,7 @@
 #include <util/fs.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <wallet/codex32.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
@@ -651,6 +653,149 @@ RPCHelpMan restorewallet()
 
     return obj;
 
+},
+    };
+}
+
+// Helper function to generate identifier from wallet name
+static std::string GenerateIdentifierFromWalletName(const std::string& wallet_name)
+{
+    char idstr[] = "xxxx";
+    size_t off = 0;
+
+    for (size_t i = 0; i < wallet_name.length() && off < 4; i++) {
+        unsigned char c = wallet_name[i];
+        if (c == 0) break;
+        if (c >= sizeof(bech32::CHARSET_REV)) continue;
+
+        // Convert to lower case
+        c = std::tolower(c);
+
+        // Must be a valid bech32 char now
+        if (bech32::CHARSET_REV[c] == -1) continue;
+
+        idstr[off++] = c;
+    }
+
+    return std::string(idstr, 4);
+}
+
+// Helper function to encode a seed key to codex32 format
+static std::string EncodeSeedToCodex32(const CKey& seed_key, const std::string& hrp,
+                                       const std::string& identifier)
+{
+    // Convert CKey to vector<uint8_t> for codex32_secret_encode
+    std::vector<uint8_t> seed_data;
+    seed_data.reserve(seed_key.size());
+    for (std::byte b : seed_key) {
+        seed_data.push_back(static_cast<uint8_t>(b));
+    }
+
+    std::string error_str;
+    std::string codex32_encoded = codex32_secret_encode(hrp, identifier, 0, seed_data, error_str);
+
+    // Clear sensitive data
+    memory_cleanse(seed_data.data(), seed_data.size());
+
+    if (!error_str.empty()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Failed to encode seed: %s", error_str));
+    }
+
+    return codex32_encoded;
+}
+
+RPCHelpMan exposesecret()
+{
+    return RPCHelpMan{
+        "exposesecret",
+        "Return the BIP32 wallet seed in codex32 format for descriptor wallets.\n"
+        "Wallet must be an unlocked descriptor wallet. For encrypted wallets, the wallet must be unlocked.\n",
+        {
+            {"identifier", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A 4-character identifier for the secret (must be valid bech32 characters). If not specified, derived from wallet name."},
+            {"hrp", RPCArg::Type::STR, RPCArg::Default{"bc"}, "A 2-character human-readable prefix (default: 'bc')"},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "seeds", "Array of wallet seeds in codex32 format.",
+            {
+                {RPCResult::Type::STR, "codex32", "(string) The seed encoded in codex32 format. If the wallet has multiple seeds, an array of codex32 strings is returned."}
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("exposesecret", "") +
+            HelpExampleCli("exposesecret", "\"test\"") +
+            HelpExampleCli("exposesecret", "\"test\" \"ms\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet not found");
+    }
+    CWallet* wallet = pwallet.get();
+    LOCK(wallet->cs_wallet);
+
+    if (!wallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "exposesecret is only available for descriptor wallets");
+    }
+    if (!wallet->IsWalletFlagSet(WALLET_FLAG_SEEDS_STORED)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This wallet does not have seeds stored.");
+    }
+    if (wallet->IsCrypted() && wallet->IsLocked()) {
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet is encrypted and locked. Unlock the wallet to retrieve the seed.");
+    }
+
+    // Get parameters
+    std::string identifier;
+    std::string hrp = "bc"; // default
+
+    if (!request.params[0].isNull()) {
+        identifier = request.params[0].get_str();
+    } else {
+        identifier = GenerateIdentifierFromWalletName(wallet->GetName());
+    }
+
+    if (!request.params[1].isNull()) {
+        hrp = request.params[1].get_str();
+    }
+
+    // Validate parameters
+    if (identifier.length() != 4) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Identifier must be exactly 4 characters");
+    }
+    if (hrp.length() != 2) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "HRP must be exactly 2 characters");
+    }
+
+    // Gather seeds
+    UniValue result(UniValue::VARR);
+    if (wallet->IsCrypted()) {
+        // Use the in-memory encrypted seeds and decrypt them
+        bool ok = wallet->WithEncryptionKey([&](const CKeyingMaterial& enc_key) {
+            for (const auto& entry : wallet->m_crypted_seed_keys) {
+                const CPubKey& pubkey = entry.second.first;
+                const std::vector<unsigned char>& crypted_secret = entry.second.second;
+                CKey seed_key;
+                if (!DecryptKey(enc_key, crypted_secret, pubkey, seed_key)) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "Failed to decrypt wallet seed");
+                }
+
+                result.push_back(EncodeSeedToCodex32(seed_key, hrp, identifier));
+            }
+            return true;
+        });
+        (void)ok; // The lambda either returns true or throws on failure
+    } else {
+        for (const auto& entry : wallet->m_seed_keys) {
+            const CKey& seed_key = entry.second;
+            result.push_back(EncodeSeedToCodex32(seed_key, hrp, identifier));
+        }
+    }
+
+    if (result.empty()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "No seed available in this wallet");
+    }
+
+    return result;
 },
     };
 }
