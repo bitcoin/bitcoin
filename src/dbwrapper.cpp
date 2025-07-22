@@ -250,10 +250,10 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     }
 
     assert(!m_obfuscation); // Needed for unobfuscated Read()/Write() below
-    if (!Read(OBFUSCATION_KEY_KEY, m_obfuscation) && params.obfuscate && IsEmpty()) {
+    if (!Read(OBFUSCATION_KEY, m_obfuscation) && params.obfuscate && IsEmpty()) {
         // Generate, write and read back the new obfuscation key, making sure we don't obfuscate the key itself
-        Write(OBFUSCATION_KEY_KEY, FastRandomContext{}.randbytes(Obfuscation::KEY_SIZE));
-        Read(OBFUSCATION_KEY_KEY, m_obfuscation);
+        Write(OBFUSCATION_KEY, FastRandomContext{}.randbytes(Obfuscation::KEY_SIZE));
+        Read(OBFUSCATION_KEY, m_obfuscation);
         LogInfo("Wrote new obfuscation key for %s: %s", fs::PathToString(params.path), m_obfuscation.HexKey());
     }
     LogInfo("Using obfuscation key for %s: %s", fs::PathToString(params.path), m_obfuscation.HexKey());
