@@ -49,7 +49,7 @@ constexpr int SIGNABLE = 1 << 3; // We can sign with this descriptor (this is no
 constexpr int DERIVE_HARDENED = 1 << 4; // The final derivation is hardened, i.e. ends with *' or *h
 constexpr int MIXED_PUBKEYS = 1 << 5;
 constexpr int XONLY_KEYS = 1 << 6; // X-only pubkeys are in use (and thus inferring/caching may swap parity of pubkeys/keyids)
-constexpr int MISSING_PRIVKEYS = 1 << 7; // Not all private keys are available, so ToPrivateString will fail.
+constexpr int MISSING_PRIVKEYS = 1 << 7; // Not all private keys are available. ToPrivateString() will fail and HavePrivateKeys() will return `false`.
 constexpr int SIGNABLE_FAILS = 1 << 8; // We can sign with this descriptor, but actually trying to sign will fail
 constexpr int MUSIG = 1 << 9; // This is a MuSig so key counts will have an extra key
 constexpr int MUSIG_DERIVATION = 1 << 10; // MuSig with BIP 328 derivation from the aggregate key
@@ -243,6 +243,9 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
         } else {
             BOOST_CHECK_MESSAGE(EqualDescriptor(prv, prv1), "Private ser: " + prv1 + " Private desc: " + prv);
         }
+        BOOST_CHECK(!parse_priv->HavePrivateKeys(keys_pub));
+        BOOST_CHECK(parse_pub->HavePrivateKeys(keys_priv));
+
         BOOST_CHECK(!parse_priv->ToPrivateString(keys_pub, prv1));
         BOOST_CHECK(parse_pub->ToPrivateString(keys_priv, prv1));
         if (expected_prv) {
