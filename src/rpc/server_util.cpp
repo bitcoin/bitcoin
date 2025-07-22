@@ -56,6 +56,20 @@ CTxMemPool& EnsureAnyMemPool(const CoreContext& context)
     return EnsureMemPool(EnsureAnyNodeContext(context));
 }
 
+
+BanMan& EnsureBanman(const NodeContext& node)
+{
+    if (!node.banman) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
+    }
+    return *node.banman;
+}
+
+BanMan& EnsureAnyBanman(const CoreContext& context)
+{
+    return EnsureBanman(EnsureAnyNodeContext(context));
+}
+
 ArgsManager& EnsureArgsman(const NodeContext& node)
 {
     if (!node.args) {
