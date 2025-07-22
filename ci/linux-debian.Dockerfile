@@ -40,7 +40,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Build and install gcc snapshot
-ARG GCC_SNAPSHOT_MAJOR=15
+ARG GCC_SNAPSHOT_MAJOR=16
 RUN apt-get update && apt-get install --no-install-recommends -y wget libgmp-dev libmpfr-dev libmpc-dev flex && \
     mkdir gcc && cd gcc && \
     wget --progress=dot:giga --https-only --recursive --accept '*.tar.xz' --level 1 --no-directories "https://gcc.gnu.org/pub/gcc/snapshots/LATEST-${GCC_SNAPSHOT_MAJOR}" && \

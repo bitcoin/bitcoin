@@ -7,10 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-07-21
+
+#### Added
+ - CMake: Added `secp256k1_objs` interface library to allow parent projects to embed libsecp256k1 object files into their own static libraries.
+ - build: Added `SECP256K1_NO_API_VISIBILITY_ATTRIBUTES` preprocessor flag (CMake option: `SECP256K1_ENABLE_API_VISIBILITY_ATTRIBUTES`) that disables explicit "visibility" attributes for API symbols. Defining this macro enables the user to control the visibility of the API symbols via `-fvisibility=<value>` when building libsecp256k1. (All non-API declarations will always have hidden visibility, even with `SECP256K1_ENABLE_API_VISIBILITY_ATTRIBUTES` defined.) For instance, `-fvisibility=hidden` can be useful even for the API symbols, e.g., when building a static libsecp256k1 which is linked into a shared library, and the latter should not re-export the libsecp256k1 API.
+
+#### Changed
+ - The pointers `secp256k1_context_static` and `secp256k1_context_no_precomp` to the constant context objects are now `const`.
+ - Removed `SECP256K1_WARN_UNUSED_RESULT` attribute (defined as `__attribute__ ((__warn_unused_result__))`) from several API functions that always return 1. Compilers will no longer warn if the return value is unused.
+ - CMake: Building with CMake is no longer considered experimental.
+ - CMake: The minimum required CMake version was increased to 3.22.
+ - CMake: Shared libraries built with CMake on FreeBSD now create the full versioned filename and symlink chain, matching the behavior of autotools builds.
+
 #### Removed
 - Removed previously deprecated function aliases `secp256k1_ec_privkey_negate`, `secp256k1_ec_privkey_tweak_add` and
   `secp256k1_ec_privkey_tweak_mul`. Use `secp256k1_ec_seckey_negate`, `secp256k1_ec_seckey_tweak_add` and
   `secp256k1_ec_seckey_tweak_mul` instead.
+
+#### ABI Compatibility
+The symbols `secp256k1_ec_privkey_negate`, `secp256k1_ec_privkey_tweak_add`, and `secp256k1_ec_privkey_tweak_mul` were removed.
+The pointers `secp256k1_context_static` and `secp256k1_context_no_precomp` have been made `const`.
+Otherwise, the library maintains backward compatibility with version 0.6.0.
 
 ## [0.6.0] - 2024-11-04
 
@@ -115,7 +133,7 @@ We strongly recommend updating to 0.3.1 if you use or plan to use Clang >=14 to 
  - Fix "constant-timeness" issue with Clang >=14 that could leave applications using libsecp256k1 vulnerable to a timing side-channel attack. The fix avoids secret-dependent control flow and secret-dependent memory accesses in conditional moves of memory objects when libsecp256k1 is compiled with Clang >=14.
 
 #### Added
-  - Added tests against [Project Wycheproof's](https://github.com/google/wycheproof/) set of ECDSA test vectors (Bitcoin "low-S" variant), a fixed set of test cases designed to trigger various edge cases.
+  - Added tests against [Project Wycheproof's](https://github.com/C2SP/wycheproof/) set of ECDSA test vectors (Bitcoin "low-S" variant), a fixed set of test cases designed to trigger various edge cases.
 
 #### Changed
  - Increased minimum required CMake version to 3.13. CMake builds remain experimental.
@@ -169,7 +187,8 @@ This version was in fact never released.
 The number was given by the build system since the introduction of autotools in Jan 2014 (ea0fe5a5bf0c04f9cc955b2966b614f5f378c6f6).
 Therefore, this version number does not uniquely identify a set of source files.
 
-[unreleased]: https://github.com/bitcoin-core/secp256k1/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/bitcoin-core/secp256k1/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/bitcoin-core/secp256k1/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bitcoin-core/secp256k1/compare/v0.4.1...v0.5.0
