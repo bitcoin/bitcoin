@@ -78,14 +78,12 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(not_hww.getwalletinfo()["external_signer"], False)
         assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
 
-        # assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", wallet_name='not_hww', disable_private_keys=True, external_signer=True)
 
-        # TODO: Handle error thrown by script
-        # self.set_mock_result(self.nodes[1], "2")
-        # assert_raises_rpc_error(-1, 'Unable to parse JSON',
-        #     self.nodes[1].createwallet, wallet_name='not_hww2', disable_private_keys=True, external_signer=False
-        # )
-        # self.clear_mock_result(self.nodes[1])
+        self.set_mock_result(self.nodes[1], '0 {"invalid json"}')
+        assert_raises_rpc_error(-1, 'Unable to parse JSON',
+            self.nodes[1].createwallet, wallet_name='hww2', disable_private_keys=True, external_signer=True
+        )
+        self.clear_mock_result(self.nodes[1])
 
         assert_equal(hww.getwalletinfo()["keypoolsize"], 40)
 
@@ -168,31 +166,6 @@ class WalletSignerTest(BitcoinTestFramework):
         mock_tx = mock_psbt_signed["hex"]
         assert mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"]
 
-        # # Create a new wallet and populate with specific public keys, in order
-        # # to work with the mock signed PSBT.
-        # self.nodes[1].createwallet(wallet_name="hww4", disable_private_keys=True, external_signer=True)
-        # hww4 = self.nodes[1].get_wallet_rpc("hww4")
-        #
-        # descriptors = [{
-        #     "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)#x30uthjs",
-        #     "timestamp": "now",
-        #     "range": [0, 1],
-        #     "internal": False,
-        #     "watchonly": True,
-        #     "active": True
-        # },
-        # {
-        #     "desc": "wpkh([00000001/84h/1h/0']tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)#h92akzzg",
-        #     "timestamp": "now",
-        #     "range": [0, 0],
-        #     "internal": True,
-        #     "watchonly": True,
-        #     "active": True
-        # }]
-
-        # result = hww4.importdescriptors(descriptors)
-        # assert_equal(result[0], {'success': True})
-        # assert_equal(result[1], {'success': True})
         assert_equal(hww.getwalletinfo()["txcount"], 1)
 
         assert hww.testmempoolaccept([mock_tx])[0]["allowed"]
@@ -232,12 +205,6 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_greater_than(res["fee"], res["origfee"])
         assert_equal(res["errors"], [])
 
-        # # Handle error thrown by script
-        # self.set_mock_result(self.nodes[4], "2")
-        # assert_raises_rpc_error(-1, 'Unable to parse JSON',
-        #     hww4.signerprocesspsbt, psbt_orig, "00000001"
-        # )
-        # self.clear_mock_result(self.nodes[4])
 
     def test_disconnected_signer(self):
         self.log.info('Test disconnected external signer')
