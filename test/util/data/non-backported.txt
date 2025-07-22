@@ -41,6 +41,7 @@ src/test/dip0020opcodes_tests.cpp
 src/test/dynamic_activation*.cpp
 src/test/evo*.cpp
 src/test/llmq*.cpp
+src/test/util/llmq_tests.h
 src/test/governance*.cpp
 src/unordered_lru_cache.h
 src/util/edge.*

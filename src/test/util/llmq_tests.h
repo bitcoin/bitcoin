@@ -107,7 +107,7 @@ inline uint256 GetTestQuorumHash(uint32_t n)
 
 inline uint256 GetTestBlockHash(uint32_t n)
 {
-    return ArithToUint256(arith_uint256(n + 1000000));
+    return ArithToUint256(arith_uint256(n) << 32);
 }
 
 } // namespace testutils
