@@ -27,6 +27,12 @@ enum PackageRelayVersions : uint64_t {
 };
 
 static constexpr bool DEFAULT_ENABLE_PACKAGE_RELAY{false};
+/** Maximum number of transactions that can be in a sender-initalized
+ * package. Sender-initalized packages are packages that were not requested
+ * by the receiver, but sent because the sender recognized that we were
+ * missing certain transactions required to accept a previously requested
+ * transaction into the mempool. */
+static constexpr size_t MAX_SENDER_INIT_PKG_SIZE{2};
 
 /** Maximum number of in-flight transaction requests from a peer. It is not a hard limit, but the threshold at which
  *  point the OVERLOADED_PEER_TX_DELAY kicks in. */
@@ -173,6 +179,8 @@ public:
      * Return a bool indicating whether this tx should be validated. If false, optionally, a
      * PackageToValidate. */
     std::pair<bool, std::optional<PackageToValidate>> ReceivedTx(NodeId nodeid, const CTransactionRef& ptx);
+
+    std::optional<PackageToValidate> ReceivedPackage(NodeId nodeid, Package& package);
 
     /** Whether there are any orphans to reconsider for this peer. */
     bool HaveMoreWork(NodeId nodeid) const;

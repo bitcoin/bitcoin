@@ -204,6 +204,8 @@ public:
 
     std::pair<bool, std::optional<PackageToValidate>> ReceivedTx(NodeId nodeid, const CTransactionRef& ptx);
 
+    std::optional<PackageToValidate> ReceivedPackage(NodeId nodeid, Package& mutable_package);
+
     bool HaveMoreWork(NodeId nodeid);
     CTransactionRef GetTxToReconsider(NodeId nodeid);
 

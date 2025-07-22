@@ -67,6 +67,9 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManager::ReceivedTx(
 {
     return m_impl->ReceivedTx(nodeid, ptx);
 }
+std::optional<PackageToValidate> TxDownloadManager::ReceivedPackage(NodeId nodeid, Package& package) {
+    return m_impl->ReceivedPackage(nodeid, package);
+}
 bool TxDownloadManager::HaveMoreWork(NodeId nodeid) const
 {
     return m_impl->HaveMoreWork(nodeid);
@@ -579,6 +582,43 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
 
 
     return {true, std::nullopt};
+}
+
+std::optional<PackageToValidate> TxDownloadManagerImpl::ReceivedPackage(NodeId nodeid, Package& mutable_package)
+{
+    // Don't validate a package that is too large
+    if (mutable_package.size() > MAX_SENDER_INIT_PKG_SIZE) return std::nullopt;
+
+    // If we recently rejected this package, don't validate it again
+    if (RecentRejectsReconsiderableFilter().contains(GetPackageHash(mutable_package))) return std::nullopt;
+
+    // We may remove certain transaction from the package that we already
+    // know about or that were recently rejected
+    for (size_t i = 0; i < mutable_package.size(); i++) {
+
+        const CTransactionRef& tx = mutable_package.at(i);
+        const Txid& txid = tx->GetHash();
+        const Wtxid& wtxid = tx->GetWitnessHash();
+
+        m_txrequest.ReceivedResponse(nodeid, txid);
+        if (tx->HasWitness()) m_txrequest.ReceivedResponse(nodeid, wtxid);
+
+        // Always check by wtxid and not txid
+        if (AlreadyHaveTx(wtxid, /*include_reconsiderable=*/false)) {
+            mutable_package.erase(mutable_package.begin()+i);
+        } else if (RecentRejectsFilter().contains(wtxid.ToUint256())) {
+            mutable_package.erase(mutable_package.begin()+i);
+        }
+    }
+
+    // If we recently rejected this package, don't validate it again
+    if (RecentRejectsReconsiderableFilter().contains(GetPackageHash(mutable_package))) return std::nullopt;
+
+    if (mutable_package.size() > 0) {
+        return PackageToValidate(mutable_package, nodeid);
+    }
+
+    return std::nullopt;
 }
 
 bool TxDownloadManagerImpl::HaveMoreWork(NodeId nodeid)
