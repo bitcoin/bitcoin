@@ -104,7 +104,7 @@ public:
 
     void Open() override {}
 
-    bool Rewrite(const char* pszSkip=nullptr) override { return m_pass; }
+    bool Rewrite() override { return m_pass; }
     bool Backup(const std::string& strDest) const override { return m_pass; }
     void Close() override {}
 
