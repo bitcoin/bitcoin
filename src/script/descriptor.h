@@ -111,6 +111,11 @@ struct Descriptor {
     /** Whether this descriptor will return one scriptPubKey or multiple (aka is or is not combo) */
     virtual bool IsSingleType() const = 0;
 
+    /** Whether this descriptor is watch-only for the given provider.
+     *  @return true if the provider lacks some private keys needed by this descriptor.
+     */
+    virtual bool IsWatchOnly(const SigningProvider& provider) const = 0;
+
     /** Convert the descriptor to a private string. This fails if the provided provider does not have the relevant private keys. */
     virtual bool ToPrivateString(const SigningProvider& provider, std::string& out) const = 0;
 
