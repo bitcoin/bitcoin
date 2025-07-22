@@ -741,7 +741,8 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, const
                     break;
             }
             request.SetError(nError);
-            CDataStream ssResponse(SER_NETWORK, pfrom.GetCommonVersion(), request, body);
+            CDataStream ssResponse{SER_NETWORK, pfrom.GetCommonVersion()};
+            ssResponse << request << body;
             connman.PushMessage(&pfrom, CNetMsgMaker(pfrom.GetCommonVersion()).Make(NetMsgType::QDATA, ssResponse));
             return ret;
         };
