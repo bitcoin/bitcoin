@@ -644,7 +644,8 @@ RPCHelpMan importwallet()
 RPCHelpMan importelectrumwallet()
 {
     return RPCHelpMan{"importelectrumwallet",
-        "\nImports keys from an Electrum wallet export file (.csv or .json)\n",
+        "\nImports keys from an Electrum wallet export file (.csv or .json)\n"
+        "Note: This command is only compatible with legacy wallets.\n",
         {
             {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The Electrum wallet export file, should be in csv or json format"},
             {"index", RPCArg::Type::NUM, RPCArg::Default{0}, "Rescan the wallet for transactions starting from this block index"},
@@ -869,7 +870,8 @@ RPCHelpMan dumpprivkey()
 RPCHelpMan dumphdinfo()
 {
     return RPCHelpMan{"dumphdinfo",
-        "Returns an object containing sensitive private info about this HD wallet.\n",
+        "Returns an object containing sensitive private info about this HD wallet.\n"
+        "Note: This command is only compatible with legacy wallets.\n",
         {},
         RPCResult{
                 RPCResult::Type::OBJ, "", "",
