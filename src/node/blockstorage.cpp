@@ -62,7 +62,8 @@ bool BlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo& info)
 bool BlockTreeDB::WriteReindexing(bool fReindexing)
 {
     if (fReindexing) {
-        return Write(DB_REINDEX_FLAG, uint8_t{'1'});
+        Write(DB_REINDEX_FLAG, uint8_t{'1'});
+        return true;
     } else {
         return Erase(DB_REINDEX_FLAG);
     }
@@ -94,7 +95,8 @@ bool BlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFi
 
 bool BlockTreeDB::WriteFlag(const std::string& name, bool fValue)
 {
-    return Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
+    Write(std::make_pair(DB_FLAG, name), fValue ? uint8_t{'1'} : uint8_t{'0'});
+    return true;
 }
 
 bool BlockTreeDB::ReadFlag(const std::string& name, bool& fValue)

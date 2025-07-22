@@ -230,12 +230,11 @@ public:
     }
 
     template <typename K, typename V>
-    bool Write(const K& key, const V& value, bool fSync = false)
+    void Write(const K& key, const V& value, bool fSync = false)
     {
         CDBBatch batch(*this);
         batch.Write(key, value);
         WriteBatch(batch, fSync);
-        return true;
     }
 
     //! @returns filesystem path to the on-disk data.
