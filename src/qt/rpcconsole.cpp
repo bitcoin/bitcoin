@@ -826,10 +826,8 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
     // use name for text and wallet model for internal data object (to allow to move to a wallet id later)
     ui->WalletSelector->addItem(walletModel->getDisplayName(), QVariant::fromValue(walletModel));
     if (ui->WalletSelector->count() == 2) {
-        if (!isVisible()) {
-            // First wallet added, set to default so long as the window isn't presently visible (and potentially in use)
-            ui->WalletSelector->setCurrentIndex(1);
-        }
+        // First wallet added, set to default to match wallet RPC behavior
+        ui->WalletSelector->setCurrentIndex(1);
         // The only loaded wallet
         ui->btn_rescan1->setEnabled(true);
         ui->btn_rescan2->setEnabled(true);
