@@ -78,7 +78,7 @@ public:
 
     std::string HexKey() const
     {
-        return HexStr(std::bit_cast<std::array<uint8_t, KEY_SIZE>>(m_rotations[0]));
+        return HexStr(std::as_bytes(std::span{&m_rotations[0], 1}));
     }
 
 private:
