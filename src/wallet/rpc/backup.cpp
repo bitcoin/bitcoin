@@ -21,6 +21,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/codex32.h>
+#include <wallet/context.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
@@ -712,7 +713,6 @@ RPCHelpMan exposesecret()
         "Wallet must be an unlocked descriptor wallet. For encrypted wallets, the wallet must be unlocked.\n",
         {
             {"identifier", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A 4-character identifier for the secret (must be valid bech32 characters). If not specified, derived from wallet name."},
-            {"hrp", RPCArg::Type::STR, RPCArg::Default{"bc"}, "A 2-character human-readable prefix (default: 'bc')"},
         },
         RPCResult{
             RPCResult::Type::ARR, "seeds", "Array of wallet seeds in codex32 format.",
@@ -746,7 +746,7 @@ RPCHelpMan exposesecret()
 
     // Get parameters
     std::string identifier;
-    std::string hrp = "bc"; // default
+    std::string hrp = "wr"; // default
 
     if (!request.params[0].isNull()) {
         identifier = request.params[0].get_str();
@@ -754,16 +754,9 @@ RPCHelpMan exposesecret()
         identifier = GenerateIdentifierFromWalletName(wallet->GetName());
     }
 
-    if (!request.params[1].isNull()) {
-        hrp = request.params[1].get_str();
-    }
-
     // Validate parameters
     if (identifier.length() != 4) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Identifier must be exactly 4 characters");
-    }
-    if (hrp.length() != 2) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "HRP must be exactly 2 characters");
     }
 
     // Gather seeds
@@ -796,6 +789,131 @@ RPCHelpMan exposesecret()
     }
 
     return result;
+},
+    };
+}
+
+RPCHelpMan recoverwalletfromseed()
+{
+    return RPCHelpMan{
+        "recoverwalletfromseed",
+        "Recover and loads a wallet from seed.\n"
+        "\nThe rescan is significantly faster if block filters are available"
+        "\n(using startup option \"-blockfilterindex=1\").\n",
+        {
+            {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name that will be applied to the restored wallet"},
+            {"codex32_seed", RPCArg::Type::STR, RPCArg::Optional::NO, "The codex32 seed that will be used to recover the wallet."},
+            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
+            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+            {"rescan", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to rescan the blockchain for wallet transactions."},
+            {"start_height", RPCArg::Type::NUM, RPCArg::Default{0}, "Block height to start rescan from. If omitted, starts from genesis block."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "name", "The wallet name if recovered successfully."},
+                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warning messages, if any, related to restoring and loading the wallet.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("recoverwalletfromseed", "\"testwallet\" \"wr10w2xxsrl466a09f9fcjuncaxsafeq0w9dlmpxmywr4w6sganxwvv9cn4nsdkx0v3ca6wewv\"")
+            + HelpExampleRpc("recoverwalletfromseed", "\"testwallet\" \"wr10w2xxsrl466a09f9fcjuncaxsafeq0w9dlmpxmywr4w6sganxwvv9cn4nsdkx0v3ca6wewv\"")
+            + HelpExampleCliNamed("recoverwalletfromseed", {{"wallet_name", "testwallet"}, {"codex32_seed", "wr10w2xxsrl466a09f9fcjuncaxsafeq0w9dlmpxmywr4w6sganxwvv9cn4nsdkx0v3ca6wewv\""}, {"passphrase", "123456"}, {"load_on_startup", true}})
+            + HelpExampleRpcNamed("recoverwalletfromseed", {{"wallet_name", "testwallet"}, {"codex32_seed", "wr10w2xxsrl466a09f9fcjuncaxsafeq0w9dlmpxmywr4w6sganxwvv9cn4nsdkx0v3ca6wewv\""}, {"load_on_startup", true}})
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    WalletContext& context = EnsureWalletContext(request.context);
+    std::vector<bilingual_str> warnings;
+
+    const std::string wallet_name = request.params[0].get_str();
+    const std::string codex32_secret = request.params[1].get_str();
+    std::string hrp = "wr";
+
+    SecureString passphrase;
+    passphrase.reserve(100);
+    if (!request.params[2].isNull()) {
+        passphrase = std::string_view{request.params[2].get_str()};
+        if (passphrase.empty()) {
+            // Empty string means unencrypted
+            warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
+        }
+    }
+
+    std::optional<bool> load_on_start = request.params[3].isNull() ? std::nullopt : std::optional<bool>(request.params[3].get_bool());
+    bool rescan = request.params[4].isNull() ? true : request.params[4].get_bool();
+    int start_height = request.params[5].isNull() ? 0 : request.params[5].getInt<int>();
+
+    // Decode the codex32 secret
+    std::string error_msg;
+    std::optional<Codex32> codex = codex32_decode(hrp, codex32_secret, error_msg);
+    if (!codex.has_value()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid codex32_secret: %s", error_msg));
+    }
+    if (codex->type != Codex32Encoding::SECRET) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "codex32_secret must represent a full secret (not a share)");
+    }
+    
+    const std::vector<unsigned char>& seed_bytes = codex->payload;
+    if (seed_bytes.size() < 16 || seed_bytes.size() > 32) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "codex32_secret decoded seed must be between 128 and 256 bits (16-32 bytes)");
+    }
+
+    std::vector<unsigned char> seed_data(32);
+    std::fill(seed_data.begin(), seed_data.end() - seed_bytes.size(), 0);
+    std::copy(seed_bytes.begin(), seed_bytes.end(), seed_data.end() - seed_bytes.size());
+
+    CKey key;
+    key.Set(seed_data.begin(), seed_data.end(), true);
+    if (!key.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "codex32_secret is invalid or produces an out-of-range seed");
+    }
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    ReadDatabaseArgs(*context.args, options);
+    options.require_create = true;
+    options.create_flags =  0 | WALLET_FLAG_DESCRIPTORS;
+    options.create_passphrase = passphrase;
+    bilingual_str error;
+    const std::shared_ptr<CWallet> wallet = CreateWallet(context, wallet_name, load_on_start, options, status, key, error, warnings);
+    if (!wallet) {
+        RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
+        throw JSONRPCError(code, error.original);
+    }
+
+    // Rescan the blockchain if requested
+    if (rescan) {
+
+        // Make sure the results are valid at least up to the most recent block
+        // the user could have gotten from another RPC command prior to now
+        wallet->BlockUntilSyncedToCurrentChain();
+
+        WalletRescanReserver reserver(*wallet);
+        if (!reserver.reserve(/*with_passphrase=*/true)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+        }
+
+        // Ensure that the wallet is not locked for the remainder of this RPC, as
+        // the passphrase is used to top up the keypool.
+        LOCK(wallet->m_relock_mutex);
+
+        wallet->RescanFromTime(start_height, reserver, /*update=*/true);
+        wallet->ResubmitWalletTransactions(/*relay=*/false, /*force=*/true);
+
+        if (wallet->IsAbortingRescan()) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
+        }
+    }
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("name", wallet->GetName());
+    PushWarnings(warnings, obj);
+
+    return obj;
 },
     };
 }

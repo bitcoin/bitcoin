@@ -81,7 +81,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     {
         LOCK(wallet->cs_wallet);
-        wallet->SetupDescriptorScriptPubKeyMans();
+        wallet->SetupDescriptorScriptPubKeyMans(/* seed_key_opt=*/ std::nullopt);
     }
 
     auto build_address{[]() {

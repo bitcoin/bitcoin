@@ -120,7 +120,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet.SetupDescriptorScriptPubKeyMans();
+        wallet.SetupDescriptorScriptPubKeyMans(std::nullopt);
     }
 
     // Generate destinations
@@ -175,7 +175,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet.SetupDescriptorScriptPubKeyMans();
+        wallet.SetupDescriptorScriptPubKeyMans(/* seed_key_opt=*/ std::nullopt);
     }
 
     // Generate destinations
