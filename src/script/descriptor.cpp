@@ -836,6 +836,25 @@ public:
     }
 
     // NOLINTNEXTLINE(misc-no-recursion)
+    bool HavePrivateKeys(const SigningProvider& arg) const override
+    {
+        if (m_pubkey_args.empty() && m_subdescriptor_args.empty()) return false;
+
+        for (const auto& sub: m_subdescriptor_args) {
+            if (!sub->HavePrivateKeys(arg)) return false;
+        }
+
+        FlatSigningProvider tmp_provider;
+        for (const auto& pubkey : m_pubkey_args) {
+            tmp_provider.keys.clear();
+            pubkey->GetPrivKey(0, arg, tmp_provider);
+            if (tmp_provider.keys.empty()) return false;
+        }
+
+        return true;
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
     bool IsRange() const final
     {
         for (const auto& pubkey : m_pubkey_args) {
