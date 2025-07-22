@@ -3878,6 +3878,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     m_external_spk_managers.clear();
     m_internal_spk_managers.clear();
 
+    // Set minversion to FEATURE_LATEST
+    SetMinVersion(FEATURE_LATEST, &local_wallet_batch);
+
     // Setup new descriptors (only if we are migrating any key material)
     SetWalletFlagWithDB(local_wallet_batch, WALLET_FLAG_DESCRIPTORS);
     if (has_spendable_material && !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
