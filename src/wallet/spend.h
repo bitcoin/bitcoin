@@ -84,6 +84,8 @@ struct CoinFilterParams {
     // When true, filter unconfirmed coins by whether their
     // version's TRUCness matches what is set by CCoinControl.
     bool check_version_trucness{true};
+    // Skip outputs not eligible for silent payments
+    bool silent_payments{false};
 };
 
 /**
