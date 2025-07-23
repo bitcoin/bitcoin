@@ -1,7 +1,6 @@
 {
   "algorithm" : "ECDH",
   "schema" : "ecdh_test_schema.json",
-  "generatorVersion" : "0.9rc5",
   "numberOfTests" : 752,
   "header" : [
     "Test vectors of type EcdhTest are intended for",
@@ -124,6 +123,10 @@
   "testGroups" : [
     {
       "type" : "EcdhTest",
+      "source" : {
+        "name" : "google-wycheproof",
+        "version" : "0.9rc5"
+      },
       "curve" : "secp256k1",
       "encoding" : "asn",
       "tests" : [

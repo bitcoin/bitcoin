@@ -910,12 +910,15 @@ static void musig_test_vectors_signverify(void) {
              * the signing key does not belong to any pubkey. */
             continue;
         }
+
         expected = c->error != MUSIG_PUBKEY;
         CHECK(expected == musig_vectors_keyagg_and_tweak(&error, &keyagg_cache, NULL, vector->pubkeys, NULL, c->key_indices_len, c->key_indices, 0, NULL, NULL));
         CHECK(expected || c->error == error);
         if (!expected) {
             continue;
         }
+        CHECK(secp256k1_ec_pubkey_parse(CTX, &pubkey, vector->pubkeys[0], sizeof(vector->pubkeys[0])));
+        CHECK(secp256k1_keypair_create(CTX, &keypair, vector->sk));
 
         expected = c->error != MUSIG_AGGNONCE;
         CHECK(expected == secp256k1_musig_aggnonce_parse(CTX, &aggnonce, vector->aggnonces[c->aggnonce_index]));
@@ -924,14 +927,10 @@ static void musig_test_vectors_signverify(void) {
         }
         CHECK(secp256k1_musig_nonce_process(CTX, &session, &aggnonce, vector->msgs[c->msg_index], &keyagg_cache));
 
-        CHECK(secp256k1_ec_pubkey_parse(CTX, &pubkey, vector->pubkeys[0], sizeof(vector->pubkeys[0])));
-        musig_test_set_secnonce(&secnonce, vector->secnonces[c->secnonce_index], &pubkey);
         expected = c->error != MUSIG_SECNONCE;
-        if (expected) {
-            CHECK(secp256k1_musig_partial_sign(CTX, &partial_sig, &secnonce, &keypair, &keyagg_cache, &session));
-        } else {
-            CHECK_ILLEGAL(CTX, secp256k1_musig_partial_sign(CTX, &partial_sig, &secnonce, &keypair, &keyagg_cache, &session));
-        }
+        CHECK(!expected);
+        musig_test_set_secnonce(&secnonce, vector->secnonces[c->secnonce_index], &pubkey);
+        CHECK_ILLEGAL(CTX, secp256k1_musig_partial_sign(CTX, &partial_sig, &secnonce, &keypair, &keyagg_cache, &session));
     }
     for (i = 0; i < sizeof(vector->verify_fail_case)/sizeof(vector->verify_fail_case[0]); i++) {
         const struct musig_verify_fail_error_case *c = &vector->verify_fail_case[i];
