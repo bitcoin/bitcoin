@@ -211,7 +211,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_
             }
             mo.pushKV("addresses", dmn->pdmnState->netInfo->ToJson());
             mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.ToString());
-            mo.pushKV("valid", quorum->qc->validMembers[i]);
+            mo.pushKV("valid", static_cast<bool>(quorum->qc->validMembers[i]));
             if (quorum->qc->validMembers[i]) {
                 if (quorum->params.size == 1) {
                     mo.pushKV("pubKeyShare", dmn->pdmnState->pubKeyOperator.ToString());

@@ -78,11 +78,11 @@ void CCoinJoinClientOptions::GetJsonInfo(UniValue& obj)
 {
     assert(obj.isObject());
     const CCoinJoinClientOptions& options = CCoinJoinClientOptions::Get();
-    obj.pushKV("enabled", options.fEnableCoinJoin);
-    obj.pushKV("multisession", options.fCoinJoinMultiSession);
-    obj.pushKV("max_sessions", options.nCoinJoinSessions);
-    obj.pushKV("max_rounds", options.nCoinJoinRounds);
-    obj.pushKV("max_amount", options.nCoinJoinAmount);
-    obj.pushKV("denoms_goal", options.nCoinJoinDenomsGoal);
-    obj.pushKV("denoms_hardcap", options.nCoinJoinDenomsHardCap);
+    obj.pushKV("enabled", options.fEnableCoinJoin.load());
+    obj.pushKV("multisession", options.fCoinJoinMultiSession.load());
+    obj.pushKV("max_sessions", options.nCoinJoinSessions.load());
+    obj.pushKV("max_rounds", options.nCoinJoinRounds.load());
+    obj.pushKV("max_amount", options.nCoinJoinAmount.load());
+    obj.pushKV("denoms_goal", options.nCoinJoinDenomsGoal.load());
+    obj.pushKV("denoms_hardcap", options.nCoinJoinDenomsHardCap.load());
 }
