@@ -5,14 +5,15 @@
 
 #include <wallet/coinjoin.h>
 
-#include <coinjoin/common.h>
-#include <coinjoin/options.h>
-#include <evo/dmn_types.h>
 #include <key_io.h>
 #include <wallet/receive.h>
 #include <wallet/spend.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
+
+#include <coinjoin/common.h>
+#include <coinjoin/options.h>
+#include <evo/dmn_types.h>
 
 namespace wallet {
 void CWallet::InitCJSaltFromDb()
@@ -150,10 +151,10 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
     for (const auto& outpoint : setWalletUTXO) {
         if (!setWalletTxesCounted.emplace(outpoint.hash).second) continue;
 
-        const auto it = mapWallet.find(outpoint.hash);
+        const auto it{mapWallet.find(outpoint.hash)};
         if (it == mapWallet.end()) continue;
 
-        const CWalletTx& wtx = (*it).second;
+        const CWalletTx& wtx{(*it).second};
 
         if (wtx.IsCoinBase() && GetTxBlocksToMaturity(wtx) > 0) continue;
         if (fSkipUnconfirmed && !CachedTxIsTrusted(*this, wtx)) continue;
@@ -168,8 +169,9 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
 
             auto itTallyItem = mapTally.find(txdest);
             if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() &&
-                int64_t(itTallyItem->second.outpoints.size()) >= nMaxOupointsPerAddress)
+                int64_t(itTallyItem->second.outpoints.size()) >= nMaxOupointsPerAddress) {
                 continue;
+            }
 
             COutPoint target_outpoint(outpoint.hash, i);
             if (IsSpent(target_outpoint) || IsLockedCoin(target_outpoint)) continue;
@@ -219,8 +221,9 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
     // debug
     if (LogAcceptDebug(BCLog::SELECTCOINS)) {
         std::string strMessage = "SelectCoinsGroupedByAddresses - vecTallyRet:\n";
-        for (const auto& item : vecTallyRet)
+        for (const auto& item : vecTallyRet) {
             strMessage += strprintf("  %s %f\n", EncodeDestination(item.txdest), float(item.nAmount) / COIN);
+        }
         LogPrint(BCLog::SELECTCOINS, "%s", strMessage); /* Continued */
     }
 
@@ -244,7 +247,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount) const
     LOCK(cs_wallet);
 
     for (const auto& outpoint : setWalletUTXO) {
-        const auto it = mapWallet.find(outpoint.hash);
+        const auto it{mapWallet.find(outpoint.hash)};
         if (it == mapWallet.end()) continue;
         if (it->second.tx->vout[outpoint.n].nValue != nInputAmount) continue;
         if (GetTxDepthInMainChain(it->second) < 0) continue;
@@ -260,7 +263,7 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
 {
     LOCK(cs_wallet);
 
-    const int nRoundsMax = MAX_COINJOIN_ROUNDS + CCoinJoinClientOptions::GetRandomRounds();
+    const int nRoundsMax{MAX_COINJOIN_ROUNDS + CCoinJoinClientOptions::GetRandomRounds()};
 
     if (nRounds >= nRoundsMax) {
         // there can only be nRoundsMax rounds max
@@ -275,7 +278,7 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
     }
 
     // TODO wtx should refer to a CWalletTx object, not a pointer, based on surrounding code
-    const CWalletTx* wtx = GetWalletTx(outpoint.hash);
+    const CWalletTx* wtx{GetWalletTx(outpoint.hash)};
 
     if (wtx == nullptr || wtx->tx == nullptr) {
         // no such tx in this wallet
@@ -336,11 +339,14 @@ int CWallet::GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRound
             }
         }
     }
-    *nRoundsRef = fDenomFound
-                      ? (nShortest >= nRoundsMax - 1
-                             ? nRoundsMax
-                             : nShortest + 1) // good, we a +1 to the shortest one but only nRoundsMax rounds max allowed
-                      : 0;                    // too bad, we are the fist one in that chain
+    *nRoundsRef = [&]() {
+        if (fDenomFound) {
+            // good, we a +1 to the shortest one but only nRoundsMax rounds max allowed
+            return nShortest >= nRoundsMax - 1 ? nRoundsMax : nShortest + 1;
+        }
+        // too bad, we are the first one in that chain
+        return 0;
+    }();
     WalletCJLogPrint(this, "%s UPDATED   %-70s %3d\n", __func__, outpoint.ToStringShort(), *nRoundsRef);
     return *nRoundsRef;
 }
@@ -367,7 +373,7 @@ bool CWallet::IsDenominated(const COutPoint& outpoint) const
 {
     LOCK(cs_wallet);
 
-    const auto it = mapWallet.find(outpoint.hash);
+    const auto it{mapWallet.find(outpoint.hash)};
     if (it == mapWallet.end()) {
         return false;
     }
@@ -393,7 +399,7 @@ bool CWallet::IsFullyMixed(const COutPoint& outpoint) const
         CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << outpoint << nCoinJoinSalt;
         uint256 nHash;
-        CSHA256().Write((const unsigned char*)ss.data(), ss.size()).Finalize(nHash.begin());
+        CSHA256().Write(reinterpret_cast<const uint8_t*>(ss.data()), ss.size()).Finalize(nHash.begin());
         if (ReadLE64(nHash.begin()) % 2 == 0) {
             return false;
         }
@@ -434,8 +440,8 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
 
     CAmount nTotal = 0;
 
-    const CAmount nSmallestDenom = CoinJoin::GetSmallestDenomination();
-    const CAmount nMixingCollateral = CoinJoin::GetCollateralAmount();
+    const CAmount nSmallestDenom{CoinJoin::GetSmallestDenomination()};
+    const CAmount nMixingCollateral{CoinJoin::GetCollateralAmount()};
     for (const auto& item : vecTally) {
         bool fIsDenominated = CoinJoin::IsDenominatedAmount(item.nAmount);
         if (fSkipDenominated && fIsDenominated) continue;
@@ -478,7 +484,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
     LOCK(cs_wallet);
     for (const auto& outpoint : setWalletUTXO) {
-        const auto it = mapWallet.find(outpoint.hash);
+        const auto it{mapWallet.find(outpoint.hash)};
         if (it == mapWallet.end()) continue;
 
         CAmount nValue = it->second.tx->vout[outpoint.n].nValue;
@@ -502,18 +508,24 @@ CAmount CachedTxGetAnonymizedCredit(const CWallet& wallet, const CWalletTx& wtx,
     CAmount nCredit = 0;
     uint256 hashTx = wtx.GetHash();
     for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
-        const CTxOut& txout = wtx.tx->vout[i];
-        const COutPoint outpoint = COutPoint(hashTx, i);
+        const CTxOut& txout{wtx.tx->vout[i]};
+        const COutPoint outpoint(hashTx, i);
 
         if (coinControl.HasSelected() && !coinControl.IsSelected(outpoint)) {
             continue;
         }
 
-        if (wallet.IsSpent(outpoint) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
+        if (wallet.IsSpent(outpoint) || !CoinJoin::IsDenominatedAmount(txout.nValue)) {
+            continue;
+        }
 
-        if (wallet.IsFullyMixed(outpoint)) {
-            nCredit += OutputGetCredit(wallet, txout, ISMINE_SPENDABLE);
-            if (!MoneyRange(nCredit)) throw std::runtime_error(std::string(__func__) + ": value out of range");
+        if (!wallet.IsFullyMixed(outpoint)) {
+            continue;
+        }
+
+        nCredit += OutputGetCredit(wallet, txout, ISMINE_SPENDABLE);
+        if (!MoneyRange(nCredit)) {
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
         }
     }
 
@@ -546,19 +558,25 @@ CoinJoinCredits CachedTxGetAvailableCoinJoinCredits(const CWallet& wallet, const
 
     uint256 hashTx = wtx.GetHash();
     for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
-        const CTxOut& txout = wtx.tx->vout[i];
-        const COutPoint outpoint = COutPoint(hashTx, i);
+        const CTxOut& txout{wtx.tx->vout[i]};
+        const COutPoint outpoint(hashTx, i);
 
-        if (wallet.IsSpent(outpoint) || !CoinJoin::IsDenominatedAmount(txout.nValue)) continue;
-        const CAmount credit = OutputGetCredit(wallet, txout, ISMINE_SPENDABLE);
+        if (wallet.IsSpent(outpoint) || !CoinJoin::IsDenominatedAmount(txout.nValue)) {
+            continue;
+        }
 
+        const CAmount credit{OutputGetCredit(wallet, txout, ISMINE_SPENDABLE)};
         if (wallet.IsFullyMixed(outpoint)) {
             ret.m_anonymized += credit;
-            if (!MoneyRange(ret.m_anonymized)) throw std::runtime_error(std::string(__func__) + ": value out of range");
+            if (!MoneyRange(ret.m_anonymized)) {
+                throw std::runtime_error(std::string(__func__) + ": value out of range");
+            }
         }
 
         ret.m_denominated += credit;
-        if (!MoneyRange(ret.m_denominated)) throw std::runtime_error(std::string(__func__) + ": value out of range");
+        if (!MoneyRange(ret.m_denominated)) {
+            throw std::runtime_error(std::string(__func__) + ": value out of range");
+        }
     }
 
     wtx.m_amounts[CWalletTx::ANON_CREDIT].Set(ISMINE_SPENDABLE, ret.m_anonymized);
