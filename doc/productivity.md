@@ -1,8 +1,6 @@
-Productivity Notes
-==================
+# Productivity Notes
 
-Table of Contents
------------------
+## Table of Contents
 
 * [General](#general)
    * [Cache compilations with `ccache`](#cache-compilations-with-ccache)
@@ -23,8 +21,7 @@ Table of Contents
    * [Reference PRs easily with `refspec`s](#reference-prs-easily-with-refspecs)
    * [Diff the diffs with `git range-diff`](#diff-the-diffs-with-git-range-diff)
 
-General
-------
+## General
 
 ### Cache compilations with `ccache`
 
@@ -114,8 +111,7 @@ This synergizes well with [`ccache`](#cache-compilations-with-ccache) as objects
 
 You can also set up [upstream refspecs](#reference-prs-easily-with-refspecs) to refer to pull requests easier in the above `git worktree` commands.
 
-Writing code
-------------
+## Writing code
 
 ### Format C/C++ diffs with `clang-format-diff.py`
 
@@ -125,8 +121,7 @@ See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.p
 
 Usage is exactly the same as [`clang-format-diff.py`](#format-cc-diffs-with-clang-format-diffpy). You can get it [here](https://github.com/MarcoFalke/yapf-diff).
 
-Rebasing/Merging code
--------------
+## Rebasing/Merging code
 
 ### More conflict context with `merge.conflictstyle diff3`
 
@@ -154,8 +149,7 @@ theirs
 
 This may make it much clearer what caused the conflict. In this style, you can often just look at what changed between *original* and *theirs*, and mechanically apply that to *yours* (or the other way around).
 
-Reviewing code
---------------
+## Reviewing code
 
 ### Reduce mental load with `git diff` options
 
