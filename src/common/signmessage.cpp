@@ -94,7 +94,7 @@ MessageVerificationResult MessageVerify(
     const std::string& message)
 {
     auto signature_bytes = DecodeBase64(signature);
-    if (!signature_bytes) {
+    if ((!signature_bytes) || signature_bytes->empty()) {
         return MessageVerificationResult::ERR_MALFORMED_SIGNATURE;
     }
 
