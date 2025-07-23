@@ -371,12 +371,19 @@ static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
            memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
 }
 
-BCLog::LogRateLimiter::LogRateLimiter(
-    SchedulerFunction scheduler_func,
-    uint64_t max_bytes,
-    std::chrono::seconds reset_window) : m_max_bytes{max_bytes}, m_reset_window{reset_window}
+BCLog::LogRateLimiter::LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window)
+    : m_max_bytes{max_bytes}, m_reset_window{reset_window} {}
+
+std::shared_ptr<BCLog::LogRateLimiter> BCLog::LogRateLimiter::Create(
+    SchedulerFunction&& scheduler_func, uint64_t max_bytes, std::chrono::seconds reset_window)
 {
-    scheduler_func([this] { Reset(); }, reset_window);
+    auto limiter{std::shared_ptr<LogRateLimiter>(new LogRateLimiter(max_bytes, reset_window))};
+    std::weak_ptr<LogRateLimiter> weak_limiter{limiter};
+    auto reset = [weak_limiter] {
+        if (auto shared_limiter{weak_limiter.lock()}) shared_limiter->Reset();
+    };
+    scheduler_func(reset, limiter->m_reset_window);
+    return limiter;
 }
 
 BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(

@@ -69,6 +69,7 @@ struct LogSetup : public BasicTestingSetup {
 
         LogInstance().SetLogLevel(BCLog::Level::Debug);
         LogInstance().SetCategoryLogLevel({});
+        LogInstance().SetRateLimiting(nullptr);
     }
 
     ~LogSetup()
@@ -82,6 +83,7 @@ struct LogSetup : public BasicTestingSetup {
         LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
         LogInstance().SetLogLevel(prev_log_level);
         LogInstance().SetCategoryLogLevel(prev_category_levels);
+        LogInstance().SetRateLimiting(nullptr);
     }
 };
 
@@ -309,7 +311,8 @@ BOOST_AUTO_TEST_CASE(logging_log_rate_limiter)
     uint64_t max_bytes{1024};
     auto reset_window{1min};
     auto sched_func = [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); };
-    BCLog::LogRateLimiter limiter{sched_func, max_bytes, reset_window};
+    auto limiter_{BCLog::LogRateLimiter::Create(sched_func, max_bytes, reset_window)};
+    auto& limiter{*limiter_};
 
     using Status = BCLog::LogRateLimiter::Status;
     auto source_loc_1{std::source_location::current()};
@@ -405,8 +408,7 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
     CScheduler scheduler{};
     scheduler.m_service_thread = std::thread([&] { scheduler.serviceQueue(); });
     auto sched_func = [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); };
-    auto limiter = std::make_unique<BCLog::LogRateLimiter>(sched_func, 1024 * 1024, 20s);
-    LogInstance().SetRateLimiting(std::move(limiter));
+    LogInstance().SetRateLimiting(BCLog::LogRateLimiter::Create(sched_func, 1024 * 1024, 20s));
 
     // Log 1024-character lines (1023 plus newline) to make the math simple.
     std::string log_message(1023, 'a');

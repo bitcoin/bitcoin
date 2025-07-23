@@ -1381,7 +1381,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }, std::chrono::minutes{5});
 
-    LogInstance().SetRateLimiting(std::make_unique<BCLog::LogRateLimiter>(
+    LogInstance().SetRateLimiting(BCLog::LogRateLimiter::Create(
         [&scheduler](auto func, auto window) { scheduler.scheduleEvery(std::move(func), window); },
         BCLog::RATELIMIT_MAX_BYTES,
         BCLog::RATELIMIT_WINDOW));
