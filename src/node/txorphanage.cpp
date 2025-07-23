@@ -51,7 +51,7 @@ class TxOrphanageImpl final : public TxOrphanage {
 
         /** Get an approximation for "memory usage". The total memory is a function of the memory used to store the
          * transaction itself, each entry in m_orphans, and each entry in m_outpoint_to_orphan_wtxids. We use weight because
-         * it is often higher than the actual memory usage of the tranaction. This metric conveniently encompasses
+         * it is often higher than the actual memory usage of the transaction. This metric conveniently encompasses
          * m_outpoint_to_orphan_wtxids usage since input data does not get the witness discount, and makes it easier to
          * reason about each peer's limits using well-understood transaction attributes. */
         TxOrphanage::Usage GetMemUsage()  const {
@@ -158,13 +158,13 @@ class TxOrphanageImpl final : public TxOrphanage {
         * do not trim unless the orphanage exceeds global limits, but it means that this peer will
         * be selected for trimming sooner. If the global latency score or global memory usage
         * limits are exceeded, it must be that there is a peer whose DoS score > 1. */
-        FeeFrac GetDosScore(TxOrphanage::Count max_peer_latency_score, TxOrphanage::Usage max_peer_bytes) const
+        FeeFrac GetDosScore(TxOrphanage::Count max_peer_latency_score, TxOrphanage::Usage max_peer_memory) const
         {
             assert(max_peer_latency_score > 0);
-            assert(max_peer_bytes > 0);
-            const FeeFrac cpu_score(m_total_latency_score, max_peer_latency_score);
-            const FeeFrac mem_score(m_total_usage, max_peer_bytes);
-            return std::max<FeeFrac>(cpu_score, mem_score);
+            assert(max_peer_memory > 0);
+            const FeeFrac latency_score(m_total_latency_score, max_peer_latency_score);
+            const FeeFrac mem_score(m_total_usage, max_peer_memory);
+            return std::max<FeeFrac>(latency_score, mem_score);
         }
     };
     /** Store per-peer statistics. Used to determine each peer's DoS score. The size of this map is used to determine the
@@ -205,7 +205,7 @@ public:
     TxOrphanage::Count TotalLatencyScore() const override;
     TxOrphanage::Usage ReservedPeerUsage() const override;
 
-    /** Maximum allowed (deduplicated) latency score for all tranactions (see Announcement::GetLatencyScore()). Dynamic
+    /** Maximum allowed (deduplicated) latency score for all transactions (see Announcement::GetLatencyScore()). Dynamic
      * based on number of peers. Each peer has an equal amount, but the global maximum latency score stays constant. The
      * number of peers times MaxPeerLatencyScore() (rounded) adds up to MaxGlobalLatencyScore().  As long as every peer's
      * m_total_latency_score / MaxPeerLatencyScore() < 1, MaxGlobalLatencyScore() is not exceeded. */
@@ -469,11 +469,11 @@ void TxOrphanageImpl::LimitOrphans()
     std::make_heap(heap_peer_dos.begin(), heap_peer_dos.end(), compare_score);
 
     unsigned int num_erased{0};
-    // This outer loop finds the peer with the highest DoS score, which is a fraction of {usage, announcements} used
+    // This outer loop finds the peer with the highest DoS score, which is a fraction of memory and latency scores
     // over the respective allowances. We continue until the orphanage is within global limits. That means some peers
     // might still have a DoS score > 1 at the end.
-    // Note: if ratios are the same, FeeFrac tiebreaks by denominator. In practice, since the CPU denominator (number of
-    // announcements) is always lower, this means that a peer with only high number of announcements will be targeted
+    // Note: if ratios are the same, FeeFrac tiebreaks by denominator. In practice, since the latency denominator (number of
+    // announcements and inputs) is always lower, this means that a peer with only high latency scores will be targeted
     // before a peer using a lot of memory, even if they have the same ratios.
     do {
         Assume(!heap_peer_dos.empty());
@@ -640,8 +640,6 @@ void TxOrphanageImpl::EraseForBlock(const CBlock& block)
     LimitOrphans();
 }
 
-/** Get all children that spend from this tx and were received from nodeid. Sorted from most
- * recent to least recent. */
 std::vector<CTransactionRef> TxOrphanageImpl::GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId peer) const
 {
     std::vector<CTransactionRef> children_found;

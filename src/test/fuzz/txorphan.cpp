@@ -367,7 +367,7 @@ FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
 FUZZ_TARGET(txorphanage_sim)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
-    // This is a comphehensive simulation fuzz test, which runs through a scenario involving up to
+    // This is a comprehensive simulation fuzz test, which runs through a scenario involving up to
     // 16 transactions (which may have simple or complex topology, and may have duplicate txids
     // with distinct wtxids, and up to 16 peers. The scenario is performed both on a real
     // TxOrphanage object and the behavior is compared with a naive reimplementation (just a vector
@@ -726,7 +726,7 @@ FUZZ_TARGET(txorphanage_sim)
             }
             assert(done);
         }
-        // We must now be within limits, otherwise LimitOrphans should have continued further).
+        // We must now be within limits, otherwise LimitOrphans should have continued further.
         // We don't check the contents of the orphanage until the end to make fuzz runs faster.
         assert(real->TotalLatencyScore() <= real->MaxGlobalLatencyScore());
         assert(real->TotalOrphanUsage() <= real->MaxGlobalUsage());
