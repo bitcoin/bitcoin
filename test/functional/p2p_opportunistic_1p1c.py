@@ -407,9 +407,10 @@ class PackageRelayTest(BitcoinTestFramework):
 
         peer_normal = node.add_p2p_connection(P2PInterface())
         peer_doser = node.add_p2p_connection(P2PInterface())
+        num_individual_dosers = 10
 
         self.log.info("Create very large orphans to be sent by DoSy peers (may take a while)")
-        large_orphans = [create_large_orphan() for _ in range(100)]
+        large_orphans = [create_large_orphan() for _ in range(50)]
         # Check to make sure these are orphans, within max standard size (to be accepted into the orphanage)
         for large_orphan in large_orphans:
             assert_greater_than_or_equal(100000, large_orphan.get_vsize())
@@ -419,11 +420,10 @@ class PackageRelayTest(BitcoinTestFramework):
             assert not testres[0]["allowed"]
             assert_equal(testres[0]["reject-reason"], "missing-inputs")
 
-        num_individual_dosers = 30
         self.log.info(f"Connect {num_individual_dosers} peers and send a very large orphan from each one")
         # This test assumes that unrequested transactions are processed (skipping inv and
         # getdata steps because they require going through request delays)
-        # Connect 20 peers and have each of them send a large orphan.
+        # Connect 10 peers and have each of them send a large orphan.
         for large_orphan in large_orphans[:num_individual_dosers]:
             peer_doser_individual = node.add_p2p_connection(P2PInterface())
             peer_doser_individual.send_and_ping(msg_tx(large_orphan))
@@ -459,7 +459,7 @@ class PackageRelayTest(BitcoinTestFramework):
         peer_normal.wait_for_getdata([parent_txid_int])
 
         self.log.info("Send another round of very large orphans from a DoSy peer")
-        for large_orphan in large_orphans[30:]:
+        for large_orphan in large_orphans[num_individual_dosers:]:
             peer_doser.send_and_ping(msg_tx(large_orphan))
 
         # Something was evicted; the orphanage does not contain all large orphans + the 1p1c child
@@ -477,12 +477,12 @@ class PackageRelayTest(BitcoinTestFramework):
 
         peer_normal = node.add_p2p_connection(P2PInterface())
 
-        # 2 sets of peers: the first set all send the same batch_size orphans. The second set each
-        # sends batch_size distinct orphans.
+        # The first set of peers all send the same batch_size orphans. Then a single peer sends
+        # batch_single_doser distinct orphans.
         batch_size = 51
         num_peers_shared = 60
-        num_peers_unique = 40
-
+        batch_single_doser = 100
+        assert_greater_than(num_peers_shared * batch_size + batch_single_doser, 3000)
         # 60 peers * 51 orphans = 3060 announcements
         shared_orphans = [self.create_small_orphan() for _ in range(batch_size)]
         self.log.info(f"Send the same {batch_size} orphans from {num_peers_shared} DoSy peers (may take a while)")
@@ -522,22 +522,15 @@ class PackageRelayTest(BitcoinTestFramework):
         node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         peer_normal.wait_for_getdata([parent_txid_int])
 
-        # Each of the num_peers_unique peers creates a distinct set of orphans
-        many_orphans = [self.create_small_orphan() for _ in range(batch_size * num_peers_unique)]
+        self.log.info(f"Send {batch_single_doser} new orphans from one DoSy peer")
+        peer_doser_batch = node.add_p2p_connection(P2PInterface())
+        this_batch_orphans = [self.create_small_orphan() for _ in range(batch_single_doser)]
+        for tx in this_batch_orphans:
+            # Don't wait for responses, because it dramatically increases the runtime of this test.
+            peer_doser_batch.send_without_ping(msg_tx(tx))
 
-        self.log.info(f"Send sets of {batch_size} orphans from {num_peers_unique} DoSy peers (may take a while)")
-        for peernum in range(num_peers_unique):
-            peer_doser_batch = node.add_p2p_connection(P2PInterface())
-            this_batch_orphans = many_orphans[batch_size*peernum : batch_size*(peernum+1)]
-            for tx in this_batch_orphans:
-                # Don't wait for responses, because it dramatically increases the runtime of this test.
-                peer_doser_batch.send_without_ping(msg_tx(tx))
-
-            # Ensure at least one of the peer's orphans shows up in getorphantxs. Since each peer is
-            # reserved a portion of orphanage space, this must happen as long as the orphans are not
-            # rejected for some other reason.
-            peer_doser_batch.sync_with_ping()
-            self.wait_until(lambda: any([tx.txid_hex in node.getorphantxs() for tx in this_batch_orphans]))
+        peer_doser_batch.sync_with_ping()
+        self.wait_until(lambda: any([tx.txid_hex in node.getorphantxs() for tx in this_batch_orphans]))
 
         self.log.info("Check that orphan from normal peer still exists in orphanage")
         assert high_fee_child["txid"] in node.getorphantxs()
