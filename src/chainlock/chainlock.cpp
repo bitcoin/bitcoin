@@ -16,6 +16,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <chainlock/signing.h>
 #include <instantsend/instantsend.h>
 #include <llmq/quorums.h>
 #include <masternode/sync.h>
@@ -34,17 +35,18 @@ namespace llmq {
 CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
                                        CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
                                        const CMasternodeSync& mn_sync, bool is_masternode) :
-    m_chainstate(chainstate),
-    qman(_qman),
-    sigman(_sigman),
-    shareman(_shareman),
-    spork_manager(sporkman),
-    mempool(_mempool),
-    m_mn_sync(mn_sync),
-    m_is_masternode{is_masternode},
-    scheduler(std::make_unique<CScheduler>()),
-    scheduler_thread(
-        std::make_unique<std::thread>(std::thread(util::TraceThread, "cl-schdlr", [&] { scheduler->serviceQueue(); })))
+    m_chainstate{chainstate},
+    qman{_qman},
+    sigman{_sigman},
+    spork_manager{sporkman},
+    mempool{_mempool},
+    m_mn_sync{mn_sync},
+    scheduler{std::make_unique<CScheduler>()},
+    scheduler_thread{
+        std::make_unique<std::thread>(std::thread(util::TraceThread, "cl-schdlr", [&] { scheduler->serviceQueue(); }))},
+    m_signer{is_masternode
+                 ? std::make_unique<chainlock::ChainLockSigner>(chainstate, *this, _sigman, _shareman, sporkman, mn_sync)
+                 : nullptr}
 {
 }
 
@@ -56,19 +58,26 @@ CChainLocksHandler::~CChainLocksHandler()
 
 void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
 {
-    sigman.RegisterRecoveredSigsListener(this);
+    if (m_signer) {
+        sigman.RegisterRecoveredSigsListener(m_signer.get());
+    }
     scheduler->scheduleEvery([&]() {
         CheckActiveState();
         EnforceBestChainLock();
+        Cleanup();
         // regularly retry signing the current chaintip as it might have failed before due to missing islocks
-        TrySignChainTip(isman);
+        if (m_signer) {
+            m_signer->TrySignChainTip(isman);
+        }
     }, std::chrono::seconds{5});
 }
 
 void CChainLocksHandler::Stop()
 {
     scheduler->stop();
-    sigman.UnregisterRecoveredSigsListener(this);
+    if (m_signer) {
+        sigman.UnregisterRecoveredSigsListener(m_signer.get());
+    }
 }
 
 bool CChainLocksHandler::AlreadyHave(const CInv& inv) const
@@ -195,7 +204,10 @@ void CChainLocksHandler::UpdatedBlockTip(const llmq::CInstantSendManager& isman)
         scheduler->scheduleFromNow([&]() {
             CheckActiveState();
             EnforceBestChainLock();
-            TrySignChainTip(isman);
+            Cleanup();
+            if (m_signer) {
+                m_signer->TrySignChainTip(isman);
+            }
             tryLockChainTipScheduled = false;
         }, std::chrono::seconds{0});
     }
@@ -234,36 +246,40 @@ void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pbl
     }
 
     // We listen for BlockConnected so that we can collect all TX ids of all included TXs of newly received blocks
-    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are
-    // safe.
-
-    LOCK(cs);
-
-    auto it = blockTxs.find(pindex->GetBlockHash());
-    if (it == blockTxs.end()) {
-        // we must create this entry even if there are no lockable transactions in the block, so that TrySignChainTip
-        // later knows about this block
-        it = blockTxs.emplace(pindex->GetBlockHash(), std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>()).first;
-    }
-    auto& txids = *it->second;
-
     int64_t curTime = GetTime<std::chrono::seconds>().count();
-
-    for (const auto& tx : pblock->vtx) {
-        if (tx->IsCoinBase() || tx->vin.empty()) {
-            continue;
+    {
+        LOCK(cs);
+        for (const auto& tx : pblock->vtx) {
+            if (!tx->IsCoinBase() && !tx->vin.empty()) {
+                txFirstSeenTime.emplace(tx->GetHash(), curTime);
+            }
         }
-
-        txids.emplace(tx->GetHash());
-        txFirstSeenTime.emplace(tx->GetHash(), curTime);
     }
 
+    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are safe.
+    if (m_signer) {
+        LOCK(m_signer->cs_signer);
+        auto it = m_signer->blockTxs.find(pindex->GetBlockHash());
+        if (it == m_signer->blockTxs.end()) {
+            // We must create this entry even if there are no lockable transactions in the block, so that TrySignChainTip
+            // later knows about this block
+            it = m_signer->blockTxs.emplace(pindex->GetBlockHash(), std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>()).first;
+        }
+        auto& txids = *it->second;
+        for (const auto& tx : pblock->vtx) {
+            if (!tx->IsCoinBase() && !tx->vin.empty()) {
+                txids.emplace(tx->GetHash());
+            }
+        }
+    }
 }
 
 void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected)
 {
-    LOCK(cs);
-    blockTxs.erase(pindexDisconnected->GetBlockHash());
+    if (m_signer) {
+        LOCK(m_signer->cs_signer);
+        m_signer->blockTxs.erase(pindexDisconnected->GetBlockHash());
+    }
 }
 
 bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
@@ -428,15 +444,18 @@ void CChainLocksHandler::Cleanup()
         }
     }
 
-    LOCK(cs);
-    for (const auto& tx : CleanupSigner()) {
-        for (const auto& txid : *tx) {
-            txFirstSeenTime.erase(txid);
+    if (m_signer) {
+        const auto cleanup_txes{m_signer->Cleanup()};
+        LOCK(cs);
+        for (const auto& tx : cleanup_txes) {
+            for (const auto& txid : *tx) {
+                txFirstSeenTime.erase(txid);
+            }
         }
     }
 
-    // need mempool.cs due to GetTransaction calls
-    LOCK2(::cs_main, mempool.cs);
+    LOCK(::cs_main);
+    LOCK2(mempool.cs, cs); // need mempool.cs due to GetTransaction calls
     for (auto it = txFirstSeenTime.begin(); it != txFirstSeenTime.end(); ) {
         uint256 hashBlock;
         if (auto tx = GetTransaction(nullptr, &mempool, it->first, Params().GetConsensus(), hashBlock); !tx) {

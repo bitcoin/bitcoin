@@ -7,11 +7,8 @@
 
 #include <chainlock/clsig.h>
 
-#include <crypto/common.h> // For ReadLE64
-#include <llmq/signing.h>
-#include <net.h> // For NodeId
-#include <net_types.h>
 #include <primitives/transaction.h>
+#include <protocol.h>
 #include <saltedhasher.h>
 #include <sync.h>
 
@@ -28,15 +25,20 @@ class CMasternodeSync;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
+namespace chainlock {
+class ChainLockSigner;
+} // namespace chainlock
 
-namespace llmq
-{
+using NodeId = int64_t;
+
+namespace llmq {
 class CInstantSendManager;
+class CQuorumManager;
 class CSigningManager;
 class CSigSharesManager;
 enum class VerifyRecSigStatus;
 
-class CChainLocksHandler : public CRecoveredSigsListener
+class CChainLocksHandler
 {
     static constexpr int64_t CLEANUP_INTERVAL = 1000 * 30;
     static constexpr int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
@@ -48,14 +50,14 @@ private:
     CChainState& m_chainstate;
     CQuorumManager& qman;
     CSigningManager& sigman;
-    CSigSharesManager& shareman;
     CSporkManager& spork_manager;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
-
-    const bool m_is_masternode;
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
+
+    std::unique_ptr<chainlock::ChainLockSigner> m_signer{nullptr};
+
     mutable Mutex cs;
     std::atomic<bool> tryLockChainTipScheduled{false};
     std::atomic<bool> isEnabled{false};
@@ -67,17 +69,6 @@ private:
     const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
     const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs) {nullptr};
 
-    int32_t lastSignedHeight GUARDED_BY(cs) {-1};
-    uint256 lastSignedRequestId GUARDED_BY(cs);
-    uint256 lastSignedMsgHash GUARDED_BY(cs);
-
-    // We keep track of txids from recently received blocks so that we can check if all TXs got islocked
-    struct BlockHasher
-    {
-        size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
-    };
-    using BlockTxs = std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>, BlockHasher>;
-    BlockTxs blockTxs GUARDED_BY(cs);
     std::unordered_map<uint256, int64_t, StaticSaltedHasher> txFirstSeenTime GUARDED_BY(cs);
 
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
@@ -106,10 +97,7 @@ public:
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void TrySignChainTip(const llmq::CInstantSendManager& isman) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void EnforceBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool HasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -122,11 +110,9 @@ private:
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> CleanupSigner()
-        EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    friend class ::chainlock::ChainLockSigner;
 };
 
 bool AreChainLocksEnabled(const CSporkManager& sporkman);
