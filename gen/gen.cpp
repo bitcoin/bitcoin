@@ -1,6 +1,6 @@
 // Copyright 2014 BitPay Inc.
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 //
 // To re-create univalue_escapes.h:
@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "univalue.h"
-
-using namespace std;
 
 static bool initEscapes;
 static std::string escapes[256];
@@ -47,7 +45,7 @@ static void outputEscape()
 
 	for (unsigned int i = 0; i < 256; i++) {
 		if (escapes[i].empty()) {
-			printf("\tNULL,\n");
+			printf("\tnullptr,\n");
 		} else {
 			printf("\t\"");
 
