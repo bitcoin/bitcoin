@@ -22,14 +22,11 @@ from test_framework.util import (
 class MempoolWtxidTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
 
     def run_test(self):
         node = self.nodes[0]
-
-        self.log.info('Start with empty mempool and 101 blocks')
-        # The last 100 coinbase transactions are premature
-        blockhash = self.generate(node, 101)[0]
+        self.log.info('Start with pre-generated blocks')
+        blockhash = self.nodes[0].getblockhash(1)
         txid = node.getblock(blockhash=blockhash, verbosity=2)["tx"][0]["txid"]
         assert_equal(node.getmempoolinfo()['size'], 0)
 
@@ -56,7 +53,6 @@ class MempoolWtxidTest(BitcoinTestFramework):
         self.log.info("Submit child_one to the mempool")
         txid_submitted = node.sendrawtransaction(child_one.serialize().hex())
         assert_equal(node.getmempoolentry(txid_submitted)['wtxid'], child_one_wtxid)
-
         peer_wtxid_relay.wait_for_broadcast([child_one_wtxid])
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)
 
