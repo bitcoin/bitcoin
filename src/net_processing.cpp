@@ -59,13 +59,13 @@
 #include <coinjoin/context.h>
 #include <coinjoin/server.h>
 
+#include <chainlock/chainlock.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <evo/smldiff.h>
 #include <instantsend/lock.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/context.h>
 #include <llmq/dkgsession.h>

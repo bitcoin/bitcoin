@@ -28,7 +28,6 @@
 
 #include <coinjoin/client.h>
 #include <coinjoin/options.h>
-#include <llmq/chainlocks.h>
 
 #include <optional>
 

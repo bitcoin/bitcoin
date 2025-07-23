@@ -5,9 +5,9 @@
 #include <llmq/context.h>
 
 #include <bls/bls_worker.h>
+#include <chainlock/chainlock.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>

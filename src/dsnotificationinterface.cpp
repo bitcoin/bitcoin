@@ -12,10 +12,10 @@
 #include <masternode/sync.h>
 #include <validation.h>
 
+#include <chainlock/chainlock.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>

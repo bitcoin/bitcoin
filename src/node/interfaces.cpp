@@ -7,6 +7,7 @@
 #include <addrdb.h>
 #include <banman.h>
 #include <chain.h>
+#include <chainlock/chainlock.h>
 #include <chainparams.h>
 #include <coinjoin/common.h>
 #include <deploymentstatus.h>
@@ -21,7 +22,6 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <mapport.h>
 #include <masternode/sync.h>

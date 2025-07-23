@@ -6,13 +6,13 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <chainlock/chainlock.h>
 #include <context.h>
 #include <core_io.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
 #include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <node/blockstorage.h>
 #include <node/context.h>

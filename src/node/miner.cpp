@@ -24,6 +24,7 @@
 #include <util/system.h>
 #include <validation.h>
 
+#include <chainlock/chainlock.h>
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/chainhelper.h>
@@ -35,7 +36,6 @@
 #include <governance/governance.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/options.h>
 #include <llmq/snapshot.h>

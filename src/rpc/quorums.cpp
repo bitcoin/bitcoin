@@ -13,11 +13,9 @@
 #include <util/check.h>
 #include <validation.h>
 
-#include <masternode/node.h>
+#include <chainlock/chainlock.h>
 #include <evo/deterministicmns.h>
-
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
 #include <llmq/commitment.h>
 #include <llmq/context.h>
 #include <llmq/debug.h>
@@ -28,6 +26,7 @@
 #include <llmq/signing_shares.h>
 #include <llmq/snapshot.h>
 #include <llmq/utils.h>
+#include <masternode/node.h>
 
 #include <iomanip>
 #include <optional>

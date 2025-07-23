@@ -7,22 +7,23 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <evo/evodb.h>
-#include <governance/governance.h>
-#include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
-#include <llmq/context.h>
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <script/standard.h>
-#include <spork.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
 #include <versionbits.h>
+
+#include <evo/evodb.h>
+#include <governance/governance.h>
+#include <instantsend/instantsend.h>
+#include <llmq/blockprocessor.h>
+#include <llmq/context.h>
+#include <spork.h>
 
 #include <test/util/setup_common.h>
 
