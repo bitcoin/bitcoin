@@ -11,7 +11,6 @@
 #include <util/irange.h>
 #include <validation.h>
 
-#include <instantsend/instantsend.h>
 #include <llmq/chainlocks.h>
 #include <llmq/quorums.h>
 #include <masternode/sync.h>
@@ -31,7 +30,7 @@ namespace instantsend {
 static constexpr std::string_view INPUTLOCK_REQUESTID_PREFIX{"inlock"};
 
 InstantSendSigner::InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
-                                     llmq::CInstantSendManager& isman, llmq::CSigningManager& sigman,
+                                     InstantSendSignerParent& isman, llmq::CSigningManager& sigman,
                                      llmq::CSigSharesManager& shareman, llmq::CQuorumManager& qman,
                                      CSporkManager& sporkman, CTxMemPool& mempool, const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},

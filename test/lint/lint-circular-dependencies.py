@@ -44,7 +44,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "governance/governance -> governance/object -> governance/governance",
     "governance/governance -> masternode/sync -> governance/governance",
     "governance/governance -> net_processing -> governance/governance",
-    "instantsend/instantsend -> instantsend/signing -> instantsend/instantsend",
     "instantsend/instantsend -> llmq/chainlocks -> instantsend/instantsend",
     "instantsend/instantsend -> net_processing -> instantsend/instantsend",
     "instantsend/instantsend -> net_processing -> llmq/context -> instantsend/instantsend",
