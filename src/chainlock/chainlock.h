@@ -103,10 +103,6 @@ public:
     [[nodiscard]] bool IsEnabled() const { return isEnabled; }
 
 private:
-    // these require locks to be held already
-    bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
