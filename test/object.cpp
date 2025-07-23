@@ -92,23 +92,30 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
     BOOST_CHECK(v1.isNum());
     BOOST_CHECK_THROW(v1.get_bool(), std::runtime_error);
 
+    {
+        UniValue v_negative;
+        BOOST_CHECK(v_negative.setNumStr("-1"));
+        BOOST_CHECK_THROW(v_negative.getInt<uint8_t>(), std::runtime_error);
+        BOOST_CHECK_EQUAL(v_negative.getInt<int8_t>(), -1);
+    }
+
     UniValue v2;
     BOOST_CHECK(v2.setBool(true));
     BOOST_CHECK_EQUAL(v2.get_bool(), true);
-    BOOST_CHECK_THROW(v2.get_int(), std::runtime_error);
+    BOOST_CHECK_THROW(v2.getInt<int>(), std::runtime_error);
 
     UniValue v3;
     BOOST_CHECK(v3.setNumStr("32482348723847471234"));
-    BOOST_CHECK_THROW(v3.get_int64(), std::runtime_error);
+    BOOST_CHECK_THROW(v3.getInt<int64_t>(), std::runtime_error);
     BOOST_CHECK(v3.setNumStr("1000"));
-    BOOST_CHECK_EQUAL(v3.get_int64(), 1000);
+    BOOST_CHECK_EQUAL(v3.getInt<int64_t>(), 1000);
 
     UniValue v4;
     BOOST_CHECK(v4.setNumStr("2147483648"));
-    BOOST_CHECK_EQUAL(v4.get_int64(), 2147483648);
-    BOOST_CHECK_THROW(v4.get_int(), std::runtime_error);
+    BOOST_CHECK_EQUAL(v4.getInt<int64_t>(), 2147483648);
+    BOOST_CHECK_THROW(v4.getInt<int>(), std::runtime_error);
     BOOST_CHECK(v4.setNumStr("1000"));
-    BOOST_CHECK_EQUAL(v4.get_int(), 1000);
+    BOOST_CHECK_EQUAL(v4.getInt<int>(), 1000);
     BOOST_CHECK_THROW(v4.get_str(), std::runtime_error);
     BOOST_CHECK_EQUAL(v4.get_real(), 1000);
     BOOST_CHECK_THROW(v4.get_array(), std::runtime_error);
@@ -120,10 +127,10 @@ BOOST_AUTO_TEST_CASE(univalue_typecheck)
     BOOST_CHECK(v5.read("[true, 10]"));
     BOOST_CHECK_NO_THROW(v5.get_array());
     std::vector<UniValue> vals = v5.getValues();
-    BOOST_CHECK_THROW(vals[0].get_int(), std::runtime_error);
+    BOOST_CHECK_THROW(vals[0].getInt<int>(), std::runtime_error);
     BOOST_CHECK_EQUAL(vals[0].get_bool(), true);
 
-    BOOST_CHECK_EQUAL(vals[1].get_int(), 10);
+    BOOST_CHECK_EQUAL(vals[1].getInt<int>(), 10);
     BOOST_CHECK_THROW(vals[1].get_bool(), std::runtime_error);
 }
 
