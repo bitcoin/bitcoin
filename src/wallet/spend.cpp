@@ -339,7 +339,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
-    const bool silent_payment = {coinControl ? coinControl->m_silent_payment : false};
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
@@ -469,8 +468,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         }
         // Very unlikely we'd be spending a witness unknown output, but if we are trying to pay a
         // silent payments v0 address, this can't be included
-        if (silent_payment && type == TxoutType::WITNESS_UNKNOWN) continue;
-        if (silent_payment && type == TxoutType::WITNESS_V1_TAPROOT) {
+        if (params.silent_payments && type == TxoutType::WITNESS_UNKNOWN) continue;
+        if (params.silent_payments && type == TxoutType::WITNESS_V1_TAPROOT) {
             TaprootSpendData spenddata;
             // If we have scriptpath spend data for the taproot output, just skip it for now. Only keypath
             // spends can be used with silent payments and at this point we don't know if the keypath or script path is going to be used
@@ -1280,7 +1279,10 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // allowed (coins automatically selected by the wallet)
     CoinsResult available_coins;
     if (coin_control.m_allow_other_inputs) {
-        available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
+        CoinFilterParams params{
+            .silent_payments = coin_control.m_silent_payment || std::holds_alternative<V0SilentPaymentDestination>(change_dest)
+        };
+        available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate, params);
     }
 
     // Choose coins to use
