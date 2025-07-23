@@ -150,7 +150,7 @@ static RPCHelpMan verifytxoutproof()
 
             UniValue res(UniValue::VARR);
 
-            std::vector<uint256> vMatch;
+            std::vector<Txid> vMatch;
             std::vector<unsigned int> vIndex;
             if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot)
                 return res;
@@ -165,8 +165,8 @@ static RPCHelpMan verifytxoutproof()
 
             // Check if proof is valid, only add results if so
             if (pindex->nTx == merkleBlock.txn.GetNumTransactions()) {
-                for (const uint256& hash : vMatch) {
-                    res.push_back(hash.GetHex());
+                for (const auto& txid : vMatch) {
+                    res.push_back(txid.GetHex());
                 }
             }
 
