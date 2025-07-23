@@ -1,10 +1,9 @@
 Dash Core staging tree
 ===========================
 
-| Source         | `master` | `develop` |
-| -------------- | -------- | --------- |
-| GitHub Actions | [![Build Status](https://github.com/dashpay/dash/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/dashpay/dash/tree/master) | [![Build Status](https://github.com/dashpay/dash/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/dashpay/dash/tree/develop) |
-| GitLab CI      | [![Build Status](https://gitlab.com/dashpay/dash/badges/master/pipeline.svg?key_text=CI&key_width=40)](https://gitlab.com/dashpay/dash/-/tree/master) | [![Build Status](https://gitlab.com/dashpay/dash/badges/develop/pipeline.svg?key_text=CI&key_width=40)](https://gitlab.com/dashpay/dash/-/tree/develop) |
+| `master` | `develop` |
+| -------- | --------- |
+| [![Build Status](https://github.com/dashpay/dash/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/dashpay/dash/tree/master) | [![Build Status](https://github.com/dashpay/dash/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/dashpay/dash/tree/develop) |
 
 https://www.dash.org
 
