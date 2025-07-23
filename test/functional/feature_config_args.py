@@ -122,7 +122,6 @@ class ConfArgsTest(BitcoinTestFramework):
                 expected_msgs=[
                     'Command-line arg: addnode="some.node"',
                     'Command-line arg: rpcauth=****',
-                    'Command-line arg: rpcbind=****',
                     'Command-line arg: rpcpassword=****',
                     'Command-line arg: rpcuser=****',
                     'Command-line arg: torpassword=****',
@@ -131,14 +130,17 @@ class ConfArgsTest(BitcoinTestFramework):
                 ],
                 unexpected_msgs=[
                     'alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',
-                    '127.1.1.1',
                     'secret-rpcuser',
                     'secret-torpassword',
+                    'Command-line arg: rpcbind=****',
+                    'Command-line arg: rpcallowip=****',
                 ]):
             self.start_node(0, extra_args=[
                 '-addnode=some.node',
                 '-rpcauth=alice:f7efda5c189b999524f151318c0c86$d5b51b3beffbc0',
                 '-rpcbind=127.1.1.1',
+                '-rpcbind=127.0.0.1',
+                "-rpcallowip=127.0.0.1",
                 '-rpcpassword=',
                 '-rpcuser=secret-rpcuser',
                 '-torpassword=secret-torpassword',
