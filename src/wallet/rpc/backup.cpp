@@ -1043,7 +1043,7 @@ RPCHelpMan dumpwallet()
                 file << "# WARNING: ACCOUNT " << i << " IS MISSING!" << "\n\n";
             }
         }
-        obj.pushKV("hdaccounts", int(hdChainCurrent.CountAccounts()));
+        obj.pushKV("hdaccounts", hdChainCurrent.CountAccounts());
     }
 
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
@@ -1087,7 +1087,7 @@ RPCHelpMan dumpwallet()
     file.close();
 
     std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!").translated, request.params[0].get_str());
-    obj.pushKV("keys", int(vKeyBirth.size()));
+    obj.pushKV("keys", vKeyBirth.size());
     obj.pushKV("filename", filepath.utf8string());
     obj.pushKV("warning", strWarning);
 

@@ -435,12 +435,12 @@ static RPCHelpMan getaddressmempool()
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("address", address);
         delta.pushKV("txid", mempoolAddressKey.m_tx_hash.GetHex());
-        delta.pushKV("index", (int)mempoolAddressKey.m_tx_index);
+        delta.pushKV("index", mempoolAddressKey.m_tx_index);
         delta.pushKV("satoshis", mempoolAddressDelta.m_amount);
         delta.pushKV("timestamp", count_seconds(mempoolAddressDelta.m_time));
         if (mempoolAddressDelta.m_amount < 0) {
             delta.pushKV("prevtxid", mempoolAddressDelta.m_prev_hash.GetHex());
-            delta.pushKV("prevout", (int)mempoolAddressDelta.m_prev_out);
+            delta.pushKV("prevout", mempoolAddressDelta.m_prev_out);
         }
         result.push_back(delta);
     }
@@ -509,7 +509,7 @@ static RPCHelpMan getaddressutxos()
 
         output.pushKV("address", address);
         output.pushKV("txid", unspentKey.m_tx_hash.GetHex());
-        output.pushKV("outputIndex", (int)unspentKey.m_tx_index);
+        output.pushKV("outputIndex", unspentKey.m_tx_index);
         output.pushKV("script", HexStr(unspentValue.m_tx_script));
         output.pushKV("satoshis", unspentValue.m_amount);
         output.pushKV("height", unspentValue.m_block_height);
@@ -596,8 +596,8 @@ static RPCHelpMan getaddressdeltas()
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("satoshis", indexDelta);
         delta.pushKV("txid", indexKey.m_tx_hash.GetHex());
-        delta.pushKV("index", (int)indexKey.m_tx_index);
-        delta.pushKV("blockindex", (int)indexKey.m_block_tx_pos);
+        delta.pushKV("index", indexKey.m_tx_index);
+        delta.pushKV("blockindex", indexKey.m_block_tx_pos);
         delta.pushKV("height", indexKey.m_block_height);
         delta.pushKV("address", address);
         result.push_back(delta);

@@ -1504,12 +1504,12 @@ UniValue CGovernanceManager::ToJson() const
     }
 
     UniValue jsonObj(UniValue::VOBJ);
-    jsonObj.pushKV("objects_total", (int)mapObjects.size());
+    jsonObj.pushKV("objects_total", mapObjects.size());
     jsonObj.pushKV("proposals", nProposalCount);
     jsonObj.pushKV("triggers", nTriggerCount);
     jsonObj.pushKV("other", nOtherCount);
-    jsonObj.pushKV("erased", (int)mapErasedGovernanceObjects.size());
-    jsonObj.pushKV("votes", (int)cmapVoteToObject.GetSize());
+    jsonObj.pushKV("erased", mapErasedGovernanceObjects.size());
+    jsonObj.pushKV("votes", cmapVoteToObject.GetSize());
     return jsonObj;
 }
 

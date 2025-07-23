@@ -270,7 +270,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             if (it != ptxSpentInfo->mSpentInfo.end()) {
                 auto spentInfo = it->second;
                 out.pushKV("spentTxId", spentInfo.m_tx_hash.GetHex());
-                out.pushKV("spentIndex", (int)spentInfo.m_tx_index);
+                out.pushKV("spentIndex", spentInfo.m_tx_index);
                 out.pushKV("spentHeight", spentInfo.m_block_height);
             }
         }
@@ -283,7 +283,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     entry.pushKV("vout", vout);
 
     if (!tx.vExtraPayload.empty()) {
-        entry.pushKV("extraPayloadSize", (int)tx.vExtraPayload.size());
+        entry.pushKV("extraPayloadSize", tx.vExtraPayload.size());
         entry.pushKV("extraPayload", HexStr(tx.vExtraPayload));
     }
 

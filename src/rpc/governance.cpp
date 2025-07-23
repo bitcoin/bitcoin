@@ -1018,7 +1018,7 @@ static RPCHelpMan getgovernanceinfo()
     obj.pushKV("superblockmaturitywindow", Params().GetConsensus().nSuperblockMaturityWindow);
     obj.pushKV("lastsuperblock", nLastSuperblock);
     obj.pushKV("nextsuperblock", nNextSuperblock);
-    obj.pushKV("fundingthreshold", int(CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetValidWeightedMNsCount() / 10));
+    obj.pushKV("fundingthreshold", CHECK_NONFATAL(node.dmnman)->GetListAtChainTip().GetValidWeightedMNsCount() / 10);
     obj.pushKV("governancebudget", ValueFromAmount(CSuperblock::GetPaymentsLimit(chainman.ActiveChain(), nNextSuperblock)));
 
     return obj;

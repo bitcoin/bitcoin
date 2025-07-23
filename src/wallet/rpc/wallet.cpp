@@ -232,24 +232,25 @@ static RPCHelpMan getwalletinfo()
         obj.pushKV("keypoololdest", kp_oldest.value());
     }
     size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
-    obj.pushKV("keypoolsize",   (int64_t)kpExternalSize);
-    obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
-    obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
-    if (pwallet->IsCrypted())
+    obj.pushKV("keypoolsize", kpExternalSize);
+    obj.pushKV("keypoolsize_hd_internal", pwallet->GetKeyPoolSize() - kpExternalSize);
+    obj.pushKV("keys_left", pwallet->nKeysLeftSinceAutoBackup);
+    if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
-    obj.pushKV("paytxfee",      ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
+    }
+    obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
     if (fHDEnabled) {
         obj.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
-        obj.pushKV("hdaccountcount", (int64_t)hdChainCurrent.CountAccounts());
+        obj.pushKV("hdaccountcount", hdChainCurrent.CountAccounts());
         UniValue accounts(UniValue::VARR);
         for (size_t i = 0; i < hdChainCurrent.CountAccounts(); ++i)
         {
             CHDAccount acc;
             UniValue account(UniValue::VOBJ);
-            account.pushKV("hdaccountindex", (int64_t)i);
+            account.pushKV("hdaccountindex", i);
             if(hdChainCurrent.GetAccount(i, acc)) {
-                account.pushKV("hdexternalkeyindex", (int64_t)acc.nExternalChainCounter);
-                account.pushKV("hdinternalkeyindex", (int64_t)acc.nInternalChainCounter);
+                account.pushKV("hdexternalkeyindex", acc.nExternalChainCounter);
+                account.pushKV("hdinternalkeyindex", acc.nInternalChainCounter);
             } else {
                 account.pushKV("error", strprintf("account %d is missing", i));
             }

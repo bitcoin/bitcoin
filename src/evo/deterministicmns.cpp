@@ -56,7 +56,7 @@ UniValue CDeterministicMN::ToJson() const
     obj.pushKV("type", std::string(GetMnType(nType).description));
     obj.pushKV("proTxHash", proTxHash.ToString());
     obj.pushKV("collateralHash", collateralOutpoint.hash.ToString());
-    obj.pushKV("collateralIndex", (int)collateralOutpoint.n);
+    obj.pushKV("collateralIndex", collateralOutpoint.n);
 
     if (g_txindex) {
         CTransactionRef collateralTx;
