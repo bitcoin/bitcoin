@@ -1032,9 +1032,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     FastRandomContext rng_fast;
     CMutableTransaction txNew; // The resulting transaction that we make
 
-    if (coin_control.m_version) {
-        txNew.version = coin_control.m_version.value();
-    }
+    txNew.version = coin_control.m_version;
 
     CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;

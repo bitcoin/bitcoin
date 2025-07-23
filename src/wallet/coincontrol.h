@@ -109,10 +109,10 @@ public:
     int m_max_depth = DEFAULT_MAX_DEPTH;
     //! SigningProvider that has pubkeys and scripts to do spend size estimation for external inputs
     FlatSigningProvider m_external_provider;
+    //! Version
+    uint32_t m_version = CTransaction::CURRENT_VERSION;
     //! Locktime
     std::optional<uint32_t> m_locktime;
-    //! Version
-    std::optional<uint32_t> m_version;
     //! Caps weight of resulting tx
     std::optional<int> m_max_tx_weight{std::nullopt};
 
