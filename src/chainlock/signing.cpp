@@ -30,13 +30,23 @@ ChainLockSigner::ChainLockSigner(CChainState& chainstate, llmq::CChainLocksHandl
 
 ChainLockSigner::~ChainLockSigner() = default;
 
+void ChainLockSigner::Start()
+{
+    m_sigman.RegisterRecoveredSigsListener(this);
+}
+
+void ChainLockSigner::Stop()
+{
+    m_sigman.UnregisterRecoveredSigsListener(this);
+}
+
 void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
 {
     if (!m_mn_sync.IsBlockchainSynced()) {
         return;
     }
 
-    if (!m_clhandler.isEnabled) {
+    if (!m_clhandler.IsEnabled()) {
         return;
     }
 
@@ -57,23 +67,23 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     // Later, we'll add the multiple attempts process.
 
     {
-        LOCK2(m_clhandler.cs, cs_signer);
+        LOCK(cs_signer);
 
         if (pindex->nHeight == lastSignedHeight) {
             // already signed this one
             return;
         }
+    }
 
-        if (m_clhandler.bestChainLock.getHeight() >= pindex->nHeight) {
-            // already got the same CLSIG or a better one
-            return;
-        }
+    if (m_clhandler.GetBestChainLockHeight() >= pindex->nHeight) {
+        // already got the same CLSIG or a better one
+        return;
+    }
 
-        if (m_clhandler.InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-            // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
-            // the correct chain.
-            return;
-        }
+    if (m_clhandler.HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
+        // the correct chain.
+        return;
     }
 
     LogPrint(BCLog::CHAINLOCKS, "%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
@@ -104,18 +114,9 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
             }
 
             for (const auto& txid : *txids) {
-                int64_t txAge = 0;
-                {
-                    LOCK(m_clhandler.cs);
-                    auto it = m_clhandler.txFirstSeenTime.find(txid);
-                    if (it != m_clhandler.txFirstSeenTime.end()) {
-                        txAge = GetTime<std::chrono::seconds>().count() - it->second;
-                    }
-                }
-
-                if (txAge < m_clhandler.WAIT_FOR_ISLOCK_TIMEOUT && !isman.IsLocked(txid)) {
-                    LogPrint(BCLog::CHAINLOCKS, "%s -- not signing block %s due to TX %s not being islocked and not old enough. age=%d\n", __func__,
-                              pindexWalk->GetBlockHash().ToString(), txid.ToString(), txAge);
+                if (!m_clhandler.IsTxSafeForMining(txid) && !isman.IsLocked(txid)) {
+                    LogPrint(BCLog::CHAINLOCKS, "%s -- not signing block %s due to TX %s not being islocked and not old enough.\n", __func__,
+                              pindexWalk->GetBlockHash().ToString(), txid.ToString());
                     return;
                 }
             }
@@ -127,12 +128,9 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
     uint256 msgHash = pindex->GetBlockHash();
 
-    {
-        LOCK(m_clhandler.cs);
-        if (m_clhandler.bestChainLock.getHeight() >= pindex->nHeight) {
-            // might have happened while we didn't hold cs
-            return;
-        }
+    if (m_clhandler.GetBestChainLockHeight() >= pindex->nHeight) {
+        // might have happened while we didn't hold cs
+        return;
     }
     {
         LOCK(cs_signer);
@@ -144,10 +142,34 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     m_sigman.AsyncSignIfMember(Params().GetConsensus().llmqTypeChainLocks, m_shareman, requestId, msgHash);
 }
 
+void ChainLockSigner::EraseFromBlockHashTxidMap(const uint256& hash)
+{
+    AssertLockNotHeld(cs_signer);
+    LOCK(cs_signer);
+    blockTxs.erase(hash);
+}
+
+void ChainLockSigner::UpdateBlockHashTxidMap(const uint256& hash, const std::vector<CTransactionRef>& vtx)
+{
+    AssertLockNotHeld(cs_signer);
+    LOCK(cs_signer);
+    auto it = blockTxs.find(hash);
+    if (it == blockTxs.end()) {
+        // We must create this entry even if there are no lockable transactions in the block, so that TrySignChainTip
+        // later knows about this block
+        it = blockTxs.emplace(hash, std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>()).first;
+    }
+    auto& txids = *it->second;
+    for (const auto& tx : vtx) {
+        if (!tx->IsCoinBase() && !tx->vin.empty()) {
+            txids.emplace(tx->GetHash());
+        }
+    }
+}
+
 ChainLockSigner::BlockTxs::mapped_type ChainLockSigner::GetBlockTxs(const uint256& blockHash)
 {
     AssertLockNotHeld(cs_signer);
-    AssertLockNotHeld(m_clhandler.cs);
     AssertLockNotHeld(::cs_main);
 
     ChainLockSigner::BlockTxs::mapped_type ret;
@@ -188,31 +210,26 @@ ChainLockSigner::BlockTxs::mapped_type ChainLockSigner::GetBlockTxs(const uint25
             LOCK(cs_signer);
             blockTxs.emplace(blockHash, ret);
         }
-        {
-            LOCK(m_clhandler.cs);
-            for (const auto& txid : *ret) {
-                m_clhandler.txFirstSeenTime.emplace(txid, blockTime);
-            }
-        }
+        m_clhandler.UpdateTxFirstSeenMap(*ret, blockTime);
     }
     return ret;
 }
 
 MessageProcessingResult ChainLockSigner::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
-    if (!m_clhandler.isEnabled) {
+    if (!m_clhandler.IsEnabled()) {
         return {};
     }
 
     ChainLockSig clsig;
     {
-        LOCK2(m_clhandler.cs, cs_signer);
+        LOCK(cs_signer);
 
         if (recoveredSig.getId() != lastSignedRequestId || recoveredSig.getMsgHash() != lastSignedMsgHash) {
             // this is not what we signed, so lets not create a CLSIG for it
             return {};
         }
-        if (m_clhandler.bestChainLock.getHeight() >= lastSignedHeight) {
+        if (m_clhandler.GetBestChainLockHeight() >= lastSignedHeight) {
             // already got the same or a better CLSIG through the CLSIG message
             return {};
         }

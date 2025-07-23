@@ -49,6 +49,14 @@ public:
                              llmq::CSigSharesManager& shareman, CSporkManager& sporkman, const CMasternodeSync& mn_sync);
     ~ChainLockSigner();
 
+    void Start();
+    void Stop();
+
+    void EraseFromBlockHashTxidMap(const uint256& hash)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+    void UpdateBlockHashTxidMap(const uint256& hash, const std::vector<CTransactionRef>& vtx)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+
     void TrySignChainTip(const llmq::CInstantSendManager& isman)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
@@ -60,8 +68,6 @@ public:
 private:
     [[nodiscard]] BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
-
-    friend class ::llmq::CChainLocksHandler;
 };
 } // namespace chainlock
 

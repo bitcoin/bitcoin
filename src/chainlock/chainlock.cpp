@@ -32,12 +32,23 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
 using node::GetTransaction;
 
 namespace llmq {
+namespace {
+static constexpr int64_t CLEANUP_INTERVAL{1000 * 30};
+static constexpr int64_t CLEANUP_SEEN_TIMEOUT{24 * 60 * 60 * 1000};
+//! How long to wait for islocks until we consider a block with non-islocked TXs to be safe to sign
+static constexpr int64_t WAIT_FOR_ISLOCK_TIMEOUT{10 * 60};
+} // anonymous namespace
+
+bool AreChainLocksEnabled(const CSporkManager& sporkman)
+{
+    return sporkman.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
+}
+
 CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
                                        CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
                                        const CMasternodeSync& mn_sync, bool is_masternode) :
     m_chainstate{chainstate},
     qman{_qman},
-    sigman{_sigman},
     spork_manager{sporkman},
     mempool{_mempool},
     m_mn_sync{mn_sync},
@@ -59,7 +70,7 @@ CChainLocksHandler::~CChainLocksHandler()
 void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
 {
     if (m_signer) {
-        sigman.RegisterRecoveredSigsListener(m_signer.get());
+        m_signer->Start();
     }
     scheduler->scheduleEvery([&]() {
         CheckActiveState();
@@ -76,7 +87,7 @@ void CChainLocksHandler::Stop()
 {
     scheduler->stop();
     if (m_signer) {
-        sigman.UnregisterRecoveredSigsListener(m_signer.get());
+        m_signer->Stop();
     }
 }
 
@@ -103,6 +114,15 @@ chainlock::ChainLockSig CChainLocksHandler::GetBestChainLock() const
 {
     LOCK(cs);
     return bestChainLock;
+}
+
+void CChainLocksHandler::UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time)
+{
+    AssertLockNotHeld(cs);
+    LOCK(cs);
+    for (const auto& txid : tx) {
+        txFirstSeenTime.emplace(txid, time);
+    }
 }
 
 MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId from, const chainlock::ChainLockSig& clsig,
@@ -258,28 +278,22 @@ void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pbl
 
     // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are safe.
     if (m_signer) {
-        LOCK(m_signer->cs_signer);
-        auto it = m_signer->blockTxs.find(pindex->GetBlockHash());
-        if (it == m_signer->blockTxs.end()) {
-            // We must create this entry even if there are no lockable transactions in the block, so that TrySignChainTip
-            // later knows about this block
-            it = m_signer->blockTxs.emplace(pindex->GetBlockHash(), std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>()).first;
-        }
-        auto& txids = *it->second;
-        for (const auto& tx : pblock->vtx) {
-            if (!tx->IsCoinBase() && !tx->vin.empty()) {
-                txids.emplace(tx->GetHash());
-            }
-        }
+        m_signer->UpdateBlockHashTxidMap(pindex->GetBlockHash(), pblock->vtx);
     }
 }
 
 void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected)
 {
     if (m_signer) {
-        LOCK(m_signer->cs_signer);
-        m_signer->blockTxs.erase(pindexDisconnected->GetBlockHash());
+        m_signer->EraseFromBlockHashTxidMap(pindexDisconnected->GetBlockHash());
     }
+}
+
+int32_t CChainLocksHandler::GetBestChainLockHeight() const
+{
+    AssertLockNotHeld(cs);
+    LOCK(cs);
+    return bestChainLock.getHeight();
 }
 
 bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
@@ -309,7 +323,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     {
         LOCK(cs);
 
-        if (!isEnabled) {
+        if (!IsEnabled()) {
             return;
         }
 
@@ -371,7 +385,7 @@ bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockH
 {
     AssertLockHeld(cs);
 
-    if (!isEnabled) {
+    if (!IsEnabled()) {
         return false;
     }
 
@@ -401,7 +415,7 @@ bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint
 {
     AssertLockHeld(cs);
 
-    if (!isEnabled) {
+    if (!IsEnabled()) {
         return false;
     }
 
@@ -473,10 +487,5 @@ void CChainLocksHandler::Cleanup()
             ++it;
         }
     }
-}
-
-bool AreChainLocksEnabled(const CSporkManager& sporkman)
-{
-    return sporkman.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
 }
 } // namespace llmq

@@ -40,16 +40,9 @@ enum class VerifyRecSigStatus;
 
 class CChainLocksHandler
 {
-    static constexpr int64_t CLEANUP_INTERVAL = 1000 * 30;
-    static constexpr int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
-
-    // how long to wait for islocks until we consider a block with non-islocked TXs to be safe to sign
-    static constexpr int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
-
 private:
     CChainState& m_chainstate;
     CQuorumManager& qman;
-    CSigningManager& sigman;
     CSporkManager& spork_manager;
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
@@ -87,6 +80,8 @@ public:
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetChainLockByHash(const uint256& hash, chainlock::ChainLockSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     chainlock::ChainLockSig GetBestChainLock() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
                                                               const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -103,7 +98,9 @@ public:
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     VerifyRecSigStatus VerifyChainLock(const chainlock::ChainLockSig& clsig) const;
 
+    [[nodiscard]] int32_t GetBestChainLockHeight() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool IsTxSafeForMining(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] bool IsEnabled() const { return isEnabled; }
 
 private:
     // these require locks to be held already
@@ -111,8 +108,6 @@ private:
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
-    friend class ::chainlock::ChainLockSigner;
 };
 
 bool AreChainLocksEnabled(const CSporkManager& sporkman);
