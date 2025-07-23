@@ -13,9 +13,7 @@
 #include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
-#include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
-#include <hash.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
 #include <llmq/clsig.h>

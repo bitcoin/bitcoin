@@ -9,7 +9,6 @@
 #include <qt/bitcoinaddressvalidator.h>
 #include <qt/bitcoingui.h>
 #include <qt/bitcoinunits.h>
-#include <qt/optionsdialog.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/sendcoinsrecipient.h>
 

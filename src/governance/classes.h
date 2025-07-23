@@ -10,6 +10,10 @@
 #include <script/standard.h>
 #include <uint256.h>
 
+#include <memory>
+#include <string>
+#include <vector>
+
 class CChain;
 class CSuperblock;
 class CTxOut;

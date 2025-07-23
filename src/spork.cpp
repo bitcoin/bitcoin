@@ -5,7 +5,6 @@
 #include <spork.h>
 
 #include <chainparams.h>
-#include <consensus/params.h>
 #include <flat-database.h>
 #include <key_io.h>
 #include <logging.h>
@@ -13,7 +12,6 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
-#include <primitives/block.h>
 #include <protocol.h>
 #include <script/standard.h>
 #include <timedata.h>

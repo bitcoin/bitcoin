@@ -8,8 +8,6 @@
 #include <univalue.h>
 #include <util/time.h>
 
-#include <sstream>
-
 const std::string MasternodeMetaStore::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-3";
 
 CMasternodeMetaMan::CMasternodeMetaMan() :

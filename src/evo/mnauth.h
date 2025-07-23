@@ -8,6 +8,9 @@
 #include <bls/bls.h>
 #include <protocol.h>
 #include <serialize.h>
+#include <uint256.h>
+
+#include <string_view>
 
 class CActiveMasternodeManager;
 class CBlockIndex;

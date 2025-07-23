@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
 #include <bls/bls.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
@@ -16,19 +15,14 @@
 #include <evo/specialtx.h>
 #include <evo/specialtxman.h>
 #include <index/txindex.h>
-#include <llmq/blockprocessor.h>
 #include <llmq/context.h>
 #include <masternode/meta.h>
-#include <messagesigner.h>
-#include <netbase.h>
 #include <node/context.h>
-#include <rpc/blockchain.h>
 #include <rpc/evo_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <util/check.h>
-#include <util/moneystr.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <wallet/rpc/util.h>

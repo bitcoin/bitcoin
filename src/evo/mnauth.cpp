@@ -5,7 +5,6 @@
 #include <evo/mnauth.h>
 
 #include <bls/bls.h>
-#include <chain.h>
 #include <chainparams.h>
 #include <evo/deterministicmns.h>
 #include <llmq/utils.h>
@@ -13,10 +12,8 @@
 #include <masternode/node.h>
 #include <masternode/sync.h>
 #include <net.h>
-#include <net_types.h>
 #include <netmessagemaker.h>
 #include <util/time.h>
-#include <validation.h>
 
 void CMNAuth::PushMNAUTH(CNode& peer, CConnman& connman, const CActiveMasternodeManager& mn_activeman)
 {

@@ -9,10 +9,7 @@
 #include <coinjoin/options.h>
 #include <node/context.h>
 #include <util/check.h>
-#include <wallet/wallet.h>
 #include <walletinitinterface.h>
-
-#include <univalue.h>
 
 #include <memory>
 #include <string>

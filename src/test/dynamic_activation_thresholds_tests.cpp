@@ -5,11 +5,8 @@
 #include <test/util/setup_common.h>
 
 #include <chainparams.h>
-#include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <node/miner.h>
-#include <script/interpreter.h>
-#include <spork.h>
 #include <validation.h>
 #include <versionbits.h>
 

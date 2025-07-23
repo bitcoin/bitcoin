@@ -5,8 +5,6 @@
 #include <saltedhasher.h>
 #include <random.h>
 
-#include <limits>
-
 SaltedHasherBase::SaltedHasherBase() : k0(GetRand<uint64_t>()), k1(GetRand<uint64_t>()) {}
 
 SaltedHasherBase StaticSaltedHasher::s;

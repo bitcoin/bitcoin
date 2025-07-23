@@ -3,10 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coinjoin/util.h>
-#include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <script/sign.h>
 #include <util/translation.h>
 #include <wallet/fees.h>
 #include <wallet/spend.h>

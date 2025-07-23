@@ -6,11 +6,11 @@
 
 #include <stats/client.h>
 
+#include <logging.h>
 #include <stats/rawsender.h>
 #include <util/system.h>
 
 #include <cmath>
-#include <cstdio>
 #include <random>
 
 namespace {

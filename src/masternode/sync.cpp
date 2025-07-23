@@ -14,8 +14,6 @@
 #include <util/translation.h>
 #include <validation.h>
 
-class CMasternodeSync;
-
 CMasternodeSync::CMasternodeSync(CConnman& _connman, CNetFulfilledRequestManager& netfulfilledman) :
     nTimeAssetSyncStarted(GetTime()),
     nTimeLastBumped(GetTime()),

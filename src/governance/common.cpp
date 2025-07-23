@@ -5,7 +5,6 @@
 #include <governance/common.h>
 
 #include <util/strencodings.h>
-#include <util/underlying.h>
 #include <hash.h>
 #include <univalue.h>
 

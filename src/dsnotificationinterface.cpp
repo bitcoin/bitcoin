@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
 #include <coinjoin/coinjoin.h>
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
@@ -11,7 +10,6 @@
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
 #include <masternode/sync.h>
-#include <net_processing.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>

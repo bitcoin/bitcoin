@@ -14,7 +14,6 @@
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
-#include <messagesigner.h>
 #include <net_processing.h>
 #include <timedata.h>
 #include <util/time.h>

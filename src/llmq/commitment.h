@@ -15,6 +15,7 @@
 #include <gsl/pointers.h>
 #include <univalue.h>
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>

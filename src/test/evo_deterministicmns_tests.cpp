@@ -4,7 +4,6 @@
 
 #include <test/util/setup_common.h>
 
-#include <base58.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
@@ -12,10 +11,8 @@
 #include <evo/providertx.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
-#include <instantsend/instantsend.h>
 #include <llmq/context.h>
 #include <messagesigner.h>
-#include <netbase.h>
 #include <node/transaction.h>
 #include <policy/policy.h>
 #include <script/interpreter.h>
