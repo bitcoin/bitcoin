@@ -60,7 +60,7 @@ RPCHelpMan importprunedfunds()
     ssMB >> merkleBlock;
 
     //Search partial merkle tree in proof for our transaction and index in valid block
-    std::vector<uint256> vMatch;
+    std::vector<Txid> vMatch;
     std::vector<unsigned int> vIndex;
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Something wrong with merkleblock");
@@ -72,7 +72,7 @@ RPCHelpMan importprunedfunds()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
     }
 
-    std::vector<uint256>::const_iterator it;
+    std::vector<Txid>::const_iterator it;
     if ((it = std::find(vMatch.begin(), vMatch.end(), tx.GetHash())) == vMatch.end()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction given doesn't exist in proof");
     }
