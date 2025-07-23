@@ -12,11 +12,11 @@
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
-#define WalletCJLogPrint(wallet, ...)               \
-    do {                                            \
-        if (LogAcceptDebug(BCLog::COINJOIN)) {      \
-            wallet->WalletLogPrintf(__VA_ARGS__);   \
-        }                                           \
+#define WalletCJLogPrint(wallet, ...)             \
+    do {                                          \
+        if (LogAcceptDebug(BCLog::COINJOIN)) {    \
+            wallet->WalletLogPrintf(__VA_ARGS__); \
+        }                                         \
     } while (0)
 
 namespace wallet {
@@ -29,8 +29,7 @@ CAmount GetBalanceAnonymized(const CWallet& wallet, const CCoinControl& coinCont
 CAmount CachedTxGetAnonymizedCredit(const CWallet& wallet, const CWalletTx& wtx, const CCoinControl& coinControl)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
-struct CoinJoinCredits
-{
+struct CoinJoinCredits {
     CAmount m_anonymized{0};
     CAmount m_denominated{0};
     bool is_unconfirmed{false};
