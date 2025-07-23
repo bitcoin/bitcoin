@@ -11,11 +11,14 @@ from test_framework.messages import (
     COIN,
 )
 from test_framework.p2p import P2PTxInvStore
-from test_framework.script_util import ValidWitnessMalleatedTx
+from test_framework.script_util import valid_witness_malleate_tx
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
+)
+from test_framework.wallet import (
+    MiniWallet,
 )
 
 
@@ -25,23 +28,19 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
+        mini_wallet = MiniWallet(node)
         self.log.info('Start with pre-generated blocks')
-        blockhash = self.nodes[0].getblockhash(1)
-        txid = node.getblock(blockhash=blockhash, verbosity=2)["tx"][0]["txid"]
+
         assert_equal(node.getmempoolinfo()['size'], 0)
 
         self.log.info("Submit parent with multiple script branches to mempool")
-        txgen = ValidWitnessMalleatedTx()
-        parent = txgen.build_parent_tx(txid, 9.99998 * COIN)
+        parent_amount = int(9.99998 * COIN)
+        child_amount = int(9.99996 * COIN)
+        _, child_one, child_two = valid_witness_malleate_tx(mini_wallet, node, parent_amount, child_amount)
 
-        privkeys = [node.get_deterministic_priv_key().key]
-        raw_parent = node.signrawtransactionwithkey(hexstring=parent.serialize().hex(), privkeys=privkeys)['hex']
-        signed_parent_txid = node.sendrawtransaction(hexstring=raw_parent, maxfeerate=0)
         self.generate(node, 1)
 
         peer_wtxid_relay = node.add_p2p_connection(P2PTxInvStore())
-
-        child_one, child_two = txgen.build_malleated_children(signed_parent_txid, 9.99996 * COIN)
         child_one_wtxid = child_one.wtxid_hex
         child_one_txid = child_one.txid_hex
         child_two_wtxid = child_two.wtxid_hex
