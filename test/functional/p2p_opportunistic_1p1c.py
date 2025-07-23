@@ -91,6 +91,7 @@ class PackageRelayTest(BitcoinTestFramework):
     def test_basic_child_then_parent(self):
         node = self.nodes[0]
         self.log.info("Check that opportunistic 1p1c logic works when child is received before parent")
+        node.setmocktime(int(time.time()))
 
         low_fee_parent = self.create_tx_below_mempoolminfee(self.wallet)
         high_fee_child = self.wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=20*FEERATE_1SAT_VB)
@@ -100,11 +101,13 @@ class PackageRelayTest(BitcoinTestFramework):
         # 1. Child is received first (perhaps the low feerate parent didn't meet feefilter or the requests were sent to different nodes). It is missing an input.
         high_child_wtxid_int = high_fee_child["tx"].wtxid_int
         peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=high_child_wtxid_int)]))
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY)
         peer_sender.wait_for_getdata([high_child_wtxid_int])
         peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
 
         # 2. Node requests the missing parent by txid.
         parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         peer_sender.wait_for_getdata([parent_txid_int])
 
         # 3. Sender relays the parent. Parent+Child are evaluated as a package and accepted.
@@ -120,6 +123,7 @@ class PackageRelayTest(BitcoinTestFramework):
     @cleanup
     def test_basic_parent_then_child(self, wallet):
         node = self.nodes[0]
+        node.setmocktime(int(time.time()))
         low_fee_parent = self.create_tx_below_mempoolminfee(wallet)
         high_fee_child = wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=20*FEERATE_1SAT_VB)
 
@@ -146,6 +150,7 @@ class PackageRelayTest(BitcoinTestFramework):
         # 3. Node requests the missing parent by txid.
         # It should do so even if it has previously rejected that parent for being too low feerate.
         parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(TXID_RELAY_DELAY)
         peer_sender.wait_for_getdata([parent_txid_int])
 
         # 4. Sender re-relays the parent. Parent+Child are evaluated as a package and accepted.
@@ -159,6 +164,7 @@ class PackageRelayTest(BitcoinTestFramework):
     @cleanup
     def test_low_and_high_child(self, wallet):
         node = self.nodes[0]
+        node.setmocktime(int(time.time()))
         low_fee_parent = self.create_tx_below_mempoolminfee(wallet)
         # This feerate is above mempoolminfee, but not enough to also bump the low feerate parent.
         feerate_just_above = node.getmempoolinfo()["mempoolminfee"]
@@ -189,6 +195,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
         # 3. Node requests the orphan's missing parent.
         parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(TXID_RELAY_DELAY)
         peer_sender.wait_for_getdata([parent_txid_int])
 
         # 4. The low parent + low child are submitted as a package. They are not accepted due to low package feerate.
@@ -216,6 +223,7 @@ class PackageRelayTest(BitcoinTestFramework):
         # 6. Node requests the orphan's parent, even though it has already been rejected, both by
         # itself and with a child. This is necessary, otherwise high_fee_child can be censored.
         parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(TXID_RELAY_DELAY)
         peer_sender.wait_for_getdata([parent_txid_int])
 
         # 7. The low feerate parent + high feerate child are submitted as a package.
@@ -231,6 +239,7 @@ class PackageRelayTest(BitcoinTestFramework):
     def test_orphan_consensus_failure(self):
         self.log.info("Check opportunistic 1p1c logic requires parent and child to be from the same peer")
         node = self.nodes[0]
+        node.setmocktime(int(time.time()))
         low_fee_parent = self.create_tx_below_mempoolminfee(self.wallet)
         coin = low_fee_parent["new_utxo"]
         address = node.get_deterministic_priv_key().address
@@ -246,11 +255,13 @@ class PackageRelayTest(BitcoinTestFramework):
         # 1. Child is received first. It is missing an input.
         child_wtxid_int = tx_orphan_bad_wit.wtxid_int
         bad_orphan_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=child_wtxid_int)]))
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY)
         bad_orphan_sender.wait_for_getdata([child_wtxid_int])
         bad_orphan_sender.send_and_ping(msg_tx(tx_orphan_bad_wit))
 
         # 2. Node requests the missing parent by txid.
         parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         bad_orphan_sender.wait_for_getdata([parent_txid_int])
 
         # 3. A different peer relays the parent. Package is not evaluated because the transactions
@@ -273,6 +284,8 @@ class PackageRelayTest(BitcoinTestFramework):
     def test_parent_consensus_failure(self):
         self.log.info("Check opportunistic 1p1c logic with consensus-invalid parent causes disconnect of the correct peer")
         node = self.nodes[0]
+        node.setmocktime(int(time.time()))
+
         low_fee_parent = self.create_tx_below_mempoolminfee(self.wallet)
         high_fee_child = self.wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=999*FEERATE_1SAT_VB)
 
@@ -287,11 +300,13 @@ class PackageRelayTest(BitcoinTestFramework):
         # 1. Child is received first. It is missing an input.
         child_wtxid_int = high_fee_child["tx"].wtxid_int
         package_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=child_wtxid_int)]))
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY)
         package_sender.wait_for_getdata([child_wtxid_int])
         package_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
 
         # 2. Node requests the missing parent by txid.
         parent_txid_int = tx_parent_bad_wit.txid_int
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         package_sender.wait_for_getdata([parent_txid_int])
 
         # 3. A different node relays the parent. The parent is first evaluated by itself and
@@ -309,6 +324,7 @@ class PackageRelayTest(BitcoinTestFramework):
         # It can send the "real" parent transaction, and the package is accepted.
         parent_wtxid_int = low_fee_parent["tx"].wtxid_int
         package_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=parent_wtxid_int)]))
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY)
         package_sender.wait_for_getdata([parent_wtxid_int])
         package_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
 
@@ -355,6 +371,7 @@ class PackageRelayTest(BitcoinTestFramework):
     def test_other_parent_in_mempool(self):
         self.log.info("Check opportunistic 1p1c fails if child already has another parent in mempool")
         node = self.nodes[0]
+        node.setmocktime(int(time.time()))
 
         # This parent needs CPFP
         parent_low = self.create_tx_below_mempoolminfee(self.wallet)
@@ -376,6 +393,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
         # 3. Node requests parent_low. However, 1p1c fails because package-not-child-with-unconfirmed-parents
         parent_low_txid_int = int(parent_low["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         peer_sender.wait_for_getdata([parent_low_txid_int])
         peer_sender.send_and_ping(msg_tx(parent_low["tx"]))
 
