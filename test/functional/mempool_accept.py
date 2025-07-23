@@ -475,7 +475,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         nested_anchor_spend.vout.append(CTxOut(nested_anchor_tx.vout[0].nValue - int(fee*COIN), script_to_p2wsh_script(CScript([OP_TRUE]))))
 
         self.check_mempool_result(
-            result_expected=[{'txid': nested_anchor_spend.txid_hex, 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Witness version reserved for soft-fork upgrades)'}],
+            result_expected=[{'txid': nested_anchor_spend.txid_hex, 'allowed': False, 'reject-reason': 'mempool-script-verify-flag-failed (Witness version reserved for soft-fork upgrades)'}],
             rawtxs=[nested_anchor_spend.serialize().hex()],
             maxfeerate=0,
         )

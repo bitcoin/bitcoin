@@ -153,12 +153,14 @@ class BIP65Test(BitcoinTestFramework):
             coin_vout = coin.prevout.n
             cltv_invalidate(spendtx, i)
 
+            blk_rej = "mandatory-script-verify-flag-failed"
+            tx_rej = "mempool-script-verify-flag-failed"
             expected_cltv_reject_reason = [
-                "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)",
-                "mandatory-script-verify-flag-failed (Negative locktime)",
-                "mandatory-script-verify-flag-failed (Locktime requirement not satisfied)",
-                "mandatory-script-verify-flag-failed (Locktime requirement not satisfied)",
-                "mandatory-script-verify-flag-failed (Locktime requirement not satisfied)",
+                " (Operation not valid with the current stack size)",
+                " (Negative locktime)",
+                " (Locktime requirement not satisfied)",
+                " (Locktime requirement not satisfied)",
+                " (Locktime requirement not satisfied)",
             ][i]
             # First we show that this tx is valid except for CLTV by getting it
             # rejected from the mempool for exactly that reason.
@@ -169,8 +171,8 @@ class BIP65Test(BitcoinTestFramework):
                     'txid': spendtx_txid,
                     'wtxid': spendtx_wtxid,
                     'allowed': False,
-                    'reject-reason': expected_cltv_reject_reason,
-                    'reject-details': expected_cltv_reject_reason + f", input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:{coin_vout}"
+                    'reject-reason': tx_rej + expected_cltv_reject_reason,
+                    'reject-details': tx_rej + expected_cltv_reject_reason + f", input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:{coin_vout}"
                 }],
                 self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
             )
@@ -180,7 +182,7 @@ class BIP65Test(BitcoinTestFramework):
             block.hashMerkleRoot = block.calc_merkle_root()
             block.solve()
 
-            with self.nodes[0].assert_debug_log(expected_msgs=[f'Block validation error: {expected_cltv_reject_reason}']):
+            with self.nodes[0].assert_debug_log(expected_msgs=[f'Block validation error: {blk_rej + expected_cltv_reject_reason}']):
                 peer.send_and_ping(msg_block(block))
                 assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
                 peer.sync_with_ping()

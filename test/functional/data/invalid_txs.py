@@ -223,7 +223,7 @@ class CreateSumTooLarge(BadTxTemplate):
 
 
 class InvalidOPIFConstruction(BadTxTemplate):
-    reject_reason = "mandatory-script-verify-flag-failed (Invalid OP_IF construction)"
+    reject_reason = "mempool-script-verify-flag-failed (Invalid OP_IF construction)"
     expect_disconnect = False
 
     def get_tx(self):
@@ -276,8 +276,9 @@ def getDisabledOpcodeTemplate(opcode):
         })
 
 class NonStandardAndInvalid(BadTxTemplate):
-    """A non-standard transaction which is also consensus-invalid should return the consensus error."""
-    reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
+    """A non-standard transaction which is also consensus-invalid should return the first error."""
+    reject_reason = "mempool-script-verify-flag-failed (Using OP_CODESEPARATOR in non-witness script)"
+    block_reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
     expect_disconnect = False
     valid_in_block = False
 
