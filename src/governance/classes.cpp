@@ -88,12 +88,12 @@ CSuperblock::CSuperblock(const CGovernanceObject& govObj, uint256& nHash) :
 
     UniValue obj = govObj.GetJSONObject();
 
-    if (obj["type"].get_int() != ToUnderlying(GovernanceObject::TRIGGER)) {
+    if (obj["type"].getInt<int>() != ToUnderlying(GovernanceObject::TRIGGER)) {
         throw std::runtime_error("CSuperblock: invalid data type");
     }
 
     // FIRST WE GET THE START HEIGHT, THE BLOCK HEIGHT AT WHICH THE PAYMENT SHALL OCCUR
-    nBlockHeight = obj["event_block_height"].get_int();
+    nBlockHeight = obj["event_block_height"].getInt<int>();
 
     // NEXT WE GET THE PAYMENT INFORMATION AND RECONSTRUCT THE PAYMENT VECTOR
     std::string strAddresses = obj["payment_addresses"].get_str();

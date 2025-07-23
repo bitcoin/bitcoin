@@ -108,7 +108,7 @@ static const CBlockIndex* ParseHashOrHeight(const UniValue& param, ChainstateMan
     CChain& active_chain = chainman.ActiveChain();
 
     if (param.isNum()) {
-        const int height{param.get_int()};
+        const int height{param.getInt<int>()};
         if (height < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d is negative", height));
         }
@@ -326,7 +326,7 @@ static RPCHelpMan waitfornewblock()
 {
     int timeout = 0;
     if (!request.params[0].isNull())
-        timeout = request.params[0].get_int();
+        timeout = request.params[0].getInt<int>();
 
     CUpdatedBlock block;
     {
@@ -372,7 +372,7 @@ static RPCHelpMan waitforblock()
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
     if (!request.params[1].isNull())
-        timeout = request.params[1].get_int();
+        timeout = request.params[1].getInt<int>();
 
     CUpdatedBlock block;
     {
@@ -416,10 +416,10 @@ static RPCHelpMan waitforblockheight()
 {
     int timeout = 0;
 
-    int height = request.params[0].get_int();
+    int height = request.params[0].getInt<int>();
 
     if (!request.params[1].isNull())
-        timeout = request.params[1].get_int();
+        timeout = request.params[1].getInt<int>();
 
     CUpdatedBlock block;
     {
@@ -506,7 +506,7 @@ static RPCHelpMan getblockfrompeer()
     PeerManager& peerman = EnsurePeerman(node);
 
     const uint256& block_hash{ParseHashV(request.params[0], "blockhash")};
-    const NodeId peer_id{request.params[1].get_int64()};
+    const NodeId peer_id{request.params[1].getInt<int64_t>()};
 
     const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
 
@@ -543,8 +543,8 @@ static RPCHelpMan getblockhashes()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    unsigned int high = request.params[0].get_int();
-    unsigned int low = request.params[1].get_int();
+    unsigned int high = request.params[0].getInt<int>();
+    unsigned int low = request.params[1].getInt<int>();
     std::vector<uint256> blockHashes;
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
@@ -581,7 +581,7 @@ static RPCHelpMan getblockhash()
     LOCK(cs_main);
     const CChain& active_chain = chainman.ActiveChain();
 
-    int nHeight = request.params[0].get_int();
+    int nHeight = request.params[0].getInt<int>();
     if (nHeight < 0 || nHeight > active_chain.Height())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
 
@@ -732,7 +732,7 @@ static RPCHelpMan getblockheaders()
 
     int nCount = MAX_HEADERS_UNCOMPRESSED_RESULT;
     if (!request.params[1].isNull())
-        nCount = request.params[1].get_int();
+        nCount = request.params[1].getInt<int>();
 
     if (nCount <= 0 || nCount > (int)MAX_HEADERS_UNCOMPRESSED_RESULT)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
@@ -849,7 +849,7 @@ static RPCHelpMan getmerkleblocks()
 
     int nCount = MAX_HEADERS_UNCOMPRESSED_RESULT;
     if (!request.params[2].isNull())
-        nCount = request.params[2].get_int();
+        nCount = request.params[2].getInt<int>();
 
     if (nCount <= 0 || nCount > (int)MAX_HEADERS_UNCOMPRESSED_RESULT) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
@@ -988,7 +988,7 @@ static RPCHelpMan getblock()
         if (request.params[1].isBool()) {
             verbosity = request.params[1].get_bool() ? 1 : 0;
         } else {
-            verbosity = request.params[1].get_int();
+            verbosity = request.params[1].getInt<int>();
         }
     }
 
@@ -1055,7 +1055,7 @@ static RPCHelpMan pruneblockchain()
     CChainState& active_chainstate = chainman.ActiveChainstate();
     CChain& active_chain = active_chainstate.m_chain;
 
-    int heightParam = request.params[0].get_int();
+    int heightParam = request.params[0].getInt<int>();
     if (heightParam < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height.");
     }
@@ -1294,7 +1294,7 @@ static RPCHelpMan gettxout()
     UniValue ret(UniValue::VOBJ);
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
-    int n = request.params[1].get_int();
+    int n = request.params[1].getInt<int>();
     COutPoint out(hash, n);
     bool fMempool = true;
     if (!request.params[2].isNull())
@@ -1351,8 +1351,8 @@ static RPCHelpMan verifychain()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].get_int()};
-    const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].get_int()};
+    const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].getInt<int>()};
+    const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].getInt<int>()};
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
@@ -1650,8 +1650,8 @@ static RPCHelpMan getchaintips()
     // Always report the currently active tip.
     setTips.insert(active_chain.Tip());
 
-    int nCountMax{request.params[0].isNull() ? INT_MAX : request.params[0].get_int()};
-    const int nBranchMin{request.params[1].isNull() ? -1: request.params[1].get_int()};
+    int nCountMax{request.params[0].isNull() ? INT_MAX : request.params[0].getInt<int>()};
+    const int nBranchMin{request.params[1].isNull() ? -1: request.params[1].getInt<int>()};
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
@@ -1883,7 +1883,7 @@ static RPCHelpMan getchaintxstats()
     if (request.params[0].isNull()) {
         blockcount = std::max(0, std::min(blockcount, pindex->nHeight - 1));
     } else {
-        blockcount = request.params[0].get_int();
+        blockcount = request.params[0].getInt<int>();
 
         if (blockcount < 0 || (blockcount > 0 && blockcount >= pindex->nHeight)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid block count: should be between 0 and the block's height - 1");
@@ -2252,26 +2252,26 @@ static RPCHelpMan getspecialtxes()
 
     int nTxType = -1;
     if (!request.params[1].isNull()) {
-        nTxType = request.params[1].get_int();
+        nTxType = request.params[1].getInt<int>();
     }
 
     int nCount = 10;
     if (!request.params[2].isNull()) {
-        nCount = request.params[2].get_int();
+        nCount = request.params[2].getInt<int>();
         if (nCount < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     }
 
     int nSkip = 0;
     if (!request.params[3].isNull()) {
-        nSkip = request.params[3].get_int();
+        nSkip = request.params[3].getInt<int>();
         if (nSkip < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative skip");
     }
 
     int nVerbosity = 0;
     if (!request.params[4].isNull()) {
-        nVerbosity = request.params[4].get_int();
+        nVerbosity = request.params[4].getInt<int>();
         if (nVerbosity < 0 || nVerbosity > 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Verbosity must be in range 0..2");
         }

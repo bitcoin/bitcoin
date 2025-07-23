@@ -73,7 +73,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     // Minimum confirmations
     int nMinDepth = 1;
     if (!params[0].isNull())
-        nMinDepth = params[0].get_int();
+        nMinDepth = params[0].getInt<int>();
     bool fAddLocked = false;
     if (!params[1].isNull())
         fAddLocked = params[1].get_bool();
@@ -505,10 +505,10 @@ RPCHelpMan listtransactions()
     }
     int nCount = 10;
     if (!request.params[1].isNull())
-        nCount = request.params[1].get_int();
+        nCount = request.params[1].getInt<int>();
     int nFrom = 0;
     if (!request.params[2].isNull())
-        nFrom = request.params[2].get_int();
+        nFrom = request.params[2].getInt<int>();
     isminefilter filter = ISMINE_SPENDABLE;
 
     if (ParseIncludeWatchonly(request.params[3], *pwallet)) {
@@ -632,7 +632,7 @@ RPCHelpMan listsinceblock()
     }
 
     if (!request.params[1].isNull()) {
-        target_confirms = request.params[1].get_int();
+        target_confirms = request.params[1].getInt<int>();
 
         if (target_confirms < 1) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
@@ -885,14 +885,14 @@ RPCHelpMan rescanblockchain()
         int tip_height = pwallet->GetLastBlockHeight();
 
         if (!request.params[0].isNull()) {
-            start_height = request.params[0].get_int();
+            start_height = request.params[0].getInt<int>();
             if (start_height < 0 || start_height > tip_height) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid start_height");
             }
         }
 
         if (!request.params[1].isNull()) {
-            stop_height = request.params[1].get_int();
+            stop_height = request.params[1].getInt<int>();
             if (*stop_height < 0 || *stop_height > tip_height) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid stop_height");
             } else if (*stop_height < start_height) {

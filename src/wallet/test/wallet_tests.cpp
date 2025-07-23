@@ -959,7 +959,7 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     BOOST_CHECK_EQUAL(find_value(response, "iswatchonly").get_bool(), false);
     BOOST_CHECK_EQUAL(find_value(response, "isscript").get_bool(), true);
     BOOST_CHECK_EQUAL(find_value(response, "ischange").get_bool(), false);
-    BOOST_CHECK_EQUAL(find_value(response, "sigsrequired").get_int(), 2);
+    BOOST_CHECK_EQUAL(find_value(response, "sigsrequired").getInt<int>(), 2);
     BOOST_CHECK(find_value(response, "label").isNull());
 
     UniValue labels = find_value(response, "labels").get_array();

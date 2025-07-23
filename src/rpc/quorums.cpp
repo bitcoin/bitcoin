@@ -997,7 +997,7 @@ static RPCHelpMan verifychainlock()
         }
         nBlockHeight = pIndex->nHeight;
     } else {
-        nBlockHeight = request.params[2].get_int();
+        nBlockHeight = request.params[2].getInt<int>();
         LOCK(cs_main);
         if (nBlockHeight < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
@@ -1063,7 +1063,7 @@ static RPCHelpMan verifyislock()
 
     int maxHeight{-1};
     if (!request.params[3].isNull()) {
-        maxHeight = request.params[3].get_int();
+        maxHeight = request.params[3].getInt<int>();
     }
 
     int signHeight;
@@ -1118,7 +1118,7 @@ static RPCHelpMan submitchainlock()
 {
     const uint256 nBlockHash(ParseHashV(request.params[0], "blockHash"));
 
-    const int nBlockHeight = request.params[2].get_int();
+    const int nBlockHeight = request.params[2].getInt<int>();
     if (nBlockHeight <= 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
     }

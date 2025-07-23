@@ -483,7 +483,7 @@ public:
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
 
         const UniValue& networkinfo{batch[ID_NETWORKINFO]["result"]};
-        if (networkinfo["version"].get_int() < 200000) {
+        if (networkinfo["version"].getInt<int>() < 200000) {
             throw std::runtime_error("-netinfo requires dashd server to be running v20.0 and up");
         }
         const int64_t time_now{TicksSinceEpoch<std::chrono::seconds>(CliClock::now())};
@@ -504,16 +504,16 @@ public:
             if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
-                const int peer_id{peer["id"].get_int()};
-                const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].get_int()};
-                const int version{peer["version"].get_int()};
-                const int64_t addr_processed{peer["addr_processed"].isNull() ? 0 : peer["addr_processed"].get_int64()};
-                const int64_t addr_rate_limited{peer["addr_rate_limited"].isNull() ? 0 : peer["addr_rate_limited"].get_int64()};
-                const int64_t conn_time{peer["conntime"].get_int64()};
-                const int64_t last_blck{peer["last_block"].get_int64()};
-                const int64_t last_recv{peer["lastrecv"].get_int64()};
-                const int64_t last_send{peer["lastsend"].get_int64()};
-                const int64_t last_trxn{peer["last_transaction"].get_int64()};
+                const int peer_id{peer["id"].getInt<int>()};
+                const int mapped_as{peer["mapped_as"].isNull() ? 0 : peer["mapped_as"].getInt<int>()};
+                const int version{peer["version"].getInt<int>()};
+                const int64_t addr_processed{peer["addr_processed"].isNull() ? 0 : peer["addr_processed"].getInt<int64_t>()};
+                const int64_t addr_rate_limited{peer["addr_rate_limited"].isNull() ? 0 : peer["addr_rate_limited"].getInt<int64_t>()};
+                const int64_t conn_time{peer["conntime"].getInt<int64_t>()};
+                const int64_t last_blck{peer["last_block"].getInt<int64_t>()};
+                const int64_t last_recv{peer["lastrecv"].getInt<int64_t>()};
+                const int64_t last_send{peer["lastsend"].getInt<int64_t>()};
+                const int64_t last_trxn{peer["last_transaction"].getInt<int64_t>()};
                 const double min_ping{peer["minping"].isNull() ? -1 : peer["minping"].get_real()};
                 const double ping{peer["pingtime"].isNull() ? -1 : peer["pingtime"].get_real()};
                 const std::string addr{peer["addr"].get_str()};
@@ -534,7 +534,7 @@ public:
         }
 
         // Generate report header.
-        std::string result{strprintf("%s client %s%s - server %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].get_int(), networkinfo["subversion"].get_str())};
+        std::string result{strprintf("%s client %s%s - server %i%s\n\n", PACKAGE_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].getInt<int>(), networkinfo["subversion"].get_str())};
 
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
@@ -623,7 +623,7 @@ public:
                 max_addr_size = std::max(addr["address"].get_str().length() + 1, max_addr_size);
             }
             for (const UniValue& addr : local_addrs) {
-                result += strprintf("\n%-*s    port %6i    score %6i", max_addr_size, addr["address"].get_str(), addr["port"].get_int(), addr["score"].get_int());
+                result += strprintf("\n%-*s    port %6i    score %6i", max_addr_size, addr["address"].get_str(), addr["port"].getInt<int>(), addr["score"].getInt<int>());
             }
         }
 
@@ -877,7 +877,7 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
             response = CallRPC(rh, strMethod, args, rpcwallet);
             if (fWait) {
                 const UniValue& error = find_value(response, "error");
-                if (!error.isNull() && error["code"].get_int() == RPC_IN_WARMUP) {
+                if (!error.isNull() && error["code"].getInt<int>() == RPC_IN_WARMUP) {
                     throw CConnectionFailed("server in warmup");
                 }
             }
@@ -912,13 +912,13 @@ static void ParseError(const UniValue& error, std::string& strPrint, int& nRet)
         if (err_msg.isStr()) {
             strPrint += ("error message:\n" + err_msg.get_str());
         }
-        if (err_code.isNum() && err_code.get_int() == RPC_WALLET_NOT_SPECIFIED) {
+        if (err_code.isNum() && err_code.getInt<int>() == RPC_WALLET_NOT_SPECIFIED) {
             strPrint += "\nTry adding \"-rpcwallet=<filename>\" option to dash-cli command line.";
         }
     } else {
         strPrint = "error: " + error.write();
     }
-    nRet = abs(error["code"].get_int());
+    nRet = abs(error["code"].getInt<int>());
 }
 
 /**

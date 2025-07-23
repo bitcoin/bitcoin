@@ -797,7 +797,7 @@ RPCHelpMan importelectrumwallet()
     // Whether to perform rescan after import
     int nStartHeight = 0;
     if (!request.params[1].isNull())
-        nStartHeight = request.params[1].get_int();
+        nStartHeight = request.params[1].getInt<int>();
     if (tip_height < nStartHeight)
         nStartHeight = tip_height;
 
@@ -1459,7 +1459,7 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
     if (data.exists("timestamp")) {
         const UniValue& timestamp = data["timestamp"];
         if (timestamp.isNum()) {
-            return timestamp.get_int64();
+            return timestamp.getInt<int64_t>();
         } else if (timestamp.isStr() && timestamp.get_str() == "now") {
             return now;
         }
@@ -1700,7 +1700,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             next_index = range_start;
 
             if (data.exists("next_index")) {
-                next_index = data["next_index"].get_int64();
+                next_index = data["next_index"].getInt<int64_t>();
                 // bound checks
                 if (next_index < range_start || next_index >= range_end) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "next_index is out of range");

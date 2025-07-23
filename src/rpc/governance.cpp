@@ -908,7 +908,7 @@ static RPCHelpMan voteraw()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hashMnCollateralTx(ParseHashV(request.params[0], "mn collateral tx hash"));
-    int nMnCollateralTxIndex = request.params[1].get_int();
+    int nMnCollateralTxIndex = request.params[1].getInt<int>();
     COutPoint outpoint = COutPoint(hashMnCollateralTx, nMnCollateralTxIndex);
 
     uint256 hashGovObj(ParseHashV(request.params[2], "Governance hash"));
@@ -939,7 +939,7 @@ static RPCHelpMan voteraw()
     }();
 
 
-    int64_t nTime = request.params[5].get_int64();
+    int64_t nTime = request.params[5].getInt<int64_t>();
     std::string strSig = request.params[6].get_str();
     auto opt_vchSig = DecodeBase64(strSig);
 
@@ -1042,7 +1042,7 @@ static RPCHelpMan getsuperblockbudget()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int nBlockHeight = request.params[0].get_int();
+    int nBlockHeight = request.params[0].getInt<int>();
     if (nBlockHeight < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
     }

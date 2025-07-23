@@ -224,7 +224,7 @@ static RPCHelpMan sporkupdate()
     CHECK_NONFATAL(node.sporkman);
 
     // SPORK VALUE
-    int64_t nValue = request.params[1].get_int64();
+    int64_t nValue = request.params[1].getInt<int64_t>();
 
     // broadcast new spork
     if (node.sporkman->UpdateSpork(peerman, nSporkID, nValue)) {
@@ -261,7 +261,7 @@ static RPCHelpMan setmocktime()
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    const int64_t time{request.params[0].get_int64()};
+    const int64_t time{request.params[0].getInt<int64_t>()};
     if (time < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime cannot be negative: %s.", time));
     }
@@ -296,7 +296,7 @@ static RPCHelpMan mnauth()
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
 
-    int64_t nodeId = request.params[0].get_int64();
+    int64_t nodeId = request.params[0].getInt<int64_t>();
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
@@ -558,8 +558,8 @@ static RPCHelpMan getaddressdeltas()
     int end = 0;
 
     if (startValue.isNum() && endValue.isNum()) {
-        start = startValue.get_int();
-        end = endValue.get_int();
+        start = startValue.getInt<int>();
+        end = endValue.getInt<int>();
         if (end < start) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "End value is expected to be greater than start");
         }
@@ -718,8 +718,8 @@ static RPCHelpMan getaddresstxids()
         UniValue startValue = find_value(request.params[0].get_obj(), "start");
         UniValue endValue = find_value(request.params[0].get_obj(), "end");
         if (startValue.isNum() && endValue.isNum()) {
-            start = startValue.get_int();
-            end = endValue.get_int();
+            start = startValue.getInt<int>();
+            end = endValue.getInt<int>();
         }
     }
 
@@ -797,7 +797,7 @@ static RPCHelpMan getspentinfo()
     }
 
     uint256 txid = ParseHashV(txidValue, "txid");
-    int outputIndex = indexValue.get_int();
+    int outputIndex = indexValue.getInt<int>();
 
     CSpentIndexKey key(txid, outputIndex);
     CSpentIndexValue value;
@@ -835,7 +835,7 @@ static RPCHelpMan mockscheduler()
 
     // check params are valid values
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    int64_t delta_seconds = request.params[0].get_int64();
+    int64_t delta_seconds = request.params[0].getInt<int64_t>();
     if (delta_seconds <= 0 || delta_seconds > 3600) {
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }

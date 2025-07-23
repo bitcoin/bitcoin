@@ -107,7 +107,7 @@ static RPCHelpMan setcoinjoinrounds()
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    int nRounds = request.params[0].get_int();
+    int nRounds = request.params[0].getInt<int>();
 
     if (nRounds > MAX_COINJOIN_ROUNDS || nRounds < MIN_COINJOIN_ROUNDS)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid number of rounds");
@@ -138,7 +138,7 @@ static RPCHelpMan setcoinjoinamount()
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    int nAmount = request.params[0].get_int();
+    int nAmount = request.params[0].getInt<int>();
 
     if (nAmount > MAX_COINJOIN_AMOUNT || nAmount < MIN_COINJOIN_AMOUNT)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount of " + CURRENCY_UNIT + " as mixing goal amount");
@@ -885,7 +885,7 @@ static RPCHelpMan upgradewallet()
 
     int version = 0;
     if (!request.params[0].isNull()) {
-        version = request.params[0].get_int();
+        version = request.params[0].getInt<int>();
     }
     bilingual_str error;
     const int previous_version{pwallet->GetVersion()};

@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           // deserialize test data
           raw_tx = test[0].get_str();
           raw_script = test[1].get_str();
-          nIn = test[2].get_int();
-          nHashType = test[3].get_int();
+          nIn = test[2].getInt<int>();
+          nHashType = test[3].getInt<int>();
           sigHashHex = test[4].get_str();
 
           CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);

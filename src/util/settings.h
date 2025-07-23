@@ -20,7 +20,7 @@ namespace util {
 //! @note UniValue is used here for convenience and because it can be easily
 //!       serialized in a readable format. But any other variant type that can
 //!       be assigned strings, int64_t, and bool values and has get_str(),
-//!       get_int64(), get_bool(), isNum(), isBool(), isFalse(), isTrue() and
+//!       getInt<int64_t>(), get_bool(), isNum(), isBool(), isFalse(), isTrue() and
 //!       isNull() methods can be substituted if there's a need to move away
 //!       from UniValue. (An implementation with boost::variant was posted at
 //!       https://github.com/bitcoin/bitcoin/pull/15934/files#r337691812)

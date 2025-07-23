@@ -50,11 +50,11 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj, 
         }
 
         if (UniValue paymentStartValue = find_value(prop_data, "start_epoch"); paymentStartValue.isNum()) {
-            m_startDate = QDateTime::fromSecsSinceEpoch(paymentStartValue.get_int64());
+            m_startDate = QDateTime::fromSecsSinceEpoch(paymentStartValue.getInt<int64_t>());
         }
 
         if (UniValue paymentEndValue = find_value(prop_data, "end_epoch"); paymentEndValue.isNum()) {
-            m_endDate = QDateTime::fromSecsSinceEpoch(paymentEndValue.get_int64());
+            m_endDate = QDateTime::fromSecsSinceEpoch(paymentEndValue.getInt<int64_t>());
         }
 
         if (UniValue amountValue = find_value(prop_data, "payment_amount"); amountValue.isNum()) {
