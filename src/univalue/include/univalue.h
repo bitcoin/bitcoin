@@ -83,66 +83,10 @@ public:
     bool isObject() const { return (typ == VOBJ); }
 
     bool push_back(const UniValue& val);
-    bool push_back(const std::string& val_) {
-        UniValue tmpVal(VSTR, val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(const char *val_) {
-        std::string s(val_);
-        return push_back(s);
-    }
-    bool push_back(uint64_t val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(int64_t val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(bool val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(int val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
-    bool push_back(double val_) {
-        UniValue tmpVal(val_);
-        return push_back(tmpVal);
-    }
     bool push_backV(const std::vector<UniValue>& vec);
 
     void __pushKV(const std::string& key, const UniValue& val);
     bool pushKV(const std::string& key, const UniValue& val);
-    bool pushKV(const std::string& key, const std::string& val_) {
-        UniValue tmpVal(VSTR, val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, const char *val_) {
-        std::string _val(val_);
-        return pushKV(key, _val);
-    }
-    bool pushKV(const std::string& key, int64_t val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, uint64_t val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, bool val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, int val_) {
-        UniValue tmpVal((int64_t)val_);
-        return pushKV(key, tmpVal);
-    }
-    bool pushKV(const std::string& key, double val_) {
-        UniValue tmpVal(val_);
-        return pushKV(key, tmpVal);
-    }
     bool pushKVs(const UniValue& obj);
 
     std::string write(unsigned int prettyIndent = 0,
@@ -185,8 +129,6 @@ public:
     }
     bool get_bool() const;
     const std::string& get_str() const;
-    auto get_int() const { return getInt<int>(); };
-    auto get_int64() const { return getInt<int64_t>(); };
     double get_real() const;
     const UniValue& get_obj() const;
     const UniValue& get_array() const;
