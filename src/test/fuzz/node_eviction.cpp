@@ -8,6 +8,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/util/random.h>
 
 #include <algorithm>
 #include <cassert>
@@ -17,6 +18,7 @@
 
 FUZZ_TARGET(node_eviction)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     std::vector<NodeEvictionCandidate> eviction_candidates;
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
