@@ -47,71 +47,8 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-#if AES_BIG_ENDIAN
-
-#define AESx(x)   ( ((SPH_C32(x) >> 24) & SPH_C32(0x000000FF)) \
-                  | ((SPH_C32(x) >>  8) & SPH_C32(0x0000FF00)) \
-                  | ((SPH_C32(x) <<  8) & SPH_C32(0x00FF0000)) \
-                  | ((SPH_C32(x) << 24) & SPH_C32(0xFF000000)))
-
-#define AES0      AES0_BE
-#define AES1      AES1_BE
-#define AES2      AES2_BE
-#define AES3      AES3_BE
-
-#define AES_ROUND_BE(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3)   do { \
-		(Y0) = AES0[((X0) >> 24) & 0xFF] \
-			^ AES1[((X1) >> 16) & 0xFF] \
-			^ AES2[((X2) >> 8) & 0xFF] \
-			^ AES3[(X3) & 0xFF] ^ (K0); \
-		(Y1) = AES0[((X1) >> 24) & 0xFF] \
-			^ AES1[((X2) >> 16) & 0xFF] \
-			^ AES2[((X3) >> 8) & 0xFF] \
-			^ AES3[(X0) & 0xFF] ^ (K1); \
-		(Y2) = AES0[((X2) >> 24) & 0xFF] \
-			^ AES1[((X3) >> 16) & 0xFF] \
-			^ AES2[((X0) >> 8) & 0xFF] \
-			^ AES3[(X1) & 0xFF] ^ (K2); \
-		(Y3) = AES0[((X3) >> 24) & 0xFF] \
-			^ AES1[((X0) >> 16) & 0xFF] \
-			^ AES2[((X1) >> 8) & 0xFF] \
-			^ AES3[(X2) & 0xFF] ^ (K3); \
-	} while (0)
-
-#define AES_ROUND_NOKEY_BE(X0, X1, X2, X3, Y0, Y1, Y2, Y3) \
-	AES_ROUND_BE(X0, X1, X2, X3, 0, 0, 0, 0, Y0, Y1, Y2, Y3)
-
-#else
 
 #define AESx(x)   SPH_C32(x)
-#define AES0      AES0_LE
-#define AES1      AES1_LE
-#define AES2      AES2_LE
-#define AES3      AES3_LE
-
-#define AES_ROUND_LE(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3)   do { \
-		(Y0) = AES0[(X0) & 0xFF] \
-			^ AES1[((X1) >> 8) & 0xFF] \
-			^ AES2[((X2) >> 16) & 0xFF] \
-			^ AES3[((X3) >> 24) & 0xFF] ^ (K0); \
-		(Y1) = AES0[(X1) & 0xFF] \
-			^ AES1[((X2) >> 8) & 0xFF] \
-			^ AES2[((X3) >> 16) & 0xFF] \
-			^ AES3[((X0) >> 24) & 0xFF] ^ (K1); \
-		(Y2) = AES0[(X2) & 0xFF] \
-			^ AES1[((X3) >> 8) & 0xFF] \
-			^ AES2[((X0) >> 16) & 0xFF] \
-			^ AES3[((X1) >> 24) & 0xFF] ^ (K2); \
-		(Y3) = AES0[(X3) & 0xFF] \
-			^ AES1[((X0) >> 8) & 0xFF] \
-			^ AES2[((X1) >> 16) & 0xFF] \
-			^ AES3[((X2) >> 24) & 0xFF] ^ (K3); \
-	} while (0)
-
-#define AES_ROUND_NOKEY_LE(X0, X1, X2, X3, Y0, Y1, Y2, Y3) \
-	AES_ROUND_LE(X0, X1, X2, X3, 0, 0, 0, 0, Y0, Y1, Y2, Y3)
-
-#endif
 
 /*
  * The AES*[] tables allow us to perform a fast evaluation of an AES
@@ -386,6 +323,28 @@ static const sph_u32 AES3[256] = {
 	AESx(0x82C34141), AESx(0x29B09999), AESx(0x5A772D2D), AESx(0x1E110F0F),
 	AESx(0x7BCBB0B0), AESx(0xA8FC5454), AESx(0x6DD6BBBB), AESx(0x2C3A1616)
 };
+
+#define AES_ROUND_LE(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3)   do { \
+		(Y0) = AES0[(X0) & 0xFF] \
+			^ AES1[((X1) >> 8) & 0xFF] \
+			^ AES2[((X2) >> 16) & 0xFF] \
+			^ AES3[((X3) >> 24) & 0xFF] ^ (K0); \
+		(Y1) = AES0[(X1) & 0xFF] \
+			^ AES1[((X2) >> 8) & 0xFF] \
+			^ AES2[((X3) >> 16) & 0xFF] \
+			^ AES3[((X0) >> 24) & 0xFF] ^ (K1); \
+		(Y2) = AES0[(X2) & 0xFF] \
+			^ AES1[((X3) >> 8) & 0xFF] \
+			^ AES2[((X0) >> 16) & 0xFF] \
+			^ AES3[((X1) >> 24) & 0xFF] ^ (K2); \
+		(Y3) = AES0[(X3) & 0xFF] \
+			^ AES1[((X0) >> 8) & 0xFF] \
+			^ AES2[((X1) >> 16) & 0xFF] \
+			^ AES3[((X2) >> 24) & 0xFF] ^ (K3); \
+	} while (0)
+
+#define AES_ROUND_NOKEY_LE(X0, X1, X2, X3, Y0, Y1, Y2, Y3) \
+	AES_ROUND_LE(X0, X1, X2, X3, 0, 0, 0, 0, Y0, Y1, Y2, Y3)
 
 #ifdef __cplusplus
 }

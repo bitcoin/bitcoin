@@ -69,7 +69,6 @@ extern "C"{
 #define C64   SPH_C64
 #endif
 
-#define AES_BIG_ENDIAN   0
 #include "aes_helper.c"
 
 #if SPH_ECHO_64

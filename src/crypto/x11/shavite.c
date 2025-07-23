@@ -61,7 +61,6 @@ extern "C"{
  * is commented out afterwards.
  */
 
-#define AES_BIG_ENDIAN   0
 #include "aes_helper.c"
 
 static const sph_u32 IV224[] = {
