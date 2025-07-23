@@ -83,6 +83,8 @@ struct CoinFilterParams {
     bool include_immature_coinbase{false};
     // By default, skip locked UTXOs
     bool skip_locked{true};
+    // Skip outputs not eligible for silent payments
+    bool silent_payments{false};
 };
 
 /**
