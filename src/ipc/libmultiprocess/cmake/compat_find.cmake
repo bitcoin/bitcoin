@@ -6,7 +6,7 @@
 # cmake find_package() calls are made
 
 # Set FOUND_LIBATOMIC to work around bug in debian capnproto package that is
-# debian-specific and does not happpen upstream. Debian includes a patch
+# debian-specific and does not happen upstream. Debian includes a patch
 # https://sources.debian.org/patches/capnproto/1.0.1-4/07_libatomic.patch/ which
 # uses check_library_exists(atomic __atomic_load_8 ...) and it fails because the
 # symbol name conflicts with a compiler instrinsic as described
