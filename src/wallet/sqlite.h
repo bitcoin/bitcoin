@@ -103,8 +103,6 @@ public:
 class SQLiteDatabase : public WalletDatabase
 {
 private:
-    const bool m_mock{false};
-
     const fs::path m_dir_path;
 
     const std::string m_file_path;
@@ -120,11 +118,16 @@ private:
 
     void Cleanup() noexcept EXCLUSIVE_LOCKS_REQUIRED(!g_sqlite_mutex);
 
+    void Open(int additional_flags);
+
+protected:
+    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, int additional_flags);
+
 public:
     SQLiteDatabase() = delete;
 
     /** Create DB handle to real database */
-    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options, bool mock = false);
+    SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, const DatabaseOptions& options);
 
     ~SQLiteDatabase();
 
