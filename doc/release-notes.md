@@ -37,6 +37,17 @@ unsupported systems.
 Notable changes
 ===============
 
+### Mempool Policy
+
+- The maximum number of potentially executed legacy signature operations in a
+  single standard transaction is now limited to 2500. Signature operations in all
+  previous output scripts, in all input scripts, as well as all P2SH redeem
+  scripts (if there are any) are counted toward the limit. The new limit is
+  assumed to not affect any known typically formed standard transactions. The
+  change was done to prepare for a possible BIP54 deployment in the future.
+
+- #32521 policy: make pathological transactions packed with legacy sigops non-standard
+
 ### Updated Settings
 
 - The `-maxmempool` and `-dbcache` startup parameters are now capped on
@@ -132,11 +143,11 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - achow101
+- Antoine Poinsot
 - benthecarman
 - bigspider
 - Brandon Odiwuor
 - brunoerg
-- darosior
 - davidgumberg
 - dergoegge
 - enirox001
