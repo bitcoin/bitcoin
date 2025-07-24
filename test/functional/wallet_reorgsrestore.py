@@ -115,7 +115,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
 
         # Abort process abruptly to mimic an unclean shutdown (no chain state flush to disk)
-        node.process.kill()
+        node.kill_process()
 
         # Restart the node and confirm that it has not persisted the last chain state changes to disk
         self.start_node(0)

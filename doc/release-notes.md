@@ -55,6 +55,7 @@ Notable changes
 
 ### Test
 
+- #32069 test: fix intermittent failure in wallet_reorgsrestore.py
 - #32286 test: Handle empty string returned by CLI as None in RPC tests
 - #32312 test: Fix feature_pruning test after nTime typo fix
 - #32336 test: Suppress upstream -Wduplicate-decl-specifier in bpfcc
