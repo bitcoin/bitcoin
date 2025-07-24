@@ -206,6 +206,17 @@ if BUILD_WINDOWS
 musig_example_LDFLAGS += -lbcrypt
 endif
 TESTS += musig_example
+if ENABLE_MODULE_BATCH
+noinst_PROGRAMS += batch_example
+batch_example_SOURCES = examples/batch.c
+batch_example_CPPFLAGS = -I$(top_srcdir)/include
+batch_example_LDADD = libsecp256k1.la
+batch_example_LDFLAGS = -static
+if BUILD_WINDOWS
+batch_example_LDFLAGS += -lbcrypt
+endif
+TESTS += batch_example
+endif
 endif
 endif
 
@@ -310,4 +321,8 @@ endif
 
 if ENABLE_MODULE_ELLSWIFT
 include src/modules/ellswift/Makefile.am.include
+endif
+
+if ENABLE_MODULE_BATCH
+include src/modules/batch/Makefile.am.include
 endif

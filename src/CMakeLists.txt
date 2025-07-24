@@ -7,6 +7,11 @@ set_property(TARGET secp256k1 PROPERTY PUBLIC_HEADER
 
 # Processing must be done in a topological sorting of the dependency graph
 # (dependent module first).
+if(SECP256K1_ENABLE_MODULE_BATCH)
+  add_compile_definitions(ENABLE_MODULE_BATCH=1)
+  set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_batch.h)
+endif()
+
 if(SECP256K1_ENABLE_MODULE_ELLSWIFT)
   add_compile_definitions(ENABLE_MODULE_ELLSWIFT=1)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_ellswift.h)
@@ -28,11 +33,17 @@ if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
   set(SECP256K1_ENABLE_MODULE_EXTRAKEYS ON)
   add_compile_definitions(ENABLE_MODULE_SCHNORRSIG=1)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_schnorrsig.h)
+  if(SECP256K1_ENABLE_MODULE_BATCH)
+    set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_schnorrsig_batch.h)
+  endif()
 endif()
 
 if(SECP256K1_ENABLE_MODULE_EXTRAKEYS)
   add_compile_definitions(ENABLE_MODULE_EXTRAKEYS=1)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_extrakeys.h)
+  if(SECP256K1_ENABLE_MODULE_BATCH)
+    set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_tweak_check_batch.h)
+  endif()
 endif()
 
 if(SECP256K1_ENABLE_MODULE_RECOVERY)
@@ -53,10 +64,6 @@ add_library(secp256k1_precomputed OBJECT EXCLUDE_FROM_ALL
 # Add objects explicitly rather than linking to the object libs to keep them
 # from being exported.
 target_sources(secp256k1 PRIVATE secp256k1.c $<TARGET_OBJECTS:secp256k1_precomputed>)
-
-if(NOT SECP256K1_ENABLE_API_VISIBILITY_ATTRIBUTES)
-  target_compile_definitions(secp256k1 PRIVATE SECP256K1_NO_API_VISIBILITY_ATTRIBUTES)
-endif()
 
 # Create a helper lib that parent projects can use to link secp256k1 into a
 # static lib.
@@ -90,8 +97,7 @@ target_include_directories(secp256k1 INTERFACE
   $<BUILD_INTERFACE:$<$<NOT:$<BOOL:${PROJECT_IS_TOP_LEVEL}>>:${PROJECT_SOURCE_DIR}/include>>
 )
 set_target_properties(secp256k1_objs PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "$<TARGET_PROPERTY:secp256k1,INTERFACE_COMPILE_DEFINITIONS>"
-  INTERFACE_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:secp256k1,INTERFACE_INCLUDE_DIRECTORIES>"
+    INTERFACE_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:secp256k1,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 
 # This emulates Libtool to make sure Libtool and CMake agree on the ABI version,
