@@ -14,6 +14,8 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
+#include <sqlite3.h>
+
 #include <memory>
 
 namespace wallet {
@@ -111,7 +113,7 @@ CTxDestination getNewDestination(CWallet& w, OutputType output_type)
 }
 
 MockableSQLiteDatabase::MockableSQLiteDatabase()
-    : SQLiteDatabase(fs::PathFromString("mock/"), fs::PathFromString("mock/wallet.dat"), DatabaseOptions(), /*mock=*/true)
+    : SQLiteDatabase(fs::PathFromString("mock/"), fs::PathFromString("mock/wallet.dat"), DatabaseOptions(), SQLITE_OPEN_MEMORY)
 {}
 
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase()
