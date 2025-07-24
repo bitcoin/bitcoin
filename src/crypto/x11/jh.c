@@ -321,39 +321,6 @@ static const sph_u64 C[] = {
 	h7h ^= m3h; \
 	h7l ^= m3l;
 
-static const sph_u64 IV224[] = {
-	C64e(0x2dfedd62f99a98ac), C64e(0xae7cacd619d634e7),
-	C64e(0xa4831005bc301216), C64e(0xb86038c6c9661494),
-	C64e(0x66d9899f2580706f), C64e(0xce9ea31b1d9b1adc),
-	C64e(0x11e8325f7b366e10), C64e(0xf994857f02fa06c1),
-	C64e(0x1b4f1b5cd8c840b3), C64e(0x97f6a17f6e738099),
-	C64e(0xdcdf93a5adeaa3d3), C64e(0xa431e8dec9539a68),
-	C64e(0x22b4a98aec86a1e4), C64e(0xd574ac959ce56cf0),
-	C64e(0x15960deab5ab2bbf), C64e(0x9611dcf0dd64ea6e)
-};
-
-static const sph_u64 IV256[] = {
-	C64e(0xeb98a3412c20d3eb), C64e(0x92cdbe7b9cb245c1),
-	C64e(0x1c93519160d4c7fa), C64e(0x260082d67e508a03),
-	C64e(0xa4239e267726b945), C64e(0xe0fb1a48d41a9477),
-	C64e(0xcdb5ab26026b177a), C64e(0x56f024420fff2fa8),
-	C64e(0x71a396897f2e4d75), C64e(0x1d144908f77de262),
-	C64e(0x277695f776248f94), C64e(0x87d5b6574780296c),
-	C64e(0x5c5e272dac8e0d6c), C64e(0x518450c657057a0f),
-	C64e(0x7be4d367702412ea), C64e(0x89e3ab13d31cd769)
-};
-
-static const sph_u64 IV384[] = {
-	C64e(0x481e3bc6d813398a), C64e(0x6d3b5e894ade879b),
-	C64e(0x63faea68d480ad2e), C64e(0x332ccb21480f8267),
-	C64e(0x98aec84d9082b928), C64e(0xd455ea3041114249),
-	C64e(0x36f555b2924847ec), C64e(0xc7250a93baf43ce1),
-	C64e(0x569b7f8a27db454c), C64e(0x9efcbd496397af0e),
-	C64e(0x589fc27d26aa80cd), C64e(0x80c08b8c9deb2eda),
-	C64e(0x8a7981e8f8d5373a), C64e(0xf43967adddd17a71),
-	C64e(0xa9b4d3bda475d394), C64e(0x976c3fba9842737f)
-};
-
 static const sph_u64 IV512[] = {
 	C64e(0x6fd14b963e00aa17), C64e(0x636a2e057a15d543),
 	C64e(0x8a225e8d0c97ef0b), C64e(0xe9341259f2b3c361),
@@ -671,39 +638,6 @@ static const sph_u32 C[] = {
 	h71 ^= m31; \
 	h70 ^= m30;
 
-static const sph_u32 IV224[] = {
-	C32e(0x2dfedd62), C32e(0xf99a98ac), C32e(0xae7cacd6), C32e(0x19d634e7),
-	C32e(0xa4831005), C32e(0xbc301216), C32e(0xb86038c6), C32e(0xc9661494),
-	C32e(0x66d9899f), C32e(0x2580706f), C32e(0xce9ea31b), C32e(0x1d9b1adc),
-	C32e(0x11e8325f), C32e(0x7b366e10), C32e(0xf994857f), C32e(0x02fa06c1),
-	C32e(0x1b4f1b5c), C32e(0xd8c840b3), C32e(0x97f6a17f), C32e(0x6e738099),
-	C32e(0xdcdf93a5), C32e(0xadeaa3d3), C32e(0xa431e8de), C32e(0xc9539a68),
-	C32e(0x22b4a98a), C32e(0xec86a1e4), C32e(0xd574ac95), C32e(0x9ce56cf0),
-	C32e(0x15960dea), C32e(0xb5ab2bbf), C32e(0x9611dcf0), C32e(0xdd64ea6e)
-};
-
-static const sph_u32 IV256[] = {
-	C32e(0xeb98a341), C32e(0x2c20d3eb), C32e(0x92cdbe7b), C32e(0x9cb245c1),
-	C32e(0x1c935191), C32e(0x60d4c7fa), C32e(0x260082d6), C32e(0x7e508a03),
-	C32e(0xa4239e26), C32e(0x7726b945), C32e(0xe0fb1a48), C32e(0xd41a9477),
-	C32e(0xcdb5ab26), C32e(0x026b177a), C32e(0x56f02442), C32e(0x0fff2fa8),
-	C32e(0x71a39689), C32e(0x7f2e4d75), C32e(0x1d144908), C32e(0xf77de262),
-	C32e(0x277695f7), C32e(0x76248f94), C32e(0x87d5b657), C32e(0x4780296c),
-	C32e(0x5c5e272d), C32e(0xac8e0d6c), C32e(0x518450c6), C32e(0x57057a0f),
-	C32e(0x7be4d367), C32e(0x702412ea), C32e(0x89e3ab13), C32e(0xd31cd769)
-};
-
-static const sph_u32 IV384[] = {
-	C32e(0x481e3bc6), C32e(0xd813398a), C32e(0x6d3b5e89), C32e(0x4ade879b),
-	C32e(0x63faea68), C32e(0xd480ad2e), C32e(0x332ccb21), C32e(0x480f8267),
-	C32e(0x98aec84d), C32e(0x9082b928), C32e(0xd455ea30), C32e(0x41114249),
-	C32e(0x36f555b2), C32e(0x924847ec), C32e(0xc7250a93), C32e(0xbaf43ce1),
-	C32e(0x569b7f8a), C32e(0x27db454c), C32e(0x9efcbd49), C32e(0x6397af0e),
-	C32e(0x589fc27d), C32e(0x26aa80cd), C32e(0x80c08b8c), C32e(0x9deb2eda),
-	C32e(0x8a7981e8), C32e(0xf8d5373a), C32e(0xf43967ad), C32e(0xddd17a71),
-	C32e(0xa9b4d3bd), C32e(0xa475d394), C32e(0x976c3fba), C32e(0x9842737f)
-};
-
 static const sph_u32 IV512[] = {
 	C32e(0x6fd14b96), C32e(0x3e00aa17), C32e(0x636a2e05), C32e(0x7a15d543),
 	C32e(0x8a225e8d), C32e(0x0c97ef0b), C32e(0xe9341259), C32e(0xf2b3c361),
@@ -997,90 +931,6 @@ jh_close(sph_jh_context *sc, unsigned ub, unsigned n,
 #endif
 	memcpy(dst, buf + ((16 - out_size_w32) << 2), out_size_w32 << 2);
 	jh_init(sc, iv);
-}
-
-/* see sph_jh.h */
-void
-sph_jh224_init(void *cc)
-{
-	jh_init(cc, IV224);
-}
-
-/* see sph_jh.h */
-void
-sph_jh224(void *cc, const void *data, size_t len)
-{
-	jh_core(cc, data, len);
-}
-
-/* see sph_jh.h */
-void
-sph_jh224_close(void *cc, void *dst)
-{
-	jh_close(cc, 0, 0, dst, 7, IV224);
-}
-
-/* see sph_jh.h */
-void
-sph_jh224_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	jh_close(cc, ub, n, dst, 7, IV224);
-}
-
-/* see sph_jh.h */
-void
-sph_jh256_init(void *cc)
-{
-	jh_init(cc, IV256);
-}
-
-/* see sph_jh.h */
-void
-sph_jh256(void *cc, const void *data, size_t len)
-{
-	jh_core(cc, data, len);
-}
-
-/* see sph_jh.h */
-void
-sph_jh256_close(void *cc, void *dst)
-{
-	jh_close(cc, 0, 0, dst, 8, IV256);
-}
-
-/* see sph_jh.h */
-void
-sph_jh256_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	jh_close(cc, ub, n, dst, 8, IV256);
-}
-
-/* see sph_jh.h */
-void
-sph_jh384_init(void *cc)
-{
-	jh_init(cc, IV384);
-}
-
-/* see sph_jh.h */
-void
-sph_jh384(void *cc, const void *data, size_t len)
-{
-	jh_core(cc, data, len);
-}
-
-/* see sph_jh.h */
-void
-sph_jh384_close(void *cc, void *dst)
-{
-	jh_close(cc, 0, 0, dst, 12, IV384);
-}
-
-/* see sph_jh.h */
-void
-sph_jh384_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	jh_close(cc, ub, n, dst, 12, IV384);
 }
 
 /* see sph_jh.h */

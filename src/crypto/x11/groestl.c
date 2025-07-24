@@ -1218,17 +1218,6 @@ static const sph_u64 T7[] = {
 
 #endif
 
-#define DECL_STATE_SMALL \
-	sph_u64 H[8];
-
-#define READ_STATE_SMALL(sc)   do { \
-		memcpy(H, (sc)->state.wide, sizeof H); \
-	} while (0)
-
-#define WRITE_STATE_SMALL(sc)   do { \
-		memcpy((sc)->state.wide, H, sizeof H); \
-	} while (0)
-
 #if SPH_SMALL_FOOTPRINT_GROESTL
 
 #define RSTT(d, a, b0, b1, b2, b3, b4, b5, b6, b7)   do { \
@@ -1256,122 +1245,6 @@ static const sph_u64 T7[] = {
 	} while (0)
 
 #endif
-
-#define ROUND_SMALL_P(a, r)   do { \
-		sph_u64 t[8]; \
-		a[0] ^= PC64(0x00, r); \
-		a[1] ^= PC64(0x10, r); \
-		a[2] ^= PC64(0x20, r); \
-		a[3] ^= PC64(0x30, r); \
-		a[4] ^= PC64(0x40, r); \
-		a[5] ^= PC64(0x50, r); \
-		a[6] ^= PC64(0x60, r); \
-		a[7] ^= PC64(0x70, r); \
-		RSTT(0, a, 0, 1, 2, 3, 4, 5, 6, 7); \
-		RSTT(1, a, 1, 2, 3, 4, 5, 6, 7, 0); \
-		RSTT(2, a, 2, 3, 4, 5, 6, 7, 0, 1); \
-		RSTT(3, a, 3, 4, 5, 6, 7, 0, 1, 2); \
-		RSTT(4, a, 4, 5, 6, 7, 0, 1, 2, 3); \
-		RSTT(5, a, 5, 6, 7, 0, 1, 2, 3, 4); \
-		RSTT(6, a, 6, 7, 0, 1, 2, 3, 4, 5); \
-		RSTT(7, a, 7, 0, 1, 2, 3, 4, 5, 6); \
-		a[0] = t[0]; \
-		a[1] = t[1]; \
-		a[2] = t[2]; \
-		a[3] = t[3]; \
-		a[4] = t[4]; \
-		a[5] = t[5]; \
-		a[6] = t[6]; \
-		a[7] = t[7]; \
-	} while (0)
-
-#define ROUND_SMALL_Q(a, r)   do { \
-		sph_u64 t[8]; \
-		a[0] ^= QC64(0x00, r); \
-		a[1] ^= QC64(0x10, r); \
-		a[2] ^= QC64(0x20, r); \
-		a[3] ^= QC64(0x30, r); \
-		a[4] ^= QC64(0x40, r); \
-		a[5] ^= QC64(0x50, r); \
-		a[6] ^= QC64(0x60, r); \
-		a[7] ^= QC64(0x70, r); \
-		RSTT(0, a, 1, 3, 5, 7, 0, 2, 4, 6); \
-		RSTT(1, a, 2, 4, 6, 0, 1, 3, 5, 7); \
-		RSTT(2, a, 3, 5, 7, 1, 2, 4, 6, 0); \
-		RSTT(3, a, 4, 6, 0, 2, 3, 5, 7, 1); \
-		RSTT(4, a, 5, 7, 1, 3, 4, 6, 0, 2); \
-		RSTT(5, a, 6, 0, 2, 4, 5, 7, 1, 3); \
-		RSTT(6, a, 7, 1, 3, 5, 6, 0, 2, 4); \
-		RSTT(7, a, 0, 2, 4, 6, 7, 1, 3, 5); \
-		a[0] = t[0]; \
-		a[1] = t[1]; \
-		a[2] = t[2]; \
-		a[3] = t[3]; \
-		a[4] = t[4]; \
-		a[5] = t[5]; \
-		a[6] = t[6]; \
-		a[7] = t[7]; \
-	} while (0)
-
-#if SPH_SMALL_FOOTPRINT_GROESTL
-
-#define PERM_SMALL_P(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r ++) \
-			ROUND_SMALL_P(a, r); \
-	} while (0)
-
-#define PERM_SMALL_Q(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r ++) \
-			ROUND_SMALL_Q(a, r); \
-	} while (0)
-
-#else
-
-/*
- * Apparently, unrolling more than that confuses GCC, resulting in
- * lower performance, even though L1 cache would be no problem.
- */
-#define PERM_SMALL_P(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r += 2) { \
-			ROUND_SMALL_P(a, r + 0); \
-			ROUND_SMALL_P(a, r + 1); \
-		} \
-	} while (0)
-
-#define PERM_SMALL_Q(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r += 2) { \
-			ROUND_SMALL_Q(a, r + 0); \
-			ROUND_SMALL_Q(a, r + 1); \
-		} \
-	} while (0)
-
-#endif
-
-#define COMPRESS_SMALL   do { \
-		sph_u64 g[8], m[8]; \
-		size_t u; \
-		for (u = 0; u < 8; u ++) { \
-			m[u] = dec64e_aligned(buf + (u << 3)); \
-			g[u] = m[u] ^ H[u]; \
-		} \
-		PERM_SMALL_P(g); \
-		PERM_SMALL_Q(m); \
-		for (u = 0; u < 8; u ++) \
-			H[u] ^= g[u] ^ m[u]; \
-	} while (0)
-
-#define FINAL_SMALL   do { \
-		sph_u64 x[8]; \
-		size_t u; \
-		memcpy(x, H, sizeof x); \
-		PERM_SMALL_P(x); \
-		for (u = 0; u < 8; u ++) \
-			H[u] ^= x[u]; \
-	} while (0)
 
 #define DECL_STATE_BIG \
 	sph_u64 H[16];
@@ -1610,33 +1483,6 @@ static const sph_u64 T7[] = {
 		} \
 	} while (0)
 
-/* obsolete
-#if SPH_SMALL_FOOTPRINT_GROESTL
-
-#define COMPRESS_BIG   do { \
-		sph_u64 g[16], m[16], *ya; \
-		const sph_u64 *yc; \
-		size_t u; \
-		int i; \
-		for (u = 0; u < 16; u ++) { \
-			m[u] = dec64e_aligned(buf + (u << 3)); \
-			g[u] = m[u] ^ H[u]; \
-		} \
-		ya = g; \
-		yc = CP; \
-		for (i = 0; i < 2; i ++) { \
-			PERM_BIG(ya, yc); \
-			ya = m; \
-			yc = CQ; \
-		} \
-		for (u = 0; u < 16; u ++) { \
-			H[u] ^= g[u] ^ m[u]; \
-		} \
-	} while (0)
-
-#else
-*/
-
 #define COMPRESS_BIG   do { \
 		sph_u64 g[16], m[16]; \
 		size_t u; \
@@ -1650,10 +1496,6 @@ static const sph_u64 T7[] = {
 			H[u] ^= g[u] ^ m[u]; \
 		} \
 	} while (0)
-
-/* obsolete
-#endif
-*/
 
 #define FINAL_BIG   do { \
 		sph_u64 x[16]; \
@@ -2202,17 +2044,6 @@ static const sph_u32 T3dn[] = {
 	C32e(0x3d46cb46), C32e(0xb71ffc1f), C32e(0x0c61d661), C32e(0x624e3a4e)
 };
 
-#define DECL_STATE_SMALL \
-	sph_u32 H[16];
-
-#define READ_STATE_SMALL(sc)   do { \
-		memcpy(H, (sc)->state.narrow, sizeof H); \
-	} while (0)
-
-#define WRITE_STATE_SMALL(sc)   do { \
-		memcpy((sc)->state.narrow, H, sizeof H); \
-	} while (0)
-
 #define XCAT(x, y)    XCAT_(x, y)
 #define XCAT_(x, y)   x ## y
 
@@ -2233,120 +2064,6 @@ static const sph_u32 T3dn[] = {
 			^ T1up[B32_1(a[b5])] \
 			^ T2up[B32_2(a[b6])] \
 			^ T3up[B32_3(a[b7])]; \
-	} while (0)
-
-#define ROUND_SMALL_P(a, r)   do { \
-		sph_u32 t[16]; \
-		a[0x0] ^= PC32up(0x00, r); \
-		a[0x1] ^= PC32dn(0x00, r); \
-		a[0x2] ^= PC32up(0x10, r); \
-		a[0x3] ^= PC32dn(0x10, r); \
-		a[0x4] ^= PC32up(0x20, r); \
-		a[0x5] ^= PC32dn(0x20, r); \
-		a[0x6] ^= PC32up(0x30, r); \
-		a[0x7] ^= PC32dn(0x30, r); \
-		a[0x8] ^= PC32up(0x40, r); \
-		a[0x9] ^= PC32dn(0x40, r); \
-		a[0xA] ^= PC32up(0x50, r); \
-		a[0xB] ^= PC32dn(0x50, r); \
-		a[0xC] ^= PC32up(0x60, r); \
-		a[0xD] ^= PC32dn(0x60, r); \
-		a[0xE] ^= PC32up(0x70, r); \
-		a[0xF] ^= PC32dn(0x70, r); \
-		RSTT(0x0, 0x1, a, 0x0, 0x2, 0x4, 0x6, 0x9, 0xB, 0xD, 0xF); \
-		RSTT(0x2, 0x3, a, 0x2, 0x4, 0x6, 0x8, 0xB, 0xD, 0xF, 0x1); \
-		RSTT(0x4, 0x5, a, 0x4, 0x6, 0x8, 0xA, 0xD, 0xF, 0x1, 0x3); \
-		RSTT(0x6, 0x7, a, 0x6, 0x8, 0xA, 0xC, 0xF, 0x1, 0x3, 0x5); \
-		RSTT(0x8, 0x9, a, 0x8, 0xA, 0xC, 0xE, 0x1, 0x3, 0x5, 0x7); \
-		RSTT(0xA, 0xB, a, 0xA, 0xC, 0xE, 0x0, 0x3, 0x5, 0x7, 0x9); \
-		RSTT(0xC, 0xD, a, 0xC, 0xE, 0x0, 0x2, 0x5, 0x7, 0x9, 0xB); \
-		RSTT(0xE, 0xF, a, 0xE, 0x0, 0x2, 0x4, 0x7, 0x9, 0xB, 0xD); \
-		memcpy(a, t, sizeof t); \
-	} while (0)
-
-#define ROUND_SMALL_Q(a, r)   do { \
-		sph_u32 t[16]; \
-		a[0x0] ^= QC32up(0x00, r); \
-		a[0x1] ^= QC32dn(0x00, r); \
-		a[0x2] ^= QC32up(0x10, r); \
-		a[0x3] ^= QC32dn(0x10, r); \
-		a[0x4] ^= QC32up(0x20, r); \
-		a[0x5] ^= QC32dn(0x20, r); \
-		a[0x6] ^= QC32up(0x30, r); \
-		a[0x7] ^= QC32dn(0x30, r); \
-		a[0x8] ^= QC32up(0x40, r); \
-		a[0x9] ^= QC32dn(0x40, r); \
-		a[0xA] ^= QC32up(0x50, r); \
-		a[0xB] ^= QC32dn(0x50, r); \
-		a[0xC] ^= QC32up(0x60, r); \
-		a[0xD] ^= QC32dn(0x60, r); \
-		a[0xE] ^= QC32up(0x70, r); \
-		a[0xF] ^= QC32dn(0x70, r); \
-		RSTT(0x0, 0x1, a, 0x2, 0x6, 0xA, 0xE, 0x1, 0x5, 0x9, 0xD); \
-		RSTT(0x2, 0x3, a, 0x4, 0x8, 0xC, 0x0, 0x3, 0x7, 0xB, 0xF); \
-		RSTT(0x4, 0x5, a, 0x6, 0xA, 0xE, 0x2, 0x5, 0x9, 0xD, 0x1); \
-		RSTT(0x6, 0x7, a, 0x8, 0xC, 0x0, 0x4, 0x7, 0xB, 0xF, 0x3); \
-		RSTT(0x8, 0x9, a, 0xA, 0xE, 0x2, 0x6, 0x9, 0xD, 0x1, 0x5); \
-		RSTT(0xA, 0xB, a, 0xC, 0x0, 0x4, 0x8, 0xB, 0xF, 0x3, 0x7); \
-		RSTT(0xC, 0xD, a, 0xE, 0x2, 0x6, 0xA, 0xD, 0x1, 0x5, 0x9); \
-		RSTT(0xE, 0xF, a, 0x0, 0x4, 0x8, 0xC, 0xF, 0x3, 0x7, 0xB); \
-		memcpy(a, t, sizeof t); \
-	} while (0)
-
-#if SPH_SMALL_FOOTPRINT_GROESTL
-
-#define PERM_SMALL_P(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r ++) \
-			ROUND_SMALL_P(a, r); \
-	} while (0)
-
-#define PERM_SMALL_Q(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r ++) \
-			ROUND_SMALL_Q(a, r); \
-	} while (0)
-
-#else
-
-#define PERM_SMALL_P(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r += 2) { \
-			ROUND_SMALL_P(a, r + 0); \
-			ROUND_SMALL_P(a, r + 1); \
-		} \
-	} while (0)
-
-#define PERM_SMALL_Q(a)   do { \
-		int r; \
-		for (r = 0; r < 10; r += 2) { \
-			ROUND_SMALL_Q(a, r + 0); \
-			ROUND_SMALL_Q(a, r + 1); \
-		} \
-	} while (0)
-
-#endif
-
-#define COMPRESS_SMALL   do { \
-		sph_u32 g[16], m[16]; \
-		size_t u; \
-		for (u = 0; u < 16; u ++) { \
-			m[u] = dec32e_aligned(buf + (u << 2)); \
-			g[u] = m[u] ^ H[u]; \
-		} \
-		PERM_SMALL_P(g); \
-		PERM_SMALL_Q(m); \
-		for (u = 0; u < 16; u ++) \
-			H[u] ^= g[u] ^ m[u]; \
-	} while (0)
-
-#define FINAL_SMALL   do { \
-		sph_u32 x[16]; \
-		size_t u; \
-		memcpy(x, H, sizeof x); \
-		PERM_SMALL_P(x); \
-		for (u = 0; u < 16; u ++) \
-			H[u] ^= x[u]; \
 	} while (0)
 
 #define DECL_STATE_BIG \
@@ -2735,142 +2452,6 @@ static const sph_u32 T3dn[] = {
 #endif
 
 static void
-groestl_small_init(sph_groestl_small_context *sc, unsigned out_size)
-{
-	size_t u;
-
-	sc->ptr = 0;
-#if SPH_GROESTL_64
-	for (u = 0; u < 7; u ++)
-		sc->state.wide[u] = 0;
-#if USE_LE
-	sc->state.wide[7] = ((sph_u64)(out_size & 0xFF) << 56)
-		| ((sph_u64)(out_size & 0xFF00) << 40);
-#else
-	sc->state.wide[7] = (sph_u64)out_size;
-#endif
-#else
-	for (u = 0; u < 15; u ++)
-		sc->state.narrow[u] = 0;
-#if USE_LE
-	sc->state.narrow[15] = ((sph_u32)(out_size & 0xFF) << 24)
-		| ((sph_u32)(out_size & 0xFF00) << 8);
-#else
-	sc->state.narrow[15] = (sph_u32)out_size;
-#endif
-#endif
-#if SPH_64
-	sc->count = 0;
-#else
-	sc->count_high = 0;
-	sc->count_low = 0;
-#endif
-}
-
-static void
-groestl_small_core(sph_groestl_small_context *sc, const void *data, size_t len)
-{
-	unsigned char *buf;
-	size_t ptr;
-	DECL_STATE_SMALL
-
-	buf = sc->buf;
-	ptr = sc->ptr;
-	if (len < (sizeof sc->buf) - ptr) {
-		memcpy(buf + ptr, data, len);
-		ptr += len;
-		sc->ptr = ptr;
-		return;
-	}
-
-	READ_STATE_SMALL(sc);
-	while (len > 0) {
-		size_t clen;
-
-		clen = (sizeof sc->buf) - ptr;
-		if (clen > len)
-			clen = len;
-		memcpy(buf + ptr, data, clen);
-		ptr += clen;
-		data = (const unsigned char *)data + clen;
-		len -= clen;
-		if (ptr == sizeof sc->buf) {
-			COMPRESS_SMALL;
-#if SPH_64
-			sc->count ++;
-#else
-			if ((sc->count_low = SPH_T32(sc->count_low + 1)) == 0)
-				sc->count_high = SPH_T32(sc->count_high + 1);
-#endif
-			ptr = 0;
-		}
-	}
-	WRITE_STATE_SMALL(sc);
-	sc->ptr = ptr;
-}
-
-static void
-groestl_small_close(sph_groestl_small_context *sc,
-	unsigned ub, unsigned n, void *dst, size_t out_len)
-{
-	unsigned char *buf;
-	unsigned char pad[72];
-	size_t u, ptr, pad_len;
-#if SPH_64
-	sph_u64 count;
-#else
-	sph_u32 count_high, count_low;
-#endif
-	unsigned z;
-	DECL_STATE_SMALL
-
-	buf = sc->buf;
-	ptr = sc->ptr;
-	z = 0x80 >> n;
-	pad[0] = ((ub & -z) | z) & 0xFF;
-	if (ptr < 56) {
-		pad_len = 64 - ptr;
-#if SPH_64
-		count = SPH_T64(sc->count + 1);
-#else
-		count_low = SPH_T32(sc->count_low + 1);
-		count_high = SPH_T32(sc->count_high);
-		if (count_low == 0)
-			count_high = SPH_T32(count_high + 1);
-#endif
-	} else {
-		pad_len = 128 - ptr;
-#if SPH_64
-		count = SPH_T64(sc->count + 2);
-#else
-		count_low = SPH_T32(sc->count_low + 2);
-		count_high = SPH_T32(sc->count_high);
-		if (count_low <= 1)
-			count_high = SPH_T32(count_high + 1);
-#endif
-	}
-	memset(pad + 1, 0, pad_len - 9);
-#if SPH_64
-	sph_enc64be(pad + pad_len - 8, count);
-#else
-	sph_enc64be(pad + pad_len - 8, count_high);
-	sph_enc64be(pad + pad_len - 4, count_low);
-#endif
-	groestl_small_core(sc, pad, pad_len);
-	READ_STATE_SMALL(sc);
-	FINAL_SMALL;
-#if SPH_GROESTL_64
-	for (u = 0; u < 4; u ++)
-		enc64e(pad + (u << 3), H[u + 4]);
-#else
-	for (u = 0; u < 8; u ++)
-		enc32e(pad + (u << 2), H[u + 8]);
-#endif
-	memcpy(dst, pad + 32 - out_len, out_len);
-	groestl_small_init(sc, (unsigned)out_len << 3);
-}
-
-static void
 groestl_big_init(sph_groestl_big_context *sc, unsigned out_size)
 {
 	size_t u;
@@ -3004,90 +2585,6 @@ groestl_big_close(sph_groestl_big_context *sc,
 #endif
 	memcpy(dst, pad + 64 - out_len, out_len);
 	groestl_big_init(sc, (unsigned)out_len << 3);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl224_init(void *cc)
-{
-	groestl_small_init(cc, 224);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl224(void *cc, const void *data, size_t len)
-{
-	groestl_small_core(cc, data, len);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl224_close(void *cc, void *dst)
-{
-	groestl_small_close(cc, 0, 0, dst, 28);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl224_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	groestl_small_close(cc, ub, n, dst, 28);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl256_init(void *cc)
-{
-	groestl_small_init(cc, 256);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl256(void *cc, const void *data, size_t len)
-{
-	groestl_small_core(cc, data, len);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl256_close(void *cc, void *dst)
-{
-	groestl_small_close(cc, 0, 0, dst, 32);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl256_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	groestl_small_close(cc, ub, n, dst, 32);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl384_init(void *cc)
-{
-	groestl_big_init(cc, 384);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl384(void *cc, const void *data, size_t len)
-{
-	groestl_big_core(cc, data, len);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl384_close(void *cc, void *dst)
-{
-	groestl_big_close(cc, 0, 0, dst, 48);
-}
-
-/* see sph_groestl.h */
-void
-sph_groestl384_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
-{
-	groestl_big_close(cc, ub, n, dst, 48);
 }
 
 /* see sph_groestl.h */
