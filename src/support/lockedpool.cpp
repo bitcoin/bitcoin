@@ -19,6 +19,7 @@
 #endif
 
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 #ifdef ARENA_DEBUG
 #include <iomanip>
