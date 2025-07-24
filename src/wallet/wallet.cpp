@@ -4306,7 +4306,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
                 success = (wallet != nullptr);
 
                 // When no wallet is set, set the main wallet.
-                if (!res.wallet) {
+                if (success && !res.wallet) {
                     res.wallet_name = wallet->GetName();
                     res.wallet = std::move(wallet);
                 }
