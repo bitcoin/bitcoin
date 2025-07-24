@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node disconnect and ban behavior"""
+from pathlib import Path
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -35,6 +36,17 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.log.info("clearbanned: successfully clear ban list")
         self.nodes[1].clearbanned()
         assert_equal(len(self.nodes[1].listbanned()), 0)
+
+        self.log.info('Test banlist database recreation')
+        self.stop_node(1)
+        target_file = self.nodes[1].chain_path / "banlist.json"
+        Path.unlink(target_file)
+        with self.nodes[1].assert_debug_log(["Recreating the banlist database"]):
+            self.start_node(1)
+
+        assert Path.exists(target_file)
+        assert_equal(self.nodes[1].listbanned(), [])
+
         self.nodes[1].setban("127.0.0.0/24", "add")
 
         self.log.info("setban: fail to ban an already banned subnet")
