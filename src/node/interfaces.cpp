@@ -100,6 +100,14 @@ public:
 #endif
 
 class NodeImpl : public Node
+/**
+ * NodeImpl implements the interfaces::Node interface for node operations.
+ *
+ * This class provides methods to control and query the node, including chain state,
+ * mempool, network, wallet loader, and event handlers for GUI and RPC.
+ *
+ * All members are intentionally public, as the class itself is private to this file.
+ */
 {
 public:
     explicit NodeImpl(NodeContext& context) { setContext(&context); }
