@@ -109,9 +109,12 @@ static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utx
     BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf("Selected amount mismatch in BnB-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
 }
 
-static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target)
+static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const bool expect_max_weight_exceeded = false)
 {
-    BOOST_CHECK_MESSAGE(!SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/default_cs_params.m_cost_of_change, /*max_selection_weight=*/MAX_STANDARD_TX_WEIGHT), "BnB-Fail: " + test_title);
+    const auto result = SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/default_cs_params.m_cost_of_change, /*max_selection_weight=*/MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK_MESSAGE(!result, "BnB-Fail: " + test_title);
+    bool max_weight_exceeded = util::ErrorString(result).original.find("The inputs size exceeds the maximum weight") != std::string::npos;
+    BOOST_CHECK(expect_max_weight_exceeded == max_weight_exceeded);
 }
 
 BOOST_AUTO_TEST_CASE(bnb_test)
