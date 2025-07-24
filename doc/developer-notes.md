@@ -20,7 +20,7 @@ tool to clean up patches automatically before submission.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
-  - No extra spaces inside parenthesis; don't do `( this )`.
+  - No extra spaces inside parentheses; don't do `( this )`.
   - No space after function names; one space after `if`, `for` and `while`.
   - If an `if` only has a single-statement `then`-clause, it can appear
     on the same line as the `if`, without braces. In every other case,
@@ -263,7 +263,7 @@ but the above styles are favored.
 
 Recommendations:
 
-- Avoiding duplicating type and input/output information in function
+- Avoid duplicating type and input/output information in function
   descriptions.
 
 - Use backticks (&#96;&#96;) to refer to `argument` names in function and
@@ -1156,7 +1156,7 @@ $ lsof -p $(pidof bitcoind) |\
 mem = 119, fd = 0
 ```
 
-The `mem` value shows how many files are mmap'ed, and the `fd` value shows you
+The `mem` value shows how many files are mmap'ed, and the `fd` value shows how
 many file descriptors these files are using. You should check that `fd` is a
 small number (usually 0 on 64-bit hosts).
 

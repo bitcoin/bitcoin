@@ -27,7 +27,7 @@ You _must not_ set base_dir to "/", or anywhere that contains system headers (ac
 
 During the generation of the build system only essential build options are enabled by default to save on compilation time.
 
-Run `cmake -B build -LH` to see the full list of available options. GUI tools, such as `ccmake` and `cmake-gui`, can be also helpful.
+Run `cmake -B build -LH` to see the full list of available options. GUI tools, such as `ccmake` and `cmake-gui`, can also be helpful.
 
 ### Make use of your threads with `-j`
 
