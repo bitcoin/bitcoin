@@ -114,8 +114,9 @@ bool StartLogging(const ArgsManager& args)
                 fs::PathToString(LogInstance().m_file_path))));
     }
 
-    if (!LogInstance().m_log_timestamps)
+    if (!LogInstance().m_log_timestamps) {
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
+    }
     LogPrintf("Default data directory %s\n", fs::PathToString(GetDefaultDataDir()));
     LogPrintf("Using data directory %s\n", fs::PathToString(gArgs.GetDataDirNet()));
 

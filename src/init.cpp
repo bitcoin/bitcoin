@@ -284,7 +284,7 @@ void Shutdown(NodeContext& node)
     static Mutex g_shutdown_mutex;
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
     if (!lock_shutdown) return;
-    LogPrintf("%s: In progress...\n", __func__);
+    LogInfo("Shutdown in progress...");
     Assert(node.args);
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,
@@ -395,7 +395,7 @@ void Shutdown(NodeContext& node)
 
     RemovePidFile(*node.args);
 
-    LogPrintf("%s: done\n", __func__);
+    LogInfo("Shutdown done");
 }
 
 /**

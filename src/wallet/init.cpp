@@ -88,14 +88,14 @@ bool WalletInit::ParameterInteraction() const
 {
     if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
         for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
-            LogPrintf("%s: parameter interaction: -disablewallet -> ignoring -wallet=%s\n", __func__, wallet);
+            LogInfo("Parameter interaction: -disablewallet -> ignoring -wallet=%s", wallet);
         }
 
         return true;
     }
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
-        LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
+        LogInfo("Parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0");
     }
 
     return true;

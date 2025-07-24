@@ -508,11 +508,11 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     // Load block file info
     m_block_tree_db->ReadLastBlockFile(max_blockfile_num);
     m_blockfile_info.resize(max_blockfile_num + 1);
-    LogPrintf("%s: last block file = %i\n", __func__, max_blockfile_num);
+    LogInfo("Loading block index db: last block file = %i", max_blockfile_num);
     for (int nFile = 0; nFile <= max_blockfile_num; nFile++) {
         m_block_tree_db->ReadBlockFileInfo(nFile, m_blockfile_info[nFile]);
     }
-    LogPrintf("%s: last block file info: %s\n", __func__, m_blockfile_info[max_blockfile_num].ToString());
+    LogInfo("Loading block index db: last block file info: %s", m_blockfile_info[max_blockfile_num].ToString());
     for (int nFile = max_blockfile_num + 1; true; nFile++) {
         CBlockFileInfo info;
         if (m_block_tree_db->ReadBlockFileInfo(nFile, info)) {
@@ -549,7 +549,7 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     // Check whether we have ever pruned block & undo files
     m_block_tree_db->ReadFlag("prunedblockfiles", m_have_pruned);
     if (m_have_pruned) {
-        LogPrintf("LoadBlockIndexDB(): Block files have previously been pruned\n");
+        LogInfo("Loading block index db: Block files have previously been pruned");
     }
 
     // Check whether we need to continue reindexing
@@ -1236,7 +1236,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
             LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
             chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
             if (chainman.m_interrupt) {
-                LogPrintf("Interrupt requested. Exit %s\n", __func__);
+                LogInfo("Interrupt requested. Exit reindexing.");
                 return;
             }
             nFile++;
@@ -1255,7 +1255,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
             LogPrintf("Importing blocks file %s...\n", fs::PathToString(path));
             chainman.LoadExternalBlockFile(file);
             if (chainman.m_interrupt) {
-                LogPrintf("Interrupt requested. Exit %s\n", __func__);
+                LogInfo("Interrupt requested. Exit block importing.");
                 return;
             }
         } else {
