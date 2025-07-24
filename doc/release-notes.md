@@ -68,6 +68,7 @@ Notable changes
 - #32841 feature_taproot: sample tx version border values more
 - #32850 test: check P2SH sigop count for coinbase tx
 - #32859 test: correctly detect nonstd TRUC tx vsize in feature_taproot
+- #33001 test: Do not pass tests on unhandled exceptions
 
 ### Util
 
