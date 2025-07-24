@@ -68,7 +68,7 @@ static void OrphanageSinglePeerEviction(benchmark::Bench& bench)
     auto large_tx = MakeTransactionBulkedTo(1, MAX_STANDARD_TX_WEIGHT, det_rand);
     assert(GetTransactionWeight(*large_tx) <= MAX_STANDARD_TX_WEIGHT);
 
-    const auto orphanage{node::MakeTxOrphanage(/*max_global_ann=*/node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE, /*reserved_peer_usage=*/node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER)};
+    const auto orphanage{node::MakeTxOrphanage(/*max_global_latency_score=*/node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE, /*reserved_peer_usage=*/node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER)};
 
     // Populate the orphanage. To maximize the number of evictions, first fill up with tiny transactions, then add a huge one.
     NodeId peer{0};
@@ -131,7 +131,7 @@ static void OrphanageMultiPeerEviction(benchmark::Bench& bench)
     indexes.resize(NUM_UNIQUE_TXNS);
     std::iota(indexes.begin(), indexes.end(), 0);
 
-    const auto orphanage{node::MakeTxOrphanage(/*max_global_ann=*/node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE, /*reserved_peer_usage=*/node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER)};
+    const auto orphanage{node::MakeTxOrphanage(/*max_global_latency_score=*/node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE, /*reserved_peer_usage=*/node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER)};
     // Every peer sends the same transactions, all from shared_txs.
     // Each peer has 1 or 2 assigned transactions, which they must place as the last and second-to-last positions.
     // The assignments ensure that every transaction is in some peer's last 2 transactions, and is thus remains in the orphanage until the end of LimitOrphans.
@@ -189,7 +189,7 @@ static void OrphanageMultiPeerEviction(benchmark::Bench& bench)
 static void OrphanageEraseAll(benchmark::Bench& bench, bool block_or_disconnect)
 {
     FastRandomContext det_rand{true};
-    const auto orphanage{node::MakeTxOrphanage(/*max_global_ann=*/node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE, /*reserved_peer_usage=*/node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER)};
+    const auto orphanage{node::MakeTxOrphanage(/*max_global_latency_score=*/node::DEFAULT_MAX_ORPHANAGE_LATENCY_SCORE, /*reserved_peer_usage=*/node::DEFAULT_RESERVED_ORPHAN_WEIGHT_PER_PEER)};
     // This is an unrealistically large number of inputs for a block, as there is almost no room given to witness data,
     // outputs, and overhead for individual transactions. The entire block is 1 transaction with 20,000 inputs.
     constexpr unsigned int NUM_BLOCK_INPUTS{MAX_BLOCK_WEIGHT / APPROX_WEIGHT_PER_INPUT};

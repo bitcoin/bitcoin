@@ -189,8 +189,8 @@ class TxOrphanageImpl final : public TxOrphanage {
 
 public:
     TxOrphanageImpl() = default;
-    TxOrphanageImpl(Count max_global_ann, Usage reserved_peer_usage) :
-        m_max_global_latency_score{max_global_ann},
+    TxOrphanageImpl(Count max_global_latency_score, Usage reserved_peer_usage) :
+        m_max_global_latency_score{max_global_latency_score},
         m_reserved_usage_per_peer{reserved_peer_usage}
     {}
     ~TxOrphanageImpl() noexcept override = default;
@@ -447,7 +447,7 @@ void TxOrphanageImpl::LimitOrphans()
 
     // Even though it's possible for MaxPeerLatencyScore to increase within this call to LimitOrphans
     // (e.g. if a peer's orphans are removed entirely, changing the number of peers), use consistent limits throughout.
-    const auto max_ann{MaxPeerLatencyScore()};
+    const auto max_lat{MaxPeerLatencyScore()};
     const auto max_mem{ReservedPeerUsage()};
 
     // We have exceeded the global limit(s). Now, identify who is using too much and evict their orphans.
@@ -456,7 +456,7 @@ void TxOrphanageImpl::LimitOrphans()
     heap_peer_dos.reserve(m_peer_orphanage_info.size());
     for (const auto& [nodeid, entry] : m_peer_orphanage_info) {
         // Performance optimization: only consider peers with a DoS score > 1.
-        const auto dos_score = entry.GetDosScore(max_ann, max_mem);
+        const auto dos_score = entry.GetDosScore(max_lat, max_mem);
         if (dos_score >> FeeFrac{1, 1}) {
             heap_peer_dos.emplace_back(nodeid, dos_score);
         }
@@ -506,7 +506,7 @@ void TxOrphanageImpl::LimitOrphans()
 
             // If we erased the last orphan from this peer, it_worst_peer will be invalidated.
             it_worst_peer = m_peer_orphanage_info.find(worst_peer);
-            if (it_worst_peer == m_peer_orphanage_info.end() || it_worst_peer->second.GetDosScore(max_ann, max_mem) <= dos_threshold) break;
+            if (it_worst_peer == m_peer_orphanage_info.end() || it_worst_peer->second.GetDosScore(max_lat, max_mem) <= dos_threshold) break;
         }
         LogDebug(BCLog::TXPACKAGES, "peer=%d orphanage overflow, removed %u of %u announcements\n", worst_peer, num_erased_this_round, starting_num_ann);
 
@@ -515,7 +515,7 @@ void TxOrphanageImpl::LimitOrphans()
         // Unless this peer is empty, put it back in the heap so we continue to consider evicting its orphans.
         // We may select this peer for evictions again if there are multiple DoSy peers.
         if (it_worst_peer != m_peer_orphanage_info.end() && it_worst_peer->second.m_count_announcements > 0) {
-            heap_peer_dos.emplace_back(worst_peer, it_worst_peer->second.GetDosScore(max_ann, max_mem));
+            heap_peer_dos.emplace_back(worst_peer, it_worst_peer->second.GetDosScore(max_lat, max_mem));
             std::push_heap(heap_peer_dos.begin(), heap_peer_dos.end(), compare_score);
         }
     } while (true);
@@ -774,8 +774,8 @@ std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept
 {
     return std::make_unique<TxOrphanageImpl>();
 }
-std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_ann, TxOrphanage::Usage reserved_peer_usage) noexcept
+std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_latency_score, TxOrphanage::Usage reserved_peer_usage) noexcept
 {
-    return std::make_unique<TxOrphanageImpl>(max_global_ann, reserved_peer_usage);
+    return std::make_unique<TxOrphanageImpl>(max_global_latency_score, reserved_peer_usage);
 }
 } // namespace node

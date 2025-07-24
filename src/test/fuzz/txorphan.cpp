@@ -470,9 +470,9 @@ FUZZ_TARGET(txorphanage_sim)
     // 3. Initialize real orphanage
     //
 
-    auto max_global_ann = provider.ConsumeIntegralInRange<node::TxOrphanage::Count>(NUM_PEERS, MAX_ANN);
+    auto max_global_latency_score = provider.ConsumeIntegralInRange<node::TxOrphanage::Count>(NUM_PEERS, MAX_ANN);
     auto reserved_peer_usage = provider.ConsumeIntegralInRange<node::TxOrphanage::Usage>(1, total_usage);
-    auto real = node::MakeTxOrphanage(max_global_ann, reserved_peer_usage);
+    auto real = node::MakeTxOrphanage(max_global_latency_score, reserved_peer_usage);
 
     //
     // 4. Functions and data structures for the simulation.
@@ -683,7 +683,7 @@ FUZZ_TARGET(txorphanage_sim)
             }
         }
         // Always trim after each command if needed.
-        const auto max_ann = max_global_ann / std::max<unsigned>(1, count_peers_fn());
+        const auto max_ann = max_global_latency_score / std::max<unsigned>(1, count_peers_fn());
         const auto max_mem = reserved_peer_usage;
         while (true) {
             // Count global usage and number of peers.
@@ -813,12 +813,12 @@ FUZZ_TARGET(txorphanage_sim)
     // CountUniqueOrphans
     assert(unique_orphans == real->CountUniqueOrphans());
     // MaxGlobalLatencyScore
-    assert(max_global_ann == real->MaxGlobalLatencyScore());
+    assert(max_global_latency_score == real->MaxGlobalLatencyScore());
     // ReservedPeerUsage
     assert(reserved_peer_usage == real->ReservedPeerUsage());
     // MaxPeerLatencyScore
     auto present_peers = count_peers_fn();
-    assert(max_global_ann / std::max<unsigned>(1, present_peers) == real->MaxPeerLatencyScore());
+    assert(max_global_latency_score / std::max<unsigned>(1, present_peers) == real->MaxPeerLatencyScore());
     // MaxGlobalUsage
     assert(reserved_peer_usage * std::max<unsigned>(1, present_peers) == real->MaxGlobalUsage());
     // TotalLatencyScore.

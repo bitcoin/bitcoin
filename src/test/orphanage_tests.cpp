@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
     {
         // Test announcement limits
         NodeId peer{8};
-        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_ann=*/1, /*reserved_peer_usage=*/TX_SIZE * 10);
-        auto orphanage_low_mem = node::MakeTxOrphanage(/*max_global_ann=*/10, /*reserved_peer_usage=*/TX_SIZE);
+        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_latency_score=*/1, /*reserved_peer_usage=*/TX_SIZE * 10);
+        auto orphanage_low_mem = node::MakeTxOrphanage(/*max_global_latency_score=*/10, /*reserved_peer_usage=*/TX_SIZE);
 
         // Add the first transaction
         orphanage_low_ann->AddTx(txns.at(0), peer);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
     {
         // Test latency score limits
         NodeId peer{10};
-        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_ann=*/5, /*reserved_peer_usage=*/TX_SIZE * 1000);
+        auto orphanage_low_ann = node::MakeTxOrphanage(/*max_global_latency_score=*/5, /*reserved_peer_usage=*/TX_SIZE * 1000);
 
         // Add the first transaction
         orphanage_low_ann->AddTx(txns.at(0), peer);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
 
         // Test announcement limits
         NodeId peer{9};
-        auto orphanage = node::MakeTxOrphanage(/*max_global_ann=*/3, /*reserved_peer_usage=*/TX_SIZE * 10);
+        auto orphanage = node::MakeTxOrphanage(/*max_global_latency_score=*/3, /*reserved_peer_usage=*/TX_SIZE * 10);
 
         // First add a tx which will be made reconsiderable.
         orphanage->AddTx(children.at(0), peer);

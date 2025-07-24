@@ -146,6 +146,6 @@ public:
 
 /** Create a new TxOrphanage instance */
 std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept;
-std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_ann, TxOrphanage::Usage reserved_peer_usage) noexcept;
+std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_latency_score, TxOrphanage::Usage reserved_peer_usage) noexcept;
 } // namespace node
 #endif // BITCOIN_NODE_TXORPHANAGE_H
