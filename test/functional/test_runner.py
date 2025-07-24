@@ -177,6 +177,7 @@ BASE_SCRIPTS = [
     'rpc_getchaintips.py',
     'rpc_misc.py',
     'p2p_sendpackages.py',
+    'p2p_sender_init_package_relay.py',
     'p2p_1p1c_network.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
