@@ -586,7 +586,7 @@ public:
         vSeeds.clear();
         vSeeds.emplace_back("dummySeed.invalid.");
 
-        fDefaultConsistencyChecks = true;
+        fDefaultConsistencyChecks = opts.default_consistency_checks;
         m_is_mockable_chain = true;
 
         m_assumeutxo_data = {
