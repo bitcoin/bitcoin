@@ -3494,7 +3494,7 @@ void CWallet::SetupLegacyScriptPubKeyMan()
         return;
     }
 
-    Assert(m_database->Format() == "bdb_ro" || m_database->Format() == "mock");
+    Assert(m_database->Format() == "bdb_ro" || m_database->Format() == "sqlite-mock");
     std::unique_ptr<ScriptPubKeyMan> spk_manager = std::make_unique<LegacyDataSPKM>(*this);
 
     for (const auto& type : LEGACY_OUTPUT_TYPES) {
