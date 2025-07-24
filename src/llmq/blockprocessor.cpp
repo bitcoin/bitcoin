@@ -228,7 +228,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
         }
     }
     for (const auto& [_, qc] : qcs) {
-        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck, false)) {
+        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck)) {
             LogPrintf("[ProcessBlock] failed h[%d] llmqType[%d] version[%d] quorumIndex[%d] quorumHash[%s]\n", pindex->nHeight, ToUnderlying(qc.llmqType), qc.nVersion, qc.quorumIndex, qc.quorumHash.ToString());
             return false;
         }
@@ -268,7 +268,8 @@ static bool IsMiningPhase(const Consensus::LLMQParams& llmqParams, const CChain&
     return nHeight >= quorumCycleMiningStartHeight && nHeight <= quorumCycleMiningEndHeight;
 }
 
-bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck, bool fBLSChecks)
+bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc,
+                                              BlockValidationState& state, bool fJustCheck)
 {
     AssertLockHeld(::cs_main);
 
@@ -334,7 +335,8 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 
     const auto* pQuorumBaseBlockIndex = m_chainstate.m_blockman.LookupBlockIndex(qc.quorumHash);
 
-    if (!qc.Verify(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex, /*checkSigs=*/fBLSChecks)) {
+    // we don't validate signatures here; they already validated on previous step
+    if (!qc.Verify(m_dmnman, m_qsnapman, pQuorumBaseBlockIndex, /*checksigs=*/false)) {
         LogPrint(BCLog::LLMQ, /* Continued */
                  "%s -- height=%d, type=%d, quorumIndex=%d, quorumHash=%s, signers=%s, validMembers=%d, "
                  "quorumPublicKey=%s qc verify failed.\n",
