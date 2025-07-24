@@ -1,56 +1,6 @@
-Developer Notes
-===============
+# Developer Notes
 
-<!-- markdown-toc start -->
-**Table of Contents**
-
-- [Developer Notes](#developer-notes)
-    - [Coding Style (General)](#coding-style-general)
-    - [Coding Style (C++)](#coding-style-c)
-    - [Coding Style (Python)](#coding-style-python)
-    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
-      - [Generating Documentation](#generating-documentation)
-    - [Development tips and tricks](#development-tips-and-tricks)
-        - [Compiling for debugging](#compiling-for-debugging)
-        - [Show sources in debugging](#show-sources-in-debugging)
-        - [`debug.log`](#debuglog)
-        - [Signet, testnet, and regtest modes](#signet-testnet-and-regtest-modes)
-        - [DEBUG_LOCKORDER](#debug_lockorder)
-        - [DEBUG_LOCKCONTENTION](#debug_lockcontention)
-        - [Valgrind suppressions file](#valgrind-suppressions-file)
-        - [Compiling for test coverage](#compiling-for-test-coverage)
-        - [Performance profiling with perf](#performance-profiling-with-perf)
-        - [Sanitizers](#sanitizers)
-    - [Locking/mutex usage notes](#lockingmutex-usage-notes)
-    - [Threads](#threads)
-    - [Ignoring IDE/editor files](#ignoring-ideeditor-files)
-- [Development guidelines](#development-guidelines)
-    - [General Bitcoin Core](#general-bitcoin-core)
-    - [Wallet](#wallet)
-    - [General C++](#general-c)
-    - [C++ data structures](#c-data-structures)
-    - [Strings and formatting](#strings-and-formatting)
-    - [Shadowing](#shadowing)
-    - [Lifetimebound](#lifetimebound)
-    - [Threads and synchronization](#threads-and-synchronization)
-    - [Scripts](#scripts)
-        - [Shebang](#shebang)
-    - [Source code organization](#source-code-organization)
-    - [GUI](#gui)
-    - [Subtrees](#subtrees)
-    - [Upgrading LevelDB](#upgrading-leveldb)
-      - [File Descriptor Counts](#file-descriptor-counts)
-      - [Consensus Compatibility](#consensus-compatibility)
-    - [Scripted diffs](#scripted-diffs)
-        - [Suggestions and examples](#suggestions-and-examples)
-    - [Release notes](#release-notes)
-    - [RPC interface guidelines](#rpc-interface-guidelines)
-    - [Internal interface guidelines](#internal-interface-guidelines)
-
-<!-- markdown-toc end -->
-
-Coding Style (General)
-----------------------
+## Coding Style (General)
 
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
@@ -60,8 +10,7 @@ commits.
 
 Do not submit patches solely to modify the style of existing code.
 
-Coding Style (C++)
-------------------
+## Coding Style (C++)
 
 - **Indentation and whitespace rules** as specified in
 [src/.clang-format](/src/.clang-format). You can use the provided
@@ -71,7 +20,7 @@ tool to clean up patches automatically before submission.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
-  - No extra spaces inside parenthesis; don't do `( this )`.
+  - No extra spaces inside parentheses; don't do `( this )`.
   - No space after function names; one space after `if`, `for` and `while`.
   - If an `if` only has a single-statement `then`-clause, it can appear
     on the same line as the `if`, without braces. In every other case,
@@ -171,8 +120,7 @@ public:
 } // namespace foo
 ```
 
-Coding Style (C++ functions and methods)
---------------------
+### Coding Style (C++ functions and methods)
 
 - When ordering function parameters, place input parameters first, then any
   in-out parameters, followed by any output parameters.
@@ -192,8 +140,7 @@ Coding Style (C++ functions and methods)
   non-optional in-out and output parameters should usually be references, as
   they cannot be null.
 
-Coding Style (C++ named arguments)
-------------------------------
+### Coding Style (C++ named arguments)
 
 When passing named arguments, use a format that clang-tidy understands. The
 argument names can otherwise not be verified by clang-tidy.
@@ -237,14 +184,11 @@ To run clang-tidy on the changed source lines:
 git diff | ( cd ./src/ && clang-tidy-diff -p2 -path ../build -j $(nproc) )
 ```
 
-Coding Style (Python)
----------------------
+## Coding Style (Python)
 
 Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
 
-
-Coding Style (Doxygen-compatible comments)
-------------------------------------------
+## Coding Style (Doxygen-compatible comments)
 
 Bitcoin Core uses [Doxygen](https://www.doxygen.nl/) to generate its official documentation.
 
@@ -319,7 +263,7 @@ but the above styles are favored.
 
 Recommendations:
 
-- Avoiding duplicating type and input/output information in function
+- Avoid duplicating type and input/output information in function
   descriptions.
 
 - Use backticks (&#96;&#96;) to refer to `argument` names in function and
@@ -348,8 +292,7 @@ Linux: `sudo apt install doxygen graphviz`
 
 MacOS: `brew install doxygen graphviz`
 
-Development tips and tricks
----------------------------
+## Development tips and tricks
 
 ### Compiling for debugging
 
@@ -393,7 +336,7 @@ ln -s /path/to/project/root/src src
 
 4. If your IDE has an option for this, change your breakpoints to use the file name only.
 
-### `debug.log`
+### debug.log
 
 If the code is behaving strangely, take a look in the `debug.log` file in the data directory;
 error and debugging messages are written there.
@@ -713,8 +656,7 @@ Additional resources:
  * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
  * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
 
-Locking/mutex usage notes
--------------------------
+## Locking/mutex usage notes
 
 The code is multi-threaded and uses mutexes and the
 `LOCK` and `TRY_LOCK` macros to protect data structures.
@@ -730,8 +672,7 @@ between the various components is a goal, with any necessary locking
 done by the components (e.g. see the self-contained `FillableSigningProvider` class
 and its `cs_KeyStore` lock for example).
 
-Threads
--------
+## Threads
 
 - [Main thread (`bitcoind`)](https://doxygen.bitcoincore.org/bitcoind_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97)
   : Started from `main()` in `bitcoind.cpp`. Responsible for starting up and
@@ -784,22 +725,19 @@ Threads
   - [ThreadI2PAcceptIncoming (`b-i2paccept`)](https://doxygen.bitcoincore.org/class_c_connman.html#a57787b4f9ac847d24065fbb0dd6e70f8)
     : Listens for and accepts incoming I2P connections through the I2P SAM proxy.
 
-Development guidelines
-============================
+# Development guidelines
 
 A few non-style-related recommendations for developers, as well as points to
 pay attention to for reviewers of Bitcoin Core code.
 
-General Bitcoin Core
-----------------------
+## General Bitcoin Core
 
 - New features should be exposed on RPC first, then can be made available in the GUI.
 
   - *Rationale*: RPC allows for better automatic testing. The test suite for
     the GUI is very limited.
 
-Logging
--------
+## Logging
 
 The macros `LogInfo`, `LogDebug`, `LogTrace`, `LogWarning` and `LogError` are available for
 logging messages. They should be used as follows:
@@ -837,8 +775,7 @@ Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
 careful to avoid side-effects in those expressions.
 
-General C++
--------------
+## General C++
 
 For general C++ guidelines, you may refer to the [C++ Core
 Guidelines](https://isocpp.github.io/CppCoreGuidelines/).
@@ -859,8 +796,7 @@ Common misconceptions are clarified in those sections:
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety.
 
-C++ data structures
---------------------
+## C++ data structures
 
 - Never use the `std::map []` syntax when reading from a map, but instead use `.find()`.
 
@@ -953,8 +889,7 @@ int GetInt(Tabs tab)
 
 *Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
 
-Strings and formatting
-------------------------
+## Strings and formatting
 
 - Use `std::string`, avoid C string manipulation functions.
 
@@ -988,8 +923,7 @@ Strings and formatting
     checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first
     and reject it if there are any.
 
-Shadowing
---------------
+## Shadowing
 
 Although the shadowing warning (`-Wshadow`) is not enabled by default (it prevents issues arising
 from using a different variable with the same name),
@@ -998,8 +932,7 @@ please name variables so that their names do not shadow variables defined in the
 When using nested cycles, do not name the inner cycle variable the same as in
 the outer cycle, etc.
 
-Lifetimebound
---------------
+## Lifetimebound
 
 The [Clang `lifetimebound`
 attribute](https://clang.llvm.org/docs/AttributeReference.html#lifetimebound)
@@ -1008,8 +941,7 @@ potentially see a compile-time warning if the object has a shorter lifetime from
 the invalid use of a temporary. You can use the attribute by adding a `LIFETIMEBOUND`
 annotation defined in `src/attributes.h`; please grep the codebase for examples.
 
-Threads and synchronization
-----------------------------
+## Threads and synchronization
 
 - Prefer `Mutex` type to `RecursiveMutex` one.
 
@@ -1110,13 +1042,11 @@ TRY_LOCK(cs_vNodes, lockNodes);
 }
 ```
 
-Scripts
---------------------------
+## Scripts
 
 Write scripts in Python or Rust rather than bash, when possible.
 
-Source code organization
---------------------------
+## Source code organization
 
 - Implementation code should go into the `.cpp` file and not the `.h`, unless necessary due to template usage or
   when performance due to inlining is critical.
@@ -1150,8 +1080,7 @@ namespace {
 
   - *Rationale*: Avoids confusion about the namespace context.
 
-GUI
------
+## GUI
 
 - Do not display or manipulate dialogs in model code (classes `*Model`).
 
@@ -1172,8 +1101,7 @@ GUI
   - *Rationale*: Blocking the GUI thread can increase latency, and lead to
     hangs and deadlocks.
 
-Subtrees
-----------
+## Subtrees
 
 Several parts of the repository are subtrees of software maintained elsewhere.
 
@@ -1203,8 +1131,7 @@ The ultimate upstream of the few externally managed subtrees are:
   - Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.
   - Upstream at https://github.com/google/crc32c ; maintained by Google.
 
-Upgrading LevelDB
----------------------
+## Upgrading LevelDB
 
 Extra care must be taken when upgrading LevelDB. This section explains issues
 you must be aware of.
@@ -1229,7 +1156,7 @@ $ lsof -p $(pidof bitcoind) |\
 mem = 119, fd = 0
 ```
 
-The `mem` value shows how many files are mmap'ed, and the `fd` value shows you
+The `mem` value shows how many files are mmap'ed, and the `fd` value shows how
 many file descriptors these files are using. You should check that `fd` is a
 small number (usually 0 on 64-bit hosts).
 
@@ -1250,8 +1177,7 @@ would be to revert the upstream fix before applying the updates to Bitcoin's
 copy of LevelDB. In general, you should be wary of any upstream changes affecting
 what data is returned from LevelDB queries.
 
-Scripted diffs
---------------
+## Scripted diffs
 
 For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use
 scripted-diff commits. The bash script is included in the commit message and our CI job checks that
@@ -1307,8 +1233,7 @@ To find all previous uses of scripted diffs in the repository, do:
 git log --grep="-BEGIN VERIFY SCRIPT-"
 ```
 
-Release notes
--------------
+## Release notes
 
 Release notes should be written for any PR that:
 
@@ -1321,8 +1246,7 @@ Release notes should be added to a PR-specific release note file at
 `/doc/release-notes-<PR number>.md` to avoid conflicts between multiple PRs.
 All `release-notes*` files are merged into a single `release-notes-<version>.md` file prior to the release.
 
-RPC interface guidelines
---------------------------
+## RPC interface guidelines
 
 A few guidelines for introducing and reviewing new RPC interfaces:
 
@@ -1430,8 +1354,7 @@ A few guidelines for modifying existing RPC interfaces:
 
   - *Rationale*: Changes in RPC JSON structure can break downstream application compatibility. Implementation of `deprecatedrpc` provides a grace period for downstream applications to migrate. Release notes provide notification to downstream users.
 
-Internal interface guidelines
------------------------------
+## Internal interface guidelines
 
 Internal interfaces between parts of the codebase that are meant to be
 independent (node, wallet, GUI), are defined in
