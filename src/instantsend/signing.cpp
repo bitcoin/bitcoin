@@ -60,7 +60,7 @@ void InstantSendSigner::Stop()
 
 void InstantSendSigner::ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
 {
-    LOCK(cs_inputReqests);
+    LOCK(cs_input_requests);
     for (const auto& id : ids) {
         inputRequestIds.erase(id);
     }
@@ -84,7 +84,7 @@ MessageProcessingResult InstantSendSigner::HandleNewRecoveredSig(const llmq::CRe
     }
 
     uint256 txid;
-    if (LOCK(cs_inputReqests); inputRequestIds.count(recoveredSig.getId())) {
+    if (LOCK(cs_input_requests); inputRequestIds.count(recoveredSig.getId())) {
         txid = recoveredSig.getMsgHash();
     }
     if (!txid.IsNull()) {
@@ -331,7 +331,7 @@ bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroact
     for (const auto i : irange::range(tx.vin.size())) {
         const auto& in = tx.vin[i];
         auto& id = ids[i];
-        WITH_LOCK(cs_inputReqests, inputRequestIds.emplace(id));
+        WITH_LOCK(cs_input_requests, inputRequestIds.emplace(id));
         LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: trying to vote on input %s with id %s. fRetroactive=%d\n",
                  __func__, tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString(), fRetroactive);
         if (m_sigman.AsyncSignIfMember(llmqType, m_shareman, id, tx.GetHash(), {}, fRetroactive)) {

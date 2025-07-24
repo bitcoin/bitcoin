@@ -39,14 +39,14 @@ private:
     const CMasternodeSync& m_mn_sync;
 
 private:
-    mutable Mutex cs_inputReqests;
+    mutable Mutex cs_input_requests;
     mutable Mutex cs_creating;
 
     /**
      * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
      * in-progress input lock.
      */
-    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds GUARDED_BY(cs_inputReqests);
+    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds GUARDED_BY(cs_input_requests);
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
@@ -68,18 +68,18 @@ public:
     void Stop();
 
     void ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
 
     void ClearLockFromQueue(const InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
 
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_input_requests);
 
     void ProcessPendingRetryLockTxs(const std::vector<CTransactionRef>& retryTxs)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_input_requests);
     void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_input_requests);
 
 private:
     [[nodiscard]] bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
@@ -95,7 +95,7 @@ private:
 
     [[nodiscard]] bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType,
                                          const Consensus::Params& params)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
     void TrySignInstantSendLock(const CTransaction& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
 };
