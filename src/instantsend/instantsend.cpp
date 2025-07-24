@@ -394,7 +394,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
         LOCK(cs_pendingLocks);
         pendingNoTxInstantSendLocks.try_emplace(hash, std::make_pair(from, islock));
     } else {
-        db.WriteNewInstantSendLock(hash, *islock);
+        db.WriteNewInstantSendLock(hash, islock);
         if (pindexMined) {
             db.WriteInstantSendLockMined(hash, pindexMined->nHeight);
         }
