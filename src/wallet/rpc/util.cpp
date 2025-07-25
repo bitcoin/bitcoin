@@ -29,6 +29,27 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
     return avoid_reuse;
 }
 
+std::string EnsureUniqueWalletName(const JSONRPCRequest& request, const std::string* wallet_name)
+{
+    std::string endpoint_wallet;
+    if (GetWalletNameFromJSONRPCRequest(request, endpoint_wallet)) {
+        // wallet endpoint was used
+        if (wallet_name && *wallet_name != endpoint_wallet) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                "The RPC endpoint wallet and the wallet name parameter specify different wallets");
+        }
+        return endpoint_wallet;
+    }
+
+    // Not a wallet endpoint; parameter must be provided
+    if (!wallet_name) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            "Either the RPC endpoint wallet or the wallet name parameter must be provided");
+    }
+
+    return *wallet_name;
+}
+
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
