@@ -2040,6 +2040,17 @@ bool ChainstateManager::IsInitialBlockDownload() const
     return false;
 }
 
+void ChainstateManager::UpdateCachedChaintipRecent()
+{
+    AssertLockHeld(cs_main);
+    CChain& chain{ActiveChain()};
+    if (chain.Tip() == nullptr) return;
+    if (chain.Tip()->nChainWork < MinimumChainWork()) return;
+    if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) return;
+
+    m_cached_chaintip_recent = true;
+}
+
 void Chainstate::CheckForkWarningConditions()
 {
     AssertLockHeld(cs_main);
