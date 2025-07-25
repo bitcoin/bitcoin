@@ -812,7 +812,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
             continue;
         }
 
-        ScriptError serror = SCRIPT_ERR_OK;
+        ScriptErrorType serror = SCRIPT_ERR_OK;
         if (!sigdata.complete && !VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, txdata, MissingDataBehavior::FAIL), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
