@@ -268,7 +268,7 @@ static RPCHelpMan getbestchainlock()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    const llmq::CChainLockSig clsig = llmq_ctx.clhandler->GetBestChainLock();
+    const chainlock::ChainLockSig clsig = llmq_ctx.clhandler->GetBestChainLock();
     if (clsig.IsNull()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any ChainLock");
     }

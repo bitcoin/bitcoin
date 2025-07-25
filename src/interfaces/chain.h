@@ -31,12 +31,12 @@ enum class MemPoolRemovalReason;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+namespace chainlock {
+struct ChainLockSig;
+} // namespace chainlock
 namespace instantsend {
 struct InstantSendLock;
 } // namespace instantsend
-namespace llmq {
-class CChainLockSig;
-} // namespace llmq
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -267,7 +267,7 @@ public:
         virtual void blockDisconnected(const CBlock& block, int height) {}
         virtual void updatedBlockTip() {}
         virtual void chainStateFlushed(const CBlockLocator& locator) {}
-        virtual void notifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) {}
+        virtual void notifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const chainlock::ChainLockSig>& clsig) {}
         virtual void notifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const instantsend::InstantSendLock>& islock) {}
     };
 

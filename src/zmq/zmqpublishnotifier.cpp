@@ -232,7 +232,7 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     return SendZmqMessage(MSG_HASHBLOCK, data, 32);
 }
 
-bool CZMQPublishHashChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
+bool CZMQPublishHashChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint(BCLog::ZMQ, "Publish hashchainlock %s to %s\n", hash.GetHex(), this->address);
@@ -322,7 +322,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     return SendZmqMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
+bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     LogPrint(BCLog::ZMQ, "Publish rawchainlock %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 
@@ -343,7 +343,7 @@ bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex,
     return SendZmqMessage(MSG_RAWCHAINLOCK, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawChainLockSigNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
+bool CZMQPublishRawChainLockSigNotifier::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     LogPrint(BCLog::ZMQ, "Publish rawchainlocksig %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 

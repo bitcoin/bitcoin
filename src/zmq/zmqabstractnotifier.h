@@ -14,6 +14,9 @@ class CDeterministicMNList;
 class CGovernanceVote;
 class CTransaction;
 class CZMQAbstractNotifier;
+namespace chainlock {
+struct ChainLockSig;
+} // namespace chainlock
 namespace Governance {
 class Object;
 } // namespace Governance
@@ -21,7 +24,6 @@ namespace instantsend {
 struct InstantSendLock;
 } // namespace instantsend
 namespace llmq {
-class CChainLockSig;
 class CRecoveredSig;
 } // namespace llmq
 
@@ -68,7 +70,7 @@ public:
     virtual bool NotifyTransactionRemoval(const CTransaction &transaction, uint64_t mempool_sequence);
     // Notifies of transactions added to mempool or appearing in blocks
     virtual bool NotifyTransaction(const CTransaction &transaction);
-    virtual bool NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig);
+    virtual bool NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const chainlock::ChainLockSig>& clsig);
     virtual bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const instantsend::InstantSendLock>& islock);
     virtual bool NotifyGovernanceVote(const std::shared_ptr<CDeterministicMNList>& tip_mn_list, const std::shared_ptr<const CGovernanceVote>& vote);
     virtual bool NotifyGovernanceObject(const std::shared_ptr<const Governance::Object>& object);

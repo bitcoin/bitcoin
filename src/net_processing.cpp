@@ -2858,7 +2858,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         }
 
         if (!push && (inv.type == MSG_CLSIG)) {
-            llmq::CChainLockSig o;
+            chainlock::ChainLockSig o;
             if (m_llmq_ctx->clhandler->GetChainLockByHash(inv.hash, o)) {
                 m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
                 push = true;
@@ -5282,7 +5282,7 @@ void PeerManagerImpl::ProcessMessage(
 
         if (msg_type == NetMsgType::CLSIG) {
             if (llmq::AreChainLocksEnabled(m_sporkman)) {
-                llmq::CChainLockSig clsig;
+                chainlock::ChainLockSig clsig;
                 vRecv >> clsig;
                 const uint256& hash = ::SerializeHash(clsig);
                 WITH_LOCK(::cs_main, EraseObjectRequest(pfrom.GetId(), CInv{MSG_CLSIG, hash}));

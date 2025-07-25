@@ -143,7 +143,8 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
     }
 }
 
-void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
+void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex,
+                                               const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     assert(m_cj_ctx && m_llmq_ctx);
 

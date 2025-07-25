@@ -66,10 +66,10 @@ inline CFinalCommitment CreateValidCommitment(const Consensus::LLMQParams& param
     return commitment;
 }
 
-inline CChainLockSig CreateChainLock(int32_t height, const uint256& blockHash)
+inline chainlock::ChainLockSig CreateChainLock(int32_t height, const uint256& blockHash)
 {
     CBLSSignature sig = CreateRandomBLSSignature();
-    return CChainLockSig(height, blockHash, sig);
+    return chainlock::ChainLockSig(height, blockHash, sig);
 }
 
 // Helper to create bit vectors with specific patterns

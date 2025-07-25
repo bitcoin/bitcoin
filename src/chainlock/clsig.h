@@ -5,42 +5,39 @@
 #ifndef BITCOIN_CHAINLOCK_CLSIG_H
 #define BITCOIN_CHAINLOCK_CLSIG_H
 
-#include <bls/bls.h>
 #include <serialize.h>
 #include <uint256.h>
 
-namespace llmq
-{
+#include <bls/bls.h>
 
+#include <cstdint>
+
+namespace chainlock {
 extern const std::string CLSIG_REQUESTID_PREFIX;
 
-class CChainLockSig
-{
+struct ChainLockSig {
 private:
     int32_t nHeight{-1};
     uint256 blockHash;
     CBLSSignature sig;
 
 public:
-    CChainLockSig(int32_t nHeight, const uint256& blockHash, const CBLSSignature& sig) :
-        nHeight(nHeight),
-        blockHash(blockHash),
-        sig(sig)
-    {}
-    CChainLockSig() = default;
+    ChainLockSig();
+    ~ChainLockSig();
 
+    ChainLockSig(int32_t nHeight, const uint256& blockHash, const CBLSSignature& sig);
 
-    [[nodiscard]] int32_t getHeight() const;
-    [[nodiscard]] const uint256& getBlockHash() const;
-    [[nodiscard]] const CBLSSignature& getSig() const;
-    [[nodiscard]] bool IsNull() const;
+    [[nodiscard]] int32_t getHeight() const { return nHeight; }
+    [[nodiscard]] const uint256& getBlockHash() const { return blockHash; }
+    [[nodiscard]] const CBLSSignature& getSig() const { return sig; }
+    [[nodiscard]] bool IsNull() const { return nHeight == -1 && blockHash == uint256(); }
     [[nodiscard]] std::string ToString() const;
 
-    SERIALIZE_METHODS(CChainLockSig, obj)
+    SERIALIZE_METHODS(ChainLockSig, obj)
     {
         READWRITE(obj.nHeight, obj.blockHash, obj.sig);
     }
 };
-} // namespace llmq
+} // namespace chainlock
 
 #endif // BITCOIN_CHAINLOCK_CLSIG_H

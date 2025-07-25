@@ -6,23 +6,21 @@
 
 #include <tinyformat.h>
 
-namespace llmq {
-    const std::string CLSIG_REQUESTID_PREFIX = "clsig";
+namespace chainlock {
+const std::string CLSIG_REQUESTID_PREFIX = "clsig";
 
-    std::string CChainLockSig::ToString() const {
-        return strprintf("CChainLockSig(nHeight=%d, blockHash=%s)", nHeight, blockHash.ToString());
-    }
-    int32_t CChainLockSig::getHeight() const {
-        return nHeight;
-    }
-    const uint256& CChainLockSig::getBlockHash() const {
-        return blockHash;
-    }
-    const CBLSSignature& CChainLockSig::getSig() const {
-        return sig;
-    }
-    bool CChainLockSig::IsNull() const
-    {
-        return nHeight == -1 && blockHash == uint256();
-    }
+ChainLockSig::ChainLockSig() = default;
+ChainLockSig::~ChainLockSig() = default;
+
+ChainLockSig::ChainLockSig(int32_t nHeight, const uint256& blockHash, const CBLSSignature& sig) :
+    nHeight{nHeight},
+    blockHash{blockHash},
+    sig{sig}
+{
 }
+
+std::string ChainLockSig::ToString() const
+{
+    return strprintf("ChainLockSig(nHeight=%d, blockHash=%s)", nHeight, blockHash.ToString());
+}
+} // namespace chainlock

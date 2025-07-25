@@ -61,9 +61,9 @@ private:
     std::atomic<bool> isEnabled{false};
 
     uint256 bestChainLockHash GUARDED_BY(cs);
-    CChainLockSig bestChainLock GUARDED_BY(cs);
+    chainlock::ChainLockSig bestChainLock GUARDED_BY(cs);
 
-    CChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
+    chainlock::ChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
     const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
     const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs) {nullptr};
 
@@ -94,10 +94,10 @@ public:
     void Stop();
 
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    CChainLockSig GetBestChainLock() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool GetChainLockByHash(const uint256& hash, chainlock::ChainLockSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    chainlock::ChainLockSig GetBestChainLock() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const CChainLockSig& clsig,
+    [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
                                                               const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -113,7 +113,7 @@ public:
 
     bool HasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    VerifyRecSigStatus VerifyChainLock(const CChainLockSig& clsig) const;
+    VerifyRecSigStatus VerifyChainLock(const chainlock::ChainLockSig& clsig) const;
 
     bool IsTxSafeForMining(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
