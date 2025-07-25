@@ -21,21 +21,22 @@ ${CI_RETRY_EXE} apt-get update
 # - moreutils (used by scripted-diff)
 ${CI_RETRY_EXE} apt-get install -y cargo curl xz-utils git gpg moreutils
 
-PYTHON_PATH="/python_build"
-if [ ! -d "${PYTHON_PATH}/bin" ]; then
-  (
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/pyenv/pyenv.git
-    cd pyenv/plugins/python-build || exit 1
-    ./install.sh
-  )
+PYENV_PATH="/pyenv"
+if [ ! -d "${PYENV_PATH}/bin" ]; then
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/pyenv/pyenv.git ${PYENV_PATH}
+
   # For dependencies see https://github.com/pyenv/pyenv/wiki#suggested-build-environment
   ${CI_RETRY_EXE} apt-get install -y build-essential libssl-dev zlib1g-dev \
     libbz2-dev libreadline-dev libsqlite3-dev curl llvm \
     libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
     clang
-  env CC=clang python-build "$(cat "/.python-version")" "${PYTHON_PATH}"
 fi
-export PATH="${PYTHON_PATH}/bin:${PATH}"
+export PATH="${PYENV_PATH}/bin:${PATH}"
+eval "$(pyenv init - bash --path)"
+
+ # Build the most recent Python patch release matching .python-version
+env CC=clang pyenv install --skip-existing "$(cat "/.python-version")"
+pyenv global "${PYTHON_VERSION}"
 command -v python3
 python3 --version
 
