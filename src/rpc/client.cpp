@@ -275,7 +275,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
-    { "upgradewallet", 0, "version" },
     { "gethdkeys", 0, "active_only" },
     { "gethdkeys", 0, "options" },
     { "gethdkeys", 0, "private" },
