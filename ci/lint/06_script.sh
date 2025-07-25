@@ -12,7 +12,8 @@ set -o errexit -o pipefail -o xtrace
 # of the mounted bitcoin src dir.
 git config --global --add safe.directory /bitcoin
 
-export PATH="/python_build/bin:${PATH}"
+export PATH="/pyenv/bin:${PATH}"
+eval "$(pyenv init - bash --path)"
 
 if [ -n "${LINT_CI_IS_PR}" ]; then
   export COMMIT_RANGE="HEAD~..HEAD"
