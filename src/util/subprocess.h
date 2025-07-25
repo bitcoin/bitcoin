@@ -173,6 +173,19 @@ public:
 //--------------------------------------------------------------------
 namespace util
 {
+  /**
+   * Call close(fd) and check that it succeeds
+   *
+   * @param[in] fd file descriptor
+   *
+   * @throws OSError if close(fd) fails
+   */
+  inline void close(const int fd)
+  {
+    const int close_res{subprocess_close(fd)};
+    if (close_res != 0) throw OSError("close failed", 0);
+  }
+
 #ifdef __USING_WINDOWS__
   inline void quote_argument(const std::wstring &argument, std::wstring &command_line,
                       bool force)
@@ -278,7 +291,7 @@ namespace util
 
     FILE *fp = _fdopen(os_fhandle, mode);
     if (fp == 0) {
-      subprocess_close(os_fhandle);
+      util::close(os_fhandle);
       throw OSError("_fdopen", 0);
     }
 
@@ -842,28 +855,28 @@ public:
   void cleanup_fds()
   {
     if (write_to_child_ != -1 && read_from_parent_ != -1) {
-      subprocess_close(write_to_child_);
+      util::close(write_to_child_);
     }
     if (write_to_parent_ != -1 && read_from_child_ != -1) {
-      subprocess_close(read_from_child_);
+      util::close(read_from_child_);
     }
     if (err_write_ != -1 && err_read_ != -1) {
-      subprocess_close(err_read_);
+      util::close(err_read_);
     }
   }
 
   void close_parent_fds()
   {
-    if (write_to_child_ != -1)  subprocess_close(write_to_child_);
-    if (read_from_child_ != -1) subprocess_close(read_from_child_);
-    if (err_read_ != -1)        subprocess_close(err_read_);
+    if (write_to_child_ != -1)  util::close(write_to_child_);
+    if (read_from_child_ != -1) util::close(read_from_child_);
+    if (err_read_ != -1)        util::close(err_read_);
   }
 
   void close_child_fds()
   {
-    if (write_to_parent_ != -1)  subprocess_close(write_to_parent_);
-    if (read_from_parent_ != -1) subprocess_close(read_from_parent_);
-    if (err_write_ != -1)        subprocess_close(err_write_);
+    if (write_to_parent_ != -1)  util::close(write_to_parent_);
+    if (read_from_parent_ != -1) util::close(read_from_parent_);
+    if (err_write_ != -1)        util::close(err_write_);
   }
 
   FILE* input()  { return input_.get(); }
@@ -1214,8 +1227,8 @@ inline void Popen::execute_process() noexcept(false)
   child_pid_ = fork();
 
   if (child_pid_ < 0) {
-    subprocess_close(err_rd_pipe);
-    subprocess_close(err_wr_pipe);
+    util::close(err_rd_pipe);
+    util::close(err_wr_pipe);
     throw OSError("fork failed", errno);
   }
 
@@ -1225,14 +1238,14 @@ inline void Popen::execute_process() noexcept(false)
     stream_.close_parent_fds();
 
     //Close the read end of the error pipe
-    subprocess_close(err_rd_pipe);
+    util::close(err_rd_pipe);
 
     detail::Child chld(this, err_wr_pipe);
     chld.execute_child();
   }
   else
   {
-    subprocess_close(err_wr_pipe);// close child side of pipe, else get stuck in read below
+    util::close(err_wr_pipe);// close child side of pipe, else get stuck in read below
 
     stream_.close_child_fds();
 
@@ -1241,7 +1254,7 @@ inline void Popen::execute_process() noexcept(false)
 
       FILE* err_fp = fdopen(err_rd_pipe, "r");
       if (!err_fp) {
-          subprocess_close(err_rd_pipe);
+          util::close(err_rd_pipe);
           throw OSError("fdopen failed", errno);
       }
       int read_bytes = util::read_atmost_n(err_fp, err_buf, SP_MAX_ERR_BUF_SIZ);
@@ -1335,13 +1348,13 @@ namespace detail {
 
       // Close the duped descriptors
       if (stream.read_from_parent_ != -1 && stream.read_from_parent_ > 2)
-        subprocess_close(stream.read_from_parent_);
+        util::close(stream.read_from_parent_);
 
       if (stream.write_to_parent_ != -1 && stream.write_to_parent_ > 2)
-        subprocess_close(stream.write_to_parent_);
+        util::close(stream.write_to_parent_);
 
       if (stream.err_write_ != -1 && stream.err_write_ > 2)
-        subprocess_close(stream.err_write_);
+        util::close(stream.err_write_);
 
       // Close all the inherited fd's except the error write pipe
       if (parent_->close_fds_) {
