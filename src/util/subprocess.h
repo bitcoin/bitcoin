@@ -84,15 +84,15 @@ extern "C" {
 // Its preferred implementations have a leading underscore.
 // See: https://learn.microsoft.com/en-us/cpp/c-runtime-library/compatibility.
 #if (defined _MSC_VER)
-  #define subprocess_close _close
-  #define subprocess_fileno _fileno
-  #define subprocess_open _open
-  #define subprocess_write _write
+  static constexpr auto& subprocess_close = _close;
+  static constexpr auto& subprocess_fileno = _fileno;
+  static constexpr auto& subprocess_open = _open;
+  static constexpr auto& subprocess_write = _write;
 #else
-  #define subprocess_close close
-  #define subprocess_fileno fileno
-  #define subprocess_open open
-  #define subprocess_write write
+  static constexpr auto& subprocess_close = close;
+  static constexpr auto& subprocess_fileno = fileno;
+  static constexpr auto& subprocess_open = open;
+  static constexpr auto& subprocess_write = write;
 #endif
 
 /*!
