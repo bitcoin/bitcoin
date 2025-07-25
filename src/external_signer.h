@@ -31,7 +31,7 @@ public:
     //! @param[in] fingerprint  master key fingerprint of the signer
     //! @param[in] chain        "main", "test", "regtest" or "signet"
     //! @param[in] name         device name
-    ExternalSigner(const std::string& command, const std::string chain, const std::string& fingerprint, const std::string name);
+    ExternalSigner(std::string command, std::string chain, std::string fingerprint, std::string name);
 
     //! Master key fingerprint of the signer
     std::string m_fingerprint;
@@ -44,7 +44,7 @@ public:
     //! @param[in,out] signers  vector to which new signers (with a unique master key fingerprint) are added
     //! @param chain            "main", "test", "regtest" or "signet"
     //! @returns success
-    static bool Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, const std::string chain);
+    static bool Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, const std::string& chain);
 
     //! Display address on the device. Calls `<command> displayaddress --desc <descriptor>`.
     //! @param[in] descriptor Descriptor specifying which address to display.
@@ -55,7 +55,7 @@ public:
     //! Calls `<command> getdescriptors --account <account>`
     //! @param[in] account  which BIP32 account to use (e.g. `m/44'/0'/account'`)
     //! @returns see doc/external-signer.md
-    UniValue GetDescriptors(const int account);
+    UniValue GetDescriptors(int account);
 
     //! Sign PartiallySignedTransaction on the device.
     //! Calls `<command> signtransaction` and passes the PSBT via stdin.
