@@ -66,6 +66,8 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
                                           const std::set<Txid>& direct_conflicts,
                                           int64_t vsize);
 
+std::vector<std::vector<size_t>> BuildInPackageRelations(const Package& package);
+
 /** Must be called for every transaction that is submitted within a package, even if not TRUC.
  *
  * For each transaction in a package:
@@ -89,6 +91,7 @@ std::optional<std::pair<std::string, CTransactionRef>> SingleTRUCChecks(const CT
  * */
 std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors);
+                                           const CTxMemPool::setEntries& mempool_ancestors,
+                                           const size_t tx_index, const std::vector<std::vector<size_t>>& relations);
 
 #endif // BITCOIN_POLICY_TRUC_POLICY_H

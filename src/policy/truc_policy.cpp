@@ -9,32 +9,37 @@
 #include <logging.h>
 #include <tinyformat.h>
 #include <util/check.h>
+#include <util/hasher.h>
 
 #include <algorithm>
 #include <numeric>
 #include <vector>
 
-/** Helper for PackageTRUCChecks: Returns a vector containing the indices of transactions (within
- * package) that are direct parents of ptx. */
-std::vector<size_t> FindInPackageParents(const Package& package, const CTransactionRef& ptx)
+std::vector<std::vector<size_t>> BuildInPackageRelations(const Package& package)
 {
-    std::vector<size_t> in_package_parents;
-
-    std::set<Txid> possible_parents;
-    for (auto &input : ptx->vin) {
-        possible_parents.insert(input.prevout.hash);
-    }
+    std::vector<std::vector<size_t>> relations(package.size());
+    std::unordered_map<Txid, size_t, SaltedTxidHasher> possible_parents;
+    std::unordered_set<size_t> pindexes;
 
     for (size_t i{0}; i < package.size(); ++i) {
         const auto& tx = package.at(i);
-        // We assume the package is sorted, so that we don't need to continue
-        // looking past the transaction itself.
-        if (&(*tx) == &(*ptx)) break;
-        if (possible_parents.count(tx->GetHash())) {
-            in_package_parents.push_back(i);
+        pindexes.clear();
+        for (auto &input : tx->vin) {
+            if (possible_parents.count(input.prevout.hash))
+                pindexes.insert(possible_parents[input.prevout.hash]);
         }
+        std::copy(pindexes.begin(), pindexes.end(), std::back_inserter(relations[i]));
+        possible_parents.emplace(tx->GetHash(), i);
     }
-    return in_package_parents;
+
+    return relations;
+}
+
+/** Helper for PackageTRUCChecks: Returns a vector containing the indices of transactions (within
+ * package) that are direct parents of ptx. */
+std::vector<size_t> FindInPackageParents(const size_t tx_index, const auto& relations)
+{
+    return relations[tx_index];
 }
 
 /** Helper for PackageTRUCChecks, storing info for a mempool or package parent. */
@@ -57,13 +62,14 @@ struct ParentInfo {
 
 std::optional<std::string> PackageTRUCChecks(const CTransactionRef& ptx, int64_t vsize,
                                            const Package& package,
-                                           const CTxMemPool::setEntries& mempool_ancestors)
+                                           const CTxMemPool::setEntries& mempool_ancestors,
+                                           const size_t tx_index, const std::vector<std::vector<size_t>>& relations)
 {
     // This function is specialized for these limits, and must be reimplemented if they ever change.
     static_assert(TRUC_ANCESTOR_LIMIT == 2);
     static_assert(TRUC_DESCENDANT_LIMIT == 2);
 
-    const auto in_package_parents{FindInPackageParents(package, ptx)};
+    const auto in_package_parents{FindInPackageParents(tx_index, relations)};
 
     // Now we have all ancestors, so we can start checking TRUC rules.
     if (ptx->version == TRUC_VERSION) {
