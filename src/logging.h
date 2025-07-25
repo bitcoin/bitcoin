@@ -46,10 +46,10 @@ struct SourceLocationHasher {
     size_t operator()(const std::source_location& s) const noexcept
     {
         // Use CSipHasher(0, 0) as a simple way to get uniform distribution.
-        return static_cast<size_t>(CSipHasher(0, 0)
-                                       .Write(std::hash<std::string_view>{}(s.file_name()))
-                                       .Write(s.line())
-                                       .Finalize());
+        return size_t(CSipHasher(0, 0)
+                      .Write(s.line())
+                      .Write(MakeUCharSpan(std::string_view{s.file_name()}))
+                      .Finalize());
     }
 };
 
