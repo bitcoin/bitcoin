@@ -17,9 +17,9 @@ void util::TraceThread(std::string_view thread_name, std::function<void()> threa
 {
     util::ThreadRename(std::string{thread_name});
     try {
-        LogPrintf("%s thread start\n", thread_name);
+        LogInfo("%s thread start", thread_name);
         thread_func();
-        LogPrintf("%s thread exit\n", thread_name);
+        LogInfo("%s thread exit", thread_name);
     } catch (const std::exception& e) {
         PrintExceptionContinue(&e, thread_name);
         throw;

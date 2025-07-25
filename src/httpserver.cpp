@@ -391,7 +391,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
 
     // Bind addresses
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
-        LogPrintf("Binding RPC on address %s port %i\n", i->first, i->second);
+        LogInfo("Binding RPC on address %s port %i", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
             const std::optional<CNetAddr> addr{LookupHost(i->first, false)};

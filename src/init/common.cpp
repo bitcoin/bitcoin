@@ -114,10 +114,11 @@ bool StartLogging(const ArgsManager& args)
                 fs::PathToString(LogInstance().m_file_path))));
     }
 
-    if (!LogInstance().m_log_timestamps)
-        LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
-    LogPrintf("Default data directory %s\n", fs::PathToString(GetDefaultDataDir()));
-    LogPrintf("Using data directory %s\n", fs::PathToString(gArgs.GetDataDirNet()));
+    if (!LogInstance().m_log_timestamps) {
+        LogInfo("Startup time: %s", FormatISO8601DateTime(GetTime()));
+    }
+    LogInfo("Default data directory %s", fs::PathToString(GetDefaultDataDir()));
+    LogInfo("Using data directory %s", fs::PathToString(gArgs.GetDataDirNet()));
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = args.GetConfigFilePath();
@@ -126,12 +127,12 @@ bool StartLogging(const ArgsManager& args)
     } else if (fs::is_directory(config_file_path)) {
         LogWarning("Config file: %s (is directory, not file)", fs::PathToString(config_file_path));
     } else if (fs::exists(config_file_path)) {
-        LogPrintf("Config file: %s\n", fs::PathToString(config_file_path));
+        LogInfo("Config file: %s", fs::PathToString(config_file_path));
     } else if (args.IsArgSet("-conf")) {
         InitWarning(strprintf(_("The specified config file %s does not exist"), fs::PathToString(config_file_path)));
     } else {
         // Not categorizing as "Warning" because it's the default behavior
-        LogPrintf("Config file: %s (not found, skipping)\n", fs::PathToString(config_file_path));
+        LogInfo("Config file: %s (not found, skipping)", fs::PathToString(config_file_path));
     }
 
     // Log the config arguments to debug.log
@@ -148,6 +149,6 @@ void LogPackageVersion()
 #else
     version_string += " (release build)";
 #endif
-    LogPrintf(CLIENT_NAME " version %s\n", version_string);
+    LogInfo(CLIENT_NAME " version %s", version_string);
 }
 } // namespace init
