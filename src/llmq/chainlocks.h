@@ -5,7 +5,7 @@
 #ifndef BITCOIN_LLMQ_CHAINLOCKS_H
 #define BITCOIN_LLMQ_CHAINLOCKS_H
 
-#include <llmq/clsig.h>
+#include <chainlock/clsig.h>
 
 #include <crypto/common.h> // For ReadLE64
 #include <llmq/signing.h>

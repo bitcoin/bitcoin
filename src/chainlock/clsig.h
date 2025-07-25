@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LLMQ_CLSIG_H
-#define BITCOIN_LLMQ_CLSIG_H
+#ifndef BITCOIN_CHAINLOCK_CLSIG_H
+#define BITCOIN_CHAINLOCK_CLSIG_H
 
 #include <bls/bls.h>
 #include <serialize.h>
@@ -43,4 +43,4 @@ public:
 };
 } // namespace llmq
 
-#endif // BITCOIN_LLMQ_CLSIG_H
+#endif // BITCOIN_CHAINLOCK_CLSIG_H

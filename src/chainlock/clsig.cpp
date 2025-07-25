@@ -2,7 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <llmq/clsig.h>
+#include <chainlock/clsig.h>
+
 #include <tinyformat.h>
 
 namespace llmq {

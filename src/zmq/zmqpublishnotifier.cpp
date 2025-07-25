@@ -10,10 +10,10 @@
 #include <node/blockstorage.h>
 #include <streams.h>
 
+#include <chainlock/clsig.h>
 #include <governance/common.h>
 #include <governance/vote.h>
 #include <instantsend/lock.h>
-#include <llmq/chainlocks.h>
 #include <llmq/signing.h>
 
 #include <zmq.h>

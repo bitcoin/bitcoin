@@ -5,18 +5,20 @@
 #ifndef BITCOIN_TEST_UTIL_LLMQ_TESTS_H
 #define BITCOIN_TEST_UTIL_LLMQ_TESTS_H
 
+#include <test/util/setup_common.h>
+
 #include <arith_uint256.h>
 #include <bls/bls.h>
 #include <consensus/params.h>
-#include <llmq/clsig.h>
-#include <llmq/commitment.h>
-#include <llmq/params.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/util/setup_common.h>
 #include <uint256.h>
+
+#include <chainlock/clsig.h>
+#include <llmq/commitment.h>
+#include <llmq/params.h>
 
 #include <vector>
 

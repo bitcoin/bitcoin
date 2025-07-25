@@ -5,9 +5,10 @@
 #include <test/util/llmq_tests.h>
 #include <test/util/setup_common.h>
 
-#include <llmq/clsig.h>
 #include <streams.h>
 #include <util/strencodings.h>
+
+#include <chainlock/clsig.h>
 
 #include <boost/test/unit_test.hpp>
 

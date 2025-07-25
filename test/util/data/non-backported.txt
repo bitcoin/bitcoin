@@ -4,6 +4,8 @@ src/bls/*.cpp
 src/bls/*.h
 src/cachemap.h
 src/cachemultimap.h
+src/chainlock/*.cpp
+src/chainlock/*.h
 src/coinjoin/*.cpp
 src/coinjoin/*.h
 src/ctpl_stl.h

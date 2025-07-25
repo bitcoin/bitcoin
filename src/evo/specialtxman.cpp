@@ -8,6 +8,12 @@
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <hash.h>
+#include <primitives/block.h>
+#include <util/irange.h>
+#include <validation.h>
+
+#include <chainlock/clsig.h>
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/creditpool.h>
@@ -16,13 +22,9 @@
 #include <evo/simplifiedmns.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/chainlocks.h>
-#include <llmq/clsig.h>
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
 #include <llmq/utils.h>
-#include <primitives/block.h>
-#include <util/irange.h>
-#include <validation.h>
 
 static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
                                    const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state)
