@@ -52,8 +52,8 @@ CreateAndActivateUTXOSnapshot(
                                          std::move(auto_outfile), // Will close auto_outfile.
                                          snapshot_path,
                                          snapshot_path);
-    LogPrintf(
-        "Wrote UTXO snapshot to %s: %s\n", fs::PathToString(snapshot_path.make_preferred()), result.write());
+    LogInfo("Wrote UTXO snapshot to %s: %s",
+            fs::PathToString(snapshot_path.make_preferred()), result.write());
 
     // Read the written snapshot in and then activate it.
     //

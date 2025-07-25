@@ -561,7 +561,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "rb")};
 
     if (est_file.IsNull()) {
-        LogPrintf("%s is not found. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
+        LogInfo("%s is not found. Continue anyway.", fs::PathToString(m_estimation_filepath));
         return;
     }
 
@@ -971,7 +971,7 @@ void CBlockPolicyEstimator::FlushFeeEstimates()
         LogError("Failed to close fee estimates file %s: %s. Continuing anyway.", fs::PathToString(m_estimation_filepath), SysErrorString(errno));
         return;
     }
-    LogPrintf("Flushed fee estimates to %s.\n", fs::PathToString(m_estimation_filepath.filename()));
+    LogInfo("Flushed fee estimates to %s.", fs::PathToString(m_estimation_filepath.filename()));
 }
 
 bool CBlockPolicyEstimator::Write(AutoFile& fileout) const

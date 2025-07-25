@@ -74,7 +74,7 @@ struct LogSetup : public BasicTestingSetup {
     ~LogSetup()
     {
         LogInstance().m_file_path = prev_log_path;
-        LogPrintf("Sentinel log to reopen log file\n");
+        LogInfo("Sentinel log to reopen log file");
         LogInstance().m_print_to_file = prev_print_to_file;
         LogInstance().m_reopen_file = prev_reopen_file;
         LogInstance().m_log_timestamps = prev_log_timestamps;
