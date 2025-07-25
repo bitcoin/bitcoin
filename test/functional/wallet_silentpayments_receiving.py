@@ -190,6 +190,11 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
         timestamp = self.nodes[0].getblockheader(blockhash)["time"]
         assert_approx(wallet.getbalance(), 10, 0.0001)
 
+        self.log.info("Check wallet with only sp descriptor can receive change when sending to a non-sp address")
+        wallet.send({self.def_wallet.getnewaddress(): 5})
+        self.generate(self.nodes[0], 1)
+        assert_approx(wallet.getbalance(), 5, 0.0001)
+
         self.log.info("Check import rescan works for silent payments")
 
         self.nodes[0].createwallet(wallet_name="wallet_wo", disable_private_keys=True, silent_payments=True)
@@ -204,7 +209,7 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
         }])
         assert_equal(res[0]["success"], True)
 
-        assert_approx(wallet_wo.getbalance(), 10, 0.0001)
+        assert_approx(wallet_wo.getbalance(), 5, 0.0001)
 
         self.log.info("Check descriptor update works for silent payments")
         # Import the same descriptor again to test the update
@@ -215,7 +220,7 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
         }])
         assert_equal(res[0]["success"], True)
 
-        assert_approx(wallet_wo.getbalance(), 10, 0.0001)
+        assert_approx(wallet_wo.getbalance(), 5, 0.0001)
 
     def test_rbf(self):
         self.log.info("Check bumpfee on tx with sp outputs")
