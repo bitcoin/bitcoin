@@ -83,6 +83,7 @@ add_executable(test_bitcoin
   rpc_tests.cpp
   sanity_tests.cpp
   scheduler_tests.cpp
+  script_assets_tests.cpp
   script_p2sh_tests.cpp
   script_parse_tests.cpp
   script_segwit_tests.cpp
@@ -194,7 +195,7 @@ function(add_boost_test source_file)
       COMMAND test_bitcoin --run_test=${test_suite_name} --catch_system_error=no --log_level=test_suite -- DEBUG_LOG_OUT
     )
     set_property(TEST ${test_suite_name} PROPERTY
-      SKIP_REGULAR_EXPRESSION "no test cases matching filter"
+      SKIP_REGULAR_EXPRESSION "no test cases matching filter" "skipping script_assets_test"
     )
   endforeach()
 endfunction()
