@@ -1138,6 +1138,7 @@ std::optional<std::map<size_t, WitnessV1Taproot>> CreateSilentPaymentOutputs(
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
+        const OutputType change_type,
         std::optional<unsigned int> change_pos,
         const CCoinControl& coin_control,
         bool sign) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -1165,7 +1166,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.tx_noinputs_size = 10 + GetSizeOfCompactSize(vecSend.size()); // bytes for output count
 
     CAmount recipients_sum = 0;
-    const OutputType change_type = wallet.TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type, vecSend);
     ReserveDestination reservedest(&wallet, change_type);
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
     for (const auto& recipient : vecSend) {
@@ -1567,14 +1567,33 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 
     LOCK(wallet.cs_wallet);
 
-    auto res = CreateTransactionInternal(wallet, vecSend, change_pos, coin_control, sign);
-    TRACEPOINT(coin_selection, normal_create_tx_internal,
+    wallet::CreatedTransactionResult txr_ungrouped;
+    OutputType change_type = wallet.TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type, vecSend);
+    auto res1 = CreateTransactionInternal(wallet, vecSend, change_type, change_pos, coin_control, sign);
+    if (!res1) {
+        change_type = wallet.TransactionChangeType(
+            coin_control.m_change_type ? *coin_control.m_change_type : wallet.m_default_change_type,
+            vecSend, /* exclude_sp= */true);
+        auto res2 = CreateTransactionInternal(wallet, vecSend, change_type, change_pos, coin_control, false);
+
+        TRACEPOINT(coin_selection, normal_create_tx_internal,
            wallet.GetName().c_str(),
-           bool(res),
-           res ? res->fee : 0,
-           res && res->change_pos.has_value() ? int32_t(*res->change_pos) : -1);
-    if (!res) return res;
-    const auto& txr_ungrouped = *res;
+           bool(res2),
+           res2 ? res2->fee : 0,
+           res2 && res2->change_pos.has_value() ? int32_t(*res2->change_pos) : -1);
+        if (!res2) return res2;
+
+        txr_ungrouped = *res2;
+    } else {
+        TRACEPOINT(coin_selection, normal_create_tx_internal,
+           wallet.GetName().c_str(),
+           bool(res1),
+           res1->fee,
+           res1->change_pos.has_value() ? int32_t(*res1->change_pos) : -1);
+
+        txr_ungrouped = *res1;
+    }
+
     // try with avoidpartialspends unless it's enabled already
     if (txr_ungrouped.fee > 0 /* 0 means non-functional fee rate estimation */ && wallet.m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         TRACEPOINT(coin_selection, attempting_aps_create_tx, wallet.GetName().c_str());
@@ -1588,7 +1607,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
             ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, tmp_cc.destChange);
         }
 
-        auto txr_grouped = CreateTransactionInternal(wallet, vecSend, change_pos, tmp_cc, sign);
+        auto txr_grouped = CreateTransactionInternal(wallet, vecSend, change_type, change_pos, tmp_cc, sign);
         // if fee of this alternative one is within the range of the max fee, we use this one
         const bool use_aps{txr_grouped.has_value() ? (txr_grouped->fee <= txr_ungrouped.fee + wallet.m_max_aps_fee) : false};
         TRACEPOINT(coin_selection, aps_create_tx_internal,
@@ -1603,7 +1622,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
             if (use_aps) return txr_grouped;
         }
     }
-    return res;
+    return txr_ungrouped;
 }
 
 util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CMutableTransaction& tx, const std::vector<CRecipient>& vecSend, std::optional<unsigned int> change_pos, bool lockUnspents, CCoinControl coinControl)
