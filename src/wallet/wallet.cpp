@@ -2237,7 +2237,7 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
 }
 
-OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const
+OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend, bool exclude_sp) const
 {
     // If -changetype is specified, always use that change type.
     if (change_type) {
@@ -2270,7 +2270,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     }
 
     const bool has_sp_spkman(GetScriptPubKeyMan(OutputType::SILENT_PAYMENTS, /*internal=*/true));
-    if (has_sp_spkman && (any_sp || any_tr)) {
+    if (has_sp_spkman && (any_sp || (any_tr && !exclude_sp))) {
         return OutputType::SILENT_PAYMENTS;
     }
     const bool has_bech32m_spkman(GetScriptPubKeyMan(OutputType::BECH32M, /*internal=*/true));
