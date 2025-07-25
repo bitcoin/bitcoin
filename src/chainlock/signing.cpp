@@ -7,7 +7,6 @@
 #include <node/blockstorage.h>
 #include <validation.h>
 
-#include <chainlock/chainlock.h>
 #include <chainlock/clsig.h>
 #include <instantsend/instantsend.h>
 #include <masternode/sync.h>
@@ -16,9 +15,9 @@
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
-ChainLockSigner::ChainLockSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
-                                 llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
-                                 CSporkManager& sporkman, const CMasternodeSync& mn_sync) :
+ChainLockSigner::ChainLockSigner(CChainState& chainstate, ChainLockSignerParent& clhandler, llmq::CSigningManager& sigman,
+                                 llmq::CSigSharesManager& shareman, CSporkManager& sporkman,
+                                 const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     m_clhandler{clhandler},
     m_sigman{sigman},

@@ -16,7 +16,6 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <chainlock/signing.h>
 #include <instantsend/instantsend.h>
 #include <llmq/quorums.h>
 #include <masternode/sync.h>

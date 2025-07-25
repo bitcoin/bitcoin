@@ -12,6 +12,8 @@
 #include <saltedhasher.h>
 #include <sync.h>
 
+#include <chainlock/signing.h>
+
 #include <gsl/pointers.h>
 
 #include <atomic>
@@ -25,9 +27,6 @@ class CMasternodeSync;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
-namespace chainlock {
-class ChainLockSigner;
-} // namespace chainlock
 
 using NodeId = int64_t;
 
@@ -38,7 +37,7 @@ class CSigningManager;
 class CSigSharesManager;
 enum class VerifyRecSigStatus;
 
-class CChainLocksHandler
+class CChainLocksHandler final : public chainlock::ChainLockSignerParent
 {
 private:
     CChainState& m_chainstate;
@@ -80,11 +79,12 @@ public:
     bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetChainLockByHash(const uint256& hash, chainlock::ChainLockSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     chainlock::ChainLockSig GetBestChainLock() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time)
+    void UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
-                                                              const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+                                                              const uint256& hash) override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const llmq::CInstantSendManager& isman);
@@ -94,13 +94,17 @@ public:
     void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void EnforceBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    bool HasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool HasChainLock(int nHeight, const uint256& blockHash) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
     VerifyRecSigStatus VerifyChainLock(const chainlock::ChainLockSig& clsig) const;
 
-    [[nodiscard]] int32_t GetBestChainLockHeight() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool IsTxSafeForMining(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    [[nodiscard]] bool IsEnabled() const { return isEnabled; }
+    [[nodiscard]] int32_t GetBestChainLockHeight() const override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool IsTxSafeForMining(const uint256& txid) const override
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] bool IsEnabled() const override { return isEnabled; }
 
 private:
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);

@@ -24,7 +24,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     # Dash
     "banman -> common/bloom -> evo/assetlocktx -> llmq/quorums -> net -> banman",
     "banman -> common/bloom -> evo/assetlocktx -> llmq/signing -> net_processing -> banman",
-    "chainlock/chainlock -> chainlock/signing -> chainlock/chainlock",
     "chainlock/chainlock -> instantsend/instantsend -> chainlock/chainlock",
     "chainlock/chainlock -> instantsend/instantsend -> instantsend/signing -> chainlock/chainlock",
     "chainlock/chainlock -> instantsend/instantsend -> net_processing -> chainlock/chainlock",
