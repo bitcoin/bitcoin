@@ -219,6 +219,8 @@ struct CreatedTransactionResult
 
     CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const OutputType change_type, const FeeCalculation& _fee_calc)
         : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos), change_type(change_type) {}
+
+    CreatedTransactionResult() = default;
 };
 
 /**
