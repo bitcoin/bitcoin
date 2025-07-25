@@ -147,7 +147,30 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
 
         self.log.info("Wallet persistence verified successfully")
 
-    def test_import_rescan(self):
+    def test_import_descriptors(self):
+        self.log.info("Check import silent payments descriptor into blank wallet")
+
+        self.nodes[0].createwallet(wallet_name="import_blank", blank=True, silent_payments=True)
+        wallet = self.nodes[0].get_wallet_rpc("import_blank")
+
+        descriptor = "sp([eea23daf/352h/0h/0h/1h/0]cRCGWnoELVHTr9oZWz1TUp7jmdBJPS3Kx8UCaHvfpxL6KiVSHH1A,[eea23daf/352h/0h/0h/0h/0]cUxxbQ67tepsEn3AUKSCWAKrvLwP6MPk55DAptcqxqDiXN6yKkNW)#q42ue5dg"
+        res = wallet.importdescriptors([{
+            "desc": descriptor,
+            "active": True,
+            "next_index": 0,
+            "timestamp": "now"
+        }])
+        assert_equal(res[0]["success"], True)
+
+        self.def_wallet.sendtoaddress(wallet.getnewaddress(address_type="silent-payments"), 10)
+        self.generate(self.nodes[0], 1)
+        assert_equal(wallet.getbalance(), 10)
+
+        self.log.info("Check wallet with only sp descriptor can receive change when sending to a non-sp address")
+        wallet.send({self.def_wallet.getnewaddress(): 5})
+        self.generate(self.nodes[0], 1)
+        assert_approx(wallet.getbalance(), 5, 0.0001)
+
         self.log.info("Check import rescan works for silent payments")
 
         self.nodes[0].createwallet(wallet_name="alice", silent_payments=True)
@@ -298,7 +321,7 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
         self.test_encrypting_unencrypted()
         self.test_basic()
         self.test_wallet_persistence()
-        self.test_import_rescan()
+        self.test_import_descriptors()
         self.test_createwallet_descriptor()
         self.test_backup_and_restore()
         self.test_getaddressinfo()

@@ -2295,6 +2295,11 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
         return OutputType::LEGACY;
     }
 
+    bool is_silent_payments_enabled{!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)};
+    if (is_silent_payments_enabled && has_sp_spkman && !exclude_sp) {
+        // If silent payments are enabled, use the silent payments spkman for change
+        return OutputType::SILENT_PAYMENTS;
+    }
     if (has_bech32m_spkman) {
         return OutputType::BECH32M;
     }
