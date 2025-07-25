@@ -501,5 +501,8 @@ class PSBTTest(BitcoinTestFramework):
         assert signed['complete']
         self.nodes[0].finalizepsbt(signed['psbt'])
 
+        self.log.info("Test we don't crash when making a 0-value funded transaction at 0 fee without forcing an input selection")
+        assert_raises_rpc_error(-4, "Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input", self.nodes[0].walletcreatefundedpsbt, [], [{"data": "deadbeef"}], 0, {"fee_rate": "0"})
+
 if __name__ == '__main__':
     PSBTTest().main()
