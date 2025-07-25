@@ -224,7 +224,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, gsl::not_null<cons
 
         if (!queue_control.Wait()) {
             // at least one check failed
-            return false;
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
         }
     }
     for (const auto& [_, qc] : qcs) {
