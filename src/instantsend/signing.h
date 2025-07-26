@@ -25,12 +25,23 @@ class CQuorumManager;
 } // namespace llmq
 
 namespace instantsend {
-class InstantSendSigner : public llmq::CRecoveredSigsListener
+class InstantSendSignerParent
+{
+public:
+    virtual ~InstantSendSignerParent() = default;
+
+    virtual bool IsInstantSendEnabled() const = 0;
+    virtual bool IsLocked(const uint256& txHash) const = 0;
+    virtual InstantSendLockPtr GetConflictingLock(const CTransaction& tx) const = 0;
+    virtual void TryEmplacePendingLock(const uint256& hash, const NodeId id, const InstantSendLockPtr& islock) = 0;
+};
+
+class InstantSendSigner final : public llmq::CRecoveredSigsListener
 {
 private:
     CChainState& m_chainstate;
     llmq::CChainLocksHandler& m_clhandler;
-    llmq::CInstantSendManager& m_isman;
+    InstantSendSignerParent& m_isman;
     llmq::CSigningManager& m_sigman;
     llmq::CSigSharesManager& m_shareman;
     llmq::CQuorumManager& m_qman;
@@ -39,19 +50,19 @@ private:
     const CMasternodeSync& m_mn_sync;
 
 private:
-    mutable Mutex cs_inputReqests;
+    mutable Mutex cs_input_requests;
     mutable Mutex cs_creating;
 
     /**
      * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
      * in-progress input lock.
      */
-    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds GUARDED_BY(cs_inputReqests);
+    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds GUARDED_BY(cs_input_requests);
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
-     * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the islock.
-     * When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
+     * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the
+     * islock. When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
      */
     std::unordered_map<uint256, InstantSendLock, StaticSaltedHasher> creatingInstantSendLocks GUARDED_BY(cs_creating);
     // maps from txid to the in-progress islock
@@ -59,7 +70,7 @@ private:
 
 public:
     explicit InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
-                               llmq::CInstantSendManager& isman, llmq::CSigningManager& sigman,
+                               InstantSendSignerParent& isman, llmq::CSigningManager& sigman,
                                llmq::CSigSharesManager& shareman, llmq::CQuorumManager& qman, CSporkManager& sporkman,
                                CTxMemPool& mempool, const CMasternodeSync& mn_sync);
     ~InstantSendSigner();
@@ -68,18 +79,18 @@ public:
     void Stop();
 
     void ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
 
     void ClearLockFromQueue(const InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
 
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_input_requests);
 
     void ProcessPendingRetryLockTxs(const std::vector<CTransactionRef>& retryTxs)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_input_requests);
     void ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_creating, !cs_input_requests);
 
 private:
     [[nodiscard]] bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
@@ -95,7 +106,7 @@ private:
 
     [[nodiscard]] bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType,
                                          const Consensus::Params& params)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_inputReqests);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
     void TrySignInstantSendLock(const CTransaction& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
 };

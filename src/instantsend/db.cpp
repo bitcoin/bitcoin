@@ -9,17 +9,18 @@
 #include <primitives/block.h>
 #include <util/system.h>
 
-static const std::string_view DB_ARCHIVED_BY_HASH = "is_a2";
-static const std::string_view DB_ARCHIVED_BY_HEIGHT_AND_HASH = "is_a1";
-static const std::string_view DB_HASH_BY_OUTPOINT = "is_in";
-static const std::string_view DB_HASH_BY_TXID = "is_tx";
-static const std::string_view DB_ISLOCK_BY_HASH = "is_i";
-static const std::string_view DB_MINED_BY_HEIGHT_AND_HASH = "is_m";
-static const std::string_view DB_VERSION = "is_v";
+static constexpr std::string_view DB_ARCHIVED_BY_HASH{"is_a2"};
+static constexpr std::string_view DB_ARCHIVED_BY_HEIGHT_AND_HASH{"is_a1"};
+static constexpr std::string_view DB_HASH_BY_OUTPOINT{"is_in"};
+static constexpr std::string_view DB_HASH_BY_TXID{"is_tx"};
+static constexpr std::string_view DB_ISLOCK_BY_HASH{"is_i"};
+static constexpr std::string_view DB_MINED_BY_HEIGHT_AND_HASH{"is_m"};
+static constexpr std::string_view DB_VERSION{"is_v"};
 
 namespace instantsend {
 namespace {
-static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockKey(std::string_view k, int nHeight, const uint256& islockHash)
+static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockKey(std::string_view k, int nHeight,
+                                                                         const uint256& islockHash)
 {
     return std::make_tuple(std::string{k}, htobe32_internal(std::numeric_limits<uint32_t>::max() - nHeight), islockHash);
 }
@@ -50,44 +51,39 @@ void CInstantSendDb::Upgrade(bool unitTests)
     }
 }
 
-void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const InstantSendLock& islock)
+void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const InstantSendLockPtr& islock)
 {
     LOCK(cs_db);
     CDBBatch batch(*db);
-    batch.Write(std::make_tuple(DB_ISLOCK_BY_HASH, hash), islock);
-    batch.Write(std::make_tuple(DB_HASH_BY_TXID, islock.txid), hash);
-    for (const auto& in : islock.inputs) {
+    batch.Write(std::make_tuple(DB_ISLOCK_BY_HASH, hash), *islock);
+    batch.Write(std::make_tuple(DB_HASH_BY_TXID, islock->txid), hash);
+    for (const auto& in : islock->inputs) {
         batch.Write(std::make_tuple(DB_HASH_BY_OUTPOINT, in), hash);
     }
     db->WriteBatch(batch);
 
-    islockCache.insert(hash, std::make_shared<InstantSendLock>(islock));
-    txidCache.insert(islock.txid, hash);
-    for (const auto& in : islock.inputs) {
+    islockCache.insert(hash, islock);
+    txidCache.insert(islock->txid, hash);
+    for (const auto& in : islock->inputs) {
         outpointCache.insert(in, hash);
     }
 }
 
-void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, InstantSendLockPtr islock, bool keep_cache)
+void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, const InstantSendLock& islock,
+                                           bool keep_cache)
 {
     AssertLockHeld(cs_db);
-    if (!islock) {
-        islock = GetInstantSendLockByHashInternal(hash, false);
-        if (!islock) {
-            return;
-        }
-    }
 
     batch.Erase(std::make_tuple(DB_ISLOCK_BY_HASH, hash));
-    batch.Erase(std::make_tuple(DB_HASH_BY_TXID, islock->txid));
-    for (auto& in : islock->inputs) {
+    batch.Erase(std::make_tuple(DB_HASH_BY_TXID, islock.txid));
+    for (auto& in : islock.inputs) {
         batch.Erase(std::make_tuple(DB_HASH_BY_OUTPOINT, in));
     }
 
     if (!keep_cache) {
         islockCache.erase(hash);
-        txidCache.erase(islock->txid);
-        for (const auto& in : islock->inputs) {
+        txidCache.erase(islock.txid);
+        for (const auto& in : islock.inputs) {
             outpointCache.erase(in);
         }
     }
@@ -151,7 +147,7 @@ std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> CInstantSend
         auto& islockHash = std::get<2>(curKey);
 
         if (auto islock = GetInstantSendLockByHashInternal(islockHash, false)) {
-            RemoveInstantSendLock(batch, islockHash, islock);
+            RemoveInstantSendLock(batch, islockHash, *islock);
             ret.try_emplace(islockHash, std::move(islock));
         }
 
@@ -221,7 +217,8 @@ void CInstantSendDb::WriteBlockInstantSendLocks(const gsl::not_null<std::shared_
     db->WriteBatch(batch);
 }
 
-void CInstantSendDb::RemoveBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected)
+void CInstantSendDb::RemoveBlockInstantSendLocks(const gsl::not_null<std::shared_ptr<const CBlock>>& pblock,
+                                                 gsl::not_null<const CBlockIndex*> pindexDisconnected)
 {
     LOCK(cs_db);
     CDBBatch batch(*db);
@@ -241,7 +238,8 @@ void CInstantSendDb::RemoveBlockInstantSendLocks(const gsl::not_null<std::shared
 bool CInstantSendDb::KnownInstantSendLock(const uint256& islockHash) const
 {
     LOCK(cs_db);
-    return GetInstantSendLockByHashInternal(islockHash) != nullptr || db->Exists(std::make_tuple(DB_ARCHIVED_BY_HASH, islockHash));
+    return GetInstantSendLockByHashInternal(islockHash) != nullptr ||
+           db->Exists(std::make_tuple(DB_ARCHIVED_BY_HASH, islockHash));
 }
 
 size_t CInstantSendDb::GetInstantSendLockCount() const
@@ -354,7 +352,8 @@ std::vector<uint256> CInstantSendDb::GetInstantSendLocksByParent(const uint256& 
     return result;
 }
 
-std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid, int nHeight)
+std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid,
+                                                                   int nHeight)
 {
     LOCK(cs_db);
     std::vector<uint256> result;
@@ -374,7 +373,7 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
                 continue;
             }
 
-            RemoveInstantSendLock(batch, childIslockHash, childIsLock, false);
+            RemoveInstantSendLock(batch, childIslockHash, *childIsLock, false);
             WriteInstantSendLockArchived(batch, childIslockHash, nHeight);
             result.emplace_back(childIslockHash);
 
@@ -384,7 +383,9 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
         }
     }
 
-    RemoveInstantSendLock(batch, islockHash, nullptr, false);
+    if (auto islock = GetInstantSendLockByHashInternal(islockHash, /*use_cache=*/false)) {
+        RemoveInstantSendLock(batch, islockHash, *islock, false);
+    }
     WriteInstantSendLockArchived(batch, islockHash, nHeight);
     result.emplace_back(islockHash);
 

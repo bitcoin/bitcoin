@@ -33,9 +33,9 @@ private:
 
     static constexpr int CURRENT_VERSION{1};
 
-    int best_confirmed_height GUARDED_BY(cs_db) {0};
+    int best_confirmed_height GUARDED_BY(cs_db){0};
 
-    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db) {nullptr};
+    std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
     mutable unordered_lru_cache<uint256, InstantSendLockPtr, StaticSaltedHasher, 10000> islockCache GUARDED_BY(cs_db);
     mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache GUARDED_BY(cs_db);
 
@@ -51,7 +51,8 @@ private:
      * @param islock The InstantSend Lock object itself
      * @param keep_cache Should we still keep corresponding entries in the cache or not
      */
-    void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, InstantSendLockPtr islock, bool keep_cache = true) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
+    void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, const InstantSendLock& islock,
+                               bool keep_cache = true) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
     /**
      * Marks an InstantSend Lock as archived.
      * @param batch Object used to batch many calls together
@@ -88,7 +89,7 @@ public:
      * @param hash The hash of the InstantSend Lock
      * @param islock The InstantSend Lock object itself
      */
-    void WriteNewInstantSendLock(const uint256& hash, const InstantSendLock& islock) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+    void WriteNewInstantSendLock(const uint256& hash, const InstantSendLockPtr& islock) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /**
      * This method updates a DB entry for an InstantSend Lock from being not included in a block to being included in a block
      * @param hash The hash of the InstantSend Lock

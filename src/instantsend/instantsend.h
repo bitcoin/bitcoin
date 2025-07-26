@@ -9,11 +9,12 @@
 #include <primitives/transaction.h>
 #include <protocol.h>
 #include <sync.h>
-#include <util/threadinterrupt.h>
 #include <threadsafety.h>
+#include <util/threadinterrupt.h>
 
 #include <instantsend/db.h>
 #include <instantsend/lock.h>
+#include <instantsend/signing.h>
 #include <unordered_lru_cache.h>
 
 #include <atomic>
@@ -43,7 +44,7 @@ class CQuorumManager;
 class CSigningManager;
 class CSigSharesManager;
 
-class CInstantSendManager
+class CInstantSendManager final : public instantsend::InstantSendSignerParent
 {
 private:
     instantsend::CInstantSendDb db;
@@ -67,8 +68,8 @@ private:
     // Tried to verify but there is no tx yet
     std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher> pendingNoTxInstantSendLocks GUARDED_BY(cs_pendingLocks);
 
-    // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking
-    // of child TXs
+    // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS
+    // locking of child TXs
     struct NonLockedTxInfo {
         const CBlockIndex* pindexMined;
         CTransactionRef tx;
@@ -116,7 +117,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
     void TruncateRecoveredSigsForInputs(const instantsend::InstantSendLock& islock);
 
-    void RemoveMempoolConflictsForLock(PeerManager& peerman, const uint256& hash, const instantsend::InstantSendLock& islock)
+    void RemoveMempoolConflictsForLock(const uint256& hash, const instantsend::InstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
     void ResolveBlockConflicts(const uint256& islockHash, const instantsend::InstantSendLock& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
@@ -128,13 +129,13 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
 
 public:
-    bool IsLocked(const uint256& txHash) const;
+    bool IsLocked(const uint256& txHash) const override;
     bool IsWaitingForTx(const uint256& txHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
-    instantsend::InstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
+    instantsend::InstantSendLockPtr GetConflictingLock(const CTransaction& tx) const override;
 
     PeerMsgRet ProcessMessage(const CNode& pfrom, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
 
-    void TransactionAddedToMempool(PeerManager& peerman, const CTransactionRef& tx)
+    void TransactionAddedToMempool(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
     void TransactionRemovedFromMempool(const CTransactionRef& tx);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
@@ -152,12 +153,12 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
 
     void RemoveConflictingLock(const uint256& islockHash, const instantsend::InstantSendLock& islock);
-    void TryEmplacePendingLock(const uint256& hash, const NodeId id, const instantsend::InstantSendLockPtr& islock)
+    void TryEmplacePendingLock(const uint256& hash, const NodeId id, const instantsend::InstantSendLockPtr& islock) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
 
     size_t GetInstantSendLockCount() const;
 
-    bool IsInstantSendEnabled() const;
+    bool IsInstantSendEnabled() const override;
     /**
      * If true, MN should sign all transactions, if false, MN should not sign
      * transactions in mempool, but should sign txes included in a block. This
