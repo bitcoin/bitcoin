@@ -304,6 +304,11 @@ RPCHelpMan sendtoaddress()
 
     UniValue address_amounts(UniValue::VOBJ);
     const std::string address = request.params[0].get_str();
+
+    if (!IsValidDestinationString(address)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid bitcoin address");
+    }
+
     address_amounts.pushKV(address, request.params[1]);
 
     std::set<int> sffo_set;

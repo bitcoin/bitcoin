@@ -463,6 +463,14 @@ class WalletSendTest(BitcoinTestFramework):
         addr = self.nodes[0].deriveaddresses(desc)[0]
         addr_info = ext_fund.getaddressinfo(addr)
 
+        assert_raises_rpc_error(
+            -8, # RPC_INVALID_PARAMETER
+            "Invalid bitcoin address",
+            self.nodes[0].sendtoaddress,
+            "invalid_address",
+            10
+        )
+
         self.nodes[0].sendtoaddress(addr, 10)
         self.nodes[0].sendtoaddress(ext_wallet.getnewaddress(), 10)
         self.generate(self.nodes[0], 6)
