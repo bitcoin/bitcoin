@@ -2,6 +2,7 @@ Checks: '
 -*,
 bugprone-argument-comment,
 modernize-use-nullptr,
+readability-const-return-type,
 readability-redundant-declaration,
 readability-redundant-string-init,
 '
