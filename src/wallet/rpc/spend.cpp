@@ -2,7 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <common/messages.h>
+#include <common/run_command.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key_io.h>
@@ -221,6 +223,194 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
     }
 }
 
+bool hasDNSResolver()
+{
+    return gArgs.GetArg("-dnsresolver", "") != "";
+}
+
+/**
+ * Validate if a string follows the BIP 353 username format
+ * @param username The username to validate
+ * @return true if the username follows BIP 353 format, false otherwise
+ *
+ * Valid examples:
+ *   - carol.user._bitcoin-payment.carol.com
+ *   - carol.user._bitcoin-payment.carol.com. (with trailing dot - FQDN)
+ *   - alice._bitcoin-payment.example.org
+ *   - pay.bob._bitcoin-payment.company.co.uk
+ *
+ * Invalid examples:
+ *   - carol.user.carol.com (missing ._bitcoin-payment.)
+ *   - _bitcoin-payment.example.com (missing username part)
+ *   - user@example.com (not a valid DNS name format)
+ */
+bool IsValidBIP353Username(const std::string& username)
+{
+    // Check for empty string
+    if (username.empty()) {
+        return false;
+    }
+
+    // Handle trailing dot (FQDN format)
+    std::string name = username;
+    if (!name.empty() && name.back() == '.') {
+        name.pop_back(); // Remove trailing dot for validation
+
+        // Check if it was just a dot
+        if (name.empty()) {
+            return false;
+        }
+    }
+
+    // Must contain the BIP 353 identifier
+    if (name.find("._bitcoin-payment.") == std::string::npos) {
+        return false;
+    }
+
+    // Basic DNS name validation
+    // - Maximum length of 253 characters (excluding trailing dot)
+    // - Labels separated by dots
+    // - Each label: 1-63 characters, alphanumeric and hyphens
+    // - Labels cannot start or end with hyphens
+    if (name.length() > 253) {
+        return false;
+    }
+
+    // Check for valid characters (alphanumeric, dots, hyphens, underscores)
+    // Use locale-independent character checking
+    if (!std::all_of(name.begin(), name.end(), [](unsigned char c) {
+        return (c >= 'a' && c <= 'z') ||
+               (c >= 'A' && c <= 'Z') ||
+               (c >= '0' && c <= '9') ||
+               c == '.' || c == '-' || c == '_';
+    })) {
+        return false;
+    }
+
+    // Split by dots and validate each label
+    size_t start = 0;
+    size_t dot_pos = name.find('.');
+
+    while (dot_pos != std::string::npos || start < name.length()) {
+        size_t end = (dot_pos != std::string::npos) ? dot_pos : name.length();
+        std::string label = name.substr(start, end - start);
+
+        // Empty label (consecutive dots)
+        if (label.empty()) {
+            return false;
+        }
+
+        // Label too long
+        if (label.length() > 63) {
+            return false;
+        }
+
+        // Label starts or ends with hyphen (unless it's the special _bitcoin-payment label)
+        if (label != "_bitcoin-payment") {
+            if (label.front() == '-' || label.back() == '-') {
+                return false;
+            }
+        }
+
+        if (dot_pos == std::string::npos) {
+            break;
+        }
+
+        start = dot_pos + 1;
+        dot_pos = name.find('.', start);
+    }
+
+    // Ensure it ends with a valid TLD (at least 2 characters after the last dot)
+    size_t last_dot = name.rfind('.');
+    if (last_dot == std::string::npos || name.length() - last_dot < 3) {
+        return false;
+    }
+
+    return true;
+}
+
+struct BIP353Result {
+    bool success;
+    std::string result;  // Either the Bitcoin address or error message
+};
+
+/**
+ * Resolve a BIP 353 username to a Bitcoin address
+ * @param username The BIP 353 username (e.g., carol.user._bitcoin-payment.carol.com)
+ * @return BIP353Result containing success status and either the address or error message
+ */
+BIP353Result ResolveBIP353Username(const std::string& username)
+{
+    // Build the command
+    const std::string dnsresolver = gArgs.GetArg("-dnsresolver", "");
+    std::string command = dnsresolver + " resolve " + username;
+
+    // Execute the command and parse JSON response
+    UniValue result;
+    try {
+        result = RunCommandParseJSON(command);
+    } catch (const std::exception& e) {
+        return {false, strprintf("Failed to execute dns-bitcoin-resolver: %s", e.what())};
+    }
+
+    // Check if result is an error object
+    if (result.isObject() && result.exists("error")) {
+        std::string error_msg = result["error"].get_str();
+        return {false, strprintf("DNS resolution error: %s", error_msg)};
+    }
+
+    // Result should be an array of DNS records
+    if (!result.isArray() || result.empty()) {
+        return {false, "Invalid response from dns-bitcoin-resolver"};
+    }
+
+    // Look for TXT record with bitcoin: URI
+    for (size_t i = 0; i < result.size(); ++i) {
+        const UniValue& record = result[i];
+
+        if (!record.isObject() || !record.exists("type") || !record.exists("contents")) {
+            continue;
+        }
+
+        if (record["type"].get_str() != "txt") {
+            continue;
+        }
+
+        std::string contents = record["contents"].get_str();
+
+        // Check if it starts with "bitcoin:"
+        if (contents.find("bitcoin:") != 0) {
+            continue;
+        }
+
+        // Extract the address part (between "bitcoin:" and "?" or end of string)
+        std::string uri = contents.substr(8); // Remove "bitcoin:" prefix
+        size_t question_pos = uri.find('?');
+
+        if (question_pos == 0) {
+            // No address, only parameters (bitcoin:?lno=...)
+            return {false, "No Bitcoin address found in the DNS record"};
+        }
+
+        std::string address;
+        if (question_pos != std::string::npos) {
+            address = uri.substr(0, question_pos);
+        } else {
+            address = uri;
+        }
+
+        // Basic validation - check if address is not empty
+        if (address.empty()) {
+            return {false, "No Bitcoin address found in the DNS record"};
+        }
+
+        // Return the extracted address
+        return {true, address};
+    }
+
+    return {false, "No valid Bitcoin payment information found for this username"};
+}
+
 RPCHelpMan sendtoaddress()
 {
     return RPCHelpMan{
@@ -303,7 +493,32 @@ RPCHelpMan sendtoaddress()
     EnsureWalletIsUnlocked(*pwallet);
 
     UniValue address_amounts(UniValue::VOBJ);
-    const std::string address = request.params[0].get_str();
+    std::string address = request.params[0].get_str();
+
+    if (!IsValidDestinationString(address)) {
+        if (!wallet::IsValidBIP353Username(address)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid address: ") + address);
+        } else if (!hasDNSResolver()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("No dns resolver specified. Cannot resolve: ") + address);
+        }
+
+        wallet::BIP353Result result = wallet::ResolveBIP353Username(address);
+
+        if (!result.success) {
+            // Determine appropriate error code based on the error message
+            RPCErrorCode error_code = RPC_MISC_ERROR;
+            if (result.result.find("DNS resolution error") != std::string::npos) {
+                error_code = RPC_INVALID_PARAMETER;
+            } else if (result.result.find("No Bitcoin address found") != std::string::npos) {
+                error_code = RPC_INVALID_ADDRESS_OR_KEY;
+            }
+
+            throw JSONRPCError(error_code, result.result);
+        } else {
+            address = result.result;
+        }
+    }
+
     address_amounts.pushKV(address, request.params[1]);
 
     std::set<int> sffo_set;
