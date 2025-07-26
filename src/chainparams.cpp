@@ -797,7 +797,7 @@ public:
         consensus.DIP0020Height = 1; // Always active unless overridden
         consensus.DIP0024Height = 1; // Always have dip0024 quorums unless overridden
         consensus.DIP0024QuorumsHeight = 1; // Always have dip0024 quorums unless overridden
-        consensus.V19Height = 1; // Always active unless overriden
+        consensus.V19Height = 1; // Always active unless overridden
         consensus.V20Height = consensus.DIP0003Height; // Active not earlier than dip0003. Functional tests (DashTestFramework) uses height 100 (same as coinbase maturity)
         consensus.MN_RRHeight = consensus.V20Height; // MN_RR does not really have effect before v20 activation
         consensus.WithdrawalsHeight = 600;
