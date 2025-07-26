@@ -96,7 +96,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_SIG_FINDANDDELETE, "SIG_FINDANDDELETE"},
 };
 
-static std::string FormatScriptFlags(uint32_t flags)
+static std::string FormatScriptFlags(script_verify_flags flags)
 {
     return util::Join(GetScriptFlagNames(flags), ",");
 }
@@ -134,13 +134,13 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
 
     // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
-    for (int i = 0; i < 16; ++i) {
-        uint32_t extra_flags(m_rng.randbits(16));
-        uint32_t combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
+    for (int i = 0; i < 256; ++i) {
+        script_verify_flags extra_flags = script_verify_flags::from_int(m_rng.randbits(MAX_SCRIPT_VERIFY_FLAGS_BITS));
+        script_verify_flags combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) continue;
         if (combined_flags & SCRIPT_VERIFY_WITNESS && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
     }
 }
 }; // struct ScriptTest
@@ -1716,9 +1716,9 @@ BOOST_AUTO_TEST_CASE(formatscriptflags)
 {
     // quick check that FormatScriptFlags reports any unknown/unexpected bits
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH), "P2SH");
-    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | (1u<<31)), "P2SH,0x80000000");
-    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | (1u<<27)), "TAPROOT,0x08000000");
-    BOOST_CHECK_EQUAL(FormatScriptFlags(1u<<26), "0x04000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | script_verify_flags::from_int(1u<<31)), "P2SH,0x80000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int(1u<<27)), "TAPROOT,0x08000000");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(script_verify_flags::from_int(1u<<26)), "0x04000000");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

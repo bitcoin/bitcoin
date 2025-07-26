@@ -14,6 +14,7 @@
 #include <span.h>
 #include <uint256.h>
 
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -43,9 +44,10 @@ enum
  *  All flags are intended to be soft forks: the set of acceptable scripts under
  *  flags (A | B) is a subset of the acceptable scripts under flag (A).
  */
-enum : uint32_t {
-    SCRIPT_VERIFY_NONE      = 0,
 
+static constexpr script_verify_flags SCRIPT_VERIFY_NONE{0};
+
+enum class script_verify_flag_name : uint32_t {
     // Evaluate P2SH subscripts (BIP16).
     SCRIPT_VERIFY_P2SH      = (1U << 0),
 
@@ -148,6 +150,13 @@ enum : uint32_t {
     //
     SCRIPT_VERIFY_END_MARKER
 };
+using enum script_verify_flag_name;
+
+// assert there is still a spare bit
+static_assert(static_cast<script_verify_flags::value_type>(SCRIPT_VERIFY_END_MARKER) < (1u << 31));
+
+static constexpr script_verify_flags::value_type MAX_SCRIPT_VERIFY_FLAGS = ((static_cast<script_verify_flags::value_type>(SCRIPT_VERIFY_END_MARKER) - 1) << 1) - 1;
+static constexpr int MAX_SCRIPT_VERIFY_FLAGS_BITS = std::bit_width(MAX_SCRIPT_VERIFY_FLAGS);
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, script_verify_flags flags, ScriptError* serror);
 
@@ -372,7 +381,7 @@ size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey,
 
 int FindAndDelete(CScript& script, const CScript& b);
 
-extern const std::map<std::string, uint32_t> g_verify_flag_names;
+extern const std::map<std::string, script_verify_flag_name> g_verify_flag_names;
 
 std::vector<std::string> GetScriptFlagNames(script_verify_flags flags);
 

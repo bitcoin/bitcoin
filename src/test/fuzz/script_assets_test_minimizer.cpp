@@ -90,7 +90,7 @@ CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
     return scriptwitness;
 }
 
-const std::map<std::string, uint32_t> FLAG_NAMES = {
+const std::map<std::string, script_verify_flag_name> FLAG_NAMES = {
     {std::string("P2SH"), SCRIPT_VERIFY_P2SH},
     {std::string("DERSIG"), SCRIPT_VERIFY_DERSIG},
     {std::string("NULLDUMMY"), SCRIPT_VERIFY_NULLDUMMY},
