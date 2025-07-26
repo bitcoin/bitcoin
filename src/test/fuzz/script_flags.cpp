@@ -15,6 +15,14 @@
 #include <utility>
 #include <vector>
 
+static DataStream& operator>>(DataStream& ds, script_verify_flags& f)
+{
+    script_verify_flags::value_type n{0};
+    ds >> n;
+    f = script_verify_flags::from_int(n);
+    return ds;
+}
+
 FUZZ_TARGET(script_flags)
 {
     if (buffer.size() > 100'000) return;
