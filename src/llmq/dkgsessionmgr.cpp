@@ -317,6 +317,9 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
             if (it == contributionsCache.end()) {
                 CDataStream s(SER_DISK, CLIENT_VERSION);
                 if (!db->ReadDataStream(std::make_tuple(DB_VVEC, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), s)) {
+                    LogPrint(BCLog::LLMQ, "%s -- this node does not have vvec for llmq=%d block=%s protx=%s\n",
+                             __func__, ToUnderlying(llmqType), pQuorumBaseBlockIndex->GetBlockHash().ToString(),
+                             proTxHash.ToString());
                     return false;
                 }
                 size_t vvec_size = ReadCompactSize(s);
