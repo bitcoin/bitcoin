@@ -2072,6 +2072,8 @@ class DashTestFramework(BitcoinTestFramework):
                         continue
                     if c["quorumHash"] != quorum_hash:
                         continue
+                    if c["quorumPublicKey"] == '000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
+                        continue
                     c_ok = True
                     break
                 if not c_ok:
