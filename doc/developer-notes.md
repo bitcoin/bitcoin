@@ -1155,10 +1155,6 @@ Current subtrees include:
 - src/crypto/ctaes
   - Upstream at https://github.com/bitcoin-core/ctaes ; maintained by Core contributors.
 
-- src/univalue
-  - Subtree at https://github.com/bitcoin-core/univalue-subtree ; maintained by Core contributors.
-  - Deviates from upstream https://github.com/jgarzik/univalue.
-
 - src/minisketch
   - Upstream at https://github.com/sipa/minisketch ; maintained by Core contributors.
 

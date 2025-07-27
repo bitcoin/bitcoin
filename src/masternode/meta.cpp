@@ -34,13 +34,13 @@ UniValue CMasternodeMetaInfo::ToJson() const
 
     int64_t now = GetTime<std::chrono::seconds>().count();
 
-    ret.pushKV("lastDSQ", nLastDsq);
-    ret.pushKV("mixingTxCount", nMixingTxCount);
-    ret.pushKV("outboundAttemptCount", outboundAttemptCount);
-    ret.pushKV("lastOutboundAttempt", lastOutboundAttempt);
-    ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt);
-    ret.pushKV("lastOutboundSuccess", lastOutboundSuccess);
-    ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess);
+    ret.pushKV("lastDSQ", nLastDsq.load());
+    ret.pushKV("mixingTxCount", nMixingTxCount.load());
+    ret.pushKV("outboundAttemptCount", outboundAttemptCount.load());
+    ret.pushKV("lastOutboundAttempt", lastOutboundAttempt.load());
+    ret.pushKV("lastOutboundAttemptElapsed", now - lastOutboundAttempt.load());
+    ret.pushKV("lastOutboundSuccess", lastOutboundSuccess.load());
+    ret.pushKV("lastOutboundSuccessElapsed", now - lastOutboundSuccess.load());
 
     return ret;
 }

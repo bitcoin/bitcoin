@@ -107,7 +107,7 @@ static RPCHelpMan setcoinjoinrounds()
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    int nRounds = request.params[0].get_int();
+    int nRounds = request.params[0].getInt<int>();
 
     if (nRounds > MAX_COINJOIN_ROUNDS || nRounds < MIN_COINJOIN_ROUNDS)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid number of rounds");
@@ -138,7 +138,7 @@ static RPCHelpMan setcoinjoinamount()
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
 
-    int nAmount = request.params[0].get_int();
+    int nAmount = request.params[0].getInt<int>();
 
     if (nAmount > MAX_COINJOIN_AMOUNT || nAmount < MIN_COINJOIN_AMOUNT)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount of " + CURRENCY_UNIT + " as mixing goal amount");
@@ -232,24 +232,25 @@ static RPCHelpMan getwalletinfo()
         obj.pushKV("keypoololdest", kp_oldest.value());
     }
     size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
-    obj.pushKV("keypoolsize",   (int64_t)kpExternalSize);
-    obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
-    obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
-    if (pwallet->IsCrypted())
+    obj.pushKV("keypoolsize", kpExternalSize);
+    obj.pushKV("keypoolsize_hd_internal", pwallet->GetKeyPoolSize() - kpExternalSize);
+    obj.pushKV("keys_left", pwallet->nKeysLeftSinceAutoBackup);
+    if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
-    obj.pushKV("paytxfee",      ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
+    }
+    obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
     if (fHDEnabled) {
         obj.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
-        obj.pushKV("hdaccountcount", (int64_t)hdChainCurrent.CountAccounts());
+        obj.pushKV("hdaccountcount", hdChainCurrent.CountAccounts());
         UniValue accounts(UniValue::VARR);
         for (size_t i = 0; i < hdChainCurrent.CountAccounts(); ++i)
         {
             CHDAccount acc;
             UniValue account(UniValue::VOBJ);
-            account.pushKV("hdaccountindex", (int64_t)i);
+            account.pushKV("hdaccountindex", i);
             if(hdChainCurrent.GetAccount(i, acc)) {
-                account.pushKV("hdexternalkeyindex", (int64_t)acc.nExternalChainCounter);
-                account.pushKV("hdinternalkeyindex", (int64_t)acc.nInternalChainCounter);
+                account.pushKV("hdexternalkeyindex", acc.nExternalChainCounter);
+                account.pushKV("hdinternalkeyindex", acc.nInternalChainCounter);
             } else {
                 account.pushKV("error", strprintf("account %d is missing", i));
             }
@@ -858,7 +859,7 @@ static RPCHelpMan upgradewallet()
         "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified.\n"
         "New keys may be generated and a new wallet backup will need to be made.",
         {
-            {"version", RPCArg::Type::NUM, RPCArg::Default{FEATURE_LATEST}, "The version number to upgrade to. Default is the latest wallet version."}
+            {"version", RPCArg::Type::NUM, RPCArg::Default{int{FEATURE_LATEST}}, "The version number to upgrade to. Default is the latest wallet version."}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -885,7 +886,7 @@ static RPCHelpMan upgradewallet()
 
     int version = 0;
     if (!request.params[0].isNull()) {
-        version = request.params[0].get_int();
+        version = request.params[0].getInt<int>();
     }
     bilingual_str error;
     const int previous_version{pwallet->GetVersion()};

@@ -224,7 +224,7 @@ static RPCHelpMan sporkupdate()
     CHECK_NONFATAL(node.sporkman);
 
     // SPORK VALUE
-    int64_t nValue = request.params[1].get_int64();
+    int64_t nValue = request.params[1].getInt<int64_t>();
 
     // broadcast new spork
     if (node.sporkman->UpdateSpork(peerman, nSporkID, nValue)) {
@@ -261,7 +261,7 @@ static RPCHelpMan setmocktime()
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    const int64_t time{request.params[0].get_int64()};
+    const int64_t time{request.params[0].getInt<int64_t>()};
     if (time < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime cannot be negative: %s.", time));
     }
@@ -296,7 +296,7 @@ static RPCHelpMan mnauth()
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
 
-    int64_t nodeId = request.params[0].get_int64();
+    int64_t nodeId = request.params[0].getInt<int64_t>();
     uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
     if (proTxHash.IsNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
@@ -357,7 +357,7 @@ static bool getAddressesFromParams(const UniValue& params, std::vector<std::pair
         addresses.push_back(std::make_pair(hashBytes, type));
     } else if (params[0].isObject()) {
 
-        UniValue addressValues = find_value(params[0].get_obj(), "addresses");
+        UniValue addressValues = params[0].get_obj().find_value("addresses");
         if (!addressValues.isArray()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Addresses is expected to be an array");
         }
@@ -435,12 +435,12 @@ static RPCHelpMan getaddressmempool()
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("address", address);
         delta.pushKV("txid", mempoolAddressKey.m_tx_hash.GetHex());
-        delta.pushKV("index", (int)mempoolAddressKey.m_tx_index);
+        delta.pushKV("index", mempoolAddressKey.m_tx_index);
         delta.pushKV("satoshis", mempoolAddressDelta.m_amount);
         delta.pushKV("timestamp", count_seconds(mempoolAddressDelta.m_time));
         if (mempoolAddressDelta.m_amount < 0) {
             delta.pushKV("prevtxid", mempoolAddressDelta.m_prev_hash.GetHex());
-            delta.pushKV("prevout", (int)mempoolAddressDelta.m_prev_out);
+            delta.pushKV("prevout", mempoolAddressDelta.m_prev_out);
         }
         result.push_back(delta);
     }
@@ -509,7 +509,7 @@ static RPCHelpMan getaddressutxos()
 
         output.pushKV("address", address);
         output.pushKV("txid", unspentKey.m_tx_hash.GetHex());
-        output.pushKV("outputIndex", (int)unspentKey.m_tx_index);
+        output.pushKV("outputIndex", unspentKey.m_tx_index);
         output.pushKV("script", HexStr(unspentValue.m_tx_script));
         output.pushKV("satoshis", unspentValue.m_amount);
         output.pushKV("height", unspentValue.m_block_height);
@@ -551,15 +551,15 @@ static RPCHelpMan getaddressdeltas()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    UniValue startValue = find_value(request.params[0].get_obj(), "start");
-    UniValue endValue = find_value(request.params[0].get_obj(), "end");
+    UniValue startValue = request.params[0].get_obj().find_value("start");
+    UniValue endValue = request.params[0].get_obj().find_value("end");
 
     int start = 0;
     int end = 0;
 
     if (startValue.isNum() && endValue.isNum()) {
-        start = startValue.get_int();
-        end = endValue.get_int();
+        start = startValue.getInt<int>();
+        end = endValue.getInt<int>();
         if (end < start) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "End value is expected to be greater than start");
         }
@@ -596,8 +596,8 @@ static RPCHelpMan getaddressdeltas()
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("satoshis", indexDelta);
         delta.pushKV("txid", indexKey.m_tx_hash.GetHex());
-        delta.pushKV("index", (int)indexKey.m_tx_index);
-        delta.pushKV("blockindex", (int)indexKey.m_block_tx_pos);
+        delta.pushKV("index", indexKey.m_tx_index);
+        delta.pushKV("blockindex", indexKey.m_block_tx_pos);
         delta.pushKV("height", indexKey.m_block_height);
         delta.pushKV("address", address);
         result.push_back(delta);
@@ -715,11 +715,11 @@ static RPCHelpMan getaddresstxids()
     int start = 0;
     int end = 0;
     if (request.params[0].isObject()) {
-        UniValue startValue = find_value(request.params[0].get_obj(), "start");
-        UniValue endValue = find_value(request.params[0].get_obj(), "end");
+        UniValue startValue = request.params[0].get_obj().find_value("start");
+        UniValue endValue = request.params[0].get_obj().find_value("end");
         if (startValue.isNum() && endValue.isNum()) {
-            start = startValue.get_int();
-            end = endValue.get_int();
+            start = startValue.getInt<int>();
+            end = endValue.getInt<int>();
         }
     }
 
@@ -789,15 +789,15 @@ static RPCHelpMan getspentinfo()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    UniValue txidValue = find_value(request.params[0].get_obj(), "txid");
-    UniValue indexValue = find_value(request.params[0].get_obj(), "index");
+    UniValue txidValue = request.params[0].get_obj().find_value("txid");
+    UniValue indexValue = request.params[0].get_obj().find_value("index");
 
     if (!txidValue.isStr() || !indexValue.isNum()) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid txid or index");
     }
 
     uint256 txid = ParseHashV(txidValue, "txid");
-    int outputIndex = indexValue.get_int();
+    int outputIndex = indexValue.getInt<int>();
 
     CSpentIndexKey key(txid, outputIndex);
     CSpentIndexValue value;
@@ -835,7 +835,7 @@ static RPCHelpMan mockscheduler()
 
     // check params are valid values
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    int64_t delta_seconds = request.params[0].get_int64();
+    int64_t delta_seconds = request.params[0].getInt<int64_t>();
     if (delta_seconds <= 0 || delta_seconds > 3600) {
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }

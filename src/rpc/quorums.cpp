@@ -163,7 +163,7 @@ static RPCHelpMan quorum_list_extended()
                 }
                 j.pushKV("creationHeight", q->m_quorum_base_block_index->nHeight);
                 j.pushKV("minedBlockHash", q->minedBlockHash.ToString());
-                j.pushKV("numValidMembers", (int32_t)num_valid_members);
+                j.pushKV("numValidMembers", num_valid_members);
                 j.pushKV("healthRatio", ss.str());
                 obj.pushKV(q->qc->quorumHash.ToString(),j);
             }
@@ -210,7 +210,7 @@ static UniValue BuildQuorumInfo(const llmq::CQuorumBlockProcessor& quorum_block_
             }
             mo.pushKV("addresses", dmn->pdmnState->netInfo->ToJson());
             mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.ToString());
-            mo.pushKV("valid", quorum->qc->validMembers[i]);
+            mo.pushKV("valid", static_cast<bool>(quorum->qc->validMembers[i]));
             if (quorum->qc->validMembers[i]) {
                 if (quorum->params.size == 1) {
                     mo.pushKV("pubKeyShare", dmn->pdmnState->pubKeyOperator.ToString());
@@ -915,7 +915,7 @@ static RPCHelpMan quorum_dkginfo()
     llmq::CDKGDebugStatus status;
     llmq_ctx.dkg_debugman->GetLocalDebugStatus(status);
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("active_dkgs", int(status.sessions.size()));
+    ret.pushKV("active_dkgs", status.sessions.size());
 
     const int nTipHeight{WITH_LOCK(cs_main, return chainman.ActiveChain().Height())};
     auto minNextDKG = [](const Consensus::Params& consensusParams, int nTipHeight) {
@@ -996,7 +996,7 @@ static RPCHelpMan verifychainlock()
         }
         nBlockHeight = pIndex->nHeight;
     } else {
-        nBlockHeight = request.params[2].get_int();
+        nBlockHeight = request.params[2].getInt<int>();
         LOCK(cs_main);
         if (nBlockHeight < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
@@ -1062,7 +1062,7 @@ static RPCHelpMan verifyislock()
 
     int maxHeight{-1};
     if (!request.params[3].isNull()) {
-        maxHeight = request.params[3].get_int();
+        maxHeight = request.params[3].getInt<int>();
     }
 
     int signHeight;
@@ -1117,7 +1117,7 @@ static RPCHelpMan submitchainlock()
 {
     const uint256 nBlockHash(ParseHashV(request.params[0], "blockHash"));
 
-    const int nBlockHeight = request.params[2].get_int();
+    const int nBlockHeight = request.params[2].getInt<int>();
     if (nBlockHeight <= 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid block height");
     }

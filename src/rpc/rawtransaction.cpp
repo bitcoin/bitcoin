@@ -263,7 +263,7 @@ static RPCHelpMan getrawtransaction()
     // Accept either a bool (true) or a num (>=1) to indicate verbose output.
     bool fVerbose = false;
     if (!request.params[1].isNull()) {
-        fVerbose = request.params[1].isNum() ? (request.params[1].get_int() != 0) : request.params[1].get_bool();
+        fVerbose = request.params[1].isNum() ? (request.params[1].getInt<int>() != 0) : request.params[1].get_bool();
     }
 
     if (!request.params[2].isNull()) {
@@ -352,7 +352,7 @@ static RPCHelpMan getrawtransactionmulti() {
     // Accept either a bool (true) or a num (>=1) to indicate verbose output.
     bool fVerbose{false};
     if (!request.params[1].isNull()) {
-        fVerbose = request.params[1].isNum() ? (request.params[1].get_int() != 0) : request.params[1].get_bool();
+        fVerbose = request.params[1].isNum() ? (request.params[1].getInt<int>() != 0) : request.params[1].get_bool();
     }
 
     const NodeContext& node{EnsureAnyNodeContext(request.context)};
@@ -627,7 +627,7 @@ static RPCHelpMan getassetunlockstatuses()
     std::optional<int> nSpecificCoreHeight{std::nullopt};
 
     if (!request.params[1].isNull()) {
-        nSpecificCoreHeight = request.params[1].get_int();
+        nSpecificCoreHeight = request.params[1].getInt<int>();
         if (nSpecificCoreHeight.value() < 0 || nSpecificCoreHeight.value() > chainman.ActiveChain().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
         }

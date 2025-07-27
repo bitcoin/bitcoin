@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <util/underlying.h>
+
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/mnhftx.h>
@@ -28,7 +30,7 @@
     }
 
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("version", int(nVersion));
+    ret.pushKV("version", nVersion);
     ret.pushKV("creditOutputs", outputs);
     return ret;
 }
@@ -36,10 +38,10 @@
 [[nodiscard]] UniValue CAssetUnlockPayload::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("version", int(nVersion));
-    ret.pushKV("index", int(index));
-    ret.pushKV("fee", int(fee));
-    ret.pushKV("requestedHeight", int(requestedHeight));
+    ret.pushKV("version", nVersion);
+    ret.pushKV("index", index);
+    ret.pushKV("fee", fee);
+    ret.pushKV("requestedHeight", requestedHeight);
     ret.pushKV("quorumHash", quorumHash.ToString());
     ret.pushKV("quorumSig", quorumSig.ToString());
     return ret;
@@ -48,13 +50,13 @@
 [[nodiscard]] UniValue CCbTx::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("version", (int)nVersion);
+    ret.pushKV("version", ToUnderlying(nVersion));
     ret.pushKV("height", nHeight);
     ret.pushKV("merkleRootMNList", merkleRootMNList.ToString());
     if (nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
         ret.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
         if (nVersion >= CCbTx::Version::CLSIG_AND_BALANCE) {
-            ret.pushKV("bestCLHeightDiff", static_cast<int>(bestCLHeightDiff));
+            ret.pushKV("bestCLHeightDiff", bestCLHeightDiff);
             ret.pushKV("bestCLSignature", bestCLSignature.ToString());
             ret.pushKV("creditPoolBalance", ValueFromAmount(creditPoolBalance));
         }
@@ -68,7 +70,7 @@
     ret.pushKV("version", nVersion);
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("collateralHash", collateralOutpoint.hash.ToString());
-    ret.pushKV("collateralIndex", (int)collateralOutpoint.n);
+    ret.pushKV("collateralIndex", collateralOutpoint.n);
     if (IsServiceDeprecatedRPCEnabled()) {
         ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
@@ -108,7 +110,7 @@
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("version", nVersion);
     ret.pushKV("proTxHash", proTxHash.ToString());
-    ret.pushKV("reason", (int)nReason);
+    ret.pushKV("reason", nReason);
     ret.pushKV("inputsHash", inputsHash.ToString());
     return ret;
 }
@@ -138,7 +140,7 @@
 [[nodiscard]] UniValue MNHFTxPayload::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("version", (int)nVersion);
+    ret.pushKV("version", nVersion);
     ret.pushKV("signal", signal.ToJson());
     return ret;
 }
@@ -146,8 +148,8 @@
 [[nodiscard]] UniValue llmq::CFinalCommitmentTxPayload::ToJson() const
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("version", int{nVersion});
-    ret.pushKV("height", int(nHeight));
+    ret.pushKV("version", nVersion);
+    ret.pushKV("height", nHeight);
     ret.pushKV("commitment", commitment.ToJson());
     return ret;
 }

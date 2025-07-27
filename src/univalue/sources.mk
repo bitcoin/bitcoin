@@ -1,21 +1,15 @@
-# - All variables are namespaced with UNIVALUE_ to avoid colliding with
-#     downstream makefiles.
 # - All Variables ending in _HEADERS or _SOURCES confuse automake, so the
 #     _INT postfix is applied.
 # - Convenience variables, for example a UNIVALUE_TEST_DIR should not be used
 #     as they interfere with automatic dependency generation
-# - The %reldir% is the relative path from the Makefile.am. This allows
-#   downstreams to use these variables without having to manually account for
-#   the path change.
+# - The %reldir% is the relative path from the Makefile.am.
 
 UNIVALUE_INCLUDE_DIR_INT = %reldir%/include
 
 UNIVALUE_DIST_HEADERS_INT =
 UNIVALUE_DIST_HEADERS_INT += %reldir%/include/univalue.h
-
-UNIVALUE_LIB_HEADERS_INT =
-UNIVALUE_LIB_HEADERS_INT += %reldir%/lib/univalue_utffilter.h
-UNIVALUE_LIB_HEADERS_INT += %reldir%/lib/univalue_escapes.h
+UNIVALUE_DIST_HEADERS_INT += %reldir%/include/univalue_utffilter.h
+UNIVALUE_DIST_HEADERS_INT += %reldir%/include/univalue_escapes.h
 
 UNIVALUE_LIB_SOURCES_INT =
 UNIVALUE_LIB_SOURCES_INT += %reldir%/lib/univalue.cpp
@@ -30,9 +24,6 @@ UNIVALUE_TEST_UNITESTER_INT += %reldir%/test/unitester.cpp
 
 UNIVALUE_TEST_JSON_INT =
 UNIVALUE_TEST_JSON_INT += %reldir%/test/test_json.cpp
-
-UNIVALUE_TEST_NO_NUL_INT =
-UNIVALUE_TEST_NO_NUL_INT += %reldir%/test/no_nul.cpp
 
 UNIVALUE_TEST_OBJECT_INT =
 UNIVALUE_TEST_OBJECT_INT += %reldir%/test/object.cpp

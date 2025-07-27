@@ -658,8 +658,8 @@ std::optional<const CSuperblock> CGovernanceManager::CreateSuperblockCandidate(i
         // Skip proposals that are too expensive
         if (budgetAllocated + payment.nAmount > governanceBudget) continue;
 
-        int64_t windowStart = jproposal["start_epoch"].get_int64() - GOVERNANCE_FUDGE_WINDOW;
-        int64_t windowEnd = jproposal["end_epoch"].get_int64() + GOVERNANCE_FUDGE_WINDOW;
+        int64_t windowStart = jproposal["start_epoch"].getInt<int64_t>() - GOVERNANCE_FUDGE_WINDOW;
+        int64_t windowEnd = jproposal["end_epoch"].getInt<int64_t>() + GOVERNANCE_FUDGE_WINDOW;
 
         // Skip proposals if the SB isn't within the proposal time window
         if (SBEpochTime < windowStart) {
@@ -1503,12 +1503,12 @@ UniValue CGovernanceManager::ToJson() const
     }
 
     UniValue jsonObj(UniValue::VOBJ);
-    jsonObj.pushKV("objects_total", (int)mapObjects.size());
+    jsonObj.pushKV("objects_total", mapObjects.size());
     jsonObj.pushKV("proposals", nProposalCount);
     jsonObj.pushKV("triggers", nTriggerCount);
     jsonObj.pushKV("other", nOtherCount);
-    jsonObj.pushKV("erased", (int)mapErasedGovernanceObjects.size());
-    jsonObj.pushKV("votes", (int)cmapVoteToObject.GetSize());
+    jsonObj.pushKV("erased", mapErasedGovernanceObjects.size());
+    jsonObj.pushKV("votes", cmapVoteToObject.GetSize());
     return jsonObj;
 }
 

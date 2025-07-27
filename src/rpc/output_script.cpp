@@ -105,7 +105,7 @@ static RPCHelpMan createmultisig()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int required = request.params[0].get_int();
+    int required = request.params[0].getInt<int>();
 
     // Get the public keys
     const UniValue& keys = request.params[1].get_array();

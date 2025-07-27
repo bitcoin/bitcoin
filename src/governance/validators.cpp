@@ -268,7 +268,7 @@ bool CProposalValidator::GetDataValue(const std::string& strKey, int64_t& nValue
         const UniValue uValue = objJSON[strKey];
         switch (uValue.getType()) {
         case UniValue::VNUM:
-            nValueRet = uValue.get_int64();
+            nValueRet = uValue.getInt<int64_t>();
             fOK = true;
             break;
         default:

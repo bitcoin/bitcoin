@@ -797,7 +797,7 @@ RPCHelpMan importelectrumwallet()
     // Whether to perform rescan after import
     int nStartHeight = 0;
     if (!request.params[1].isNull())
-        nStartHeight = request.params[1].get_int();
+        nStartHeight = request.params[1].getInt<int>();
     if (tip_height < nStartHeight)
         nStartHeight = tip_height;
 
@@ -1043,7 +1043,7 @@ RPCHelpMan dumpwallet()
                 file << "# WARNING: ACCOUNT " << i << " IS MISSING!" << "\n\n";
             }
         }
-        obj.pushKV("hdaccounts", int(hdChainCurrent.CountAccounts()));
+        obj.pushKV("hdaccounts", hdChainCurrent.CountAccounts());
     }
 
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
@@ -1087,7 +1087,7 @@ RPCHelpMan dumpwallet()
     file.close();
 
     std::string strWarning = strprintf(_("%s file contains all private keys from this wallet. Do not share it with anyone!").translated, request.params[0].get_str());
-    obj.pushKV("keys", int(vKeyBirth.size()));
+    obj.pushKV("keys", vKeyBirth.size());
     obj.pushKV("filename", filepath.utf8string());
     obj.pushKV("warning", strWarning);
 
@@ -1459,7 +1459,7 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
     if (data.exists("timestamp")) {
         const UniValue& timestamp = data["timestamp"];
         if (timestamp.isNum()) {
-            return timestamp.get_int64();
+            return timestamp.getInt<int64_t>();
         } else if (timestamp.isStr() && timestamp.get_str() == "now") {
             return now;
         }
@@ -1700,7 +1700,7 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             next_index = range_start;
 
             if (data.exists("next_index")) {
-                next_index = data["next_index"].get_int64();
+                next_index = data["next_index"].getInt<int64_t>();
                 // bound checks
                 if (next_index < range_start || next_index >= range_end) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "next_index is out of range");

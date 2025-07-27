@@ -311,7 +311,7 @@ void CGovernanceObject::LoadData()
         GetData(objResult);
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::LoadData -- GetDataAsPlainString = %s\n", GetDataAsPlainString());
         UniValue obj = GetJSONObject();
-        m_obj.type = GovernanceObject(obj["type"].get_int());
+        m_obj.type = GovernanceObject(obj["type"].getInt<int>());
     } catch (std::exception& e) {
         fUnparsable = true;
         LogPrintf("%s\n", strprintf("CGovernanceObject::LoadData -- Error parsing JSON, e.what() = %s", e.what()));
