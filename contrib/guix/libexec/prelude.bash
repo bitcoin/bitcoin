@@ -21,6 +21,26 @@ check_tools() {
     done
 }
 
+################
+# SOURCE_DATE_EPOCH should not unintentionally be set
+################
+
+check_source_date_epoch() {
+    if [ -n "$SOURCE_DATE_EPOCH" ] && [ -z "$FORCE_SOURCE_DATE_EPOCH" ]; then
+        cat << EOF
+ERR: Environment variable SOURCE_DATE_EPOCH is set which may break reproducibility.
+
+     Aborting...
+
+Hint: You may want to:
+      1. Unset this variable: \`unset SOURCE_DATE_EPOCH\` before rebuilding
+      2. Set the 'FORCE_SOURCE_DATE_EPOCH' environment variable if you insist on
+         using your own epoch
+EOF
+        exit 1
+    fi
+}
+
 check_tools cat env readlink dirname basename git
 
 ################
