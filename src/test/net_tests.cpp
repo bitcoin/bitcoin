@@ -792,6 +792,43 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     BOOST_CHECK(!IsLocal(addr));
 }
 
+BOOST_AUTO_TEST_CASE(LocalAddress_nScore_Overflow)
+{
+    g_reachable_nets.Add(NET_IPV4);
+
+    CService addr = CService(UtilBuildAddress(0x002, 0x001, 0x001, 0x001), 1000); // 2.1.1.1:1000
+
+    // Start with maximum nScore value
+    BOOST_CHECK(AddLocal(addr, std::numeric_limits<int>::max()));
+    BOOST_CHECK(IsLocal(addr));
+
+    // Verify initial state
+    {
+        LOCK(g_maplocalhost_mutex);
+        auto it = mapLocalHost.find(addr);
+        BOOST_CHECK(it != mapLocalHost.end());
+        BOOST_CHECK_EQUAL(it->second.nScore, std::numeric_limits<int>::max());
+    }
+
+    //Simulate multiple SeenLocal calls - should not overflow
+    for (int i = 0; i < 1000; i++) {
+        bool result = SeenLocal(addr);
+        BOOST_CHECK(result);
+
+        // Verify saturation - nScore should remain at max value
+        {
+            LOCK(g_maplocalhost_mutex);
+            auto it = mapLocalHost.find(addr);
+            BOOST_CHECK(it != mapLocalHost.end());
+            BOOST_CHECK_EQUAL(it->second.nScore, std::numeric_limits<int>::max());
+        }
+    }
+
+    // Clean up
+    RemoveLocal(addr);
+    BOOST_CHECK(!IsLocal(addr));
+}
+
 BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);

@@ -313,7 +313,9 @@ bool SeenLocal(const CService& addr)
     LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
     if (it == mapLocalHost.end()) return false;
-    ++it->second.nScore;
+    if (it->second.nScore < std::numeric_limits<int>::max()) {
+        ++it->second.nScore;
+    }
     return true;
 }
 
