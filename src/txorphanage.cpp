@@ -177,22 +177,11 @@ std::set<uint256> TxOrphanage::GetCandidatesForBlock(const CBlock& block)
 {
     AssertLockHeld(g_cs_orphans);
 
-    std::set<uint256> orphanWorkSet;
-
-    for (const CTransactionRef& ptx : block.vtx) {
-        const CTransaction& tx = *ptx;
-
-        // Which orphan pool entries we should reprocess and potentially try to accept into mempool again?
-        for (size_t i = 0; i < tx.vin.size(); i++) {
-            auto itByPrev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), (uint32_t)i));
-            if (itByPrev == m_outpoint_to_orphan_it.end()) continue;
-            for (const auto& elem : itByPrev->second) {
-                orphanWorkSet.insert(elem->first);
-            }
-        }
+    std::set<uint256> orphan_work_set;
+    for (const auto& ptx : block.vtx) {
+        AddChildrenToWorkSet(*ptx, orphan_work_set);
     }
-
-    return orphanWorkSet;
+    return orphan_work_set;
 }
 
 void TxOrphanage::EraseForBlock(const CBlock& block)
