@@ -709,7 +709,6 @@ class CompactBlocksTest(BitcoinTestFramework):
         utxo = self.utxos[0]
 
         block = self.build_block_with_transactions(node, utxo, 5)
-        del block.vtx[3]
         block.hashMerkleRoot = block.calc_merkle_root()
         # Drop the coinbase witness but include the witness commitment.
         add_witness_commitment(block)
