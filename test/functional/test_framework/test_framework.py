@@ -263,6 +263,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
+    def set_binary_paths(self):
+        """Update self.options with the paths of all binaries from environment variables or their default values"""
+
+        binaries = {
+            "dashd": ("dashd", "DASHD"),
+            "dash-cli": ("dashcli", "DASHCLI"),
+            "dash-util": ("dashutil", "DASHUTIL"),
+            "dash-wallet": ("dashwallet", "DASHWALLET"),
+        }
+        for binary, [attribute_name, env_variable_name] in binaries.items():
+            default_filename = os.path.join(
+                self.config["environment"]["BUILDDIR"],
+                "src",
+                binary + self.config["environment"]["EXEEXT"],
+            )
+            setattr(self.options, attribute_name, os.getenv(env_variable_name, default=default_filename))
+
     def setup(self):
         """Call this method to start up the test framework object with options set."""
 
@@ -272,18 +289,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         config = self.config
 
-        fname_bitcoind = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "dashd" + config["environment"]["EXEEXT"],
-        )
-        fname_bitcoincli = os.path.join(
-            config["environment"]["BUILDDIR"],
-            "src",
-            "dash-cli" + config["environment"]["EXEEXT"],
-        )
-        self.options.bitcoind = os.getenv("BITCOIND", default=fname_bitcoind)
-        self.options.bitcoincli = os.getenv("BITCOINCLI", default=fname_bitcoincli)
+        self.set_binary_paths()
 
         self.extra_args_from_options = self.options.dashd_extra_args
 
