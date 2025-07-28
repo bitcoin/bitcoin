@@ -40,16 +40,19 @@ Notable changes
 ### Test
 
 - #32765 test: Fix list index out of range error in feature_bip68_sequence.py
+- #33001 test: Do not pass tests on unhandled exceptions
 
 ### Build
 
 - #32678 guix: warn and abort when SOURCE_DATE_EPOCH is set
 - #32943 depends: Force CMAKE_EXPORT_NO_PACKAGE_REGISTRY=TRUE
+- #33073 guix: warn SOURCE_DATE_EPOCH set in guix-codesign
 
 ### Doc
 
 - #32776 doc: taproot became always active in v24.0
 - #32777 doc: fix Transifex 404s
+- #33070 doc/zmq: fix unix socket path example
 
 
 Credits
@@ -58,6 +61,8 @@ Credits
 Thanks to everyone who directly contributed to this release:
 - fanquake
 - Hennadii Stepanov
+- MarcoFalke
+- romanz
 - Sjors Provoost
 - willcl-ark
 - zaidmstrr
