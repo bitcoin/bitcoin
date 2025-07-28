@@ -302,6 +302,7 @@ BITCOIN_CORE_H = \
   psbt.h \
   random.h \
   randomenv.h \
+  rest.h \
   rpc/blockchain.h \
   rpc/client.h \
   rpc/evo_util.h \
