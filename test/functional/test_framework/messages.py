@@ -65,6 +65,9 @@ MSG_TYPE_MASK = 0xffffffff >> 2
 
 FILTER_TYPE_BASIC = 0
 
+DEFAULT_ANCESTOR_LIMIT = 25    # default max number of in-mempool ancestors
+DEFAULT_DESCENDANT_LIMIT = 25  # default max number of in-mempool descendants
+
 MAGIC_BYTES = {
     "mainnet": b"\xbf\x0c\x6b\xbd",   # mainnet
     "testnet3": b"\xce\xe2\xca\xff",  # testnet3
