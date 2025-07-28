@@ -403,10 +403,8 @@ private:
 /**
  * We use a prevector for the script to reduce the considerable memory overhead
  *  of vectors in cases where they normally contain a small number of small elements.
- * Tests in October 2015 showed use of this reduced dbcache memory usage by 23%
- *  and made an initial sync 13% faster.
  */
-typedef prevector<28, unsigned char> CScriptBase;
+using CScriptBase = prevector<36, uint8_t>;
 
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
 
