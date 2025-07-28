@@ -12,11 +12,12 @@
 #include <validationinterface.h>
 
 #include <atomic>
+#include <memory>
 
 BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, ChainTestingSetup)
 
 struct TestSubscriberNoop final : public CValidationInterface {
-    void BlockChecked(const CBlock&, const BlockValidationState&) override {}
+    void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&) override {}
 };
 
 BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
@@ -25,10 +26,9 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
 
     // Start thread to generate notifications
     std::thread gen{[&] {
-        const CBlock block_dummy;
         BlockValidationState state_dummy;
         while (generate) {
-            m_node.validation_signals->BlockChecked(block_dummy, state_dummy);
+            m_node.validation_signals->BlockChecked(std::make_shared<const CBlock>(), state_dummy);
         }
     }};
 
@@ -60,15 +60,14 @@ public:
     {
         if (m_on_destroy) m_on_destroy();
     }
-    void BlockChecked(const CBlock& block, const BlockValidationState& state) override
+    void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
     {
         if (m_on_call) m_on_call();
     }
     void Call()
     {
-        CBlock block;
         BlockValidationState state;
-        m_signals.BlockChecked(block, state);
+        m_signals.BlockChecked(std::make_shared<const CBlock>(), state);
     }
     std::function<void()> m_on_call;
     std::function<void()> m_on_destroy;

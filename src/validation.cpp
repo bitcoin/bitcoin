@@ -3178,7 +3178,7 @@ bool Chainstate::ConnectTip(
         CCoinsViewCache view(&CoinsTip());
         bool rv = ConnectBlock(*block_to_connect, state, pindexNew, view);
         if (m_chainman.m_options.signals) {
-            m_chainman.m_options.signals->BlockChecked(*block_to_connect, state);
+            m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
         }
         if (!rv) {
             if (state.IsInvalid())
@@ -4554,7 +4554,7 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         }
         if (!ret) {
             if (m_options.signals) {
-                m_options.signals->BlockChecked(*block, state);
+                m_options.signals->BlockChecked(block, state);
             }
             LogError("%s: AcceptBlock FAILED (%s)\n", __func__, state.ToString());
             return false;
