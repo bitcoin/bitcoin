@@ -89,7 +89,7 @@ protected:
     std::vector<OrphanMap::iterator> m_orphan_list GUARDED_BY(g_cs_orphans);
 
     /** Cumulative size of all transactions in the orphan map */
-    size_t m_orphan_tx_size{0};
+    size_t m_orphan_tx_size GUARDED_BY(g_cs_orphans){0};
 };
 
 #endif // BITCOIN_TXORPHANAGE_H
