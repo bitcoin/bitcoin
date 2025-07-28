@@ -3,8 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
-#include <net.h>
+#include <consensus/validation.h>
 #include <net_processing.h>
+#include <node/eviction.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
@@ -102,16 +104,20 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                 [&] {
                     bool have_tx = orphanage.HaveTx(tx->GetHash());
                     // AddTx should return false if tx is too big or already have it
+                    // tx size is unknown, we only check when tx is already in orphanage
                     {
                         LOCK(g_cs_orphans);
-                        Assert(have_tx != orphanage.AddTx(tx, peer_id));
+                        bool add_tx = orphanage.AddTx(tx, peer_id);
+                        // have_tx == true -> add_tx == false
+                        Assert(!have_tx || !add_tx);
                     }
                     have_tx = orphanage.HaveTx(tx->GetHash());
-                    // tx should already be added since it will not be too big in the test
-                    // have_tx should be true and AddTx should fail
                     {
                         LOCK(g_cs_orphans);
-                        Assert(have_tx && !orphanage.AddTx(tx, peer_id));
+                        bool add_tx = orphanage.AddTx(tx, peer_id);
+                        // if have_tx is still false, it must be too big
+                        Assert(!have_tx == ::GetSerializeSize(*tx, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE);
+                        Assert(!have_tx || !add_tx);
                     }
                 },
                 [&] {
