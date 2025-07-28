@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
-                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
+                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence(), {});
                 }
                 uint256 hash = tx.GetHash();
                 txHashes[j].push_back(hash);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
-                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
+                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence(), {});
                 }
                 uint256 hash = tx.GetHash();
                 txHashes[j].push_back(hash);
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
-                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
+                    m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence(), {});
                 }
                 uint256 hash = tx.GetHash();
                 CTransactionRef ptx = mpool.get(hash);
