@@ -54,6 +54,7 @@ from test_framework.script import (
     CScript,
     OP_DROP,
     OP_TRUE,
+    OP_RETURN,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -723,6 +724,23 @@ class CompactBlocksTest(BitcoinTestFramework):
         test_node.send_and_ping(msg)
 
         # Check that the tip didn't advance
+        assert_not_equal(node.getbestblockhash(), block.hash_hex)
+        test_node.sync_with_ping()
+
+        # Re-establish a proper witness commitment with the coinbase witness, but
+        # invalidate the last tx in the block.
+        block.vtx[4].vin[0].scriptSig = CScript([OP_RETURN])
+        block.hashMerkleRoot = block.calc_merkle_root()
+        add_witness_commitment(block)
+        block.solve()
+
+        # This will lead to a consensus failure for which we also won't be disconnected but which
+        # will be cached.
+        comp_block.initialize_from_block(block, prefill_list=list(range(len(block.vtx))), use_witness=True)
+        msg = msg_cmpctblock(comp_block.to_p2p())
+        test_node.send_and_ping(msg)
+
+        # The tip still didn't advance.
         assert_not_equal(node.getbestblockhash(), block.hash_hex)
         test_node.sync_with_ping()
 
