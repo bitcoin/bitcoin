@@ -34,6 +34,8 @@ set(CLIENT_VERSION_RC 0)
 set(CLIENT_VERSION_IS_RELEASE "true")
 set(COPYRIGHT_YEAR "2025")
 
+set(CLIENT_VERSION_SUFFIX ".knotsYYYYMMDD")
+
 # During the enabling of the CXX and CXXOBJ languages, we modify
 # CMake's compiler/linker invocation strings by appending the content
 # of the user-defined `APPEND_*` variables, which allows overriding
@@ -57,7 +59,7 @@ project(BitcoinCore
   LANGUAGES NONE
 )
 
-set(CLIENT_VERSION_STRING ${PROJECT_VERSION})
+set(CLIENT_VERSION_STRING ${PROJECT_VERSION}${CLIENT_VERSION_SUFFIX})
 if(CLIENT_VERSION_RC GREATER 0)
   string(APPEND CLIENT_VERSION_STRING "rc${CLIENT_VERSION_RC}")
 endif()

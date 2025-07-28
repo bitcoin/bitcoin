@@ -48,6 +48,8 @@ const std::string UA_NAME("Satoshi");
     #endif
 #endif
 
+static const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
+
 static std::string FormatVersion(int nVersion)
 {
     return strprintf("%d.%d.%d", nVersion / 10000, (nVersion / 100) % 100, nVersion % 100);
@@ -55,7 +57,6 @@ static std::string FormatVersion(int nVersion)
 
 std::string FormatFullVersion()
 {
-    static const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
     return CLIENT_BUILD;
 }
 
@@ -68,7 +69,11 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
     if (!comments.empty()) comments_str = strprintf("(%s)", Join(comments, "; "));
     std::string ua = strprintf("/%s:%s%s/", name, FormatVersion(nClientVersion), comments_str);
     if (!base_name_only) {
-        ua += "Knots:20250205/";
+        static const auto ua_knots = []() -> std::string {
+            const auto pos{CLIENT_BUILD.find(".knots")};
+            return "Knots:" + CLIENT_BUILD.substr(pos + 6) + "/";
+        }();
+        ua += ua_knots;
     }
     return ua;
 }
