@@ -110,6 +110,7 @@ Notable changes
 - #32837 depends: fix libevent _WIN32_WINNT usage
 - #32943 depends: Force CMAKE_EXPORT_NO_PACKAGE_REGISTRY=TRUE
 - #32954 cmake: Drop no longer necessary "cmakeMinimumRequired" object
+- #33073 guix: warn SOURCE_DATE_EPOCH set in guix-codesign
 
 ### Gui
 
@@ -132,6 +133,7 @@ Notable changes
 - #32777 doc: fix Transifex 404s
 - #32846 doc: clarify that the "-j N" goes after the "--build build" part
 - #32858 doc: Add workaround for vcpkg issue with paths with embedded spaces
+- #33070 doc/zmq: fix unix socket path example
 
 ### CI
 
@@ -142,6 +144,7 @@ Notable changes
 - #32187 refactor: Remove spurious virtual from final ~CZMQNotificationInterface
 - #32454 tracing: fix invalid argument in mempool_monitor
 - #32771 contrib: tracing: Fix read of pmsg_type in p2p_monitor.py
+- #33086 contrib: [tracing] fix pointer argument handling in mempool_monitor.py
 
 Credits
 =======
@@ -155,6 +158,7 @@ Thanks to everyone who directly contributed to this release:
 - Brandon Odiwuor
 - brunoerg
 - davidgumberg
+- deadmanoz
 - dergoegge
 - enirox001
 - fanquake
@@ -174,6 +178,7 @@ Thanks to everyone who directly contributed to this release:
 - nervana21
 - pablomartin4btc
 - rkrux
+- romanz
 - ryanofsky
 - Sjors
 - theStack
