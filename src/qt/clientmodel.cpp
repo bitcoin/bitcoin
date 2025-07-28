@@ -263,7 +263,7 @@ void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockT
 
     // Throttle GUI notifications about (a) blocks during initial sync, and (b) both blocks and headers during reindex.
     const bool throttle = (sync_state != SynchronizationState::POST_INIT && !header) || sync_state == SynchronizationState::INIT_REINDEX;
-    const int64_t now = throttle ? GetTimeMillis() : 0;
+    const int64_t now = throttle ? TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) : 0;
     int64_t& nLastUpdateNotification = header ? nLastHeaderTipUpdateNotification : nLastBlockTipUpdateNotification;
     if (throttle && now < nLastUpdateNotification + count_milliseconds(MODEL_UPDATE_DELAY)) {
         return;

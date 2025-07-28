@@ -1488,9 +1488,9 @@ void CSigSharesManager::WorkThreadMain(CConnman& connman, PeerManager& peerman)
         bool fMoreWork = ProcessPendingSigShares(peerman, connman);
         SignPendingSigShares(connman, peerman);
 
-        if (GetTimeMillis() - lastSendTime > 100) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - lastSendTime > 100) {
             SendMessages(connman);
-            lastSendTime = GetTimeMillis();
+            lastSendTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         }
 
         Cleanup(connman);

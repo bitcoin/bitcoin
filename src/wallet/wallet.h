@@ -574,7 +574,7 @@ public:
     void AbortRescan() { fAbortRescan = true; }
     bool IsAbortingRescan() const { return fAbortRescan; }
     bool IsScanning() const { return fScanningWallet; }
-    int64_t ScanningDuration() const { return fScanningWallet ? GetTimeMillis() - m_scanning_start : 0; }
+    int64_t ScanningDuration() const { return fScanningWallet ? TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - m_scanning_start : 0; }
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
 
     //! Upgrade stored CKeyMetadata objects to store key origin info as KeyOriginInfo
@@ -1085,7 +1085,7 @@ public:
         if (m_wallet.fScanningWallet.exchange(true)) {
             return false;
         }
-        m_wallet.m_scanning_start = GetTimeMillis();
+        m_wallet.m_scanning_start = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         m_wallet.m_scanning_progress = 0;
         m_wallet.fAbortRescan = false;
         m_could_reserve = true;

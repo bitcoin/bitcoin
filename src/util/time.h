@@ -29,6 +29,8 @@ using SteadySeconds = std::chrono::time_point<std::chrono::steady_clock, std::ch
 using SteadyMilliseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::milliseconds>;
 using SteadyMicroseconds = std::chrono::time_point<std::chrono::steady_clock, std::chrono::microseconds>;
 
+using SystemClock = std::chrono::system_clock;
+
 void UninterruptibleSleep(const std::chrono::microseconds& n);
 
 /**
@@ -69,10 +71,7 @@ using SecondsDouble = std::chrono::duration<double, std::chrono::seconds::period
 int64_t GetTime();
 
 /** Returns the system time (not mockable) */
-int64_t GetTimeMillis();
-/** Returns the system time (not mockable) */
 int64_t GetTimeMicros();
-
 /**
  * DEPRECATED
  * Use SetMockTime with chrono type
