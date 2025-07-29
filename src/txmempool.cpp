@@ -211,6 +211,7 @@ void CTxMemPool::Apply(ChangeSet* changeset)
 
         addNewTransaction(it);
     }
+    m_txgraph->DoWork(POST_CHANGE_WORK);
 }
 
 void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit)
@@ -357,6 +358,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
+    m_txgraph->DoWork(POST_CHANGE_WORK);
 }
 
 void CTxMemPool::removeConflicts(const CTransaction &tx)
@@ -401,6 +403,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     }
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
+    m_txgraph->DoWork(POST_CHANGE_WORK);
 }
 
 void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const
