@@ -1689,8 +1689,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.mempool);
     assert(!node.chainman);
 
-    // If reindex=auto, then this returns false, which is intentional,
-    // because we check for auto only if corruption is detected
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
 
@@ -1706,7 +1704,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         bool fAutoReindex = (args.GetArg("-reindex", "0") == "auto");
         bool do_retry;
         if (!fAutoReindex) {
-            // suggest a reindex to GUI users
+        // suggest a reindex
             do_retry = HasTestOption(args, "reindex_after_failure_noninteractive_yes") ||
             uiInterface.ThreadSafeQuestion(
             error + Untranslated(".\n\n") + _("Do you want to rebuild the databases now?"),
