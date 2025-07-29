@@ -18,16 +18,16 @@ from .wallet import (
 )
 
 # Default for -minrelaytxfee in sat/kvB
-DEFAULT_MIN_RELAY_TX_FEE = 1000
+DEFAULT_MIN_RELAY_TX_FEE = 100
 # Default for -incrementalrelayfee in sat/kvB
-DEFAULT_INCREMENTAL_RELAY_FEE = 1000
+DEFAULT_INCREMENTAL_RELAY_FEE = 100
 
 def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     """Fill mempool until eviction.
 
     Allows for simpler testing of scenarios with floating mempoolminfee > minrelay
     Requires -datacarriersize=100000 and -maxmempool=5 and assumes -minrelaytxfee
-    is 1 sat/vbyte.
+    is 100 sat/kvB.
     To avoid unintentional tx dependencies, the mempool filling txs are created with a
     tagged ephemeral miniwallet instance.
     """
