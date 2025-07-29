@@ -16,4 +16,4 @@ export FUZZ_TESTS_CONFIG="--valgrind"
 export GOAL="install"
 # Temporarily pin dwarf 4, until valgrind can understand clang's dwarf 5
 export BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer CC=clang-18 CXX=clang++-18 CFLAGS='-gdwarf-4' CXXFLAGS='-gdwarf-4'"
-export CCACHE_SIZE=200M
+export CCACHE_MAXSIZE=200M
