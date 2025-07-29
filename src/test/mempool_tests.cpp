@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx1.vout.resize(1);
     tx1.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
     tx1.vout[0].nValue = 10 * COIN;
-    AddToMempool(pool, entry.Fee(10000LL).FromTx(tx1));
+    AddToMempool(pool, entry.Fee(1000LL).FromTx(tx1));
 
     CMutableTransaction tx2 = CMutableTransaction();
     tx2.vin.resize(1);
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx2.vout.resize(1);
     tx2.vout[0].scriptPubKey = CScript() << OP_2 << OP_EQUAL;
     tx2.vout[0].nValue = 10 * COIN;
-    AddToMempool(pool, entry.Fee(5000LL).FromTx(tx2));
+    AddToMempool(pool, entry.Fee(500LL).FromTx(tx2));
 
     pool.TrimToSize(pool.DynamicMemoryUsage()); // should do nothing
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx1.GetHash())));
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx3.vout.resize(1);
     tx3.vout[0].scriptPubKey = CScript() << OP_3 << OP_EQUAL;
     tx3.vout[0].nValue = 10 * COIN;
-    AddToMempool(pool, entry.Fee(20000LL).FromTx(tx3));
+    AddToMempool(pool, entry.Fee(2000LL).FromTx(tx3));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4); // tx3 should pay for tx2 (CPFP)
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx1.GetHash())));
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx2.GetHash())));
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx3.GetHash())));
 
-    CFeeRate maxFeeRateRemoved(25000, GetVirtualTransactionSize(CTransaction(tx3)) + GetVirtualTransactionSize(CTransaction(tx2)));
+    CFeeRate maxFeeRateRemoved(2500, GetVirtualTransactionSize(CTransaction(tx3)) + GetVirtualTransactionSize(CTransaction(tx2)));
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE);
 
     CMutableTransaction tx4 = CMutableTransaction();
@@ -532,10 +532,10 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
     tx7.vout[1].nValue = 10 * COIN;
 
-    AddToMempool(pool, entry.Fee(7000LL).FromTx(tx4));
-    AddToMempool(pool, entry.Fee(1000LL).FromTx(tx5));
-    AddToMempool(pool, entry.Fee(1100LL).FromTx(tx6));
-    AddToMempool(pool, entry.Fee(9000LL).FromTx(tx7));
+    AddToMempool(pool, entry.Fee(700LL).FromTx(tx4));
+    AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+    AddToMempool(pool, entry.Fee(110LL).FromTx(tx6));
+    AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     // we only require this to remove, at max, 2 txn, because it's not clear what we're really optimizing for aside from that
     pool.TrimToSize(pool.DynamicMemoryUsage() - 1);
@@ -544,8 +544,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx7.GetHash())));
 
     if (!pool.exists(GenTxid::Txid(tx5.GetHash())))
-        AddToMempool(pool, entry.Fee(1000LL).FromTx(tx5));
-    AddToMempool(pool, entry.Fee(9000LL).FromTx(tx7));
+        AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+    AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     pool.TrimToSize(pool.DynamicMemoryUsage() / 2); // should maximize mempool size by only removing 5/7
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx4.GetHash())));
@@ -553,8 +553,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     BOOST_CHECK(pool.exists(GenTxid::Txid(tx6.GetHash())));
     BOOST_CHECK(!pool.exists(GenTxid::Txid(tx7.GetHash())));
 
-    AddToMempool(pool, entry.Fee(1000LL).FromTx(tx5));
-    AddToMempool(pool, entry.Fee(9000LL).FromTx(tx7));
+    AddToMempool(pool, entry.Fee(100LL).FromTx(tx5));
+    AddToMempool(pool, entry.Fee(900LL).FromTx(tx7));
 
     std::vector<CTransactionRef> vtx;
     SetMockTime(42);
