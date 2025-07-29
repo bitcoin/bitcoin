@@ -29,6 +29,11 @@ parser.add_argument(
     default=False,
     help="skip generation for binaries that are not found in the build path",
 )
+parser.add_argument(
+    '--skip-build-options-check',
+     action='store_true',
+     help='Skip checking required build options'
+)
 args = parser.parse_args()
 
 # Paths to external utilities.
@@ -85,7 +90,7 @@ def check_build_options():
     return disabled
 
 disabled_options = check_build_options()
-if disabled_options:
+if disabled_options and not args.skip_build_options_check:
     error_msg = (
         "Aborting generating manpages...\n"
         "Missing build components for comprehensive man pages:\n"
