@@ -508,7 +508,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC. Setting this to auto automatically reindexes the block database if it is corrupted.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
@@ -1228,13 +1228,24 @@ static ChainstateLoadResult InitAndLoadChainstate(
     const kernel::CacheSizes& cache_sizes,
     const ArgsManager& args)
 {
+    // This function may be called twice, so any dirty state must be reset.
+    node.notifications.reset(); // Drop state, such as a cached tip block
+    node.mempool.reset();
+    node.chainman.reset(); // Drop state, such as an initialized m_block_tree_db
+
     const CChainParams& chainparams = Params();
+
+    Assert(!node.notifications); // Was reset above
+    node.notifications = std::make_unique<KernelNotifications>(Assert(node.shutdown_request), node.exit_status, *Assert(node.warnings));
+    ReadNotificationArgs(args, *node.notifications);
+
     CTxMemPool::Options mempool_opts{
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
         .signals = node.validation_signals.get(),
     };
     Assert(ApplyArgsManOptions(args, chainparams, mempool_opts)); // no error can happen, already checked in AppInitParameterInteraction
     bilingual_str mempool_error;
+    Assert(!node.mempool); // Was reset above
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, mempool_error);
     if (!mempool_error.empty()) {
         return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
@@ -1263,6 +1274,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     // Creating the chainstate manager internally creates a BlockManager, opens
     // the blocks tree db, and wipes existing block files in case of a reindex.
     // The coinsdb is opened at a later point on LoadChainstate.
+    Assert(!node.chainman); // Was reset above
     try {
         node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, blockman_opts);
     } catch (dbwrapper_error& e) {
@@ -1660,10 +1672,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 7: load block chain
 
-    node.notifications = std::make_unique<KernelNotifications>(Assert(node.shutdown_request), node.exit_status, *Assert(node.warnings));
-    auto& kernel_notifications{*node.notifications};
-    ReadNotificationArgs(args, kernel_notifications);
-
     // cache size calculations
     const auto [index_cache_sizes, kernel_cache_sizes] = CalculateCacheSizes(args, g_enabled_filter_types.size());
 
@@ -1692,11 +1700,20 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         kernel_cache_sizes,
         args);
     if (status == ChainstateLoadStatus::FAILURE && !do_reindex && !ShutdownRequested(node)) {
+        // If reindex=auto, directly start the reindex
+        bool fAutoReindex = (args.GetArg("-reindex", "0") == "auto");
+        bool do_retry;
+        if (!fAutoReindex) {
         // suggest a reindex
-        bool do_retry = uiInterface.ThreadSafeQuestion(
+            do_retry = HasTestOption(args, "reindex_after_failure_noninteractive_yes") ||
+            uiInterface.ThreadSafeQuestion(
             error + Untranslated(".\n\n") + _("Do you want to rebuild the databases now?"),
             error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
             "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+        } else {
+            LogPrintf("Automatically running a reindex.\n");
+            do_retry = true;
+        }
         if (!do_retry) {
             return false;
         }
@@ -1723,6 +1740,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     ChainstateManager& chainman = *Assert(node.chainman);
+    auto& kernel_notifications{*Assert(node.notifications)};
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
