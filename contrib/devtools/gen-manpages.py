@@ -7,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 import argparse
+import re
+import configparser
 
 BINARIES = [
 'bin/bitcoind',
@@ -42,6 +44,56 @@ if not topdir:
 # Get input and output directories.
 builddir = os.getenv('BUILDDIR', os.path.join(topdir, 'build'))
 mandir = os.getenv('MANDIR', os.path.join(topdir, 'doc/man'))
+
+build_options = {
+    # Required options
+    'HAVE_SYSTEM': 'System component',
+    'ENABLE_WALLET': 'Enable wallet',
+    'ENABLE_CLI': 'Build bitcoin-cli executable.',
+    'ENABLE_BITCOIN_UTIL': 'Bitcoin utility',
+    'ENABLE_WALLET_TOOL': 'Build bitcoin-wallet tool',
+    'ENABLE_BITCOIND': 'Build bitcoind executable',
+    'ENABLE_EXTERNAL_SIGNER': 'Enable external signer support',
+    # Enabled options
+    'ENABLE_BITCOIN_CHAINSTATE': 'Build experimental bitcoin-chainstate executable',
+    'ENABLE_FUZZ_BINARY': 'Build fuzz binary',
+    'ENABLE_ZMQ': 'Enable ZMQ notifications',
+    'ENABLE_USDT_TRACEPOINTS': 'Enable tracepoints for Userspace, Statically Defined Tracing',
+}
+
+def check_build_options():
+    enabled_options = set()
+
+    # Check HAVE_SYSTEM from builddir/src/bitcoin-build-config.h
+    config_h_path = os.path.join(builddir, 'src', 'bitcoin-build-config.h')
+    if os.path.exists(config_h_path):
+        with open(config_h_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        if re.search(r'#define\s+HAVE_SYSTEM\s+1', content):
+            enabled_options.add('HAVE_SYSTEM')
+
+    # Check other options from builddir/test/config.ini
+    config_ini_path = os.path.join(builddir, 'test', 'config.ini')
+    if os.path.exists(config_ini_path):
+        config = configparser.ConfigParser()
+        config.read(config_ini_path)
+        for option in build_options.keys():
+            if config['components'].getboolean(option, fallback=False):
+                enabled_options.add(option)
+
+    disabled = build_options.keys() - enabled_options
+    return disabled
+
+disabled_options = check_build_options()
+if disabled_options:
+    error_msg = (
+        "Aborting generating manpages...\n"
+        "Missing build components for comprehensive man pages:\n"
+        + "\n".join(f"    - {opt}: ({build_options[opt]})" for opt in disabled_options) + "\n"
+        "Please enable them and try again."
+    )
+    print(error_msg, file=sys.stderr)
+    sys.exit(1)
 
 # Verify that all the required binaries are usable, and extract copyright
 # message in a first pass.
