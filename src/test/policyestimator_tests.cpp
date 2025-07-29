@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       feeV[j],
                                                                                       virtual_size,
                                                                                       entry.nHeight,
-                                                                                      /*mempool_limit_bypassed=*/false,
+                                                                                      empty_ignore_rejects,
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       feeV[j],
                                                                                       virtual_size,
                                                                                       entry.nHeight,
-                                                                                      /*mempool_limit_bypassed=*/false,
+                                                                                      empty_ignore_rejects,
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       feeV[j],
                                                                                       virtual_size,
                                                                                       entry.nHeight,
-                                                                                      /*mempool_limit_bypassed=*/false,
+                                                                                      empty_ignore_rejects,
                                                                                       /*submitted_in_package=*/false,
                                                                                       /*chainstate_is_current=*/true,
                                                                                       /*has_no_mempool_parents=*/true)};
