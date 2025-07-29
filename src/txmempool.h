@@ -53,6 +53,10 @@ static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 /** How many linearization iterations required for TxGraph clusters */
 static constexpr uint64_t ACCEPTABLE_ITERS = 10'000;
 
+/** How much work we ask TxGraph to do after a mempool change occurs (either
+ * due to a changeset being applied, a new block being found, or a reorg). */
+static constexpr uint64_t POST_CHANGE_WORK = 100 * ACCEPTABLE_ITERS;
+
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
  */
