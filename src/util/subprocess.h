@@ -1256,6 +1256,10 @@ namespace detail {
     popen_->close_fds_ = cfds.close_all;
   }
 
+#ifndef __USING_WINDOWS__
+  void subprocess_close_all_fds(int except_fd);
+#endif
+
 
   inline void Child::execute_child() {
 #ifndef __USING_WINDOWS__
@@ -1304,21 +1308,7 @@ namespace detail {
 
       // Close all the inherited fd's except the error write pipe
       if (parent_->close_fds_) {
-        try {
-            std::vector<int> fds_to_close;
-            for (const auto& it : fs::directory_iterator("/proc/self/fd")) {
-                int64_t fd;
-                if (!ParseInt64(it.path().filename().native(), &fd)) continue;
-                if (fd <= 2) continue;  // leave std{in,out,err} alone
-                if (fd == err_wr_pipe_) continue;
-                fds_to_close.push_back(fd);
-            }
-            for (const int fd : fds_to_close) {
-                close(fd);
-            }
-        } catch (...) {
-            // TODO: maybe log this - but we're in a child process, so maybe non-trivial!
-        }
+        subprocess_close_all_fds(/*except_fd=*/ err_wr_pipe_);
       }
 
       // Replace the current image with the executable
