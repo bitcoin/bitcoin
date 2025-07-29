@@ -491,7 +491,7 @@ public:
     /** Translate a list of hashes into a list of mempool iterators to avoid repeated lookups.
      * The nth element in txids becomes the nth element in the returned vector. If any of the txids
      * don't actually exist in the mempool, returns an empty vector. */
-    std::vector<txiter> GetIterVec(const std::vector<uint256>& txids) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<txiter> GetIterVec(const std::vector<Txid>& txids) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** UpdateTransactionsFromBlock is called when adding transactions from a
      * disconnected block back to the mempool, new mempool entries may have
@@ -548,7 +548,7 @@ public:
      * All txids must correspond to transaction entries in the mempool, otherwise this returns an
      * empty vector. This call will also exit early and return an empty vector if it collects 500 or
      * more transactions as a DoS protection. */
-    std::vector<txiter> GatherClusters(const std::vector<uint256>& txids) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::vector<txiter> GatherClusters(const std::vector<Txid>& txids) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** Calculate all in-mempool ancestors of a set of transactions not already in the mempool and
      * check ancestor and descendant limits. Heuristics are used to estimate the ancestor and
