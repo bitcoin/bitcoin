@@ -13,9 +13,11 @@ from decimal import Decimal
 from math import ceil
 
 from test_framework.mempool_util import (
+    DEFAULT_MIN_RELAY_TX_FEE,
     fill_mempool,
 )
 from test_framework.messages import (
+    COIN,
     msg_tx,
 )
 from test_framework.p2p import (
@@ -30,9 +32,6 @@ from test_framework.wallet import (
     MiniWallet,
     MiniWalletMode,
 )
-
-# 1sat/vB feerate denominated in BTC/KvB
-FEERATE_1SAT_VB = Decimal("0.00001000")
 
 class PackageRelayTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -49,12 +48,12 @@ class PackageRelayTest(BitcoinTestFramework):
 
         self.log.debug("Check that all nodes' mempool minimum feerates are above min relay feerate")
         for node in self.nodes:
-            assert_equal(node.getmempoolinfo()['minrelaytxfee'], FEERATE_1SAT_VB)
-            assert_greater_than(node.getmempoolinfo()['mempoolminfee'], FEERATE_1SAT_VB)
+            assert_equal(node.getmempoolinfo()['minrelaytxfee'], Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN)
+            assert_greater_than(node.getmempoolinfo()['mempoolminfee'], Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN)
 
     def create_basic_1p1c(self, wallet):
-        low_fee_parent = wallet.create_self_transfer(fee_rate=FEERATE_1SAT_VB, confirmed_only=True)
-        high_fee_child = wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=999*FEERATE_1SAT_VB)
+        low_fee_parent = wallet.create_self_transfer(fee_rate=Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN, confirmed_only=True)
+        high_fee_child = wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=999*Decimal(DEFAULT_MIN_RELAY_TX_FEE)/ COIN)
         package_hex_basic = [low_fee_parent["hex"], high_fee_child["hex"]]
         return package_hex_basic, low_fee_parent["tx"], high_fee_child["tx"]
 
@@ -85,8 +84,8 @@ class PackageRelayTest(BitcoinTestFramework):
         return [low_fee_parent_2outs["hex"], high_fee_child_2outs["hex"]], low_fee_parent_2outs["tx"], high_fee_child_2outs["tx"]
 
     def create_package_2p1c(self, wallet):
-        parent1 = wallet.create_self_transfer(fee_rate=FEERATE_1SAT_VB*10, confirmed_only=True)
-        parent2 = wallet.create_self_transfer(fee_rate=FEERATE_1SAT_VB*20, confirmed_only=True)
+        parent1 = wallet.create_self_transfer(fee_rate=Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN * 10, confirmed_only=True)
+        parent2 = wallet.create_self_transfer(fee_rate=Decimal(DEFAULT_MIN_RELAY_TX_FEE) / COIN * 20, confirmed_only=True)
         child = wallet.create_self_transfer_multi(
             utxos_to_spend=[parent1["new_utxo"], parent2["new_utxo"]],
             fee_per_output=999*parent1["tx"].get_vsize(),

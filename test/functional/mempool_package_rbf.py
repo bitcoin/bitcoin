@@ -162,13 +162,13 @@ class PackageRBFTest(BitcoinTestFramework):
         self.log.info("Check replacement pays for incremental bandwidth")
         _, placeholder_txns3 = self.create_simple_package(coin)
         package_3_size = sum([tx.get_vsize() for tx in placeholder_txns3])
-        incremental_sats_required = Decimal(package_3_size) / COIN
-        incremental_sats_short = incremental_sats_required - Decimal("0.00000001")
+        incremental_sats_required = (Decimal(package_3_size * 0.1) / COIN).quantize(Decimal("0.00000001"))
+        incremental_sats_short = incremental_sats_required - Decimal("0.00000005")
         # Recreate the package with slightly higher fee once we know the size of the new package, but still short of required fee
         failure_package_hex3, failure_package_txns3 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE + incremental_sats_short)
         assert_equal(package_3_size, sum([tx.get_vsize() for tx in failure_package_txns3]))
         pkg_results3 = node.submitpackage(failure_package_hex3)
-        assert_equal(f"package RBF failed: insufficient anti-DoS fees, rejecting replacement {failure_package_txns3[1].txid_hex}, not enough additional fees to relay; {incremental_sats_short} < {incremental_sats_required}", pkg_results3["package_msg"])
+        assert_equal(f"package RBF failed: insufficient anti-DoS fees, rejecting replacement {failure_package_txns3[1].txid_hex}, not enough additional fees to relay; {incremental_sats_short:8f} < {incremental_sats_required:8f}", pkg_results3["package_msg"])
         self.assert_mempool_contents(expected=package_txns1)
 
         success_package_hex3, success_package_txns3 = self.create_simple_package(coin, parent_fee=DEFAULT_FEE, child_fee=DEFAULT_CHILD_FEE + incremental_sats_required)
@@ -562,12 +562,13 @@ class PackageRBFTest(BitcoinTestFramework):
         )
 
         node.sendrawtransaction(grandparent_result["hex"])
+        minrelayfeerate = node.getnetworkinfo()["relayfee"]
 
         # Now make package of two descendants that looks
         # like a cpfp where the parent can't get in on its own
         self.ctr += 1
         parent_result = self.wallet.create_self_transfer(
-            fee_rate=Decimal('0.00001000'),
+            fee_rate=minrelayfeerate,
             utxo_to_spend=grandparent_result["new_utxo"],
             sequence=MAX_BIP125_RBF_SEQUENCE - self.ctr,
         )
