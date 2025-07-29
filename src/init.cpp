@@ -2081,6 +2081,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             // TODO: Make this a modal dialog (but DON'T block the scheduler thread!)
             uiInterface.ThreadSafeMessageBox(msg, "Warning", CClientUIInterface::ICON_WARNING | CClientUIInterface::BTN_OK);
         }, std::chrono::seconds{std::max<int64_t>(1, g_software_expiry - SOFTWARE_EXPIRY_WARN_PERIOD - GetTime())});
+
+        scheduler.scheduleFromNow([&node] {
+            auto msg = _("This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration.");
+            node.chainman->GetNotifications().warningSet(kernel::Warning::SOFTWARE_EXPIRY, msg, /*update=*/ true);
+            uiInterface.ThreadSafeMessageBox(msg, "Error", CClientUIInterface::ICON_ERROR | CClientUIInterface::BTN_OK);
+        }, std::chrono::seconds{std::max<int64_t>(2, g_software_expiry - GetTime())});
     }
 
     for (const auto& client : node.chain_clients) {

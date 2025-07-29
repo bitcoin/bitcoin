@@ -35,12 +35,16 @@ class SoftwareExpiryTest(BitcoinTestFramework):
             pass
         return warnings
 
-    def check_warning(self, node, alerts_path, re_warning_stderr_prefix, re_expected_warning):
+    def check_warning(self, node, alerts_path, re_warning_stderr_prefix, re_expected_warning, ignored_stderr=None):
         warnings = "\n".join(self.get_warnings(node))
         assert re.match(re_expected_warning, warnings)
         node.stderr.seek(0)
-        stderr = node.stderr.read().decode('utf-8').strip()
-        assert re.match(re_warning_stderr_prefix + re_expected_warning, stderr)
+        stderr = node.stderr.read().decode('utf-8')
+        check_stderr = stderr.strip()
+        if ignored_stderr:
+            assert check_stderr.startswith(ignored_stderr)
+            check_stderr = check_stderr[len(ignored_stderr):].strip()
+        assert re.match(re_warning_stderr_prefix + re_expected_warning, check_stderr)
         assert alerts_path.exists()
         with open(alerts_path, 'r', encoding='utf8') as f:
             alerts_data = f.read()
@@ -50,7 +54,7 @@ class SoftwareExpiryTest(BitcoinTestFramework):
                 alerts_data = alerts_data[1:-3]
             assert re.match('^' + re_expected_warning, alerts_data)
         alerts_path.unlink()
-        return stderr
+        return stderr.rstrip()
 
     def run_test(self):
         nodes = self.nodes
@@ -100,6 +104,9 @@ class SoftwareExpiryTest(BitcoinTestFramework):
 
         self.log.info("When expiry is passed, we should get errors, but blocks should still be accepted")
         setmocktime(expirytime + 1)
+        for i in range(0, SOFTWARE_EXPIRY_WARN_PERIOD, 3600):
+            nodes[0].mockscheduler(3600)
+        time.sleep(1)
         assert_raises_rpc_error(-9, 'node software has expired', nodes[0].getblocktemplate, NORMAL_GBT_REQUEST_PARAMS)
         blockhash = self.generatetoaddress(nodes[1], 1, addr)[0]
         blockinfo = nodes[1].getblock(blockhash, 1)
@@ -113,6 +120,8 @@ class SoftwareExpiryTest(BitcoinTestFramework):
         with nodes[0].assert_debug_log(['node-expired'], unexpected_msgs=['UpdatedBlockTip: new block']):
             new_blockhash = self.generatetoaddress(nodes[1], 1, addr, sync_fun=self.no_op)[0]
         assert_equal(nodes[0].getbestblockhash(), blockhash)
+        re_expected_error = r'This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration.$'
+        stderr = self.check_warning(nodes[0], alerts_path, r'^Error: ', re_expected_error, stderr)
 
         self.log.info("Restarting the node should fail")
         assert self.mocktime > expirytime
