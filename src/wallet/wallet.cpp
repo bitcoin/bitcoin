@@ -4201,10 +4201,20 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         return util::Error{_("Error: This wallet is already a descriptor wallet")};
     }
 
-    // Make a backup of the DB
-    fs::path this_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
-    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", (wallet_name.empty() ? "default_wallet" : wallet_name), GetTime()));
-    fs::path backup_path = this_wallet_dir / backup_filename;
+    // Make a backup of the DB in the wallet's directory with a unique filename
+    // using the wallet name and current timestamp. The backup filename is based
+    // on the name of the parent directory containing the wallet data in most
+    // cases, but in the case where the wallet name is a path to a data file,
+    // the name of the data file is used, and in the case where the wallet name
+    // is blank, "default_wallet" is used.
+    const std::string backup_prefix = wallet_name.empty() ? "default_wallet" : [&] {
+        // fs::weakly_canonical resolves relative specifiers and remove trailing slashes.
+        const auto legacy_wallet_path = fs::weakly_canonical(GetWalletDir() / fs::PathFromString(wallet_name));
+        return fs::PathToString(legacy_wallet_path.filename());
+    }();
+
+    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", backup_prefix, GetTime()));
+    fs::path backup_path = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
     if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
         return util::Error{_("Error: Unable to make a backup of your wallet")};
     }
@@ -4286,11 +4296,6 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         }
     }
     if (!success) {
-        // Migration failed, cleanup
-        // Before deleting the wallet's directory, copy the backup file to the top-level wallets dir
-        fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
-        fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
-
         // Make list of wallets to cleanup
         std::vector<std::shared_ptr<CWallet>> created_wallets;
         if (local_wallet) created_wallets.push_back(std::move(local_wallet));
@@ -4326,17 +4331,13 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         // Restore the backup
         // Convert the backup file to the wallet db file by renaming it and moving it into the wallet's directory.
         bilingual_str restore_error;
-        const auto& ptr_wallet = RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings, /*load_after_restore=*/false);
+        const auto& ptr_wallet = RestoreWallet(context, backup_path, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings, /*load_after_restore=*/false);
         if (!restore_error.empty()) {
             error += restore_error + _("\nUnable to restore backup of wallet.");
             return util::Error{error};
         }
         // Verify that the legacy wallet is not loaded after restoring from the backup.
         assert(!ptr_wallet);
-
-        // The wallet directory has been restored, but just in case, copy the previously created backup to the wallet dir
-        fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
-        fs::remove(temp_backup_location);
 
         return util::Error{error};
     }
