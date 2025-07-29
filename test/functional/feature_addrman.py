@@ -9,10 +9,10 @@ import re
 import struct
 
 from test_framework.messages import ser_uint256, hash256, MAGIC_BYTES
+from test_framework.netutil import ADDRMAN_NEW_BUCKET_COUNT, ADDRMAN_TRIED_BUCKET_COUNT, ADDRMAN_BUCKET_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import assert_equal
-
 
 def serialize_addrman(
     *,
@@ -116,17 +116,34 @@ class AddrmanTest(BitcoinTestFramework):
 
         self.log.info("Check that corrupt addrman cannot be read (len_tried)")
         self.stop_node(0)
+        max_len_tried = ADDRMAN_TRIED_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE
         write_addrman(peers_dat, len_tried=-1)
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg=init_error("Corrupt AddrMan serialization: nTried=-1, should be in \\[0, 16384\\]:.*"),
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nTried=-1, should be in \\[0, {max_len_tried}\\]:.*"),
+            match=ErrorMatch.FULL_REGEX,
+        )
+
+        self.log.info("Check that corrupt addrman cannot be read (large len_tried)")
+        write_addrman(peers_dat, len_tried=max_len_tried + 1)
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nTried={max_len_tried + 1}, should be in \\[0, {max_len_tried}\\]:.*"),
             match=ErrorMatch.FULL_REGEX,
         )
 
         self.log.info("Check that corrupt addrman cannot be read (len_new)")
         self.stop_node(0)
+        max_len_new = ADDRMAN_NEW_BUCKET_COUNT * ADDRMAN_BUCKET_SIZE
         write_addrman(peers_dat, len_new=-1)
         self.nodes[0].assert_start_raises_init_error(
-            expected_msg=init_error("Corrupt AddrMan serialization: nNew=-1, should be in \\[0, 65536\\]:.*"),
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nNew=-1, should be in \\[0, {max_len_new}\\]:.*"),
+            match=ErrorMatch.FULL_REGEX,
+        )
+
+        self.log.info("Check that corrupt addrman cannot be read (large len_new)")
+        self.stop_node(0)
+        write_addrman(peers_dat, len_new=max_len_new + 1)
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg=init_error(f"Corrupt AddrMan serialization: nNew={max_len_new + 1}, should be in \\[0, {max_len_new}\\]:.*"),
             match=ErrorMatch.FULL_REGEX,
         )
 
