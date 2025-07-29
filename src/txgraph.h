@@ -94,9 +94,10 @@ public:
     virtual void SetTransactionFee(const Ref& arg, int64_t fee) noexcept = 0;
 
     /** TxGraph is internally lazy, and will not compute many things until they are needed.
-     *  Calling DoWork will compute everything now, so that future operations are fast. This can be
-     *  invoked while oversized. */
-    virtual void DoWork() noexcept = 0;
+     *  Calling DoWork will perform some work now (controlled by iters) so that future operations
+     *  are fast, if there is any. Returns whether all currently-available work is done. This can
+     *  be invoked while oversized, but oversized graphs will be skipped by this call. */
+    virtual bool DoWork(uint64_t iters) noexcept = 0;
 
     /** Create a staging graph (which cannot exist already). This acts as if a full copy of
      *  the transaction graph is made, upon which further modifications are made. This copy can
@@ -247,7 +248,8 @@ public:
 
 /** Construct a new TxGraph with the specified limit on the number of transactions within a cluster,
  *  and on the sum of transaction sizes within a cluster. max_cluster_count cannot exceed
- *  MAX_CLUSTER_COUNT_LIMIT. */
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size) noexcept;
+ *  MAX_CLUSTER_COUNT_LIMIT. acceptable_iters controls how many linearization optimization
+ *  steps will be performed per cluster before they are considered to be of acceptable quality. */
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H

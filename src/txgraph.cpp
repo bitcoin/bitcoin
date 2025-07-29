@@ -189,8 +189,9 @@ public:
     void Merge(TxGraphImpl& graph, Cluster& cluster) noexcept;
     /** Given a span of (parent, child) pairs that all belong to this Cluster, apply them. */
     void ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept;
-    /** Improve the linearization of this Cluster. */
-    void Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
+    /** Improve the linearization of this Cluster. Returns how much work was performed and whether
+     *  the Cluster's QualityLevel improved as a result. */
+    std::pair<uint64_t, bool> Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept;
     /** For every chunk in the cluster, append its FeeFrac to ret. */
     void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept;
     /** Add a TrimTxData entry (filling m_chunk_feerate, m_index, m_tx_size) for every
@@ -255,6 +256,9 @@ private:
     const DepGraphIndex m_max_cluster_count;
     /** This TxGraphImpl's maximum cluster size limit. */
     const uint64_t m_max_cluster_size;
+    /** The number of linearization improvement steps needed per cluster to be considered
+     *  acceptable. */
+    const uint64_t m_acceptable_iters;
 
     /** Information about one group of Clusters to be merged. */
     struct GroupEntry
@@ -456,9 +460,10 @@ private:
 
 public:
     /** Construct a new TxGraphImpl with the specified limits. */
-    explicit TxGraphImpl(DepGraphIndex max_cluster_count, uint64_t max_cluster_size) noexcept :
+    explicit TxGraphImpl(DepGraphIndex max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept :
         m_max_cluster_count(max_cluster_count),
         m_max_cluster_size(max_cluster_size),
+        m_acceptable_iters(acceptable_iters),
         m_main_chunkindex(ChunkOrder(this))
     {
         Assume(max_cluster_count >= 1);
@@ -588,7 +593,7 @@ public:
     void AddDependency(const Ref& parent, const Ref& child) noexcept final;
     void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
 
-    void DoWork() noexcept final;
+    bool DoWork(uint64_t iters) noexcept final;
 
     void StartStaging() noexcept final;
     void CommitStaging() noexcept final;
@@ -978,10 +983,11 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
     // Iterate over the connected components of this Cluster's m_depgraph.
     while (todo.Any()) {
         auto component = m_depgraph.FindConnectedComponent(todo);
+        auto split_quality = component.Count() <= 2 ? QualityLevel::OPTIMAL : new_quality;
         if (first && component == todo) {
             // The existing Cluster is an entire component. Leave it be, but update its quality.
             Assume(todo == m_depgraph.Positions());
-            graph.SetClusterQuality(m_level, m_quality, m_setindex, new_quality);
+            graph.SetClusterQuality(m_level, m_quality, m_setindex, split_quality);
             // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
             // chunking.
             Updated(graph);
@@ -996,7 +1002,7 @@ bool Cluster::Split(TxGraphImpl& graph) noexcept
         for (auto i : component) {
             remap[i] = {new_cluster.get(), DepGraphIndex(-1)};
         }
-        graph.InsertCluster(m_level, std::move(new_cluster), new_quality);
+        graph.InsertCluster(m_level, std::move(new_cluster), split_quality);
         todo -= component;
     }
     // Redistribute the transactions.
@@ -1108,6 +1114,11 @@ void Cluster::ApplyDependencies(TxGraphImpl& graph, std::span<std::pair<GraphInd
     // linearization, and post-linearize it to fix up the worst problems with it.
     FixLinearization(m_depgraph, m_linearization);
     PostLinearize(m_depgraph, m_linearization);
+    Assume(!NeedsSplitting());
+    Assume(!IsOversized());
+    if (IsAcceptable()) {
+        graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
+    }
 
     // Finally push the changes to graph.m_entries.
     Updated(graph);
@@ -1645,32 +1656,39 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
     clusterset.m_group_data = GroupData{};
 }
 
-void Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
+std::pair<uint64_t, bool> Cluster::Relinearize(TxGraphImpl& graph, uint64_t max_iters) noexcept
 {
     // We can only relinearize Clusters that do not need splitting.
     Assume(!NeedsSplitting());
     // No work is required for Clusters which are already optimally linearized.
-    if (IsOptimal()) return;
+    if (IsOptimal()) return {0, false};
     // Invoke the actual linearization algorithm (passing in the existing one).
     uint64_t rng_seed = graph.m_rng.rand64();
-    auto [linearization, optimal] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization);
+    auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization);
     // Postlinearize if the result isn't optimal already. This guarantees (among other things)
     // that the chunks of the resulting linearization are all connected.
     if (!optimal) PostLinearize(m_depgraph, linearization);
     // Update the linearization.
     m_linearization = std::move(linearization);
     // Update the Cluster's quality.
-    auto new_quality = optimal ? QualityLevel::OPTIMAL : QualityLevel::ACCEPTABLE;
-    graph.SetClusterQuality(m_level, m_quality, m_setindex, new_quality);
+    bool improved = false;
+    if (optimal) {
+        graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::OPTIMAL);
+        improved = true;
+    } else if (max_iters >= graph.m_acceptable_iters && !IsAcceptable()) {
+        graph.SetClusterQuality(m_level, m_quality, m_setindex, QualityLevel::ACCEPTABLE);
+        improved = true;
+    }
     // Update the Entry objects.
     Updated(graph);
+    return {cost, improved};
 }
 
 void TxGraphImpl::MakeAcceptable(Cluster& cluster) noexcept
 {
     // Relinearize the Cluster if needed.
     if (!cluster.NeedsSplitting() && !cluster.IsAcceptable() && !cluster.IsOversized()) {
-        cluster.Relinearize(*this, 10000);
+        cluster.Relinearize(*this, m_acceptable_iters);
     }
 }
 
@@ -2467,13 +2485,50 @@ void TxGraphImpl::SanityCheck() const
     assert(actual_chunkindex == expected_chunkindex);
 }
 
-void TxGraphImpl::DoWork() noexcept
+bool TxGraphImpl::DoWork(uint64_t iters) noexcept
 {
-    for (int level = 0; level <= GetTopLevel(); ++level) {
-        if (level > 0 || m_main_chunkindex_observers == 0) {
-            MakeAllAcceptable(level);
+    uint64_t iters_done{0};
+    // First linearize everything in NEEDS_RELINEARIZE to an acceptable level. If more budget
+    // remains after that, try to make everything optimal.
+    for (QualityLevel quality : {QualityLevel::NEEDS_RELINEARIZE, QualityLevel::ACCEPTABLE}) {
+        // First linearize staging, if it exists, then main.
+        for (int level = GetTopLevel(); level >= 0; --level) {
+            // Do not modify main if it has any observers.
+            if (level == 0 && m_main_chunkindex_observers != 0) continue;
+            ApplyDependencies(level);
+            auto& clusterset = GetClusterSet(level);
+            // Do not modify oversized levels.
+            if (clusterset.m_oversized == true) continue;
+            auto& queue = clusterset.m_clusters[int(quality)];
+            while (!queue.empty()) {
+                if (iters_done >= iters) return false;
+                // Randomize the order in which we process, so that if the first cluster somehow
+                // needs more work than what iters allows, we don't keep spending it on the same
+                // one.
+                auto pos = m_rng.randrange<size_t>(queue.size());
+                auto iters_now = iters - iters_done;
+                if (quality == QualityLevel::NEEDS_RELINEARIZE) {
+                    // If we're working with clusters that need relinearization still, only perform
+                    // up to m_acceptable_iters iterations. If they become ACCEPTABLE, and we still
+                    // have budget after all other clusters are ACCEPTABLE too, we'll spend the
+                    // remaining budget on trying to make them OPTIMAL.
+                    iters_now = std::min(iters_now, m_acceptable_iters);
+                }
+                auto [cost, improved] = queue[pos].get()->Relinearize(*this, iters_now);
+                iters_done += cost;
+                // If no improvement was made to the Cluster, it means we've essentially run out of
+                // budget. Even though it may be the case that iters_done < iters still, the
+                // linearizer decided there wasn't enough budget left to attempt anything with.
+                // To avoid an infinite loop that keeps trying clusters with minuscule budgets,
+                // stop here too.
+                if (!improved) return false;
+            }
         }
     }
+    // All possible work has been performed, so we can return true. Note that this does *not* mean
+    // that all clusters are optimally linearized now. It may be that there is nothing to do left
+    // because all non-optimal clusters are in oversized and/or observer-bearing levels.
+    return true;
 }
 
 void BlockBuilderImpl::Next() noexcept
@@ -2885,7 +2940,7 @@ TxGraph::Ref::Ref(Ref&& other) noexcept
     std::swap(m_index, other.m_index);
 }
 
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size) noexcept
+std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept
 {
-    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size);
+    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size, acceptable_iters);
 }
