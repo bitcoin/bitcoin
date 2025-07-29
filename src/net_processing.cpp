@@ -711,14 +711,14 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. Generally only one
+     * @param[in]  node_id The peer whose orphan transactions we will reconsider. Generally only one
      *                     orphan will be reconsidered on each call of this function. This set
      *                     may be added to if accepting an orphan causes its children to be
      *                     reconsidered.
      * @return             True if there are still orphans in this peer's work set.
      */
-    bool ProcessOrphanTx(Peer& peer)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, cs_main);
+    bool ProcessOrphanTx(NodeId node_id)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, cs_main);
     /** Process a single headers message from a peer. */
     void ProcessHeadersMessage(CNode& pfrom, Peer& peer,
                                const std::vector<CBlockHeader>& headers,
@@ -1774,7 +1774,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     return true;
 }
 
-void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
+void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
 {
     size_t max_extra_txn = gArgs.GetIntArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
@@ -2012,13 +2012,14 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
  */
 void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
+    // Candidates are sourced from a block and therefore cannot be attributed to a peer, we use -1 as the identifier
+    bool have_candidates{true};
     {
-        LOCK2(::cs_main, m_mutex);
-
-        auto orphanWorkSet = m_orphanage.GetCandidatesForBlock(*pblock);
-        while (!orphanWorkSet.empty()) {
-            LogPrint(BCLog::MEMPOOL, "Trying to process %d orphans\n", orphanWorkSet.size());
-            ProcessOrphanTx(orphanWorkSet);
+        LOCK(::cs_main);
+        m_orphanage.SetCandidatesByBlock(*pblock);
+        // Keep processing as valid orphans may enable processing of their descendants
+        while (have_candidates) {
+            have_candidates = ProcessOrphanTx(/*node_id=*/-1);
         }
     }
 
@@ -3203,16 +3204,15 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     return;
 }
 
-bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
+bool PeerManagerImpl::ProcessOrphanTx(NodeId node_id)
 {
-    AssertLockHeld(g_msgproc_mutex);
     AssertLockHeld(cs_main);
 
     CTransactionRef porphanTx = nullptr;
     NodeId from_peer = -1;
     bool more = false;
 
-    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(peer.m_id, from_peer, more)) {
+    while (CTransactionRef porphanTx = m_orphanage.GetTxToReconsider(node_id, from_peer, more)) {
         const MempoolAcceptResult result = m_chainman.ProcessTransaction(porphanTx);
         const TxValidationState& state = result.m_state;
         const uint256& orphanHash = porphanTx->GetHash();
@@ -3220,7 +3220,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             _RelayTransaction(porphanTx->GetHash());
-            m_orphanage.AddChildrenToWorkSet(*porphanTx, peer.m_id);
+            m_orphanage.AddChildrenToWorkSet(*porphanTx, node_id);
             m_orphanage.EraseTx(orphanHash);
             break;
         } else if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
@@ -3241,7 +3241,9 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
         }
     }
 
-    return more;
+    // We could either have more to process from the existing work set or processing this
+    // orphan has given us more potential work
+    return more || m_orphanage.HaveMoreWork(node_id);
 }
 
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
@@ -4508,7 +4510,7 @@ void PeerManagerImpl::ProcessMessage(
                      m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
 
             // Recursively process any orphan transactions that depended on this one
-            ProcessOrphanTx(*peer);
+            ProcessOrphanTx(peer->m_id);
         }
         else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
@@ -5353,7 +5355,7 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     bool has_more_orphans;
     {
         LOCK(cs_main);
-        has_more_orphans = ProcessOrphanTx(*peer);
+        has_more_orphans = ProcessOrphanTx(peer->m_id);
     }
 
     if (pfrom->fDisconnect)

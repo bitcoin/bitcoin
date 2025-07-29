@@ -35,8 +35,8 @@ public:
      */
     CTransactionRef GetTxToReconsider(NodeId peer, NodeId& originator, bool& more) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Get a set of orphan transactions that can be candidates for reconsideration into the mempool */
-    std::set<uint256> GetCandidatesForBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Determine orphan transactions that can be candidates for reconsideration into the mempool based on block */
+    void SetCandidatesByBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Erase an orphan by txid */
     int EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -46,6 +46,9 @@ public:
 
     /** Erase all orphans included in or invalidated by a new block */
     void EraseForBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Check if there are more orphans reported by a peer to work on */
+    bool HaveMoreWork(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Limit the orphanage to the given maximum */
     void LimitOrphans(unsigned int max_orphans_size) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);

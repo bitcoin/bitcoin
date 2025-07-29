@@ -198,15 +198,15 @@ CTransactionRef TxOrphanage::GetTxToReconsider(NodeId peer, NodeId& originator, 
     return nullptr;
 }
 
-std::set<uint256> TxOrphanage::GetCandidatesForBlock(const CBlock& block)
+void TxOrphanage::SetCandidatesByBlock(const CBlock& block)
 {
-    LOCK(m_mutex);
-
-    std::set<uint256> orphan_work_set;
+    AssertLockNotHeld(m_mutex);
+    // As these candidates are generated from a block, they have no peer to attribute it to. We use
+    // NodeId -1 for this reason and need to flush the last set before processing this one.
+    WITH_LOCK(m_mutex, m_peer_work_set.try_emplace(NodeId{-1}).first->second.clear());
     for (const auto& ptx : block.vtx) {
-        AddChildrenToWorkSet(*ptx, orphan_work_set);
+        AddChildrenToWorkSet(*ptx, /*peer=*/-1);
     }
-    return orphan_work_set;
 }
 
 void TxOrphanage::EraseForBlock(const CBlock& block)
@@ -238,4 +238,11 @@ void TxOrphanage::EraseForBlock(const CBlock& block)
         }
         LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
+}
+
+bool TxOrphanage::HaveMoreWork(NodeId peer)
+{
+    LOCK(m_mutex);
+    auto it = m_peer_work_set.find(peer);
+    return it != m_peer_work_set.end() && !it->second.empty();
 }

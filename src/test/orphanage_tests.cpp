@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     BOOST_CHECK(orphanage.CountOrphans() == 0);
 }
 
-BOOST_AUTO_TEST_CASE(GetCandidatesForBlock)
+BOOST_AUTO_TEST_CASE(SetCandidatesByBlock)
 {
     constexpr CAmount tx_fee{1 * CENT};
 
@@ -170,18 +170,17 @@ BOOST_AUTO_TEST_CASE(GetCandidatesForBlock)
     block.vtx.push_back(MakeTransactionRef(tx_input));
 
     // Reprocess orphans based on inclusion of input transaction in block
-    std::set<uint256> orphan_work_set{};
-    {
-        LOCK(g_cs_orphans);
-        BOOST_CHECK(orphanage.AddTx(MakeTransactionRef(orphan), /*peer=*/128));
-        orphan_work_set = orphanage.GetCandidatesForBlock(block);
-    }
+    BOOST_CHECK(orphanage.AddTx(MakeTransactionRef(orphan), /*peer=*/128));
+    orphanage.SetCandidatesByBlock(block);
 
-    // Old GetCandidatesForBlock() behavior cycled through vin instead of vout and would therefore miss the
+    // Old SetCandidatesByBlock() behavior cycled through vin instead of vout and would therefore miss the
     // orphan because there are more vouts than vins in the transaction the orphan is attempting to spend.
     // Let's check to make sure this isn't happening again.
-    BOOST_CHECK_EQUAL(orphan_work_set.size(), 1);
-    BOOST_CHECK(orphan_work_set.count(orphan.GetHash()) > 0);
+    NodeId _originator{-1}; bool more{false};
+    CTransactionRef ref = orphanage.GetTxToReconsider(/*peer=*/-1, _originator, more);
+    BOOST_CHECK(orphanage.HaveTx(Assert(ref)->GetHash()));
+    BOOST_CHECK_EQUAL(ref->GetHash(), orphan.GetHash());
+    BOOST_CHECK(!more);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
