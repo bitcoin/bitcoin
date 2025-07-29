@@ -816,6 +816,13 @@ static std::optional<CreatedTransactionResult> CreateTransactionInternal(
     const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
     CAmount selection_target = recipients_sum + not_input_fees;
 
+    // This can only happen if feerate is 0, and requested destinations are value of 0 (e.g. OP_RETURN)
+    // and no pre-selected inputs. This will result in 0-input transaction, which is consensus-invalid anyways
+    if (selection_target == 0 && !coin_control.HasSelected()) {
+        error = _("Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input");
+        return std::nullopt;
+    }
+
     // Get available coins
     auto res_available_coins = AvailableCoins(wallet,
                                               &coin_control,

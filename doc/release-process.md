@@ -71,7 +71,7 @@ Checkout the Dash Core version you'd like to build:
 pushd ./dash
 export SIGNER='(your builder key, ie udjinm6, pasta, etc)'
 export VERSION='(new version, e.g. 20.0.0)'
-git fetch "v${VERSION}"
+git fetch origin "v${VERSION}"
 git checkout "v${VERSION}"
 popd
 ```

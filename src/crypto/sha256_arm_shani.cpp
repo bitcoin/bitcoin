@@ -62,7 +62,7 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
         MSG3 = vreinterpretq_u32_u8(vrev32q_u8(vld1q_u8(chunk + 48)));
         chunk += 64;
 
-        // Original implemenation preloaded message and constant addition which was 1-3% slower.
+        // Original implementation preloaded message and constant addition which was 1-3% slower.
         // Now included as first step in quad round code saving one Q Neon register
         // "TMP0 = vaddq_u32(MSG0, vld1q_u32(&K[0]));"
 

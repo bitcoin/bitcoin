@@ -448,8 +448,7 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
     LOCK(cs_args);
     fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
 
-    // Cache the path to avoid calling fs::create_directories on every call of
-    // this function
+    // Used cached path if available
     if (!path.empty()) return path;
 
     const fs::path datadir{GetPathArg("-datadir")};
@@ -463,15 +462,8 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
         path = GetDefaultDataDir();
     }
 
-    if (!fs::exists(path)) {
-        fs::create_directories(path / "wallets");
-    }
-
     if (net_specific && !BaseParams().DataDir().empty()) {
         path /= fs::PathFromString(BaseParams().DataDir());
-        if (!fs::exists(path)) {
-            fs::create_directories(path / "wallets");
-        }
     }
 
     return path;
@@ -483,6 +475,27 @@ fs::path ArgsManager::GetBackupsDirPath()
         return GetDataDirNet() / "backups";
 
     return fs::absolute(GetPathArg("-walletbackupsdir"));
+}
+
+void ArgsManager::EnsureDataDir() const
+{
+    /**
+     * "/wallets" subdirectories are created in all **new**
+     * datadirs, because wallet code will create new wallets in the "wallets"
+     * subdirectory only if exists already, otherwise it will create them in
+     * the top-level datadir where they could interfere with other files.
+     * Wallet init code currently avoids creating "wallets" directories itself
+     * for backwards compatibility, but this be changed in the future and
+     * wallet code here could go away (#16220).
+     */
+    auto path{GetDataDir(false)};
+    if (!fs::exists(path)) {
+        fs::create_directories(path / "wallets");
+    }
+    path = GetDataDir(true);
+    if (!fs::exists(path)) {
+        fs::create_directories(path / "wallets");
+    }
 }
 
 void ArgsManager::ClearPathCache()
@@ -530,6 +543,7 @@ bool ArgsManager::IsArgSet(const std::string& strArg) const
 
 bool ArgsManager::InitSettings(std::string& error)
 {
+    EnsureDataDir();
     if (!GetSettingsPath()) {
         return true; // Do nothing if settings file disabled.
     }
@@ -963,6 +977,11 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
     return true;
 }
 
+fs::path ArgsManager::GetConfigFilePath() const
+{
+    return GetConfigFile(GetPathArg("-conf", BITCOIN_CONF_FILENAME));
+}
+
 bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 {
     {
@@ -971,8 +990,8 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         m_config_sections.clear();
     }
 
-    const fs::path conf_path = GetPathArg("-conf", BITCOIN_CONF_FILENAME);
-    std::ifstream stream{GetConfigFile(conf_path)};
+    const auto conf_path{GetConfigFilePath()};
+    std::ifstream stream{conf_path};
 
     // not ok to have a config file specified that cannot be opened
     if (IsArgSet("-conf") && !stream.good()) {

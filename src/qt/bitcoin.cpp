@@ -171,6 +171,7 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
 
 static bool InitSettings()
 {
+    gArgs.EnsureDataDir();
     if (!gArgs.GetSettingsPath()) {
         return true; // Do nothing if settings file disabled.
     }

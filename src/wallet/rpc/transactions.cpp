@@ -409,6 +409,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                 entry.pushKV("label", label);
             }
             entry.pushKV("vout", r.vout);
+            entry.pushKV("abandoned", wtx.isAbandoned());
             if (fLong)
                 WalletTxToJSON(wallet, wtx, entry);
             ret.push_back(entry);
@@ -475,8 +476,7 @@ RPCHelpMan listtransactions()
                     },
                     TransactionDescriptionString()),
                     {
-                       {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
-                                                            "'send' category of transactions."},
+                       {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
                     })},
             }
         },
@@ -588,7 +588,7 @@ RPCHelpMan listsinceblock()
                     },
                     TransactionDescriptionString()),
                     {
-                        {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the 'send' category of transactions."},
+                        {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
                         {RPCResult::Type::STR, "label", /* optional */ true, "A comment for the address/transaction, if any."},
                         {RPCResult::Type::STR, "to", "If a comment to is associated with the transaction."},
                     })},
@@ -728,8 +728,7 @@ RPCHelpMan gettransaction()
                                     {RPCResult::Type::NUM, "vout", "the vout value"},
                                     {RPCResult::Type::STR_AMOUNT, "fee", /* optional */ true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
                                                                                                                        "'send' category of transactions."},
-                                    {RPCResult::Type::BOOL, "abandoned", /* optional */ true, "'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
-                                                                         "'send' category of transactions."},
+                                    {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
                             }},
                     }},
                   {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},

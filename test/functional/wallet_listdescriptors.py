@@ -51,7 +51,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         assert_equal(1, len([d for d in result['descriptors'] if d['internal']]))
         for item in result['descriptors']:
             assert item['desc'] != ''
-            assert item['next'] == 0
+            assert item['next_index'] == 0
             assert item['range'] == [0, 0]
             assert item['timestamp'] is not None
 
@@ -71,7 +71,8 @@ class ListDescriptorsTest(BitcoinTestFramework):
                  'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
-                 'next': 0},
+                 'next': 0,
+                 'next_index': 0},
             ],
         }
         assert_equal(expected, wallet.listdescriptors())
@@ -85,7 +86,8 @@ class ListDescriptorsTest(BitcoinTestFramework):
                  'timestamp': TIME_GENESIS_BLOCK,
                  'active': False,
                  'range': [0, 0],
-                 'next': 0},
+                 'next': 0,
+                 'next_index': 0},
             ],
         }
         assert_equal(expected_private, wallet.listdescriptors(True))

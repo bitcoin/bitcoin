@@ -597,7 +597,7 @@ static RPCHelpMan createwallet()
     passphrase.reserve(100);
     std::vector<bilingual_str> warnings;
     if (!request.params[3].isNull()) {
-        passphrase = request.params[3].get_str().c_str();
+        passphrase = std::string_view{request.params[3].get_str()};
         if (passphrase.empty()) {
             // Empty string means unencrypted
             warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
