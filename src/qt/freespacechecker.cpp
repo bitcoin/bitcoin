@@ -5,18 +5,12 @@
 #include <qt/freespacechecker.h>
 
 #include <qt/guiutil.h>
-#include <qt/intro.h>
 #include <util/fs.h>
 
 #include <QDir>
 #include <QString>
 
 #include <cstdint>
-
-FreespaceChecker::FreespaceChecker(Intro *_intro)
-{
-    this->intro = _intro;
-}
 
 void FreespaceChecker::check()
 {

@@ -9,8 +9,6 @@
 #include <QString>
 #include <QtGlobal>
 
-class Intro;
-
 /* Check free space asynchronously to prevent hanging the UI thread.
 
    Up to one request to check a path is in flight to this thread; when the check()
@@ -26,7 +24,13 @@ class FreespaceChecker : public QObject
     Q_OBJECT
 
 public:
-    explicit FreespaceChecker(Intro *intro);
+    class PathQuery
+    {
+    public:
+        virtual QString getPathToCheck() = 0;
+    };
+
+    explicit FreespaceChecker(PathQuery* intro) : intro{intro} {}
 
     enum Status {
         ST_OK,
@@ -40,7 +44,7 @@ Q_SIGNALS:
     void reply(int status, const QString &message, quint64 available);
 
 private:
-    Intro *intro;
+    PathQuery* intro;
 };
 
 #endif // BITCOIN_QT_FREESPACECHECKER_H
