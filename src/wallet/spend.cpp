@@ -941,11 +941,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
     return true;
 }
 
-/**
- * Set a height-based locktime for new transactions (uses the height of the
- * current chain tip unless we are not synced with the current chain
- */
-static void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
+void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
                                  interfaces::Chain& chain, const uint256& block_hash, int block_height)
 {
     // All inputs must be added by now
