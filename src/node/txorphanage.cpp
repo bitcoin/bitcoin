@@ -51,7 +51,7 @@ class TxOrphanageImpl final : public TxOrphanage {
 
         /** Get an approximation for "memory usage". The total memory is a function of the memory used to store the
          * transaction itself, each entry in m_orphans, and each entry in m_outpoint_to_orphan_it. We use weight because
-         * it is often higher than the actual memory usage of the tranaction. This metric conveniently encompasses
+         * it is often higher than the actual memory usage of the transaction. This metric conveniently encompasses
          * m_outpoint_to_orphan_it usage since input data does not get the witness discount, and makes it easier to
          * reason about each peer's limits using well-understood transaction attributes. */
         TxOrphanage::Usage GetMemUsage()  const {
@@ -195,7 +195,7 @@ public:
     TxOrphanage::Count TotalLatencyScore() const override;
     TxOrphanage::Usage ReservedPeerUsage() const override;
 
-    /** Maximum allowed (deduplicated) latency score for all tranactions (see Announcement::GetLatencyScore()). Dynamic
+    /** Maximum allowed (deduplicated) latency score for all transactions (see Announcement::GetLatencyScore()). Dynamic
      * based on number of peers. Each peer has an equal amount, but the global maximum latency score stays constant. The
      * number of peers times MaxPeerLatencyScore() (rounded) adds up to MaxGlobalLatencyScore().  As long as every peer's
      * m_total_latency_score / MaxPeerLatencyScore() < 1, MaxGlobalLatencyScore() is not exceeded. */
