@@ -99,6 +99,9 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         if (model->wallet().taprootEnabled()) {
             add_address_type(OutputType::BECH32M, tr("Bech32m (Taproot)"), tr("Bech32m (BIP-350) is an upgrade to Bech32, wallet support is still limited."));
         }
+        if (model->wallet().silentPaymentsEnabled()) {
+            add_address_type(OutputType::SILENT_PAYMENTS, tr("Silent Payment"), tr("A Silent Payment address (BIP-352) can safely be reused. Wallet support is still limited."));
+        }
 
         // Set the button to be enabled or disabled based on whether the wallet can give out new addresses.
         ui->receiveButton->setEnabled(model->wallet().canGetAddresses());
