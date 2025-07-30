@@ -68,6 +68,12 @@ exit 1
 fi
 
 ################
+# SOURCE_DATE_EPOCH should not unintentionally be set
+################
+
+check_source_date_epoch
+
+################
 # The codesignature git worktree should not be dirty
 ################
 

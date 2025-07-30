@@ -84,7 +84,7 @@ For instance:
     $ bitcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
                -zmqpubhashtx=tcp://192.168.1.2:28332 \
                -zmqpubhashblock="tcp://[::1]:28333" \
-               -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
+               -zmqpubrawtx=unix:/tmp/bitcoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
 Each PUB notification has a topic and body, where the header
