@@ -265,6 +265,9 @@ public:
     // Return whether the wallet contains a Taproot scriptPubKeyMan
     virtual bool taprootEnabled() = 0;
 
+    // Return whether the wallet contains a Silent Payment scriptPubKeyMan
+    virtual bool silentPaymentsEnabled() = 0;
+
     // Return whether wallet uses an external signer.
     virtual bool hasExternalSigner() = 0;
 
