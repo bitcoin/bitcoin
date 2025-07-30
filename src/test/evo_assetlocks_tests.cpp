@@ -289,7 +289,7 @@ BOOST_FIXTURE_TEST_CASE(evo_assetlock, TestChain100Setup)
     {
         // OP_RETURN should not have any data
         CMutableTransaction txReturnData(tx);
-        txReturnData.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("abc");
+        txReturnData.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("abcd");
 
         BOOST_CHECK(!CheckAssetLockTx(CTransaction(txReturnData), tx_state));
         BOOST_CHECK(tx_state.GetRejectReason() == "bad-assetlocktx-non-empty-return");
