@@ -54,31 +54,31 @@ if [ -n "$PIP_PACKAGES" ]; then
   ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
 fi
 
-if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
+if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   if [ -n "${APT_LLVM_V}" ]; then
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-$( clang --version | sed --silent 's@.*clang version \([0-9.]*\).*@\1@p' )" /msan/llvm-project
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-$( clang --version | sed --silent 's@.*clang version \([0-9.]*\).*@\1@p' )" /llvm-project
   else
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-20.1.8" /msan/llvm-project
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-20.1.8" /llvm-project
 
-    cmake -G Ninja -B /msan/clang_build/ \
+    cmake -G Ninja -B /clang_build/ \
       -DLLVM_ENABLE_PROJECTS="clang" \
       -DCMAKE_BUILD_TYPE=Release \
       -DLLVM_TARGETS_TO_BUILD=Native \
       -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
-      -S /msan/llvm-project/llvm
+      -S /llvm-project/llvm
 
-    ninja -C /msan/clang_build/ "$MAKEJOBS"
-    ninja -C /msan/clang_build/ install-runtimes
+    ninja -C /clang_build/ "$MAKEJOBS"
+    ninja -C /clang_build/ install-runtimes
 
-    update-alternatives --install /usr/bin/clang++ clang++ /msan/clang_build/bin/clang++ 100
-    update-alternatives --install /usr/bin/clang clang /msan/clang_build/bin/clang 100
-    update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /msan/clang_build/bin/llvm-symbolizer 100
+    update-alternatives --install /usr/bin/clang++ clang++ /clang_build/bin/clang++ 100
+    update-alternatives --install /usr/bin/clang clang /clang_build/bin/clang 100
+    update-alternatives --install /usr/bin/llvm-symbolizer llvm-symbolizer /clang_build/bin/llvm-symbolizer 100
   fi
 
-  cmake -G Ninja -B /msan/cxx_build/ \
+  cmake -G Ninja -B /cxx_build/ \
     -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DLLVM_USE_SANITIZER=MemoryWithOrigins \
+    -DLLVM_USE_SANITIZER="${USE_INSTRUMENTED_LIBCPP}" \
     -DCMAKE_C_COMPILER=clang \
     -DCMAKE_CXX_COMPILER=clang++ \
     -DLLVM_TARGETS_TO_BUILD=Native \
@@ -86,13 +86,13 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
     -DLIBCXXABI_USE_LLVM_UNWINDER=OFF \
     -DLIBCXX_ABI_DEFINES="_LIBCPP_ABI_BOUNDED_ITERATORS;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING;_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR;_LIBCPP_ABI_BOUNDED_UNIQUE_PTR" \
     -DLIBCXX_HARDENING_MODE=debug \
-    -S /msan/llvm-project/runtimes
+    -S /llvm-project/runtimes
 
-  ninja -C /msan/cxx_build/ "$MAKEJOBS"
+  ninja -C /cxx_build/ "$MAKEJOBS"
 
   # Clear no longer needed source folder
-  du -sh /msan/llvm-project
-  rm -rf /msan/llvm-project
+  du -sh /llvm-project
+  rm -rf /llvm-project
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then
