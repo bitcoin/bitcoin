@@ -2,66 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <logging.h>
 #include <node/txreconciliation.h>
+#include <node/txreconciliation_impl.h>
 
 #include <common/system.h>
-#include <logging.h>
 #include <util/check.h>
 
 #include <unordered_map>
 #include <variant>
 
-
-namespace {
-
-/** Static salt component used to compute short txids for sketch construction, see BIP-330. */
-const std::string RECON_STATIC_SALT = "Tx Relay Salting";
-const HashWriter RECON_SALT_HASHER = TaggedHash(RECON_STATIC_SALT);
-
-/**
- * Salt (specified by BIP-330) constructed from contributions from both peers. It is used
- * to compute transaction short IDs, which are then used to construct a sketch representing a set
- * of transactions we want to announce to the peer.
- */
-uint256 ComputeSalt(uint64_t salt1, uint64_t salt2)
-{
-    // According to BIP-330, salts should be combined in ascending order.
-    return (HashWriter(RECON_SALT_HASHER) << std::min(salt1, salt2) << std::max(salt1, salt2)).GetSHA256();
-}
-
-/**
- * Keeps track of txreconciliation-related per-peer state.
- */
-class TxReconciliationState
-{
-public:
-    /**
-     * TODO: This field is public to ignore -Wunused-private-field. Make private once used in
-     * the following commits.
-     *
-     * Reconciliation protocol assumes using one role consistently: either a reconciliation
-     * initiator (requesting sketches), or responder (sending sketches). This defines our role,
-     * based on the direction of the p2p connection.
-     *
-     */
-    bool m_we_initiate;
-
-    /**
-     * TODO: These fields are public to ignore -Wunused-private-field. Make private once used in
-     * the following commits.
-     *
-     * These values are used to salt short IDs, which is necessary for transaction reconciliations.
-     */
-    uint64_t m_k0, m_k1;
-
-    TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
-};
-
-} // namespace
-
+namespace node {
 /** Actual implementation for TxReconciliationTracker's data structure. */
-class TxReconciliationTracker::Impl
-{
+class TxReconciliationTrackerImpl {
 private:
     mutable Mutex m_txreconciliation_mutex;
 
@@ -77,7 +30,7 @@ private:
     std::unordered_map<NodeId, std::variant<uint64_t, TxReconciliationState>> m_states GUARDED_BY(m_txreconciliation_mutex);
 
 public:
-    explicit Impl(uint32_t recon_version) : m_recon_version(recon_version) {}
+    explicit TxReconciliationTrackerImpl(uint32_t recon_version) : m_recon_version(recon_version) {}
 
     uint64_t PreRegisterPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
@@ -125,15 +78,6 @@ public:
         return ReconciliationRegisterResult::SUCCESS;
     }
 
-    void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
-    {
-        AssertLockNotHeld(m_txreconciliation_mutex);
-        LOCK(m_txreconciliation_mutex);
-        if (m_states.erase(peer_id)) {
-            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
-        }
-    }
-
     bool IsPeerRegistered(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -142,9 +86,18 @@ public:
         return (recon_state != m_states.end() &&
                 std::holds_alternative<TxReconciliationState>(recon_state->second));
     }
+
+    void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (m_states.erase(peer_id)) {
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
+        }
+    }
 };
 
-TxReconciliationTracker::TxReconciliationTracker(uint32_t recon_version) : m_impl{std::make_unique<TxReconciliationTracker::Impl>(recon_version)} {}
+TxReconciliationTracker::TxReconciliationTracker(uint32_t recon_version) : m_impl{std::make_unique<TxReconciliationTrackerImpl>(recon_version)} {}
 
 TxReconciliationTracker::~TxReconciliationTracker() = default;
 
@@ -153,18 +106,18 @@ uint64_t TxReconciliationTracker::PreRegisterPeer(NodeId peer_id)
     return m_impl->PreRegisterPeer(peer_id);
 }
 
-ReconciliationRegisterResult TxReconciliationTracker::RegisterPeer(NodeId peer_id, bool is_peer_inbound,
-                                                          uint32_t peer_recon_version, uint64_t remote_salt)
+ReconciliationRegisterResult TxReconciliationTracker::RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version, uint64_t remote_salt)
 {
     return m_impl->RegisterPeer(peer_id, is_peer_inbound, peer_recon_version, remote_salt);
-}
-
-void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
-{
-    m_impl->ForgetPeer(peer_id);
 }
 
 bool TxReconciliationTracker::IsPeerRegistered(NodeId peer_id) const
 {
     return m_impl->IsPeerRegistered(peer_id);
 }
+
+void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
+{
+    m_impl->ForgetPeer(peer_id);
+}
+} // namespace node
