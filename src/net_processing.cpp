@@ -2470,6 +2470,11 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             // construct a package here if package relay supported
             if (supports_package_relay) {
                 if (auto package{GetSenderInitPackage(tx_relay, tx)}) {
+                    auto txns = package.value().txns;
+                    LogDebug(BCLog::TXPACKAGES, "Proactively sending a pkgtxns: parent %s (wtxid=%s), child %s (wtxid=%s), package hash (%s)\n",
+                        txns.front()->GetHash().ToString(), txns.front()->GetWitnessHash().ToString(),
+                        txns.back()->GetHash().ToString(), txns.back()->GetWitnessHash().ToString(),
+                        GetPackageHash(txns).ToString());
                     MakeAndPushMessage(pfrom, NetMsgType::PKGTXNS, package.value());
                 } else {
                     MakeAndPushMessage(pfrom, NetMsgType::TX, maybe_with_witness(*tx));
@@ -4896,7 +4901,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (package_to_validate) {
             const auto package_result{WITH_LOCK(cs_main, return ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate.value().m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt))};
 
-            LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
+            LogDebug(BCLog::TXPACKAGES, "pkgtxns package evaluation for %s: %s\n", package_to_validate->ToString(),
                      package_result.m_state.IsValid() ? "package accepted" : "package rejected");
 
             {

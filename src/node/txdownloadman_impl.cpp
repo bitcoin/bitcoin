@@ -589,8 +589,19 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::ReceivedPackage(NodeId n
     // Don't validate a package that is too large
     if (mutable_package.size() > MAX_SENDER_INIT_PKG_SIZE) return std::nullopt;
 
+    std::string package_string = strprintf("package hash: %s, parent (txid=%s, wtxid=%s) + child (txid=%s, wtxid=%s)",
+            GetPackageHash(mutable_package).ToString(),
+            mutable_package.front()->GetHash().ToString(),
+            mutable_package.front()->GetWitnessHash().ToString(),
+            mutable_package.back()->GetHash().ToString(),
+            mutable_package.back()->GetWitnessHash().ToString()
+            );
+
     // If we recently rejected this package, don't validate it again
-    if (RecentRejectsReconsiderableFilter().contains(GetPackageHash(mutable_package))) return std::nullopt;
+    if (RecentRejectsReconsiderableFilter().contains(GetPackageHash(mutable_package))) {
+        LogDebug(BCLog::TXPACKAGES, "ignoring package we previously rejected: %s\n", package_string);
+        return std::nullopt;
+    }
 
     // We may remove certain transaction from the package that we already
     // know about or that were recently rejected
@@ -605,8 +616,10 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::ReceivedPackage(NodeId n
 
         // Always check by wtxid and not txid
         if (AlreadyHaveTx(wtxid, /*include_reconsiderable=*/false)) {
+            LogDebug(BCLog::TXPACKAGES, "removing tx (%s) from the following package because we already have it: %s\n", txid.ToString(), package_string);
             mutable_package.erase(mutable_package.begin()+i);
         } else if (RecentRejectsFilter().contains(wtxid.ToUint256())) {
+            LogDebug(BCLog::TXPACKAGES, "dropping package because tx (%s) has already been rejected and is not eligible for reconsideration: %s\n", txid.ToString(), package_string);
             mutable_package.erase(mutable_package.begin()+i);
         }
     }
