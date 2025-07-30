@@ -206,14 +206,8 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         if not self.options.descriptors:
             assert_raises_rpc_error(-1,  "Error: The wallet passphrase entered was incorrect", node.upgradetohd, mnemonic, "", "wrongpass")
         else:
-            assert_raises_rpc_error(-1,  "SetupDescriptorScriptPubKeyMans: Wallet is locked, cannot setup new descriptors", node.upgradetohd, mnemonic, "", "wrongpass")
-        if self.options.descriptors:
-            # TODO - implement auto-unlock descriptor wallet
-            node.walletpassphrase(walletpass, 100)
+            assert_raises_rpc_error(-4,  "Error: The wallet passphrase entered was incorrect", node.upgradetohd, mnemonic, "", "wrongpass")
         assert node.upgradetohd(mnemonic, "", walletpass)
-        # TODO - drop it too!
-        if self.options.descriptors:
-            node.walletlock()
         if not self.options.descriptors:
             assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", node.dumphdinfo)
         else:
