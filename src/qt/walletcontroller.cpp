@@ -262,6 +262,9 @@ void CreateWalletActivity::createWallet()
     if (m_create_wallet_dialog->isMakeBlankWalletChecked()) {
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
+    if (m_create_wallet_dialog->isSilentPaymentsWalletChecked()) {
+        flags |= wallet::WALLET_FLAG_SILENT_PAYMENTS;
+    }
     if (m_create_wallet_dialog->isExternalSignerChecked()) {
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
     }

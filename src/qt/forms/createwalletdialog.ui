@@ -154,6 +154,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="silent_payments_wallet_checkbox">
+        <property name="toolTip">
+         <string>Make Silent Payments Wallet. Silent Payments wallet cannot use fast rescan.</string>
+        </property>
+        <property name="text">
+         <string>Make Silent Payments Wallet</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="external_signer_checkbox">
         <property name="toolTip">
          <string>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</string>
