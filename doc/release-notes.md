@@ -48,6 +48,12 @@ Notable changes
 
 - #32521 policy: make pathological transactions packed with legacy sigops non-standard
 
+### RPC
+
+- The `dumptxoutset` RPC now requires a `type` parameter to be specified. To maintain pre
+  v29.0 behavior, use the `latest` parameter. Documenting this change was missed in the v29.0
+  release notes. (#30808)
+
 ### Updated Settings
 
 - The `-maxmempool` and `-dbcache` startup parameters are now capped on
