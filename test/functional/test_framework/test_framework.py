@@ -2072,13 +2072,15 @@ class DashTestFramework(BitcoinTestFramework):
                         continue
                     if c["quorumHash"] != quorum_hash:
                         continue
+                    if c["quorumPublicKey"] == '0' * 96:
+                        continue
                     c_ok = True
                     break
                 if not c_ok:
                     return False
             return True
 
-        self.wait_until(check_dkg_comitments, timeout=timeout, sleep=1)
+        self.wait_until(check_dkg_comitments, timeout=timeout)
 
     def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, llmq_type_name="llmq_test"):
         def wait_func():
