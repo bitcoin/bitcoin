@@ -45,31 +45,27 @@ class MempoolWtxidTest(BitcoinTestFramework):
         self.generate(node, 1)
 
         peer_wtxid_relay = node.add_p2p_connection(P2PTxInvStore())
-        child_one_wtxid = child_one.wtxid_hex
-        child_one_txid = child_one.txid_hex
-        child_two_wtxid = child_two.wtxid_hex
-        child_two_txid = child_two.txid_hex
 
-        assert_equal(child_one_txid, child_two_txid)
-        assert_not_equal(child_one_wtxid, child_two_wtxid)
+        assert_equal(child_one.txid_hex, child_two.txid_hex)
+        assert_not_equal(child_one.wtxid_hex, child_two.wtxid_hex)
 
         self.log.info("Submit child_one to the mempool")
         txid_submitted = node.sendrawtransaction(child_one.serialize().hex())
-        assert_equal(node.getmempoolentry(txid_submitted)['wtxid'], child_one_wtxid)
-        peer_wtxid_relay.wait_for_broadcast([child_one_wtxid])
+        assert_equal(node.getmempoolentry(txid_submitted)['wtxid'], child_one.wtxid_hex)
+        peer_wtxid_relay.wait_for_broadcast([child_one.wtxid_hex])
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)
 
         # testmempoolaccept reports the "already in mempool" error
         assert_equal(node.testmempoolaccept([child_one.serialize().hex()]), [{
-            "txid": child_one_txid,
-            "wtxid": child_one_wtxid,
+            "txid": child_one.txid_hex,
+            "wtxid": child_one.wtxid_hex,
             "allowed": False,
             "reject-reason": "txn-already-in-mempool",
             "reject-details": "txn-already-in-mempool"
         }])
         assert_equal(node.testmempoolaccept([child_two.serialize().hex()])[0], {
-            "txid": child_two_txid,
-            "wtxid": child_two_wtxid,
+            "txid": child_two.txid_hex,
+            "wtxid": child_two.wtxid_hex,
             "allowed": False,
             "reject-reason": "txn-same-nonwitness-data-in-mempool",
             "reject-details": "txn-same-nonwitness-data-in-mempool"
@@ -87,7 +83,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         # The node should rebroadcast the transaction using the wtxid of the correct transaction
         # (child_one, which is in its mempool).
-        peer_wtxid_relay_2.wait_for_broadcast([child_one_wtxid])
+        peer_wtxid_relay_2.wait_for_broadcast([child_one.wtxid_hex])
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)
 
 if __name__ == '__main__':
