@@ -6,6 +6,7 @@
 #include <consensus/merkle.h>
 #include <random.h>
 #include <uint256.h>
+#include <util/ints.h>
 
 #include <vector>
 
@@ -22,7 +23,7 @@ static void MerkleRoot(benchmark::Bench& bench)
     constexpr uint256 expected_root{"d8d4dfd014a533bc3941b8663fa6e7f3a8707af124f713164d75b0c3179ecb08"};
     bench.batch(hashes.size()).unit("leaf").run([&] {
         std::vector<uint256> leaves;
-        leaves.reserve(hashes.size() + (hashes.size() & 1)); // capacity rounded up to even
+        leaves.reserve(RoundUpToEven(hashes.size()));
         for (size_t s = 0; s < hashes.size(); s++) {
             leaves.push_back(hashes[s]);
         }

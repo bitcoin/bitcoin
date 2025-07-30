@@ -17,6 +17,7 @@
 #include <span.h>
 #include <streams.h>
 #include <uint256.h>
+#include <util/ints.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
@@ -58,7 +59,7 @@ static bool FetchAndClearCommitmentSection(const std::span<const uint8_t> header
 static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block)
 {
     std::vector<uint256> leaves;
-    leaves.reserve(block.vtx.size() + (block.vtx.size() & 1)); // capacity rounded up to even
+    leaves.reserve(RoundUpToEven(block.vtx.size()));
     leaves.push_back(cb.GetHash());
     for (size_t s = 1; s < block.vtx.size(); ++s) {
         leaves.push_back(block.vtx[s]->GetHash());
