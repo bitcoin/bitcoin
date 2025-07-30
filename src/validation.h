@@ -31,6 +31,7 @@
 #include <util/translation.h>
 
 #include <atomic>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <optional>
@@ -796,6 +797,9 @@ private:
     /** Check warning conditions and do some notifications on new chain tip set. */
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    std::chrono::microseconds m_last_write{0};
+    std::chrono::microseconds m_last_flush{0};
 
     friend ChainstateManager;
 };
