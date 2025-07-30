@@ -793,7 +793,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(innerUsage == cachedInnerUsage);
 }
 
-bool CTxMemPool::CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb) const
+bool CTxMemPool::CompareDepthAndScore(const Wtxid& hasha, const Wtxid& hashb) const
 {
     /* Return `true` if hasha should be considered sooner than hashb. Namely when:
      *   a is not in the mempool, but b is
@@ -801,9 +801,9 @@ bool CTxMemPool::CompareDepthAndScore(const GenTxid& hasha, const GenTxid& hashb
      *   both are in the mempool and a has a higher score than b
      */
     LOCK(cs);
-    auto j{std::visit([&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(cs) { return GetIter(id); }, hashb)};
+    auto j{GetIter(hashb)};
     if (!j.has_value()) return false;
-    auto i{std::visit([&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(cs) { return GetIter(id); }, hasha)};
+    auto i{GetIter(hasha)};
     if (!i.has_value()) return true;
     uint64_t counta = i.value()->GetCountWithAncestors();
     uint64_t countb = j.value()->GetCountWithAncestors();
@@ -961,9 +961,9 @@ const CTransaction* CTxMemPool::GetConflictTx(const COutPoint& prevout) const
 
 std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Txid& txid) const
 {
+    AssertLockHeld(cs);
     auto it = mapTx.find(txid.ToUint256());
-    if (it != mapTx.end()) return it;
-    return std::nullopt;
+    return it != mapTx.end() ? std::make_optional(it) : std::nullopt;
 }
 
 std::optional<CTxMemPool::txiter> CTxMemPool::GetIter(const Wtxid& wtxid) const

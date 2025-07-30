@@ -98,7 +98,8 @@ public:
 
     friend auto operator<=>(const GenTxid& a, const GenTxid& b)
     {
-        return std::tuple(a.IsWtxid(), a.ToUint256()) <=> std::tuple(b.IsWtxid(), b.ToUint256());
+        // Use a reference for read-only access to the hash, avoiding a copy that might not be optimized away.
+        return std::tuple<bool, const uint256&>(a.IsWtxid(), a.ToUint256()) <=> std::tuple<bool, const uint256&>(b.IsWtxid(), b.ToUint256());
     }
 };
 
