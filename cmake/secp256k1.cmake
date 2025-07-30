@@ -5,7 +5,8 @@
 function(add_secp256k1 subdir)
   message("")
   message("Configuring secp256k1 subtree...")
-  set(SECP256K1_DISABLE_SHARED ON CACHE BOOL "" FORCE)
+  set(BUILD_SHARED_LIBS OFF)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
   set(SECP256K1_ENABLE_MODULE_ECDH OFF CACHE BOOL "" FORCE)
   set(SECP256K1_ENABLE_MODULE_RECOVERY ON CACHE BOOL "" FORCE)
   set(SECP256K1_ENABLE_MODULE_MUSIG ON CACHE BOOL "" FORCE)
@@ -42,7 +43,7 @@ function(add_secp256k1 subdir)
   if(DEFINED ENV{CFLAGS})
     deduplicate_flags(CMAKE_C_FLAGS)
   endif()
-  set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+
   add_subdirectory(${subdir})
   set_target_properties(secp256k1 PROPERTIES
     EXCLUDE_FROM_ALL TRUE
