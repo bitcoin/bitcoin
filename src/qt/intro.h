@@ -1,17 +1,17 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_INTRO_H
 #define BITCOIN_QT_INTRO_H
 
+#include <qt/freespacechecker.h>
+
 #include <QDialog>
 #include <QMutex>
 #include <QThread>
 
 static const bool DEFAULT_CHOOSE_DATADIR = false;
-
-class FreespaceChecker;
 
 namespace interfaces {
     class Node;
@@ -25,7 +25,7 @@ namespace Ui {
   Allows the user to choose a data directory,
   in which the wallet and block chain will be stored.
  */
-class Intro : public QDialog
+class Intro : public QDialog, public FreespaceChecker::PathQuery
 {
     Q_OBJECT
 
@@ -78,7 +78,7 @@ private:
 
     void startThread();
     void checkPath(const QString &dataDir);
-    QString getPathToCheck();
+    QString getPathToCheck() override;
     void UpdatePruneLabels(bool prune_checked);
     void UpdateFreeSpaceLabel();
 
