@@ -321,6 +321,7 @@ BASE_SCRIPTS = [
     'wallet_encryption.py --legacy-wallet',
     'wallet_encryption.py --descriptors',
     'wallet_upgradetohd.py --legacy-wallet',
+    'wallet_upgradetohd.py --descriptors',
     'feature_dersig.py',
     'feature_cltv.py',
     'feature_new_quorum_type_activation.py',
