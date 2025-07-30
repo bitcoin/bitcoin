@@ -128,7 +128,8 @@ class WalletMigrationTest(BitcoinTestFramework):
             if w["name"] == wallet_name:
                 assert_equal(w["warnings"], ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"])
 
-        # Mock time so that we can check the backup filename.
+        # migratewallet uses current time in naming the backup file, set a mock time
+        # to check that this works correctly.
         mocked_time = int(time.time())
         self.master_node.setmocktime(mocked_time)
         # Migrate, checking that rescan does not occur
@@ -148,8 +149,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         else:
             backup_prefix = os.path.basename(os.path.realpath(self.old_node.wallets_path / wallet_name))
 
-        expected_backup_path = self.master_node.wallets_path / f"{backup_prefix}_{mocked_time}.legacy.bak"
+        backup_filename = f"{backup_prefix}_{mocked_time}.legacy.bak"
+        expected_backup_path = self.master_node.wallets_path / backup_filename
         assert_equal(str(expected_backup_path), migrate_info['backup_path'])
+        assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
 
         return migrate_info, wallet
 
@@ -593,12 +596,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generate(self.master_node, 1)
         bals = wallet.getbalances()
 
-        # migratewallet uses current time in naming the backup file, set a mock time
-        # to check that this works correctly.
-        curr_time = int(time.time())
-        self.master_node.setmocktime(curr_time)
         migrate_res, wallet = self.migrate_and_get_rpc(relative_name)
-        self.master_node.setmocktime(0)
 
         # Check that the wallet was migrated, knows the right txid, and has the right balance.
         assert wallet.gettransaction(txid)
@@ -665,12 +663,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.log.info("Test migration of the wallet named as the empty string")
         wallet = self.create_legacy_wallet("")
 
-        # Set time to verify backup existence later
-        curr_time = int(time.time())
-        self.master_node.setmocktime(curr_time)
-
         res, wallet = self.migrate_and_get_rpc("")
-        self.master_node.setmocktime(0)
         info = wallet.getwalletinfo()
         assert_equal(info["descriptors"], True)
         assert_equal(info["format"], "sqlite")
@@ -678,14 +671,9 @@ class WalletMigrationTest(BitcoinTestFramework):
         walletdir_list = wallet.listwalletdir()
         assert {"name": info["walletname"]} in [{"name": w["name"]} for w in walletdir_list["wallets"]]
 
-        # Check backup existence and its non-empty wallet filename
-        backup_filename = f"default_wallet_{curr_time}.legacy.bak"
-        backup_path = self.master_node.wallets_path / backup_filename
-        assert backup_path.exists()
-        assert_equal(str(backup_path), res['backup_path'])
-        assert {"name": backup_filename} not in walletdir_list["wallets"]
-
-        self.master_node.setmocktime(0)
+        # Make sure the backup uses a non-empty filename
+        # migrate_and_get_rpc already checks for backup file existence
+        assert os.path.basename(res["backup_path"]).startswith("default_wallet")
 
     def test_direct_file(self):
         self.log.info("Test migration of a wallet that is not in a wallet directory")
