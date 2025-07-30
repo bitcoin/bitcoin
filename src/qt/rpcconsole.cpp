@@ -825,6 +825,7 @@ void RPCConsole::setFontSize(int newSize)
 
 void RPCConsole::clear(bool keep_prompt)
 {
+    history.clear();
     ui->messagesWidget->clear();
     if (!keep_prompt) ui->lineEdit->clear();
     ui->lineEdit->setFocus();
