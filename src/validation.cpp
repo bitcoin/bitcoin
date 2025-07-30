@@ -902,8 +902,24 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }
 
     // Check for non-standard witnesses.
-    if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
-        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+    if (tx.HasWitness()) {
+        if (m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
+            return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+        }
+    } else {
+        // All standard Segwit programs but P2A require a non-empty witness. Detect if it is spending a non-P2A Segwit
+        // program with no witness. We specifically detect the case of stripped witness because in this case wtxid==txid
+        // and adding the wtxid to the reject filter upon Script validation failure could allow a malicious peer to
+        // interfere with orphan parent resolution (which is necessarily done by txid) as used in 1p1c package relay. For
+        // more details see this brief historical summary: https://github.com/bitcoin/bitcoin/pull/32379#issuecomment-2985252920.
+        int version;
+        std::vector<uint8_t> program;
+        for (const auto& txin: tx.vin) {
+            const auto& prev_spk{m_view.AccessCoin(txin.prevout).out.scriptPubKey};
+            if (prev_spk.IsWitnessProgram(version, program) && !prev_spk.IsPayToAnchor(version, program)) {
+                return state.Invalid(TxValidationResult::TX_WITNESS_STRIPPED, "bad-witness-stripped");
+            }
+        }
     }
 
     int64_t nSigOpsCost = GetTransactionSigOpCost(tx, m_view, STANDARD_SCRIPT_VERIFY_FLAGS);
@@ -1254,16 +1270,6 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
     if (!CheckInputScripts(tx, state, m_view, scriptVerifyFlags, true, false, ws.m_precomputed_txdata, GetValidationCache())) {
-        // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
-        // need to turn both off, and compare against just turning off CLEANSTACK
-        // to see if the failure is specifically due to witness validation.
-        TxValidationState state_dummy; // Want reported failures to be from first CheckInputScripts
-        if (!tx.HasWitness() && CheckInputScripts(tx, state_dummy, m_view, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, false, ws.m_precomputed_txdata, GetValidationCache()) &&
-                !CheckInputScripts(tx, state_dummy, m_view, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, false, ws.m_precomputed_txdata, GetValidationCache())) {
-            // Only the witness is missing, so the transaction itself may be fine.
-            state.Invalid(TxValidationResult::TX_WITNESS_STRIPPED,
-                    state.GetRejectReason(), state.GetDebugMessage());
-        }
         return false; // state filled in by CheckInputScripts
     }
 
