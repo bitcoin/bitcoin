@@ -923,11 +923,11 @@ void CQuorumManager::StartQuorumDataRecoveryThread(CConnman& connman, const CQuo
 {
     assert(m_mn_activeman);
 
-    if (pQuorum->fQuorumDataRecoveryThreadRunning) {
+    bool expected = false;
+    if (!pQuorum->fQuorumDataRecoveryThreadRunning.compare_exchange_strong(expected, true)) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Already running\n", __func__);
         return;
     }
-    pQuorum->fQuorumDataRecoveryThreadRunning = true;
 
     workerPool.push([&connman, pQuorum, pIndex, nDataMaskIn, this](int threadId) {
         size_t nTries{0};
