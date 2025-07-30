@@ -44,6 +44,9 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 4
+        self.extra_args = [[
+            "-minrelaytxfee=0.00001000",
+        ] for i in range(self.num_nodes)]
         self.setup_clean_chain = True
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
