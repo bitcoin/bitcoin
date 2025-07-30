@@ -1647,6 +1647,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
  * @param[out] apostrophe only updated if hardened derivation is found
  * @param[out] error parsing error message
  * @param[in] allow_multipath Allows the parsed path to use the multipath specifier
+ * @param[out] has_hardened Records whether the path contains any hardened derivation
  * @returns false if parsing failed
  **/
 [[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath, bool& has_hardened)
