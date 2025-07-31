@@ -1491,7 +1491,7 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
 
         for (const CTxIn& tx_in : ptx->vin) {
             // No other wallet transactions conflicted with this transaction
-            if (mapTxSpends.count(tx_in.prevout) < 1) continue;
+            if (!mapTxSpends.contains(tx_in.prevout)) continue;
 
             std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(tx_in.prevout);
 
