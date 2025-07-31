@@ -267,10 +267,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Update self.options with the paths of all binaries from environment variables or their default values"""
 
         binaries = {
-            "dashd": ("dashd", "DASHD"),
-            "dash-cli": ("dashcli", "DASHCLI"),
-            "dash-util": ("dashutil", "DASHUTIL"),
-            "dash-wallet": ("dashwallet", "DASHWALLET"),
+            "dashd": ("bitcoind", "DASHD"),
+            "dash-cli": ("bitcoincli", "DASHCLI"),
+            "dash-util": ("bitcoinutil", "DASHUTIL"),
+            "dash-wallet": ("bitcoinwallet", "DASHWALLET"),
         }
         for binary, [attribute_name, env_variable_name] in binaries.items():
             default_filename = os.path.join(
