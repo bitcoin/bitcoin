@@ -1275,7 +1275,7 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws)
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
     const CTransaction& tx = *ws.m_ptx;
-    const uint256& hash = ws.m_hash;
+    const Txid& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
 
     // Check again against the current block tip's script verification
@@ -1322,7 +1322,7 @@ void MemPoolAccept::FinalizeSubpackage(const ATMPArgs& args)
         const bool replaced_with_tx{m_subpackage.m_changeset->GetTxCount() == 1};
         if (replaced_with_tx) {
             const CTransaction& tx = m_subpackage.m_changeset->GetAddedTxn(0);
-            tx_or_package_hash = tx.GetHash();
+            tx_or_package_hash = tx.GetHash().ToUint256();
             log_string += strprintf("New tx %s (wtxid=%s, fees=%s, vsize=%s)",
                                     tx.GetHash().ToString(),
                                     tx.GetWitnessHash().ToString(),
