@@ -1162,7 +1162,7 @@ std::chrono::microseconds PeerManagerImpl::NextInvToInbounds(std::chrono::micros
 
 bool PeerManagerImpl::IsBlockRequested(const uint256& hash)
 {
-    return mapBlocksInFlight.count(hash);
+    return mapBlocksInFlight.contains(hash);
 }
 
 bool PeerManagerImpl::IsBlockRequestedFromOutbound(const uint256& hash)
