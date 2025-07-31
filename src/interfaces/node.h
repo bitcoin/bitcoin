@@ -13,6 +13,7 @@
 #include <netbase.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
+#include <util/fs.h>
 #include <util/log.h>
 #include <util/translation.h>
 
@@ -38,6 +39,7 @@ struct NodeContext;
 
 namespace interfaces {
 class Handler;
+class Snapshot;
 class WalletLoader;
 struct BlockTip;
 
@@ -199,6 +201,9 @@ public:
 
     //! List rpc commands.
     virtual std::vector<std::string> listRpcCommands() = 0;
+
+    //! UTXO Snapshot interface.
+    virtual std::unique_ptr<Snapshot> snapshot(const fs::path& path) = 0;
 
     //! Get unspent output associated with a transaction.
     virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
