@@ -630,13 +630,13 @@ public:
     bool exists(const Txid& txid) const
     {
         LOCK(cs);
-        return (mapTx.count(txid) != 0);
+        return mapTx.contains(txid);
     }
 
     bool exists(const Wtxid& wtxid) const
     {
         LOCK(cs);
-        return (mapTx.get<index_by_wtxid>().count(wtxid) != 0);
+        return mapTx.get<index_by_wtxid>().contains(wtxid);
     }
 
     const CTxMemPoolEntry* GetEntry(const Txid& txid) const LIFETIMEBOUND EXCLUSIVE_LOCKS_REQUIRED(cs);
