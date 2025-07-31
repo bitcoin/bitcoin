@@ -143,7 +143,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_previous_releases.sh"
 
 task:
-  name: 'TSan, depends, gui'
+  name: 'TSan, depends, no gui'
   << : *GLOBAL_TASK_TEMPLATE
   persistent_worker:
     labels:
