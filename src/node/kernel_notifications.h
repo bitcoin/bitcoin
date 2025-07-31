@@ -41,6 +41,8 @@ public:
 
     void progress(const bilingual_str& title, int progress_percent, bool resume_possible) override;
 
+    void snapshotLoadProgress(double progress) override;
+
     void warningSet(kernel::Warning id, const bilingual_str& message) override;
 
     void warningUnset(kernel::Warning id) override;

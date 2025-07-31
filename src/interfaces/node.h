@@ -239,6 +239,10 @@ public:
     using ShowProgressFn = std::function<void(const std::string& title, int progress, bool resume_possible)>;
     virtual std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) = 0;
 
+    //! Register handler for snapshot load progress.
+    using SnapshotLoadProgressFn = std::function<void(double progress)>;
+    virtual std::unique_ptr<Handler> handleSnapshotLoadProgress(SnapshotLoadProgressFn fn) = 0;
+
     //! Register handler for wallet loader constructed messages.
     using InitWalletFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) = 0;
