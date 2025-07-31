@@ -18,8 +18,29 @@ concurrency:
   cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
+  check-skip:
+    name: Check skip conditions
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.skip-check.outputs.skip }}
+    steps:
+      - name: Check skip environment variables
+        id: skip-check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ vars.SKIP_ON_PUSH }}" != "" ]]; then
+            echo "Skipping build on push due to SKIP_ON_PUSH environment variable"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "pull_request_target" && "${{ vars.SKIP_ON_PR }}" != "" ]]; then
+            echo "Skipping build on pull request due to SKIP_ON_PR environment variable"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
   container:
     name: Build container
+    needs: [check-skip]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     uses: ./.github/workflows/build-container.yml
     with:
       context: ./contrib/containers/ci
@@ -28,6 +49,8 @@ jobs:
 
   container-slim:
     name: Build slim container
+    needs: [check-skip]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     uses: ./.github/workflows/build-container.yml
     with:
       context: ./contrib/containers/ci
@@ -37,8 +60,8 @@ jobs:
   depends-arm-linux:
     name: arm-linux-gnueabihf
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
-    if: ${{ vars.SKIP_ARM_LINUX == '' }}
+    needs: [check-skip, container]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_ARM_LINUX == '' }}
     with:
       build-target: arm-linux
       container-path: ${{ needs.container.outputs.path }}
@@ -46,12 +69,14 @@ jobs:
   depends-linux64:
     name: x86_64-pc-linux-gnu
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [check-skip, container]
     if: |
-      vars.SKIP_LINUX64 == '' ||
-      vars.SKIP_LINUX64_FUZZ == '' ||
-      vars.SKIP_LINUX64_SQLITE == '' ||
-      vars.SKIP_LINUX64_UBSAN == ''
+      needs.check-skip.outputs.skip == 'false' && (
+        vars.SKIP_LINUX64 == '' ||
+        vars.SKIP_LINUX64_FUZZ == '' ||
+        vars.SKIP_LINUX64_SQLITE == '' ||
+        vars.SKIP_LINUX64_UBSAN == ''
+      )
     with:
       build-target: linux64
       container-path: ${{ needs.container.outputs.path }}
@@ -59,10 +84,12 @@ jobs:
   depends-linux64_multiprocess:
     name: x86_64-pc-linux-gnu_multiprocess
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
+    needs: [check-skip, container]
     if: |
-      vars.SKIP_LINUX64_MULTIPROCESS == '' ||
-      vars.SKIP_LINUX64_TSAN == ''
+      needs.check-skip.outputs.skip == 'false' && (
+        vars.SKIP_LINUX64_MULTIPROCESS == '' ||
+        vars.SKIP_LINUX64_TSAN == ''
+      )
     with:
       build-target: linux64_multiprocess
       container-path: ${{ needs.container.outputs.path }}
@@ -70,8 +97,8 @@ jobs:
   depends-linux64_nowallet:
     name: x86_64-pc-linux-gnu_nowallet
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
-    if: ${{ vars.SKIP_LINUX64_NOWALLET == '' }}
+    needs: [check-skip, container]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_LINUX64_NOWALLET == '' }}
     with:
       build-target: linux64_nowallet
       container-path: ${{ needs.container.outputs.path }}
@@ -79,8 +106,8 @@ jobs:
   depends-mac:
     name: x86_64-apple-darwin
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
-    if: ${{ vars.SKIP_MAC == '' }}
+    needs: [check-skip, container]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_MAC == '' }}
     with:
       build-target: mac
       container-path: ${{ needs.container.outputs.path }}
@@ -88,8 +115,8 @@ jobs:
   depends-win64:
     name: x86_64-w64-mingw32
     uses: ./.github/workflows/build-depends.yml
-    needs: [container]
-    if: ${{ vars.SKIP_WIN64 == '' }}
+    needs: [check-skip, container]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_WIN64 == '' }}
     with:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}
@@ -97,14 +124,16 @@ jobs:
   lint:
     name: Lint
     uses: ./.github/workflows/lint.yml
-    needs: [container]
+    needs: [check-skip, container]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       container-path: ${{ needs.container.outputs.path }}
 
   src-arm-linux:
     name: arm-linux-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-arm-linux]
+    needs: [check-skip, container, depends-arm-linux]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       build-target: arm-linux
       container-path: ${{ needs.container.outputs.path }}
@@ -113,8 +142,8 @@ jobs:
   src-linux64:
     name: linux64-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
-    if: ${{ vars.SKIP_LINUX64 == '' }}
+    needs: [check-skip, container, depends-linux64]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_LINUX64 == '' }}
     with:
       build-target: linux64
       container-path: ${{ needs.container.outputs.path }}
@@ -123,8 +152,8 @@ jobs:
   src-linux64_fuzz:
     name: linux64_fuzz-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
-    if: ${{ vars.SKIP_LINUX64_FUZZ == '' }}
+    needs: [check-skip, container, depends-linux64]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_LINUX64_FUZZ == '' }}
     with:
       build-target: linux64_fuzz
       container-path: ${{ needs.container.outputs.path }}
@@ -133,8 +162,8 @@ jobs:
   src-linux64_multiprocess:
     name: linux64_multiprocess-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64_multiprocess, lint]
-    if: ${{ vars.SKIP_LINUX64_MULTIPROCESS == '' }}
+    needs: [check-skip, container, depends-linux64_multiprocess, lint]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_LINUX64_MULTIPROCESS == '' }}
     with:
       build-target: linux64_multiprocess
       container-path: ${{ needs.container.outputs.path }}
@@ -143,7 +172,8 @@ jobs:
   src-linux64_nowallet:
     name: linux64_nowallet-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64_nowallet]
+    needs: [check-skip, container, depends-linux64_nowallet]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       build-target: linux64_nowallet
       container-path: ${{ needs.container.outputs.path }}
@@ -152,8 +182,8 @@ jobs:
   src-linux64_sqlite:
     name: linux64_sqlite-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
-    if: ${{ vars.SKIP_LINUX64_SQLITE == '' }}
+    needs: [check-skip, container, depends-linux64]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_LINUX64_SQLITE == '' }}
     with:
       build-target: linux64_sqlite
       container-path: ${{ needs.container.outputs.path }}
@@ -162,8 +192,8 @@ jobs:
   src-linux64_tsan:
     name: linux64_tsan-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64_multiprocess]
-    if: ${{ vars.SKIP_LINUX64_TSAN == '' }}
+    needs: [check-skip, container, depends-linux64_multiprocess]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_LINUX64_TSAN == '' }}
     with:
       build-target: linux64_tsan
       container-path: ${{ needs.container.outputs.path }}
@@ -172,8 +202,8 @@ jobs:
   src-linux64_ubsan:
     name: linux64_ubsan-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-linux64]
-    if: ${{ vars.SKIP_LINUX64_UBSAN == '' }}
+    needs: [check-skip, container, depends-linux64]
+    if: ${{ needs.check-skip.outputs.skip == 'false' && vars.SKIP_LINUX64_UBSAN == '' }}
     with:
       build-target: linux64_ubsan
       container-path: ${{ needs.container.outputs.path }}
@@ -182,7 +212,8 @@ jobs:
   src-mac:
     name: mac-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-mac]
+    needs: [check-skip, container, depends-mac]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       build-target: mac
       container-path: ${{ needs.container.outputs.path }}
@@ -191,7 +222,8 @@ jobs:
   src-win64:
     name: win64-build
     uses: ./.github/workflows/build-src.yml
-    needs: [container, depends-win64]
+    needs: [check-skip, container, depends-win64]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       build-target: win64
       container-path: ${{ needs.container.outputs.path }}
@@ -200,7 +232,8 @@ jobs:
   test-linux64:
     name: linux64-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64, lint]
+    needs: [check-skip, container-slim, src-linux64, lint]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       bundle-key: ${{ needs.src-linux64.outputs.key }}
       build-target: linux64
@@ -209,7 +242,8 @@ jobs:
   test-linux64_multiprocess:
     name: linux64_multiprocess-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_multiprocess, lint]
+    needs: [check-skip, container-slim, src-linux64_multiprocess, lint]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       bundle-key: ${{ needs.src-linux64_multiprocess.outputs.key }}
       build-target: linux64_multiprocess
@@ -218,7 +252,8 @@ jobs:
   test-linux64_nowallet:
     name: linux64_nowallet-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_nowallet, lint]
+    needs: [check-skip, container-slim, src-linux64_nowallet, lint]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       bundle-key: ${{ needs.src-linux64_nowallet.outputs.key }}
       build-target: linux64_nowallet
@@ -227,7 +262,8 @@ jobs:
   test-linux64_sqlite:
     name: linux64_sqlite-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_sqlite, lint]
+    needs: [check-skip, container-slim, src-linux64_sqlite, lint]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       bundle-key: ${{ needs.src-linux64_sqlite.outputs.key }}
       build-target: linux64_sqlite
@@ -236,7 +272,8 @@ jobs:
   test-linux64_tsan:
     name: linux64_tsan-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_tsan, lint]
+    needs: [check-skip, container-slim, src-linux64_tsan, lint]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       bundle-key: ${{ needs.src-linux64_tsan.outputs.key }}
       build-target: linux64_tsan
@@ -245,7 +282,8 @@ jobs:
   test-linux64_ubsan:
     name: linux64_ubsan-test
     uses: ./.github/workflows/test-src.yml
-    needs: [container-slim, src-linux64_ubsan, lint]
+    needs: [check-skip, container-slim, src-linux64_ubsan, lint]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     with:
       bundle-key: ${{ needs.src-linux64_ubsan.outputs.key }}
       build-target: linux64_ubsan
