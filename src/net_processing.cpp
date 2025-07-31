@@ -2393,12 +2393,12 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
 
 CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
 {
+    // If a tx was in the mempool prior to the last INV for this peer, permit the request.
     auto txinfo{std::visit(
         [&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
             return m_mempool.info_for_relay(id, tx_relay.m_last_inv_sequence);
         },
         gtxid)};
-
     if (txinfo.tx) {
         return std::move(txinfo.tx);
     }
