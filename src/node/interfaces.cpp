@@ -18,6 +18,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
+#include <interfaces/snapshot.h>
 #include <interfaces/types.h>
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
@@ -38,6 +39,7 @@
 #include <node/kernel_notifications.h>
 #include <node/transaction.h>
 #include <node/types.h>
+#include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -89,6 +91,41 @@ namespace node {
 // All members of the classes in this namespace are intentionally public, as the
 // classes themselves are private.
 namespace {
+class SnapshotImpl : public interfaces::Snapshot
+{
+public:
+    SnapshotImpl(ChainstateManager& chainman, const fs::path& path, bool in_memory)
+        : m_chainman(chainman), m_path(path), m_in_memory(in_memory) {}
+
+    bool activate() override
+    {
+        if (!fs::exists(m_path)) {
+            return false;
+        }
+
+        FILE* snapshot_file{fsbridge::fopen(m_path, "rb")};
+        AutoFile afile{snapshot_file};
+        if (afile.IsNull()) {
+            return false;
+        }
+
+        node::SnapshotMetadata metadata{m_chainman.GetParams().MessageStart()};
+        try {
+            afile >> metadata;
+        } catch (const std::exception&) {
+            return false;
+        }
+
+        auto activation_result{m_chainman.ActivateSnapshot(afile, metadata, m_in_memory)};
+        return activation_result.has_value();
+    }
+
+private:
+    ChainstateManager& m_chainman;
+    fs::path m_path;
+    bool m_in_memory;
+};
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 class ExternalSignerImpl : public interfaces::ExternalSigner
 {
@@ -356,6 +393,10 @@ public:
         return ::tableRPC.execute(req);
     }
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
+    std::unique_ptr<interfaces::Snapshot> loadSnapshot(const fs::path& path) override
+    {
+        return std::make_unique<SnapshotImpl>(chainman(), path, /*in_memory=*/ false);
+    }
     std::optional<Coin> getUnspentOutput(const COutPoint& output) override
     {
         LOCK(::cs_main);

@@ -12,7 +12,10 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <interfaces/snapshot.h>
+#include <node/utxo_snapshot.h>
 #include <support/allocators/secure.h>
+#include <util/fs.h>
 #include <util/translation.h>
 
 #include <cstddef>
@@ -203,6 +206,9 @@ public:
 
     //! List rpc commands.
     virtual std::vector<std::string> listRpcCommands() = 0;
+
+    //! Load UTXO Snapshot.
+    virtual std::unique_ptr<Snapshot> loadSnapshot(const fs::path& path) = 0;
 
     //! Get unspent output associated with a transaction.
     virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
