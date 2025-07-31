@@ -48,7 +48,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
 
     // Walk backwards in steps of nPeriod to find a pindexPrev whose information is known
     std::vector<const CBlockIndex*> vToCompute;
-    while (cache.count(pindexPrev) == 0) {
+    while (!cache.contains(pindexPrev)) {
         if (pindexPrev == nullptr) {
             // The genesis block is by definition defined.
             cache[pindexPrev] = ThresholdState::DEFINED;
@@ -64,7 +64,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     }
 
     // At this point, cache[pindexPrev] is known
-    assert(cache.count(pindexPrev));
+    assert(cache.contains(pindexPrev));
     ThresholdState state = cache[pindexPrev];
 
     // Now walk forward and compute the state of descendants of pindexPrev

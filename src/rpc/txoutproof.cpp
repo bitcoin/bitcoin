@@ -109,7 +109,7 @@ static RPCHelpMan gettxoutproof()
 
             unsigned int ntxFound = 0;
             for (const auto& tx : block.vtx) {
-                if (setTxids.count(tx->GetHash())) {
+                if (setTxids.contains(tx->GetHash())) {
                     ntxFound++;
                 }
             }
