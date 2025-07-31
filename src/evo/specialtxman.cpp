@@ -497,7 +497,7 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
         static int64_t nTimeQuorum = 0;
         static int64_t nTimeDMN = 0;
         static int64_t nTimeMerkleMNL = 0;
-        static int64_t nTimeMerkle = 0;
+        static int64_t nTimeMerkleQuorums = 0;
         static int64_t nTimeCbTxCL = 0;
         static int64_t nTimeMnehf = 0;
         static int64_t nTimePayload = 0;
@@ -599,62 +599,63 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(const CBlock& block, const CB
             }
         }
 
-            int64_t nTime5_1 = GetTimeMicros();
-            nTimeDMN += nTime5_1 - nTime5;
-
-            LogPrint(BCLog::BENCHMARK, "      - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime5_1 - nTime5),
-                     nTimeDMN * 0.000001);
+        int64_t nTime6 = GetTimeMicros();
+        nTimeDMN += nTime6 - nTime5;
+        LogPrint(BCLog::BENCHMARK, "      - m_dmnman: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeDMN * 0.000001);
 
         if (opt_cbTx.has_value()) {
-            uint256 calculatedMerkleRoot;
-            if (!CalcCbTxMerkleRootMNList(calculatedMerkleRoot, mn_list.to_sml(), state)) {
+            uint256 calculatedMerkleRootMNL;
+            if (!CalcCbTxMerkleRootMNList(calculatedMerkleRootMNL, mn_list.to_sml(), state)) {
                 // pass the state returned by the function above
                 return false;
             }
-            if (calculatedMerkleRoot != opt_cbTx->merkleRootMNList) {
+            if (calculatedMerkleRootMNL != opt_cbTx->merkleRootMNList) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-mnmerkleroot");
             }
 
-            int64_t nTime5_2 = GetTimeMicros();
-            nTimeMerkleMNL += nTime5_2 - nTime5_1;
+            int64_t nTime6_1 = GetTimeMicros();
+            nTimeMerkleMNL += nTime6_1 - nTime6;
             LogPrint(BCLog::BENCHMARK, "      - CalcCbTxMerkleRootMNList: %.2fms [%.2fs]\n",
-                     0.001 * (nTime5_2 - nTime5_1), nTimeMerkleMNL * 0.000001);
-        }
+                     0.001 * (nTime6_1 - nTime6), nTimeMerkleMNL * 0.000001);
 
-        int64_t nTime6 = GetTimeMicros();
-        if (opt_cbTx.has_value()) {
-            if (!CheckCbTxMerkleRoots(block, *opt_cbTx, pindex, m_qblockman, state)) {
-                // pass the state returned by the function above
-                return false;
+            if (opt_cbTx->nVersion >= CCbTx::Version::MERKLE_ROOT_QUORUMS) {
+                uint256 calculatedMerkleRootQuorums;
+                if (!CalcCbTxMerkleRootQuorums(block, pindex->pprev, m_qblockman, calculatedMerkleRootQuorums, state)) {
+                    // pass the state returned by the function above
+                    return false;
+                }
+                if (calculatedMerkleRootQuorums != opt_cbTx->merkleRootQuorums) {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-quorummerkleroot");
+                }
             }
-        }
 
-        int64_t nTime7 = GetTimeMicros();
-        nTimeMerkle += nTime7 - nTime6;
+            int64_t nTime6_2 = GetTimeMicros();
+            nTimeMerkleQuorums += nTime6_2 - nTime6_1;
 
-        LogPrint(BCLog::BENCHMARK, "      - CheckCbTxMerkleRoots: %.2fms [%.2fs]\n", 0.001 * (nTime7 - nTime6),
-                 nTimeMerkle * 0.000001);
+            LogPrint(BCLog::BENCHMARK, "      - CalcCbTxMerkleRootQuorums: %.2fms [%.2fs]\n",
+                     0.001 * (nTime6_2 - nTime6_1), nTimeMerkleQuorums * 0.000001);
 
-        if (opt_cbTx.has_value()) {
             if (!CheckCbTxBestChainlock(*opt_cbTx, pindex, m_clhandler, state)) {
                 // pass the state returned by the function above
                 return false;
             }
+
+            int64_t nTime6_3 = GetTimeMicros();
+            nTimeCbTxCL += nTime6_3 - nTime6_2;
+            LogPrint(BCLog::BENCHMARK, "      - CheckCbTxBestChainlock: %.2fms [%.2fs]\n",
+                     0.001 * (nTime6_3 - nTime6_2), nTimeCbTxCL * 0.000001);
         }
 
-        int64_t nTime8 = GetTimeMicros();
-        nTimeCbTxCL += nTime8 - nTime7;
-        LogPrint(BCLog::BENCHMARK, "      - CheckCbTxBestChainlock: %.2fms [%.2fs]\n", 0.001 * (nTime8 - nTime7),
-                 nTimeCbTxCL * 0.000001);
+        int64_t nTime7 = GetTimeMicros();
 
         if (!m_mnhfman.ProcessBlock(block, pindex, fJustCheck, state)) {
             // pass the state returned by the function above
             return false;
         }
 
-        int64_t nTime9 = GetTimeMicros();
-        nTimeMnehf += nTime9 - nTime8;
-        LogPrint(BCLog::BENCHMARK, "      - m_mnhfman: %.2fms [%.2fs]\n", 0.001 * (nTime9 - nTime8), nTimeMnehf * 0.000001);
+        int64_t nTime8 = GetTimeMicros();
+        nTimeMnehf += nTime8 - nTime7;
+        LogPrint(BCLog::BENCHMARK, "      - m_mnhfman: %.2fms [%.2fs]\n", 0.001 * (nTime8 - nTime7), nTimeMnehf * 0.000001);
 
         if (DeploymentActiveAfter(pindex, m_consensus_params, Consensus::DEPLOYMENT_V19) && bls::bls_legacy_scheme.load()) {
             // NOTE: The block next to the activation is the one that is using new rules.

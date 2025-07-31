@@ -65,9 +65,6 @@ template<> struct is_serializable_enum<CCbTx::Version> : std::true_type {};
 
 bool CheckCbTx(const CCbTx& cbTx, const CBlockIndex* pindexPrev, TxValidationState& state);
 
-// This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
-bool CheckCbTxMerkleRoots(const CBlock& block, const CCbTx& cbTx, const CBlockIndex* pindex,
-                          const llmq::CQuorumBlockProcessor& quorum_block_processor, BlockValidationState& state);
 bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev,
                                const llmq::CQuorumBlockProcessor& quorum_block_processor, uint256& merkleRootRet,
                                BlockValidationState& state);
