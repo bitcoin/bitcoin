@@ -197,20 +197,26 @@ constexpr XOnlyPubKey XOnlyPubKey::NUMS_H{
     []() consteval { return XOnlyPubKey{"50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"_hex_u8}; }(),
 };
 
-std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
+std::vector<CPubKey> XOnlyPubKey::GetCPubKeys() const
 {
-    std::vector<CKeyID> out;
-    // For now, use the old full pubkey-based key derivation logic. As it is indexed by
-    // Hash160(full pubkey), we need to return both a version prefixed with 0x02, and one
-    // with 0x03.
+    std::vector<CPubKey> out;
     unsigned char b[33] = {0x02};
     std::copy(m_keydata.begin(), m_keydata.end(), b + 1);
     CPubKey fullpubkey;
     fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
+    out.push_back(fullpubkey);
     b[0] = 0x03;
     fullpubkey.Set(b, b + 33);
-    out.push_back(fullpubkey.GetID());
+    out.push_back(fullpubkey);
+    return out;
+}
+
+std::vector<CKeyID> XOnlyPubKey::GetKeyIDs() const
+{
+    std::vector<CKeyID> out;
+    for (const CPubKey& pk : GetCPubKeys()) {
+        out.push_back(pk.GetID());
+    }
     return out;
 }
 
