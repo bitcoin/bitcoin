@@ -453,6 +453,10 @@ public:
     {
         return MakeSignalHandler(::uiInterface.ShowProgress.connect(fn));
     }
+    std::unique_ptr<Handler> handleSnapshotLoadProgress(SnapshotLoadProgressFn fn) override
+    {
+        return MakeSignalHandler(::uiInterface.SnapshotLoadProgress.connect(fn));
+    }
     std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
     {
         return MakeSignalHandler(::uiInterface.InitWallet.connect(fn));
