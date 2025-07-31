@@ -239,7 +239,7 @@ void MiniMiner::SanityCheck() const
                entry->second.GetModFeesWithAncestors() >= entry->second.GetModifiedFee();}));
     // None of the entries should be to-be-replaced transactions
     Assume(std::all_of(m_to_be_replaced.begin(), m_to_be_replaced.end(),
-        [&](const auto& txid){return m_entries_by_txid.find(txid) == m_entries_by_txid.end();}));
+        [&](const auto& txid){return !m_entries_by_txid.contains(txid);}));
 }
 
 void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)

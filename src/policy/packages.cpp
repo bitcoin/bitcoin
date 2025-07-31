@@ -26,7 +26,7 @@ bool IsTopoSortedPackage(const Package& txns, std::unordered_set<Txid, SaltedTxi
     // than its child.
     for (const auto& tx : txns) {
         for (const auto& input : tx->vin) {
-            if (later_txids.find(input.prevout.hash) != later_txids.end()) {
+            if (later_txids.contains(input.prevout.hash)) {
                 // The parent is a subsequent transaction in the package.
                 return false;
             }
@@ -62,7 +62,7 @@ bool IsConsistentPackage(const Package& txns)
             return false;
         }
         for (const auto& input : tx->vin) {
-            if (inputs_seen.find(input.prevout) != inputs_seen.end()) {
+            if (inputs_seen.contains(input.prevout)) {
                 // This input is also present in another tx in the package.
                 return false;
             }

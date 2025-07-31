@@ -166,7 +166,7 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
 
     LOCK(cs_args);
     std::list<SectionInfo> unrecognized = m_config_sections;
-    unrecognized.remove_if([](const SectionInfo& appeared){ return available_sections.find(appeared.m_name) != available_sections.end(); });
+    unrecognized.remove_if([](const SectionInfo& appeared){ return available_sections.contains(appeared.m_name); });
     return unrecognized;
 }
 
