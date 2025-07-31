@@ -5819,6 +5819,12 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                 --coins_left;
                 ++coins_processed;
 
+                // Show Snapshot Loading progress
+                if (coins_processed % 100000 == 0 || coins_left == 0) {
+                    double progress = static_cast<double>(coins_processed) / static_cast<double>(coins_count);
+                    GetNotifications().snapshotLoadProgress(progress);
+                }
+
                 if (coins_processed % 1000000 == 0) {
                     LogInfo("[snapshot] %d coins loaded (%.2f%%, %.2f MB)",
                         coins_processed,
