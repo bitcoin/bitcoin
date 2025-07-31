@@ -3030,7 +3030,7 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
         AddToCompactExtraTransactions(ptx);
     }
     for (const Txid& parent_txid : unique_parents) {
-        if (peer) AddKnownTx(*peer, parent_txid);
+        if (peer) AddKnownTx(*peer, parent_txid.ToUint256());
     }
 
     MaybePunishNodeForTx(nodeid, state);
@@ -4280,12 +4280,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         CTransactionRef ptx;
         vRecv >> TX_WITH_WITNESS(ptx);
-        const CTransaction& tx = *ptx;
 
-        const uint256& txid = ptx->GetHash();
-        const uint256& wtxid = ptx->GetWitnessHash();
+        const Txid& txid = ptx->GetHash();
+        const Wtxid& wtxid = ptx->GetWitnessHash();
 
-        const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
+        const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(*peer, hash);
 
         LOCK2(cs_main, m_tx_download_mutex);
@@ -4296,13 +4295,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
-                if (!m_mempool.exists(tx.GetHash())) {
+                if (!m_mempool.exists(txid)) {
                     LogPrintf("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
-                              tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
+                              txid.ToString(), wtxid.ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s (wtxid=%s) from peer=%d\n",
-                              tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
+                              txid.ToString(), wtxid.ToString(), pfrom.GetId());
+                    RelayTransaction(txid, wtxid);
                 }
             }
 

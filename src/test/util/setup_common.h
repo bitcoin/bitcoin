@@ -291,6 +291,8 @@ inline std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
 std::ostream& operator<<(std::ostream& os, const arith_uint256& num);
 std::ostream& operator<<(std::ostream& os, const uint160& num);
 std::ostream& operator<<(std::ostream& os, const uint256& num);
+std::ostream& operator<<(std::ostream& os, const Txid& txid);
+std::ostream& operator<<(std::ostream& os, const Wtxid& wtxid);
 // @}
 
 /**

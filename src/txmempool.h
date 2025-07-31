@@ -313,7 +313,7 @@ public:
             boost::multi_index::hashed_unique<
                 boost::multi_index::tag<index_by_wtxid>,
                 mempoolentry_wtxid,
-                SaltedTxidHasher
+                SaltedWtxidHasher
             >,
             // sorted by fee rate
             boost::multi_index::ordered_non_unique<
