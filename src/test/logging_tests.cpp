@@ -57,6 +57,7 @@ struct LogSetup : public BasicTestingSetup {
     bool prev_log_sourcelocations;
     std::unordered_map<BCLog::LogFlags, BCLog::Level> prev_category_levels;
     BCLog::Level prev_log_level;
+    BCLog::CategoryMask prev_category_mask;
 
     LogSetup() : prev_log_path{LogInstance().m_file_path},
                  tmp_log_path{m_args.GetDataDirBase() / "tmp_debug.log"},
@@ -66,7 +67,8 @@ struct LogSetup : public BasicTestingSetup {
                  prev_log_threadnames{LogInstance().m_log_threadnames},
                  prev_log_sourcelocations{LogInstance().m_log_sourcelocations},
                  prev_category_levels{LogInstance().CategoryLevels()},
-                 prev_log_level{LogInstance().LogLevel()}
+                 prev_log_level{LogInstance().LogLevel()},
+                 prev_category_mask{LogInstance().GetCategoryMask()}
     {
         LogInstance().m_file_path = tmp_log_path;
         LogInstance().m_reopen_file = true;
@@ -78,6 +80,7 @@ struct LogSetup : public BasicTestingSetup {
         LogInstance().m_log_sourcelocations = false;
 
         LogInstance().SetLogLevel(BCLog::Level::Debug);
+        LogInstance().DisableCategory(BCLog::LogFlags::ALL);
         LogInstance().SetCategoryLogLevel({});
         LogInstance().SetRateLimiting(nullptr);
     }
@@ -94,6 +97,8 @@ struct LogSetup : public BasicTestingSetup {
         LogInstance().SetLogLevel(prev_log_level);
         LogInstance().SetCategoryLogLevel(prev_category_levels);
         LogInstance().SetRateLimiting(nullptr);
+        LogInstance().DisableCategory(BCLog::LogFlags::ALL);
+        LogInstance().EnableCategory(BCLog::LogFlags{prev_category_mask});
     }
 };
 
@@ -136,6 +141,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 {
+    LogInstance().EnableCategory(BCLog::NET);
     LogPrintf("foo5: %s\n", "bar5");
     LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
@@ -155,6 +161,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
 {
+    LogInstance().EnableCategory(BCLog::NET);
     LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged
     LogDebug(BCLog::NET, "foo7: %s", "bar7");
     LogInfo("foo8: %s", "bar8");
@@ -199,8 +206,6 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
 {
     LogInstance().EnableCategory(BCLog::LogFlags::ALL);
-
-    LogInstance().SetLogLevel(BCLog::Level::Debug);
     LogInstance().SetCategoryLogLevel(/*category_str=*/"net", /*level_str=*/"info");
 
     // Global log level
