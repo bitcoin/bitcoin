@@ -204,7 +204,11 @@ public:
     /** Get the descriptor string form. */
     virtual std::string ToString(StringType type=StringType::PUBLIC) const = 0;
 
-    /** Get the descriptor string form including private data (if available in arg). */
+    /** Get the descriptor string form including private data (if available in arg).
+     *  If the private data is not available, the output string in the "out" parameter
+     *  will not contain any private key information,
+     *  and this function will return "false".
+     */
     virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
 
     /** Get the descriptor string form with the xpub at the last hardened derivation,
@@ -260,9 +264,9 @@ public:
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         std::string sub;
-        if (!m_provider->ToPrivateString(arg, sub)) return false;
+        bool has_priv_key{m_provider->ToPrivateString(arg, sub)};
         ret = "[" + OriginString(StringType::PUBLIC) + "]" + std::move(sub);
-        return true;
+        return has_priv_key;
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
@@ -329,7 +333,10 @@ public:
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         std::optional<CKey> key = GetPrivKey(arg);
-        if (!key) return false;
+        if (!key) {
+            ret = ToString(StringType::PUBLIC);
+            return false;
+        }
         ret = EncodeSecret(*key);
         return true;
     }
@@ -492,7 +499,10 @@ public:
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
         CExtKey key;
-        if (!GetExtKey(arg, key)) return false;
+        if (!GetExtKey(arg, key)) {
+            out = ToString(StringType::PUBLIC);
+            return false;
+        }
         out = EncodeExtKey(key) + FormatHDKeypath(m_path, /*apostrophe=*/m_apostrophe);
         if (IsRange()) {
             out += "/*";
@@ -710,17 +720,14 @@ public:
             std::string tmp;
             if (pubkey->ToPrivateString(arg, tmp)) {
                 any_privkeys = true;
-                out += tmp;
-            } else {
-                out += pubkey->ToString();
             }
+            out += tmp;
         }
         out += ")";
         out += FormatHDKeypath(m_path);
         if (IsRangedDerivation()) {
             out += "/*";
         }
-        if (!any_privkeys) out.clear();
         return any_privkeys;
     }
     bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const override
