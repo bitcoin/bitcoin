@@ -6,7 +6,7 @@
 #define BITCOIN_WALLET_RECEIVE_H
 
 #include <consensus/amount.h>
-#include <util/transaction_identifier.h>
+#include <primitives/transaction_identifier.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>

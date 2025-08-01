@@ -6,8 +6,8 @@
 #define BITCOIN_QT_TRANSACTIONRECORD_H
 
 #include <consensus/amount.h>
+#include <primitives/transaction_identifier.h>
 #include <uint256.h>
-#include <util/transaction_identifier.h>
 
 #include <QList>
 #include <QString>
