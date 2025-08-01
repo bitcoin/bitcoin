@@ -24,6 +24,14 @@ fi
 echo "Free disk space:"
 df -h
 
+# We force an install of linux-headers again here via $PACKAGES to fix any
+# kernel mismatch between a cached docker image and the underlying host.
+# This can happen occasionally on hosted runners if the runner image is updated.
+if [[ "$CONTAINER_NAME" == "ci_native_asan" ]]; then
+  $CI_RETRY_EXE apt-get update
+  ${CI_RETRY_EXE} bash -c "apt-get install --no-install-recommends --no-upgrade -y $PACKAGES"
+fi
+
 # What host to compile for. See also ./depends/README.md
 # Tests that need cross-compilation export the appropriate HOST.
 # Tests that run natively guess the host
@@ -137,6 +145,12 @@ cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target all $GOAL || (
 )
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
+if [ "$CI" = "true" ]; then
+  hit_rate=$(ccache -s | grep "Hits:" | head -1 | sed 's/.*(\(.*\)%).*/\1/')
+  if [ "${hit_rate%.*}" -lt 90 ]; then
+      echo "::notice title=low ccache hitrate::Ccache hit-rate in $CONTAINER_NAME was $hit_rate%"
+  fi
+fi
 du -sh "${DEPENDS_DIR}"/*/
 du -sh "${PREVIOUS_RELEASES_DIR}"
 
@@ -158,7 +172,7 @@ if [ "$RUN_UNIT_TESTS" = "true" ]; then
   CTEST_OUTPUT_ON_FAILURE=ON \
   ctest --test-dir "${BASE_BUILD_DIR}" \
     --stop-on-failure \
-    "${MAKEJOBS}" \
+    "${TESTJOBS}" \
     --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
 fi
 
@@ -171,7 +185,7 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
   "${BASE_BUILD_DIR}/test/functional/test_runner.py" \
-    --ci "${MAKEJOBS}" \
+    --ci "${TESTJOBS}" \
     --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" \
     --ansi \
     --combinedlogslen=99999999 \
