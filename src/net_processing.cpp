@@ -1399,9 +1399,7 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
 
     // Bootstrap quickly by guessing a parent of our best tip is the forking point.
     // Guessing wrong in either direction is not a problem.
-    // Also reset pindexLastCommonBlock after a snapshot was loaded, so that blocks after the snapshot will be prioritised for download.
-    if (state->pindexLastCommonBlock == nullptr ||
-        (snap_base && state->pindexLastCommonBlock->nHeight < snap_base->nHeight)) {
+    if (state->pindexLastCommonBlock == nullptr) {
         state->pindexLastCommonBlock = m_chainman.ActiveChain()[std::min(state->pindexBestKnownBlock->nHeight, m_chainman.ActiveChain().Height())];
     }
 
@@ -1410,6 +1408,12 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     state->pindexLastCommonBlock = LastCommonAncestor(state->pindexLastCommonBlock, state->pindexBestKnownBlock);
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
         return;
+
+    // If our tip has advanced beyond pindexLastCommonBlock, move it ahead to the tip. We don't need to download any blocks in between, and skipping ahead here
+    // allows us to determine nWindowEnd better.
+    if (m_chainman.ActiveHeight() > state->pindexLastCommonBlock->nHeight && state->pindexBestKnownBlock->GetAncestor(m_chainman.ActiveHeight()) == m_chainman.ActiveTip()) {
+        state->pindexLastCommonBlock = m_chainman.ActiveTip();
+    }
 
     const CBlockIndex *pindexWalk = state->pindexLastCommonBlock;
     // Never fetch further than the best block we know the peer has, or more than BLOCK_DOWNLOAD_WINDOW + 1 beyond the last
