@@ -47,8 +47,6 @@ extern "C"{
 #pragma warning (disable: 4146)
 #endif
 
-#if SPH_64
-
 static const sph_u64 IV512[] = {
 	SPH_C64(0x8081828384858687), SPH_C64(0x88898A8B8C8D8E8F),
 	SPH_C64(0x9091929394959697), SPH_C64(0x98999A9B9C9D9E9F),
@@ -59,8 +57,6 @@ static const sph_u64 IV512[] = {
 	SPH_C64(0xE0E1E2E3E4E5E6E7), SPH_C64(0xE8E9EAEBECEDEEEF),
 	SPH_C64(0xF0F1F2F3F4F5F6F7), SPH_C64(0xF8F9FAFBFCFDFEFF)
 };
-
-#endif
 
 #define XCAT(x, y)    XCAT_(x, y)
 #define XCAT_(x, y)   x ## y
@@ -154,8 +150,6 @@ static const sph_u64 IV512[] = {
 	expand2s_(qf, mf, hf, i16, I16_ ## i16, M16_ ## i16)
 #define expand2s_(qf, mf, hf, i16, ix, iy) \
 	expand2s_inner LPAR qf, mf, hf, i16, ix, iy)
-
-#if SPH_64
 
 #define sb0(x)    (((x) >> 1) ^ SPH_T64((x) << 3) \
                   ^ SPH_ROTL64(x,  4) ^ SPH_ROTL64(x, 37))
@@ -251,13 +245,9 @@ static const sph_u64 Kb_tab[] = {
 
 #endif
 
-#endif
-
 #define MAKE_W(tt, i0, op01, i1, op12, i2, op23, i3, op34, i4) \
 	tt((M(i0) ^ H(i0)) op01 (M(i1) ^ H(i1)) op12 (M(i2) ^ H(i2)) \
 	op23 (M(i3) ^ H(i3)) op34 (M(i4) ^ H(i4)))
-
-#if SPH_64
 
 #define Wb0    MAKE_W(SPH_T64,  5, -,  7, +, 10, +, 13, +, 14)
 #define Wb1    MAKE_W(SPH_T64,  6, -,  8, +, 11, +, 14, -, 15)
@@ -364,8 +354,6 @@ static const sph_u64 Kb_tab[] = {
 
 #define Qb(j)   (qt[j])
 
-#endif
-
 #define FOLD(type, mkQ, tt, rol, mf, qf, dhf)   do { \
 		type qt[32], xl, xh; \
 		mkQ; \
@@ -407,13 +395,7 @@ static const sph_u64 Kb_tab[] = {
 			+ ((xl >> 2) ^ qf(22) ^ qf(15))); \
 	} while (0)
 
-#if SPH_64
-
 #define FOLDb   FOLD(sph_u64, MAKE_Qb, SPH_T64, SPH_ROTL64, M, Qb, dH)
-
-#endif
-
-#if SPH_64
 
 static void
 compress_big(const unsigned char *data, const sph_u64 h[16], sph_u64 dh[16])
@@ -540,10 +522,6 @@ bmw64_close(sph_bmw_big_context *sc, unsigned ub, unsigned n,
 		sph_enc64le(out + 8 * u, h1[v]);
 }
 
-#endif
-
-#if SPH_64
-
 /* see sph_bmw.h */
 void
 sph_bmw512_init(void *cc)
@@ -572,8 +550,6 @@ sph_bmw512_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
 	bmw64_close(cc, ub, n, dst, 8);
 	sph_bmw512_init(cc);
 }
-
-#endif
 
 #ifdef __cplusplus
 }

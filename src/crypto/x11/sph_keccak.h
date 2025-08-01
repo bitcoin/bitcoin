@@ -62,9 +62,7 @@ typedef struct {
 	unsigned char buf[144];    /* first field, for alignment */
 	size_t ptr, lim;
 	union {
-#if SPH_64
 		sph_u64 wide[25];
-#endif
 		sph_u32 narrow[50];
 	} u;
 } sph_keccak_context;

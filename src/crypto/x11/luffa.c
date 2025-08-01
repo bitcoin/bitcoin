@@ -39,9 +39,7 @@
 extern "C"{
 #endif
 
-#if SPH_64_TRUE && !defined SPH_LUFFA_PARALLEL
 #define SPH_LUFFA_PARALLEL   1
-#endif
 
 #ifdef _MSC_VER
 #pragma warning (disable: 4146)

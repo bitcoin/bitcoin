@@ -43,7 +43,7 @@ extern "C"{
 #define SPH_SMALL_FOOTPRINT_BLAKE   1
 #endif
 
-#if SPH_64 && (SPH_SMALL_FOOTPRINT_BLAKE || !SPH_64_TRUE)
+#if SPH_SMALL_FOOTPRINT_BLAKE
 #define SPH_COMPACT_BLAKE_64   1
 #endif
 
@@ -51,16 +51,12 @@ extern "C"{
 #pragma warning (disable: 4146)
 #endif
 
-#if SPH_64
-
 static const sph_u64 IV512[8] = {
 	SPH_C64(0x6A09E667F3BCC908), SPH_C64(0xBB67AE8584CAA73B),
 	SPH_C64(0x3C6EF372FE94F82B), SPH_C64(0xA54FF53A5F1D36F1),
 	SPH_C64(0x510E527FADE682D1), SPH_C64(0x9B05688C2B3E6C1F),
 	SPH_C64(0x1F83D9ABFB41BD6B), SPH_C64(0x5BE0CD19137E2179)
 };
-
-#endif
 
 #if SPH_COMPACT_BLAKE_64
 
@@ -271,8 +267,6 @@ static const unsigned sigma[16][16] = {
 #define Mx_(n)      Mx__(n)
 #define Mx__(n)     M ## n
 
-#if SPH_64
-
 #define CBx(r, i)   CBx_(Z ## r ## i)
 #define CBx_(n)     CBx__(n)
 #define CBx__(n)    CB ## n
@@ -308,10 +302,6 @@ static const sph_u64 CB[16] = {
 };
 
 #endif
-
-#endif
-
-#if SPH_64
 
 #define GB(m0, m1, c0, c1, a, b, c, d)   do { \
 		a = SPH_T64(a + b + (m0 ^ c1)); \
@@ -359,10 +349,6 @@ static const sph_u64 CB[16] = {
 	} while (0)
 
 #endif
-
-#endif
-
-#if SPH_64
 
 #define DECL_STATE64 \
 	sph_u64 H0, H1, H2, H3, H4, H5, H6, H7; \
@@ -520,10 +506,6 @@ static const sph_u64 CB[16] = {
 
 #endif
 
-#endif
-
-#if SPH_64
-
 static const sph_u64 salt_zero_big[4] = { 0, 0, 0, 0 };
 
 static void
@@ -627,10 +609,6 @@ blake64_close(sph_blake_big_context *sc,
 		sph_enc64be(out + (k << 3), sc->H[k]);
 }
 
-#endif
-
-#if SPH_64
-
 /* see sph_blake.h */
 void
 sph_blake512_init(void *cc)
@@ -659,8 +637,6 @@ sph_blake512_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
 	blake64_close(cc, ub, n, dst, 8);
 	sph_blake512_init(cc);
 }
-
-#endif
 
 #ifdef __cplusplus
 }

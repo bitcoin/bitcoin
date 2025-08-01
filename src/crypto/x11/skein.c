@@ -48,8 +48,6 @@ extern "C"{
 #pragma warning (disable: 4146)
 #endif
 
-#if SPH_64
-
 /*
  * M9_ ## s ## _ ## i  evaluates to s+i mod 9 (0 <= s <= 18, 0 <= i <= 7).
  */
@@ -704,9 +702,6 @@ sph_skein512_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
 	skein_big_close(cc, ub, n, dst, 64);
 	sph_skein512_init(cc);
 }
-
-#endif
-
 
 #ifdef __cplusplus
 }

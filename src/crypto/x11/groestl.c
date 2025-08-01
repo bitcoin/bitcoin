@@ -43,22 +43,6 @@ extern "C"{
 #define SPH_SMALL_FOOTPRINT_GROESTL   1
 #endif
 
-/*
- * Apparently, the 32-bit-only version is not faster than the 64-bit
- * version unless using the "small footprint" code on a 32-bit machine.
- */
-#if !defined SPH_GROESTL_64
-#if SPH_SMALL_FOOTPRINT_GROESTL && !SPH_64_TRUE
-#define SPH_GROESTL_64   0
-#else
-#define SPH_GROESTL_64   1
-#endif
-#endif
-
-#if !SPH_64
-#undef SPH_GROESTL_64
-#endif
-
 #ifdef _MSC_VER
 #pragma warning (disable: 4146)
 #endif
@@ -99,7 +83,6 @@ extern "C"{
 #define QC32up(j, r)   SPH_C32(0xFFFFFFFF)
 #define QC32dn(j, r)   (((sph_u32)(r) << 24) ^ SPH_T32(~((sph_u32)(j) << 24)))
 
-#if SPH_64
 #define C64e(x)     ((SPH_C64(x) >> 56) \
                     | ((SPH_C64(x) >> 40) & SPH_C64(0x000000000000FF00)) \
                     | ((SPH_C64(x) >> 24) & SPH_C64(0x0000000000FF0000)) \
@@ -121,7 +104,6 @@ extern "C"{
 #define R64         SPH_ROTL64
 #define PC64(j, r)  ((sph_u64)((j) + (r)))
 #define QC64(j, r)  (((sph_u64)(r) << 56) ^ SPH_T64(~((sph_u64)(j) << 56)))
-#endif
 
 #else
 
@@ -141,7 +123,6 @@ extern "C"{
 #define QC32up(j, r)   SPH_C32(0xFFFFFFFF)
 #define QC32dn(j, r)   ((sph_u32)(r) ^ SPH_T32(~(sph_u32)(j)))
 
-#if SPH_64
 #define C64e(x)     SPH_C64(x)
 #define dec64e_aligned   sph_dec64be_aligned
 #define enc64e           sph_enc64be
@@ -156,11 +137,8 @@ extern "C"{
 #define R64         SPH_ROTR64
 #define PC64(j, r)  ((sph_u64)((j) + (r)) << 56)
 #define QC64(j, r)  ((sph_u64)(r) ^ SPH_T64(~(sph_u64)(j)))
-#endif
 
 #endif
-
-#if SPH_GROESTL_64
 
 static const sph_u64 T0[] = {
 	C64e(0xc632f4a5f497a5c6), C64e(0xf86f978497eb84f8),
@@ -687,8 +665,6 @@ static const sph_u64 T3[] = {
 	C64e(0xf6cb7b7b3d46cb46), C64e(0x4bfca8a8b71ffc1f),
 	C64e(0xdad66d6d0c61d661), C64e(0x583a2c2c624e3a4e)
 };
-
-#endif
 
 static const sph_u64 T4[] = {
 	C64e(0xf497a5c6c632f4a5), C64e(0x97eb84f8f86f9784),
@@ -2457,7 +2433,6 @@ groestl_big_init(sph_groestl_big_context *sc, unsigned out_size)
 	size_t u;
 
 	sc->ptr = 0;
-#if SPH_GROESTL_64
 	for (u = 0; u < 15; u ++)
 		sc->state.wide[u] = 0;
 #if USE_LE
@@ -2466,22 +2441,7 @@ groestl_big_init(sph_groestl_big_context *sc, unsigned out_size)
 #else
 	sc->state.wide[15] = (sph_u64)out_size;
 #endif
-#else
-	for (u = 0; u < 31; u ++)
-		sc->state.narrow[u] = 0;
-#if USE_LE
-	sc->state.narrow[31] = ((sph_u32)(out_size & 0xFF) << 24)
-		| ((sph_u32)(out_size & 0xFF00) << 8);
-#else
-	sc->state.narrow[31] = (sph_u32)out_size;
-#endif
-#endif
-#if SPH_64
 	sc->count = 0;
-#else
-	sc->count_high = 0;
-	sc->count_low = 0;
-#endif
 }
 
 static void
@@ -2513,12 +2473,7 @@ groestl_big_core(sph_groestl_big_context *sc, const void *data, size_t len)
 		len -= clen;
 		if (ptr == sizeof sc->buf) {
 			COMPRESS_BIG;
-#if SPH_64
 			sc->count ++;
-#else
-			if ((sc->count_low = SPH_T32(sc->count_low + 1)) == 0)
-				sc->count_high = SPH_T32(sc->count_high + 1);
-#endif
 			ptr = 0;
 		}
 	}
@@ -2533,11 +2488,7 @@ groestl_big_close(sph_groestl_big_context *sc,
 	unsigned char *buf;
 	unsigned char pad[136];
 	size_t ptr, pad_len, u;
-#if SPH_64
 	sph_u64 count;
-#else
-	sph_u32 count_high, count_low;
-#endif
 	unsigned z;
 	DECL_STATE_BIG
 
@@ -2547,42 +2498,18 @@ groestl_big_close(sph_groestl_big_context *sc,
 	pad[0] = ((ub & -z) | z) & 0xFF;
 	if (ptr < 120) {
 		pad_len = 128 - ptr;
-#if SPH_64
 		count = SPH_T64(sc->count + 1);
-#else
-		count_low = SPH_T32(sc->count_low + 1);
-		count_high = SPH_T32(sc->count_high);
-		if (count_low == 0)
-			count_high = SPH_T32(count_high + 1);
-#endif
 	} else {
 		pad_len = 256 - ptr;
-#if SPH_64
 		count = SPH_T64(sc->count + 2);
-#else
-		count_low = SPH_T32(sc->count_low + 2);
-		count_high = SPH_T32(sc->count_high);
-		if (count_low <= 1)
-			count_high = SPH_T32(count_high + 1);
-#endif
 	}
 	memset(pad + 1, 0, pad_len - 9);
-#if SPH_64
 	sph_enc64be(pad + pad_len - 8, count);
-#else
-	sph_enc64be(pad + pad_len - 8, count_high);
-	sph_enc64be(pad + pad_len - 4, count_low);
-#endif
 	groestl_big_core(sc, pad, pad_len);
 	READ_STATE_BIG(sc);
 	FINAL_BIG;
-#if SPH_GROESTL_64
 	for (u = 0; u < 8; u ++)
 		enc64e(pad + (u << 3), H[u + 8]);
-#else
-	for (u = 0; u < 16; u ++)
-		enc32e(pad + (u << 2), H[u + 16]);
-#endif
 	memcpy(dst, pad + 64 - out_len, out_len);
 	groestl_big_init(sc, (unsigned)out_len << 3);
 }

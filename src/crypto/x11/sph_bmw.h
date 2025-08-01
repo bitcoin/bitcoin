@@ -43,16 +43,10 @@ extern "C"{
 #include <stddef.h>
 #include "sph_types.h"
 
-#if SPH_64
-
 /**
  * Output size (in bits) for BMW-512.
  */
 #define SPH_SIZE_bmw512   512
-
-#endif
-
-#if SPH_64
 
 /**
  * This structure is a context for BMW-384 and BMW-512 computations:
@@ -76,10 +70,6 @@ typedef struct {
  * identical to the common <code>sph_bmw_small_context</code>.
  */
 typedef sph_bmw_big_context sph_bmw512_context;
-
-#endif
-
-#if SPH_64
 
 /**
  * Initialize a BMW-512 context. This process performs no memory allocation.
@@ -125,8 +115,6 @@ void sph_bmw512_close(void *cc, void *dst);
  */
 void sph_bmw512_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
-
-#endif
 
 #ifdef __cplusplus
 }
