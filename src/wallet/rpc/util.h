@@ -11,7 +11,9 @@
 
 #include <any>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class JSONRPCRequest;
@@ -42,7 +44,7 @@ bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string&
  * Ensures that a wallet name is specified across the endpoint and wallet_name.
  * Throws `RPC_INVALID_PARAMETER` if none or different wallet names are specified.
  */
-std::string EnsureUniqueWalletName(const JSONRPCRequest& request, const std::string* wallet_name);
+std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<std::string_view> wallet_name);
 
 void EnsureWalletIsUnlocked(const CWallet&);
 WalletContext& EnsureWalletContext(const std::any& context);
