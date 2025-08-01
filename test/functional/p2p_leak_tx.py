@@ -15,7 +15,7 @@ from test_framework.wallet import MiniWallet
 import time
 
 class P2PNode(P2PDataStore):
-    def on_inv(self, msg):
+    def on_inv(self, message):
         pass
 
 
@@ -26,6 +26,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
     def run_test(self):
         self.gen_node = self.nodes[0]  # The block and tx generating node
         self.miniwallet = MiniWallet(self.gen_node)
+        self.mocktime = int(time.time())
 
         self.test_tx_in_block()
         self.test_notfound_on_replaced_tx()
@@ -33,20 +34,20 @@ class P2PLeakTxTest(BitcoinTestFramework):
 
     def test_tx_in_block(self):
         self.log.info("Check that a transaction in the last block is uploaded (beneficial for compact block relay)")
+        self.gen_node.setmocktime(self.mocktime)
         inbound_peer = self.gen_node.add_p2p_connection(P2PNode())
 
         self.log.debug("Generate transaction and block")
         inbound_peer.last_message.pop("inv", None)
 
-        self.gen_node.setmocktime(int(time.time())) # pause time based activities
         wtxid = self.miniwallet.send_self_transfer(from_node=self.gen_node)["wtxid"]
         rawmp = self.gen_node.getrawmempool(False, True)
         pi = self.gen_node.getpeerinfo()[0]
         assert_equal(rawmp["mempool_sequence"], 2) # our tx cause mempool activity
         assert_equal(pi["last_inv_sequence"], 1) # that is after the last inv
         assert_equal(pi["inv_to_send"], 1) # and our tx has been queued
-        self.gen_node.setmocktime(0)
-
+        self.mocktime += 120
+        self.gen_node.setmocktime(self.mocktime)
         inbound_peer.wait_until(lambda: "inv" in inbound_peer.last_message and inbound_peer.last_message.get("inv").inv[0].hash == int(wtxid, 16))
 
         rawmp = self.gen_node.getrawmempool(False, True)
@@ -65,15 +66,20 @@ class P2PLeakTxTest(BitcoinTestFramework):
 
     def test_notfound_on_replaced_tx(self):
         self.gen_node.disconnect_p2ps()
+        self.gen_node.setmocktime(self.mocktime)
         inbound_peer = self.gen_node.add_p2p_connection(P2PTxInvStore())
 
         self.log.info("Transaction tx_a is broadcast")
         tx_a = self.miniwallet.send_self_transfer(from_node=self.gen_node)
+        self.mocktime += 120
+        self.gen_node.setmocktime(self.mocktime)
         inbound_peer.wait_for_broadcast(txns=[tx_a["wtxid"]])
 
         tx_b = tx_a["tx"]
         tx_b.vout[0].nValue -= 9000
         self.gen_node.sendrawtransaction(tx_b.serialize().hex())
+        self.mocktime += 120
+        self.gen_node.setmocktime(self.mocktime)
         inbound_peer.wait_until(lambda: "tx" in inbound_peer.last_message and inbound_peer.last_message.get("tx").tx.wtxid_hex == tx_b.wtxid_hex)
 
         self.log.info("Re-request of tx_a after replacement is answered with notfound")
