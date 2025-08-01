@@ -37,7 +37,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         self.log.debug("Generate transaction and block")
         inbound_peer.last_message.pop("inv", None)
         wtxid = self.miniwallet.send_self_transfer(from_node=self.gen_node)["wtxid"]
-        inbound_peer.wait_until(lambda: "inv" in inbound_peer.last_message and inbound_peer.last_message.get("inv").inv[0].hash == int(wtxid, 16))
+        inbound_peer.wait_until(lambda: "inv" in inbound_peer.last_message and inbound_peer.last_message.get("inv").inv[0].hash == int(wtxid, 16), timeout=120)
         want_tx = msg_getdata(inv=inbound_peer.last_message.get("inv").inv)
         self.generate(self.gen_node, 1)
 
@@ -57,7 +57,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         tx_b = tx_a["tx"]
         tx_b.vout[0].nValue -= 9000
         self.gen_node.sendrawtransaction(tx_b.serialize().hex())
-        inbound_peer.wait_until(lambda: "tx" in inbound_peer.last_message and inbound_peer.last_message.get("tx").tx.wtxid_hex == tx_b.wtxid_hex)
+        inbound_peer.wait_until(lambda: "tx" in inbound_peer.last_message and inbound_peer.last_message.get("tx").tx.wtxid_hex == tx_b.wtxid_hex, timeout=120)
 
         self.log.info("Re-request of tx_a after replacement is answered with notfound")
         req_vec = [
@@ -83,24 +83,23 @@ class P2PLeakTxTest(BitcoinTestFramework):
         self.log.info("Running test up to {} times.".format(MAX_REPEATS))
         for i in range(MAX_REPEATS):
             self.log.info('Run repeat {}'.format(i + 1))
-            txid = self.miniwallet.send_self_transfer(from_node=self.gen_node)["wtxid"]
+            wtxid = self.miniwallet.send_self_transfer(from_node=self.gen_node)["wtxid"]
 
             want_tx = msg_getdata()
-            want_tx.inv.append(CInv(t=MSG_TX, h=int(txid, 16)))
+            want_tx.inv.append(CInv(t=MSG_WTX, h=int(wtxid, 16)))
             with p2p_lock:
                 inbound_peer.last_message.pop('notfound', None)
             inbound_peer.send_and_ping(want_tx)
-
             if inbound_peer.last_message.get('notfound'):
-                self.log.debug('tx {} was not yet announced to us.'.format(txid))
+                self.log.debug('tx {} was not yet announced to us.'.format(wtxid))
                 self.log.debug("node has responded with a notfound message. End test.")
-                assert_equal(inbound_peer.last_message['notfound'].vec[0].hash, int(txid, 16))
+                assert_equal(inbound_peer.last_message['notfound'].vec[0].hash, int(wtxid, 16))
                 with p2p_lock:
                     inbound_peer.last_message.pop('notfound')
                 break
             else:
-                self.log.debug('tx {} was already announced to us. Try test again.'.format(txid))
-                assert int(txid, 16) in [inv.hash for inv in inbound_peer.last_message['inv'].inv]
+                self.log.debug('tx {} was already announced to us. Try test again.'.format(wtxid))
+                assert int(wtxid, 16) in [inv.hash for inv in inbound_peer.last_message['inv'].inv]
 
 
 if __name__ == '__main__':
