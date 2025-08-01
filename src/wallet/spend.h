@@ -83,6 +83,8 @@ struct CoinFilterParams {
     bool include_immature_coinbase{false};
     // By default, skip locked UTXOs
     bool skip_locked{true};
+    // Whether or not to care about the tx version
+    bool track_version{true}; // only used by AvailableCoinsListUnspent
 };
 
 /**

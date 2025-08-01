@@ -30,6 +30,7 @@
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
+#include <policy/truc_policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <psbt.h>
@@ -1388,6 +1389,36 @@ void CWallet::transactionAddedToMempool(const CTransactionRef& tx) {
                 return wtx.mempool_conflicts.insert(txid).second ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
             });
         }
+
+    }
+
+    if (tx->version == TRUC_VERSION) {
+        // Unconfirmed TRUC transactions are only allowed a 1-parent-1-child topology.
+        // For any unconfirmed v3 parents (there should be a maximum of 1 except in reorgs),
+        // record this child so the wallet doesn't try to spend any other outputs
+        for (const CTxIn& tx_in : tx->vin) {
+            auto parent_it = mapWallet.find(tx_in.prevout.hash);
+            if (parent_it != mapWallet.end()) {
+                CWalletTx& parent_tx = parent_it->second;
+                if (parent_tx.isUnconfirmed()) {
+                    parent_tx.truc_child_in_mempool = tx->GetHash();
+                    // Find all other txs in our wallet that spend utxos from this parent
+                    // so that we can mark them as mempool-conflicted by this new tx.
+                    // Even though these siblings do not spend the same utxos, they can't
+                    // be present in the mempool at the same time because of TRUC policy rules
+                    for (long unsigned int i = 0; i < parent_tx.tx->vout.size(); i++) {
+                        for (auto range = mapTxSpends.equal_range(COutPoint(parent_tx.tx->GetHash(), i)); range.first != range.second; range.first++) {
+                            const Txid& sibling_txid = range.first->second;
+                            // Skip the recently added tx
+                            if (sibling_txid == txid) continue;
+                            RecursiveUpdateTxState(/*batch=*/nullptr, sibling_txid, [&txid](CWalletTx& parent_tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+                                return parent_tx.mempool_conflicts.insert(txid).second ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1439,6 +1470,31 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
             RecursiveUpdateTxState(/*batch=*/nullptr, spent_id, [&txid](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
                 return wtx.mempool_conflicts.erase(txid) ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
             });
+        }
+    }
+
+    if (tx->version == TRUC_VERSION) {
+        // unset truc_child_in_mempool to make it possible to spend from
+        // this again. If this tx was replaced by another
+        // child of the same parent, transactionAddedToMempool
+        // will update truc_child_in_mempool
+        for (const CTxIn& tx_in : tx->vin) {
+            auto wallet_it = mapWallet.find(tx_in.prevout.hash);
+            if (wallet_it != mapWallet.end()) {
+                CWalletTx& wtx = wallet_it->second;
+                if (wtx.truc_child_in_mempool == tx->GetHash()) {
+                    wtx.truc_child_in_mempool = std::nullopt;
+                    // Find all wallet transactions that spend utxos from this tx
+                    for (long unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
+                        for (auto range = mapTxSpends.equal_range(COutPoint(wtx.tx->GetHash(), i)); range.first != range.second; range.first++) {
+                            const Txid& spent_id = range.first->second;
+                            RecursiveUpdateTxState(/*batch=*/nullptr, spent_id, [&txid](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
+                                return wtx.mempool_conflicts.erase(txid) ? TxUpdate::CHANGED : TxUpdate::UNCHANGED;
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
 }
