@@ -60,9 +60,9 @@ void PSBTOperationsDialog::openWithPSBT(PartiallySignedTransaction psbtx)
     if (m_wallet_model) {
         size_t n_could_sign;
         const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, &n_could_sign, m_transaction_data, complete)};
-        if (err) {
+        if (err != PSBTResult::OK) {
             showStatus(tr("Failed to load transaction: %1")
-                           .arg(QString::fromStdString(PSBTErrorString(*err).translated)),
+                           .arg(QString::fromStdString(PSBTResultString(err).translated)),
                        StatusLevel::ERR);
             return;
         }
@@ -85,9 +85,9 @@ void PSBTOperationsDialog::signTransaction()
 
     const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete)};
 
-    if (err) {
+    if (err != PSBTResult::OK) {
         showStatus(tr("Failed to sign transaction: %1")
-            .arg(QString::fromStdString(PSBTErrorString(*err).translated)), StatusLevel::ERR);
+            .arg(QString::fromStdString(PSBTResultString(err).translated)), StatusLevel::ERR);
         return;
     }
 
@@ -253,7 +253,7 @@ size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &p
     bool complete;
     const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/false, &n_signed, m_transaction_data, complete)};
 
-    if (err) {
+    if (err != PSBTResult::OK) {
         return 0;
     }
     return n_signed;
