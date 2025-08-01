@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_DUMP_H
 
 #include <util/fs.h>
+#include <util/result.h>
 
 #include <string>
 #include <vector>
@@ -16,8 +17,8 @@ class ArgsManager;
 namespace wallet {
 class WalletDatabase;
 
-bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& error);
-bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::path& wallet_path, bilingual_str& error, std::vector<bilingual_str>& warnings);
+util::Result<void> DumpWallet(const ArgsManager& args, WalletDatabase& db);
+util::Result<void> CreateFromDump(const ArgsManager& args, const std::string& name, const fs::path& wallet_path);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_DUMP_H
