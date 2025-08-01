@@ -143,6 +143,45 @@ The GUI will be able to encode addresses in QR codes unless this feature is expl
 
 Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` option to disable this feature in order to compile the GUI.
 
+### Alpine
+
+#### Dependency Build Instructions
+
+Build requirements:
+
+    apk add build-base cmake linux-headers pkgconf python3
+
+Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
+
+    apk add libevent-dev boost-dev
+
+SQLite is required for the descriptor wallet:
+
+    apk add sqlite-dev
+
+To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+
+ZMQ dependencies (provides ZMQ API):
+
+    apk add zeromq-dev
+
+User-Space, Statically Defined Tracing (USDT) is not supported or tested on Alpine Linux at this time.
+
+GUI dependencies:
+
+Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
+the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
+
+    apk add qt6-qtbase-dev  qt6-qttools-dev
+
+For Qt 6.5 and later, the `xcb-util-cursor` package must be installed at runtime.
+
+The GUI will be able to encode addresses in QR codes unless this feature is explicitly disabled. To install libqrencode, run:
+
+    apk add libqrencode-dev
+
+Otherwise, if you don't need QR encoding support, use the `-DWITH_QRENCODE=OFF` option to disable this feature in order to compile the GUI.
+
 ## Dependencies
 
 See [dependencies.md](dependencies.md) for a complete overview, and
