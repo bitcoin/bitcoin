@@ -38,6 +38,7 @@
 #include <node/kernel_notifications.h>
 #include <node/transaction.h>
 #include <node/types.h>
+#include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -356,6 +357,11 @@ public:
         return ::tableRPC.execute(req);
     }
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
+    bool loadSnapshot(AutoFile& coins_file, const SnapshotMetadata& metadata, bool in_memory) override
+    {
+        auto activation_result{chainman().ActivateSnapshot(coins_file, metadata, in_memory)};
+        return activation_result.has_value();
+    }
     std::optional<Coin> getUnspentOutput(const COutPoint& output) override
     {
         LOCK(::cs_main);
@@ -384,6 +390,10 @@ public:
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeSignalHandler(::uiInterface.ShowProgress_connect(fn));
+    }
+    std::unique_ptr<Handler> handleSnapshotLoadProgress(SnapshotLoadProgressFn fn) override
+    {
+        return MakeSignalHandler(::uiInterface.SnapshotLoadProgress_connect(fn));
     }
     std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
     {
