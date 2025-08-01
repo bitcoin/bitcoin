@@ -825,7 +825,7 @@ public:
     }
 
     template<typename CTx>
-    std::optional<std::string> ToString(const CTx& ctx) const {
+    std::string ToString(const CTx& ctx, bool* has_priv_key = nullptr) const {
         // To construct the std::string representation for a Miniscript object, we use
         // the TreeEvalMaybe algorithm. The State is a boolean: whether the parent node is a
         // wrapper. If so, non-wrapper expressions must be prefixed with a ":".
@@ -838,10 +838,18 @@ public:
                     (node.fragment == Fragment::OR_I && node.subs[0]->fragment == Fragment::JUST_0) ||
                     (node.fragment == Fragment::OR_I && node.subs[1]->fragment == Fragment::JUST_0));
         };
+        auto toString = [&ctx, &has_priv_key](Key key) -> std::string {
+            bool fragment_has_priv_key{false};
+            auto key_str{ctx.ToString(key, fragment_has_priv_key)};
+            if (has_priv_key != nullptr) {
+                *has_priv_key = *has_priv_key || fragment_has_priv_key;
+            }
+            return key_str;
+        };
         // The upward function computes for a node, given whether its parent is a wrapper,
         // and the string representations of its child nodes, the string representation of the node.
         const bool is_tapscript{IsTapscript(m_script_ctx)};
-        auto upfn = [&ctx, is_tapscript](bool wrapped, const Node& node, std::span<std::string> subs) -> std::optional<std::string> {
+        auto upfn = [is_tapscript, &toString](bool wrapped, const Node& node, std::span<std::string> subs) -> std::string {
             std::string ret = wrapped ? ":" : "";
 
             switch (node.fragment) {
@@ -850,15 +858,13 @@ public:
                 case Fragment::WRAP_C:
                     if (node.subs[0]->fragment == Fragment::PK_K) {
                         // pk(K) is syntactic sugar for c:pk_k(K)
-                        auto key_str = ctx.ToString(node.subs[0]->keys[0]);
-                        if (!key_str) return {};
-                        return std::move(ret) + "pk(" + std::move(*key_str) + ")";
+                        auto key_str = toString(node.subs[0]->keys[0]);
+                        return std::move(ret) + "pk(" + std::move(key_str) + ")";
                     }
                     if (node.subs[0]->fragment == Fragment::PK_H) {
                         // pkh(K) is syntactic sugar for c:pk_h(K)
-                        auto key_str = ctx.ToString(node.subs[0]->keys[0]);
-                        if (!key_str) return {};
-                        return std::move(ret) + "pkh(" + std::move(*key_str) + ")";
+                        auto key_str = toString(node.subs[0]->keys[0]);
+                        return std::move(ret) + "pkh(" + std::move(key_str) + ")";
                     }
                     return "c" + std::move(subs[0]);
                 case Fragment::WRAP_D: return "d" + std::move(subs[0]);
@@ -877,14 +883,12 @@ public:
             }
             switch (node.fragment) {
                 case Fragment::PK_K: {
-                    auto key_str = ctx.ToString(node.keys[0]);
-                    if (!key_str) return {};
-                    return std::move(ret) + "pk_k(" + std::move(*key_str) + ")";
+                    auto key_str = toString(node.keys[0]);
+                    return std::move(ret) + "pk_k(" + std::move(key_str) + ")";
                 }
                 case Fragment::PK_H: {
-                    auto key_str = ctx.ToString(node.keys[0]);
-                    if (!key_str) return {};
-                    return std::move(ret) + "pk_h(" + std::move(*key_str) + ")";
+                    auto key_str = toString(node.keys[0]);
+                    return std::move(ret) + "pk_h(" + std::move(key_str) + ")";
                 }
                 case Fragment::AFTER: return std::move(ret) + "after(" + util::ToString(node.k) + ")";
                 case Fragment::OLDER: return std::move(ret) + "older(" + util::ToString(node.k) + ")";
@@ -908,9 +912,8 @@ public:
                     CHECK_NONFATAL(!is_tapscript);
                     auto str = std::move(ret) + "multi(" + util::ToString(node.k);
                     for (const auto& key : node.keys) {
-                        auto key_str = ctx.ToString(key);
-                        if (!key_str) return {};
-                        str += "," + std::move(*key_str);
+                        auto key_str = toString(key);
+                        str += "," + std::move(key_str);
                     }
                     return std::move(str) + ")";
                 }
@@ -918,9 +921,8 @@ public:
                     CHECK_NONFATAL(is_tapscript);
                     auto str = std::move(ret) + "multi_a(" + util::ToString(node.k);
                     for (const auto& key : node.keys) {
-                        auto key_str = ctx.ToString(key);
-                        if (!key_str) return {};
-                        str += "," + std::move(*key_str);
+                        auto key_str = toString(key);
+                        str += "," + std::move(key_str);
                     }
                     return std::move(str) + ")";
                 }
@@ -936,7 +938,7 @@ public:
             assert(false);
         };
 
-        return TreeEvalMaybe<std::string>(false, downfn, upfn);
+        return TreeEval<std::string>(false, downfn, upfn);
     }
 
 private:
