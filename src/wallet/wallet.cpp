@@ -1710,6 +1710,10 @@ uint64_t CWallet::GetWalletFlags() const
     return m_wallet_flags;
 }
 
+void CWallet::LoadHmacBIP388(std::string policy_name, std::string hmac) {
+    m_bip388 = {.name = policy_name, .hmac = hmac};
+}
+
 void CWallet::MaybeUpdateBirthTime(int64_t time)
 {
     int64_t birthtime = m_birth_time.load();
@@ -2580,6 +2584,44 @@ util::Result<void> CWallet::DisplayAddress(const CTxDestination& dest)
         return signer_spk_man->DisplayAddress(dest, *signer);
     }
     return util::Error{_("There is no ScriptPubKeyManager for this address")};
+}
+
+util::Result<std::string> CWallet::RegisterPolicy(std::optional<std::string> name)
+{
+    // TODO: use wallet name as default
+    const std::string policy_name{name.has_value() ? *name : "Core"};
+
+    // TODO: derive policy from descriptor (fail if not possible)
+    const std::string descriptor_template{"wsh(multi(@0,@1))"};
+
+    // TODO: extract key information
+    const std::vector<std::string> keys_info{
+            "[00000001/47h/1h/0h]tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H",
+            "[00000001/47h/1h/0h]tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
+    };
+
+    for (const auto& spk_man : GetActiveScriptPubKeyMans()) {
+        auto signer_spk_man = dynamic_cast<ExternalSignerScriptPubKeyMan *>(spk_man);
+        if (signer_spk_man == nullptr) {
+            continue;
+        }
+        auto signer{ExternalSignerScriptPubKeyMan::GetExternalSigner()};
+        if (!signer) return util::ErrorString(signer).original;
+
+        util::Result<std::string> res{signer_spk_man->RegisterPolicy(*signer, policy_name, descriptor_template, keys_info)};
+
+        if (res) {
+            // Store hmac in wallet
+            WalletBatch batch(GetDatabase());
+            if(!batch.WriteHmacBip388(policy_name, *res)) {
+                return util::Error{_("Failed to store BIP388 hmac in wallet database.")};
+            };
+            LoadHmacBIP388(policy_name, *res);
+        }
+
+        return res;
+    }
+    return util::Error{_("Could not find ExternalSignerScriptPubKeyMananager")};
 }
 
 void CWallet::LoadLockedCoin(const COutPoint& coin, bool persistent)
