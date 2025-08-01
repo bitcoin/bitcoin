@@ -11,6 +11,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
 
@@ -437,7 +438,9 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([10,11])
         tx_from_wallet = self.test_sendall_success(sendall_args = [self.remainder_target])
 
-        assert_greater_than(tx_from_wallet["decoded"]["locktime"], tx_from_wallet["blockheight"] - 100)
+        # the locktime should be within 100 blocks of the
+        # block height
+        assert_greater_than_or_equal(tx_from_wallet["decoded"]["locktime"], tx_from_wallet["blockheight"] - 100)
 
         self.log.info("Testing sendall does not do anti-fee-sniping when locktime is specified")
         self.add_utxos([10,11])
