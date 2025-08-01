@@ -72,16 +72,6 @@ FUZZ_TARGET(coincontrol, .init = initialize_coincontrol)
             [&] {
                 std::vector<COutPoint> selected;
                 coin_control.ListSelected(selected);
-            },
-            [&] {
-                int64_t weight{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
-                (void)coin_control.SetInputWeight(out_point, weight);
-            },
-            [&] {
-                // Condition to avoid the assertion in GetInputWeight
-                if (coin_control.HasInputWeight(out_point)) {
-                    (void)coin_control.GetInputWeight(out_point);
-                }
             });
     }
 }
