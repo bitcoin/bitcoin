@@ -58,9 +58,6 @@ static const sph_u64 IV512[] = {
 	SPH_C64(0xF0F1F2F3F4F5F6F7), SPH_C64(0xF8F9FAFBFCFDFEFF)
 };
 
-#define XCAT(x, y)    XCAT_(x, y)
-#define XCAT_(x, y)   x ## y
-
 #define LPAR   (
 
 #define I16_16    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
@@ -120,36 +117,6 @@ static const sph_u64 IV512[] = {
 #define add_elt_s(mf, hf, j0m, j1m, j3m, j4m, j7m, j10m, j11m, j16) \
 	(SPH_T32(SPH_ROTL32(mf(j0m), j1m) + SPH_ROTL32(mf(j3m), j4m) \
 		- SPH_ROTL32(mf(j10m), j11m) + Ks(j16)) ^ hf(j7m))
-
-#define expand1s_inner(qf, mf, hf, i16, \
-		i0, i1, i2, i3, i4, i5, i6, i7, i8, \
-		i9, i10, i11, i12, i13, i14, i15, \
-		i0m, i1m, i3m, i4m, i7m, i10m, i11m) \
-	SPH_T32(ss1(qf(i0)) + ss2(qf(i1)) + ss3(qf(i2)) + ss0(qf(i3)) \
-		+ ss1(qf(i4)) + ss2(qf(i5)) + ss3(qf(i6)) + ss0(qf(i7)) \
-		+ ss1(qf(i8)) + ss2(qf(i9)) + ss3(qf(i10)) + ss0(qf(i11)) \
-		+ ss1(qf(i12)) + ss2(qf(i13)) + ss3(qf(i14)) + ss0(qf(i15)) \
-		+ add_elt_s(mf, hf, i0m, i1m, i3m, i4m, i7m, i10m, i11m, i16))
-
-#define expand1s(qf, mf, hf, i16) \
-	expand1s_(qf, mf, hf, i16, I16_ ## i16, M16_ ## i16)
-#define expand1s_(qf, mf, hf, i16, ix, iy) \
-	expand1s_inner LPAR qf, mf, hf, i16, ix, iy)
-
-#define expand2s_inner(qf, mf, hf, i16, \
-		i0, i1, i2, i3, i4, i5, i6, i7, i8, \
-		i9, i10, i11, i12, i13, i14, i15, \
-		i0m, i1m, i3m, i4m, i7m, i10m, i11m) \
-	SPH_T32(qf(i0) + rs1(qf(i1)) + qf(i2) + rs2(qf(i3)) \
-		+ qf(i4) + rs3(qf(i5)) + qf(i6) + rs4(qf(i7)) \
-		+ qf(i8) + rs5(qf(i9)) + qf(i10) + rs6(qf(i11)) \
-		+ qf(i12) + rs7(qf(i13)) + ss4(qf(i14)) + ss5(qf(i15)) \
-		+ add_elt_s(mf, hf, i0m, i1m, i3m, i4m, i7m, i10m, i11m, i16))
-
-#define expand2s(qf, mf, hf, i16) \
-	expand2s_(qf, mf, hf, i16, I16_ ## i16, M16_ ## i16)
-#define expand2s_(qf, mf, hf, i16, ix, iy) \
-	expand2s_inner LPAR qf, mf, hf, i16, ix, iy)
 
 #define sb0(x)    (((x) >> 1) ^ SPH_T64((x) << 3) \
                   ^ SPH_ROTL64(x,  4) ^ SPH_ROTL64(x, 37))

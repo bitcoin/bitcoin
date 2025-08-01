@@ -51,7 +51,6 @@ extern "C"{
 #endif
 
 #define T32   SPH_T32
-#define C32   SPH_C32
 #define C64   SPH_C64
 
 #include "aes_helper.c"

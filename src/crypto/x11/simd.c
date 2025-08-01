@@ -213,42 +213,6 @@ static const s32 alpha_tab[] = {
 		FFT_LOOP(rb, 32, 4, id); \
 	} while (0)
 
-#if SPH_SMALL_FOOTPRINT_SIMD
-
-static void
-fft32(unsigned char *x, size_t xs, s32 *q)
-{
-	size_t xd;
-
-	xd = xs << 1;
-	FFT16(0, xd, 0);
-	FFT16(xs, xd, 16);
-	FFT_LOOP(0, 16, 8, label_);
-}
-
-#define FFT128(xb, xs, rb, id)   do { \
-		fft32(x + (xb) + ((xs) * 0), (xs) << 2, &q[(rb) +  0]); \
-		fft32(x + (xb) + ((xs) * 2), (xs) << 2, &q[(rb) + 32]); \
-		FFT_LOOP(rb, 32, 4, XCAT(id, aa)); \
-		fft32(x + (xb) + ((xs) * 1), (xs) << 2, &q[(rb) + 64]); \
-		fft32(x + (xb) + ((xs) * 3), (xs) << 2, &q[(rb) + 96]); \
-		FFT_LOOP((rb) + 64, 32, 4, XCAT(id, ab)); \
-		FFT_LOOP(rb, 64, 2, XCAT(id, a)); \
-	} while (0)
-
-#else
-
-/*
- * Output range: |q| <= 4733784
- */
-#define FFT128(xb, xs, rb, id)   do { \
-		FFT64(xb, (xs) << 1, rb, XCAT(id, a)); \
-		FFT64((xb) + (xs), (xs) << 1, (rb) + 64, XCAT(id, b)); \
-		FFT_LOOP(rb, 64, 2, id); \
-	} while (0)
-
-#endif
-
 /*
  * For SIMD-384 / SIMD-512, the fully unrolled FFT yields a compression
  * function which does not fit in the 32 kB L1 cache of a typical x86

@@ -59,13 +59,6 @@ extern "C"{
 
 #if SPH_LITTLE_ENDIAN
 
-#define C32e(x)     ((SPH_C32(x) >> 24) \
-                    | ((SPH_C32(x) >>  8) & SPH_C32(0x0000FF00)) \
-                    | ((SPH_C32(x) <<  8) & SPH_C32(0x00FF0000)) \
-                    | ((SPH_C32(x) << 24) & SPH_C32(0xFF000000)))
-#define dec32e_aligned   sph_dec32le_aligned
-#define enc32e           sph_enc32le
-
 #define C64e(x)     ((SPH_C64(x) >> 56) \
                     | ((SPH_C64(x) >> 40) & SPH_C64(0x000000000000FF00)) \
                     | ((SPH_C64(x) >> 24) & SPH_C64(0x0000000000FF0000)) \
@@ -79,9 +72,6 @@ extern "C"{
 
 #else
 
-#define C32e(x)     SPH_C32(x)
-#define dec32e_aligned   sph_dec32be_aligned
-#define enc32e           sph_enc32be
 #define C64e(x)     SPH_C64(x)
 #define dec64e_aligned   sph_dec64be_aligned
 #define enc64e           sph_enc64be

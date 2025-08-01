@@ -69,7 +69,6 @@ extern "C"{
                     | ((SPH_C32(x) <<  8) & SPH_C32(0x00FF0000)) \
                     | ((SPH_C32(x) << 24) & SPH_C32(0xFF000000)))
 #define dec32e_aligned   sph_dec32le_aligned
-#define enc32e           sph_enc32le
 #define B32_0(x)    ((x) & 0xFF)
 #define B32_1(x)    (((x) >> 8) & 0xFF)
 #define B32_2(x)    (((x) >> 16) & 0xFF)
@@ -109,7 +108,6 @@ extern "C"{
 
 #define C32e(x)     SPH_C32(x)
 #define dec32e_aligned   sph_dec32be_aligned
-#define enc32e           sph_enc32be
 #define B32_0(x)    ((x) >> 24)
 #define B32_1(x)    (((x) >> 16) & 0xFF)
 #define B32_2(x)    (((x) >> 8) & 0xFF)
@@ -1194,34 +1192,6 @@ static const sph_u64 T7[] = {
 
 #endif
 
-#if SPH_SMALL_FOOTPRINT_GROESTL
-
-#define RSTT(d, a, b0, b1, b2, b3, b4, b5, b6, b7)   do { \
-		t[d] = T0[B64_0(a[b0])] \
-			^ R64(T0[B64_1(a[b1])],  8) \
-			^ R64(T0[B64_2(a[b2])], 16) \
-			^ R64(T0[B64_3(a[b3])], 24) \
-			^ T4[B64_4(a[b4])] \
-			^ R64(T4[B64_5(a[b5])],  8) \
-			^ R64(T4[B64_6(a[b6])], 16) \
-			^ R64(T4[B64_7(a[b7])], 24); \
-	} while (0)
-
-#else
-
-#define RSTT(d, a, b0, b1, b2, b3, b4, b5, b6, b7)   do { \
-		t[d] = T0[B64_0(a[b0])] \
-			^ T1[B64_1(a[b1])] \
-			^ T2[B64_2(a[b2])] \
-			^ T3[B64_3(a[b3])] \
-			^ T4[B64_4(a[b4])] \
-			^ T5[B64_5(a[b5])] \
-			^ T6[B64_6(a[b6])] \
-			^ T7[B64_7(a[b7])]; \
-	} while (0)
-
-#endif
-
 #define DECL_STATE_BIG \
 	sph_u64 H[16];
 
@@ -2019,28 +1989,6 @@ static const sph_u32 T3dn[] = {
 	C32e(0xdc5ec35e), C32e(0xe2cbb0cb), C32e(0xc3997799), C32e(0x2d331133),
 	C32e(0x3d46cb46), C32e(0xb71ffc1f), C32e(0x0c61d661), C32e(0x624e3a4e)
 };
-
-#define XCAT(x, y)    XCAT_(x, y)
-#define XCAT_(x, y)   x ## y
-
-#define RSTT(d0, d1, a, b0, b1, b2, b3, b4, b5, b6, b7)   do { \
-		t[d0] = T0up[B32_0(a[b0])] \
-			^ T1up[B32_1(a[b1])] \
-			^ T2up[B32_2(a[b2])] \
-			^ T3up[B32_3(a[b3])] \
-			^ T0dn[B32_0(a[b4])] \
-			^ T1dn[B32_1(a[b5])] \
-			^ T2dn[B32_2(a[b6])] \
-			^ T3dn[B32_3(a[b7])]; \
-		t[d1] = T0dn[B32_0(a[b0])] \
-			^ T1dn[B32_1(a[b1])] \
-			^ T2dn[B32_2(a[b2])] \
-			^ T3dn[B32_3(a[b3])] \
-			^ T0up[B32_0(a[b4])] \
-			^ T1up[B32_1(a[b5])] \
-			^ T2up[B32_2(a[b6])] \
-			^ T3up[B32_3(a[b7])]; \
-	} while (0)
 
 #define DECL_STATE_BIG \
 	sph_u32 H[32];
