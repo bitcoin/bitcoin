@@ -59,13 +59,10 @@ BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool
         .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}}
 {}
 
-bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
+void BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
 {
-    bool success = Read(DB_BEST_BLOCK, locator);
-    if (!success) {
+    if (!Read(DB_BEST_BLOCK, locator))
         locator.SetNull();
-    }
-    return success;
 }
 
 void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator)
@@ -98,9 +95,7 @@ bool BaseIndex::Init()
     m_chain->context()->validation_signals->RegisterValidationInterface(this);
 
     CBlockLocator locator;
-    if (!GetDB().ReadBestBlock(locator)) {
-        locator.SetNull();
-    }
+    GetDB().ReadBestBlock(locator);
 
     LOCK(cs_main);
     CChain& index_chain = m_chainstate->m_chain;
