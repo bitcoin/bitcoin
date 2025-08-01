@@ -23,6 +23,7 @@ from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     find_vout_for_address,
     sha256sum_file,
@@ -31,6 +32,13 @@ from test_framework.wallet_util import (
     get_generate_key,
     generate_keypair,
 )
+
+SQLITE3_IMPORTED = False
+try:
+    import sqlite3 # type: ignore[import]
+    SQLITE3_IMPORTED = True
+except ImportError:
+    pass
 
 BTREE_MAGIC = 0x053162
 
@@ -45,6 +53,9 @@ class WalletMigrationTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
         self.skip_if_no_previous_releases()
+
+        if not SQLITE3_IMPORTED:
+            self.log.warning("sqlite3 module not available, skipping tests that inspect the database")
 
     def setup_nodes(self):
         self.add_nodes(
@@ -140,7 +151,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         # (in which case the wallet name would be suffixed by the 'watchonly' term)
         migrated_wallet_name = migrate_info['wallet_name']
         wallet = self.master_node.get_wallet_rpc(migrated_wallet_name)
-        assert_equal(wallet.getwalletinfo()["descriptors"], True)
+        wallet_info = wallet.getwalletinfo()
+        assert_equal(wallet_info["descriptors"], True)
         self.assert_is_sqlite(migrated_wallet_name)
         # Always verify the backup path exist after migration
         assert os.path.exists(migrate_info['backup_path'])
@@ -153,6 +165,29 @@ class WalletMigrationTest(BitcoinTestFramework):
         expected_backup_path = self.master_node.wallets_path / backup_filename
         assert_equal(str(expected_backup_path), migrate_info['backup_path'])
         assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
+
+        # Open the wallet with sqlite and verify that the wallet has the last hardened cache flag
+        # set and the last hardened cache entries
+        if SQLITE3_IMPORTED:
+            inspect_path = os.path.join(self.options.tmpdir, os.path.basename(f"{migrated_wallet_name}_inspect.dat"))
+            wallet.backupwallet(inspect_path)
+
+            conn = sqlite3.connect(inspect_path)
+
+            with conn:
+                flags_rec = conn.execute("SELECT value FROM main WHERE key = x'05666c616773'").fetchone()
+                flags = int.from_bytes(flags_rec[0], byteorder="little")
+
+                # All wallets should have the upgrade flag set
+                assert_equal(bool(flags & (1 << 2)), True)
+
+                # Fetch all records with the walletdescriptorlhcache prefix
+                # if the wallet has private keys and is not blank
+                if wallet_info["private_keys_enabled"] and not wallet_info["blank"]:
+                    lh_cache_recs = conn.execute("SELECT value FROM main where key >= x'1777616c6c657464657363726970746f726c686361636865' AND key < x'1777616c6c657464657363726970746f726c686361636866'").fetchall()
+                    assert_greater_than(len(lh_cache_recs), 0)
+
+            conn.close()
 
         return migrate_info, wallet
 
