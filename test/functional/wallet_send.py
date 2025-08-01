@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
     count_bytes,
 )
@@ -149,7 +150,9 @@ class WalletSendTest(BitcoinTestFramework):
         else:
             if add_to_wallet:
                 decoded_tx = from_wallet.gettransaction(txid=res["txid"], verbose=True)["decoded"]
-                assert_greater_than(decoded_tx["locktime"], from_wallet.getblockcount() - 100)
+                # the locktime should be within 100 blocks of the
+                # block height
+                assert_greater_than_or_equal(decoded_tx["locktime"], from_wallet.getblockcount() - 100)
 
         if expect_sign:
             assert_equal(res["complete"], True)
