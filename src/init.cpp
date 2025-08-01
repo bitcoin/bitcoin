@@ -1859,6 +1859,55 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+#ifdef __APPLE__
+    // Warn about exFAT filesystem usage on macOS
+    struct PathCheck {
+        fs::path path;
+        std::string_view description;
+        PathCheck(const fs::path& p, std::string_view d) : path(p), description(d) {}
+    };
+
+
+    fs::path data_dir = args.GetDataDirNet();
+    fs::path blocks_dir = args.GetBlocksDirPath();
+    std::vector<PathCheck> paths{{data_dir, "data directory"}};
+    // Don't mention blocks dir if it's inside datadir
+    if (fs::relative(blocks_dir, data_dir / "blocks").string() != ".") {
+        paths.emplace_back(blocks_dir, "blocks directory");
+    }
+
+    std::vector<std::string> exfat_paths;
+    std::vector<std::string> error_paths;
+
+    for (const auto& check : paths) {
+        FSType fs_type = GetFilesystemType(check.path);
+        switch(fs_type) {
+            case FSType::EXFAT:
+                exfat_paths.push_back(strprintf("%s (\"%s\")",
+                    check.description,
+                    fs::PathToString(check.path)));
+                break;
+            case FSType::ERROR:
+                error_paths.push_back(strprintf("%s (\"%s\")",
+                    check.description,
+                    fs::PathToString(check.path)));
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (!exfat_paths.empty()) {
+        InitWarning(strprintf(_("The following paths are on exFAT which is known to have intermittent corruption problems on MacOS: %s. "
+            "Move these directories to a non-exFAT formatted drive to avoid corruption."),
+            util::Join(exfat_paths, ", ")));
+    }
+
+    if (!error_paths.empty()) {
+        LogInfo("Failed to detect filesystem type for: %s\n", util::Join(error_paths, ", "));
+    }
+#endif
+
 #if HAVE_SYSTEM
     const std::string block_notify = args.GetArg("-blocknotify", "");
     if (!block_notify.empty()) {
