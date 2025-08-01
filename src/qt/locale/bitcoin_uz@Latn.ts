@@ -233,6 +233,10 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Hamyon uchun kiritilgan maxfiy so'z yangisiga almashtirildi.</translation>
     </message>
     <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Parolni o‘zgartirib bo‘lmadi</translation>
+    </message>
+    <message>
         <source>The old passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character.</source>
         <translation type="unfinished">Hamyon shifrini ochish uchun yordam eski parol noto'g'ri. U null belgini o'z ichiga oladi (ya'ni - nol bayt). Agar parol iborasi ushbu dasturiy ta'minotning 25.0 dan oldingi versiyasida o'rnatilgan bo'lsa, iltimos, faqat birinchi null belgigacha bo'lgan qurilmalar bilan qayta urinib ko'ring (lekin shu narsa emas).</translation>
     </message>
@@ -290,6 +294,18 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     <message>
         <source>unknown</source>
         <translation type="unfinished">noma'lum</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">O'rnatilgan "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Standart tizim shrifti "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Alohida moslashtirilgan...</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -627,6 +643,10 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Hozirgi kunda</translation>
     </message>
     <message>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished">formatini olib tashlash(Ctrl+Q)</translation>
+    </message>
+    <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
         <translation type="unfinished">Qisman signlangan Bitkoin tranzaksiyasini yuklash</translation>
     </message>
@@ -729,6 +749,10 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">&amp;Oyna</translation>
     </message>
     <message>
+        <source>Ctrl+M</source>
+        <translation type="unfinished">Abzatsga chek qo'ying.(Ctrl+M)</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished">Kattalashtirish</translation>
     </message>
@@ -775,6 +799,18 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">Ijtimoiy tarmoq faoliyatini yoqish</translation>
+    </message>
+    <message>
+        <source>Pre-syncing Headers (%1%)…</source>
+        <translation type="unfinished">Sarlavhalarni oldindan sinxronlash (%1%)…</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">Hamyonni yaratishda xatolik yuz berdi</translation>
+    </message>
+    <message>
+        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
+        <translation type="unfinished">Yangi hamyon yaratib bo'lmadi, dasturiy ta'minot sqlite qo'llab-quvvatlanmasdan tuzilgan (deskriptor hamyonlari uchun talab qilinadi)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1019,7 +1055,11 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <source>Can't list signers</source>
         <translation type="unfinished">Signerlarni ro'yxat shakliga keltirib bo'lmaydi</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Juda koʻp tashqi imzo qoʻyuvchilar topildi</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -1036,10 +1076,50 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
 <context>
     <name>MigrateWalletActivity</name>
     <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Hamyonni ko'chirish</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Hamyonni ko'chirish ushbu hamyonni bir yoki bir nechta deskriptor hamyonga aylantiradi. Hamyonning yangi zaxira nusxasini yaratish kerak bo'ladi.
+Agar bu hamyonda faqat tomosha skriptlari mavjud bo'lsa, yangi hamyon yaratiladi, unda faqat tomosha qilish uchun skriptlar mavjud.
+Agar bu hamyonda echilishi mumkin bo'lgan, lekin tomosha qilinmagan skriptlar bo'lsa, ushbu skriptlarni o'z ichiga olgan boshqa va yangi hamyon yaratiladi.
+
+Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Ushbu zaxira fayli 1-2.legacy.bak deb nomlanadi va uni ushbu hamyon katalogida topish mumkin. Noto'g'ri migratsiya bo'lsa, zaxira nusxasini "Hamyonni tiklash" funksiyasi bilan tiklash mumkin.</translation>
+    </message>
+    <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">dudlangan cho'chqa go'shti koʻchirish</translation>
     </message>
-    </context>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Hamyonni koʻchirish&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">hamyon '%1' muvaffaqiyatli ko'chirildi.</translation>
+    </message>
+    <message>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Watchonly skriptlari nomli yangi hamyonga ko'chirildi%1</translation>
+    </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Yechish mumkin bo'lgan, lekin ko'rilmagan skriptlar nomli yangi hamyonga o'tkazildi%1</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Migratsiya amalga oshmadi</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Migratsiya muvaffaqiyatli amalga oshirildi</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1068,7 +1148,27 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
         <translation type="unfinished">Hamyonni tiklash</translation>
     </message>
-    </context>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Wallet tiklanmoqda&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">Hamyonni tiklash amalga oshmadi</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">Hamyonni tiklash haqida ogohlantirish</translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Hamyon xabarini tiklash</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1097,6 +1197,14 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">Hamyon yaratish</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Siz yangi hamyonni yaratishga bir qadam qoldi!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Iltimos, nom kiriting va agar xohlasangiz, kengaytirilgan variantlarni yoqing</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1235,23 +1343,27 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>%nGb bo'sh joy mavjud</numerusform>
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(%nGb kerak)</numerusform>
             <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform />
+            <numerusform>(To'liq zanjir uchun%n GB kerak)</numerusform>
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Ma'lumotlar katalogini tanlang</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1312,6 +1424,10 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Ushbu dastlabki sinxronlash juda qiyin va kompyuteringiz bilan ilgari sezilmagan apparat muammolarini yuzaga keltirishi mumkin. Har safar %1 ni ishga tushirganingizda, u yuklab olish jarayonini qayerda to'xtatgan bo'lsa, o'sha yerdan boshlab davom ettiradi.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">OK ni bosganingizda, %1to'liq blok zanjirini (%2GB) yuklab olish%4 va qayta ishlash boshlanadi, %3birinchi boshlangan%4 tranzaksiyalardan boshlab.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
@@ -1406,7 +1522,11 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Noma'lum. Sarlavhalarni sinxronlash(%1, %2%)...</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
+        <translation type="unfinished">Noma'lum. Sarlavhalarni oldindan sinxronlash (, %1%2%)…</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1450,6 +1570,10 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Skriptni &amp;tekshirish thread lari soni</translation>
     </message>
     <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation type="unfinished">Mos skriptga toʻliq yoʻl %1(masalan, C:\Downloads\hwi.exe yoki /Users/you/Downloads/hwi.py). Ehtiyot bo'ling: zararli dastur tangalaringizni o'g'irlashi mumkin!</translation>
+    </message>
+    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation type="unfinished">Proksi IP manzili (masalan: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
@@ -1460,6 +1584,14 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">Oyna yopilganda dasturdan chiqish o'rniga minimallashtirish. Ushbu parametr yoqilganda, dastur faqat menyuda Chiqish ni tanlagandan keyin yopiladi.</translation>
+    </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Umumiy ko‘rinish oynasidagi shrift:</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation type="unfinished">Ushbu dialog oynasida o'rnatilgan parametrlar buyruq qatori tomonidan bekor qilinadi:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1531,6 +1663,14 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Tangalarni &amp;nazorat qilish funksiyasini yoqish</translation>
     </message>
     <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation type="unfinished">Tasdiqlanmagan oʻzgarishlarni sarflashni oʻchirib qoʻysangiz, tranzaksiyadagi oʻzgarishlardan kamida bitta tasdiq boʻlmaguncha foydalanilmaydi. Bu sizning balansingiz qanday hisoblanishiga ham ta'sir qiladi.</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation type="unfinished">Tasdiqlanmagan oʻzgarishlarni &amp;sarflash</translation>
+    </message>
+    <message>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
         <translation type="unfinished">&amp;PSBT nazoratini yoqish</translation>
@@ -1549,6 +1689,22 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">&amp;Tashqi signer skripti yo'li</translation>
     </message>
     <message>
+        <source>Accept connections from outside.</source>
+        <translation type="unfinished">Tashqaridan ulanishlarni qabul qiling.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation type="unfinished">Kiruvchi va kirish ulanishlariga ruxsat bering</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">SOCKS5 proksi-server orqali Bitcoin tarmog'iga ulaning.</translation>
+    </message>
+    <message>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation type="unfinished">SOCKS5 proksi-server orqali ulaning (standart proksi-server):</translation>
+    </message>
+    <message>
         <source>Proxy &amp;IP:</source>
         <translation type="unfinished">Прокси &amp;IP рақами:</translation>
     </message>
@@ -1561,8 +1717,20 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Прокси порти (e.g. 9050)</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation type="unfinished">Tengdoshlar bilan bog'lanish uchun ishlatiladi:</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Oyna</translation>
+    </message>
+    <message>
+        <source>Show the icon in the system tray.</source>
+        <translation type="unfinished">Tizim tepsisidagi belgini ko'rsating.</translation>
+    </message>
+    <message>
+        <source>&amp;Show tray icon</source>
+        <translation type="unfinished"> belgisini ko'rsatish</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
@@ -1585,8 +1753,36 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Фойдаланувчи интерфейси &amp;тили:</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation type="unfinished">Bu yerda foydalanuvchi interfeysi tilini sozlash mumkin. Ushbu sozlama qayta ishga tushirilgandan so'ng kuchga kiradi%1</translation>
+    </message>
+    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation type="unfinished">Миқдорларни кўрсатиш учун &amp;қисм:</translation>
+    </message>
+    <message>
+        <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
+        <translation type="unfinished">Interfeysda va tangalarni yuborishda ko'rsatish uchun standart bo'linma birligini tanlang.</translation>
+    </message>
+    <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished">Tranzaktsiyalar yorlig'ida kontekst menyusi elementlari sifatida paydo bo'ladigan uchinchi tomon URL manzillari (masalan, blok tadqiqotchisi). %sURL manzili tranzaksiya xeshi bilan almashtiriladi. Bir nechta URL-manzillar vertikal chiziq bilan ajratilgan |.</translation>
+    </message>
+    <message>
+        <source>&amp;Third-party transaction URLs</source>
+        <translation type="unfinished">&amp;Uchinchi tomon tranzaksiyalari URL manzillari</translation>
+    </message>
+    <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation type="unfinished">Tangani boshqarish xususiyatlarini ko'rsatish yoki ko'rsatmaslik.</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">Tor onion xizmatlari uchun alohida SOCKS5 proksi-server orqali Bitcoin tarmog'iga ulaning.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation type="unfinished">Tor onion xizmatlari orqali tengdoshlar bilan bog'lanish uchun alohida SOCKS&amp;5 proksi-serveridan foydalaning:</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1616,12 +1812,40 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Ўзгаришлар амалга ошиши учун мижозни қайта ишга тушириш талаб қилинади.</translation>
     </message>
     <message>
+        <source>Current settings will be backed up at "%1".</source>
+        <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
+        <translation type="unfinished">Joriy sozlamalar "%1" da zaxiralanadi.</translation>
+    </message>
+    <message>
+        <source>Client will be shut down. Do you want to proceed?</source>
+        <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
+        <translation type="unfinished">Mijoz yopiladi. Davom etishni xohlaysizmi?</translation>
+    </message>
+    <message>
+        <source>Configuration options</source>
+        <extracomment>Window title text of pop-up box that allows opening up of configuration file.</extracomment>
+        <translation type="unfinished">Konfiguratsiya imkoniyatlari</translation>
+    </message>
+    <message>
+        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
+        <translation type="unfinished">Konfiguratsiya fayli GUI sozlamalarini bekor qiluvchi ilg'or foydalanuvchi parametrlarini belgilash uchun ishlatiladi. Bundan tashqari, har qanday buyruq qatori parametrlari ushbu konfiguratsiya faylini bekor qiladi.</translation>
+    </message>
+    <message>
         <source>Continue</source>
         <translation type="unfinished">Davom etish</translation>
     </message>
     <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Bekor qilish</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">Хатолик</translation>
+    </message>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation type="unfinished">Konfiguratsiya faylini ochib bo'lmadi.</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1630,6 +1854,13 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation type="unfinished">Келтирилган прокси манзили ишламайди.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation type="unfinished">Sozlamani o'qib bo'lmadi "%1", %2.</translation>
     </message>
 </context>
 <context>
@@ -1699,12 +1930,48 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Тасдиқланмаган ўтказмалар-фақат манзилларини кўриш</translation>
     </message>
     <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation type="unfinished">Faqat tomosha qilish uchun moʻljallangan manzillarda hisoblangan qoldiq hali yetib bormagan</translation>
+    </message>
+    <message>
         <source>Current total balance in watch-only addresses</source>
         <translation type="unfinished">Жорий умумий баланс фақат кўринадиган манзилларда</translation>
     </message>
-    </context>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation type="unfinished">"Umumiy ko'rinish" yorlig'i uchun maxfiylik rejimi faollashtirilgan. Qiymatlarni qaytarish uchun Sozlamalar-&gt;Qiymatlar.</translation>
+    </message>
+</context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">PSBT Operatsiyalari</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation type="unfinished">Muhirlash Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation type="unfinished">"Clipboard"ga nusxa olish</translation>
+    </message>
+    <message>
+        <source>Save…</source>
+        <translation type="unfinished">Saqlash...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation type="unfinished">Yopish</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation type="unfinished">Tranzaksiyani muhirlab bo'lmadi: %1</translation>
+    </message>
+    <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">Hamyon maʼlumotlarga imzo qoʻyib boʻlmaydi.</translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">ўз манзили</translation>
@@ -2554,7 +2821,11 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">Hamyon maʼlumotlari</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">Bekor qilish</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>

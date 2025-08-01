@@ -729,6 +729,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
  </translation>
     </message>
     <message>
+        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">ನಿರ್ದಿಷ್ಟ -ಬ್ಲಾಕ್‌ಮ್ಯಾಕ್ಸ್‌ವೈಟ್ (%d) ಸಮ್ಮತಿಯ ಗರಿಷ್ಠ ಬ್ಲಾಕ್ ತೂಕವನ್ನು (%d) ಮೀರಿದೆ</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">ನಿರ್ದಿಷ್ಟ -ಬ್ಲಾಕ್‌ರಿಸರ್ವ್ಡ್‌ವೈಟ್ (%d) ಸಮ್ಮತಿಯ ಗರಿಷ್ಠ ಬ್ಲಾಕ್ ತೂಕವನ್ನು (%d) ಮೀರಿದೆ</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">ನಿರ್ದಿಷ್ಟ -ಬ್ಲಾಕ್‌ರಿಸರ್ವ್ಡ್‌ವೈಟ್ (%d) ಕನಿಷ್ಠ ಸುರಕ್ಷತಾ ಮೌಲ್ಯಕ್ಕಿಂತ (%d) ಕಡಿಮೆಯಾಗಿದೆ</translation>
+    </message>
+    <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation type="unfinished">ನೆಲೆಯ ರೆಲೇ ಶುಲ್ಕದಿಂದ ಕಡಿಮೆ ಶುಲ್ಕವನ್ನು ಕೊಡದಂತೆ ವಾಲೆಟ್ ನುಡಿಮುಟ್ಟುವುದು.</translation>
     </message>

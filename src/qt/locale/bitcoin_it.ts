@@ -51,7 +51,7 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Scegli l'indirizzo al quale ricevere bitcoin.</translation>
+        <translation type="unfinished">Scegli l'indirizzo al quale ricevere bitcoin</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -572,7 +572,7 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Sincronizzazione Intestazioni in corso (1%1%)...</translation>
+        <translation type="unfinished">Sincronizzazione Intestazioni in corso (%1%)...</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>

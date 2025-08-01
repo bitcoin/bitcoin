@@ -1483,12 +1483,21 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">&amp;Açılışta %1 açılsın</translation>
     </message>
     <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Maksimum veritabanı önbellek boyutu. Yeterince RAM'iniz olduğundan emin olun. Daha geniş bir önbellek daha hızlı eşitleme sağlayabilir, bir aşamadan sonra fayda daha az hissedilir. Önbellek boyutunu düşürmek hafıza kullanımını azaltacaktır. Kullanılmayan mempool hafızası bu önbellek ile paylaşılır.</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">&amp;veritabanı önbellek boyutu</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">Betik &amp;doğrulama iş parçacığı sayısı</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Yönlendiricideki Bitcoin istemcisini otomatik olarak aç. Bu özellik yalnızca yönlendiriciniz PCP veya NAT-PMP desteğine sahipse ve aktif edilmişse çalışır. Harici port rastgele olabilir.</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -2097,6 +2106,14 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Bağlantı sayısı</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">Yerel adresler</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Bitcoin düğümünüzün diğer düğümlerle iletişim için kullandığı internet adresleri.</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">Blok zinciri</translation>
     </message>
@@ -2143,6 +2160,10 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">Ayrıntılı bilgi görmek için bir eş seçin.</translation>
+    </message>
+    <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">Eş ayrıntılarını gizle</translation>
     </message>
     <message>
         <source>The transport layer version: %1</source>
@@ -3788,6 +3809,10 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Verilen blok hash '%s' için AssumeUTXO verisi bulunamadı.</translation>
     </message>
     <message>
+        <source>Cannot write to directory '%s'; check permissions.</source>
+        <translation type="unfinished">'%s' dizinine yazılamıyor; izinleri kontrol et.</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation type="unfinished">Telif Hakkı (C) %i-%i</translation>
     </message>
@@ -3836,6 +3861,10 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Blok veritabanının yüklenmesinde hata</translation>
     </message>
     <message>
+        <source>Error loading databases</source>
+        <translation type="unfinished">Veri tabanları yüklenirken hata oluştu</translation>
+    </message>
+    <message>
         <source>Error opening block database</source>
         <translation type="unfinished">Blok veritabanının açılışı sırasında hata</translation>
     </message>
@@ -3854,6 +3883,10 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>Error: Unable to read wallet's best block locator record</source>
         <translation type="unfinished">Hata: Cüzdan okunamadı en iyi blok bulucu kaydı </translation>
+    </message>
+    <message>
+        <source>Error: Unable to write data to disk for wallet %s</source>
+        <translation type="unfinished">Hata: Cüzdan %s için  diske veri yazılamıyor</translation>
     </message>
     <message>
         <source>Error: Unable to write solvable wallet best block locator record</source>
@@ -4160,12 +4193,28 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Desteklenmeyen günlük kategorisi %s=%s.</translation>
     </message>
     <message>
+        <source>Do you want to rebuild the databases now?</source>
+        <translation type="unfinished">Veritabanlarını şimdi yeniden inşa etmek istiyor musunuz?</translation>
+    </message>
+    <message>
         <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
         <translation type="unfinished">Hata: Sadece izleme %s cüzdanı. tx izleme cüzdanına eklenemedi</translation>
     </message>
     <message>
         <source>Error: Could not delete watchonly transactions. </source>
         <translation type="unfinished">Hata: Yalnızca izlenen işlemler silinemedi.</translation>
+    </message>
+    <message>
+        <source>Error: Wallet does not exist</source>
+        <translation type="unfinished">Hata: Böyle bir cüzdan yok</translation>
+    </message>
+    <message>
+        <source>Error: cannot remove legacy wallet records</source>
+        <translation type="unfinished">Hata: Eski cüzdan kayıtları silinemiyor</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available. %d available, %d required.</source>
+        <translation type="unfinished">Yeterince dosya açıklayıcısı mevcut değil. Mevcut %d, gereken %d.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

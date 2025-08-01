@@ -1,41 +1,52 @@
-<TS version="2.1" language="yo">
+<TS version="2.1" language="tt">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Te botiini apa otun lati se atunse si adireesi tabi isaami</translation>
+        <translation type="unfinished">Адресны яки тамганы үзгәртү өчен уң төймәгә басыгыз</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">si adireesi tuntun</translation>
+        <translation type="unfinished">Яңа адрес төзегез</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;ati tuntun</translation>
+        <translation type="unfinished">&amp;Яңа</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">da adiresi tuntun ti o sayan ko si eto sileti </translation>
+        <translation type="unfinished">Хәзерге вакытта сайланган адресны алмашу системалы буферына күчерегез</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">daako</translation>
+        <translation type="unfinished">&amp;Күчерү</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">paade</translation>
+        <translation type="unfinished">Ябу</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">samukuro adiresi ti o sese sayan kuro ninu akojo</translation>
+        <translation type="unfinished">Хәзерге вакытта сайланган адресны исемлектән алып ташлагыз</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation type="unfinished">Tẹ adirẹsi sii tàbí áámì làtí wáá</translation>
+        <translation type="unfinished">Эзләү өчен адрес яки ярлык кертегез</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Se òkèéé dátà ní tàábù lọwọlọwọ sí fáílì kán.</translation>
+        <translation type="unfinished">Агымдагы вкладкадагы мәгълүматларны файлга экспортлагыз</translation>
+    </message>
+    </context>
+<context>
+    <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation type="unfinished">Тамга</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <translation type="unfinished">Адрес</translation>
     </message>
     </context>
 <context>
@@ -85,53 +96,12 @@
             <numerusform />
         </translation>
     </message>
-    <message>
-        <source>Open Wallet</source>
-        <translation type="unfinished">sii apamowo</translation>
-    </message>
-    <message>
-        <source>Open a wallet</source>
-        <translation type="unfinished">sii apamowo</translation>
-    </message>
-    <message>
-        <source>Close wallet</source>
-        <translation type="unfinished">Ti Apamowo</translation>
-    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform />
         </translation>
-    </message>
-    </context>
-<context>
-    <name>CoinControlDialog</name>
-    <message>
-        <source>Date</source>
-        <translation type="unfinished">Ojo</translation>
-    </message>
-    </context>
-<context>
-    <name>OpenWalletActivity</name>
-    <message>
-        <source>Open Wallet</source>
-        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
-        <translation type="unfinished">sii apamowo</translation>
-    </message>
-    </context>
-<context>
-    <name>WalletController</name>
-    <message>
-        <source>Close wallet</source>
-        <translation type="unfinished">Ti Apamowo</translation>
-    </message>
-    </context>
-<context>
-    <name>FreespaceChecker</name>
-    <message>
-        <source>name</source>
-        <translation type="unfinished">oruko</translation>
     </message>
     </context>
 <context>
@@ -161,34 +131,20 @@
             <numerusform />
         </translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Ka bo</translation>
-    </message>
     </context>
 <context>
-    <name>OptionsDialog</name>
+    <name>PeerTableModel</name>
     <message>
-        <source>&amp;OK</source>
-        <translation type="unfinished">&amp;o da</translation>
-    </message>
-    </context>
-<context>
-    <name>RPCConsole</name>
-    <message>
-        <source>Name</source>
-        <translation type="unfinished">Oruko</translation>
-    </message>
-    <message>
-        <source>1 &amp;year</source>
-        <translation type="unfinished">okan ati &amp;odun</translation>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Адрес</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <source>Date</source>
-        <translation type="unfinished">Ojo</translation>
+        <source>Label</source>
+        <translation type="unfinished">Тамга</translation>
     </message>
     </context>
 <context>
@@ -202,14 +158,6 @@
     </context>
 <context>
     <name>TransactionDesc</name>
-    <message>
-        <source>Date</source>
-        <translation type="unfinished">Ojo</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation type="unfinished">wo nikan</translation>
-    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -220,30 +168,26 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Date</source>
-        <translation type="unfinished">Ojo</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation type="unfinished">wo nikan</translation>
+        <source>Label</source>
+        <translation type="unfinished">Тамга</translation>
     </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
-        <source>This year</source>
-        <translation type="unfinished">Odun yi</translation>
+        <source>Label</source>
+        <translation type="unfinished">Тамга</translation>
     </message>
     <message>
-        <source>Date</source>
-        <translation type="unfinished">Ojo</translation>
+        <source>Address</source>
+        <translation type="unfinished">Адрес</translation>
     </message>
     </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation type="unfinished">Se òkèéé dátà ní tàábù lọwọlọwọ sí fáílì kán.</translation>
+        <translation type="unfinished">Агымдагы вкладкадагы мәгълүматларны файлга экспортлагыз</translation>
     </message>
     </context>
 </TS>

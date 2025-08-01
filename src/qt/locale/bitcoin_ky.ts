@@ -6,6 +6,10 @@
         <translation type="unfinished">Жаң даректи жасоо</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation type="unfinished">&amp;Жаңы</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation type="unfinished">Ө&amp;чүрүү</translation>
     </message>
@@ -21,6 +25,13 @@
         <translation type="unfinished">(аты жок)</translation>
     </message>
 </context>
+<context>
+    <name>AskPassphraseDialog</name>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Улантуу</translation>
+    </message>
+    </context>
 <context>
     <name>QObject</name>
     <message numerus="yes">
@@ -227,8 +238,23 @@
         <translation type="unfinished">жок</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Улантуу</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">Ката</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Save…</source>
+        <translation type="unfinished">Сактоо…</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation type="unfinished">же</translation>
     </message>
     </context>
 <context>
@@ -274,6 +300,22 @@
         <source>Clear console</source>
         <translation type="unfinished">Консолду тазалоо</translation>
     </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation type="unfinished">1&amp;саат</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation type="unfinished">1&amp;жыл</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation type="unfinished">Ооба</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="unfinished">Жок</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -313,6 +355,10 @@
     <message>
         <source>S&amp;end</source>
         <translation type="unfinished">&amp;Жөнөтүү</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation type="unfinished">же</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -379,6 +425,18 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>This week</source>
+        <translation type="unfinished">Бул апта</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation type="unfinished">Бул ай</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation type="unfinished">Бул жыл</translation>
+    </message>
     <message>
         <source>Date</source>
         <translation type="unfinished">Дата</translation>

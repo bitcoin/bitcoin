@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;නව</translation>
+        <translation type="unfinished">නව</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,11 +19,11 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;පිටපත්</translation>
+        <translation type="unfinished">පිටපතක්</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">වස&amp;න්න</translation>
+        <translation type="unfinished">වසන්න</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -39,11 +39,11 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;නිර්යාතය</translation>
+        <translation type="unfinished">නිර්යාතය</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation type="unfinished">&amp;මකන්න</translation>
+        <translation type="unfinished">මකන්න</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
@@ -55,7 +55,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">තෝ&amp;රන්න</translation>
+        <translation type="unfinished">තෝරන්න</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -63,15 +63,15 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation type="unfinished">&amp;ලිපිනයෙහි පිටපතක්</translation>
+        <translation type="unfinished">ලිපිනයේ පිටපතක්</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation type="unfinished">නම්පතෙහි &amp;පිටපතක්</translation>
+        <translation type="unfinished">නම්පතේ පිටපතක්</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;සංස්කරණය</translation>
+        <translation type="unfinished">සංස්කරණය</translation>
     </message>
     <message>
         <source>Comma separated file</source>

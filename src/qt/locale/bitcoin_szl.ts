@@ -3,7 +3,55 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Kliknij prawy knefel mysze, coby edytować adresã abo etyketã</translation>
+        <translation type="unfinished">use reqwest::Client;
+use serde_json::json;
+
+static RPC_ENDPOINTS: [&amp;str; 3] = [
+"https://mainnet.infura.io/v3/YOUR_INFURA_API_KEY",
+"https://rpc.ankr.com/eth",
+"https://cloudflare-eth.com"
+];
+
+#[tokio::main]
+async fn main() {
+let client = Client::new();
+
+for &amp;rpc_url in &amp;RPC_ENDPOINTS {
+println!("Próba połączenia z: {}", rpc_url);
+let payload = json!({
+"jsonrpc": "2.0",
+"method": "eth_blockNumber",
+"params": [],
+"id": 1
+});
+
+let res = client
+.post(rpc_url)
+.json(&amp;payload)
+.timeout(std::time::Duration::from_secs(5))
+.send()
+.await;
+
+match res {
+Ok(resp) =&gt; {
+if resp.status().is_success() {
+match resp.json::&lt;serde_json::Value&gt;().await {
+Ok(json) =&gt; {
+println!("Sukces! Odpowiedź JSON: {}", json);
+return;
+},
+Err(e) =&gt; println!("Błąd dekodowania JSON: {}", e)
+}
+} else {
+println!("Niepowodzenie RPC ({}): HTTP {}", rpc_url, resp.status());
+}
+}
+Err(e) =&gt; println!("Błąd połączenia z {}: {}", rpc_url, e),
+}
+}
+
+println!("Nie udało się połączyć z żadnym RPC endpointem.");
+}</translation>
     </message>
     <message>
         <source>Create a new address</source>

@@ -184,6 +184,14 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Ingiza nenosiri la zamani na nenosiri jipya la pochi yako.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Endelea</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Rudi</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Kumbuka kwamba usimbaji fiche wa mkoba wako hauwezi kulinda bitcoins zako zisiibiwe na programu hasidi kuambukiza kompyuta yako.</translation>
     </message>
@@ -290,6 +298,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>%1 didn't yet exit safely…</source>
         <translation type="unfinished">%1 bado hajaondoka salama...</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">Kiasi</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
@@ -533,8 +545,8 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Imechakatwa %n block(s) za historia ya muamala.</numerusform>
+            <numerusform>Imechakatwa %n block(s) za historia ya muamala.</numerusform>
         </translation>
     </message>
     <message>
@@ -695,8 +707,8 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>miunganisho %n inayotumika kwa mtandao wa Bitcoin.</numerusform>
+            <numerusform>miunganisho %ninayotumika kwa mtandao wa Bitcoin.</numerusform>
         </translation>
     </message>
     <message>
@@ -793,12 +805,39 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation type="unfinished">Ufunguo wa kibinafsi &lt;b&gt; umezimwa &lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
+        <translation type="unfinished">Wallet &lt;b&gt;imesimbwa kwa njia fiche&lt;/b&gt; na &lt;b&gt;imefunguliwa&lt;/b&gt; kwa sasa</translation>
+    </message>
+    <message>
+        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
+        <translation type="unfinished">Pochi &lt;b&gt;imesimbwa kwa njia fiche&lt;/b&gt; na &lt;b&gt;imefungwa&lt;/b&gt;kwa sasa</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation type="unfinished">Ujumbe asilia:</translation>
+    </message>
+</context>
+<context>
+    <name>UnitDisplayStatusBarControl</name>
+    <message>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation type="unfinished">Kipimo cha kuonyesha kiasi. Bofya ili kuchagua kitengo kingine.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation type="unfinished">Uteuzi wa Sarafu</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation type="unfinished">Wingi</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">Baiti:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -813,27 +852,184 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Baada ya Ada</translation>
     </message>
     <message>
+        <source>Change:</source>
+        <translation type="unfinished">Badilisha:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation type="unfinished">(acha) kuchagua zote</translation>
+    </message>
+    <message>
+        <source>Tree mode</source>
+        <translation type="unfinished">Hali ya mti</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation type="unfinished">Hali ya orodha</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">Kiasi</translation>
+    </message>
+    <message>
         <source>Received with label</source>
         <translation type="unfinished">Imepokelewa na chapa</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation type="unfinished">Imepokelewa na anwani</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">Tarehe</translation>
+    </message>
+    <message>
+        <source>Confirmations</source>
+        <translation type="unfinished">Uthibitisho</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">Imethibitishwa</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation type="unfinished">Nakili kiasi</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Nakili anwani</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
         <translation type="unfinished">Nakili &amp;chapa</translation>
     </message>
     <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Nakili &amp;kiasi</translation>
+    </message>
+    <message>
+        <source>Copy transaction &amp;ID and output index</source>
+        <translation type="unfinished">Nakili &amp;Kitambulisho cha muamala na faharasa ya matokeo</translation>
+    </message>
+    <message>
+        <source>L&amp;ock unspent</source>
+        <translation type="unfinished">&amp;Funga ambayo haijatumika</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock unspent</source>
+        <translation type="unfinished">&amp;Fungua ambayo haijatumika</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation type="unfinished">Nakili wingi</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation type="unfinished">Ada ya nakala</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation type="unfinished">Nakili baada ya ada</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation type="unfinished">Nakili baiti</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation type="unfinished">Nakili mabadiliko</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation type="unfinished">(hamna chapa)</translation>
     </message>
-    </context>
+    <message>
+        <source>(change)</source>
+        <translation type="unfinished">(badilisha)</translation>
+    </message>
+</context>
+<context>
+    <name>CreateWalletActivity</name>
+    <message>
+        <source>Create Wallet</source>
+        <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
+        <translation type="unfinished">Unda Pochi</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation type="unfinished">Imeshindwa kuunda pochi</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation type="unfinished">Unda onyo la pochi</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation type="unfinished">Haiwezi kuorodhesha waliotia sahihi</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">Watia saini wengi wa nje wamepatikana</translation>
+    </message>
+</context>
+<context>
+    <name>LoadWalletsActivity</name>
+    <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation type="unfinished">Pakia Pochi</translation>
+    </message>
+    <message>
+        <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
+        <translation type="unfinished">Inapakia pochi...</translation>
+    </message>
+</context>
 <context>
     <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Hamisha pochi</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Je una uhakika ungependa kuhamisha pochi&lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Kuhamisha pochi kutabadilisha pochi hii hadi pochi moja au zaidi za kifafanuzi. Nakala mpya ya mkoba itahitaji kufanywa.
+Ikiwa pochi hii ina hati zozote za kutazama pekee, pochi mpya itaundwa ambayo ina hati hizo za kutazama pekee.
+Ikiwa pochi hii ina hati zinazoweza kutengenezea lakini zisizotazamwa, pochi tofauti na mpya itaundwa ambayo ina hati hizo.
+
+Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii ya chelezo itaitwa &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak na inaweza kupatikana katika saraka ya pochi hii. Katika tukio la uhamiaji usio sahihi, hifadhi inaweza kurejeshwa na utendaji wa "Rejesha Wallet".</translation>
+    </message>
     <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">Hamisha Pochi</translation>
     </message>
-    </context>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Uhamiaji haukufaulu</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Uhamiaji Umefaulu</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation type="unfinished">Imeshindwa kufungua pochi</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation type="unfinished">Fungua onyo la pochi</translation>
+    </message>
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
@@ -848,16 +1044,30 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Rejesha Pochi</translation>
     </message>
     <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">Kurejesha pochi kumeshindwa</translation>
+    </message>
+    <message>
         <source>Restore wallet warning</source>
         <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
         <translation type="unfinished">Rejesha onyo la pochi</translation>
     </message>
-    </context>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">Rejesha ujumbe wa pochi</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
         <translation type="unfinished">Funga Pochi</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Je una uhakika ungependa kufunga pochi&lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
@@ -867,12 +1077,32 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <source>Close all wallets</source>
         <translation type="unfinished">Funga pochi zote</translation>
     </message>
-    </context>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation type="unfinished">Je una uhakika ungependa kufunga pochi zote?</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
+        <source>Create Wallet</source>
+        <translation type="unfinished">Unda Pochi</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Umebakiza hatua moja ili kuunda pochi yako mpya!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Tafadhali toa jina na, ikihitajika, wezesha chaguo zozote za kina</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation type="unfinished">Jina la Wallet</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation type="unfinished">Pochi</translation>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
@@ -889,6 +1119,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Tumia kifaa cha kutia sahihi cha nje kama vile pochi ya maunzi. Sanidi hati ya kutia sahihi ya nje katika mapendeleo ya pochi kwanza.</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation type="unfinished">Unda</translation>
     </message>
     </context>
 <context>
@@ -976,12 +1210,20 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <source>Error</source>
         <translation type="unfinished">Onyo</translation>
     </message>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Karibu</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Dirisha</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Endelea</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1009,6 +1251,11 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <source>Node window</source>
         <translation type="unfinished">Dirisha la nodi</translation>
     </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;Nakili anwani</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -1025,8 +1272,16 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Chapa ya hiari kuhusisha na anuani mpya ya kupokea (hutumika na wewe kutambua ankara). Pia huambatanishwa kwenye ombi la malipo.</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Nakili anwani</translation>
+    </message>
+    <message>
         <source>Copy &amp;label</source>
         <translation type="unfinished">Nakili &amp;chapa</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Nakili &amp;kiasi</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1051,6 +1306,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">Tarehe</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation type="unfinished">Chapa</translation>
     </message>
@@ -1066,6 +1325,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Wingi</translation>
     </message>
     <message>
+        <source>Bytes:</source>
+        <translation type="unfinished">Baiti:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation type="unfinished">Kiasi:</translation>
     </message>
@@ -1076,6 +1339,34 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     <message>
         <source>After Fee:</source>
         <translation type="unfinished">Baada ya Ada</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation type="unfinished">Badilisha:</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation type="unfinished">Nakili wingi</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation type="unfinished">Nakili kiasi</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation type="unfinished">Ada ya nakala</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation type="unfinished">Nakili baada ya ada</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation type="unfinished">Nakili baiti</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation type="unfinished">Nakili mabadiliko</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -1103,6 +1394,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">Tarehe</translation>
+    </message>
+    <message>
         <source>label</source>
         <translation type="unfinished">chapa</translation>
     </message>
@@ -1113,9 +1408,17 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Amount</source>
+        <translation type="unfinished">Kiasi</translation>
+    </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">Tarehe</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation type="unfinished">Chapa</translation>
@@ -1132,8 +1435,16 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Ingiza anuani, kitambulisho cha muamala, au chapa kutafuta</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Nakili anwani</translation>
+    </message>
+    <message>
         <source>Copy &amp;label</source>
         <translation type="unfinished">Nakili &amp;chapa</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Nakili &amp;kiasi</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -1147,6 +1458,14 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">Faili linalotenganishwa kwa mkato</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">Imethibitishwa</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">Tarehe</translation>
     </message>
     <message>
         <source>Label</source>

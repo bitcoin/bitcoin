@@ -10,6 +10,10 @@
         <translation type="unfinished">创建新地址</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation type="unfinished">新建(&amp;N)</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation type="unfinished">把目前选择的地址复制到系统粘贴板中</translation>
     </message>
@@ -145,6 +149,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
         <translation type="unfinished">這個動作需要你的錢包密碼來解鎖錢包。</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">解鎖錢包</translation>
     </message>
     <message>
         <source>Change passphrase</source>

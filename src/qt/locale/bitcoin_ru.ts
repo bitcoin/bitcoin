@@ -6,6 +6,10 @@
         <translation type="unfinished">Нажмите правой кнопкой мыши, чтобы изменить адрес или метку</translation>
     </message>
     <message>
+        <source>Create a new address</source>
+        <translation type="unfinished">Создать новые адрес</translation>
+    </message>
+    <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;Новый</translation>
     </message>
@@ -92,6 +96,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sending addresses - %1</source>
         <translation type="unfinished">Адреса отправки - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Адреса получения - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>

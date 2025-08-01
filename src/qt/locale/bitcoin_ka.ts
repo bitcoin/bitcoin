@@ -94,6 +94,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">მისამართების სიის %1 შენახვა ვერ მოხერხდა. თავიდან სცადეთ.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">გასაგზავნი მისამართები - %1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">მიმღები მისამართები - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">ექპორტი ვერ განხორციელდა</translation>
     </message>
@@ -180,6 +188,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">გაგრძელება</translation>
     </message>
     <message>
+        <source>Back</source>
+        <translation type="unfinished">უკან დაბრუნება</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">გახსოვდეთ, რომ თქვენი საფულის დაშიფვრა ვერ უზრუნველყოფს სრულად დაიცვას თქვენი ბიტკოინების მოპარვა კომპიუტერში მავნე პროგრამებით.</translation>
     </message>
@@ -222,6 +234,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">საფულის ფრაზა-პაროლი შეცვლილია.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">კოდური სიტყვა ვერ შეიცვალა</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -668,6 +684,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">საფულის სარეზერვოს ჩატვირთვა</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">საფულის აღდგენა</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">საფულის სახელი</translation>
@@ -692,6 +713,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>&amp;Hide</source>
         <translation type="unfinished">&amp;დამალვა</translation>
     </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">ჩ&amp;ვენება</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
@@ -714,6 +739,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Enable network activity</source>
         <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
         <translation type="unfinished">ქსელის აქტივობის ჩართვა</translation>
+    </message>
+    <message>
+        <source>Error creating wallet</source>
+        <translation type="unfinished">საფულის შექმნისას დაფიქსირდა შეცდომა</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -775,7 +804,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation type="unfinished">საფულე &lt;b&gt;დაშიფრულია&lt;/b&gt; და ამჟამად &lt;b&gt;დაბლოკილია&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Original message:</source>
+        <translation type="unfinished">თავდაპირველი/ორიგინალი გზავნილი:</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -821,6 +854,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Amount</source>
         <translation type="unfinished">თანხა</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation type="unfinished">ლეიბლით მიღება</translation>
     </message>
     <message>
         <source>Received with address</source>
@@ -934,6 +971,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">ღია საფულე</translation>
+    </message>
+    </context>
+<context>
+    <name>RestoreWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">საფულის აღდგენა</translation>
     </message>
     </context>
 <context>
@@ -1070,6 +1115,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
             <numerusform />
             <numerusform />
         </translation>
+    </message>
+    <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">აირჩიეთ მონაცემთა დირექტორია</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>

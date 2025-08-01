@@ -185,6 +185,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">वालेटको लागि पुरानो पासफ्रेज र नयाँ पासफ्रेज प्रविष्ट गर्नुहोस्।</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">जारी राख्नुहोस्</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">फिर्ता जानुहोस्</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">याद गर्नुहोस् कि तपाईको वालेट इन्क्रिप्ट गर्नाले तपाईको बिटकोइनलाई तपाईको कम्प्युटरमा मालवेयरले चोरी हुनबाट पूर्णतया सुरक्षित गर्न सक्दैन।</translation>
     </message>
@@ -281,6 +289,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation type="unfinished">के तपाइँ पूर्वनिर्धारित मानहरूमा सेटिङहरू रिसेट गर्न चाहनुहुन्छ, वा परिवर्तन नगरी रद्द गर्न चाहनुहुन्छ?</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
+        <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
+        <translation type="unfinished">एउटा ठूलो त्रुटि भयो। सेटिङ फाइल लेख्न मिल्छ कि मिल्दैन जाँच गर्नुहोस्, वा -nosettings लेखेर चलाउने प्रयास गर्नुहोस्।</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -683,6 +696,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;OK</source>
         <translation type="unfinished">&amp;ठिक छ</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">जारी राख्नुहोस्</translation>
     </message>
     </context>
 <context>

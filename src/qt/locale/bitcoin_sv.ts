@@ -26,6 +26,10 @@
         <translation type="unfinished">S&amp;täng</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation type="unfinished">Radera den markerade adressen från listan</translation>
+    </message>
+    <message>
         <source>Enter address or label to search</source>
         <translation type="unfinished">Ange en adress eller etikett att söka efter</translation>
     </message>
@@ -44,6 +48,10 @@
     <message>
         <source>Choose the address to send coins to</source>
         <translation type="unfinished">Välj en adress att skicka transaktionen till</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">Välj en adress att ` emot transaktionen med</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -292,6 +300,10 @@ Försök igen.</translation>
     <message>
         <source>unknown</source>
         <translation type="unfinished">okänd</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Inbäddad "%1"</translation>
     </message>
     <message>
         <source>Custom…</source>
@@ -2120,6 +2132,10 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">Antalet anslutningar</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">Lokala adresser</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">Blockkedja</translation>
     </message>
@@ -3185,6 +3201,10 @@ Om den här plånboken innehåller lösbara</translation>
         <translation type="unfinished">Utmatningsindex</translation>
     </message>
     <message>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (certifikatet verifierades inte)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation type="unfinished">Handlare</translation>
     </message>
@@ -3683,6 +3703,14 @@ Gå till Fil &gt; Öppna plånbok för att läsa in en plånbok.
     <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation type="unfinished">Kan inte använda -peerblockfilters utan -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is less than transaction weight without inputs</source>
+        <translation type="unfinished">Maximal transaktionsvikt är mindre än transaktionsvikten utan inmatningar</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is too low, can not accommodate change output</source>
+        <translation type="unfinished">Maximal transaktionsvikt är för låg, kan inte tillgodose ändrad utdata</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>

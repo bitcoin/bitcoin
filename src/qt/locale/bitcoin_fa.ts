@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp; جدید</translation>
+        <translation type="unfinished">&amp;جدید</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp; ذخیره</translation>
+        <translation type="unfinished">&amp;ذخیره</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -38,6 +38,26 @@
         <translation type="unfinished">داده های موجود در برگه فعلی را به یک فایل صادر کنید</translation>
     </message>
     <message>
+        <source>&amp;Export</source>
+        <translation type="unfinished">&amp;صدور</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation type="unfinished">&amp;حذف</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation type="unfinished">آدرسی را برای ارسال سکه‌ها انتخاب کنید</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation type="unfinished">آدرسی را برای دریافت سکه‌ها انتخاب کنید</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation type="unfinished">&amp;انتخاب</translation>
+    </message>
+    <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation type="unfinished">اینها آدرس های بیت کوین شما برای ارسال پرداخت هستند. همیشه قبل از ارسال سکه، مبلغ و آدرس دریافت کننده را بررسی کنید.</translation>
     </message>
@@ -46,6 +66,27 @@
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">اینها آدرس های بیت کوین شما برای دریافت هستند. از دکمه "ایجاد آدرس دریافت جدید" در برگه دریافت برای ایجاد آدرس های جدید استفاده کنید.
 امضا فقط با آدرس هایی از نوع "میراث" امکان پذیر است.</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">&amp;کپی کردن آدرس</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">&amp;کپی کردن برچسب</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">&amp;ویرایش</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation type="unfinished">صادر کردن فهرستی از آدرس‌ها</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">فایل جدا شده با کاما</translation>
     </message>
     </context>
 <context>
@@ -263,6 +304,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;به حداقل رساندن</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">کیف پول:</translation>
+    </message>
+    <message>
         <source>Network activity disabled.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">فعالیت شبکه غیرفعال شد.</translation>
@@ -320,6 +365,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Verify message…</source>
         <translation type="unfinished">پیام تایید</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation type="unfinished">پیام‌ها را تأیید کنید تا مطمئن شوید که با آدرس‌های بیت‌کوین مشخص‌شده امضا شده‌اند</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -746,6 +795,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">حداکثر اندازهٔ کش پایگاه داده. اطمینان حاصل کنید که حافظهٔ RAM کافی دارید. کش بزرگ‌تر می‌تواند به همگام‌سازی سریع‌تر کمک کند، اما پس از آن، این مزیت برای بیشتر کاربردها چندان محسوس نیست. کاهش اندازهٔ کش باعث کاهش مصرف حافظه می‌شود. حافظهٔ استفاده‌نشدهٔ mempool با این کش به‌صورت مشترک استفاده می‌شود.</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">باز کردن خودکار پورت کلاینت بیت‌کوین روی روتر. این ویژگی تنها زمانی کار می‌کند که روتر شما از PCP یا NAT-PMP پشتیبانی کند و این قابلیت فعال باشد. پورت خارجی ممکن است به‌صورت تصادفی انتخاب شود.</translation>
+    </message>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">پورت را با استفاده از PCP یا NAT-PMP نگاشت کن</translation>
+    </message>
     <message>
         <source>Font in the Overview tab: </source>
         <translation type="unfinished">فونت در برگه کلی:</translation>
@@ -1242,6 +1304,13 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     </context>
 <context>
+    <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Wallet:</source>
+        <translation type="unfinished">کیف پول:</translation>
+    </message>
+    </context>
+<context>
     <name>RecentRequestsTableModel</name>
     <message>
         <source>(no label)</source>
@@ -1361,6 +1430,17 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     </context>
 <context>
+    <name>WalletModel</name>
+    <message>
+        <source>Fee-bump PSBT copied to clipboard</source>
+        <translation type="unfinished">PSBT با هزینه اضافه شده، در بریده‌دان کپی شد</translation>
+    </message>
+    <message>
+        <source>Signer error</source>
+        <translation type="unfinished">خطای امضا کننده</translation>
+    </message>
+    </context>
+<context>
     <name>WalletView</name>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -1378,6 +1458,64 @@ If you are receiving this error you should request the merchant provide a BIP21 
 </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Error starting/committing db txn for wallet transactions removal process</source>
+        <translation type="unfinished">خطا در شروع یا انجام تراکنش پایگاه داده برای فرآیند حذف تراکنش‌های کیف پول</translation>
+    </message>
+    <message>
+        <source>Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets</source>
+        <translation type="unfinished">مقدار نامعتبری برای گزینهٔ ‘-wallet’ یا ‘-nowallet’ شناسایی شد. گزینهٔ ‘-wallet’ نیاز به مقدار رشته‌ای دارد، در حالی که ‘-nowallet’ فقط مقدار ‘1’ را برای غیرفعال‌سازی تمام کیف‌پول‌ها می‌پذیرد</translation>
+    </message>
+    <message>
+        <source>Option '-upnp' is set but UPnP support was dropped in version 29.0. Consider using '-natpmp' instead.</source>
+        <translation type="unfinished">گزینهٔ ‘-upnp’ تنظیم شده است اما پشتیبانی از UPnP در نسخهٔ 29.0 حذف شده است. استفاده از گزینهٔ ‘-natpmp’ را در نظر بگیرید</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">امکان قفل‌گذاری روی پوشهٔ %s وجود ندارد. احتمالاً %s در حال حاضر در حال اجراست</translation>
+    </message>
+    <message>
+        <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
+</source>
+        <translation type="unfinished">پاک‌سازی پوشهٔ وضعیت زنجیرهٔ اسنپ‌شات (%s) با شکست مواجه شد. لطفاً پیش از راه‌اندازی مجدد، آن را به‌صورت دستی حذف کنید.
+</translation>
+    </message>
+    <message>
+        <source>Flushing block file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">ذخیرهٔ فایل بلاک روی دیسک با شکست مواجه شد. احتمالاً ناشی از یک خطای ورودی/خروجی (I/O) است</translation>
+    </message>
+    <message>
+        <source>Flushing undo file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">ذخیرهٔ فایل undo روی دیسک با شکست مواجه شد. احتمالاً ناشی از خطای ورودی/خروجی است</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is less than transaction weight without inputs</source>
+        <translation type="unfinished">حداکثر وزن تراکنش کمتر از وزن تراکنش بدون ورودی‌ها است</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is too low, can not accommodate change output</source>
+        <translation type="unfinished">حداکثر وزن تراکنش بسیار کم است، امکان افزودن خروجی تغییر (change output) وجود ندارد</translation>
+    </message>
+    <message>
+        <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
+        <translation type="unfinished">تغییر نام '%s' به '%s' با شکست مواجه شد. نمی‌توان پوشهٔ leveldb مربوط به chainstate پس‌زمینه را پاک‌سازی کرد</translation>
+    </message>
+    <message>
+        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">مقدار تعیین‌شده برای -blockmaxweight (%d) از حداکثر وزن بلاک مورد توافق (%d) بیشتر است</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">مقدار تعیین‌شده برای -blockreservedweight (%d) از حداکثر وزن بلاک مورد توافق (%d) بیشتر است</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">مقدار تعیین‌شده برای -blockreservedweight (%d) کمتر از مقدار حداقلی ایمنی (%d) است</translation>
+    </message>
+    <message>
+        <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
+        <translation type="unfinished">ترکیب ورودی‌های از پیش انتخاب‌شده و ورودی‌های انتخاب‌شده به‌صورت خودکار توسط کیف‌پول از حداکثر وزن تراکنش فراتر رفته است. لطفاً مقدار کمتری ارسال کنید یا UTXOهای کیف‌پول را به‌صورت دستی تجمیع کنید</translation>
+    </message>
     <message>
         <source>Error: Unable to read wallet's best block locator record</source>
         <translation type="unfinished">خطا: خواندن بهترین سابقه یاب بلوک کیف پول امکان پذیر نیست</translation>
