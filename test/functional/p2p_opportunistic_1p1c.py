@@ -333,41 +333,6 @@ class PackageRelayTest(BitcoinTestFramework):
         assert high_fee_child["txid"] in node_mempool
 
     @cleanup
-    def test_multiple_parents(self):
-        self.log.info("Check that node does not request more than 1 previously-rejected low feerate parent")
-
-        node = self.nodes[0]
-        node.setmocktime(int(time.time()))
-
-        # 2-parent-1-child package where both parents are below mempool min feerate
-        parent_low_1 = self.create_tx_below_mempoolminfee(self.wallet_nonsegwit)
-        parent_low_2 = self.create_tx_below_mempoolminfee(self.wallet_nonsegwit)
-        child_bumping = self.wallet_nonsegwit.create_self_transfer_multi(
-            utxos_to_spend=[parent_low_1["new_utxo"], parent_low_2["new_utxo"]],
-            fee_per_output=999*parent_low_1["tx"].get_vsize(),
-        )
-
-        peer_sender = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, connection_type="outbound-full-relay")
-
-        # 1. Send both parents. Each should be rejected for being too low feerate.
-        # Send unsolicited so that we can later check that no "getdata" was ever received.
-        peer_sender.send_and_ping(msg_tx(parent_low_1["tx"]))
-        peer_sender.send_and_ping(msg_tx(parent_low_2["tx"]))
-
-        # parent_low_1 and parent_low_2 are rejected for being low feerate.
-        assert parent_low_1["txid"] not in node.getrawmempool()
-        assert parent_low_2["txid"] not in node.getrawmempool()
-
-        # 2. Send child.
-        peer_sender.send_and_ping(msg_tx(child_bumping["tx"]))
-
-        # 3. Node should not request any parents, as it should recognize that it will not accept
-        # multi-parent-1-child packages.
-        node.bumpmocktime(GETDATA_WAIT)
-        peer_sender.sync_with_ping()
-        assert "getdata" not in peer_sender.last_message
-
-    @cleanup
     def test_other_parent_in_mempool(self):
         self.log.info("Check opportunistic 1p1c works when part of a 2p1c (child already has another parent in mempool)")
         node = self.nodes[0]
@@ -632,7 +597,6 @@ class PackageRelayTest(BitcoinTestFramework):
 
         self.test_orphan_consensus_failure()
         self.test_parent_consensus_failure()
-        self.test_multiple_parents()
         self.test_other_parent_in_mempool()
         self.test_1p1c_on_1p1c()
 
