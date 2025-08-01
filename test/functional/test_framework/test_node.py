@@ -117,6 +117,7 @@ class TestNode():
             "-debugexclude=leveldb",
             "-debugexclude=rand",
             "-uacomment=testnode%d" % i,  # required for subversion uniqueness across peers
+            "-disableratelimitlogging",
         ]
         if uses_wallet is not None and not uses_wallet:
             self.args.append("-disablewallet")
