@@ -2585,6 +2585,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(m_chainman.time_forks),
              Ticks<MillisecondsDouble>(m_chainman.time_forks) / m_chainman.num_blocks_total);
 
+    if (static bool prev{!fScriptChecks}; fScriptChecks != prev) {
+        LogInfo("%s signature validations at block #%d (%s).", fScriptChecks ? "Enabling" : "Disabling", pindex->nHeight, block_hash.ToString());
+        prev = fScriptChecks;
+    }
+
     CBlockUndo blockundo;
 
     // Precomputed transaction data pointers must not be invalidated
