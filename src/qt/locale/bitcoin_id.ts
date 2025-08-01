@@ -1627,6 +1627,18 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <translation type="unfinished">Koneksi keluar dibatasi untuk i2p (-onlynet=i2p) tetapi -i2psam tidak disertakan</translation>
     </message>
     <message>
+        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Detailnya - nilai block maksimal ( %d ) melebihi nilai awal maksimal block ( %d )</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Berat blok yang ditetapkan -blockreservedweight (%d) melebihi berat maksimum blok konsensus (%d)</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">Detailnya -nilai block cadangan (%d) lebih kecil dari nilai minimum aman nya (%d)</translation>
+    </message>
+    <message>
         <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
         <translation type="unfinished">Kombinasi input yang telah dipilih sebelumnya dan pemilihan input otomatis dompet melebihi berat maksimum transaksi. Silakan coba mengirimkan jumlah yang lebih kecil atau menggabungkan UTXO dompet Anda secara manual</translation>
     </message>

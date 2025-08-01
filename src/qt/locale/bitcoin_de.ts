@@ -997,7 +997,7 @@ Das Signieren ist nur mit Adressen vom Typ 'Legacy' möglich.</translation>
     </message>
     <message>
         <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation type="unfinished">Sicher, dass die Wallet migriert werden soll? &lt;i&gt;%1&lt;/i&gt;?</translation>
+        <translation type="unfinished">Sicher, dass die Wallet &lt;i&gt;%1&lt;/i&gt; migriert werden soll?</translation>
     </message>
     <message>
         <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
@@ -1029,7 +1029,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     </message>
     <message>
         <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Lösbare aber nicht beobachtete Scripts wurde in eine neue Wallet namens '%1' überführt.</translation>
+        <translation type="unfinished">Lösbare aber nicht beobachtete Scripts wurden in eine neue Wallet namens '%1' überführt.</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1081,12 +1081,12 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     <message>
         <source>Restore wallet warning</source>
         <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
-        <translation type="unfinished">Wallet Wiederherstellungs Warnung</translation>
+        <translation type="unfinished">Wallet-Wiederherstellungswarnung</translation>
     </message>
     <message>
         <source>Restore wallet message</source>
         <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
-        <translation type="unfinished">Wallet Wiederherstellungs Nachricht</translation>
+        <translation type="unfinished">Wallet-Wiederherstellungsnachricht</translation>
     </message>
 </context>
 <context>
@@ -1169,7 +1169,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Ohne Unterstützung für die Signierung durch externe Geräte Dritter kompiliert (notwendig für Signierung durch externe Geräte Dritter)</translation>
+        <translation type="unfinished">Ohne Unterstützung für externe Signierung kompiliert (notwendig für externe Signierung)</translation>
     </message>
 </context>
 <context>
@@ -1484,7 +1484,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     </message>
     <message>
         <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">Vollständiger Pfad zu %1 einem Bitcoin Core kompatibelen Script (z.B.: C:\Downloads\hwi.exe oder /Users/you/Downloads/hwi.py). Achtung: Malware kann Bitcoins stehlen!</translation>
+        <translation type="unfinished">Vollständiger Pfad zu einem mit %1 kompatiblen Skript (z.B. C:\Downloads\hwi.exe oder /Users/you/Downloads/hwi.py). Achtung: Malware kann Coins stehlen</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
@@ -1594,12 +1594,12 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     <message>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">&amp;PBST-Kontrollen aktivieren</translation>
+        <translation type="unfinished">&amp;PSBT-Kontrollen aktivieren</translation>
     </message>
     <message>
         <source>Whether to show PSBT controls.</source>
         <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
-        <translation type="unfinished">Ob PSBT-Kontrollen angezeigt werden sollen. </translation>
+        <translation type="unfinished">Ob PSBT-Kontrollen angezeigt werden sollen.</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -1708,7 +1708,7 @@ Während des Migrationsprozesses wird vor der Migration ein Backup der Wallet er
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Ohne Unterstützung für die Signierung durch externe Geräte Dritter kompiliert (notwendig für Signierung durch externe Geräte Dritter)</translation>
+        <translation type="unfinished">Ohne Unterstützung für externe Signierung kompiliert (notwendig für externe Signierung)</translation>
     </message>
     <message>
         <source>default</source>
@@ -2211,7 +2211,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>Hide Peers Detail</source>
-        <translation type="unfinished">Reiter mit Peers verstecken</translation>
+        <translation type="unfinished">Peer-Details ausblenden</translation>
     </message>
     <message>
         <source>Ctrl+X</source>
@@ -2223,7 +2223,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     </message>
     <message>
         <source>Whether we relay transactions to this peer.</source>
-        <translation type="unfinished">Ob wir Adressen an diesen Peer weiterleiten.</translation>
+        <translation type="unfinished">Ob wir Transaktionen an diesen Peer weiterleiten.</translation>
     </message>
     <message>
         <source>Transaction Relay</source>
@@ -2266,7 +2266,7 @@ Wenn Sie diese Fehlermeldung erhalten, sollten Sie den Händler bitten, einen BI
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
         <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
-        <translation type="unfinished">Die Gesamtzahl der von diesem Peer empfangenen Adressen, die aufgrund von Ratenbegrenzung verworfen (nicht verarbeitet) wurden.</translation>
+        <translation type="unfinished">Die Gesamtzahl der von diesem Peer empfangenen Adressen, die verarbeitet wurden (ausgenommen Adressen, die aufgrund von Ratenbegrenzung verworfen wurden).</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
@@ -3315,7 +3315,7 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation type="unfinished">Geben Sie die Zahlungsadresse des Empfängers, Nachricht (achten Sie darauf Zeilenumbrüche, Leerzeichen, Tabulatoren usw. exakt zu kopieren) und Signatur unten ein, um die Nachricht zu verifizieren. Vorsicht, interpretieren Sie nicht mehr in die Signatur hinein, als in der signierten Nachricht selber enthalten ist, um nicht von einem Man-in-the-middle-Angriff hinters Licht geführt zu werden. Beachten Sie, dass dies nur beweist, dass die signierende Partei über diese Adresse Überweisungen empfangen kann.</translation>
+        <translation type="unfinished">Geben Sie die Zahlungsadresse des Empfängers, Nachricht (achten Sie darauf Zeilenumbrüche, Leerzeichen, Tabulatoren usw. exakt zu kopieren) und Signatur unten ein, um die Nachricht zu verifizieren. Vorsicht, interpretieren Sie nicht mehr in die Signatur hinein, als in der signierten Nachricht selber enthalten ist, um nicht von einem Man-in-the-middle-Angriff hinters Licht geführt zu werden. Beachten Sie, dass dies nur beweist, dass die signierende Partei über diese Adresse Überweisungen empfangen kann, es aber nicht die Absenderschaft irgendeiner Transaktion beweisen kann.</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -3825,7 +3825,7 @@ Hinweis: Da die Gebühr auf Basis der Bytes berechnet wird, führt eine Gebühre
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation type="unfinished">Speichern des Transaktionsverlaufs nach %1 war erfolgreich.</translation>
+        <translation type="unfinished">Der Transaktionsverlauf wurde erfolgreich in %1 gespeichert.</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -4007,7 +4007,7 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
     </message>
     <message>
         <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
-        <translation type="unfinished">Kann ein aufgespaltenes nicht-HD Wallet nicht von Version %i auf Version %i aktualisieren, ohne auf Unterstützung von Keypools vor der Aufspaltung zu aktualisieren. Bitte benutze Version%i oder keine bestimmte Version.</translation>
+        <translation type="unfinished">Kann ein aufgespaltenes nicht-HD Wallet nicht von Version %i auf Version %i aktualisieren, ohne auf Unterstützung von Keypools vor der Aufspaltung zu aktualisieren. Bitte benutze Version %i oder keine bestimmte Version.</translation>
     </message>
     <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
@@ -4031,7 +4031,7 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
     </message>
     <message>
         <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
-        <translation type="unfinished">Fehler: Dumpdatei Format Eintrag ist Ungültig. Habe "%s" bekommen, aber "format" erwartet.</translation>
+        <translation type="unfinished">Fehler: Dumpdatei Format Eintrag ist ungültig. Habe "%s" bekommen, aber "format" erwartet.</translation>
     </message>
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
@@ -4039,7 +4039,7 @@ Gehen Sie zu Datei &gt; Wallet Öffnen, um eine Wallet zu laden.
     </message>
     <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation type="unfinished">Fehler: Die Version der Speicherauszugsdatei ist %s und wird nicht unterstützt. Diese Version von bitcoin-wallet unterstützt nur Speicherauszugsdateien der Version 1.</translation>
+        <translation type="unfinished">Fehler: Die Version %sder Dumpdatei wird nicht unterstützt. Diese Version von bitcoin-wallet unterstützt nur Dumpdateien der Version 1.</translation>
     </message>
     <message>
         <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
@@ -4228,7 +4228,7 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     </message>
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Fehler: Transaktion in Wallet %s kann nicht als zu migrierten Wallet gehörend identifiziert werden</translation>
+        <translation type="unfinished">Fehler: Transaktion %s in der Wallet kann nicht den migrierten Wallets zugeordnet werden.</translation>
     </message>
     <message>
         <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
@@ -4237,7 +4237,7 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     <message>
         <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
 </source>
-        <translation type="unfinished">Fehler beim Entfernen des Snapshot-Chainstate-Verzeichnisses (%s). Entferne es manuell, bevor dem Neustart.
+        <translation type="unfinished">Fehler beim Entfernen des Snapshot-Chainstate-Verzeichnisses (%s). Entferne es manuell vor dem Neustart.
 </translation>
     </message>
     <message>
@@ -4278,7 +4278,7 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     </message>
     <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
-        <translation type="unfinished">Ausgehende Verbindungen sind eingeschränkt auf Tor (-onlynet=onion), aber der Proxy, um das Tor-Netzwerk zu erreichen ist nicht vorhanden (no -proxy= and no -onion= given) oder ausdrücklich verboten (-onion=0)</translation>
+        <translation type="unfinished">Ausgehende Verbindungen sind eingeschränkt auf Tor (-onlynet=onion), aber der Proxy, um das Tor-Netzwerk zu erreichen ist nicht ausdrücklich verboten (-onion=0)</translation>
     </message>
     <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
@@ -4318,7 +4318,7 @@ Bitte nutzen Sie entweder "bdb" oder "sqlite".</translation>
     </message>
     <message>
         <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
-        <translation type="unfinished">Die Transaktion erfordert ein Ziel mit einem Wert ungleich nicht-0, eine Gebühr ungleich nicht-0 oder eine vorausgewählte Eingabe</translation>
+        <translation type="unfinished">Die Transaktion erfordert ein Ziel mit einem Wert ungleich 0, eine Gebühr ungleich 0 oder eine vorausgewählte Eingabe</translation>
     </message>
     <message>
         <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>
@@ -4388,7 +4388,7 @@ Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
-        <translation type="unfinished">Konfigurationseinstellungen für %s sind nur auf %s network gültig, wenn in Sektion [%s]</translation>
+        <translation type="unfinished">Konfigurationseinstellung für %s ist nur im %s Netzwerk gültig, wenn sie im Abschnitt [%s] steht.</translation>
     </message>
     <message>
         <source>Corrupt block found indicating potential hardware failure.</source>
@@ -4416,7 +4416,7 @@ Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
     </message>
     <message>
         <source>Dump file %s does not exist.</source>
-        <translation type="unfinished">Speicherauszugsdatei %sexistiert nicht.</translation>
+        <translation type="unfinished">Dumpdatei %s existiert nicht.</translation>
     </message>
     <message>
         <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
@@ -4492,7 +4492,7 @@ Die Sicherung der Wallet kann nicht wiederhergestellt werden.</translation>
     </message>
     <message>
         <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
-        <translation type="unfinished">Fehler: Prüfsumme der Speicherauszugsdatei stimmt nicht überein.
+        <translation type="unfinished">Fehler: Prüfsumme der Dumpdatei stimmt nicht überein.
 Berechnet: %s, erwartet: %s</translation>
     </message>
     <message>
@@ -4553,7 +4553,7 @@ Berechnet: %s, erwartet: %s</translation>
     </message>
     <message>
         <source>Error: Unable to write data to disk for wallet %s</source>
-        <translation type="unfinished">Fehler: Daten können nicht auf die Festplatte für die Wallet %s geschrieben werden </translation>
+        <translation type="unfinished">Fehler: Daten können nicht auf die Festplatte für die Wallet %s geschrieben werden</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -4669,7 +4669,7 @@ Berechnet: %s, erwartet: %s</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Ungültiger Betrag für %s=&lt;amount&gt;: '%s' (muss mindestens %ssein)</translation>
+        <translation type="unfinished">Ungültiger Betrag für %s=&lt;amount&gt;: '%s' (muss mindestens %s sein)</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
@@ -4737,7 +4737,7 @@ Berechnet: %s, erwartet: %s</translation>
     </message>
     <message>
         <source>Not solvable pre-selected input %s</source>
-        <translation type="unfinished">Nicht auflösbare vorausgewählter Input %s</translation>
+        <translation type="unfinished">Nicht auflösbarer vorausgewählter Input %s</translation>
     </message>
     <message>
         <source>Only direction was set, no permissions: '%s'</source>
@@ -4757,7 +4757,7 @@ Berechnet: %s, erwartet: %s</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
-        <translation type="unfinished">Reduziere -maxconnections von %d zu %d, aufgrund von Systemlimitierungen.</translation>
+        <translation type="unfinished">Reduziere -maxconnections von %d auf %d, aufgrund von Systemlimitierungen.</translation>
     </message>
     <message>
         <source>Replaying blocks…</source>
@@ -4777,8 +4777,7 @@ Berechnet: %s, erwartet: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to read database verification error: %s</source>
-        <translation type="unfinished">Datenbank konnte nicht gelesen werden
-Verifikations-Error: %s</translation>
+        <translation type="unfinished">SQLiteDatabase: Fehler beim Lesen der Datenbank, Verifizierungsfehler: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
@@ -4786,7 +4785,7 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>Section [%s] is not recognized.</source>
-        <translation type="unfinished">Sektion [%s] ist nicht delegiert.</translation>
+        <translation type="unfinished">Sektion [%s] wird nicht erkannt.</translation>
     </message>
     <message>
         <source>Signer did not echo address</source>
@@ -4846,7 +4845,7 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>The specified config file %s does not exist</source>
-        <translation type="unfinished">Die angegebene Konfigurationsdatei %sexistiert nicht</translation>
+        <translation type="unfinished">Die angegebene Konfigurationsdatei %s existiert nicht</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -4858,7 +4857,7 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Das Wallet verhindert Zahlungen, die die Mindesttransaktionsgebühr nicht berücksichtigen.</translation>
+        <translation type="unfinished">Das Wallet vermeidet es, weniger als die Mindesttransaktionsgebühr zu zahlen.</translation>
     </message>
     <message>
         <source>There is no ScriptPubKeyManager for this address</source>
@@ -4930,7 +4929,7 @@ Verifikations-Error: %s</translation>
     </message>
     <message>
         <source>Unable to open %s for writing</source>
-        <translation type="unfinished">Konnte %s nicht zum Schreiben zu öffnen</translation>
+        <translation type="unfinished">Konnte %s nicht zum Schreiben öffnen</translation>
     </message>
     <message>
         <source>Unable to parse -maxuploadtarget: '%s'</source>

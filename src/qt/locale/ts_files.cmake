@@ -15,26 +15,17 @@ set(ts_files
   bitcoin_cs.ts
   bitcoin_cy.ts
   bitcoin_da.ts
-  bitcoin_de_AT.ts
-  bitcoin_de_CH.ts
   bitcoin_de.ts
   bitcoin_el.ts
   bitcoin_en.ts
   bitcoin_eo.ts
   bitcoin_es.ts
-  bitcoin_es_CL.ts
-  bitcoin_es_CO.ts
-  bitcoin_es_DO.ts
-  bitcoin_es_SV.ts
-  bitcoin_es_VE.ts
   bitcoin_et.ts
   bitcoin_eu.ts
   bitcoin_fa.ts
   bitcoin_fi.ts
   bitcoin_fil.ts
   bitcoin_fo.ts
-  bitcoin_fr_CM.ts
-  bitcoin_fr_LU.ts
   bitcoin_fr.ts
   bitcoin_ga.ts
   bitcoin_ga_IE.ts
@@ -112,6 +103,7 @@ set(ts_files
   bitcoin_tl.ts
   bitcoin_tn.ts
   bitcoin_tr.ts
+  bitcoin_tt.ts
   bitcoin_ug.ts
   bitcoin_uk.ts
   bitcoin_ur.ts

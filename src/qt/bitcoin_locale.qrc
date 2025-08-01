@@ -17,17 +17,10 @@
         <file alias="cy">locale/bitcoin_cy.qm</file>
         <file alias="da">locale/bitcoin_da.qm</file>
         <file alias="de">locale/bitcoin_de.qm</file>
-        <file alias="de_AT">locale/bitcoin_de_AT.qm</file>
-        <file alias="de_CH">locale/bitcoin_de_CH.qm</file>
         <file alias="el">locale/bitcoin_el.qm</file>
         <file alias="en">locale/bitcoin_en.qm</file>
         <file alias="eo">locale/bitcoin_eo.qm</file>
         <file alias="es">locale/bitcoin_es.qm</file>
-        <file alias="es_CL">locale/bitcoin_es_CL.qm</file>
-        <file alias="es_CO">locale/bitcoin_es_CO.qm</file>
-        <file alias="es_DO">locale/bitcoin_es_DO.qm</file>
-        <file alias="es_SV">locale/bitcoin_es_SV.qm</file>
-        <file alias="es_VE">locale/bitcoin_es_VE.qm</file>
         <file alias="et">locale/bitcoin_et.qm</file>
         <file alias="eu">locale/bitcoin_eu.qm</file>
         <file alias="fa">locale/bitcoin_fa.qm</file>
@@ -35,8 +28,6 @@
         <file alias="fil">locale/bitcoin_fil.qm</file>
         <file alias="fo">locale/bitcoin_fo.qm</file>
         <file alias="fr">locale/bitcoin_fr.qm</file>
-        <file alias="fr_CM">locale/bitcoin_fr_CM.qm</file>
-        <file alias="fr_LU">locale/bitcoin_fr_LU.qm</file>
         <file alias="ga">locale/bitcoin_ga.qm</file>
         <file alias="ga_IE">locale/bitcoin_ga_IE.qm</file>
         <file alias="gd">locale/bitcoin_gd.qm</file>
@@ -113,6 +104,7 @@
         <file alias="tl">locale/bitcoin_tl.qm</file>
         <file alias="tn">locale/bitcoin_tn.qm</file>
         <file alias="tr">locale/bitcoin_tr.qm</file>
+        <file alias="tt">locale/bitcoin_tt.qm</file>
         <file alias="ug">locale/bitcoin_ug.qm</file>
         <file alias="uk">locale/bitcoin_uk.qm</file>
         <file alias="ur">locale/bitcoin_ur.qm</file>
