@@ -1,16 +1,16 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <mp/config.h>
 #include <mp/util.h>
 
-#include <errno.h>
+#include <cerrno>
+#include <cstdio>
 #include <kj/common.h>
 #include <kj/string-tree.h>
 #include <pthread.h>
 #include <sstream>
-#include <stdio.h>
 #include <string>
 #include <sys/resource.h>
 #include <sys/socket.h>

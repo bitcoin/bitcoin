@@ -55,7 +55,6 @@ void IpcPipeTest()
 {
     // Setup: create FooImplementation object and listen for FooInterface requests
     std::promise<std::unique_ptr<mp::ProxyClient<gen::FooInterface>>> foo_promise;
-    std::function<void()> disconnect_client;
     std::thread thread([&]() {
         mp::EventLoop loop("IpcPipeTest", [](bool raise, const std::string& log) { LogInfo("LOG%i: %s", raise, log); });
         auto pipe = loop.m_io_context.provider->newTwoWayPipe();
@@ -63,9 +62,9 @@ void IpcPipeTest()
         auto connection_client = std::make_unique<mp::Connection>(loop, kj::mv(pipe.ends[0]));
         auto foo_client = std::make_unique<mp::ProxyClient<gen::FooInterface>>(
             connection_client->m_rpc_system->bootstrap(mp::ServerVatId().vat_id).castAs<gen::FooInterface>(),
-            connection_client.get(), /* destroy_connection= */ false);
+            connection_client.get(), /* destroy_connection= */ true);
+        connection_client.release();
         foo_promise.set_value(std::move(foo_client));
-        disconnect_client = [&] { loop.sync([&] { connection_client.reset(); }); };
 
         auto connection_server = std::make_unique<mp::Connection>(loop, kj::mv(pipe.ends[1]), [&](mp::Connection& connection) {
             auto foo_server = kj::heap<mp::ProxyServer<gen::FooInterface>>(std::make_shared<FooImplementation>(), connection);
@@ -106,8 +105,8 @@ void IpcPipeTest()
     auto script2{foo->passScript(script1)};
     BOOST_CHECK_EQUAL(HexStr(script1), HexStr(script2));
 
-    // Test cleanup: disconnect pipe and join thread
-    disconnect_client();
+    // Test cleanup: disconnect and join thread
+    foo.reset();
     thread.join();
 }
 

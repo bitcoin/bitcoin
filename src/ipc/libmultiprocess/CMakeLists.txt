@@ -1,4 +1,4 @@
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,16 +15,35 @@ include("cmake/compat_find.cmake")
 find_package(CapnProto REQUIRED)
 find_package(Threads REQUIRED)
 
-option(Libmultiprocess_ENABLE_CLANG_TIDY "Run clang-tidy with the compiler." OFF)
-if(Libmultiprocess_ENABLE_CLANG_TIDY)
+set(MPGEN_EXECUTABLE "" CACHE FILEPATH "If specified, should be full path to an external mpgen binary to use rather than the one built internally.")
+
+option(MP_ENABLE_CLANG_TIDY "Run clang-tidy with the compiler." OFF)
+if(MP_ENABLE_CLANG_TIDY)
   find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
   if(NOT CLANG_TIDY_EXECUTABLE)
-    message(FATAL_ERROR "Libmultiprocess_ENABLE_CLANG_TIDY is ON but clang-tidy is not found.")
+    message(FATAL_ERROR "MP_ENABLE_CLANG_TIDY is ON but clang-tidy is not found.")
   endif()
   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE}")
+
+  # Workaround for nix from https://gitlab.kitware.com/cmake/cmake/-/issues/20912#note_793338
+  # Nix injects header paths via $NIX_CFLAGS_COMPILE; CMake tags these as
+  # CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES and omits them from the compile
+  # database, so clang-tidy, which ignores $NIX_CFLAGS_COMPILE, can't find capnp
+  # headers. Setting them as standard passes them to clang-tidy.
+  set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 endif()
 
-set(MPGEN_EXECUTABLE "" CACHE FILEPATH "If specified, should be full path to an external mpgen binary to use rather than the one built internally.")
+option(MP_ENABLE_IWYU "Run include-what-you-use with the compiler." OFF)
+if(MP_ENABLE_IWYU)
+  find_program(IWYU_EXECUTABLE NAMES include-what-you-use iwyu)
+  if(NOT IWYU_EXECUTABLE)
+    message(FATAL_ERROR "MP_ENABLE_IWYU is ON but include-what-you-use was not found.")
+  endif()
+  set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "${IWYU_EXECUTABLE};-Xiwyu;--error")
+  if(DEFINED ENV{IWYU_MAPPING_FILE})
+    list(APPEND CMAKE_CXX_INCLUDE_WHAT_YOU_USE "-Xiwyu" "--mapping_file=$ENV{IWYU_MAPPING_FILE}")
+  endif()
+endif()
 
 include("cmake/compat_config.cmake")
 include("cmake/pthread_checks.cmake")
@@ -51,6 +70,7 @@ configure_file(include/mp/config.h.in "${CMAKE_CURRENT_BINARY_DIR}/include/mp/co
 
 # Generated C++ Capn'Proto schema files
 capnp_generate_cpp(MP_PROXY_SRCS MP_PROXY_HDRS include/mp/proxy.capnp)
+set_source_files_properties("${MP_PROXY_SRCS}" PROPERTIES SKIP_LINTING TRUE) # Ignored before cmake 3.27
 
 # util library
 add_library(mputil OBJECT src/mp/util.cpp)

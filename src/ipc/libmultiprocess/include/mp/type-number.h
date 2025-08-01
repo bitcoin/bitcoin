@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -50,8 +50,14 @@ decltype(auto) CustomReadField(TypeList<LocalType>,
     InvokeContext& invoke_context,
     Input&& input,
     ReadDest&& read_dest,
-    typename std::enable_if<std::is_enum<LocalType>::value>::type* enable = 0)
+    typename std::enable_if<std::is_enum<LocalType>::value>::type* enable = nullptr)
 {
+    // Disable clang-tidy out-of-range enum value check which triggers when
+    // using an enum type that does not have a 0 value. The check correctly
+    // triggers when it detects that Cap'n Proto returns 0 when reading an
+    // integer field that is unset. But the warning is spurious because the
+    // corresponding BuildField call should never leave the field unset.
+    // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
     return read_dest.construct(static_cast<LocalType>(input.get()));
 }
 
