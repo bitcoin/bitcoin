@@ -8,9 +8,9 @@
 
 #include <common/bloom.h>
 #include <primitives/block.h>
+#include <primitives/transaction_identifier.h>
 #include <serialize.h>
 #include <uint256.h>
-#include <util/transaction_identifier.h>
 
 #include <set>
 #include <vector>
