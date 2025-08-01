@@ -811,9 +811,9 @@ void InitParameterInteraction(ArgsManager& args)
  * Note that this is called very early in the process lifetime, so you should be
  * careful about what global state you rely on here.
  */
-void InitLogging(const ArgsManager& args)
+void InitLogging(const ArgsManager& args, const char* log_suffix)
 {
-    init::SetLoggingOptions(args);
+    init::SetLoggingOptions(args, log_suffix);
     init::LogPackageVersion();
 }
 
