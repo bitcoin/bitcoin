@@ -18,8 +18,9 @@ using namespace util::hex_literals;
 
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 
-// Test that obfuscation can be properly reverted even with random chunk sizes.
-BOOST_AUTO_TEST_CASE(xor_roundtrip_random_chunks)
+// Check optimized obfuscation with random offsets and sizes to ensure proper
+// handling of key wrapping. Also verify it roundtrips.
+BOOST_AUTO_TEST_CASE(xor_random_chunks)
 {
     auto apply_random_xor_chunks{[&](std::span<std::byte> target, const Obfuscation& obfuscation) {
         for (size_t offset{0}; offset < target.size();) {
@@ -37,41 +38,14 @@ BOOST_AUTO_TEST_CASE(xor_roundtrip_random_chunks)
         const auto key_bytes{m_rng.randbool() ? m_rng.randbytes<Obfuscation::KEY_SIZE>() : std::array<std::byte, Obfuscation::KEY_SIZE>{}};
         const Obfuscation obfuscation{key_bytes};
         apply_random_xor_chunks(roundtrip, obfuscation);
-
-        const bool key_all_zeros{std::ranges::all_of(
-            std::span{key_bytes}.first(std::min(write_size, Obfuscation::KEY_SIZE)), [](auto b) { return b == std::byte{0}; })};
-        BOOST_CHECK(key_all_zeros ? original == roundtrip : original != roundtrip);
+        BOOST_CHECK_EQUAL(roundtrip.size(), original.size());
+        for (size_t i{0}; i < original.size(); ++i) {
+            BOOST_CHECK_EQUAL(roundtrip[i], original[i] ^ key_bytes[i % Obfuscation::KEY_SIZE]);
+        }
 
         apply_random_xor_chunks(roundtrip, obfuscation);
-        BOOST_CHECK(original == roundtrip);
-    }
-}
-
-// Compares optimized obfuscation against a trivial, byte-by-byte reference implementation
-// with random offsets to ensure proper handling of key wrapping.
-BOOST_AUTO_TEST_CASE(xor_bytes_reference)
-{
-    auto expected_xor{[](std::span<std::byte> target, std::span<const std::byte, Obfuscation::KEY_SIZE> obfuscation, size_t key_offset) {
-        for (auto& b : target) {
-            b ^= obfuscation[key_offset++ % obfuscation.size()];
-        }
-    }};
-
-    for (size_t test{0}; test < 100; ++test) {
-        const size_t write_size{1 + m_rng.randrange(100U)};
-        const size_t key_offset{m_rng.randrange(3 * Obfuscation::KEY_SIZE)}; // Make sure the key can wrap around
-        const size_t write_offset{std::min(write_size, m_rng.randrange(Obfuscation::KEY_SIZE * 2))}; // Write unaligned data
-
-        const auto key_bytes{m_rng.randbool() ? m_rng.randbytes<Obfuscation::KEY_SIZE>() : std::array<std::byte, Obfuscation::KEY_SIZE>{}};
-        const Obfuscation obfuscation{key_bytes};
-        std::vector expected{m_rng.randbytes<std::byte>(write_size)};
-        std::vector actual{expected};
-
-        expected_xor(std::span{expected}.subspan(write_offset), key_bytes, key_offset);
-        obfuscation(std::span{actual}.subspan(write_offset), key_offset);
-
-        BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), actual.begin(), actual.end());
-    }
+        BOOST_CHECK_EQUAL_COLLECTIONS(roundtrip.begin(), roundtrip.end(), original.begin(), original.end());
+  }
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
@@ -84,19 +58,24 @@ BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
 
 BOOST_AUTO_TEST_CASE(obfuscation_serialize)
 {
-    const Obfuscation original{m_rng.randbytes<Obfuscation::KEY_SIZE>()};
+    Obfuscation obfuscation{};
+    BOOST_CHECK(!obfuscation);
 
-    // Serialization
-    DataStream ds;
-    ds << original;
+    // Test loading a key.
+    std::vector key_in{m_rng.randbytes<std::byte>(Obfuscation::KEY_SIZE)};
+    DataStream ds_in;
+    ds_in << key_in;
+    BOOST_CHECK_EQUAL(ds_in.size(), 1 + Obfuscation::KEY_SIZE); // serialized as a vector
+    ds_in >> obfuscation;
 
-    BOOST_CHECK_EQUAL(ds.size(), 1 + Obfuscation::KEY_SIZE); // serialized as a vector
+    // Test saving the key.
+    std::vector<std::byte> key_out;
+    DataStream ds_out;
+    ds_out << obfuscation;
+    ds_out >> key_out;
 
-    // Deserialization
-    Obfuscation recovered{};
-    ds >> recovered;
-
-    BOOST_CHECK_EQUAL(recovered.HexKey(), original.HexKey());
+    // Make sure saved key is the same.
+    BOOST_CHECK_EQUAL_COLLECTIONS(key_in.begin(), key_in.end(), key_out.begin(), key_out.end());
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_empty)
