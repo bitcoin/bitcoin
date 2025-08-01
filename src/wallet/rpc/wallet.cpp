@@ -351,13 +351,13 @@ static RPCHelpMan createwallet()
         "Creates and loads a new wallet.\n",
         {
             {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
-            {"disable_private_keys", RPCArg::Type::BOOL, RPCArg::Default{false}, "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
+            {"disable_private_keys", RPCArg::Type::BOOL, RPCArg::DefaultHint{"false unless external_signer is set"}, "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
             {"blank", RPCArg::Type::BOOL, RPCArg::Default{false}, "Create a blank wallet. A blank wallet has no keys."},
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
             {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{false}, "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
             {"descriptors", RPCArg::Type::BOOL, RPCArg::Default{true}, "If set, must be \"true\""},
             {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
-            {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
+            {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -379,9 +379,8 @@ static RPCHelpMan createwallet()
 {
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
-    if (!request.params[1].isNull() && request.params[1].get_bool()) {
-        flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
-    }
+
+    std::optional<bool> disable_private_keys{self.MaybeArg<bool>("disable_private_keys")};
 
     if (!request.params[2].isNull() && request.params[2].get_bool()) {
         flags |= WALLET_FLAG_BLANK_WALLET;
@@ -407,9 +406,19 @@ static RPCHelpMan createwallet()
     if (!request.params[7].isNull() && request.params[7].get_bool()) {
 #ifdef ENABLE_EXTERNAL_SIGNER
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
+        if (!disable_private_keys.has_value()) {
+            // In the basic use case all keys will be on the external signer
+            // device and the wallet should be watch-only. Makes this the
+            // default.
+            disable_private_keys = true;
+        }
 #else
         throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
 #endif
+    }
+
+    if (disable_private_keys.value_or(false)) {
+        flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
 
     DatabaseOptions options;
