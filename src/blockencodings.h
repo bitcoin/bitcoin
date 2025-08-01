@@ -130,6 +130,29 @@ public:
     }
 };
 
+class ExtraTransactions {
+public:
+    virtual ~ExtraTransactions() = default;
+    virtual CTransactionRef next() = 0;
+};
+
+class VectorExtraTransactions : public ExtraTransactions
+{
+private:
+    const std::vector<CTransactionRef>& m_vec;
+    size_t m_idx{0};
+public:
+    VectorExtraTransactions(const std::vector<CTransactionRef>& vec) : m_vec{vec} { }
+
+    CTransactionRef next() override {
+        while (m_idx < m_vec.size()) {
+            CTransactionRef r = m_vec[m_idx++];
+            if (r != nullptr) return r;
+        }
+        return nullptr;
+    }
+};
+
 class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
@@ -144,7 +167,13 @@ public:
     explicit PartiallyDownloadedBlock() = default;
 
     // extra_txn is a list of extra orphan/conflicted/etc transactions to look at
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const CTxMemPool& pool, const std::vector<CTransactionRef>& extra_txn);
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const CTxMemPool& pool, ExtraTransactions&& extra_txn);
+
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const CTxMemPool& pool, const std::vector<CTransactionRef>& extra_txn)
+    {
+        return InitData(cmpctblock, pool, VectorExtraTransactions(extra_txn));
+    }
+
     bool IsTxAvailable(size_t index) const;
     // segwit_active enforces witness mutation checks just before reporting a healthy status
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active);
