@@ -481,7 +481,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
 
         auto ancestors{pool.CalculateMemPoolAncestors(entry.FromTx(tx_many_sigops), m_limits)};
         // legacy uses fAccurate = false, and the maximum number of multisig keys is used
-        const int64_t total_sigops{static_cast<int64_t>(tx_many_sigops->vin.size()) * static_cast<int64_t>(script_multisig.GetSigOpCount(/*fAccurate=*/false))};
+        const int64_t total_sigops{static_cast<int64_t>(tx_many_sigops->vin.size()) * static_cast<int64_t>(script_multisig.GetLegacySigOpCount(/*fAccurate=*/false))};
         BOOST_CHECK_EQUAL(total_sigops, tx_many_sigops->vin.size() * MAX_PUBKEYS_PER_MULTISIG);
         const int64_t bip141_vsize{GetVirtualTransactionSize(*tx_many_sigops)};
         // Weight limit is not reached...

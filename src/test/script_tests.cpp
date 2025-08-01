@@ -1194,7 +1194,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // P2WPKH has direct allocation
     {
         const auto script{GetScriptForDestination(WitnessV0KeyHash{PKHash{dummy_pubkey}})};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V0_KEYHASH);
+        BOOST_CHECK(script.IsPayToWitnessPubKeyHash());
         CHECK_SCRIPT_STATIC_SIZE(script, 22);
     }
 
@@ -1208,7 +1208,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // P2PKH has direct allocation
     {
         const auto script{GetScriptForDestination(PKHash{dummy_pubkey})};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEYHASH);
+        BOOST_CHECK(script.IsPayToPubKeyHash());
         CHECK_SCRIPT_STATIC_SIZE(script, 25);
     }
 
@@ -1222,14 +1222,14 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     // P2TR has direct allocation
     {
         const auto script{GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{dummy_pubkey}})};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::WITNESS_V1_TAPROOT);
+        BOOST_CHECK(script.IsPayToTaproot());
         CHECK_SCRIPT_STATIC_SIZE(script, 34);
     }
 
     // Compressed P2PK has direct allocation
     {
         const auto script{GetScriptForRawPubKey(dummy_pubkey)};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
+        BOOST_CHECK(script.IsCompressedPayToPubKey());
         CHECK_SCRIPT_STATIC_SIZE(script, 35);
     }
 
@@ -1240,15 +1240,15 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
         const CPubKey uncompressed_pubkey{uncompressed_key.GetPubKey()};
 
         const auto script{GetScriptForRawPubKey(uncompressed_pubkey)};
-        BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::PUBKEY);
-        CHECK_SCRIPT_DYNAMIC_SIZE(script, 67, 67);
+        BOOST_CHECK(script.IsUncompressedPayToPubKey());
+        CHECK_SCRIPT_DYNAMIC_SIZE(script, /*expected_size=*/67, /*expected_extra=*/67);
     }
 
     // Bare multisig needs extra allocation
     {
         const auto script{GetScriptForMultisig(1, std::vector{2, dummy_pubkey})};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::MULTISIG);
-        CHECK_SCRIPT_DYNAMIC_SIZE(script, 71, 103);
+        CHECK_SCRIPT_DYNAMIC_SIZE(script, /*expected_size=*/71, /*expected_extra=*/103);
     }
 }
 
@@ -1601,18 +1601,14 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
     BOOST_CHECK(s == expect);
 }
 
-BOOST_AUTO_TEST_CASE(script_HasValidOps)
+// Exercise the HasValidLegacyOps functionality
+BOOST_AUTO_TEST_CASE(script_HasValidLegacyOps)
 {
-    // Exercise the HasValidOps functionality
-    CScript script;
-    script = ToScript("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex); // Normal script
-    BOOST_CHECK(script.HasValidOps());
-    script = ToScript("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex);
-    BOOST_CHECK(script.HasValidOps());
-    script = ToScript("ff88ac"_hex); // Script with OP_INVALIDOPCODE explicit
-    BOOST_CHECK(!script.HasValidOps());
-    script = ToScript("88acc0"_hex); // Script with undefined opcode
-    BOOST_CHECK(!script.HasValidOps());
+    BOOST_CHECK( ToScript("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex).HasValidLegacyOps()); // Normal script
+    BOOST_CHECK( ToScript("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex).HasValidLegacyOps());
+    BOOST_CHECK(!ToScript("ff88ac"_hex).HasValidLegacyOps()); // Script with OP_INVALIDOPCODE explicit
+    BOOST_CHECK(!ToScript("88acc0"_hex).HasValidLegacyOps()); // Script with undefined opcode
+    BOOST_CHECK(!ToScript("ba"_hex).HasValidLegacyOps());     // OP_CHECKSIGADD > MAX_LEGACY_OPCODE
 }
 
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
