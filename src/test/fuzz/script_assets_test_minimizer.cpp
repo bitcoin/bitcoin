@@ -90,22 +90,22 @@ CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
     return scriptwitness;
 }
 
-const std::map<std::string, unsigned int> FLAG_NAMES = {
-    {std::string("P2SH"), (unsigned int)SCRIPT_VERIFY_P2SH},
-    {std::string("DERSIG"), (unsigned int)SCRIPT_VERIFY_DERSIG},
-    {std::string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY},
-    {std::string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY},
-    {std::string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY},
-    {std::string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS},
-    {std::string("TAPROOT"), (unsigned int)SCRIPT_VERIFY_TAPROOT},
+const std::map<std::string, script_verify_flag_name> FLAG_NAMES = {
+    {std::string("P2SH"), SCRIPT_VERIFY_P2SH},
+    {std::string("DERSIG"), SCRIPT_VERIFY_DERSIG},
+    {std::string("NULLDUMMY"), SCRIPT_VERIFY_NULLDUMMY},
+    {std::string("CHECKLOCKTIMEVERIFY"), SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY},
+    {std::string("CHECKSEQUENCEVERIFY"), SCRIPT_VERIFY_CHECKSEQUENCEVERIFY},
+    {std::string("WITNESS"), SCRIPT_VERIFY_WITNESS},
+    {std::string("TAPROOT"), SCRIPT_VERIFY_TAPROOT},
 };
 
-std::vector<unsigned int> AllFlags()
+std::vector<script_verify_flags> AllFlags()
 {
-    std::vector<unsigned int> ret;
+    std::vector<script_verify_flags> ret;
 
     for (unsigned int i = 0; i < 128; ++i) {
-        unsigned int flag = 0;
+        script_verify_flags flag = 0;
         if (i & 1) flag |= SCRIPT_VERIFY_P2SH;
         if (i & 2) flag |= SCRIPT_VERIFY_DERSIG;
         if (i & 4) flag |= SCRIPT_VERIFY_NULLDUMMY;
@@ -125,13 +125,13 @@ std::vector<unsigned int> AllFlags()
     return ret;
 }
 
-const std::vector<unsigned int> ALL_FLAGS = AllFlags();
+const std::vector<script_verify_flags> ALL_FLAGS = AllFlags();
 
-unsigned int ParseScriptFlags(const std::string& str)
+script_verify_flags ParseScriptFlags(const std::string& str)
 {
     if (str.empty()) return 0;
 
-    unsigned int flags = 0;
+    script_verify_flags flags = 0;
     std::vector<std::string> words = SplitString(str, ',');
 
     for (const std::string& word : words) {
@@ -153,7 +153,7 @@ void Test(const std::string& str)
     if (prevouts.size() != tx.vin.size()) throw std::runtime_error("Incorrect number of prevouts");
     size_t idx = test["index"].getInt<int64_t>();
     if (idx >= tx.vin.size()) throw std::runtime_error("Invalid index");
-    unsigned int test_flags = ParseScriptFlags(test["flags"].get_str());
+    script_verify_flags test_flags = ParseScriptFlags(test["flags"].get_str());
     bool final = test.exists("final") && test["final"].get_bool();
 
     if (test.exists("success")) {
