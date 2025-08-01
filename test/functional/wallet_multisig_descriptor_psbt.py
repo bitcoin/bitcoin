@@ -124,9 +124,34 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             psbts.append(partially_signed_psbt["psbt"])
 
         self.log.info("Finally, collect the signed PSBTs with combinepsbt, finalizepsbt, then broadcast the resulting transaction...")
+
         combined = coordinator_wallet.combinepsbt(psbts)
+        combined_stripped = coordinator_wallet.combinepsbt(psbts, stripderivs=True)
+
+        combined_decoded = coordinator_wallet.decodepsbt(combined)
+        combined_decoded_stripped = coordinator_wallet.decodepsbt(combined_stripped)
+
+        self.log.info("Check that we can strip bip32 derivation information from all inputs and outputs using combinepsbt")
+        for key in ['inputs', 'outputs']:
+            # Test for presence
+            for item in combined_decoded[key]:
+                # Only check these those that are not empty
+                if item:
+                    assert "bip32_derivs" in item, f"{key} must contain 'bip32_derivs'"
+            # Test for absence
+            for item in combined_decoded_stripped[key]:
+                if item:
+                    assert "bip32_derivs" not in item, f"'bip32_derivs' should not be in {key}"
+
         finalized = coordinator_wallet.finalizepsbt(combined)
         coordinator_wallet.sendrawtransaction(finalized["hex"])
+
+        self.log.info("Check that we can strip bip32 derivation information from a single psbt using combinepsbt")
+        psbts2 = [psbts[0],]
+        combined_single_stripped = coordinator_wallet.combinepsbt(psbts2, stripderivs=True)
+        combined_single_stripped_decoded = coordinator_wallet.decodepsbt(combined_single_stripped)
+        assert "bip32_derivs" not in combined_single_stripped_decoded["inputs"][0]
+        assert "bip32_derivs" not in combined_single_stripped_decoded["outputs"][0]
 
         self.log.info("Check that balances are correct after the transaction has been included in a block.")
         self.generate(self.nodes[0], 1)
