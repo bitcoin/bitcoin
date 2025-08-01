@@ -72,6 +72,10 @@ set_target_properties(secp256k1 PROPERTIES
 )
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(WAIT_FOR_DEBUGGER)
+  add_compile_definitions(WAIT_FOR_DEBUGGER=1)
+endif()
+
 # Set top-level target output locations.
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
