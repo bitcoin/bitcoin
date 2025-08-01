@@ -13,6 +13,7 @@
 #include <numeric>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
@@ -21,7 +22,6 @@
 #include <util/rbf.h>
 #include <util/trace.h>
 #include <util/translation.h>
-#include <util/transaction_identifier.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/receive.h>

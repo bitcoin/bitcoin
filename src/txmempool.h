@@ -17,12 +17,12 @@
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
 #include <sync.h>
 #include <util/epochguard.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>
-#include <util/transaction_identifier.h>
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>

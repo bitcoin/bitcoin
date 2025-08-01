@@ -9,12 +9,12 @@
 #include <common/signmessage.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
+#include <primitives/transaction_identifier.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 #include <util/result.h>
-#include <util/transaction_identifier.h>
 #include <util/ui_change_type.h>
 
 #include <cstdint>

@@ -16,6 +16,7 @@
 #include <key.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
+#include <primitives/transaction_identifier.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sigcache.h>
@@ -29,7 +30,6 @@
 #include <test/util/transaction_utils.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <util/transaction_identifier.h>
 #include <validation.h>
 
 #include <functional>
