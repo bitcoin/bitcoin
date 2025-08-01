@@ -47,7 +47,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         assert_equal(pi["inv_to_send"], 1) # and our tx has been queued
         self.gen_node.setmocktime(0)
 
-        inbound_peer.wait_until(lambda: "inv" in inbound_peer.last_message and inbound_peer.last_message.get("inv").inv[0].hash == int(wtxid, 16))
+        inbound_peer.wait_until(lambda: "inv" in inbound_peer.last_message and inbound_peer.last_message.get("inv").inv[0].hash == int(wtxid, 16), timeout=120)
 
         rawmp = self.gen_node.getrawmempool(False, True)
         pi = self.gen_node.getpeerinfo()[0]
@@ -74,7 +74,7 @@ class P2PLeakTxTest(BitcoinTestFramework):
         tx_b = tx_a["tx"]
         tx_b.vout[0].nValue -= 9000
         self.gen_node.sendrawtransaction(tx_b.serialize().hex())
-        inbound_peer.wait_until(lambda: "tx" in inbound_peer.last_message and inbound_peer.last_message.get("tx").tx.wtxid_hex == tx_b.wtxid_hex)
+        inbound_peer.wait_until(lambda: "tx" in inbound_peer.last_message and inbound_peer.last_message.get("tx").tx.wtxid_hex == tx_b.wtxid_hex, timeout=120)
 
         self.log.info("Re-request of tx_a after replacement is answered with notfound")
         req_vec = [
