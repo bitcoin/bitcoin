@@ -203,7 +203,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
     try {
         auto& newTx = transaction.getWtx();
-        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled(), /*change_pos=*/std::nullopt);
+        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled() && !wallet().hasExternalSigner(), /*change_pos=*/std::nullopt);
         if (!res) {
             Q_EMIT message(tr("Send Coins"), QString::fromStdString(util::ErrorString(res).translated),
                            CClientUIInterface::MSG_ERROR);
