@@ -8,5 +8,6 @@ export LC_ALL=C.UTF-8
 set -o errexit -o pipefail -o xtrace
 
 # Only used in .cirrus.yml. Refer to test/lint/README.md on how to run locally.
-export PATH="/python_build/bin:${PATH}"
+export PATH="/pyenv/bin:${PATH}"
+eval "$(pyenv init - bash --path)"
 ./ci/lint/06_script.sh
