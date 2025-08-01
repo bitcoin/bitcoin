@@ -328,6 +328,12 @@ static RPCMethod setwalletflag()
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is immutable: %s", flag_str));
     }
 
+#ifndef ENABLE_EXTERNAL_SIGNER
+    if (flag == WALLET_FLAG_EXTERNAL_SIGNER && value) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
+    }
+#endif
+
     UniValue res(UniValue::VOBJ);
 
     if (pwallet->IsWalletFlagSet(flag) == value) {
