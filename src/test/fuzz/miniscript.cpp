@@ -124,10 +124,13 @@ struct ParserContext {
         return a < b;
     }
 
-    std::optional<std::string> ToString(const Key& key) const
+    std::string ToString(const Key& key, bool* has_priv_key) const
     {
         auto it = TEST_DATA.dummy_key_idx_map.find(key);
-        if (it == TEST_DATA.dummy_key_idx_map.end()) return {};
+        if (it == TEST_DATA.dummy_key_idx_map.end()) {
+            return HexStr(key);
+        }
+        *has_priv_key = true;
         uint8_t idx = it->second;
         return HexStr(std::span{&idx, 1});
     }
@@ -1033,9 +1036,9 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
 
     // Check that it roundtrips to text representation
     const ParserContext parser_ctx{script_ctx};
-    std::optional<std::string> str{node->ToString(parser_ctx)};
-    assert(str);
-    auto parsed = miniscript::FromString(*str, parser_ctx);
+    bool tmp{false};
+    std::string str{node->ToString(parser_ctx, &tmp)};
+    auto parsed = miniscript::FromString(str, parser_ctx);
     assert(parsed);
     assert(*parsed == *node);
 
@@ -1241,9 +1244,9 @@ FUZZ_TARGET(miniscript_string, .init = FuzzInit)
     auto parsed = miniscript::FromString(str, parser_ctx);
     if (!parsed) return;
 
-    const auto str2 = parsed->ToString(parser_ctx);
-    assert(str2);
-    auto parsed2 = miniscript::FromString(*str2, parser_ctx);
+    bool tmp{false};
+    const auto str2 = parsed->ToString(parser_ctx, &tmp);
+    auto parsed2 = miniscript::FromString(str2, parser_ctx);
     assert(parsed2);
     assert(*parsed == *parsed2);
 }
