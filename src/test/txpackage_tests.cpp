@@ -355,6 +355,9 @@ BOOST_AUTO_TEST_CASE(noncontextual_package_tests)
 
 BOOST_AUTO_TEST_CASE(package_submission_tests)
 {
+    // Mine blocks to mature coinbases.
+    mineBlocks(3);
+    MockMempoolMinFee(CFeeRate(5000));
     LOCK(cs_main);
     unsigned int expected_pool_size = m_node.mempool->size();
     CKey parent_key = GenerateRandomKey();
@@ -441,20 +444,6 @@ BOOST_AUTO_TEST_CASE(package_submission_tests)
         BOOST_CHECK_EQUAL(result_quit_early.m_state.GetResult(), PackageValidationResult::PCKG_TX);
     }
 
-    // Child with missing parent.
-    mtx_child.vin.emplace_back(COutPoint(package_unrelated[0]->GetHash(), 0));
-    Package package_missing_parent;
-    package_missing_parent.push_back(tx_parent);
-    package_missing_parent.push_back(MakeTransactionRef(mtx_child));
-    {
-        const auto result_missing_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
-                                                             package_missing_parent, /*test_accept=*/false, /*client_maxfeerate=*/{});
-        BOOST_CHECK(result_missing_parent.m_state.IsInvalid());
-        BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetResult(), PackageValidationResult::PCKG_POLICY);
-        BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetRejectReason(), "package-not-child-with-unconfirmed-parents");
-        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
-    }
-
     // Submit package with parent + child.
     {
         const auto submit_parent_child = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
@@ -490,6 +479,60 @@ BOOST_AUTO_TEST_CASE(package_submission_tests)
             BOOST_CHECK(it_child_deduped->second.m_result_type == MempoolAcceptResult::ResultType::MEMPOOL_ENTRY);
         }
 
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+    }
+
+    // In-mempool parent and child with missing parent.
+    {
+        auto tx_parent_1 = MakeTransactionRef(CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
+                                                                            /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                                            /*output_destination=*/parent_locking_script,
+                                                                            /*output_amount=*/CAmount(50 * COIN - low_fee_amt), /*submit=*/false));
+        auto tx_parent_2 = MakeTransactionRef(CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[2], /*input_vout=*/0,
+                                                                            /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                                            /*output_destination=*/parent_locking_script,
+                                                                            /*output_amount=*/CAmount(50 * COIN - 800), /*submit=*/false));
+
+        auto tx_child_missing_parent = MakeTransactionRef(CreateValidMempoolTransaction({tx_parent_1, tx_parent_2},
+                                                                                        {{tx_parent_1->GetHash(), 0}, {tx_parent_2->GetHash(), 0}},
+                                                                                        /*input_height=*/0, {parent_key},
+                                                                                        {{49 * COIN, child_locking_script}}, /*submit=*/false));
+
+        Package package_missing_parent{tx_parent_1, tx_child_missing_parent};
+
+        const auto result_missing_parent = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                             package_missing_parent, /*test_accept=*/false, /*client_maxfeerate=*/{});
+        if (auto err_missing_parent{CheckPackageMempoolAcceptResult(package_missing_parent, result_missing_parent, /*expect_valid=*/false, m_node.mempool.get())}) {
+            BOOST_ERROR(err_missing_parent.value());
+        } else {
+            auto it_parent = result_missing_parent.m_tx_results.find(tx_parent_1->GetWitnessHash());
+            auto it_child = result_missing_parent.m_tx_results.find(tx_child_missing_parent->GetWitnessHash());
+
+            BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetResult(), PackageValidationResult::PCKG_TX);
+            BOOST_CHECK_EQUAL(result_missing_parent.m_state.GetRejectReason(), "transaction failed");
+
+            BOOST_CHECK_EQUAL(it_parent->second.m_state.GetResult(), TxValidationResult::TX_RECONSIDERABLE);
+            BOOST_CHECK_EQUAL(it_child->second.m_state.GetResult(), TxValidationResult::TX_MISSING_INPUTS);
+            BOOST_CHECK_EQUAL(it_child->second.m_state.GetRejectReason(), "bad-txns-inputs-missingorspent");
+            BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+        }
+
+        // Submit parent2 ahead of time, should become ok.
+        Package package_just_parent2{tx_parent_2};
+        expected_pool_size += 1;
+        const auto result_just_parent2 = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                           package_just_parent2, /*test_accept=*/false, /*client_maxfeerate=*/{});
+        if (auto err_parent2{CheckPackageMempoolAcceptResult(package_just_parent2, result_just_parent2, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_parent2.value());
+        }
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+
+        const auto result_parent_already_in = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                                package_missing_parent, /*test_accept=*/false, /*client_maxfeerate=*/{});
+        expected_pool_size += 2;
+        if (auto err_parent_already_in{CheckPackageMempoolAcceptResult(package_missing_parent, result_parent_already_in, /*expect_valid=*/true, m_node.mempool.get())}) {
+            BOOST_ERROR(err_parent_already_in.value());
+        }
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
     }
 }

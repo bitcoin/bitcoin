@@ -8,11 +8,9 @@ Graph (a directed edge exists between a transaction that spends the output of an
 For every transaction `t` in a **topologically sorted** package, if any of its parents are present
 in the package, they appear somewhere in the list before `t`.
 
-A **child-with-unconfirmed-parents** package is a topologically sorted package that consists of
-exactly one child and all of its unconfirmed parents (no other transactions may be present).
-The last transaction in the package is the child, and its package can be canonically defined based
-on the current state: each of its inputs must be available in the UTXO set as of the current chain
-tip or some preceding transaction in the package.
+A **child-with-parents** package is a topologically sorted package that consists of exactly one child and at least one
+of its unconfirmed parents.  Not all unconfirmed parents need to be present but no other transactions may be present; the
+parent of a parent should not be in this package (unless this "grandparent" is also a direct parent of the child).
 
 ## Package Mempool Acceptance Rules
 
@@ -73,7 +71,7 @@ The following rules are enforced for all packages:
 The following rules are only enforced for packages to be submitted to the mempool (not
 enforced for test accepts):
 
-* Packages must be child-with-unconfirmed-parents packages. This also means packages must contain at
+* Packages must be child-with-parents packages. This also means packages must contain at
   least 1 transaction. (#31096)
 
    - *Rationale*: This allows for fee-bumping by CPFP. Allowing multiple parents makes it possible
