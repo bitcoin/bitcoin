@@ -73,11 +73,12 @@ class WalletSignerTest(BitcoinTestFramework):
         # Private keys are disabled by default
         assert_equal(hww.getwalletinfo()["private_keys_enabled"], False)
 
-        # Flag can't be set afterwards (could be added later for non-blank descriptor based watch-only wallets)
+        # Flag can be set afterwards
         self.nodes[1].createwallet(wallet_name='not_hww', external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
         assert_equal(not_hww.getwalletinfo()["external_signer"], False)
-        assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
+        not_hww.setwalletflag("external_signer", True)
+        assert_equal(not_hww.getwalletinfo()["external_signer"], True)
 
         self.set_mock_result(self.nodes[1], '0 {"invalid json"}')
         assert_raises_rpc_error(-1, 'Unable to parse JSON',
