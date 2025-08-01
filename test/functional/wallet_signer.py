@@ -72,6 +72,13 @@ class WalletSignerTest(BitcoinTestFramework):
         hww = self.nodes[1].get_wallet_rpc('hww')
         assert_equal(hww.getwalletinfo()["external_signer"], True)
 
+        # A blank external signer wallet does not auto-import any keys.
+        self.nodes[1].createwallet(wallet_name='hww_blank', disable_private_keys=True, external_signer=True, blank=True)
+        hww_blank = self.nodes[1].get_wallet_rpc('hww_blank')
+        assert_equal(hww_blank.getwalletinfo()["keypoolsize"], 0)
+        assert_equal(hww_blank.listdescriptors()["descriptors"], [])
+        self.nodes[1].unloadwallet('hww_blank')
+
         # Flag can't be set afterwards (could be added later for non-blank descriptor based watch-only wallets)
         self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')

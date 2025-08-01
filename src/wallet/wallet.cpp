@@ -3688,10 +3688,10 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
 void CWallet::SetupWalletGeneration()
 {
     AssertLockHeld(cs_wallet);
-    // Skip setup for non-external-signer wallets that are either blank
-    // or have private keys disabled (not having private keys implies blank).
-    if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) &&
-        (IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET) || IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS))) {
+    // Skip setup for blank wallets. Non-external-signer wallets with disabled
+    // private keys also skip setup (not having private keys implies blank).
+    if (IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET) ||
+        (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) && IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS))) {
         return;
     }
     SetupDescriptorScriptPubKeyMans();
