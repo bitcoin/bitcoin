@@ -198,7 +198,7 @@ FUZZ_TARGET(mini_miner_selection, .init = initialize_miner)
     assert(!mini_miner.IsReadyToCalculate());
     auto mock_template_txids = mini_miner.GetMockTemplateTxids();
     // MiniMiner doesn't add a coinbase tx.
-    assert(mock_template_txids.count(blocktemplate->block.vtx[0]->GetHash()) == 0);
+    assert(!mock_template_txids.contains(blocktemplate->block.vtx[0]->GetHash()));
     auto [iter, new_entry] = mock_template_txids.emplace(blocktemplate->block.vtx[0]->GetHash());
     assert(new_entry);
 
