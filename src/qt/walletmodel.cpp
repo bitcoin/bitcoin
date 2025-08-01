@@ -203,7 +203,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         int nChangePosRet = -1;
 
         auto& newTx = transaction.getWtx();
-        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled(), nChangePosRet, nFeeRequired);
+        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled() && !wallet().hasExternalSigner(), nChangePosRet, nFeeRequired);
         newTx = res ? *res : nullptr;
         transaction.setTransactionFee(nFeeRequired);
         if (fSubtractFeeFromAmount && newTx)
