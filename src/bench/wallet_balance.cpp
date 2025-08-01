@@ -37,7 +37,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     {
         LOCK(wallet.cs_wallet);
         wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet.SetupDescriptorScriptPubKeyMans();
+        wallet.SetupDescriptorScriptPubKeyMans(/* seed_key_opt=*/ std::nullopt);
     }
     auto handler = test_setup->m_node.chain->handleNotifications({&wallet, [](CWallet*) {}});
 

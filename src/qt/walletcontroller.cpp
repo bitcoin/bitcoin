@@ -267,7 +267,7 @@ void CreateWalletActivity::createWallet()
     }
 
     QTimer::singleShot(500ms, worker(), [this, name, flags] {
-        auto wallet{node().walletLoader().createWallet(name, m_passphrase, flags, m_warning_message)};
+        auto wallet{node().walletLoader().createWallet(name, m_passphrase, flags, /* seed_key_opt=*/ std::nullopt, m_warning_message)};
 
         if (wallet) {
             m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));

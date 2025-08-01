@@ -27,7 +27,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     {
         LOCK(wallet->cs_wallet);
         wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet->SetupDescriptorScriptPubKeyMans();
+        wallet->SetupDescriptorScriptPubKeyMans(/* seed_key_opt=*/ std::nullopt);
 
         FlatSigningProvider provider;
         std::string error;
@@ -51,7 +51,7 @@ std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database
 {
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto wallet = CWallet::Create(context, "", std::move(database), create_flags, error, warnings);
+    auto wallet = CWallet::Create(context, "", std::move(database), create_flags,  /* seed_key_opt=*/ std::nullopt, error, warnings);
     NotifyWalletLoaded(context, wallet);
     if (context.chain) {
         wallet->postInitProcess();

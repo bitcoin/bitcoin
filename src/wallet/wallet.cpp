@@ -281,7 +281,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(WalletContext& context, const std::s
         }
 
         context.chain->initMessage(_("Loading wallet…"));
-        std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings);
+        std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), options.create_flags, /* seed_key_opt=*/ std::nullopt, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
             status = DatabaseStatus::FAILED_LOAD;
@@ -372,7 +372,7 @@ std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& n
     return wallet;
 }
 
-std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, std::optional<CKey> seed_key_opt, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
@@ -413,7 +413,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 
     // Make the wallet
     context.chain->initMessage(_("Loading wallet…"));
-    std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), wallet_creation_flags, error, warnings);
+    std::shared_ptr<CWallet> wallet = CWallet::Create(context, name, std::move(database), wallet_creation_flags, seed_key_opt, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
         status = DatabaseStatus::FAILED_CREATE;
@@ -438,7 +438,7 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
             // Set a seed for the wallet
             {
                 LOCK(wallet->cs_wallet);
-                wallet->SetupDescriptorScriptPubKeyMans();
+                wallet->SetupDescriptorScriptPubKeyMans(seed_key_opt);
             }
 
             // Relock the wallet
@@ -821,6 +821,23 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             }
         }
 
+        // Encrypt any existing descriptor wallet seed keys
+        for (auto it = m_seed_keys.begin(); it != m_seed_keys.end(); ++it) {
+            const CKey& seed_key = it->second;
+            CPubKey seed_pub = seed_key.GetPubKey();
+            CKeyingMaterial secret{UCharCast(seed_key.begin()), UCharCast(seed_key.end())};
+            std::vector<unsigned char> crypted_secret;
+            if (!EncryptSecret(plain_master_key, secret, seed_pub.GetHash(), crypted_secret)) {
+                encrypted_batch->TxnAbort();
+                delete encrypted_batch;
+                assert(false); // encryption failed
+            }
+            encrypted_batch->WriteCryptedWalletSeed(seed_pub, crypted_secret);
+            // Store in encrypted map for runtime, and clear plaintext
+            m_crypted_seed_keys[seed_pub.GetID()] = std::make_pair(seed_pub, crypted_secret);
+        }
+        m_seed_keys.clear();
+
         // Encryption was introduced in version 0.4.0
         SetMinVersion(FEATURE_WALLETCRYPT, encrypted_batch);
 
@@ -840,7 +857,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // Make new descriptors with a new seed
         if (!IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
-            SetupDescriptorScriptPubKeyMans();
+            SetupDescriptorScriptPubKeyMans(/* seed_key_opt=*/ std::nullopt);
         }
         Lock();
 
@@ -2802,7 +2819,7 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
     return MakeDatabase(*wallet_path, options, status, error_string);
 }
 
-std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
+std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, std::optional<CKey> seed_key_opt, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     interfaces::Chain* chain = context.chain;
     ArgsManager& args = *Assert(context.args);
@@ -2863,6 +2880,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         }
     }
 
+    // if there is any seed, set the expected flag
+    if (!walletInstance->m_seed_keys.empty() || !walletInstance->m_crypted_seed_keys.empty()) {
+        walletInstance->SetWalletFlag(WALLET_FLAG_SEEDS_STORED);
+    }
+
     // This wallet is in its first run if there are no ScriptPubKeyMans and it isn't blank or no privkeys
     const bool fFirstRun = walletInstance->m_spk_managers.empty() &&
                      !walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) &&
@@ -2882,7 +2904,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         assert(walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
         if ((wallet_creation_flags & WALLET_FLAG_EXTERNAL_SIGNER) || !(wallet_creation_flags & (WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET))) {
-            walletInstance->SetupDescriptorScriptPubKeyMans();
+            walletInstance->SetupDescriptorScriptPubKeyMans(seed_key_opt);
         }
 
         if (chain) {
@@ -3500,12 +3522,30 @@ void CWallet::SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey&
     }
 }
 
-void CWallet::SetupOwnDescriptorScriptPubKeyMans(WalletBatch& batch)
+void CWallet::AddWalletSeed(const CKey& seed_key)
+{
+    AssertLockHeld(cs_wallet);
+    m_seed_keys[seed_key.GetPubKey().GetID()] = seed_key;
+}
+
+void CWallet::AddCryptedWalletSeed(const CPubKey& pubkey, const std::vector<unsigned char>& crypted_secret)
+{
+    AssertLockHeld(cs_wallet);
+    m_crypted_seed_keys[pubkey.GetID()] = std::make_pair(pubkey, crypted_secret);
+}
+
+void CWallet::SetupOwnDescriptorScriptPubKeyMans(WalletBatch& batch, std::optional<CKey> seed_key_opt)
 {
     AssertLockHeld(cs_wallet);
     assert(!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
     // Make a seed
-    CKey seed_key = GenerateRandomKey();
+    CKey seed_key;
+    if (seed_key_opt.has_value()) {
+        seed_key = seed_key_opt.value();
+    } else {
+        seed_key = GenerateRandomKey();
+    }
+
     CPubKey seed = seed_key.GetPubKey();
     assert(seed_key.VerifyPubKey(seed));
 
@@ -3513,16 +3553,43 @@ void CWallet::SetupOwnDescriptorScriptPubKeyMans(WalletBatch& batch)
     CExtKey master_key;
     master_key.SetSeed(seed_key);
 
+    // Save the raw seed to the wallet database (encrypted if applicable)
+    if (IsCrypted()) {
+        if (IsLocked()) {
+            throw std::runtime_error(std::string(__func__) + ": Wallet is locked, cannot save seed");
+        }
+        // Encrypt the seed key using the wallet's encryption key
+        std::vector<unsigned char> crypted_secret;
+        CKeyingMaterial seed_secret{UCharCast(seed_key.begin()), UCharCast(seed_key.end())};
+        bool ok = WithEncryptionKey([&](const CKeyingMaterial& enc_key) {
+            return EncryptSecret(enc_key, seed_secret, seed.GetHash(), crypted_secret);
+        });
+        if (!ok || !batch.WriteCryptedWalletSeed(seed, crypted_secret)) {
+            throw std::runtime_error(std::string(__func__) + ": Failed to encrypt/write wallet seed");
+        }
+        // Store in memory encrypted seeds map
+        m_crypted_seed_keys[seed.GetID()] = std::make_pair(seed, crypted_secret);
+    } else {
+        CPrivKey seed_priv = seed_key.GetPrivKey();
+        if (!batch.WriteWalletSeed(seed, seed_priv)) {
+            throw std::runtime_error(std::string(__func__) + ": Failed to write wallet seed to DB");
+        }
+        // Store in memory plaintext seeds map
+        m_seed_keys[seed.GetID()] = seed_key;
+    }
+
+    SetWalletFlagWithDB(batch, WALLET_FLAG_SEEDS_STORED);
+
     SetupDescriptorScriptPubKeyMans(batch, master_key);
 }
 
-void CWallet::SetupDescriptorScriptPubKeyMans()
+void CWallet::SetupDescriptorScriptPubKeyMans(std::optional<CKey> seed_key_opt)
 {
     AssertLockHeld(cs_wallet);
 
     if (!IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
         if (!RunWithinTxn(GetDatabase(), /*process_desc=*/"setup descriptors", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet){
-            SetupOwnDescriptorScriptPubKeyMans(batch);
+            SetupOwnDescriptorScriptPubKeyMans(batch, seed_key_opt);
             return true;
         })) throw std::runtime_error("Error: cannot process db transaction for descriptors setup");
     } else {
@@ -3858,7 +3925,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             SetupDescriptorScriptPubKeyMans(local_wallet_batch, data.master_key);
         } else {
             // Setup with a new seed if we don't.
-            SetupOwnDescriptorScriptPubKeyMans(local_wallet_batch);
+            SetupOwnDescriptorScriptPubKeyMans(local_wallet_batch, std::nullopt);
         }
     }
 
@@ -4060,7 +4127,7 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
                 return false;
             }
 
-            data->watchonly_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+            data->watchonly_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, /* seed_key_opt=*/ std::nullopt, error, warnings);
             if (!data->watchonly_wallet) {
                 error = _("Error: Failed to create new watchonly wallet");
                 return false;
@@ -4099,7 +4166,7 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
                 return false;
             }
 
-            data->solvable_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+            data->solvable_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, /* seed_key_opt=*/ std::nullopt, error, warnings);
             if (!data->solvable_wallet) {
                 error = _("Error: Failed to create new watchonly wallet");
                 return false;
@@ -4176,7 +4243,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
 
     // Make the local wallet
-    std::shared_ptr<CWallet> local_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+    std::shared_ptr<CWallet> local_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, /* seed_key_opt=*/ std::nullopt, error, warnings);
     if (!local_wallet) {
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
