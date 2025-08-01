@@ -1,0 +1,3 @@
+A new (experimental) Mining interface was introduced to support Stratum v2 or other mining client software, see #31098. When the node is started with `bitcoin node -m -ipcbind=unix` the node will listen on a unix socket for IPC client connections. The `-m` option launches a new binary `bitcoin-node` instead of `bitcoind`.
+
+IPC connectivity introduces new dependencies (see [multiprocess.md](multiprocess.md)), which are only included in the `bitcoin-node` and `bitcoin-gui` binaries (not in `bitcoind` and `bitcoin-qt`). Those new binaries are now built by default (controlled by `ENABLE_IPC`). If you don't intend to use IPC, nothing changes and there is no need to use `bitcoin -m`, `bitcoin-node` or `bitcoin-gui`(#31802)
