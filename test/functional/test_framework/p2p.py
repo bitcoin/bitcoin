@@ -866,8 +866,8 @@ class P2PDataStore(P2PInterface):
          - the on_getheaders handler will ensure that any getheaders are responded to
          - if force_send is False: wait for getdata for each of the blocks. The on_getdata handler will
            ensure that any getdata messages are responded to. Otherwise send the full block unsolicited.
-         - if success is True: assert that the node's tip advances to the most recent block
-         - if success is False: assert that the node's tip doesn't advance
+         - if success is True: assert that the node's tip is the last block in blocks at the end of the operation.
+         - if success is False: assert that the node's tip isn't the last block in blocks at the end of the operation
          - if reject_reason is set: assert that the correct reject message is logged"""
 
         with p2p_lock:
