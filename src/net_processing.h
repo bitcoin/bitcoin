@@ -109,7 +109,7 @@ public:
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 
-    virtual std::vector<node::TxOrphanage::OrphanTxBase> GetOrphanTransactions() = 0;
+    virtual std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() = 0;
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;

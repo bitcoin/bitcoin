@@ -490,6 +490,8 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-allowignoredconf", strprintf("For backwards compatibility, treat an unused %s file in the datadir as a warning, not an error.", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-loadblock=<file>", "Imports blocks from external file on startup", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-maxmempool=<n>", strprintf("Keep the transaction memory pool below <n> megabytes (default: %u)", DEFAULT_MAX_MEMPOOL_SIZE_MB), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    // TODO: remove in v31.0
+    argsman.AddArg("-maxorphantx=<n>", strprintf("(Removed option, see release notes)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mempoolexpiry=<n>", strprintf("Do not keep transactions in the mempool longer than <n> hours (default: %u)", DEFAULT_MEMPOOL_EXPIRY_HOURS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-minimumchainwork=<hex>", strprintf("Minimum work assumed to exist on a valid chain in hex (default: %s, testnet3: %s, testnet4: %s, signet: %s)", defaultChainParams->GetConsensus().nMinimumChainWork.GetHex(), testnetChainParams->GetConsensus().nMinimumChainWork.GetHex(), testnet4ChainParams->GetConsensus().nMinimumChainWork.GetHex(), signetChainParams->GetConsensus().nMinimumChainWork.GetHex()), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-par=<n>", strprintf("Set the number of script verification threads (0 = auto, up to %d, <0 = leave that many cores free, default: %d)",
@@ -891,6 +893,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (args.IsArgSet("-datacarriersize") || args.IsArgSet("-datacarrier")) {
         InitWarning(_("Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version."));
+    }
+
+    // We no longer limit the orphanage based on number of transactions but keep the option to warn users who still have it in their config.
+    if (args.IsArgSet("-maxorphantx")) {
+        InitWarning(_("Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration."));
     }
 
     // Error if network-specific options (-addnode, -connect, etc) are

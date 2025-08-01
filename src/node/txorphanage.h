@@ -41,13 +41,13 @@ public:
     using Count = unsigned int;
 
     /** Allows providing orphan information externally */
-    struct OrphanTxBase {
+    struct OrphanInfo {
         CTransactionRef tx;
         /** Peers added with AddTx or AddAnnouncer. */
         std::set<NodeId> announcers;
 
         // Constructor with moved announcers
-        OrphanTxBase(CTransactionRef tx, std::set<NodeId>&& announcers) :
+        OrphanInfo(CTransactionRef tx, std::set<NodeId>&& announcers) :
             tx(std::move(tx)),
             announcers(std::move(announcers))
         {}
@@ -88,24 +88,18 @@ public:
     /** Erase all orphans included in or invalidated by a new block */
     virtual void EraseForBlock(const CBlock& block) = 0;
 
-    /** Limit the orphanage to MaxGlobalLatencyScore and MaxGlobalUsage. */
-    virtual void LimitOrphans() = 0;
-
     /** Add any orphans that list a particular tx as a parent into the from peer's work set */
     virtual std::vector<std::pair<Wtxid, NodeId>> AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) = 0;
 
     /** Does this peer have any work to do? */
     virtual bool HaveTxToReconsider(NodeId peer) = 0;
 
-    /** Get all children that spend from this tx and were received from nodeid. Sorted from most
-     * recent to least recent. */
+    /** Get all children that spend from this tx and were received from nodeid. Sorted
+     * reconsiderable before non-reconsiderable, then from most recent to least recent. */
     virtual std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const = 0;
 
-    /** Return how many entries exist in the orphange */
-    virtual size_t Size() const = 0;
-
     /** Get all orphan transactions */
-    virtual std::vector<OrphanTxBase> GetOrphanTransactions() const = 0;
+    virtual std::vector<OrphanInfo> GetOrphanTransactions() const = 0;
 
     /** Get the total usage (weight) of all orphans. If an orphan has multiple announcers, its usage is
      * only counted once within this total. */
@@ -152,6 +146,6 @@ public:
 
 /** Create a new TxOrphanage instance */
 std::unique_ptr<TxOrphanage> MakeTxOrphanage() noexcept;
-std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_ann, TxOrphanage::Usage reserved_peer_usage) noexcept;
+std::unique_ptr<TxOrphanage> MakeTxOrphanage(TxOrphanage::Count max_global_latency_score, TxOrphanage::Usage reserved_peer_usage) noexcept;
 } // namespace node
 #endif // BITCOIN_NODE_TXORPHANAGE_H
