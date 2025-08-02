@@ -3299,6 +3299,11 @@ void Chainstate::PruneBlockIndexCandidates() {
     while (it != setBlockIndexCandidates.end() && setBlockIndexCandidates.value_comp()(*it, m_chain.Tip())) {
         setBlockIndexCandidates.erase(it++);
     }
+
+    if (setBlockIndexCandidates.empty()) {
+        m_chainman.GetNotifications().fatalError(_("Seems like your data is corrupt. Try running -reindex-chainstate or -reindex. Shutting down..."));
+    }
+
     // Either the current tip or a successor of it we're working towards is left in setBlockIndexCandidates.
     assert(!setBlockIndexCandidates.empty());
 }
