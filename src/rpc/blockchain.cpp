@@ -1086,7 +1086,7 @@ static RPCHelpMan pruneblockchain()
     const CBlockIndex& block{*CHECK_NONFATAL(active_chain.Tip())};
     const CBlockIndex* last_block{active_chainstate.m_blockman.GetFirstStoredBlock(block)};
 
-    return static_cast<uint64_t>(last_block->nHeight);
+    return static_cast<int64_t>(last_block->nHeight - 1);
 },
     };
 }
