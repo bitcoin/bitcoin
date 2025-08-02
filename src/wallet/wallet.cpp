@@ -4203,14 +4203,15 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
 
     // Make a backup of the DB in the wallet's directory with a unique filename
     // using the wallet name and current timestamp. The backup filename is based
-    // on the name of the parent directory containing the wallet data in most
-    // cases, but in the case where the wallet name is a path to a data file,
-    // the name of the data file is used, and in the case where the wallet name
-    // is blank, "default_wallet" is used.
-    const std::string backup_prefix = wallet_name.empty() ? "default_wallet" : [&] {
-        // fs::weakly_canonical resolves relative specifiers and remove trailing slashes.
-        const auto legacy_wallet_path = fs::weakly_canonical(GetWalletDir() / fs::PathFromString(wallet_name));
-        return fs::PathToString(legacy_wallet_path.filename());
+    // on wallet name but expanded to "default_wallet" if it is empty and only
+    // the final filename portion is used if it contains slashes.
+    std::string backup_prefix = wallet_name.empty() ? "default_wallet" : [&] {
+        // Normalize any .. components
+        fs::path p{fs::PathFromString(wallet_name).lexically_normal()};
+        // Drop trailing slash if any.
+        if (p.filename().empty()) p = p.parent_path();
+        // Return last path component
+        return fs::PathToString(p.filename());
     }();
 
     fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", backup_prefix, GetTime()));

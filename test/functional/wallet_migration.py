@@ -621,31 +621,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["descriptors"], False)
         assert_equal(info["format"], "bdb")
 
-    def test_wallet_with_path_ending_in_slash(self):
-        self.log.info("Test migrating a wallet with a name/path ending in '/'")
-
-        # The last directory in the wallet's path
-        final_dir = "mywallet"
-        wallet_name = f"path/to/{final_dir}/"
-        wallet = self.create_legacy_wallet(wallet_name)
-        default = self.master_node.get_wallet_rpc(self.default_wallet_name)
-
-        addr = wallet.getnewaddress()
-        txid = default.sendtoaddress(addr, 1)
-        self.generate(self.master_node, 1)
-        bals = wallet.getbalances()
-
-        _, wallet = self.migrate_and_get_rpc(wallet_name)
-
-        assert wallet.gettransaction(txid)
-
-        assert_equal(bals, wallet.getbalances())
-
-    def test_wallet_with_path_ending_in_relative_specifier(self):
-        self.log.info("Test migrating a wallet with a name/path ending in a relative specifier, '..'")
-        wallet_ending_in_relative = "path/that/ends/in/.."
+    def test_wallet_with_path(self, wallet_path):
+        self.log.info("Test migrating a wallet with the following path/name: %s", wallet_path)
         # the wallet data is actually inside of path/that/ends/
-        wallet = self.create_legacy_wallet(wallet_ending_in_relative)
+        wallet = self.create_legacy_wallet(wallet_path)
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
 
         addr = wallet.getnewaddress()
@@ -653,7 +632,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generate(self.master_node, 1)
         bals = wallet.getbalances()
 
-        _, wallet = self.migrate_and_get_rpc(wallet_ending_in_relative)
+        _, wallet = self.migrate_and_get_rpc(wallet_path)
 
         assert wallet.gettransaction(txid)
 
@@ -1558,8 +1537,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_nonexistent()
         self.test_unloaded_by_path()
         self.test_wallet_with_relative_path()
-        self.test_wallet_with_path_ending_in_slash()
-        self.test_wallet_with_path_ending_in_relative_specifier()
+        self.test_wallet_with_path("path/to/mywallet/")
+        self.test_wallet_with_path("path/that/ends/in/..")
         self.test_default_wallet()
         self.test_direct_file()
         self.test_addressbook()
