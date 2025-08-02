@@ -88,6 +88,7 @@ if ENABLE_WALLET
 bench_bench_dash_SOURCES += bench/coin_selection.cpp
 bench_bench_dash_SOURCES += bench/wallet_balance.cpp
 bench_bench_dash_SOURCES += bench/wallet_create.cpp
+bench_bench_dash_SOURCES += bench/wallet_loading.cpp
 bench_bench_dash_LDADD += $(BDB_LIBS) $(SQLITE_LIBS)
 endif
 

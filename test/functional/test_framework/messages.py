@@ -65,6 +65,12 @@ MSG_TYPE_MASK = 0xffffffff >> 2
 
 FILTER_TYPE_BASIC = 0
 
+DEFAULT_ANCESTOR_LIMIT = 25    # default max number of in-mempool ancestors
+DEFAULT_DESCENDANT_LIMIT = 25  # default max number of in-mempool descendants
+
+# Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN, +2 for the pushdata opcodes.
+MAX_OP_RETURN_RELAY = 83
+
 MAGIC_BYTES = {
     "mainnet": b"\xbf\x0c\x6b\xbd",   # mainnet
     "testnet3": b"\xce\xe2\xca\xff",  # testnet3
