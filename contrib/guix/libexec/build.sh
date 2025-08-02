@@ -6,6 +6,8 @@ export LC_ALL=C
 set -e -o pipefail
 export TZ=UTC
 
+CLIENT_NAME="Bitcoin-Core"
+
 # Although Guix _does_ set umask when building its own packages (in our case,
 # this is all packages in manifest.scm), it does not set it for `guix
 # shell`. It does make sense for at least `guix shell --container`
@@ -369,7 +371,7 @@ mkdir -p "$DISTSRC"
             ;;
         *darwin*)
             cmake --build build --target deploy ${V:+--verbose}
-            mv build/dist/Bitcoin-Core.zip "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.zip"
+            mv "build/dist/${CLIENT_NAME}.zip" "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.zip"
             mkdir -p "unsigned-app-${HOST}"
             cp  --target-directory="unsigned-app-${HOST}" \
                 contrib/macdeploy/detached-sig-create.sh
