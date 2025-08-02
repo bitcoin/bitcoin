@@ -14,6 +14,6 @@ export BITCOIN_CONFIG="--with-gui --enable-reduce-exports --disable-miner --with
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
 export OSX_SDK=""
-export CCACHE_SIZE=300M
+export CCACHE_MAXSIZE=300M
 
 export RUN_SECURITY_TESTS="true"

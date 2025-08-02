@@ -27,7 +27,7 @@ if [ "$CHECK_DOC" = 1 ]; then
     test/lint/all-lint.py
 fi
 
-ccache --zero-stats --max-size="$CCACHE_SIZE"
+ccache --zero-stats
 
 if [ -n "$CONFIG_SHELL" ]; then
   export CONFIG_SHELL="$CONFIG_SHELL"

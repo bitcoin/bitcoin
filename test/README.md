@@ -334,6 +334,7 @@ Use the `-v` option for verbose output.
 | Lint test | Dependency |
 |-----------|:----------:|
 | [`lint-python.py`](lint/lint-python.py) | [flake8](https://gitlab.com/pycqa/flake8)
+| [`lint-python.py`](lint/lint-python.py) | [lief](https://github.com/lief-project/LIEF)
 | [`lint-python.py`](lint/lint-python.py) | [mypy](https://github.com/python/mypy)
 | [`lint-python.py`](lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
 | [`lint-python-dead-code.py`](lint/lint-python-dead-code.py) | [vulture](https://github.com/jendrikseipp/vulture)

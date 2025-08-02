@@ -111,7 +111,7 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
 
     {
         LOCK(cs);
-        if (!seenChainLocks.emplace(hash, GetTimeMillis()).second) {
+        if (!seenChainLocks.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now())).second) {
             return {};
         }
 
@@ -611,15 +611,15 @@ void CChainLocksHandler::Cleanup()
         return;
     }
 
-    if (GetTimeMillis() - lastCleanupTime < CLEANUP_INTERVAL) {
+    if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - lastCleanupTime < CLEANUP_INTERVAL) {
         return;
     }
-    lastCleanupTime = GetTimeMillis();
+    lastCleanupTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
 
     {
         LOCK(cs);
         for (auto it = seenChainLocks.begin(); it != seenChainLocks.end(); ) {
-            if (GetTimeMillis() - it->second >= CLEANUP_SEEN_TIMEOUT) {
+            if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second >= CLEANUP_SEEN_TIMEOUT) {
                 it = seenChainLocks.erase(it);
             } else {
                 ++it;

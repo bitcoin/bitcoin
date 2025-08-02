@@ -13,7 +13,7 @@ import pkg_resources
 import subprocess
 import sys
 
-DEPS = ['flake8', 'mypy', 'pyzmq']
+DEPS = ['flake8', 'lief', 'mypy', 'pyzmq']
 MYPY_CACHE_DIR = f"{os.getenv('BASE_ROOT_DIR', '')}/test/.mypy_cache"
 FILES_ARGS = ['git', 'ls-files', '--','test/functional/*.py', 'contrib/devtools/*.py', ':(exclude)contrib/devtools/github-merge.py']
 EXCLUDE_DIRS = ['src/dashbls/',

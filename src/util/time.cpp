@@ -57,11 +57,6 @@ std::chrono::seconds GetMockTime()
     return g_mock_time.load(std::memory_order_relaxed);
 }
 
-int64_t GetTimeMillis()
-{
-    return int64_t{GetSystemTime<std::chrono::milliseconds>().count()};
-}
-
 int64_t GetTimeMicros()
 {
     return int64_t{GetSystemTime<std::chrono::microseconds>().count()};

@@ -155,7 +155,7 @@ PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom
             LOCK(cs_timingsTxSeen);
             if (auto it = timingsTxSeen.find(islock->txid); it != timingsTxSeen.end()) {
                 // This is the normal case where we received the TX before the islock
-                auto diff = GetTimeMillis() - it->second;
+                auto diff = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second;
                 timingsTxSeen.erase(it);
                 return diff;
             }
@@ -551,7 +551,7 @@ void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx, const CBlock
     if (ShouldReportISLockTiming()) {
         LOCK(cs_timingsTxSeen);
         // Only insert the time the first time we see the tx, as we sometimes try to resign
-        timingsTxSeen.try_emplace(tx->GetHash(), GetTimeMillis());
+        timingsTxSeen.try_emplace(tx->GetHash(), TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
     }
 
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, pindexMined=%s\n", __func__,

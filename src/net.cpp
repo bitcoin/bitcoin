@@ -2117,9 +2117,9 @@ void CConnman::DisconnectNodes()
                         //   1. vSendMsg must be empty and all messages sent via send(). This is ensured by SocketHandler()
                         //      being called before DisconnectNodes and also by the linger time
                         //   2. Internal socket send buffers must be flushed. This is ensured solely by the linger time
-                        pnode->nDisconnectLingerTime = GetTimeMillis() + 100;
+                        pnode->nDisconnectLingerTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) + 100;
                     }
-                    if (GetTimeMillis() < pnode->nDisconnectLingerTime) {
+                    if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) < pnode->nDisconnectLingerTime) {
                         // everything flushed to the kernel?
                         const auto& [to_send, more, _msg_type] = pnode->m_transport->GetBytesToSend(pnode->nSendMsgSize != 0);
                         const bool queue_is_empty{to_send.empty() && !more};
@@ -2638,11 +2638,11 @@ void CConnman::ThreadSocketHandler(CMasternodeSync& mn_sync)
         // Handle sockets before we do the next round of disconnects. This allows us to flush send buffers one last time
         // before actually closing sockets. Receiving is however skipped in case a peer is pending to be disconnected
         SocketHandler(mn_sync);
-        if (GetTimeMillis() - nLastCleanupNodes > 1000) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nLastCleanupNodes > 1000) {
             ForEachNode(AllNodes, [&](CNode* pnode) {
                 if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
             });
-            nLastCleanupNodes = GetTimeMillis();
+            nLastCleanupNodes = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         }
         DisconnectNodes();
         NotifyNumConnectionsChanged(mn_sync);
@@ -3650,9 +3650,9 @@ void CConnman::ThreadMessageHandler()
         bool fMoreWork = false;
 
         bool fSkipSendMessagesForMasternodes = true;
-        if (GetTimeMillis() - nLastSendMessagesTimeMasternodes >= 100) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - nLastSendMessagesTimeMasternodes >= 100) {
             fSkipSendMessagesForMasternodes = false;
-            nLastSendMessagesTimeMasternodes = GetTimeMillis();
+            nLastSendMessagesTimeMasternodes = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
         }
 
         // Randomize the order in which we process messages from/to our peers.
