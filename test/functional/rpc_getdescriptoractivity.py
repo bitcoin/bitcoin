@@ -191,6 +191,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
         assert result['activity'][2]['type'] == 'spend'
         assert result['activity'][2]['spend_txid'] == sent2['txid']
+        assert result['activity'][2]['spend_vin'] == 0
         assert result['activity'][2]['prevout_txid'] == sent1['txid']
         assert result['activity'][2]['blockhash'] == blockhash_2
 
