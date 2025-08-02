@@ -744,7 +744,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         assert_not_equal(node.getbestblockhash(), block.hash_hex)
         test_node.sync_with_ping()
 
-        # The failure above was cached. Submitting the compact block again will returned a cached
+        # The failure above was cached. Submitting the compact block again will return a cached
         # consensus error (the code path is different) and still not get us disconnected (nor
         # advance the tip).
         test_node.send_and_ping(msg)

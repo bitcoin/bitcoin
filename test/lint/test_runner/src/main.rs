@@ -688,6 +688,7 @@ fn lint_doc() -> LintResult {
 fn lint_markdown() -> LintResult {
     let bin_name = "mlc";
     let mut md_ignore_paths = get_subtrees();
+    md_ignore_paths.push("./depends/work/");
     md_ignore_paths.push("./doc/README_doxygen.md");
     let md_ignore_path_str = md_ignore_paths.join(",");
 
