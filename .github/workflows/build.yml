@@ -18,8 +18,29 @@ concurrency:
   cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
+  check-skip:
+    name: Check skip conditions
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.skip-check.outputs.skip }}
+    steps:
+      - name: Check skip environment variables
+        id: skip-check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ vars.SKIP_ON_PUSH }}" != "" ]]; then
+            echo "Skipping build on push due to SKIP_ON_PUSH environment variable"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "pull_request_target" && "${{ vars.SKIP_ON_PR }}" != "" ]]; then
+            echo "Skipping build on pull request due to SKIP_ON_PR environment variable"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
   container:
     name: Build container
+    needs: [check-skip]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     uses: ./.github/workflows/build-container.yml
     with:
       context: ./contrib/containers/ci
@@ -28,6 +49,8 @@ jobs:
 
   container-slim:
     name: Build slim container
+    needs: [check-skip]
+    if: ${{ needs.check-skip.outputs.skip == 'false' }}
     uses: ./.github/workflows/build-container.yml
     with:
       context: ./contrib/containers/ci
