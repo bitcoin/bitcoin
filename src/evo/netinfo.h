@@ -262,10 +262,16 @@ private:
     static constexpr uint8_t CURRENT_VERSION{1};
 
     /** Returns true if there are addr:port duplicates in the object */
-    bool HasDuplicates() const;
+    bool HasAddrPortDuplicates() const;
 
     /** Returns true if candidate is an addr:port duplicate in the object */
-    bool IsDuplicateCandidate(const NetInfoEntry& candidate) const;
+    bool IsAddrPortDuplicate(const NetInfoEntry& candidate) const;
+
+    /** Returns true if there are addr duplicates within a given address list */
+    bool HasAddrDuplicates(const NetInfoList& entries) const;
+
+    /** Returns true if candidate is an addr duplicate within a given address list */
+    bool IsAddrDuplicate(const NetInfoEntry& candidate, const NetInfoList& entries) const;
 
     /** Validate uniqueness requirements and add to object if passed */
     NetInfoStatus ProcessCandidate(const NetInfoPurpose purpose, const NetInfoEntry& candidate);

@@ -262,11 +262,11 @@ std::string MnNetInfo::ToString() const
                                  m_addr.ToString());
 }
 
-bool ExtNetInfo::HasDuplicates() const
+bool ExtNetInfo::HasAddrPortDuplicates() const
 {
-    std::unordered_set<std::string> known{};
+    std::set<NetInfoEntry> known{};
     for (const auto& entry : m_all_entries) {
-        if (auto [_, inserted] = known.insert(entry.ToStringAddr()); !inserted) {
+        if (auto [_, inserted] = known.insert(entry); !inserted) {
             return true;
         }
     }
@@ -274,10 +274,28 @@ bool ExtNetInfo::HasDuplicates() const
     return false;
 }
 
-bool ExtNetInfo::IsDuplicateCandidate(const NetInfoEntry& candidate) const
+bool ExtNetInfo::IsAddrPortDuplicate(const NetInfoEntry& candidate) const
+{
+    return std::any_of(m_all_entries.begin(), m_all_entries.end(),
+                       [&candidate](const auto& entry) { return candidate == entry; });
+}
+
+bool ExtNetInfo::HasAddrDuplicates(const NetInfoList& entries) const
+{
+    std::unordered_set<std::string> known{};
+    for (const auto& entry : entries) {
+        if (auto [_, inserted] = known.insert(entry.ToStringAddr()); !inserted) {
+            return true;
+        }
+    }
+    ASSERT_IF_DEBUG(known.size() == entries.size());
+    return false;
+}
+
+bool ExtNetInfo::IsAddrDuplicate(const NetInfoEntry& candidate, const NetInfoList& entries) const
 {
     const std::string& candidate_str{candidate.ToStringAddr()};
-    return std::any_of(m_all_entries.begin(), m_all_entries.end(),
+    return std::any_of(entries.begin(), entries.end(),
                        [&candidate_str](const auto& entry) { return candidate_str == entry.ToStringAddr(); });
 }
 
@@ -285,7 +303,7 @@ NetInfoStatus ExtNetInfo::ProcessCandidate(const NetInfoPurpose purpose, const N
 {
     assert(candidate.IsTriviallyValid());
 
-    if (IsDuplicateCandidate(candidate)) {
+    if (IsAddrPortDuplicate(candidate)) {
         return NetInfoStatus::Duplicate;
     }
     if (auto it{m_data.find(purpose)}; it != m_data.end()) {
@@ -293,6 +311,9 @@ NetInfoStatus ExtNetInfo::ProcessCandidate(const NetInfoPurpose purpose, const N
         auto& [_, entries] = *it;
         if (entries.size() >= MAX_ENTRIES_EXTNETINFO) {
             return NetInfoStatus::MaxLimit;
+        }
+        if (IsAddrDuplicate(candidate, entries)) {
+            return NetInfoStatus::Duplicate;
         }
         entries.push_back(candidate);
     } else {
@@ -384,7 +405,7 @@ NetInfoStatus ExtNetInfo::Validate() const
     if (m_version == 0 || m_version > CURRENT_VERSION || m_data.empty()) {
         return NetInfoStatus::Malformed;
     }
-    if (HasDuplicates()) {
+    if (HasAddrPortDuplicates()) {
         return NetInfoStatus::Duplicate;
     }
     for (const auto& [purpose, entries] : m_data) {
@@ -394,6 +415,9 @@ NetInfoStatus ExtNetInfo::Validate() const
         if (entries.empty()) {
             // Purpose if present in map must have at least one entry
             return NetInfoStatus::Malformed;
+        }
+        if (HasAddrDuplicates(entries)) {
+            return NetInfoStatus::Duplicate;
         }
         for (const auto& entry : entries) {
             if (!entry.IsTriviallyValid()) {
