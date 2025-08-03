@@ -4273,14 +4273,12 @@ bool Chainstate::LoadChainTip()
     // to maintain a consistent best tip over reboots in case of a tie.
     auto target = tip;
     while (target) {
+        const bool is_candidate{setBlockIndexCandidates.contains(target)};
+        if (is_candidate) setBlockIndexCandidates.erase(tip);
         target->nSequenceId = SEQ_ID_BEST_CHAIN_FROM_DISK;
+        if (is_candidate) setBlockIndexCandidates.insert(tip);
         target = target->pprev;
     }
-
-    // Block index candidates are loaded before the chain tip, so we need to replace this entry
-    // Otherwise the scoring will be based on the memory address location instead of the nSequenceId
-    setBlockIndexCandidates.erase(tip);
-    TryAddBlockIndexCandidate(tip);
     PruneBlockIndexCandidates();
 
     tip = m_chain.Tip();
