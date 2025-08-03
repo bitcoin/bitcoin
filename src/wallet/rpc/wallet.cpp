@@ -371,51 +371,101 @@ static RPCHelpMan upgradetohd()
     if (!pwallet) return NullUniValue;
 
     bool generate_mnemonic = request.params[0].isNull() || request.params[0].get_str().empty();
-    SecureString secureWalletPassphrase;
-    secureWalletPassphrase.reserve(100);
 
-    if (request.params[2].isNull()) {
+    {
+        LOCK(pwallet->cs_wallet);
+
+        SecureString secureWalletPassphrase;
+        secureWalletPassphrase.reserve(100);
+
+        if (request.params[2].isNull()) {
+            if (pwallet->IsCrypted()) {
+                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet encrypted but passphrase not supplied to RPC.");
+            }
+        } else {
+            // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+            // Alternately, find a way to make request.params[0] mlock()'d to begin with.
+            secureWalletPassphrase = request.params[2].get_str().c_str();
+        }
+
+        SecureString secureMnemonic;
+        secureMnemonic.reserve(256);
+        if (!generate_mnemonic) {
+            secureMnemonic = request.params[0].get_str().c_str();
+        }
+
+        SecureString secureMnemonicPassphrase;
+        secureMnemonicPassphrase.reserve(256);
+        if (!request.params[1].isNull()) {
+            secureMnemonicPassphrase = request.params[1].get_str().c_str();
+        }
+
+        // TODO: breaking changes kept for v21!
+        // instead upgradetohd let's use more straightforward 'sethdseed'
+        constexpr bool is_v21 = false;
+        const int previous_version{pwallet->GetVersion()};
+        if (is_v21 && previous_version >= FEATURE_HD) {
+            return JSONRPCError(RPC_WALLET_ERROR, "Already at latest version. Wallet version unchanged.");
+        }
+
+        // Do not do anything to HD wallets
+        if (pwallet->IsHDEnabled()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot upgrade a wallet to HD if it is already upgraded to HD");
+        }
+
+        if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Private keys are disabled for this wallet");
+        }
+
+        pwallet->WalletLogPrintf("Upgrading wallet to HD\n");
+        pwallet->SetMinVersion(FEATURE_HD);
+
+        bool is_locked = pwallet->IsLocked();
+
         if (pwallet->IsCrypted()) {
-            throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet encrypted but passphrase not supplied to RPC.");
+            if (secureWalletPassphrase.empty()) {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: Wallet encrypted but supplied empty wallet passphrase");
+            }
+
+            // We are intentionally re-locking the wallet so we can validate passphrase
+            // by verifying if it can unlock the wallet
+            pwallet->Lock();
+
+            // Unlock the wallet
+            if (!pwallet->Unlock(secureWalletPassphrase)) {
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect");
+            }
         }
-    } else {
-        // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-        // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-        secureWalletPassphrase = request.params[2].get_str().c_str();
-    }
 
-    SecureString secureMnemonic;
-    secureMnemonic.reserve(256);
-    if (!generate_mnemonic) {
-        secureMnemonic = request.params[0].get_str().c_str();
-    }
+        if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            pwallet->SetupDescriptorScriptPubKeyMans(secureMnemonic, secureMnemonicPassphrase);
+        } else {
+            auto spk_man = pwallet->GetLegacyScriptPubKeyMan();
+            if (!spk_man) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Error: Legacy ScriptPubKeyMan is not available");
+            }
 
-    SecureString secureMnemonicPassphrase;
-    secureMnemonicPassphrase.reserve(256);
-    if (!request.params[1].isNull()) {
-        secureMnemonicPassphrase = request.params[1].get_str().c_str();
-    }
-
-    // TODO: breaking changes kept for v21!
-    // instead upgradetohd let's use more straightforward 'sethdseed'
-    constexpr bool is_v21 = false;
-    const int previous_version{pwallet->GetVersion()};
-    if (is_v21 && previous_version >= FEATURE_HD) {
-        return JSONRPCError(RPC_WALLET_ERROR, "Already at latest version. Wallet version unchanged.");
-    }
-
-    bilingual_str error;
-    const bool wallet_upgraded{pwallet->UpgradeToHD(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase, error)};
-
-    if (!secureWalletPassphrase.empty() && !pwallet->IsCrypted()) {
-        if (!pwallet->EncryptWallet(secureWalletPassphrase)) {
-            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
+            if (pwallet->IsCrypted()) {
+                pwallet->WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, encryption_key);
+                        return true;
+                    });
+            } else {
+                spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
+            }
         }
-    }
 
-    if (!wallet_upgraded) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
+        if (is_locked) {
+            // Relock the wallet
+            pwallet->Lock();
+        }
+
+        if (!secureWalletPassphrase.empty() && !pwallet->IsCrypted()) {
+            if (!pwallet->EncryptWallet(secureWalletPassphrase)) {
+                throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
+            }
+        }
+    } // pwallet->cs_wallet
 
     // If you are generating new mnemonic it is assumed that the addresses have never gotten a transaction before, so you don't need to rescan for transactions
     bool rescan = request.params[3].isNull() ? !generate_mnemonic : request.params[3].get_bool();
