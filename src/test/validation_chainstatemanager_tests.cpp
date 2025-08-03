@@ -557,6 +557,34 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     BOOST_CHECK_EQUAL(cs2.setBlockIndexCandidates.size(), num_indexes - last_assumed_valid_idx + 1);
 }
 
+    //! Test that after running PruneBlockIndexCandidates(), the current tip is
+    //! always found in the candidates set.
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_candidates_consistency, TestChain100Setup)
+{
+
+    ChainstateManager& chainman = *Assert(m_node.chainman);
+    Chainstate& chainstate = chainman.ActiveChainstate();
+
+    mineBlocks(10);
+
+    {
+        LOCK(::cs_main);
+        const CBlockIndex* current_tip = chainstate.m_chain.Tip();
+
+        // Remove current tip from candidates to create the problematic state
+        chainstate.setBlockIndexCandidates.erase(const_cast<CBlockIndex*>(current_tip));
+
+        // Verify the current tip is not in candidates
+        BOOST_CHECK(!chainstate.setBlockIndexCandidates.contains(const_cast<CBlockIndex*>(current_tip)));
+
+        // PruneBlockIndexCandidates should re-add the tip
+        chainstate.PruneBlockIndexCandidates();
+
+        // Verify the current tip is in candidates
+        BOOST_CHECK(chainstate.setBlockIndexCandidates.contains(const_cast<CBlockIndex*>(current_tip)));
+    }
+}
+
 //! Ensure that snapshot chainstates initialize properly when found on disk.
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
 {

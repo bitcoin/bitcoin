@@ -3299,6 +3299,10 @@ void Chainstate::PruneBlockIndexCandidates() {
     while (it != setBlockIndexCandidates.end() && setBlockIndexCandidates.value_comp()(*it, m_chain.Tip())) {
         setBlockIndexCandidates.erase(it++);
     }
+
+    // Ensure that after pruning, the current tip is always in the candidates set
+    setBlockIndexCandidates.insert(const_cast<CBlockIndex*>(m_chain.Tip()));
+
     // Either the current tip or a successor of it we're working towards is left in setBlockIndexCandidates.
     assert(!setBlockIndexCandidates.empty());
 }
