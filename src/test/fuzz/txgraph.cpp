@@ -668,7 +668,10 @@ FUZZ_TARGET(txgraph)
             } else if (block_builders.empty() && sims.size() > 1 && command-- == 0) {
                 // CommitStaging.
                 real->CommitStaging();
+                // Resulting main level is only guaranteed to be optimal if all levels are
+                const bool main_optimal = std::all_of(sims.cbegin(), sims.cend(), [](const auto &sim) { return sim.real_is_optimal; });
                 sims.erase(sims.begin());
+                sims.front().real_is_optimal = main_optimal;
                 break;
             } else if (sims.size() > 1 && command-- == 0) {
                 // AbortStaging.
