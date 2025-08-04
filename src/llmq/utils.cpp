@@ -953,7 +953,8 @@ bool BlsCheck::operator()()
             return false;
         }
     } else {
-        // It is supposed to be at least one public key!
+        // we should not get there ever
+        LogPrint(BCLog::LLMQ, "%s - no public keys are provided\n", m_id_string);
         return false;
     }
     return true;
