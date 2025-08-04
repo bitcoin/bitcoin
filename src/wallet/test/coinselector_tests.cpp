@@ -1223,7 +1223,7 @@ BOOST_AUTO_TEST_CASE(srd_tests)
 
     {
         // ################################################################################################################
-        // 3) Test selection when some coins surpass the max allowed weight while others not. --> must find a good solution
+        // 3) Test that SRD result does not exceed the max weight
         // ################################################################################################################
         CAmount target = 25.33L * COIN;
         int max_selection_weight = 10000; // WU
@@ -1238,6 +1238,7 @@ BOOST_AUTO_TEST_CASE(srd_tests)
             return available_coins;
         });
         BOOST_CHECK(res);
+        BOOST_CHECK(res->GetWeight() <= max_selection_weight);
     }
 }
 
