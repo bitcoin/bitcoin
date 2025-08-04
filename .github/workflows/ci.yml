@@ -85,7 +85,8 @@ jobs:
           git config --list --show-origin
           git rev-parse HEAD
           git rev-parse origin/${GITHUB_BASE_REF}
-          git rebase --exec "(git merge --no-commit origin/${GITHUB_BASE_REF} || (git diff; git status; false)) && python3 ./.github/ci-test-each-commit-exec.py && git reset --hard" ${{ env.TEST_BASE }}
+          echo git rebase --exec "(git -c merge.conflictStyle=diff3 merge --no-commit origin/${GITHUB_BASE_REF} || (git diff; git status; false)) && python3 ./.github/ci-test-each-commit-exec.py && git reset --hard" ${{ env.TEST_BASE }}
+          git rebase --exec "(git -c merge.conflictStyle=diff3 merge --no-commit origin/${GITHUB_BASE_REF} || (git diff; git status; false)) && python3 ./.github/ci-test-each-commit-exec.py && git reset --hard" ${{ env.TEST_BASE }}
 
   macos-native-arm64:
     name: ${{ matrix.job-name }}
