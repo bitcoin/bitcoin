@@ -25,7 +25,7 @@ enum class QvvecSyncMode {
 };
 
 /** Maximum number of dedicated script-checking threads allowed */
-static const int MAX_BLSCHECK_THREADS = 31;
+static const int MAX_BLSCHECK_THREADS = 33;
 /** -parbls default (number of bls-checking threads, 0 = auto) */
 static const int DEFAULT_BLSCHECK_THREADS = 0;
 
