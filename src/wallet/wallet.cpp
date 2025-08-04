@@ -353,11 +353,17 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
                 // TODO: drop this condition after removing option to create non-HD wallets
                 // related backport bitcoin#11250
                 if (wallet->GetVersion() >= FEATURE_HD) {
-                    if (!wallet->GenerateNewHDChain(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"", passphrase)) {
-                       error = Untranslated("Error: Failed to generate encrypted HD wallet");
-                       status = DatabaseStatus::FAILED_CREATE;
-                       return nullptr;
+                    auto spk_man = wallet->GetLegacyScriptPubKeyMan();
+                    if (!spk_man) {
+                        error = Untranslated("Error: Legacy ScriptPubKeyMan is not available");
+                        status = DatabaseStatus::FAILED_ENCRYPT;
+                        return nullptr;
                     }
+
+                    wallet->WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
+                            spk_man->GenerateNewHDChain(/*secureMnemonic=*/"", /*secureMnemonicPassphrase=*/"", encryption_key);
+                            return true;
+                        });
                 }
             }
 
@@ -3209,52 +3215,6 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
     return true;
 }
 
-bool CWallet::UpgradeToHD(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase, bilingual_str& error)
-{
-    LOCK(cs_wallet);
-
-    // Do not do anything to HD wallets
-    if (IsHDEnabled()) {
-        error = Untranslated("Cannot upgrade a wallet to HD if it is already upgraded to HD.");
-        return false;
-    }
-
-    if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        error = Untranslated("Private keys are disabled for this wallet");
-        return false;
-    }
-
-    WalletLogPrintf("Upgrading wallet to HD\n");
-    SetMinVersion(FEATURE_HD);
-
-    if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        if (IsCrypted()) {
-            if (secureWalletPassphrase.empty()) {
-                error = Untranslated("Error: Wallet encrypted but supplied empty wallet passphrase");
-                return false;
-            }
-
-            // Unlock the wallet
-            if (!Unlock(secureWalletPassphrase)) {
-                error = Untranslated("Error: The wallet passphrase entered was incorrect");
-                return false;
-            }
-        }
-        SetupDescriptorScriptPubKeyMans(secureMnemonic, secureMnemonicPassphrase);
-
-        if (IsCrypted()) {
-            // Relock the wallet
-            Lock();
-        }
-    } else {
-        if (!GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
-            error = Untranslated("Failed to generate HD wallet");
-            return false;
-        }
-    }
-    return true;
-}
-
 const CAddressBookData* CWallet::FindAddressBookEntry(const CTxDestination& dest, bool allow_change) const
 {
     const auto& address_book_it = m_address_book.find(dest);
@@ -3783,64 +3743,6 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
         spk_man->NotifyWatchonlyChanged.connect(NotifyWatchonlyChanged);
         spk_man->NotifyCanGetAddressesChanged.connect(NotifyCanGetAddressesChanged);
     }
-}
-
-bool CWallet::GenerateNewHDChain(const SecureString& secureMnemonic, const SecureString& secureMnemonicPassphrase, const SecureString& secureWalletPassphrase)
-{
-    auto spk_man = GetLegacyScriptPubKeyMan();
-    if (!spk_man) {
-        throw std::runtime_error(strprintf("%s: spk_man is not available", __func__));
-    }
-
-    if (IsCrypted()) {
-        if (secureWalletPassphrase.empty()) {
-            throw std::runtime_error(strprintf("%s: encrypted but supplied empty wallet passphrase", __func__));
-        }
-
-        bool is_locked = IsLocked();
-
-        CCrypter crypter;
-        CKeyingMaterial vMasterKey;
-
-        // We are intentionally re-locking the wallet so we can validate vMasterKey
-        // by verifying if it can unlock the wallet
-        Lock();
-
-        LOCK(cs_wallet);
-        for (const auto& [_, master_key] : mapMasterKeys) {
-            CKeyingMaterial _vMasterKey;
-            if (!crypter.SetKeyFromPassphrase(secureWalletPassphrase, master_key.vchSalt, master_key.nDeriveIterations, master_key.nDerivationMethod)) {
-                return false;
-            }
-            // Try another key if it cannot be decrypted or the key is incapable of encrypting
-            if (!crypter.Decrypt(master_key.vchCryptedKey, _vMasterKey) || _vMasterKey.size() != WALLET_CRYPTO_KEY_SIZE) {
-                continue;
-            }
-            // The likelihood of the plaintext being gibberish but also of the expected size is low but not zero.
-            // If it can unlock the wallet, it's a good key.
-            if (Unlock(_vMasterKey)) {
-                vMasterKey = _vMasterKey;
-                break;
-            }
-        }
-
-        // We got a gibberish key...
-        if (vMasterKey.empty()) {
-            // Mimicking the error message of RPC_WALLET_PASSPHRASE_INCORRECT as it's possible
-            // that the user may see this error when interacting with the upgradetohd RPC
-            throw std::runtime_error("Error: The wallet passphrase entered was incorrect");
-        }
-
-        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, vMasterKey);
-
-        if (is_locked) {
-            Lock();
-        }
-    } else {
-        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
-    }
-
-    return true;
 }
 
 void CWallet::UpdateProgress(const std::string& title, int nProgress)
