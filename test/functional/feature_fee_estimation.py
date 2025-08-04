@@ -255,12 +255,16 @@ class EstimateFeeTest(BitcoinTestFramework):
     def test_feerate_dustrelayfee_common(self, node, multiplier, dust_mode, desc, expected_base):
         dust_parameter = f"-dustdynamic={dust_mode}".replace('=3*', '=')
         self.log.info(f"Test dust limit setting {dust_parameter} (fee estimation for {desc})")
-        self.restart_node(0, extra_args=[dust_parameter])
+        self.restart_node(0, extra_args=[dust_parameter, '-dustrelayfee=0'])
         assert_equal(node.getmempoolinfo()['dustdynamic'], dust_mode)
+        expected_dustrelayfee = satoshi_round(expected_base() * multiplier, rounding=ROUND_DOWN)
         with node.busy_wait_for_debug_log([b'Updating dust feerate']):
+            mempool_info = node.getmempoolinfo()
+            assert mempool_info['dustrelayfee'] != expected_dustrelayfee
+            assert mempool_info['dustrelayfeefloor'] <= expected_dustrelayfee
             node.mockscheduler(SECONDS_PER_HOUR)
         mempool_info = node.getmempoolinfo()
-        assert_equal(mempool_info['dustrelayfee'], satoshi_round(expected_base() * multiplier, rounding=ROUND_DOWN))
+        assert_equal(mempool_info['dustrelayfee'], expected_dustrelayfee)
         assert mempool_info['dustrelayfee'] > mempool_info['dustrelayfeefloor']
 
     def test_feerate_dustrelayfee_target(self, node, multiplier, dustfee_target):
