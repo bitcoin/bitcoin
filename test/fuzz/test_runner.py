@@ -6,6 +6,7 @@
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 import argparse
 import configparser
 import logging
@@ -42,6 +43,11 @@ def main():
         help='If true, run fuzzing binaries under the valgrind memory error detector',
     )
     parser.add_argument(
+        "--empty_min_time",
+        type=int,
+        help="If set, run at least this long, if the existing fuzz inputs directory is empty.",
+    )
+    parser.add_argument(
         '-x',
         '--exclude',
         help="A comma-separated list of targets to exclude",
@@ -76,6 +82,7 @@ def main():
     )
 
     args = parser.parse_args()
+    args.corpus_dir = Path(args.corpus_dir)
 
     # Set up logging
     logging.basicConfig(
@@ -183,6 +190,7 @@ def main():
             src_dir=config['environment']['SRCDIR'],
             build_dir=config["environment"]["BUILDDIR"],
             use_valgrind=args.valgrind,
+            empty_min_time=args.empty_min_time,
         )
 
 
@@ -263,16 +271,22 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dir)
         future.result()
 
 
-def run_once(*, fuzz_pool, corpus, test_list, src_dir, build_dir, use_valgrind):
+def run_once(*, fuzz_pool, corpus, test_list, src_dir, build_dir, use_valgrind, empty_min_time):
     jobs = []
     for t in test_list:
-        corpus_path = os.path.join(corpus, t)
+        corpus_path = corpus / t
         os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
-            '-runs=1',
-            corpus_path,
         ]
+        empty_dir = not any(corpus_path.iterdir())
+        if empty_min_time and empty_dir:
+            args += [f"-max_total_time={empty_min_time}"]
+        else:
+            args += [
+                "-runs=1",
+                corpus_path,
+            ]
         if use_valgrind:
             args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
 
