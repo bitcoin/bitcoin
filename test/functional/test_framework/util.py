@@ -559,7 +559,7 @@ def get_mnemonic(node):
                 assert_equal(mnemonic_passphrase, desc['mnemonicpassphrase'])
         elif desc['desc'][:6] == 'combo(':
             assert 'mnemonic' not in desc
-            assert 'mnemonic_passphrase' not in desc
+            assert 'mnemonicpassphrase' not in desc
         else:
             raise AssertionError(f"Unknown descriptor type: {desc['desc']}")
     return (mnemonic, mnemonic_passphrase)
