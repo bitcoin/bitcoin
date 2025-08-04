@@ -83,7 +83,7 @@ void TxDownloadManager::CheckIsEmpty(NodeId nodeid) const
 {
     m_impl->CheckIsEmpty(nodeid);
 }
-std::vector<TxOrphanage::OrphanTxBase> TxDownloadManager::GetOrphanTransactions() const
+std::vector<TxOrphanage::OrphanInfo> TxDownloadManager::GetOrphanTransactions() const
 {
     return m_impl->GetOrphanTransactions();
 }
@@ -188,7 +188,6 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
 
             if (MaybeAddOrphanResolutionCandidate(unique_parents, *wtxid, peer, now)) {
                 m_orphanage->AddAnnouncer(orphan_tx->GetWitnessHash(), peer);
-                m_orphanage->LimitOrphans();
             }
 
             // Return even if the peer isn't an orphan resolution candidate. This would be caught by AlreadyHaveTx.
@@ -419,9 +418,6 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
                 m_txrequest.ForgetTxHash(tx.GetHash());
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-
-                // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
-                m_orphanage->LimitOrphans();
             } else {
                 unique_parents.clear();
                 LogDebug(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s (wtxid=%s)\n",
@@ -576,11 +572,11 @@ void TxDownloadManagerImpl::CheckIsEmpty(NodeId nodeid)
 void TxDownloadManagerImpl::CheckIsEmpty()
 {
     assert(m_orphanage->TotalOrphanUsage() == 0);
-    assert(m_orphanage->Size() == 0);
+    assert(m_orphanage->CountUniqueOrphans() == 0);
     assert(m_txrequest.Size() == 0);
     assert(m_num_wtxid_peers == 0);
 }
-std::vector<TxOrphanage::OrphanTxBase> TxDownloadManagerImpl::GetOrphanTransactions() const
+std::vector<TxOrphanage::OrphanInfo> TxDownloadManagerImpl::GetOrphanTransactions() const
 {
     return m_orphanage->GetOrphanTransactions();
 }
