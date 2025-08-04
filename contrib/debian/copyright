@@ -83,6 +83,10 @@ Files: src/qt/res/fonts/RobotoMono-Bold.ttf
 License: Apache-2.0
 Comment: Site: https://fonts.google.com/specimen/Roboto+Mono
 
+Files: src/qt/res/fonts/OCR-Bitcoin.ttf.in
+Copyright: Orange Manufacturing Group & Kurtis Stirling
+License: Expat
+
 
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a
