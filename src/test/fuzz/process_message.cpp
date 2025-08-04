@@ -17,6 +17,7 @@
 #include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -72,7 +73,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     connman.ResetMaxOutboundCycle();
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
     const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
-    SetMockTime(1610000000); // any time to successfully reset ibd
+    ElapseTime elapse_time{1610000000s}; // any time to successfully reset ibd
     chainman.ResetIbd();
     chainman.DisableNextWrite();
 
@@ -99,8 +100,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     connman.AddTestNode(p2p_node);
     FillNode(fuzzed_data_provider, connman, p2p_node);
 
-    const auto mock_time = ConsumeTime(fuzzed_data_provider);
-    SetMockTime(mock_time);
+    elapse_time.set(ConsumeTime(fuzzed_data_provider));
 
     CSerializedNetMsg net_msg;
     net_msg.m_type = random_message_type;

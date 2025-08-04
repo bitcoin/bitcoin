@@ -121,7 +121,7 @@ CBlockHeader ConsumeHeader(FuzzedDataProvider& fuzzed_data_provider, const uint2
         arith_uint256 target = ConsumeArithUInt256InRange(fuzzed_data_provider, lower_target, upper_target);
         header.nBits = target.GetCompact();
     }
-    header.nTime = ConsumeTime(fuzzed_data_provider);
+    header.nTime = Ticks<std::chrono::seconds>(ConsumeTime(fuzzed_data_provider));
     header.hashPrevBlock = prev_hash;
     header.nVersion = fuzzed_data_provider.ConsumeIntegral<int32_t>();
     return header;
@@ -176,7 +176,7 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
     CBlockHeader base{chainman.GetParams().GenesisBlock()};
-    SetMockTime(base.nTime);
+    const ElapseTime elapse_time{base.Time()};
 
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
