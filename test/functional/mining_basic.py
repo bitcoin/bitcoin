@@ -20,6 +20,7 @@ from test_framework.blocktools import (
     TIME_GENESIS_BLOCK,
     REGTEST_N_BITS,
     REGTEST_TARGET,
+    COINBASE_MATURITY,
     nbits_str,
     target_str,
 )
@@ -49,7 +50,8 @@ from test_framework.wallet import (
 )
 
 
-DIFFICULTY_ADJUSTMENT_INTERVAL = 144
+TARGET_SPACING = 8 * 60
+DIFFICULTY_ADJUSTMENT_INTERVAL = 24 * 60 * 60 // TARGET_SPACING
 MAX_FUTURE_BLOCK_TIME = 2 * 3600
 MAX_TIMEWARP = 600
 VERSIONBITS_TOP_BITS = 0x20000000
@@ -68,7 +70,7 @@ class MiningTest(BitcoinTestFramework):
 
     def mine_chain(self):
         self.log.info('Create some old blocks')
-        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * 600, 600):
+        for t in range(TIME_GENESIS_BLOCK, TIME_GENESIS_BLOCK + 200 * TARGET_SPACING, TARGET_SPACING):
             self.nodes[0].setmocktime(t)
             self.generate(self.wallet, 1, sync_fun=self.no_op)
         mining_info = self.nodes[0].getmininginfo()
@@ -95,7 +97,7 @@ class MiningTest(BitcoinTestFramework):
         self.generate(wallet_sigops, 1, sync_fun=self.no_op)
 
         # Mature with regular coinbases to prevent interference with other tests
-        self.generate(self.wallet, 100, sync_fun=self.no_op)
+        self.generate(self.wallet, COINBASE_MATURITY, sync_fun=self.no_op)
 
         # Generate three transactions that must be mined in sequence
         #
@@ -190,7 +192,7 @@ class MiningTest(BitcoinTestFramework):
         t = blockchain_info['time']
 
         for _ in range(n):
-            t += 600
+            t += TARGET_SPACING
             self.nodes[0].setmocktime(t)
             self.generate(self.wallet, 1, sync_fun=self.no_op)
 
@@ -384,7 +386,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(mining_info['next']['target'], target_str(REGTEST_TARGET))
         assert_equal(mining_info['next']['bits'], nbits_str(REGTEST_N_BITS))
         assert_equal(round(mining_info['next']['difficulty'], 10), Decimal('0.0000000005'))
-        assert_equal(round(mining_info['networkhashps'], 5), Decimal('0.00333'))
+        assert_equal(round(mining_info['networkhashps'], 5), Decimal('0.00417'))
         assert_equal(mining_info['pooledtx'], 0)
 
         self.log.info("getblocktemplate: Test default witness commitment")
