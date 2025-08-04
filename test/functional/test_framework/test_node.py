@@ -106,6 +106,7 @@ class TestNode():
             "-debug",
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
+            "-debugexclude=rand",
             "-uacomment=testnode%d" % i,  # required for subversion uniqueness across peers
         ]
         if self.mocktime != 0:

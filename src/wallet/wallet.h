@@ -617,6 +617,10 @@ public:
     //! @return true if wtx is changed and needs to be saved to disk, otherwise false
     using UpdateWalletTxFn = std::function<bool(CWalletTx& wtx, bool new_tx)>;
 
+    /**
+     * Add the transaction to the wallet, wrapping it up inside a CWalletTx
+     * @return the recently added wtx pointer or nullptr if there was a db write error.
+     */
     CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true, bool rescanning_old_block = false);
     bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override;

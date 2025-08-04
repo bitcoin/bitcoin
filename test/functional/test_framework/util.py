@@ -575,39 +575,6 @@ def find_output(node, txid, amount, *, blockhash=None):
     raise RuntimeError("find_output txid %s : %s not found" % (txid, str(amount)))
 
 
-# Helper to create at least "count" utxos
-# Pass in a fee that is sufficient for relay and mining new transactions.
-def create_confirmed_utxos(test_framework, fee, node, count, **kwargs):
-    to_generate = int(0.5 * count) + 101
-    while to_generate > 0:
-        test_framework.generate(node, min(25, to_generate), **kwargs)
-        to_generate -= 25
-    utxos = node.listunspent()
-    iterations = count - len(utxos)
-    addr1 = node.getnewaddress()
-    addr2 = node.getnewaddress()
-    if iterations <= 0:
-        return utxos
-    for _ in range(iterations):
-        t = utxos.pop()
-        inputs = []
-        inputs.append({"txid": t["txid"], "vout": t["vout"]})
-        outputs = {}
-        send_value = t['amount'] - fee
-        outputs[addr1] = satoshi_round(send_value / 2)
-        outputs[addr2] = satoshi_round(send_value / 2)
-        raw_tx = node.createrawtransaction(inputs, outputs)
-        signed_tx = node.signrawtransactionwithwallet(raw_tx)["hex"]
-        node.sendrawtransaction(signed_tx)
-
-    while (node.getmempoolinfo()['size'] > 0):
-        test_framework.generate(node, 1, **kwargs)
-
-    utxos = node.listunspent()
-    assert len(utxos) >= count
-    return utxos
-
-
 def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
     """Build and send a transaction that spends the given inputs (specified
     by lists of parent_txid:vout each), with the desired total value and fee,

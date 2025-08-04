@@ -5,34 +5,23 @@
 #ifndef BITCOIN_UTIL_CHECK_H
 #define BITCOIN_UTIL_CHECK_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
-
 #include <attributes.h>
-#include <clientversion.h>
-#include <tinyformat.h>
 
 #include <stdexcept>
+#include <utility>
 
 class NonFatalCheckError : public std::runtime_error
 {
-    using std::runtime_error::runtime_error;
+public:
+    NonFatalCheckError(const char* msg, const char* file, int line, const char* func);
 };
-
-#define format_internal_error(msg, file, line, func, report)                                    \
-    strprintf("Internal bug detected: \"%s\"\n%s:%d (%s)\n"                                     \
-              "%s %s\n"                                                                           \
-              "Please report this issue here: %s\n",                                             \
-              msg, file, line, func, PACKAGE_NAME, FormatFullVersion(), report)
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
 T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const char* file, int line, const char* func, const char* assertion)
 {
-    if (!(val)) {
-        throw NonFatalCheckError(
-            format_internal_error(assertion, file, line, func, PACKAGE_BUGREPORT));
+    if (!val) {
+        throw NonFatalCheckError{assertion, file, line, func};
     }
     return std::forward<T>(val);
 }
@@ -91,11 +80,9 @@ T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] const char* f
 
 /**
  * NONFATAL_UNREACHABLE() is a macro that is used to mark unreachable code. It throws a NonFatalCheckError.
- * This is used to mark code that is not yet implemented or is not yet reachable.
  */
 #define NONFATAL_UNREACHABLE()                                        \
     throw NonFatalCheckError(                                         \
-        format_internal_error("Unreachable code reached (non-fatal)", \
-                              __FILE__, __LINE__, __func__, PACKAGE_BUGREPORT))
+        "Unreachable code reached (non-fatal)", __FILE__, __LINE__, __func__)
 
 #endif // BITCOIN_UTIL_CHECK_H

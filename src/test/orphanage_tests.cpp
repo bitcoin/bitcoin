@@ -20,13 +20,15 @@ BOOST_FIXTURE_TEST_SUITE(orphanage_tests, TestingSetup)
 class TxOrphanageTest : public TxOrphanage
 {
 public:
-    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_orphans.size();
     }
 
-    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         std::map<uint256, OrphanTx>::iterator it;
         it = m_orphans.lower_bound(InsecureRand256());
         if (it == m_orphans.end())
@@ -58,8 +60,6 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     MakeNewKeyWithFastRandomContext(key);
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
-
-    LOCK(g_cs_orphans);
 
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
@@ -132,6 +132,55 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     BOOST_CHECK(orphanage.CountOrphans() <= 10);
     orphanage.LimitOrphans(0);
     BOOST_CHECK(orphanage.CountOrphans() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(SetCandidatesByBlock)
+{
+    constexpr CAmount tx_fee{1 * CENT};
+
+    TxOrphanageTest orphanage;
+    CKey key;
+    MakeNewKeyWithFastRandomContext(key);
+    CScript scriptPubKey{GetScriptForDestination(PKHash(key.GetPubKey()))};
+
+    // Construct two transactions, the first transaction splits one input into multiple outputs
+    // and the second transaction spends the last output of the first transaction (i.e. our orphan).
+    // We want our orphan to try and spend from a transaction with more outputs than inputs.
+    CMutableTransaction tx_input;
+    tx_input.vin.resize(1);
+    tx_input.vin[0].prevout.n = 0;
+    tx_input.vin[0].prevout.hash = InsecureRand256();
+    tx_input.vin[0].scriptSig << OP_1;
+    tx_input.vout.resize(3);
+    for (size_t idx{0}; idx < tx_input.vout.size(); idx++) {
+        tx_input.vout[idx].nValue = 10 * CENT;
+        tx_input.vout[idx].scriptPubKey = scriptPubKey;
+    }
+    tx_input.vout.back().nValue -= tx_fee;
+
+    CMutableTransaction orphan;
+    orphan.vin.resize(1);
+    orphan.vin[0].prevout = COutPoint(tx_input.GetHash(), tx_input.vout.size() - 1);
+    orphan.vin[0].scriptSig << OP_1;
+    orphan.vout.resize(1);
+    orphan.vout[0].nValue = tx_input.vout.back().nValue - tx_fee;
+    orphan.vout[0].scriptPubKey = scriptPubKey;
+
+    CBlock block;
+    block.vtx.push_back(MakeTransactionRef(tx_input));
+
+    // Reprocess orphans based on inclusion of input transaction in block
+    BOOST_CHECK(orphanage.AddTx(MakeTransactionRef(orphan), /*peer=*/128));
+    orphanage.SetCandidatesByBlock(block);
+
+    // Old SetCandidatesByBlock() behavior cycled through vin instead of vout and would therefore miss the
+    // orphan because there are more vouts than vins in the transaction the orphan is attempting to spend.
+    // Let's check to make sure this isn't happening again.
+    NodeId _originator{-1}; bool more{false};
+    CTransactionRef ref = orphanage.GetTxToReconsider(/*peer=*/-1, _originator, more);
+    BOOST_CHECK(orphanage.HaveTx(Assert(ref)->GetHash()));
+    BOOST_CHECK_EQUAL(ref->GetHash(), orphan.GetHash());
+    BOOST_CHECK(!more);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
