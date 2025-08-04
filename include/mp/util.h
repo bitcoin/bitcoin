@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,18 +6,17 @@
 #define MP_UTIL_H
 
 #include <capnp/schema.h>
+#include <cassert>
 #include <cstddef>
+#include <cstring>
 #include <functional>
-#include <future>
-#include <kj/common.h>
-#include <kj/exception.h>
 #include <kj/string-tree.h>
-#include <memory>
-#include <string.h>
+#include <mutex>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace mp {
@@ -130,6 +129,59 @@ const char* TypeName()
     return short_name ? short_name + 1 : display_name;
 }
 
+//! Convenient wrapper around std::variant<T*, T>
+template <typename T>
+struct PtrOrValue {
+    std::variant<T*, T> data;
+
+    template <typename... Args>
+    PtrOrValue(T* ptr, Args&&... args) : data(ptr ? ptr : std::variant<T*, T>{std::in_place_type<T>, std::forward<Args>(args)...}) {}
+
+    T& operator*() { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
+    T* operator->() { return &**this; }
+    T& operator*() const { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
+    T* operator->() const { return &**this; }
+};
+
+// Annotated mutex and lock class (https://clang.llvm.org/docs/ThreadSafetyAnalysis.html)
+#if defined(__clang__) && (!defined(SWIG))
+#define MP_TSA(x)   __attribute__((x))
+#else
+#define MP_TSA(x)   // no-op
+#endif
+
+#define MP_CAPABILITY(x)        MP_TSA(capability(x))
+#define MP_SCOPED_CAPABILITY    MP_TSA(scoped_lockable)
+#define MP_REQUIRES(x)          MP_TSA(requires_capability(x))
+#define MP_ACQUIRE(...)         MP_TSA(acquire_capability(__VA_ARGS__))
+#define MP_RELEASE(...)         MP_TSA(release_capability(__VA_ARGS__))
+#define MP_ASSERT_CAPABILITY(x) MP_TSA(assert_capability(x))
+#define MP_GUARDED_BY(x)        MP_TSA(guarded_by(x))
+#define MP_NO_TSA               MP_TSA(no_thread_safety_analysis)
+
+class MP_CAPABILITY("mutex") Mutex {
+public:
+    void lock() MP_ACQUIRE() { m_mutex.lock(); }
+    void unlock() MP_RELEASE() { m_mutex.unlock(); }
+
+    std::mutex m_mutex;
+};
+
+class MP_SCOPED_CAPABILITY Lock {
+public:
+    explicit Lock(Mutex& m) MP_ACQUIRE(m) : m_lock(m.m_mutex) {}
+    ~Lock() MP_RELEASE() = default;
+    void unlock() MP_RELEASE() { m_lock.unlock(); }
+    void lock() MP_ACQUIRE() { m_lock.lock(); }
+    void assert_locked(Mutex& mutex) MP_ASSERT_CAPABILITY() MP_ASSERT_CAPABILITY(mutex)
+    {
+        assert(m_lock.mutex() == &mutex.m_mutex);
+        assert(m_lock);
+    }
+
+    std::unique_lock<std::mutex> m_lock;
+};
+
 //! Analog to std::lock_guard that unlocks instead of locks.
 template <typename Lock>
 struct UnlockGuard
@@ -144,46 +196,6 @@ void Unlock(Lock& lock, Callback&& callback)
 {
     const UnlockGuard<Lock> unlock(lock);
     callback();
-}
-
-//! Needed for libc++/macOS compatibility. Lets code work with shared_ptr nothrow declaration
-//! https://github.com/capnproto/capnproto/issues/553#issuecomment-328554603
-template <typename T>
-struct DestructorCatcher
-{
-    T value;
-    template <typename... Params>
-    DestructorCatcher(Params&&... params) : value(kj::fwd<Params>(params)...)
-    {
-    }
-    ~DestructorCatcher() noexcept try {
-    } catch (const kj::Exception& e) { // NOLINT(bugprone-empty-catch)
-    }
-};
-
-//! Wrapper around callback function for compatibility with std::async.
-//!
-//! std::async requires callbacks to be copyable and requires noexcept
-//! destructors, but this doesn't work well with kj types which are generally
-//! move-only and not noexcept.
-template <typename Callable>
-struct AsyncCallable
-{
-    AsyncCallable(Callable&& callable) : m_callable(std::make_shared<DestructorCatcher<Callable>>(std::move(callable)))
-    {
-    }
-    AsyncCallable(const AsyncCallable&) = default;
-    AsyncCallable(AsyncCallable&&) = default;
-    ~AsyncCallable() noexcept = default;
-    ResultOf<Callable> operator()() const { return (m_callable->value)(); }
-    mutable std::shared_ptr<DestructorCatcher<Callable>> m_callable;
-};
-
-//! Construct AsyncCallable object.
-template <typename Callable>
-AsyncCallable<std::remove_reference_t<Callable>> MakeAsyncCallable(Callable&& callable)
-{
-    return std::forward<Callable>(callable);
 }
 
 //! Format current thread name as "{exe_name}-{$pid}/{thread_name}-{$tid}".
