@@ -7,7 +7,7 @@ project(libsecp256k1
   # The package (a.k.a. release) version is based on semantic versioning 2.0.0 of
   # the API. All changes in experimental modules are treated as
   # backwards-compatible and therefore at most increase the minor version.
-  VERSION 0.7.1
+  VERSION 0.6.1
   DESCRIPTION "Optimized C library for ECDSA signatures and secret/public key operations on curve secp256k1."
   HOMEPAGE_URL "https://github.com/bitcoin-core/secp256k1"
   LANGUAGES C
@@ -21,7 +21,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
-set(${PROJECT_NAME}_LIB_VERSION_CURRENT 6)
+set(${PROJECT_NAME}_LIB_VERSION_CURRENT 5)
 set(${PROJECT_NAME}_LIB_VERSION_REVISION 1)
 set(${PROJECT_NAME}_LIB_VERSION_AGE 0)
 
@@ -42,8 +42,6 @@ endif()
 
 option(SECP256K1_INSTALL "Enable installation." ${PROJECT_IS_TOP_LEVEL})
 
-option(SECP256K1_ENABLE_API_VISIBILITY_ATTRIBUTES "Enable visibility attributes in the API." ON)
-
 ## Modules
 
 # We declare all options before processing them, to make sure we can express
@@ -54,6 +52,7 @@ option(SECP256K1_ENABLE_MODULE_EXTRAKEYS "Enable extrakeys module." ON)
 option(SECP256K1_ENABLE_MODULE_SCHNORRSIG "Enable schnorrsig module." ON)
 option(SECP256K1_ENABLE_MODULE_MUSIG "Enable musig module." ON)
 option(SECP256K1_ENABLE_MODULE_ELLSWIFT "Enable ElligatorSwift module." ON)
+option(SECP256K1_ENABLE_MODULE_SILENTPAYMENTS "Enable Silent Payments module." ON)
 
 option(SECP256K1_USE_EXTERNAL_DEFAULT_CALLBACKS "Enable external default callback functions." OFF)
 if(SECP256K1_USE_EXTERNAL_DEFAULT_CALLBACKS)
@@ -287,6 +286,7 @@ message("  extrakeys ........................... ${SECP256K1_ENABLE_MODULE_EXTRA
 message("  schnorrsig .......................... ${SECP256K1_ENABLE_MODULE_SCHNORRSIG}")
 message("  musig ............................... ${SECP256K1_ENABLE_MODULE_MUSIG}")
 message("  ElligatorSwift ...................... ${SECP256K1_ENABLE_MODULE_ELLSWIFT}")
+message("  Silent Payments ..................... ${SECP256K1_ENABLE_MODULE_SILENTPAYMENTS}")
 message("Parameters:")
 message("  ecmult window size .................. ${SECP256K1_ECMULT_WINDOW_SIZE}")
 message("  ecmult gen table size ............... ${SECP256K1_ECMULT_GEN_KB} KiB")
@@ -314,7 +314,6 @@ else()
   set(cross_status "FALSE")
 endif()
 message("Cross compiling ....................... ${cross_status}")
-message("API visibility attributes ............. ${SECP256K1_ENABLE_API_VISIBILITY_ATTRIBUTES}")
 message("Valgrind .............................. ${SECP256K1_VALGRIND}")
 get_directory_property(definitions COMPILE_DEFINITIONS)
 string(REPLACE ";" " " definitions "${definitions}")
