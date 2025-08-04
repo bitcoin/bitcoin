@@ -333,7 +333,6 @@ public:
     std::unordered_map<uint256, Session, StaticSaltedHasher> sessions;
 
     std::unordered_map<uint32_t, Session*> sessionByRecvId;
-    uint32_t nextSendSessionId{1};
 
     SigShareMap<CSigShare> pendingIncomingSigShares;
     SigShareMap<int64_t> requestedSigShares;
