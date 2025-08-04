@@ -543,21 +543,26 @@ def get_mnemonic(node):
     Raises exception if there is none.
     """
     if not node.getwalletinfo()['descriptors']:
-        return node.dumphdinfo()["mnemonic"]
+        hd = node.dumphdinfo()
+        return (hd["mnemonic"], hd["mnemonicpassphrase"])
 
     mnemonic = None
+    mnemonic_passphrase = None
     descriptors = node.listdescriptors(True)['descriptors']
     for desc in descriptors:
         if desc['desc'][:4] == 'pkh(':
             if mnemonic is None:
                 mnemonic = desc['mnemonic']
+                mnemonic_passphrase = desc['mnemonicpassphrase']
             else:
                 assert_equal(mnemonic, desc['mnemonic'])
+                assert_equal(mnemonic_passphrase, desc['mnemonicpassphrase'])
         elif desc['desc'][:6] == 'combo(':
             assert 'mnemonic' not in desc
+            assert 'mnemonic_passphrase' not in desc
         else:
             raise AssertionError(f"Unknown descriptor type: {desc['desc']}")
-    return mnemonic
+    return (mnemonic, mnemonic_passphrase)
 
 # Transaction/Block functions
 #############################
