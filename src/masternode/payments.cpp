@@ -127,12 +127,12 @@ CAmount PlatformShare(const CAmount reward)
         if (!found) {
             std::string str_payout;
             if (CTxDestination dest; ExtractDestination(txout.scriptPubKey, dest)) {
-                str_payout = EncodeDestination(dest);
+                str_payout = "address=" + EncodeDestination(dest);
             } else {
-                str_payout = HexStr(txout.scriptPubKey);
+                str_payout = "scriptPubKey=" + HexStr(txout.scriptPubKey);
             }
-            LogPrintf("CMNPaymentsProcessor::%s -- ERROR! Failed to find expected payee %s in block at height %s\n",
-                      __func__, str_payout, nBlockHeight);
+            LogPrintf("CMNPaymentsProcessor::%s -- ERROR! Failed to find expected payee %s amount=%lld height=%d\n",
+                      __func__, str_payout, txout.nValue, nBlockHeight);
             return false;
         }
     }
