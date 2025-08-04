@@ -328,7 +328,7 @@ FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
                     {
                         if (peer_is_protected && !have_tx_and_peer &&
                             (orphanage->UsageByPeer(peer_id) + tx_weight > honest_mem_limit ||
-                            orphanage->LatencyScoreFromPeer(peer_id) + (tx->vin.size()) + 1 > honest_latency_limit)) {
+                            orphanage->LatencyScoreFromPeer(peer_id) + (tx->vin.size() / 10) + 1 > honest_latency_limit)) {
                             // We never want our protected peer oversized
                         } else {
                             orphanage->AddAnnouncer(tx->GetWitnessHash(), peer_id);
