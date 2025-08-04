@@ -1001,9 +1001,12 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
     // Iterate over the connected components of this Cluster's m_depgraph.
     while (todo.Any()) {
         auto component = m_depgraph.FindConnectedComponent(todo);
-        auto split_quality = component.Count() <= 2 ? QualityLevel::OPTIMAL : new_quality;
-        if (first && component == todo) {
-            // The existing Cluster is an entire component. Leave it be, but update its quality.
+        auto component_size = component.Count();
+        auto split_quality = component_size <= 2 ? QualityLevel::OPTIMAL : new_quality;
+        if (first && component == todo && SetType::Fill(component_size) == component) {
+            // The existing Cluster is an entire component, without holes. Leave it be, but update
+            // its quality. If there are holes, we continue, so that the Cluster is reconstructed
+            // without holes, reducing memory usage.
             Assume(todo == m_depgraph.Positions());
             graph.SetClusterQuality(level, m_quality, m_setindex, split_quality);
             // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
@@ -1064,12 +1067,11 @@ void Cluster::Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept
         auto idx = other.m_mapping[pos];
         // Copy the transaction into this Cluster, and remember its position.
         auto new_pos = m_depgraph.AddTransaction(other.m_depgraph.FeeRate(pos));
+        // Since this cluster must have been made hole-free before being merged into, all added
+        // transactions should appear at the end.
+        Assume(new_pos == m_mapping.size());
         remap[pos] = new_pos;
-        if (new_pos == m_mapping.size()) {
-            m_mapping.push_back(idx);
-        } else {
-            m_mapping[new_pos] = idx;
-        }
+        m_mapping.push_back(idx);
         m_linearization.push_back(new_pos);
         // Copy the transaction's dependencies, translating them using remap. Note that since
         // pos iterates over other.m_linearization, which is in topological order, all parents
@@ -2286,6 +2288,10 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
     assert(m_depgraph.PositionRange() == m_mapping.size());
     // The linearization for this Cluster must contain every transaction once.
     assert(m_depgraph.TxCount() == m_linearization.size());
+    // Unless a split is to be applied, the cluster cannot have any holes.
+    if (!NeedsSplitting()) {
+        assert(m_depgraph.Positions() == SetType::Fill(m_depgraph.TxCount()));
+    }
 
     // Compute the chunking of m_linearization.
     LinearizationChunking linchunking(m_depgraph, m_linearization);
