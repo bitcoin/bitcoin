@@ -605,7 +605,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     if (dmn->nType == MnType::Evo) {
         if (dmn->pdmnState->platformNodeID != uint160() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
-            throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a duplicate platformNodeID=%s", __func__,
+            throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a platformNodeID=%s", __func__,
                                                dmn->proTxHash.ToString(), dmn->pdmnState->platformNodeID.ToString())));
         }
     }
