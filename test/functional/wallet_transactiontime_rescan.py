@@ -8,11 +8,12 @@
 import time
 
 import threading
-from test_framework.authproxy import AuthServiceProxy
+from test_framework.authproxy import AuthServiceProxy, JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     set_node_times,
 )
@@ -157,75 +158,40 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
         assert_equal(restorewo_wallet.getbalance(), 0)
         assert_equal(len(restorewo_wallet.listtransactions()), 0)
 
-        # Test 'abortrescan' when a rescan is in progress:
-        # We’ll retry on increasingly large tails until we catch 'scanning==True'.
+        # Test 'abortrescan' when a rescan is in progress
         self.log.info('testing abortrescan when a rescan is in progress')
-        # RPC handle dedicated to polling getwalletinfo() and abortrescan()
         poll_rpc = AuthServiceProxy(restorenode.url + '/wallet/wo')
 
-        # Get current block height and start with up to 10‐block tail.
-        height = restorewo_wallet.getblockcount()
-        tail = min(10, height)
+        # Launch a full rescan in a worker thread
+        def _rescan_ignore_abort():
+            try:
+                restorewo_wallet.rescanblockchain()
+            except JSONRPCException:
+                # expected when we abort the scan
+                pass
 
-        # Flag for whether we ever observed scanning==True.
-        saw = False
-        # Cap to avoid infinite retries.
-        max_attempts = 5
+        t = threading.Thread(target=_rescan_ignore_abort)
+        t.start()
 
-        for attempt in range(max_attempts):
-            self.log.info(
-                f'Attempt {attempt + 1}/{max_attempts}: '
-                f'rescan last {tail} blocks'
-            )
-
-            def _rescan_ignore_abort():
-                """Do the rescan and swallow any exception (including abort)."""
-                try:
-                    restorewo_wallet.rescanblockchain(height - tail)
-                except Exception:
-                    pass
-
-            # Launch the rescan in a daemon thread.
-            t = threading.Thread(target=_rescan_ignore_abort)
-            t.daemon = True
-            t.start()
-
-            # Poll every 0.01s for up to 5s to see scanning==True.
-            deadline = time.time() + 5
-            while time.time() < deadline:
-                if poll_rpc.getwalletinfo().get('scanning', False):
-                    saw = True
-                    break
-                time.sleep(0.01)
-
-            if saw:
-                # We saw the scan start, exit loop.
-                self.log.info(f'scanning observed for tail={tail}')
+        # Wait until we see scanning==True (poll every 0.01 seconds, max 10 seconds)
+        deadline = time.time() + 10
+        while time.time() < deadline:
+            info = poll_rpc.getwalletinfo()
+            if info.get("scanning"):
                 break
+            time.sleep(0.01)
 
-            # Didn't see scanning, double tail, cleanup and retry.
-            self.log.warning(
-                f'No scanning for tail={tail}; doubling tail'
-            )
-            t.join(timeout=1)
-            tail = min(height, tail * 2)
-        else:
-            # If we never saw scanning after all attempts, fail.
-            raise AssertionError(
-                f'Could not observe scanning after {max_attempts} attempts'
-            )
+        # Ensure that the rescan started within 10 seconds
+        assert_greater_than(deadline, time.time())
 
-        # Now abort the in-flight rescan and require a True return.
+        # Abort and require True
         result = poll_rpc.abortrescan()
         assert_equal(result, True)
-        self.log.info(f'abortrescan() returned {result}')
 
-        # Wait for the thread to finish cleanup.
-        t.join(timeout=2)
-        if t.is_alive():
-            self.log.warning(
-                'Background rescan thread still alive after join'
-            )
+        # Now block until the rescan threads are joined
+        self.log.info('Joining threads...')
+        t.join()
+        self.log.info('Threads joined')
 
         # proceed to rescan, first with an incomplete one, then with a full rescan
         self.log.info('Rescan last history part')
