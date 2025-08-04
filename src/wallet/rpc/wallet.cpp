@@ -420,8 +420,6 @@ static RPCHelpMan upgradetohd()
         pwallet->WalletLogPrintf("Upgrading wallet to HD\n");
         pwallet->SetMinVersion(FEATURE_HD);
 
-        bool is_locked = pwallet->IsLocked();
-
         if (pwallet->IsCrypted()) {
             if (secureWalletPassphrase.empty()) {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: Wallet encrypted but supplied empty wallet passphrase");
@@ -455,12 +453,11 @@ static RPCHelpMan upgradetohd()
             }
         }
 
-        if (is_locked) {
-            // Relock the wallet
+        if (pwallet->IsCrypted()) {
+            // Relock encrypted wallet
             pwallet->Lock();
-        }
-
-        if (!secureWalletPassphrase.empty() && !pwallet->IsCrypted()) {
+        } else if (!secureWalletPassphrase.empty()) {
+            // Encrypt non-encrypted wallet
             if (!pwallet->EncryptWallet(secureWalletPassphrase)) {
                 throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
             }
