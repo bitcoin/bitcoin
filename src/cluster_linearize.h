@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include <memusage.h>
 #include <random.h>
 #include <span.h>
 #include <util/feefrac.h>
@@ -331,6 +332,17 @@ public:
             }
         }
         return true;
+    }
+
+    /** Reduce memory usage if possible. No observable effect. */
+    void Compact() noexcept
+    {
+        entries.shrink_to_fit();
+    }
+
+    size_t DynamicMemoryUsage() const noexcept
+    {
+        return memusage::DynamicUsage(entries);
     }
 };
 

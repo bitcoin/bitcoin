@@ -452,63 +452,72 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
         }
     };
 
+    auto last_compaction_pos{real.PositionRange()};
+
     LIMITED_WHILE(provider.remaining_bytes() > 0, 1000) {
-        uint8_t command = provider.ConsumeIntegral<uint8_t>();
-        if (num_tx_sim == 0 || ((command % 3) <= 0 && num_tx_sim < TestBitSet::Size())) {
-            // AddTransaction.
-            auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
-            auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
-            FeeFrac feerate{fee, size};
-            // Apply to DepGraph.
-            auto idx = real.AddTransaction(feerate);
-            // Verify that the returned index is correct.
-            assert(!sim[idx].has_value());
-            for (DepGraphIndex i = 0; i < TestBitSet::Size(); ++i) {
-                if (!sim[i].has_value()) {
-                    assert(idx == i);
-                    break;
-                }
-            }
-            // Update sim.
-            sim[idx] = {feerate, TestBitSet::Singleton(idx)};
-            ++num_tx_sim;
-            continue;
-        }
-        if ((command % 3) <= 1 && num_tx_sim > 0) {
-            // AddDependencies.
-            DepGraphIndex child = idx_fn();
-            auto parents = subset_fn();
-            // Apply to DepGraph.
-            real.AddDependencies(parents, child);
-            // Apply to sim.
-            sim[child]->second |= parents;
-            continue;
-        }
-        if (num_tx_sim > 0) {
-            // Remove transactions.
-            auto del = set_fn();
-            // Propagate all ancestry information before deleting anything in the simulation (as
-            // intermediary transactions may be deleted which impact connectivity).
-            anc_update_fn();
-            // Compare the state of the transactions being deleted.
-            for (auto i : del) check_fn(i);
-            // Apply to DepGraph.
-            real.RemoveTransactions(del);
-            // Apply to sim.
-            for (DepGraphIndex i = 0; i < sim.size(); ++i) {
-                if (sim[i].has_value()) {
-                    if (del[i]) {
-                        --num_tx_sim;
-                        sim[i] = std::nullopt;
-                    } else {
-                        sim[i]->second -= del;
+        int command = provider.ConsumeIntegral<uint8_t>() % 4;
+        while (true) {
+            // Iterate decreasing command until an applicable branch is found.
+            if (num_tx_sim < TestBitSet::Size() && command-- == 0) {
+                // AddTransaction.
+                auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
+                auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
+                FeeFrac feerate{fee, size};
+                // Apply to DepGraph.
+                auto idx = real.AddTransaction(feerate);
+                // Verify that the returned index is correct.
+                assert(!sim[idx].has_value());
+                for (DepGraphIndex i = 0; i < TestBitSet::Size(); ++i) {
+                    if (!sim[i].has_value()) {
+                        assert(idx == i);
+                        break;
                     }
                 }
+                // Update sim.
+                sim[idx] = {feerate, TestBitSet::Singleton(idx)};
+                ++num_tx_sim;
+                break;
+            } else if (num_tx_sim > 0 && command-- == 0) {
+                // AddDependencies.
+                DepGraphIndex child = idx_fn();
+                auto parents = subset_fn();
+                // Apply to DepGraph.
+                real.AddDependencies(parents, child);
+                // Apply to sim.
+                sim[child]->second |= parents;
+                break;
+            } else if (num_tx_sim > 0 && command-- == 0) {
+                // Remove transactions.
+                auto del = set_fn();
+                // Propagate all ancestry information before deleting anything in the simulation (as
+                // intermediary transactions may be deleted which impact connectivity).
+                anc_update_fn();
+                // Compare the state of the transactions being deleted.
+                for (auto i : del) check_fn(i);
+                // Apply to DepGraph.
+                real.RemoveTransactions(del);
+                // Apply to sim.
+                for (DepGraphIndex i = 0; i < sim.size(); ++i) {
+                    if (sim[i].has_value()) {
+                        if (del[i]) {
+                            --num_tx_sim;
+                            sim[i] = std::nullopt;
+                        } else {
+                            sim[i]->second -= del;
+                        }
+                    }
+                }
+                break;
+            } else if (command-- == 0) {
+                // Compact.
+                const size_t mem_before{real.DynamicMemoryUsage()};
+                real.Compact();
+                const size_t mem_after{real.DynamicMemoryUsage()};
+                assert(real.PositionRange() < last_compaction_pos ? mem_after < mem_before : mem_after <= mem_before);
+                last_compaction_pos = real.PositionRange();
+                break;
             }
-            continue;
         }
-        // This should be unreachable (one of the 3 above actions should always be possible).
-        assert(false);
     }
 
     // Compare the real obtained depgraph against the simulation.
