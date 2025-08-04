@@ -12,7 +12,11 @@ set -eo pipefail
 #          that *before* running this script.
 
 cd "${BASE_ROOT_DIR}/build-ci/dashcore-${BUILD_TARGET}/src"
-( run-clang-tidy -quiet "${MAKEJOBS}" ) | grep -C5 "error"
+if ! ( run-clang-tidy -quiet "${MAKEJOBS}" | tee tmp.tidy-out.txt ); then
+  grep -C5 "error: " tmp.tidy-out.txt
+  echo "^^^ ⚠️ Failure generated from clang-tidy"
+  false
+fi
 
 cd "${BASE_ROOT_DIR}/build-ci/dashcore-${BUILD_TARGET}"
 iwyu_tool.py \
