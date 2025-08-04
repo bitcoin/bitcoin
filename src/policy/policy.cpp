@@ -396,9 +396,13 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
             return false;
         }
 
+        if (GetSerializeSize(tx.vin[i].scriptWitness.stack) > g_script_size_policy_limit) {
+            MaybeReject("witness-size");
+        }
+
         // Check P2WSH standard limits
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            if (tx.vin[i].scriptWitness.stack.back().size() > std::min(MAX_STANDARD_P2WSH_SCRIPT_SIZE, g_script_size_policy_limit))
+            if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
                 MaybeReject("script-size");
             size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
@@ -424,14 +428,11 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
             if (stack.size() >= 2) {
                 // Script path spend (2 or more stack elements after removing optional annex)
                 const auto& control_block = SpanPopBack(stack);
-                const auto& tapscript = SpanPopBack(stack);
+                SpanPopBack(stack); // Ignore script
                 if (control_block.empty()) {
                     // Empty control block is invalid
                     out_reason = reason_prefix + "taproot-control-missing";
                     return false;
-                }
-                if (tapscript.size() > g_script_size_policy_limit) {
-                    MaybeReject("script-size");
                 }
                 if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                     // Leaf version 0xc0 (aka Tapscript, see BIP 342)
