@@ -453,8 +453,8 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
     };
 
     LIMITED_WHILE(provider.remaining_bytes() > 0, 1000) {
-        uint8_t command = provider.ConsumeIntegral<uint8_t>();
-        if (num_tx_sim == 0 || ((command % 3) <= 0 && num_tx_sim < TestBitSet::Size())) {
+        uint8_t command = provider.ConsumeIntegral<uint8_t>() % 4;
+        if ((command <= 2 && num_tx_sim == 0) || (command <= 0 && num_tx_sim < TestBitSet::Size())) {
             // AddTransaction.
             auto fee = provider.ConsumeIntegralInRange<int64_t>(-0x8000000000000, 0x7ffffffffffff);
             auto size = provider.ConsumeIntegralInRange<int32_t>(1, 0x3fffff);
@@ -474,7 +474,7 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
             ++num_tx_sim;
             continue;
         }
-        if ((command % 3) <= 1 && num_tx_sim > 0) {
+        if (command <= 1 && num_tx_sim > 0) {
             // AddDependencies.
             DepGraphIndex child = idx_fn();
             auto parents = subset_fn();
@@ -484,7 +484,7 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
             sim[child]->second |= parents;
             continue;
         }
-        if (num_tx_sim > 0) {
+        if (command <= 2 && num_tx_sim > 0) {
             // Remove transactions.
             auto del = set_fn();
             // Propagate all ancestry information before deleting anything in the simulation (as
@@ -505,6 +505,11 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
                     }
                 }
             }
+            continue;
+        }
+        if (command <= 3) {
+            // Compact.
+            real.Compact();
             continue;
         }
         // This should be unreachable (one of the 3 above actions should always be possible).
