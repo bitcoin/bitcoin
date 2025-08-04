@@ -25,18 +25,6 @@ private:
     std::unique_ptr<BaseIndex::DB> m_db;
 
     MuHash3072 m_muhash;
-    uint64_t m_transaction_output_count{0};
-    uint64_t m_bogo_size{0};
-    CAmount m_total_amount{0};
-    CAmount m_total_subsidy{0};
-    CAmount m_total_unspendable_amount{0};
-    CAmount m_total_prevout_spent_amount{0};
-    CAmount m_total_new_outputs_ex_coinbase_amount{0};
-    CAmount m_total_coinbase_amount{0};
-    CAmount m_total_unspendables_genesis_block{0};
-    CAmount m_total_unspendables_bip30{0};
-    CAmount m_total_unspendables_scripts{0};
-    CAmount m_total_unspendables_unclaimed_rewards{0};
 
     [[nodiscard]] bool ReverseBlock(const interfaces::BlockInfo& block);
 
