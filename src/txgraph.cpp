@@ -1001,8 +1001,10 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
     while (todo.Any()) {
         auto component = m_depgraph.FindConnectedComponent(todo);
         auto split_quality = component.Count() <= 2 ? QualityLevel::OPTIMAL : new_quality;
-        if (first && component == todo) {
-            // The existing Cluster is an entire component. Leave it be, but update its quality.
+        if (first && component == todo && SetType::Fill(component.Count()) == component) {
+            // The existing Cluster is an entire component, without holes. Leave it be, but update
+            // its quality. If there are holes, we continue, so that the Cluster is reconstructed
+            // without holes, reducing memory usage.
             Assume(todo == m_depgraph.Positions());
             graph.SetClusterQuality(level, m_quality, m_setindex, split_quality);
             // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
@@ -2285,6 +2287,10 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
     assert(m_depgraph.PositionRange() == m_mapping.size());
     // The linearization for this Cluster must contain every transaction once.
     assert(m_depgraph.TxCount() == m_linearization.size());
+    // Unless a split is to be applied, the cluster cannot have any holes.
+    if (!NeedsSplitting()) {
+        assert(m_depgraph.Positions() == SetType::Fill(m_depgraph.TxCount()));
+    }
 
     // Compute the chunking of m_linearization.
     LinearizationChunking linchunking(m_depgraph, m_linearization);
