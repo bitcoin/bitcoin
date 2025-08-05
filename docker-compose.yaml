@@ -7,7 +7,6 @@ services:
       args:
         VERSION: "29.0"
         TARGETARCH: "amd64"  # amd64 | arm64 | riscv64
-    image: kauech/bitcoin:latest
     container_name: bitcoin
     restart: unless-stopped
     volumes:
