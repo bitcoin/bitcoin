@@ -7,7 +7,7 @@
 
 #include <secp256k1_musig.h>
 
-bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache)
+static bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache)
 {
     // Parse the pubkeys
     std::vector<secp256k1_pubkey> secp_pubkeys;
@@ -29,7 +29,7 @@ bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_k
     return true;
 }
 
-std::optional<CPubKey> GetCPubKeyFromMuSig2KeyAggCache(secp256k1_musig_keyagg_cache& keyagg_cache)
+static std::optional<CPubKey> GetCPubKeyFromMuSig2KeyAggCache(secp256k1_musig_keyagg_cache& keyagg_cache)
 {
     // Get the plain aggregated pubkey
     secp256k1_pubkey agg_pubkey;
@@ -44,13 +44,21 @@ std::optional<CPubKey> GetCPubKeyFromMuSig2KeyAggCache(secp256k1_musig_keyagg_ca
     return CPubKey(ser_agg_pubkey, ser_agg_pubkey + ser_agg_pubkey_len);
 }
 
-std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkeys)
+std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache, const std::optional<CPubKey>& expected_aggregate)
 {
-    secp256k1_musig_keyagg_cache keyagg_cache;
     if (!GetMuSig2KeyAggCache(pubkeys, keyagg_cache)) {
         return std::nullopt;
     }
-    return GetCPubKeyFromMuSig2KeyAggCache(keyagg_cache);
+    std::optional<CPubKey> agg_key = GetCPubKeyFromMuSig2KeyAggCache(keyagg_cache);
+    if (!agg_key.has_value()) return std::nullopt;
+    if (expected_aggregate.has_value() && expected_aggregate != agg_key) return std::nullopt;
+    return agg_key;
+}
+
+std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkeys)
+{
+    secp256k1_musig_keyagg_cache keyagg_cache;
+    return MuSig2AggregatePubkeys(pubkeys, keyagg_cache, std::nullopt);
 }
 
 CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey)
