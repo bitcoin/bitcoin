@@ -10,6 +10,9 @@ FROM ${CI_IMAGE_NAME_TAG}
 ARG FILE_ENV
 ENV FILE_ENV=${FILE_ENV}
 
+ARG BASE_ROOT_DIR
+ENV BASE_ROOT_DIR=${BASE_ROOT_DIR}
+
 COPY ./ci/retry/retry /usr/bin/retry
 COPY ./ci/test/00_setup_env.sh ./${FILE_ENV} ./ci/test/01_base_install.sh /ci_container_base/ci/test/
 
