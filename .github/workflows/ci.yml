@@ -283,48 +283,6 @@ jobs:
         run: |
           py -3 test\fuzz\test_runner.py --par %NUMBER_OF_PROCESSORS% --loglevel DEBUG %RUNNER_TEMP%\qa-assets\fuzz_corpora
 
-  asan-lsan-ubsan-integer-no-depends-usdt:
-    name: 'ASan + LSan + UBSan + integer, no depends, USDT'
-    runs-on: ubuntu-24.04 # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
-    timeout-minutes: 120
-    env:
-      FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
-      DANGER_CI_ON_HOST_FOLDERS: 1
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set CI directories
-        run: |
-          echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> "$GITHUB_ENV"
-          echo "BASE_ROOT_DIR=${{ runner.temp }}" >> "$GITHUB_ENV"
-          echo "BASE_BUILD_DIR=${{ runner.temp }}/build-asan" >> "$GITHUB_ENV"
-
-      - name: Restore Ccache cache
-        id: ccache-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-ccache-
-
-      - name: Enable bpfcc script
-        # In the image build step, no external environment variables are available,
-        # so any settings will need to be written to the settings env file:
-        run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
-
-      - name: CI script
-        run: ./ci/test_run_all.sh
-
-      - name: Save Ccache cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-
   ci-matrix:
     name: ${{ matrix.name }}
     needs: runners
@@ -351,6 +309,13 @@ jobs:
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_win64.sh'
+
+          - name: 'ASan + LSan + UBSan + integer, no depends, USDT'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_asan.sh'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -366,6 +331,12 @@ jobs:
         uses: ./.github/actions/configure-docker
         with:
           use-cirrus: ${{ needs.runners.outputs.use-cirrus-runners }}
+
+      - name: Enable bpfcc script
+        if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
+        # In the image build step, no external environment variables are available,
+        # so any settings will need to be written to the settings env file:
+        run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
 
       - name: CI script
         run: ./ci/test_run_all.sh
