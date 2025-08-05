@@ -19,7 +19,7 @@ from test_framework.test_node import TestNode
 
 from _decimal import Decimal
 from random import randint
-from typing import Optional
+from typing import List, Optional
 
 # See CMainParams in src/chainparams.cpp
 DEFAULT_PORT_MAINNET_CORE_P2P = 9999
@@ -29,13 +29,13 @@ DEFAULT_PORT_PLATFORM_HTTP = 22201
 # See CDeterministicMNStateDiff::ToJson() in src/evo/dmnstate.h
 DMNSTATE_DIFF_DUMMY_ADDR = "255.255.255.255"
 
-class Node:
+class EvoNode:
     mn: MasternodeInfo
     node: TestNode
     platform_nodeid: str = ""
 
-    def __init__(self, node: TestNode, is_evo: bool):
-        self.mn = MasternodeInfo(evo=is_evo, legacy=False)
+    def __init__(self, node: TestNode):
+        self.mn = MasternodeInfo(evo=True, legacy=False)
         self.mn.generate_addresses(node)
         self.mn.set_node(node.index)
         self.mn.set_params(nodePort=p2p_port(node.index))
@@ -43,11 +43,11 @@ class Node:
 
     def generate_collateral(self, test: BitcoinTestFramework):
         assert self.mn.nodeIdx is not None
-
+        # Generate enough blocks to cover collateral amount
         while self.node.getbalance() < self.mn.get_collateral_value():
             test.bump_mocktime(1)
             test.generate(self.node, 10, sync_fun=test.no_op)
-
+        # Create collateral UTXO
         collateral_txid = self.node.sendmany("", {self.mn.collateral_address: self.mn.get_collateral_value(), self.mn.fundsAddr: 1})
         self.mn.bury_tx(test, self.mn.nodeIdx, collateral_txid, 1)
         collateral_vout = self.mn.get_collateral_vout(self.node, collateral_txid)
@@ -60,68 +60,51 @@ class Node:
         for mn_entry in mn_list:
             dmn = mn_list.get(mn_entry)
             if dmn['proTxHash'] == protx_hash:
-                assert_equal(dmn['type'], "Evo" if self.mn.evo else "Regular")
+                assert_equal(dmn['type'], "Evo")
                 mn_visible = True
         return mn_visible
 
-    def register_mn(self, test: BitcoinTestFramework, submit: bool, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_https = None, code = None, msg = None) -> str:
+    def set_active_state(self, test: BitcoinTestFramework, active: bool, more_extra_args: Optional[List[str]] = None):
+        assert self.mn.proTxHash and self.mn.keyOperator
+        target_extra_args = self.node.extra_args.copy()
+        if active:
+            target_extra_args += [f'-masternodeblsprivkey={self.mn.keyOperator}']
+        if more_extra_args is not None:
+            target_extra_args += more_extra_args
+        test.restart_node(self.mn.nodeIdx, extra_args=target_extra_args)
+
+    def register_mn(self, test: BitcoinTestFramework, submit: bool, addrs_core_p2p, addrs_platform_p2p, addrs_platform_https, code = None, msg = None) -> Optional[str]:
         assert self.mn.nodeIdx is not None
-
-        if self.mn.evo and (not addrs_platform_https or not addrs_platform_p2p):
-            raise AssertionError("EvoNode but addrs_platform_p2p and addrs_platform_https not specified")
-
-        # Evonode-specific fields are ignored if regular masternode
         self.platform_nodeid = hash160(b'%d' % randint(1, 65535)).hex()
         protx_output = self.mn.register(self.node, submit=submit, addrs_core_p2p=addrs_core_p2p, operator_reward=0,
                                         platform_node_id=self.platform_nodeid, addrs_platform_p2p=addrs_platform_p2p,
                                         addrs_platform_https=addrs_platform_https, expected_assert_code=code, expected_assert_msg=msg)
-
-        # If we expected error, make sure the transaction didn't succeed
-        if code and msg:
-            assert protx_output is None
-            return ""
-        else:
-            assert protx_output is not None
-            if not submit:
-                return ""
-
+        if (code and msg) or not submit:
+            return protx_output
+        assert protx_output is not None
         # Bury ProTx transaction and check if masternode is online
         self.mn.set_params(proTxHash=protx_output, operator_reward=0)
         self.mn.bury_tx(test, self.mn.nodeIdx, protx_output, 1)
         assert_equal(self.is_mn_visible(), True)
-
-        test.log.debug(f"Registered {'Evo' if self.mn.evo else 'regular'} masternode with collateral_txid={self.mn.collateral_txid}, "
-                       f"collateral_vout={self.mn.collateral_vout}, provider_txid={self.mn.proTxHash}")
-
-        test.restart_node(self.mn.nodeIdx, extra_args=self.node.extra_args + [f'-masternodeblsprivkey={self.mn.keyOperator}'])
+        test.log.debug(f"Registered EvoNode with collateral_txid={self.mn.collateral_txid}, collateral_vout={self.mn.collateral_vout}, provider_txid={self.mn.proTxHash}")
         return self.mn.proTxHash
 
-    def update_mn(self, test: BitcoinTestFramework, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_https = None) -> str:
+    def update_mn(self, test: BitcoinTestFramework, addrs_core_p2p, addrs_platform_p2p, addrs_platform_https) -> str:
         assert self.mn.nodeIdx is not None
-
-        if self.mn.evo and (not addrs_platform_https or not addrs_platform_p2p):
-            raise AssertionError("EvoNode but addrs_platform_p2p and addrs_platform_https not specified")
-
-        # Evonode-specific fields are ignored if regular masternode
         protx_output = self.mn.update_service(self.node, submit=True, addrs_core_p2p=addrs_core_p2p, platform_node_id=self.platform_nodeid,
                                               addrs_platform_p2p=addrs_platform_p2p, addrs_platform_https=addrs_platform_https)
         assert protx_output is not None
-
         self.mn.bury_tx(test, self.mn.nodeIdx, protx_output, 1)
         assert_equal(self.is_mn_visible(), True)
-
-        test.log.debug(f"Updated {'Evo' if self.mn.evo else 'regular'} masternode with collateral_txid={self.mn.collateral_txid}, "
-                       f"collateral_vout={self.mn.collateral_vout}, provider_txid={self.mn.proTxHash}")
+        test.log.debug(f"Updated EvoNode with collateral_txid={self.mn.collateral_txid}, collateral_vout={self.mn.collateral_vout}, provider_txid={self.mn.proTxHash}")
         return protx_output
 
     def destroy_mn(self, test: BitcoinTestFramework):
         assert self.mn.nodeIdx is not None
-
         # Get UTXO from address used to pay fees, generate new addresses
         address_funds_unspent = self.node.listunspent(0, 99999, [self.mn.fundsAddr])[0]
         address_funds_value = address_funds_unspent['amount']
         self.mn.generate_addresses(self.node, True)
-
         # Create transaction to spend old collateral and fee change
         raw_tx = self.node.createrawtransaction([
                 { 'txid': self.mn.collateral_txid, 'vout': self.mn.collateral_vout },
@@ -131,19 +114,15 @@ class Node:
                 {self.mn.fundsAddr: float(address_funds_value - Decimal(0.001))}
             ])
         raw_tx = self.node.signrawtransactionwithwallet(raw_tx)['hex']
-
         # Send that transaction, resulting txid is new collateral
         new_collateral_txid = self.node.sendrawtransaction(raw_tx)
         self.mn.bury_tx(test, self.mn.nodeIdx, new_collateral_txid, 1)
         new_collateral_vout = self.mn.get_collateral_vout(self.node, new_collateral_txid)
+        old_protx_hash = self.mn.proTxHash
         self.mn.set_params(proTxHash="", collateral_txid=new_collateral_txid, collateral_vout=new_collateral_vout)
-
         # Old masternode entry should be dead
-        assert_equal(self.is_mn_visible(self.mn.proTxHash), False)
-        test.log.debug(f"Destroyed {'Evo' if self.mn.evo else 'regular'} masternode with collateral_txid={self.mn.collateral_txid}, "
-                       f"collateral_vout={self.mn.collateral_vout}, provider_txid={self.mn.proTxHash}")
-
-        test.restart_node(self.mn.nodeIdx, extra_args=self.node.extra_args)
+        assert_equal(self.is_mn_visible(old_protx_hash), False)
+        test.log.debug(f"Destroyed EvoNode with collateral_txid={self.mn.collateral_txid}, collateral_vout={self.mn.collateral_vout}, provider_txid={old_protx_hash}")
 
 class NetInfoTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -163,8 +142,13 @@ class NetInfoTest(BitcoinTestFramework):
         if plat_p2p_port:
             assert_equal(val['platform_p2p'][0], f"127.0.0.1:{plat_p2p_port}")
 
+    def reconnect_nodes(self):
+        # Needed as restarts don't reconnect nodes
+        for idx in range(1, self.num_nodes):
+            self.connect_nodes(0, idx)
+
     def run_test(self):
-        self.node_evo: Node = Node(self.nodes[0], True)
+        self.node_evo: EvoNode = EvoNode(self.nodes[0])
         self.node_evo.generate_collateral(self)
 
         self.node_simple: TestNode = self.nodes[1]
@@ -229,17 +213,17 @@ class NetInfoTest(BitcoinTestFramework):
         proregtx_rpc = self.node_evo.node.getrawtransaction(proregtx_hash, True)
 
         # CDeterministicMNState::ToJson() <- CDeterministicMN::pdmnState <- masternode_status
+        self.node_evo.set_active_state(self, True)
         masternode_status = self.node_evo.node.masternode('status')
 
         # Generate deprecation-disabled response to avoid having to re-create a masternode again later on
-        self.restart_node(self.node_evo.mn.nodeIdx, extra_args=self.node_evo.node.extra_args +
-                          [f'-masternodeblsprivkey={self.node_evo.mn.keyOperator}', '-deprecatedrpc=service'])
-        self.connect_nodes(self.node_evo.mn.nodeIdx, self.node_simple.index) # Needed as restarts don't reconnect nodes
+        self.node_evo.set_active_state(self, True, ['-deprecatedrpc=service'])
+        self.reconnect_nodes()
         masternode_status_depr = self.node_evo.node.masternode('status')
 
         # Stop actively running the masternode so we can issue a CProUpServTx (and enable the deprecation)
-        self.restart_node(self.node_evo.mn.nodeIdx, extra_args=self.node_evo.node.extra_args)
-        self.connect_nodes(self.node_evo.mn.nodeIdx, self.node_simple.index) # Needed as restarts don't reconnect nodes
+        self.node_evo.set_active_state(self, False)
+        self.reconnect_nodes()
 
         # CProUpServTx::ToJson() <- TxToUniv() <- TxToJSON() <- getrawtransaction
         # We need to update *thrice*, the first time to incorrect values and the second time, (back) to correct values and the third time, only
@@ -297,8 +281,9 @@ class NetInfoTest(BitcoinTestFramework):
         # relevant on the host node as opposed to expressing payload information in most other RPCs.
         assert "service" in masternode_status.keys()
 
-        self.node_evo.destroy_mn(self) # Shut down previous masternode
-        self.connect_nodes(self.node_evo.mn.nodeIdx, self.node_simple.index) # Needed as restarts don't reconnect nodes
+        # Shut down masternode
+        self.node_evo.destroy_mn(self)
+        self.reconnect_nodes()
 
         self.log.info("Collect RPC responses from node with -deprecatedrpc=service")
 
