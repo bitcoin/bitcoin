@@ -183,32 +183,32 @@ static RPCArg GetRpcArg(const std::string& strParamName)
             {"platformNodeID", RPCArg::Type::STR, RPCArg::Optional::NO,
                 "Platform P2P node ID, derived from P2P public key."}
         },
-        {"platformP2PPort",
-            {"platformP2PPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+        {"platformP2PAddrs",
+            {"platformP2PAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
                 "Array of addresses in the form \"ADDR:PORT\" used by Platform for peer-to-peer connection.\n"
                 "Must be unique on the network. Can be set to an empty string, which will require a ProUpServTx afterwards.",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
                 }}
         },
-        {"platformP2PPort_update",
-            {"platformP2PPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+        {"platformP2PAddrs_update",
+            {"platformP2PAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
                 "Array of addresses in the form \"ADDR:PORT\" used by Platform for peer-to-peer connection.\n"
                 "Must be unique on the network.",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
                 }}
         },
-        {"platformHTTPPort",
-            {"platformHTTPPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+        {"platformHTTPSAddrs",
+            {"platformHTTPSAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
                 "Array of addresses in the form \"ADDR:PORT\" used by Platform for their HTTPS API.\n"
                 "Must be unique on the network. Can be set to an empty string, which will require a ProUpServTx afterwards.",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
                 }}
         },
-        {"platformHTTPPort_update",
-            {"platformHTTPPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+        {"platformHTTPSAddrs_update",
+            {"platformHTTPSAddrs", RPCArg::Type::ARR, RPCArg::Optional::NO,
                 "Array of addresses in the form \"ADDR:PORT\" used by Platform for their HTTPS API.\n"
                 "Must be unique on the network.",
                 {
@@ -575,8 +575,8 @@ static RPCHelpMan protx_register_fund_evo()
             GetRpcArg("operatorReward"),
             GetRpcArg("payoutAddress_register"),
             GetRpcArg("platformNodeID"),
-            GetRpcArg("platformP2PPort"),
-            GetRpcArg("platformHTTPPort"),
+            GetRpcArg("platformP2PAddrs"),
+            GetRpcArg("platformHTTPSAddrs"),
             GetRpcArg("fundAddress"),
             GetRpcArg("submit"),
         },
@@ -614,8 +614,8 @@ static RPCHelpMan protx_register_evo()
             GetRpcArg("operatorReward"),
             GetRpcArg("payoutAddress_register"),
             GetRpcArg("platformNodeID"),
-            GetRpcArg("platformP2PPort"),
-            GetRpcArg("platformHTTPPort"),
+            GetRpcArg("platformP2PAddrs"),
+            GetRpcArg("platformHTTPSAddrs"),
             GetRpcArg("feeSourceAddress"),
             GetRpcArg("submit"),
         },
@@ -652,8 +652,8 @@ static RPCHelpMan protx_register_prepare_evo()
             GetRpcArg("operatorReward"),
             GetRpcArg("payoutAddress_register"),
             GetRpcArg("platformNodeID"),
-            GetRpcArg("platformP2PPort"),
-            GetRpcArg("platformHTTPPort"),
+            GetRpcArg("platformP2PAddrs"),
+            GetRpcArg("platformHTTPSAddrs"),
             GetRpcArg("feeSourceAddress"),
         },
         RPCResult{
@@ -966,8 +966,8 @@ static RPCHelpMan protx_update_service_evo()
             GetRpcArg("coreP2PAddrs_update"),
             GetRpcArg("operatorKey"),
             GetRpcArg("platformNodeID"),
-            GetRpcArg("platformP2PPort_update"),
-            GetRpcArg("platformHTTPPort_update"),
+            GetRpcArg("platformP2PAddrs_update"),
+            GetRpcArg("platformHTTPSAddrs_update"),
             GetRpcArg("operatorPayoutAddress"),
             GetRpcArg("feeSourceAddress"),
             GetRpcArg("submit"),
