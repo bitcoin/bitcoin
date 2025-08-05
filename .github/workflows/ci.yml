@@ -24,6 +24,22 @@ env:
   REPO_USE_CIRRUS_RUNNERS: 'bitcoin/bitcoin' # Use cirrus runners and cache for this repo, instead of falling back to the slow GHA runners
 
 jobs:
+  runners:
+    name: 'determine runners'
+    runs-on: ubuntu-latest
+    outputs:
+      use-cirrus-runners: ${{ steps.runners.outputs.use-cirrus-runners }}
+    steps:
+      - id: runners
+        run: |
+          if [[ "${REPO_USE_CIRRUS_RUNNERS}" == "${{ github.repository }}" ]]; then
+            echo "use-cirrus-runners=true" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Runner Selection::Using Cirrus Runners"
+          else
+            echo "use-cirrus-runners=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Runner Selection::Using GitHub-hosted runners"
+          fi
+
   test-each-commit:
     name: 'test each commit'
     runs-on: ubuntu-24.04
