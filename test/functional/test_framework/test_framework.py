@@ -1242,7 +1242,7 @@ class MasternodeInfo:
         args = [
             collateral_txid or self.collateral_txid,
             collateral_vout or self.collateral_vout,
-            addrs_core_p2p or [f'127.0.0.1:{self.nodePort}'],
+            [f'127.0.0.1:{self.nodePort}'] if addrs_core_p2p is None else addrs_core_p2p,
             ownerAddr or self.ownerAddr,
             pubKeyOperator or self.pubKeyOperator,
             votingAddr or self.votingAddr,
@@ -1306,7 +1306,7 @@ class MasternodeInfo:
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
             collateral_address or self.collateral_address,
-            addrs_core_p2p or [f'127.0.0.1:{self.nodePort}'],
+            [f'127.0.0.1:{self.nodePort}'] if addrs_core_p2p is None else addrs_core_p2p,
             ownerAddr or self.ownerAddr,
             pubKeyOperator or self.pubKeyOperator,
             votingAddr or self.votingAddr,
@@ -1450,7 +1450,7 @@ class MasternodeInfo:
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
             self.proTxHash,
-            addrs_core_p2p or [f'127.0.0.1:{self.nodePort}'],
+            [f'127.0.0.1:{self.nodePort}'] if addrs_core_p2p is None else addrs_core_p2p,
             self.keyOperator,
         ]
         address_funds = fundsAddr or self.fundsAddr
