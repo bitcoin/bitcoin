@@ -12,7 +12,7 @@ case "$PROTOCOL" in
         RPC_ALLOW="-rpcallowip=0.0.0.0/0"
         ;;
     *)
-        echo "Protocolo inválido: $PROTOCOL (use IPV4 ou IPV6)"
+        echo "Invalid protocol: $PROTOCOL (use IPV4 or IPV6)"
         exit 1
         ;;
 esac
