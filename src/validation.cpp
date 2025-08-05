@@ -7,6 +7,7 @@
 
 #include <validation.h>
 #include <pos/stake.h>
+#include <pos/stake.h>
 
 #include <arith_uint256.h>
 #include <chain.h>

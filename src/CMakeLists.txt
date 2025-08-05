@@ -289,6 +289,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/rbf.cpp
   policy/settings.cpp
   policy/truc_policy.cpp
+  pos/stake.cpp
   rest.cpp
   rpc/blockchain.cpp
   rpc/external_signer.cpp
