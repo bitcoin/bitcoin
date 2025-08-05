@@ -46,7 +46,7 @@ FUZZ_TARGET(script_ops)
     (void)script.CountSigOps(/*fAccurate=*/fuzzed_data_provider.ConsumeBool());
     (void)CountP2SHSigOps(CScript{}, script);
     (void)CountP2SHSigOps(script, CScript{});
-    (void)script.HasValidOps();
+    (void)script.HasValidBaseOps();
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPayToAnchor();

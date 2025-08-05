@@ -121,7 +121,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(!tx_pubkey_script.IsPayToWitnessScriptHash());
         assert(!tx_pubkey_script.IsPushOnly());
         assert(!tx_pubkey_script.IsUnspendable());
-        assert(tx_pubkey_script.HasValidOps());
+        assert(tx_pubkey_script.HasValidBaseOps());
         assert(tx_pubkey_script.size() == 35);
 
         const CScript tx_multisig_script = GetScriptForMultisig(1, {pubkey});
@@ -129,7 +129,7 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(!tx_multisig_script.IsPayToWitnessScriptHash());
         assert(!tx_multisig_script.IsPushOnly());
         assert(!tx_multisig_script.IsUnspendable());
-        assert(tx_multisig_script.HasValidOps());
+        assert(tx_multisig_script.HasValidBaseOps());
         assert(tx_multisig_script.size() == 37);
 
         FillableSigningProvider fillable_signing_provider;
