@@ -205,6 +205,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     }
 
     setupFontOptions(ui->moneyFont, ui->moneyFont_preview);
+    setupFontOptions(ui->qrFont, ui->qrFont_preview);
+#ifndef USE_QRCODE
+    ui->qrFontLabel->setVisible(false);
+    ui->qrFont->setVisible(false);
+    ui->qrFont_preview->setVisible(false);
+#endif
 
     GUIUtil::handleCloseWindowShortcut(this);
 }
@@ -244,6 +250,9 @@ void OptionsDialog::setModel(OptionsModel *_model)
 
         const auto& font_for_money = _model->data(_model->index(OptionsModel::FontForMoney, 0), Qt::EditRole).value<OptionsModel::FontChoice>();
         setFontChoice(ui->moneyFont, font_for_money);
+
+        const auto& font_for_qrcodes = _model->data(_model->index(OptionsModel::FontForQRCodes, 0), Qt::EditRole).value<OptionsModel::FontChoice>();
+        setFontChoice(ui->qrFont, font_for_qrcodes);
 
         updateDefaultProxyNets();
     }
@@ -318,6 +327,7 @@ void OptionsDialog::setMapper()
 #endif
 
     /* Display */
+    mapper->addMapping(ui->peersTabAlternatingRowColors, OptionsModel::PeersTabAlternatingRowColors);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
@@ -383,6 +393,7 @@ void OptionsDialog::on_openBitcoinConfButton_clicked()
 void OptionsDialog::on_okButton_clicked()
 {
     model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
+    model->setData(model->index(OptionsModel::FontForQRCodes, 0), ui->qrFont->itemData(ui->qrFont->currentIndex()));
 
     mapper->submit();
     accept();
