@@ -180,15 +180,16 @@ unsigned int CScript::CountSigOps(bool fAccurate) const
     return n;
 }
 
-unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey)
 {
-    if (!IsPayToScriptHash())
-        return CountSigOps(/*fAccurate=*/true);
+    if (!scriptPubKey.IsPayToScriptHash()) {
+        return 0;
+    }
 
     // This is a pay-to-script-hash scriptPubKey;
     // get the last item that the scriptSig
     // pushes onto the stack:
-    const_iterator pc = scriptSig.begin();
+    auto pc = scriptSig.begin();
     std::vector<unsigned char> vData;
     while (pc < scriptSig.end())
     {

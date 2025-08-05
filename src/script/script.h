@@ -535,12 +535,6 @@ public:
      */
     unsigned int CountSigOps(bool fAccurate) const;
 
-    /**
-     * Accurately count sigOps, including sigOps in
-     * pay-to-script-hash transactions:
-     */
-    unsigned int GetSigOpCount(const CScript& scriptSig) const;
-
     /*
      * OP_1 <0x4e73>
      */
@@ -604,6 +598,15 @@ public:
     explicit CScriptID(const CScript& in);
     explicit CScriptID(const uint160& in) : BaseHash(in) {}
 };
+
+/**
+ * Count the number of signature operations (sigops) in a P2SH scriptSig.
+ *
+ * If the scriptSig contains a SegWit redeem script (i.e., a P2SH-P2WPKH or P2SH-P2WSH script),
+ * this function counts only the non-SegWit sigops.
+ * To count SegWit sigops in such cases, use `CountWitnessSigOps`.
+ */
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey);
 
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
