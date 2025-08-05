@@ -1012,6 +1012,21 @@ FUZZ_TARGET(txgraph)
                 }
                 assert(!top_sim.IsOversized());
                 break;
+            } else if (command-- == 0) {
+                // GetMainMemoryUsage().
+                auto usage = real->GetMainMemoryUsage();
+                // Test stability.
+                if (alt) {
+                    auto usage2 = real->GetMainMemoryUsage();
+                    assert(usage == usage2);
+                }
+                // Only empty graphs have 0 memory usage.
+                if (main_sim.GetTransactionCount() == 0) {
+                    assert(usage == 0);
+                } else {
+                    assert(usage > 0);
+                }
+                break;
             }
         }
     }

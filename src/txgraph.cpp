@@ -629,6 +629,8 @@ public:
     std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept final;
     std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept final;
 
+    size_t GetMainMemoryUsage() noexcept final;
+
     void SanityCheck() const final;
 };
 
@@ -2978,6 +2980,21 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
     clusterset.m_oversized = false;
     Assume(!ret.empty());
     return ret;
+}
+
+size_t TxGraphImpl::GetMainMemoryUsage() noexcept
+{
+    // Make sure splits/merges are applied, as memory usage may not be representative otherwise.
+    SplitAll(/*up_to_level=*/0);
+    ApplyDependencies(/*level=*/0);
+    // Compute memory usage
+    size_t usage = /* From clusters */
+                   m_main_clusterset.m_cluster_usage +
+                   /* From Entry objects. */
+                   sizeof(Entry) * m_main_clusterset.m_txcount +
+                   /* From the chunk index. */
+                   memusage::DynamicUsage(m_main_chunkindex);
+    return usage;
 }
 
 } // namespace
