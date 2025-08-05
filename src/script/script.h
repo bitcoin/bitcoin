@@ -608,6 +608,17 @@ public:
     explicit CScriptID(const uint160& in) : BaseHash(in) {}
 };
 
+/**
+ * Count sigops in the redeemScript selected by a P2SH scriptSig (unlocking
+ * script) for the given scriptPubKey (locking script). Returns 0 if the
+ * scriptPubKey is not P2SH or the scriptSig is not a valid push-only script.
+ *
+ * If the scriptSig contains a SegWit redeem script (P2SH-P2WPKH or
+ * P2SH-P2WSH), this function counts only the non-SegWit sigops.
+ * To count SegWit sigops in such cases, use `CountWitnessSigOps`.
+ */
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey);
+
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
 

@@ -112,20 +112,21 @@ BOOST_AUTO_TEST_CASE(P2SHSigOpCountEdgeCases)
     const auto p2sh_script_pubkey{GetScriptForDestination(ScriptHash(CScript{} << OP_TRUE))};
     BOOST_REQUIRE(p2sh_script_pubkey.IsPayToScriptHash());
 
-    BOOST_CHECK_EQUAL(p2sh_script_pubkey.GetSigOpCount(CScript{}), 0);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/CScript{}, /*scriptPubKey=*/p2sh_script_pubkey), 0);
     const auto single_sigop{CScript{} << ToByteVector(CScript{} << OP_CHECKMULTISIG)};
-    BOOST_CHECK_EQUAL(p2sh_script_pubkey.GetSigOpCount(single_sigop), MAX_PUBKEYS_PER_MULTISIG);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/single_sigop, /*scriptPubKey=*/p2sh_script_pubkey), MAX_PUBKEYS_PER_MULTISIG);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/single_sigop, /*scriptPubKey=*/CScript{} << OP_CHECKSIG), 0);
 
     // Only the final push in scriptSig is treated as the redeemScript.
     const auto sigop_then_trivial{CScript{} << ToByteVector(CScript{} << OP_CHECKSIG) << ToByteVector(CScript{} << OP_TRUE)};
-    BOOST_CHECK_EQUAL(p2sh_script_pubkey.GetSigOpCount(sigop_then_trivial), 0); // last push (OP_TRUE) wins
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/sigop_then_trivial, /*scriptPubKey=*/p2sh_script_pubkey), 0); // last push (OP_TRUE) wins
     const auto trivial_then_sigop{CScript{} << ToByteVector(CScript{} << OP_TRUE) << ToByteVector(CScript{} << OP_CHECKSIG)};
-    BOOST_CHECK_EQUAL(p2sh_script_pubkey.GetSigOpCount(trivial_then_sigop), 1); // last push (CHECKSIG) wins
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/trivial_then_sigop, /*scriptPubKey=*/p2sh_script_pubkey), 1); // last push (CHECKSIG) wins
 
     const auto malformed_pushdata1{CScript{} << OP_PUSHDATA1};
-    BOOST_CHECK_EQUAL(p2sh_script_pubkey.GetSigOpCount(malformed_pushdata1), 0); // error: OP_PUSHDATA1, but no size byte
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/malformed_pushdata1, /*scriptPubKey=*/p2sh_script_pubkey), 0); // error: OP_PUSHDATA1, but no size byte
     const auto non_push_opcode{CScript{} << OP_CHECKSIGADD};
-    BOOST_CHECK_EQUAL(p2sh_script_pubkey.GetSigOpCount(non_push_opcode), 0); // rejected: scriptSig is not push-only
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/non_push_opcode, /*scriptPubKey=*/p2sh_script_pubkey), 0); // rejected: scriptSig is not push-only
 }
 
 // Feeds malformed PUSHDATA sequences to confirm the parser never crashes and
