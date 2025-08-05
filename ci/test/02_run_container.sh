@@ -17,11 +17,15 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker run --rm "${CI_IMAGE_NAME_TAG}" bash -c "env | grep --extended-regexp '^(HOME|PATH|USER)='" | tee --append "/tmp/env-$USER-$CONTAINER_NAME"
   echo "Creating $CI_IMAGE_NAME_TAG container to run in"
 
-  DOCKER_BUILDKIT=1 docker build \
+  # Use buildx unconditionally
+  # Using buildx is required to properly load the correct driver, for use with registry caching. Neither build, nor BUILDKIT=1 currently do this properly
+  # shellcheck disable=SC2086
+  docker buildx build \
       --file "${BASE_READ_ONLY_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
       --label="${CI_IMAGE_LABEL}" \
+      $DOCKER_BUILD_CACHE_ARG \
       --tag="${CONTAINER_NAME}" \
       "${BASE_READ_ONLY_DIR}"
 
