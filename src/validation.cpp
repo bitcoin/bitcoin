@@ -6,6 +6,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <validation.h>
+#include <pos/stake.h>
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -1940,12 +1941,12 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
+    // Force block reward to zero when right shift is undefined or too large.
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    CAmount nSubsidy = 100 * COIN; // BitGold: Start with 100 coins per block
+    // Subsidy is cut in half every nSubsidyHalvingInterval blocks.
     nSubsidy >>= halvings;
     return nSubsidy;
 }
@@ -3956,9 +3957,9 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
+    // Check proof of stake (or work for initial blocks) matches claimed amount
+    if (fCheckPOW && !CheckProofOfStake(block, consensusParams))
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of stake failed");
 
     return true;
 }
