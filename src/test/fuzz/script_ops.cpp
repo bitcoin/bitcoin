@@ -45,7 +45,8 @@ FUZZ_TARGET(script_ops)
     const CScript& script = script_mut;
     (void)script.CountSigOps(/*fAccurate=*/false);
     (void)script.CountSigOps(/*fAccurate=*/true);
-    (void)script.GetSigOpCount(script);
+    (void)CountP2SHSigOps(CScript{}, script);
+    (void)CountP2SHSigOps(script, CScript{});
     (void)script.HasValidOps();
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
