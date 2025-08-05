@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <dbwrapper.h>
 #include <key.h>
 #include <test/util/setup_common.h>
 
@@ -11,6 +12,7 @@ BOOST_FIXTURE_TEST_SUITE(sanity_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(basic_sanity)
 {
+  BOOST_CHECK_MESSAGE(dbwrapper_SanityCheck(), "dbwrapper sanity test");
   BOOST_CHECK_MESSAGE(ECC_InitSanityCheck() == true, "secp256k1 sanity test");
 }
 
