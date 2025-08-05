@@ -34,6 +34,7 @@ RUN apt update && \
         libcapnp-dev capnproto && \
     apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+
 ###################################################
 # ----------- BUILD FROM OFFICIAL SITE -----------
 ###################################################
@@ -41,25 +42,38 @@ RUN apt update && \
 FROM base-system AS build-official-site
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates gnupg wget tar && \
+    ca-certificates gnupg wget curl tar && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp
 
 ARG VERSION
+ARG ARCH
 ENV VERSION="${VERSION}"
+ENV ARCH="${ARCH}"
 
-ENV BITCOIN_CORE_SIGNATURE=71A3B16735405025D447E8F274810B012346C9A6
-
-RUN gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys ${BITCOIN_CORE_SIGNATURE}
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS.asc 
-RUN wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/SHA256SUMS
 RUN wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz
-RUN gpg --status-fd 1 --verify SHA256SUMS.asc SHA256SUMS 2>/dev/null | grep "^\[GNUPG:\] VALIDSIG.*${BITCOIN_CORE_SIGNATURE}\$" 
-RUN sha256sum --ignore-missing --check SHA256SUMS 
-RUN tar -xzvf bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz -C /opt 
-RUN ln -sv bitcoin-${VERSION} /opt/bitcoin
-RUN rm -v /opt/bitcoin/bin/test_bitcoin /opt/bitcoin/bin/bitcoin-qt
+
+RUN set -eux; \
+    export FILENAME="bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz"; \
+    export EXPECTED_HASH=$(sha256sum "$FILENAME" | awk '{print $1}'); \
+    export DEVS="fanquake achow101 laanwj"; \
+    for DEV in $DEVS; do \
+        echo "🔍 Checking $DEV..."; \
+        curl -sO "https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/${VERSION}/${DEV}/all.SHA256SUMS"; \
+        curl -sO "https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/${VERSION}/${DEV}/all.SHA256SUMS.asc"; \
+        gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys \
+            $(curl -s https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/${VERSION}/${DEV}/all.SHA256SUMS.asc | gpg --list-packets | grep '^:signature packet' | awk '{print $NF}' | head -n 1); \
+        gpg --verify all.SHA256SUMS.asc all.SHA256SUMS || { echo "🚫 Invalid sig from $DEV"; exit 1; }; \
+        grep "$EXPECTED_HASH" all.SHA256SUMS > /dev/null \
+            && echo "✅ $DEV verified the hash" \
+            || { echo "❌ $DEV did NOT verify the hash"; exit 1; }; \
+        rm -f all.SHA256SUMS all.SHA256SUMS.asc; \
+    done
+
+RUN tar -xzvf bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz -C /opt && \
+    ln -sv /opt/bitcoin-${VERSION} /opt/bitcoin && \
+    rm -v /opt/bitcoin/bin/test_bitcoin /opt/bitcoin/bin/bitcoin-qt
 
 #####################################
 # -------- BUILD FROM GITHUB -------
