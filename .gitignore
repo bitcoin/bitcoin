@@ -8,6 +8,8 @@
 !/build-aux
 !/build_msvc
 
+data
+
 *.pyc
 
 # Only ignore unexpected patches

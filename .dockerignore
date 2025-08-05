@@ -1,0 +1,10 @@
+doc
+.git
+.github
+.tx
+*.md
+build/
+cmake-build*
+*.log
+*.tar.gz
+data

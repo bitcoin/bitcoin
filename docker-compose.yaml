@@ -1,0 +1,17 @@
+services:
+  bitcoin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: official-site   # local | github | official-site
+      args:
+        VERSION: "29.0"
+        TARGETARCH: "amd64"  # amd64 | arm64 | riscv64
+    image: kauech/bitcoin:latest
+    container_name: bitcoin
+    restart: unless-stopped
+    volumes:
+      - ./data:/bitcoin/.bitcoin
+    ports:
+      - "8332:8332"  # RPC
+      - "8333:8333"  # P2P
