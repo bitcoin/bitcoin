@@ -48,7 +48,7 @@ FUZZ_TARGET(script_ops)
     (void)script.CountSigOps(/*fAccurate=*/true);
     (void)script.GetSigOpCount(script);
     (void)CountP2SHSigOps(/*scriptSig=*/script_sig, /*scriptPubKey=*/script);
-    (void)script.HasValidOps();
+    (void)script.HasValidBaseOps();
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToPubKeyHash();
     (void)script.IsCompressedPayToPubKey();
