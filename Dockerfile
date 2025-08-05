@@ -57,7 +57,7 @@ RUN wget https://bitcoincore.org/bin/bitcoin-core-${VERSION}/bitcoin-${VERSION}-
 RUN set -eux; \
     export FILENAME="bitcoin-${VERSION}-${ARCH}-linux-gnu.tar.gz"; \
     export EXPECTED_HASH=$(sha256sum "$FILENAME" | awk '{print $1}'); \
-    export DEVS="fanquake achow101 laanwj"; \
+    export DEVS="fanquake achow101 laanwj pinheadmz"; \
     for DEV in $DEVS; do \
         echo "🔍 Checking $DEV..."; \
         curl -sO "https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/${VERSION}/${DEV}/all.SHA256SUMS"; \
