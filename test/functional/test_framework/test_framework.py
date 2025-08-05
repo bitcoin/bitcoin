@@ -1221,10 +1221,11 @@ class MasternodeInfo:
         return test.nodes[self.nodeIdx]
 
     def register(self, node: TestNode, submit: bool, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
-                 coreP2PAddrs: Union[str, List[str], None] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
-                 operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
-                 platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None,
-                 expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+                 coreP2PAddrs: Union[str, List[str], None] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None,
+                 votingAddr: Optional[str] = None, operator_reward: Optional[int] = None, rewards_address: Optional[str] = None,
+                 fundsAddr: Optional[str] = None, platform_node_id: Optional[str] = None, addrs_platform_p2p: Union[int, str, List[str], None] = None,
+                 addrs_platform_https: Union[int, str, List[str], None] = None, expected_assert_code: Optional[int] = None,
+                 expected_assert_msg: Optional[str] = None) -> Optional[str]:
         if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
             raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
 
@@ -1232,10 +1233,10 @@ class MasternodeInfo:
         if self.evo:
             if platform_node_id is None:
                 raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
-            if platform_p2p_port is None:
-                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
-            if platform_http_port is None:
-                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+            if addrs_platform_p2p is None:
+                raise AssertionError("EvoNode but addrs_platform_p2p is missing, must be specified!")
+            if addrs_platform_https is None:
+                raise AssertionError("EvoNode but addrs_platform_https is missing, must be specified!")
 
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
@@ -1261,7 +1262,7 @@ class MasternodeInfo:
         # Construct final command and arguments
         if self.evo:
             command = "register_evo"
-            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_funds, submit] # type: ignore
+            args = args + [platform_node_id, addrs_platform_p2p, addrs_platform_https, address_funds, submit] # type: ignore
         else:
             command = "register_legacy" if self.legacy else "register"
             args = args + [address_funds, submit] # type: ignore
@@ -1279,8 +1280,9 @@ class MasternodeInfo:
     def register_fund(self, node: TestNode, submit: bool, collateral_address: Optional[str] = None, coreP2PAddrs: Union[str, List[str], None] = None,
                       ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None, votingAddr: Optional[str] = None,
                       operator_reward: Optional[int] = None, rewards_address: Optional[str] = None, fundsAddr: Optional[str] = None,
-                      platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None, platform_http_port: Optional[int] = None,
-                      expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+                      platform_node_id: Optional[str] = None, addrs_platform_p2p: Union[int, str, List[str], None] = None,
+                      addrs_platform_https: Union[int, str, List[str], None] = None, expected_assert_code: Optional[int] = None,
+                      expected_assert_msg: Optional[str] = None) -> Optional[str]:
         if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
             raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
 
@@ -1288,10 +1290,10 @@ class MasternodeInfo:
         if self.evo:
             if platform_node_id is None:
                 raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
-            if platform_p2p_port is None:
-                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
-            if platform_http_port is None:
-                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+            if addrs_platform_p2p is None:
+                raise AssertionError("EvoNode but addrs_platform_p2p is missing, must be specified!")
+            if addrs_platform_https is None:
+                raise AssertionError("EvoNode but addrs_platform_https is missing, must be specified!")
 
         # Use assert_raises_rpc_error if we expect to error out
         use_assert: bool = bool(expected_assert_code and expected_assert_msg)
@@ -1316,7 +1318,7 @@ class MasternodeInfo:
         # Construct final command and arguments
         if self.evo:
             command = "register_fund_evo"
-            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_funds, submit] # type: ignore
+            args = args + [platform_node_id, addrs_platform_p2p, addrs_platform_https, address_funds, submit] # type: ignore
         else:
             command = "register_fund_legacy" if self.legacy else "register_fund"
             args = args + [address_funds, submit] # type: ignore
@@ -1415,9 +1417,10 @@ class MasternodeInfo:
 
         return ret
 
-    def update_service(self, node: TestNode, submit: bool, coreP2PAddrs: Union[str, List[str], None] = None, platform_node_id: Optional[str] = None, platform_p2p_port: Optional[int] = None,
-                       platform_http_port: Optional[int] = None, address_operator: Optional[str] = None, fundsAddr: Optional[str] = None,
-                       expected_assert_code: Optional[int] = None, expected_assert_msg: Optional[str] = None) -> Optional[str]:
+    def update_service(self, node: TestNode, submit: bool, coreP2PAddrs: Union[str, List[str], None] = None, platform_node_id: Optional[str] = None,
+                       addrs_platform_p2p: Union[int, str, List[str], None] = None, addrs_platform_https: Union[int, str, List[str], None] = None,
+                       address_operator: Optional[str] = None, fundsAddr: Optional[str] = None, expected_assert_code: Optional[int] = None,
+                       expected_assert_msg: Optional[str] = None) -> Optional[str]:
         if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
             raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
 
@@ -1431,10 +1434,10 @@ class MasternodeInfo:
         if self.evo:
             if platform_node_id is None:
                 raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
-            if platform_p2p_port is None:
-                raise AssertionError("EvoNode but platform_p2p_port is missing, must be specified!")
-            if platform_http_port is None:
-                raise AssertionError("EvoNode but platform_http_port is missing, must be specified!")
+            if addrs_platform_p2p is None:
+                raise AssertionError("EvoNode but addrs_platform_p2p is missing, must be specified!")
+            if addrs_platform_https is None:
+                raise AssertionError("EvoNode but addrs_platform_https is missing, must be specified!")
 
         # Use assert_raises_rpc_error if we expect to error out
         use_assert: bool = bool(expected_assert_code and expected_assert_msg)
@@ -1456,7 +1459,7 @@ class MasternodeInfo:
         # Construct final command and arguments
         if self.evo:
             command = "update_service_evo"
-            args = args + [platform_node_id, platform_p2p_port, platform_http_port, address_operator, address_funds, submit] # type: ignore
+            args = args + [platform_node_id, addrs_platform_p2p, addrs_platform_https, address_operator, address_funds, submit] # type: ignore
         else:
             command = "update_service"
             args = args + [address_operator, address_funds, submit] # type: ignore
@@ -1641,8 +1644,8 @@ class DashTestFramework(BitcoinTestFramework):
         mn.generate_addresses(self.nodes[0])
 
         platform_node_id = hash160(b'%d' % rnd).hex() if rnd is not None else hash160(b'%d' % node_p2p_port).hex()
-        platform_p2p_port = node_p2p_port + 101
-        platform_http_port = node_p2p_port + 102
+        addrs_platform_p2p = node_p2p_port + 101
+        addrs_platform_https = node_p2p_port + 102
 
         outputs = {mn.collateral_address: mn.get_collateral_value(), mn.fundsAddr: 1}
         collateral_txid = self.nodes[0].sendmany("", outputs)
@@ -1653,9 +1656,9 @@ class DashTestFramework(BitcoinTestFramework):
         coreP2PAddrs = ['127.0.0.1:%d' % node_p2p_port]
         operatorReward = idx
 
-        # platform_node_id, platform_p2p_port and platform_http_port are ignored for regular masternodes
+        # platform_node_id, addrs_platform_p2p and addrs_platform_https are ignored for regular masternodes
         protx_result = mn.register(self.nodes[0], submit=True, collateral_txid=collateral_txid, collateral_vout=collateral_vout, coreP2PAddrs=coreP2PAddrs, operator_reward=operatorReward,
-                                   platform_node_id=platform_node_id, platform_p2p_port=platform_p2p_port, platform_http_port=platform_http_port)
+                                   platform_node_id=platform_node_id, addrs_platform_p2p=addrs_platform_p2p, addrs_platform_https=addrs_platform_https)
         assert protx_result is not None
 
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
@@ -1675,8 +1678,8 @@ class DashTestFramework(BitcoinTestFramework):
         # For the sake of the test, generate random nodeid, p2p and http platform values
         r = rnd if rnd is not None else random.randint(21000, 65000)
         platform_node_id = hash160(b'%d' % r).hex()
-        platform_p2p_port = r + 1
-        platform_http_port = r + 2
+        addrs_platform_p2p = r + 1
+        addrs_platform_https = r + 2
 
         fund_txid = self.nodes[0].sendtoaddress(funds_address, 1)
         self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
@@ -1684,11 +1687,11 @@ class DashTestFramework(BitcoinTestFramework):
 
         protx_success = False
         try:
-            protx_result = evo_info.update_service(self.nodes[0], True, f'127.0.0.1:{evo_info.nodePort}', platform_node_id, platform_p2p_port, platform_http_port, operator_reward_address, funds_address)
+            protx_result = evo_info.update_service(self.nodes[0], True, f'127.0.0.1:{evo_info.nodePort}', platform_node_id, addrs_platform_p2p, addrs_platform_https, operator_reward_address, funds_address)
             assert protx_result is not None
             self.bump_mocktime(10 * 60 + 1) # to make tx safe to include in block
             evo_info.bury_tx(self, genIdx=0, txid=protx_result, depth=1)
-            self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, platform_p2p_port, platform_http_port))
+            self.log.info("Updated EvoNode %s: platformNodeID=%s, platformP2PPort=%s, platformHTTPPort=%s" % (evo_info.proTxHash, platform_node_id, addrs_platform_p2p, addrs_platform_https))
             protx_success = True
         except:
             self.log.info("protx_evo rejected")

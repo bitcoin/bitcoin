@@ -61,17 +61,17 @@ class Node:
                 mn_visible = True
         return mn_visible
 
-    def register_mn(self, test: BitcoinTestFramework, submit: bool, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_http = None, code = None, msg = None) -> str:
+    def register_mn(self, test: BitcoinTestFramework, submit: bool, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_https = None, code = None, msg = None) -> str:
         assert self.mn.nodeIdx is not None
 
-        if self.mn.evo and (not addrs_platform_http or not addrs_platform_p2p):
-            raise AssertionError("EvoNode but platformP2PAddrs and platformHTTPSAddrs not specified")
+        if self.mn.evo and (not addrs_platform_https or not addrs_platform_p2p):
+            raise AssertionError("EvoNode but addrs_platform_p2p and addrs_platform_https not specified")
 
         # Evonode-specific fields are ignored if regular masternode
         self.platform_nodeid = hash160(b'%d' % randint(1, 65535)).hex()
         protx_output = self.mn.register(self.node, submit=submit, coreP2PAddrs=addrs_core_p2p, operator_reward=0,
-                                        platform_node_id=self.platform_nodeid, platform_p2p_port=addrs_platform_p2p,
-                                        platform_http_port=addrs_platform_http, expected_assert_code=code, expected_assert_msg=msg)
+                                        platform_node_id=self.platform_nodeid, addrs_platform_p2p=addrs_platform_p2p,
+                                        addrs_platform_https=addrs_platform_https, expected_assert_code=code, expected_assert_msg=msg)
 
         # If we expected error, make sure the transaction didn't succeed
         if code and msg:
@@ -93,15 +93,15 @@ class Node:
         test.restart_node(self.mn.nodeIdx, extra_args=self.node.extra_args + [f'-masternodeblsprivkey={self.mn.keyOperator}'])
         return self.mn.proTxHash
 
-    def update_mn(self, test: BitcoinTestFramework, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_http = None) -> str:
+    def update_mn(self, test: BitcoinTestFramework, addrs_core_p2p, addrs_platform_p2p = None, addrs_platform_https = None) -> str:
         assert self.mn.nodeIdx is not None
 
-        if self.mn.evo and (not addrs_platform_http or not addrs_platform_p2p):
-            raise AssertionError("EvoNode but platformP2PAddrs and platformHTTPSAddrs not specified")
+        if self.mn.evo and (not addrs_platform_https or not addrs_platform_p2p):
+            raise AssertionError("EvoNode but addrs_platform_p2p and addrs_platform_https not specified")
 
         # Evonode-specific fields are ignored if regular masternode
         protx_output = self.mn.update_service(self.node, submit=True, coreP2PAddrs=addrs_core_p2p, platform_node_id=self.platform_nodeid,
-                                              platform_p2p_port=addrs_platform_p2p, platform_http_port=addrs_platform_http)
+                                              addrs_platform_p2p=addrs_platform_p2p, addrs_platform_https=addrs_platform_https)
         assert protx_output is not None
 
         self.mn.bury_tx(test, self.mn.nodeIdx, protx_output, 1)
