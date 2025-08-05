@@ -302,7 +302,8 @@ jobs:
 
   windows-cross:
     name: 'Linux->Windows cross, no tests'
-    runs-on: ubuntu-latest
+    needs: runners
+    runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     env:
@@ -313,36 +314,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set CI directories
-        run: |
-          echo "CCACHE_DIR=${{ runner.temp }}/ccache_dir" >> "$GITHUB_ENV"
-          echo "BASE_ROOT_DIR=${{ runner.temp }}" >> "$GITHUB_ENV"
-          echo "DEPENDS_DIR=${{ runner.temp }}/depends" >> "$GITHUB_ENV"
-          echo "BASE_BUILD_DIR=${{ runner.temp }}/build" >> "$GITHUB_ENV"
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
 
-      - name: Depends cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.DEPENDS_DIR }}/built
-          key: ${{ github.job }}-depends-${{ hashFiles('depends/**', 'ci/test/00_setup_env_win64.sh') }}
+      - name: Restore caches
+        id: restore-cache
+        uses: ./.github/actions/restore-caches
 
-      - name: Restore Ccache cache
-        id: ccache-cache
-        uses: actions/cache/restore@v4
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
         with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-ccache-
+          use-cirrus: ${{ needs.runners.outputs.use-cirrus-runners }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
 
-      - name: Save Ccache cache
-        uses: actions/cache/save@v4
-        if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ${{ github.job }}-ccache-${{ github.run_id }}
+      - name: Save caches
+        uses: ./.github/actions/save-caches
 
       - name: Upload built executables
         uses: actions/upload-artifact@v4
