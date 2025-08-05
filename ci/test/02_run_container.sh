@@ -46,8 +46,10 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
     DOCKER_BUILD_CACHE_ARG="--cache-from type=local,src=${DOCKER_BUILD_CACHE_OLD_DIR} --cache-to type=local,dest=${DOCKER_BUILD_CACHE_NEW_DIR},mode=max"
   fi
 
+  # Use buildx unconditionally
+  # Using buildx is required to properly load the correct driver, for use with registry caching. Neither build, nor BUILDKIT=1 currently do this properly
   # shellcheck disable=SC2086
-  DOCKER_BUILDKIT=1 docker build \
+  docker buildx build \
       --file "${BASE_READ_ONLY_DIR}/ci/test_imagefile" \
       --build-arg "CI_IMAGE_NAME_TAG=${CI_IMAGE_NAME_TAG}" \
       --build-arg "FILE_ENV=${FILE_ENV}" \
