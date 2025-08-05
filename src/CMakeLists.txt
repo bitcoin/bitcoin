@@ -29,7 +29,7 @@ endif()
 message("")
 message("Configuring secp256k1 subtree...")
 set(SECP256K1_DISABLE_SHARED ON CACHE BOOL "" FORCE)
-set(SECP256K1_ENABLE_MODULE_ECDH OFF CACHE BOOL "" FORCE)
+set(SECP256K1_ENABLE_MODULE_ECDH ON CACHE BOOL "" FORCE)
 set(SECP256K1_ENABLE_MODULE_RECOVERY ON CACHE BOOL "" FORCE)
 set(SECP256K1_ENABLE_MODULE_MUSIG ON CACHE BOOL "" FORCE)
 set(SECP256K1_BUILD_BENCHMARK OFF CACHE BOOL "" FORCE)
@@ -155,6 +155,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   core_read.cpp
   core_write.cpp
   deploymentinfo.cpp
+  dhkem_secp256k1.cpp
   external_signer.cpp
   init/common.cpp
   kernel/chainparams.cpp
