@@ -28,7 +28,7 @@ Serialize(const CScript& s)
 
 BOOST_FIXTURE_TEST_SUITE(sigopcount_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_CASE(GetSigOpCount)
+BOOST_AUTO_TEST_CASE(CountSigOps)
 {
     CScript s1;
     BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/false), 0U);
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     CScript p2sh = GetScriptForDestination(ScriptHash(s1));
     CScript scriptSig;
     scriptSig << OP_0 << Serialize(s1);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(scriptSig, p2sh), 3U);
 
     std::vector<CPubKey> keys;
     for (int i = 0; i < 3; i++)
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(p2sh.CountSigOps(/*fAccurate=*/false), 0U);
     CScript scriptSig2;
     scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(scriptSig2, p2sh), 3U);
 }
 
 /**
