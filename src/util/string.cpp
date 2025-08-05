@@ -8,9 +8,17 @@
 #include <string>
 
 namespace util {
-void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute)
+void ReplaceAll(std::string& in_out, const std::string& search, const std::string& substitute, bool regex)
 {
     if (search.empty()) return;
-    in_out = std::regex_replace(in_out, std::regex(search), substitute);
+    if (regex) {
+        in_out = std::regex_replace(in_out, std::regex(search), substitute);
+        return;
+    }
+    size_t pos{0};
+    while ((pos = in_out.find(search, pos)) != std::string::npos) {
+        in_out.replace(pos, search.size(), substitute);
+        ++pos;
+    }
 }
 } // namespace util
