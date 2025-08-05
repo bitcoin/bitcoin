@@ -132,6 +132,20 @@ public:
 
     // Generic helper functions.
 
+    /** Total memory usage currently for this Cluster, including all its dynamic memory, plus Cluster
+     *  structure itself, and ClusterSet::m_clusters entry. */
+    size_t TotalMemoryUsage() const noexcept
+    {
+        return // Dynamic memory allocated in this Cluster.
+               memusage::DynamicUsage(m_mapping) + memusage::DynamicUsage(m_linearization) +
+               // Dynamic memory usage inside m_depgraph.
+               m_depgraph.DynamicMemoryUsage() +
+               // Memory usage of the allocated Cluster itself.
+               memusage::MallocUsage(sizeof(Cluster)) +
+               // Memory usage of the ClusterSet::m_clusters entry.
+               sizeof(std::unique_ptr<Cluster>);
+    }
+
     /** Whether the linearization of this Cluster can be exposed. */
     bool IsAcceptable(bool after_split = false) const noexcept
     {
@@ -308,6 +322,9 @@ private:
         GraphIndex m_txcount_oversized{0};
         /** Whether this graph is oversized (if known). */
         std::optional<bool> m_oversized{false};
+        /** The combined TotalMemoryUsage of all clusters in this level (only Clusters that
+         *  are materialized; in staging, implicit Clusters from main are not counted), */
+        size_t m_cluster_usage{0};
 
         ClusterSet() noexcept = default;
     };
@@ -853,6 +870,8 @@ Cluster* Cluster::CopyToStaging(TxGraphImpl& graph) const noexcept
     graph.InsertCluster(1, std::move(ret), m_quality);
     // Update its Locators.
     ptr->Updated(graph, 1);
+    // Update memory usage.
+    graph.GetClusterSet(1).m_cluster_usage += ptr->TotalMemoryUsage();
     return ptr;
 }
 
@@ -861,6 +880,7 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>
     // Iterate over the prefix of to_remove that applies to this cluster.
     Assume(!to_remove.empty());
     SetType todo;
+    graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
     do {
         GraphIndex idx = to_remove.front();
         Assume(idx < graph.m_entries.size());
@@ -895,6 +915,7 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>
         todo.Reset(m_linearization.back());
         m_linearization.pop_back();
     }
+
     if (todo.None()) {
         // If no further removals remain, and thus all removals were at the end, we may be able
         // to leave the cluster at a better quality level.
@@ -912,12 +933,14 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>
         quality = QualityLevel::NEEDS_SPLIT;
     }
     Compact();
+    graph.GetClusterSet(level).m_cluster_usage += TotalMemoryUsage();
     graph.SetClusterQuality(level, m_quality, m_setindex, quality);
     Updated(graph, level);
 }
 
 void Cluster::Clear(TxGraphImpl& graph, int level) noexcept
 {
+    graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
     for (auto i : m_linearization) {
         graph.ClearLocator(level, m_mapping[i], m_quality == QualityLevel::OVERSIZED_SINGLETON);
     }
@@ -934,8 +957,10 @@ void Cluster::MoveToMain(TxGraphImpl& graph) noexcept
         entry.m_locator[1].SetMissing();
     }
     auto quality = m_quality;
+    graph.GetClusterSet(1).m_cluster_usage -= TotalMemoryUsage();
     auto cluster = graph.ExtractCluster(1, quality, m_setindex);
     graph.InsertCluster(0, std::move(cluster), quality);
+    graph.GetClusterSet(0).m_cluster_usage += TotalMemoryUsage();
     Updated(graph, 0);
 }
 
@@ -1034,6 +1059,8 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
         graph.InsertCluster(level, std::move(new_cluster), split_quality);
         todo -= component;
     }
+    // We have to split the Cluster up. Remove accounting for the existing one first.
+    graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
     // Redistribute the transactions.
     for (auto i : m_linearization) {
         /** The cluster which transaction originally in position i is moved to. */
@@ -1055,10 +1082,11 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
         for (auto par : m_depgraph.GetReducedParents(i)) new_parents.Set(remap[par].second);
         new_cluster->m_depgraph.AddDependencies(new_parents, remap[i].second);
     }
-    // Update all the Locators of moved transactions.
+    // Update all the Locators of moved transactions, and memory usage.
     for (Cluster* new_cluster : new_clusters) {
         new_cluster->Updated(graph, level);
         new_cluster->Compact();
+        graph.GetClusterSet(level).m_cluster_usage += new_cluster->TotalMemoryUsage();
     }
     // Wipe this Cluster, and return that it needs to be deleted.
     m_depgraph = DepGraph<SetType>{};
@@ -1071,6 +1099,8 @@ void Cluster::Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept
 {
     /** Vector to store the positions in this Cluster for each position in other. */
     std::vector<DepGraphIndex> remap(other.m_depgraph.PositionRange());
+    graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
+    graph.GetClusterSet(level).m_cluster_usage -= other.TotalMemoryUsage();
     // Iterate over all transactions in the other Cluster (the one being absorbed).
     for (auto pos : other.m_linearization) {
         auto idx = other.m_mapping[pos];
@@ -1101,6 +1131,7 @@ void Cluster::Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept
         entry.m_locator[level].SetPresent(this, new_pos);
     }
     Compact();
+    graph.GetClusterSet(level).m_cluster_usage += TotalMemoryUsage();
     // Purge the other Cluster, now that everything has been moved.
     other.m_depgraph = DepGraph<SetType>{};
     other.m_linearization.clear();
@@ -1764,6 +1795,7 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     auto& clusterset = GetClusterSet(level);
     InsertCluster(level, std::move(cluster), oversized ? QualityLevel::OVERSIZED_SINGLETON : QualityLevel::OPTIMAL);
     cluster_ptr->Updated(*this, level);
+    clusterset.m_cluster_usage += cluster_ptr->TotalMemoryUsage();
     ++clusterset.m_txcount;
     // Deal with individually oversized transactions.
     if (oversized) {
@@ -2114,6 +2146,7 @@ void TxGraphImpl::StartStaging() noexcept
     m_staging_clusterset->m_deps_to_add = m_main_clusterset.m_deps_to_add;
     m_staging_clusterset->m_group_data = m_main_clusterset.m_group_data;
     m_staging_clusterset->m_oversized = m_main_clusterset.m_oversized;
+    m_staging_clusterset->m_cluster_usage = 0;
     Assume(m_staging_clusterset->m_oversized.has_value());
 }
 
@@ -2422,6 +2455,7 @@ void TxGraphImpl::SanityCheck() const
         assert(level < MAX_LEVELS);
         auto& clusterset = GetClusterSet(level);
         std::set<const Cluster*> actual_clusters;
+        size_t recomputed_cluster_usage{0};
 
         // For all quality levels...
         for (int qual = 0; qual < int(QualityLevel::NONE); ++qual) {
@@ -2444,8 +2478,13 @@ void TxGraphImpl::SanityCheck() const
                 // Check that the cluster's quality and setindex matches its position in the quality list.
                 assert(cluster.m_quality == quality);
                 assert(cluster.m_setindex == setindex);
+                // Count memory usage.
+                recomputed_cluster_usage += cluster.TotalMemoryUsage();
             }
         }
+
+        // Verify memory usage.
+        assert(clusterset.m_cluster_usage == recomputed_cluster_usage);
 
         // Verify that all to-be-removed transactions have valid identifiers.
         for (GraphIndex idx : clusterset.m_to_remove) {
