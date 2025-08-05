@@ -143,7 +143,8 @@ void CMnemonic::ToSeed(const SecureString& mnemonic, const SecureString& passphr
 {
 
     SecureString ssSalt = SecureString("mnemonic") + passphrase;
-    SecureVector vchSalt(ssSalt.begin(), ssSalt.begin() + strnlen(ssSalt.data(), 256));
+    SecureVector vchSalt(ssSalt.begin(), ssSalt.begin() + std::min<size_t>(256, ssSalt.size()));
     seedRet.resize(64);
+    // NOTE: c_str() here is fine because mnemonic has only [a-z ] characters
     PKCS5_PBKDF2_HMAC_SHA512(mnemonic.c_str(), mnemonic.size(), vchSalt.data(), vchSalt.size(), 2048, 64, seedRet.data());
 }

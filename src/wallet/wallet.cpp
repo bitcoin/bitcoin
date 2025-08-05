@@ -2872,11 +2872,16 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                         error = strprintf(_("%s -- Incorrect seed, it should be a hex string"), __func__);
                         return nullptr;
                     }
-                    SecureString secureMnemonic = args.GetArg("-mnemonic", "").c_str();
-                    SecureString secureMnemonicPassphrase = args.GetArg("-mnemonicpassphrase", "").c_str();
+
+                    SecureString mnemonic, mnemonic_passphrase;
+                    mnemonic.reserve(256);
+                    mnemonic_passphrase.reserve(256);
+
+                    mnemonic = args.GetArg("-mnemonic", "");
+                    mnemonic_passphrase = args.GetArg("-mnemonicpassphrase", "");
                     LOCK(walletInstance->cs_wallet);
                     if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
-                        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
+                        spk_man->GenerateNewHDChain(mnemonic, mnemonic_passphrase);
                     }
                 }
 
@@ -2888,8 +2893,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
             LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-                SecureString mnemonic = args.GetArg("-mnemonic", "").c_str();
-                SecureString mnemonic_passphrase = args.GetArg("-mnemonicpassphrase", "").c_str();
+                SecureString mnemonic, mnemonic_passphrase;
+                mnemonic.reserve(256);
+                mnemonic_passphrase.reserve(256);
+                mnemonic = args.GetArg("-mnemonic", "");
+                mnemonic_passphrase = args.GetArg("-mnemonicpassphrase", "");
                 args.ForceRemoveArg("mnemonic");
                 args.ForceRemoveArg("mnemonicpassphrase");
                 walletInstance->SetupDescriptorScriptPubKeyMans(mnemonic, mnemonic_passphrase);
@@ -3764,7 +3772,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans(const SecureString& mnemonic_arg, 
     // TODO: remove duplicated code with CHDChain::SetMnemonic
     const SecureString mnemonic = mnemonic_arg.empty() ? CMnemonic::Generate(m_args.GetIntArg("-mnemonicbits", CHDChain::DEFAULT_MNEMONIC_BITS)) : mnemonic_arg;
     if (!CMnemonic::Check(mnemonic)) {
-        throw std::runtime_error(std::string(__func__) + ": invalid mnemonic: `" + std::string(mnemonic.c_str()) + "`");
+        throw std::runtime_error(std::string(__func__) + ": invalid mnemonic: `" + std::string(mnemonic) + "`");
     }
     SecureVector seed_key;
     CMnemonic::ToSeed(mnemonic, mnemonic_passphrase, seed_key);

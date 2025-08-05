@@ -375,29 +375,27 @@ static RPCHelpMan upgradetohd()
     {
         LOCK(pwallet->cs_wallet);
 
-        SecureString secureWalletPassphrase;
-        secureWalletPassphrase.reserve(100);
+        SecureString wallet_passphrase;
+        wallet_passphrase.reserve(100);
 
         if (request.params[2].isNull()) {
             if (pwallet->IsCrypted()) {
                 throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet encrypted but passphrase not supplied to RPC.");
             }
         } else {
-            // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-            // Alternately, find a way to make request.params[0] mlock()'d to begin with.
-            secureWalletPassphrase = request.params[2].get_str().c_str();
+            wallet_passphrase = std::string_view{request.params[2].get_str()};
         }
 
-        SecureString secureMnemonic;
-        secureMnemonic.reserve(256);
+        SecureString mnemonic;
+        mnemonic.reserve(256);
         if (!generate_mnemonic) {
-            secureMnemonic = request.params[0].get_str().c_str();
+            mnemonic = std::string_view{request.params[0].get_str()};
         }
 
-        SecureString secureMnemonicPassphrase;
-        secureMnemonicPassphrase.reserve(256);
+        SecureString mnemonic_passphrase;
+        mnemonic_passphrase.reserve(256);
         if (!request.params[1].isNull()) {
-            secureMnemonicPassphrase = request.params[1].get_str().c_str();
+            mnemonic_passphrase = std::string_view{request.params[1].get_str()};
         }
 
         // TODO: breaking changes kept for v21!
@@ -421,7 +419,7 @@ static RPCHelpMan upgradetohd()
         pwallet->SetMinVersion(FEATURE_HD);
 
         if (pwallet->IsCrypted()) {
-            if (secureWalletPassphrase.empty()) {
+            if (wallet_passphrase.empty()) {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: Wallet encrypted but supplied empty wallet passphrase");
             }
 
@@ -430,13 +428,13 @@ static RPCHelpMan upgradetohd()
             pwallet->Lock();
 
             // Unlock the wallet
-            if (!pwallet->Unlock(secureWalletPassphrase)) {
+            if (!pwallet->Unlock(wallet_passphrase)) {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect");
             }
         }
 
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            pwallet->SetupDescriptorScriptPubKeyMans(secureMnemonic, secureMnemonicPassphrase);
+            pwallet->SetupDescriptorScriptPubKeyMans(mnemonic, mnemonic_passphrase);
         } else {
             auto spk_man = pwallet->GetLegacyScriptPubKeyMan();
             if (!spk_man) {
@@ -445,20 +443,20 @@ static RPCHelpMan upgradetohd()
 
             if (pwallet->IsCrypted()) {
                 pwallet->WithEncryptionKey([&](const CKeyingMaterial& encryption_key) {
-                        spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase, encryption_key);
+                        spk_man->GenerateNewHDChain(mnemonic, mnemonic_passphrase, encryption_key);
                         return true;
                     });
             } else {
-                spk_man->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
+                spk_man->GenerateNewHDChain(mnemonic, mnemonic_passphrase);
             }
         }
 
         if (pwallet->IsCrypted()) {
             // Relock encrypted wallet
             pwallet->Lock();
-        } else if (!secureWalletPassphrase.empty()) {
+        } else if (!wallet_passphrase.empty()) {
             // Encrypt non-encrypted wallet
-            if (!pwallet->EncryptWallet(secureWalletPassphrase)) {
+            if (!pwallet->EncryptWallet(wallet_passphrase)) {
                 throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
             }
         }

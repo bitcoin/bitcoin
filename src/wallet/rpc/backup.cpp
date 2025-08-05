@@ -908,8 +908,8 @@ RPCHelpMan dumphdinfo()
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("hdseed", HexStr(hdChainCurrent.GetSeed()));
-    obj.pushKV("mnemonic", ssMnemonic.c_str());
-    obj.pushKV("mnemonicpassphrase", ssMnemonicPassphrase.c_str());
+    obj.pushKV("mnemonic", ssMnemonic);
+    obj.pushKV("mnemonicpassphrase", ssMnemonicPassphrase);
 
     return obj;
 },
@@ -2024,8 +2024,8 @@ RPCHelpMan listdescriptors()
             SecureString mnemonic;
             SecureString mnemonic_passphrase;
             if (desc_spk_man->GetMnemonicString(mnemonic, mnemonic_passphrase) && !mnemonic.empty()) {
-                spk.pushKV("mnemonic", mnemonic.c_str());
-                spk.pushKV("mnemonicpassphrase", mnemonic_passphrase.c_str());
+                spk.pushKV("mnemonic", mnemonic);
+                spk.pushKV("mnemonicpassphrase", mnemonic_passphrase);
             }
         }
         spk.pushKV("desc", descriptor);
