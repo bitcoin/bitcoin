@@ -177,6 +177,8 @@ public:
     void Clear(TxGraphImpl& graph, int level) noexcept;
     /** Change a Cluster's level from 1 (staging) to 0 (main). */
     void MoveToMain(TxGraphImpl& graph) noexcept;
+    /** Minimize this Cluster's memory usage. */
+    void Compact() noexcept;
 
     // Functions that implement the Cluster-specific side of internal TxGraphImpl mutations.
 
@@ -910,6 +912,7 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>
             [&](auto pos) { return todo[pos]; }), m_linearization.end());
         quality = QualityLevel::NEEDS_SPLIT;
     }
+    Compact();
     graph.SetClusterQuality(level, m_quality, m_setindex, quality);
     Updated(graph, level);
 }
@@ -935,6 +938,13 @@ void Cluster::MoveToMain(TxGraphImpl& graph) noexcept
     auto cluster = graph.ExtractCluster(1, quality, m_setindex);
     graph.InsertCluster(/*level=*/0, std::move(cluster), quality);
     Updated(graph, /*level=*/0);
+}
+
+void Cluster::Compact() noexcept
+{
+    m_linearization.shrink_to_fit();
+    m_mapping.shrink_to_fit();
+    m_depgraph.Compact();
 }
 
 void Cluster::AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept
@@ -1050,6 +1060,7 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
     // Update all the Locators of moved transactions.
     for (Cluster* new_cluster : new_clusters) {
         new_cluster->Updated(graph, level);
+        new_cluster->Compact();
     }
     // Wipe this Cluster, and return that it needs to be deleted.
     m_depgraph = DepGraph<SetType>{};
@@ -1627,6 +1638,7 @@ void TxGraphImpl::Merge(std::span<Cluster*> to_merge, int level) noexcept
         to_merge[0]->Merge(*this, level, *to_merge[i]);
         DeleteCluster(*to_merge[i], level);
     }
+    to_merge[0]->Compact();
 }
 
 void TxGraphImpl::ApplyDependencies(int level) noexcept
