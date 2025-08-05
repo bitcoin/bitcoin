@@ -481,6 +481,12 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tidy.sh'
 
+          - name: 'TSan, depends, no gui'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_tsan.sh'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -502,6 +508,11 @@ jobs:
         # In the image build step, no external environment variables are available,
         # so any settings will need to be written to the settings env file:
         run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
+
+      - name: Set mmap_rnd_bits
+        if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' }}
+        # Prevents crashes due to high ASLR entropy
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
 
       - name: CI script
         run: ./ci/test_run_all.sh
