@@ -49,7 +49,3 @@ inline bool CheckProofOfStake(const CBlock& block, const CBlockIndex* pindexPrev
 }
 
 #endif // BITCOIN_POS_STAKE_H
-<<<<<<< ours
-=======
-
->>>>>>> theirs
