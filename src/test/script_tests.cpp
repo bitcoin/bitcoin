@@ -1608,16 +1608,11 @@ BOOST_AUTO_TEST_CASE(script_FindAndDelete)
 
 BOOST_AUTO_TEST_CASE(script_HasValidBaseOps)
 {
-    // Exercise the HasValidBaseOps functionality
-    CScript script;
-    script = ToScript("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex); // Normal script
-    BOOST_CHECK(script.HasValidBaseOps());
-    script = ToScript("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex);
-    BOOST_CHECK(script.HasValidBaseOps());
-    script = ToScript("ff88ac"_hex); // Script with OP_INVALIDOPCODE explicit
-    BOOST_CHECK(!script.HasValidBaseOps());
-    script = ToScript("88acc0"_hex); // Script with undefined opcode
-    BOOST_CHECK(!script.HasValidBaseOps());
+    BOOST_CHECK( ToScript("76a9141234567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex).HasValidBaseOps()); // Normal script
+    BOOST_CHECK( ToScript("76a914ff34567890abcdefa1a2a3a4a5a6a7a8a9a0aaab88ac"_hex).HasValidBaseOps());
+    BOOST_CHECK(!ToScript("ff88ac"_hex).HasValidBaseOps()); // Script with OP_INVALIDOPCODE explicit
+    BOOST_CHECK(!ToScript("88acc0"_hex).HasValidBaseOps()); // Script with undefined opcode
+    BOOST_CHECK(!ToScript("ba"_hex).HasValidBaseOps());     // OP_CHECKSIGADD > MAX_BASE_OPCODE
 }
 
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
