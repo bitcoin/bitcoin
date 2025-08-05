@@ -4,7 +4,8 @@
 
 # See ci/README.md for usage.
 
-ARG CI_IMAGE_NAME_TAG
+# We never want scratch, but default arg silences a Warning
+ARG CI_IMAGE_NAME_TAG=scratch
 FROM ${CI_IMAGE_NAME_TAG}
 
 ARG FILE_ENV
