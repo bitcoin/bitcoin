@@ -26,9 +26,12 @@ def main():
         encoding="utf8",
     ).stdout.splitlines()
     settings = set(l.split("=")[0].split("export ")[1] for l in settings)
-    # Add this one manually, because it is the only one set inside the
-    # container that also allows external overwrites
-    settings.add("BASE_BUILD_DIR")
+    # Add "hidden" settings, which are never exported, manually. Otherwise,
+    # they will not be passed on.
+    settings.update([
+        "BASE_BUILD_DIR",
+        "CI_FAILFAST_TEST_LEAVE_DANGLING",
+    ])
 
     # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
     # to allow support starting multiple runs simultaneously by the same user.
