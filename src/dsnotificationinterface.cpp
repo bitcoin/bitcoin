@@ -12,10 +12,10 @@
 #include <masternode/sync.h>
 #include <validation.h>
 
+#include <chainlock/chainlock.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
 #include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/ehf_signals.h>
@@ -143,7 +143,8 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
     }
 }
 
-void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
+void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex,
+                                               const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     assert(m_cj_ctx && m_llmq_ctx);
 

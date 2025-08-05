@@ -5,6 +5,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <chainlock/chainlock.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -17,7 +18,6 @@
 #include <key_io.h>
 #include <llmq/blockprocessor.h>
 #include <llmq/context.h>
-#include <llmq/chainlocks.h>
 #include <evo/evodb.h>
 #include <net.h>
 #include <node/context.h>

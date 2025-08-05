@@ -24,6 +24,7 @@
 #include <util/system.h>
 #include <validation.h>
 
+#include <chainlock/chainlock.h>
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <evo/chainhelper.h>
@@ -35,7 +36,6 @@
 #include <governance/governance.h>
 #include <instantsend/instantsend.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <llmq/options.h>
 #include <llmq/snapshot.h>
@@ -127,7 +127,7 @@ static bool CalcCbTxBestChainlock(const llmq::CChainLocksHandler& chainlock_hand
     auto best_clsig = chainlock_handler.GetBestChainLock();
     if (best_clsig.getHeight() < Params().GetConsensus().DeploymentHeight(Consensus::DEPLOYMENT_V19)) {
         // We don't want legacy BLS ChainLocks in CbTx (can happen on regtest/devenets)
-        best_clsig = llmq::CChainLockSig{};
+        best_clsig = chainlock::ChainLockSig{};
     }
     if (best_clsig.getHeight() == pindexPrev->nHeight) {
         // Our best CL is the newest one possible

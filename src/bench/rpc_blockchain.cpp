@@ -5,9 +5,9 @@
 #include <bench/bench.h>
 #include <bench/data.h>
 
+#include <chainlock/chainlock.h>
 #include <consensus/validation.h>
 #include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 #include <rpc/blockchain.h>
 #include <streams.h>

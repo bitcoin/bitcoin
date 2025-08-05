@@ -48,11 +48,11 @@
 #include <validationinterface.h>
 #include <util/irange.h>
 
+#include <chainlock/chainlock.h>
 #include <evo/cbtx.h>
 #include <evo/specialtx.h>
 #include <instantsend/lock.h>
 #include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
 #include <llmq/context.h>
 
 #include <numeric>

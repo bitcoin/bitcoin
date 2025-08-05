@@ -8,6 +8,13 @@
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <hash.h>
+#include <primitives/block.h>
+#include <util/irange.h>
+#include <validation.h>
+
+#include <chainlock/chainlock.h>
+#include <chainlock/clsig.h>
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/creditpool.h>
@@ -15,14 +22,9 @@
 #include <evo/mnhftx.h>
 #include <evo/simplifiedmns.h>
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
-#include <llmq/clsig.h>
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
 #include <llmq/utils.h>
-#include <primitives/block.h>
-#include <util/irange.h>
-#include <validation.h>
 
 static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
                                    const llmq::CChainLocksHandler& chainlock_handler, BlockValidationState& state)
@@ -76,7 +78,7 @@ static bool CheckCbTxBestChainlock(const CCbTx& cbTx, const CBlockIndex* pindex,
         }
         uint256 curBlockCoinbaseCLBlockHash = pindex->GetAncestor(curBlockCoinbaseCLHeight)->GetBlockHash();
         if (chainlock_handler.VerifyChainLock(
-                llmq::CChainLockSig(curBlockCoinbaseCLHeight, curBlockCoinbaseCLBlockHash, cbTx.bestCLSignature)) !=
+                chainlock::ChainLockSig(curBlockCoinbaseCLHeight, curBlockCoinbaseCLBlockHash, cbTx.bestCLSignature)) !=
             llmq::VerifyRecSigStatus::Valid) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-invalid-clsig");
         }

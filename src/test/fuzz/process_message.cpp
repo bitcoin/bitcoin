@@ -23,7 +23,6 @@
 #include <version.h>
 
 #include <llmq/blockprocessor.h>
-#include <llmq/chainlocks.h>
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>

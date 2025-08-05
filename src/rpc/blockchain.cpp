@@ -20,7 +20,6 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
-#include <llmq/context.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/coinstats.h>
@@ -49,13 +48,14 @@
 #include <versionbits.h>
 #include <warnings.h>
 
+#include <chainlock/chainlock.h>
 #include <evo/assetlocktx.h>
 #include <evo/cbtx.h>
 #include <evo/evodb.h>
 #include <evo/mnhftx.h>
 #include <evo/specialtx.h>
 #include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
+#include <llmq/context.h>
 
 #include <stdint.h>
 
@@ -268,7 +268,7 @@ static RPCHelpMan getbestchainlock()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
-    const llmq::CChainLockSig clsig = llmq_ctx.clhandler->GetBestChainLock();
+    const chainlock::ChainLockSig clsig = llmq_ctx.clhandler->GetBestChainLock();
     if (clsig.IsNull()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any ChainLock");
     }

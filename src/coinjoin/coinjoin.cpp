@@ -4,20 +4,21 @@
 
 #include <coinjoin/coinjoin.h>
 
-#include <bls/bls.h>
 #include <chain.h>
 #include <chainparams.h>
-#include <instantsend/instantsend.h>
-#include <llmq/chainlocks.h>
-#include <masternode/node.h>
-#include <masternode/sync.h>
 #include <txmempool.h>
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
-
 #include <tinyformat.h>
+
+#include <bls/bls.h>
+#include <chainlock/chainlock.h>
+#include <instantsend/instantsend.h>
+#include <masternode/node.h>
+#include <masternode/sync.h>
+
 #include <string>
 
 constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};

@@ -277,7 +277,7 @@ void CMainSignals::NotifyTransactionLock(const CTransactionRef &tx, const std::s
                           tx->GetHash().ToString());
 }
 
-void CMainSignals::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig, const std::string& id) {
+void CMainSignals::NotifyChainLock(const CBlockIndex* pindex, const std::shared_ptr<const chainlock::ChainLockSig>& clsig, const std::string& id) {
     auto event = [pindex, clsig, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyChainLock(pindex, clsig); });
     };
