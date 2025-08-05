@@ -15,6 +15,7 @@ FUZZ_TARGET(script_ops)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CScript script_mut = ConsumeScript(fuzzed_data_provider);
+    const CScript script_sig{ConsumeScript(fuzzed_data_provider)};
     LIMITED_WHILE (fuzzed_data_provider.remaining_bytes() > 0, 1000000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -45,7 +46,7 @@ FUZZ_TARGET(script_ops)
     const CScript& script = script_mut;
     (void)script.CountSigOps(/*fAccurate=*/false);
     (void)script.CountSigOps(/*fAccurate=*/true);
-    (void)script.GetSigOpCount(script);
+    (void)CountP2SHSigOps(/*scriptSig=*/script_sig, /*scriptPubKey=*/script);
     (void)script.HasValidOps();
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToAnchor();

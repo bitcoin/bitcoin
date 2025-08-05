@@ -536,12 +536,6 @@ public:
      */
     unsigned int CountSigOps(bool fAccurate) const;
 
-    /**
-     * Accurately count sigOps, including sigOps in
-     * pay-to-script-hash transactions:
-     */
-    unsigned int GetSigOpCount(const CScript& scriptSig) const;
-
     /*
      * OP_1 <0x4e73>
      */

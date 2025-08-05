@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(CountSigOpsErrors)
     }
 }
 
-BOOST_AUTO_TEST_CASE(GetSigOpCount)
+BOOST_AUTO_TEST_CASE(CountSigOps)
 {
     CScript s1;
     BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/false), 0);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     CScript p2sh = GetScriptForDestination(ScriptHash(s1));
     CScript scriptSig;
     scriptSig << OP_0 << Serialize(s1);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig), 3U);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/scriptSig, /*scriptPubKey=*/p2sh), 3);
 
     std::vector<CPubKey> keys;
     for (int i{0}; i < 3; ++i) {
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     BOOST_CHECK_EQUAL(p2sh.CountSigOps(/*fAccurate=*/false), 0);
     CScript scriptSig2;
     scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
+    BOOST_CHECK_EQUAL(CountP2SHSigOps(/*scriptSig=*/scriptSig2, /*scriptPubKey=*/p2sh), 3);
 }
 
 /**

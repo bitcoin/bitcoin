@@ -180,14 +180,6 @@ unsigned int CScript::CountSigOps(bool fAccurate) const
     return n;
 }
 
-unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
-{
-    if (!IsPayToScriptHash())
-        return CountSigOps(/*fAccurate=*/true);
-
-    return CountP2SHSigOps(/*scriptSig=*/scriptSig, /*scriptPubKey=*/*this);
-}
-
 unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey)
 {
     if (!scriptPubKey.IsPayToScriptHash()) return 0;
