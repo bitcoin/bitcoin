@@ -46,7 +46,7 @@ ${CI_RETRY_EXE} pip3 install \
   ruff==0.5.5 \
   vulture==2.6
 
-SHELLCHECK_VERSION=v0.8.0
+SHELLCHECK_VERSION=v0.11.0
 curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | \
     tar --xz -xf - --directory /tmp/
 mv "/tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/bin/
