@@ -346,6 +346,11 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_arm.sh'
 
+          - name: 'win64 Cross'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_win64.sh'
     steps:
       - name: Checkout
         uses: actions/checkout@v5
