@@ -384,6 +384,12 @@ jobs:
             timeout-minutes: 240
             file-env: './ci/test/00_setup_env_native_fuzz.sh'
 
+          - name: 'previous releases, depends DEBUG'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_native_previous_releases.sh'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
