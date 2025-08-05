@@ -96,6 +96,12 @@
 /* Define this symbol if platform supports unix domain sockets */
 #cmakedefine HAVE_SOCKADDR_UN 1
 
+/* Define to 1 if close_range works with just unistd.h included. */
+#cmakedefine01 HAVE_CLOSE_RANGE_GENERIC
+
+/* Define to 1 if close_range works only with Linux-specific includes. */
+#cmakedefine01 HAVE_CLOSE_RANGE_LINUX
+
 /* Define this symbol to build code that uses getauxval */
 #cmakedefine HAVE_STRONG_GETAUXVAL 1
 
