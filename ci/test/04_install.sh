@@ -61,6 +61,9 @@ if [ -z "$DANGER_RUN_CI_ON_HOST" ]; then
   docker exec "$DOCKER_ID" chown -R "$LOCAL_USER":"$LOCAL_USER" "${BASE_ROOT_DIR}"
   export DOCKER_CI_CMD_PREFIX_ROOT="docker exec -u 0 $DOCKER_ID"
   export DOCKER_CI_CMD_PREFIX="docker exec -u $LOCAL_UID $DOCKER_ID"
+  # Fixes permission issues when there is a container UID/GID mismatch with the owner
+  # of the mounted dash src dir.
+  $DOCKER_CI_CMD_PREFIX_ROOT git config --global --add safe.directory "*"
 else
   echo "Running on host system without docker wrapper"
 fi

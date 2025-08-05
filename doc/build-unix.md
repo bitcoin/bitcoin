@@ -107,7 +107,7 @@ To build without GUI pass `--without-gui`.
 To build with Qt 5 you need the following:
 
 ```sh
-sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools
+sudo apt-get install qtbase5-dev qttools5-dev qttools5-dev-tools
 ```
 
 Additionally, to support Wayland protocol for modern desktop environments:
