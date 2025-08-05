@@ -1220,16 +1220,11 @@ class MasternodeInfo:
             raise AssertionError(f"Node at pos {self.nodeIdx} not present, did you start the node?")
         return test.nodes[self.nodeIdx]
 
-    def register(self, node: TestNode, submit: bool, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
-                 addrs_core_p2p: Union[str, List[str], None] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None,
-                 votingAddr: Optional[str] = None, operator_reward: Optional[int] = None, rewards_address: Optional[str] = None,
-                 fundsAddr: Optional[str] = None, platform_node_id: Optional[str] = None, addrs_platform_p2p: Union[int, str, List[str], None] = None,
-                 addrs_platform_https: Union[int, str, List[str], None] = None, expected_assert_code: Optional[int] = None,
-                 expected_assert_msg: Optional[str] = None) -> Optional[str]:
+    def validate_inputs(self, platform_node_id: Optional[str] = None, addrs_platform_p2p: Union[int, str, List[str], None] = None,
+                        addrs_platform_https: Union[int, str, List[str], None] = None, expected_assert_code: Optional[int] = None,
+                        expected_assert_msg: Optional[str] = None):
         if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
             raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
-
-        # EvoNode-specific fields are ignored for regular masternodes
         if self.evo:
             if platform_node_id is None:
                 raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
@@ -1237,6 +1232,14 @@ class MasternodeInfo:
                 raise AssertionError("EvoNode but addrs_platform_p2p is missing, must be specified!")
             if addrs_platform_https is None:
                 raise AssertionError("EvoNode but addrs_platform_https is missing, must be specified!")
+
+    def register(self, node: TestNode, submit: bool, collateral_txid: Optional[str] = None, collateral_vout: Optional[int] = None,
+                 addrs_core_p2p: Union[str, List[str], None] = None, ownerAddr: Optional[str] = None, pubKeyOperator: Optional[str] = None,
+                 votingAddr: Optional[str] = None, operator_reward: Optional[int] = None, rewards_address: Optional[str] = None,
+                 fundsAddr: Optional[str] = None, platform_node_id: Optional[str] = None, addrs_platform_p2p: Union[int, str, List[str], None] = None,
+                 addrs_platform_https: Union[int, str, List[str], None] = None, expected_assert_code: Optional[int] = None,
+                 expected_assert_msg: Optional[str] = None) -> Optional[str]:
+        self.validate_inputs(platform_node_id, addrs_platform_p2p, addrs_platform_https, expected_assert_code, expected_assert_msg)
 
         # Common arguments shared between regular masternodes and EvoNodes
         args = [
@@ -1283,17 +1286,7 @@ class MasternodeInfo:
                       platform_node_id: Optional[str] = None, addrs_platform_p2p: Union[int, str, List[str], None] = None,
                       addrs_platform_https: Union[int, str, List[str], None] = None, expected_assert_code: Optional[int] = None,
                       expected_assert_msg: Optional[str] = None) -> Optional[str]:
-        if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
-            raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
-
-        # EvoNode-specific fields are ignored for regular masternodes
-        if self.evo:
-            if platform_node_id is None:
-                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
-            if addrs_platform_p2p is None:
-                raise AssertionError("EvoNode but addrs_platform_p2p is missing, must be specified!")
-            if addrs_platform_https is None:
-                raise AssertionError("EvoNode but addrs_platform_https is missing, must be specified!")
+        self.validate_inputs(platform_node_id, addrs_platform_p2p, addrs_platform_https, expected_assert_code, expected_assert_msg)
 
         # Use assert_raises_rpc_error if we expect to error out
         use_assert: bool = bool(expected_assert_code and expected_assert_msg)
@@ -1421,23 +1414,13 @@ class MasternodeInfo:
                        addrs_platform_p2p: Union[int, str, List[str], None] = None, addrs_platform_https: Union[int, str, List[str], None] = None,
                        address_operator: Optional[str] = None, fundsAddr: Optional[str] = None, expected_assert_code: Optional[int] = None,
                        expected_assert_msg: Optional[str] = None) -> Optional[str]:
-        if (expected_assert_code and not expected_assert_msg) or (not expected_assert_code and expected_assert_msg):
-            raise AssertionError("Intending to use assert_raises_rpc_error() but didn't specify code and message")
+        self.validate_inputs(platform_node_id, addrs_platform_p2p, addrs_platform_https, expected_assert_code, expected_assert_msg)
 
         # Update commands should be run from the appropriate MasternodeInfo instance, we do not allow overriding some values for this reason
         if self.proTxHash is None:
             raise AssertionError("proTxHash not set, did you call set_params()")
         if self.keyOperator is None:
             raise AssertionError("keyOperator not set, did you call generate_addresses()")
-
-        # EvoNode-specific fields are ignored for regular masternodes
-        if self.evo:
-            if platform_node_id is None:
-                raise AssertionError("EvoNode but platform_node_id is missing, must be specified!")
-            if addrs_platform_p2p is None:
-                raise AssertionError("EvoNode but addrs_platform_p2p is missing, must be specified!")
-            if addrs_platform_https is None:
-                raise AssertionError("EvoNode but addrs_platform_https is missing, must be specified!")
 
         # Use assert_raises_rpc_error if we expect to error out
         use_assert: bool = bool(expected_assert_code and expected_assert_msg)
