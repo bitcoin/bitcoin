@@ -7,7 +7,6 @@
 
 #include <validation.h>
 #include <pos/stake.h>
-#include <pos/stake.h>
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -3958,10 +3957,8 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    // Check proof of stake (or work for initial blocks) matches claimed amount
-    if (fCheckPOW && !CheckProofOfStake(block, consensusParams))
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of stake failed");
-
+    // Proof-of-stake validation of the header itself is deferred to ContextualCheckBlock
+    // where the full block and previous index are available. For now just succeed.
     return true;
 }
 
@@ -4275,6 +4272,11 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     const int64_t nLockTimeCutoff{enforce_locktime_median_time_past ?
                                       pindexPrev->GetMedianTimePast() :
                                       block.GetBlockTime()};
+
+    // Verify proof-of-stake and difficulty target
+    if (!CheckProofOfStake(block, pindexPrev, chainman.GetConsensus())) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of stake failed");
+    }
 
     // Check that all transactions are finalized
     for (const auto& tx : block.vtx) {

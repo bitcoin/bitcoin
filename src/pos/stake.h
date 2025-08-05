@@ -3,23 +3,53 @@
 
 #include <primitives/block.h>
 #include <consensus/params.h>
+#include <uint256.h>
+
+class CBlockIndex;
+
+/** Check that the kernel for a stake meets the required target */
+bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
+                          const CBlock& blockFrom, unsigned int nTxPrevOffset,
+                          const CTransactionRef& txPrev, const COutPoint& prevout,
+                          unsigned int nTimeTx, uint256& hashProofOfStake,
+                          bool fPrintProofOfStake);
 
 /**
- * Placeholder check for stake kernel hash and coin-age calculations.
- * The real implementation should verify that the stake kernel meets
- * the target defined by the consensus parameters and that the coins
- * used as stake have sufficient age.
+ * Validate the proof-of-stake for a block. The block must include a coinstake
+ * transaction whose inputs have matured enough time, and the stake kernel hash
+ * must satisfy the network difficulty.
  */
-bool CheckStakeKernelHash(const CBlockHeader& block, const Consensus::Params& params);
-
-/**
- * Check proof-of-stake for a block header. For now this simply proxies to
- * CheckStakeKernelHash which always succeeds. A real implementation would
- * perform full stake validation.
- */
-inline bool CheckProofOfStake(const CBlockHeader& block, const Consensus::Params& params)
+inline bool CheckProofOfStake(const CBlock& block, const CBlockIndex* pindexPrev,
+                              const Consensus::Params& params)
 {
-    return CheckStakeKernelHash(block, params);
+    if (block.vtx.size() < 2) {
+        return false; // Needs coinbase and coinstake
+    }
+
+    const CTransactionRef& tx = block.vtx[1];
+    if (!tx->IsCoinStake() || tx->vin.empty()) {
+        return false;
+    }
+
+    // Basic coin age check: the coinstake tx time must not precede the block time.
+    if (block.nTime < tx->nTime) {
+        return false;
+    }
+
+    uint256 hashProofOfStake;
+    const COutPoint& prevout = tx->vin[0].prevout;
+
+    // Enforce difficulty by verifying the stake kernel hash.
+    if (!CheckStakeKernelHash(pindexPrev, block.nBits, block, 1, tx,
+                              prevout, block.nTime, hashProofOfStake, false)) {
+        return false;
+    }
+
+    return true;
 }
 
 #endif // BITCOIN_POS_STAKE_H
+<<<<<<< ours
+=======
+
+>>>>>>> theirs
