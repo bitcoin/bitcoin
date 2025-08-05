@@ -378,6 +378,12 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_i686_multiprocess.sh'
 
+          - name: 'fuzzer,address,undefined,integer, no depends'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 240
+            file-env: './ci/test/00_setup_env_native_fuzz.sh'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
