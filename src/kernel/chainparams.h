@@ -149,7 +149,7 @@ public:
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
     static std::unique_ptr<const CChainParams> Main();
     static std::unique_ptr<const CChainParams> TestNet();
-    static std::unique_ptr<const CChainParams> TestNet4();
+    
 
 protected:
     CChainParams() = default;

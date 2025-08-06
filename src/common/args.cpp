@@ -813,7 +813,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
     if (fRegTest) return ChainType::REGTEST;
     if (fSigNet) return ChainType::SIGNET;
     if (fTestNet) return ChainType::TESTNET;
-    if (fTestNet4) return ChainType::TESTNET4;
+    
     return ChainType::MAIN;
 }
 
