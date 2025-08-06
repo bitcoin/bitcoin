@@ -9,6 +9,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./data:/home/bitcoin/.bitcoin
+    networks:
+      - bitcoin-network
     ports:
       - "8332:8332"  # RPC
       - "8333:8333"  # P2P
@@ -23,7 +25,7 @@ services:
       dockerfile: ./contrib/docker/tor/Dockerfile
     container_name: bitcoin-hidden-service
     environment:
-      HS_bitcoin: "127.0.0.1:8332 127.0.0.1:8333 127.0.0.1:18332 127.0.0.1:18333 127.0.0.1:18443 127.0.0.1:18444"
+      HS_bitcoin: "bitcoin:8332 bitcoin:8333 bitcoin:18332 bitcoin:18333 bitcoin:18443 bitcoin:18444"
     networks:
       - bitcoin-network
     volumes:
