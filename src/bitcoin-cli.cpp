@@ -477,7 +477,13 @@ private:
         std::string str;
         for (size_t i = 0; i < services.size(); ++i) {
             const std::string s{services[i].get_str()};
-            str += s == "NETWORK_LIMITED" ? 'l' : s == "P2P_V2" ? '2' : ToLower(s[0]);
+            if (s == "NETWORK_LIMITED") {
+                str += 'l';
+            } else if (s == "P2P_V2") {
+                str += '2';
+            } else {
+                str += ToLower(s[0]);
+            }
         }
         return str;
     }
