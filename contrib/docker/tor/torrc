@@ -1,0 +1,6 @@
+# Basic Tor configuration
+SocksPort 0.0.0.0:9050
+Log notice stdout
+DataDirectory /var/lib/tor
+
+# Hidden services will be configured dynamically by the entrypoint script

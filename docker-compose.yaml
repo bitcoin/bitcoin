@@ -2,15 +2,33 @@ services:
   bitcoin:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: official-site   # local | github | official-site
+      dockerfile: ./contrib/docker/bitcoin/Dockerfile
       args:
-        VERSION: "29.0"
-        TARGETARCH: "amd64"  # amd64 | arm64 | riscv64
+        BITCOIN_VERSION: "29.0"
     container_name: bitcoin
     restart: unless-stopped
     volumes:
-      - ./data:/bitcoin/.bitcoin
+      - ./data:/home/bitcoin/.bitcoin
     ports:
       - "8332:8332"  # RPC
       - "8333:8333"  # P2P
+      - "18332:18332"
+      - "18333:18333"
+      - "18443:18443" 
+      - "18444:18444" 
+
+  tor:
+    build:
+      context: .
+      dockerfile: ./contrib/docker/tor/Dockerfile
+    container_name: bitcoin-hidden-service
+    environment:
+      HS_bitcoin: "127.0.0.1:8332 127.0.0.1:8333 127.0.0.1:18332 127.0.0.1:18333 127.0.0.1:18443 127.0.0.1:18444"
+    networks:
+      - bitcoin-network
+    volumes:
+      - ./data/hidden-service:/var/lib/tor/bitcoin  # Persist onion addresses
+
+networks:
+  bitcoin-network:
+    driver: bridge
