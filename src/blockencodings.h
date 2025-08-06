@@ -134,7 +134,6 @@ class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
     size_t prefilled_count = 0, mempool_count = 0, extra_count = 0;
-    const CTxMemPool* pool;
 public:
     CBlockHeader header;
 
@@ -142,10 +141,10 @@ public:
     using IsBlockMutatedFn = std::function<bool(const CBlock&, bool)>;
     IsBlockMutatedFn m_check_block_mutated_mock{nullptr};
 
-    explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
+    explicit PartiallyDownloadedBlock() = default;
 
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn);
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const CTxMemPool& pool, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
     // segwit_active enforces witness mutation checks just before reporting a healthy status
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active);

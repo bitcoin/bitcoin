@@ -52,7 +52,7 @@ uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const Wtxid& wtxid) const {
  * in a vector and iterate over the vector directly. This allows optimal
  * CPU caching behaviour, at a cost of only 40 bytes per transaction.
  */
-ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn)
+ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const CTxMemPool& pool, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn)
 {
     LogDebug(BCLog::CMPCTBLOCK, "Initializing PartiallyDownloadedBlock for block %s using a cmpctblock of %u bytes\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock));
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
@@ -113,8 +113,8 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
 
     std::vector<bool> have_txn(txn_available.size());
     {
-    LOCK(pool->cs);
-    for (const auto& [wtxid, txit] : pool->txns_randomized) {
+    LOCK(pool.cs);
+    for (const auto& [wtxid, txit] : pool.txns_randomized) {
         uint64_t shortid = cmpctblock.GetShortID(wtxid);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {

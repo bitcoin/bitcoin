@@ -100,8 +100,8 @@ static void BlockEncodingBench(benchmark::Bench& bench, size_t n_pool, size_t n_
     BenchCBHAST cmpctblock{rng, 3000};
 
     bench.run([&] {
-        PartiallyDownloadedBlock pdb{&pool};
-        auto res = pdb.InitData(cmpctblock, extratxn);
+        PartiallyDownloadedBlock pdb;
+        auto res = pdb.InitData(cmpctblock, pool, extratxn);
 
         // if there were duplicates the benchmark will be invalid
         // (eg, extra txns will be skipped) and we will receive
