@@ -322,6 +322,13 @@ def get_binary_paths(config):
     return paths
 
 
+def export_env_build_path(config):
+    os.environ["PATH"] = os.pathsep.join([
+        os.path.join(config["environment"]["BUILDDIR"], "bin"),
+        os.environ["PATH"],
+    ])
+
+
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
