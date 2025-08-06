@@ -52,6 +52,7 @@ std::chrono::minutes TrafficGraphWidget::getGraphRange() const { return m_range;
 
 int TrafficGraphWidget::y_value(float value)
 {
+    if (fMax == 0) return 0;
     int h = height() - YMARGIN * 2;
     return YMARGIN + h - (h * 1.0 * (fToggle ? (pow(value, 0.30102) / pow(fMax, 0.30102)) : (value / fMax)));
 }
