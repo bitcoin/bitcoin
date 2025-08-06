@@ -179,6 +179,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലെറ്റിന്റെ പഴയ രഹസ്യപദവും പുതിയ രഹസ്യപദവും നൽകുക.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">തുടരുക</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">മടങ്ങിപ്പോവുക</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">നിങ്ങളുടെ വാലറ്റ് എൻ‌ക്രിപ്റ്റ് ചെയ്യുന്നതിലൂടെ നിങ്ങളുടെ കമ്പ്യൂട്ടറിനെ ബാധിക്കുന്ന ക്ഷുദ്രവെയർ‌ മോഷ്ടിക്കുന്നതിൽ‌ നിന്നും നിങ്ങളുടെ ബിറ്റ്കോയിനുകളെ പൂർണ്ണമായി സംരക്ഷിക്കാൻ‌ കഴിയില്ല.</translation>
     </message>
@@ -483,6 +491,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">വാലറ്റ് അടയ്ക്കുക</translation>
     </message>
     <message>
+        <source>Create Wallet…</source>
+        <translation type="unfinished">വാലറ്റ് സൃഷ്ടിക്കുക</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">എല്ലാ വാലറ്റുകളും അടയ്ക്കുക</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation type="unfinished">&amp; ഫയൽ</translation>
     </message>
@@ -501,6 +517,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Synchronizing with network…</source>
         <translation type="unfinished"> നെറ്റ്‌വർക്കുമായി സമന്വയിപ്പിക്കുന്നു...</translation>
+    </message>
+    <message>
+        <source>Connecting to peers…</source>
+        <translation type="unfinished">സമപ്രായക്കാരുമായി ബന്ധിപ്പിക്കുന്നു...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -599,6 +619,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">എല്ലാ വാലറ്റുകളും അടയ്‌ക്കുക ...</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">വാലറ്റ് മൈഗ്രേറ്റ് ചെയ്യുക</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">സാധ്യമായ ബിറ്റ്കോയിൻ കമാൻഡ്-ലൈൻ ഓപ്ഷനുകളുള്ള ഒരു ലിസ്റ്റ് ലഭിക്കുന്നതിന് %1 സഹായ സന്ദേശം കാണിക്കുക</translation>
     </message>
@@ -613,6 +637,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>No wallets available</source>
         <translation type="unfinished">വാലറ്റ് ഒന്നും ലഭ്യം അല്ല </translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">വാലറ്റ് അടിസ്ഥാനവിവരം</translation>
     </message>
     <message>
         <source>Load Wallet Backup</source>
@@ -863,6 +892,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">വാലറ്റ് മൈഗ്രേറ്റ് ചെയ്യുക</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open Wallet</source>
@@ -1080,6 +1116,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;ജാലകം </translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">തുടരുക</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1489,6 +1529,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">നിലവിലുള്ള  ടാബിലെ  വിവരങ്ങൾ ഒരു ഫയലിലേക്ക് എക്സ്പോർട്ട് ചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>Wallet Data</source>
+        <extracomment>Name of the wallet data file format.</extracomment>
+        <translation type="unfinished">വാലറ്റ് അടിസ്ഥാനവിവരം</translation>
     </message>
     </context>
 <context>

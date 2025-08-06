@@ -717,6 +717,18 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">Presincronizando encabezaos (%1%)…</translation>
     </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation type="unfinished">Fecha: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation type="unfinished">Cantidá: %1
+</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
