@@ -31,6 +31,7 @@ from .util import (
     PortSeed,
     assert_equal,
     check_json_precision,
+    export_env_build_path,
     find_vout_for_address,
     get_binary_paths,
     get_datadir_path,
@@ -226,13 +227,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Call this method to start up the test framework object with options set."""
 
         check_json_precision()
+        export_env_build_path(self.config)
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
-
-        os.environ['PATH'] = os.pathsep.join([
-            os.path.join(self.config["environment"]["BUILDDIR"], "bin"),
-            os.environ['PATH']
-        ])
 
         # Set up temp directory and start logging
         if self.options.tmpdir:
