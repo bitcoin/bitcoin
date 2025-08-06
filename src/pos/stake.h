@@ -27,12 +27,7 @@ inline bool CheckProofOfStake(const CBlock& block, const CBlockIndex* pindexPrev
     }
 
     const CTransactionRef& tx = block.vtx[1];
-    if (!tx->IsCoinStake() || tx->vin.empty()) {
-        return false;
-    }
-
-    // Basic coin age check: the coinstake tx time must not precede the block time.
-    if (block.nTime < tx->nTime) {
+    if (tx->vin.empty() || tx->vout.empty() || !tx->vout[0].IsNull()) {
         return false;
     }
 

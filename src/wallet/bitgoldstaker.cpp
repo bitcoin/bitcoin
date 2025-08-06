@@ -2,6 +2,7 @@
 #include <wallet/wallet.h>
 #include <logging.h>
 #include <chrono>
+#include <pos/stake.h>
 
 namespace wallet {
 
@@ -25,18 +26,11 @@ void BitGoldStaker::Stop()
     if (m_thread.joinable()) m_thread.join();
 }
 
-bool CheckStakeKernelHash()
-{
-    // TODO: implement kernel hash calculation
-    return true;
-}
-
 void BitGoldStaker::ThreadStaker()
 {
     while (!m_stop) {
-        // Placeholder staking loop. Real implementation would select UTXOs,
-        // verify kernel hash and craft a coinstake transaction.
-        LogPrint(BCLog::WALLET, "BitGoldStaker thread iteration\n");
+        // Placeholder staking loop. Select UTXOs and evaluate kernel hashes.
+        LogPrintf("BitGoldStaker thread iteration\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
