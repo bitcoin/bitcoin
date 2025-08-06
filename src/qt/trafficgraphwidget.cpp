@@ -17,6 +17,7 @@
 #include <QTimer>
 #include <QToolTip>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 
@@ -80,12 +81,6 @@ void TrafficGraphWidget::mousePressEvent(QMouseEvent *event)
     update();
 }
 
-float floatmax(float a, float b)
-{
-    if (a > b) return a;
-    else return b;
-}
-
 void TrafficGraphWidget::mouseMoveEvent(QMouseEvent *event)
 {
     QWidget::mouseMoveEvent(event);
@@ -109,7 +104,7 @@ void TrafficGraphWidget::mouseMoveEvent(QMouseEvent *event)
     int sampleSize = vTimeStamp.size();
     if (sampleSize && i >= -10 && i < sampleSize + 2 && y <= h + YMARGIN + 3) {
         for (int test_i = std::max(i - 2, 0); test_i < std::min(i + 10, sampleSize); test_i++) {
-            float val = floatmax(vSamplesIn.at(test_i), vSamplesOut.at(test_i));
+            float val = std::max(vSamplesIn.at(test_i), vSamplesOut.at(test_i));
             int y_data = y_value(val);
             unsigned int distance = abs(y - y_data);
             if (distance < smallest_distance) {
@@ -192,7 +187,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         painter.setPen(Qt::yellow);
         int w = width() - XMARGIN * 2;
         int x = XMARGIN + w - w * ttpoint / DESIRED_SAMPLES;
-        int y = y_value(floatmax(vSamplesIn.at(ttpoint), vSamplesOut.at(ttpoint)));
+        int y = y_value(std::max(vSamplesIn.at(ttpoint), vSamplesOut.at(ttpoint)));
         painter.drawEllipse(QPointF(x, y), 3, 3);
         QString strTime;
         int64_t sampleTime = vTimeStamp.at(ttpoint);
