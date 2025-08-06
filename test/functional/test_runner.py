@@ -29,6 +29,10 @@ import sys
 import tempfile
 import re
 import logging
+from test_framework.util import (
+    Binaries,
+    get_binary_paths,
+)
 
 # Minimum amount of space to run the tests.
 MIN_FREE_SPACE = 1.1 * 1024 * 1024 * 1024
