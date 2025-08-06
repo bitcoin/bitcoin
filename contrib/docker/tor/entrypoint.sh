@@ -1,12 +1,10 @@
 #!/bin/sh
 set -e
 
-# Limpa entradas antigas do torrc
 grep -v "HiddenService" /etc/tor/torrc > /tmp/torrc.new
 cat /tmp/torrc.new > /etc/tor/torrc
 rm /tmp/torrc.new
 
-# Cria serviço .onion com múltiplas portas
 create_hidden_service() {
     local service_name=$1
     shift
@@ -15,7 +13,6 @@ create_hidden_service() {
     local service_dir="/var/lib/tor/${service_name}"
     mkdir -p "$service_dir"
 
-    # Verifica se já existem chaves
     if [ -f "${service_dir}/private_key" ] || [ -f "${service_dir}/hs_ed25519_secret_key" ]; then
         echo "Found existing keys for hidden service: $service_name"
     fi
@@ -23,7 +20,6 @@ create_hidden_service() {
     chown -R tor:tor "$service_dir"
     chmod -R 700 "$service_dir"
 
-    # Escreve no torrc
     echo "HiddenServiceDir $service_dir" >> /etc/tor/torrc
 
     for entry in $entries; do
@@ -31,7 +27,7 @@ create_hidden_service() {
         local target_port=$(echo "$entry" | cut -d: -f2)
         local virtual_port=$(echo "$entry" | cut -d: -f3)
 
-        # Se não tem virtual_port, usa target_port
+        # If not has virtual_port, uses target_port
         if [ -z "$virtual_port" ]; then
             virtual_port="$target_port"
         fi
@@ -41,7 +37,7 @@ create_hidden_service() {
     done
 }
 
-# Processa variáveis de ambiente HS_*
+# Proccess HS_* envs
 env | grep ^HS_ | while IFS= read -r var; do
     service_name=$(echo "$var" | cut -d= -f1 | sed 's/^HS_//')
     entries=$(echo "$var" | cut -d= -f2-)
@@ -49,22 +45,10 @@ env | grep ^HS_ | while IFS= read -r var; do
     create_hidden_service "$service_name" $entries
 done
 
-# # Processa argumentos CLI (modo antigo)
-# for arg in "$@"; do
-#     if [[ "$arg" == *:*:* ]]; then
-#         service_name=$(echo "$arg" | cut -d: -f1)
-#         target_host=$(echo "$arg" | cut -d: -f2)
-#         target_port=$(echo "$arg" | cut -d: -f3)
-#         virtual_port=$(echo "$arg" | cut -d: -f4)
-#         create_hidden_service "$service_name" "$target_host:$target_port:$virtual_port"
-#     fi
-# done
-
-# Permissões
+# Permissions
 chown -R tor:tor /var/lib/tor
 chmod -R 700 /var/lib/tor
 
-# Exibe endereços .onion
 print_onion_addresses() {
     sleep 10
     echo "======== TOR HIDDEN SERVICES ========"
@@ -79,7 +63,6 @@ print_onion_addresses() {
 }
 print_onion_addresses &
 
-# Inicia o tor
 if [ "$1" = "tor" ]; then
     shift
     exec su-exec tor tor "$@"
