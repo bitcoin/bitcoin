@@ -66,7 +66,7 @@ BPF_PERF_OUTPUT(replaced_events);
 int trace_added(struct pt_regs *ctx) {
   struct added_event added = {};
   void *phash = NULL;
-  bpf_usdt_readarg(1, ctx, phash);
+  bpf_usdt_readarg(1, ctx, &phash);
   bpf_probe_read_user(&added.hash, sizeof(added.hash), phash);
   bpf_usdt_readarg(2, ctx, &added.vsize);
   bpf_usdt_readarg(3, ctx, &added.fee);
@@ -78,9 +78,9 @@ int trace_added(struct pt_regs *ctx) {
 int trace_removed(struct pt_regs *ctx) {
   struct removed_event removed = {};
   void *phash = NULL, *preason = NULL;
-  bpf_usdt_readarg(1, ctx, phash);
+  bpf_usdt_readarg(1, ctx, &phash);
   bpf_probe_read_user(&removed.hash, sizeof(removed.hash), phash);
-  bpf_usdt_readarg(2, ctx, preason);
+  bpf_usdt_readarg(2, ctx, &preason);
   bpf_probe_read_user_str(&removed.reason, sizeof(removed.reason), preason);
   bpf_usdt_readarg(3, ctx, &removed.vsize);
   bpf_usdt_readarg(4, ctx, &removed.fee);
@@ -93,9 +93,9 @@ int trace_removed(struct pt_regs *ctx) {
 int trace_rejected(struct pt_regs *ctx) {
   struct rejected_event rejected = {};
   void *phash = NULL, *preason = NULL;
-  bpf_usdt_readarg(1, ctx, phash);
+  bpf_usdt_readarg(1, ctx, &phash);
   bpf_probe_read_user(&rejected.hash, sizeof(rejected.hash), phash);
-  bpf_usdt_readarg(2, ctx, preason);
+  bpf_usdt_readarg(2, ctx, &preason);
   bpf_probe_read_user_str(&rejected.reason, sizeof(rejected.reason), preason);
   rejected_events.perf_submit(ctx, &rejected, sizeof(rejected));
   return 0;
@@ -104,12 +104,12 @@ int trace_rejected(struct pt_regs *ctx) {
 int trace_replaced(struct pt_regs *ctx) {
   struct replaced_event replaced = {};
   void *phash_replaced = NULL, *phash_replacement = NULL;
-  bpf_usdt_readarg(1, ctx, phash_replaced);
+  bpf_usdt_readarg(1, ctx, &phash_replaced);
   bpf_probe_read_user(&replaced.replaced_hash, sizeof(replaced.replaced_hash), phash_replaced);
   bpf_usdt_readarg(2, ctx, &replaced.replaced_vsize);
   bpf_usdt_readarg(3, ctx, &replaced.replaced_fee);
   bpf_usdt_readarg(4, ctx, &replaced.replaced_entry_time);
-  bpf_usdt_readarg(5, ctx, phash_replacement);
+  bpf_usdt_readarg(5, ctx, &phash_replacement);
   bpf_probe_read_user(&replaced.replacement_hash, sizeof(replaced.replacement_hash), phash_replacement);
   bpf_usdt_readarg(6, ctx, &replaced.replacement_vsize);
   bpf_usdt_readarg(7, ctx, &replaced.replacement_fee);
