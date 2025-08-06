@@ -202,6 +202,9 @@ struct TxMempoolInfo
 
     /** The fee delta. */
     int64_t nFeeDelta;
+
+    /** The priority of the transaction. */
+    int64_t priority;
 };
 
 /**

@@ -87,6 +87,7 @@ private:
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
+    int64_t priority;               //!< Priority of the transaction
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
     mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
@@ -119,6 +120,7 @@ public:
           entryHeight{entry_height},
           spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
+          priority{0},
           m_modified_fee{nFee},
           lockPoints{lp},
           nSizeWithDescendants{GetTxSize()},
@@ -146,6 +148,8 @@ public:
     unsigned int GetHeight() const { return entryHeight; }
     uint64_t GetSequence() const { return entry_sequence; }
     int64_t GetSigOpCost() const { return sigOpCost; }
+    int64_t GetPriority() const { return priority; }
+    void SetPriority(int64_t p) { priority = p; }
     CAmount GetModifiedFee() const { return m_modified_fee; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }

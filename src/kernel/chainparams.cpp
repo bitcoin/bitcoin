@@ -128,10 +128,10 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xa1;
-        pchMessageStart[1] = 0xb2;
-        pchMessageStart[2] = 0xc3;
-        pchMessageStart[3] = 0xd4;
+        pchMessageStart[0] = 0xfb;
+        pchMessageStart[1] = 0xc0;
+        pchMessageStart[2] = 0xc5;
+        pchMessageStart[3] = 0xdb;
         nDefaultPort = 8888;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 720;
@@ -139,7 +139,7 @@ public:
 
         // To create a new genesis block, modify the timestamp, nonce, and the message in CreateGenesisBlock
         // Then, run the node to get the required hashMerkleRoot and hashGenesisBlock
-        genesis = CreateGenesisBlock(1704067200, 12345, 0x1e0ffff0, 1, 100 * COIN);
+        genesis = CreateGenesisBlock(1704067200, 12345, 0x1e0ffff0, 1, 3000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         // assert(consensus.hashGenesisBlock == uint256{"0x..."});
         // assert(genesis.hashMerkleRoot == uint256{"0x..."});
@@ -233,10 +233,10 @@ public:
         consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000000015f5e0c9f13455b0eb17"};
         consensus.defaultAssumeValid = uint256{"00000000000003fc7967410ba2d0a8a8d50daedc318d43e8baf1a9782c236a57"}; // 3974606
 
-        pchMessageStart[0] = 0xa2;
-        pchMessageStart[1] = 0xb3;
-        pchMessageStart[2] = 0xc4;
-        pchMessageStart[3] = 0xd5;
+        pchMessageStart[0] = 0xb1;
+        pchMessageStart[1] = 0xd2;
+        pchMessageStart[2] = 0xf3;
+        pchMessageStart[3] = 0xa4;
         nDefaultPort = 28889;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 200;
@@ -396,7 +396,7 @@ public:
 
             consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000000000002b517f3d1a1"};
             consensus.defaultAssumeValid = uint256{"000000895a110f46e59eb82bbc5bfb67fa314656009c295509c21b4999f5180a"}; // 237722
-            m_assumed_blockchain_size = 9;
+            m_assumed_blockchain_size = 11;
             m_assumed_chain_state_size = 1;
             chainTxData = ChainTxData{
                 // Data from RPC: getchaintxstats 4096 000000895a110f46e59eb82bbc5bfb67fa314656009c295509c21b4999f5180a
@@ -454,10 +454,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1815;          // 90%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
 
-        pchMessageStart[0] = 0xa4;
-        pchMessageStart[1] = 0xb5;
-        pchMessageStart[2] = 0xc6;
-        pchMessageStart[3] = 0xd7;
+        pchMessageStart[0] = 0xb2;
+        pchMessageStart[1] = 0xc3;
+        pchMessageStart[2] = 0xd4;
+        pchMessageStart[3] = 0xe5;
 
         nDefaultPort = 38888;
         nPruneAfterHeight = 1000;
@@ -533,10 +533,10 @@ public:
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
 
-        pchMessageStart[0] = 0xa5;
-        pchMessageStart[1] = 0xb6;
-        pchMessageStart[2] = 0xc7;
-        pchMessageStart[3] = 0xd8;
+        pchMessageStart[0] = 0xaa;
+        pchMessageStart[1] = 0xbb;
+        pchMessageStart[2] = 0xcc;
+        pchMessageStart[3] = 0xdd;
         nDefaultPort = 38333;
         nPruneAfterHeight = opts.fastprune ? 100 : 1000;
         m_assumed_blockchain_size = 0;
