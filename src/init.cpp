@@ -599,6 +599,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
         "-whitebind. "
         "Additional flags \"in\" and \"out\" control whether permissions apply to incoming connections and/or manual (default: incoming only). "
         "Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-sharetemplatecount", strprintf("Number of block templates to store and share to peers (default: %d). Set to 0 to disable sharing block templates.", DEFAULT_SHARETMPL_COUNT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::NODE_RELAY);
 
     g_wallet_init_interface.AddWalletOptions(argsman);
 

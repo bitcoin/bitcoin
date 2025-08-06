@@ -46,6 +46,8 @@ static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
+/** Number of templates to keep around for sharing. */
+static constexpr uint32_t DEFAULT_SHARETMPL_COUNT = 10;
 
 struct CNodeStateStats {
     int nSyncHeight = -1;
@@ -89,6 +91,8 @@ public:
         //! Number of headers sent in one getheaders message result (this is
         //! a test-only option).
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
+        //! Number of block templates to keep for sharing.
+        uint32_t share_template_count{DEFAULT_SHARETMPL_COUNT};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
