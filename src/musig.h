@@ -14,7 +14,12 @@ struct secp256k1_musig_keyagg_cache;
 
 //! MuSig2 chaincode as defined by BIP 328
 using namespace util::hex_literals;
-constexpr uint256 MUSIG_CHAINCODE{"868087ca02a6f974c4598924c36b57762d32cb45717167e300622c7167e38965"_hex_u8};
+constexpr uint256 MUSIG_CHAINCODE{
+    // Use immediate lambda to work around GCC-14 bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=117966
+    []() consteval { return uint256{"868087ca02a6f974c4598924c36b57762d32cb45717167e300622c7167e38965"_hex_u8}; }(),
+};
+
+
 
 //! Create a secp256k1_musig_keyagg_cache from the pubkeys in their current order. This is necessary for most MuSig2 operations
 bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache);
