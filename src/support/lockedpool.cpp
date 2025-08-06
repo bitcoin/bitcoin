@@ -399,3 +399,10 @@ void LockedPoolManager::CreateInstance()
     static LockedPoolManager instance(std::move(allocator));
     LockedPoolManager::_instance = &instance;
 }
+
+LockedPoolManager& LockedPoolManager::Instance()
+{
+    static std::once_flag init_flag;
+    std::call_once(init_flag, LockedPoolManager::CreateInstance);
+    return *LockedPoolManager::_instance;
+}
