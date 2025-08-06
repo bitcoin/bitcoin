@@ -262,6 +262,35 @@ public:
         }
         return result;
     }
+
+    class ExtraTxns : public ExtraTransactions {
+    private:
+        const TemplateManager& tman;
+        const std::vector<std::pair<Wtxid, CTransactionRef>>& vec;
+        TemplateTxSet::const_iterator it;
+        size_t vec_idx{0};
+
+    public:
+        ExtraTxns(const TemplateManager& tman, const std::vector<std::pair<Wtxid, CTransactionRef>>& vec) : tman{tman}, vec{vec}, it{tman.template_txs.begin()} { }
+
+        WitRef next() override
+        {
+            if (it != tman.template_txs.end()) {
+                const auto& tx = (it++)->second.tx;
+                return {{tx->GetWitnessHash(), tx}};
+            }
+            while (vec_idx < vec.size()) {
+                auto r = vec[vec_idx++];
+                if (r.second != nullptr) return {{r.first, r.second}};
+            }
+            return std::nullopt;
+        }
+    };
+
+    ExtraTxns GetExtraTxns(const std::vector<std::pair<Wtxid,CTransactionRef>>& vec) const
+    {
+        return ExtraTxns(*this, vec);
+    }
 };
 
 /**
@@ -1132,6 +1161,12 @@ private:
     TemplateManager m_template_man GUARDED_BY(g_msgproc_mutex);
     void ProcessTemplateManActions(Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex, !m_peer_mutex, !m_tx_download_mutex);
     void SendTemplateTransactions(CNode& pfrom, Peer& peer, const MyTemplate& mytmp, const BlockTransactionsRequest& req) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    TemplateManager::ExtraTxns GetExtraTxns() const
+        EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex)
+    {
+        return m_template_man.GetExtraTxns(vExtraTxnForCompact);
+    }
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -4539,7 +4574,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 }
 
                 PartiallyDownloadedBlock& partialBlock = *(*queuedBlockIt)->partialBlock;
-                ReadStatus status = partialBlock.InitData(cmpctblock, m_mempool, vExtraTxnForCompact);
+                ReadStatus status = partialBlock.InitData(cmpctblock, m_mempool, GetExtraTxns());
                 if (status == READ_STATUS_INVALID) {
                     RemoveBlockRequest(pindex->GetBlockHash(), pfrom.GetId()); // Reset in-flight state in case Misbehaving does not result in a disconnect
                     Misbehaving(*peer, "invalid compact block");
@@ -4590,7 +4625,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Optimistically try to reconstruct anyway since we might be
                 // able to without any round trips.
                 PartiallyDownloadedBlock tempBlock;
-                ReadStatus status = tempBlock.InitData(cmpctblock, m_mempool, vExtraTxnForCompact);
+                ReadStatus status = tempBlock.InitData(cmpctblock, m_mempool, GetExtraTxns());
                 if (status != READ_STATUS_OK) {
                     // TODO: don't ignore failures
                     return;
