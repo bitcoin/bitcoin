@@ -13,6 +13,7 @@ add_library(bitcoin_wallet STATIC EXCLUDE_FROM_ALL
   external_signer_scriptpubkeyman.cpp
   feebumper.cpp
   fees.cpp
+  bitgoldstaker.cpp
   interfaces.cpp
   load.cpp
   migrate.cpp

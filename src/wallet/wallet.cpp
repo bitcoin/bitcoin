@@ -3230,6 +3230,12 @@ void CWallet::postInitProcess()
 
     // Update wallet transactions with current mempool transactions.
     WITH_LOCK(cs_wallet, chain().requestMempoolTransactions(*this));
+
+    // Start staking thread
+    if (!m_staker) {
+        m_staker = std::make_unique<BitGoldStaker>(*this);
+        m_staker->Start();
+    }
 }
 
 bool CWallet::BackupWallet(const std::string& strDest) const

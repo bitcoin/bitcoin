@@ -26,6 +26,9 @@
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif
 
 #include <algorithm>
 #include <utility>
@@ -579,4 +582,15 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
     // avoid deadlocks.
     return GetTip(chainman);
 }
+
+#ifdef ENABLE_WALLET
+bool CreatePosBlock(wallet::CWallet& wallet)
+{
+    // Placeholder for proof-of-stake block creation. A full implementation
+    // would select staking coins from the wallet, construct a coinstake
+    // transaction, sign the block and submit it to the network.
+    (void)wallet;
+    return true;
+}
+#endif // ENABLE_WALLET
 } // namespace node

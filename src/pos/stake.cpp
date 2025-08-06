@@ -1,8 +1,8 @@
 #include <pos/stake.h>
+#include <arith_uint256.h>
 #include <chain.h>
 #include <hash.h>
 #include <serialize.h>
-#include <arith_uint256.h>
 #include <cassert>
 
 bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
@@ -13,22 +13,40 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
 {
     assert(pindexPrev);
 
-    // TODO: Implement the full kernel hash algorithm with stake modifier and
-    //       additional consensus checks.
-    CHashWriter ss(SER_GETHASH, 0);
-    ss << pindexPrev->GetBlockHash() << pindexPrev->nHeight << nBits
-       << blockFrom.GetHash() << nTxPrevOffset << txPrev->GetHash()
-       << prevout.hash << prevout.n << nTimeTx;
-    hashProofOfStake = ss.GetHash();
+    // Basic consensus checks on the staking input
+    if (prevout.n >= txPrev->vout.size()) {
+        return false; // invalid outpoint
+    }
+    if (blockFrom.GetBlockTime() >= nTimeTx) {
+        return false; // coin not mature enough
+    }
 
+    // Derive a simple stake modifier from the previous block hash and height
+    CHashWriter ss_mod(SER_GETHASH, 0);
+    ss_mod << pindexPrev->GetBlockHash() << pindexPrev->nHeight << pindexPrev->nTime;
+    const uint256 stake_modifier = ss_mod.GetHash();
+
+    // Time weight is the age of the coin being staked
+    const unsigned int nTimeWeight = nTimeTx - blockFrom.GetBlockTime();
+
+    // Build the kernel hash using the stake modifier and prevout details
+    CHashWriter ss_kernel(SER_GETHASH, 0);
+    ss_kernel << stake_modifier << blockFrom.GetHash() << nTxPrevOffset
+              << txPrev->GetHash() << prevout.hash << prevout.n << nTimeTx;
+    hashProofOfStake = ss_kernel.GetHash();
+
+    // Target is weighted by coin amount and time weight
     arith_uint256 bnTarget;
     bnTarget.SetCompact(nBits);
+    const arith_uint256 bnWeight = arith_uint256(txPrev->vout[prevout.n].nValue) * nTimeWeight;
+    bnTarget *= bnWeight;
+
     if (UintToArith256(hashProofOfStake) > bnTarget) {
         return false;
     }
 
     if (fPrintProofOfStake) {
-        // TODO: add verbose logging for stake kernel evaluations
+        // Logging could be added here for detailed kernel evaluation
     }
 
     return true;

@@ -34,6 +34,7 @@
 #include <wallet/transaction.h>
 #include <wallet/types.h>
 #include <wallet/walletutil.h>
+#include <wallet/bitgoldstaker.h>
 
 #include <atomic>
 #include <cassert>
@@ -49,6 +50,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <thread>
 
 #include <boost/signals2/signal.hpp>
 
@@ -83,6 +85,7 @@ struct bilingual_str;
 
 namespace wallet {
 struct WalletContext;
+class BitGoldStaker;
 
 //! Explicitly delete the wallet.
 //! Blocks the current thread until the wallet is destructed.
@@ -486,6 +489,7 @@ public:
     {
         // Should not have slots connected at this point.
         assert(NotifyUnload.empty());
+        if (m_staker) m_staker->Stop();
     }
 
     bool IsCrypted() const;
@@ -515,6 +519,9 @@ public:
 
     /** Registered interfaces::Chain::Notifications handler. */
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
+
+    /** Proof-of-stake staker thread. */
+    std::unique_ptr<BitGoldStaker> m_staker;
 
     /** Interface for accessing chain state. */
     interfaces::Chain& chain() const { assert(m_chain); return *m_chain; }
