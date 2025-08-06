@@ -22,7 +22,7 @@
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>
-#include <util/transacti        on_identifier.h>
+#include <util/transaction_identifier.h>
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>

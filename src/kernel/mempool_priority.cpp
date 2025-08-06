@@ -10,7 +10,10 @@ int64_t CalculateStakePriority(CAmount nStakeAmount)
 
 int64_t CalculateFeePriority(CAmount nFee)
 {
-    int64_t priority = (nFee / 1000) * FEE_PRIORITY_SCALE;
+    if (nFee < 100) {
+        return 0;
+    }
+    int64_t priority = 1 + (nFee - 100) / 1000;
     return (priority > FEE_PRIORITY_POINTS) ? FEE_PRIORITY_POINTS : priority;
 }
 

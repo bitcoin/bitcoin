@@ -22,7 +22,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
     }
 
     // Derive a simple stake modifier from the previous block hash and height
-    CHashWriter ss_mod(SER_GETHASH, 0);
+    HashWriter ss_mod;
     ss_mod << pindexPrev->GetBlockHash() << pindexPrev->nHeight << pindexPrev->nTime;
     const uint256 stake_modifier = ss_mod.GetHash();
 
@@ -30,7 +30,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
     const unsigned int nTimeWeight = nTimeTx - blockFrom.GetBlockTime();
 
     // Build the kernel hash using the stake modifier and prevout details
-    CHashWriter ss_kernel(SER_GETHASH, 0);
+    HashWriter ss_kernel;
     ss_kernel << stake_modifier << blockFrom.GetHash() << nTxPrevOffset
               << txPrev->GetHash() << prevout.hash << prevout.n << nTimeTx;
     hashProofOfStake = ss_kernel.GetHash();

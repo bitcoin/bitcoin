@@ -1461,7 +1461,20 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     int64_t priority = 0;
     priority += CalculateStakePriority(ws.m_ptx->GetValueOut());
     priority += CalculateFeePriority(ws.m_base_fees);
-    // TODO: Add stake duration priority
+    int64_t stake_duration = 0;
+    for (const CTxIn& txin : ws.m_ptx->vin) {
+        const Coin& coin = m_view.AccessCoin(txin.prevout);
+        if (!coin.IsSpent()) {
+            int n_blocks = m_active_chainstate.m_chain.Height() - coin.nHeight;
+            if (n_blocks > 0) {
+                stake_duration = std::max<int64_t>(stake_duration, n_blocks * m_chainparams.GetConsensus().nPowTargetSpacing);
+            }
+        }
+    }
+    priority += CalculateStakeDurationPriority(stake_duration);
+    if (m_pool.DynamicMemoryUsage() > m_pool.m_opts.max_size_bytes * 9 / 10) {
+        priority += CONGESTION_PENALTY;
+    }
     ws.m_tx_handle->SetPriority(priority);
 
     const CFeeRate effective_feerate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};

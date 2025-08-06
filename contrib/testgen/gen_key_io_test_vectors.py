@@ -18,8 +18,8 @@ from test_framework.script import OP_0, OP_1, OP_2, OP_3, OP_16, OP_DUP, OP_EQUA
 from test_framework.segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding  # noqa: E402
 
 # key types
-PUBKEY_ADDRESS = 0
-SCRIPT_ADDRESS = 5
+PUBKEY_ADDRESS = 25
+SCRIPT_ADDRESS = 40
 PUBKEY_ADDRESS_TEST = 111
 SCRIPT_ADDRESS_TEST = 196
 PUBKEY_ADDRESS_REGTEST = 111
