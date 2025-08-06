@@ -53,12 +53,13 @@ Notable changes
 - #32776 doc: taproot became always active in v24.0
 - #32777 doc: fix Transifex 404s
 - #33070 doc/zmq: fix unix socket path example
-
+- #33133 rpc: fix getpeerinfo ping duration unit docs
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
+- 0xB10C
 - fanquake
 - Hennadii Stepanov
 - MarcoFalke
