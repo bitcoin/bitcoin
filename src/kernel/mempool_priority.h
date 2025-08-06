@@ -6,7 +6,6 @@
 
 // Constants for priority calculation
 static const int64_t STAKE_PRIORITY_SCALE = 1;
-static const int64_t FEE_PRIORITY_SCALE = 1000;
 static const int64_t STAKE_DURATION_7_DAYS = 7 * 24 * 60 * 60;
 static const int64_t STAKE_DURATION_30_DAYS = 30 * 24 * 60 * 60;
 
