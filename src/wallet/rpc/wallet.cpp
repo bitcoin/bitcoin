@@ -354,9 +354,7 @@ static RPCHelpMan upgradetohd()
             {"walletpassphrase", RPCArg::Type::STR, RPCArg::Default{""}, "If your wallet is encrypted you must have your wallet passphrase here. If your wallet is not encrypted, specifying wallet passphrase will trigger wallet encryption."},
             {"rescan", RPCArg::Type::BOOL, RPCArg::DefaultHint{"false if mnemonic is empty"}, "Whether to rescan the blockchain for missing transactions or not"},
         },
-        RPCResult{
-            RPCResult::Type::BOOL, "", "true if successful"
-        },
+        RPCResult{RPCResult::Type::STR, "", "A string with further instructions"},
         RPCExamples{
             HelpExampleCli("upgradetohd", "")
     + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\"")
@@ -370,7 +368,7 @@ static RPCHelpMan upgradetohd()
     if (!pwallet) return NullUniValue;
 
     bool generate_mnemonic = request.params[0].isNull() || request.params[0].get_str().empty();
-
+    bool mnemonic_passphrase_has_null{false};
     {
         LOCK(pwallet->cs_wallet);
 
@@ -395,6 +393,7 @@ static RPCHelpMan upgradetohd()
         mnemonic_passphrase.reserve(256);
         if (!request.params[1].isNull()) {
             mnemonic_passphrase = std::string_view{request.params[1].get_str()};
+            mnemonic_passphrase_has_null = (mnemonic_passphrase.find('\0') != std::string::npos);
         }
 
         // TODO: breaking changes kept for v21!
@@ -490,7 +489,17 @@ static RPCHelpMan upgradetohd()
         }
     }
 
-    return true;
+    // Check if the passphrase has a null character (see #27067 for details)
+    if (!mnemonic_passphrase_has_null) {
+        return "Make sure that you have backup of your mnemonic.";
+    } else {
+        return "Make sure that you have backup of your mnemonic. "
+               "Your mnemonic passphrase contains a null character (ie - a zero byte). "
+               "If the passphrase was created with a version of this software prior to 23.0, "
+               "please try again with only the characters up to — but not including — "
+               "the first null character. If this is successful, please set a new "
+               "passphrase to avoid this issue in the future.";
+    }
 },
     };
 }

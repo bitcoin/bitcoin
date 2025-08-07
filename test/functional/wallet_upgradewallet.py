@@ -169,7 +169,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.test_upgradewallet(wallet, previous_version=61000, expected_version=120200, requested_version=169900)
         # after conversion master key hash should not be present yet
         assert 'hdchainid' not in wallet.getwalletinfo()
-        assert_equal(wallet.upgradetohd(), True)
+        assert_equal(wallet.upgradetohd(), "Make sure that you have backup of your mnemonic.")
         new_version = wallet.getwalletinfo()["walletversion"]
         assert_equal(new_version, 120200)
         assert_is_hex_string(wallet.getwalletinfo()['hdchainid'])
