@@ -146,7 +146,7 @@ FUZZ_TARGET(txorphan, .init = initialize_orphanage)
                             Assert(orphanage->TotalOrphanUsage() <= total_bytes_start);
                         }
                     }
-                    // We are not guaranteed to have_tx after AddTx. There are a few possibile reasons:
+                    // We are not guaranteed to have_tx after AddTx. There are a few possible reasons:
                     // - tx itself exceeds the per-peer memory usage limit, so LimitOrphans had to remove it immediately
                     // - tx itself exceeds the per-peer latency score limit, so LimitOrphans had to remove it immediately
                     // - the orphanage needed trim and all other announcements from this peer are reconsiderable

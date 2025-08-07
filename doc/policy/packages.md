@@ -115,7 +115,7 @@ rejected from the mempool when transaction volume is high and the mempool minimu
 
 Note: Package feerate cannot be used to meet the minimum relay feerate (`-minrelaytxfee`)
 requirement. For example, if the mempool minimum feerate is 5sat/vB and the minimum relay feerate is
-set to 5satvB, a 1sat/vB parent transaction with a high-feerate child will not be accepted, even if
+set to 5sat/vB, a 1sat/vB parent transaction with a high-feerate child will not be accepted, even if
 submitted as a package.
 
 *Rationale*: Avoid situations in which the mempool contains non-bumped transactions below min relay
