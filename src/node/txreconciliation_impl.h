@@ -13,11 +13,14 @@ class TxReconciliationTrackerImpl;
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
-enum class ReconciliationRegisterResult
+enum class ReconciliationError
 {
     NOT_FOUND,
-    SUCCESS,
     ALREADY_REGISTERED,
+    WRONG_PHASE,
+    WRONG_ROLE,
+    FULL_RECON_SET,
+    SHORTID_COLLISION,
     PROTOCOL_VIOLATION,
 };
 
@@ -66,9 +69,10 @@ public:
 
     /**
      * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
-     * ongoing reconciliations. Must be called only after pre-registering the peer and only once.
+     * ongoing reconciliations. Must be called only after pre-registering.
+     * Returns a error if the registering proccess fails for any reason, nullopt otherwise.
      */
-    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version, uint64_t remote_salt);
+    std::optional<ReconciliationError> RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version, uint64_t remote_salt);
 
     /** Check if a peer is registered to reconcile transactions with us. */
     bool IsPeerRegistered(NodeId peer_id) const;
