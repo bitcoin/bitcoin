@@ -16,7 +16,7 @@
 
   - [Berkeley DB database based wallets](#berkeley-db-database-based-wallets)
 
-- [Notes](#notes)
+- [Installed Files](#installed-files)
 
 ## Data directory location
 
@@ -83,7 +83,7 @@ Wallets are SQLite databases.
 
 3. A wallet database path can be specified with the `-wallet` option.
 
-4. `wallet.dat` files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.
+4. `wallet.dat` files must not be shared across different node instances, as that can result in key-reuse and double-spends due to the lack of synchronization between instances.
 
 5. Any copy or backup of the wallet should be done through a `backupwallet` call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.
 
@@ -123,8 +123,40 @@ Subdirectory | File(s)           | Description
 `./`         | `wallet.dat`      | Personal wallet (a BDB database) with keys and transactions
 `./`         | `.walletlock`     | BDB wallet lock file
 
-## Notes
+### Notes
 
 <a name="note1">1</a>. The `/` (slash, U+002F) is used as the platform-independent path component separator in this document.
 
 <a name="note2">2</a>. `NNNNN` matches `[0-9]{5}` regex.
+
+## Installed Files
+
+This table describes the files installed by Bitcoin Core across different platforms.
+
+| **Path**                                                   | **Description**                                                             |
+|------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [README.md](README.md) or [readme.txt](README_windows.txt) | Project information and instructions                                        |
+| bitcoin.conf                                               | [Generated](../contrib/devtools/gen-bitcoin-conf.sh) configuration file     |
+| bin/bitcoin                                                | Command-line tool for interacting with Bitcoin. Calls other binaries below. |
+| bin/bitcoin-cli                                            | Tool for making node and wallet RPC calls.                                  |
+| bin/bitcoin-qt                                             | Bitcoin node and wallet GUI                                                 |
+| bin/bitcoin-tx                                             | Tool for creating and modifying transactions                                |
+| bin/bitcoin-util                                           | Miscellaneous utilities                                                     |
+| bin/bitcoin-wallet                                         | Bitcoin wallet tool                                                         |
+| bin/bitcoind                                               | Bitcoin node and wallet daemon                                              |
+| *lib/libbitcoinkernel.so*                                  | Shared library containing core consensus and validation code                |
+| *lib/pkgconfig/libbitcoinkernel.pc*                        | Pkg-config metadata for linking to `libbitcoinkernel`                       |
+| *libexec/bench_bitcoin*                                    | Benchmarking tool for measuring node performance                            |
+| *libexec/bitcoin-chainstate*                               | Tool to validate and connect blocks                                         |
+| *libexec/bitcoin-gui*                                      | IPC-enabled alternative to `bitcoin-qt`                                     |
+| *libexec/bitcoin-node*                                     | IPC-enabled alternative to `bitcoind`                                       |
+| libexec/test_bitcoin                                       | Unit test binary                                                            |
+| *libexec/test_bitcoin-qt*                                  | GUI-specific unit tests                                                     |
+| share/man/man1/                                            | Man pages for command-line tools like `bitcoin-cli`, `bitcoind`, and others |
+| share/rpcauth/                                             | Documentation and scripts for RPC authentication setup                      |
+
+### Notes
+
+- *Italicized* files are only installed in source builds if relevant CMake options are enabled. They are not included in binary releases.
+- README and bitcoin.conf files are included in binary releases but not installed in source builds.
+- On Windows, binaries have a `.exe` suffix (e.g., `bitcoin-cli.exe`).
