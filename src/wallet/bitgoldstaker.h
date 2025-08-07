@@ -8,9 +8,9 @@ namespace wallet {
 
 class CWallet;
 
-/** BitGoldStaker is a placeholder thread that would handle proof-of-stake
- *  block creation. The actual staking logic is not implemented here and should
- *  be provided by a full PoS implementation. */
+/** BitGoldStaker runs a background thread performing simple proof-of-stake
+ *  block creation by selecting mature UTXOs and submitting new blocks. The
+ *  implementation is minimal and intended for experimental use only. */
 class BitGoldStaker {
 public:
     explicit BitGoldStaker(CWallet& wallet);
@@ -22,8 +22,9 @@ public:
     void Stop();
 
 private:
-    /** Main thread loop. Selects UTXOs, calls CheckStakeKernelHash and crafts
-     *  coinstake transactions. Currently only a stub.
+    /** Main thread loop. Gathers eligible UTXOs, checks stake kernels, builds
+     *  coinstake transactions and blocks, and broadcasts them with basic
+     *  back-off handling.
      */
     void ThreadStaker();
 
