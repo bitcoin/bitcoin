@@ -32,9 +32,6 @@ private:
     std::atomic<bool> m_stop{false};
 };
 
-/** Placeholder for stake kernel hash check. */
-bool CheckStakeKernelHash();
-
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_BITGOLDSTAKER_H
