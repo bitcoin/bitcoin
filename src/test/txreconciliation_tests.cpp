@@ -23,29 +23,29 @@ BOOST_AUTO_TEST_CASE(RegisterPeerTest)
 
     // Invalid version.
     BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(/*peer_id=*/0, /*is_peer_inbound=*/true,
-                                           /*peer_recon_version=*/0, salt),
-                      ReconciliationRegisterResult::PROTOCOL_VIOLATION);
+                                           /*peer_recon_version=*/0, salt).value(),
+                      ReconciliationError::PROTOCOL_VIOLATION);
 
     // Valid registration (inbound and outbound peers).
     BOOST_REQUIRE(!tracker.IsPeerRegistered(0));
-    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(0, true, TXRECONCILIATION_VERSION, salt), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(!tracker.RegisterPeer(0, true, TXRECONCILIATION_VERSION, salt).has_value());
     BOOST_REQUIRE(tracker.IsPeerRegistered(0));
     BOOST_REQUIRE(!tracker.IsPeerRegistered(1));
     tracker.PreRegisterPeer(1);
-    BOOST_REQUIRE(tracker.RegisterPeer(1, false, TXRECONCILIATION_VERSION, salt) == ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(!tracker.RegisterPeer(1, false, TXRECONCILIATION_VERSION, salt).has_value());
     BOOST_REQUIRE(tracker.IsPeerRegistered(1));
 
     // Reconciliation version is higher than ours, should be able to register.
     BOOST_REQUIRE(!tracker.IsPeerRegistered(2));
     tracker.PreRegisterPeer(2);
-    BOOST_REQUIRE(tracker.RegisterPeer(2, true, TXRECONCILIATION_VERSION+1, salt) == ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(!tracker.RegisterPeer(2, true, TXRECONCILIATION_VERSION+1, salt).has_value());
     BOOST_REQUIRE(tracker.IsPeerRegistered(2));
 
     // Try registering for the second time.
-    BOOST_REQUIRE(tracker.RegisterPeer(1, false, TXRECONCILIATION_VERSION, salt) == ReconciliationRegisterResult::ALREADY_REGISTERED);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(1, false, TXRECONCILIATION_VERSION, salt).value(), ReconciliationError::ALREADY_REGISTERED);
 
     // Do not register if there were no pre-registration for the peer.
-    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(100, true, TXRECONCILIATION_VERSION, salt), ReconciliationRegisterResult::NOT_FOUND);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(100, true, TXRECONCILIATION_VERSION, salt).value(), ReconciliationError::NOT_FOUND);
     BOOST_REQUIRE(!tracker.IsPeerRegistered(100));
 }
 
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(IsPeerRegisteredTest)
     tracker.PreRegisterPeer(peer_id0);
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
 
-    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, /*peer_recon_version=*/true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, 1).has_value());
     BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id0));
 
     // Forgotten peers do not count either.
@@ -76,12 +76,12 @@ BOOST_AUTO_TEST_CASE(ForgetPeerTest)
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
     tracker.PreRegisterPeer(peer_id0);
     tracker.ForgetPeer(peer_id0);
-    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::NOT_FOUND);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, 1).value(), ReconciliationError::NOT_FOUND);
 
     // Removing peer after it is registered works.
     tracker.PreRegisterPeer(peer_id0);
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
-    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, 1).has_value());
     BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id0));
     tracker.ForgetPeer(peer_id0);
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));

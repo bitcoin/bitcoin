@@ -3794,22 +3794,22 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         uint64_t remote_salt;
         vRecv >> peer_txreconcl_version >> remote_salt;
 
-        const node::ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
-                                                                                     peer_txreconcl_version, remote_salt);
-        switch (result) {
-        case node::ReconciliationRegisterResult::NOT_FOUND:
-            LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
-            break;
-        case node::ReconciliationRegisterResult::SUCCESS:
-            break;
-        case node::ReconciliationRegisterResult::ALREADY_REGISTERED:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s\n", pfrom.DisconnectMsg(fLogIPs));
-            pfrom.fDisconnect = true;
-            return;
-        case node::ReconciliationRegisterResult::PROTOCOL_VIOLATION:
-            LogDebug(BCLog::NET, "txreconciliation protocol violation, %s\n", pfrom.DisconnectMsg(fLogIPs));
-            pfrom.fDisconnect = true;
-            return;
+        const auto error = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(), peer_txreconcl_version, remote_salt);
+        if (error.has_value()) {
+            switch (error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogDebug(BCLog::NET, "Ignore unexpected txreconciliation signal from peer=%d\n", pfrom.GetId());
+                    break;
+                case node::ReconciliationError::ALREADY_REGISTERED:
+                    LogDebug(BCLog::NET, "txreconciliation protocol violation (sendtxrcncl received from already registered peer), %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    pfrom.fDisconnect = true;
+                    return;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                    LogDebug(BCLog::NET, "txreconciliation protocol violation, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    pfrom.fDisconnect = true;
+                    return;
+                default: break;
+            }
         }
         return;
     }

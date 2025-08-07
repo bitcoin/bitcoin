@@ -46,16 +46,16 @@ public:
         return local_salt;
     }
 
-    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version,
-                                              uint64_t remote_salt) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    std::optional<ReconciliationError> RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version,
+                                                    uint64_t remote_salt) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
 
         auto peer_state = m_states.find(peer_id);
-        if (peer_state == m_states.end()) return ReconciliationRegisterResult::NOT_FOUND;
+        if (peer_state == m_states.end()) return ReconciliationError::NOT_FOUND;
         if (std::holds_alternative<TxReconciliationState>(peer_state->second)) {
-            return ReconciliationRegisterResult::ALREADY_REGISTERED;
+            return ReconciliationError::ALREADY_REGISTERED;
         }
         uint64_t local_salt = std::get<uint64_t>(peer_state->second);
 
@@ -66,14 +66,14 @@ public:
         // satisfactory (e.g. too low).
         const uint32_t recon_version{std::min(peer_recon_version, m_recon_version)};
         // v1 is the lowest version, so suggesting something below must be a protocol violation.
-        if (recon_version < 1) return ReconciliationRegisterResult::PROTOCOL_VIOLATION;
+        if (recon_version < 1) return ReconciliationError::PROTOCOL_VIOLATION;
 
         LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Register peer=%d (inbound=%i)\n",
                       peer_id, is_peer_inbound);
 
         const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
         peer_state->second = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
-        return ReconciliationRegisterResult::SUCCESS;
+        return std::nullopt;
     }
 
     bool IsPeerRegistered(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
@@ -104,7 +104,7 @@ uint64_t TxReconciliationTracker::PreRegisterPeer(NodeId peer_id)
     return m_impl->PreRegisterPeer(peer_id);
 }
 
-ReconciliationRegisterResult TxReconciliationTracker::RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version, uint64_t remote_salt)
+std::optional<ReconciliationError> TxReconciliationTracker::RegisterPeer(NodeId peer_id, bool is_peer_inbound, uint32_t peer_recon_version, uint64_t remote_salt)
 {
     return m_impl->RegisterPeer(peer_id, is_peer_inbound, peer_recon_version, remote_salt);
 }
