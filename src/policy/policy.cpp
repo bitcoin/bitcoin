@@ -83,13 +83,15 @@ bool IsStandard(const CScript& scriptPubKey, const std::optional<unsigned>& max_
         if (m < 1 || m > n)
             return false;
     } else if (whichType == TxoutType::NULL_DATA) {
-        if (!max_datacarrier_bytes || scriptPubKey.size() > *max_datacarrier_bytes) {
+        // Disallow any OP_RETURN with data
+        if (scriptPubKey.size() > 1) {
             return false;
         }
     }
 
     return true;
 }
+
 
 bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
