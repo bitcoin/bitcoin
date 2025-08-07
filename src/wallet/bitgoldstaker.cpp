@@ -2,7 +2,6 @@
 #include <wallet/wallet.h>
 #include <logging.h>
 #include <chrono>
-#include <pos/stake.h>
 
 namespace wallet {
 
