@@ -762,7 +762,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
         }
         std::optional<CAmount> combined_bump_fee = chain.calculateCombinedBumpFee(outpoints, coin_selection_params.m_effective_feerate);
         if (!combined_bump_fee.has_value()) {
-            return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.")};
+            return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
         }
         CAmount bump_fee_overestimate = summed_bump_fees - combined_bump_fee.value();
         if (bump_fee_overestimate) {

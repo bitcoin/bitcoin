@@ -84,7 +84,7 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTrans
 
     std::optional<CAmount> combined_bump_fee = wallet.chain().calculateCombinedBumpFee(reused_inputs, newFeerate);
     if (!combined_bump_fee.has_value()) {
-        errors.push_back(Untranslated(strprintf("Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.")));
+        errors.push_back(Untranslated(strprintf("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")));
     }
     CAmount new_total_fee = newFeerate.GetFee(maxTxSize) + combined_bump_fee.value();
 
