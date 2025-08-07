@@ -37,6 +37,7 @@
 #include <util/syserror.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <pos/stake.h>
 
 #include <cstddef>
 #include <map>
@@ -1026,6 +1027,17 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
     // Signet only: check block solution
     if (GetConsensus().signet_blocks && !CheckSignetBlockSolution(block, GetConsensus())) {
         LogError("Errors in block solution at %s while reading block", pos.ToString());
+        return false;
+    }
+
+    // Proof-of-stake validation
+    const CBlockIndex* prev_index{nullptr};
+    {
+        LOCK(cs_main);
+        prev_index = LookupBlockIndex(block.hashPrevBlock);
+    }
+    if (prev_index && !CheckProofOfStake(block, prev_index, GetConsensus())) {
+        LogError("Errors in block proof-of-stake at %s while reading block", pos.ToString());
         return false;
     }
 
