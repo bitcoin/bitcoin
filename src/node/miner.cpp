@@ -22,12 +22,14 @@
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
+#include <pos/stake.h>
 #include <util/moneystr.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
+#include <wallet/spend.h>
 #endif
 
 #include <algorithm>
@@ -590,11 +592,75 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
 #ifdef ENABLE_WALLET
 bool CreatePosBlock(wallet::CWallet& wallet)
 {
-    // Placeholder for proof-of-stake block creation. A full implementation
-    // would select staking coins from the wallet, construct a coinstake
-    // transaction, sign the block and submit it to the network.
-    (void)wallet;
-    return true;
+    interfaces::Chain& chain = wallet.chain();
+    node::NodeContext* node_context = chain.context();
+    if (!node_context || !node_context->chainman) return false;
+    ChainstateManager& chainman = *node_context->chainman;
+    Chainstate& chainstate = chainman.ActiveChainstate();
+
+    LOCK(::cs_main);
+    CBlockIndex* pindexPrev = chainstate.m_chain.Tip();
+    if (!pindexPrev) return false;
+    const int height = pindexPrev->nHeight + 1;
+    const Consensus::Params& consensus = chainman.GetParams().GetConsensus();
+
+    // Select a staking output from the wallet
+    std::optional<wallet::COutput> stake_out;
+    {
+        LOCK(wallet.cs_wallet);
+        for (const wallet::COutput& out : wallet::AvailableCoins(wallet).All()) {
+            if (!out.spendable || out.depth <= 0) continue;
+            stake_out = out;
+            break;
+        }
+    }
+    if (!stake_out) return false;
+
+    // Construct coinstake transaction
+    CMutableTransaction coinstake;
+    coinstake.nLockTime = height;
+    coinstake.vin.emplace_back(stake_out->outpoint);
+    coinstake.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    coinstake.vout.resize(2);
+    coinstake.vout[0].SetNull();
+    coinstake.vout[1].nValue = stake_out->txout.nValue + GetBlockSubsidy(height, consensus);
+    coinstake.vout[1].scriptPubKey = stake_out->txout.scriptPubKey;
+    {
+        LOCK(wallet.cs_wallet);
+        if (!wallet.SignTransaction(coinstake)) return false;
+    }
+
+    // Empty coinbase required for height commitment
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].prevout.SetNull();
+    coinbase.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
+    coinbase.vin[0].scriptSig = CScript() << height << OP_0;
+    coinbase.vout.resize(1);
+    coinbase.vout[0].nValue = 0;
+    coinbase.nLockTime = height;
+
+    CBlock block;
+    block.vtx.emplace_back(MakeTransactionRef(std::move(coinbase)));
+    block.vtx.emplace_back(MakeTransactionRef(std::move(coinstake)));
+
+    block.hashPrevBlock = pindexPrev->GetBlockHash();
+    block.nVersion = chainman.m_versionbitscache.ComputeBlockVersion(pindexPrev, consensus);
+    block.nTime = std::max<int64_t>(
+        GetMinimumTime(pindexPrev, consensus.DifficultyAdjustmentInterval()),
+        TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()));
+    block.nBits = GetNextWorkRequired(pindexPrev, &block, consensus);
+    block.nNonce = 0;
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+
+    if (!CheckProofOfStake(block, pindexPrev, consensus)) {
+        return false;
+    }
+
+    bool new_block{false};
+    return chainman.ProcessNewBlock(std::make_shared<const CBlock>(std::move(block)),
+                                    /*force_processing=*/true, /*min_pow_checked=*/true,
+                                    &new_block);
 }
 #endif // ENABLE_WALLET
 } // namespace node
