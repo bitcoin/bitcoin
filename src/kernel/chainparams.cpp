@@ -141,9 +141,9 @@ public:
         // Then, run the node to get the required hashMerkleRoot and hashGenesisBlock
         genesis = CreateGenesisBlock(1704067200, 12345, 0x1e0ffff0, 1, 3000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        // assert(consensus.hashGenesisBlock == uint256{"0x..."});
-        // assert(genesis.hashMerkleRoot == uint256{"0x..."});
-        // No DNS seeds for BitGold
+        assert(consensus.hashGenesisBlock == uint256{"c7a6c842f7b1811b4e8ed0964291e9eb91a9ca01bb85256acb2f723f9983424b"});
+        assert(genesis.hashMerkleRoot == uint256{"66c868e09d6a774ca6019e4f757f1d4e9aafe9633151111451c8767db6d8dd62"});
+        vSeeds.emplace_back("seed.bitgold.org");
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
