@@ -237,7 +237,7 @@ public:
             if (!validator.Validate()) { error = "Invalid proposal data: " + validator.GetErrorMessages(); return false; }
         }
         const CTxMemPool& mempool = *Assert(context().mempool);
-        bool fMissingConfirmations;
+        bool fMissingConfirmations{false};
         {
             #ifdef TXINDEX_ENABLED
             if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();

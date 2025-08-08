@@ -33,7 +33,6 @@ public:
     ~ProposalWizard();
 
 private Q_SLOTS:
-    void onSuggestTimes();
     void onNextFromDetails();
     void onBackToDetails();
     void onValidateJson();

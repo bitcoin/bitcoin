@@ -242,30 +242,6 @@ int ProposalWizard::queryConfirmations(const QString& txid)
     return tx_status.depth_in_main_chain;
 }
 
-void ProposalWizard::onSuggestTimes()
-{
-    // Build first-payment list from upcoming superblocks
-    QString res;
-    if (!runRpc("getgovernanceinfo", res)) return;
-    QJsonParseError err{};
-    const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
-    if (err.error != QJsonParseError::NoError || !doc.isObject()) return;
-    const auto obj = doc.object();
-    const int nextSb = obj.value("nextsuperblock").toInt();
-    const int cycle = obj.value("superblockcycle").toInt();
-    if (nextSb <= 0 || cycle <= 0) return;
-
-    comboFirstPayment->clear();
-    // Offer next 12 superblocks as options
-    for (int i = 0; i < 12; ++i) {
-        const int sbHeight = nextSb + i * cycle;
-        // Rough date: current time + i * cycle * 150s
-        const qint64 secs = static_cast<qint64>(i) * cycle * 150;
-        const auto dt = QDateTime::currentDateTimeUtc().addSecs(secs).toLocalTime();
-        comboFirstPayment->addItem(QLocale().toString(dt, QLocale::ShortFormat), sbHeight);
-    }
-}
-
 void ProposalWizard::onNextFromDetails()
 {
     buildJsonAndHex();
