@@ -127,17 +127,23 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     // Populate first-payment options by default
     onSuggestTimes();
 
-    // Initialize total amount display
-    labelTotalValue->setText(QString::number(spinAmount->value() * comboPayments->currentData().toInt(), 'f', 8) + " DASH");
+    // Initialize total amount display (formatted with current unit)
+    {
+        const auto unit = m_walletModel && m_walletModel->getOptionsModel() ? m_walletModel->getOptionsModel()->getDisplayUnit() : BitcoinUnit::DASH;
+        const CAmount totalAmount = static_cast<CAmount>(spinAmount->value() * comboPayments->currentData().toInt() * COIN);
+        labelTotalValue->setText(BitcoinUnits::formatWithUnit(unit, totalAmount, false, BitcoinUnits::SeparatorStyle::ALWAYS));
+    }
 
     // First payment options are populated on load. No separate suggest-times button.
     connect(comboPayments, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int){
-        const double total = spinAmount->value() * comboPayments->currentData().toInt();
-        labelTotalValue->setText(QString::number(total, 'f', 8) + " DASH");
+        const auto unit = m_walletModel && m_walletModel->getOptionsModel() ? m_walletModel->getOptionsModel()->getDisplayUnit() : BitcoinUnit::DASH;
+        const CAmount totalAmount = static_cast<CAmount>(spinAmount->value() * comboPayments->currentData().toInt() * COIN);
+        labelTotalValue->setText(BitcoinUnits::formatWithUnit(unit, totalAmount, false, BitcoinUnits::SeparatorStyle::ALWAYS));
     });
     connect(spinAmount, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double){
-        const double total = spinAmount->value() * comboPayments->currentData().toInt();
-        labelTotalValue->setText(QString::number(total, 'f', 8) + " DASH");
+        const auto unit = m_walletModel && m_walletModel->getOptionsModel() ? m_walletModel->getOptionsModel()->getDisplayUnit() : BitcoinUnit::DASH;
+        const CAmount totalAmount = static_cast<CAmount>(spinAmount->value() * comboPayments->currentData().toInt() * COIN);
+        labelTotalValue->setText(BitcoinUnits::formatWithUnit(unit, totalAmount, false, BitcoinUnits::SeparatorStyle::ALWAYS));
     });
     connect(btnNext1, &QPushButton::clicked, this, &ProposalWizard::onNextFromDetails);
     connect(ui->btnBack1, &QPushButton::clicked, this, &ProposalWizard::onBackToDetails);
@@ -154,8 +160,11 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
 
     // Update fee labels on display unit change
     if (m_walletModel && m_walletModel->getOptionsModel()) {
-        connect(m_walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, [updateFeeAndLabels]() {
+        connect(m_walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, [this, updateFeeAndLabels]() {
             updateFeeAndLabels();
+            const auto unit = m_walletModel->getOptionsModel()->getDisplayUnit();
+            const CAmount totalAmount = static_cast<CAmount>(spinAmount->value() * comboPayments->currentData().toInt() * COIN);
+            labelTotalValue->setText(BitcoinUnits::formatWithUnit(unit, totalAmount, false, BitcoinUnits::SeparatorStyle::ALWAYS));
         });
     }
 
