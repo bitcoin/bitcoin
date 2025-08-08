@@ -4147,7 +4147,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
     return commitment;
 }
 
-bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams)
+bool HasValidProofOfWork(std::span<const CBlockHeader> headers, const Consensus::Params& consensusParams)
 {
     return std::ranges::all_of(headers,
                                [&](const auto& header) { return CheckProofOfWork(header.GetHash(), header.nBits, consensusParams); });
