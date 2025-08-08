@@ -97,10 +97,12 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     }
     comboPayments->setCurrentIndex(0);
 
-    // Load proposal fee and set dynamic labels using display unit
+    // Load governance parameters and set dynamic labels using display unit
     auto updateFeeAndLabels = [this]() {
         const auto info = m_walletModel->node().gov().getGovernanceInfo();
         const CAmount fee_amount = info.proposalfee;
+        m_relayRequiredConfs = info.relayRequiredConfs;
+        m_requiredConfs = info.requiredConfs;
         const auto unit = m_walletModel && m_walletModel->getOptionsModel() ? m_walletModel->getOptionsModel()->getDisplayUnit() : BitcoinUnit::DASH;
         const QString feeFormatted = BitcoinUnits::formatWithUnit(unit, fee_amount, false, BitcoinUnits::SeparatorStyle::ALWAYS);
         labelFeeValue->setText(feeFormatted.isEmpty() ? QString("-") : feeFormatted);
@@ -108,7 +110,7 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
         if (labelSubheader) labelSubheader->setText(tr("A fee of %1 will be burned when you prepare the proposal.").arg(feeFormatted));
         if (labelPrepare) labelPrepare->setText(tr("Prepare (burn %1) and wait for %2 confirmations.")
                                       .arg(feeFormatted)
-                                      .arg(GOVERNANCE_FEE_CONFIRMATIONS));
+                                      .arg(m_requiredConfs));
         // If we ever decide to show unit suffix in the spin box, do it dynamically here
         // const QString unitName = BitcoinUnits::name(unit);
         // spinAmount->setSuffix(" " + unitName);

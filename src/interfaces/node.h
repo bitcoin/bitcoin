@@ -81,6 +81,8 @@ public:
         int nextsuperblock{0};
         int fundingthreshold{0};
         CAmount governancebudget{0};
+        int relayRequiredConfs{1};
+        int requiredConfs{6};
     };
     virtual GovernanceInfo getGovernanceInfo() = 0;
     virtual bool prepareProposal(Wallet& wallet, const uint256& parent, int32_t revision, int64_t created_time,

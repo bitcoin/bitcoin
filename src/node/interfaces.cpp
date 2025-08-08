@@ -176,6 +176,8 @@ public:
         info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
         info.superblockcycle = Params().GetConsensus().nSuperblockCycle;
         info.superblockmaturitywindow = Params().GetConsensus().nSuperblockMaturityWindow;
+        info.relayRequiredConfs = GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS;
+        info.requiredConfs = GOVERNANCE_FEE_CONFIRMATIONS;
         if (context().dmnman) {
             info.fundingthreshold = context().dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
         }
