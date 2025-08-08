@@ -68,6 +68,17 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
     for (size_t o = 0; o < num_outputs; ++o) tx.vout.emplace_back(CENT, P2WSH_OP_TRUE);
     return MakeTransactionRef(tx);
 }
+
+static Package MakePackage(FuzzedDataProvider& fuzzed_data_provider) {
+    Package txs;
+    const auto num_txs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 10);
+    for (unsigned long i = 0; i < num_txs; i++) {
+        txs.push_back(TRANSACTIONS.at(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, TRANSACTIONS.size() - 1)));
+    }
+
+    return txs;
+}
+
 static std::vector<COutPoint> PickCoins(FuzzedDataProvider& fuzzed_data_provider)
 {
     std::vector<COutPoint> ret;
@@ -164,6 +175,12 @@ void CheckPackageToValidate(const node::PackageToValidate& package_to_validate, 
     Assert(package.size() == 2);
 }
 
+void CheckSenderInitPackageToValidate(const node::PackageToValidate& package_to_validate, NodeId peer)
+{
+    Assert(package_to_validate.m_senders.front() == peer);
+    Assert(package_to_validate.m_txns.size() <= node::MAX_SENDER_INIT_PKG_SIZE);
+}
+
 FUZZ_TARGET(txdownloadman, .init = initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
@@ -188,6 +205,8 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                                     /*num_outputs=*/fuzzed_data_provider.ConsumeIntegralInRange(1, 500),
                                     /*add_witness=*/fuzzed_data_provider.ConsumeBool()) :
             TRANSACTIONS.at(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, TRANSACTIONS.size() - 1));
+
+        auto rand_package = MakePackage(fuzzed_data_provider);
 
         CallOneOf(
             fuzzed_data_provider,
@@ -244,6 +263,9 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                 // The only combination that doesn't make sense is validate both tx and package.
                 Assert(!(should_validate && maybe_package.has_value()));
                 if (maybe_package.has_value()) CheckPackageToValidate(*maybe_package, rand_peer);
+            },
+            [&] {
+                if (const auto& package_to_validate = txdownloadman.ReceivedPackage(rand_peer, rand_package)) CheckSenderInitPackageToValidate(*package_to_validate, rand_peer);
             },
             [&] {
                 txdownloadman.ReceivedNotFound(rand_peer, {rand_tx->GetWitnessHash()});
@@ -313,6 +335,8 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                                     /*num_outputs=*/fuzzed_data_provider.ConsumeIntegralInRange(1, 500),
                                     /*add_witness=*/fuzzed_data_provider.ConsumeBool()) :
             TRANSACTIONS.at(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, TRANSACTIONS.size() - 1));
+
+        auto rand_package = MakePackage(fuzzed_data_provider);
 
         CallOneOf(
             fuzzed_data_provider,
@@ -401,6 +425,17 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                     // Neither is in m_lazy_recent_rejects
                     Assert(!txdownload_impl.RecentRejectsFilter().contains(package.front()->GetWitnessHash().ToUint256()));
                     Assert(!txdownload_impl.RecentRejectsFilter().contains(package.back()->GetWitnessHash().ToUint256()));
+                }
+            },
+            [&] {
+                if (const auto& package_to_validate = txdownload_impl.ReceivedPackage(rand_peer, rand_package)) {
+                    CheckSenderInitPackageToValidate(*package_to_validate, rand_peer);
+
+                    const auto& package = package_to_validate->m_txns;
+
+                    for (size_t i = 0; i < package.size(); i++) {
+                        Assert(!txdownload_impl.RecentRejectsFilter().contains(package.at(i)->GetWitnessHash().ToUint256()));
+                    }
                 }
             },
             [&] {
