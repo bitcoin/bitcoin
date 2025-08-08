@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QT_PROPOSALWIZARD_H
-#define DASH_QT_PROPOSALWIZARD_H
+#ifndef BITCOIN_QT_PROPOSALWIZARD_H
+#define BITCOIN_QT_PROPOSALWIZARD_H
 
 #include <QDialog>
 #include <QObject>
@@ -92,6 +92,6 @@ private:
     int queryConfirmations(const QString& txid);
 };
 
-#endif // DASH_QT_PROPOSALWIZARD_H
+#endif // BITCOIN_QT_PROPOSALWIZARD_H
 
 

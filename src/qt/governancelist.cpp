@@ -28,7 +28,6 @@
 
 #include <QAbstractItemView>
 #include <QDesktopServices>
-#include <QMessageBox>
 #include <QTableWidgetItem>
 #include <QUrl>
 #include <QtGui/QClipboard>
