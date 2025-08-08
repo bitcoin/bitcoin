@@ -8,6 +8,7 @@
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
+#include <script/interpreter.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -303,8 +304,34 @@ bool CScript::HasValidOps() const
     return true;
 }
 
-std::pair<size_t, size_t> CScript::DatacarrierBytes() const
+size_t CScript::IsOLGA(const size_t remaining_outputs) const
 {
+    if (!IsPayToWitnessScriptHash()) {
+        return 0;
+    }
+
+    const size_t olga_payload_size{(size_t{(*this)[2]} << 8) | (*this)[3]};
+    const size_t olga_outputs{(olga_payload_size + 1) / WITNESS_V0_SCRIPTHASH_SIZE + 1};
+    if (remaining_outputs < olga_outputs) {
+        return 0;
+    }
+
+    if (((*this)[4] | 0x20) != 's') return 0;
+    if (((*this)[5] | 0x20) != 't') return 0;
+    if (((*this)[6] | 0x20) != 'a') return 0;
+    if (((*this)[7] | 0x20) != 'm') return 0;
+    if (((*this)[8] | 0x20) != 'p') return 0;
+    if ((*this)[9] != ':') return 0;
+
+    return olga_outputs * (WITNESS_V0_SCRIPTHASH_SIZE + /* script length */ 1 + /* amount */ 8);
+}
+
+std::pair<size_t, size_t> CScript::DatacarrierBytes(const size_t remaining_outputs) const
+{
+    if (size_t olga_bytes = IsOLGA(remaining_outputs); olga_bytes) {
+        return {0, olga_bytes};
+    }
+
     size_t counted{0};
     opcodetype opcode, last_opcode{OP_INVALIDOPCODE};
     std::vector<unsigned char> push_data;
