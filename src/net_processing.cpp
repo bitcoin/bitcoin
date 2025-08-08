@@ -613,7 +613,7 @@ public:
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex, !m_tx_download_mutex);
     bool HasAllDesirableServiceFlags(ServiceFlags services) const override;
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex, !m_templatestats_mutex);
     bool SendMessages(CNode* pto) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, g_msgproc_mutex, !m_tx_download_mutex);
 
@@ -624,6 +624,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
+    TemplateStats GetTemplateStats() const override EXCLUSIVE_LOCKS_REQUIRED(!m_templatestats_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const Txid& txid, const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1158,8 +1159,10 @@ private:
 
     void LogBlockHeader(const CBlockIndex& index, const CNode& peer, bool via_compact_block);
 
+    mutable Mutex m_templatestats_mutex;
     TemplateManager m_template_man GUARDED_BY(g_msgproc_mutex);
-    void ProcessTemplateManActions(Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex, !m_peer_mutex, !m_tx_download_mutex);
+    TemplateStats m_templatestats GUARDED_BY(m_templatestats_mutex);
+    void ProcessTemplateManActions(Peer& peer) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_peer_mutex, !m_peer_mutex, !m_tx_download_mutex, !m_templatestats_mutex);
     void SendTemplateTransactions(CNode& pfrom, Peer& peer, const MyTemplate& mytmp, const BlockTransactionsRequest& req) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     TemplateManager::ExtraTxns GetExtraTxns() const
@@ -5116,6 +5119,12 @@ void PeerManagerImpl::SendTemplateTransactions(CNode& pfrom, Peer& peer, const M
     MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
 }
 
+TemplateStats PeerManagerImpl::GetTemplateStats() const
+{
+    LOCK(m_templatestats_mutex);
+    return m_templatestats;
+}
+
 void PeerManagerImpl::ProcessTemplateManActions(Peer& peer)
 {
     auto now = NodeClock::now();
@@ -5172,6 +5181,20 @@ void PeerManagerImpl::ProcessTemplateManActions(Peer& peer)
         new_template.inv_sequence = WITH_LOCK(m_mempool.cs, return m_mempool.GetSequence());
 
         LogDebug(BCLog::SHARETMPL, "Generated template for sharing hash=%s (%d txs, %d weight)\n", new_template.hash.ToString(), new_template.txs.size(), new_template.weight);
+
+        LOCK(m_templatestats_mutex);
+        m_templatestats.num_templates = my_templates.size();
+        m_templatestats.max_templates = m_opts.share_template_count;
+        m_templatestats.num_transactions = m_template_man.template_txs.size();
+        if (!m_template_man.my_templates.empty()) {
+            const auto& tmp = m_template_man.my_templates.front();
+            m_templatestats.latest_template_weight = tmp.weight;
+            m_templatestats.latest_template_tx = tmp.txs.size();
+        } else {
+            m_templatestats.latest_template_weight = 0;
+            m_templatestats.latest_template_tx = 0;
+        }
+        m_templatestats.next_update = m_template_man.next_template_update;
     }
 
     return;
