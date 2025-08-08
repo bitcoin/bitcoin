@@ -29,7 +29,6 @@
 #include <node/warnings.h>
 #include <noui.h>
 #include <policy/fees.h>
-#include <pow.h>
 #include <random.h>
 #include <rpc/blockchain.h>
 #include <rpc/register.h>
@@ -400,7 +399,7 @@ CBlock TestChain100Setup::CreateBlock(
     }
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    block.nNonce = 0;
 
     return block;
 }

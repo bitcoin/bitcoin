@@ -8,7 +8,6 @@
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <node/peerman_args.h>
-#include <pow.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -145,9 +144,8 @@ CBlock ConsumeBlock(FuzzedDataProvider& fuzzed_data_provider, const uint256& pre
 
 void FinalizeHeader(CBlockHeader& header, const ChainstateManager& chainman)
 {
-    while (!CheckProofOfWork(header.GetHash(), header.nBits, chainman.GetParams().GetConsensus())) {
-        ++(header.nNonce);
-    }
+    (void)header;
+    (void)chainman;
 }
 
 // Global setup works for this test as state modification (specifically in the

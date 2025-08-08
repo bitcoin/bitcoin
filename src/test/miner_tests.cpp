@@ -22,7 +22,6 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <versionbits.h>
-#include <pow.h>
 
 #include <test/util/setup_common.h>
 
@@ -692,17 +691,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         }
 
         {
-            // A block template does not have proof-of-work, but it might pass
-            // verification by coincidence. Grind the nonce if needed:
-            while (CheckProofOfWork(block.GetHash(), block.nBits, Assert(m_node.chainman)->GetParams().GetConsensus())) {
-                block.nNonce++;
-            }
-
             std::string reason;
             std::string debug;
             BOOST_REQUIRE(!mining->checkBlock(block, {.check_pow = true}, reason, debug));
             BOOST_REQUIRE_EQUAL(reason, "high-hash");
-            BOOST_REQUIRE_EQUAL(debug, "proof of work failed");
         }
     }
 

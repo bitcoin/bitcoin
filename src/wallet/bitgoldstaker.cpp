@@ -6,7 +6,6 @@
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <pos/stake.h>
-#include <pow.h>
 #include <util/time.h>
 #include <validation.h>
 
@@ -104,7 +103,7 @@ void BitGoldStaker::ThreadStaker()
 
                         unsigned int nTimeTx = std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1,
                                                                  TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()));
-                        unsigned int nBits = GetNextWorkRequired(pindexPrev, nullptr, consensus);
+                        unsigned int nBits = pindexPrev->nBits;
                         uint256 hash_proof;
                         if (!CheckStakeKernelHash(pindexPrev, nBits, block_from, conf->position_in_block,
                                                   wtx->tx, stake_out.outpoint, nTimeTx, hash_proof, false)) {
@@ -143,7 +142,7 @@ void BitGoldStaker::ThreadStaker()
                         block.hashPrevBlock = pindexPrev->GetBlockHash();
                         block.nVersion = chainman.m_versionbitscache.ComputeBlockVersion(pindexPrev, consensus);
                         block.nTime = nTimeTx;
-                        block.nBits = GetNextWorkRequired(pindexPrev, &block, consensus);
+                        block.nBits = pindexPrev->nBits;
                         block.nNonce = 0;
                         block.hashMerkleRoot = BlockMerkleRoot(block);
 
