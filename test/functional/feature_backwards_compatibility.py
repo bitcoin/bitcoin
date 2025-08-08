@@ -283,17 +283,16 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v17.loadwallet("w1")
             wallet = node_v17.get_wallet_rpc("w1")
             info = wallet.getwalletinfo()
-            # doesn't have private_keys_enabled in v17
-            #assert info['private_keys_enabled']
+            # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+            assert 'private_keys_enabled' not in info
             assert info['keypoolsize'] > 0
 
             node_v17.loadwallet("w2")
             wallet = node_v17.get_wallet_rpc("w2")
             info = wallet.getwalletinfo()
-            # doesn't have private_keys_enabled in v17
-            # TODO enable back when HD wallets are created by default
-            # assert info['private_keys_enabled'] == False
-            # assert info['keypoolsize'] == 0
+            # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+            assert 'private_keys_enabled' not in info
+            assert info['keypoolsize'] > 0
         else:
             # Descriptor wallets appear to be corrupted wallets to old software
             assert_raises_rpc_error(-4, "Wallet requires newer version of Dash Core", node_v19.loadwallet, "w1")
@@ -307,17 +306,16 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v17.loadwallet("w1_v18")
         wallet = node_v17.get_wallet_rpc("w1_v18")
         info = wallet.getwalletinfo()
-        # doesn't have private_keys_enabled in v17
-        # assert info['private_keys_enabled']
+        # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+        assert 'private_keys_enabled' not in info
         assert info['keypoolsize'] > 0
 
         node_v17.loadwallet("w2_v18")
         wallet = node_v17.get_wallet_rpc("w2_v18")
         info = wallet.getwalletinfo()
-        # doesn't have private_keys_enabled in v17
-        # TODO enable back when HD wallets are created by default
-        #assert info['private_keys_enabled'] == False
-        #assert info['keypoolsize'] == 0
+        # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+        assert 'private_keys_enabled' not in info
+        assert info['keypoolsize'] > 0
 
         # RPC loadwallet failure causes bitcoind to exit, in addition to the RPC
         # call failure, so the following test won't work:
