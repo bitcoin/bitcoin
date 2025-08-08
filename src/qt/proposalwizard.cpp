@@ -1,0 +1,358 @@
+// Copyright (c) 2025 The Dash Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <qt/proposalwizard.h>
+
+#include <qt/forms/ui_proposalwizard.h>
+
+#include <qt/guiutil.h>
+#include <qt/rpcconsole.h>
+#include <interfaces/node.h>
+#include <qt/walletmodel.h>
+
+#include <QDateTime>
+#include <QDateTimeEdit>
+#include <QDoubleSpinBox>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QLabel>
+#include <QLineEdit>
+#include <qt/qvalidatedlineedit.h>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QStackedWidget>
+#include <QTimer>
+
+namespace {
+// Minimal helper to encode plain ASCII JSON to hex for RPC
+static QString toHex(const QByteArray& bytes)
+{
+    return QString(bytes.toHex());
+}
+}
+
+ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel, QWidget* parent)
+    : QDialog(parent)
+    , m_node(node)
+    , m_walletModel(walletModel)
+{
+    auto ui = std::make_unique<Ui::ProposalWizard>();
+    ui->setupUi(this);
+
+    // Prefer the minimum vertical size needed for current content
+    if (this->layout()) {
+        this->layout()->setSizeConstraint(QLayout::SetMinimumSize);
+    }
+    this->adjustSize();
+    this->setMinimumHeight(this->sizeHint().height());
+
+    // Bind UI pointers
+    stacked = ui->stackedWidget;
+    editName = ui->editName;
+    editUrl = ui->editUrl;
+    editPayAddr = ui->editPayAddr;
+    // Attach address validators
+    GUIUtil::setupAddressWidget(static_cast<QValidatedLineEdit*>(editPayAddr), this, /*fAllowURI=*/false);
+    comboFirstPayment = ui->comboFirstPayment;
+    comboPayments = ui->comboPayments;
+    spinAmount = ui->spinAmount;
+    labelFeeValue = ui->labelFeeValue;
+    labelTotalValue = ui->labelTotalValue;
+    btnNext1 = ui->btnNext1;
+
+    plainJson = ui->plainJson;
+    editHex = ui->editHex;
+    labelValidateStatus = ui->labelValidateStatus;
+    btnNext2 = ui->btnNext2;
+
+    // Txid widgets
+    labelTxid = ui->labelTxidCaption;
+    editTxid = ui->editTxid;
+    QPushButton* btnCopyTxid = ui->btnCopyTxid;
+    labelConfStatus = ui->labelConfStatus;
+    labelEta = ui->labelEta;
+    progressConfirmations = ui->progressConfirmations;
+    // Submit page mirrors
+    labelConfStatus2 = ui->labelConfStatus2;
+    labelEta2 = ui->labelEta2;
+    progressConfirmations2 = ui->progressConfirmations2;
+    btnNext3 = ui->btnNext3;
+
+    editGovObjId = ui->editGovObjId;
+    btnCopyGovId = ui->btnCopyGovId;
+    btnSubmit = ui->btnSubmit;
+
+    // Initialize fields
+    // Populate payments dropdown (mainnet 1..12 by default; adjust by network later if needed)
+    for (int i = 1; i <= 12; ++i) {
+        comboPayments->addItem(tr("%1").arg(i), i);
+    }
+    comboPayments->setCurrentIndex(0);
+
+    // Load proposal fee from getgovernanceinfo
+    QString res;
+    if (runRpc("getgovernanceinfo", res)) {
+        // naive parse: find proposalfee
+        QJsonParseError err{};
+        const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
+        if (err.error == QJsonParseError::NoError && doc.isObject()) {
+            const auto fee = doc.object().value("proposalfee").toDouble();
+            if (fee > 0) {
+                labelFeeValue->setText(QString::number(fee, 'f', 8) + " DASH");
+            }
+        }
+    }
+
+    // Populate first-payment options by default
+    onSuggestTimes();
+
+    // Initialize total amount display
+    labelTotalValue->setText(QString::number(spinAmount->value() * comboPayments->currentData().toInt(), 'f', 8) + " DASH");
+
+    // First payment options are populated on load. No separate suggest-times button.
+    connect(comboPayments, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int){
+        const double total = spinAmount->value() * comboPayments->currentData().toInt();
+        labelTotalValue->setText(QString::number(total, 'f', 8) + " DASH");
+    });
+    connect(spinAmount, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double){
+        const double total = spinAmount->value() * comboPayments->currentData().toInt();
+        labelTotalValue->setText(QString::number(total, 'f', 8) + " DASH");
+    });
+    connect(btnNext1, &QPushButton::clicked, this, &ProposalWizard::onNextFromDetails);
+    connect(ui->btnBack1, &QPushButton::clicked, this, &ProposalWizard::onBackToDetails);
+    connect(ui->btnValidate, &QPushButton::clicked, this, &ProposalWizard::onValidateJson);
+    connect(btnNext2, &QPushButton::clicked, this, &ProposalWizard::onNextFromReview);
+    connect(ui->btnBack2, &QPushButton::clicked, this, &ProposalWizard::onBackToReview);
+    btnPrepare = ui->btnPrepare;
+    connect(btnPrepare, &QPushButton::clicked, this, &ProposalWizard::onPrepare);
+    connect(btnCopyTxid, &QPushButton::clicked, this, [this]() { if (editTxid) { editTxid->selectAll(); editTxid->copy(); } });
+    connect(btnNext3, &QPushButton::clicked, this, &ProposalWizard::onGoToSubmit);
+    connect(ui->btnSubmit, &QPushButton::clicked, this, &ProposalWizard::onSubmit);
+    connect(btnCopyGovId, &QPushButton::clicked, this, [this]() { if (editGovObjId) { editGovObjId->selectAll(); editGovObjId->copy(); } });
+    connect(ui->btnClose, &QPushButton::clicked, this, &QDialog::accept);
+
+    // Re-compute minimum vertical size when switching pages
+    connect(stacked, &QStackedWidget::currentChanged, this, [this](int){
+        this->adjustSize();
+        this->setMinimumHeight(this->sizeHint().height());
+    });
+}
+
+void ProposalWizard::buildJsonAndHex()
+{
+    // Compute start/end epochs from selected superblocks
+    QString res;
+    int start_epoch = 0;
+    int end_epoch = 0;
+    int firstSb = comboFirstPayment->currentData().toInt();
+    int payments = comboPayments->currentData().toInt();
+    if (firstSb > 0 && payments > 0 && runRpc("getgovernanceinfo", res)) {
+        QJsonParseError err{};
+        const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
+        if (err.error == QJsonParseError::NoError && doc.isObject()) {
+            const int cycle = doc.object().value("superblockcycle").toInt();
+            const int prevSb = firstSb - cycle;
+            const int lastSb = firstSb + (payments - 1) * cycle;
+            const int nextAfterLast = lastSb + cycle;
+            // Midpoints in blocks; convert roughly to seconds relative to now
+            const int startMidBlocks = (firstSb + prevSb) / 2;
+            const int endMidBlocks = (lastSb + nextAfterLast) / 2;
+            // We don't know absolute time for those heights in GUI; approximate using 150s per block delta from first option
+            // Use now as baseline; this is only to pass validator and give a stable window
+            const qint64 now = QDateTime::currentSecsSinceEpoch();
+            start_epoch = static_cast<int>(now + (startMidBlocks - firstSb) * 150LL);
+            end_epoch = static_cast<int>(now + (endMidBlocks - firstSb) * 150LL);
+        }
+    }
+
+    QJsonObject o;
+    o.insert("name", editName->text());
+    o.insert("payment_address", editPayAddr->text());
+    o.insert("payment_amount", spinAmount->value());
+    o.insert("url", editUrl->text());
+    if (start_epoch > 0) o.insert("start_epoch", start_epoch);
+    if (end_epoch > 0) o.insert("end_epoch", end_epoch);
+    o.insert("type", 1);
+    const auto json = QJsonDocument(o).toJson(QJsonDocument::Compact);
+    plainJson->setPlainText(QString::fromUtf8(json));
+    m_hex = toHex(json);
+    editHex->setText(m_hex);
+}
+
+bool ProposalWizard::runRpc(const QString& methodAndArgs, QString& outResult, const WalletModel* walletModel)
+{
+    try {
+        std::string result;
+        if (!RPCConsole::RPCExecuteCommandLine(m_node, result, methodAndArgs.toStdString() + "\n", nullptr, walletModel)) {
+            return false;
+        }
+        outResult = QString::fromStdString(result);
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+int ProposalWizard::queryConfirmations(const QString& txid)
+{
+    QString res;
+    if (!runRpc(QString("gettransaction %1").arg(txid), res, m_walletModel)) return -1;
+    QJsonParseError err{};
+    const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) return -1;
+    return doc.object().value("confirmations").toInt(-1);
+}
+
+void ProposalWizard::onSuggestTimes()
+{
+    // Build first-payment list from upcoming superblocks
+    QString res;
+    if (!runRpc("getgovernanceinfo", res)) return;
+    QJsonParseError err{};
+    const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) return;
+    const auto obj = doc.object();
+    const int nextSb = obj.value("nextsuperblock").toInt();
+    const int cycle = obj.value("superblockcycle").toInt();
+    if (nextSb <= 0 || cycle <= 0) return;
+
+    comboFirstPayment->clear();
+    // Offer next 12 superblocks as options
+    for (int i = 0; i < 12; ++i) {
+        const int sbHeight = nextSb + i * cycle;
+        // Rough date: current time + i * cycle * 150s
+        const qint64 secs = static_cast<qint64>(i) * cycle * 150;
+        const auto dt = QDateTime::currentDateTimeUtc().addSecs(secs).toLocalTime();
+        comboFirstPayment->addItem(QLocale().toString(dt, QLocale::ShortFormat), sbHeight);
+    }
+}
+
+void ProposalWizard::onNextFromDetails()
+{
+    buildJsonAndHex();
+    stacked->setCurrentIndex(1);
+}
+
+void ProposalWizard::onBackToDetails()
+{
+    stacked->setCurrentIndex(0);
+}
+
+void ProposalWizard::onValidateJson()
+{
+    buildJsonAndHex();
+    QString res;
+    if (runRpc(QString("gobject check %1").arg(m_hex), res)) {
+        labelValidateStatus->setText(tr("Valid"));
+        btnNext2->setEnabled(true);
+    } else {
+        labelValidateStatus->setText(tr("Invalid"));
+        btnNext2->setEnabled(false);
+    }
+}
+
+void ProposalWizard::onNextFromReview()
+{
+    stacked->setCurrentIndex(2);
+}
+
+void ProposalWizard::onBackToReview()
+{
+    stacked->setCurrentIndex(1);
+}
+
+void ProposalWizard::onPrepare()
+{
+    // Unlock wallet if necessary
+    WalletModel::UnlockContext ctx(m_walletModel->requestUnlock());
+    if (!ctx.isValid()) return;
+
+    // Confirm burn
+    if (QMessageBox::question(this,
+                              tr("Burn 1 DASH"),
+                              tr("Burn 1 DASH to create the fee transaction?"),
+                              QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Yes,
+                              QMessageBox::StandardButton::Cancel) != QMessageBox::StandardButton::Yes) {
+        return;
+    }
+
+    const int64_t now = QDateTime::currentSecsSinceEpoch();
+    QString res;
+    // gobject prepare 0 1 <now> <hex>
+    if (!runRpc(QString("gobject prepare 0 1 %1 %2").arg(now).arg(m_hex), res, m_walletModel)) return;
+    m_txid = res.trimmed();
+    editTxid->setText(m_txid);
+    btnPrepare->setEnabled(false);
+    m_prepareTime = now;
+
+    // Start polling confirmations every 10s
+    auto* timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &ProposalWizard::onMaybeAdvanceAfterConfirmations);
+    timer->start(10000);
+}
+
+void ProposalWizard::onMaybeAdvanceAfterConfirmations()
+{
+    if (m_txid.isEmpty()) return;
+    const int confs = queryConfirmations(m_txid);
+    if (confs >= 0 && confs != m_lastConfs) {
+        m_lastConfs = confs;
+        const int bounded = std::min(confs, m_requiredConfs);
+        progressConfirmations->setMaximum(m_requiredConfs);
+        progressConfirmations->setValue(bounded);
+        labelConfStatus->setText(tr("Confirmations: %1 / %2 required").arg(bounded).arg(m_requiredConfs));
+        // Mirror to submit page
+        progressConfirmations2->setMaximum(m_requiredConfs);
+        progressConfirmations2->setValue(bounded);
+        labelConfStatus2->setText(tr("Confirmations: %1 / %2 required").arg(bounded).arg(m_requiredConfs));
+        // Simple ETA: 2.5 min per block remaining
+        const int remaining = std::max(0, m_requiredConfs - bounded);
+        const int secs = remaining * 150;
+        if (remaining == 0) {
+            labelEta->setText(tr("Estimated time remaining: Ready"));
+            labelEta2->setText(tr("Estimated time remaining: Ready"));
+        } else {
+            const auto mins = (secs + 59) / 60;
+            labelEta->setText(tr("Estimated time remaining: %1 min").arg(mins));
+            labelEta2->setText(tr("Estimated time remaining: %1 min").arg(mins));
+        }
+    }
+    // Allow submitting (relay/postpone) at 1 confirmation and enable Next to proceed
+    if (confs >= m_relayRequiredConfs) {
+        btnSubmit->setEnabled(true);
+        btnNext3->setEnabled(true);
+    }
+    // No auto-advance; user controls when to proceed
+}
+
+void ProposalWizard::onSubmit()
+{
+    // Submit with same parent/revision/time and hex, including fee txid
+    const int64_t now = (m_prepareTime > 0 ? m_prepareTime : QDateTime::currentSecsSinceEpoch());
+    QString res;
+    if (m_submitted) {
+        QMessageBox::information(this, tr("Already submitted"), tr("This proposal has already been submitted."));
+        return;
+    }
+    if (!runRpc(QString("gobject submit 0 1 %1 %2 %3").arg(now).arg(m_hex).arg(m_txid), res, m_walletModel)) {
+        QMessageBox::critical(this, tr("Submission failed"), tr("Unable to submit proposal. Check the debug console for details."));
+        return;
+    }
+    const QString govId = res.trimmed();
+    editGovObjId->setText(govId);
+    QMessageBox::information(this, tr("Proposal submitted"), tr("Your proposal was submitted successfully.\nID: %1").arg(govId));
+    m_submitted = true;
+    btnSubmit->setEnabled(false);
+    // When 6 confs are reached show a final success message
+}
+
+void ProposalWizard::onGoToSubmit()
+{
+    // Only allow entering the submit step if we have a prepared txid and at least relay confirmations
+    if (m_txid.isEmpty()) return;
+    if (m_lastConfs < m_relayRequiredConfs) return;
+    stacked->setCurrentIndex(3);
+}
+
+

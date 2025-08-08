@@ -4,6 +4,8 @@
 
 #include <qt/forms/ui_governancelist.h>
 #include <qt/governancelist.h>
+#include <qt/proposalwizard.h>
+#include <QMessageBox>
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -341,6 +343,9 @@ GovernanceList::GovernanceList(QWidget* parent) :
     // Enable CustomContextMenu on the table to make the view emit customContextMenuRequested signal.
     ui->govTableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->govTableView, &QTableView::customContextMenuRequested, this, &GovernanceList::showProposalContextMenu);
+
+    // Create Proposal button
+    connect(ui->btnCreateProposal, &QPushButton::clicked, this, &GovernanceList::showCreateProposalDialog);
     connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
 
     connect(timer, &QTimer::timeout, this, &GovernanceList::updateProposalList);
@@ -415,6 +420,34 @@ void GovernanceList::updateProposalList()
 void GovernanceList::updateProposalCount() const
 {
     ui->countLabel->setText(QString::number(proposalModelProxy->rowCount()));
+}
+
+void GovernanceList::showCreateProposalDialog()
+{
+    if (!this->clientModel || !this->walletModel) {
+        QMessageBox::warning(this, tr("Unavailable"), tr("A synced node and an unlocked wallet are required."));
+        return;
+    }
+    if (!proposalWizard) {
+        proposalWizard = new ProposalWizard(this->clientModel->node(), this->walletModel, this);
+        // Ensure closing the dialog actually destroys it so a fresh flow starts next time
+        proposalWizard->setAttribute(Qt::WA_DeleteOnClose, true);
+        connect(proposalWizard, &QObject::destroyed, this, [this]() { proposalWizard = nullptr; });
+        // Modeless window that does not block the parent
+        proposalWizard->setWindowModality(Qt::NonModal);
+        proposalWizard->setModal(false);
+        proposalWizard->setWindowFlag(Qt::Window, true);
+        proposalWizard->show();
+    } else {
+        // Bring existing wizard to front and focus it
+        proposalWizard->setWindowModality(Qt::NonModal);
+        proposalWizard->setModal(false);
+        proposalWizard->setAttribute(Qt::WA_ShowWithoutActivating, false);
+        proposalWizard->show();
+        proposalWizard->raise();
+        proposalWizard->activateWindow();
+        proposalWizard->setFocus(Qt::ActiveWindowFocusReason);
+    }
 }
 
 void GovernanceList::showProposalContextMenu(const QPoint& pos)
