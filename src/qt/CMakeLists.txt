@@ -337,6 +337,10 @@ elseif(NOT SED_EXECUTABLE)
   add_custom_target(translate
     COMMAND ${CMAKE_COMMAND} -E echo "Error: GNU sed not found"
   )
+elseif(NOT TARGET Python3::Interpreter)
+  add_custom_target(translate
+    COMMAND ${CMAKE_COMMAND} -E echo "Error: Python not found"
+  )
 else()
   set(translatable_sources_directories src src/qt src/util)
   if(ENABLE_WALLET)
