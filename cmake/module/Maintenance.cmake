@@ -96,8 +96,8 @@ function(add_macos_deploy_target)
       VERBATIM
     )
 
-    string(REPLACE " " "-" osx_volname ${CLIENT_NAME})
     if(CMAKE_HOST_APPLE)
+      string(REPLACE " " "-" osx_volname ${CLIENT_NAME})
       add_custom_command(
         OUTPUT ${PROJECT_BINARY_DIR}/${osx_volname}.zip
         COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/contrib/macdeploy/macdeployqtplus ${macos_app} -translations-dir=${QT_TRANSLATIONS_DIR} -zip=${osx_volname}
@@ -128,13 +128,13 @@ function(add_macos_deploy_target)
         )
       else()
         add_custom_command(
-          OUTPUT ${PROJECT_BINARY_DIR}/dist/${osx_volname}.zip
+          OUTPUT ${PROJECT_BINARY_DIR}/dist/bitcoin-macos-app.zip
           WORKING_DIRECTORY dist
-          COMMAND ${PROJECT_SOURCE_DIR}/cmake/script/macos_zip.sh ${ZIP_EXECUTABLE} ${osx_volname}.zip
+          COMMAND ${PROJECT_SOURCE_DIR}/cmake/script/macos_zip.sh ${ZIP_EXECUTABLE} bitcoin-macos-app.zip
           VERBATIM
         )
         add_custom_target(deploy
-          DEPENDS ${PROJECT_BINARY_DIR}/dist/${osx_volname}.zip
+          DEPENDS ${PROJECT_BINARY_DIR}/dist/bitcoin-macos-app.zip
         )
       endif()
     endif()
