@@ -1,5 +1,3 @@
-#include <wallet/bitgoldstaker.h>
-#include <wallet/wallet.h>
 #include <chrono>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -8,6 +6,8 @@
 #include <pos/stake.h>
 #include <util/time.h>
 #include <validation.h>
+#include <wallet/bitgoldstaker.h>
+#include <wallet/wallet.h>
 
 #include <algorithm>
 #include <logging.h>
@@ -33,6 +33,11 @@ void BitGoldStaker::Stop()
 {
     m_stop = true;
     if (m_thread.joinable()) m_thread.join();
+}
+
+bool BitGoldStaker::IsActive() const
+{
+    return m_thread.joinable() && !m_stop;
 }
 
 void BitGoldStaker::ThreadStaker()
@@ -178,4 +183,3 @@ void BitGoldStaker::ThreadStaker()
 }
 
 } // namespace wallet
-

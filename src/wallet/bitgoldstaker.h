@@ -11,7 +11,8 @@ class CWallet;
 /** BitGoldStaker runs a background thread performing simple proof-of-stake
  *  block creation by selecting mature UTXOs and submitting new blocks. The
  *  implementation is minimal and intended for experimental use only. */
-class BitGoldStaker {
+class BitGoldStaker
+{
 public:
     explicit BitGoldStaker(CWallet& wallet);
     ~BitGoldStaker();
@@ -20,6 +21,8 @@ public:
     void Start();
     /** Stop the staking thread. */
     void Stop();
+    /** Return true if the staking thread is active. */
+    bool IsActive() const;
 
 private:
     /** Main thread loop. Gathers eligible UTXOs, checks stake kernels, builds
