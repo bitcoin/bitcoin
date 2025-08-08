@@ -122,6 +122,8 @@ BITCOIN_TESTS =\
   test/governance_validators_tests.cpp \
   test/coinjoin_inouts_tests.cpp \
   test/coinjoin_dstxmanager_tests.cpp \
+  test/coinjoin_basemanager_tests.cpp \
+  test/coinjoin_queue_tests.cpp \
   test/hash_tests.cpp \
   test/httpserver_tests.cpp \
   test/i2p_tests.cpp \
