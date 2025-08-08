@@ -97,13 +97,16 @@
          <property name="labelAlignment">
           <set>Qt::AlignRight|Qt::AlignVCenter</set>
          </property>
-         <item row="0" column="0">
-          <widget class="QLabel" name="labelName">
-           <property name="text">
-            <string>Proposal name</string>
-           </property>
-          </widget>
-         </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelName">
+            <property name="text">
+             <string>Proposal &amp;name</string>
+            </property>
+            <property name="buddy">
+             <cstring>editName</cstring>
+            </property>
+           </widget>
+          </item>
          <item row="0" column="1">
            <widget class="QLineEdit" name="editName">
             <property name="sizePolicy">
@@ -120,13 +123,16 @@
             </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="labelUrl">
-           <property name="text">
-            <string>Description URL</string>
-           </property>
-          </widget>
-         </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelUrl">
+            <property name="text">
+             <string>&amp;Description URL</string>
+            </property>
+            <property name="buddy">
+             <cstring>editUrl</cstring>
+            </property>
+           </widget>
+          </item>
          <item row="1" column="1">
            <widget class="QLineEdit" name="editUrl">
             <property name="sizePolicy">
@@ -143,13 +149,16 @@
             </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="labelPayAddr">
-           <property name="text">
-            <string>Payment address</string>
-           </property>
-          </widget>
-         </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelPayAddr">
+            <property name="text">
+             <string>Payment &amp;address</string>
+            </property>
+            <property name="buddy">
+             <cstring>editPayAddr</cstring>
+            </property>
+           </widget>
+          </item>
            <item row="2" column="1">
            <widget class="QValidatedLineEdit" name="editPayAddr">
             <property name="sizePolicy">
@@ -163,13 +172,16 @@
             </property>
            </widget>
           </item>
-         <item row="3" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="labelPayAmt">
-           <property name="text">
-             <string>Payment amount</string>
-           </property>
-          </widget>
-         </item>
+            <property name="text">
+             <string>Payment &amp;amount</string>
+            </property>
+            <property name="buddy">
+             <cstring>spinAmount</cstring>
+            </property>
+           </widget>
+          </item>
          <item row="3" column="1">
            <widget class="QDoubleSpinBox" name="spinAmount">
             <property name="sizePolicy">
@@ -192,13 +204,16 @@
             </property>
           </widget>
          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="labelFirstPayment">
-            <property name="text">
-             <string>First payment</string>
-            </property>
-           </widget>
-          </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="labelFirstPayment">
+             <property name="text">
+              <string>&amp;First payment</string>
+             </property>
+             <property name="buddy">
+              <cstring>comboFirstPayment</cstring>
+             </property>
+            </widget>
+           </item>
            <item row="4" column="1">
             <layout class="QHBoxLayout" name="firstAndPaymentsLayout">
              <property name="spacing">
@@ -220,7 +235,10 @@
              <item>
               <widget class="QLabel" name="labelPaymentsInline">
                <property name="text">
-                <string>Payments</string>
+                <string>Pa&amp;yments</string>
+               </property>
+               <property name="buddy">
+                <cstring>comboPayments</cstring>
                </property>
               </widget>
              </item>
@@ -239,10 +257,13 @@
              </item>
             </layout>
            </item>
-          <item row="6" column="0">
+           <item row="6" column="0">
            <widget class="QLabel" name="labelTotal">
             <property name="text">
-             <string>Total amount</string>
+             <string>To&amp;tal amount</string>
+            </property>
+            <property name="buddy">
+             <cstring>labelTotalValue</cstring>
             </property>
            </widget>
           </item>
@@ -256,7 +277,10 @@
           <item row="7" column="0">
           <widget class="QLabel" name="labelFee">
            <property name="text">
-            <string>Proposal fee</string>
+            <string>Proposal &amp;fee</string>
+           </property>
+           <property name="buddy">
+            <cstring>labelFeeValue</cstring>
            </property>
           </widget>
          </item>
