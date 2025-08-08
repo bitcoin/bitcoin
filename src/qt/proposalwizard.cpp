@@ -13,6 +13,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/optionsmodel.h>
 #include <governance/object.h>
+#include <governance/validators.h>
 
 #include <QDateTime>
 #include <QDateTimeEdit>
@@ -98,18 +99,8 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
 
     // Load proposal fee and set dynamic labels using display unit
     auto updateFeeAndLabels = [this]() {
-        // Fetch governance fee via RPC to keep in sync with node params
-        QString res;
-        CAmount fee_amount = 0;
-        if (runRpc("getgovernanceinfo", res)) {
-            QJsonParseError err{};
-            const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
-            if (err.error == QJsonParseError::NoError && doc.isObject()) {
-                // proposalfee is returned as a float number of coins; convert to duffs
-                const double fee_coins = doc.object().value("proposalfee").toDouble();
-                if (fee_coins > 0) fee_amount = static_cast<CAmount>(fee_coins * COIN);
-            }
-        }
+        const auto info = m_walletModel->node().gov().getGovernanceInfo();
+        const CAmount fee_amount = info.proposalfee;
         const auto unit = m_walletModel && m_walletModel->getOptionsModel() ? m_walletModel->getOptionsModel()->getDisplayUnit() : BitcoinUnit::DASH;
         const QString feeFormatted = BitcoinUnits::formatWithUnit(unit, fee_amount, false, BitcoinUnits::SeparatorStyle::ALWAYS);
         labelFeeValue->setText(feeFormatted.isEmpty() ? QString("-") : feeFormatted);
@@ -124,8 +115,19 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     };
     updateFeeAndLabels();
 
-    // Populate first-payment options by default
-    onSuggestTimes();
+    // Populate first-payment options by default using governance info
+    {
+        const auto info = m_walletModel->node().gov().getGovernanceInfo();
+        comboFirstPayment->clear();
+        const int nextSb = info.nextsuperblock;
+        const int cycle = info.superblockcycle;
+        for (int i = 0; i < 12; ++i) {
+            const int sbHeight = nextSb + i * cycle;
+            const qint64 secs = static_cast<qint64>(i) * cycle * Params().GetConsensus().nPowTargetSpacing;
+            const auto dt = QDateTime::currentDateTimeUtc().addSecs(secs).toLocalTime();
+            comboFirstPayment->addItem(QLocale().toString(dt, QLocale::ShortFormat), sbHeight);
+        }
+    }
 
     // Initialize total amount display (formatted with current unit)
     {
@@ -180,16 +182,14 @@ ProposalWizard::~ProposalWizard() = default;
 void ProposalWizard::buildJsonAndHex()
 {
     // Compute start/end epochs from selected superblocks
-    QString res;
     int start_epoch = 0;
     int end_epoch = 0;
     int firstSb = comboFirstPayment->currentData().toInt();
     int payments = comboPayments->currentData().toInt();
-    if (firstSb > 0 && payments > 0 && runRpc("getgovernanceinfo", res)) {
-        QJsonParseError err{};
-        const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
-        if (err.error == QJsonParseError::NoError && doc.isObject()) {
-            const int cycle = doc.object().value("superblockcycle").toInt();
+    if (firstSb > 0 && payments > 0) {
+        const auto info = m_walletModel->node().gov().getGovernanceInfo();
+        const int cycle = info.superblockcycle;
+        if (cycle > 0) {
             const int prevSb = firstSb - cycle;
             const int lastSb = firstSb + (payments - 1) * cycle;
             const int nextAfterLast = lastSb + cycle;
@@ -230,28 +230,16 @@ void ProposalWizard::buildJsonAndHex()
     editHex->setText(m_hex);
 }
 
-bool ProposalWizard::runRpc(const QString& methodAndArgs, QString& outResult, const WalletModel* walletModel)
-{
-    try {
-        std::string result;
-        if (!RPCConsole::RPCExecuteCommandLine(m_node, result, methodAndArgs.toStdString() + "\n", nullptr, walletModel)) {
-            return false;
-        }
-        outResult = QString::fromStdString(result);
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
+// No longer used after refactor; retained for compatibility if needed
+bool ProposalWizard::runRpc(const QString&, QString&, const WalletModel*) { return false; }
 
 int ProposalWizard::queryConfirmations(const QString& txid)
 {
-    QString res;
-    if (!runRpc(QString("gettransaction %1").arg(txid), res, m_walletModel)) return -1;
-    QJsonParseError err{};
-    const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
-    if (err.error != QJsonParseError::NoError || !doc.isObject()) return -1;
-    return doc.object().value("confirmations").toInt(-1);
+    if (!m_walletModel) return -1;
+    interfaces::WalletTxStatus tx_status;
+    int num_blocks{}; int64_t block_time{};
+    if (!m_walletModel->wallet().tryGetTxStatus(uint256S(txid.toStdString()), tx_status, num_blocks, block_time)) return -1;
+    return tx_status.depth_in_main_chain;
 }
 
 void ProposalWizard::onSuggestTimes()
@@ -292,12 +280,12 @@ void ProposalWizard::onBackToDetails()
 void ProposalWizard::onValidateJson()
 {
     buildJsonAndHex();
-    QString res;
-    if (runRpc(QString("gobject check %1").arg(m_hex), res)) {
+    CProposalValidator validator(m_hex.toStdString());
+    if (validator.Validate()) {
         labelValidateStatus->setText(tr("Valid"));
         btnNext2->setEnabled(true);
     } else {
-        labelValidateStatus->setText(tr("Invalid"));
+        labelValidateStatus->setText(tr("Invalid: %1").arg(QString::fromStdString(validator.GetErrorMessages())));
         btnNext2->setEnabled(false);
     }
 }
@@ -328,10 +316,13 @@ void ProposalWizard::onPrepare()
     }
 
     const int64_t now = QDateTime::currentSecsSinceEpoch();
-    QString res;
-    // gobject prepare 0 1 <now> <hex>
-    if (!runRpc(QString("gobject prepare 0 1 %1 %2").arg(now).arg(m_hex), res, m_walletModel)) return;
-    m_txid = res.trimmed();
+    std::string txid_str; std::string error;
+    COutPoint none; // null by default
+    if (!m_walletModel->node().gov().prepareProposal(m_walletModel->wallet().wallet(), uint256(), 1, now, m_hex.toStdString(), none, txid_str, error)) {
+        QMessageBox::critical(this, tr("Prepare failed"), QString::fromStdString(error));
+        return;
+    }
+    m_txid = QString::fromStdString(txid_str);
     editTxid->setText(m_txid);
     btnPrepare->setEnabled(false);
     m_prepareTime = now;
@@ -380,16 +371,18 @@ void ProposalWizard::onSubmit()
 {
     // Submit with same parent/revision/time and hex, including fee txid
     const int64_t now = (m_prepareTime > 0 ? m_prepareTime : QDateTime::currentSecsSinceEpoch());
-    QString res;
+    std::string res;
     if (m_submitted) {
         QMessageBox::information(this, tr("Already submitted"), tr("This proposal has already been submitted."));
         return;
     }
-    if (!runRpc(QString("gobject submit 0 1 %1 %2 %3").arg(now).arg(m_hex).arg(m_txid), res, m_walletModel)) {
-        QMessageBox::critical(this, tr("Submission failed"), tr("Unable to submit proposal. Check the debug console for details."));
+    std::string error;
+    std::string obj_hash;
+    if (!m_walletModel->node().gov().submitProposal(uint256(), 1, now, m_hex.toStdString(), uint256S(m_txid.toStdString()), obj_hash, error)) {
+        QMessageBox::critical(this, tr("Submission failed"), QString::fromStdString(error));
         return;
     }
-    const QString govId = res.trimmed();
+    const QString govId = QString::fromStdString(obj_hash);
     editGovObjId->setText(govId);
     QMessageBox::information(this, tr("Proposal submitted"), tr("Your proposal was submitted successfully.\nID: %1").arg(govId));
     m_submitted = true;

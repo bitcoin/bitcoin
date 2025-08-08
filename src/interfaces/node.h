@@ -72,6 +72,21 @@ public:
     virtual bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) = 0;
     virtual bool isEnabled() = 0;
     virtual bool processVoteAndRelay(const CGovernanceVote& vote, std::string& error) = 0;
+    struct GovernanceInfo {
+        CAmount proposalfee{0};
+        int superblockcycle{0};
+        int superblockmaturitywindow{0};
+        int lastsuperblock{0};
+        int nextsuperblock{0};
+        int fundingthreshold{0};
+        CAmount governancebudget{0};
+    };
+    virtual GovernanceInfo getGovernanceInfo() = 0;
+    virtual bool prepareProposal(void* wallet_ptr, const uint256& parent, int32_t revision, int64_t created_time,
+                                 const std::string& data_hex, const COutPoint& outpoint,
+                                 std::string& out_fee_txid, std::string& error) = 0;
+    virtual bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
+                                const uint256& fee_txid, std::string& out_object_hash, std::string& error) = 0;
     virtual void setContext(node::NodeContext* context) {}
 };
 

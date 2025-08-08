@@ -42,6 +42,7 @@
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <shutdown.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
@@ -53,6 +54,10 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+
+#include <wallet/wallet.h>
+#include <wallet/spend.h>
+#include <governance/validators.h>
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
@@ -154,6 +159,106 @@ public:
         }
         error = "Governance manager not available";
         return false;
+    }
+    GovernanceInfo getGovernanceInfo() override
+    {
+        GovernanceInfo info;
+        if (context().chainman) {
+            const CBlockIndex* tip = WITH_LOCK(::cs_main, return context().chainman->ActiveChain().Tip());
+            int last = 0, next = 0;
+            const int height = tip ? tip->nHeight : 0;
+            CSuperblock::GetNearestSuperblocksHeights(height, last, next);
+            info.lastsuperblock = last;
+            info.nextsuperblock = next;
+        }
+        info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
+        info.superblockcycle = Params().GetConsensus().nSuperblockCycle;
+        info.superblockmaturitywindow = Params().GetConsensus().nSuperblockMaturityWindow;
+        if (context().dmnman) {
+            info.fundingthreshold = context().dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
+        }
+        if (context().chainman) {
+            info.governancebudget = CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), info.nextsuperblock);
+        }
+        return info;
+    }
+    bool prepareProposal(void* wallet_void, const uint256& parent, int32_t revision, int64_t created_time,
+                         const std::string& data_hex, const COutPoint& outpoint,
+                         std::string& out_fee_txid, std::string& error) override
+    {
+        wallet::CWallet* const wallet = reinterpret_cast<wallet::CWallet*>(wallet_void);
+        if (!wallet) { error = "Wallet not available"; return false; }
+        CGovernanceObject govobj(parent, revision, created_time, uint256(), data_hex);
+        if (govobj.GetObjectType() != GovernanceObject::PROPOSAL) {
+            error = "Invalid object type, only proposals can be validated"; return false;
+        }
+        CProposalValidator validator(data_hex);
+        if (!validator.Validate()) {
+            error = "Invalid proposal data: " + validator.GetErrorMessages();
+            return false;
+        }
+        // txindex is optional; include header and check existence where available
+        #ifdef TXINDEX_ENABLED
+        if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
+        #endif
+        LOCK(wallet->cs_wallet);
+        const ChainstateManager& chainman = *Assert(context().chainman);
+        {
+            LOCK(cs_main);
+            std::string strError;
+            if (!govobj.IsValidLocally(Assert(context().dmnman)->GetListAtChainTip(), chainman, strError, false)) {
+                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
+                return false;
+            }
+        }
+        CTransactionRef tx;
+        if (!GenBudgetSystemCollateralTx(*wallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
+            error = "Error making collateral transaction for governance object.";
+            return false;
+        }
+        if (!wallet->WriteGovernanceObject(Governance::Object{parent, revision, created_time, tx->GetHash(), data_hex})) {
+            error = "WriteGovernanceObject failed";
+            return false;
+        }
+        wallet->CommitTransaction(tx, {}, {});
+        out_fee_txid = tx->GetHash().ToString();
+        return true;
+    }
+    bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
+                        const uint256& fee_txid, std::string& out_object_hash, std::string& error) override
+    {
+        if (!context().govman || !context().dmnman || !context().chainman) { error = "Governance not available"; return false; }
+        if(!Assert(context().mn_sync)->IsBlockchainSynced()) { error = "Client not synced"; return false; }
+        const auto mnList = Assert(context().dmnman)->GetListAtChainTip();
+        CGovernanceObject govobj(parent, revision, created_time, fee_txid, data_hex);
+        if (govobj.GetObjectType() == GovernanceObject::TRIGGER) { error = "Submission of triggers is not available"; return false; }
+        if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
+            CProposalValidator validator(data_hex);
+            if (!validator.Validate()) { error = "Invalid proposal data: " + validator.GetErrorMessages(); return false; }
+        }
+        const CTxMemPool& mempool = *Assert(context().mempool);
+        bool fMissingConfirmations;
+        {
+            #ifdef TXINDEX_ENABLED
+            if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
+            #endif
+            LOCK2(cs_main, mempool.cs);
+            std::string strError;
+            if (!govobj.IsValidLocally(mnList, *Assert(context().chainman), strError, fMissingConfirmations, true) && !fMissingConfirmations) {
+                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
+                return false;
+            }
+        }
+        if (!Assert(context().govman)->MasternodeRateCheck(govobj)) { error = "Object creation rate limit exceeded"; return false; }
+        PeerManager& peerman = EnsurePeerman(context());
+        if (fMissingConfirmations) {
+            context().govman->AddPostponedObject(govobj);
+            govobj.Relay(peerman, *Assert(context().mn_sync));
+        } else {
+            context().govman->AddGovernanceObject(govobj, peerman);
+        }
+        out_object_hash = govobj.GetHash().ToString();
+        return true;
     }
     void setContext(NodeContext* context) override
     {
