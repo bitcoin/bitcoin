@@ -73,13 +73,8 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             tx = template.get_tx()
             node.p2ps[0].send_txs_and_test(
                 [tx], node, success=False,
-                expect_disconnect=False,
                 reject_reason=template.reject_reason,
             )
-
-            if template.expect_disconnect:
-                self.log.info("Reconnecting to peer")
-                self.reconnect_p2p()
 
         # Make two p2p connections to provide the node with orphans
         # * p2ps[0] will send valid orphan txs (one with low fee)
