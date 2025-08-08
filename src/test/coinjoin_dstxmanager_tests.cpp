@@ -63,9 +63,20 @@ BOOST_AUTO_TEST_CASE(update_heights_block_connect_disconnect)
 
     // Height should set to 100 on connect
     man.BlockConnected(block, &index);
+    {
+        auto got = man.GetDSTX(dstx.tx->GetHash());
+        BOOST_CHECK(static_cast<bool>(got));
+        BOOST_CHECK(got.GetConfirmedHeight().has_value());
+        BOOST_CHECK_EQUAL(*got.GetConfirmedHeight(), 100);
+    }
 
     // Height should clear on disconnect
     man.BlockDisconnected(block, nullptr);
+    {
+        auto got = man.GetDSTX(dstx.tx->GetHash());
+        BOOST_CHECK(static_cast<bool>(got));
+        BOOST_CHECK(!got.GetConfirmedHeight().has_value());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
