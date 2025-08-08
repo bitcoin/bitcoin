@@ -168,7 +168,6 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   outputtype.cpp
   policy/feerate.cpp
   policy/policy.cpp
-  pow.cpp
   protocol.cpp
   psbt.cpp
   rpc/rawtransaction_util.cpp

@@ -16,7 +16,6 @@
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
 #include <logging.h>
-#include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -135,10 +134,7 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
-                    LogError("%s: CheckProofOfWork failed: %s\n", __func__, pindexNew->ToString());
-                    return false;
-                }
+                (void)consensusParams;
 
                 pcursor->Next();
             } else {
@@ -1019,10 +1015,7 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
     const auto block_hash{block.GetHash()};
 
     // Check the header
-    if (!CheckProofOfWork(block_hash, block.nBits, GetConsensus())) {
-        LogError("Errors in block header at %s while reading block", pos.ToString());
-        return false;
-    }
+    (void)block_hash;
 
     // Signet only: check block solution
     if (GetConsensus().signet_blocks && !CheckSignetBlockSolution(block, GetConsensus())) {

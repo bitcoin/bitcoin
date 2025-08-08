@@ -87,7 +87,6 @@ add_executable(fuzz
   policy_estimator.cpp
   policy_estimator_io.cpp
   poolresource.cpp
-  pow.cpp
   prevector.cpp
   primitives_transaction.cpp
   process_message.cpp

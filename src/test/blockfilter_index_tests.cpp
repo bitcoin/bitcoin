@@ -10,7 +10,6 @@
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
 #include <node/miner.h>
-#include <pow.h>
 #include <test/util/blockfilter.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
@@ -86,7 +85,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         block.hashMerkleRoot = BlockMerkleRoot(block);
     }
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_node.chainman->GetConsensus())) ++block.nNonce;
+    block.nNonce = 0;
 
     return block;
 }

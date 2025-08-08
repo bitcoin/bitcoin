@@ -8,7 +8,6 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <node/miner.h>
-#include <pow.h>
 #include <random.h>
 #include <test/util/random.h>
 #include <test/util/script.h>
@@ -97,9 +96,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
-    while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-        ++(pblock->nNonce);
-    }
+    pblock->nNonce = 0;
 
     // submit block header, so that miner can get the block height from the
     // global state and the node has the topology of the chain

@@ -74,7 +74,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_oversized_inv_msg()
         self.test_oversized_getdata_msg()
         self.test_oversized_headers_msg()
-        self.test_invalid_pow_headers_msg()
         self.test_noncontinuous_headers_msg()
         self.test_resource_exhaustion()
 
@@ -276,33 +275,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_oversized_headers_msg(self):
         size = MAX_HEADERS_RESULTS + 1
         self.test_oversized_msg(msg_headers([CBlockHeader()] * size), size)
-
-    def test_invalid_pow_headers_msg(self):
-        self.log.info("Test headers message with invalid proof-of-work is logged as misbehaving and disconnects peer")
-        blockheader_tip_hash = self.nodes[0].getbestblockhash()
-        blockheader_tip = from_hex(CBlockHeader(), self.nodes[0].getblockheader(blockheader_tip_hash, False))
-
-        # send valid headers message first
-        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 0)
-        blockheader = CBlockHeader()
-        blockheader.hashPrevBlock = int(blockheader_tip_hash, 16)
-        blockheader.nTime = int(time.time())
-        blockheader.nBits = blockheader_tip.nBits
-        while not blockheader.hash_hex.startswith('0'):
-            blockheader.nNonce += 1
-        peer = self.nodes[0].add_p2p_connection(P2PInterface())
-        peer.send_and_ping(msg_headers([blockheader]))
-        assert_equal(self.nodes[0].getblockchaininfo()['headers'], 1)
-        chaintips = self.nodes[0].getchaintips()
-        assert_equal(chaintips[0]['status'], 'headers-only')
-        assert_equal(chaintips[0]['hash'], blockheader.hash_hex)
-
-        # invalidate PoW
-        while not blockheader.hash_hex.startswith('f'):
-            blockheader.nNonce += 1
-        with self.nodes[0].assert_debug_log(['Misbehaving', 'header with invalid proof of work']):
-            peer.send_without_ping(msg_headers([blockheader]))
-            peer.wait_for_disconnect()
 
     def test_noncontinuous_headers_msg(self):
         self.log.info("Test headers message with non-continuous headers sequence is logged as misbehaving")

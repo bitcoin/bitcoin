@@ -20,7 +20,6 @@
 #include <node/kernel_notifications.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
-#include <pow.h>
 #include <primitives/transaction.h>
 #include <pos/stake.h>
 #include <util/moneystr.h>
@@ -60,10 +59,8 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
         pblock->nTime = nNewTime;
     }
 
-    // Updating time can change work required on testnet:
-    if (consensusParams.fPowAllowMinDifficultyBlocks) {
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
-    }
+    (void)consensusParams;
+    (void)pindexPrev;
 
     return nNewTime - nOldTime;
 }
@@ -185,7 +182,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
-    pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
+    pblock->nBits          = pindexPrev->nBits;
     pblock->nNonce         = 0;
 
     if (m_options.test_block_validity) {
@@ -649,7 +646,7 @@ bool CreatePosBlock(wallet::CWallet& wallet)
     block.nTime = std::max<int64_t>(
         GetMinimumTime(pindexPrev, consensus.DifficultyAdjustmentInterval()),
         TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()));
-    block.nBits = GetNextWorkRequired(pindexPrev, &block, consensus);
+    block.nBits = pindexPrev->nBits;
     block.nNonce = 0;
     block.hashMerkleRoot = BlockMerkleRoot(block);
 

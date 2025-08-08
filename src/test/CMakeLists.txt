@@ -45,7 +45,6 @@ add_executable(test_bitcoin
   fs_tests.cpp
   getarg_tests.cpp
   hash_tests.cpp
-  headers_sync_chainwork_tests.cpp
   httpserver_tests.cpp
   i2p_tests.cpp
   interfaces_tests.cpp
@@ -72,7 +71,6 @@ add_executable(test_bitcoin
   policy_fee_tests.cpp
   policyestimator_tests.cpp
   pool_tests.cpp
-  pow_tests.cpp
   stake_tests.cpp
   prevector_tests.cpp
   raii_event_tests.cpp
@@ -124,7 +122,6 @@ add_executable(test_bitcoin
   validation_chainstate_tests.cpp
   validation_chainstatemanager_tests.cpp
   validation_flush_tests.cpp
-  validation_header_tests.cpp
   validation_tests.cpp
   validationinterface_tests.cpp
   versionbits_tests.cpp

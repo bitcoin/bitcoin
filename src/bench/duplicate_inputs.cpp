@@ -8,7 +8,6 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -41,7 +40,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
     LOCK(cs_main);
     CBlockIndex* pindexPrev = testing_setup->m_node.chainman->ActiveChain().Tip();
     assert(pindexPrev != nullptr);
-    block.nBits = GetNextWorkRequired(pindexPrev, &block, chainparams.GetConsensus());
+    block.nBits = 0;
     block.nNonce = 0;
     auto nHeight = pindexPrev->nHeight + 1;
 

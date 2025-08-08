@@ -14,7 +14,6 @@
 #include <key_io.h>
 #include <node/types.h>
 #include <outputtype.h>
-#include <pow.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
@@ -1403,6 +1402,6 @@ std::vector<RPCResult> ScriptPubKeyDoc() {
 
 uint256 GetTarget(const CBlockIndex& blockindex, const uint256 pow_limit)
 {
-    arith_uint256 target{*CHECK_NONFATAL(DeriveTarget(blockindex.nBits, pow_limit))};
-    return ArithToUint256(target);
+    (void)blockindex;
+    return pow_limit;
 }
