@@ -1,8 +1,8 @@
 #ifndef BITCOIN_POS_STAKE_H
 #define BITCOIN_POS_STAKE_H
 
-#include <primitives/block.h>
 #include <consensus/params.h>
+#include <primitives/block.h>
 #include <uint256.h>
 
 class CBlockIndex;
@@ -22,6 +22,13 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
 inline bool CheckProofOfStake(const CBlock& block, const CBlockIndex* pindexPrev,
                               const Consensus::Params& params)
 {
+    assert(pindexPrev);
+    // Allow the first block after genesis (height 1) to be mined with
+    // proof-of-work for initial supply before proof-of-stake activates.
+    if (pindexPrev->nHeight < 1) {
+        return true;
+    }
+
     if (block.vtx.size() < 2) {
         return false; // Needs coinbase and coinstake
     }
