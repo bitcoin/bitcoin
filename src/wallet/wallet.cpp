@@ -2847,7 +2847,7 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
             rescan_required = true;
         } else if (nLoadWalletRet == DBErrors::UNKNOWN_DESCRIPTOR) {
             error = strprintf(_("Unrecognized descriptor found. Loading wallet %s\n\n"
-                                "The wallet might had been created on a newer version.\n"
+                                "The wallet might have been created on a newer version.\n"
                                 "Please try running the latest software version.\n"), walletFile);
             return nullptr;
         } else if (nLoadWalletRet == DBErrors::UNEXPECTED_LEGACY_ENTRY) {
@@ -3149,7 +3149,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
                 // but fail the rescan with a generic error.
 
                 error = chain.havePruned() ?
-                     _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)") :
+                     _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)") :
                      strprintf(_(
                         "Error loading wallet. Wallet requires blocks to be downloaded, "
                         "and software does not currently support loading wallets while "
