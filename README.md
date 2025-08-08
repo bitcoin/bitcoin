@@ -1,24 +1,27 @@
-Bitcoin Core integration/staging tree
+BitGold integration/staging tree
 =====================================
 
-https://bitcoincore.org
+https://bitgold.org
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+For an immediately usable, binary version of the BitGold software, see
+https://bitgold.org/en/download/.
 
-What is Bitcoin Core?
+What is BitGold?
 ---------------------
 
-Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
-validate blocks and transactions. It also includes a wallet and graphical user
-interface, which can be optionally built.
+BitGold connects to the BitGold peer-to-peer network to download and fully
+validate blocks and transactions. The protocol targets 8-minute block times and
+the block subsidy halves every 90 000 blocks. In addition to proof-of-work,
+BitGold implements proof-of-stake staking so holders can help secure the
+network. The software also includes a wallet and graphical user interface,
+which can be optionally built.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+Further information about BitGold is available in the [doc folder](/doc).
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+BitGold is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/license/MIT.
 
 Development Process
@@ -26,7 +29,7 @@ Development Process
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
 completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+regularly from release branches to indicate new official, stable release versions of BitGold.
 
 The https://github.com/bitcoin-core/gui repository is used exclusively for the
 development of the GUI. Its master branch is identical in all monotree
@@ -35,6 +38,13 @@ that repository unless it is for development reasons.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+
+Staking
+-------
+
+To participate in BitGold's proof-of-stake, run `bitgoldd` or `bitgold-qt` with
+`-staking=1`, or add `staking=1` to `bitgold.conf`. The staking status can be
+checked with `bitgold-cli getstakinginfo`.
 
 Testing
 -------
@@ -70,7 +80,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://explore.transifex.com/bitcoin/bitcoin/).
+[BitGold's Transifex page](https://explore.transifex.com/bitcoin/bitcoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
