@@ -230,9 +230,6 @@ void ProposalWizard::buildJsonAndHex()
     editHex->setText(m_hex);
 }
 
-// No longer used after refactor; retained for compatibility if needed
-bool ProposalWizard::runRpc(const QString&, QString&, const WalletModel*) { return false; }
-
 int ProposalWizard::queryConfirmations(const QString& txid)
 {
     if (!m_walletModel) return -1;
