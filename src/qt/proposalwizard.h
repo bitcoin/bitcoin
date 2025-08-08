@@ -96,7 +96,6 @@ private:
     QTimer* m_confirmTimer{nullptr};
 
     void buildJsonAndHex();
-    bool runRpc(const QString& methodAndArgs, QString& outResult, const WalletModel* walletModel = nullptr);
     int queryConfirmations(const QString& txid);
     void closeEvent(QCloseEvent* event) override;
 };
