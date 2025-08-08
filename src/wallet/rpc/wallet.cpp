@@ -901,7 +901,8 @@ static RPCHelpMan upgradewallet()
 {
     return RPCHelpMan{"upgradewallet",
         "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified.\n"
-        "New keys may be generated and a new wallet backup will need to be made.",
+        "New keys may be generated and a new wallet backup will need to be made.\n"
+        "Consider using RPC upgradetohd instead upgradewallet if you have BIP39 mnemonic or want to set a wallet passphrase also (encrypt wallet).",
         {
             {"version", RPCArg::Type::NUM, RPCArg::Default{int{FEATURE_LATEST}}, "The version number to upgrade to. Default is the latest wallet version."}
         },

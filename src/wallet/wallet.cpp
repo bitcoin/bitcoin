@@ -3211,13 +3211,6 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
         return false;
     }
 
-    // TODO: consider discourage users to skip passphrase for HD wallets for v21
-    if (/* DISABLES CODE */ (false) && nMaxVersion >= FEATURE_HD && !IsHDEnabled()) {
-        error = Untranslated("You should use upgradetohd RPC to upgrade non-HD wallet to HD");
-        error = strprintf(_("Cannot upgrade a non HD wallet from version %i to version %i which is non-HD wallet. Use upgradetohd RPC"), prev_version, version);
-        return false;
-    }
-
     SetMinVersion(GetClosestWalletFeature(version));
 
     return true;
