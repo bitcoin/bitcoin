@@ -6,6 +6,7 @@
 #define BITCOIN_QT_PROPOSALWIZARD_H
 
 #include <QDialog>
+#include <QCloseEvent>
 #include <QObject>
 #include <QString>
 #include <qt/forms/ui_proposalwizard.h>
