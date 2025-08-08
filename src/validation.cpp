@@ -1962,7 +1962,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 100 * COIN; // BitGold: Start with 100 coins per block
+    CAmount nSubsidy = 50 * COIN; // BitGold: Start with 50 coins per block
     // Subsidy is cut in half every nSubsidyHalvingInterval blocks.
     nSubsidy >>= halvings;
     return nSubsidy;
