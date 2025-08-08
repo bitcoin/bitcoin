@@ -40,7 +40,8 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     , m_node(node)
     , m_walletModel(walletModel)
 {
-    auto ui = std::make_unique<Ui::ProposalWizard>();
+    m_ui = std::make_unique<Ui::ProposalWizard>();
+    auto* ui = m_ui.get();
     ui->setupUi(this);
 
     // Prefer the minimum vertical size needed for current content
@@ -161,6 +162,8 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
         this->setMinimumHeight(this->sizeHint().height());
     });
 }
+
+ProposalWizard::~ProposalWizard() = default;
 
 void ProposalWizard::buildJsonAndHex()
 {

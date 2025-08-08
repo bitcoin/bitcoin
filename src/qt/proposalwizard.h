@@ -8,6 +8,8 @@
 #include <QDialog>
 #include <QObject>
 #include <QString>
+#include <qt/forms/ui_proposalwizard.h>
+#include <memory>
 
 class QDateTimeEdit;
 class QDoubleSpinBox;
@@ -21,12 +23,14 @@ class QProgressBar;
 
 namespace interfaces { class Node; }
 class WalletModel;
+// The UI header is included above for complete type to satisfy unique_ptr deleter
 
 class ProposalWizard : public QDialog
 {
     Q_OBJECT
 public:
     explicit ProposalWizard(interfaces::Node& node, WalletModel* walletModel, QWidget* parent = nullptr);
+    ~ProposalWizard();
 
 private Q_SLOTS:
     void onSuggestTimes();
@@ -43,6 +47,7 @@ private Q_SLOTS:
 private:
     interfaces::Node& m_node;
     WalletModel* m_walletModel;
+    std::unique_ptr<Ui::ProposalWizard> m_ui;
 
     // UI pointers
     QStackedWidget* stacked{nullptr};
