@@ -301,9 +301,11 @@ void ProposalWizard::onPrepare()
     m_prepareTime = now;
 
     // Start polling confirmations every 10s
-    auto* timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &ProposalWizard::onMaybeAdvanceAfterConfirmations);
-    timer->start(10000);
+    if (!m_confirmTimer) {
+        m_confirmTimer = new QTimer(this);
+        connect(m_confirmTimer, &QTimer::timeout, this, &ProposalWizard::onMaybeAdvanceAfterConfirmations);
+    }
+    m_confirmTimer->start(10000);
 }
 
 void ProposalWizard::onMaybeAdvanceAfterConfirmations()
@@ -326,6 +328,7 @@ void ProposalWizard::onMaybeAdvanceAfterConfirmations()
         if (remaining == 0) {
             labelEta->setText(tr("Estimated time remaining: Ready"));
             labelEta2->setText(tr("Estimated time remaining: Ready"));
+            if (m_confirmTimer) m_confirmTimer->stop();
         } else {
             const auto mins = (secs + 59) / 60;
             labelEta->setText(tr("Estimated time remaining: %1 min").arg(mins));
@@ -361,6 +364,12 @@ void ProposalWizard::onSubmit()
     m_submitted = true;
     btnSubmit->setEnabled(false);
     // When 6 confs are reached show a final success message
+}
+
+void ProposalWizard::closeEvent(QCloseEvent* event)
+{
+    if (m_confirmTimer) m_confirmTimer->stop();
+    QDialog::closeEvent(event);
 }
 
 void ProposalWizard::onGoToSubmit()

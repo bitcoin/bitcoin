@@ -20,6 +20,7 @@ class QPlainTextEdit;
 class QPushButton;
 class QStackedWidget;
 class QProgressBar;
+class QTimer;
 
 namespace interfaces { class Node; }
 class WalletModel;
@@ -92,10 +93,12 @@ private:
     int m_requiredConfs{6};
     int m_lastConfs{-1};
     bool m_submitted{false};
+    QTimer* m_confirmTimer{nullptr};
 
     void buildJsonAndHex();
     bool runRpc(const QString& methodAndArgs, QString& outResult, const WalletModel* walletModel = nullptr);
     int queryConfirmations(const QString& txid);
+    void closeEvent(QCloseEvent* event) override;
 };
 
 #endif // BITCOIN_QT_PROPOSALWIZARD_H
