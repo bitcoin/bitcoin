@@ -196,11 +196,23 @@ void ProposalWizard::buildJsonAndHex()
             // Midpoints in blocks; convert roughly to seconds relative to now
             const int startMidBlocks = (firstSb + prevSb) / 2;
             const int endMidBlocks = (lastSb + nextAfterLast) / 2;
-            // We don't know absolute time for those heights in GUI; approximate using 150s per block delta from first option
+            // We don't know absolute time for those heights in GUI; approximate using consensus block time
             // Use now as baseline; this is only to pass validator and give a stable window
             const qint64 now = QDateTime::currentSecsSinceEpoch();
-            start_epoch = static_cast<int>(now + (startMidBlocks - firstSb) * 150LL);
-            end_epoch = static_cast<int>(now + (endMidBlocks - firstSb) * 150LL);
+            const int64_t targetSpacing = Params().GetConsensus().nPowTargetSpacing; // seconds
+            const int64_t deltaStartBlocks = static_cast<int64_t>(startMidBlocks) - static_cast<int64_t>(firstSb);
+            const int64_t deltaEndBlocks = static_cast<int64_t>(endMidBlocks) - static_cast<int64_t>(firstSb);
+            // Guard against overflow when multiplying
+            const int64_t maxMultiplier = std::numeric_limits<int64_t>::max() / std::max<int64_t>(1, targetSpacing);
+            const int64_t clampedDeltaStart = std::clamp<int64_t>(deltaStartBlocks, -maxMultiplier, maxMultiplier);
+            const int64_t clampedDeltaEnd = std::clamp<int64_t>(deltaEndBlocks, -maxMultiplier, maxMultiplier);
+            const int64_t startOffsetSecs = clampedDeltaStart * targetSpacing;
+            const int64_t endOffsetSecs = clampedDeltaEnd * targetSpacing;
+            const int64_t startEpoch64 = now + startOffsetSecs;
+            const int64_t endEpoch64 = now + endOffsetSecs;
+            // Clamp to 32-bit int range used by validator
+            start_epoch = static_cast<int>(std::clamp<int64_t>(startEpoch64, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
+            end_epoch = static_cast<int>(std::clamp<int64_t>(endEpoch64, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
         }
     }
 
