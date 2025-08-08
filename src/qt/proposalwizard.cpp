@@ -118,6 +118,9 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
         if (labelPrepare) labelPrepare->setText(tr("Prepare (burn %1) and wait for %2 confirmations.")
                                       .arg(feeFormatted)
                                       .arg(GOVERNANCE_FEE_CONFIRMATIONS));
+        // If we ever decide to show unit suffix in the spin box, do it dynamically here
+        // const QString unitName = BitcoinUnits::name(unit);
+        // spinAmount->setSuffix(" " + unitName);
     };
     updateFeeAndLabels();
 
