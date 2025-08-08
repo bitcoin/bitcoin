@@ -182,11 +182,11 @@ public:
         }
         return info;
     }
-    bool prepareProposal(void* wallet_void, const uint256& parent, int32_t revision, int64_t created_time,
+    bool prepareProposal(interfaces::Wallet& wallet_iface, const uint256& parent, int32_t revision, int64_t created_time,
                          const std::string& data_hex, const COutPoint& outpoint,
                          std::string& out_fee_txid, std::string& error) override
     {
-        wallet::CWallet* const wallet = reinterpret_cast<wallet::CWallet*>(wallet_void);
+        wallet::CWallet* const wallet = wallet_iface.wallet();
         if (!wallet) { error = "Wallet not available"; return false; }
         CGovernanceObject govobj(parent, revision, created_time, uint256(), data_hex);
         if (govobj.GetObjectType() != GovernanceObject::PROPOSAL) {

@@ -318,7 +318,7 @@ void ProposalWizard::onPrepare()
     const int64_t now = QDateTime::currentSecsSinceEpoch();
     std::string txid_str; std::string error;
     COutPoint none; // null by default
-    if (!m_walletModel->node().gov().prepareProposal(m_walletModel->wallet().wallet(), uint256(), 1, now, m_hex.toStdString(), none, txid_str, error)) {
+    if (!m_walletModel->node().gov().prepareProposal(m_walletModel->wallet(), uint256(), 1, now, m_hex.toStdString(), none, txid_str, error)) {
         QMessageBox::critical(this, tr("Prepare failed"), QString::fromStdString(error));
         return;
     }

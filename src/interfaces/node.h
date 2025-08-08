@@ -47,6 +47,7 @@ class CCoinControl;
 
 namespace interfaces {
 class Handler;
+class Wallet; // forward declaration for type-safe wallet parameter
 class WalletLoader;
 namespace CoinJoin {
 class Loader;
@@ -82,7 +83,7 @@ public:
         CAmount governancebudget{0};
     };
     virtual GovernanceInfo getGovernanceInfo() = 0;
-    virtual bool prepareProposal(void* wallet_ptr, const uint256& parent, int32_t revision, int64_t created_time,
+    virtual bool prepareProposal(Wallet& wallet, const uint256& parent, int32_t revision, int64_t created_time,
                                  const std::string& data_hex, const COutPoint& outpoint,
                                  std::string& out_fee_txid, std::string& error) = 0;
     virtual bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
