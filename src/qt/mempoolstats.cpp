@@ -104,7 +104,7 @@ void MempoolStats::drawChart()
         txCountValueItem = scene->addText("N/A");
         txCountValueItem->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Bold));
 
-        cbShowMinFeerate = new QCheckBox("MinRelayFee per KB");
+        cbShowMinFeerate = new QCheckBox("Min relay fee per kB");
         cbShowMinFeerate->setChecked(false);
         minFeeSwitch = scene->addWidget(cbShowMinFeerate);
         scene->addItem(minFeeSwitch);
