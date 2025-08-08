@@ -725,6 +725,29 @@
    <container>0</container>
   </customwidget>
  </customwidgets>
+  <tabstops>
+   <tabstop>editName</tabstop>
+   <tabstop>editUrl</tabstop>
+   <tabstop>editPayAddr</tabstop>
+   <tabstop>spinAmount</tabstop>
+   <tabstop>comboFirstPayment</tabstop>
+   <tabstop>comboPayments</tabstop>
+   <tabstop>btnNext1</tabstop>
+   <tabstop>plainJson</tabstop>
+   <tabstop>editHex</tabstop>
+   <tabstop>btnBack1</tabstop>
+   <tabstop>btnValidate</tabstop>
+   <tabstop>btnNext2</tabstop>
+   <tabstop>editTxid</tabstop>
+   <tabstop>btnCopyTxid</tabstop>
+   <tabstop>btnBack2</tabstop>
+   <tabstop>btnPrepare</tabstop>
+   <tabstop>btnNext3</tabstop>
+   <tabstop>editGovObjId</tabstop>
+   <tabstop>btnCopyGovId</tabstop>
+   <tabstop>btnSubmit</tabstop>
+   <tabstop>btnClose</tabstop>
+  </tabstops>
  <resources/>
  <connections/>
 </ui>
