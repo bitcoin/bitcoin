@@ -81,6 +81,19 @@ class TestBitcoinCli(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
 
+    def test_netinfo(self):
+        """Test -netinfo output format."""
+        self.log.info("Test -netinfo header and separate local services line")
+        out = self.nodes[0].cli('-netinfo').send_cli().splitlines()
+        assert out[0].startswith(f"{self.config['environment']['CLIENT_NAME']} client ")
+        assert any(re.match(r"^Local services:.+network", line) for line in out)
+
+        self.log.info("Test -netinfo local services are moved to header if details are requested")
+        det = self.nodes[0].cli('-netinfo', '1').send_cli().splitlines()
+        self.log.debug(f"Test -netinfo 1 header output: {det[0]}")
+        assert re.match(rf"^{re.escape(self.config['environment']['CLIENT_NAME'])} client.+services nwl2?$", det[0])
+        assert not any(line.startswith("Local services:") for line in det)
+
     def run_test(self):
         """Main test logic"""
         self.generate(self.nodes[0], BLOCKS)
@@ -376,6 +389,8 @@ class TestBitcoinCli(BitcoinTestFramework):
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.generate(self.nodes[0], 25)  # maintain block parity with the wallet_compiled conditional branch
+
+        self.test_netinfo()
 
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
