@@ -55,8 +55,10 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#if defined(ENABLE_WALLET)
 #include <wallet/wallet.h>
 #include <wallet/spend.h>
+#endif
 #include <governance/validators.h>
 
 #if defined(HAVE_CONFIG_H)
@@ -186,6 +188,11 @@ public:
                          const std::string& data_hex, const COutPoint& outpoint,
                          std::string& out_fee_txid, std::string& error) override
     {
+        #if !defined(ENABLE_WALLET)
+        (void)wallet_iface; (void)parent; (void)revision; (void)created_time; (void)data_hex; (void)outpoint; (void)out_fee_txid;
+        error = "Wallet functionality disabled at build time";
+        return false;
+        #else
         wallet::CWallet* const wallet = wallet_iface.wallet();
         if (!wallet) { error = "Wallet not available"; return false; }
         CGovernanceObject govobj(parent, revision, created_time, uint256(), data_hex);
@@ -223,6 +230,7 @@ public:
         wallet->CommitTransaction(tx, {}, {});
         out_fee_txid = tx->GetHash().ToString();
         return true;
+        #endif
     }
     bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
                         const uint256& fee_txid, std::string& out_object_hash, std::string& error) override
