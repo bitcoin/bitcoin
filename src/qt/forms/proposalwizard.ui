@@ -480,9 +480,9 @@
        <item>
         <layout class="QVBoxLayout" name="confirmationsLayout">
          <item>
-          <widget class="QLabel" name="labelConfStatus">
+           <widget class="QLabel" name="labelConfStatus">
            <property name="text">
-            <string>Confirmations: 0 / 6 required</string>
+            <string>Confirmations: %1 / %2 required</string>
            </property>
           </widget>
          </item>
@@ -621,10 +621,10 @@
           <number>6</number>
          </property>
          <item>
-          <widget class="QLabel" name="labelConfStatus2">
-           <property name="text">
-            <string>Confirmations: 0 / 6 required</string>
-           </property>
+           <widget class="QLabel" name="labelConfStatus2">
+            <property name="text">
+             <string>Confirmations: %1 / %2 required</string>
+            </property>
           </widget>
          </item>
          <item>
