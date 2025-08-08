@@ -486,6 +486,12 @@
             <property name="maximumHeight">
              <number>10</number>
             </property>
+            <property name="accessibleName">
+             <string>Confirmations progress</string>
+            </property>
+            <property name="accessibleDescription">
+             <string>Shows progress toward the required number of confirmations for the proposal fee transaction.</string>
+            </property>
           </widget>
          </item>
          <item>
@@ -610,6 +616,12 @@
            </property>
             <property name="maximumHeight">
              <number>10</number>
+            </property>
+            <property name="accessibleName">
+             <string>Confirmations progress</string>
+            </property>
+            <property name="accessibleDescription">
+             <string>Shows progress toward the required number of confirmations for the proposal fee transaction.</string>
             </property>
           </widget>
          </item>
