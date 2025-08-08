@@ -10,6 +10,9 @@
 #include <qt/rpcconsole.h>
 #include <interfaces/node.h>
 #include <qt/walletmodel.h>
+#include <qt/bitcoinunits.h>
+#include <qt/optionsmodel.h>
+#include <governance/object.h>
 
 #include <QDateTime>
 #include <QDateTimeEdit>
@@ -59,6 +62,7 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     spinAmount = ui->spinAmount;
     labelFeeValue = ui->labelFeeValue;
     labelTotalValue = ui->labelTotalValue;
+    labelSubheader = ui->labelSubheader;
     btnNext1 = ui->btnNext1;
 
     plainJson = ui->plainJson;
@@ -82,6 +86,7 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     editGovObjId = ui->editGovObjId;
     btnCopyGovId = ui->btnCopyGovId;
     btnSubmit = ui->btnSubmit;
+    labelPrepare = ui->labelPrepare;
 
     // Initialize fields
     // Populate payments dropdown (mainnet 1..12 by default; adjust by network later if needed)
@@ -90,19 +95,30 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     }
     comboPayments->setCurrentIndex(0);
 
-    // Load proposal fee from getgovernanceinfo
-    QString res;
-    if (runRpc("getgovernanceinfo", res)) {
-        // naive parse: find proposalfee
-        QJsonParseError err{};
-        const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
-        if (err.error == QJsonParseError::NoError && doc.isObject()) {
-            const auto fee = doc.object().value("proposalfee").toDouble();
-            if (fee > 0) {
-                labelFeeValue->setText(QString::number(fee, 'f', 8) + " DASH");
+    // Load proposal fee and set dynamic labels using display unit
+    auto updateFeeAndLabels = [this]() {
+        // Fetch governance fee via RPC to keep in sync with node params
+        QString res;
+        CAmount fee_amount = 0;
+        if (runRpc("getgovernanceinfo", res)) {
+            QJsonParseError err{};
+            const auto doc = QJsonDocument::fromJson(res.toUtf8(), &err);
+            if (err.error == QJsonParseError::NoError && doc.isObject()) {
+                // proposalfee is returned as a float number of coins; convert to duffs
+                const double fee_coins = doc.object().value("proposalfee").toDouble();
+                if (fee_coins > 0) fee_amount = static_cast<CAmount>(fee_coins * COIN);
             }
         }
-    }
+        const auto unit = m_walletModel && m_walletModel->getOptionsModel() ? m_walletModel->getOptionsModel()->getDisplayUnit() : BitcoinUnit::DASH;
+        const QString feeFormatted = BitcoinUnits::formatWithUnit(unit, fee_amount, false, BitcoinUnits::SeparatorStyle::ALWAYS);
+        labelFeeValue->setText(feeFormatted.isEmpty() ? QString("-") : feeFormatted);
+        // Dynamic header/subheader and prepare text
+        if (labelSubheader) labelSubheader->setText(tr("A fee of %1 will be burned when you prepare the proposal.").arg(feeFormatted));
+        if (labelPrepare) labelPrepare->setText(tr("Prepare (burn %1) and wait for %2 confirmations.")
+                                      .arg(feeFormatted)
+                                      .arg(GOVERNANCE_FEE_CONFIRMATIONS));
+    };
+    updateFeeAndLabels();
 
     // Populate first-payment options by default
     onSuggestTimes();
@@ -131,6 +147,13 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     connect(ui->btnSubmit, &QPushButton::clicked, this, &ProposalWizard::onSubmit);
     connect(btnCopyGovId, &QPushButton::clicked, this, [this]() { if (editGovObjId) { editGovObjId->selectAll(); editGovObjId->copy(); } });
     connect(ui->btnClose, &QPushButton::clicked, this, &QDialog::accept);
+
+    // Update fee labels on display unit change
+    if (m_walletModel && m_walletModel->getOptionsModel()) {
+        connect(m_walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, [updateFeeAndLabels]() {
+            updateFeeAndLabels();
+        });
+    }
 
     // Re-compute minimum vertical size when switching pages
     connect(stacked, &QStackedWidget::currentChanged, this, [this](int){

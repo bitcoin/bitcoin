@@ -55,6 +55,8 @@ private:
     QDoubleSpinBox* spinAmount{nullptr};
     QLabel* labelFeeValue{nullptr};
     QLabel* labelTotalValue{nullptr};
+    QLabel* labelSubheader{nullptr};
+    QLabel* labelPrepare{nullptr};
     QPushButton* btnNext1{nullptr};
     QPushButton* btnPrepare{nullptr};
 

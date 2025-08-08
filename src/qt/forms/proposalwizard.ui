@@ -73,7 +73,7 @@
        <item>
         <widget class="QLabel" name="labelSubheader">
          <property name="text">
-          <string>A fee of 1 DASH will be burned when you prepare the proposal.</string>
+          <string>A fee will be burned when you prepare the proposal.</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignHCenter|Qt::AlignVCenter</set>
@@ -406,7 +406,7 @@
        <item>
         <widget class="QLabel" name="labelPrepare">
          <property name="text">
-          <string>Prepare (burn 1 DASH) and wait for 6 confirmations.</string>
+          <string>Prepare (burn fee) and wait for confirmations.</string>
          </property>
         </widget>
        </item>
