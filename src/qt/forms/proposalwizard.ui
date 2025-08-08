@@ -564,10 +564,10 @@
      <widget class="QWidget" name="pageSubmit">
       <layout class="QVBoxLayout" name="submitLayout">
        <item>
-        <widget class="QLabel" name="labelSubmit">
-         <property name="text">
-          <string>Submit the proposal once the fee transaction has 6 confirmations.</string>
-         </property>
+         <widget class="QLabel" name="labelSubmit">
+          <property name="text">
+           <string>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</string>
+          </property>
          <property name="wordWrap">
           <bool>true</bool>
          </property>
