@@ -2200,7 +2200,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
             if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
                 return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("mempool-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
             } else {
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
+                return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("block-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
             }
         }
     }
@@ -2674,7 +2674,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (control) {
         auto parallel_result = control->Complete();
         if (parallel_result.has_value() && state.IsValid()) {
-            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(parallel_result->first)), parallel_result->second);
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, strprintf("block-script-verify-flag-failed (%s)", ScriptErrorString(parallel_result->first)), parallel_result->second);
         }
     }
     if (!state.IsValid()) {

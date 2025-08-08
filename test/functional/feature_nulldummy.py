@@ -38,7 +38,7 @@ from test_framework.wallet import getnewdestination
 from test_framework.wallet_util import generate_keypair
 
 NULLDUMMY_TX_ERROR = "mempool-script-verify-flag-failed (Dummy CHECKMULTISIG argument must be zero)"
-NULLDUMMY_BLK_ERROR = "mandatory-script-verify-flag-failed (Dummy CHECKMULTISIG argument must be zero)"
+NULLDUMMY_BLK_ERROR = "block-script-verify-flag-failed (Dummy CHECKMULTISIG argument must be zero)"
 
 def invalidate_nulldummy_tx(tx):
     """Transform a NULLDUMMY compliant tx (i.e. scriptSig starts with OP_0)

@@ -153,7 +153,7 @@ class BIP65Test(BitcoinTestFramework):
             coin_vout = coin.prevout.n
             cltv_invalidate(spendtx, i)
 
-            blk_rej = "mandatory-script-verify-flag-failed"
+            blk_rej = "block-script-verify-flag-failed"
             tx_rej = "mempool-script-verify-flag-failed"
             expected_cltv_reject_reason = [
                 " (Operation not valid with the current stack size)",
