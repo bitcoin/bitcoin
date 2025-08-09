@@ -51,6 +51,8 @@ from test_framework.wallet import (
 
 # 1sat/vB feerate denominated in BTC/KvB
 FEERATE_1SAT_VB = Decimal("0.00001000")
+# 0.1sat/vB feerate denominated in BTC/KvB
+FEERATE_100SAT_KVB = Decimal("0.00000100")
 # Number of seconds to wait to ensure no getdata is received
 GETDATA_WAIT = 60
 
@@ -79,13 +81,13 @@ class PackageRelayTest(BitcoinTestFramework):
         ]]
 
     def create_tx_below_mempoolminfee(self, wallet, utxo_to_spend=None):
-        """Create a 1-input 1sat/vB transaction using a confirmed UTXO. Decrement and use
+        """Create a 1-input 0.1sat/vB transaction using a confirmed UTXO. Decrement and use
         self.sequence so that subsequent calls to this function result in unique transactions."""
 
         self.sequence -= 1
-        assert_greater_than(self.nodes[0].getmempoolinfo()["mempoolminfee"], FEERATE_1SAT_VB)
+        assert_greater_than(self.nodes[0].getmempoolinfo()["mempoolminfee"], FEERATE_100SAT_KVB)
 
-        return wallet.create_self_transfer(fee_rate=FEERATE_1SAT_VB, sequence=self.sequence, utxo_to_spend=utxo_to_spend, confirmed_only=True)
+        return wallet.create_self_transfer(fee_rate=FEERATE_100SAT_KVB, sequence=self.sequence, utxo_to_spend=utxo_to_spend, confirmed_only=True)
 
     @cleanup
     def test_basic_child_then_parent(self):
