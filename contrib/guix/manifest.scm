@@ -493,6 +493,54 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
+(define-public libcxx-18 ;; 18.1.8
+  (package
+    (inherit libcxx) ;; 15.0.7
+    (version (package-version llvm-18))
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/llvm/llvm-project")
+                    (commit (string-append "llvmorg-" version))))
+              (file-name (git-file-name "llvm-project" version))
+              (sha256 (base32 "1l9wm0g9jrpdf309kxjx7xrzf13h81kz8bbp0md14nrz38qll9la"))
+              (patches (map search-patch '("clang-18.0-libc-search-path.patch"
+                                           "clang-17.0-link-dsymutil-latomic.patch")))))
+    (arguments
+     (list
+      #:tests? #f
+      #:configure-flags
+      #~(list "-DLLVM_ENABLE_RUNTIMES=libcxx;libcxxabi;libunwind"
+              "-DCMAKE_C_COMPILER=clang"
+              "-DCMAKE_CXX_COMPILER=clang++"
+              ;; libc++.so is actually a GNU ld style linker script, however,
+              ;; CMake still tries to fix the RUNPATH of it during the install
+              ;; step. This argument tells CMake to use the install directory
+              ;; as RUNPATH and don't attempt to patch it.
+              ;; See also: https://gitlab.kitware.com/cmake/cmake/-/issues/22963
+              "-DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE")
+      #:phases
+      #~(modify-phases %standard-phases
+          (add-after 'unpack 'enter-subdirectory
+            (lambda _
+              (chdir "runtimes")))
+          (add-after 'set-paths 'adjust-CPLUS_INCLUDE_PATH
+            (lambda* (#:key inputs #:allow-other-keys)
+              (let ((gcc (assoc-ref inputs  "gcc")))
+                ;; Hide GCC's C++ headers so that they do not interfere with
+                ;; the ones we are attempting to build.
+                (setenv "CPLUS_INCLUDE_PATH"
+                        (string-join (delete (string-append gcc "/include/c++")
+                                             (string-split (getenv "CPLUS_INCLUDE_PATH")
+                                                           #\:))
+                                     ":"))
+                (format #t
+                        "environment variable `CPLUS_INCLUDE_PATH' changed to ~a~%"
+                        (getenv "CPLUS_INCLUDE_PATH"))
+                #t))))))
+    (native-inputs
+         (list clang-18 libunwind-headers llvm-18 python-minimal))))
+
 ;; The sponge tool from moreutils.
 (define-public sponge
   (package
@@ -543,7 +591,6 @@ inspecting signatures in Mach-O binaries.")
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-13
         cmake-minimal
         gnu-make
         ninja
@@ -556,6 +603,7 @@ inspecting signatures in Mach-O binaries.")
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            (list zip
+                 gcc-toolchain-13
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  nss-certs
@@ -563,10 +611,12 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
+                 gcc-toolchain-13
                  (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-18
+                 libcxx-18
                  lld-18
                  (make-lld-wrapper lld-18 #:lld-as-ld? #t)
                  python-signapple
