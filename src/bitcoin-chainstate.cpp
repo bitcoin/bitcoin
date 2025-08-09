@@ -194,10 +194,10 @@ int main(int argc, char* argv[])
         {
         public:
             uint256 hash;
-            bool found;
+            bool found{false};
             BlockValidationState state;
 
-            explicit submitblock_StateCatcher(const uint256& hashIn) : hash(hashIn), found(false), state() {}
+            explicit submitblock_StateCatcher(const uint256& hashIn) : hash(hashIn), state() {}
 
         protected:
             void BlockChecked(const CBlock& block, const BlockValidationState& stateIn) override
