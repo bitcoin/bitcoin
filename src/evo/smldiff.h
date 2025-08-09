@@ -49,7 +49,7 @@ public:
     uint256 baseBlockHash;
     uint256 blockHash;
     CPartialMerkleTree cbTxMerkleTree;
-    CTransactionRef cbTx;
+    CMutableTransaction cbTx;
     std::vector<uint256> deletedMNs;
     std::vector<CSimplifiedMNListEntry> mnList;
     uint16_t nVersion{CURRENT_VERSION};
