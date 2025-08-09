@@ -119,6 +119,7 @@ bool StartLogging(const ArgsManager& args)
     }
     LogInfo("Default data directory %s", fs::PathToString(GetDefaultDataDir()));
     LogInfo("Using data directory %s", fs::PathToString(gArgs.GetDataDirNet()));
+    LogInfo("Using blocks directory %s", fs::PathToString(gArgs.GetBlocksDirPath()));
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = args.GetConfigFilePath();
