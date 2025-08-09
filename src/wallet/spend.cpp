@@ -12,6 +12,7 @@
 #include <node/types.h>
 #include <numeric>
 #include <policy/policy.h>
+#include <policy/truc_policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -282,6 +283,14 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             if (input_bytes == -1) {
                 input_bytes = CalculateMaximumSignedInputSize(txout, &wallet, &coin_control);
             }
+            const CWalletTx& parent_tx = txo->GetWalletTx();
+            if (wallet.GetTxDepthInMainChain(parent_tx) == 0) {
+                if (parent_tx.tx->version == TRUC_VERSION && coin_control.m_version != TRUC_VERSION) {
+                    return util::Error{strprintf(_("Can't spend unconfirmed version 3 pre-selected input with a version %d tx"), coin_control.m_version)};
+                } else if (coin_control.m_version == TRUC_VERSION && parent_tx.tx->version != TRUC_VERSION) {
+                    return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), parent_tx.tx->version)};
+                }
+            }
         } else {
             // The input is external. We did not find the tx in mapWallet.
             const auto out{coin_control.GetExternalOutput(outpoint)};
@@ -386,6 +395,17 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                 safeTx = false;
             }
 
+            if (nDepth == 0 && params.check_version_trucness) {
+                if (coinControl->m_version == TRUC_VERSION) {
+                    if (wtx.tx->version != TRUC_VERSION) continue;
+                    // this unconfirmed v3 transaction already has a child
+                    if (wtx.truc_child_in_mempool.has_value()) continue;
+                } else {
+                    if (wtx.tx->version == TRUC_VERSION) continue;
+                    Assume(!wtx.truc_child_in_mempool.has_value());
+                }
+            }
+
             if (only_safe && !safeTx) {
                 continue;
             }
@@ -484,6 +504,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl, CoinFilterParams params)
 {
     params.only_spendable = false;
+    params.check_version_trucness = false;
     return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, params);
 }
 
@@ -904,11 +925,17 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         // If no solution is found, return the first detailed error (if any).
         // future: add "error level" so the worst one can be picked instead.
         std::vector<util::Result<SelectionResult>> res_detailed_errors;
+        CoinSelectionParams temp_selection_params = coin_selection_params;
         for (const auto& select_filter : ordered_filters) {
             auto it = filtered_groups.find(select_filter.filter);
             if (it == filtered_groups.end()) continue;
+            if (temp_selection_params.m_version == TRUC_VERSION && (select_filter.filter.conf_mine == 0 || select_filter.filter.conf_theirs == 0)) {
+                if (temp_selection_params.m_max_tx_weight > (TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR)) {
+                    temp_selection_params.m_max_tx_weight = TRUC_CHILD_MAX_VSIZE * WITNESS_SCALE_FACTOR;
+                }
+            }
             if (auto res{AttemptSelection(wallet.chain(), value_to_select, it->second,
-                                          coin_selection_params, select_filter.allow_mixed_output_types)}) {
+                                          temp_selection_params, select_filter.allow_mixed_output_types)}) {
                 return res; // result found
             } else {
                 // If any specific error message appears here, then something particularly wrong might have happened.
@@ -1019,14 +1046,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     FastRandomContext rng_fast;
     CMutableTransaction txNew; // The resulting transaction that we make
 
-    if (coin_control.m_version) {
-        txNew.version = coin_control.m_version.value();
-    }
+    txNew.version = coin_control.m_version;
 
     CoinSelectionParams coin_selection_params{rng_fast}; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
     coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
     coin_selection_params.m_max_tx_weight = coin_control.m_max_tx_weight.value_or(MAX_STANDARD_TX_WEIGHT);
+    coin_selection_params.m_version = coin_control.m_version;
     int minimum_tx_weight = MIN_STANDARD_TX_NONWITNESS_SIZE * WITNESS_SCALE_FACTOR;
     if (coin_selection_params.m_max_tx_weight.value() < minimum_tx_weight || coin_selection_params.m_max_tx_weight.value() > MAX_STANDARD_TX_WEIGHT) {
         return util::Error{strprintf(_("Maximum transaction weight must be between %d and %d"), minimum_tx_weight, MAX_STANDARD_TX_WEIGHT)};
