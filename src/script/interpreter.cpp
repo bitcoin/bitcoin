@@ -343,6 +343,53 @@ static bool EvalChecksigPreTapscript(const valtype& vchSig, const valtype& vchPu
     return true;
 }
 
+static bool EvalChecksigFromStack(const valtype& sig, const valtype& msg, const valtype& pubkey_in, ScriptExecutionData& execdata, unsigned int flags, SigVersion sigversion, ScriptError* serror, bool& success)
+{
+    /*
+     *  The following validation sequence is consensus critical. Please note how --
+     *    upgradable public key versions precede other rules;
+     *    the script execution fails when using empty signature with invalid public key;
+     *    the script execution fails when using non-empty invalid signature.
+     */
+    success = !sig.empty();
+    if (success && sigversion == SigVersion::TAPSCRIPT) {
+        // Implement the sigops/witnesssize ratio test.
+        // Passing with an upgradable public key version is also counted.
+        assert(execdata.m_validation_weight_left_init);
+        execdata.m_validation_weight_left -= VALIDATION_WEIGHT_PER_SIGOP_PASSED;
+        if (execdata.m_validation_weight_left < 0) {
+            return set_error(serror, SCRIPT_ERR_TAPSCRIPT_VALIDATION_WEIGHT);
+        }
+    }
+    if (pubkey_in.size() == 0) {
+        return set_error(serror, SCRIPT_ERR_PUBKEYTYPE);
+    } else if (pubkey_in.size() == 32) {
+        if (!success) {
+            return true;
+        }
+        if (sig.size() != 64) {
+            return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_SIZE);
+        }
+
+        XOnlyPubKey pubkey{pubkey_in};
+
+        if (!pubkey.VerifySchnorr(msg, sig)) {
+            return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);
+        }
+    } else {
+        /*
+         *  New public key version softforks should be defined before this `else` block.
+         *  Generally, the new code should not do anything but failing the script execution. To avoid
+         *  consensus bugs, it should not modify any existing values (including `success`).
+         */
+        if ((flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE) != 0) {
+            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_PUBKEYTYPE);
+        }
+    }
+
+    return true;
+}
+
 static bool EvalChecksigTapscript(const valtype& sig, const valtype& pubkey, ScriptExecutionData& execdata, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* serror, bool& success)
 {
     assert(sigversion == SigVersion::TAPSCRIPT);
@@ -1213,6 +1260,39 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 }
                 break;
 
+                case OP_CHECKSIGFROMSTACK:
+                {
+                    // OP_CHECKSIGFROMSTACK is only available in Tapscript
+                    if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0) {
+                        return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                    }
+
+                    // <sig> <msg> <pubkey>
+                    if (stack.size() < 3) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    const valtype& vchSigIn = stacktop(-3);
+                    const valtype& vchMsg = stacktop(-2);
+                    const valtype& vchPubKey = stacktop(-1);
+
+                    bool fSuccess = true;
+
+                    // Note that (as with CHECKSIG) if a signature was supplied and its
+                    // verification fails, we do _not_ push a "false" result to the stack.
+                    // Rather, we terminate script execution immediately. This might be
+                    // surprising if you're reading this for the first time.
+                    if (!EvalChecksigFromStack(vchSigIn, vchMsg, vchPubKey, execdata, flags, sigversion, serror, fSuccess)) {
+                        return false;
+                    }
+
+                    popstack(stack);
+                    popstack(stack);
+                    popstack(stack);
+                    stack.push_back(fSuccess ? vchTrue : vchFalse);
+                }
+                break;
+
                 default:
                     return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
             }
@@ -1800,10 +1880,19 @@ static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, con
             }
             // New opcodes will be listed here. May use a different sigversion to modify existing opcodes.
             if (IsOpSuccess(opcode)) {
-                if (flags & SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS) {
-                    return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
+                if (opcode == OP_CHECKSIGFROMSTACK) {
+                    if (flags & SCRIPT_VERIFY_DISCOURAGE_CHECKSIGFROMSTACK) {
+                        return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
+                    } else if (!(flags & SCRIPT_VERIFY_CHECKSIGFROMSTACK)) {
+                        return set_success(serror);
+                    }
+                } else {
+                    // OP_SUCCESS behaviour
+                    if (flags & SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS) {
+                        return set_error(serror, SCRIPT_ERR_DISCOURAGE_OP_SUCCESS);
+                    }
+                    return set_success(serror);
                 }
-                return set_success(serror);
             }
         }
 

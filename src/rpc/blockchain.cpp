@@ -1438,6 +1438,10 @@ UniValue DeploymentInfo(const CBlockIndex* blockindex, const ChainstateManager& 
     SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_SEGWIT);
     SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_TESTDUMMY);
     SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_TAPROOT);
+
+    if (chainman.GetParams().GetChainType() == ChainType::REGTEST) {
+        SoftForkDescPushBack(blockindex, softforks, chainman, Consensus::DEPLOYMENT_CSFS);
+    }
     return softforks;
 }
 } // anon namespace

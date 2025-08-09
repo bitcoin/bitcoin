@@ -263,7 +263,8 @@ public:
      *
      * sigbytes must be exactly 64 bytes.
      */
-    bool VerifySchnorr(const uint256& msg, std::span<const unsigned char> sigbytes) const;
+    bool VerifySchnorr(
+        const std::span<const unsigned char> msg, std::span<const unsigned char> sigbytes) const;
 
     /** Compute the Taproot tweak as specified in BIP341, with *this as internal
      * key:
