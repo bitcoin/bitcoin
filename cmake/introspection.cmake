@@ -118,7 +118,7 @@ check_cxx_source_compiles("
   #include <sys/sysctl.h>
 
   #ifdef __linux__
-  #error Don't use sysctl on Linux, it's deprecated even when it works
+  #error sysctl was removed
   #endif
 
   int main()
@@ -134,7 +134,7 @@ check_cxx_source_compiles("
   #include <sys/sysctl.h>
 
   #ifdef __linux__
-  #error Don't use sysctl on Linux, it's deprecated even when it works
+  #error sysctl was removed
   #endif
 
   int main()
