@@ -29,12 +29,20 @@ BOOST_AUTO_TEST_CASE(stake_block_passes_check)
     }
     staker.Stop();
 
-    LOCK(cs_main);
-    CBlockIndex* tip = m_node.chainman->ActiveChain().Tip();
     CBlock block;
-    BOOST_REQUIRE(m_node.chainman->m_blockman.ReadBlock(block, *tip));
+    CBlockIndex* tip;
+    {
+        LOCK(cs_main);
+        tip = m_node.chainman->ActiveChain().Tip();
+        BOOST_REQUIRE(m_node.chainman->m_blockman.ReadBlock(block, *tip));
+    }
     const Consensus::Params& consensus = m_node.chainman->GetParams().GetConsensus();
-    BOOST_CHECK(CheckProofOfStake(block, tip->pprev, consensus));
+    {
+        LOCK(cs_main);
+        BOOST_CHECK(ContextualCheckProofOfStake(block, tip->pprev,
+                                                m_node.chainman->ActiveChainstate().CoinsTip(),
+                                                m_node.chainman->ActiveChain(), consensus));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(stake_fails_no_utxos)
