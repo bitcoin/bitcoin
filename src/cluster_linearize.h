@@ -919,6 +919,58 @@ private:
         return TxIdx(-1);
     }
 
+    /** Perform an upward or downward merge step, on the specified chunk representative. Returns
+     *  the representative of the merged chunk, or TxIdx(-1) if no merge took place. */
+    template<bool DownWard>
+    TxIdx MergeStep(TxIdx chunk_rep) noexcept
+    {
+        /** Information about the chunk that tx_idx is currently in. */
+        auto& chunk_data = m_tx_data[chunk_rep];
+        SetType chunk_txn = chunk_data.chunk_setinfo.transactions;
+        // Iterate over all transactions in the chunk, figuring out which other chunk each
+        // depends on, but only testing each other chunk once. For those depended-on chunks,
+        // remember the highest-feerate (if DownWard) or lowest-feerate (if !DownWard) one.
+        // If multiple equal-feerate candidate chunks to merge with exist, pick a uniformly
+        // random one among them (using random tiebreaker).
+        SetType explored = chunk_txn;
+        FeeFrac best_other_chunk_feerate;
+        TxIdx best_other_chunk_rep = TxIdx(-1);
+        uint64_t best_other_chunk_tiebreak{0};
+        for (auto tx : chunk_txn) {
+            auto& tx_data = m_tx_data[tx];
+            auto unreached = (DownWard ? tx_data.children : tx_data.parents) - explored;
+            while (unreached.Any()) {
+                m_cost += 3;
+                auto chunk_rep = m_tx_data[unreached.First()].chunk_rep;
+                auto& reached = m_tx_data[m_tx_data[unreached.First()].chunk_rep].chunk_setinfo;
+                explored |= reached.transactions;
+                unreached -= explored;
+                auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached.feerate)
+                                    : FeeRateCompare(reached.feerate, best_other_chunk_feerate);
+                if (cmp > 0) continue;
+                uint64_t tiebreak = m_rng.rand64();
+                if ((cmp < 0) || (tiebreak >= best_other_chunk_tiebreak)) {
+                    best_other_chunk_feerate = reached.feerate;
+                    best_other_chunk_tiebreak = tiebreak;
+                    best_other_chunk_rep = chunk_rep;
+                }
+            }
+        }
+        // Stop if all of the depended-on chunks have a lower/higher feerate than the chunk
+        // that tx_idx is in.
+        if (best_other_chunk_feerate.IsEmpty()) return TxIdx(-1);
+        if (DownWard && best_other_chunk_feerate << chunk_data.chunk_setinfo.feerate) return TxIdx(-1);
+        if (!DownWard && best_other_chunk_feerate >> chunk_data.chunk_setinfo.feerate) return TxIdx(-1);
+        Assume(best_other_chunk_rep != TxIdx(-1));
+        if constexpr (DownWard) {
+            chunk_rep = MergeChunks(chunk_rep, best_other_chunk_rep);
+        } else {
+            chunk_rep = MergeChunks(best_other_chunk_rep, chunk_rep);
+        }
+        Assume(chunk_rep != TxIdx(-1));
+        return chunk_rep;
+    }
+
     /** Perform an upward or downward merge sequence on the specified transaction. Returns the
      *  representative of the merged chunk. */
     template<bool DownWard>
@@ -926,50 +978,9 @@ private:
     {
         auto chunk_rep = m_tx_data[tx_idx].chunk_rep;
         while (true) {
-            /** Information about the chunk that tx_idx is currently in. */
-            auto& chunk_data = m_tx_data[chunk_rep];
-            SetType chunk_txn = chunk_data.chunk_setinfo.transactions;
-            // Iterate over all transactions in the chunk, figuring out which other chunk each
-            // depends on, but only testing each other chunk once. For those depended-on chunks,
-            // remember the highest-feerate (if DownWard) or lowest-feerate (if !DownWard) one.
-            // If multiple equal-feerate candidate chunks to merge with exist, pick a uniformly
-            // random one among them (using random tiebreaker).
-            SetType explored = chunk_txn;
-            FeeFrac best_other_chunk_feerate;
-            TxIdx best_other_chunk_rep = TxIdx(-1);
-            uint64_t best_other_chunk_tiebreak{0};
-            for (auto tx : chunk_txn) {
-                auto& tx_data = m_tx_data[tx];
-                auto unreached = (DownWard ? tx_data.children : tx_data.parents) - explored;
-                while (unreached.Any()) {
-                    m_cost += 3;
-                    auto chunk_rep = m_tx_data[unreached.First()].chunk_rep;
-                    auto& reached = m_tx_data[m_tx_data[unreached.First()].chunk_rep].chunk_setinfo;
-                    explored |= reached.transactions;
-                    unreached -= explored;
-                    auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached.feerate)
-                                        : FeeRateCompare(reached.feerate, best_other_chunk_feerate);
-                    if (cmp > 0) continue;
-                    uint64_t tiebreak = m_rng.rand64();
-                    if ((cmp < 0) || (tiebreak >= best_other_chunk_tiebreak)) {
-                        best_other_chunk_feerate = reached.feerate;
-                        best_other_chunk_tiebreak = tiebreak;
-                        best_other_chunk_rep = chunk_rep;
-                    }
-                }
-            }
-            // Stop if all of the depended-on chunks have a lower/higher feerate than the chunk
-            // that tx_idx is in.
-            if (best_other_chunk_feerate.IsEmpty()) break;
-            if (DownWard && best_other_chunk_feerate << chunk_data.chunk_setinfo.feerate) break;
-            if (!DownWard && best_other_chunk_feerate >> chunk_data.chunk_setinfo.feerate) break;
-            Assume(best_other_chunk_rep != TxIdx(-1));
-            if constexpr (DownWard) {
-                chunk_rep = MergeChunks(chunk_rep, best_other_chunk_rep);
-            } else {
-                chunk_rep = MergeChunks(best_other_chunk_rep, chunk_rep);
-            }
-            Assume(chunk_rep != TxIdx(-1));
+            auto merged_rep = MergeStep<DownWard>(chunk_rep);
+            if (merged_rep == TxIdx(-1)) break;
+            chunk_rep = merged_rep;
         }
         // Add the chunk to the queue of improvable chunks, if it wasn't already there.
         auto& chunk_data = m_tx_data[chunk_rep];
