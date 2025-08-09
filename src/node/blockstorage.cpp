@@ -1087,6 +1087,30 @@ bool BlockManager::ReadRawBlock(std::vector<std::byte>& block, const FlatFilePos
     return true;
 }
 
+bool BlockManager::ReadTxFromBlock(CTransactionRef& tx, const FlatFilePos& block_pos, size_t tx_index) const
+{
+    AutoFile file{OpenBlockFile(block_pos, /*fReadOnly=*/true)};
+    if (file.IsNull()) {
+        LogError("OpenBlockFile failed for %s while reading raw transaction from block", block_pos.ToString());
+        return false;
+    }
+    BufferedReader filein{std::move(file)};
+
+    filein >> CBlockHeader{};
+    size_t tx_count = ReadCompactSize(filein);
+    if (tx_index >= tx_count) {
+        return false;
+    }
+
+    CMutableTransaction tx_data{};
+    for (size_t i = 0; i < tx_index; ++i) {
+        filein >> TX_WITH_WITNESS(tx_data);
+    }
+    filein >> TX_WITH_WITNESS(tx_data);
+    tx = MakeTransactionRef(std::move(tx_data));
+    return true;
+}
+
 FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
 {
     const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
