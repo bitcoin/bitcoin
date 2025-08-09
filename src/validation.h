@@ -1029,6 +1029,7 @@ public:
      * const, which latches this for caching purposes.
      */
     mutable std::atomic<bool> m_cached_finished_ibd{false};
+    mutable std::atomic<bool> m_cached_chaintip_recent{false};
 
     /**
      * Every received block is assigned a unique and increasing identifier, so we
@@ -1142,6 +1143,7 @@ public:
 
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const;
+    void UpdateCachedChaintipRecent() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
     double GuessVerificationProgress(const CBlockIndex* pindex) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
