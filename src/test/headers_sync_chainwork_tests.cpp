@@ -15,8 +15,36 @@
 
 #include <boost/test/unit_test.hpp>
 
+using State = HeadersSyncState::State;
+
 constexpr size_t TARGET_BLOCKS{15'000};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
+
+static HeadersSyncState::ProcessingResult g_latest_result;
+
+// Standard set of checks common to all scenarios. Macro keeps failure lines at the call-site.
+#define CHECK_RESULT(result_expression, hss, exp_state, exp_success, exp_request_more,                   \
+                     min_headers_size, exp_pow_validated_prev, exp_locator_hash)                         \
+    do {                                                                                                 \
+        const auto result = result_expression;                                                           \
+        BOOST_REQUIRE_EQUAL(hss.GetState(), exp_state);                                                  \
+        BOOST_CHECK_EQUAL(result.success, exp_success);                                                  \
+        BOOST_CHECK_EQUAL(result.request_more, exp_request_more);                                        \
+        BOOST_CHECK_GE(result.pow_validated_headers.size(), min_headers_size);                           \
+        std::optional<uint256> pow_validated_prev_opt{exp_pow_validated_prev};                           \
+        if (pow_validated_prev_opt.has_value()) {                                                        \
+            BOOST_CHECK_EQUAL(result.pow_validated_headers.at(0).hashPrevBlock, pow_validated_prev_opt); \
+        } else {                                                                                         \
+            BOOST_CHECK_EQUAL(min_headers_size, 0);                                                      \
+        }                                                                                                \
+        std::optional<uint256> locator_hash_opt{exp_locator_hash};                                       \
+        if (locator_hash_opt.has_value()) {                                                              \
+            BOOST_CHECK_EQUAL(hss.NextHeadersRequestLocator().vHave.at(0), locator_hash_opt);            \
+        } else {                                                                                         \
+            BOOST_CHECK_EQUAL(exp_state, State::FINAL);                                                  \
+        }                                                                                                \
+        g_latest_result = result;                                                                        \
+    } while (false)
 
 /** Search for a nonce to meet (regtest) proof of work */
 static void FindProofOfWork(CBlockHeader& starting_header)
@@ -115,22 +143,29 @@ static void SneakyRedownload(const CBlockIndex* chain_start,
     // initially and then the rest.
     HeadersSyncState hss{CreateState(chain_start)};
 
-    // Just feed one header.
-    (void)hss.ProcessNextHeaders({{first_chain.front()}}, true);
+    // Just feed one header and check state.
+    CHECK_RESULT(hss.ProcessNextHeaders({{first_chain.front()}}, /*full_headers_message=*/true),
+        hss, /*exp_state=*/State::PRESYNC,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*min_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/first_chain.front().GetHash());
 
     // Pretend the message is still "full", so we don't abort.
-    auto result{hss.ProcessNextHeaders(std::span{first_chain}.last(first_chain.size() - 1), true)};
-
     // This chain should look valid, and we should have met the proof-of-work
     // requirement during PRESYNC and transitioned to REDOWNLOAD.
-    BOOST_CHECK(result.success);
-    BOOST_CHECK(result.request_more);
-    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
+    CHECK_RESULT(hss.ProcessNextHeaders(std::span{first_chain}.last(first_chain.size() - 1), true),
+        hss, /*exp_state=*/State::REDOWNLOAD,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*min_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/Params().GenesisBlock().GetHash());
 
     // Try to sneakily feed back the second chain during REDOWNLOAD.
-    result = hss.ProcessNextHeaders(second_chain, true);
-    BOOST_CHECK(!result.success); // foiled!
-    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
+    CHECK_RESULT(hss.ProcessNextHeaders(second_chain, true),
+        hss, /*exp_state=*/State::FINAL,
+        /*exp_success*/false, // Foiled! We detected mismatching headers.
+        /*exp_request_more=*/false,
+        /*min_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/std::nullopt);
 }
 
 static void HappyPath(const CBlockIndex* chain_start,
@@ -140,30 +175,38 @@ static void HappyPath(const CBlockIndex* chain_start,
     HeadersSyncState hss{CreateState(chain_start)};
 
     // Sufficient work transitions us from PRESYNC to REDOWNLOAD:
-    (void)hss.ProcessNextHeaders(first_chain, true);
-    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
+    CHECK_RESULT(hss.ProcessNextHeaders(first_chain, /*full_headers_message=*/true),
+        hss, /*exp_state=*/State::REDOWNLOAD,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*min_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/Params().GenesisBlock().GetHash());
 
     // Process so that the internal threshold isn't met, meaning validated
     // headers shouldn't be returned yet:
-    auto result = hss.ProcessNextHeaders({{first_chain.front()}}, true);
-    BOOST_CHECK_EQUAL(hss.GetState(), HeadersSyncState::State::REDOWNLOAD);
-    BOOST_CHECK_EQUAL(result.pow_validated_headers.size(), 0);
+    CHECK_RESULT(hss.ProcessNextHeaders({{first_chain.front()}}, true),
+        hss, /*exp_state=*/State::REDOWNLOAD,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*min_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/first_chain.front().GetHash());
 
-    // We start receiving headers for permanent storage before completing:
-    result = hss.ProcessNextHeaders(std::span{std::next(first_chain.begin()), std::prev(first_chain.end())}, true);
-    BOOST_CHECK_EQUAL(hss.GetState(), HeadersSyncState::State::REDOWNLOAD);
-    BOOST_CHECK_GT(result.pow_validated_headers.size(), 0);
-    const size_t validated_headers_count = result.pow_validated_headers.size();
+    // We start receiving headers for permanent storage before completing.
+    CHECK_RESULT(hss.ProcessNextHeaders(std::span{std::next(first_chain.begin()), std::prev(first_chain.end())}, true),
+        hss, /*exp_state=*/State::REDOWNLOAD,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*min_headers_size=*/1, /*exp_pow_validated_prev=*/Params().GenesisBlock().GetHash(),
+        /*exp_locator_hash=*/first_chain[first_chain.size() - 2].GetHash());
+    const size_t validated_headers_count{g_latest_result.pow_validated_headers.size()};
+    const uint256 last_validated{g_latest_result.pow_validated_headers.back().GetHash()};
 
     // Feed final header, meeting the work threshold again and
     // completing the REDOWNLOAD phase.
-    result = hss.ProcessNextHeaders({{first_chain.back()}}, true);
-    BOOST_CHECK(result.success);
-    BOOST_CHECK(!result.request_more);
-    // All headers should be ready for acceptance:
-    BOOST_CHECK_EQUAL(validated_headers_count + result.pow_validated_headers.size(), first_chain.size());
-    // Nothing left for the sync logic to do:
-    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
+    CHECK_RESULT(hss.ProcessNextHeaders({{first_chain.back()}}, true),
+        // Nothing left for the sync logic to do:
+        hss, /*exp_state=*/State::FINAL,
+        /*exp_success*/true, /*exp_request_more=*/false,
+        // All headers should be ready for acceptance:
+        /*min_headers_size=*/first_chain.size() - validated_headers_count, /*exp_pow_validated_prev=*/last_validated,
+        /*exp_locator_hash=*/std::nullopt);
 }
 
 static void TooLittleWork(const CBlockIndex* chain_start,
@@ -172,22 +215,26 @@ static void TooLittleWork(const CBlockIndex* chain_start,
     // Verify that just trying to process the second chain would not succeed
     // (too little work).
     HeadersSyncState hss{CreateState(chain_start)};
-    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
+    BOOST_REQUIRE_EQUAL(hss.GetState(), State::PRESYNC);
 
     // Pretend just the first message is "full", so we don't abort.
-    (void)hss.ProcessNextHeaders({{second_chain.front()}}, true);
-    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
+    CHECK_RESULT(hss.ProcessNextHeaders({{second_chain.front()}}, true),
+        hss, /*exp_state=*/State::PRESYNC,
+        /*exp_success*/true, /*exp_request_more=*/true,
+        /*min_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/second_chain.front().GetHash());
 
     // Tell the sync logic that the headers message was not full, implying no
     // more headers can be requested. For a low-work-chain, this should cause
     // the sync to end with no headers for acceptance.
-    const auto result{hss.ProcessNextHeaders(std::span{second_chain}.last(second_chain.size() - 1), false)};
-    BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
-    BOOST_CHECK(result.pow_validated_headers.empty());
-    BOOST_CHECK(!result.request_more);
-    // Nevertheless, no validation errors should have been detected with the
-    // chain:
-    BOOST_CHECK(result.success);
+    CHECK_RESULT(hss.ProcessNextHeaders(std::span{second_chain}.last(second_chain.size() - 1), false),
+        hss, /*exp_state=*/State::FINAL,
+        // Nevertheless, no validation errors should have been detected with the
+        // chain:
+        /*exp_success*/true,
+        /*exp_request_more=*/false,
+        /*min_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+        /*exp_locator_hash=*/std::nullopt);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
