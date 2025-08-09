@@ -5,9 +5,11 @@
 #include <test/util/llmq_tests.h>
 #include <test/util/setup_common.h>
 
-#include <llmq/snapshot.h>
 #include <streams.h>
 #include <univalue.h>
+
+#include <llmq/params.h>
+#include <llmq/snapshot.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -188,6 +190,37 @@ BOOST_AUTO_TEST_CASE(get_quorum_rotation_info_serialization_test)
     emptyInfo.extraShare = false;
 
     BOOST_CHECK(TestSerializationRoundtrip(emptyInfo));
+}
+
+BOOST_AUTO_TEST_CASE(quorum_rotation_info_serialization_test)
+{
+    // Note: mnListDiff{smth} testing requires proper CSimplifiedMNListDiff setup
+    // which is complex and better tested in functional tests
+
+    // Test CQuorumRotationInfo serialization with various optional field combinations
+    CQuorumRotationInfo rotInfo;
+
+    // Set up basic required fields
+    rotInfo.quorumSnapshotAtHMinusC = CQuorumSnapshot({true, false, true}, MODE_SKIPPING_ENTRIES, {1, 2});
+    rotInfo.quorumSnapshotAtHMinus2C = CQuorumSnapshot({false, true, false}, MODE_NO_SKIPPING, {});
+    rotInfo.quorumSnapshotAtHMinus3C = CQuorumSnapshot({true, true, false}, MODE_ALL_SKIPPED, {3});
+
+    // Test without extraShare
+    rotInfo.extraShare = false;
+    BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
+
+    // Test with extraShare but uninitialized optional fields
+    rotInfo.extraShare = true;
+    BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
+
+    // Test with extraShare and initialized snapshot
+    rotInfo.quorumSnapshotAtHMinus4C = CQuorumSnapshot({false, false, true}, MODE_SKIPPING_ENTRIES, {4, 5, 6});
+    BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
+
+    CFinalCommitment commitment{GetLLMQParams(Consensus::LLMQType::LLMQ_TEST), uint256::ONE};
+    rotInfo.lastCommitmentPerIndex.push_back(commitment);
+    rotInfo.quorumSnapshotList.push_back(CQuorumSnapshot({false, false, true}, MODE_SKIPPING_ENTRIES, {7, 8}));
+    BOOST_CHECK(TestSerializationRoundtrip(rotInfo));
 }
 
 BOOST_AUTO_TEST_CASE(quorum_snapshot_json_test)
