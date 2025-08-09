@@ -145,10 +145,6 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         options.require_existing = true;
         DatabaseStatus status;
 
-        if (IsBDBFile(BDBDataFile(path))) {
-            options.require_format = DatabaseFormat::BERKELEY_RO;
-        }
-
         bilingual_str error;
         std::unique_ptr<WalletDatabase> database = MakeDatabase(path, options, status, error);
         if (!database) {
