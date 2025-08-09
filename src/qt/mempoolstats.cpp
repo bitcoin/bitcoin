@@ -51,13 +51,12 @@ void ClickableTextItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
 void ClickableTextItem::setEnabled(bool state)
 {
-    if (state) {
+    if (state)
         // Use system default text color for active item
         setDefaultTextColor(QApplication::palette().color(QPalette::WindowText));
-    } else {
+    else
         // Use system disabled color
         setDefaultTextColor(QApplication::palette().color(QPalette::Disabled, QPalette::WindowText));
-    }
 }
 
 MempoolStats::MempoolStats(QWidget *parent) :
@@ -80,7 +79,9 @@ ui(new Ui::MempoolStats)
     scene = new QGraphicsScene();
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
     updateThemeColors();
+
     if (clientModel)
         drawChart();
 }
