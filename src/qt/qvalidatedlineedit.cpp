@@ -6,8 +6,7 @@
 
 #include <qt/bitcoinaddressvalidator.h>
 #include <qt/guiconstants.h>
-
-#include <cmath>
+#include <qt/guiutil.h>
 
 #include <QColor>
 #include <QCoreApplication>
@@ -31,14 +30,6 @@ void QValidatedLineEdit::setText(const QString& text)
 {
     QLineEdit::setText(text);
     checkValidity();
-}
-
-double ColourLuminosity(QColor c)
-{
-    const auto Lr = std::pow(c.redF(),   2.2) * .2126;
-    const auto Lg = std::pow(c.greenF(), 2.2) * .7152;
-    const auto Lb = std::pow(c.blueF(),  2.2) * .0722;
-    return Lr + Lg + Lb;
 }
 
 void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vector<int>&error_locations)
@@ -67,7 +58,7 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vec
         if (!error_locations.empty()) {
             const QColor normal_text_colour = palette().color(foregroundRole());
             const QColor bg_colour = palette().color(backgroundRole());
-            const bool dark_mode = ColourLuminosity(bg_colour) < .36;
+            const bool dark_mode = GUIUtil::isDarkMode(bg_colour);
             QColor error_colour;
             if (normal_text_colour.red() > normal_text_colour.green() && normal_text_colour.red() > normal_text_colour.blue()) {
                 // red is dominant, avoid fg red
