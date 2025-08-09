@@ -39,10 +39,7 @@ src/stats/*.cpp
 src/stats/*.h
 src/test/block_reward_reallocation_tests.cpp
 src/test/bls_tests.cpp
-src/test/coinjoin_dstxmanager_tests.cpp
-src/test/coinjoin_inouts_tests.cpp
-src/test/coinjoin_queue_tests.cpp
-src/test/coinjoin_server_tests.cpp
+src/test/coinjoin_*.cpp
 src/test/dip0020opcodes_tests.cpp
 src/test/dynamic_activation*.cpp
 src/test/evo*.cpp
