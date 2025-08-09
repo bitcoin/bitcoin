@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
     // Fill transaction with our data
     bool complete = true;
-    BOOST_REQUIRE(!m_wallet.FillPSBT(psbtx, complete, std::nullopt, false, true));
+    BOOST_REQUIRE(!m_wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = true}, complete));
 
     // Get the final tx
     DataStream ssTx{};
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
     // Try to sign the mutated input
     SignatureData sigdata;
-    BOOST_CHECK(m_wallet.FillPSBT(psbtx, complete, std::nullopt, true, true));
+    BOOST_CHECK(m_wallet.FillPSBT(psbtx, {.sign = true, .bip32_derivs = true}, complete));
 }
 
 BOOST_AUTO_TEST_CASE(parse_hd_keypath)
