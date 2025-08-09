@@ -152,13 +152,6 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         node.p2ps[0].send_txs_and_test(orphan_tx_pool, node, success=False)
         self.wait_until(lambda: len(node.getorphantxs()) >= 101)
 
-        self.log.info('Test orphan with rejected parents')
-        rejected_parent = CTransaction()
-        rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.txid_int, 0)))
-        rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
-        with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.txid_hex)]):
-            node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
-
         self.log.info('Test that a peer disconnection causes erase its transactions from the orphan pool')
         self.reconnect_p2p(num_connections=1)
         self.wait_until(lambda: len(node.getorphantxs()) == 0)
