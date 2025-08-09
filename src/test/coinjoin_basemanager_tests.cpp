@@ -5,12 +5,13 @@
 #include <test/util/setup_common.h>
 
 #include <coinjoin/coinjoin.h>
-#include <uint256.h>
 #include <cstddef>
+#include <uint256.h>
 
 #include <boost/test/unit_test.hpp>
 
-class TestBaseManager : public CCoinJoinBaseManager {
+class TestBaseManager : public CCoinJoinBaseManager
+{
 public:
     void PushQueue(const CCoinJoinQueue& q)
     {
@@ -22,10 +23,7 @@ public:
         LOCK(cs_vecqueue);
         return vecCoinJoinQueue.size();
     }
-    void CallCheckQueue()
-    {
-        CheckQueue();
-    }
+    void CallCheckQueue() { CheckQueue(); }
 };
 
 BOOST_FIXTURE_TEST_SUITE(coinjoin_basemanager_tests, BasicTestingSetup)
@@ -74,5 +72,3 @@ BOOST_AUTO_TEST_CASE(getqueueitem_marks_tried_once)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

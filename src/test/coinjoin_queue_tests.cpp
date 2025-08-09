@@ -4,9 +4,9 @@
 
 #include <test/util/setup_common.h>
 
+#include <bls/bls.h>
 #include <coinjoin/coinjoin.h>
 #include <masternode/node.h>
-#include <bls/bls.h>
 #include <uint256.h>
 
 #include <boost/test/unit_test.hpp>
@@ -54,5 +54,3 @@ BOOST_AUTO_TEST_CASE(queue_hashes_and_equality)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

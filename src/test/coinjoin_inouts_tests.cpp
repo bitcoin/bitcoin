@@ -9,10 +9,10 @@
 #include <cstdint>
 #include <vector>
 
+#include <chain.h>
+#include <chainlock/chainlock.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/common.h>
-#include <chainlock/chainlock.h>
-#include <chain.h>
 #include <llmq/context.h>
 #include <script/script.h>
 #include <uint256.h>
@@ -134,5 +134,3 @@ BOOST_AUTO_TEST_CASE(broadcasttx_expiry_height_logic)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

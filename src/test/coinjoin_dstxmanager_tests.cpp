@@ -27,7 +27,8 @@ static CCoinJoinBroadcastTx MakeDSTX(int vin_vout_count = 3)
     for (int i = 0; i < count; ++i) {
         mtx.vin.emplace_back(COutPoint(uint256S("0a"), i));
         // Use denominated P2PKH outputs
-        CScript spk; spk << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, i) << OP_EQUALVERIFY << OP_CHECKSIG;
+        CScript spk;
+        spk << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, i) << OP_EQUALVERIFY << OP_CHECKSIG;
         mtx.vout.emplace_back(CoinJoin::GetSmallestDenomination(), spk);
     }
     dstx.tx = MakeTransactionRef(mtx);
@@ -58,7 +59,10 @@ BOOST_AUTO_TEST_CASE(update_heights_block_connect_disconnect)
     // Create a fake block containing the tx
     auto block = std::make_shared<CBlock>();
     block->vtx.push_back(dstx.tx);
-    CBlockIndex index; index.nHeight = 100; uint256 bh = uint256S("0b"); index.phashBlock = &bh;
+    CBlockIndex index;
+    index.nHeight = 100;
+    uint256 bh = uint256S("0b");
+    index.phashBlock = &bh;
 
     // Height should set to 100 on connect
     man.BlockConnected(block, &index);
@@ -79,5 +83,3 @@ BOOST_AUTO_TEST_CASE(update_heights_block_connect_disconnect)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
