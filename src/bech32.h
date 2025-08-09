@@ -21,6 +21,9 @@
 namespace bech32
 {
 
+extern const char* CHARSET;
+extern const int8_t CHARSET_REV[128];
+
 static constexpr size_t CHECKSUM_SIZE = 6;
 static constexpr char SEPARATOR = '1';
 
