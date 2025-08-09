@@ -21,6 +21,15 @@ if(SECP256K1_ENABLE_MODULE_MUSIG)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_musig.h)
 endif()
 
+if(SECP256K1_ENABLE_MODULE_SILENTPAYMENTS)
+  if(DEFINED SECP256K1_ENABLE_MODULE_SCHNORRSIG AND NOT SECP256K1_ENABLE_MODULE_SCHNORRSIG)
+    message(FATAL_ERROR "Module dependency error: You have disabled the schnorrsig module explicitly, but it is required by the silent payments module.")
+  endif()
+  set(SECP256K1_ENABLE_MODULE_SCHNORRSIG ON)
+  add_compile_definitions(ENABLE_MODULE_SILENTPAYMENTS=1)
+  set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_silentpayments.h)
+endif()
+
 if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
   if(DEFINED SECP256K1_ENABLE_MODULE_EXTRAKEYS AND NOT SECP256K1_ENABLE_MODULE_EXTRAKEYS)
     message(FATAL_ERROR "Module dependency error: You have disabled the extrakeys module explicitly, but it is required by the schnorrsig module.")
@@ -54,10 +63,6 @@ add_library(secp256k1_precomputed OBJECT EXCLUDE_FROM_ALL
 # from being exported.
 target_sources(secp256k1 PRIVATE secp256k1.c $<TARGET_OBJECTS:secp256k1_precomputed>)
 
-if(NOT SECP256K1_ENABLE_API_VISIBILITY_ATTRIBUTES)
-  target_compile_definitions(secp256k1 PRIVATE SECP256K1_NO_API_VISIBILITY_ATTRIBUTES)
-endif()
-
 # Create a helper lib that parent projects can use to link secp256k1 into a
 # static lib.
 add_library(secp256k1_objs INTERFACE)
@@ -90,8 +95,7 @@ target_include_directories(secp256k1 INTERFACE
   $<BUILD_INTERFACE:$<$<NOT:$<BOOL:${PROJECT_IS_TOP_LEVEL}>>:${PROJECT_SOURCE_DIR}/include>>
 )
 set_target_properties(secp256k1_objs PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "$<TARGET_PROPERTY:secp256k1,INTERFACE_COMPILE_DEFINITIONS>"
-  INTERFACE_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:secp256k1,INTERFACE_INCLUDE_DIRECTORIES>"
+    INTERFACE_INCLUDE_DIRECTORIES "$<TARGET_PROPERTY:secp256k1,INTERFACE_INCLUDE_DIRECTORIES>"
 )
 
 # This emulates Libtool to make sure Libtool and CMake agree on the ABI version,
