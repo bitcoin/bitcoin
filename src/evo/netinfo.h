@@ -156,6 +156,9 @@ private:
 
 public:
     DomainPort() = default;
+    template <typename Stream>
+    DomainPort(deserialize_type, Stream& s) { s >> *this; }
+
     ~DomainPort() = default;
 
     bool operator<(const DomainPort& rhs) const { return std::tie(m_addr, m_port) < std::tie(rhs.m_addr, rhs.m_port); }
@@ -182,15 +185,22 @@ class NetInfoEntry
 public:
     enum NetInfoType : uint8_t {
         Service = 0x01,
+        Domain  = 0x02,
         Invalid = 0xff
     };
 
 private:
     uint8_t m_type{NetInfoType::Invalid};
-    std::variant<std::monostate, CService> m_data{std::monostate{}};
+    std::variant<std::monostate, CService, DomainPort> m_data{std::monostate{}};
 
 public:
     NetInfoEntry() = default;
+    NetInfoEntry(const DomainPort& domain)
+    {
+        if (!domain.IsValid()) return;
+        m_type = NetInfoType::Domain;
+        m_data = domain;
+    }
     NetInfoEntry(const CService& service)
     {
         if (!service.IsValid()) return;
@@ -213,6 +223,9 @@ public:
         if (const auto* data_ptr{std::get_if<CService>(&m_data)};
             m_type == NetInfoType::Service && data_ptr && data_ptr->IsValid()) {
             s << m_type << *data_ptr;
+        } else if (const auto* data_ptr{std::get_if<DomainPort>(&m_data)};
+                   m_type == NetInfoType::Domain && data_ptr && data_ptr->IsValid()) {
+            s << m_type << *data_ptr;
         } else {
             s << NetInfoType::Invalid;
         }
@@ -224,11 +237,16 @@ public:
         OverrideStream<Stream> s(&s_, /*nType=*/0, s_.GetVersion() | ADDRV2_FORMAT);
         s >> m_type;
         if (m_type == NetInfoType::Service) {
-            m_data = CService{};
             try {
-                CService& service{std::get<CService>(m_data)};
+                auto& service{m_data.emplace<CService>()};
                 s >> service;
                 if (!service.IsValid()) { Clear(); } // Invalid CService, mark as invalid
+            } catch (const std::ios_base::failure&) { Clear(); } // Deser failed, mark as invalid
+        } else if (m_type == NetInfoType::Domain) {
+            try {
+                auto& domain{m_data.emplace<DomainPort>()};
+                s >> domain;
+                if (!domain.IsValid()) { Clear(); } // Invalid DomainPort, mark as invalid
             } catch (const std::ios_base::failure&) { Clear(); } // Deser failed, mark as invalid
         } else { Clear(); } // Invalid type code, mark as invalid
     }
@@ -240,6 +258,7 @@ public:
     }
 
     std::optional<CService> GetAddrPort() const;
+    std::optional<DomainPort> GetDomainPort() const;
     uint16_t GetPort() const;
     bool IsEmpty() const { return *this == NetInfoEntry{}; }
     bool IsTriviallyValid() const;

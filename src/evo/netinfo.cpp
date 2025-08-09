@@ -124,6 +124,10 @@ bool NetInfoEntry::operator<(const NetInfoEntry& rhs) const
             if constexpr (std::is_same_v<T1, T2>) {
                 // Both the same type, compare as usual
                 return lhs < rhs;
+            } else if constexpr ((std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) &&
+                                 (std::is_same_v<T2, CService> || std::is_same_v<T2, DomainPort>)) {
+                // Differing types but both implement ToStringAddrPort(), lexicographical compare strings
+                return lhs.ToStringAddrPort() < rhs.ToStringAddrPort();
             }
             // If lhs is monostate, it less than rhs; otherwise rhs is greater
             return std::is_same_v<T1, std::monostate>;
@@ -140,12 +144,21 @@ std::optional<CService> NetInfoEntry::GetAddrPort() const
     return std::nullopt;
 }
 
+std::optional<DomainPort> NetInfoEntry::GetDomainPort() const
+{
+    if (const auto* data_ptr{std::get_if<DomainPort>(&m_data)}; m_type == NetInfoType::Domain && data_ptr) {
+        ASSERT_IF_DEBUG(data_ptr->IsValid());
+        return *data_ptr;
+    }
+    return std::nullopt;
+}
+
 uint16_t NetInfoEntry::GetPort() const
 {
     return std::visit(
         [](auto&& input) -> uint16_t {
             using T1 = std::decay_t<decltype(input)>;
-            if constexpr (std::is_same_v<T1, CService>) {
+            if constexpr (std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) {
                 return input.GetPort();
             }
             return 0;
@@ -162,7 +175,8 @@ bool NetInfoEntry::IsTriviallyValid() const
     return std::visit(
         [this](auto&& input) -> bool {
             using T1 = std::decay_t<decltype(input)>;
-            static_assert(std::is_same_v<T1, std::monostate> || std::is_same_v<T1, CService>, "Unexpected type");
+            static_assert(std::is_same_v<T1, std::monostate> || std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>,
+                          "Unexpected type");
             if constexpr (std::is_same_v<T1, std::monostate>) {
                 // Empty underlying data isn't a valid entry
                 return false;
@@ -170,6 +184,11 @@ bool NetInfoEntry::IsTriviallyValid() const
                 // Type code should be truthful as it decides what underlying type is used when (de)serializing
                 if (m_type != NetInfoType::Service) return false;
                 // Underlying data must meet surface-level validity checks for its type
+                if (!input.IsValid()) return false;
+            } else if constexpr (std::is_same_v<T1, DomainPort>) {
+                // Type code should be truthful as it decides what underlying type is used when (de)serializing
+                if (m_type != NetInfoType::Domain) return false;
+                // Underlying data should at least meet surface-level validity checks
                 if (!input.IsValid()) return false;
             }
             return true;
@@ -184,6 +203,8 @@ std::string NetInfoEntry::ToString() const
             using T1 = std::decay_t<decltype(input)>;
             if constexpr (std::is_same_v<T1, CService>) {
                 return strprintf("CService(addr=%s, port=%u)", input.ToStringAddr(), input.GetPort());
+            } else if constexpr (std::is_same_v<T1, DomainPort>) {
+                return strprintf("DomainPort(addr=%s, port=%u)", input.ToStringAddr(), input.GetPort());
             }
             return "[invalid entry]";
         },
@@ -195,7 +216,7 @@ std::string NetInfoEntry::ToStringAddr() const
     return std::visit(
         [](auto&& input) -> std::string {
             using T1 = std::decay_t<decltype(input)>;
-            if constexpr (std::is_same_v<T1, CService>) {
+            if constexpr (std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) {
                 return input.ToStringAddr();
             }
             return "[invalid entry]";
@@ -208,7 +229,7 @@ std::string NetInfoEntry::ToStringAddrPort() const
     return std::visit(
         [](auto&& input) -> std::string {
             using T1 = std::decay_t<decltype(input)>;
-            if constexpr (std::is_same_v<T1, CService>) {
+            if constexpr (std::is_same_v<T1, CService> || std::is_same_v<T1, DomainPort>) {
                 return input.ToStringAddrPort();
             }
             return "[invalid entry]";
