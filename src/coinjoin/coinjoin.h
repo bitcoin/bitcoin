@@ -287,6 +287,8 @@ public:
     bool Sign(const CActiveMasternodeManager& mn_activeman);
     [[nodiscard]] bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
+    // Used only for unit tests
+    [[nodiscard]] std::optional<int> GetConfirmedHeight() const { return nConfirmedHeight; }
     void SetConfirmedHeight(std::optional<int> nConfirmedHeightIn) { assert(nConfirmedHeightIn == std::nullopt || *nConfirmedHeightIn > 0); nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) const;
     [[nodiscard]] bool IsValidStructure() const;
