@@ -39,11 +39,12 @@
 
 #include <algorithm>
 #include <array>
-#include <cstring>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <optional>
+#include <string_view>
 #include <unordered_map>
 
 TRACEPOINT_SEMAPHORE(net, closed_connection);
@@ -336,7 +337,7 @@ CNode* CConnman::FindNode(const CNetAddr& ip)
     return nullptr;
 }
 
-CNode* CConnman::FindNode(const std::string& addrName)
+CNode* CConnman::FindNode(std::string_view addrName)
 {
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
@@ -3566,11 +3567,11 @@ bool CConnman::AddNode(const AddedNodeParams& add)
     return true;
 }
 
-bool CConnman::RemoveAddedNode(const std::string& strNode)
+bool CConnman::RemoveAddedNode(std::string_view node)
 {
     LOCK(m_added_nodes_mutex);
     for (auto it = m_added_node_params.begin(); it != m_added_node_params.end(); ++it) {
-        if (strNode == it->m_added_node) {
+        if (node == it->m_added_node) {
             m_added_node_params.erase(it);
             return true;
         }
@@ -3629,11 +3630,11 @@ void CConnman::GetNodeStats(std::vector<CNodeStats>& vstats) const
     }
 }
 
-bool CConnman::DisconnectNode(const std::string& strNode)
+bool CConnman::DisconnectNode(std::string_view node)
 {
     LOCK(m_nodes_mutex);
-    if (CNode* pnode = FindNode(strNode)) {
-        LogDebug(BCLog::NET, "disconnect by address%s match, %s", (fLogIPs ? strprintf("=%s", strNode) : ""), pnode->DisconnectMsg(fLogIPs));
+    if (CNode* pnode = FindNode(node)) {
+        LogDebug(BCLog::NET, "disconnect by address%s match, %s", (fLogIPs ? strprintf("=%s", node) : ""), pnode->DisconnectMsg(fLogIPs));
         pnode->fDisconnect = true;
         return true;
     }
