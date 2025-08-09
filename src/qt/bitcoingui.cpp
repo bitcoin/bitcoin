@@ -1359,6 +1359,7 @@ void BitcoinGUI::changeEvent(QEvent *e)
         sendCoinsAction->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/send")));
         receiveCoinsAction->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/receiving_addresses")));
         historyAction->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/history")));
+        m_action_pairing->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/connect_1")));
     }
 
     QMainWindow::changeEvent(e);
