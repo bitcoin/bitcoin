@@ -31,9 +31,6 @@
    </property>
    <item>
     <widget class="QWidget" name="bgWidget" native="true">
-     <property name="styleSheet">
-      <string notr="true">#bgWidget { background: rgba(0,0,0,220); }</string>
-     </property>
      <layout class="QVBoxLayout" name="verticalLayoutMain" stretch="1">
       <property name="leftMargin">
        <number>60</number>
@@ -49,11 +46,6 @@
       </property>
       <item>
        <widget class="QWidget" name="contentWidget" native="true">
-        <property name="styleSheet">
-         <string notr="true">#contentWidget { background: rgba(255,255,255,240); border-radius: 6px; }
-
-QLabel { color: rgb(40,40,40);  }</string>
-        </property>
         <layout class="QVBoxLayout" name="verticalLayoutSub" stretch="1,0,0,0">
          <property name="spacing">
           <number>0</number>
@@ -78,32 +70,11 @@ QLabel { color: rgb(40,40,40);  }</string>
            <item>
             <layout class="QVBoxLayout" name="verticalLayoutIcon">
              <property name="leftMargin">
-              <number>0</number>
+              <number>25</number>
              </property>
-             <item>
-              <widget class="QPushButton" name="warningIcon">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/icons/warning</normaloff>
-                 <disabledoff>:/icons/warning</disabledoff>:/icons/warning</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>48</width>
-                 <height>48</height>
-                </size>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
+             <property name="rightMargin">
+              <number>25</number>
+             </property>
              <item>
               <spacer name="verticalSpacerWarningIcon">
                <property name="orientation">
