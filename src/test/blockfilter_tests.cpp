@@ -59,21 +59,21 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     CScript included_scripts[5], excluded_scripts[4];
 
     // First two are outputs on a single transaction.
-    included_scripts[0] << std::vector<unsigned char>(0, 65) << OP_CHECKSIG;
-    included_scripts[1] << OP_DUP << OP_HASH160 << std::vector<unsigned char>(1, 20) << OP_EQUALVERIFY << OP_CHECKSIG;
+    included_scripts[0] << std::vector<unsigned char>(65, 0) << OP_CHECKSIG;
+    included_scripts[1] << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, 1) << OP_EQUALVERIFY << OP_CHECKSIG;
 
     // Third is an output on in a second transaction.
-    included_scripts[2] << OP_1 << std::vector<unsigned char>(2, 33) << OP_1 << OP_CHECKMULTISIG;
+    included_scripts[2] << OP_1 << std::vector<unsigned char>(33, 2) << OP_1 << OP_CHECKMULTISIG;
 
     // Last two are spent by a single transaction.
-    included_scripts[3] << OP_0 << std::vector<unsigned char>(3, 32);
+    included_scripts[3] << OP_0 << std::vector<unsigned char>(32, 3);
     included_scripts[4] << OP_4 << OP_ADD << OP_8 << OP_EQUAL;
 
     // OP_RETURN output is an output on the second transaction.
-    excluded_scripts[0] << OP_RETURN << std::vector<unsigned char>(4, 40);
+    excluded_scripts[0] << OP_RETURN << std::vector<unsigned char>(40, 4);
 
     // This script is not related to the block at all.
-    excluded_scripts[1] << std::vector<unsigned char>(5, 33) << OP_CHECKSIG;
+    excluded_scripts[1] << std::vector<unsigned char>(33, 5) << OP_CHECKSIG;
 
     // OP_RETURN is non-standard since it's not followed by a data push, but is still excluded from
     // filter.
