@@ -98,20 +98,13 @@ void BitGoldStaker::ThreadStaker()
                             continue;
                         }
 
-                        CBlock block_from;
-                        block_from.nVersion = pindexFrom->nVersion;
-                        block_from.hashPrevBlock = pindexFrom->hashPrev;
-                        block_from.hashMerkleRoot = pindexFrom->hashMerkleRoot;
-                        block_from.nTime = pindexFrom->nTime;
-                        block_from.nBits = pindexFrom->nBits;
-                        block_from.nNonce = pindexFrom->nNonce;
-
                         unsigned int nTimeTx = std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1,
                                                                  TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()));
+                        nTimeTx &= ~STAKE_TIMESTAMP_MASK;
                         unsigned int nBits = pindexPrev->nBits;
                         uint256 hash_proof;
-                        if (!CheckStakeKernelHash(pindexPrev, nBits, block_from, conf->position_in_block,
-                                                  wtx->tx, stake_out.outpoint, nTimeTx, hash_proof, false)) {
+                        if (!CheckStakeKernelHash(pindexPrev, nBits, pindexFrom->GetBlockHash(), pindexFrom->nTime,
+                                                  stake_out.txout.nValue, stake_out.outpoint, nTimeTx, hash_proof, false)) {
                             LogPrintf("BitGoldStaker: kernel check failed\n");
                             continue;
                         }
@@ -151,9 +144,14 @@ void BitGoldStaker::ThreadStaker()
                         block.nNonce = 0;
                         block.hashMerkleRoot = BlockMerkleRoot(block);
 
-                        if (!CheckProofOfStake(block, pindexPrev, consensus)) {
-                            LogPrintf("BitGoldStaker: produced block failed CheckProofOfStake\n");
-                            continue;
+                        {
+                            LOCK(cs_main);
+                            if (!ContextualCheckProofOfStake(block, pindexPrev,
+                                                              chainman.ActiveChainstate().CoinsTip(),
+                                                              chainman.ActiveChain(), consensus)) {
+                                LogPrintf("BitGoldStaker: produced block failed CheckProofOfStake\n");
+                                continue;
+                            }
                         }
 
                         bool new_block{false};

@@ -1,5 +1,6 @@
 #include <pos/stake.h>
 #include <chain.h>
+#include <consensus/amount.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -17,24 +18,17 @@ BOOST_AUTO_TEST_CASE(valid_kernel)
     prev_index.nTime = 100;
     prev_index.phashBlock = &prev_hash;
 
-    // Previous block containing the stake input
-    CBlock block_from;
-    block_from.nTime = 50;
-
-    // Transaction being staked
-    CMutableTransaction mtx_prev;
-    mtx_prev.nTime = 50;
-    mtx_prev.vout.emplace_back(CAmount(1000), CScript());
-    CTransactionRef tx_prev = MakeTransactionRef(mtx_prev);
-
-    COutPoint prevout{tx_prev->GetHash(), 0};
+    uint256 hash_block_from{2};
+    unsigned int nTimeBlockFrom = 0;
+    CAmount amount = 100 * COIN;
+    COutPoint prevout{uint256{3}, 0};
 
     uint256 hash_proof;
     unsigned int nBits = 0x207fffff; // very low difficulty
-    unsigned int nTimeTx = 150;      // coin age 100 seconds
+    unsigned int nTimeTx = nTimeBlockFrom + MIN_STAKE_AGE; // exactly minimum age
 
-    BOOST_CHECK(CheckStakeKernelHash(&prev_index, nBits, block_from, 0, tx_prev,
-                                     prevout, nTimeTx, hash_proof, false));
+    BOOST_CHECK(CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
+                                     amount, prevout, nTimeTx, hash_proof, false));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_kernel_time)
@@ -45,22 +39,17 @@ BOOST_AUTO_TEST_CASE(invalid_kernel_time)
     prev_index.nTime = 100;
     prev_index.phashBlock = &prev_hash;
 
-    CBlock block_from;
-    block_from.nTime = 200;
-
-    CMutableTransaction mtx_prev;
-    mtx_prev.nTime = 200;
-    mtx_prev.vout.emplace_back(CAmount(1000), CScript());
-    CTransactionRef tx_prev = MakeTransactionRef(mtx_prev);
-
-    COutPoint prevout{tx_prev->GetHash(), 0};
+    uint256 hash_block_from{2};
+    unsigned int nTimeBlockFrom = 0;
+    CAmount amount = 100 * COIN;
+    COutPoint prevout{uint256{3}, 0};
 
     uint256 hash_proof;
     unsigned int nBits = 0x207fffff;
-    unsigned int nTimeTx = 150; // earlier than block time
+    unsigned int nTimeTx = MIN_STAKE_AGE - 16; // not old enough and masked
 
-    BOOST_CHECK(!CheckStakeKernelHash(&prev_index, nBits, block_from, 0, tx_prev,
-                                      prevout, nTimeTx, hash_proof, false));
+    BOOST_CHECK(!CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
+                                      amount, prevout, nTimeTx, hash_proof, false));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_kernel_target)
@@ -71,22 +60,17 @@ BOOST_AUTO_TEST_CASE(invalid_kernel_target)
     prev_index.nTime = 100;
     prev_index.phashBlock = &prev_hash;
 
-    CBlock block_from;
-    block_from.nTime = 50;
-
-    CMutableTransaction mtx_prev;
-    mtx_prev.nTime = 50;
-    mtx_prev.vout.emplace_back(CAmount(1), CScript());
-    CTransactionRef tx_prev = MakeTransactionRef(mtx_prev);
-
-    COutPoint prevout{tx_prev->GetHash(), 0};
+    uint256 hash_block_from{2};
+    unsigned int nTimeBlockFrom = 0;
+    CAmount amount = 1 * COIN; // minimum stake amount
+    COutPoint prevout{uint256{3}, 0};
 
     uint256 hash_proof;
     unsigned int nBits = 0x1;     // extremely high difficulty
-    unsigned int nTimeTx = 60;    // minimal age
+    unsigned int nTimeTx = MIN_STAKE_AGE;    // minimal age
 
-    BOOST_CHECK(!CheckStakeKernelHash(&prev_index, nBits, block_from, 0, tx_prev,
-                                      prevout, nTimeTx, hash_proof, false));
+    BOOST_CHECK(!CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
+                                      amount, prevout, nTimeTx, hash_proof, false));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -643,14 +643,17 @@ bool CreatePosBlock(wallet::CWallet& wallet)
 
     block.hashPrevBlock = pindexPrev->GetBlockHash();
     block.nVersion = chainman.m_versionbitscache.ComputeBlockVersion(pindexPrev, consensus);
-    block.nTime = std::max<int64_t>(
+    unsigned int nTime = std::max<int64_t>(
         GetMinimumTime(pindexPrev, consensus.DifficultyAdjustmentInterval()),
         TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()));
+    nTime &= ~STAKE_TIMESTAMP_MASK;
+    block.nTime = nTime;
     block.nBits = pindexPrev->nBits;
     block.nNonce = 0;
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    if (!CheckProofOfStake(block, pindexPrev, consensus)) {
+    if (!ContextualCheckProofOfStake(block, pindexPrev, chainstate.CoinsTip(),
+                                     chainstate.m_chain, consensus)) {
         return false;
     }
 

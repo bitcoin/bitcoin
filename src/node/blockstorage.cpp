@@ -1029,9 +1029,12 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
         LOCK(cs_main);
         prev_index = LookupBlockIndex(block.hashPrevBlock);
     }
-    if (prev_index && !CheckProofOfStake(block, prev_index, GetConsensus())) {
-        LogError("Errors in block proof-of-stake at %s while reading block", pos.ToString());
-        return false;
+    if (prev_index) {
+        if (block.vtx.size() < 2 || block.vtx[1]->vin.empty() || block.vtx[1]->vout.empty() ||
+            !block.vtx[1]->vout[0].IsNull()) {
+            LogError("Errors in block proof-of-stake at %s while reading block", pos.ToString());
+            return false;
+        }
     }
 
     if (expected_hash && block_hash != *expected_hash) {

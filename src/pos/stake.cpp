@@ -1,44 +1,49 @@
 #include <pos/stake.h>
 #include <arith_uint256.h>
 #include <chain.h>
+#include <coins.h>
 #include <hash.h>
 #include <serialize.h>
+#include <validation.h>
 #include <cassert>
 
 bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
-                          const CBlock& blockFrom, unsigned int nTxPrevOffset,
-                          const CTransactionRef& txPrev, const COutPoint& prevout,
+                          uint256 hashBlockFrom, unsigned int nTimeBlockFrom,
+                          CAmount amount, const COutPoint& prevout,
                           unsigned int nTimeTx, uint256& hashProofOfStake,
                           bool fPrintProofOfStake)
 {
     assert(pindexPrev);
 
-    // Basic consensus checks on the staking input
-    if (prevout.n >= txPrev->vout.size()) {
-        return false; // invalid outpoint
-    }
-    if (blockFrom.GetBlockTime() >= nTimeTx) {
-        return false; // coin not mature enough
+    // Require timestamp to be masked to 16-second granularity
+    if (nTimeTx & STAKE_TIMESTAMP_MASK) {
+        return false;
     }
 
-    // Derive a simple stake modifier from the previous block hash and height
+    // Enforce minimum coin age
+    if (nTimeTx <= nTimeBlockFrom || nTimeTx - nTimeBlockFrom < MIN_STAKE_AGE) {
+        return false;
+    }
+
+    // Derive a stake modifier from the previous block
     HashWriter ss_mod;
     ss_mod << pindexPrev->GetBlockHash() << pindexPrev->nHeight << pindexPrev->nTime;
     const uint256 stake_modifier = ss_mod.GetHash();
 
-    // Time weight is the age of the coin being staked
-    const unsigned int nTimeWeight = nTimeTx - blockFrom.GetBlockTime();
+    // Mask times before hashing to reduce kernel search space
+    const unsigned int nTimeTxMasked{nTimeTx & ~STAKE_TIMESTAMP_MASK};
+    const unsigned int nTimeBlockFromMasked{nTimeBlockFrom & ~STAKE_TIMESTAMP_MASK};
 
-    // Build the kernel hash using the stake modifier and prevout details
+    // Build the kernel hash
     HashWriter ss_kernel;
-    ss_kernel << stake_modifier << blockFrom.GetHash() << nTxPrevOffset
-              << txPrev->GetHash() << prevout.hash << prevout.n << nTimeTx;
+    ss_kernel << stake_modifier << hashBlockFrom << nTimeBlockFromMasked
+              << prevout.hash << prevout.n << nTimeTxMasked;
     hashProofOfStake = ss_kernel.GetHash();
 
-    // Target is weighted by coin amount and time weight
+    // Target is weighted by coin amount (amount / COIN)
     arith_uint256 bnTarget;
     bnTarget.SetCompact(nBits);
-    const arith_uint256 bnWeight = arith_uint256(txPrev->vout[prevout.n].nValue) * nTimeWeight;
+    arith_uint256 bnWeight(amount / COIN);
     bnTarget *= bnWeight;
 
     if (UintToArith256(hashProofOfStake) > bnTarget) {
@@ -46,9 +51,47 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
     }
 
     if (fPrintProofOfStake) {
-        // Logging could be added here for detailed kernel evaluation
+        // Optional: add detailed logging for kernel evaluation
     }
 
     return true;
 }
 
+bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexPrev,
+                                 const CCoinsViewCache& view, const CChain& chain,
+                                 const Consensus::Params& params)
+{
+    assert(pindexPrev);
+
+    // Allow first block after genesis to be mined with proof-of-work
+    if (pindexPrev->nHeight < 1) {
+        return true;
+    }
+
+    if (block.vtx.size() < 2) {
+        return false; // Needs coinbase and coinstake
+    }
+    const CTransactionRef& tx = block.vtx[1];
+    if (tx->vin.empty() || tx->vout.empty() || !tx->vout[0].IsNull()) {
+        return false;
+    }
+
+    const COutPoint& prevout = tx->vin[0].prevout;
+    const Coin& coin = view.AccessCoin(prevout);
+    if (coin.IsSpent()) {
+        return false;
+    }
+
+    const CBlockIndex* pindexFrom = chain[coin.nHeight];
+    if (!pindexFrom) {
+        return false;
+    }
+
+    uint256 hashProof;
+    if (!CheckStakeKernelHash(pindexPrev, block.nBits, pindexFrom->GetBlockHash(),
+                              pindexFrom->nTime, coin.out.nValue, prevout,
+                              block.nTime, hashProof, false)) {
+        return false;
+    }
+    return true;
+}
