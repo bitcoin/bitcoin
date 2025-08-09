@@ -162,8 +162,8 @@ BOOST_AUTO_TEST_CASE(quorum_rotation_info_construction_test)
 
     // Test default state
     BOOST_CHECK(!rotInfo.extraShare);
-    BOOST_CHECK(!rotInfo.quorumSnapshotAtHMinus4C.has_value());
-    BOOST_CHECK(!rotInfo.mnListDiffAtHMinus4C.has_value());
+    BOOST_CHECK_EQUAL(::SerializeHash(rotInfo.quorumSnapshotAtHMinus4C), ::SerializeHash(CQuorumSnapshot()));
+    BOOST_CHECK_EQUAL(::SerializeHash(rotInfo.mnListDiffAtHMinus4C), ::SerializeHash(CSimplifiedMNListDiff()));
     BOOST_CHECK(rotInfo.lastCommitmentPerIndex.empty());
     BOOST_CHECK(rotInfo.quorumSnapshotList.empty());
     BOOST_CHECK(rotInfo.mnListDiffList.empty());

@@ -116,8 +116,8 @@ public:
     CSimplifiedMNListDiff mnListDiffAtHMinus3C;
 
     bool extraShare{false};
-    std::optional<CQuorumSnapshot> quorumSnapshotAtHMinus4C;
-    std::optional<CSimplifiedMNListDiff> mnListDiffAtHMinus4C;
+    CQuorumSnapshot quorumSnapshotAtHMinus4C;
+    CSimplifiedMNListDiff mnListDiffAtHMinus4C;
 
     std::vector<llmq::CFinalCommitment> lastCommitmentPerIndex;
     std::vector<CQuorumSnapshot> quorumSnapshotList;
@@ -142,12 +142,9 @@ public:
     {
         const_cast<CQuorumRotationInfo*>(this)->SerializationOpBase(s, CSerActionSerialize());
 
-        if (extraShare && quorumSnapshotAtHMinus4C.has_value()) {
-            ::Serialize(s, quorumSnapshotAtHMinus4C.value());
-        }
-
-        if (extraShare && mnListDiffAtHMinus4C.has_value()) {
-            ::Serialize(s, mnListDiffAtHMinus4C.value());
+        if (extraShare) {
+            ::Serialize(s, quorumSnapshotAtHMinus4C);
+            ::Serialize(s, mnListDiffAtHMinus4C);
         }
 
         WriteCompactSize(s, lastCommitmentPerIndex.size());
@@ -171,12 +168,9 @@ public:
     {
         SerializationOpBase(s, CSerActionUnserialize());
 
-        if (extraShare && quorumSnapshotAtHMinus4C.has_value()) {
-            ::Unserialize(s, quorumSnapshotAtHMinus4C.value());
-        }
-
-        if (extraShare && mnListDiffAtHMinus4C.has_value()) {
-            ::Unserialize(s, mnListDiffAtHMinus4C.value());
+        if (extraShare) {
+            ::Unserialize(s, quorumSnapshotAtHMinus4C);
+            ::Unserialize(s, mnListDiffAtHMinus4C);
         }
 
         size_t cnt = ReadCompactSize(s);
