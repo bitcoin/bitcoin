@@ -61,7 +61,7 @@ MiniMiner::MiniMiner(const CTxMemPool& mempool, const std::vector<COutPoint>& ou
     if (m_requested_outpoints_by_txid.empty()) return;
 
     // Calculate the cluster and construct the entry map.
-    std::vector<uint256> txids_needed;
+    std::vector<Txid> txids_needed;
     txids_needed.reserve(m_requested_outpoints_by_txid.size());
     for (const auto& [txid, _]: m_requested_outpoints_by_txid) {
         txids_needed.push_back(txid);
@@ -286,7 +286,7 @@ void MiniMiner::BuildMockTemplate(std::optional<CFeeRate> target_feerate)
         }
         // Track the order in which transactions were selected.
         for (const auto& ancestor : ancestors) {
-            m_inclusion_order.emplace(Txid::FromUint256(ancestor->first), sequence_num);
+            m_inclusion_order.emplace(ancestor->first, sequence_num);
         }
         DeleteAncestorPackage(ancestors);
         SanityCheck();
@@ -409,7 +409,7 @@ std::optional<CAmount> MiniMiner::CalculateTotalBumpFees(const CFeeRate& target_
         ancestors.insert(iter);
     }
 
-    std::set<uint256> has_been_processed;
+    std::set<Txid> has_been_processed;
     while (!to_process.empty()) {
         auto iter = to_process.begin();
         const CTransaction& tx = (*iter)->second.GetTx();

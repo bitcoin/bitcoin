@@ -519,16 +519,16 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
     }
 }
 
-bool CBlockPolicyEstimator::removeTx(uint256 hash)
+bool CBlockPolicyEstimator::removeTx(Txid hash)
 {
     LOCK(m_cs_fee_estimator);
     return _removeTx(hash, /*inBlock=*/false);
 }
 
-bool CBlockPolicyEstimator::_removeTx(const uint256& hash, bool inBlock)
+bool CBlockPolicyEstimator::_removeTx(const Txid& hash, bool inBlock)
 {
     AssertLockHeld(m_cs_fee_estimator);
-    std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
+    std::map<Txid, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
         feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
         shortStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);

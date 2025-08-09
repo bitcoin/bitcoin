@@ -5,9 +5,9 @@
 #include <core_io.h>
 #include <key_io.h>
 #include <policy/rbf.h>
+#include <primitives/transaction_identifier.h>
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
-#include <util/transaction_identifier.h>
 #include <util/vector.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>

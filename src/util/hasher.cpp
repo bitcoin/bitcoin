@@ -7,6 +7,10 @@
 #include <span.h>
 #include <util/hasher.h>
 
+SaltedUint256Hasher::SaltedUint256Hasher() :
+    k0{FastRandomContext().rand64()},
+    k1{FastRandomContext().rand64()} {}
+
 SaltedTxidHasher::SaltedTxidHasher() :
     k0{FastRandomContext().rand64()},
     k1{FastRandomContext().rand64()} {}

@@ -2319,7 +2319,7 @@ util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs
             for (const auto& txin : it->second.tx->vin)
                 mapTxSpends.erase(txin.prevout);
             for (unsigned int i = 0; i < it->second.tx->vout.size(); ++i) {
-                m_txos.erase(COutPoint(Txid::FromUint256(hash), i));
+                m_txos.erase(COutPoint(hash, i));
             }
             mapWallet.erase(it);
             NotifyTransactionChanged(hash, CT_DELETED);

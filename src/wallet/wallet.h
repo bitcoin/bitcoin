@@ -15,6 +15,7 @@
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
@@ -26,7 +27,6 @@
 #include <util/result.h>
 #include <util/string.h>
 #include <util/time.h>
-#include <util/transaction_identifier.h>
 #include <util/ui_change_type.h>
 #include <wallet/crypter.h>
 #include <wallet/db.h>

@@ -7,8 +7,8 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <key.h>
+#include <primitives/transaction_identifier.h>
 #include <script/sign.h>
-#include <util/transaction_identifier.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
 

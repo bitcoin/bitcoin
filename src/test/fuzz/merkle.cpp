@@ -19,7 +19,7 @@ uint256 ComputeMerkleRootFromPath(const CBlock& block, uint32_t position, const 
         throw std::out_of_range("Position out of range");
     }
 
-    uint256 current_hash = block.vtx[position]->GetHash();
+    uint256 current_hash = block.vtx[position]->GetHash().ToUint256();
 
     for (const uint256& sibling : merkle_path) {
         if (position % 2 == 0) {
@@ -47,7 +47,7 @@ FUZZ_TARGET(merkle)
     tx_hashes.reserve(num_txs);
 
     for (size_t i = 0; i < num_txs; ++i) {
-        tx_hashes.push_back(block->vtx[i]->GetHash());
+        tx_hashes.push_back(block->vtx[i]->GetHash().ToUint256());
     }
 
     // Test ComputeMerkleRoot
