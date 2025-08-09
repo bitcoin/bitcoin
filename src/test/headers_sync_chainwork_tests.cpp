@@ -113,11 +113,28 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     (void)hss->ProcessNextHeaders(first_chain, true);
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::REDOWNLOAD);
 
-    result = hss->ProcessNextHeaders(first_chain, true);
+    // Process so that the internal threshold isn't met, meaning validated
+    // headers shouldn't be returned yet:
+    headers_batch.assign(first_chain.begin(), std::next(first_chain.begin()));
+    result = hss->ProcessNextHeaders(headers_batch, true);
+    BOOST_CHECK_EQUAL(hss->GetState(), HeadersSyncState::State::REDOWNLOAD);
+    BOOST_CHECK_EQUAL(result.pow_validated_headers.size(), 0);
+
+    // We start receiving headers for permanent storage before completing:
+    headers_batch.assign(std::next(first_chain.begin()), std::prev(first_chain.end()));
+    result = hss->ProcessNextHeaders(headers_batch, true);
+    BOOST_CHECK_EQUAL(hss->GetState(), HeadersSyncState::State::REDOWNLOAD);
+    BOOST_CHECK_GT(result.pow_validated_headers.size(), 0);
+    const size_t validated_headers_count = result.pow_validated_headers.size();
+
+    // Feed final header, meeting the work threshold again and
+    // completing the REDOWNLOAD phase.
+    headers_batch.assign(std::prev(first_chain.end()), first_chain.end());
+    result = hss->ProcessNextHeaders(headers_batch, true);
     BOOST_CHECK(result.success);
     BOOST_CHECK(!result.request_more);
     // All headers should be ready for acceptance:
-    BOOST_CHECK(result.pow_validated_headers.size() == first_chain.size());
+    BOOST_CHECK_EQUAL(validated_headers_count + result.pow_validated_headers.size(), first_chain.size());
     // Nothing left for the sync logic to do:
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
 
