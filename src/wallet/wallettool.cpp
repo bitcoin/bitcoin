@@ -113,7 +113,7 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         return false;
     }
     if (command == "create" && !args.IsArgSet("-wallet")) {
-        tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
+        tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet. Use -wallet=<wallet-name> to specify the name.\n");
         return false;
     }
     const std::string name = args.GetArg("-wallet", "");
