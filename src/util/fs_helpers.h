@@ -14,6 +14,23 @@
 #include <limits>
 #include <optional>
 
+#ifdef __APPLE__
+enum class FSType {
+    EXFAT,
+    OTHER,
+    ERROR
+};
+
+/**
+ * Detect filesystem type for a given path.
+ * Currently identifies exFAT filesystems which cause issues on macOS.
+ *
+ * @param[in] path The directory path to check
+ * @return FSType enum indicating the filesystem type
+ */
+FSType GetFilesystemType(const fs::path& path);
+#endif
+
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific
  * feature analogous to fsync().
