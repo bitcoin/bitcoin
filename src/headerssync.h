@@ -165,7 +165,7 @@ public:
      * ProcessingResult.request_more: if true, the caller is suggested to call
      *                       NextHeadersRequestLocator and send a getheaders message using it.
      */
-    ProcessingResult ProcessNextHeaders(const std::vector<CBlockHeader>&
+    ProcessingResult ProcessNextHeaders(std::span<const CBlockHeader>
             received_headers, bool full_headers_message);
 
     /** Issue the next GETHEADERS message to our peer.
@@ -195,7 +195,7 @@ private:
      *  processed headers.
      *  On failure, this invokes Finalize() and returns false.
      */
-    bool ValidateAndStoreHeadersCommitments(const std::vector<CBlockHeader>& headers);
+    bool ValidateAndStoreHeadersCommitments(std::span<const CBlockHeader> headers);
 
     /** In PRESYNC, process and update state for a single header */
     bool ValidateAndProcessSingleHeader(const CBlockHeader& current);
