@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
-#include <clientversion.h>
 #include <coins.h>
+#include <node/coins_view_args.h>
 #include <streams.h>
 #include <test/util/poolresourcetester.h>
 #include <test/util/random.h>
@@ -1083,6 +1083,28 @@ BOOST_AUTO_TEST_CASE(coins_resource_is_used)
     }
 
     PoolResourceTester::CheckAllDataAccountedFor(resource);
+}
+
+BOOST_AUTO_TEST_CASE(db_batch_sizes)
+{
+    BOOST_REQUIRE_EQUAL(node::GetDbBatchSize(DEFAULT_KERNEL_CACHE), DEFAULT_DB_CACHE_BATCH);
+    BOOST_REQUIRE_EQUAL(node::GetDbBatchSize(0_MiB), DEFAULT_DB_CACHE_BATCH);
+
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(4_MiB), 16'777'216);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(10_MiB), 16'777'216);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(45_MiB), 16'777'216);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(100_MiB), 16'777'216);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(450_MiB), 16'777'216);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(1000_MiB), 33'554'432);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(2000_MiB), 67'108'864);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(3000_MiB), 100'663'296);
+
+#if SIZE_MAX > UINT32_MAX
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(4500_MiB), 167'772'160);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(7000_MiB), 251'658'240);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(10000_MiB), 268'435'456);
+    BOOST_CHECK_EQUAL(node::GetDbBatchSize(45000_MiB), 268'435'456);
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()
