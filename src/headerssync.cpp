@@ -278,6 +278,13 @@ std::vector<CBlockHeader> HeadersSyncState::PopHeadersReadyForAcceptance()
     Assume(m_download_state == State::REDOWNLOAD);
     if (m_download_state != State::REDOWNLOAD) return ret;
 
+    if (m_process_all_remaining_headers && m_chain_start->nHeight == 0 &&
+            m_redownload_buffer_first_prev_hash == m_chain_start->GetBlockHash()) {
+        LogWarning("Unexpectedly reached minimum required work before starting to feed back headers, even though we started all the way back from genesis. This indicates the redownload_buffer_size was too big. "
+                   "(redownload_buffer_size: %u, m_redownload_buffer_last_height: %u).",
+                   m_params.redownload_buffer_size, m_redownload_buffer_last_height);
+    }
+
     while (m_redownloaded_headers.size() > m_params.redownload_buffer_size ||
             (m_redownloaded_headers.size() > 0 && m_process_all_remaining_headers)) {
         ret.emplace_back(m_redownloaded_headers.front().GetFullHeader(m_redownload_buffer_first_prev_hash));
