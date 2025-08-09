@@ -13,18 +13,18 @@
 
 BOOST_FIXTURE_TEST_SUITE(coinjoin_queue_tests, BasicTestingSetup)
 
-static CActiveMasternodeInfo MakeActiveInfo()
+static CBLSSecretKey MakeSecretKey()
 {
     // Generate a dummy operator keypair for signing
-    CBLSSecretKey sk; sk.MakeNewKey();
-    CBLSPublicKey pk = sk.GetPublicKey();
-    return CActiveMasternodeInfo{sk, pk};
+    CBLSSecretKey sk;
+    sk.MakeNewKey();
+    return sk;
 }
 
 BOOST_AUTO_TEST_CASE(queue_sign_and_verify)
 {
     // Build active MN manager with operator key using node context wiring
-    CActiveMasternodeManager mn_activeman(MakeActiveInfo().blsKeyOperator, *Assert(m_node.connman), m_node.dmnman);
+    CActiveMasternodeManager mn_activeman(MakeSecretKey(), *Assert(m_node.connman), m_node.dmnman);
 
     CCoinJoinQueue q;
     q.nDenom = CoinJoin::AmountToDenomination(CoinJoin::GetSmallestDenomination());

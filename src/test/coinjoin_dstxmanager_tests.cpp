@@ -4,16 +4,16 @@
 
 #include <test/util/setup_common.h>
 
-#include <array>
-#include <algorithm>
-#include <vector>
-
+#include <chain.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/common.h>
 #include <coinjoin/context.h>
-#include <chain.h>
 #include <script/script.h>
 #include <uint256.h>
+
+#include <algorithm>
+#include <array>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -27,8 +27,7 @@ static CCoinJoinBroadcastTx MakeDSTX(int vin_vout_count = 3)
     for (int i = 0; i < count; ++i) {
         mtx.vin.emplace_back(COutPoint(uint256S("0a"), i));
         // Use denominated P2PKH outputs
-    std::array<unsigned char, 20> h{}; h.fill(static_cast<unsigned char>(i));
-    CScript spk; spk << OP_DUP << OP_HASH160 << std::vector<unsigned char>(h.begin(), h.end()) << OP_EQUALVERIFY << OP_CHECKSIG;
+        CScript spk; spk << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, i) << OP_EQUALVERIFY << OP_CHECKSIG;
         mtx.vout.emplace_back(CoinJoin::GetSmallestDenomination(), spk);
     }
     dstx.tx = MakeTransactionRef(mtx);

@@ -26,11 +26,8 @@ BOOST_FIXTURE_TEST_SUITE(coinjoin_inouts_tests, TestingSetup)
 static CScript P2PKHScript(uint8_t tag = 0x01)
 {
     // OP_DUP OP_HASH160 <20-byte-tag> OP_EQUALVERIFY OP_CHECKSIG
-    std::array<unsigned char, 20> hash{};
-    hash.fill(tag);
-    CScript spk;
-    spk << OP_DUP << OP_HASH160 << std::vector<unsigned char>(hash.begin(), hash.end()) << OP_EQUALVERIFY << OP_CHECKSIG;
-    return spk;
+    std::vector<unsigned char> hash(20, tag);
+    return CScript{} << OP_DUP << OP_HASH160 << hash << OP_EQUALVERIFY << OP_CHECKSIG;
 }
 
 BOOST_AUTO_TEST_CASE(broadcasttx_isvalidstructure_good_and_bad)
@@ -43,7 +40,7 @@ BOOST_AUTO_TEST_CASE(broadcasttx_isvalidstructure_good_and_bad)
         const int participants = std::max(3, CoinJoin::GetMinPoolParticipants());
         for (int i = 0; i < participants; ++i) {
             CTxIn in;
-            in.prevout = COutPoint(uint256S("01"), static_cast<uint32_t>(i));
+            in.prevout = COutPoint(uint256::ONE, static_cast<uint32_t>(i));
             mtx.vin.push_back(in);
             // Pick the smallest denomination
             CTxOut out{CoinJoin::GetSmallestDenomination(), P2PKHScript(static_cast<uint8_t>(i))};
@@ -56,7 +53,7 @@ BOOST_AUTO_TEST_CASE(broadcasttx_isvalidstructure_good_and_bad)
 
     // Bad: both identifiers null
     CCoinJoinBroadcastTx bad_ids = good;
-    bad_ids.m_protxHash = uint256();
+    bad_ids.m_protxHash = uint256{};
     bad_ids.masternodeOutpoint.SetNull();
     BOOST_CHECK(!bad_ids.IsValidStructure());
 
@@ -118,7 +115,7 @@ BOOST_AUTO_TEST_CASE(broadcasttx_expiry_height_logic)
         CMutableTransaction mtx;
         const int participants = std::max(3, CoinJoin::GetMinPoolParticipants());
         for (int i = 0; i < participants; ++i) {
-            mtx.vin.emplace_back(COutPoint(uint256S("02"), i));
+            mtx.vin.emplace_back(COutPoint(uint256::TWO, i));
             mtx.vout.emplace_back(CoinJoin::GetSmallestDenomination(), P2PKHScript(static_cast<uint8_t>(i)));
         }
         dstx.tx = MakeTransactionRef(mtx);
