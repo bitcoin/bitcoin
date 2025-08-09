@@ -147,7 +147,7 @@ class MultiWalletTest(BitcoinTestFramework):
         os.mkdir(wallet_dir('no_access'))
         os.chmod(wallet_dir('no_access'), 0)
         try:
-            with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+            with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"], wallet=True):
                 walletlist = self.nodes[0].listwalletdir()['wallets']
         finally:
             # Need to ensure access is restored for cleanup
