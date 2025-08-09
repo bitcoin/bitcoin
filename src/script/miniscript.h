@@ -239,6 +239,7 @@ enum class Availability {
 enum class MiniscriptContext {
     P2WSH,
     TAPSCRIPT,
+    P2QRH,
 };
 
 /** Whether the context Tapscript, ensuring the only other possibility is P2WSH. */
@@ -247,6 +248,7 @@ constexpr bool IsTapscript(MiniscriptContext ms_ctx)
     switch (ms_ctx) {
         case MiniscriptContext::P2WSH: return false;
         case MiniscriptContext::TAPSCRIPT: return true;
+        case MiniscriptContext::P2QRH: return true;
     }
     assert(false);
 }

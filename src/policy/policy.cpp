@@ -91,6 +91,9 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
+    } else if (whichType == TxoutType::WITNESS_V3_P2QRH) {
+        // Accept as standard
+        return true;
     }
 
     return true;
@@ -242,6 +245,9 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
                 return false;
             }
+        } else if (whichType == TxoutType::WITNESS_V3_P2QRH) {
+            // Accept as standard
+            continue;
         }
     }
 
@@ -330,6 +336,34 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 // (no policy rules apply)
             } else {
                 // 0 stack elements; this is already invalid by consensus rules
+                return false;
+            }
+        }
+
+        // Check policy limits for P2QRH spends:
+        // - MAX_STANDARD_P2QRH_STACK_ITEM_SIZE limit for stack item size
+        // - Script path only (no key path spending)
+        // - No annexes
+        if (witnessversion == 3 && witnessprogram.size() == WITNESS_V3_P2QRH_SIZE) {
+            // P2QRH spend (non-P2SH-wrapped, version 3, witness program size 32)
+            std::span stack{tx.vin[i].scriptWitness.stack};
+            if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+                // Annexes are nonstandard as long as no semantics are defined for them.
+                return false;
+            }
+            if (stack.size() >= 2) {
+                // Script path spend (2 or more stack elements after removing optional annex)
+                const auto& control_block = SpanPopBack(stack);
+                SpanPopBack(stack); // Ignore script
+                if (control_block.empty()) return false; // Empty control block is invalid
+                if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
+                    // Leaf version 0xc0 (aka Tapscript, see BIP 342)
+                    for (const auto& item : stack) {
+                        if (item.size() > MAX_STANDARD_P2QRH_STACK_ITEM_SIZE) return false;
+                    }
+                }
+            } else {
+                // P2QRH only supports script path spending, no key path spending allowed
                 return false;
             }
         }

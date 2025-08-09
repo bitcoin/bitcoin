@@ -1602,6 +1602,92 @@ public:
     }
 };
 
+class QRHDescriptor final : public DescriptorImpl
+{
+    std::vector<int> m_depths;
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
+    {
+        assert(m_depths.size() == scripts.size());
+        
+        if (scripts.empty()) {
+            // No scripts provided, return empty
+            return {};
+        }
+        
+        TaprootBuilder builder;
+        for (size_t pos = 0; pos < m_depths.size(); ++pos) {
+            builder.Add(m_depths[pos], scripts[pos], TAPROOT_LEAF_TAPSCRIPT);
+        }
+        if (!builder.IsComplete()) return {};
+        
+        // Because we are leveraging P2TR TaprootBuilder, create a dummy internal key for finalization
+        // P2QRH only uses the merkle root
+        // Subsequently, use NUMS_H as placeholder since P2QRH doesn't use keypath
+        XOnlyPubKey dummy_key = XOnlyPubKey::NUMS_H;
+        builder.Finalize(dummy_key);
+        
+        // Get the merkle root from the builder
+        uint256 merkle_root = builder.GetSpendData().merkle_root;
+        
+        CScript output_script;
+        output_script << OP_3 << ToByteVector(merkle_root);
+        
+        return {output_script};
+    }
+    
+    bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
+    {
+        if (m_depths.empty()) return true;
+        std::vector<bool> path;
+        for (size_t pos = 0; pos < m_depths.size(); ++pos) {
+            if (pos) ret += ',';
+            while ((int)path.size() <= m_depths[pos]) {
+                if (path.size()) ret += '{';
+                path.push_back(false);
+            }
+            std::string tmp;
+            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache)) return false;
+            ret += tmp;
+            while (!path.empty() && path.back()) {
+                if (path.size() > 1) ret += '}';
+                path.pop_back();
+            }
+            if (!path.empty()) path.back() = true;
+        }
+        return true;
+    }
+public:
+    QRHDescriptor(std::vector<std::unique_ptr<DescriptorImpl>> descs, std::vector<int> depths) :
+        DescriptorImpl({}, std::move(descs), "qrh"), m_depths(std::move(depths))
+    {
+        assert(m_subdescriptor_args.size() == m_depths.size());
+    }
+    
+    std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32M; }
+    bool IsSingleType() const final { return true; }
+    
+    std::optional<int64_t> ScriptSize() const override { return 1 + 1 + 32; }
+    
+    std::optional<int64_t> MaxSatisfactionWeight(bool) const override {
+        // P2QRH only supports script path, no keypath
+        return 1 + 65; // Script path satisfaction
+    }
+    
+    std::optional<int64_t> MaxSatisfactionElems() const override {
+        // Script path satisfaction elements
+        return 1;
+    }
+    
+    std::unique_ptr<DescriptorImpl> Clone() const override
+    {
+        std::vector<std::unique_ptr<DescriptorImpl>> subdescs;
+        subdescs.reserve(m_subdescriptor_args.size());
+        std::transform(m_subdescriptor_args.begin(), m_subdescriptor_args.end(), subdescs.begin(), [](const std::unique_ptr<DescriptorImpl>& d) { return d->Clone(); });
+        return std::make_unique<QRHDescriptor>(std::move(subdescs), m_depths);
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
 ////////////////////////////////////////////////////////////////////////////
@@ -1613,6 +1699,7 @@ enum class ParseScriptContext {
     P2WSH,   //!< Inside wsh() (script becomes v0 witness script)
     P2TR,    //!< Inside tr() (either internal key, or BIP342 script leaf)
     MUSIG,   //!< Inside musig() (implies P2TR, cannot have nested musig())
+    P2QRH,   //!< Inside qrh() (Bip360 script leaf only)
 };
 
 std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostrophe, std::string& error, bool& has_hardened)
@@ -1766,7 +1853,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
                     error = "Uncompressed keys are not allowed";
                     return {};
                 }
-            } else if (data.size() == 32 && ctx == ParseScriptContext::P2TR) {
+            } else if (data.size() == 32 && (ctx == ParseScriptContext::P2TR || ctx == ParseScriptContext::P2QRH)) {
                 unsigned char fullkey[33] = {0x02};
                 std::copy(data.begin(), data.end(), fullkey + 1);
                 pubkey.Set(std::begin(fullkey), std::end(fullkey));
@@ -1783,7 +1870,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
             if (permit_uncompressed || key.IsCompressed()) {
                 CPubKey pubkey = key.GetPubKey();
                 out.keys.emplace(pubkey.GetID(), key);
-                ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, ctx == ParseScriptContext::P2TR));
+                ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, ctx == ParseScriptContext::P2TR || ctx == ParseScriptContext::P2QRH));
                 return ret;
             } else {
                 error = "Uncompressed keys are not allowed";
@@ -2061,6 +2148,7 @@ struct KeyParser {
         switch (m_script_ctx) {
             case miniscript::MiniscriptContext::P2WSH: return ParseScriptContext::P2WSH;
             case miniscript::MiniscriptContext::TAPSCRIPT: return ParseScriptContext::P2TR;
+            case miniscript::MiniscriptContext::P2QRH: return ParseScriptContext::P2QRH;
         }
         assert(false);
     }
@@ -2133,7 +2221,7 @@ struct KeyParser {
 std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     using namespace script;
-    Assume(ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR);
+    Assume(ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR || ctx == ParseScriptContext::P2QRH);
     std::vector<std::unique_ptr<DescriptorImpl>> ret;
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
@@ -2180,7 +2268,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
     const bool multi_a = !(multi || sortedmulti) && Func("multi_a", expr);
     const bool sortedmulti_a = !(multi || sortedmulti || multi_a) && Func("sortedmulti_a", expr);
     if (((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && (multi || sortedmulti)) ||
-        (ctx == ParseScriptContext::P2TR && (multi_a || sortedmulti_a))) {
+        ((ctx == ParseScriptContext::P2TR || ctx == ParseScriptContext::P2QRH) && (multi_a || sortedmulti_a))) {
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::vector<std::unique_ptr<PubkeyProvider>>> providers; // List of multipath expanded pubkeys
@@ -2422,6 +2510,71 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         error = "Can only have tr at top level";
         return {};
     }
+    if (ctx == ParseScriptContext::TOP && Func("qrh", expr)) {
+        // P2QRH only supports script path, no internal key
+        std::vector<std::vector<std::unique_ptr<DescriptorImpl>>> subscripts;
+        std::vector<int> depths;
+        
+        if (expr.size()) {
+            /** The path from the top of the tree to what we're currently processing.
+             * branches[i] == false: left branch in the i'th step from the top; true: right branch.
+             */
+            std::vector<bool> branches;
+            // Loop over all provided scripts. In every iteration exactly one script will be processed.
+            do {
+                // First process all open braces.
+                while (Const("{", expr)) {
+                    branches.push_back(false); // new left branch
+                    if (branches.size() > TAPROOT_CONTROL_MAX_NODE_COUNT) {
+                        error = strprintf("qrh() supports at most %i nesting levels", TAPROOT_CONTROL_MAX_NODE_COUNT);
+                        return {};
+                    }
+                }
+                // Process the actual script expression.
+                auto sarg = Expr(expr);
+                subscripts.emplace_back(ParseScript(key_exp_index, sarg, ParseScriptContext::P2QRH, out, error));
+                if (subscripts.back().empty()) return {};
+                depths.push_back(branches.size());
+                // Process closing braces; one is expected for every right branch we were in.
+                while (branches.size() && branches.back()) {
+                    if (!Const("}", expr)) {
+                        error = strprintf("qrh(): expected '}' after script expression");
+                        return {};
+                    }
+                    branches.pop_back();
+                }
+                // If after that, we're at the end of a left branch, expect a comma.
+                if (branches.size() && !branches.back()) {
+                    if (!Const(",", expr)) {
+                        error = strprintf("qrh(): expected ',' after script expression");
+                        return {};
+                    }
+                    branches.back() = true;
+                }
+            } while (branches.size());
+            // After we've explored a whole tree, we must be at the end of the expression.
+            if (expr.size()) {
+                error = strprintf("qrh(): expected ')' after script expression");
+                return {};
+            }
+        }
+        
+        assert(TaprootBuilder::ValidDepths(depths));
+        
+        // Build the final descriptors vector
+        // For qrh(), we create a single descriptor with all subdescriptors
+        std::vector<std::unique_ptr<DescriptorImpl>> all_descs;
+        for (auto& subscripts_vec : subscripts) {
+            for (auto& desc : subscripts_vec) {
+                all_descs.push_back(std::move(desc));
+            }
+        }
+        ret.emplace_back(std::make_unique<QRHDescriptor>(std::move(all_descs), depths));
+        return ret;
+    } else if (Func("qrh", expr)) {
+        error = "Can only have qrh at top level";
+        return {};
+    }
     if (ctx == ParseScriptContext::TOP && Func("rawtr", expr)) {
         auto arg = Expr(expr);
         if (expr.size()) {
@@ -2457,7 +2610,9 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
     }
     // Process miniscript expressions.
     {
-        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
+        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : 
+                             ctx == ParseScriptContext::P2QRH ? miniscript::MiniscriptContext::P2QRH :
+                             miniscript::MiniscriptContext::TAPSCRIPT};
         KeyParser parser(/*out = */&out, /* in = */nullptr, /* ctx = */script_ctx, key_exp_index);
         auto node = miniscript::FromString(std::string(expr.begin(), expr.end()), parser);
         if (parser.m_key_parsing_error != "") {
@@ -2465,8 +2620,8 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             return {};
         }
         if (node) {
-            if (ctx != ParseScriptContext::P2WSH && ctx != ParseScriptContext::P2TR) {
-                error = "Miniscript expressions can only be used in wsh or tr.";
+            if (ctx != ParseScriptContext::P2WSH && ctx != ParseScriptContext::P2TR && ctx != ParseScriptContext::P2QRH) {
+                error = "Miniscript expressions can only be used in wsh, tr, or qrh.";
                 return {};
             }
             if (!node->IsSane() || node->IsNotSatisfiable()) {
@@ -2563,7 +2718,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider), true);
     }
 
-    if (ctx == ParseScriptContext::P2TR) {
+    if (ctx == ParseScriptContext::P2TR || ctx == ParseScriptContext::P2QRH) {
         auto ret = InferMultiA(script, ctx, provider);
         if (ret) return ret;
     }
@@ -2670,8 +2825,10 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
 
-    if (ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR) {
-        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : miniscript::MiniscriptContext::TAPSCRIPT};
+    if (ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR || ctx == ParseScriptContext::P2QRH) {
+        const auto script_ctx{ctx == ParseScriptContext::P2WSH ? miniscript::MiniscriptContext::P2WSH : 
+                             ctx == ParseScriptContext::P2QRH ? miniscript::MiniscriptContext::P2QRH :
+                             miniscript::MiniscriptContext::TAPSCRIPT};
         KeyParser parser(/* out = */nullptr, /* in = */&provider, /* ctx = */script_ctx);
         auto node = miniscript::FromScript(script, parser);
         if (node && node->IsSane()) {
@@ -2697,8 +2854,6 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
     return std::make_unique<RawDescriptor>(script);
 }
-
-
 } // namespace
 
 /** Check a descriptor checksum, and update desc to be the checksum-less part. */

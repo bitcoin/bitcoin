@@ -1410,8 +1410,9 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
     bool uses_bip341_taproot = force;
     for (size_t inpos = 0; inpos < txTo.vin.size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
         if (!txTo.vin[inpos].scriptWitness.IsNull()) {
+            
             if (m_spent_outputs_ready && m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
-                m_spent_outputs[inpos].scriptPubKey[0] == OP_1) {
+                ( m_spent_outputs[inpos].scriptPubKey[0] == OP_1 || m_spent_outputs[inpos].scriptPubKey[0] == OP_3)) {
                 // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 as a Taproot
                 // spend. This only works if spent_outputs was provided as well, but if it wasn't, actual validation
                 // will fail anyway. Note that this branch may trigger for scriptPubKeys that aren't actually segwit
@@ -1461,6 +1462,7 @@ template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTr
 const HashWriter HASHER_TAPSIGHASH{TaggedHash("TapSighash")};
 const HashWriter HASHER_TAPLEAF{TaggedHash("TapLeaf")};
 const HashWriter HASHER_TAPBRANCH{TaggedHash("TapBranch")};
+const HashWriter HASHER_QUANTUMROOT{TaggedHash("QuantumRoot")};
 
 static bool HandleMissingData(MissingDataBehavior mdb)
 {
@@ -1690,6 +1692,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(std::span<cons
     }
     uint256 sighash;
     if (!this->txdata) return HandleMissingData(m_mdb);
+    
     if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata, m_mdb)) {
         return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
     }
@@ -1856,6 +1859,24 @@ uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const u
     return k;
 }
 
+uint256 ComputeQuantumRoot(std::span<const unsigned char> control, const uint256& tapleaf_hash)
+{
+    assert(control.size() >= P2QRH_CONTROL_BASE_SIZE);
+    assert(control.size() <= P2QRH_CONTROL_MAX_SIZE);
+    assert((control.size() - P2QRH_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE == 0);
+
+    const int path_len = (control.size() - P2QRH_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
+    uint256 k = tapleaf_hash;
+    for (int i = 0; i < path_len; ++i) {
+        std::span node{std::span{control}.subspan(P2QRH_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * i, TAPROOT_CONTROL_NODE_SIZE)};
+        k = ComputeTapbranchHash(k, node);
+    }
+
+    // Use the proper HashWriter pattern for tagged hashing
+    const uint256 derived_quantum_root = (HashWriter{HASHER_QUANTUMROOT} << k).GetSHA256();
+    return derived_quantum_root;
+}
+
 static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const uint256& tapleaf_hash)
 {
     assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
@@ -1869,6 +1890,25 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
     // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
     return q.CheckTapTweak(p, merkle_root, control[0] & 1);
 }
+
+static bool VerifyScriptInQuantumRootPath(const std::vector<unsigned char>& control, const std::vector<unsigned char>& quantum_root, const CScript& script)
+{
+    assert(control.size() >= P2QRH_CONTROL_BASE_SIZE);
+    assert(quantum_root.size() >= uint256::size());
+    
+    // Convert quantum_root vector to uint256 for comparison
+    const uint256 quantum_root_uint256{quantum_root};
+    
+    // Compute the tapleaf hash from the script
+    const uint256 tapleaf_hash = ComputeTapleafHash(control[0] & TAPROOT_LEAF_MASK, script);
+    
+    // Compute the Merkle root from the leaf and the provided path.
+    const uint256 derived_quantum_root = ComputeQuantumRoot(control, tapleaf_hash);
+    
+    // Verify that the computed Merkle root matches the quantum_root
+    return derived_quantum_root == quantum_root_uint256;
+}
+
 
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
 {
@@ -1923,6 +1963,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             // Script path spending (stack size is >1 after removing optional annex)
             const valtype& control = SpanPopBack(stack);
             const valtype& script = SpanPopBack(stack);
+
             if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE || ((control.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) {
                 return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
             }
@@ -1933,6 +1974,66 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             execdata.m_tapleaf_hash_init = true;
             if ((control[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                 // Tapscript (leaf version 0xc0)
+                exec_script = CScript(script.begin(), script.end());
+                execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack) + VALIDATION_WEIGHT_OFFSET;
+                execdata.m_validation_weight_left_init = true;
+                return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::TAPSCRIPT, checker, execdata, serror);
+            }
+            if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION) {
+                return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);
+            }
+            return set_success(serror);
+        }
+    } else if (witversion == 3 && program.size() == WITNESS_V3_P2QRH_SIZE ) {
+        // P2QRH: 32-byte witness v3 program (script path only)
+        // Only apply P2QRH validation for native witness outputs, not P2SH-wrapped ones
+        if (is_p2sh) {
+            // For P2SH-wrapped witness v3, treat as WITNESS_UNKNOWN to maintain compatibility
+            if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
+                return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
+            }
+            return true;
+        }
+        
+        // Only apply P2QRH validation if the flag is explicitly set
+        if (!(flags & SCRIPT_VERIFY_P2QRH)) {
+            // If P2QRH flag is not set, treat as WITNESS_UNKNOWN
+            if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
+                return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
+            }
+            return true;
+        }
+        
+        if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
+        if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+            // Drop annex (this is non-standard; see IsWitnessStandard)
+            const valtype& annex = SpanPopBack(stack);
+            execdata.m_annex_hash = (HashWriter{} << annex).GetSHA256();
+            execdata.m_annex_present = true;
+        } else {
+            execdata.m_annex_present = false;
+        }
+        execdata.m_annex_init = true;
+        // P2QRH only supports script path spending, not key path spending
+        if (stack.size() == 1) {
+            return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+        } else {
+            // Script path spending (stack size is >1 after removing optional annex)
+            const valtype& control = SpanPopBack(stack);
+
+            const valtype& script = SpanPopBack(stack);
+
+            const size_t control_size = control.size();
+            if (control_size < P2QRH_CONTROL_BASE_SIZE || control_size > P2QRH_CONTROL_MAX_SIZE || ((control_size - P2QRH_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) {
+                return set_error(serror, SCRIPT_ERR_P2QRH_WRONG_CONTROL_SIZE);
+            }
+            execdata.m_tapleaf_hash = ComputeTapleafHash(control[0] & TAPROOT_LEAF_MASK, script);
+            if (!VerifyScriptInQuantumRootPath(control, program, CScript(script.begin(), script.end()))) {
+                return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+            }
+            execdata.m_tapleaf_hash_init = true;
+            if (control[0] == P2QRH_LEAF_TAPSCRIPT) {
+                // Tapscript (leaf version 0xc1 since parity is always 1)
                 exec_script = CScript(script.begin(), script.end());
                 execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack) + VALIDATION_WEIGHT_OFFSET;
                 execdata.m_validation_weight_left_init = true;
