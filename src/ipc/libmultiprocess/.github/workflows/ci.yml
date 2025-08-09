@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [default, llvm, gnu32, sanitize]
+
+    name: build • ${{ matrix.config }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31       # 2025-05-27, from https://github.com/cachix/install-nix-action/tags
+        with:
+          nix_path: nixpkgs=channel:nixos-25.05   # latest release
+
+      - name: Run CI script
+        env:
+          CI_CONFIG: ci/configs/${{ matrix.config }}.bash
+        run: ci/scripts/run.sh

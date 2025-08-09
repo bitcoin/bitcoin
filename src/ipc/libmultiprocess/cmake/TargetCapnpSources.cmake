@@ -81,6 +81,8 @@ function(target_capnp_sources target include_prefix)
       DEPENDS ${capnp_file}
       VERBATIM
     )
+    # Skip linting for capnp-generated files but keep it for mpgen-generated ones
+    set_source_files_properties(${capnp_file}.c++ PROPERTIES SKIP_LINTING TRUE) # Ignored before cmake 3.27
     target_sources(${target} PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.c++
       ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.proxy-client.c++
