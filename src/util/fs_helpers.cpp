@@ -206,17 +206,28 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
     if (0 == posix_fallocate(fileno(file), 0, nEndPos)) return;
 #endif
     // Fallback version
-    // TODO: just write one byte per block
-    static const char buf[65536] = {};
-    if (fseek(file, offset, SEEK_SET)) {
+    if (fseek(file, 0, SEEK_END)) {
         return;
     }
-    while (length > 0) {
+    const int64_t filesize = std::ftell(file);
+    if (filesize < 0) {
+        return;
+    }
+    if (offset + length <= static_cast<unsigned int>(filesize)) {
+        return;
+    }
+    unsigned int inc_size = offset + length - static_cast<unsigned int>(filesize);
+    if (fseek(file, filesize, SEEK_SET)) {
+        return;
+    }
+    static const char buf[65536] = {};
+    while (inc_size > 0) {
         unsigned int now = 65536;
-        if (length < now)
-            now = length;
+        if (inc_size < now) {
+            now = inc_size;
+        }
         fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
-        length -= now;
+        inc_size -= now;
     }
 #endif
 }
