@@ -45,8 +45,7 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     }
     (void)GetDiscardRate(wallet);
 
-    const auto tx_bytes{fuzzed_data_provider.ConsumeIntegral<unsigned int>()};
-
+    const auto tx_bytes{fuzzed_data_provider.ConsumeIntegralInRange(0, std::numeric_limits<int32_t>::max())};
     if (fuzzed_data_provider.ConsumeBool()) {
         wallet.m_pay_tx_fee = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
         wallet.m_min_fee = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
