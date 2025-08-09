@@ -345,6 +345,16 @@ public:
         obj.pushKV("witness_program", HexStr(id.GetWitnessProgram()));
         return obj;
     }
+
+    UniValue operator()(const WitnessV3P2QRH& id) const
+    {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", true);
+        obj.pushKV("iswitness", true);
+        obj.pushKV("witness_version", 3);
+        obj.pushKV("witness_program", HexStr(id));
+        return obj;
+    }
 };
 
 UniValue DescribeAddress(const CTxDestination& dest)

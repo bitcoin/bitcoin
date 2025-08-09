@@ -171,6 +171,11 @@ VALID_DATA = [
         "bc1pfeessrawgf",
         "51024e73",
     ),
+    # P2QRH (Witness v3)
+    (
+        "bc1rc5jhzjnlf8pg4mdmhfuvqpvnr2quyd9j7mye5uly6psg9twghu4s0glfcg",
+        "5320c525714a7f49c28aedbbba78c005931a81c234b2f6c99a73e4d06082adc8bf2b",
+    ),
 ]
 
 
