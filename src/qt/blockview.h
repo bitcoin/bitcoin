@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include <QColor>
 #include <QDialog>
 #include <QGraphicsView>
 #include <QPointF>
@@ -23,6 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
+class QEvent;
 class QGraphicsItem;
 class QGraphicsScene;
 class QLabel;
@@ -90,12 +92,15 @@ private:
     QComboBox *m_block_chooser;
     QLabel *m_lbl_tx_count;
     QLabel *m_lbl_tx_fees;
+    QColor m_bubble_color;
 
     BlockViewValidationInterface *m_validation_interface;
 
     static bool any_overlap(const Bubble& proposed, const std::vector<Bubble>& others);
+    void updateThemeColors();
 
 protected:
+    void changeEvent(QEvent* e) override;
     void updateElements(bool instant) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
     void updateBlockFees(CAmount block_fees);
 

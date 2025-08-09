@@ -26,12 +26,14 @@
 #include <cmath>
 #include <numbers>
 
+#include <QColor>
 #include <QComboBox>
 #include <QLabel>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QMouseEvent>
+#include <QPalette>
 #include <QHBoxLayout>
 #include <QToolTip>
 #include <QVariant>
@@ -160,6 +162,8 @@ GuiBlockView::GuiBlockView(const PlatformStyle *platformStyle, const NetworkStyl
     setWindowIcon(networkStyle->getTrayAndWindowIcon());
     resize(640, 640);
 
+    updateThemeColors();
+
     QVBoxLayout * const layout = new QVBoxLayout(this);
     setLayout(layout);
 
@@ -283,6 +287,14 @@ GuiBlockView::~GuiBlockView()
         delete m_validation_interface;
         m_validation_interface = nullptr;
     }
+}
+
+void GuiBlockView::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::PaletteChange) {
+        updateThemeColors();
+    }
+    QDialog::changeEvent(e);
 }
 
 void GuiBlockView::setClientModel(ClientModel *model)
@@ -504,7 +516,7 @@ void GuiBlockView::updateSceneInit()
             auto gi = m_scene->addEllipse(0, 0, diameter, diameter, QPen(palette().window(), TX_PADDING_NEARBY));
             el.gi = gi;
             gi->setData(0, QVariant::fromValue(std::move(bubble.tx)));
-            gi->setBrush(QColor(Qt::blue));
+            gi->setBrush(m_bubble_color);
             gi->setPos(bubble.pos.x() - bubble.radius, m_bubblegraph->instant ? (bubble.pos.y() - bubble.radius) : offscreen);
         }
     }
@@ -581,5 +593,27 @@ void GuiBlockView::updateScene()
     --m_frame_div;
     if (all_completed) {
         m_timer.stop();
+    }
+}
+
+void GuiBlockView::updateThemeColors()
+{
+    // Store old color to check if it actually changes
+    const QColor old_color = m_bubble_color;
+
+    // Detect dark mode for color palette selection
+    const bool dark_mode = GUIUtil::isDarkMode(palette().color(backgroundRole()));
+    m_bubble_color = dark_mode ? QColor(137, 170, 255) : QColor(2, 61, 204);
+
+    // Only update existing bubbles if color actually changed
+    if (old_color != m_bubble_color) {
+        LOCK(m_mutex);
+        for (auto& el : m_elements) {
+            if (el.second.gi) {
+                if (auto* ellipse = dynamic_cast<QGraphicsEllipseItem*>(el.second.gi)) {
+                    ellipse->setBrush(m_bubble_color);
+                }
+            }
+        }
     }
 }
