@@ -18,8 +18,10 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     check_node_connections,
+    p2p_port,
 )
 from test_framework.crypto.chacha20 import REKEY_INTERVAL
+from test_framework.socks5 import Socks5Configuration, Socks5Server
 
 
 class P2PEncrypted(BitcoinTestFramework):
@@ -128,6 +130,27 @@ class P2PEncrypted(BitcoinTestFramework):
         assert not peer1.supports_v2_p2p
         assert_equal(node0.getpeerinfo()[-1]["transport_protocol_type"], "v1")
         check_node_connections(node=node0, num_in=1, num_out=0)
+
+        conf = Socks5Configuration()
+        conf.auth = True
+        conf.unauth = True
+        conf.addr = ('127.0.0.1', p2p_port(self.num_nodes))
+        conf.keep_alive = True
+        proxy = Socks5Server(conf)
+        proxy.start()
+        args = ['-listen', f'-proxy={conf.addr[0]}:{conf.addr[1]}', '-proxyrandomize=0', '-v2onlyclearnet=1', '-v2transport=1']
+        self.restart_node(0, extra_args=args)
+        self.log.info("Test -v2onlyclearnet=1 behaviour")
+        self.log.info("Check that outbound v2 connection to an ipv4 peer is successful")
+        node0.addnode("15.61.23.23:1234", "onetry", True)
+        assert_equal(node0.getpeerinfo()[-1]["addr"], "15.61.23.23:1234")
+        self.log.info("Check that outbound v1 connection to an ipv4 peer is unsuccessful")
+        node0.addnode("8.8.8.8:1234", "onetry", False)
+        assert all(peer["addr"] != "8.8.8.8:1234" for peer in node0.getpeerinfo())
+        self.log.info("Check that outbound v1 connection to an onion peer is successful")
+        addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8333"
+        node0.addnode(addr, "onetry", False)
+        assert_equal(node0.getpeerinfo()[-1]["addr"], addr)
 
 
 if __name__ == '__main__':
