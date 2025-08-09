@@ -16,6 +16,7 @@
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <stdexcept>
+#include <test/util/net.h>
 #include <test/util/random.h>
 #include <util/chaintype.h> // IWYU pragma: export
 #include <util/check.h>
@@ -269,6 +270,24 @@ std::unique_ptr<T> MakeNoLogFileContext(const ChainType chain_type = ChainType::
 
     return std::make_unique<T>(chain_type, opts);
 }
+
+class SocketTestingSetup : public BasicTestingSetup
+{
+public:
+    explicit SocketTestingSetup();
+    ~SocketTestingSetup();
+
+    // Connect to the socket with a mock client (a DynSock) and send pre-loaded data.
+    // Returns the I/O pipes from the mock client so we can read response datasent to it.
+    std::shared_ptr<DynSock::Pipes> ConnectClient(const std::vector<uint8_t>& data);
+
+private:
+    // Save the original value of CreateSock here and restore it when the test ends.
+    const decltype(CreateSock) m_create_sock_orig;
+
+    // Queue of connected sockets returned by listening socket (represents network interface)
+    std::shared_ptr<DynSock::Queue> m_accepted_sockets{std::make_shared<DynSock::Queue>()};
+};
 
 CBlock getBlock13b8a();
 
