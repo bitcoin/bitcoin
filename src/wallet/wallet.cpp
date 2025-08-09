@@ -3656,9 +3656,8 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
 {
     AssertLockHeld(cs_wallet);
 
-    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        return util::Error{_("Cannot add WalletDescriptor to a non-descriptor wallet")};
-    }
+    // Descriptors can only be added to descriptor wallets
+    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
     auto spk_man = GetDescriptorScriptPubKeyMan(desc);
     if (spk_man) {
