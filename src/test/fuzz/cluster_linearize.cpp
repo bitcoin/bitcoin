@@ -961,7 +961,7 @@ FUZZ_TARGET(clusterlin_linearize)
     } catch (const std::ios_base::failure&) {}
     // The most complicated graphs are connected ones (other ones just split up). Optionally force
     // the graph to be connected.
-    if (make_connected) MakeConnected(depgraph);
+    if (make_connected & 1) MakeConnected(depgraph);
 
     // Optionally construct an old linearization for it.
     std::vector<DepGraphIndex> old_linearization;
