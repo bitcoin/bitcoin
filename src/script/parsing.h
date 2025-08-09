@@ -35,6 +35,13 @@ bool Func(const std::string& str, std::span<const char>& sp);
  */
 std::span<const char> Expr(std::span<const char>& sp);
 
+/** Find the next occurrence of a character in sp, returning its index.
+ *
+ * If the character is not found, -1 is returned.
+ * The search stops at the first closing parenthesis.
+ */
+int FindNextChar(std::span<const char>& sp, const char m);
+
 } // namespace script
 
 #endif // BITCOIN_SCRIPT_PARSING_H

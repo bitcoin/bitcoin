@@ -22,6 +22,7 @@ from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
+from test_framework.script import SEQUENCE_LOCKTIME_TYPE_FLAG
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -58,6 +59,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if 'warnings' in result[0]:
             observed_warnings = result[0]['warnings']
         assert_equal("\n".join(sorted(warnings)), "\n".join(sorted(observed_warnings)))
+        self.log.debug(result)
         assert_equal(result[0]['success'], success)
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
@@ -769,6 +771,49 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+
+        self.log.info("Test older() safety")
+
+        for flag in [0, SEQUENCE_LOCKTIME_TYPE_FLAG]:
+            self.log.debug("Importing a safe value always works")
+            height_delta = 65535 + (1 << 22 if flag is SEQUENCE_LOCKTIME_TYPE_FLAG else 0)
+            self.test_importdesc(
+                {
+                    'desc': descsum_create(f"wsh(and_v(v:pk([12345678/0h/0h]{xpub}/*),older({height_delta})))"),
+                    'active': True,
+                    'range': [0, 2],
+                    'timestamp': 'now'
+                },
+                success=True
+            )
+
+            self.log.debug("Importing an unsafe value is prevented by default")
+            height_delta = height_delta + 1
+            desc = descsum_create(f"wsh(and_v(v:pk([12345678/0h/0h]{xpub}/*),older({height_delta})))")
+            self.test_importdesc(
+                {
+                    'desc': desc,
+                    'active': True,
+                    'range': [0, 2],
+                    'timestamp': 'now'
+                },
+                success=False,
+                error_code=-5,
+                error_message=f"older({height_delta}{' - 1<<22' if flag is SEQUENCE_LOCKTIME_TYPE_FLAG else ''}) > 65535 is unsafe"
+            )
+
+            self.log.debug("Set unsafe to True to import it anyway")
+            self.test_importdesc(
+                {
+                    'desc': desc,
+                    'active': True,
+                    'range': [0, 2],
+                    'timestamp': 'now',
+                    'unsafe': True
+                },
+                success=True
+            )
+
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
