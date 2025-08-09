@@ -136,7 +136,8 @@ public:
      * minimum_required_work: amount of chain work required to accept the chain
      */
     HeadersSyncState(NodeId id, const Consensus::Params& consensus_params,
-            const CBlockIndex* chain_start, const arith_uint256& minimum_required_work);
+            const HeadersSyncParams& params, const CBlockIndex* chain_start,
+            const arith_uint256& minimum_required_work);
 
     /** Result data structure for ProcessNextHeaders. */
     struct ProcessingResult {
@@ -165,7 +166,7 @@ public:
      * ProcessingResult.request_more: if true, the caller is suggested to call
      *                       NextHeadersRequestLocator and send a getheaders message using it.
      */
-    ProcessingResult ProcessNextHeaders(const std::vector<CBlockHeader>&
+    ProcessingResult ProcessNextHeaders(std::span<const CBlockHeader>
             received_headers, bool full_headers_message);
 
     /** Issue the next GETHEADERS message to our peer.
@@ -195,7 +196,7 @@ private:
      *  processed headers.
      *  On failure, this invokes Finalize() and returns false.
      */
-    bool ValidateAndStoreHeadersCommitments(const std::vector<CBlockHeader>& headers);
+    bool ValidateAndStoreHeadersCommitments(std::span<const CBlockHeader> headers);
 
     /** In PRESYNC, process and update state for a single header */
     bool ValidateAndProcessSingleHeader(const CBlockHeader& current);
@@ -213,6 +214,9 @@ private:
 
     /** We use the consensus params in our anti-DoS calculations */
     const Consensus::Params& m_consensus_params;
+
+    /** Parameters that impact memory usage for a given chain, especially when attacked. */
+    const HeadersSyncParams m_params;
 
     /** Store the last block in our block index that the peer's chain builds from */
     const CBlockIndex* m_chain_start{nullptr};
