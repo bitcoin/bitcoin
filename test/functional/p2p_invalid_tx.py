@@ -73,13 +73,8 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             tx = template.get_tx()
             node.p2ps[0].send_txs_and_test(
                 [tx], node, success=False,
-                expect_disconnect=template.expect_disconnect,
                 reject_reason=template.reject_reason,
             )
-
-            if template.expect_disconnect:
-                self.log.info("Reconnecting to peer")
-                self.reconnect_p2p()
 
         # Make two p2p connections to provide the node with orphans
         # * p2ps[0] will send valid orphan txs (one with low fee)
@@ -140,7 +135,6 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # tx_orphan_2_no_fee, because it has too low fee (p2ps[0] is not disconnected for relaying that tx)
         # tx_orphan_2_invalid, because it has negative fee (p2ps[1] is disconnected for relaying that tx)
 
-        self.wait_until(lambda: 1 == len(node.getpeerinfo()), timeout=12)  # p2ps[1] is no longer connected
         assert_equal(expected_mempool, set(node.getrawmempool()))
 
         self.log.info('Test orphanage can store more than 100 transactions')

@@ -123,8 +123,8 @@ class RPCPackagesTest(BitcoinTestFramework):
         assert_equal(testres_bad_sig, self.independent_txns_testres + [{
             "txid": tx_bad_sig_txid,
             "wtxid": tx_bad_sig_wtxid, "allowed": False,
-            "reject-reason": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size)",
-            "reject-details": "mandatory-script-verify-flag-failed (Operation not valid with the current stack size), " +
+            "reject-reason": "mempool-script-verify-flag-failed (Operation not valid with the current stack size)",
+            "reject-details": "mempool-script-verify-flag-failed (Operation not valid with the current stack size), " +
                               f"input 0 of {tx_bad_sig_txid} (wtxid {tx_bad_sig_wtxid}), spending {coin['txid']}:{coin['vout']}"
         }])
 

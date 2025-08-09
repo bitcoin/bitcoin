@@ -121,8 +121,8 @@ class BIP66Test(BitcoinTestFramework):
                 'txid': spendtx_txid,
                 'wtxid': spendtx_wtxid,
                 'allowed': False,
-                'reject-reason': 'mandatory-script-verify-flag-failed (Non-canonical DER signature)',
-                'reject-details': 'mandatory-script-verify-flag-failed (Non-canonical DER signature), ' +
+                'reject-reason': 'mempool-script-verify-flag-failed (Non-canonical DER signature)',
+                'reject-details': 'mempool-script-verify-flag-failed (Non-canonical DER signature), ' +
                                   f"input 0 of {spendtx_txid} (wtxid {spendtx_wtxid}), spending {coin_txid}:0"
             }],
             self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
