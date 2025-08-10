@@ -40,12 +40,16 @@ static const std::vector<TestEntry> addr_vals_main{
     // - Non-IPv4 addresses are prohibited in MnNetInfo
     // - Any valid BIP155 address is allowed in ExtNetInfo
     {{NetInfoPurpose::CORE_P2P, "[2606:4700:4700::1111]:9999"}, NetInfoStatus::BadInput, NetInfoStatus::Success},
-    // Domains are not allowed for Core P2P or Platform P2P
-    {{NetInfoPurpose::CORE_P2P, "example.com:9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
-    {{NetInfoPurpose::PLATFORM_P2P, "example.com:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
     // - MnNetInfo doesn't allow storing anything except a Core P2P address
-    // - ExtNetInfo can store Platform HTTPS addresses *as domains*
+    // - Privacy network domains are allowed in ExtNetInfo but internet domains are not
+    {{NetInfoPurpose::CORE_P2P, "example.com:9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
+    {{NetInfoPurpose::CORE_P2P, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9999"}, NetInfoStatus::BadInput, NetInfoStatus::Success},
+    {{NetInfoPurpose::PLATFORM_P2P, "example.com:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
+    {{NetInfoPurpose::PLATFORM_P2P, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
+    // - MnNetInfo doesn't allow storing anything except a Core P2P address
+    // - ExtNetInfo can store Platform HTTPS addresses *as domains* alongside privacy network domains
     {{NetInfoPurpose::PLATFORM_HTTPS, "example.com:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
+    {{NetInfoPurpose::PLATFORM_HTTPS, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
     // Incorrect IPv4 address
     {{NetInfoPurpose::CORE_P2P, "1.1.1.256:9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
     // Missing address
@@ -143,10 +147,20 @@ static const std::vector<TestEntry> addr_vals_reg{
 
 enum class ExpectedType : uint8_t {
     CJDNS,
+    I2P,
+    Tor,
 };
 
 static const std::vector<std::tuple</*type=*/ExpectedType, /*input=*/std::string, /*expected_ret=*/NetInfoStatus>> privacy_addr_vals{
     {ExpectedType::CJDNS, "[fc00:3344:5566:7788:9900:aabb:ccdd:eeff]:9998", NetInfoStatus::Success},
+    // ExtNetInfo can store I2P addresses as long as it uses port 0
+    {ExpectedType::I2P, "udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p:0", NetInfoStatus::Success},
+    // ExtNetInfo can store onion addresses
+    {ExpectedType::Tor, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:9998", NetInfoStatus::Success},
+    // ExtNetInfo can store I2P addresses but non-zero ports are not allowed
+    {ExpectedType::I2P, "udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p:9998", NetInfoStatus::BadPort},
+    // ExtNetInfo can store onion addresses but zero ports are not allowed
+    {ExpectedType::Tor, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:0", NetInfoStatus::BadPort},
 };
 
 BOOST_FIXTURE_TEST_CASE(mnnetinfo_rules_reg, RegTestingSetup) { TestMnNetInfo(addr_vals_reg); }
@@ -206,6 +220,8 @@ BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
             {{NetInfoPurpose::PLATFORM_HTTPS, "example.123:443"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
             // .local is a prohibited TLD
             {{NetInfoPurpose::PLATFORM_HTTPS, "somebodys-macbook-pro.local:9998"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
+            // DomainPort isn't used for storing privacy network TLDs like .onion
+            {{NetInfoPurpose::PLATFORM_HTTPS, "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd:9998"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
         };
         TestExtNetInfo(domain_vals);
     }
@@ -225,6 +241,12 @@ BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
         switch (type) {
         case ExpectedType::CJDNS:
             BOOST_CHECK(service.IsCJDNS());
+            break;
+        case ExpectedType::I2P:
+            BOOST_CHECK(service.IsI2P());
+            break;
+        case ExpectedType::Tor:
+            BOOST_CHECK(service.IsTor());
             break;
         } // no default case, so the compiler can warn about missing cases
     }

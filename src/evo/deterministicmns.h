@@ -442,7 +442,17 @@ private:
         DMNL_NO_TEMPLATE(NetInfoInterface);
         DMNL_NO_TEMPLATE(std::shared_ptr<NetInfoInterface>);
 #undef DMNL_NO_TEMPLATE
-        return ::SerializeHash(v);
+        int ser_version{PROTOCOL_VERSION};
+        if constexpr (std::is_same_v<std::decay_t<T>, CService>) {
+            // Special handling is required if we're using addresses that can only be (de)serialized using
+            // ADDRv2. Without this step, the address gets truncated, the hashmap gets contaminated with
+            // an invalid entry and subsequent attempts at registering ADDRv2 entries get blocked. We cannot
+            // apply this treatment ADDRv1 compatible addresses for backwards compatibility with the existing map.
+            if (!v.IsAddrV1Compatible()) {
+                ser_version |= ADDRV2_FORMAT;
+            }
+        }
+        return ::SerializeHash(v, /*nType=*/SER_GETHASH, /*nVersion=*/ser_version);
     }
     template <typename T>
     [[nodiscard]] bool AddUniqueProperty(const CDeterministicMN& dmn, const T& v)
