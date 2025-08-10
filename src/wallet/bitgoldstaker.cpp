@@ -1,6 +1,7 @@
 #include <chrono>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/merkle.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <pos/stake.h>
@@ -8,6 +9,7 @@
 #include <validation.h>
 #include <wallet/bitgoldstaker.h>
 #include <wallet/wallet.h>
+#include <wallet/spend.h>
 
 #include <algorithm>
 #include <logging.h>
