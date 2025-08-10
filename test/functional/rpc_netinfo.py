@@ -180,13 +180,15 @@ class NetInfoTest(BitcoinTestFramework):
         self.log.info("Test input validation for masternode address fields (pre-fork)")
         self.test_validation_common()
         self.test_validation_legacy()
-        self.log.info("Test output masternode address fields for consistency")
+        self.log.info("Test output masternode address fields for consistency (pre-fork)")
         self.test_deprecation()
         self.log.info("Mine blocks to activate DEPLOYMENT_V23")
         self.activate_v23()
         self.log.info("Test input validation for masternode address fields (post-fork)")
         self.test_validation_common()
         self.test_validation_extended()
+        self.log.info("Test output masternode address fields for consistency (post-fork)")
+        self.test_shims()
 
     def test_validation_common(self):
         # Arrays of addresses with invalid inputs get refused
@@ -454,6 +456,58 @@ class NetInfoTest(BitcoinTestFramework):
         assert "service" in proupservtx_rpc['proUpServTx'].keys()
         assert "service" in protx_diff_rpc['mnList'][0].keys()
         assert "service" in protx_listdiff_rpc.keys()
+
+    def test_shims(self):
+        # There are two shims there to help with migrating between legacy and extended addresses, one reads from legacy platform
+        # fields to ensure 'addresses' is adequately populated. The other, reads from netInfo to populate platform{HTTP,P2P}Port.
+        # As the fork is now active, we can now evaluate the test cases that couldn't be evaluated in test_deprecation().
+        self.log.info("Collect JSON RPC responses from node")
+
+        # Create an masternode that clearly uses extended addresses (hello IPv6!)
+        proregtx_hash = self.node_evo.register_mn(self, True,
+                                                  [f"127.0.0.1:{self.node_evo.mn.nodePort}", f"[::1]:{self.node_evo.mn.nodePort}"],
+                                                  [f"127.0.0.2:{DEFAULT_PORT_PLATFORM_P2P}", f"[::2]:{DEFAULT_PORT_PLATFORM_P2P}"],
+                                                  [f"127.0.0.3:{DEFAULT_PORT_PLATFORM_HTTP}", f"[::3]:{DEFAULT_PORT_PLATFORM_HTTP}"])
+        proregtx_rpc = self.node_evo.node.getrawtransaction(proregtx_hash, True)
+
+        # Update only a platform field (platformP2PAddrs) but with an odd twist, we only specify the port number and expect the shim
+        # to auto-fill the addr portion from coreP2PAddrs[0]
+        proupservtx_hash = self.node_evo.update_mn(self, True,
+                                                   [f"127.0.0.1:{self.node_evo.mn.nodePort}", f"[::1]:{self.node_evo.mn.nodePort}"],
+                                                   DEFAULT_PORT_PLATFORM_P2P + 12,
+                                                   [f"127.0.0.3:{DEFAULT_PORT_PLATFORM_HTTP}", f"[::3]:{DEFAULT_PORT_PLATFORM_HTTP}"])
+        proupservtx_rpc = self.node_evo.node.getrawtransaction(proupservtx_hash, True)
+        assert_equal(proupservtx_rpc['proUpServTx']['addresses']['platform_p2p'][0], f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P + 12}")
+
+        # Since all fields are stored in the netInfo, even though we updated only platformP2PAddrs, the dummy address should never be visible
+        # and *all* the addresses fields will be visible as they're now in one data structure
+        proupservtx_height = proupservtx_rpc['height']
+        protx_listdiff_rpc = self.node_evo.node.protx('listdiff', proupservtx_height - 1, proupservtx_height)
+        protx_listdiff_rpc = self.extract_from_listdiff(protx_listdiff_rpc, proregtx_hash)
+        assert_equal(protx_listdiff_rpc['addresses'], {
+            'core_p2p': [f"127.0.0.1:{self.node_evo.mn.nodePort}", f"[::1]:{self.node_evo.mn.nodePort}"],
+            'platform_p2p': [f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P + 12}"],
+            'platform_https': [f"127.0.0.3:{DEFAULT_PORT_PLATFORM_HTTP}", f"[::3]:{DEFAULT_PORT_PLATFORM_HTTP}"]
+        })
+
+        # Check platform{HTTP,P2P}Port shims work as expected
+        assert_equal(proregtx_rpc['proRegTx']['platformP2PPort'], DEFAULT_PORT_PLATFORM_P2P)
+        assert_equal(proregtx_rpc['proRegTx']['platformHTTPPort'], DEFAULT_PORT_PLATFORM_HTTP)
+        assert_equal(proupservtx_rpc['proUpServTx']['platformP2PPort'], DEFAULT_PORT_PLATFORM_P2P + 12)
+        assert_equal(proupservtx_rpc['proUpServTx']['platformHTTPPort'], DEFAULT_PORT_PLATFORM_HTTP)
+        # platform{HTTP,P2P}Port *won't* be populated by listdiff as that *field* is now unused and it's dangerous to report "updates" to disused fields
+        assert "platformP2PPort" not in protx_listdiff_rpc.keys()
+        assert "platformHTTPPort" not in protx_listdiff_rpc.keys()
+
+        # Restart the client to see if (de)ser works as intended (CDeterministicMNStateDiff is a special case and we just made an update)
+        self.node_evo.set_active_state(self, False)
+        self.reconnect_nodes()
+
+        # Check that 'service' correctly reports as coreP2PAddrs[0]
+        proregtx_rpc = self.node_simple.getrawtransaction(proregtx_hash, True)
+        proupservtx_rpc = self.node_simple.getrawtransaction(proupservtx_hash, True)
+        assert_equal(proregtx_rpc['proRegTx']['service'], f"127.0.0.1:{self.node_evo.mn.nodePort}")
+        assert_equal(proupservtx_rpc['proUpServTx']['service'], f"127.0.0.1:{self.node_evo.mn.nodePort}")
 
 if __name__ == "__main__":
     NetInfoTest().main()
