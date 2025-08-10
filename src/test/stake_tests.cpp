@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(valid_kernel)
     uint256 hash_block_from{2};
     unsigned int nTimeBlockFrom = 0;
     CAmount amount = 100 * COIN;
-    COutPoint prevout{uint256{3}, 0};
+    COutPoint prevout{Txid::FromUint256(uint256{3}), 0};
 
     uint256 hash_proof;
     unsigned int nBits = 0x207fffff; // very low difficulty
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(invalid_kernel_time)
     uint256 hash_block_from{2};
     unsigned int nTimeBlockFrom = 0;
     CAmount amount = 100 * COIN;
-    COutPoint prevout{uint256{3}, 0};
+    COutPoint prevout{Txid::FromUint256(uint256{3}), 0};
 
     uint256 hash_proof;
     unsigned int nBits = 0x207fffff;
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(invalid_kernel_target)
     uint256 hash_block_from{2};
     unsigned int nTimeBlockFrom = 0;
     CAmount amount = 1 * COIN; // minimum stake amount
-    COutPoint prevout{uint256{3}, 0};
+    COutPoint prevout{Txid::FromUint256(uint256{3}), 0};
 
     uint256 hash_proof;
     unsigned int nBits = 0x1;     // extremely high difficulty

@@ -1466,7 +1466,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
         if (!coin.IsSpent()) {
             int n_blocks = m_active_chainstate.m_chain.Height() - coin.nHeight;
             if (n_blocks > 0) {
-                stake_duration = std::max<int64_t>(stake_duration, n_blocks * m_chainparams.GetConsensus().nPowTargetSpacing);
+                stake_duration = std::max<int64_t>(stake_duration, n_blocks * args.m_chainparams.GetConsensus().nPowTargetSpacing);
             }
         }
     }
@@ -1474,7 +1474,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     if (m_pool.DynamicMemoryUsage() > m_pool.m_opts.max_size_bytes * 9 / 10) {
         priority += CONGESTION_PENALTY;
     }
-    ws.m_tx_handle->SetPriority(priority);
+    const_cast<CTxMemPoolEntry&>(*ws.m_tx_handle).SetPriority(priority);
 
     const CFeeRate effective_feerate{ws.m_modified_fees, static_cast<uint32_t>(ws.m_vsize)};
     // Tx was accepted, but not added
@@ -2011,3 +2011,6 @@ void Chainstate::InitCoinsDB(
             .memory_only = in_memory,
             .wipe_data = should_wipe,
             .obfuscate = true,
+        },
+        CoinsViewOptions{});
+}
