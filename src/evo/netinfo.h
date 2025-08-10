@@ -118,7 +118,7 @@ public:
         m_data = std::monostate{};
     }
 
-    std::optional<std::reference_wrapper<const CService>> GetAddrPort() const;
+    std::optional<CService> GetAddrPort() const;
     uint16_t GetPort() const;
     bool IsEmpty() const { return *this == NetInfoEntry{}; }
     bool IsTriviallyValid() const;
@@ -129,7 +129,7 @@ public:
 
 template<> struct is_serializable_enum<NetInfoEntry::NetInfoType> : std::true_type {};
 
-using NetInfoList = std::vector<std::reference_wrapper<const NetInfoEntry>>;
+using NetInfoList = std::vector<NetInfoEntry>;
 
 class NetInfoInterface
 {
@@ -142,7 +142,7 @@ public:
     virtual NetInfoStatus AddEntry(const std::string& service) = 0;
     virtual NetInfoList GetEntries() const = 0;
 
-    virtual const CService& GetPrimary() const = 0;
+    virtual CService GetPrimary() const = 0;
     virtual bool CanStorePlatform() const = 0;
     virtual bool IsEmpty() const = 0;
     virtual NetInfoStatus Validate() const = 0;
@@ -176,8 +176,8 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (const auto& service{m_addr.GetAddrPort()}; service.has_value()) {
-            s << service->get();
+        if (const auto service_opt{m_addr.GetAddrPort()}) {
+            s << *service_opt;
         } else {
             s << CService{};
         }
@@ -199,7 +199,7 @@ public:
     NetInfoStatus AddEntry(const std::string& service) override;
     NetInfoList GetEntries() const override;
 
-    const CService& GetPrimary() const override;
+    CService GetPrimary() const override;
     bool IsEmpty() const override { return m_addr.IsEmpty(); }
     bool CanStorePlatform() const override { return false; }
     NetInfoStatus Validate() const override;

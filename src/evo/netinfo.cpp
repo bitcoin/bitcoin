@@ -16,7 +16,6 @@
 namespace {
 static std::unique_ptr<const CChainParams> g_main_params{nullptr};
 static std::once_flag g_main_params_flag;
-static const CService empty_service{};
 
 static constexpr std::string_view SAFE_CHARS_IPV4{"1234567890."};
 
@@ -78,7 +77,7 @@ bool NetInfoEntry::operator<(const NetInfoEntry& rhs) const
         m_data, rhs.m_data);
 }
 
-std::optional<std::reference_wrapper<const CService>> NetInfoEntry::GetAddrPort() const
+std::optional<CService> NetInfoEntry::GetAddrPort() const
 {
     if (const auto* data_ptr{std::get_if<CService>(&m_data)}; m_type == NetInfoType::Service && data_ptr) {
         ASSERT_IF_DEBUG(data_ptr->IsValid());
@@ -226,12 +225,12 @@ NetInfoList MnNetInfo::GetEntries() const
     return {};
 }
 
-const CService& MnNetInfo::GetPrimary() const
+CService MnNetInfo::GetPrimary() const
 {
-    if (const auto& service_opt{m_addr.GetAddrPort()}) {
+    if (const auto service_opt{m_addr.GetAddrPort()}) {
         return *service_opt;
     }
-    return empty_service;
+    return CService{};
 }
 
 NetInfoStatus MnNetInfo::Validate() const
