@@ -42,12 +42,6 @@ UniValue ArrFromService(const CService& addr)
     return obj;
 }
 
-bool IsServiceDeprecatedRPCEnabled()
-{
-    const auto args = gArgs.GetArgs("-deprecatedrpc");
-    return std::find(args.begin(), args.end(), "service") != args.end();
-}
-
 bool NetInfoEntry::operator==(const NetInfoEntry& rhs) const
 {
     if (m_type != rhs.m_type) return false;

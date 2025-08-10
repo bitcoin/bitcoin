@@ -135,11 +135,10 @@ class EvoNode:
 
 class NetInfoTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 3
+        self.num_nodes = 2
         self.extra_args = [[
             "-dip3params=2:2", f"-vbparams=v23:{self.mocktime}:999999999999:{V23_ACTIVATION_THRESHOLD}:10:8:6:5:0"
         ] for _ in range(self.num_nodes)]
-        self.extra_args[2] += ["-deprecatedrpc=service"]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -177,14 +176,12 @@ class NetInfoTest(BitcoinTestFramework):
         self.node_two: EvoNode = EvoNode(self.nodes[1])
         self.node_two.generate_collateral(self)
         self.node_two.register_mn(self, True, "", DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP)
-        # Used to check deprecated field behavior
-        self.node_simple: TestNode = self.nodes[2]
         # Test routines
         self.log.info("Test input validation for masternode address fields (pre-fork)")
         self.test_validation_common()
         self.test_validation_legacy()
         self.log.info("Test output masternode address fields for consistency (pre-fork)")
-        self.test_deprecation()
+        self.test_fields()
         self.log.info("Mine blocks to activate DEPLOYMENT_V23")
         self.activate_v23()
         self.log.info("Test input validation for masternode address fields (post-fork)")
@@ -361,7 +358,7 @@ class NetInfoTest(BitcoinTestFramework):
         self.node_evo.register_mn(self, False, "127.0.0.1", DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
                                   -8, "Error setting coreP2PAddrs[0] to '127.0.0.1' (invalid port)")
 
-    def test_deprecation(self):
+    def test_fields(self):
         # netInfo is represented with JSON in CProRegTx, CProUpServTx, CDeterministicMNState and CSimplifiedMNListEntry,
         # so we need to test calls that rely on these underlying implementations. Start by collecting RPC responses.
         self.log.info("Collect JSON RPC responses from node")
@@ -374,12 +371,7 @@ class NetInfoTest(BitcoinTestFramework):
         self.node_evo.set_active_state(self, True)
         masternode_status = self.node_evo.node.masternode('status')
 
-        # Generate deprecation-disabled response to avoid having to re-create a masternode again later on
-        self.node_evo.set_active_state(self, True, ['-deprecatedrpc=service'])
-        self.reconnect_nodes()
-        masternode_status_depr = self.node_evo.node.masternode('status')
-
-        # Stop actively running the masternode so we can issue a CProUpServTx (and enable the deprecation)
+        # Stop actively running the masternode so we can issue a CProUpServTx
         self.node_evo.set_active_state(self, False)
         self.reconnect_nodes()
 
@@ -411,13 +403,6 @@ class NetInfoTest(BitcoinTestFramework):
         protx_listdiff_rpc_pl = self.node_evo.node.protx('listdiff', proupservtx_height_pl - 1, proupservtx_height_pl)
         protx_listdiff_rpc_pl = self.extract_from_listdiff(protx_listdiff_rpc_pl, proregtx_hash)
 
-        self.log.info("Test RPCs return an 'addresses' field")
-        assert "addresses" in proregtx_rpc['proRegTx'].keys()
-        assert "addresses" in masternode_status['dmnState'].keys()
-        assert "addresses" in proupservtx_rpc['proUpServTx'].keys()
-        assert "addresses" in protx_diff_rpc['mnList'][0].keys()
-        assert "addresses" in protx_listdiff_rpc.keys()
-
         self.log.info("Test 'addresses' report correctly")
         self.check_netinfo_fields(proregtx_rpc['proRegTx']['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, DEFAULT_PORT_PLATFORM_P2P)
         self.check_netinfo_fields(masternode_status['dmnState']['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, DEFAULT_PORT_PLATFORM_P2P)
@@ -431,36 +416,9 @@ class NetInfoTest(BitcoinTestFramework):
         assert_equal(protx_listdiff_rpc_pl['addresses']['platform_https'][0], f"{DMNSTATE_DIFF_DUMMY_ADDR}:{DEFAULT_PORT_PLATFORM_HTTP + 10}")
         assert_equal(protx_listdiff_rpc_pl['addresses']['platform_p2p'][0], f"{DMNSTATE_DIFF_DUMMY_ADDR}:{DEFAULT_PORT_PLATFORM_P2P + 10}")
 
-        self.log.info("Test RPCs by default no longer return a 'service' field")
-        assert "service" not in proregtx_rpc['proRegTx'].keys()
-        assert "service" not in masternode_status['dmnState'].keys()
-        assert "service" not in proupservtx_rpc['proUpServTx'].keys()
-        assert "service" not in protx_diff_rpc['mnList'][0].keys()
-        assert "service" not in protx_listdiff_rpc.keys()
-        # "service" in "masternode status" is exempt from the deprecation as the primary address is
-        # relevant on the host node as opposed to expressing payload information in most other RPCs.
-        assert "service" in masternode_status.keys()
-
         # Shut down masternode
         self.node_evo.destroy_mn(self)
         self.reconnect_nodes()
-
-        self.log.info("Collect RPC responses from node with -deprecatedrpc=service")
-
-        # Re-use chain activity from earlier
-        proregtx_rpc = self.node_simple.getrawtransaction(proregtx_hash, True)
-        proupservtx_rpc = self.node_simple.getrawtransaction(proupservtx_hash, True)
-        protx_diff_rpc = self.node_simple.protx('diff', masternode_active_height - 1, masternode_active_height)
-        masternode_status = masternode_status_depr # Pull in response generated from earlier
-        protx_listdiff_rpc = self.node_simple.protx('listdiff', proupservtx_height - 1, proupservtx_height)
-        protx_listdiff_rpc = self.extract_from_listdiff(protx_listdiff_rpc, proregtx_hash)
-
-        self.log.info("Test RPCs return 'service' with -deprecatedrpc=service")
-        assert "service" in proregtx_rpc['proRegTx'].keys()
-        assert "service" in masternode_status['dmnState'].keys()
-        assert "service" in proupservtx_rpc['proUpServTx'].keys()
-        assert "service" in protx_diff_rpc['mnList'][0].keys()
-        assert "service" in protx_listdiff_rpc.keys()
 
     def test_empty_fields(self):
         def empty_common(grt_dict):
@@ -471,7 +429,7 @@ class NetInfoTest(BitcoinTestFramework):
             assert_equal(grt_dict['service'], "[::]:0")
 
         # Validate that our masternode was registered before the fork
-        grt_proregtx = self.node_simple.getrawtransaction(self.node_two.mn.proTxHash, True)['proRegTx']
+        grt_proregtx = self.node_two.node.getrawtransaction(self.node_two.mn.proTxHash, True)['proRegTx']
         assert_equal(grt_proregtx['version'], PROTXVER_BASIC)
 
         # Test reporting on legacy address (i.e. basic BLS and earlier) nodes
@@ -487,7 +445,7 @@ class NetInfoTest(BitcoinTestFramework):
         self.node_two.register_mn(self, True, "", "", "")
 
         # Validate that masternode uses extended addresses
-        grt_proregtx = self.node_simple.getrawtransaction(self.node_two.mn.proTxHash, True)['proRegTx']
+        grt_proregtx = self.node_two.node.getrawtransaction(self.node_two.mn.proTxHash, True)['proRegTx']
         assert_equal(grt_proregtx['version'], PROTXVER_EXTADDR)
 
         # Test reporting for extended addresses
@@ -507,7 +465,7 @@ class NetInfoTest(BitcoinTestFramework):
     def test_shims(self):
         # There are two shims there to help with migrating between legacy and extended addresses, one reads from legacy platform
         # fields to ensure 'addresses' is adequately populated. The other, reads from netInfo to populate platform{HTTP,P2P}Port.
-        # As the fork is now active, we can now evaluate the test cases that couldn't be evaluated in test_deprecation().
+        # As the fork is now active, we can now evaluate the test cases that couldn't be evaluated in test_fields().
         self.log.info("Collect JSON RPC responses from node")
 
         # Create an masternode that clearly uses extended addresses (hello IPv6!)
@@ -545,16 +503,13 @@ class NetInfoTest(BitcoinTestFramework):
         # platform{HTTP,P2P}Port *won't* be populated by listdiff as that *field* is now unused and it's dangerous to report "updates" to disused fields
         assert "platformP2PPort" not in protx_listdiff_rpc.keys()
         assert "platformHTTPPort" not in protx_listdiff_rpc.keys()
+        # Check that 'service' correctly reports as coreP2PAddrs[0]
+        assert_equal(proregtx_rpc['proRegTx']['service'], f"127.0.0.1:{self.node_evo.mn.nodePort}")
+        assert_equal(proupservtx_rpc['proUpServTx']['service'], f"127.0.0.1:{self.node_evo.mn.nodePort}")
 
         # Restart the client to see if (de)ser works as intended (CDeterministicMNStateDiff is a special case and we just made an update)
         self.node_evo.set_active_state(self, False)
         self.reconnect_nodes()
-
-        # Check that 'service' correctly reports as coreP2PAddrs[0]
-        proregtx_rpc = self.node_simple.getrawtransaction(proregtx_hash, True)
-        proupservtx_rpc = self.node_simple.getrawtransaction(proupservtx_hash, True)
-        assert_equal(proregtx_rpc['proRegTx']['service'], f"127.0.0.1:{self.node_evo.mn.nodePort}")
-        assert_equal(proupservtx_rpc['proUpServTx']['service'], f"127.0.0.1:{self.node_evo.mn.nodePort}")
 
 if __name__ == "__main__":
     NetInfoTest().main()

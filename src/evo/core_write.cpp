@@ -72,9 +72,7 @@
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     ret.pushKV("collateralIndex", collateralOutpoint.n);
-    if (IsServiceDeprecatedRPCEnabled()) {
-        ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    }
+    ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     ret.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     ret.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
@@ -122,9 +120,7 @@
     ret.pushKV("version", nVersion);
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("proTxHash", proTxHash.ToString());
-    if (IsServiceDeprecatedRPCEnabled()) {
-        ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    }
+    ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
         ret.pushKV("operatorPayoutAddress", EncodeDestination(dest));
@@ -162,9 +158,7 @@
     obj.pushKV("nType", ToUnderlying(nType));
     obj.pushKV("proRegTxHash", proRegTxHash.ToString());
     obj.pushKV("confirmedHash", confirmedHash.ToString());
-    if (IsServiceDeprecatedRPCEnabled()) {
-        obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    }
+    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
