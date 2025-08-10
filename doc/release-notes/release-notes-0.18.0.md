@@ -419,7 +419,7 @@ Planned changes
 This section describes planned changes to Bitcoin Core that may affect
 other Bitcoin software and services.
 
-- Since version 0.16.0, Bitcoin Core’s built-in wallet has defaulted to
+- Since version 0.16.0, Bitcoin Core's built-in wallet has defaulted to
   generating P2SH-wrapped segwit addresses when users want to receive
   payments. These addresses are backwards compatible with all
   widely-used software.  Starting with Bitcoin Core 0.20 (expected about
@@ -430,7 +430,7 @@ other Bitcoin software and services.
   additional adoption, it will instead default to bech32 receiving
   addresses in Bitcoin Core 0.19 (approximately November 2019).
   P2SH-wrapped segwit addresses will continue to be provided if the user
-  requests them in the GUI or by RPC, and anyone who doesn’t want the
+  requests them in the GUI or by RPC, and anyone who doesn't want the
   update will be able to configure their default address type.
   (Similarly, pioneering users who want to change their default now may
   set the `addresstype=bech32` configuration option in any Bitcoin Core
@@ -924,7 +924,7 @@ Changes for particular platforms
 - #14958 Remove race between connecting and shutdown on separate connections (promag)
 - #15166 Pin shellcheck version (practicalswift)
 - #15196 Update all `subprocess.check_output` functions to be Python 3.4 compatible (gkrizek)
-- #15043 Build fuzz targets into seperate executables (MarcoFalke)
+- #15043 Build fuzz targets into separate executables (MarcoFalke)
 - #15276 travis: Compile once on trusty (MarcoFalke)
 - #15246 Add tests for invalid message headers (MarcoFalke)
 - #15301 When testing with --usecli, unify RPC arg to cli arg conversion and handle dicts and lists (achow101)

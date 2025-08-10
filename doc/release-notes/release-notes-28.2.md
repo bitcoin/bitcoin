@@ -43,7 +43,7 @@ Notable changes
 - #31500 depends: Fix compiling libevent package on NetBSD
 - #31627 depends: Fix spacing issue
 - #32070 build: use make < 3.82 syntax for define directive
-- #32439 guix: accomodate migration to codeberg
+- #32439 guix: accommodate migration to codeberg
 - #32568 depends: use "mkdir -p" when installing xproto
 - #32693 depends: fix cmake compatibility error for freetype
 
