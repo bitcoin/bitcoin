@@ -143,9 +143,6 @@ public:
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
 
-    //! Get locator for the current chain tip.
-    virtual CBlockLocator getTipLocator() = 0;
-
     //! Return a locator that refers to a block in the active chain.
     //! If specified block is not in the active chain, return locator for the latest ancestor that is in the chain.
     virtual CBlockLocator getActiveChainLocator(const uint256& block_hash) = 0;

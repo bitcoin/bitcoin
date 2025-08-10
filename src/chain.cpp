@@ -52,11 +52,6 @@ CBlockLocator GetLocator(const CBlockIndex* index)
     return CBlockLocator{LocatorEntries(index)};
 }
 
-CBlockLocator CChain::GetLocator() const
-{
-    return ::GetLocator(Tip());
-}
-
 const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
     if (pindex == nullptr) {
         return nullptr;
