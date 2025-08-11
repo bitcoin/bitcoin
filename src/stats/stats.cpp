@@ -13,7 +13,10 @@ static const uint32_t SAMPLE_MIN_DELTA_IN_SEC = 2;
 static const int CLEANUP_SAMPLES_THRESHOLD = 100;
 size_t CStats::maxStatsMemory = 0;
 const size_t CStats::DEFAULT_MAX_STATS_MEMORY = 10 * 1024 * 1024; //10 MB
+
+// NOTE: stats/init.cpp help for -statsenable needs to be manually updated
 const bool CStats::DEFAULT_STATISTICS_ENABLED = false;
+
 std::atomic<bool> CStats::m_stats_enabled(false); //disable stats by default
 
 CStats* CStats::m_shared_instance{nullptr};

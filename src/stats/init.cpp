@@ -9,7 +9,9 @@
 
 void CStats::AddStatsOptions()
 {
-    gArgs.AddArg("-statsenable", strprintf("Enable statistics (default: %u)", DEFAULT_STATISTICS_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::STATS);
+    // FIXME: autodetect which default is in use
+    // FIXME: ensure we get the correct for multiprocess builds
+    gArgs.AddArg("-statsenable", "Enable statistics (default: 1 for GUI, 0 otherwise)", ArgsManager::ALLOW_ANY, OptionsCategory::STATS);
     gArgs.AddArg("-statsmaxmemorytarget=<n>", strprintf("Set the memory limit target for statistics in bytes (default: %u)", DEFAULT_MAX_STATS_MEMORY), ArgsManager::ALLOW_ANY, OptionsCategory::STATS);
 }
 
