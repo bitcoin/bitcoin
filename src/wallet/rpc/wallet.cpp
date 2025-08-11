@@ -708,7 +708,8 @@ RPCHelpMan gethdkeys()
                 // Retrieve the pubkeys from the descriptor
                 std::set<CPubKey> desc_pubkeys;
                 std::set<CExtPubKey> desc_xpubs;
-                w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs);
+                std::vector<CKey> desc_scankeys;
+                w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs, desc_scankeys);
                 for (const CExtPubKey& xpub : desc_xpubs) {
                     std::string desc_str;
                     bool ok = desc_spkm->GetDescriptorString(desc_str, false);

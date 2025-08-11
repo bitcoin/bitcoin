@@ -586,6 +586,14 @@ void CheckSilentPayments(const std::string& desc, const std::string& expected_pr
 
     BOOST_CHECK_MESSAGE(EqualDescriptor(public_string, expected_public_string), "Public: " + public_string + " Expected: " + expected_public_string);
     BOOST_CHECK_MESSAGE(EqualDescriptor(norm_string, expected_norm_string), "Normalized: " + norm_string + " Expected: " + expected_norm_string);
+
+    std::set<CPubKey> pubkeys;
+    std::set<CExtPubKey> ext_pubkeys;
+    std::vector<CKey> scankeys;
+    parsed_desc.at(0)->GetPubKeys(pubkeys, ext_pubkeys, scankeys);
+    BOOST_CHECK(pubkeys.size() == 1);
+    BOOST_CHECK(ext_pubkeys.size() == 0);
+    BOOST_CHECK(scankeys.size() == 1);
 }
 }
 
@@ -1297,6 +1305,11 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
                         "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,[3442193e]0339a36013301597daef41fbe593a02cc513d0b55527ec2df1050e2e8ff49c85c2)",
                         "sp([5a61ff8e]L2ysLrR6KMSAtx7uPqmYpoTeiRzydXBattRXjXz5GDFPrdfPzKbj,[3442193e]0339a36013301597daef41fbe593a02cc513d0b55527ec2df1050e2e8ff49c85c2)");
     CheckSilentPayments("sp(xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt/1h,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi/1h)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]L5DHzMBY8jmSGNXzcYsjJxHactLCWWpm37HMTKzVeDtA8YX96GzR)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]0338b91904e0fea043ee1ea3429cad94b4b6f0eacc1ff3db5e5e2b0483b29570dc)",
+                        "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]0338b91904e0fea043ee1ea3429cad94b4b6f0eacc1ff3db5e5e2b0483b29570dc)");
+
+    CheckSilentPayments("sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi/1h)",
                         "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]L5DHzMBY8jmSGNXzcYsjJxHactLCWWpm37HMTKzVeDtA8YX96GzR)",
                         "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]0338b91904e0fea043ee1ea3429cad94b4b6f0eacc1ff3db5e5e2b0483b29570dc)",
                         "sp([5a61ff8e/1h]KwLHcb3XEefhvFLXZM779rGXSa59zHDoemxeR78XJST9gX5o9S7P,[3442193e/1h]0338b91904e0fea043ee1ea3429cad94b4b6f0eacc1ff3db5e5e2b0483b29570dc)");

@@ -4373,7 +4373,8 @@ std::set<CExtPubKey> CWallet::GetActiveHDPubKeys() const
 
         std::set<CPubKey> desc_pubkeys;
         std::set<CExtPubKey> desc_xpubs;
-        w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs);
+        std::vector<CKey> desc_scankeys;
+        w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs, desc_scankeys);
         active_xpubs.merge(std::move(desc_xpubs));
     }
     return active_xpubs;

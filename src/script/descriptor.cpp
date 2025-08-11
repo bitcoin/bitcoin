@@ -1026,16 +1026,23 @@ public:
     std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 
     // NOLINTNEXTLINE(misc-no-recursion)
-    void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override
+    void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs, std::vector<CKey>& scankeys) const override
     {
         for (const auto& p : m_pubkey_args) {
+            FlatSigningProvider dummy, out;
+            p->GetPrivKey(0, dummy, out);
+            if (out.keys.size() > 0) {
+                // ScankeyPubkeyProvider is the only provider that has a stored private key
+                scankeys.emplace_back(out.keys.begin()->second);
+                continue;
+            }
             std::optional<CPubKey> pub = p->GetRootPubKey();
             if (pub) pubkeys.insert(*pub);
             std::optional<CExtPubKey> ext_pub = p->GetRootExtPubKey();
             if (ext_pub) ext_pubs.insert(*ext_pub);
         }
         for (const auto& arg : m_subdescriptor_args) {
-            arg->GetPubKeys(pubkeys, ext_pubs);
+            arg->GetPubKeys(pubkeys, ext_pubs, scankeys);
         }
     }
 
