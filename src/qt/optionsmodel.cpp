@@ -1176,6 +1176,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                 auto node_ctx = node().context();
                 assert(node_ctx && node_ctx->mempool && node_ctx->chainman);
                 auto& active_chainstate = node_ctx->chainman->ActiveChainstate();
+                LOCK(node_ctx->mempool->cs);
                 LimitMempoolSize(*node_ctx->mempool, active_chainstate.CoinsTip());
             }
         }
@@ -1202,6 +1203,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                 auto node_ctx = node().context();
                 assert(node_ctx && node_ctx->mempool && node_ctx->chainman);
                 auto& active_chainstate = node_ctx->chainman->ActiveChainstate();
+                LOCK(node_ctx->mempool->cs);
                 LimitMempoolSize(*node_ctx->mempool, active_chainstate.CoinsTip());
             }
         }
