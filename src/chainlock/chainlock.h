@@ -76,9 +76,12 @@ public:
     void Start(const llmq::CInstantSendManager& isman);
     void Stop();
 
-    bool AlreadyHave(const CInv& inv) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool GetChainLockByHash(const uint256& hash, chainlock::ChainLockSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    chainlock::ChainLockSig GetBestChainLock() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool AlreadyHave(const CInv& inv) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool GetChainLockByHash(const uint256& hash, chainlock::ChainLockSig& ret) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    chainlock::ChainLockSig GetBestChainLock() const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
@@ -86,13 +89,19 @@ public:
                                                               const uint256& hash) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const llmq::CInstantSendManager& isman);
-    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void EnforceBestChainLock() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void TransactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindex)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, gsl::not_null<const CBlockIndex*> pindexDisconnected)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void CheckActiveState()
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void EnforceBestChainLock()
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     bool HasChainLock(int nHeight, const uint256& blockHash) const override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -107,7 +116,8 @@ public:
     [[nodiscard]] bool IsEnabled() const override { return isEnabled; }
 
 private:
-    void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Cleanup()
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 bool AreChainLocksEnabled(const CSporkManager& sporkman);
