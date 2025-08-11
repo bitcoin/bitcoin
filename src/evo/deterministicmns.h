@@ -540,6 +540,8 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
+        // Reset all collections before reading
+        addedMNs.clear();
         updatedMNs.clear();
         removedMns.clear();
 
