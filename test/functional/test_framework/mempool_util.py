@@ -30,6 +30,11 @@ from .wallet import (
     MiniWallet,
 )
 
+# Default for -minrelaytxfee in sat/kvB
+DEFAULT_MIN_RELAY_TX_FEE = 1000
+# Default for -incrementalrelayfee in sat/kvB
+DEFAULT_INCREMENTAL_RELAY_FEE = 1000
+
 def assert_mempool_contents(test_framework, node, expected=None, sync=True):
     """Assert that all transactions in expected are in the mempool,
     and no additional ones exist. 'expected' is an array of
