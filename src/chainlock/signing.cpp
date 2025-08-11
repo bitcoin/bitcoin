@@ -56,7 +56,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
 
     const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip());
 
-    if (pindex->pprev == nullptr) {
+    if (!pindex || !pindex->pprev) {
         return;
     }
 
@@ -192,6 +192,9 @@ ChainLockSigner::BlockTxs::mapped_type ChainLockSigner::GetBlockTxs(const uint25
         {
             LOCK(::cs_main);
             const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(blockHash);
+            if (!pindex) {
+                return nullptr;
+            }
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
                 return nullptr;
@@ -247,7 +250,9 @@ std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> Ch
     LOCK2(::cs_main, cs_signer);
     for (auto it = blockTxs.begin(); it != blockTxs.end();) {
         const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
-        if (m_clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        if (!pindex) {
+            it = blockTxs.erase(it);
+        } else if (m_clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             removed.push_back(it->second);
             it = blockTxs.erase(it);
         } else if (m_clhandler.HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {

@@ -479,6 +479,7 @@ void CChainLocksHandler::Cleanup()
             it = txFirstSeenTime.erase(it);
         } else if (!hashBlock.IsNull()) {
             const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(hashBlock);
+            assert(pindex); // GetTransaction gave us that hashBlock, it should resolve to a valid block index
             if (m_chainstate.m_chain.Tip()->GetAncestor(pindex->nHeight) == pindex &&
                 m_chainstate.m_chain.Height() - pindex->nHeight >= 6) {
                 // tx got confirmed >= 6 times, so we can stop keeping track of it
