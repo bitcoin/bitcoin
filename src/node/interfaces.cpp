@@ -55,10 +55,6 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
-#if defined(ENABLE_WALLET)
-#include <wallet/wallet.h>
-#include <wallet/spend.h>
-#endif
 #include <governance/validators.h>
 
 #if defined(HAVE_CONFIG_H)
@@ -185,54 +181,6 @@ public:
             info.governancebudget = CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), info.nextsuperblock);
         }
         return info;
-    }
-    bool prepareProposal(interfaces::Wallet& wallet_iface, const uint256& parent, int32_t revision, int64_t created_time,
-                         const std::string& data_hex, const COutPoint& outpoint,
-                         std::string& out_fee_txid, std::string& error) override
-    {
-        #if !defined(ENABLE_WALLET)
-        (void)wallet_iface; (void)parent; (void)revision; (void)created_time; (void)data_hex; (void)outpoint; (void)out_fee_txid;
-        error = "Wallet functionality disabled at build time";
-        return false;
-        #else
-        wallet::CWallet* const wallet = wallet_iface.wallet();
-        if (!wallet) { error = "Wallet not available"; return false; }
-        CGovernanceObject govobj(parent, revision, created_time, uint256(), data_hex);
-        if (govobj.GetObjectType() != GovernanceObject::PROPOSAL) {
-            error = "Invalid object type, only proposals can be validated"; return false;
-        }
-        CProposalValidator validator(data_hex);
-        if (!validator.Validate()) {
-            error = "Invalid proposal data: " + validator.GetErrorMessages();
-            return false;
-        }
-        // txindex is optional; include header and check existence where available
-        #ifdef TXINDEX_ENABLED
-        if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
-        #endif
-        LOCK(wallet->cs_wallet);
-        const ChainstateManager& chainman = *Assert(context().chainman);
-        {
-            LOCK(cs_main);
-            std::string strError;
-            if (!govobj.IsValidLocally(Assert(context().dmnman)->GetListAtChainTip(), chainman, strError, false)) {
-                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
-                return false;
-            }
-        }
-        CTransactionRef tx;
-        if (!GenBudgetSystemCollateralTx(*wallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
-            error = "Error making collateral transaction for governance object.";
-            return false;
-        }
-        if (!wallet->WriteGovernanceObject(Governance::Object{parent, revision, created_time, tx->GetHash(), data_hex})) {
-            error = "WriteGovernanceObject failed";
-            return false;
-        }
-        wallet->CommitTransaction(tx, {}, {});
-        out_fee_txid = tx->GetHash().ToString();
-        return true;
-        #endif
     }
     bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
                         const uint256& fee_txid, std::string& out_object_hash, std::string& error) override

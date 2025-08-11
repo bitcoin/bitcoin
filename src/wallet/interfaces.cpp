@@ -30,6 +30,10 @@
 #include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
+#include <governance/object.h>
+#include <governance/validators.h>
+#include <masternode/sync.h>
+#include <txdb.h>
 
 #include <memory>
 #include <string>
@@ -561,6 +565,47 @@ public:
     std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
+    }
+    bool prepareProposal(const uint256& parent, int32_t revision, int64_t created_time,
+                         const std::string& data_hex, const COutPoint& outpoint,
+                         std::string& out_fee_txid, std::string& error) override
+    {
+        CGovernanceObject govobj(parent, revision, created_time, uint256(), data_hex);
+        if (govobj.GetObjectType() != GovernanceObject::PROPOSAL) {
+            error = "Invalid object type, only proposals can be validated";
+            return false;
+        }
+        CProposalValidator validator(data_hex);
+        if (!validator.Validate()) {
+            error = "Invalid proposal data: " + validator.GetErrorMessages();
+            return false;
+        }
+        // txindex is optional; include header and check existence where available
+        #ifdef TXINDEX_ENABLED
+        if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
+        #endif
+        LOCK(m_wallet->cs_wallet);
+        const ChainstateManager& chainman = *Assert(m_context.chain->chainman());
+        {
+            LOCK(cs_main);
+            std::string strError;
+            if (!govobj.IsValidLocally(Assert(m_context.chain->dmnman())->GetListAtChainTip(), chainman, strError, false)) {
+                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
+                return false;
+            }
+        }
+        CTransactionRef tx;
+        if (!GenBudgetSystemCollateralTx(*m_wallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
+            error = "Error making collateral transaction for governance object.";
+            return false;
+        }
+        if (!m_wallet->WriteGovernanceObject(Governance::Object{parent, revision, created_time, tx->GetHash(), data_hex})) {
+            error = "WriteGovernanceObject failed";
+            return false;
+        }
+        m_wallet->CommitTransaction(tx, {}, {});
+        out_fee_txid = tx->GetHash().ToString();
+        return true;
     }
     CWallet* wallet() override { return m_wallet.get(); }
 

@@ -15,6 +15,7 @@
 #include <governance/object.h>
 #include <governance/validators.h>
 
+#include <algorithm>
 #include <QDateTime>
 #include <QDateTimeEdit>
 #include <QDoubleSpinBox>
@@ -281,10 +282,16 @@ void ProposalWizard::onPrepare()
     WalletModel::UnlockContext ctx(m_walletModel->requestUnlock());
     if (!ctx.isValid()) return;
 
+    // Get the current proposal fee and format it
+    const auto info = m_walletModel->node().gov().getGovernanceInfo();
+    const CAmount fee_amount = info.proposalfee;
+    const auto unit = m_walletModel && m_walletModel->getOptionsModel() ? m_walletModel->getOptionsModel()->getDisplayUnit() : BitcoinUnit::DASH;
+    const QString feeFormatted = BitcoinUnits::formatWithUnit(unit, fee_amount, false, BitcoinUnits::SeparatorStyle::ALWAYS);
+
     // Confirm burn
     if (QMessageBox::question(this,
-                              tr("Burn 1 DASH"),
-                              tr("Burn 1 DASH to create the fee transaction?"),
+                              tr("Burn %1").arg(feeFormatted),
+                              tr("Burn %1 to create the fee transaction?").arg(feeFormatted),
                               QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Yes,
                               QMessageBox::StandardButton::Cancel) != QMessageBox::StandardButton::Yes) {
         return;
@@ -293,7 +300,7 @@ void ProposalWizard::onPrepare()
     const int64_t now = QDateTime::currentSecsSinceEpoch();
     std::string txid_str; std::string error;
     COutPoint none; // null by default
-    if (!m_walletModel->node().gov().prepareProposal(m_walletModel->wallet(), uint256(), 1, now, m_hex.toStdString(), none, txid_str, error)) {
+    if (!m_walletModel->wallet().prepareProposal(uint256(), 1, now, m_hex.toStdString(), none, txid_str, error)) {
         QMessageBox::critical(this, tr("Prepare failed"), QString::fromStdString(error));
         return;
     }
