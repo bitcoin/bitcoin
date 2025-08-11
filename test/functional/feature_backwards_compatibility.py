@@ -20,6 +20,7 @@ needs an older patch version.
 import os
 import shutil
 
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 
 from test_framework.util import (
@@ -283,17 +284,16 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v17.loadwallet("w1")
             wallet = node_v17.get_wallet_rpc("w1")
             info = wallet.getwalletinfo()
-            # doesn't have private_keys_enabled in v17
-            #assert info['private_keys_enabled']
+            # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+            assert 'private_keys_enabled' not in info
             assert info['keypoolsize'] > 0
 
             node_v17.loadwallet("w2")
             wallet = node_v17.get_wallet_rpc("w2")
             info = wallet.getwalletinfo()
-            # doesn't have private_keys_enabled in v17
-            # TODO enable back when HD wallets are created by default
-            # assert info['private_keys_enabled'] == False
-            # assert info['keypoolsize'] == 0
+            # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+            assert 'private_keys_enabled' not in info
+            assert info['keypoolsize'] > 0
         else:
             # Descriptor wallets appear to be corrupted wallets to old software
             assert_raises_rpc_error(-4, "Wallet requires newer version of Dash Core", node_v19.loadwallet, "w1")
@@ -307,17 +307,16 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v17.loadwallet("w1_v18")
         wallet = node_v17.get_wallet_rpc("w1_v18")
         info = wallet.getwalletinfo()
-        # doesn't have private_keys_enabled in v17
-        # assert info['private_keys_enabled']
+        # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+        assert 'private_keys_enabled' not in info
         assert info['keypoolsize'] > 0
 
         node_v17.loadwallet("w2_v18")
         wallet = node_v17.get_wallet_rpc("w2_v18")
         info = wallet.getwalletinfo()
-        # doesn't have private_keys_enabled in v17
-        # TODO enable back when HD wallets are created by default
-        #assert info['private_keys_enabled'] == False
-        #assert info['keypoolsize'] == 0
+        # doesn't have WALLET_FLAG_DISABLE_PRIVATE_KEYS in v17
+        assert 'private_keys_enabled' not in info
+        assert info['keypoolsize'] > 0
 
         # RPC loadwallet failure causes bitcoind to exit, in addition to the RPC
         # call failure, so the following test won't work:
@@ -338,13 +337,15 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert info['keypoolsize'] == 1
 
         self.log.info("Test wallet upgrade path...")
+        # Bitcoin creates hd wallets by default since v16, but Dash Core v17 does not.
+        # enforce it by restarting v17
+        self.restart_node(5, extra_args=["-usehd=1"])
         # u1: regular wallet, created with v0.17
         node_v17.rpc.createwallet(wallet_name="u1_v17")
         wallet = node_v17.get_wallet_rpc("u1_v17")
         address = wallet.getnewaddress()
         v17_info = wallet.getaddressinfo(address)
-        # TODO enable back when HD wallets are created by default
-        #v17_hdkeypath = v17_info["hdkeypath"]
+        v17_hdkeypath = v17_info["hdkeypath"]
         v17_pubkey = v17_info["pubkey"]
 
         if self.is_bdb_compiled():
@@ -358,9 +359,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_master.loadwallet("u1_v17")
             wallet = node_master.get_wallet_rpc("u1_v17")
             info = wallet.getaddressinfo(address)
-            # TODO enable back when HD wallets are created by default
-            #descriptor = f"pkh([{info["hdmasterfingerprint"]}{hdkeypath[1:]}]{v17_pubkey})"
-            #assert_equal(info["desc"], descsum_create(descriptor))
+            descriptor = f"pkh([{info['hdmasterfingerprint']}{v17_hdkeypath[1:]}]{v17_pubkey})"
+            assert_equal(info["desc"], descsum_create(descriptor))
             assert_equal(info["pubkey"], v17_pubkey)
 
             # Now copy that same wallet back to 0.17 to make sure no automatic upgrade breaks it
@@ -394,6 +394,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             node_v19.loadwallet("w1_v19")
             wallet = node_v19.get_wallet_rpc("w1_v19")
             assert wallet.getaddressinfo(address_18075)["solvable"]
+
+            self.stop_node(5, expected_stderr=("Warning: Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!\n"*3)[:-1])
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()
