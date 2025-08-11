@@ -27,6 +27,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/hasher.h>
@@ -35,6 +36,7 @@
 #include <util/translation.h>
 #include <versionbits.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <map>
@@ -502,6 +504,14 @@ enum class CoinsCacheSizeState
     LARGE = 1,
     OK = 0
 };
+
+constexpr int64_t LargeCoinsCacheThreshold(int64_t total_space) noexcept
+{
+    // No periodic flush needed if at least this much space is free
+    constexpr int64_t MAX_BLOCK_COINSDB_USAGE_BYTES{int64_t(10_MiB)};
+    return std::max((total_space * 9) / 10,
+                    total_space - MAX_BLOCK_COINSDB_USAGE_BYTES);
+}
 
 /**
  * Chainstate stores and provides an API to update our local knowledge of the
