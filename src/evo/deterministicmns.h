@@ -540,6 +540,20 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
+        UnserializeImpl(s, false); // Default: new format
+    }
+
+    // Legacy-aware unserialize method
+    template <typename Stream>
+    void UnserializeLegacyFormat(Stream& s)
+    {
+        UnserializeImpl(s, true); // Legacy format
+    }
+
+private:
+    template <typename Stream>
+    void UnserializeImpl(Stream& s, bool isLegacyFormat)
+    {
         // Reset all collections before reading
         addedMNs.clear();
         updatedMNs.clear();
@@ -551,9 +565,16 @@ public:
 
         for (size_t to_read = ReadCompactSize(s); to_read > 0; --to_read) {
             uint64_t internalId = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
-            // CDeterministicMNState can have newer fields but doesn't need migration logic here as CDeterministicMNStateDiff
-            // is always serialised using a bitmask and new fields have a new bit guide value, so we are good to continue.
-            updatedMNs.emplace(internalId, CDeterministicMNStateDiff(deserialize, s));
+
+            if (isLegacyFormat) {
+                // Use legacy deserializer for old format
+                CDeterministicMNStateDiffLegacy legacyDiff(deserialize, s);
+                // Convert to new format and store
+                updatedMNs.emplace(internalId, legacyDiff.ToNewFormat());
+            } else {
+                // Use current deserializer for new format
+                updatedMNs.emplace(internalId, CDeterministicMNStateDiff(deserialize, s));
+            }
         }
 
         for (size_t to_read = ReadCompactSize(s); to_read > 0; --to_read) {
@@ -562,6 +583,7 @@ public:
         }
     }
 
+public:
     bool HasChanges() const
     {
         return !addedMNs.empty() || !updatedMNs.empty() || !removedMns.empty();
@@ -632,6 +654,10 @@ public:
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
     void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    // Migration support for nVersion-first CDeterministicMNStateDiff format
+    [[nodiscard]] bool IsMigrationRequired() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] bool MigrateLegacyDiffs() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
