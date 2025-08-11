@@ -18,6 +18,10 @@ from .wallet import (
     MiniWallet,
 )
 
+# Default for -minrelaytxfee in sat/kvB
+DEFAULT_MIN_RELAY_TX_FEE = 1000
+# Default for -incrementalrelayfee in sat/kvB
+DEFAULT_INCREMENTAL_RELAY_FEE = 1000
 
 def fill_mempool(test_framework, node):
     """Fill mempool until eviction.
