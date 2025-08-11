@@ -231,8 +231,8 @@ public:
                 }
             }
         });
-        if (fields & Field_pubKeyOperator) {
-            // pubKeyOperator needs nVersion
+        if ((fields & Field_pubKeyOperator) || (fields & Field_netInfo)) {
+            // pubKeyOperator and netInfo need nVersion
             state.nVersion = b.nVersion;
             fields |= Field_nVersion;
         }
@@ -246,21 +246,21 @@ public:
     {
         READWRITE(VARINT(obj.fields));
 
-        // NOTE: reading pubKeyOperator requires nVersion
-        bool read_pubkey{false};
+        if ((obj.fields & Field_pubKeyOperator) || (obj.fields & Field_netInfo)) {
+            // pubKeyOperator and netInfo need nVersion
+            assert(obj.fields & Field_nVersion);
+        }
+
         boost::hana::for_each(members, [&](auto&& member) {
             using BaseType = std::decay_t<decltype(member)>;
             if constexpr (BaseType::mask == Field_pubKeyOperator) {
                 if (obj.fields & member.mask) {
-                    SER_READ(obj, read_pubkey = true);
                     READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), obj.state.nVersion == ProTxVersion::LegacyBLS));
                 }
             } else if constexpr (BaseType::mask == Field_netInfo) {
                 if (obj.fields & member.mask) {
-                    // As nVersion is stored after netInfo, we use a magic word to determine the underlying implementation
-                    // TODO: Implement this
                     READWRITE(NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.state.netInfo),
-                                                /*is_extended=*/false));
+                                                obj.state.nVersion == ProTxVersion::ExtAddr));
                 }
             } else {
                 if (obj.fields & member.mask) {
@@ -268,11 +268,6 @@ public:
                 }
             }
         });
-
-        if (read_pubkey) {
-            SER_READ(obj, obj.fields |= Field_nVersion);
-            SER_READ(obj, obj.state.pubKeyOperator.SetLegacy(obj.state.nVersion == ProTxVersion::LegacyBLS));
-        }
     }
 
     void ApplyToState(CDeterministicMNState& target) const
@@ -352,7 +347,14 @@ public:
     CDeterministicMNStateDiffLegacy() = default;
 
     template <typename Stream>
-    CDeterministicMNStateDiffLegacy(deserialize_type, Stream& s) { s >> *this; }
+    CDeterministicMNStateDiffLegacy(deserialize_type, Stream& s)
+    {
+        s >> *this;
+        if ((fields & LegacyField_pubKeyOperator) || (fields & LegacyField_netInfo)) {
+            // pubKeyOperator and netInfo need nVersion
+            fields |= LegacyField_nVersion;
+        }
+    }
 
     // Deserialize using legacy format
     SERIALIZE_METHODS(CDeterministicMNStateDiffLegacy, obj)
