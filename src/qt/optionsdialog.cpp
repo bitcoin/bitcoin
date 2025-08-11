@@ -29,6 +29,7 @@
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <chrono>
+#include <cmath>
 #include <utility>
 
 #include <QApplication>
@@ -351,8 +352,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     CreateOptionUI(verticalLayout_Mempool, maxorphantx, tr("Keep at most %s unconnected transactions in memory"));
 
     maxmempool = new QSpinBox(tabMempool);
-    const int64_t nMempoolSizeMinMB = maxmempoolMinimumBytes(gArgs.GetIntArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT_KVB) * 1'000) / 1'000'000;
-    maxmempool->setMinimum(nMempoolSizeMinMB);
+    maxmempool->setMinimum(1);
     maxmempool->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Mempool, maxmempool, tr("Keep the transaction memory pool below %s MB"));
 
@@ -437,6 +437,33 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     limitdescendantsize->setMinimum(1);
     limitdescendantsize->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Spamfiltering, limitdescendantsize, tr("Ignore transactions if any ancestor would have more than %s kilobytes of unconfirmed descendants."));
+
+    connect(maxmempool, &QSpinBox::editingFinished, [&]() {
+        const int64_t limitdescendantsize_max_kvB = limitdescendantsizeMaximumVBytes(int64_t{maxmempool->value()} * 1'000'000) / 1'000;
+        if (limitdescendantsize_max_kvB < limitdescendantsize->value()) {
+            if (QMessageBox::question(this, tr("Confirm change"), tr("Decreasing your mempool size to %1 MB requires also decreasing your unconfirmed descendants size limit to %2 kB (currently %3 kB, on the Spam filtering tab).<br><br>Do you wish to make these changes?").arg(maxmempool->value()).arg(limitdescendantsize_max_kvB).arg(limitdescendantsize->value()), QMessageBox::Apply | QMessageBox::Cancel) == QMessageBox::Apply) {
+                limitdescendantsize->setValue(limitdescendantsize_max_kvB);
+                limitdescendantsize->setProperty("pv", (int)limitdescendantsize_max_kvB);
+            } else {  // Cancel
+                maxmempool->setValue(maxmempool->property("pv").toInt());
+                return;
+            }
+        }
+        maxmempool->setProperty("pv", maxmempool->value());
+    });
+    connect(limitdescendantsize, &QSpinBox::editingFinished, [&]() {
+        const int maxmempool_min_MB = std::ceil(maxmempoolMinimumBytes(int64_t{limitdescendantsize->value()} * 1'000) / 1'000'000.0);
+        if (maxmempool_min_MB > maxmempool->value()) {
+            if (QMessageBox::question(this, tr("Confirm change"), tr("Increasing your descendant size limit to %1 kB requires also increasing your mempool size to %2 MB (currently %3 MB, on the Mempool tab).<br><br>Do you wish to make these changes?").arg(limitdescendantsize->value()).arg(maxmempool_min_MB).arg(maxmempool->value()), QMessageBox::Apply | QMessageBox::Cancel) == QMessageBox::Apply) {
+                maxmempool->setValue(maxmempool_min_MB);
+                maxmempool->setProperty("pv", maxmempool_min_MB);
+            } else {  // Cancel
+                limitdescendantsize->setValue(limitdescendantsize->property("pv").toInt());
+                return;
+            }
+        }
+        limitdescendantsize->setProperty("pv", limitdescendantsize->value());
+    });
 
     rejectbarepubkey = new QCheckBox(groupBox_Spamfiltering);
     rejectbarepubkey->setText(tr("Ignore bare/exposed public keys (pay-to-IP)"));
@@ -758,6 +785,9 @@ void OptionsDialog::setModel(OptionsModel *_model)
         setFontChoice(ui->qrFont, font_for_qrcodes);
 
         updateDefaultProxyNets();
+
+        maxmempool->setProperty("pv", maxmempool->value());
+        limitdescendantsize->setProperty("pv", limitdescendantsize->value());
     }
 
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
