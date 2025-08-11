@@ -1041,4 +1041,104 @@ BOOST_AUTO_TEST_CASE(test_sml_cache_basic)
     SmlCache(setup);
 }
 
+BOOST_AUTO_TEST_CASE(field_bit_migration_validation)
+{
+    // Test individual field mappings for ALL 19 fields
+    struct FieldMapping {
+        uint32_t legacyBit;
+        uint32_t newBit;
+        std::string name;
+    };
+
+    std::vector<FieldMapping> mappings = {
+        {0x0001, CDeterministicMNStateDiff::Field_nRegisteredHeight, "nRegisteredHeight"},
+        {0x0002, CDeterministicMNStateDiff::Field_nLastPaidHeight, "nLastPaidHeight"},
+        {0x0004, CDeterministicMNStateDiff::Field_nPoSePenalty, "nPoSePenalty"},
+        {0x0008, CDeterministicMNStateDiff::Field_nPoSeRevivedHeight, "nPoSeRevivedHeight"},
+        {0x0010, CDeterministicMNStateDiff::Field_nPoSeBanHeight, "nPoSeBanHeight"},
+        {0x0020, CDeterministicMNStateDiff::Field_nRevocationReason, "nRevocationReason"},
+        {0x0040, CDeterministicMNStateDiff::Field_confirmedHash, "confirmedHash"},
+        {0x0080, CDeterministicMNStateDiff::Field_confirmedHashWithProRegTxHash, "confirmedHashWithProRegTxHash"},
+        {0x0100, CDeterministicMNStateDiff::Field_keyIDOwner, "keyIDOwner"},
+        {0x0200, CDeterministicMNStateDiff::Field_pubKeyOperator, "pubKeyOperator"},
+        {0x0400, CDeterministicMNStateDiff::Field_keyIDVoting, "keyIDVoting"},
+        {0x0800, CDeterministicMNStateDiff::Field_netInfo, "netInfo"},
+        {0x1000, CDeterministicMNStateDiff::Field_scriptPayout, "scriptPayout"},
+        {0x2000, CDeterministicMNStateDiff::Field_scriptOperatorPayout, "scriptOperatorPayout"},
+        {0x4000, CDeterministicMNStateDiff::Field_nConsecutivePayments, "nConsecutivePayments"},
+        {0x8000, CDeterministicMNStateDiff::Field_platformNodeID, "platformNodeID"},
+        {0x10000, CDeterministicMNStateDiff::Field_platformP2PPort, "platformP2PPort"},
+        {0x20000, CDeterministicMNStateDiff::Field_platformHTTPPort, "platformHTTPPort"},
+        {0x40000, CDeterministicMNStateDiff::Field_nVersion, "nVersion"},
+    };
+
+    // Verify each field mapping is correct
+    for (const auto& mapping : mappings) {
+        // Test individual field conversion
+        CDeterministicMNStateDiffLegacy legacyDiff;
+        legacyDiff.fields |= mapping.legacyBit;
+        // Convert to new format
+        auto newDiff = legacyDiff.ToNewFormat();
+        BOOST_CHECK_MESSAGE(newDiff.fields == mapping.newBit, strprintf("Field %s: legacy 0x%x should convert to 0x%x",
+                                                                        mapping.name, mapping.legacyBit, mapping.newBit));
+    }
+
+    // Test complex multi-field scenarios
+    uint32_t complexLegacyFields = 0x0200 | // Legacy Field_pubKeyOperator
+                                   0x0800 | // Legacy Field_netInfo
+                                   0x1000 | // Legacy Field_scriptPayout
+                                   0x40000; // Legacy Field_nVersion
+
+    uint32_t expectedNewFields = CDeterministicMNStateDiff::Field_nVersion |       // 0x0001
+                                 CDeterministicMNStateDiff::Field_pubKeyOperator | // 0x0400 (was 0x0200)
+                                 CDeterministicMNStateDiff::Field_netInfo |        // 0x1000 (was 0x0800)
+                                 CDeterministicMNStateDiff::Field_scriptPayout;    // 0x2000 (was 0x1000)
+
+    CDeterministicMNStateDiffLegacy legacyDiff;
+    legacyDiff.fields |= complexLegacyFields;
+    // Convert to new format
+    auto newDiff = legacyDiff.ToNewFormat();
+    BOOST_CHECK_EQUAL(newDiff.fields, expectedNewFields);
+
+    // Verify no bit conflicts exist in new field layout
+    std::set<uint32_t> usedBits;
+    for (const auto& mapping : mappings) {
+        BOOST_CHECK_MESSAGE(usedBits.find(mapping.newBit) == usedBits.end(),
+                            strprintf("Duplicate bit 0x%x found for field %s", mapping.newBit, mapping.name));
+        usedBits.insert(mapping.newBit);
+    }
+
+    // Verify all 19 fields have unique bit assignments
+    BOOST_CHECK_EQUAL(usedBits.size(), 19);
+}
+
+BOOST_AUTO_TEST_CASE(migration_logic_validation)
+{
+    // Test the database migration logic for nVersion-first format conversion.
+    // Migration logic is handled at CDeterministicMNListDiff level
+    // using CDeterministicMNStateDiffLegacy for legacy format deserialization.
+
+    // Create sample legacy format state diff
+    CDeterministicMNStateDiffLegacy legacyDiff;
+    legacyDiff.fields = 0x40000 | 0x0200 | 0x0800; // Legacy: nVersion, pubKeyOperator, netInfo
+    legacyDiff.state.nVersion = ProTxVersion::BasicBLS;
+    legacyDiff.state.pubKeyOperator.Set(CBLSPublicKey{}, false);
+    legacyDiff.state.netInfo = NetInfoInterface::MakeNetInfo(ProTxVersion::BasicBLS);
+
+    // Test legacy class conversion (this would normally be done by CDeterministicMNListDiff)
+    CDataStream ss(SER_DISK, CLIENT_VERSION);
+    ss << legacyDiff;
+
+    CDeterministicMNStateDiffLegacy legacyDeserializer(deserialize, ss);
+    CDeterministicMNStateDiff convertedDiff = legacyDeserializer.ToNewFormat();
+
+    // Verify conversion worked correctly
+    uint32_t expectedNewFields = CDeterministicMNStateDiff::Field_nVersion |       // 0x0001
+                                 CDeterministicMNStateDiff::Field_pubKeyOperator | // 0x0400
+                                 CDeterministicMNStateDiff::Field_netInfo;         // 0x1000
+
+    BOOST_CHECK_EQUAL(convertedDiff.fields, expectedNewFields);
+    BOOST_CHECK_EQUAL(convertedDiff.state.nVersion, ProTxVersion::BasicBLS);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
