@@ -61,11 +61,11 @@ private:
     const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs){nullptr};
     const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs){nullptr};
 
-    std::unordered_map<uint256, int64_t, StaticSaltedHasher> txFirstSeenTime GUARDED_BY(cs);
+    std::unordered_map<uint256, std::chrono::seconds, StaticSaltedHasher> txFirstSeenTime GUARDED_BY(cs);
 
-    std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
+    std::map<uint256, std::chrono::seconds> seenChainLocks GUARDED_BY(cs);
 
-    std::atomic<int64_t> lastCleanupTime{0};
+    std::atomic<std::chrono::seconds> lastCleanupTime{0s};
 
 public:
     explicit CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,

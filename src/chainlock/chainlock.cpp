@@ -32,10 +32,10 @@ using node::GetTransaction;
 
 namespace llmq {
 namespace {
-static constexpr int64_t CLEANUP_INTERVAL{1000 * 30};
-static constexpr int64_t CLEANUP_SEEN_TIMEOUT{24 * 60 * 60 * 1000};
+static constexpr auto CLEANUP_INTERVAL{30s};
+static constexpr auto CLEANUP_SEEN_TIMEOUT{24h};
 //! How long to wait for islocks until we consider a block with non-islocked TXs to be safe to sign
-static constexpr int64_t WAIT_FOR_ISLOCK_TIMEOUT{10 * 60};
+static constexpr auto WAIT_FOR_ISLOCK_TIMEOUT{10min};
 } // anonymous namespace
 
 bool AreChainLocksEnabled(const CSporkManager& sporkman)
@@ -133,7 +133,7 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
 
     {
         LOCK(cs);
-        if (!seenChainLocks.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now())).second) {
+        if (!seenChainLocks.emplace(hash, GetTime<std::chrono::seconds>()).second) {
             return {};
         }
 
@@ -305,16 +305,16 @@ int32_t CChainLocksHandler::GetBestChainLockHeight() const
 
 bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid) const
 {
-    int64_t txAge = 0;
+    auto tx_age{0s};
     {
         LOCK(cs);
         auto it = txFirstSeenTime.find(txid);
         if (it != txFirstSeenTime.end()) {
-            txAge = GetTime<std::chrono::seconds>().count() - it->second;
+            tx_age = GetTime<std::chrono::seconds>() - it->second;
         }
     }
 
-    return txAge >= WAIT_FOR_ISLOCK_TIMEOUT;
+    return tx_age >= WAIT_FOR_ISLOCK_TIMEOUT;
 }
 
 // WARNING: cs_main and cs should not be held!
@@ -444,15 +444,15 @@ void CChainLocksHandler::Cleanup()
         return;
     }
 
-    if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - lastCleanupTime < CLEANUP_INTERVAL) {
+    if (GetTime<std::chrono::seconds>() - lastCleanupTime.load() < CLEANUP_INTERVAL) {
         return;
     }
-    lastCleanupTime = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
+    lastCleanupTime = GetTime<std::chrono::seconds>();
 
     {
         LOCK(cs);
         for (auto it = seenChainLocks.begin(); it != seenChainLocks.end();) {
-            if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second >= CLEANUP_SEEN_TIMEOUT) {
+            if (GetTime<std::chrono::seconds>() - it->second >= CLEANUP_SEEN_TIMEOUT) {
                 it = seenChainLocks.erase(it);
             } else {
                 ++it;
