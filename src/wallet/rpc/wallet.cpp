@@ -397,14 +397,6 @@ static RPCHelpMan upgradetohd()
             mnemonic_passphrase = std::string_view{request.params[1].get_str()};
         }
 
-        // TODO: breaking changes kept for v21!
-        // instead upgradetohd let's use more straightforward 'sethdseed'
-        constexpr bool is_v21 = false;
-        const int previous_version{pwallet->GetVersion()};
-        if (is_v21 && previous_version >= FEATURE_HD) {
-            return JSONRPCError(RPC_WALLET_ERROR, "Already at latest version. Wallet version unchanged.");
-        }
-
         // Do not do anything to HD wallets
         if (pwallet->IsHDEnabled()) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Cannot upgrade a wallet to HD if it is already upgraded to HD");
@@ -842,7 +834,6 @@ static RPCHelpMan sethdseed()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    // TODO: add mnemonic feature to sethdseed or remove it in favour of upgradetohd
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
@@ -901,7 +892,8 @@ static RPCHelpMan upgradewallet()
 {
     return RPCHelpMan{"upgradewallet",
         "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified.\n"
-        "New keys may be generated and a new wallet backup will need to be made.",
+        "New keys may be generated and a new wallet backup will need to be made.\n"
+        "Consider using RPC upgradetohd instead upgradewallet if you have BIP39 mnemonic or want to set a wallet passphrase also (encrypt wallet).",
         {
             {"version", RPCArg::Type::NUM, RPCArg::Default{int{FEATURE_LATEST}}, "The version number to upgrade to. Default is the latest wallet version."}
         },
