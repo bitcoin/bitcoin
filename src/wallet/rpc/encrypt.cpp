@@ -81,7 +81,7 @@ RPCHelpMan walletpassphrase()
         }
 
         if (!pwallet->Unlock(strWalletPass, fForMixingOnly)) {
-            // Check if the passphrase has a null character (see #27067 for details)
+            // Check if the passphrase has a null character (see bitcoin#27067 for details)
             if (strWalletPass.find('\0') == std::string::npos) {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
             } else {
@@ -159,7 +159,7 @@ RPCHelpMan walletpassphrasechange()
     }
 
     if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
-        // Check if the old passphrase had a null character (see #27067 for details)
+        // Check if the old passphrase had a null character (see bitcoin#27067 for details)
         if (strOldWalletPass.find('\0') == std::string::npos) {
             throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
         } else {
