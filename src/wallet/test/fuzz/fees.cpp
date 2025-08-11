@@ -14,11 +14,11 @@
 
 namespace wallet {
 namespace {
-const TestingSetup* g_setup;
+TestingSetup* g_setup;
 
 void initialize_setup()
 {
-    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
+    static const auto testing_setup = MakeNoLogFileContext<TestingSetup>();
     g_setup = testing_setup.get();
 }
 
@@ -27,8 +27,16 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    const auto& node{g_setup->m_node};
+    auto& node{g_setup->m_node};
     Chainstate* chainstate = &node.chainman->ActiveChainstate();
+
+    bilingual_str error;
+    CTxMemPool::Options mempool_opts{
+        .incremental_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)},
+        .min_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)},
+        .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
+    };
+    node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
     std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
     CWallet& wallet{*wallet_ptr};
     {
