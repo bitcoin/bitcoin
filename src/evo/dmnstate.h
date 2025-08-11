@@ -154,25 +154,25 @@ class CDeterministicMNStateDiff
 {
 public:
     enum Field : uint32_t {
-        Field_nRegisteredHeight = 0x0001,
-        Field_nLastPaidHeight = 0x0002,
-        Field_nPoSePenalty = 0x0004,
-        Field_nPoSeRevivedHeight = 0x0008,
-        Field_nPoSeBanHeight = 0x0010,
-        Field_nRevocationReason = 0x0020,
-        Field_confirmedHash = 0x0040,
-        Field_confirmedHashWithProRegTxHash = 0x0080,
-        Field_keyIDOwner = 0x0100,
-        Field_pubKeyOperator = 0x0200,
-        Field_keyIDVoting = 0x0400,
-        Field_netInfo = 0x0800,
-        Field_scriptPayout = 0x1000,
-        Field_scriptOperatorPayout = 0x2000,
-        Field_nConsecutivePayments = 0x4000,
-        Field_platformNodeID = 0x8000,
-        Field_platformP2PPort = 0x10000,
-        Field_platformHTTPPort = 0x20000,
-        Field_nVersion = 0x40000,
+        Field_nVersion = 0x0001,
+        Field_nRegisteredHeight = 0x0002,
+        Field_nLastPaidHeight = 0x0004,
+        Field_nPoSePenalty = 0x0008,
+        Field_nPoSeRevivedHeight = 0x0010,
+        Field_nPoSeBanHeight = 0x0020,
+        Field_nRevocationReason = 0x0040,
+        Field_confirmedHash = 0x0080,
+        Field_confirmedHashWithProRegTxHash = 0x0100,
+        Field_keyIDOwner = 0x0200,
+        Field_pubKeyOperator = 0x0400,
+        Field_keyIDVoting = 0x0800,
+        Field_netInfo = 0x1000,
+        Field_scriptPayout = 0x2000,
+        Field_scriptOperatorPayout = 0x4000,
+        Field_nConsecutivePayments = 0x8000,
+        Field_platformNodeID = 0x10000,
+        Field_platformP2PPort = 0x20000,
+        Field_platformHTTPPort = 0x40000,
     };
 
 private:
@@ -186,6 +186,7 @@ private:
 
 #define DMN_STATE_MEMBER(name) Member<&CDeterministicMNState::name, Field_##name>{}
     static constexpr auto members = boost::hana::make_tuple(
+        DMN_STATE_MEMBER(nVersion),
         DMN_STATE_MEMBER(nRegisteredHeight),
         DMN_STATE_MEMBER(nLastPaidHeight),
         DMN_STATE_MEMBER(nPoSePenalty),
@@ -203,8 +204,7 @@ private:
         DMN_STATE_MEMBER(nConsecutivePayments),
         DMN_STATE_MEMBER(platformNodeID),
         DMN_STATE_MEMBER(platformP2PPort),
-        DMN_STATE_MEMBER(platformHTTPPort),
-        DMN_STATE_MEMBER(nVersion)
+        DMN_STATE_MEMBER(platformHTTPPort)
     );
 #undef DMN_STATE_MEMBER
 
