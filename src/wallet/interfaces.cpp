@@ -32,8 +32,10 @@
 #include <wallet/wallet.h>
 #include <governance/object.h>
 #include <governance/validators.h>
+#include <evo/deterministicmns.h>
 #include <masternode/sync.h>
 #include <txdb.h>
+#include <node/context.h>
 
 #include <memory>
 #include <string>
@@ -585,11 +587,11 @@ public:
         if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
         #endif
         LOCK(m_wallet->cs_wallet);
-        const ChainstateManager& chainman = *Assert(m_context.chain->chainman());
+        const ChainstateManager& chainman = *Assert(m_context.node_context->chainman);
         {
-            LOCK(cs_main);
+            LOCK(::cs_main);
             std::string strError;
-            if (!govobj.IsValidLocally(Assert(m_context.chain->dmnman())->GetListAtChainTip(), chainman, strError, false)) {
+            if (!govobj.IsValidLocally(Assert(m_context.node_context->dmnman)->GetListAtChainTip(), chainman, strError, false)) {
                 error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
                 return false;
             }
