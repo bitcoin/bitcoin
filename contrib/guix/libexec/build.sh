@@ -231,7 +231,7 @@ esac
 
 # EXE FLAGS
 case "$HOST" in
-    *linux*)  CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=${HOST_LDFLAGS} -static-libstdc++" ;;
+    *linux*)  CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=${HOST_LDFLAGS} -static-libstdc++ -static-libgcc" ;;
 esac
 
 mkdir -p "$DISTSRC"
