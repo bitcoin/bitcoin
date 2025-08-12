@@ -39,6 +39,14 @@ pkgin sqlite3
 
 To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
 
+Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
+
+```bash
+pkgin capnproto
+```
+
+Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
+
 See [dependencies.md](dependencies.md) for a complete overview.
 
 ### 2. Clone Bitcoin Repo
