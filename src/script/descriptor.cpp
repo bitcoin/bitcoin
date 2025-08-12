@@ -783,6 +783,50 @@ public:
     }
 };
 
+class ScankeyPubkeyProvider final : public PubkeyProvider
+{
+    CKey m_scan_key;
+    std::unique_ptr<PubkeyProvider> m_provider;
+
+public:
+    ScankeyPubkeyProvider(uint32_t exp_index, const CKey& scankey, std::unique_ptr<PubkeyProvider> provider): PubkeyProvider(exp_index), m_scan_key(scankey), m_provider(std::move(provider)) {}
+
+    std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    {
+        return m_provider->GetPubKey(pos, arg, out, read_cache, write_cache);
+    }
+    bool IsRange() const override { return false; }
+    size_t GetSize() const override { return m_provider->GetSize(); }
+    bool IsBIP32() const override { return false; }
+    std::string ToString(StringType type) const override { return m_provider->ToString(); }
+    bool ToPrivateString(const SigningProvider&, std::string& ret) const override
+    {
+        FlatSigningProvider arg;
+        arg.keys.emplace(m_scan_key.GetPubKey().GetID(), m_scan_key);
+        return m_provider->ToPrivateString(arg, ret);
+    }
+    bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
+    {
+        return m_provider->ToNormalizedString(arg, ret, cache);
+    }
+    void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const override
+    {
+        out.keys.emplace(m_scan_key.GetPubKey().GetID(), m_scan_key);
+    }
+    std::optional<CPubKey> GetRootPubKey() const override
+    {
+        return m_provider->GetRootPubKey();
+    }
+    std::optional<CExtPubKey> GetRootExtPubKey() const override
+    {
+        return m_provider->GetRootExtPubKey();
+    }
+    std::unique_ptr<PubkeyProvider> Clone() const override
+    {
+        return std::make_unique<ScankeyPubkeyProvider>(m_expr_index, m_scan_key, m_provider->Clone());
+    }
+};
+
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
