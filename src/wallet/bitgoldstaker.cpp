@@ -84,17 +84,22 @@ void BitGoldStaker::ThreadStaker()
                     LogPrintf("BitGoldStaker: no tip block\n");
                 } else {
                     for (const COutput& stake_out : candidates) {
-                        const CWalletTx* wtx = m_wallet.GetWalletTx(stake_out.outpoint.hash);
-                        if (!wtx) {
-                            LogPrintf("BitGoldStaker: missing wallet tx\n");
-                            continue;
+                        uint256 confirmed_block_hash;
+                        {
+                            LOCK(m_wallet.cs_wallet);
+                            const CWalletTx* wtx = m_wallet.GetWalletTx(stake_out.outpoint.hash);
+                            if (!wtx) {
+                                LogPrintf("BitGoldStaker: missing wallet tx\n");
+                                continue;
+                            }
+                            auto* conf = wtx->state<TxStateConfirmed>();
+                            if (!conf) {
+                                LogPrintf("BitGoldStaker: staking tx not confirmed\n");
+                                continue;
+                            }
+                            confirmed_block_hash = conf->confirmed_block_hash;
                         }
-                        auto* conf = wtx->state<TxStateConfirmed>();
-                        if (!conf) {
-                            LogPrintf("BitGoldStaker: staking tx not confirmed\n");
-                            continue;
-                        }
-                        const CBlockIndex* pindexFrom = chainman.m_blockman.LookupBlockIndex(conf->confirmed_block_hash);
+                        const CBlockIndex* pindexFrom = chainman.m_blockman.LookupBlockIndex(confirmed_block_hash);
                         if (!pindexFrom) {
                             LogPrintf("BitGoldStaker: staking tx block not found\n");
                             continue;
