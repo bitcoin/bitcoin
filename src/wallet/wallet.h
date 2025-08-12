@@ -931,18 +931,25 @@ public:
     //! Retrieve all of the wallet's flags
     uint64_t GetWalletFlags() const;
 
-    /** Returns a bracketed wallet name for displaying in logs, will return [default wallet] if the wallet has no name */
-    std::string GetDisplayName() const override
+    /** Return wallet name for use in logs, will return "default wallet" if the wallet has no name. */
+    std::string LogName() const override
     {
-        std::string wallet_name = GetName().length() == 0 ? "default wallet" : GetName();
-        return strprintf("[%s]", wallet_name);
+        std::string name{GetName()};
+        return name.empty() ? "default wallet" : name;
+    };
+
+    /** Return wallet name for display, like LogName() but translates "default wallet" string. */
+    std::string DisplayName() const
+    {
+        std::string name{GetName()};
+        return name.empty() ? _("default wallet") : name;
     };
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template <typename... Params>
     void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
     {
-        LogInfo("%s %s", GetDisplayName(), tfm::format(wallet_fmt, params...));
+        LogInfo("[%s] %s", LogName(), tfm::format(wallet_fmt, params...));
     };
 
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers

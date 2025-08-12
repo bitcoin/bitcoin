@@ -43,7 +43,7 @@ class WalletStorage
 {
 public:
     virtual ~WalletStorage() = default;
-    virtual std::string GetDisplayName() const = 0;
+    virtual std::string LogName() const = 0;
     virtual WalletDatabase& GetDatabase() const = 0;
     virtual bool IsWalletFlagSet(uint64_t) const = 0;
     virtual void UnsetBlankWalletFlag(WalletBatch&) = 0;
@@ -153,7 +153,7 @@ public:
     template <typename... Params>
     void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
     {
-        LogInfo("%s %s", m_storage.GetDisplayName(), tfm::format(wallet_fmt, params...));
+        LogInfo("[%s] %s", m_storage.LogName(), tfm::format(wallet_fmt, params...));
     };
 
     /** Keypool has new keys */
