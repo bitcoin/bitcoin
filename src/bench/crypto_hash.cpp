@@ -295,15 +295,6 @@ static void DSHA256_1M(benchmark::Bench& bench)
     });
 }
 
-static void X11_1M(benchmark::Bench& bench)
-{
-    uint256 hash;
-    std::vector<uint8_t> in(BUFFER_SIZE,0);
-    bench.batch(in.size()).unit("byte").run([&] {
-        hash = HashX11(in.begin(), in.end());
-    });
-}
-
 /* Hash different number of bytes via DSHA256 */
 static void DSHA256_0032b_single(benchmark::Bench& bench)
 {
@@ -359,63 +350,7 @@ static void DSHA256_2048b_single(benchmark::Bench& bench)
     });
 }
 
-/* Hash different number of bytes via X11 */
-static void X11_0032b_single(benchmark::Bench& bench)
-{
-    uint256 hash;
-    std::vector<uint8_t> in(32,0);
-    bench.batch(in.size()).unit("byte").run([&] {
-        hash = HashX11(in.begin(), in.end());
-    });
-}
-
-static void X11_0080b_single(benchmark::Bench& bench)
-{
-    uint256 hash;
-    std::vector<uint8_t> in(80,0);
-    bench.batch(in.size()).unit("byte").run([&] {
-        hash = HashX11(in.begin(), in.end());
-    });
-}
-
-static void X11_0128b_single(benchmark::Bench& bench)
-{
-    uint256 hash;
-    std::vector<uint8_t> in(128,0);
-    bench.batch(in.size()).unit("byte").run([&] {
-        hash = HashX11(in.begin(), in.end());
-    });
-}
-
-static void X11_0512b_single(benchmark::Bench& bench)
-{
-    uint256 hash;
-    std::vector<uint8_t> in(512,0);
-    bench.batch(in.size()).unit("byte").run([&] {
-        hash = HashX11(in.begin(), in.end());
-    });
-}
-
-static void X11_1024b_single(benchmark::Bench& bench)
-{
-    uint256 hash;
-    std::vector<uint8_t> in(1024,0);
-    bench.batch(in.size()).unit("byte").run([&] {
-        hash = HashX11(in.begin(), in.end());
-    });
-}
-
-static void X11_2048b_single(benchmark::Bench& bench)
-{
-    uint256 hash;
-    std::vector<uint8_t> in(2048,0);
-    bench.batch(in.size()).unit("byte").run([&] {
-        hash = HashX11(in.begin(), in.end());
-    });
-}
-
 BENCHMARK(DSHA256_1M);
-BENCHMARK(X11_1M);
 
 BENCHMARK(DSHA256_0032b_single);
 BENCHMARK(DSHA256_0080b_single);
@@ -423,10 +358,3 @@ BENCHMARK(DSHA256_0128b_single);
 BENCHMARK(DSHA256_0512b_single);
 BENCHMARK(DSHA256_1024b_single);
 BENCHMARK(DSHA256_2048b_single);
-
-BENCHMARK(X11_0032b_single);
-BENCHMARK(X11_0080b_single);
-BENCHMARK(X11_0128b_single);
-BENCHMARK(X11_0512b_single);
-BENCHMARK(X11_1024b_single);
-BENCHMARK(X11_2048b_single);

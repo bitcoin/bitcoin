@@ -4,6 +4,8 @@
 
 #include <bench/bench.h>
 
+#include <hash_x11.h>
+
 #include <crypto/x11/sph_blake.h>
 #include <crypto/x11/sph_bmw.h>
 #include <crypto/x11/sph_cubehash.h>
@@ -21,6 +23,15 @@ namespace {
 static constexpr size_t BUFFER_SIZE{1000*1000};
 //! Bytes required to represent 512-bit unsigned integers (uint512)
 static constexpr size_t OUTPUT_SIZE{64};
+
+inline void Pow_X11(benchmark::Bench& bench, const size_t bytes)
+{
+    uint256 hash{};
+    std::vector<uint8_t> in(bytes, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        hash = HashX11(in.begin(), in.end());
+    });
+}
 
 inline void Pow_Blake512(benchmark::Bench& bench, const size_t bytes)
 {
@@ -155,6 +166,14 @@ inline void Pow_Skein512(benchmark::Bench& bench, const size_t bytes)
 }
 } // anonymous namespace
 
+static void Pow_X11_0032b(benchmark::Bench& bench) { return Pow_X11(bench, 32); }
+static void Pow_X11_0080b(benchmark::Bench& bench) { return Pow_X11(bench, 80); }
+static void Pow_X11_0128b(benchmark::Bench& bench) { return Pow_X11(bench, 128); }
+static void Pow_X11_0512b(benchmark::Bench& bench) { return Pow_X11(bench, 512); }
+static void Pow_X11_1024b(benchmark::Bench& bench) { return Pow_X11(bench, 1024); }
+static void Pow_X11_2048b(benchmark::Bench& bench) { return Pow_X11(bench, 2048); }
+static void Pow_X11_1M(benchmark::Bench& bench) { return Pow_X11(bench, BUFFER_SIZE); }
+
 static void Pow_Blake512_0032b(benchmark::Bench& bench) { return Pow_Blake512(bench, 32); }
 static void Pow_Blake512_0080b(benchmark::Bench& bench) { return Pow_Blake512(bench, 80); }
 static void Pow_Blake512_0128b(benchmark::Bench& bench) { return Pow_Blake512(bench, 128); }
@@ -242,6 +261,14 @@ static void Pow_Skein512_0512b(benchmark::Bench& bench) { return Pow_Skein512(be
 static void Pow_Skein512_1024b(benchmark::Bench& bench) { return Pow_Skein512(bench, 1024); }
 static void Pow_Skein512_2048b(benchmark::Bench& bench) { return Pow_Skein512(bench, 2048); }
 static void Pow_Skein512_1M(benchmark::Bench& bench) { return Pow_Skein512(bench, BUFFER_SIZE); }
+
+BENCHMARK(Pow_X11_0032b);
+BENCHMARK(Pow_X11_0080b);
+BENCHMARK(Pow_X11_0128b);
+BENCHMARK(Pow_X11_0512b);
+BENCHMARK(Pow_X11_1024b);
+BENCHMARK(Pow_X11_2048b);
+BENCHMARK(Pow_X11_1M);
 
 BENCHMARK(Pow_Blake512_0032b);
 BENCHMARK(Pow_Blake512_0080b);
