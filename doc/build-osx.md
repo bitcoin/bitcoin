@@ -59,6 +59,11 @@ the `cmake -B` step below.
 SQLite is required, but since macOS ships with a useable `sqlite` package, you don't need to
 install anything.
 
+#### IPC Dependencies
+
+If you do not need IPC functionality (see [multiprocess.md](multiprocess.md))
+you can omit `capnp` and use `-DENABLE_IPC=OFF` in the `cmake -B` step below.
+
 ### 4. Clone Bitcoin repository
 
 `git` should already be installed by default on your system.
@@ -109,19 +114,6 @@ brew install zeromq
 Check out the [further configuration](#further-configuration) section for more information.
 
 For more information on ZMQ, see: [zmq.md](zmq.md)
-
----
-
-### IPC Dependencies
-
-Compiling IPC-enabled binaries with `-DENABLE_IPC=ON` requires the following dependency.
-Skip if you do not need IPC functionality.
-
-```bash
-brew install capnp
-```
-
-For more information on IPC, see: [multiprocess.md](multiprocess.md).
 
 ---
 
