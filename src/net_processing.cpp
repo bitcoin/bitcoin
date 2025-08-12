@@ -629,8 +629,6 @@ public:
     void PushInventory(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInv(const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayInv(const CInv& inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayRecoveredSig(const uint256& sigHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayDSQ(const CCoinJoinQueue& queue) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -645,9 +643,20 @@ public:
     void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
                        bool fForce = false) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     size_t GetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void AskPeersForTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 private:
     void _RelayTransaction(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Ask peers that have a transaction in their inventory to relay it to us. */
+    void AskPeersForTransaction(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /** Relay inventories to peers that find it relevant */
+    void RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx, const int minProtoVersion) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
+    /**
+     * This overload will not update node filters, use it only for the cases
+     * when other messages will update related transaction data in filters
+     */
+    void RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash, const int minProtoVersion) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Helper to process result of external handlers of message */
     void PostProcessMessage(MessageProcessingResult&& ret, NodeId node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
