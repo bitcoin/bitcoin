@@ -1,11 +1,15 @@
-#include <pos/stake.h>
 #include <arith_uint256.h>
+#include <cassert>
 #include <chain.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <hash.h>
+#include <pos/stake.h>
 #include <serialize.h>
 #include <validation.h>
-#include <cassert>
+
+// Minimum value for any staking input
+static constexpr CAmount MIN_STAKE_AMOUNT{1 * COIN};
 
 bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
                           uint256 hashBlockFrom, unsigned int nTimeBlockFrom,
@@ -76,22 +80,36 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
         return false;
     }
 
-    const COutPoint& prevout = tx->vin[0].prevout;
-    const Coin& coin = view.AccessCoin(prevout);
-    if (coin.IsSpent()) {
-        return false;
-    }
-
-    const CBlockIndex* pindexFrom = chain[coin.nHeight];
-    if (!pindexFrom) {
-        return false;
-    }
-
     uint256 hashProof;
-    if (!CheckStakeKernelHash(pindexPrev, block.nBits, pindexFrom->GetBlockHash(),
-                              pindexFrom->nTime, coin.out.nValue, prevout,
-                              block.nTime, hashProof, false)) {
-        return false;
+    for (size_t i = 0; i < tx->vin.size(); ++i) {
+        const CTxIn& txin = tx->vin[i];
+        const Coin& coin = view.AccessCoin(txin.prevout);
+        if (coin.IsSpent()) {
+            return false;
+        }
+
+        const CBlockIndex* pindexFrom = chain[coin.nHeight];
+        if (!pindexFrom) {
+            return false;
+        }
+
+        // All inputs must satisfy basic age and amount requirements
+        if (block.nTime <= pindexFrom->nTime ||
+            block.nTime - pindexFrom->nTime < MIN_STAKE_AGE) {
+            return false;
+        }
+        if (coin.out.nValue < MIN_STAKE_AMOUNT) {
+            return false;
+        }
+
+        // Perform kernel check on the designated (first) input
+        if (i == 0) {
+            if (!CheckStakeKernelHash(pindexPrev, block.nBits, pindexFrom->GetBlockHash(),
+                                      pindexFrom->nTime, coin.out.nValue, txin.prevout,
+                                      block.nTime, hashProof, false)) {
+                return false;
+            }
+        }
     }
     return true;
 }
