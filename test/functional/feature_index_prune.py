@@ -22,7 +22,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.extra_args = [
             ["-fastprune", "-prune=1", "-blockfilterindex=1"] + DEPLOYMENT_ARGS,
-            ["-fastprune", "-prune=1", "-coinstatsindex=1", "-blockfilterindex=0", "-peerblockfilters=0"] + DEPLOYMENT_ARGS,
+            ["-fastprune", "-prune=1", "-coinstatsindex=1"] + DEPLOYMENT_ARGS,
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"] + DEPLOYMENT_ARGS,
             [] + DEPLOYMENT_ARGS,
         ]
@@ -54,7 +54,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
 
     def restart_without_indices(self):
         for i in range(3):
-            self.restart_node(i, extra_args=["-fastprune", "-prune=1", "-blockfilterindex=0", "-coinstatsindex=0", "-peerblockfilters=0"] + DEPLOYMENT_ARGS, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
+            self.restart_node(i, extra_args=["-fastprune", "-prune=1"] + DEPLOYMENT_ARGS, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
         self.reconnect_nodes()
 
     def run_test(self):
