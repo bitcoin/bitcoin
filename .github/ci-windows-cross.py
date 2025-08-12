@@ -99,23 +99,26 @@ def run_functional_tests():
         f"--tmpdirprefix={workspace}",
         "--combinedlogslen=99999999",
         *shlex.split(os.environ.get("TEST_RUNNER_EXTRA", "").strip()),
-        # feature_unsupported_utxo_db.py fails on Windows because of emojis in the test data directory.
+        # Tests using ancient releases fail on Windows because of emojis in the test data directory.
         "--exclude",
         "feature_unsupported_utxo_db.py",
+        "--exclude",
+        "wallet_ancient_migration.py",
     ]
     run(test_runner_cmd)
 
-    # Run feature_unsupported_utxo_db sequentially in ASCII-only tmp dir,
-    # because it is excluded above due to lack of UTF-8 support in the
+    # Run ancient release tests sequentially in ASCII-only tmp dir,
+    # because they are excluded above due to lack of UTF-8 support in the
     # ancient release.
-    cmd_feature_unsupported_db = [
-        sys.executable,
-        str(workspace / "test" / "functional" / "feature_unsupported_utxo_db.py"),
-        "--previous-releases",
-        "--tmpdir",
-        str(Path(workspace) / "test_feature_unsupported_utxo_db"),
-    ]
-    run(cmd_feature_unsupported_db)
+    for test_name in ["feature_unsupported_utxo_db", "wallet_ancient_migration"]:
+        cmd = [
+            sys.executable,
+            str(workspace / "test" / "functional" / f"{test_name}.py"),
+            "--previous-releases",
+            "--tmpdir",
+            str(workspace / f"test_{test_name}"),
+        ]
+        run(cmd)
 
 
 def run_unit_tests():
