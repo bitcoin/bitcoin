@@ -900,13 +900,12 @@ class P2PDataStore(P2PInterface):
             else:
                 assert_not_equal(node.getbestblockhash(), blocks[-1].hash_hex)
 
-    def send_txs_and_test(self, txs, node, *, success=True, expect_disconnect=False, reject_reason=None):
+    def send_txs_and_test(self, txs, node, *, success=True, reject_reason=None):
         """Send txs to test node and test whether they're accepted to the mempool.
 
          - add all txs to our tx_store
          - send tx messages for all txs
          - if success is True/False: assert that the txs are/are not accepted to the mempool
-         - if expect_disconnect is True: Skip the sync with ping
          - if reject_reason is set: assert that the correct reject message is logged."""
 
         with p2p_lock:
@@ -918,10 +917,7 @@ class P2PDataStore(P2PInterface):
             for tx in txs:
                 self.send_without_ping(msg_tx(tx))
 
-            if expect_disconnect:
-                self.wait_for_disconnect()
-            else:
-                self.sync_with_ping()
+            self.sync_with_ping()
 
             raw_mempool = node.getrawmempool()
             if success:

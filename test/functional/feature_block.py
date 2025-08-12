@@ -177,11 +177,6 @@ class FullBlockTest(BitcoinTestFramework):
         for TxTemplate in invalid_txs.iter_all_templates():
             template = TxTemplate(spend_tx=attempt_spend_tx)
 
-            # belt-and-suspenders checking we won't pass up validating something
-            # we expect a disconnect from
-            if template.expect_disconnect:
-                assert not template.valid_in_block
-
             if template.valid_in_block:
                 continue
 
@@ -194,9 +189,12 @@ class FullBlockTest(BitcoinTestFramework):
             if TxTemplate != invalid_txs.InputMissing:
                 self.sign_tx(badtx, attempt_spend_tx)
             badblock = self.update_block(blockname, [badtx])
+            reject_reason = (template.block_reject_reason or template.reject_reason)
+            if reject_reason.startswith("mempool-script-verify-flag-failed"):
+                reject_reason = "mandatory-script-verify-flag-failed" + reject_reason[33:]
             self.send_blocks(
                 [badblock], success=False,
-                reject_reason=(template.block_reject_reason or template.reject_reason),
+                reject_reason=reject_reason,
                 reconnect=True, timeout=2)
 
             self.move_tip(2)

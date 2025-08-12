@@ -73,9 +73,6 @@ class BadTxTemplate:
     # Only specified if it differs from mempool acceptance error.
     block_reject_reason = ""
 
-    # Do we expect to be disconnected after submitting this tx?
-    expect_disconnect = False
-
     # Is this tx considered valid when included in a block, but not for acceptance into
     # the mempool (i.e. does it violate policy but not consensus)?
     valid_in_block = False
@@ -93,7 +90,6 @@ class BadTxTemplate:
 
 class OutputMissing(BadTxTemplate):
     reject_reason = "bad-txns-vout-empty"
-    expect_disconnect = True
 
     def get_tx(self):
         tx = CTransaction()
@@ -103,7 +99,6 @@ class OutputMissing(BadTxTemplate):
 
 class InputMissing(BadTxTemplate):
     reject_reason = "bad-txns-vin-empty"
-    expect_disconnect = True
 
     # We use a blank transaction here to make sure
     # it is interpreted as a non-witness transaction.
@@ -119,7 +114,6 @@ class InputMissing(BadTxTemplate):
 # tree depth commitment (CVE-2017-12842)
 class SizeTooSmall(BadTxTemplate):
     reject_reason = "tx-size-small"
-    expect_disconnect = False
     valid_in_block = True
 
     def get_tx(self):
@@ -137,7 +131,6 @@ class BadInputOutpointIndex(BadTxTemplate):
     reject_reason = None
     # But fails in block
     block_reject_reason = "bad-txns-inputs-missingorspent"
-    expect_disconnect = False
 
     def get_tx(self):
         num_indices = len(self.spend_tx.vin)
@@ -151,7 +144,6 @@ class BadInputOutpointIndex(BadTxTemplate):
 
 class DuplicateInput(BadTxTemplate):
     reject_reason = 'bad-txns-inputs-duplicate'
-    expect_disconnect = True
 
     def get_tx(self):
         tx = CTransaction()
@@ -163,7 +155,6 @@ class DuplicateInput(BadTxTemplate):
 
 class PrevoutNullInput(BadTxTemplate):
     reject_reason = 'bad-txns-prevout-null'
-    expect_disconnect = True
 
     def get_tx(self):
         tx = CTransaction()
@@ -175,7 +166,6 @@ class PrevoutNullInput(BadTxTemplate):
 
 class NonexistentInput(BadTxTemplate):
     reject_reason = None  # Added as an orphan tx.
-    expect_disconnect = False
     # But fails in block
     block_reject_reason = "bad-txns-inputs-missingorspent"
 
@@ -189,7 +179,6 @@ class NonexistentInput(BadTxTemplate):
 
 class SpendTooMuch(BadTxTemplate):
     reject_reason = 'bad-txns-in-belowout'
-    expect_disconnect = True
 
     def get_tx(self):
         return create_tx_with_script(
@@ -198,7 +187,6 @@ class SpendTooMuch(BadTxTemplate):
 
 class CreateNegative(BadTxTemplate):
     reject_reason = 'bad-txns-vout-negative'
-    expect_disconnect = True
 
     def get_tx(self):
         return create_tx_with_script(self.spend_tx, 0, amount=-1)
@@ -206,7 +194,6 @@ class CreateNegative(BadTxTemplate):
 
 class CreateTooLarge(BadTxTemplate):
     reject_reason = 'bad-txns-vout-toolarge'
-    expect_disconnect = True
 
     def get_tx(self):
         return create_tx_with_script(self.spend_tx, 0, amount=MAX_MONEY + 1)
@@ -214,7 +201,6 @@ class CreateTooLarge(BadTxTemplate):
 
 class CreateSumTooLarge(BadTxTemplate):
     reject_reason = 'bad-txns-txouttotal-toolarge'
-    expect_disconnect = True
 
     def get_tx(self):
         tx = create_tx_with_script(self.spend_tx, 0, amount=MAX_MONEY)
@@ -223,8 +209,7 @@ class CreateSumTooLarge(BadTxTemplate):
 
 
 class InvalidOPIFConstruction(BadTxTemplate):
-    reject_reason = "mandatory-script-verify-flag-failed (Invalid OP_IF construction)"
-    expect_disconnect = True
+    reject_reason = "mempool-script-verify-flag-failed (Invalid OP_IF construction)"
 
     def get_tx(self):
         return create_tx_with_script(
@@ -235,7 +220,6 @@ class InvalidOPIFConstruction(BadTxTemplate):
 class TooManySigopsPerBlock(BadTxTemplate):
     reject_reason = "bad-txns-too-many-sigops"
     block_reject_reason = "bad-blk-sigops, out-of-bounds SigOpCount"
-    expect_disconnect = False
 
     def get_tx(self):
         lotsa_checksigs = CScript([OP_CHECKSIG] * (MAX_BLOCK_SIGOPS))
@@ -247,7 +231,6 @@ class TooManySigopsPerBlock(BadTxTemplate):
 
 class TooManySigopsPerTransaction(BadTxTemplate):
     reject_reason = "bad-txns-too-many-sigops"
-    expect_disconnect = False
     valid_in_block = True
 
     def get_tx(self):
@@ -270,15 +253,14 @@ def getDisabledOpcodeTemplate(opcode):
 
     return type('DisabledOpcode_' + str(opcode), (BadTxTemplate,), {
         'reject_reason': "disabled opcode",
-        'expect_disconnect': True,
         'get_tx': get_tx,
         'valid_in_block' : False
         })
 
 class NonStandardAndInvalid(BadTxTemplate):
-    """A non-standard transaction which is also consensus-invalid should return the consensus error."""
-    reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
-    expect_disconnect = True
+    """A non-standard transaction which is also consensus-invalid should return the first error."""
+    reject_reason = "mempool-script-verify-flag-failed (Using OP_CODESEPARATOR in non-witness script)"
+    block_reject_reason = "mandatory-script-verify-flag-failed (OP_RETURN was encountered)"
     valid_in_block = False
 
     def get_tx(self):
