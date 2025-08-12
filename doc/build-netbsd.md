@@ -31,6 +31,14 @@ cmake -B build
     ...
 ```
 
+SQLite is required for the wallet:
+
+```bash
+pkgin sqlite3
+```
+
+To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
+
 See [dependencies.md](dependencies.md) for a complete overview.
 
 ### 2. Clone Bitcoin Repo
@@ -42,18 +50,6 @@ git clone https://github.com/bitcoin/bitcoin.git
 ```
 
 ### 3. Install Optional Dependencies
-
-#### Wallet Dependencies
-
-It is not necessary to build wallet functionality to run bitcoind or the GUI.
-
-###### Descriptor Wallet Support
-
-`sqlite3` is required to enable support for [descriptor wallets](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md).
-
-```bash
-pkgin install sqlite3
-```
 
 #### GUI Dependencies
 ###### Qt6
