@@ -16,23 +16,18 @@ import lief
 
 # Debian 11 (Bullseye) EOL: 2026. https://wiki.debian.org/LTS
 #
-# - libgcc version 10.2.1 (https://packages.debian.org/bullseye/libgcc-s1)
 # - libc version 2.31 (https://packages.debian.org/source/bullseye/glibc)
 #
 # Ubuntu 20.04 (Focal) EOL: 2030. https://wiki.ubuntu.com/ReleaseTeam
 #
-# - libgcc version 10.5.0 (https://packages.ubuntu.com/focal/libgcc1)
 # - libc version 2.31 (https://packages.ubuntu.com/focal/libc6)
 #
 # CentOS Stream 9 EOL: 2027. https://www.centos.org/cl-vs-cs/#end-of-life
 #
-# - libgcc version 12.2.1 (https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/)
 # - libc version 2.34 (https://mirror.stream.centos.org/9-stream/AppStream/x86_64/os/Packages/)
 #
-# See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
 
 MAX_VERSIONS = {
-'GCC':       (7,0,0),
 'GLIBC': {
     lief.ELF.ARCH.X86_64: (2,31),
     lief.ELF.ARCH.ARM:    (2,31),
@@ -40,7 +35,6 @@ MAX_VERSIONS = {
     lief.ELF.ARCH.PPC64:  (2,31),
     lief.ELF.ARCH.RISCV:  (2,31),
 },
-'LIBATOMIC': (1,0),
 'V':         (0,5,0),  # xkb (bitcoin-qt only)
 }
 
@@ -93,11 +87,9 @@ ELF_ABIS: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, list[int]]] = {
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
 # bitcoind and bitcoin-qt
-'libgcc_s.so.1', # GCC base support
 'libc.so.6', # C library
 'libpthread.so.0', # threading
 'libm.so.6', # math library
-'libatomic.so.1',
 'ld-linux-x86-64.so.2', # 64-bit dynamic linker
 'ld-linux.so.2', # 32-bit dynamic linker
 'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
