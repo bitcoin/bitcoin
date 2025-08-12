@@ -85,9 +85,6 @@ public:
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
 
-    /** Is an inventory in the known inventory filter. Used by InstantSend. */
-    virtual bool IsInvInFilter(NodeId nodeid, const uint256& hash) const = 0;
-
     /** Ask a number of our peers, which have a transaction in their inventory, for the transaction. */
     virtual void AskPeersForTransaction(const uint256& txid, bool is_masternode) = 0;
 

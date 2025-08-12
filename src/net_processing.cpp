@@ -645,7 +645,6 @@ public:
     void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
                        bool is_masternode, bool fForce = false) override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     size_t GetRequestedObjectCount(NodeId nodeid) const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool IsInvInFilter(NodeId nodeid, const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void AskPeersForTransaction(const uint256& txid, bool is_masternode) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 private:
     void _RelayTransaction(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -2315,14 +2314,6 @@ void PeerManagerImpl::AskPeersForTransaction(const uint256& txid, bool is_master
                           /*fForce=*/true);
         }
     }
-}
-
-bool PeerManagerImpl::IsInvInFilter(NodeId nodeid, const uint256& hash) const
-{
-    PeerRef peer = GetPeerRef(nodeid);
-    if (peer == nullptr)
-        return false;
-    return IsInvInFilter(*peer, hash);
 }
 
 bool PeerManagerImpl::IsInvInFilter(const Peer& peer, const uint256& hash) const
