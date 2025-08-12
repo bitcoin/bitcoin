@@ -2135,6 +2135,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     StartupNotify(args);
 #endif
 
+    LogPrintf("J Duarte: primeira contribuição adicionada com sucesso!\n");
+
     return true;
 }
 
