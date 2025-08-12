@@ -300,7 +300,16 @@ void ProposalWizard::onPrepare()
     const int64_t now = QDateTime::currentSecsSinceEpoch();
     std::string txid_str; std::string error;
     COutPoint none; // null by default
-    if (!m_walletModel->wallet().prepareProposal(uint256(), 1, now, m_hex.toStdString(), none, txid_str, error)) {
+
+    // TODO: VALIDATE HERE IF blockchain synced
+    // instead
+    // do something like clientModel->masternodeSync().isBlockchainSynced()
+    auto govobj = m_walletModel->node().gov().createProposal(1, now, m_hex.toStdString(), error);
+    if (!govobj) {
+        QMessageBox::critical(this, tr("Prepare failed"), QString::fromStdString(error));
+        return;
+    }
+    if (!m_walletModel->wallet().prepareProposal(govobj->GetHash(), govobj->GetMinCollateralFee(), 1, now, m_hex.toStdString(), none, txid_str, error)) {
         QMessageBox::critical(this, tr("Prepare failed"), QString::fromStdString(error));
         return;
     }

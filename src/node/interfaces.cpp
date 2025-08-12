@@ -186,6 +186,31 @@ public:
         }
         return info;
     }
+    std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
+                        const std::string& data_hex, std::string& error) override
+    {
+        CGovernanceObject govobj(uint256{}, revision, created_time, uint256{}, data_hex);
+        if (govobj.GetObjectType() != GovernanceObject::PROPOSAL) {
+            error = "Invalid object type, only proposals can be validated";
+            return std::nullopt;
+        }
+        CProposalValidator validator(data_hex);
+        if (!validator.Validate()) {
+            error = "Invalid proposal data: " + validator.GetErrorMessages();
+            return std::nullopt;
+        }
+        const ChainstateManager& chainman = *Assert(context().chainman);
+        {
+            LOCK(::cs_main);
+            std::string strError;
+            if (!govobj.IsValidLocally(Assert(context().dmnman)->GetListAtChainTip(), chainman, strError, false)) {
+                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
+                return std::nullopt;
+            }
+        }
+        return govobj;
+    }
+
     bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
                         const uint256& fee_txid, std::string& out_object_hash, std::string& error) override
     {

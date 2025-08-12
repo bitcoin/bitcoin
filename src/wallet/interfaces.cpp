@@ -568,40 +568,17 @@ public:
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
-    bool prepareProposal(const uint256& parent, int32_t revision, int64_t created_time,
+    bool prepareProposal(const uint256& govobj_hash, CAmount fee, int32_t revision, int64_t created_time,
                          const std::string& data_hex, const COutPoint& outpoint,
                          std::string& out_fee_txid, std::string& error) override
     {
-        CGovernanceObject govobj(parent, revision, created_time, uint256(), data_hex);
-        if (govobj.GetObjectType() != GovernanceObject::PROPOSAL) {
-            error = "Invalid object type, only proposals can be validated";
-            return false;
-        }
-        CProposalValidator validator(data_hex);
-        if (!validator.Validate()) {
-            error = "Invalid proposal data: " + validator.GetErrorMessages();
-            return false;
-        }
-        // txindex is optional; include header and check existence where available
-        #ifdef TXINDEX_ENABLED
-        if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
-        #endif
         LOCK(m_wallet->cs_wallet);
-        const ChainstateManager& chainman = *Assert(m_context.node_context->chainman);
-        {
-            LOCK(::cs_main);
-            std::string strError;
-            if (!govobj.IsValidLocally(Assert(m_context.node_context->dmnman)->GetListAtChainTip(), chainman, strError, false)) {
-                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
-                return false;
-            }
-        }
         CTransactionRef tx;
-        if (!GenBudgetSystemCollateralTx(*m_wallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
+        if (!GenBudgetSystemCollateralTx(*m_wallet, tx, govobj_hash, fee, outpoint)) {
             error = "Error making collateral transaction for governance object.";
             return false;
         }
-        if (!m_wallet->WriteGovernanceObject(Governance::Object{parent, revision, created_time, tx->GetHash(), data_hex})) {
+        if (!m_wallet->WriteGovernanceObject(Governance::Object{uint256{}, revision, created_time, tx->GetHash(), data_hex})) {
             error = "WriteGovernanceObject failed";
             return false;
         }
