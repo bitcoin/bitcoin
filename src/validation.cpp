@@ -1977,6 +1977,12 @@ void CoinsViews::InitCache()
     m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
 }
 
+Chainstate& ChainstateManager::ActiveChainstate() const
+{
+    Assert(m_active_chainstate);
+    return *m_active_chainstate;
+}
+
 Chainstate::Chainstate(
     CTxMemPool* mempool,
     BlockManager& blockman,
