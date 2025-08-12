@@ -5170,7 +5170,9 @@ void PeerManagerImpl::ProcessTemplateManActions(Peer& peer)
         auto& new_template = my_templates.emplace_front();
 
         auto block_template = assembler.CreateNewBlock();
-        const auto& block = block_template->block;
+        auto& block = block_template->block;
+        assert(block.vtx[0]->IsCoinBase());
+        block.vtx.erase(block.vtx.begin());
         new_template.hash = block.GetHash();
         new_template.compact = CBlockHeaderAndShortTxIDs(block, FastRandomContext().rand64());
         new_template.weight = 0;
