@@ -627,10 +627,10 @@ public:
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);;
     void PushInventory(NodeId nodeid, const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInv(CInv &inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInv(CInv &inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInv(const CInv& inv) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInv(const CInv& inv, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash, const int minProtoVersion) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayRecoveredSig(const uint256& sigHash) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayDSQ(const CCoinJoinQueue& queue) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -2343,7 +2343,7 @@ void PeerManagerImpl::PushInventory(NodeId nodeid, const CInv& inv)
     PushInv(*peer, inv);
 }
 
-void PeerManagerImpl::RelayInv(CInv &inv, const int minProtoVersion)
+void PeerManagerImpl::RelayInv(const CInv& inv, const int minProtoVersion)
 {
     // TODO: Migrate to iteration through m_peer_map
     m_connman.ForEachNode([&](CNode* pnode) {
@@ -2356,7 +2356,7 @@ void PeerManagerImpl::RelayInv(CInv &inv, const int minProtoVersion)
     });
 }
 
-void PeerManagerImpl::RelayInv(CInv &inv)
+void PeerManagerImpl::RelayInv(const CInv& inv)
 {
     LOCK(m_peer_mutex);
     for (const auto& [_, peer] : m_peer_map) {
@@ -2393,7 +2393,7 @@ void PeerManagerImpl::RelayDSQ(const CCoinJoinQueue& queue)
     }
 }
 
-void PeerManagerImpl::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const int minProtoVersion)
+void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const CTransaction& relatedTx, const int minProtoVersion)
 {
     // TODO: Migrate to iteration through m_peer_map
     m_connman.ForEachNode([&](CNode* pnode) {
@@ -2418,7 +2418,7 @@ void PeerManagerImpl::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx,
     });
 }
 
-void PeerManagerImpl::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const int minProtoVersion)
+void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const uint256& relatedTxHash, const int minProtoVersion)
 {
     // TODO: Migrate to iteration through m_peer_map
     m_connman.ForEachNode([&](CNode* pnode) {
