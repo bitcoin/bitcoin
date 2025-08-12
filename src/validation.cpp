@@ -2014,3 +2014,54 @@ void Chainstate::InitCoinsDB(
         },
         CoinsViewOptions{});
 }
+
+bool IsBlockMutated(const CBlock& block, bool check_witness_root)
+{
+    bool mutated{false};
+
+    bool merkle_mutated{false};
+    const uint256 merkle_root{BlockMerkleRoot(block, &merkle_mutated)};
+    block.m_checked_merkle_root = true;
+    if (merkle_mutated || merkle_root != block.hashMerkleRoot) {
+        mutated = true;
+    }
+
+    const bool has_witness_tx = std::any_of(block.vtx.begin(), block.vtx.end(),
+        [](const CTransactionRef& tx) { return tx->HasWitness(); });
+
+    if (check_witness_root) {
+        block.m_checked_witness_commitment = true;
+        bool witness_mutated{false};
+        const uint256 witness_root{BlockWitnessMerkleRoot(block, &witness_mutated)};
+        if (witness_mutated) {
+            mutated = true;
+        } else if (has_witness_tx) {
+            const int commitpos = GetWitnessCommitmentIndex(block);
+            if (commitpos == NO_WITNESS_COMMITMENT) {
+                mutated = true;
+            } else {
+                const CScript& script = block.vtx[0]->vout[commitpos].scriptPubKey;
+                if (script.size() < 38) {
+                    mutated = true;
+                } else if (block.vtx[0]->vin.empty() ||
+                           block.vtx[0]->vin[0].scriptWitness.stack.size() != 1 ||
+                           block.vtx[0]->vin[0].scriptWitness.stack[0].size() != 32) {
+                    mutated = true;
+                } else {
+                    unsigned char hash[32];
+                    CSHA256()
+                        .Write(witness_root.begin(), 32)
+                        .Write(block.vtx[0]->vin[0].scriptWitness.stack[0].data(), 32)
+                        .Finalize(hash);
+                    if (!std::equal(hash, hash + 32, script.data() + 6)) {
+                        mutated = true;
+                    }
+                }
+            }
+        }
+    } else if (has_witness_tx) {
+        mutated = true;
+    }
+
+    return mutated;
+}
