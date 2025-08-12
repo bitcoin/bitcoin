@@ -15,9 +15,9 @@
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
-ChainLockSigner::ChainLockSigner(CChainState& chainstate, ChainLockSignerParent& clhandler, llmq::CSigningManager& sigman,
-                                 llmq::CSigSharesManager& shareman, CSporkManager& sporkman,
-                                 const CMasternodeSync& mn_sync) :
+ChainLockSigner::ChainLockSigner(CChainState& chainstate, ChainLockSignerParent& clhandler,
+                                 llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
+                                 CSporkManager& sporkman, const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     m_clhandler{clhandler},
     m_sigman{sigman},
@@ -85,7 +85,8 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
         return;
     }
 
-    LogPrint(BCLog::CHAINLOCKS, "%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
+    LogPrint(BCLog::CHAINLOCKS, "%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(),
+             pindex->nHeight);
 
     // When the new IX system is activated, we only try to ChainLock blocks which include safe transactions. A TX is
     // considered safe when it is islocked or at least known since 10 minutes (from mempool or block). These checks are
@@ -114,8 +115,9 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
 
             for (const auto& txid : *txids) {
                 if (!m_clhandler.IsTxSafeForMining(txid) && !isman.IsLocked(txid)) {
-                    LogPrint(BCLog::CHAINLOCKS, "%s -- not signing block %s due to TX %s not being islocked and not old enough.\n", __func__,
-                              pindexWalk->GetBlockHash().ToString(), txid.ToString());
+                    LogPrint(BCLog::CHAINLOCKS, /* Continued */
+                             "%s -- not signing block %s due to TX %s not being islocked and not old enough.\n",
+                             __func__, pindexWalk->GetBlockHash().ToString(), txid.ToString());
                     return;
                 }
             }
@@ -243,7 +245,7 @@ std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> Ch
     AssertLockNotHeld(cs_signer);
     std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> removed;
     LOCK2(::cs_main, cs_signer);
-    for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
+    for (auto it = blockTxs.begin(); it != blockTxs.end();) {
         const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
         if (m_clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             removed.push_back(it->second);

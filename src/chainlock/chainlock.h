@@ -58,8 +58,8 @@ private:
     chainlock::ChainLockSig bestChainLock GUARDED_BY(cs);
 
     chainlock::ChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
-    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
-    const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs) {nullptr};
+    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs){nullptr};
+    const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs){nullptr};
 
     std::unordered_map<uint256, int64_t, StaticSaltedHasher> txFirstSeenTime GUARDED_BY(cs);
 
