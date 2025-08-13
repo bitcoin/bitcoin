@@ -47,7 +47,7 @@ void BitGoldStaker::ThreadStaker()
     interfaces::Chain& chain = m_wallet.chain();
     node::NodeContext* node_context = chain.context();
     if (!node_context || !node_context->chainman) {
-        LogPrintf("BitGoldStaker: chainman unavailable\n");
+        LogDebug(BCLog::STAKING, "BitGoldStaker: chainman unavailable\n");
         return;
     }
     ChainstateManager& chainman = *node_context->chainman;
@@ -76,12 +76,12 @@ void BitGoldStaker::ThreadStaker()
             }
 
             if (candidates.empty()) {
-                LogPrintf("BitGoldStaker: no eligible UTXOs\n");
+                LogDebug(BCLog::STAKING, "BitGoldStaker: no eligible UTXOs\n");
             } else {
                 LOCK(::cs_main);
                 CBlockIndex* pindexPrev = chainman.ActiveChain().Tip();
                 if (!pindexPrev) {
-                    LogPrintf("BitGoldStaker: no tip block\n");
+                    LogDebug(BCLog::STAKING, "BitGoldStaker: no tip block\n");
                 } else {
                     for (const COutput& stake_out : candidates) {
                         uint256 confirmed_block_hash;
@@ -89,19 +89,19 @@ void BitGoldStaker::ThreadStaker()
                             LOCK(m_wallet.cs_wallet);
                             const CWalletTx* wtx = m_wallet.GetWalletTx(stake_out.outpoint.hash);
                             if (!wtx) {
-                                LogPrintf("BitGoldStaker: missing wallet tx\n");
+                                LogDebug(BCLog::STAKING, "BitGoldStaker: missing wallet tx\n");
                                 continue;
                             }
                             auto* conf = wtx->state<TxStateConfirmed>();
                             if (!conf) {
-                                LogPrintf("BitGoldStaker: staking tx not confirmed\n");
+                                LogDebug(BCLog::STAKING, "BitGoldStaker: staking tx not confirmed\n");
                                 continue;
                             }
                             confirmed_block_hash = conf->confirmed_block_hash;
                         }
                         const CBlockIndex* pindexFrom = chainman.m_blockman.LookupBlockIndex(confirmed_block_hash);
                         if (!pindexFrom) {
-                            LogPrintf("BitGoldStaker: staking tx block not found\n");
+                            LogDebug(BCLog::STAKING, "BitGoldStaker: staking tx block not found\n");
                             continue;
                         }
 
@@ -110,9 +110,10 @@ void BitGoldStaker::ThreadStaker()
                         nTimeTx &= ~STAKE_TIMESTAMP_MASK;
                         unsigned int nBits = pindexPrev->nBits;
                         uint256 hash_proof;
+                        LogTrace(BCLog::STAKING, "BitGoldStaker: checking kernel for %s", stake_out.outpoint.ToString());
                         if (!CheckStakeKernelHash(pindexPrev, nBits, pindexFrom->GetBlockHash(), pindexFrom->nTime,
-                                                  stake_out.txout.nValue, stake_out.outpoint, nTimeTx, hash_proof, false)) {
-                            LogPrintf("BitGoldStaker: kernel check failed\n");
+                                                  stake_out.txout.nValue, stake_out.outpoint, nTimeTx, hash_proof, true)) {
+                            LogDebug(BCLog::STAKING, "BitGoldStaker: kernel check failed\n");
                             continue;
                         }
 
@@ -127,7 +128,7 @@ void BitGoldStaker::ThreadStaker()
                         {
                             LOCK(m_wallet.cs_wallet);
                             if (!m_wallet.SignTransaction(coinstake)) {
-                                LogPrintf("BitGoldStaker: failed to sign coinstake\n");
+                                LogDebug(BCLog::STAKING, "BitGoldStaker: failed to sign coinstake\n");
                                 continue;
                             }
                         }
@@ -156,7 +157,7 @@ void BitGoldStaker::ThreadStaker()
                             if (!ContextualCheckProofOfStake(block, pindexPrev,
                                                               chainman.ActiveChainstate().CoinsTip(),
                                                               chainman.ActiveChain(), consensus)) {
-                                LogPrintf("BitGoldStaker: produced block failed CheckProofOfStake\n");
+                                LogDebug(BCLog::STAKING, "BitGoldStaker: produced block failed CheckProofOfStake\n");
                                 continue;
                             }
                         }
@@ -165,17 +166,19 @@ void BitGoldStaker::ThreadStaker()
                         if (!chainman.ProcessNewBlock(std::make_shared<const CBlock>(block),
                                                       /*force_processing=*/true, /*min_pow_checked=*/true,
                                                       &new_block)) {
-                            LogPrintf("BitGoldStaker: ProcessNewBlock failed\n");
+                            LogDebug(BCLog::STAKING, "BitGoldStaker: ProcessNewBlock failed\n");
                             continue;
                         }
-                        LogPrintf("BitGoldStaker: staked block %s\n", block.GetHash().ToString());
+                        LogPrintLevel(BCLog::STAKING, BCLog::Level::Info,
+                                       "BitGoldStaker: staked block %s\n",
+                                       block.GetHash().ToString());
                         staked = true;
                         break;
                     }
                 }
             }
         } catch (const std::exception& e) {
-            LogPrintf("BitGoldStaker exception: %s\n", e.what());
+            LogDebug(BCLog::STAKING, "BitGoldStaker exception: %s\n", e.what());
         }
 
         if (staked) {
