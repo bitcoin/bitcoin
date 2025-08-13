@@ -93,9 +93,10 @@ class LLMQSimplePoSeTest(DashTestFramework):
         return False, True
 
     def test_no_banning(self, invalidate_proc, expected_connections=None):
-        invalidate_proc(self.mninfo[0])
-        for i in range(3):
-            self.log.info(f"Testing no PoSe banning in normal conditions {i + 1}/3")
+        [_, instant_ban] = invalidate_proc(self.mninfo[0])
+        iters = 2 if instant_ban else 6
+        for i in range(iters):
+            self.log.info(f"Testing no PoSe banning in normal conditions {i + 1}/{iters}")
             self.mine_quorum(expected_connections=expected_connections)
 
     def mine_quorum_less_checks(self, expected_good_nodes, mninfos_online):
