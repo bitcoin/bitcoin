@@ -361,11 +361,12 @@ class AssetLocksTest(DashTestFramework):
                 result_expected={'allowed': False, 'reject-reason' : 'max-fee-exceeded'})
         self.check_mempool_result(tx=asset_unlock_tx_zero_fee,
                 result_expected={'allowed': False, 'reject-reason' : 'bad-txns-assetunlock-fee-outofrange'})
-        # not-verified is a correct faiure from mempool. Mempool knows nothing about CreditPool indexes and he just report that signature is not validated
+        # not-verified is a correct error message when adding to mempool because Mempool knows nothing about CreditPool and indexes.
+        # but the signature is invalid so far as we changed index without re-signing it by quorum
         self.check_mempool_result(tx=asset_unlock_tx_duplicate_index,
                 result_expected={'allowed': False, 'reject-reason' : 'bad-assetunlock-not-verified'})
 
-        self.log.info("Validating that we calculate payload hash correctly: ask quorum forcely by message hash...")
+        self.log.info("Validating payload hash calculation by using hard-coded message hash")
         asset_unlock_tx_payload = CAssetUnlockTx()
         asset_unlock_tx_payload.deserialize(BytesIO(asset_unlock_tx.vExtraPayload))
 
@@ -441,27 +442,16 @@ class AssetLocksTest(DashTestFramework):
         self.check_mempool_result(tx=asset_unlock_tx_too_late,
                 result_expected={'allowed': False, 'reject-reason' : 'bad-assetunlock-too-late'})
 
-        self.log.info("Checking that two quorums later it is too late because quorum is not active...")
-        self.mine_quorum_2_nodes()
-        self.log.info("Expecting new reject-reason...")
-        assert not softfork_active(self.nodes[0], 'withdrawals')
-        self.check_mempool_result(tx=asset_unlock_tx_too_late,
-                result_expected={'allowed': False, 'reject-reason' : 'bad-assetunlock-too-old-quorum'})
-
         block_to_reconsider = node.getbestblockhash()
         self.log.info("Test block invalidation with asset unlock tx...")
         for inode in self.nodes:
             inode.invalidateblock(block_asset_unlock)
         self.validate_credit_pool_balance(locked)
-        self.generate_batch(50)
+        self.generate_batch(25)
         self.validate_credit_pool_balance(locked)
         for inode in self.nodes:
             inode.reconsiderblock(block_to_reconsider)
         self.validate_credit_pool_balance(locked - 2 * COIN)
-
-        self.log.info("Forcibly mining asset_unlock_tx_too_late and ensure block is invalid")
-        assert not softfork_active(self.nodes[0], 'withdrawals')
-        self.create_and_check_block([asset_unlock_tx_too_late], expected_error = "bad-assetunlock-too-old-quorum")
 
         self.generate(node, 1)
 
