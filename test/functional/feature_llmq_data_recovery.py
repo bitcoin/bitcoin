@@ -28,8 +28,8 @@ llmq_type_strings = {llmq_test: 'llmq_test', llmq_test_v17: 'llmq_test_v17'}
 
 class QuorumDataRecoveryTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=testdummy:0:999999999999:0:10:8:6:5:-1"] for _ in range(9)]
-        self.set_dash_test_params(9, 7, extra_args=extra_args)
+        extra_args = [["-vbparams=testdummy:0:999999999999:0:10:8:6:5:-1"] for _ in range(7)]
+        self.set_dash_test_params(7, 6, extra_args=extra_args)
         self.set_dash_llmq_test_params(4, 3)
 
     def restart_mn(self, mn: MasternodeInfo, reindex=False, qvvec_sync=None, qdata_recovery_enabled=True):
