@@ -565,7 +565,9 @@ private:
 
         for (size_t to_read = ReadCompactSize(s); to_read > 0; --to_read) {
             uint64_t internalId = ReadVarInt<Stream, VarIntMode::DEFAULT, uint64_t>(s);
-
+            // CDeterministicMNState can have newer fields but doesn't need migration logic here as
+            // CDeterministicMNStateDiff is always serialised using a bitmask and new fields have a new bit guide value,
+            // so we are good to continue. We do need migration logic to change field order though.
             if (isLegacyFormat) {
                 // Use legacy deserializer for old format
                 CDeterministicMNStateDiffLegacy legacyDiff(deserialize, s);
@@ -656,8 +658,8 @@ public:
     void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     // Migration support for nVersion-first CDeterministicMNStateDiff format
-    [[nodiscard]] bool IsMigrationRequired() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    [[nodiscard]] bool MigrateLegacyDiffs() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    [[nodiscard]] bool IsMigrationRequired() const EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
+    [[nodiscard]] bool MigrateLegacyDiffs() EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
 
 private:
     void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);

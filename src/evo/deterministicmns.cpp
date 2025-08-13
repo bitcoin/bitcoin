@@ -1342,7 +1342,8 @@ bool CDeterministicMNManager::IsMigrationRequired() const
 {
     // Check if there are any legacy format diffs in the database
     // by looking for DB_LIST_DIFF_LEGACY entries
-    LOCK(::cs_main);
+
+    AssertLockHeld(::cs_main);
 
     std::unique_ptr<CDBIterator> pcursor{m_evoDb.GetRawDB().NewIterator()};
     auto start{std::make_tuple(DB_LIST_DIFF_LEGACY, uint256())};
@@ -1368,8 +1369,9 @@ bool CDeterministicMNManager::MigrateLegacyDiffs()
     // CRITICAL: This migration converts ALL stored CDeterministicMNListDiff entries
     // from legacy database key (DB_LIST_DIFF_LEGACY) to new key (DB_LIST_DIFF) format
 
+    AssertLockHeld(::cs_main);
+
     LogPrintf("CDeterministicMNManager::%s -- Starting migration to nVersion-first format\n", __func__);
-    LOCK(::cs_main);
 
     std::vector<uint256> keys_to_erase;
 

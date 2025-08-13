@@ -246,9 +246,9 @@ public:
     {
         READWRITE(VARINT(obj.fields));
 
-        if ((obj.fields & Field_pubKeyOperator) || (obj.fields & Field_netInfo)) {
+        if (((obj.fields & Field_pubKeyOperator) || (obj.fields & Field_netInfo)) && !(obj.fields & Field_nVersion)) {
             // pubKeyOperator and netInfo need nVersion
-            assert(obj.fields & Field_nVersion);
+            throw std::ios_base::failure("Invalid data, nVersion unset when pubKeyOperator or netInfo set");
         }
 
         boost::hana::for_each(members, [&](auto&& member) {
