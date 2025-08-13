@@ -250,52 +250,6 @@ Otherwise, you can build Dash Core from self-compiled [depends](/depends/README.
 
 **Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
 
-Security
---------
-To help make your Dash Core installation more secure by making certain attacks impossible to
-exploit even if a vulnerability is found, binaries are hardened by default.
-This can be disabled with:
-
-Hardening Flags:
-
-    ./configure --enable-hardening
-    ./configure --disable-hardening
-
-
-Hardening enables the following features:
-* _Position Independent Executable_: Build position independent code to take advantage of Address Space Layout Randomization
-    offered by some kernels. Attackers who can cause execution of code at an arbitrary memory
-    location are thwarted if they don't know where anything useful is located.
-    The stack and heap are randomly located by default, but this allows the code section to be
-    randomly located as well.
-
-    On an AMD64 processor where a library was not compiled with -fPIC, this will cause an error
-    such as: "relocation R_X86_64_32 against `......' can not be used when making a shared object;"
-
-    To test that you have built PIE executable, install scanelf, part of paxutils, and use:
-
-        scanelf -e ./dashd
-
-    The output should contain:
-
-     TYPE
-    ET_DYN
-
-* _Non-executable Stack_: If the stack is executable then trivial stack-based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, Dash Core should be built with a non-executable stack,
-    but if one of the libraries it uses asks for an executable stack or someone makes a mistake
-    and uses a compiler extension which requires an executable stack, it will silently build an
-    executable without the non-executable stack protection.
-
-    To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./dashd`
-
-    The output should contain:
-    STK/REL/PTL
-    RW- R-- RW-
-
-    The STK RW- means that the stack is readable and writeable but not executable.
-
 Disable-wallet mode
 --------------------
 When the intention is to run only a P2P node without a wallet, Dash Core may be compiled in

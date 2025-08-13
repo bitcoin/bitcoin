@@ -946,7 +946,9 @@ Threads and synchronization
 
 - Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
   get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
-  run-time asserts in function definitions:
+  run-time asserts in function definitions (`AssertLockNotHeld()` can be omitted if `LOCK()` is
+  called unconditionally after it because `LOCK()` does the same check as
+  `AssertLockNotHeld()` internally, for non-recursive mutexes):
 
 ```C++
 // txmempool.h
