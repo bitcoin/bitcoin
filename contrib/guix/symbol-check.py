@@ -32,7 +32,7 @@ import lief
 # See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html for more info.
 
 MAX_VERSIONS = {
-'GCC':       (4,3,0),
+'GCC':       (7,0,0),
 'GLIBC': {
     lief.ELF.ARCH.X86_64: (2,31),
     lief.ELF.ARCH.ARM:    (2,31),
