@@ -199,14 +199,12 @@ class QuorumDataMessagesTest(DashTestFramework):
             qdata_valid = p2p_mn2.get_qdata()
             # - Not requested
             p2p_mn1.send_message(qdata_valid)
-            time.sleep(1)
             wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 10)
             # - Already received
             force_request_expire()
             assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qmessage("qgetdata")
             p2p_mn1.send_message(qdata_valid)
-            time.sleep(1)
             p2p_mn1.send_message(qdata_valid)
             wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 20)
             # - Not like requested
