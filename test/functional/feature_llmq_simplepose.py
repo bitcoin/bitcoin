@@ -195,6 +195,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
                     self.log.info(f"Accumulating PoSe penalty {j + 1}/6")
                     self.reset_probe_timeouts()
                     self.mine_quorum_less_checks(expected_contributors - 1, mninfos_online)
+                    if check_banned(self.nodes[0], mn):
+                        break
 
             assert check_banned(self.nodes[0], mn)
 
