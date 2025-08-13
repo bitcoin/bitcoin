@@ -62,13 +62,13 @@ BOOST_FIXTURE_TEST_SUITE(headers_sync_chainwork_tests, RegTestingSetup)
 // sufficient proof of work and one without.
 // 1. We deliver the first set of headers and verify that the headers sync state
 //    updates to the REDOWNLOAD phase successfully.
-// 2. Then we deliver the second set of headers and verify that they fail
+//    Then we deliver the second set of headers and verify that they fail
 //    processing (presumably due to commitments not matching).
 static void SneakyRedownload(const CBlockIndex*, const std::vector<CBlockHeader>&, const std::vector<CBlockHeader>&);
-// 3. Verify that repeating with the first set of headers in both phases is
+// 2. Verify that repeating with the first set of headers in both phases is
 //    successful.
 static void HappyPath(const CBlockIndex*, const std::vector<CBlockHeader>&);
-// 4. Repeat the second set of headers in both phases to demonstrate behavior
+// 3. Repeat the second set of headers in both phases to demonstrate behavior
 //    when the chain a peer provides has too little work.
 static void TooLittleWork(const CBlockIndex*, const std::vector<CBlockHeader>&);
 
@@ -76,8 +76,18 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
 {
     const auto& genesis{Params().GenesisBlock()};
 
+    // Block header hash target is half of max uint256 (2**256 / 2), expressible
+    // roughly as the coefficient 0x7fffff with the exponent 0x20 (32 bytes).
+    assert(genesis.nBits == 0x207fffff);
+    // ...which implies around every 2nd hash attempt should succeed...
+    assert(GetBlockProof(CBlockIndex(genesis)) == 2);
+    // ...and that is where we get our minimum PoW threshold.
+    assert(CHAIN_WORK == TARGET_BLOCKS * 2);
+
     // Generate headers for two different chains (using differing merkle roots
     // to ensure the headers are different).
+    // Subtract 1 since the genesis block also contributes work so we reach the
+    // CHAIN_WORK target. Subtract 2 to keep total work below the target.
     const auto first_chain{GenerateHeaders(/*count=*/TARGET_BLOCKS - 1, genesis.GetHash(),
             genesis.nVersion, genesis.nTime, /*merkle_root=*/uint256::ZERO, genesis.nBits)};
     const auto second_chain{GenerateHeaders(/*count=*/TARGET_BLOCKS - 2, genesis.GetHash(),
@@ -97,17 +107,20 @@ static void SneakyRedownload(const CBlockIndex* chain_start,
     // Feed the first chain to HeadersSyncState, by delivering 1 header
     // initially and then the rest.
     HeadersSyncState hss{CreateState(chain_start)};
+
+    // Just feed one header.
     (void)hss.ProcessNextHeaders({{first_chain.front()}}, true);
-    // Pretend the first header is still "full", so we don't abort.
+
+    // Pretend the message is still "full", so we don't abort.
     auto result{hss.ProcessNextHeaders(std::span{first_chain}.last(first_chain.size() - 1), true)};
 
     // This chain should look valid, and we should have met the proof-of-work
-    // requirement.
+    // requirement during PRESYNC and transitioned to REDOWNLOAD.
     BOOST_CHECK(result.success);
     BOOST_CHECK(result.request_more);
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
 
-    // Try to sneakily feed back the second chain.
+    // Try to sneakily feed back the second chain during REDOWNLOAD.
     result = hss.ProcessNextHeaders(second_chain, true);
     BOOST_CHECK(!result.success); // foiled!
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
@@ -116,8 +129,10 @@ static void SneakyRedownload(const CBlockIndex* chain_start,
 static void HappyPath(const CBlockIndex* chain_start,
         const std::vector<CBlockHeader>& first_chain)
 {
-    // Now try again, this time feeding the first chain twice.
+    // This time we feed the first chain twice.
     HeadersSyncState hss{CreateState(chain_start)};
+
+    // Sufficient work transitions us from PRESYNC to REDOWNLOAD:
     (void)hss.ProcessNextHeaders(first_chain, true);
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
 
@@ -147,16 +162,17 @@ static void HappyPath(const CBlockIndex* chain_start,
 static void TooLittleWork(const CBlockIndex* chain_start,
         const std::vector<CBlockHeader>& second_chain)
 {
-    // Finally, verify that just trying to process the second chain would not
-    // succeed (too little work)
+    // Verify that just trying to process the second chain would not succeed
+    // (too little work).
     HeadersSyncState hss{CreateState(chain_start)};
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
-     // Pretend just the first message is "full", so we don't abort.
+
+    // Pretend just the first message is "full", so we don't abort.
     (void)hss.ProcessNextHeaders({{second_chain.front()}}, true);
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
 
     // Tell the sync logic that the headers message was not full, implying no
-    // more headers can be requested. For a low-work-chain, this should causes
+    // more headers can be requested. For a low-work-chain, this should cause
     // the sync to end with no headers for acceptance.
     const auto result{hss.ProcessNextHeaders(std::span{second_chain}.last(second_chain.size() - 1), false)};
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
