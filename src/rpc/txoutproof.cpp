@@ -6,6 +6,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
+#include <consensus/validation.h>
 #include <index/txindex.h>
 #include <merkleblock.h>
 #include <node/blockstorage.h>
@@ -32,13 +33,38 @@ static RPCHelpMan gettxoutproof()
         {
             {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The txids to filter",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A transaction hash"},
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A transaction id"},
                 },
             },
             {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "If specified, looks for txid in the block with this hash"},
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                {
+                    {"prove_witness", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, proves the associated wtxid/hash of the specified transactions instead of txid"},
+                },
+            },
         },
+        {
         RPCResult{
+                "If prove_witness is false or unspecified",
             RPCResult::Type::STR, "data", "A string that is a serialized, hex-encoded data for the proof."
+        },
+            RPCResult{
+                "If prove_witness is true", RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "proof", "The produced txout proof, hex-encoded."},
+                    {RPCResult::Type::OBJ, "proven", "Information about the proof.", {
+                        {RPCResult::Type::STR_HEX, "blockhash", "The block hash the proof links to"},
+                        {RPCResult::Type::NUM, "blockheight", "The height of the block the proof links to"},
+                        {RPCResult::Type::ARR, "tx", "Information about transactions", {
+                            {RPCResult::Type::OBJ, "", "Information about a transaction", {
+                                {RPCResult::Type::STR_HEX, "txid", "Transaction id this is for (parameter; NOT proven by proof)"},
+                                {RPCResult::Type::STR_HEX, "wtxid", "Wtxid/hash of a transaction"},
+                                {RPCResult::Type::NUM, "blockindex", "Index of transaction in block"},
+                            }},
+                        }},
+                    }},
+                }
+            },
         },
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -54,6 +80,8 @@ static RPCHelpMan gettxoutproof()
                     throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated txid: ") + txids[idx].get_str());
                 }
             }
+            const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
+            bool prove_witness = options["prove_witness"].isNull() ? false : options["prove_witness"].get_bool();
 
             const CBlockIndex* pblockindex = nullptr;
             uint256 hashBlock;
@@ -108,9 +136,18 @@ static RPCHelpMan gettxoutproof()
             }
 
             unsigned int ntxFound = 0;
-            for (const auto& tx : block.vtx) {
+            UniValue txs{UniValue::VARR};
+            for (size_t i{0}; i < block.vtx.size(); ++i) {
+                const auto& tx = block.vtx.at(i);
                 if (setTxids.count(tx->GetHash())) {
                     ntxFound++;
+                    if (prove_witness) {
+                        UniValue txinfo{UniValue::VOBJ};
+                        txinfo.pushKV("txid", tx->GetHash().GetHex());
+                        txinfo.pushKV("wtxid", tx->GetWitnessHash().GetHex());
+                        txinfo.pushKV("blockindex", i);
+                        txs.push_back(txinfo);
+                    }
                 }
             }
             if (ntxFound != setTxids.size()) {
@@ -118,9 +155,25 @@ static RPCHelpMan gettxoutproof()
             }
 
             DataStream ssMB{};
-            CMerkleBlock mb(block, setTxids);
-            ssMB << mb;
+            CMerkleBlock mb(block, setTxids, /*prove_witness=*/ prove_witness);
+            if (prove_witness) {
+                mb.SerializeWithWitness(ssMB);
+            } else {
+                ssMB << mb;
+            }
             std::string strHex = HexStr(ssMB);
+
+            if (prove_witness) {
+                UniValue proven{UniValue::VOBJ};
+                proven.pushKV("blockhash", block.GetHash().GetHex());
+                proven.pushKV("blockheight", pblockindex->nHeight);
+                proven.pushKV("tx", txs);
+                UniValue res{UniValue::VOBJ};
+                res.pushKV("proof", strHex);
+                res.pushKV("proven", proven);
+                return res;
+            }
+
             return strHex;
         },
     };
@@ -134,42 +187,140 @@ static RPCHelpMan verifytxoutproof()
         "and throwing an RPC error if the block is not in our best chain\n",
         {
             {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex-encoded proof generated by gettxoutproof"},
+            {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
+                {
+                    {"verify_witness", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, also verifies the associated wtxid/hash of the specified transactions (if included in proof)"},
+                },
+            },
         },
+        {
         RPCResult{
+            "If verify_witness is false or unspecified",
             RPCResult::Type::ARR, "", "",
             {
                 {RPCResult::Type::STR_HEX, "txid", "The txid(s) which the proof commits to, or empty array if the proof cannot be validated."},
             }
         },
+            RPCResult{
+                "If verify_witness is true and the proof valid", RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "blockhash", "The block hash this proof links to"},
+                    {RPCResult::Type::NUM, "blockheight", "The height of the block this proof links to"},
+                    {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "Number of blocks (including the one with the transactions) confirming these transactions"},
+                    {RPCResult::Type::NUM, "confirmations_assumed", /*optional=*/true, "The number of unverified blocks confirming these transactions (eg, in an assumed-valid UTXO set)"},
+                    {RPCResult::Type::ARR, "tx", "Information about transactions", {
+                        {RPCResult::Type::OBJ, "", "Information about a transaction", {
+                            {RPCResult::Type::STR_HEX, "wtxid", "Wtxid/hash of a transaction"},
+                            {RPCResult::Type::NUM, "blockindex", "Index of transaction in block"},
+                        }},
+                    }},
+                }
+            },
+            RPCResult{"If verify_witness is true and the proof invalid", RPCResult::Type::OBJ, "", ""},
+        },
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
+            const UniValue options{request.params[1].isNull() ? UniValue::VOBJ : request.params[1].get_obj()};
+            const bool verify_witness = options["verify_witness"].isNull() ? false : options["verify_witness"].get_bool();
+
             DataStream ssMB{ParseHexV(request.params[0], "proof")};
             CMerkleBlock merkleBlock;
-            ssMB >> merkleBlock;
+            if (verify_witness) {
+                merkleBlock.UnserializeWithWitness(ssMB);
+            } else {
+                ssMB >> merkleBlock;
+            }
 
-            UniValue res(UniValue::VARR);
+            UniValue res(verify_witness ? UniValue::VOBJ : UniValue::VARR);
 
             std::vector<uint256> vMatch;
             std::vector<unsigned int> vIndex;
             if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot)
                 return res;
 
-            ChainstateManager& chainman = EnsureAnyChainman(request.context);
-            LOCK(cs_main);
-
-            const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(merkleBlock.header.GetHash());
-            if (!pindex || !chainman.ActiveChain().Contains(pindex) || pindex->nTx == 0) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+            if (vMatch.empty()) {
+                return res;
             }
 
-            // Check if proof is valid, only add results if so
-            if (pindex->nTx == merkleBlock.txn.GetNumTransactions()) {
-                for (const uint256& hash : vMatch) {
-                    res.push_back(hash.GetHex());
+            int witness_commit_outidx{NO_WITNESS_COMMITMENT};
+            if (verify_witness) {
+                if (vIndex.at(0) != 0) return res;
+                if (!merkleBlock.m_gentx) return res;
+                if (merkleBlock.m_gentx->GetHash() != vMatch[0]) return res;
+                if (!merkleBlock.m_gentx->IsCoinBase()) return res;
+                witness_commit_outidx = GetWitnessCommitmentIndex(*merkleBlock.m_gentx);
+                if (witness_commit_outidx == NO_WITNESS_COMMITMENT) {
+                    if (!merkleBlock.m_prove_gentx) {
+                        // We must always prove the gentx to either reveal the wtxid root or prove it has none
+                        // But the user may not care to prove the gentx itself, and in this case, we need some way to disambiguate
+                        vMatch.erase(vMatch.begin());
+                        vIndex.erase(vIndex.begin());
+                    }
+                } else {
+                    vIndex.clear();
+                    uint256 wtxid_root = merkleBlock.m_wtxid_tree.ExtractMatches(vMatch, vIndex);
+                    if (vMatch.empty()) return res;
+                    const auto& gentx_witness_stack{merkleBlock.m_gentx->vin[0].scriptWitness.stack};
+                    if (gentx_witness_stack.size() != 1 || gentx_witness_stack[0].size() != 32) return res;
+                    CHash256().Write(wtxid_root).Write(gentx_witness_stack[0]).Finalize(wtxid_root);
+                    if (memcmp(wtxid_root.begin(), &merkleBlock.m_gentx->vout[witness_commit_outidx].scriptPubKey[6], 32)) {
+                        return res;
+                    }
+                    if (vIndex.at(0) == 0) {
+                        auto& gentx_match = vMatch[0];
+                        if (!gentx_match.IsNull()) return res;
+                        gentx_match = merkleBlock.m_gentx->GetHash();
+                    }
                 }
             }
 
+            {
+                ChainstateManager& chainman = EnsureAnyChainman(request.context);
+                LOCK(cs_main);
+
+                const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(merkleBlock.header.GetHash());
+                const auto& active_chain = chainman.ActiveChain();
+                if (!pindex || !active_chain.Contains(pindex) || pindex->nTx == 0) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+                }
+
+                // Check if proof is valid, only add results if so
+                if (pindex->nTx != merkleBlock.txn.GetNumTransactions()) {
+                    return res;
+                }
+
+                if (verify_witness) {
+                    res.pushKV("blockheight", pindex->nHeight);
+
+                    const auto pindex_tip = active_chain.Tip();
+                    CHECK_NONFATAL(pindex_tip);
+                    const auto assumed_base_height = chainman.GetSnapshotBaseHeight();
+                    if (assumed_base_height && pindex->nHeight < *assumed_base_height) {
+                        res.pushKV("confirmations", 0);
+                        res.pushKV("confirmations_assumed", (int64_t)(pindex_tip->nHeight - pindex->nHeight + 1));
+                    } else {
+                        res.pushKV("confirmations", (int64_t)(pindex_tip->nHeight - pindex->nHeight + 1));
+                    }
+                }
+            }
+
+            if (verify_witness) {
+                res.pushKV("blockhash", merkleBlock.header.GetHash().GetHex());
+                UniValue txs{UniValue::VARR};
+                for (size_t i{0}; i < vMatch.size(); ++i) {
+                    UniValue tx{UniValue::VOBJ};
+                    tx.pushKV("wtxid", vMatch.at(i).GetHex());
+                    tx.pushKV("blockindex", vIndex.at(i));
+                    txs.push_back(tx);
+                }
+                res.pushKV("tx", txs);
+                return res;
+            }
+
+            for (const uint256& hash : vMatch) {
+                res.push_back(hash.GetHex());
+            }
             return res;
         },
     };
