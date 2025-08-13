@@ -135,10 +135,11 @@ class QuorumDataRecoveryTest(DashTestFramework):
                 quorum_hash_2 = None
                 members_only_in_1 = []
                 members_only_in_2 = []
+                member_mns_2 = []
                 while len(members_only_in_1) == 0 or len(members_only_in_2) == 0:
-                    quorum_hash_1 = self.mine_quorum()
+                    quorum_hash_1 = quorum_hash_2
                     quorum_hash_2 = self.mine_quorum()
-                    member_mns_1 = self.get_member_mns(llmq_type, quorum_hash_1)
+                    member_mns_1 = member_mns_2
                     member_mns_2 = self.get_member_mns(llmq_type, quorum_hash_2)
                     members_only_in_1 = self.get_subset_only_in_left(member_mns_1, member_mns_2)
                     members_only_in_2 = self.get_subset_only_in_left(member_mns_2, member_mns_1)
