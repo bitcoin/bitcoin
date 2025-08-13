@@ -203,29 +203,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         peer1 = node.add_p2p_connection(PeerTxRelayer())
         peer2 = node.add_p2p_connection(PeerTxRelayer())
 
-        self.log.info("Test orphan handling when a nonsegwit parent is known to be invalid")
-        parent_low_fee_nonsegwit = self.wallet_nonsegwit.create_self_transfer(fee_rate=0)
-        assert_equal(parent_low_fee_nonsegwit["txid"], parent_low_fee_nonsegwit["tx"].wtxid_hex)
-        parent_other = self.wallet_nonsegwit.create_self_transfer()
-        child_nonsegwit = self.wallet_nonsegwit.create_self_transfer_multi(
-            utxos_to_spend=[parent_other["new_utxo"], parent_low_fee_nonsegwit["new_utxo"]])
-
-        # Relay the parent. It should be rejected because it pays 0 fees.
-        self.relay_transaction(peer1, parent_low_fee_nonsegwit["tx"])
-        assert parent_low_fee_nonsegwit["txid"] not in node.getrawmempool()
-
-        # Relay the child. It should not be accepted because it has missing inputs.
-        # Its parent should not be requested because its hash (txid == wtxid) has been added to the rejection filter.
-        self.relay_transaction(peer2, child_nonsegwit["tx"])
-        assert child_nonsegwit["txid"] not in node.getrawmempool()
-        assert not tx_in_orphanage(node, child_nonsegwit["tx"])
-
-        # No parents are requested.
-        self.nodes[0].bumpmocktime(GETDATA_TX_INTERVAL)
-        peer1.assert_never_requested(int(parent_other["txid"], 16))
-        peer2.assert_never_requested(int(parent_other["txid"], 16))
-        peer2.assert_never_requested(int(parent_low_fee_nonsegwit["txid"], 16))
-
         self.log.info("Test orphan handling when a segwit parent was invalid but may be retried with another witness")
         parent_low_fee = self.wallet.create_self_transfer(fee_rate=0)
         child_low_fee = self.wallet.create_self_transfer(utxo_to_spend=parent_low_fee["new_utxo"])
@@ -398,45 +375,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         assert tx_in_orphanage(node, orphan["tx"])
         peer.wait_for_parent_requests([int(missing_parent["txid"], 16)])
-
-    @cleanup
-    def test_orphan_inherit_rejection(self):
-        node = self.nodes[0]
-        peer1 = node.add_p2p_connection(PeerTxRelayer())
-        peer2 = node.add_p2p_connection(PeerTxRelayer())
-        peer3 = node.add_p2p_connection(PeerTxRelayer(wtxidrelay=False))
-
-        self.log.info("Test that an orphan with rejected parents, along with any descendants, cannot be retried with an alternate witness")
-        parent_low_fee_nonsegwit = self.wallet_nonsegwit.create_self_transfer(fee_rate=0)
-        assert_equal(parent_low_fee_nonsegwit["txid"], parent_low_fee_nonsegwit["tx"].wtxid_hex)
-        child = self.wallet.create_self_transfer(utxo_to_spend=parent_low_fee_nonsegwit["new_utxo"])
-        grandchild = self.wallet.create_self_transfer(utxo_to_spend=child["new_utxo"])
-        assert_not_equal(child["txid"], child["tx"].wtxid_hex)
-        assert_not_equal(grandchild["txid"], grandchild["tx"].wtxid_hex)
-
-        # Relay the parent. It should be rejected because it pays 0 fees.
-        self.relay_transaction(peer1, parent_low_fee_nonsegwit["tx"])
-        assert parent_low_fee_nonsegwit["txid"] not in node.getrawmempool()
-
-        # Relay the child. It should be rejected for having missing parents, and this rejection is
-        # cached by txid and wtxid.
-        self.relay_transaction(peer1, child["tx"])
-        assert_equal(0, len(node.getrawmempool()))
-        assert not tx_in_orphanage(node, child["tx"])
-        peer1.assert_never_requested(parent_low_fee_nonsegwit["txid"])
-
-        # Grandchild should also not be kept in orphanage because its parent has been rejected.
-        self.relay_transaction(peer2, grandchild["tx"])
-        assert_equal(0, len(node.getrawmempool()))
-        assert not tx_in_orphanage(node, grandchild["tx"])
-        peer2.assert_never_requested(child["txid"])
-        peer2.assert_never_requested(child["tx"].wtxid_hex)
-
-        # The child should never be requested, even if announced again with potentially different witness.
-        # Sync with ping to ensure orphans are reconsidered
-        peer3.send_and_ping(msg_inv([CInv(t=MSG_TX, h=int(child["txid"], 16))]))
-        self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
-        peer3.assert_never_requested(child["txid"])
 
     @cleanup
     def test_same_txid_orphan(self):
@@ -852,7 +790,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_orphan_multiple_parents()
         self.test_orphans_overlapping_parents()
         self.test_orphan_of_orphan()
-        self.test_orphan_inherit_rejection()
         self.test_same_txid_orphan()
         self.test_same_txid_orphan_of_orphan()
         self.test_orphan_txid_inv()

@@ -126,7 +126,7 @@ bool TxDownloadManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_rec
 {
     const uint256& hash = gtxid.ToUint256();
 
-    // Never query by txid: it is possible that the transaction in the orphanage has the same
+    // Never query the orphanage by txid: it is possible that the transaction in the orphanage has the same
     // txid but a different witness, which would give us a false positive result. If we decided
     // not to request the transaction based on this result, an attacker could prevent us from
     // downloading a transaction by intentionally creating a malleated version of it.  While
@@ -139,11 +139,16 @@ bool TxDownloadManagerImpl::AlreadyHaveTx(const GenTxid& gtxid, bool include_rec
     // help us find non-segwit transactions, saving bandwidth, and should have no false positives.
     if (m_orphanage->HaveTx(Wtxid::FromUint256(hash))) return true;
 
-    if (include_reconsiderable && RecentRejectsReconsiderableFilter().contains(hash)) return true;
+    // Never query the rejection filters by txid.
+    if (gtxid.IsWtxid()) {
+        if (include_reconsiderable && RecentRejectsReconsiderableFilter().contains(hash)) return true;
+
+        if (RecentRejectsFilter().contains(hash)) return true;
+    }
 
     if (RecentConfirmedTransactionsFilter().contains(hash)) return true;
 
-    return RecentRejectsFilter().contains(hash) || std::visit([&](const auto& id) { return m_opts.m_mempool.exists(id); }, gtxid);
+    return std::visit([&](const auto& id) { return m_opts.m_mempool.exists(id); }, gtxid);
 }
 
 void TxDownloadManagerImpl::ConnectedPeer(NodeId nodeid, const TxDownloadConnectionInfo& info)
@@ -360,80 +365,42 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
 
     if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
         // Only process a new orphan if this is a first time failure, as otherwise it must be either
-        // already in orphanage or from 1p1c processing.
+        // already in orphanage or from 1p1c processing. Also, we are unable to process orphans that are too low feerate
+        // right now, as package validation only permits one generation of CPFP.
         if (first_time_failure && !RecentRejectsFilter().contains(ptx->GetWitnessHash().ToUint256())) {
-            bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
-
             // Deduplicate parent txids, so that we don't have to loop over
             // the same parent txid more than once down below.
             unique_parents = GetUniqueParents(tx);
 
-            // Distinguish between parents in m_lazy_recent_rejects and m_lazy_recent_rejects_reconsiderable.
-            // We can tolerate having up to 1 parent in m_lazy_recent_rejects_reconsiderable since we
-            // submit 1p1c packages. However, fail immediately if any are in m_lazy_recent_rejects.
-            std::optional<Txid> rejected_parent_reconsiderable;
-            for (const Txid& parent_txid : unique_parents) {
-                if (RecentRejectsFilter().contains(parent_txid.ToUint256())) {
-                    fRejectedParents = true;
-                    break;
-                } else if (RecentRejectsReconsiderableFilter().contains(parent_txid.ToUint256()) &&
-                           !m_opts.m_mempool.exists(parent_txid)) {
-                    // More than 1 parent in m_lazy_recent_rejects_reconsiderable: 1p1c will not be
-                    // sufficient to accept this package, so just give up here.
-                    if (rejected_parent_reconsiderable.has_value()) {
-                        fRejectedParents = true;
-                        break;
-                    }
-                    rejected_parent_reconsiderable = parent_txid;
+            // Filter parents that we already have. AlreadyHaveTx excludes the rejection filters because we only know
+            // the txids, but filters out the ones already in mempool or recently confirmed.
+            std::erase_if(unique_parents, [&](const auto& txid){
+                return AlreadyHaveTx(txid, /*include_reconsiderable=*/false);
+            });
+            const auto now{GetTime<std::chrono::microseconds>()};
+            const auto& wtxid = ptx->GetWitnessHash();
+            // Potentially flip add_extra_compact_tx to false if tx is already in orphanage, which
+            // means it was already added to vExtraTxnForCompact.
+            add_extra_compact_tx &= !m_orphanage->HaveTx(wtxid);
+
+            // If there is no candidate for orphan resolution, AddTx will not be called. This means
+            // that if a peer is overloading us with invs and orphans, they will eventually not be
+            // able to add any more transactions to the orphanage.
+            //
+            // Search by txid and, if the tx has a witness, wtxid
+            std::vector<NodeId> orphan_resolution_candidates{nodeid};
+            m_txrequest.GetCandidatePeers(ptx->GetHash().ToUint256(), orphan_resolution_candidates);
+            if (ptx->HasWitness()) m_txrequest.GetCandidatePeers(ptx->GetWitnessHash().ToUint256(), orphan_resolution_candidates);
+
+            for (const auto& nodeid : orphan_resolution_candidates) {
+                if (MaybeAddOrphanResolutionCandidate(unique_parents, ptx->GetWitnessHash(), nodeid, now)) {
+                    m_orphanage->AddTx(ptx, nodeid);
                 }
             }
-            if (!fRejectedParents) {
-                // Filter parents that we already have.
-                // Exclude m_lazy_recent_rejects_reconsiderable: the missing parent may have been
-                // previously rejected for being too low feerate. This orphan might CPFP it.
-                std::erase_if(unique_parents, [&](const auto& txid) {
-                    return AlreadyHaveTx(txid, /*include_reconsiderable=*/false);
-                });
-                const auto now{GetTime<std::chrono::microseconds>()};
-                const auto& wtxid = ptx->GetWitnessHash();
-                // Potentially flip add_extra_compact_tx to false if tx is already in orphanage, which
-                // means it was already added to vExtraTxnForCompact.
-                add_extra_compact_tx &= !m_orphanage->HaveTx(wtxid);
 
-                // If there is no candidate for orphan resolution, AddTx will not be called. This means
-                // that if a peer is overloading us with invs and orphans, they will eventually not be
-                // able to add any more transactions to the orphanage.
-                //
-                // Search by txid and, if the tx has a witness, wtxid
-                std::vector<NodeId> orphan_resolution_candidates{nodeid};
-                m_txrequest.GetCandidatePeers(ptx->GetHash(), orphan_resolution_candidates);
-                if (ptx->HasWitness()) m_txrequest.GetCandidatePeers(ptx->GetWitnessHash(), orphan_resolution_candidates);
-
-                for (const auto& nodeid : orphan_resolution_candidates) {
-                    if (MaybeAddOrphanResolutionCandidate(unique_parents, ptx->GetWitnessHash(), nodeid, now)) {
-                        m_orphanage->AddTx(ptx, nodeid);
-                    }
-                }
-
-                // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
-                m_txrequest.ForgetTxHash(tx.GetHash());
-                m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-            } else {
-                unique_parents.clear();
-                LogDebug(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s (wtxid=%s)\n",
-                         tx.GetHash().ToString(),
-                         tx.GetWitnessHash().ToString());
-                // We will continue to reject this tx since it has rejected
-                // parents so avoid re-requesting it from other peers.
-                // Here we add both the txid and the wtxid, as we know that
-                // regardless of what witness is provided, we will not accept
-                // this, so we don't need to allow for redownload of this txid
-                // from any of our non-wtxidrelay peers.
-                RecentRejectsFilter().insert(tx.GetHash().ToUint256());
-                RecentRejectsFilter().insert(tx.GetWitnessHash().ToUint256());
-                m_txrequest.ForgetTxHash(tx.GetHash());
-                m_txrequest.ForgetTxHash(tx.GetWitnessHash());
-            }
+            // Once added to the orphan pool, a tx is considered AlreadyHave, and we shouldn't request it anymore.
+            m_txrequest.ForgetTxHash(tx.GetHash());
+            m_txrequest.ForgetTxHash(tx.GetWitnessHash());
         }
     } else if (state.GetResult() == TxValidationResult::TX_WITNESS_STRIPPED) {
         add_extra_compact_tx = false;
