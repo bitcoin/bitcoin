@@ -4,13 +4,13 @@
 
 #include <core_io.h>
 #include <primitives/block.h>
+#include <primitives/transaction_identifier.h>
 #include <pubkey.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/strencodings.h>
-#include <util/transaction_identifier.h>
 
 #include <algorithm>
 #include <cassert>

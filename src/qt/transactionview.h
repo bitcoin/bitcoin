@@ -7,8 +7,8 @@
 
 #include <qt/guiutil.h>
 
+#include <primitives/transaction_identifier.h>
 #include <uint256.h>
-#include <util/transaction_identifier.h>
 
 #include <QWidget>
 #include <QKeyEvent>

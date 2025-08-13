@@ -9,6 +9,7 @@
 #include <index/disktxpos.h>
 #include <logging.h>
 #include <node/blockstorage.h>
+#include <primitives/transaction_identifier.h>
 #include <validation.h>
 
 constexpr uint8_t DB_TXINDEX{'t'};
@@ -24,26 +25,26 @@ public:
 
     /// Read the disk location of the transaction data with the given hash. Returns false if the
     /// transaction hash is not indexed.
-    bool ReadTxPos(const uint256& txid, CDiskTxPos& pos) const;
+    bool ReadTxPos(const Txid& txid, CDiskTxPos& pos) const;
 
     /// Write a batch of transaction positions to the DB.
-    [[nodiscard]] bool WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos);
+    [[nodiscard]] bool WriteTxs(const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos);
 };
 
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
     BaseIndex::DB(gArgs.GetDataDirNet() / "indexes" / "txindex", n_cache_size, f_memory, f_wipe)
 {}
 
-bool TxIndex::DB::ReadTxPos(const uint256 &txid, CDiskTxPos& pos) const
+bool TxIndex::DB::ReadTxPos(const Txid& txid, CDiskTxPos& pos) const
 {
-    return Read(std::make_pair(DB_TXINDEX, txid), pos);
+    return Read(std::make_pair(DB_TXINDEX, txid.ToUint256()), pos);
 }
 
-bool TxIndex::DB::WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_pos)
+bool TxIndex::DB::WriteTxs(const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos)
 {
     CDBBatch batch(*this);
-    for (const auto& tuple : v_pos) {
-        batch.Write(std::make_pair(DB_TXINDEX, tuple.first), tuple.second);
+    for (const auto& [txid, pos] : v_pos) {
+        batch.Write(std::make_pair(DB_TXINDEX, txid.ToUint256()), pos);
     }
     return WriteBatch(batch);
 }
@@ -61,7 +62,7 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 
     assert(block.data);
     CDiskTxPos pos({block.file_number, block.data_pos}, GetSizeOfCompactSize(block.data->vtx.size()));
-    std::vector<std::pair<uint256, CDiskTxPos>> vPos;
+    std::vector<std::pair<Txid, CDiskTxPos>> vPos;
     vPos.reserve(block.data->vtx.size());
     for (const auto& tx : block.data->vtx) {
         vPos.emplace_back(tx->GetHash(), pos);
@@ -72,7 +73,7 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 
 BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
-bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const
+bool TxIndex::FindTx(const Txid& tx_hash, uint256& block_hash, CTransactionRef& tx) const
 {
     CDiskTxPos postx;
     if (!m_db->ReadTxPos(tx_hash, postx)) {

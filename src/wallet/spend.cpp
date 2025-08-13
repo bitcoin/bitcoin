@@ -13,6 +13,7 @@
 #include <numeric>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
@@ -21,7 +22,6 @@
 #include <util/rbf.h>
 #include <util/trace.h>
 #include <util/translation.h>
-#include <util/transaction_identifier.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 #include <wallet/receive.h>
@@ -327,7 +327,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
     std::set<Txid> trusted_parents;
     // Cache for whether each tx passes the tx level checks (first bool), and whether the transaction is "safe" (second bool)
-    std::unordered_map<uint256, std::pair<bool, bool>, SaltedTxidHasher> tx_safe_cache;
+    std::unordered_map<Txid, std::pair<bool, bool>, SaltedTxidHasher> tx_safe_cache;
     for (const auto& [outpoint, txo] : wallet.GetTXOs()) {
         const CWalletTx& wtx = txo.GetWalletTx();
         const CTxOut& output = txo.GetTxOut();

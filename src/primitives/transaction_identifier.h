@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
-#ifndef BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
-#define BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
+#ifndef BITCOIN_PRIMITIVES_TRANSACTION_IDENTIFIER_H
+#define BITCOIN_PRIMITIVES_TRANSACTION_IDENTIFIER_H
 
 #include <attributes.h>
 #include <uint256.h>
@@ -24,9 +24,6 @@ class transaction_identifier
     // Note: Use FromUint256 externally instead.
     transaction_identifier(const uint256& wrapped) : m_wrapped{wrapped} {}
 
-    // TODO: Comparisons with uint256 should be disallowed once we have
-    // converted most of the code to using the new txid types.
-    constexpr int Compare(const uint256& other) const { return m_wrapped.Compare(other); }
     constexpr int Compare(const transaction_identifier<has_witness>& other) const { return m_wrapped.Compare(other.m_wrapped); }
     template <typename Other>
     constexpr int Compare(const Other& other) const
@@ -65,15 +62,6 @@ public:
     constexpr const std::byte* end() const { return reinterpret_cast<const std::byte*>(m_wrapped.end()); }
     template <typename Stream> void Serialize(Stream& s) const { m_wrapped.Serialize(s); }
     template <typename Stream> void Unserialize(Stream& s) { m_wrapped.Unserialize(s); }
-
-    /** Conversion function to `uint256`.
-     *
-     * Note: new code should use `ToUint256`.
-     *
-     * TODO: This should be removed once the majority of the code has switched
-     * to using the Txid and Wtxid types. Until then it makes for a smoother
-     * transition to allow this conversion. */
-    operator const uint256&() const LIFETIMEBOUND { return m_wrapped; }
 };
 
 /** Txid commits to all transaction fields except the witness. */
@@ -103,4 +91,4 @@ public:
     }
 };
 
-#endif // BITCOIN_UTIL_TRANSACTION_IDENTIFIER_H
+#endif // BITCOIN_PRIMITIVES_TRANSACTION_IDENTIFIER_H

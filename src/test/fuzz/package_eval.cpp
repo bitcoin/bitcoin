@@ -314,7 +314,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
             if (tx_pool.exists(txid)) {
                 const auto tx_info{tx_pool.info(txid)};
                 if (GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
-                    tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
+                    tx_pool.PrioritiseTransaction(txid, delta);
                 }
             }
         }
@@ -477,7 +477,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                                    txs.back()->GetHash() :
                                    PickValue(fuzzed_data_provider, mempool_outpoints).hash;
             const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
-            tx_pool.PrioritiseTransaction(txid.ToUint256(), delta);
+            tx_pool.PrioritiseTransaction(txid, delta);
         }
 
         // Remember all added transactions

@@ -1571,13 +1571,13 @@ void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_service
 
 void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
 {
-    std::set<uint256> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
+    std::set<Txid> unbroadcast_txids = m_mempool.GetUnbroadcastTxs();
 
     for (const auto& txid : unbroadcast_txids) {
         CTransactionRef tx = m_mempool.get(txid);
 
         if (tx != nullptr) {
-            RelayTransaction(Txid::FromUint256(txid), tx->GetWitnessHash());
+            RelayTransaction(txid, tx->GetWitnessHash());
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
@@ -2320,9 +2320,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
                 // they must either disconnect and retry or request the full block.
                 // Thus, the protocol spec specified allows for us to provide duplicate txn here,
                 // however we MUST always provide at least what the remote peer needs
-                typedef std::pair<unsigned int, uint256> PairType;
-                for (PairType& pair : merkleBlock.vMatchedTxn)
-                    MakeAndPushMessage(pfrom, NetMsgType::TX, TX_NO_WITNESS(*pblock->vtx[pair.first]));
+                for (const auto& [tx_idx, _] : merkleBlock.vMatchedTxn)
+                    MakeAndPushMessage(pfrom, NetMsgType::TX, TX_NO_WITNESS(*pblock->vtx[tx_idx]));
             }
             // else
             // no response
@@ -2361,12 +2360,12 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
 
 CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay, const GenTxid& gtxid)
 {
+    // If a tx was in the mempool prior to the last INV for this peer, permit the request.
     auto txinfo{std::visit(
         [&](const auto& id) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
             return m_mempool.info_for_relay(id, tx_relay.m_last_inv_sequence);
         },
         gtxid)};
-
     if (txinfo.tx) {
         return std::move(txinfo.tx);
     }
@@ -2999,7 +2998,7 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
         AddToCompactExtraTransactions(ptx);
     }
     for (const Txid& parent_txid : unique_parents) {
-        if (peer) AddKnownTx(*peer, parent_txid);
+        if (peer) AddKnownTx(*peer, parent_txid.ToUint256());
     }
 
     return package_to_validate;
@@ -4247,12 +4246,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         CTransactionRef ptx;
         vRecv >> TX_WITH_WITNESS(ptx);
-        const CTransaction& tx = *ptx;
 
-        const uint256& txid = ptx->GetHash();
-        const uint256& wtxid = ptx->GetWitnessHash();
+        const Txid& txid = ptx->GetHash();
+        const Wtxid& wtxid = ptx->GetWitnessHash();
 
-        const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
+        const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(*peer, hash);
 
         LOCK2(cs_main, m_tx_download_mutex);
@@ -4263,13 +4261,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // Always relay transactions received from peers with forcerelay
                 // permission, even if they were already in the mempool, allowing
                 // the node to function as a gateway for nodes hidden behind it.
-                if (!m_mempool.exists(tx.GetHash())) {
+                if (!m_mempool.exists(txid)) {
                     LogPrintf("Not relaying non-mempool transaction %s (wtxid=%s) from forcerelay peer=%d\n",
-                              tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
+                              txid.ToString(), wtxid.ToString(), pfrom.GetId());
                 } else {
                     LogPrintf("Force relaying tx %s (wtxid=%s) from peer=%d\n",
-                              tx.GetHash().ToString(), tx.GetWitnessHash().ToString(), pfrom.GetId());
-                    RelayTransaction(tx.GetHash(), tx.GetWitnessHash());
+                              txid.ToString(), wtxid.ToString(), pfrom.GetId());
+                    RelayTransaction(txid, wtxid);
                 }
             }
 

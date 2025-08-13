@@ -29,7 +29,7 @@ static uint256 BlockBuildMerkleTree(const CBlock& block, bool* fMutated, std::ve
     vMerkleTree.clear();
     vMerkleTree.reserve(block.vtx.size() * 2 + 16); // Safe upper bound for the number of total nodes.
     for (std::vector<CTransactionRef>::const_iterator it(block.vtx.begin()); it != block.vtx.end(); ++it)
-        vMerkleTree.push_back((*it)->GetHash());
+        vMerkleTree.push_back((*it)->GetHash().ToUint256());
     int j = 0;
     bool mutated = false;
     for (int nSize = block.vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(merkle_test)
                     std::vector<uint256> newBranch = TransactionMerklePath(block, mtx);
                     std::vector<uint256> oldBranch = BlockGetMerkleBranch(block, merkleTree, mtx);
                     BOOST_CHECK(oldBranch == newBranch);
-                    BOOST_CHECK(ComputeMerkleRootFromBranch(block.vtx[mtx]->GetHash(), newBranch, mtx) == oldRoot);
+                    BOOST_CHECK(ComputeMerkleRootFromBranch(block.vtx[mtx]->GetHash().ToUint256(), newBranch, mtx) == oldRoot);
                 }
             }
         }
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(merkle_test_oneTx_block)
     mtx.nLockTime = 0;
     block.vtx[0] = MakeTransactionRef(std::move(mtx));
     uint256 root = BlockMerkleRoot(block, &mutated);
-    BOOST_CHECK_EQUAL(root, block.vtx[0]->GetHash());
+    BOOST_CHECK_EQUAL(root, block.vtx[0]->GetHash().ToUint256());
     BOOST_CHECK_EQUAL(mutated, false);
 }
 
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(merkle_test_BlockWitness)
     std::vector<uint256> hashes;
     hashes.resize(block.vtx.size());
     hashes[0].SetNull();
-    hashes[1] = block.vtx[1]->GetHash();
+    hashes[1] = block.vtx[1]->GetHash().ToUint256();
 
     uint256 merkleRootofHashes = ComputeMerkleRoot(hashes);
 

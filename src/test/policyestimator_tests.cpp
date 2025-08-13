@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // added to the mempool by their associate fee
     // txHashes[j] is populated with transactions either of
     // fee = basefee * (j+1)
-    std::vector<uint256> txHashes[10];
+    std::vector<Txid> txHashes[10];
 
     // Create a transaction template
     CScript garbage;
@@ -77,8 +77,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*has_no_mempool_parents=*/true)};
                     m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
-                uint256 hash = tx.GetHash();
-                txHashes[j].push_back(hash);
+                txHashes[j].push_back(tx.GetHash());
             }
         }
         //Create blocks where higher fee txs are included more often
@@ -178,8 +177,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*has_no_mempool_parents=*/true)};
                     m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
-                uint256 hash = tx.GetHash();
-                txHashes[j].push_back(hash);
+                txHashes[j].push_back(tx.GetHash());
             }
         }
         {
@@ -242,8 +240,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*has_no_mempool_parents=*/true)};
                     m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
-                uint256 hash = tx.GetHash();
-                CTransactionRef ptx = mpool.get(hash);
+                CTransactionRef ptx = mpool.get(tx.GetHash());
                 if (ptx)
                     block.push_back(ptx);
 
