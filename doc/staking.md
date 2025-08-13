@@ -23,3 +23,17 @@ mature coins may stake to help secure the network and earn rewards.
 The staker will automatically attempt to create new blocks at the protocol's
 8-minute target spacing. Staking rewards follow BitGold's 90 000-block halving
 schedule.
+
+## Monitoring block production
+
+Use `bitgold-cli getblockheader` or `bitgold-cli getblockchaininfo` to inspect
+recent block timestamps. If the interval between consecutive blocks exceeds
+roughly eight minutes, check `debug.log` for entries mentioning `kernel` that
+indicate failed stake evaluations. Reducing stake difficulty or adding more
+mature inputs to the wallet can improve block production.
+
+The helper script `contrib/stake_monitor.py` automates this check:
+
+```
+$ python3 contrib/stake_monitor.py
+```
