@@ -18,7 +18,7 @@
              ((gnu packages python-build) #:select (python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
              ((gnu packages python-science) #:select (python-scikit-build-core))
-             ((gnu packages python-xyz) #:select (python-pydantic-2 python-pydantic-core))
+             ((gnu packages python-xyz) #:select (python-pydantic-2))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -175,7 +175,6 @@ chain for " target " development."))
     (native-inputs (list cmake-minimal
                          ninja
                          python-scikit-build-core
-                         python-pydantic-core
                          python-pydantic-2))
     (arguments
      (list
