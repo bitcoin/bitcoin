@@ -55,7 +55,7 @@ class AssetLocksTest(DashTestFramework):
                 "-whitelist=127.0.0.1",
                 "-llmqtestinstantsenddip0024=llmq_test_instantsend",
         ]] * 2, evo_count=2)
-        self.mn_rr_height = 620
+        self.mn_rr_height = 560
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -623,7 +623,7 @@ class AssetLocksTest(DashTestFramework):
     def test_mn_rr(self, node_wallet, node, pubkey):
         self.log.info("Activate mn_rr...")
         locked = self.get_credit_pool_balance()
-        self.activate_mn_rr(expected_activation_height=620)
+        self.activate_mn_rr(expected_activation_height=560)
         self.log.info(f'mn-rr height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         assert_equal(locked, self.get_credit_pool_balance())
 
@@ -635,7 +635,7 @@ class AssetLocksTest(DashTestFramework):
         all_mn_rewards = platform_reward + owner_reward + operator_reward
         assert_equal(all_mn_rewards, bt['coinbasevalue'] * 3 // 4)  # 75/25 mn/miner reward split
         assert_equal(platform_reward, all_mn_rewards * 375 // 1000)  # 0.375 platform share
-        assert_equal(platform_reward, 104549943)
+        assert_equal(platform_reward, 112592247)
         assert_equal(locked, self.get_credit_pool_balance())
         self.generate(node, 1)
         locked += platform_reward
@@ -650,6 +650,7 @@ class AssetLocksTest(DashTestFramework):
 
     def test_withdrawals_fork(self, node_wallet, node, pubkey):
         self.log.info("Testing asset unlock after 'withdrawals' activation...")
+        self.activate_by_name('withdrawals', 600)
         assert softfork_active(node_wallet, 'withdrawals')
         self.log.info(f'post-withdrawals height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
 
