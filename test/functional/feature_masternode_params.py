@@ -72,7 +72,7 @@ class MasternodeParamsTest(BitcoinTestFramework):
 
         self.log.info("Test that masternode parameter interaction is logged")
         # Check debug log for parameter interaction messages
-        with open(node1.debug_log_path, 'r') as f:
+        with open(node1.debug_log_path, 'r', encoding='utf-8') as f:
             log_content = f.read()
             assert "parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1" in log_content
             # Note: The peerblockfilters and blockfilterindex messages won't be in the log
