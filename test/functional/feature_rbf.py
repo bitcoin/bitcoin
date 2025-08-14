@@ -594,7 +594,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         node = self.nodes[0]
         for incremental_setting in (0, 5, 10, 50, 100, 234, 1000, 5000, 21000):
             incremental_setting_decimal = incremental_setting / Decimal(COIN)
-            self.log.info(f"-> Test -incrementalrelayfee={incremental_setting_decimal:.8f}sat/kvB...")
+            self.log.info(f"-> Test -incrementalrelayfee={incremental_setting:.8f}sat/kvB...")
             self.restart_node(0, extra_args=[f"-incrementalrelayfee={incremental_setting_decimal:.8f}", "-persistmempool=0"])
 
             # When incremental relay feerate is higher than min relay feerate, min relay feerate is automatically increased.
