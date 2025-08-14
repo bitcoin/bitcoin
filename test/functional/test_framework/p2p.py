@@ -53,6 +53,7 @@ from test_framework.messages import (
     msg_getcfilters,
     msg_getdata,
     msg_getheaders,
+    msg_gettemplate,
     msg_headers,
     msg_inv,
     msg_mempool,
@@ -63,7 +64,9 @@ from test_framework.messages import (
     msg_sendaddrv2,
     msg_sendcmpct,
     msg_sendheaders,
+    msg_sendtemplate,
     msg_sendtxrcncl,
+    msg_template,
     msg_tx,
     MSG_TX,
     MSG_TYPE_MASK,
@@ -131,6 +134,7 @@ MESSAGEMAP = {
     b"getcfilters": msg_getcfilters,
     b"getdata": msg_getdata,
     b"getheaders": msg_getheaders,
+    b"gettemplate": msg_gettemplate,
     b"headers": msg_headers,
     b"inv": msg_inv,
     b"mempool": msg_mempool,
@@ -141,7 +145,9 @@ MESSAGEMAP = {
     b"sendaddrv2": msg_sendaddrv2,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
+    b"sendtemplate": msg_sendtemplate,
     b"sendtxrcncl": msg_sendtxrcncl,
+    b"template": msg_template,
     b"tx": msg_tx,
     b"verack": msg_verack,
     b"version": msg_version,
@@ -547,6 +553,7 @@ class P2PInterface(P2PConnection):
     def on_getblocktxn(self, message): pass
     def on_getdata(self, message): pass
     def on_getheaders(self, message): pass
+    def on_gettemplate(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
     def on_merkleblock(self, message): pass
@@ -555,7 +562,9 @@ class P2PInterface(P2PConnection):
     def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
+    def on_sendtemplate(self, message): pass
     def on_sendtxrcncl(self, message): pass
+    def on_template(self, message): pass
     def on_tx(self, message): pass
     def on_wtxidrelay(self, message): pass
 
