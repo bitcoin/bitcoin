@@ -1837,9 +1837,13 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         chain().findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(next_block).hash(next_block_hash)));
 
         if (fetch_block) {
-            // Read block data
+            // Read block data and locator if needed (the locator is usually null unless we need to save progress)
             CBlock block;
-            chain().findBlock(block_hash, FoundBlock().data(block));
+            CBlockLocator loc;
+            // Find block
+            FoundBlock found_block{FoundBlock().data(block)};
+            if (save_progress && next_interval) found_block.locator(loc);
+            chain().findBlock(block_hash, found_block);
 
             if (!block.IsNull()) {
                 LOCK(cs_wallet);
@@ -1857,14 +1861,10 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 result.last_scanned_block = block_hash;
                 result.last_scanned_height = block_height;
 
-                if (save_progress && next_interval) {
-                    CBlockLocator loc = m_chain->getActiveChainLocator(block_hash);
-
-                    if (!loc.IsNull()) {
-                        WalletLogPrintf("Saving scan progress %d.\n", block_height);
-                        WalletBatch batch(GetDatabase());
-                        batch.WriteBestBlock(loc);
-                    }
+                if (!loc.IsNull()) {
+                    WalletLogPrintf("Saving scan progress %d.\n", block_height);
+                    WalletBatch batch(GetDatabase());
+                    batch.WriteBestBlock(loc);
                 }
             } else {
                 // could not scan block, keep scanning but record this block as the most recent failure
