@@ -1121,13 +1121,18 @@ bool CSigSharesManager::SendMessages(CConnman& connman)
         auto& nodeState = nodeStates[nodeId];
         auto* session = nodeState.GetSessionBySignHash(signHash);
         assert(session);
-        if (session->sendSessionId == UNINITIALIZED_SESSION_ID) {
-            session->sendSessionId = nodeState.nextSendSessionId++;
-
-            sigSessionAnnouncements[nodeId].emplace_back(
+        while (session->sendSessionId == UNINITIALIZED_SESSION_ID) {
+            const uint32_t session_id{GetRand<uint32_t>()};
+            if (ranges::all_of(nodeState.sessions,
+                               [&session_id](const auto& s) { return s.second.sendSessionId != session_id; })) {
+                // No session is using this id yet
+                session->sendSessionId = session_id;
+                sigSessionAnnouncements[nodeId].emplace_back(
                     CSigSesAnn(/*sessionId=*/session->sendSessionId, /*llmqType=*/session->llmqType,
-                               /*quorumHash=*/session->quorumHash, /*id=*/session->id, /*msgHash=*/session->msgHash)
-            );
+                               /*quorumHash=*/session->quorumHash, /*id=*/session->id, /*msgHash=*/session->msgHash));
+            }
+            // It's very unlikely that there is a session with the same id,
+            // but if there is one we just start over and pick another id
         }
         return session->sendSessionId;
     };
