@@ -311,16 +311,14 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
     newState->nPoSePenalty += penalty;
     newState->nPoSePenalty = std::min(maxPenalty, newState->nPoSePenalty);
 
-    if (debugLogs && dmn->pdmnState->nPoSePenalty != maxPenalty) {
-        LogPrintf("CDeterministicMNList::%s -- punished MN %s, penalty %d->%d (max=%d)\n",
-                  __func__, proTxHash.ToString(), dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
-    }
-
-    if (newState->nPoSePenalty >= maxPenalty && !newState->IsBanned()) {
-        newState->BanIfNotBanned(nHeight);
+    if (!dmn->pdmnState->IsBanned()) {
+        if (newState->nPoSePenalty >= maxPenalty) {
+            newState->BanIfNotBanned(nHeight);
+        }
         if (debugLogs) {
-            LogPrintf("CDeterministicMNList::%s -- banned MN %s at height %d\n",
-                      __func__, proTxHash.ToString(), nHeight);
+            LogPrintf("CDeterministicMNList::%s -- %s MN %s at height %d, penalty %d->%d (max=%d)\n", __func__,
+                      newState->IsBanned() ? "banned" : "punished", proTxHash.ToString(), nHeight,
+                      dmn->pdmnState->nPoSePenalty, newState->nPoSePenalty, maxPenalty);
         }
     }
     UpdateMN(proTxHash, newState);
@@ -607,7 +605,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     if (dmn->nType == MnType::Evo) {
         if (dmn->pdmnState->platformNodeID != uint160() && !DeleteUniqueProperty(*dmn, dmn->pdmnState->platformNodeID)) {
             mnUniquePropertyMap = mnUniquePropertyMapSaved;
-            throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a duplicate platformNodeID=%s", __func__,
+            throw(std::runtime_error(strprintf("%s: Can't delete a masternode %s with a platformNodeID=%s", __func__,
                                                dmn->proTxHash.ToString(), dmn->pdmnState->platformNodeID.ToString())));
         }
     }
