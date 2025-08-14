@@ -153,6 +153,7 @@ class MiningTest(BitcoinTestFramework):
                 self.log.info(f"-> Test {blockmintxfee_parameter} ({blockmintxfee_sat_kvb} sat/kvB)...")
                 self.restart_node(0, extra_args=[blockmintxfee_parameter, '-minrelaytxfee=0', '-persistmempool=0'])
                 self.wallet.rescan_utxos()  # to avoid spending outputs of txs that are not in mempool anymore after restart
+            assert_equal(node.getmininginfo()['blockmintxfee'], blockmintxfee_btc_kvb)
 
             # submit one tx with exactly the blockmintxfee rate, and one slightly below
             tx_with_min_feerate = self.wallet.send_self_transfer(from_node=node, fee_rate=blockmintxfee_btc_kvb, confirmed_only=True)
