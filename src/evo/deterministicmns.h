@@ -659,7 +659,7 @@ public:
 
     // Migration support for nVersion-first CDeterministicMNStateDiff format
     [[nodiscard]] bool IsMigrationRequired() const EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
-    [[nodiscard]] bool MigrateLegacyDiffs() EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
+    [[nodiscard]] bool MigrateLegacyDiffs(const CBlockIndex* const tip_index) EXCLUSIVE_LOCKS_REQUIRED(!cs, ::cs_main);
 
 private:
     void CleanupCache(int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);

@@ -350,10 +350,6 @@ public:
     CDeterministicMNStateDiffLegacy(deserialize_type, Stream& s)
     {
         s >> *this;
-        if ((fields & LegacyField_pubKeyOperator) || (fields & LegacyField_netInfo)) {
-            // pubKeyOperator and netInfo need nVersion
-            fields |= LegacyField_nVersion;
-        }
     }
 
     // Deserialize using legacy format
@@ -361,19 +357,19 @@ public:
     {
         READWRITE(VARINT(obj.fields));
 
-        bool read_pubkey{false};
         boost::hana::for_each(legacy_members, [&](auto&& member) {
             using BaseType = std::decay_t<decltype(member)>;
             if constexpr (BaseType::mask == LegacyField_pubKeyOperator) {
                 if (obj.fields & member.mask) {
-                    SER_READ(obj, read_pubkey = true);
+                    // We'll set proper scheme later in MigrateLegacyDiffs()
                     READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator),
-                                                              obj.state.nVersion == ProTxVersion::LegacyBLS));
+                                                              /*legacy=*/true));
                 }
             } else if constexpr (BaseType::mask == LegacyField_netInfo) {
                 if (obj.fields & member.mask) {
                     // Legacy format supports non-extended addresses only
-                    READWRITE(NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.state.netInfo), false));
+                    READWRITE(NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.state.netInfo),
+                                                /*is_extended=*/false));
                 }
             } else {
                 if (obj.fields & member.mask) {
@@ -381,11 +377,6 @@ public:
                 }
             }
         });
-
-        if (read_pubkey) {
-            SER_READ(obj, obj.fields |= LegacyField_nVersion);
-            SER_READ(obj, obj.state.pubKeyOperator.SetLegacy(obj.state.nVersion == ProTxVersion::LegacyBLS));
-        }
     }
 
     // Convert to new format
