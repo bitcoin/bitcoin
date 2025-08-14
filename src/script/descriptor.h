@@ -163,8 +163,9 @@ struct Descriptor {
      *
      * @param[out] pubkeys Any public keys
      * @param[out] ext_pubs Any extended public keys
+     * @param[out] scankeys Any scan keys
      */
-    virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
+    virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs, std::vector<CKey>& scankeys) const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.

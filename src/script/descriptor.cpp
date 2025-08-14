@@ -789,6 +789,50 @@ public:
     }
 };
 
+class ScankeyPubkeyProvider final : public PubkeyProvider
+{
+    CKey m_scan_key;
+    std::unique_ptr<PubkeyProvider> m_provider;
+
+public:
+    ScankeyPubkeyProvider(uint32_t exp_index, const CKey& scankey, std::unique_ptr<PubkeyProvider> provider): PubkeyProvider(exp_index), m_scan_key(scankey), m_provider(std::move(provider)) {}
+
+    std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const override
+    {
+        return m_provider->GetPubKey(pos, arg, out, read_cache, write_cache);
+    }
+    bool IsRange() const override { return false; }
+    size_t GetSize() const override { return m_provider->GetSize(); }
+    bool IsBIP32() const override { return false; }
+    std::string ToString(StringType type) const override { return m_provider->ToString(); }
+    bool ToPrivateString(const SigningProvider&, std::string& ret) const override
+    {
+        FlatSigningProvider arg;
+        arg.keys.emplace(m_scan_key.GetPubKey().GetID(), m_scan_key);
+        return m_provider->ToPrivateString(arg, ret);
+    }
+    bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
+    {
+        return m_provider->ToNormalizedString(arg, ret, cache);
+    }
+    void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const override
+    {
+        out.keys.emplace(m_scan_key.GetPubKey().GetID(), m_scan_key);
+    }
+    std::optional<CPubKey> GetRootPubKey() const override
+    {
+        return m_provider->GetRootPubKey();
+    }
+    std::optional<CExtPubKey> GetRootExtPubKey() const override
+    {
+        return m_provider->GetRootExtPubKey();
+    }
+    std::unique_ptr<PubkeyProvider> Clone() const override
+    {
+        return std::make_unique<ScankeyPubkeyProvider>(m_expr_index, m_scan_key, m_provider->Clone());
+    }
+};
+
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
@@ -842,7 +886,7 @@ public:
     }
 
     // NOLINTNEXTLINE(misc-no-recursion)
-    bool IsRange() const final
+    bool IsRange() const override
     {
         for (const auto& pubkey : m_pubkey_args) {
             if (pubkey->IsRange()) return true;
@@ -956,7 +1000,7 @@ public:
     }
 
     // NOLINTNEXTLINE(misc-no-recursion)
-    void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const final
+    void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const override
     {
         for (const auto& p : m_pubkey_args) {
             p->GetPrivKey(pos, provider, out);
@@ -982,16 +1026,23 @@ public:
     std::optional<int64_t> MaxSatisfactionElems() const override { return {}; }
 
     // NOLINTNEXTLINE(misc-no-recursion)
-    void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const override
+    void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs, std::vector<CKey>& scankeys) const override
     {
         for (const auto& p : m_pubkey_args) {
+            FlatSigningProvider dummy, out;
+            p->GetPrivKey(0, dummy, out);
+            if (out.keys.size() > 0) {
+                // ScankeyPubkeyProvider is the only provider that has a stored private key
+                scankeys.emplace_back(out.keys.begin()->second);
+                continue;
+            }
             std::optional<CPubKey> pub = p->GetRootPubKey();
             if (pub) pubkeys.insert(*pub);
             std::optional<CExtPubKey> ext_pub = p->GetRootExtPubKey();
             if (ext_pub) ext_pubs.insert(*ext_pub);
         }
         for (const auto& arg : m_subdescriptor_args) {
-            arg->GetPubKeys(pubkeys, ext_pubs);
+            arg->GetPubKeys(pubkeys, ext_pubs, scankeys);
         }
     }
 
@@ -1602,6 +1653,56 @@ public:
     }
 };
 
+/** A parsed sp(...) descriptor */
+class SpDescriptor final : public DescriptorImpl
+{
+protected:
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return std::vector<CScript>(); }
+
+public:
+    SpDescriptor(std::unique_ptr<PubkeyProvider> scan_pubkey, std::unique_ptr<PubkeyProvider> spend_key) : DescriptorImpl(Vector(std::move(scan_pubkey), std::move(spend_key)), "sp") {};
+
+    std::optional<OutputType> GetOutputType() const override { return OutputType::SILENT_PAYMENTS; }
+
+    bool IsRange() const final { return false; }
+
+    bool IsSingleType() const final { return true; }
+
+    bool IsSolvable() const override { return false; }
+
+    bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type, const DescriptorCache* cache = nullptr) const override
+    {
+        FlatSigningProvider dummy;
+        std::string scan_key;
+        bool has_scan_key{m_pubkey_args.at(0)->ToPrivateString(dummy, scan_key)};
+        assert(has_scan_key); // The ScankeyPubkeyProvider always has the scan key
+        std::string ret{m_name + "(" + scan_key + ","};
+        auto& spend_pubkey{m_pubkey_args.at(1)};
+        std::string tmp;
+        switch (type) {
+        case StringType::NORMALIZED:
+            if (!spend_pubkey->ToNormalizedString(*arg, tmp, cache)) return false;
+            break;
+        case StringType::PRIVATE:
+            if (!spend_pubkey->ToPrivateString(*arg, tmp)) return false;
+            break;
+        case StringType::PUBLIC:
+            tmp = spend_pubkey->ToString();
+            break;
+        case StringType::COMPAT:
+            tmp = spend_pubkey->ToString(PubkeyProvider::StringType::COMPAT);
+            break;
+        }
+        out = std::move(ret) + std::move(tmp) + ")";
+        return true;
+    }
+
+    std::unique_ptr<DescriptorImpl> Clone() const override
+    {
+        return std::make_unique<SpDescriptor>(m_pubkey_args.at(0)->Clone(), m_pubkey_args.at(1)->Clone());
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////////
 // Parser                                                                 //
 ////////////////////////////////////////////////////////////////////////////
@@ -1613,6 +1714,7 @@ enum class ParseScriptContext {
     P2WSH,   //!< Inside wsh() (script becomes v0 witness script)
     P2TR,    //!< Inside tr() (either internal key, or BIP342 script leaf)
     MUSIG,   //!< Inside musig() (implies P2TR, cannot have nested musig())
+    SP,      //!< Inside sp()
 };
 
 std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostrophe, std::string& error, bool& has_hardened)
@@ -1740,6 +1842,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
 {
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
+    bool is_scan_key{ctx == ParseScriptContext::SP && key_exp_index == 0}; // The first key under sp() is the scan key
     auto split = Split(sp, '/');
     std::string str(split[0].begin(), split[0].end());
     if (str.size() == 0) {
@@ -1751,7 +1854,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
         return {};
     }
     if (split.size() == 1) {
-        if (IsHex(str)) {
+        if (IsHex(str) && !is_scan_key) { // Scan key cannot be a public key
             std::vector<unsigned char> data = ParseHex(str);
             CPubKey pubkey(data);
             if (pubkey.IsValid() && !pubkey.IsValidNonHybrid()) {
@@ -1782,8 +1885,15 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
         if (key.IsValid()) {
             if (permit_uncompressed || key.IsCompressed()) {
                 CPubKey pubkey = key.GetPubKey();
+                auto provider{std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, ctx == ParseScriptContext::P2TR)};
+
+                if (is_scan_key) {
+                    ret.emplace_back(std::make_unique<ScankeyPubkeyProvider>(key_exp_index, key, std::move(provider)));
+                    return ret;
+                }
+
                 out.keys.emplace(pubkey.GetID(), key);
-                ret.emplace_back(std::make_unique<ConstPubkeyProvider>(key_exp_index, pubkey, ctx == ParseScriptContext::P2TR));
+                ret.emplace_back(std::move(provider));
                 return ret;
             } else {
                 error = "Uncompressed keys are not allowed";
@@ -1800,6 +1910,44 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t key_exp_i
     std::vector<KeyPath> paths;
     DeriveType type = ParseDeriveType(split, apostrophe);
     if (!ParseKeyPath(split, paths, apostrophe, error, /*allow_multipath=*/true)) return {};
+    if (ctx == ParseScriptContext::SP) {
+        for (const auto& path : paths) {
+            KeyOriginInfo origin;
+            CKeyID id = extkey.key.IsValid() ? extkey.key.GetPubKey().GetID() : extpubkey.pubkey.GetID();
+            std::copy(id.begin(), id.begin() + 4, origin.fingerprint);
+            auto tmp_extkey{extkey};
+            auto tmp_extpubkey{extpubkey};
+            for (auto entry : path) {
+                origin.path.push_back(entry);
+                if (tmp_extkey.key.IsValid() && !tmp_extkey.Derive(tmp_extkey, entry)) {
+                    error = strprintf("key '%s' is not valid", str);
+                    return {};
+                }
+                if (tmp_extpubkey.pubkey.IsValid() && !tmp_extpubkey.Derive(tmp_extpubkey, entry)) {
+                    error = strprintf("key '%s' is not valid", str);
+                    return {};
+                }
+            }
+
+            if (tmp_extkey.key.IsValid()) tmp_extpubkey = tmp_extkey.Neuter();
+            auto pubkey{std::make_unique<ConstPubkeyProvider>(key_exp_index, tmp_extpubkey.pubkey, false)};
+            auto origin_pubkey{std::make_unique<OriginPubkeyProvider>(key_exp_index, origin, std::move(pubkey), apostrophe)};
+
+            if (is_scan_key) {
+                if (!tmp_extkey.key.IsValid()) {
+                    error = strprintf("key '%s' is not valid", str);
+                    return {};
+                }
+                ret.emplace_back(std::make_unique<ScankeyPubkeyProvider>(key_exp_index, tmp_extkey.key, std::move(origin_pubkey)));
+                continue;
+            }
+
+            if (tmp_extkey.key.IsValid()) out.keys.emplace(tmp_extpubkey.pubkey.GetID(), tmp_extkey.key);
+            ret.emplace_back(std::move(origin_pubkey));
+        }
+        return ret;
+    }
+
     if (extkey.key.IsValid()) {
         extpubkey = extkey.Neuter();
         out.keys.emplace(extpubkey.pubkey.GetID(), extkey.key);
@@ -2148,6 +2296,36 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         }
         return ret;
     }
+    if (ctx == ParseScriptContext::TOP && Func("sp", expr)) {
+        auto scan_pubkeys{ParsePubkey(key_exp_index, Expr(expr), ParseScriptContext::SP, out, error)};
+        if (scan_pubkeys.empty()) {
+            error = strprintf("sp(): %s", error);
+            return {};
+        }
+        if (!Const(",", expr)) {
+            error = strprintf("sp(): expected ',', got '%c'", expr.size() > 0 ? expr[0] : ')');
+            return {};
+        }
+        ++key_exp_index;
+
+        auto spend_pubkeys{ParsePubkey(key_exp_index, Expr(expr), ParseScriptContext::SP, out, error)};
+        if (spend_pubkeys.empty()) {
+            error = strprintf("sp(): %s", error);
+            return {};
+        }
+
+        for (auto& scan_pubkey : scan_pubkeys) {
+            for (auto& spend_pubkey : spend_pubkeys) {
+                ret.emplace_back(std::make_unique<SpDescriptor>(std::move(scan_pubkey), std::move(spend_pubkey)));
+            }
+        }
+
+        ++key_exp_index;
+        return ret;
+    } else if (Func("sp", expr)) {
+        error = "Can only have sp() at top level";
+        return {};
+    }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH) && Func("pkh", expr)) {
         auto pubkeys = ParsePubkey(key_exp_index, expr, ctx, out, error);
         if (pubkeys.empty()) {
@@ -2313,6 +2491,10 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         CTxDestination dest = DecodeDestination(std::string(expr.begin(), expr.end()));
         if (!IsValidDestination(dest)) {
             error = "Address is not valid";
+            return {};
+        }
+        if (std::holds_alternative<V0SilentPaymentDestination>(dest)) {
+            error = "silent-payments address is not valid for addr()";
             return {};
         }
         ret.emplace_back(std::make_unique<AddressDescriptor>(std::move(dest)));

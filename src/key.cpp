@@ -16,7 +16,7 @@
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
 
-static secp256k1_context* secp256k1_context_sign = nullptr;
+secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
 
@@ -164,6 +164,13 @@ void CKey::MakeNewKey(bool fCompressedIn) {
         GetStrongRandBytes(*keydata);
     } while (!Check(keydata->data()));
     fCompressed = fCompressedIn;
+}
+
+bool CKey::TweakAdd(const unsigned char* tweak32)
+{
+    assert(keydata);
+    // Modify the current CKey's data directly.
+    return secp256k1_ec_seckey_tweak_add(secp256k1_context_sign, keydata->data(), tweak32);
 }
 
 CPrivKey CKey::GetPrivKey() const {
