@@ -65,7 +65,7 @@ def wait_for_banscore(node, peer_id, expected_score):
                     # The score matches the one we expected.
                     # Wait a bit to make sure it won't change
                     # to avoid false positives.
-                    time.sleep(1)
+                    time.sleep(0.1)
                 return peer["banscore"]
         return None
     wait_until_helper(lambda: get_score() == expected_score, timeout=6)
@@ -199,14 +199,12 @@ class QuorumDataMessagesTest(DashTestFramework):
             qdata_valid = p2p_mn2.get_qdata()
             # - Not requested
             p2p_mn1.send_message(qdata_valid)
-            time.sleep(1)
             wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 10)
             # - Already received
             force_request_expire()
             assert mn1.get_node(self).quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qmessage("qgetdata")
             p2p_mn1.send_message(qdata_valid)
-            time.sleep(1)
             p2p_mn1.send_message(qdata_valid)
             wait_for_banscore(mn1.get_node(self), id_p2p_mn1, 20)
             # - Not like requested
