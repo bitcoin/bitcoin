@@ -16,6 +16,25 @@ namespace wallet {
 namespace {
 TestingSetup* g_setup;
 
+class FuzzedBlockPolicyEstimator : public CBlockPolicyEstimator
+{
+    FuzzedDataProvider& fuzzed_data_provider;
+
+public:
+    FuzzedBlockPolicyEstimator(FuzzedDataProvider& provider)
+        : CBlockPolicyEstimator(fs::path{}, false), fuzzed_data_provider(provider) {}
+
+    CFeeRate estimateSmartFee(int confTarget, FeeCalculation* feeCalc, bool conservative) const override
+    {
+        return CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)};
+    }
+
+    unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const override
+    {
+        return fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, 1000);
+    }
+};
+
 void initialize_setup()
 {
     static const auto testing_setup = MakeNoLogFileContext<TestingSetup>();
@@ -37,6 +56,8 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
+    std::unique_ptr<CBlockPolicyEstimator> fee_estimator = std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider);
+    node.fee_estimator = std::move(fee_estimator);
     std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
     CWallet& wallet{*wallet_ptr};
     {
