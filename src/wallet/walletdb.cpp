@@ -58,6 +58,8 @@ const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
 const std::string WALLETDESCRIPTORLHCACHE{"walletdescriptorlhcache"};
 const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
+const std::string WALLETSEEDKEY{"walletseedkey"};
+const std::string WALLETSEEDCKEY{"walletseedckey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
@@ -233,6 +235,32 @@ bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKe
         return false;
     }
     EraseIC(std::make_pair(DBKeys::WALLETDESCRIPTORKEY, std::make_pair(desc_id, pubkey)));
+    return true;
+}
+
+bool WalletBatch::WriteWalletSeed(const CPubKey& seed_pubkey, const CPrivKey& seed_privkey)
+{
+    // Hash pubkey+privkey for integrity check
+    std::vector<unsigned char> data;
+    data.reserve(seed_pubkey.size() + seed_privkey.size());
+    data.insert(data.end(), seed_pubkey.begin(), seed_pubkey.end());
+    data.insert(data.end(), seed_privkey.begin(), seed_privkey.end());
+    uint256 hash = Hash(data);
+    // Write as (seed_privkey, hash) pair under key ("walletseedkey", seed_pubkey)
+    return WriteIC(std::make_pair(DBKeys::WALLETSEEDKEY, seed_pubkey),
+                   std::make_pair(seed_privkey, hash),
+                   /*fOverwrite=*/false);
+}
+
+
+bool WalletBatch::WriteCryptedWalletSeed(const CPubKey& seed_pubkey, const std::vector<unsigned char>& crypted_secret)
+{
+    // Write encrypted seed bytes under key ("walletseedckey", seed_pubkey)
+    if (!WriteIC(std::make_pair(DBKeys::WALLETSEEDCKEY, seed_pubkey), crypted_secret, /*fOverwrite=*/false)) {
+        return false;
+    }
+    // Remove any unencrypted seed record with the same pubkey
+    EraseIC(std::make_pair(DBKeys::WALLETSEEDKEY, seed_pubkey));
     return true;
 }
 
@@ -932,6 +960,59 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         result = std::max(result, ckey_res.m_result);
         num_ckeys = ckey_res.m_records;
 
+        LoadResult seed_res = LoadRecords(pwallet, batch, DBKeys::WALLETSEEDKEY,
+            [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& strErr) {
+                CPubKey seed_pub;
+                key >> seed_pub;
+                if (!seed_pub.IsValid()) {
+                    strErr = "Error reading wallet database: descriptor seed CPubKey corrupt";
+                    return DBErrors::CORRUPT;
+                }
+                CPrivKey seed_priv;
+                uint256 hash;
+                value >> seed_priv;
+                value >> hash;
+                // Verify integrity hash
+                std::vector<unsigned char> buf;
+                buf.reserve(seed_pub.size() + seed_priv.size());
+                buf.insert(buf.end(), seed_pub.begin(), seed_pub.end());
+                buf.insert(buf.end(), seed_priv.begin(), seed_priv.end());
+                if (Hash(buf) != hash) {
+                    strErr = "Error reading wallet database: descriptor seed key corrupt";
+                    return DBErrors::CORRUPT;
+                }
+                CKey seed_key;
+                if (!seed_key.Load(seed_priv, seed_pub, /* fSkipCheck= */ true)) {
+                    strErr = "Error reading wallet database: wallet seed CPrivKey corrupt";
+                    return DBErrors::CORRUPT;
+                }
+                {
+                    LOCK(pwallet->cs_wallet);
+                    pwallet->AddWalletSeed(seed_key);
+                }
+                return DBErrors::LOAD_OK;
+            });
+        result = std::max(result, seed_res.m_result);
+
+        // Load encrypted seed (walletseedckey) records:
+        LoadResult seed_enc_res = LoadRecords(pwallet, batch, DBKeys::WALLETSEEDCKEY,
+            [] (CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) {
+                CPubKey seed_pub;
+                key >> seed_pub;
+                if (!seed_pub.IsValid()) {
+                    err = "Error reading wallet database: descriptor encrypted seed CPubKey corrupt";
+                    return DBErrors::CORRUPT;
+                }
+                std::vector<unsigned char> crypted_secret;
+                value >> crypted_secret;
+                {
+                    LOCK(pwallet->cs_wallet);
+                    pwallet->AddCryptedWalletSeed(seed_pub, crypted_secret);
+                }
+                return DBErrors::LOAD_OK;
+            });
+        result = std::max(result, seed_enc_res.m_result);
+
         return result;
     });
 
@@ -939,6 +1020,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         // Only log if there are no critical errors
         pwallet->WalletLogPrintf("Descriptors: %u, Descriptor Keys: %u plaintext, %u encrypted, %u total.\n",
                desc_res.m_records, num_keys, num_ckeys, num_keys + num_ckeys);
+        if (!pwallet->m_seed_keys.empty() || !pwallet->m_crypted_seed_keys.empty()) {
+            pwallet->WalletLogPrintf("Wallet seed loaded (%u plaintext, %u encrypted).\n",
+                pwallet->m_seed_keys.size(), pwallet->m_crypted_seed_keys.size());
+        }
     }
 
     return desc_res.m_result;

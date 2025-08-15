@@ -145,7 +145,7 @@ bool LoadWallets(WalletContext& context)
                 }
             }
             chain.initMessage(_("Loading wallet…"));
-            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, error, warnings) : nullptr;
+            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(context, name, std::move(database), options.create_flags, /* seed_key_opt=*/ std::nullopt, error, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
                 chain.initError(error);

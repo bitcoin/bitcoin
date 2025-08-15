@@ -198,7 +198,7 @@ std::shared_ptr<CWallet> SetupDescriptorsWallet(interfaces::Node& node, TestChai
     if (watch_only) {
         wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
     } else {
-        wallet->SetupDescriptorScriptPubKeyMans();
+        wallet->SetupDescriptorScriptPubKeyMans(/* seed_key_opt=*/ std::nullopt);
     }
 
     // Add the coinbase key
