@@ -834,7 +834,7 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const
 {
-    return m_network == ChainTypeToString(ChainType::MAIN) || m_network_only_args.count(arg) == 0;
+    return m_network == ChainTypeToString(ChainType::MAIN) || !m_network_only_args.contains(arg);
 }
 
 common::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
