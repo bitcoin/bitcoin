@@ -21,6 +21,34 @@ Unpack the files into a directory and run:
 
 The `bitcoin` command supports subcommands like `bitcoin gui`, `bitcoin node`, and `bitcoin rpc` exposing different functionality. Subcommands can be listed with `bitcoin help`.
 
+#### Linux GUI runtime libraries
+
+If you plan to run the GUI on Linux, your system may need Qt runtime packages provided by your distribution before launching `bin/bitcoin-qt`. Package names vary by distro. Examples:
+
+- Debian/Ubuntu (Qt 6.5+ runtime):
+
+```
+sudo apt-get install libxcb-cursor0
+# Wayland support (optional):
+sudo apt-get install qt6-wayland
+```
+
+- Fedora (Qt 6.5+ runtime):
+
+```
+sudo dnf install xcb-util-cursor
+# Wayland support (optional):
+sudo dnf install qt6-qtwayland
+```
+
+- Alpine (Qt 6.5+ runtime):
+
+```
+sudo apk add xcb-util-cursor
+```
+
+For additional Linux GUI setup guidance, see the "Other Linux" instructions in the full node guide on [bitcoin.org](https://bitcoin.org/en/full-node#other-linux-gui).
+
 ### Windows
 
 Unpack the files into a directory, and then run bitcoin-qt.exe.
