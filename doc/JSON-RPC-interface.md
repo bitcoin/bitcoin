@@ -124,6 +124,16 @@ RPC interface will be abused.
   security-sensitive operations on a computer whose other programs you
   trust.
 
+- **RPC Command Whitelisting:** Bitcoin Core provides the `-rpcwhitelist` option to
+  restrict which RPC commands specific users can access, and `-rpcwhitelistdefault`
+  to control the default behavior for users without explicit whitelists. When using
+  multiple wallets or sharing access with different users, these should not be
+  considered robust security boundaries, as users with access to certain commands
+  may still be able to exploit functionality in unexpected ways. For security-sensitive
+  operations, implement proper system-level isolation (containers, virtualization,
+  separate user accounts with restricted permissions) rather than relying solely on
+  RPC access controls.
+
 - **Securing remote network access:** You may optionally allow other
   computers to remotely control Bitcoin Core by setting the `rpcallowip`
   and `rpcbind` configuration parameters.  These settings are only meant
