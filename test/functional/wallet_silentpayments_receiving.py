@@ -325,6 +325,50 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
         test_addressinfo(wallet.getnewaddress(address_type="silent-payments"))
         test_addressinfo(wallet.getrawchangeaddress(address_type="silent-payments"))
 
+    def test_coincontrol(self):
+        self.log.info("Testing Silent Payments wallet coin control")
+
+        node = self.nodes[0]
+        node.createwallet("sender", silent_payments=True)
+        node.createwallet("receiver", silent_payments=True)
+
+        sender = node.get_wallet_rpc("sender")
+        receiver = node.get_wallet_rpc("receiver")
+
+        # Create multiple UTXOs
+        for _ in range(3):
+            self.generatetoaddress(node, 50, sender.getnewaddress())
+
+        sp_addr = receiver.getnewaddress(address_type="silent-payments")
+
+        # Get specific UTXO to use
+        unspent = sender.listunspent()
+
+        # select utxos to spend
+        inputs = []
+        TOTAL_SPEND = 10
+        total_amount_selected = 0
+        for utxo in unspent:
+            if total_amount_selected > TOTAL_SPEND:
+                break
+            inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
+            total_amount_selected += utxo["amount"]
+
+        options = {
+            "inputs": inputs,
+            "add_to_wallet": True
+        }
+
+        result = sender.send(outputs={sp_addr: TOTAL_SPEND}, options=options)
+        assert result["txid"]
+
+        # Verify transaction used the selected input
+        raw_tx = receiver.getrawtransaction(result["txid"], True)
+        assert any(vin["txid"] == input["txid"] and
+                  vin["vout"] == input["vout"]
+                  for vin in raw_tx["vin"]
+                  for input in inputs)
+
     def run_test(self):
         self.def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         self.generate(self.nodes[0], 102)
@@ -339,6 +383,7 @@ class SilentPaymentsReceivingTest(BitcoinTestFramework):
         self.test_createwallet_descriptor()
         self.test_backup_and_restore()
         self.test_getaddressinfo()
+        self.test_coincontrol()
 
 
 
