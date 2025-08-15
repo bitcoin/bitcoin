@@ -43,8 +43,8 @@ Staking
 -------
 
 To participate in BitGold's proof-of-stake, run `bitgoldd` or `bitgold-qt` with
-`-staking=1`, or add `staking=1` to `bitgold.conf`. The staking status can be
-checked with `bitgold-cli getstakinginfo`.
+`-staker`, or add `staker=1` to `bitgold.conf`. The staking status can be
+checked with `bitgold-cli stakerstatus`.
 
 Testing
 -------
