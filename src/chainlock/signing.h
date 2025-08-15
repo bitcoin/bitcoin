@@ -20,6 +20,9 @@ class CSigSharesManager;
 } // namespace llmq
 
 namespace chainlock {
+//! Depth of block including transactions before it's considered safe
+static constexpr int32_t TX_CONFIRM_THRESHOLD{5};
+
 class ChainLockSignerParent
 {
 public:

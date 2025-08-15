@@ -95,10 +95,10 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     if (isman.IsInstantSendEnabled() && isman.RejectConflictingBlocks()) {
         const auto* pindexWalk = pindex;
         while (pindexWalk != nullptr) {
-            if (pindex->nHeight - pindexWalk->nHeight > 5) {
-                // no need to check further down, 6 confs is safe to assume that TXs below this height won't be
+            if (pindex->nHeight - pindexWalk->nHeight > TX_CONFIRM_THRESHOLD) {
+                // no need to check further down, safe to assume that TXs below this height won't be
                 // islocked anymore if they aren't already
-                LogPrint(BCLog::CHAINLOCKS, "%s -- tip and previous 5 blocks all safe\n", __func__);
+                LogPrint(BCLog::CHAINLOCKS, "%s -- tip and previous %d blocks all safe\n", __func__, TX_CONFIRM_THRESHOLD);
                 break;
             }
             if (m_clhandler.HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
