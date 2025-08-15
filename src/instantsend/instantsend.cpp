@@ -421,7 +421,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, PeerManager& peerm
         // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
         // with the TX taken into account.
         peerman.RelayInvFiltered(inv, islock->txid, ISDLOCK_PROTO_VERSION);
-        peerman.AskPeersForTransaction(islock->txid, /*is_masternode=*/m_signer != nullptr);
+        peerman.AskPeersForTransaction(islock->txid);
     }
 }
 

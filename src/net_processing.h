@@ -86,7 +86,7 @@ public:
     virtual void SendPings() = 0;
 
     /** Ask a number of our peers, which have a transaction in their inventory, for the transaction. */
-    virtual void AskPeersForTransaction(const uint256& txid, bool is_masternode) = 0;
+    virtual void AskPeersForTransaction(const uint256& txid) = 0;
 
     /** Broadcast inventory message to a specific peer. */
     virtual void PushInventory(NodeId nodeid, const CInv& inv) = 0;
@@ -140,8 +140,7 @@ public:
     virtual bool IsBanned(NodeId pnode) = 0;
 
     virtual void EraseObjectRequest(NodeId nodeid, const CInv& inv) = 0;
-    virtual void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time,
-                               bool is_masternode, bool fForce = false) = 0;
+    virtual void RequestObject(NodeId nodeid, const CInv& inv, std::chrono::microseconds current_time, bool fForce = false) = 0;
     virtual size_t GetRequestedObjectCount(NodeId nodeid) const = 0;
 };
 
