@@ -140,9 +140,10 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
         assert(block.data);
         for (size_t i = 0; i < block.data->vtx.size(); ++i) {
             const auto& tx{block.data->vtx.at(i)};
+            const bool is_coinbase{tx->IsCoinBase()};
 
             // Skip duplicate txid coinbase transactions (BIP30).
-            if (IsBIP30Unspendable(block.hash, block.height) && tx->IsCoinBase()) {
+            if (is_coinbase && IsBIP30Unspendable(block.hash, block.height)) {
                 m_total_unspendable_amount += block_subsidy;
                 m_total_unspendables_bip30 += block_subsidy;
                 continue;
@@ -150,8 +151,8 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
             for (uint32_t j = 0; j < tx->vout.size(); ++j) {
                 const CTxOut& out{tx->vout[j]};
-                Coin coin{out, block.height, tx->IsCoinBase()};
-                COutPoint outpoint{tx->GetHash(), j};
+                const Coin coin{out, block.height, is_coinbase};
+                const COutPoint outpoint{tx->GetHash(), j};
 
                 // Skip unspendable coins
                 if (coin.out.scriptPubKey.IsUnspendable()) {
@@ -162,7 +163,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
                 ApplyCoinHash(m_muhash, outpoint, coin);
 
-                if (tx->IsCoinBase()) {
+                if (is_coinbase) {
                     m_total_coinbase_amount += coin.out.nValue;
                 } else {
                     m_total_new_outputs_ex_coinbase_amount += coin.out.nValue;
@@ -174,12 +175,12 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
             }
 
             // The coinbase tx has no undo data since no former output is spent
-            if (!tx->IsCoinBase()) {
+            if (!is_coinbase) {
                 const auto& tx_undo{Assert(block.undo_data)->vtxundo.at(i - 1)};
 
                 for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
-                    Coin coin{tx_undo.vprevout[j]};
-                    COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
+                    const Coin coin{tx_undo.vprevout[j]};
+                    const COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
 
                     RemoveCoinHash(m_muhash, outpoint, coin);
 
@@ -413,11 +414,12 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
     assert(block.undo_data);
     for (size_t i = 0; i < block.data->vtx.size(); ++i) {
         const auto& tx{block.data->vtx.at(i)};
+        const bool is_coinbase{tx->IsCoinBase()};
 
         for (uint32_t j = 0; j < tx->vout.size(); ++j) {
             const CTxOut& out{tx->vout[j]};
-            COutPoint outpoint{tx->GetHash(), j};
-            Coin coin{out, block.height, tx->IsCoinBase()};
+            const COutPoint outpoint{tx->GetHash(), j};
+            const Coin coin{out, block.height, is_coinbase};
 
             // Skip unspendable coins
             if (coin.out.scriptPubKey.IsUnspendable()) {
@@ -440,13 +442,12 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
         }
 
         // The coinbase tx has no undo data since no former output is spent
-        if (!tx->IsCoinBase()) {
+        if (!is_coinbase) {
             const auto& tx_undo{block.undo_data->vtxundo.at(i - 1)};
 
             for (size_t j = 0; j < tx_undo.vprevout.size(); ++j) {
-                Coin coin{tx_undo.vprevout[j]};
-                COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
-
+                const Coin coin{tx_undo.vprevout[j]};
+                const COutPoint outpoint{tx->vin[j].prevout.hash, tx->vin[j].prevout.n};
                 ApplyCoinHash(m_muhash, outpoint, coin);
 
                 m_total_prevout_spent_amount -= coin.out.nValue;
