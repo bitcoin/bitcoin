@@ -126,7 +126,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
         }
     }
 
-    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
+    uint256 requestId = GenSigRequestId(pindex->nHeight);
     uint256 msgHash = pindex->GetBlockHash();
 
     if (m_clhandler.GetBestChainLockHeight() >= pindex->nHeight) {

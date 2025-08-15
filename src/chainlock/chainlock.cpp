@@ -381,7 +381,7 @@ void CChainLocksHandler::EnforceBestChainLock()
 VerifyRecSigStatus CChainLocksHandler::VerifyChainLock(const chainlock::ChainLockSig& clsig) const
 {
     const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
-    const uint256 nRequestId = ::SerializeHash(std::make_pair(chainlock::CLSIG_REQUESTID_PREFIX, clsig.getHeight()));
+    const uint256 nRequestId = chainlock::GenSigRequestId(clsig.getHeight());
 
     return llmq::VerifyRecoveredSig(llmqType, m_chainstate.m_chain, qman, clsig.getHeight(), nRequestId,
                                     clsig.getBlockHash(), clsig.getSig());
