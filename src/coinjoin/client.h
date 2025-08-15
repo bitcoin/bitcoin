@@ -8,6 +8,7 @@
 #include <coinjoin/util.h>
 #include <coinjoin/coinjoin.h>
 
+#include <net_types.h>
 #include <protocol.h>
 #include <util/ranges.h>
 #include <util/translation.h>
@@ -252,9 +253,9 @@ public:
         m_mn_sync(mn_sync),
         m_is_masternode{is_masternode} {};
 
-    PeerMsgRet ProcessMessage(const CNode& peer, CConnman& connman, PeerManager& peerman, std::string_view msg_type,
-                              CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue);
-    PeerMsgRet ProcessDSQueue(const CNode& peer, CConnman& connman, PeerManager& peerman, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, CConnman& connman, PeerManager& peerman, std::string_view msg_type,
+                                                         CDataStream& vRecv)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_vecqueue);
     void DoMaintenance();
 };
 
