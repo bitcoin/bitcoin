@@ -275,7 +275,7 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex* pindexNew, CConnman& connman, bool fInitialDownload) const;
 
-    PeerMsgRet ProcessMessage(CNode& pfrom, CConnman& connman, const std::string& msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& pfrom, CConnman& connman, std::string_view msg_type, CDataStream& vRecv);
 
     static bool HasQuorum(Consensus::LLMQType llmqType, const CQuorumBlockProcessor& quorum_block_processor, const uint256& quorumHash);
 

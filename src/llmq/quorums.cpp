@@ -703,13 +703,13 @@ size_t CQuorumManager::GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, c
     return nIndex % pQuorum->qc->validMembers.size();
 }
 
-PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, const std::string& msg_type, CDataStream& vRecv)
+MessageProcessingResult CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, std::string_view msg_type, CDataStream& vRecv)
 {
     auto strFunc = __func__;
-    auto errorHandler = [&](const std::string& strError, int nScore = 10) -> PeerMsgRet {
+    auto errorHandler = [&](const std::string& strError, int nScore = 10) -> MessageProcessingResult {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- %s: %s, from peer=%d\n", strFunc, msg_type, strError, pfrom.GetId());
         if (nScore > 0) {
-            return tl::unexpected{nScore};
+            return MisbehavingError{nScore};
         }
         return {};
     };
@@ -724,8 +724,8 @@ PeerMsgRet CQuorumManager::ProcessMessage(CNode& pfrom, CConnman& connman, const
 
         auto sendQDATA = [&](CQuorumDataRequest::Errors nError,
                              bool request_limit_exceeded,
-                             const CDataStream& body = CDataStream(SER_NETWORK, PROTOCOL_VERSION)) -> PeerMsgRet {
-            PeerMsgRet ret{};
+                             const CDataStream& body = CDataStream(SER_NETWORK, PROTOCOL_VERSION)) -> MessageProcessingResult {
+            MessageProcessingResult ret{};
             switch (nError) {
                 case (CQuorumDataRequest::Errors::NONE):
                 case (CQuorumDataRequest::Errors::QUORUM_TYPE_INVALID):
