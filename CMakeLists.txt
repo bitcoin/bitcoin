@@ -89,6 +89,9 @@ if (NOT DEFINED CMAKE_OPTIMIZE_DEPENDENCIES)
   set(CMAKE_OPTIMIZE_DEPENDENCIES TRUE)
 endif()
 
+# Enable export of `compile_commands.json` used by the clangd language server.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 #=============================
 # Configurable options
 #=============================
