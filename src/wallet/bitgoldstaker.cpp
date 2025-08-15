@@ -60,16 +60,25 @@ void BitGoldStaker::ThreadStaker()
     while (!m_stop) {
         bool staked{false};
         try {
+            int chain_height;
+            {
+                LOCK(::cs_main);
+                chain_height = chainman.ActiveChain().Height();
+            }
+            const int min_depth = chain_height < MIN_STAKE_DEPTH ? 0 : MIN_STAKE_DEPTH;
+            const std::chrono::seconds min_age =
+                chain_height < MIN_STAKE_DEPTH ? std::chrono::seconds{0} : MIN_COIN_AGE;
+
             std::vector<COutput> candidates;
             {
                 LOCK(m_wallet.cs_wallet);
                 for (const COutput& out : AvailableCoins(m_wallet).All()) {
                     if (!out.spendable) continue;
-                    if (out.depth < MIN_STAKE_DEPTH) continue;
+                    if (out.depth < min_depth) continue;
                     if (out.txout.nValue < MIN_STAKE_AMOUNT) continue;
-                    if (MIN_COIN_AGE.count() > 0) {
+                    if (min_age.count() > 0) {
                         int64_t age = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()) - out.time;
-                        if (age < MIN_COIN_AGE.count()) continue;
+                        if (age < min_age.count()) continue;
                     }
                     candidates.push_back(out);
                 }
