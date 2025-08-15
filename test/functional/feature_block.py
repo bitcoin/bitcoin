@@ -191,7 +191,7 @@ class FullBlockTest(BitcoinTestFramework):
             badblock = self.update_block(blockname, [badtx])
             reject_reason = (template.block_reject_reason or template.reject_reason)
             if reject_reason.startswith("mempool-script-verify-flag-failed"):
-                reject_reason = "mandatory-script-verify-flag-failed" + reject_reason[33:]
+                reject_reason = "block-script-verify-flag-failed" + reject_reason[33:]
             self.send_blocks(
                 [badblock], success=False,
                 reject_reason=reject_reason,
