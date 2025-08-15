@@ -47,8 +47,6 @@ sudo dnf install qt6-qtwayland
 sudo apk add xcb-util-cursor
 ```
 
-For additional Linux GUI setup guidance, see the "Other Linux" instructions in the full node guide on [bitcoin.org](https://bitcoin.org/en/full-node#other-linux-gui).
-
 ### Windows
 
 Unpack the files into a directory, and then run bitcoin-qt.exe.
