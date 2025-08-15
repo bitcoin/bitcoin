@@ -924,8 +924,6 @@ MessageProcessingResult CGovernanceManager::SyncSingleObjVotes(CNode& peer, cons
     // do not provide any data until our node is synced
     if (!m_mn_sync.IsSynced()) return {};
 
-    int nVoteCount = 0;
-
     // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
 
     LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing single object to peer=%d, nProp = %s\n", __func__, peer.GetId(), nProp.ToString());
@@ -962,12 +960,13 @@ MessageProcessingResult CGovernanceManager::SyncSingleObjVotes(CNode& peer, cons
             continue;
         }
         ret.m_inventory.emplace_back(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash);
-        ++nVoteCount;
     }
 
     CNetMsgMaker msgMaker(peer.GetCommonVersion());
-    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE, nVoteCount));
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, nVoteCount, peer.GetId());
+    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE,
+                                             static_cast<int>(ret.m_inventory.size())));
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, ret.m_inventory.size(),
+             peer.GetId());
     return ret;
 }
 
@@ -984,8 +983,6 @@ MessageProcessingResult CGovernanceManager::SyncObjects(CNode& peer, CConnman& c
         return MisbehavingError{20};
     }
     m_netfulfilledman.AddFulfilledRequest(peer.addr, NetMsgType::MNGOVERNANCESYNC);
-
-    int nObjCount = 0;
 
     // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
 
@@ -1024,12 +1021,13 @@ MessageProcessingResult CGovernanceManager::SyncObjects(CNode& peer, CConnman& c
         // Push the inventory budget proposal message over to the other client
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing govobj: %s, peer=%d\n", __func__, strHash, peer.GetId());
         ret.m_inventory.emplace_back(MSG_GOVERNANCE_OBJECT, nHash);
-        ++nObjCount;
     }
 
     CNetMsgMaker msgMaker(peer.GetCommonVersion());
-    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, nObjCount));
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d objects to peer=%d\n", __func__, nObjCount, peer.GetId());
+    connman.PushMessage(&peer, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ,
+                                             static_cast<int>(ret.m_inventory.size())));
+    LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- sent %d objects to peer=%d\n", __func__, ret.m_inventory.size(),
+             peer.GetId());
     return ret;
 }
 
