@@ -9,7 +9,6 @@ when a node is configured as a masternode via -masternodeblsprivkey.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
 
 # Service flags
 NODE_COMPACT_FILTERS = (1 << 6)
