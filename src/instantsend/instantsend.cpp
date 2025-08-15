@@ -102,36 +102,34 @@ void CInstantSendManager::Stop()
     }
 }
 
-PeerMsgRet CInstantSendManager::ProcessMessage(const CNode& pfrom, PeerManager& peerman, std::string_view msg_type,
-                                               CDataStream& vRecv)
-{
-    if (IsInstantSendEnabled() && msg_type == NetMsgType::ISDLOCK) {
-        const auto islock = std::make_shared<instantsend::InstantSendLock>();
-        vRecv >> *islock;
-        return ProcessMessageInstantSendLock(pfrom, peerman, islock);
-    }
-    return {};
-}
-
 bool ShouldReportISLockTiming() {
     return g_stats_client->active() || LogAcceptDebug(BCLog::INSTANTSEND);
 }
 
-PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom, PeerManager& peerman,
-                                                              const instantsend::InstantSendLockPtr& islock)
+MessageProcessingResult CInstantSendManager::ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv)
 {
+    if (!IsInstantSendEnabled() || msg_type != NetMsgType::ISDLOCK) {
+        return {};
+    }
+
+    const auto islock = std::make_shared<instantsend::InstantSendLock>();
+    vRecv >> *islock;
+
     auto hash = ::SerializeHash(*islock);
 
-    WITH_LOCK(::cs_main, peerman.EraseObjectRequest(pfrom.GetId(), CInv(MSG_ISDLOCK, hash)));
+    MessageProcessingResult ret{};
+    ret.m_to_erase = CInv{MSG_ISDLOCK, hash};
 
     if (!islock->TriviallyValid()) {
-        return tl::unexpected{100};
+        ret.m_error = MisbehavingError{100};
+        return ret;
     }
 
     const auto blockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(islock->cycleHash));
     if (blockIndex == nullptr) {
         // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
-        return tl::unexpected{1};
+        ret.m_error = MisbehavingError{1};
+        return ret;
     }
 
     // Deterministic islocks MUST use rotation based llmq
@@ -139,16 +137,17 @@ PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt);
     if (blockIndex->nHeight % llmq_params_opt->dkgInterval != 0) {
-        return tl::unexpected{100};
+        ret.m_error = MisbehavingError{100};
+        return ret;
     }
 
     if (WITH_LOCK(cs_pendingLocks, return pendingInstantSendLocks.count(hash) || pendingNoTxInstantSendLocks.count(hash)) ||
         db.KnownInstantSendLock(hash)) {
-        return {};
+        return ret;
     }
 
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: received islock, peer=%d\n", __func__,
-             islock->txid.ToString(), hash.ToString(), pfrom.GetId());
+             islock->txid.ToString(), hash.ToString(), from);
 
     if (ShouldReportISLockTiming()) {
         auto time_diff = [&]() -> int64_t {
@@ -168,8 +167,8 @@ PeerMsgRet CInstantSendManager::ProcessMessageInstantSendLock(const CNode& pfrom
     }
 
     LOCK(cs_pendingLocks);
-    pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom.GetId(), islock));
-    return {};
+    pendingInstantSendLocks.emplace(hash, std::make_pair(from, islock));
+    return ret;
 }
 
 bool CInstantSendManager::ProcessPendingInstantSendLocks(PeerManager& peerman)

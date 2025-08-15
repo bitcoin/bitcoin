@@ -5289,7 +5289,7 @@ void PeerManagerImpl::ProcessMessage(
             return; // CLSIG
         }
 
-        ProcessPeerMsgRet(m_llmq_ctx->isman->ProcessMessage(pfrom, *this, msg_type, vRecv), pfrom);
+        PostProcessMessage(m_llmq_ctx->isman->ProcessMessage(pfrom.GetId(), msg_type, vRecv), pfrom.GetId());
         return;
     }
 
