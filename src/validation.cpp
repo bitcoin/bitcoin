@@ -121,14 +121,6 @@ static bool CheckProofOfWork(const uint256& hash, unsigned int nBits, const Cons
     return UintToArith256(hash) <= bnTarget;
 }
 
-bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& params)
-{
-    for (const auto& header : headers) {
-        if (!CheckProofOfWork(header.GetHash(), header.nBits, params)) return false;
-    }
-    return true;
-}
-
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& params, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // Check block weight
