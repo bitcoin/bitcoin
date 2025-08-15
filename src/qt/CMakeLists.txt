@@ -290,14 +290,9 @@ if(BUILD_GUI_TESTS)
 endif()
 
 find_program(XGETTEXT_EXECUTABLE xgettext)
-find_program(SED_EXECUTABLE sed)
 if(NOT XGETTEXT_EXECUTABLE)
   add_custom_target(translate
     COMMAND ${CMAKE_COMMAND} -E echo "Error: GNU gettext-tools not found"
-  )
-elseif(NOT SED_EXECUTABLE)
-  add_custom_target(translate
-    COMMAND ${CMAKE_COMMAND} -E echo "Error: GNU sed not found"
   )
 else()
   add_custom_target(translate COMMAND ${CMAKE_COMMAND}
@@ -306,7 +301,6 @@ else()
     -D "LCONVERT_EXECUTABLE=$<TARGET_FILE:Qt6::lconvert>"
     -D "LUPDATE_EXECUTABLE=$<TARGET_FILE:Qt6::lupdate>"
     -D "PYTHON_EXECUTABLE=$<TARGET_FILE:Python3::Interpreter>"
-    -D "SED_EXECUTABLE=${SED_EXECUTABLE}"
     -D "XGETTEXT_EXECUTABLE=${XGETTEXT_EXECUTABLE}"
     -P ${PROJECT_SOURCE_DIR}/share/qt/translate.cmake
   )

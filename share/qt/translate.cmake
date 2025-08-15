@@ -8,7 +8,6 @@ set(input_variables
   LCONVERT_EXECUTABLE
   LUPDATE_EXECUTABLE
   PYTHON_EXECUTABLE
-  SED_EXECUTABLE
   XGETTEXT_EXECUTABLE
 )
 
@@ -73,13 +72,11 @@ execute_process(
   COMMAND_ERROR_IS_FATAL ANY
 )
 
-execute_process(
-  COMMAND ${SED_EXECUTABLE}
-    -i.old
-    -e "s|source-language=\"en\" target-language=\"en\"|source-language=\"en\"|"
-    -e "/<target xml:space=\"preserve\"><\\/target>/d"
-    ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf
-  COMMAND_ERROR_IS_FATAL ANY
+file(READ "${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf" bitcoin_en)
+string(REPLACE "source-language=\"en\" target-language=\"en\""
+  "source-language=\"en\"" bitcoin_en "${bitcoin_en}"
 )
-
-file(REMOVE "${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf.old")
+string(REGEX REPLACE " *<target xml:space=\"preserve\"></target>\n"
+  "" bitcoin_en "${bitcoin_en}"
+)
+file(WRITE "${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf" "${bitcoin_en}")
