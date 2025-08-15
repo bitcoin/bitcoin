@@ -38,7 +38,7 @@ private:
     CAmount m_total_unspendables_scripts{0};
     CAmount m_total_unspendables_unclaimed_rewards{0};
 
-    [[nodiscard]] bool ReverseBlock(const interfaces::BlockInfo& block);
+    [[nodiscard]] bool RevertBlock(const interfaces::BlockInfo& block);
 
     bool AllowPrune() const override { return true; }
 
