@@ -3,6 +3,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <hash.h>
 #include <logging.h>
 #include <pos/stake.h>
@@ -16,7 +17,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
                           uint256 hashBlockFrom, unsigned int nTimeBlockFrom,
                           CAmount amount, const COutPoint& prevout,
                           unsigned int nTimeTx, uint256& hashProofOfStake,
-                          bool fPrintProofOfStake)
+                          bool fPrintProofOfStake, int64_t min_stake_age)
 {
     assert(pindexPrev);
 
@@ -32,7 +33,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
     }
 
     // Enforce minimum coin age
-    if (nTimeTx <= nTimeBlockFrom || nTimeTx - nTimeBlockFrom < MIN_STAKE_AGE) {
+    if (nTimeTx <= nTimeBlockFrom || nTimeTx - nTimeBlockFrom < min_stake_age) {
         LogDebug(BCLog::STAKING,
                  "CheckStakeKernelHash: min age violation nTimeTx=%u nTimeBlockFrom=%u",
                  nTimeTx, nTimeBlockFrom);
@@ -105,6 +106,9 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
         return false;
     }
 
+    const int64_t min_stake_age =
+        (pindexPrev->nHeight + 1 < COINBASE_MATURITY) ? 0 : MIN_STAKE_AGE;
+
     uint256 hashProof;
     for (size_t i = 0; i < tx->vin.size(); ++i) {
         const CTxIn& txin = tx->vin[i];
@@ -126,7 +130,7 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
 
         // All inputs must satisfy basic age and amount requirements
         if (block.nTime <= pindexFrom->nTime ||
-            block.nTime - pindexFrom->nTime < MIN_STAKE_AGE) {
+            block.nTime - pindexFrom->nTime < min_stake_age) {
             LogDebug(BCLog::STAKING,
                      "ContextualCheckProofOfStake: input %s too young", txin.prevout.ToString());
             return false;
@@ -142,7 +146,7 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
         if (i == 0) {
             if (!CheckStakeKernelHash(pindexPrev, block.nBits, pindexFrom->GetBlockHash(),
                                       pindexFrom->nTime, coin.out.nValue, txin.prevout,
-                                      block.nTime, hashProof, true)) {
+                                      block.nTime, hashProof, true, min_stake_age)) {
                 LogDebug(BCLog::STAKING,
                          "ContextualCheckProofOfStake: kernel check failed for %s",
                          txin.prevout.ToString());
