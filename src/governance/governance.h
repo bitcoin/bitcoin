@@ -272,8 +272,8 @@ public:
      */
     bool ConfirmInventoryRequest(const CInv& inv);
 
-    void SyncSingleObjVotes(CNode& peer, PeerManager& peerman, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
-    [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, PeerManager& peerman, CConnman& connman) const;
+    [[nodiscard]] MessageProcessingResult SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
+    [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, CConnman& connman) const;
 
     [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& peer, CConnman& connman, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
 
