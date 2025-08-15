@@ -2,7 +2,9 @@ BitGold Staker
 ==============
 
 BitGold combines proof-of-work with proof-of-stake. Any node that holds
-mature coins may stake to help secure the network and earn rewards.
+mature coins may stake to help secure the network and earn rewards. All
+blocks—including the first after the genesis block—must include a valid
+coinstake transaction.
 
 ## Enabling staking
 

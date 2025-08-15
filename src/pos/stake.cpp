@@ -93,11 +93,6 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
              "ContextualCheckProofOfStake: height=%d time=%u txs=%u",
              pindexPrev->nHeight, block.nTime, block.vtx.size());
 
-    // Allow first block after genesis to be mined with proof-of-work
-    if (pindexPrev->nHeight < 1) {
-        return true;
-    }
-
     if (block.vtx.size() < 2) {
         LogDebug(BCLog::STAKING,
                  "ContextualCheckProofOfStake: block missing coinstake tx");

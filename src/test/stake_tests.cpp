@@ -73,4 +73,76 @@ BOOST_AUTO_TEST_CASE(invalid_kernel_target)
                                       amount, prevout, nTimeTx, hash_proof, false));
 }
 
+BOOST_AUTO_TEST_CASE(height1_requires_coinstake)
+{
+    uint256 prev_hash{1};
+    CBlockIndex prev_index;
+    prev_index.nHeight = 0;
+    prev_index.nTime = 0;
+    prev_index.phashBlock = &prev_hash;
+
+    CChain chain;
+    chain.SetTip(prev_index);
+
+    CCoinsView view_base;
+    CCoinsViewCache view(&view_base);
+    Consensus::Params params;
+
+    CBlock block;
+    block.nTime = 16;
+
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].prevout.SetNull();
+    coinbase.vout.resize(1);
+    block.vtx.emplace_back(MakeTransactionRef(std::move(coinbase)));
+
+    BOOST_CHECK(!ContextualCheckProofOfStake(block, &prev_index, view, chain, params));
+}
+
+BOOST_AUTO_TEST_CASE(valid_height1_coinstake)
+{
+    uint256 prev_hash{1};
+    CBlockIndex prev_index;
+    prev_index.nHeight = 0;
+    prev_index.nTime = 0;
+    prev_index.nBits = 0x207fffff;
+    prev_index.phashBlock = &prev_hash;
+
+    CChain chain;
+    chain.SetTip(prev_index);
+
+    CCoinsView view_base;
+    CCoinsViewCache view(&view_base);
+
+    // Add a mature coin to the view
+    COutPoint prevout{Txid::FromUint256(uint256{2}), 0};
+    Coin coin;
+    coin.out.nValue = 1 * COIN;
+    coin.nHeight = 0;
+    view.AddCoin(prevout, std::move(coin), false);
+
+    CBlock block;
+    block.nTime = MIN_STAKE_AGE + 16;
+    block.nBits = 0x207fffff;
+
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].prevout.SetNull();
+    coinbase.vout.resize(1);
+    block.vtx.emplace_back(MakeTransactionRef(coinbase));
+
+    CMutableTransaction coinstake;
+    coinstake.nLockTime = 1;
+    coinstake.vin.emplace_back(prevout);
+    coinstake.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
+    coinstake.vout.resize(2);
+    coinstake.vout[0].SetNull();
+    coinstake.vout[1].nValue = 1 * COIN;
+    block.vtx.emplace_back(MakeTransactionRef(std::move(coinstake)));
+
+    Consensus::Params params;
+    BOOST_CHECK(ContextualCheckProofOfStake(block, &prev_index, view, chain, params));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
