@@ -14,7 +14,23 @@
 
 namespace wallet {
 namespace {
-TestingSetup* g_setup;
+
+struct FeeEstimatorTestingSetup : public TestingSetup {
+    FeeEstimatorTestingSetup(const ChainType chain_type, TestOpts opts) : TestingSetup{chain_type, opts}
+    {
+    }
+
+    ~FeeEstimatorTestingSetup() {
+        m_node.fee_estimator.reset();
+    }
+
+    void SetFeeEstimator(std::unique_ptr<CBlockPolicyEstimator> fee_estimator)
+    {
+        m_node.fee_estimator = std::move(fee_estimator);
+    }
+};
+
+FeeEstimatorTestingSetup* g_setup;
 
 class FuzzedBlockPolicyEstimator : public CBlockPolicyEstimator
 {
@@ -37,7 +53,7 @@ public:
 
 void initialize_setup()
 {
-    static const auto testing_setup = MakeNoLogFileContext<TestingSetup>();
+    static const auto testing_setup = MakeNoLogFileContext<FeeEstimatorTestingSetup>();
     g_setup = testing_setup.get();
 }
 
@@ -57,7 +73,7 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator = std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider);
-    node.fee_estimator = std::move(fee_estimator);
+    g_setup->SetFeeEstimator(std::move(fee_estimator));
     std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
     CWallet& wallet{*wallet_ptr};
     {
