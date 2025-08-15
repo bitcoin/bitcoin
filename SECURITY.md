@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-See our website for versions of Bitcoin Core that are currently supported with
+See our website for versions of BitGold that are currently supported with
 security updates: https://bitcoincore.org/en/lifecycle/#schedule
 
 ## Reporting a Vulnerability
