@@ -14,6 +14,9 @@ from test_framework.util import assert_equal
 # Service flags
 NODE_COMPACT_FILTERS = (1 << 6)
 
+# Constants
+BASIC_FILTER_INDEX = 'basic filter index'
+
 
 class MasternodeParamsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -30,7 +33,7 @@ class MasternodeParamsTest(BitcoinTestFramework):
 
         # Regular node should not have blockfilterindex enabled
         index_info = node0.getindexinfo()
-        assert 'basic filter index' not in index_info
+        assert BASIC_FILTER_INDEX not in index_info
 
         self.log.info("Test that masternode has blockfilters auto-enabled")
         # Generate a valid BLS key for testing
@@ -68,15 +71,21 @@ class MasternodeParamsTest(BitcoinTestFramework):
 
         # Should not have blockfilterindex
         index_info = node1.getindexinfo()
-        assert 'basic filter index' not in index_info
+        assert BASIC_FILTER_INDEX not in index_info
 
         self.log.info("Test that masternode parameter interaction is logged")
-        # Check debug log for parameter interaction messages
-        with open(node1.debug_log_path, 'r', encoding='utf-8') as f:
-            log_content = f.read()
-            assert "parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1" in log_content
-            # Note: The peerblockfilters and blockfilterindex messages won't be in the log
-            # when explicitly disabled, only when auto-enabled
+        # Stop the node first so we can check the startup logs
+        self.stop_node(1)
+
+        # Check debug log for parameter interaction messages during startup
+        with self.nodes[1].assert_debug_log(["parameter interaction: -masternodeblsprivkey set -> setting -disablewallet=1"]):
+            self.start_node(1, extra_args=[
+                f"-masternodeblsprivkey={bls_key}",
+                "-peerblockfilters=0",
+                "-blockfilterindex=0"
+            ])
+        # Note: The peerblockfilters and blockfilterindex messages won't be in the log
+        # when explicitly disabled, only when auto-enabled
 
 
 if __name__ == '__main__':
