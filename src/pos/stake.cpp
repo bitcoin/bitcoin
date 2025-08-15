@@ -152,3 +152,13 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
     }
     return true;
 }
+
+bool IsProofOfStake(const CBlock& block)
+{
+    if (block.vtx.size() < 2) return false;
+    const CTransactionRef& tx = block.vtx[1];
+    if (tx->vin.empty() || tx->vout.size() < 2) return false;
+    if (tx->vin[0].prevout.IsNull()) return false;
+    if (!tx->vout[0].IsNull()) return false;
+    return true;
+}

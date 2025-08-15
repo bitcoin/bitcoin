@@ -32,4 +32,7 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
                                  const CCoinsViewCache& view, const CChain& chain,
                                  const Consensus::Params& params);
 
+/** Return true if the block appears to be proof-of-stake. */
+bool IsProofOfStake(const CBlock& block);
+
 #endif // BITCOIN_POS_STAKE_H

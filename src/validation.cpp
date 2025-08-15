@@ -71,6 +71,7 @@
 #include <deque>
 #include <numeric>
 #include <optional>
+#include <set>
 #include <ranges>
 #include <span>
 #include <string>
@@ -111,6 +112,76 @@ TRACEPOINT_SEMAPHORE(validation, block_connected);
 TRACEPOINT_SEMAPHORE(utxocache, flush);
 TRACEPOINT_SEMAPHORE(mempool, replaced);
 TRACEPOINT_SEMAPHORE(mempool, rejected);
+
+static bool CheckProofOfWork(const uint256& hash, unsigned int nBits, const Consensus::Params& params)
+{
+    arith_uint256 bnTarget;
+    bnTarget.SetCompact(nBits);
+    if (bnTarget <= 0 || bnTarget > UintToArith256(params.powLimit)) return false;
+    return UintToArith256(hash) <= bnTarget;
+}
+
+bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& params)
+{
+    for (const auto& header : headers) {
+        if (!CheckProofOfWork(header.GetHash(), header.nBits, params)) return false;
+    }
+    return true;
+}
+
+bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& params, bool fCheckPOW, bool fCheckMerkleRoot)
+{
+    // Check block weight
+    if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-weight", "block weight limits exceeded");
+    }
+
+    if (block.vtx.empty()) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "no transactions");
+    }
+
+    // First transaction must be coinbase, the rest must not be
+    if (!block.vtx[0]->IsCoinBase()) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
+    }
+    for (size_t i = 1; i < block.vtx.size(); ++i) {
+        if (block.vtx[i]->IsCoinBase()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "multiple coinbase");
+        }
+    }
+
+    // Check for duplicate txids
+    std::set<Txid> unique_txids;
+    for (const auto& tx : block.vtx) {
+        if (!unique_txids.insert(tx->GetHash()).second) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-duplicate", "duplicate transaction");
+        }
+    }
+
+    // Verify merkle root
+    if (fCheckMerkleRoot) {
+        if (block.hashMerkleRoot != BlockMerkleRoot(block)) {
+            return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txnmrklroot", "hashMerkleRoot mismatch");
+        }
+    }
+
+    // Proof checks
+    if (IsProofOfStake(block)) {
+        const CBlockIndex* pindexPrev{nullptr};
+        CCoinsView dummy_view;
+        CCoinsViewCache view(&dummy_view);
+        CChain chain;
+        if (pindexPrev && !ContextualCheckProofOfStake(block, pindexPrev, view, chain, params)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos", "proof of stake check failed");
+        }
+    } else if (fCheckPOW) {
+        if (!CheckProofOfWork(block.GetHash(), block.nBits, params)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
+        }
+    }
+
+    return true;
+}
 
 const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
