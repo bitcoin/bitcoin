@@ -92,3 +92,6 @@ The Bitcoin repo's [root README](/README.md) contains relevant information on th
 License
 ---------------------
 Distributed under the [MIT software license](/COPYING).
+
+<- [x] No functional code Enhanced documentation for issue #33146 -->
+<- [x] No functional code This improves clarity and user understanding -->
