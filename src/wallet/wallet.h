@@ -321,9 +321,6 @@ private:
     std::atomic<double> m_scanning_progress{0};
     friend class WalletRescanReserver;
 
-    //! the current wallet version: clients below this version are not able to load the wallet
-    int nWalletVersion GUARDED_BY(cs_wallet){FEATURE_BASE};
-
     /** The next scheduled rebroadcast of wallet transactions. */
     NodeClock::time_point m_next_resend{GetDefaultNextResend()};
     /** Whether this wallet will submit newly created transactions to the node's mempool and
@@ -556,9 +553,6 @@ public:
     int GetTxBlocksToMaturity(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool IsTxImmatureCoinBase(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    //! check whether we support the named feature
-    bool CanSupportFeature(enum WalletFeature wf) const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); return IsFeatureSupported(nWalletVersion, wf); }
-
     bool IsSpent(const COutPoint& outpoint) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     // Whether this or any known scriptPubKey with the same single key has been spent.
@@ -587,8 +581,6 @@ public:
 
     //! Upgrade DescriptorCaches
     void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
-    bool LoadMinVersion(int nVersion) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) { AssertLockHeld(cs_wallet); nWalletVersion = nVersion; return true; }
 
     //! Marks destination as previously spent.
     void LoadAddressPreviouslySpent(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -824,12 +816,6 @@ public:
     bool EraseAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
-    //! signify that a particular wallet feature is now used.
-    void SetMinVersion(enum WalletFeature, WalletBatch* batch_in = nullptr) override;
-
-    //! get the current wallet format (the oldest client version guaranteed to understand this wallet)
-    int GetVersion() const { LOCK(cs_wallet); return nWalletVersion; }
 
     //! Get wallet transactions that conflict with given transaction (spend same outputs)
     std::set<Txid> GetConflicts(const Txid& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

@@ -40,7 +40,7 @@ static RPCHelpMan getwalletinfo()
                     {
                         {
                         {RPCResult::Type::STR, "walletname", "the wallet name"},
-                        {RPCResult::Type::NUM, "walletversion", "the wallet version"},
+                        {RPCResult::Type::NUM, "walletversion", "(DEPRECATED) only related to unsupported legacy wallet, returns the latest version 169900 for backwards compatibility"},
                         {RPCResult::Type::STR, "format", "the database format (only sqlite)"},
                         {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
                         {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
@@ -82,16 +82,16 @@ static RPCHelpMan getwalletinfo()
 
     UniValue obj(UniValue::VOBJ);
 
+    const int latest_legacy_wallet_minversion{169900};
+
     size_t kpExternalSize = pwallet->KeypoolCountExternalKeys();
     obj.pushKV("walletname", pwallet->GetName());
-    obj.pushKV("walletversion", pwallet->GetVersion());
+    obj.pushKV("walletversion", latest_legacy_wallet_minversion);
     obj.pushKV("format", pwallet->GetDatabase().Format());
     obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
     obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
+    obj.pushKV("keypoolsize_hd_internal", pwallet->GetKeyPoolSize() - kpExternalSize);
 
-    if (pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
-        obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
-    }
     if (pwallet->IsCrypted()) {
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }

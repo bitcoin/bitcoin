@@ -31,7 +31,6 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
 {
     LOCK(wallet_instance->cs_wallet);
 
-    wallet_instance->SetMinVersion(FEATURE_LATEST);
     wallet_instance->InitWalletFlags(wallet_creation_flags);
 
     Assert(wallet_instance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));

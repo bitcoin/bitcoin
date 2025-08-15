@@ -241,8 +241,6 @@ public:
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
-    bool WriteMinVersion(int nVersion);
-
     bool WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const CPrivKey& privkey);
     bool WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret);
     bool WriteDescriptor(const uint256& desc_id, const WalletDescriptor& descriptor);
