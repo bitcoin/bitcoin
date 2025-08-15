@@ -18,12 +18,6 @@ which can be optionally built.
 
 Further information about BitGold is available in the [doc folder](/doc).
 
-License
--------
-
-BitGold is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/license/MIT.
-
 Development Process
 -------------------
 
@@ -43,8 +37,8 @@ Staking
 -------
 
 To participate in BitGold's proof-of-stake, run `bitgoldd` or `bitgold-qt` with
-`-staking=1`, or add `staking=1` to `bitgold.conf`. The staking status can be
-checked with `bitgold-cli getstakinginfo`.
+`-staker`, or add `staker=1` to `bitgold.conf`. The staking status can be
+checked with `bitgold-cli stakerstatus`.
 
 Testing
 -------
