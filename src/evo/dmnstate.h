@@ -260,7 +260,7 @@ public:
             } else if constexpr (BaseType::mask == Field_netInfo) {
                 if (obj.fields & member.mask) {
                     READWRITE(NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.state.netInfo),
-                                                obj.state.nVersion == ProTxVersion::ExtAddr));
+                                                obj.state.nVersion >= ProTxVersion::ExtAddr));
                 }
             } else {
                 if (obj.fields & member.mask) {
