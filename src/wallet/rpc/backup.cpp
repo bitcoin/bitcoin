@@ -526,7 +526,7 @@ RPCHelpMan listdescriptors()
         wallet_descriptors.push_back({
             descriptor,
             wallet_descriptor.creation_time,
-            active_spk_mans.count(desc_spk_man) != 0,
+            active_spk_mans.contains(desc_spk_man),
             wallet->IsInternalScriptPubKeyMan(desc_spk_man),
             is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
             wallet_descriptor.next_index

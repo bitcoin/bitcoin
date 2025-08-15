@@ -50,7 +50,7 @@ LockResult LockDirectory(const fs::path& directory, const fs::path& lockfile_nam
     fs::path pathLockFile = directory / lockfile_name;
 
     // If a lock for this directory already exists in the map, don't try to re-lock it
-    if (dir_locks.count(fs::PathToString(pathLockFile))) {
+    if (dir_locks.contains(fs::PathToString(pathLockFile))) {
         return LockResult::Success;
     }
 
