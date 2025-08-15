@@ -380,18 +380,6 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     return true;
 }
 
-PeerMsgRet CSigningManager::ProcessMessage(const CNode& pfrom, PeerManager& peerman, const std::string& msg_type,
-                                           CDataStream& vRecv)
-{
-    if (msg_type == NetMsgType::QSIGREC) {
-        auto recoveredSig = std::make_shared<CRecoveredSig>();
-        vRecv >> *recoveredSig;
-
-        return ProcessMessageRecoveredSig(pfrom, peerman, recoveredSig);
-    }
-    return {};
-}
-
 static bool PreVerifyRecoveredSig(const CQuorumManager& quorum_manager, const CRecoveredSig& recoveredSig, bool& retBan)
 {
     retBan = false;
@@ -416,39 +404,46 @@ static bool PreVerifyRecoveredSig(const CQuorumManager& quorum_manager, const CR
     return true;
 }
 
-PeerMsgRet CSigningManager::ProcessMessageRecoveredSig(const CNode& pfrom, PeerManager& peerman,
-                                                       const std::shared_ptr<const CRecoveredSig>& recoveredSig)
+MessageProcessingResult CSigningManager::ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv)
 {
-    WITH_LOCK(::cs_main,
-              peerman.EraseObjectRequest(pfrom.GetId(), CInv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash())));
+    if (msg_type != NetMsgType::QSIGREC) {
+        return {};
+    }
+
+    auto recoveredSig = std::make_shared<CRecoveredSig>();
+    vRecv >> *recoveredSig;
+
+    MessageProcessingResult ret{};
+    ret.m_to_erase = CInv{MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash()};
 
     bool ban = false;
     if (!PreVerifyRecoveredSig(qman, *recoveredSig, ban)) {
         if (ban) {
-            return tl::unexpected{100};
+            ret.m_error = MisbehavingError{100};
+            return ret;
         }
-        return {};
+        return ret;
     }
 
     // It's important to only skip seen *valid* sig shares here. See comment for CBatchedSigShare
     // We don't receive recovered sigs in batches, but we do batched verification per node on these
     if (db.HasRecoveredSigForHash(recoveredSig->GetHash())) {
-        return {};
+        return ret;
     }
 
     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
-             recoveredSig->buildSignHash().ToString(), recoveredSig->getId().ToString(), recoveredSig->getMsgHash().ToString(), pfrom.GetId());
+             recoveredSig->buildSignHash().ToString(), recoveredSig->getId().ToString(), recoveredSig->getMsgHash().ToString(), from);
 
     LOCK(cs_pending);
     if (pendingReconstructedRecoveredSigs.count(recoveredSig->GetHash())) {
         // no need to perform full verification
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- already pending reconstructed sig, signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
-                 recoveredSig->buildSignHash().ToString(), recoveredSig->getId().ToString(), recoveredSig->getMsgHash().ToString(), pfrom.GetId());
-        return {};
+                 recoveredSig->buildSignHash().ToString(), recoveredSig->getId().ToString(), recoveredSig->getMsgHash().ToString(), from);
+        return ret;
     }
 
-    pendingRecoveredSigs[pfrom.GetId()].emplace_back(recoveredSig);
-    return {};
+    pendingRecoveredSigs[from].emplace_back(recoveredSig);
+    return ret;
 }
 
 void CSigningManager::CollectPendingRecoveredSigsToVerify(
