@@ -1,12 +1,12 @@
-Contributing to Bitcoin Core
-============================
+Contributing to BitGold
+=======================
 
-The Bitcoin Core project operates an open contributor model where anyone is
+The BitGold project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
 
-First, in terms of structure, there is no particular concept of "Bitcoin Core
+First, in terms of structure, there is no particular concept of "BitGold
 developers" in the sense of privileged people. Open source often naturally
 revolves around a meritocracy where contributors earn trust from the developer
 community over time. Nevertheless, some hierarchy is necessary for practical
@@ -24,9 +24,9 @@ as a new contributor. It also will teach you much more about the code and
 process than opening pull requests. Please refer to the [peer review](#peer-review)
 section below.
 
-Before you start contributing, familiarize yourself with the Bitcoin Core build
+Before you start contributing, familiarize yourself with the BitGold build
 system and tests. Refer to the documentation in the repository on how to build
-Bitcoin Core and how to run the unit tests, functional tests, and fuzz tests.
+BitGold and how to run the unit tests, functional tests, and fuzz tests.
 
 There are many open issues of varying difficulty waiting to be fixed.
 If you're looking for somewhere to start contributing, check out the
@@ -36,7 +36,7 @@ list or changes that are
 Some of them might no longer be applicable. So if you are interested, but
 unsure, you might want to leave a comment on the issue first.
 
-You may also participate in the [Bitcoin Core PR Review Club](https://bitcoincore.reviews/).
+You may also participate in the [PR Review Club](https://bitcoincore.reviews/).
 
 ### Good First Issue Label
 
@@ -54,7 +54,7 @@ and is also an effective way to request assistance if and when you need it.
 Communication Channels
 ----------------------
 
-Most communication about Bitcoin Core development happens on IRC, in the
+Most communication about BitGold development happens on IRC, in the
 `#bitcoin-core-dev` channel on Libera Chat. The easiest way to participate on IRC is
 with the web client, [web.libera.chat](https://web.libera.chat/#bitcoin-core-dev). Chat
 history logs can be found
@@ -171,7 +171,7 @@ mailing list discussions).
 The description for a new pull request should not contain any `@` mentions. The
 PR description will be included in the commit message when the PR is merged and
 any users mentioned in the description will be annoyingly notified each time a
-fork of Bitcoin Core copies the merge. Instead, make any username mentions in a
+fork of BitGold copies the merge. Instead, make any username mentions in a
 subsequent comment to the PR.
 
 ### Translation changes
@@ -290,11 +290,11 @@ workload on reviewing.
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Bitcoin Core project (and related
+The following applies to code changes to the BitGold project (and related
 projects such as libsecp256k1), and is not to be confused with overall Bitcoin
 Network Protocol consensus changes.
 
-Whether a pull request is merged into Bitcoin Core rests with the project merge
+Whether a pull request is merged into BitGold rests with the project merge
 maintainers.
 
 Maintainers will take into consideration if a patch is in line with the general
