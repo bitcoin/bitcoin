@@ -27,8 +27,6 @@ using node::fReindex;
 using node::GetTransaction;
 
 namespace instantsend {
-static constexpr std::string_view INPUTLOCK_REQUESTID_PREFIX{"inlock"};
-
 InstantSendSigner::InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
                                      InstantSendSignerParent& isman, llmq::CSigningManager& sigman,
                                      llmq::CSigSharesManager& shareman, llmq::CQuorumManager& qman,
@@ -113,8 +111,7 @@ void InstantSendSigner::HandleNewInputLockRecoveredSig(const llmq::CRecoveredSig
 
     if (LogAcceptDebug(BCLog::INSTANTSEND)) {
         for (const auto& in : tx->vin) {
-            auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
-            if (id == recoveredSig.getId()) {
+            if (GenInputLockRequestId(in.prevout) == recoveredSig.getId()) {
                 LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: got recovered sig for input %s\n", __func__,
                          txid.ToString(), in.prevout.ToStringShort());
                 break;
@@ -298,7 +295,7 @@ bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroact
 
     size_t alreadyVotedCount = 0;
     for (const auto& in : tx.vin) {
-        auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
+        auto id = GenInputLockRequestId(in);
         ids.emplace_back(id);
 
         uint256 otherTxHash;
@@ -347,7 +344,7 @@ void InstantSendSigner::TrySignInstantSendLock(const CTransaction& tx)
     const auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
 
     for (const auto& in : tx.vin) {
-        auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
+        auto id = GenInputLockRequestId(in);
         if (!m_sigman.HasRecoveredSig(llmqType, id, tx.GetHash())) {
             return;
         }
