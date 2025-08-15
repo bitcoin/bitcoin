@@ -1967,6 +1967,42 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
+/**
+ * Iterate over the given headers and ensure each one satisfies the proof of
+ * work or proof of stake target specified by its nBits field.
+ */
+bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams)
+{
+    for (const CBlockHeader& header : headers) {
+        bool fNegative{false};
+        bool fOverflow{false};
+        arith_uint256 bnTarget;
+        bnTarget.SetCompact(header.nBits, &fNegative, &fOverflow);
+
+        // Range checks
+        if (fNegative || fOverflow || bnTarget == 0 || bnTarget > UintToArith256(consensusParams.powLimit)) {
+            return false;
+        }
+
+        // Check whether the block hash satisfies the claimed target. This is
+        // valid for both proof-of-work and proof-of-stake blocks as both must
+        // have hashes below the target encoded in nBits.
+        if (UintToArith256(header.GetHash()) > bnTarget) {
+            return false;
+        }
+    }
+    return true;
+}
+
+arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
+{
+    arith_uint256 total_work{0};
+    for (const CBlockHeader& header : headers) {
+        total_work += GetBlockProof(CBlockIndex(header));
+    }
+    return total_work;
+}
+
 CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)
     : m_dbview{std::move(db_params), std::move(options)},
       m_catcherview(&m_dbview) {}
