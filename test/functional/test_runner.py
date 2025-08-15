@@ -364,6 +364,7 @@ BASE_SCRIPTS = [
     'wallet_migration.py',
     'p2p_ibd_txrelay.py',
     'p2p_seednode.py',
+    'wallet_ancient_migration.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]
@@ -428,7 +429,12 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging_level)
 
     # Create base test directory
-    tmpdir = "%s/test_runner_₿_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    # Special case for tests using old binaries (e.g. version v0.14.3) that don't handle Unicode on Windows
+    has_migration_tests = any('wallet_ancient_migration' in script for script in BASE_SCRIPTS)
+    if platform.system() == 'Windows' and has_migration_tests:
+        tmpdir = "%s/test_runner_btc_run_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
+    else:
+        tmpdir = "%s/test_runner_₿_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
     os.makedirs(tmpdir)
 
