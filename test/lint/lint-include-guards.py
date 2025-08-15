@@ -30,8 +30,7 @@ EXCLUDE_FILES_WITH_PREFIX = ['src/crypto/ctaes',
                              'src/ctpl_stl.h',
                              'src/dashbls',
                              'src/gsl',
-                             'src/immer',
-                             'src/util/expected.h']
+                             'src/immer']
 
 
 def _get_header_file_lst() -> List[str]:
