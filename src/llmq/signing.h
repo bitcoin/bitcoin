@@ -8,6 +8,7 @@
 #include <bls/bls.h>
 #include <gsl/pointers.h>
 #include <llmq/params.h>
+#include <net_types.h>
 #include <protocol.h>
 #include <random.h>
 #include <saltedhasher.h>
@@ -26,8 +27,6 @@ class CInv;
 class CNode;
 class PeerManager;
 class UniValue;
-
-using NodeId = int64_t;
 
 namespace llmq
 {

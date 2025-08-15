@@ -36,8 +36,6 @@ namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
 
-using NodeId = int64_t;
-
 namespace llmq {
 class CChainLocksHandler;
 class CQuorumManager;
