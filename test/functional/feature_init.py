@@ -154,7 +154,7 @@ class InitTest(BitcoinTestFramework):
                 'startup_args': ['-blockfilterindex=1'],
             },
             {
-                'filepath_glob': 'indexes/coinstats/db/*.*',
+                'filepath_glob': 'indexes/coinstatsindex/db/*.*',
                 'error_message': 'LevelDB error: Corruption',
                 'startup_args': ['-coinstatsindex=1'],
             },
