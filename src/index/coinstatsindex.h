@@ -38,6 +38,8 @@ private:
     CAmount m_total_unspendables_scripts{0};
     CAmount m_total_unspendables_unclaimed_rewards{0};
 
+    uint256 m_current_block_hash{};
+
     [[nodiscard]] bool RevertBlock(const interfaces::BlockInfo& block);
 
     bool AllowPrune() const override { return true; }
