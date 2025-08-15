@@ -372,24 +372,25 @@ class AssetLocksTest(DashTestFramework):
 
         assert_equal(asset_unlock_tx_payload.quorumHash, int(self.mninfo[0].get_node(self).quorum("selectquorum", llmq_type_test, 'e6c7a809d79f78ea85b72d5df7e9bd592aecf151e679d6e976b74f053a7f9056')["quorumHash"], 16))
 
-        self.log.info("Test no IS for asset unlock...")
-        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
-        self.wait_for_sporks_same()
-
         txid = self.send_tx(asset_unlock_tx)
-        assert_equal(node.getmempoolentry(txid)['fees']['base'], Decimal("0.0007"))
-        is_id = node_wallet.sendtoaddress(node_wallet.getnewaddress(), 1)
-        self.bump_mocktime(30)
-        for node in self.nodes:
-            self.wait_for_instantlock(is_id, node)
 
-
+        self.log.info("Test RPC getassetunlockstatuses part I")
         tip = self.nodes[0].getblockcount()
         indexes_statuses_no_height = self.nodes[0].getassetunlockstatuses(["101", "102", "300"])
         assert_equal([{'index': 101, 'status': 'mempooled'}, {'index': 102, 'status': 'unknown'}, {'index': 300, 'status': 'unknown'}], indexes_statuses_no_height)
         indexes_statuses_height = self.nodes[0].getassetunlockstatuses(["101", "102", "300"], tip)
         assert_equal([{'index': 101, 'status': 'unknown'}, {'index': 102, 'status': 'unknown'}, {'index': 300, 'status': 'unknown'}], indexes_statuses_height)
 
+
+        self.log.info("Test no IS for asset unlock...")
+        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
+        self.wait_for_sporks_same()
+
+        assert_equal(node.getmempoolentry(txid)['fees']['base'], Decimal("0.0007"))
+        is_id = node_wallet.sendtoaddress(node_wallet.getnewaddress(), 1)
+        self.bump_mocktime(30)
+        for node in self.nodes:
+            self.wait_for_instantlock(is_id, node)
 
         rawtx = node.getrawtransaction(txid, 1)
         rawtx_is = node.getrawtransaction(is_id, 1)
@@ -399,7 +400,7 @@ class AssetLocksTest(DashTestFramework):
         assert_equal(rawtx_is["chainlock"], False)
         assert not "confirmations" in rawtx
         assert not "confirmations" in rawtx_is
-        self.log.info("Disable back IS")
+        self.log.info("Reset IS spork")
         self.set_sporks()
 
         assert "assetUnlockTx" in node.getrawtransaction(txid, 1)
