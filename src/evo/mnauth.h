@@ -58,9 +58,9 @@ public:
      * @pre CMasternodeMetaMan's database must be successfully loaded before
      *      attempting to call this function regardless of sync state
      */
-    static PeerMsgRet ProcessMessage(CNode& peer, ServiceFlags node_services, CConnman& connman, CMasternodeMetaMan& mn_metaman, const CActiveMasternodeManager* const mn_activeman,
-                                     const CMasternodeSync& mn_sync, const CDeterministicMNList& tip_mn_list,
-                                     std::string_view msg_type, CDataStream& vRecv);
+    [[nodiscard]] static MessageProcessingResult ProcessMessage(CNode& peer, ServiceFlags node_services, CConnman& connman, CMasternodeMetaMan& mn_metaman,
+                                                                const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
+                                                                const CDeterministicMNList& tip_mn_list, std::string_view msg_type, CDataStream& vRecv);
     static void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff, CConnman& connman);
 };
 
