@@ -875,6 +875,23 @@ static RPCHelpMan stakerstatus()
         }};
 }
 
+static RPCHelpMan getstakinginfo()
+{
+    return RPCHelpMan{
+        "getstakinginfo",
+        "Returns the staking status for this wallet.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                                              {RPCResult::Type::BOOL, "enabled", "true if staking is enabled via -staker"},
+                                              {RPCResult::Type::BOOL, "staking", "true if the staking thread is running"},
+                                          }},
+        RPCExamples{HelpExampleCli("getstakinginfo", "") + HelpExampleRpc("getstakinginfo", "")},
+        [](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            return stakerstatus().HandleRequest(request);
+        }};
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -1001,6 +1018,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &walletpassphrasechange},
         {"wallet", &walletprocesspsbt},
         {"wallet", &stakerstatus},
+        {"wallet", &getstakinginfo},
     };
     return commands;
 }
