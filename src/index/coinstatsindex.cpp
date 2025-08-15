@@ -126,31 +126,22 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     const CAmount block_subsidy{GetBlockSubsidy(block.height, Params().GetConsensus())};
     CAmount block_unspendable{0};
-    std::pair<uint256, DBVal> read_out;
     std::pair<uint256, DBVal> new_value;
 
     // Ignore genesis block
     if (block.height > 0) {
-        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
-            return false;
-        }
-
         uint256 expected_block_hash{*Assert(block.prev_hash)};
-        if (read_out.first != expected_block_hash) {
+        if (m_current_block_hash != expected_block_hash) {
             LogWarning("previous block header belongs to unexpected block %s; expected %s",
-                      read_out.first.ToString(), expected_block_hash.ToString());
+                      m_current_block_hash.ToString(), expected_block_hash.ToString());
 
+            std::pair<uint256, DBVal> read_out;
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
                 LogError("previous block header not found; expected %s",
                           expected_block_hash.ToString());
                 return false;
             }
         }
-
-        new_value.second.total_amount = read_out.second.total_amount;
-        new_value.second.total_unspendable_amount = read_out.second.total_unspendable_amount;
-        new_value.second.transaction_output_count = read_out.second.transaction_output_count;
-        new_value.second.bogo_size = read_out.second.bogo_size;
 
         // Add the new utxos created from the block
         assert(block.data);
@@ -185,9 +176,9 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
                     new_value.second.block_new_outputs_ex_coinbase_amount += coin.out.nValue;
                 }
 
-                ++new_value.second.transaction_output_count;
-                new_value.second.total_amount += coin.out.nValue;
-                new_value.second.bogo_size += GetBogoSize(coin.out.scriptPubKey);
+                ++m_transaction_output_count;
+                m_total_amount += coin.out.nValue;
+                m_bogo_size += GetBogoSize(coin.out.scriptPubKey);
             }
 
             // The coinbase tx has no undo data since no former output is spent
@@ -202,9 +193,9 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
                     new_value.second.block_prevout_spent_amount += coin.out.nValue;
 
-                    --new_value.second.transaction_output_count;
-                    new_value.second.total_amount -= coin.out.nValue;
-                    new_value.second.bogo_size -= GetBogoSize(coin.out.scriptPubKey);
+                    --m_transaction_output_count;
+                    m_total_amount -= coin.out.nValue;
+                    m_bogo_size -= GetBogoSize(coin.out.scriptPubKey);
                 }
             }
         }
@@ -222,13 +213,19 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     // rewards are also unspendable.
     const CAmount unclaimed_rewards{(new_value.second.block_prevout_spent_amount + new_value.second.block_subsidy) - (new_value.second.block_new_outputs_ex_coinbase_amount + new_value.second.block_coinbase_amount + block_unspendable)};
     new_value.second.block_unspendables_unclaimed_rewards += unclaimed_rewards;
-    new_value.second.total_unspendable_amount += (unclaimed_rewards + block_unspendable);
+    m_total_unspendable_amount += (unclaimed_rewards + block_unspendable);
 
     new_value.first = block.hash;
+    new_value.second.total_amount = m_total_amount;
+    new_value.second.total_unspendable_amount = m_total_unspendable_amount;
+    new_value.second.transaction_output_count = m_transaction_output_count;
+    new_value.second.bogo_size = m_bogo_size;
 
     uint256 out;
     m_muhash.Finalize(out);
     new_value.second.muhash = out;
+
+    m_current_block_hash = block.hash;
 
     // Intentionally do not update DB_MUHASH here so it stays in sync with
     // DB_BEST_BLOCK, and the index is not corrupted if there is an unclean shutdown.
@@ -354,6 +351,12 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
                       GetName());
             return false;
         }
+
+        m_transaction_output_count = entry.transaction_output_count;
+        m_bogo_size = entry.bogo_size;
+        m_total_amount = entry.total_amount;
+        m_total_unspendable_amount = entry.total_unspendable_amount;
+        m_current_block_hash = block->hash;
     }
 
     return true;
@@ -438,6 +441,12 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
     uint256 out;
     m_muhash.Finalize(out);
     Assert(read_out.second.muhash == out);
+
+    m_transaction_output_count = read_out.second.transaction_output_count;
+    m_bogo_size = read_out.second.bogo_size;
+    m_total_amount = read_out.second.total_amount;
+    m_total_unspendable_amount = read_out.second.total_unspendable_amount;
+    m_current_block_hash = *block.prev_hash;
 
     return true;
 }

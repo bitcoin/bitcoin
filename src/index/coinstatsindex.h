@@ -25,6 +25,12 @@ private:
     std::unique_ptr<BaseIndex::DB> m_db;
 
     MuHash3072 m_muhash;
+    uint64_t m_transaction_output_count{0};
+    uint64_t m_bogo_size{0};
+    CAmount m_total_amount{0};
+    CAmount m_total_unspendable_amount{0};
+
+    uint256 m_current_block_hash{};
 
     [[nodiscard]] bool RevertBlock(const interfaces::BlockInfo& block);
 
