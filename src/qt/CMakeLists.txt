@@ -289,44 +289,6 @@ if(BUILD_GUI_TESTS)
   add_subdirectory(test)
 endif()
 
-
-# Gets sources to be parsed to gather translatable strings.
-function(get_translatable_sources var)
-  set(result)
-  set(targets)
-  foreach(dir IN ITEMS ${ARGN})
-    get_directory_property(dir_targets DIRECTORY ${PROJECT_SOURCE_DIR}/${dir} BUILDSYSTEM_TARGETS)
-    list(APPEND targets ${dir_targets})
-  endforeach()
-  foreach(target IN LISTS targets)
-    get_target_property(target_sources ${target} SOURCES)
-    if(target_sources)
-      foreach(source IN LISTS target_sources)
-        # Get an expression from the generator expression, if any.
-        if(source MATCHES ":([^>]+)>$")
-          set(source ${CMAKE_MATCH_1})
-        endif()
-        cmake_path(GET source EXTENSION LAST_ONLY ext)
-        if(ext STREQUAL ".qrc")
-          continue()
-        endif()
-        if(NOT IS_ABSOLUTE source)
-          get_target_property(target_source_dir ${target} SOURCE_DIR)
-          cmake_path(APPEND target_source_dir ${source} OUTPUT_VARIABLE source)
-        endif()
-        get_property(is_generated
-          SOURCE  ${source} TARGET_DIRECTORY ${target}
-          PROPERTY GENERATED
-        )
-        if(NOT is_generated)
-          list(APPEND result ${source})
-        endif()
-      endforeach()
-    endif()
-  endforeach()
-  set(${var} ${result} PARENT_SCOPE)
-endfunction()
-
 find_program(XGETTEXT_EXECUTABLE xgettext)
 find_program(SED_EXECUTABLE sed)
 if(NOT XGETTEXT_EXECUTABLE)
@@ -338,20 +300,14 @@ elseif(NOT SED_EXECUTABLE)
     COMMAND ${CMAKE_COMMAND} -E echo "Error: GNU sed not found"
   )
 else()
-  set(translatable_sources_directories src src/qt src/util)
-  if(ENABLE_WALLET)
-    list(APPEND translatable_sources_directories src/wallet)
-  endif()
-  get_translatable_sources(translatable_sources ${translatable_sources_directories})
-  get_translatable_sources(qt_translatable_sources src/qt)
-  file(GLOB ui_files ${CMAKE_CURRENT_SOURCE_DIR}/forms/*.ui)
-  add_custom_target(translate
-    COMMAND ${CMAKE_COMMAND} -E env XGETTEXT=${XGETTEXT_EXECUTABLE} COPYRIGHT_HOLDERS=${COPYRIGHT_HOLDERS} $<TARGET_FILE:Python3::Interpreter> ${PROJECT_SOURCE_DIR}/share/qt/extract_strings_qt.py ${translatable_sources}
-    COMMAND Qt6::lupdate -no-obsolete -I ${PROJECT_SOURCE_DIR}/src -locations relative ${CMAKE_CURRENT_SOURCE_DIR}/bitcoinstrings.cpp ${ui_files} ${qt_translatable_sources} -ts ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.ts
-    COMMAND Qt6::lconvert -drop-translations -o ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.xlf -i ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.ts
-    COMMAND ${SED_EXECUTABLE} -i.old -e "s|source-language=\"en\" target-language=\"en\"|source-language=\"en\"|" -e "/<target xml:space=\"preserve\"><\\/target>/d" ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.xlf
-    COMMAND ${CMAKE_COMMAND} -E rm ${CMAKE_CURRENT_SOURCE_DIR}/locale/bitcoin_en.xlf.old
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src
-    VERBATIM
+  add_custom_target(translate COMMAND ${CMAKE_COMMAND}
+    -D "PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}"
+    -D "COPYRIGHT_HOLDERS=${COPYRIGHT_HOLDERS}"
+    -D "LCONVERT_EXECUTABLE=$<TARGET_FILE:Qt6::lconvert>"
+    -D "LUPDATE_EXECUTABLE=$<TARGET_FILE:Qt6::lupdate>"
+    -D "PYTHON_EXECUTABLE=$<TARGET_FILE:Python3::Interpreter>"
+    -D "SED_EXECUTABLE=${SED_EXECUTABLE}"
+    -D "XGETTEXT_EXECUTABLE=${XGETTEXT_EXECUTABLE}"
+    -P ${PROJECT_SOURCE_DIR}/share/qt/translate.cmake
   )
 endif()
