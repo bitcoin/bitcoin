@@ -80,6 +80,10 @@ class Binaries:
         "Return argv array that should be used to invoke bitcoind"
         return self._argv("node", self.paths.bitcoind)
 
+    def multiprocess_node_argv(self):
+        "Return argv array that should be used to invoke bitcoin-node"
+        return self._argv("node", self.paths.bitcoinnode)
+
     def rpc_argv(self):
         "Return argv array that should be used to invoke bitcoin-cli"
         # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
@@ -165,6 +169,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.parse_args(test_file)
         self.default_wallet_name = "default_wallet"
         self.wallet_data_filename = "wallet.dat"
+        self.use_multiprocess_node = False
         # Optional list of wallet names that can be set in set_test_params to
         # create and import keys to. If unset, default is len(nodes) *
         # [default_wallet_name]. If wallet names are None, wallet creation is
@@ -284,6 +289,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoin-tx": "BITCOINTX",
             "bitcoin-chainstate": "BITCOINCHAINSTATE",
             "bitcoin-wallet": "BITCOINWALLET",
+            "bitcoin-node": "BITCOINNODE",
         }
         for binary, env_variable_name in binaries.items():
             default_filename = os.path.join(
@@ -574,6 +580,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 use_valgrind=self.options.valgrind,
                 v2transport=self.options.v2transport,
                 uses_wallet=self.uses_wallet,
+                use_multiprocess_node=self.use_multiprocess_node,
             )
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
@@ -952,6 +959,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         except ImportError:
             raise SkipTest("sqlite3 module not available.")
 
+    def skip_if_no_py_capnp(self):
+        """Attempt to import the capnp package and skip the test if the import fails."""
+        try:
+            import capnp  # type: ignore[import] # noqa: F401
+        except ImportError:
+            raise SkipTest("capnp module not available.")
+
     def skip_if_no_python_bcc(self):
         """Attempt to import the bcc package and skip the tests if the import fails."""
         try:
@@ -984,6 +998,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if bitcoind has not been compiled with zmq support."""
         if not self.is_zmq_compiled():
             raise SkipTest("bitcoind has not been built with zmq enabled.")
+
+    def skip_if_no_bitcoind_ipc(self):
+        """Skip the running test if bitcoind has not been compiled with IPC support."""
+        if not self.is_ipc_compiled():
+            raise SkipTest("bitcoind has not been built with IPC enabled.")
 
     def skip_if_no_wallet(self):
         """Skip the running test if wallet has not been compiled."""
@@ -1074,6 +1093,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_usdt_compiled(self):
         """Checks whether the USDT tracepoints were compiled."""
         return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
+
+    def is_ipc_compiled(self):
+        """Checks whether IPC support was compiled."""
+        return self.config["components"].getboolean("ENABLE_IPC")
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()

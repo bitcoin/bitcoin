@@ -77,7 +77,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, v2transport=False, uses_wallet=False):
+    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, v2transport=False, uses_wallet=False, use_multiprocess_node=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -109,7 +109,11 @@ class TestNode():
         # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
         # This means that starting a bitcoind using the temp dir to debug a failed test won't
         # spam debug.log.
-        self.args = self.binaries.node_argv() + [
+        if use_multiprocess_node:
+            node_argv = self.binaries.multiprocess_node_argv()
+        else:
+            node_argv = self.binaries.node_argv()
+        self.args = node_argv + [
             f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
