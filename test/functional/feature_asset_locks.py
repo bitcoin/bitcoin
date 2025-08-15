@@ -707,7 +707,7 @@ class AssetLocksTest(DashTestFramework):
 
     def test_v23_fork(self, node_wallet, node, pubkey):
         self.log.info("Testing asset unlock after 'v23' activation...")
-        self.activate_by_name('v23', 1050)
+        self.activate_by_name('v23', 750)
         self.log.info(f'post-v23 height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
 
         index = 601

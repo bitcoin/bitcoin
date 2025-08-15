@@ -820,9 +820,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V23].bit = 12;
         consensus.vDeployments[Consensus::DEPLOYMENT_V23].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_V23].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V23].nWindowSize = 350;
-        consensus.vDeployments[Consensus::DEPLOYMENT_V23].nThresholdStart = 350 / 5 * 4;     // 80% of window size
-        consensus.vDeployments[Consensus::DEPLOYMENT_V23].nThresholdMin = 350 / 5 * 3;       // 60% of window size
+        consensus.vDeployments[Consensus::DEPLOYMENT_V23].nWindowSize = 250;
+        consensus.vDeployments[Consensus::DEPLOYMENT_V23].nThresholdStart = 250 / 5 * 4;     // 80% of window size
+        consensus.vDeployments[Consensus::DEPLOYMENT_V23].nThresholdMin = 250 / 5 * 3;       // 60% of window size
         consensus.vDeployments[Consensus::DEPLOYMENT_V23].nFalloffCoeff = 5;                 // this corresponds to 10 periods
         consensus.vDeployments[Consensus::DEPLOYMENT_V23].useEHF = true;
 
