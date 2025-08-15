@@ -211,6 +211,7 @@ if(ENABLE_WALLET)
       bitcoin_wallet
       bitcoin_common
       bitcoin_util
+      bitcoin_node
       Boost::headers
     )
     install_binary_component(bitcoin-wallet HAS_MANPAGE)
