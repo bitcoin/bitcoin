@@ -509,6 +509,14 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, std::source_location&& so
     }
 }
 
+void BCLog::Logger::FlushDebugFile()
+{
+    StdLockGuard lock{m_cs};
+    if (m_fileout) {
+        fflush(m_fileout);
+    }
+}
+
 void BCLog::Logger::ShrinkDebugFile()
 {
     // Amount of debug.log to save at end when shrinking (must fit in memory)
