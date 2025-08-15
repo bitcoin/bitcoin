@@ -265,7 +265,7 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
 
     if (!m_db->WriteBatch(batch)) return false;
 
-    if (!ReverseBlock(block)) {
+    if (!RevertBlock(block)) {
         return false; // failure cause logged internally
     }
 
@@ -381,8 +381,8 @@ interfaces::Chain::NotifyOptions CoinStatsIndex::CustomOptions()
     return options;
 }
 
-// Reverse a single block as part of a reorg
-bool CoinStatsIndex::ReverseBlock(const interfaces::BlockInfo& block)
+// Revert a single block as part of a reorg
+bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
 {
     std::pair<uint256, DBVal> read_out;
 
