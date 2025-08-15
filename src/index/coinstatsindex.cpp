@@ -137,16 +137,12 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
 
     // Ignore genesis block
     if (block.height > 0) {
-        std::pair<uint256, DBVal> read_out;
-        if (!m_db->Read(DBHeightKey(block.height - 1), read_out)) {
-            return false;
-        }
-
         uint256 expected_block_hash{*Assert(block.prev_hash)};
-        if (read_out.first != expected_block_hash) {
+        if (m_current_block_hash != expected_block_hash) {
             LogWarning("previous block header belongs to unexpected block %s; expected %s",
-                      read_out.first.ToString(), expected_block_hash.ToString());
+                      m_current_block_hash.ToString(), expected_block_hash.ToString());
 
+            std::pair<uint256, DBVal> read_out;
             if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
                 LogError("previous block header not found; expected %s",
                           expected_block_hash.ToString());
@@ -239,6 +235,8 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     uint256 out;
     m_muhash.Finalize(out);
     value.second.muhash = out;
+
+    m_current_block_hash = block.hash;
 
     // Intentionally do not update DB_MUHASH here so it stays in sync with
     // DB_BEST_BLOCK, and the index is not corrupted if there is an unclean shutdown.
@@ -373,6 +371,7 @@ bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block
         m_total_unspendables_bip30 = entry.total_unspendables_bip30;
         m_total_unspendables_scripts = entry.total_unspendables_scripts;
         m_total_unspendables_unclaimed_rewards = entry.total_unspendables_unclaimed_rewards;
+        m_current_block_hash = block->hash;
     }
 
     return true;
@@ -466,6 +465,7 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
     m_total_unspendables_bip30 = read_out.second.total_unspendables_bip30;
     m_total_unspendables_scripts = read_out.second.total_unspendables_scripts;
     m_total_unspendables_unclaimed_rewards = read_out.second.total_unspendables_unclaimed_rewards;
+    m_current_block_hash = *block.prev_hash;
 
     return true;
 }
