@@ -20,7 +20,8 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
                           uint256 hashBlockFrom, unsigned int nTimeBlockFrom,
                           CAmount amount, const COutPoint& prevout,
                           unsigned int nTimeTx, uint256& hashProofOfStake,
-                          bool fPrintProofOfStake);
+                          bool fPrintProofOfStake,
+                          int64_t min_stake_age = MIN_STAKE_AGE);
 
 /**
  * Validate the proof-of-stake for a block using contextual chain information.
