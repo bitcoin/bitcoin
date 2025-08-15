@@ -2403,7 +2403,7 @@ void TxGraphImpl::SanityCheck() const
                 const auto& cluster = *quality_clusters[setindex];
                 // Check the sequence number.
                 assert(cluster.m_sequence < m_next_sequence_counter);
-                assert(sequences.count(cluster.m_sequence) == 0);
+                assert(!sequences.contains(cluster.m_sequence));
                 sequences.insert(cluster.m_sequence);
                 // Remember we saw this Cluster (only if it is non-empty; empty Clusters aren't
                 // expected to be referenced by the Entry vector).

@@ -586,17 +586,17 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
          */
         std::string torpassword = gArgs.GetArg("-torpassword", "");
         if (!torpassword.empty()) {
-            if (methods.count("HASHEDPASSWORD")) {
+            if (methods.contains("HASHEDPASSWORD")) {
                 LogDebug(BCLog::TOR, "Using HASHEDPASSWORD authentication\n");
                 ReplaceAll(torpassword, "\"", "\\\"");
                 _conn.Command("AUTHENTICATE \"" + torpassword + "\"", std::bind(&TorController::auth_cb, this, std::placeholders::_1, std::placeholders::_2));
             } else {
                 LogPrintf("tor: Password provided with -torpassword, but HASHEDPASSWORD authentication is not available\n");
             }
-        } else if (methods.count("NULL")) {
+        } else if (methods.contains("NULL")) {
             LogDebug(BCLog::TOR, "Using NULL authentication\n");
             _conn.Command("AUTHENTICATE", std::bind(&TorController::auth_cb, this, std::placeholders::_1, std::placeholders::_2));
-        } else if (methods.count("SAFECOOKIE")) {
+        } else if (methods.contains("SAFECOOKIE")) {
             // Cookie: hexdump -e '32/1 "%02x""\n"'  ~/.tor/control_auth_cookie
             LogDebug(BCLog::TOR, "Using SAFECOOKIE authentication, reading cookie authentication from %s\n", cookiefile);
             std::pair<bool,std::string> status_cookie = ReadBinaryFile(fs::PathFromString(cookiefile), TOR_COOKIE_SIZE);
@@ -613,7 +613,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
                     LogPrintf("tor: Authentication cookie %s could not be opened (check permissions)\n", cookiefile);
                 }
             }
-        } else if (methods.count("HASHEDPASSWORD")) {
+        } else if (methods.contains("HASHEDPASSWORD")) {
             LogPrintf("tor: The only supported authentication mechanism left is password, but no password provided with -torpassword\n");
         } else {
             LogPrintf("tor: No supported authentication method\n");

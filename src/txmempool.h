@@ -688,7 +688,7 @@ public:
     bool IsUnbroadcastTx(const Txid& txid) const EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
         AssertLockHeld(cs);
-        return m_unbroadcast_txids.count(txid) != 0;
+        return m_unbroadcast_txids.contains(txid);
     }
 
     /** Guards this internal counter for external reporting */
