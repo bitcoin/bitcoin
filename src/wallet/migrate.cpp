@@ -748,7 +748,7 @@ bool BerkeleyROBatch::ReadKey(DataStream&& key, DataStream& value)
 bool BerkeleyROBatch::HasKey(DataStream&& key)
 {
     SerializeData key_data{key.begin(), key.end()};
-    return m_database.m_records.count(key_data) > 0;
+    return m_database.m_records.contains(key_data);
 }
 
 BerkeleyROCursor::BerkeleyROCursor(const BerkeleyRODatabase& database, std::span<const std::byte> prefix)

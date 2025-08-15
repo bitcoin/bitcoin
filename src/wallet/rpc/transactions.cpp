@@ -800,7 +800,7 @@ RPCHelpMan abandontransaction()
 
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
-    if (!pwallet->mapWallet.count(hash)) {
+    if (!pwallet->mapWallet.contains(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
     if (!pwallet->AbandonTransaction(hash)) {

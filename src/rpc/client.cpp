@@ -332,13 +332,13 @@ public:
     /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
     UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, int param_idx)
     {
-        return members.count({method, param_idx}) > 0 ? Parse(arg_value) : arg_value;
+        return members.contains({method, param_idx}) ? Parse(arg_value) : arg_value;
     }
 
     /** Return arg_value as UniValue, and first parse it if it is a non-string parameter */
     UniValue ArgToUniValue(std::string_view arg_value, const std::string& method, const std::string& param_name)
     {
-        return membersByName.count({method, param_name}) > 0 ? Parse(arg_value) : arg_value;
+        return membersByName.contains({method, param_name}) ? Parse(arg_value) : arg_value;
     }
 };
 

@@ -1879,7 +1879,7 @@ static RPCHelpMan joinpsbts()
             merged_psbt.AddOutput(psbt.tx->vout[i], psbt.outputs[i]);
         }
         for (auto& xpub_pair : psbt.m_xpubs) {
-            if (merged_psbt.m_xpubs.count(xpub_pair.first) == 0) {
+            if (!merged_psbt.m_xpubs.contains(xpub_pair.first)) {
                 merged_psbt.m_xpubs[xpub_pair.first] = xpub_pair.second;
             } else {
                 merged_psbt.m_xpubs[xpub_pair.first].insert(xpub_pair.second.begin(), xpub_pair.second.end());

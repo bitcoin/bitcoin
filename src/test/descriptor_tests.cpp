@@ -455,7 +455,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
             // Test whether the observed key path is present in the 'paths' variable (which contains expected, unobserved paths),
             // and then remove it from that set.
             for (const auto& origin : script_provider.origins) {
-                BOOST_CHECK_MESSAGE(paths.count(origin.second.second.path), "Unexpected key path: " + prv);
+                BOOST_CHECK_MESSAGE(paths.contains(origin.second.second.path), "Unexpected key path: " + prv);
                 left_paths.erase(origin.second.second.path);
             }
         }

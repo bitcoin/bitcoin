@@ -73,7 +73,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendan
                 for (txiter cacheEntry : cacheIt->second) {
                     descendants.insert(*cacheEntry);
                 }
-            } else if (!descendants.count(childEntry)) {
+            } else if (!descendants.contains(childEntry)) {
                 // Schedule for later processing
                 stageEntries.insert(childEntry);
             }
@@ -85,7 +85,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendan
     CAmount modifyFee = 0;
     int64_t modifyCount = 0;
     for (const CTxMemPoolEntry& descendant : descendants) {
-        if (!setExclude.count(descendant.GetTx().GetHash())) {
+        if (!setExclude.contains(descendant.GetTx().GetHash())) {
             modifySize += descendant.GetTxSize();
             modifyFee += descendant.GetModifiedFee();
             modifyCount++;
@@ -142,7 +142,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
                 assert(childIter != mapTx.end());
                 // We can skip updating entries we've encountered before or that
                 // are in the block (which are already accounted for).
-                if (!visited(childIter) && !setAlreadyIncluded.count(childHash)) {
+                if (!visited(childIter) && !setAlreadyIncluded.contains(childHash)) {
                     UpdateChild(it, childIter, true);
                     UpdateParent(childIter, it, true);
                 }
@@ -190,7 +190,7 @@ util::Result<CTxMemPool::setEntries> CTxMemPool::CalculateAncestorsAndCheckLimit
             txiter parent_it = mapTx.iterator_to(parent);
 
             // If this is a new ancestor, add it.
-            if (ancestors.count(parent_it) == 0) {
+            if (!ancestors.contains(parent_it)) {
                 staged_ancestors.insert(parent);
             }
             if (staged_ancestors.size() + ancestors.size() + entry_count > static_cast<uint64_t>(limits.ancestor_count)) {
@@ -571,7 +571,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
     setEntries stage;
-    if (setDescendants.count(entryit) == 0) {
+    if (!setDescendants.contains(entryit)) {
         stage.insert(entryit);
     }
     // Traverse down the children of entry, only adding children that are not
@@ -585,7 +585,7 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants
         const CTxMemPoolEntry::Children& children = it->GetMemPoolChildrenConst();
         for (const CTxMemPoolEntry& child : children) {
             txiter childiter = mapTx.iterator_to(child);
-            if (!setDescendants.count(childiter)) {
+            if (!setDescendants.contains(childiter)) {
                 stage.insert(childiter);
             }
         }

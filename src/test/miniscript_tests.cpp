@@ -207,17 +207,17 @@ struct Satisfier : public KeyConverter {
 
     //! Implement simplified CLTV logic: stack value must exactly match an entry in `supported`.
     bool CheckAfter(uint32_t value) const {
-        return supported.count(Challenge(ChallengeType::AFTER, value));
+        return supported.contains(Challenge(ChallengeType::AFTER, value));
     }
 
     //! Implement simplified CSV logic: stack value must exactly match an entry in `supported`.
     bool CheckOlder(uint32_t value) const {
-        return supported.count(Challenge(ChallengeType::OLDER, value));
+        return supported.contains(Challenge(ChallengeType::OLDER, value));
     }
 
     //! Produce a signature for the given key.
     miniscript::Availability Sign(const CPubKey& key, std::vector<unsigned char>& sig) const {
-        if (supported.count(Challenge(ChallengeType::PK, ChallengeNumber(key)))) {
+        if (supported.contains(Challenge(ChallengeType::PK, ChallengeNumber(key)))) {
             if (!miniscript::IsTapscript(m_script_ctx)) {
                 auto it = g_testdata->signatures.find(key);
                 if (it == g_testdata->signatures.end()) return miniscript::Availability::NO;
@@ -234,7 +234,7 @@ struct Satisfier : public KeyConverter {
 
     //! Helper function for the various hash based satisfactions.
     miniscript::Availability SatHash(const std::vector<unsigned char>& hash, std::vector<unsigned char>& preimage, ChallengeType chtype) const {
-        if (!supported.count(Challenge(chtype, ChallengeNumber(hash)))) return miniscript::Availability::NO;
+        if (!supported.contains(Challenge(chtype, ChallengeNumber(hash)))) return miniscript::Availability::NO;
         const auto& m =
             chtype == ChallengeType::SHA256 ? g_testdata->sha256_preimages :
             chtype == ChallengeType::HASH256 ? g_testdata->hash256_preimages :

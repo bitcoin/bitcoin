@@ -457,7 +457,7 @@ void AddrManImpl::Delete(nid_type nId)
 {
     AssertLockHeld(cs);
 
-    assert(mapInfo.count(nId) != 0);
+    assert(mapInfo.contains(nId));
     AddrInfo& info = mapInfo[nId];
     assert(!info.fInTried);
     assert(info.nRefCount == 0);
@@ -1115,7 +1115,7 @@ int AddrManImpl::CheckAddrman() const
     for (int n = 0; n < ADDRMAN_TRIED_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
             if (vvTried[n][i] != -1) {
-                if (!setTried.count(vvTried[n][i]))
+                if (!setTried.contains(vvTried[n][i]))
                     return -11;
                 const auto it{mapInfo.find(vvTried[n][i])};
                 if (it == mapInfo.end() || it->second.GetTriedBucket(nKey, m_netgroupman) != n) {
@@ -1132,7 +1132,7 @@ int AddrManImpl::CheckAddrman() const
     for (int n = 0; n < ADDRMAN_NEW_BUCKET_COUNT; n++) {
         for (int i = 0; i < ADDRMAN_BUCKET_SIZE; i++) {
             if (vvNew[n][i] != -1) {
-                if (!mapNew.count(vvNew[n][i]))
+                if (!mapNew.contains(vvNew[n][i]))
                     return -12;
                 const auto it{mapInfo.find(vvNew[n][i])};
                 if (it == mapInfo.end() || it->second.GetBucketPosition(nKey, true, n) != i) {

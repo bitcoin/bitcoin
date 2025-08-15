@@ -19,7 +19,7 @@ bool CCoinControl::HasSelected() const
 
 bool CCoinControl::IsSelected(const COutPoint& outpoint) const
 {
-    return m_selected.count(outpoint) > 0;
+    return m_selected.contains(outpoint);
 }
 
 bool CCoinControl::IsExternalSelected(const COutPoint& outpoint) const

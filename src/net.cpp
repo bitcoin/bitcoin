@@ -322,7 +322,7 @@ bool SeenLocal(const CService& addr)
 bool IsLocal(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
-    return mapLocalHost.count(addr) > 0;
+    return mapLocalHost.contains(addr);
 }
 
 CNode* CConnman::FindNode(const CNetAddr& ip)
@@ -2611,7 +2611,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                 // (e.g. in case of -onlynet changes by the user), fixed seeds will
                 // be loaded only for networks for which we have no addresses.
                 seed_addrs.erase(std::remove_if(seed_addrs.begin(), seed_addrs.end(),
-                                                [&fixed_seed_networks](const CAddress& addr) { return fixed_seed_networks.count(addr.GetNetwork()) == 0; }),
+                                                [&fixed_seed_networks](const CAddress& addr) { return !fixed_seed_networks.contains(addr.GetNetwork()); }),
                                  seed_addrs.end());
                 CNetAddr local;
                 local.SetInternal("fixedseeds");
@@ -2759,7 +2759,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                 m_anchors.pop_back();
                 if (!addr.IsValid() || IsLocal(addr) || !g_reachable_nets.Contains(addr) ||
                     !m_msgproc->HasAllDesirableServiceFlags(addr.nServices) ||
-                    outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) continue;
+                    outbound_ipv46_peer_netgroups.contains(m_netgroupman.GetGroup(addr))) continue;
                 addrConnect = addr;
                 LogDebug(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToStringAddrPort());
                 break;
@@ -2805,7 +2805,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             }
 
             // Require outbound IPv4/IPv6 connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && outbound_ipv46_peer_netgroups.count(m_netgroupman.GetGroup(addr))) {
+            if (!fFeeler && outbound_ipv46_peer_netgroups.contains(m_netgroupman.GetGroup(addr))) {
                 continue;
             }
 
