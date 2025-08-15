@@ -11,7 +11,6 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/expected.h>
 #include <util/time.h>
 
 #include <cstdint>
@@ -580,9 +579,6 @@ struct MisbehavingError
         message{std::forward<T>(msg)}
     {}
 };
-
-// TODO: replace usages of PeerMsgRet to MessageProcessingResult which is cover this one
-using PeerMsgRet = tl::expected<void, MisbehavingError>;
 
 /**
  * This struct is a helper to return values from handlers that are processing

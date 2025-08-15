@@ -650,8 +650,7 @@ public:
 private:
     void _RelayTransaction(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    /** Helpers to process result of external handlers of message */
-    void ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    /** Helper to process result of external handlers of message */
     void PostProcessMessage(MessageProcessingResult&& ret, NodeId node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
@@ -3490,11 +3489,6 @@ void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlo
         LOCK(cs_main);
         mapBlockSource.erase(block->GetHash());
     }
-}
-
-void PeerManagerImpl::ProcessPeerMsgRet(const PeerMsgRet& ret, CNode& pfrom)
-{
-    if (!ret) Misbehaving(pfrom.GetId(), ret.error().score, ret.error().message);
 }
 
 void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeId node)
