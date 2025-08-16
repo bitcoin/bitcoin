@@ -578,7 +578,7 @@ public:
             error = "Error making collateral transaction for governance object.";
             return false;
         }
-        if (!m_wallet->WriteGovernanceObject(Governance::Object{uint256{}, revision, created_time, tx->GetHash(), data_hex})) {
+        if (!m_wallet->WriteGovernanceObject(Governance::Object{govobj_hash, revision, created_time, tx->GetHash(), data_hex})) {
             error = "WriteGovernanceObject failed";
             return false;
         }
