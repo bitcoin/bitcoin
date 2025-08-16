@@ -218,7 +218,8 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout[0].nValue = 5000000000LL - 100000000;
     tx.vout[1].nValue = 100000000; // 1BTC output
     // Increase size to avoid rounding errors: when the feerate is extremely small (i.e. 1sat/kvB), evaluating the fee
-    // at a smaller transaction size gives us a rounded value of 0.
+    // at smaller sizes gives us rounded values that are equal to each other, which means we incorrectly include
+    // hashFreeTx2 + hashLowFeeTx2.
     BulkTransaction(tx, 4000);
     Txid hashFreeTx2 = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(true).FromTx(tx));

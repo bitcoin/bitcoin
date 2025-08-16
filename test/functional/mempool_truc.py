@@ -617,6 +617,10 @@ class MempoolTRUC(BitcoinTestFramework):
                 assert_greater_than(get_fee(tx_v3_0fee_parent["tx"].get_vsize(), minrelayfeerate), 0)
                 # Always need to pay at least 1 satoshi for entry, even if minimum feerate is very low
                 assert_greater_than(total_v3_fee, 0)
+                # Also create a version where the child is at minrelaytxfee
+                tx_v3_child_minrelay = self.wallet.create_self_transfer(utxo_to_spend=tx_v3_0fee_parent["new_utxo"], fee_rate=minrelayfeerate, version=3)
+                result_truc_minrelay = node.submitpackage([tx_v3_0fee_parent["hex"], tx_v3_child_minrelay["hex"]])
+                assert_equal(result_truc_minrelay["package_msg"], "transaction failed")
 
             tx_v2_0fee_parent = self.wallet.create_self_transfer(fee=0, fee_rate=0, confirmed_only=True, version=2)
             tx_v2_child = self.wallet.create_self_transfer(utxo_to_spend=tx_v2_0fee_parent["new_utxo"], fee_rate=high_feerate, version=2)
