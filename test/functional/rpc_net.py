@@ -178,6 +178,27 @@ class NetTest(BitcoinTestFramework):
                 "version": 0,
             },
         )
+
+        self.log.info("Check getpeerinfo filtering: all, single, multiple")
+        node = self.nodes[0]
+        all_peers = node.getpeerinfo()
+        assert_equal(len(all_peers), node.getconnectioncount())
+
+        for peer in all_peers:
+            filtered = node.getpeerinfo(peer["id"])
+            assert_equal(len(filtered), 1)
+            assert_equal(filtered[0]["id"], peer["id"])
+
+        ids = [p["id"] for p in all_peers[:2]]
+        filtered = node.getpeerinfo(ids)
+        assert_equal(len(filtered), len(ids))
+        assert_equal(sorted(p["id"] for p in filtered), sorted(ids))
+
+        self.log.info("Check getpeerinfo with nonexistent peer_id")
+        nonexistent_id = max(p["id"] for p in all_peers) + 1000
+        assert_equal(node.getpeerinfo(nonexistent_id), [])
+        assert_raises_rpc_error(-8, "must be a number or an array of numbers", node.getpeerinfo, {})
+
         no_version_peer.peer_disconnect()
         self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 2)
 
