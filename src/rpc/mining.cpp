@@ -842,12 +842,12 @@ static RPCHelpMan getblocktemplate()
     const Consensus::Params& consensusParams = chainman.GetParams().GetConsensus();
 
     // GBT must be called with 'signet' set in the rules for signet chains
-    if (consensusParams.signet_blocks && setClientRules.count("signet") != 1) {
+    if (consensusParams.signet_blocks && !setClientRules.contains("signet")) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the signet rule set (call with {\"rules\": [\"segwit\", \"signet\"]})");
     }
 
     // GBT must be called with 'segwit' set in the rules
-    if (setClientRules.count("segwit") != 1) {
+    if (!setClientRules.contains("segwit")) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
     }
 
@@ -909,7 +909,7 @@ static RPCHelpMan getblocktemplate()
         UniValue deps(UniValue::VARR);
         for (const CTxIn &in : tx.vin)
         {
-            if (setTxIndex.count(in.prevout.hash))
+            if (setTxIndex.contains(in.prevout.hash))
                 deps.push_back(setTxIndex[in.prevout.hash]);
         }
         entry.pushKV("depends", std::move(deps));
@@ -953,7 +953,7 @@ static RPCHelpMan getblocktemplate()
 
     for (const auto& [name, info] : gbtstatus.signalling) {
         vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
-        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
+        if (!info.gbt_optional_rule && !setClientRules.contains(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
             block.nVersion &= ~info.mask;
         }
@@ -962,7 +962,7 @@ static RPCHelpMan getblocktemplate()
     for (const auto& [name, info] : gbtstatus.locked_in) {
         block.nVersion |= info.mask;
         vbavailable.pushKV(gbt_rule_value(name, info.gbt_optional_rule), info.bit);
-        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
+        if (!info.gbt_optional_rule && !setClientRules.contains(name)) {
             // If the client doesn't support this, don't indicate it in the [default] version
             block.nVersion &= ~info.mask;
         }
@@ -970,7 +970,7 @@ static RPCHelpMan getblocktemplate()
 
     for (const auto& [name, info] : gbtstatus.active) {
         aRules.push_back(gbt_rule_value(name, info.gbt_optional_rule));
-        if (!info.gbt_optional_rule && !setClientRules.count(name)) {
+        if (!info.gbt_optional_rule && !setClientRules.contains(name)) {
             // Not supported by the client; make sure it's safe to proceed
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Support for '%s' rule requires explicit client support", name));
         }
