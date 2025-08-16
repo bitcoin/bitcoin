@@ -1,13 +1,20 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef MP_TEST_FOO_TYPES_H
 #define MP_TEST_FOO_TYPES_H
 
+#include <mp/proxy.h>
 #include <mp/proxy-types.h>
+
+// IWYU pragma: begin_exports
+#include <capnp/common.h>
+#include <cstddef>
+#include <mp/test/foo.capnp.h>
 #include <mp/type-context.h>
 #include <mp/type-decay.h>
+#include <mp/type-function.h>
 #include <mp/type-interface.h>
 #include <mp/type-map.h>
 #include <mp/type-message.h>
@@ -17,9 +24,18 @@
 #include <mp/type-struct.h>
 #include <mp/type-threadmap.h>
 #include <mp/type-vector.h>
+#include <string>
+#include <type_traits>
+// IWYU pragma: end_exports
 
 namespace mp {
 namespace test {
+namespace messages {
+struct ExtendedCallback; // IWYU pragma: export
+struct FooCallback; // IWYU pragma: export
+struct FooFn; // IWYU pragma: export
+struct FooInterface; // IWYU pragma: export
+} // namespace messages
 
 template <typename Output>
 void CustomBuildField(TypeList<FooCustom>, Priority<1>, InvokeContext& invoke_context, const FooCustom& value, Output&& output)
