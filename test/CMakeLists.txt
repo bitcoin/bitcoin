@@ -16,6 +16,7 @@ function(create_test_config)
   endmacro()
 
   set_configure_variable(ENABLE_WALLET ENABLE_WALLET)
+  set_configure_variable(BUILD_BENCH BUILD_BENCH)
   set_configure_variable(BUILD_CLI BUILD_BITCOIN_CLI)
   set_configure_variable(BUILD_TX BUILD_BITCOIN_TX)
   set_configure_variable(BUILD_UTIL BUILD_BITCOIN_UTIL)
