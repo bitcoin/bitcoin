@@ -428,10 +428,10 @@ void GovernanceList::showCreateProposalDialog()
         return;
     }
     if (!proposalWizard) {
-        proposalWizard = new ProposalWizard(this->clientModel->node(), this->walletModel, this);
+        proposalWizard = std::make_unique<ProposalWizard>(this->clientModel->node(), this->walletModel, this);
         // Ensure closing the dialog actually destroys it so a fresh flow starts next time
         proposalWizard->setAttribute(Qt::WA_DeleteOnClose, true);
-        connect(proposalWizard, &QObject::destroyed, this, [this]() { proposalWizard = nullptr; });
+        connect(proposalWizard.get(), &QObject::destroyed, this, [this]() { proposalWizard.reset(); });
         // Modeless window that does not block the parent
         proposalWizard->setWindowModality(Qt::NonModal);
         proposalWizard->setModal(false);

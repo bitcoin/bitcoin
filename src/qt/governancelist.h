@@ -20,6 +20,7 @@
 #include <QWidget>
 
 #include <map>
+#include <memory>
 
 inline constexpr int GOVERNANCELIST_UPDATE_SECONDS = 10;
 
@@ -54,7 +55,7 @@ private:
 
     QMenu* proposalContextMenu;
     QTimer* timer;
-    ProposalWizard* proposalWizard{nullptr};
+    std::unique_ptr<ProposalWizard> proposalWizard;
 
     // Voting-related members
     std::map<uint256, CKeyID> votableMasternodes; // proTxHash -> voting keyID

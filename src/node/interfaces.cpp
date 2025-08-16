@@ -161,24 +161,28 @@ public:
     GovernanceInfo getGovernanceInfo() override
     {
         GovernanceInfo info;
-        if (context().chainman) {
-            const CBlockIndex* tip = WITH_LOCK(::cs_main, return context().chainman->ActiveChain().Tip());
-            int last = 0, next = 0;
+        const NodeContext& ctx = context();
+        const Consensus::Params& consensusParams = Params().GetConsensus();
+
+        if (ctx.chainman) {
+            const CBlockIndex* tip = WITH_LOCK(::cs_main, return ctx.chainman->ActiveChain().Tip());
+            int last = 0;
+            int next = 0;
             const int height = tip ? tip->nHeight : 0;
             CSuperblock::GetNearestSuperblocksHeights(height, last, next);
             info.lastsuperblock = last;
             info.nextsuperblock = next;
         }
         info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
-        info.superblockcycle = Params().GetConsensus().nSuperblockCycle;
-        info.superblockmaturitywindow = Params().GetConsensus().nSuperblockMaturityWindow;
+        info.superblockcycle = consensusParams.nSuperblockCycle;
+        info.superblockmaturitywindow = consensusParams.nSuperblockMaturityWindow;
         info.relayRequiredConfs = GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS;
         info.requiredConfs = GOVERNANCE_FEE_CONFIRMATIONS;
-        if (context().dmnman) {
-            info.fundingthreshold = context().dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
+        if (ctx.dmnman) {
+            info.fundingthreshold = ctx.dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
         }
-        if (context().chainman) {
-            info.governancebudget = CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), info.nextsuperblock);
+        if (ctx.chainman) {
+            info.governancebudget = CSuperblock::GetPaymentsLimit(ctx.chainman->ActiveChain(), info.nextsuperblock);
         }
         return info;
     }
@@ -197,9 +201,6 @@ public:
         const CTxMemPool& mempool = *Assert(context().mempool);
         bool fMissingConfirmations{false};
         {
-            #ifdef TXINDEX_ENABLED
-            if (g_txindex) g_txindex->BlockUntilSyncedToCurrentChain();
-            #endif
             LOCK2(cs_main, mempool.cs);
             std::string strError;
             if (!govobj.IsValidLocally(mnList, *Assert(context().chainman), strError, fMissingConfirmations, true) && !fMissingConfirmations) {
