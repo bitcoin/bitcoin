@@ -288,21 +288,18 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     return true;
 }
 
-bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
+util::Result<CTxDestination> LegacyScriptPubKeyMan::GetReservedDestination(bool internal, int64_t& index, CKeyPool& keypool)
 {
     LOCK(cs_KeyStore);
     if (!CanGetAddresses(internal)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first");
-        return false;
+        return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
 
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first");
-        return false;
+        return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
     // TODO: unify with bitcoin and use here GetDestinationForKey even if we have no type
-    address = PKHash(keypool.vchPubKey);
-    return true;
+    return CTxDestination(PKHash(keypool.vchPubKey));
 }
 
 void LegacyScriptPubKeyMan::MarkUnusedAddresses(WalletBatch &batch, const CScript& script, const std::optional<int64_t>& block_time)
@@ -1905,17 +1902,12 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
     return true;
 }
 
-bool DescriptorScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
+util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(bool internal, int64_t& index, CKeyPool& keypool)
 {
     LOCK(cs_desc_man);
     auto op_dest = GetNewDestination();
     index = m_wallet_descriptor.next_index - 1;
-    if (op_dest) {
-        address = *op_dest;
-    } else {
-        error = util::ErrorString(op_dest);
-    }
-    return bool(op_dest);
+    return op_dest;
 }
 
 void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)

@@ -1575,12 +1575,10 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     if (txout.nValue >= CoinJoin::GetCollateralAmount() * 2) {
         // make our change address
         CScript scriptChange;
-        CTxDestination dest;
-        bilingual_str error;
         ReserveDestination reserveDest(m_wallet.get());
-        bool success = reserveDest.GetReservedDestination(dest, true, error);
-        assert(success); // should never fail, as we just unlocked
-        scriptChange = GetScriptForDestination(dest);
+        auto dest_opt = reserveDest.GetReservedDestination(true);
+        assert(dest_opt); // should never fail, as we just unlocked
+        scriptChange = GetScriptForDestination(*dest_opt);
         reserveDest.KeepDestination();
         // return change
         txCollateral.vout.emplace_back(txout.nValue - CoinJoin::GetCollateralAmount(), scriptChange);

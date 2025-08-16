@@ -2366,15 +2366,11 @@ util::Result<CTxDestination> CWallet::GetNewChangeDestination()
 {
     LOCK(cs_wallet);
 
-    CTxDestination dest;
-    bilingual_str error;
     ReserveDestination reservedest(this);
-    if (!reservedest.GetReservedDestination(dest, true, error)) {
-        return util::Error{error};
-    }
+    auto op_dest = reservedest.GetReservedDestination(true);
+    if (op_dest) reservedest.KeepDestination();
 
-    reservedest.KeepDestination();
-    return dest;
+    return op_dest;
 }
 
 std::optional<int64_t> CWallet::GetOldestKeyPoolTime() const
@@ -2443,12 +2439,11 @@ std::set<std::string> CWallet::ListAddrBookLabels(const std::string& purpose) co
     return label_set;
 }
 
-bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInternalIn, bilingual_str& error)
+util::Result<CTxDestination> ReserveDestination::GetReservedDestination(bool fInternalIn)
 {
     m_spk_man = pwallet->GetScriptPubKeyMan(fInternalIn);
     if (!m_spk_man) {
-        error = _("Error: No addresses available.");
-        return false;
+        return util::Error{_("Error: No addresses available.")};
     }
 
     if (nIndex == -1)
@@ -2457,14 +2452,13 @@ bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInte
 
         CKeyPool keypool;
         int64_t index;
-        if (!m_spk_man->GetReservedDestination(fInternalIn, address, index, keypool, error)) {
-            return false;
-        }
+        auto op_address = m_spk_man->GetReservedDestination(fInternalIn, index, keypool);
+        if (!op_address) return op_address;
+        address = *op_address;
         nIndex = index;
         fInternal = keypool.fInternal;
     }
-    dest = address;
-    return true;
+    return address;
 }
 
 void ReserveDestination::KeepDestination()

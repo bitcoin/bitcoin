@@ -183,12 +183,13 @@ public:
         CompactTallyItem tallyItem;
         ReserveDestination reserveDest(wallet.get());
         int nChangePosRet{RANDOM_CHANGE_POSITION};
-        bilingual_str strError;
         CCoinControl coinControl;
         coinControl.m_feerate = CFeeRate(1000);
         {
             LOCK(wallet->cs_wallet);
-            BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false, strError));
+            auto dest_opt = reserveDest.GetReservedDestination(false);
+            BOOST_CHECK(dest_opt);
+            tallyItem.txdest = *dest_opt;
         }
         for (CAmount nAmount : vecAmounts) {
             CTransactionRef tx;
