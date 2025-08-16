@@ -290,39 +290,18 @@ if(BUILD_GUI_TESTS)
 endif()
 
 
-# Gets sources to be parsed to gather translatable strings.
+# Recursively collects source files from the given directories
+# to be parsed for translatable strings.
 function(get_translatable_sources var)
-  set(result)
-  set(targets)
+  set(result "")
   foreach(dir IN ITEMS ${ARGN})
-    get_directory_property(dir_targets DIRECTORY ${PROJECT_SOURCE_DIR}/${dir} BUILDSYSTEM_TARGETS)
-    list(APPEND targets ${dir_targets})
+    file(GLOB_RECURSE sources ${dir}/*.h ${dir}/*.cpp ${dir}/*.mm)
+    list(APPEND result ${sources})
   endforeach()
-  foreach(target IN LISTS targets)
-    get_target_property(target_sources ${target} SOURCES)
-    if(target_sources)
-      foreach(source IN LISTS target_sources)
-        # Get an expression from the generator expression, if any.
-        if(source MATCHES ":([^>]+)>$")
-          set(source ${CMAKE_MATCH_1})
-        endif()
-        cmake_path(GET source EXTENSION LAST_ONLY ext)
-        if(ext STREQUAL ".qrc")
-          continue()
-        endif()
-        if(NOT IS_ABSOLUTE source)
-          get_target_property(target_source_dir ${target} SOURCE_DIR)
-          cmake_path(APPEND target_source_dir ${source} OUTPUT_VARIABLE source)
-        endif()
-        get_property(is_generated
-          SOURCE  ${source} TARGET_DIRECTORY ${target}
-          PROPERTY GENERATED
-        )
-        if(NOT is_generated)
-          list(APPEND result ${source})
-        endif()
-      endforeach()
-    endif()
+  set(subtrees crc32c crypto/ctaes leveldb minisketch secp256k1)
+  set(exclude_dirs bench compat crypto support test univalue)
+  foreach(directory IN LISTS subtrees exclude_dirs)
+    list(FILTER result EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/src/${directory}/.*")
   endforeach()
   set(${var} ${result} PARENT_SCOPE)
 endfunction()
@@ -338,12 +317,8 @@ elseif(NOT SED_EXECUTABLE)
     COMMAND ${CMAKE_COMMAND} -E echo "Error: GNU sed not found"
   )
 else()
-  set(translatable_sources_directories src src/qt src/util)
-  if(ENABLE_WALLET)
-    list(APPEND translatable_sources_directories src/wallet)
-  endif()
-  get_translatable_sources(translatable_sources ${translatable_sources_directories})
-  get_translatable_sources(qt_translatable_sources src/qt)
+  get_translatable_sources(translatable_sources ${PROJECT_SOURCE_DIR}/src)
+  get_translatable_sources(qt_translatable_sources ${PROJECT_SOURCE_DIR}/src/qt)
   file(GLOB ui_files ${CMAKE_CURRENT_SOURCE_DIR}/forms/*.ui)
   add_custom_target(translate
     COMMAND ${CMAKE_COMMAND} -E env XGETTEXT=${XGETTEXT_EXECUTABLE} COPYRIGHT_HOLDERS=${COPYRIGHT_HOLDERS} $<TARGET_FILE:Python3::Interpreter> ${PROJECT_SOURCE_DIR}/share/qt/extract_strings_qt.py ${translatable_sources}

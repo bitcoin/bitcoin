@@ -173,6 +173,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Specified -blockreservedweight (%d) is lower than minimum safety value of "
 "(%d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
+"The %s path uses exFAT, which is known to have intermittent corruption "
+"problems on macOS. Move this directory to a different filesystem to avoid "
+"data loss."),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
 "The block database contains a block which appears to be from the future. "
 "This may be due to your computer's date and time being set incorrectly. Only "
 "rebuild the block database if you are sure that your computer's date and "
@@ -435,4 +439,5 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Verifying wallet(s)…"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet file creation failed: %s"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet needed to be rewritten: restart %s to complete"),
 QT_TRANSLATE_NOOP("bitcoin-core", "acceptstalefeeestimates is not supported on %s chain."),
+QT_TRANSLATE_NOOP("bitcoin-core", "default wallet"),
 };
