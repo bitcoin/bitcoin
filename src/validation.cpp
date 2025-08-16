@@ -1995,29 +1995,27 @@ void Chainstate::InitCoinsCache(size_t cache_size_bytes)
 //
 bool ChainstateManager::IsInitialBlockDownload() const
 {
-    // Optimization: pre-test latch before taking the lock.
-    if (m_cached_finished_ibd.load(std::memory_order_relaxed))
-        return false;
-
-    LOCK(cs_main);
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
     if (m_blockman.LoadingBlocks()) {
         return true;
     }
-    CChain& chain{ActiveChain()};
-    if (chain.Tip() == nullptr) {
+    if (!m_cached_chaintip_recent)
         return true;
-    }
-    if (chain.Tip()->nChainWork < MinimumChainWork()) {
-        return true;
-    }
-    if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) {
-        return true;
-    }
     LogInfo("Leaving InitialBlockDownload (latching to false)");
     m_cached_finished_ibd.store(true, std::memory_order_relaxed);
     return false;
+}
+
+void ChainstateManager::UpdateCachedChaintipRecent()
+{
+    AssertLockHeld(cs_main);
+    CChain& chain{ActiveChain()};
+    if (chain.Tip() == nullptr) return;
+    if (chain.Tip()->nChainWork < MinimumChainWork()) return;
+    if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) return;
+
+    m_cached_chaintip_recent = true;
 }
 
 void Chainstate::CheckForkWarningConditions()
@@ -3052,6 +3050,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     }
 
     m_chain.SetTip(*pindexDelete->pprev);
+    m_chainman.UpdateCachedChaintipRecent();
 
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
@@ -3180,6 +3179,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     }
     // Update m_chain & related variables.
     m_chain.SetTip(*pindexNew);
+    m_chainman.UpdateCachedChaintipRecent();
     UpdateTip(pindexNew);
 
     const auto time_6{SteadyClock::now()};
@@ -4655,6 +4655,7 @@ bool Chainstate::LoadChainTip()
         return false;
     }
     m_chain.SetTip(*pindex);
+    m_chainman.UpdateCachedChaintipRecent();
     PruneBlockIndexCandidates();
 
     tip = m_chain.Tip();
