@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <crypto/muhash.h>
 #include <index/coinstatsindex.h>
+#include <index/db_key.h>
 #include <kernel/coinstats.h>
 #include <logging.h>
 #include <node/blockstorage.h>
@@ -20,8 +21,6 @@ using kernel::CCoinsStats;
 using kernel::GetBogoSize;
 using kernel::RemoveCoinHash;
 
-static constexpr uint8_t DB_BLOCK_HASH{'s'};
-static constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
 static constexpr uint8_t DB_MUHASH{'M'};
 
 namespace {
@@ -58,47 +57,6 @@ struct DBVal {
         READWRITE(obj.total_unspendables_unclaimed_rewards);
     }
 };
-
-struct DBHeightKey {
-    int height;
-
-    explicit DBHeightKey(int height_in) : height(height_in) {}
-
-    template <typename Stream>
-    void Serialize(Stream& s) const
-    {
-        ser_writedata8(s, DB_BLOCK_HEIGHT);
-        ser_writedata32be(s, height);
-    }
-
-    template <typename Stream>
-    void Unserialize(Stream& s)
-    {
-        const uint8_t prefix{ser_readdata8(s)};
-        if (prefix != DB_BLOCK_HEIGHT) {
-            throw std::ios_base::failure("Invalid format for coinstatsindex DB height key");
-        }
-        height = ser_readdata32be(s);
-    }
-};
-
-struct DBHashKey {
-    uint256 block_hash;
-
-    explicit DBHashKey(const uint256& hash_in) : block_hash(hash_in) {}
-
-    SERIALIZE_METHODS(DBHashKey, obj)
-    {
-        uint8_t prefix{DB_BLOCK_HASH};
-        READWRITE(prefix);
-        if (prefix != DB_BLOCK_HASH) {
-            throw std::ios_base::failure("Invalid format for coinstatsindex DB hash key");
-        }
-
-        READWRITE(obj.block_hash);
-    }
-};
-
 }; // namespace
 
 std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
@@ -229,29 +187,6 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     return m_db->Write(DBHeightKey(block.height), value);
 }
 
-[[nodiscard]] static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
-                                                     const std::string& index_name, int height)
-{
-    DBHeightKey key{height};
-    db_it.Seek(key);
-
-    if (!db_it.GetKey(key) || key.height != height) {
-        LogError("unexpected key in %s: expected (%c, %d)",
-                 index_name, DB_BLOCK_HEIGHT, height);
-        return false;
-    }
-
-    std::pair<uint256, DBVal> value;
-    if (!db_it.GetValue(value)) {
-        LogError("unable to read value in %s at key (%c, %d)",
-                 index_name, DB_BLOCK_HEIGHT, height);
-        return false;
-    }
-
-    batch.Write(DBHashKey(value.first), std::move(value.second));
-    return true;
-}
-
 bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
 {
     CDBBatch batch(*m_db);
@@ -259,7 +194,7 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
 
     // During a reorg, copy the block's hash digest from the height index to the hash index,
     // ensuring it's still accessible after the height index entry is overwritten.
-    if (!CopyHeightIndexToHashIndex(*db_it, batch, m_name, block.height)) {
+    if (!CopyHeightIndexToHashIndex<DBVal>(*db_it, batch, m_name, block.height)) {
         return false;
     }
 
@@ -270,25 +205,6 @@ bool CoinStatsIndex::CustomRemove(const interfaces::BlockInfo& block)
     }
 
     return true;
-}
-
-static bool LookUpOne(const CDBWrapper& db, const interfaces::BlockRef& block, DBVal& result)
-{
-    // First check if the result is stored under the height index and the value
-    // there matches the block hash. This should be the case if the block is on
-    // the active chain.
-    std::pair<uint256, DBVal> read_out;
-    if (!db.Read(DBHeightKey(block.height), read_out)) {
-        return false;
-    }
-    if (read_out.first == block.hash) {
-        result = std::move(read_out.second);
-        return true;
-    }
-
-    // If value at the height index corresponds to an different block, the
-    // result will be stored in the hash index.
-    return db.Read(DBHashKey(block.hash), result);
 }
 
 std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_index) const
