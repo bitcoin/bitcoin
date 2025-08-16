@@ -655,7 +655,7 @@
          <item>
           <widget class="QLabel" name="labelEta2">
            <property name="text">
-            <string>Estimated time remaining: —</string>
+            <string>Estimated time remaining: -</string>
            </property>
           </widget>
          </item>
