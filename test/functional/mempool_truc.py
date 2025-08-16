@@ -18,10 +18,16 @@ from test_framework.wallet import (
     DEFAULT_FEE,
     MiniWallet,
 )
+from test_framework.blocktools import (
+    create_empty_fork,
+)
 
 MAX_REPLACEMENT_CANDIDATES = 100
 TRUC_MAX_VSIZE = 10000
 TRUC_CHILD_MAX_VSIZE = 1000
+
+# Number of blocks to create in temporary blockchain branch for reorg testing
+FORK_LENGTH = 10
 
 def cleanup(extra_args=None):
     def decorator(func):
@@ -49,6 +55,12 @@ class MempoolTRUC(BitcoinTestFramework):
         mempool_contents = self.nodes[0].getrawmempool()
         assert_equal(len(txids), len(mempool_contents))
         assert all([txid in txids for txid in mempool_contents])
+
+    def trigger_reorg(self, fork_blocks):
+        """Trigger reorg of the fork blocks."""
+        for block in fork_blocks:
+            self.nodes[0].submitblock(block.serialize().hex())
+        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
 
     @cleanup()
     def test_truc_max_vsize(self):
@@ -164,23 +176,27 @@ class MempoolTRUC(BitcoinTestFramework):
     @cleanup()
     def test_truc_reorg(self):
         node = self.nodes[0]
+
+        # Prep for fork
+        fork_blocks = create_empty_fork(node, fork_length=FORK_LENGTH)
         self.log.info("Test that, during a reorg, TRUC rules are not enforced")
         tx_v2_block = self.wallet.send_self_transfer(from_node=node, version=2)
         tx_v3_block = self.wallet.send_self_transfer(from_node=node, version=3)
         tx_v3_block2 = self.wallet.send_self_transfer(from_node=node, version=3)
         self.check_mempool([tx_v3_block["txid"], tx_v2_block["txid"], tx_v3_block2["txid"]])
 
-        block = self.generate(node, 1)
+        self.generate(node, 1)
         self.check_mempool([])
+
         tx_v2_from_v3 = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=tx_v3_block["new_utxo"], version=2)
         tx_v3_from_v2 = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=tx_v2_block["new_utxo"], version=3)
         tx_v3_child_large = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=tx_v3_block2["new_utxo"], target_vsize=1250, version=3)
         assert_greater_than(node.getmempoolentry(tx_v3_child_large["txid"])["vsize"], TRUC_CHILD_MAX_VSIZE)
         self.check_mempool([tx_v2_from_v3["txid"], tx_v3_from_v2["txid"], tx_v3_child_large["txid"]])
-        node.invalidateblock(block[0])
+        self.trigger_reorg(fork_blocks)
         self.check_mempool([tx_v3_block["txid"], tx_v2_block["txid"], tx_v3_block2["txid"], tx_v2_from_v3["txid"], tx_v3_from_v2["txid"], tx_v3_child_large["txid"]])
-        # This is needed because generate() will create the exact same block again.
-        node.reconsiderblock(block[0])
+        # Clean-up the mempool
+        self.generate(node, 1)
 
 
     @cleanup(extra_args=["-limitdescendantsize=10"])
@@ -459,21 +475,20 @@ class MempoolTRUC(BitcoinTestFramework):
         node = self.nodes[0]
         self.log.info("Test that children of a TRUC transaction can be replaced individually, even if there are multiple due to reorg")
 
+        # Prep for fork
+        fork_blocks = create_empty_fork(node, fork_length=FORK_LENGTH)
         ancestor_tx = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2, version=3)
         self.check_mempool([ancestor_tx["txid"]])
 
-        block = self.generate(node, 1)[0]
+        self.generate(node, 1)[0]
         self.check_mempool([])
 
         child_1 = self.wallet.send_self_transfer(from_node=node, version=3, utxo_to_spend=ancestor_tx["new_utxos"][0])
         child_2 = self.wallet.send_self_transfer(from_node=node, version=3, utxo_to_spend=ancestor_tx["new_utxos"][1])
         self.check_mempool([child_1["txid"], child_2["txid"]])
 
-        self.generate(node, 1)
-        self.check_mempool([])
-
         # Create a reorg, causing ancestor_tx to exceed the 1-child limit
-        node.invalidateblock(block)
+        self.trigger_reorg(fork_blocks)
         self.check_mempool([ancestor_tx["txid"], child_1["txid"], child_2["txid"]])
         assert_equal(node.getmempoolentry(ancestor_tx["txid"])["descendantcount"], 3)
 
@@ -563,10 +578,12 @@ class MempoolTRUC(BitcoinTestFramework):
         node = self.nodes[0]
         self.log.info("Test that sibling eviction is not allowed when multiple siblings exist")
 
+        # Prep for fork
+        fork_blocks = create_empty_fork(node, fork_length=FORK_LENGTH)
         tx_with_multi_children = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=3, version=3, confirmed_only=True)
         self.check_mempool([tx_with_multi_children["txid"]])
 
-        block_to_disconnect = self.generate(node, 1)[0]
+        self.generate(node, 1)
         self.check_mempool([])
 
         tx_with_sibling1 = self.wallet.send_self_transfer(from_node=node, version=3, utxo_to_spend=tx_with_multi_children["new_utxos"][0])
@@ -574,7 +591,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.check_mempool([tx_with_sibling1["txid"], tx_with_sibling2["txid"]])
 
         # Create a reorg, bringing tx_with_multi_children back into the mempool with a descendant count of 3.
-        node.invalidateblock(block_to_disconnect)
+        self.trigger_reorg(fork_blocks)
         self.check_mempool([tx_with_multi_children["txid"], tx_with_sibling1["txid"], tx_with_sibling2["txid"]])
         assert_equal(node.getmempoolentry(tx_with_multi_children["txid"])["descendantcount"], 3)
 
