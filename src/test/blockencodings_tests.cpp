@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         CBlockHeaderAndShortTxIDs shortIDs2;
         stream >> shortIDs2;
 
-        PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
+        PartiallyDownloadedBlock partialBlock;
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, pool, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK( partialBlock.IsTxAvailable(0));
         BOOST_CHECK(!partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
@@ -171,8 +171,8 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         CBlockHeaderAndShortTxIDs shortIDs2;
         stream >> shortIDs2;
 
-        PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
+        PartiallyDownloadedBlock partialBlock;
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, pool, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK(!partialBlock.IsTxAvailable(0));
         BOOST_CHECK( partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
@@ -242,8 +242,8 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         CBlockHeaderAndShortTxIDs shortIDs2;
         stream >> shortIDs2;
 
-        PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
+        PartiallyDownloadedBlock partialBlock;
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, pool, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK( partialBlock.IsTxAvailable(0));
         BOOST_CHECK( partialBlock.IsTxAvailable(1));
         BOOST_CHECK( partialBlock.IsTxAvailable(2));
@@ -294,8 +294,8 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         CBlockHeaderAndShortTxIDs shortIDs2;
         stream >> shortIDs2;
 
-        PartiallyDownloadedBlock partialBlock(&pool);
-        BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
+        PartiallyDownloadedBlock partialBlock;
+        BOOST_CHECK(partialBlock.InitData(shortIDs2, pool, empty_extra_txn) == READ_STATUS_OK);
         BOOST_CHECK(partialBlock.IsTxAvailable(0));
 
         CBlock block2;
@@ -333,10 +333,10 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
 
     {
         const CBlockHeaderAndShortTxIDs cmpctblock{block, rand_ctx.rand64()};
-        PartiallyDownloadedBlock partial_block(&pool);
-        PartiallyDownloadedBlock partial_block_with_extra(&pool);
+        PartiallyDownloadedBlock partial_block;
+        PartiallyDownloadedBlock partial_block_with_extra;
 
-        BOOST_CHECK(partial_block.InitData(cmpctblock, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK(partial_block.InitData(cmpctblock, pool, extra_txn) == READ_STATUS_OK);
         BOOST_CHECK( partial_block.IsTxAvailable(0));
         BOOST_CHECK(!partial_block.IsTxAvailable(1));
         BOOST_CHECK( partial_block.IsTxAvailable(2));
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
         // and a tx from the block that's not in the mempool:
         extra_txn[1] = block.vtx[1];
 
-        BOOST_CHECK(partial_block_with_extra.InitData(cmpctblock, extra_txn) == READ_STATUS_OK);
+        BOOST_CHECK(partial_block_with_extra.InitData(cmpctblock, pool, extra_txn) == READ_STATUS_OK);
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(0));
         // This transaction is now available via extra_txn:
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(1));
