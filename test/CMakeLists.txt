@@ -26,6 +26,7 @@ function(create_test_config)
   set_configure_variable(WITH_ZMQ ENABLE_ZMQ)
   set_configure_variable(ENABLE_EXTERNAL_SIGNER ENABLE_EXTERNAL_SIGNER)
   set_configure_variable(WITH_USDT ENABLE_USDT_TRACEPOINTS)
+  set_configure_variable(ENABLE_IPC ENABLE_IPC)
 
   configure_file(config.ini.in config.ini USE_SOURCE_PERMISSIONS @ONLY)
 endfunction()
