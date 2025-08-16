@@ -3,13 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <policy/fees.h>
+#include <policy/fees/block_policy_estimator.h>
 
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
 #include <policy/feerate.h>
+#include <policy/fees/forecaster_util.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <serialize.h>
@@ -541,7 +542,7 @@ bool CBlockPolicyEstimator::_removeTx(const Txid& hash, bool inBlock)
 }
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(const fs::path& estimation_filepath, const bool read_stale_estimates)
-    : m_estimation_filepath{estimation_filepath}
+    : Forecaster(ForecastType::BLOCK_POLICY), m_estimation_filepath{estimation_filepath}
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;
@@ -724,6 +725,29 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
     return estimateRawFee(confTarget, DOUBLE_SUCCESS_PCT, FeeEstimateHorizon::MED_HALFLIFE);
 }
 
+ForecastResult CBlockPolicyEstimator::ForecastFeeRate(int target, bool conservative) const
+{
+    ForecastResult result;
+    result.forecaster = ForecastType::BLOCK_POLICY;
+    FeeCalculation fee_calculation_result;
+    CFeeRate feerate{estimateSmartFee(target, &fee_calculation_result, conservative)};
+    result.current_block_height = fee_calculation_result.best_height;
+    if (feerate == CFeeRate(0)) {
+        result.error = "Insufficient data or no feerate found";
+        return result;
+    }
+    // Note: size can be any positive non-zero integer; the evaluated fee/size will result in the same fee rate,
+    // and we only care that the fee rate remains consistent.
+    int32_t size = 1000;
+    result.feerate = FeeFrac(feerate.GetFee(size), size);
+    return result;
+}
+
+unsigned int CBlockPolicyEstimator::MaximumTarget() const
+{
+    return HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+}
+
 CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult* result) const
 {
     TxConfirmStats* stats = nullptr;
@@ -875,6 +899,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     if (feeCalc) {
         feeCalc->desiredTarget = confTarget;
         feeCalc->returnedTarget = confTarget;
+        feeCalc->best_height = nBestSeenHeight;
     }
 
     double median = -1;
