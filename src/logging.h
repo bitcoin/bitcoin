@@ -275,6 +275,7 @@ namespace BCLog {
          */
         void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
+        void FlushDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         void ShrinkDebugFile();
 
         std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)

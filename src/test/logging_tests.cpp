@@ -39,6 +39,7 @@ static void ResetLogger()
 
 static std::vector<std::string> ReadDebugLogLines()
 {
+    LogInstance().FlushDebugFile();
     std::vector<std::string> lines;
     std::ifstream ifs{LogInstance().m_file_path};
     for (std::string line; std::getline(ifs, line);) {
