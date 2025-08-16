@@ -83,7 +83,11 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vin[0].scriptWitness.SetNull();
     // Always pad with OP_0 at the end to avoid bad-cb-length error
     const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
-    txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
+    txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1;
+    if (prev_height < 16) {
+        // Append dummy to increase scriptSig size to 2 (see bad-cb-length consensus rule)
+        txCoinbase.vin[0].scriptSig << OP_0;
+    }
     txCoinbase.nLockTime = static_cast<uint32_t>(prev_height);
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
