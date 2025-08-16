@@ -18,7 +18,7 @@
              ((gnu packages python-build) #:select (python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
              ((gnu packages python-science) #:select (python-scikit-build-core))
-             ((gnu packages python-xyz) #:select (python-pydantic-2 python-pydantic-core))
+             ((gnu packages python-xyz) #:select (python-pydantic-2))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -175,7 +175,6 @@ chain for " target " development."))
     (native-inputs (list cmake-minimal
                          ninja
                          python-scikit-build-core
-                         python-pydantic-core
                          python-pydantic-2))
     (arguments
      (list
@@ -455,7 +454,7 @@ inspecting signatures in Mach-O binaries.")
 (define-public glibc-2.31
   (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
   (package
-    (inherit glibc) ;; 2.35
+    (inherit glibc) ;; 2.39
     (version "2.31")
     (source (origin
               (method git-fetch)
@@ -466,7 +465,8 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
-              (patches (search-our-patches "glibc-guix-prefix.patch"))))
+              (patches (search-our-patches "glibc-guix-prefix.patch"
+                                           "glibc-riscv-jumptarget.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
@@ -566,9 +566,9 @@ inspecting signatures in Mach-O binaries.")
                  (list gcc-toolchain-13 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-18
-                 lld-18
-                 (make-lld-wrapper lld-18 #:lld-as-ld? #t)
+           (list clang-toolchain-19
+                 lld-19
+                 (make-lld-wrapper lld-19 #:lld-as-ld? #t)
                  python-signapple
                  zip))
           (else '())))))
