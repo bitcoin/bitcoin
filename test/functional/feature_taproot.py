@@ -19,6 +19,7 @@ from test_framework.messages import (
     CTxOut,
     SEQUENCE_FINAL,
     tx_from_hex,
+    TX_MAX_STANDARD_VERSION,
     WITNESS_SCALE_FACTOR,
 )
 from test_framework.script import (
@@ -666,7 +667,6 @@ SIG_ADD_ZERO = {"failure": {"sign": zero_appender(default_sign)}}
 DUST_LIMIT = 600
 MIN_FEE = 50000
 
-TX_MAX_STANDARD_VERSION = 3
 TX_STANDARD_VERSIONS = [1, 2, TX_MAX_STANDARD_VERSION]
 TRUC_MAX_VSIZE = 10000 # test doesn't cover in-mempool spends, so only this limit is hit
 

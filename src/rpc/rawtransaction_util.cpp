@@ -18,6 +18,7 @@
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/rbf.h>
+#include <util/string.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -143,7 +144,7 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
     }
 }
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, const uint32_t version)
 {
     CMutableTransaction rawTx;
 
@@ -153,6 +154,11 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, locktime out of range");
         rawTx.nLockTime = nLockTime;
     }
+
+    if (version < TX_MIN_STANDARD_VERSION || version > TX_MAX_STANDARD_VERSION) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, version out of range(%d~%d)", TX_MIN_STANDARD_VERSION, TX_MAX_STANDARD_VERSION));
+    }
+    rawTx.version = version;
 
     AddInputs(rawTx, inputs_in, rbf);
     AddOutputs(rawTx, outputs_in);
