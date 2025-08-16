@@ -27,7 +27,6 @@ src/netfulfilledman.*
 src/qt/governancelist.*
 src/qt/masternodelist.*
 src/qt/proposalwizard.*
-src/qt/forms/proposalwizard.ui
 src/rpc/coinjoin.cpp
 src/rpc/evo.cpp
 src/rpc/evo_util.*

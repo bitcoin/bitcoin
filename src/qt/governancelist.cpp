@@ -427,26 +427,14 @@ void GovernanceList::showCreateProposalDialog()
         QMessageBox::warning(this, tr("Unavailable"), tr("A synced node and an unlocked wallet are required."));
         return;
     }
-    if (!proposalWizard) {
-        proposalWizard = std::make_unique<ProposalWizard>(this->clientModel->node(), this->walletModel, this);
-        // Ensure closing the dialog actually destroys it so a fresh flow starts next time
-        proposalWizard->setAttribute(Qt::WA_DeleteOnClose, true);
-        connect(proposalWizard.get(), &QObject::destroyed, this, [this]() { proposalWizard.reset(); });
-        // Modeless window that does not block the parent
-        proposalWizard->setWindowModality(Qt::NonModal);
-        proposalWizard->setModal(false);
-        proposalWizard->setWindowFlag(Qt::Window, true);
-        proposalWizard->show();
-    } else {
-        // Bring existing wizard to front and focus it
-        proposalWizard->setWindowModality(Qt::NonModal);
-        proposalWizard->setModal(false);
-        proposalWizard->setAttribute(Qt::WA_ShowWithoutActivating, false);
-        proposalWizard->show();
-        proposalWizard->raise();
-        proposalWizard->activateWindow();
-        proposalWizard->setFocus(Qt::ActiveWindowFocusReason);
-    }
+    ProposalWizard* proposalWizard = new ProposalWizard(this->clientModel->node(), this->walletModel, this);
+    // Ensure closing the dialog actually destroys it so a fresh flow starts next time
+    proposalWizard->setAttribute(Qt::WA_DeleteOnClose, true);
+    // Modeless window that does not block the parent
+    proposalWizard->setWindowModality(Qt::NonModal);
+    proposalWizard->setModal(false);
+    proposalWizard->setWindowFlag(Qt::Window, true);
+    proposalWizard->show();
 }
 
 void GovernanceList::showProposalContextMenu(const QPoint& pos)

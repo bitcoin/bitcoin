@@ -62,12 +62,6 @@
          <property name="wordWrap">
           <bool>true</bool>
          </property>
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-           <bold>true</bold>
-          </font>
-         </property>
         </widget>
        </item>
        <item>
@@ -178,32 +172,20 @@
              <string>Payment &amp;amount</string>
             </property>
             <property name="buddy">
-             <cstring>spinAmount</cstring>
+             <cstring>paymentAmount</cstring>
             </property>
            </widget>
           </item>
          <item row="3" column="1">
-           <widget class="QDoubleSpinBox" name="spinAmount">
+           <widget class="BitcoinAmountField" name="paymentAmount">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
-           <property name="decimals">
-            <number>8</number>
-           </property>
-             <property name="minimum">
-              <double>0.000000000000000</double>
-             </property>
-           <property name="maximum">
-            <double>1000000000.000000000000000</double>
-           </property>
-           <property name="singleStep">
-              <double>0.100000000000000</double>
-           </property>
-            <property name="maximumHeight">
-             <number>24</number>
+            <property name="toolTip">
+             <string>The amount to request in a single payment</string>
             </property>
           </widget>
          </item>
@@ -482,7 +464,7 @@
          <item>
            <widget class="QLabel" name="labelConfStatus">
            <property name="text">
-            <string>Confirmations: %1 / %2 required</string>
+            <string></string>
            </property>
           </widget>
          </item>
@@ -623,7 +605,7 @@
          <item>
            <widget class="QLabel" name="labelConfStatus2">
             <property name="text">
-             <string>Confirmations: %1 / %2 required</string>
+             <string></string>
             </property>
           </widget>
          </item>
@@ -763,12 +745,17 @@
    <header>qt/qvalidatedlineedit.h</header>
    <container>0</container>
   </customwidget>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QLineEdit</extends>
+   <header>qt/bitcoinamountfield.h</header>
+  </customwidget>
  </customwidgets>
   <tabstops>
    <tabstop>editName</tabstop>
    <tabstop>editUrl</tabstop>
    <tabstop>editPayAddr</tabstop>
-   <tabstop>spinAmount</tabstop>
+   <tabstop>paymentAmount</tabstop>
    <tabstop>comboFirstPayment</tabstop>
    <tabstop>comboPayments</tabstop>
    <tabstop>btnNext1</tabstop>

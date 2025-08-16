@@ -55,7 +55,6 @@ private:
 
     QMenu* proposalContextMenu;
     QTimer* timer;
-    std::unique_ptr<ProposalWizard> proposalWizard;
 
     // Voting-related members
     std::map<uint256, CKeyID> votableMasternodes; // proTxHash -> voting keyID
