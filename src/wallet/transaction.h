@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <map>
 #include <utility>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -170,6 +171,8 @@ public:
     }
 };
 
+class WalletTXO;
+
 /**
  * A transaction with a bunch of additional info that only the owner cares about.
  * It includes any unrecorded transactions needed to link it back to the block chain.
@@ -215,6 +218,11 @@ public:
      * CWallet::ComputeTimeSmart().
      */
     unsigned int nTimeSmart;
+    /**
+     * For every isminetype, we want to track whether the transaction spends any
+     * inputs that match that isminetype.
+     */
+    std::optional<bool> m_from_me;
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -230,6 +238,8 @@ public:
     mutable bool m_is_cache_empty{true};
     mutable bool fChangeCached;
     mutable CAmount nChangeCached;
+
+    mutable std::unordered_map<uint32_t, WalletTXO*> m_txos;
 
     CWalletTx(CTransactionRef tx, const TxState& state) : tx(std::move(tx)), m_state(state)
     {
@@ -248,8 +258,11 @@ public:
     }
 
     CTransactionRef tx;
+
+private:
     TxState m_state;
 
+public:
     // Set of mempool transactions that conflict
     // directly with the transaction, or that conflict
     // with an ancestor transaction. This set will be
@@ -278,6 +291,7 @@ public:
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
         s << TX_WITH_WITNESS(tx) << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << dummy_int << nTimeReceived << dummy_bool << dummy_bool;
+        if (m_from_me) s << *m_from_me;
     }
 
     template<typename Stream>
@@ -292,6 +306,12 @@ public:
         uint256 serialized_block_hash;
         int serializedIndex;
         s >> TX_WITH_WITNESS(tx) >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> dummy_int >> nTimeReceived >> dummy_bool >> dummy_bool;
+
+        if (!s.eof()) {
+            bool from_me;
+            s >> from_me;
+            m_from_me = from_me;
+        }
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
@@ -329,6 +349,8 @@ public:
 
     template<typename T> const T* state() const { return std::get_if<T>(&m_state); }
     template<typename T> T* state() { return std::get_if<T>(&m_state); }
+    void SetState(const TxState& state);
+    const TxState& GetState() const { return m_state; }
 
     //! Update transaction state when attaching to a chain, filling in heights
     //! of conflicted and confirmed blocks
@@ -365,25 +387,37 @@ struct WalletTxOrderComparator {
 class WalletTXO
 {
 private:
-    const CWalletTx& m_wtx;
     const CTxOut& m_output;
     isminetype m_ismine;
+    TxState m_tx_state;
+    bool m_tx_coinbase;
+    bool m_tx_from_me;
+    int64_t m_tx_time;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const isminetype ismine)
-    : m_wtx(wtx),
-    m_output(output),
-    m_ismine(ismine)
-    {
-        Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
-    }
-
-    const CWalletTx& GetWalletTx() const { return m_wtx; }
+    WalletTXO(const CTxOut& output, const isminetype ismine, const TxState& state, bool coinbase, bool tx_from_me, int64_t tx_time)
+    : m_output(output),
+    m_ismine(ismine),
+    m_tx_state(state),
+    m_tx_coinbase(coinbase),
+    m_tx_from_me(tx_from_me),
+    m_tx_time(tx_time)
+    {}
 
     const CTxOut& GetTxOut() const { return m_output; }
 
     isminetype GetIsMine() const { return m_ismine; }
     void SetIsMine(isminetype ismine) { m_ismine = ismine; }
+
+    const TxState& GetState() const { return m_tx_state; }
+    void SetState(const TxState& state) { m_tx_state = state; }
+
+    bool IsTxCoinBase() const { return m_tx_coinbase; }
+
+    void SetTxFromMe(bool from_me) { m_tx_from_me = from_me; }
+    bool GetTxFromMe() const { return m_tx_from_me; }
+
+    int64_t GetTxTime() const { return m_tx_time; }
 };
 } // namespace wallet
 
