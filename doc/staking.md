@@ -4,7 +4,8 @@ BitGold Staker
 BitGold combines proof-of-work with proof-of-stake. Any node that holds
 mature coins may stake to help secure the network and earn rewards. All
 blocks—including the first after the genesis block—must include a valid
-coinstake transaction.
+coinstake transaction. The staking engine implements the PoSV3 consensus rules
+described below.
 
 ## Enabling staking
 
@@ -24,7 +25,21 @@ coinstake transaction.
 
 The staker will automatically attempt to create new blocks at the protocol's
 8-minute target spacing. Staking rewards follow BitGold's 90 000-block halving
-schedule.
+schedule. The staking thread adheres to PoSV3 without additional options, but
+`-debug=staking` can help diagnose failures.
+
+## PoSV3 consensus rules
+
+PoSV3 introduces stricter requirements for proof-of-stake validation:
+
+* Block timestamps must be multiples of 16 seconds.
+* Each staked input must be at least 1 BG and must have aged for one hour or
+  more before being eligible.
+* Blocks contain a zero-value coinbase transaction followed by the coinstake.
+* The coinstake output pays back the original amount plus the current block
+  subsidy.
+
+These parameters are fixed by consensus and cannot be changed via configuration.
 
 ## Monitoring block production
 
