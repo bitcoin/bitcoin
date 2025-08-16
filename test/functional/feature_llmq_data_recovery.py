@@ -28,8 +28,8 @@ llmq_type_strings = {llmq_test: 'llmq_test', llmq_test_v17: 'llmq_test_v17'}
 
 class QuorumDataRecoveryTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=testdummy:0:999999999999:0:10:8:6:5:-1"] for _ in range(9)]
-        self.set_dash_test_params(9, 7, extra_args=extra_args)
+        extra_args = [["-vbparams=testdummy:0:999999999999:0:10:8:6:5:-1"] for _ in range(7)]
+        self.set_dash_test_params(7, 6, extra_args=extra_args)
         self.set_dash_llmq_test_params(4, 3)
 
     def restart_mn(self, mn: MasternodeInfo, reindex=False, qvvec_sync=None, qdata_recovery_enabled=True):
@@ -41,29 +41,40 @@ class QuorumDataRecoveryTest(DashTestFramework):
             args.append('-llmq-qvvec-sync=%s:%d' % (llmq_type_strings[llmq_sync[0]], llmq_sync[1]))
         if reindex:
             args.append('-reindex')
-            bb_hash = mn.get_node(self).getbestblockhash()
             self.restart_node(mn.nodeIdx, args)
-            self.wait_until(lambda: mn.get_node(self).getbestblockhash() == bb_hash)
         else:
             self.restart_node(mn.nodeIdx, args)
+
+    def wait_restarted_mn(self, mn: MasternodeInfo, reindex=False, block_count=None):
+        if reindex:
+            self.wait_until(lambda: mn.get_node(self).getblockcount() >= block_count)
+
         force_finish_mnsync(mn.get_node(self))
         self.connect_nodes(mn.nodeIdx, 0)
-        if qdata_recovery_enabled:
-            # trigger recovery threads and wait for them to start
-            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
-
-            self.bump_mocktime(self.quorum_data_thread_request_timeout_seconds + 1)
-            time.sleep(1)
-        self.sync_blocks()
 
     def restart_mns(self, mns=None, exclude=None, reindex=False, qvvec_sync=None, qdata_recovery_enabled=True):
         if exclude is None:
             exclude = []
         if qvvec_sync is None:
             qvvec_sync = []
+
+        block_count = self.nodes[0].getblockcount()
         for mn in self.mninfo if mns is None else mns: # type: MasternodeInfo
             if mn not in exclude:
                 self.restart_mn(mn, reindex, qvvec_sync, qdata_recovery_enabled)
+
+        for mn in self.mninfo if mns is None else mns: # type: MasternodeInfo
+            if mn not in exclude:
+                self.wait_restarted_mn(mn, reindex, block_count)
+
+        if qdata_recovery_enabled:
+            # trigger recovery threads and wait for them to start
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
+            self.bump_mocktime(self.quorum_data_thread_request_timeout_seconds + 1)
+            time.sleep(1)
+
+        self.sync_blocks()
         self.wait_for_sporks_same()
 
     def test_mns(self, quorum_type_in, quorum_hash_in, valid_mns=None, all_mns=None, test_secret=True, expect_secret=True,
@@ -124,10 +135,11 @@ class QuorumDataRecoveryTest(DashTestFramework):
                 quorum_hash_2 = None
                 members_only_in_1 = []
                 members_only_in_2 = []
+                member_mns_2 = []
                 while len(members_only_in_1) == 0 or len(members_only_in_2) == 0:
-                    quorum_hash_1 = self.mine_quorum()
+                    quorum_hash_1 = quorum_hash_2
                     quorum_hash_2 = self.mine_quorum()
-                    member_mns_1 = self.get_member_mns(llmq_type, quorum_hash_1)
+                    member_mns_1 = member_mns_2
                     member_mns_2 = self.get_member_mns(llmq_type, quorum_hash_2)
                     members_only_in_1 = self.get_subset_only_in_left(member_mns_1, member_mns_2)
                     members_only_in_2 = self.get_subset_only_in_left(member_mns_2, member_mns_1)
