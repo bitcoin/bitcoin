@@ -9,6 +9,9 @@ import os
 import random
 import time
 
+from test_framework.mempool_util import (
+    DEFAULT_MIN_RELAY_TX_FEE,
+)
 from test_framework.messages import (
     COIN,
 )
@@ -25,6 +28,8 @@ from test_framework.wallet import MiniWallet
 
 MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
+MINIMUM_RELAY_FEE_RATE = Decimal(DEFAULT_MIN_RELAY_TX_FEE) / Decimal(COIN)
+TXS_COUNT = 24
 
 def small_txpuzzle_randfee(
     wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment, batch_reqs
@@ -164,7 +169,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # produces too small blocks (room for only 55 or so transactions)
 
     def transact_and_mine(self, numblocks, mining_node):
-        min_fee = Decimal("0.00001")
+        min_fee = MINIMUM_RELAY_FEE_RATE
         # We will now mine numblocks blocks generating on average 100 transactions between each block
         # We shuffle our confirmed txout set before each set of transactions
         # small_txpuzzle_randfee will use the transactions that have inputs already in the chain when possible
@@ -412,19 +417,23 @@ class EstimateFeeTest(BitcoinTestFramework):
     def test_estimation_modes(self):
         low_feerate = Decimal("0.001")
         high_feerate = Decimal("0.005")
-        tx_count = 24
         # Broadcast and mine high fee transactions for the first 12 blocks.
         for _ in range(12):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], high_feerate, tx_count)
+            self.broadcast_and_mine(self.nodes[1], self.nodes[2], high_feerate, TXS_COUNT)
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, high_feerate)
 
         # We now track 12 blocks; short horizon stats will start decaying.
         # Broadcast and mine low fee transactions for the next 4 blocks.
         for _ in range(4):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], low_feerate, tx_count)
+            self.broadcast_and_mine(self.nodes[1], self.nodes[2], low_feerate, TXS_COUNT)
         # conservative mode will consider longer time horizons while economical mode does not
         # Check the fee estimates for both modes after mining low fee transactions.
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
+
+    def test_sub_1s_per_vb_estimates(self):
+        for _ in range(6):
+            self.broadcast_and_mine(self.nodes[1], self.nodes[2], MINIMUM_RELAY_FEE_RATE, TXS_COUNT)
+        assert_greater_than(Decimal("0.00001"), self.nodes[0].estimatesmartfee(1)["feerate"])
 
 
     def run_test(self):
@@ -472,6 +481,10 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.clear_estimates()
         self.log.info("Test estimatesmartfee modes")
         self.test_estimation_modes()
+
+        self.clear_estimates()
+        self.log.info("Test that estimatesmartfee return sub 1s/vb fee rate estimate")
+        self.test_sub_1s_per_vb_estimates()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
