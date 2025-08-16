@@ -43,6 +43,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
+#include <string_view>
 #include <thread>
 #include <unordered_set>
 #include <vector>
@@ -1216,7 +1217,7 @@ public:
     int GetExtraBlockRelayCount() const;
 
     bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
-    bool RemoveAddedNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    bool RemoveAddedNode(std::string_view node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
 
@@ -1239,7 +1240,7 @@ public:
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;
     uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
-    bool DisconnectNode(const std::string& node);
+    bool DisconnectNode(std::string_view node);
     bool DisconnectNode(const CSubNet& subnet);
     bool DisconnectNode(const CNetAddr& addr);
     bool DisconnectNode(NodeId id);
@@ -1365,7 +1366,7 @@ private:
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;
 
     CNode* FindNode(const CNetAddr& ip);
-    CNode* FindNode(const std::string& addrName);
+    CNode* FindNode(std::string_view addrName);
     CNode* FindNode(const CService& addr);
 
     /**
