@@ -708,6 +708,7 @@ if(configure_warnings)
       message(WARNING "${warning}")
     endforeach()
     message("  ******\n")
+    message(AUTHOR_WARNING "Warnings have been encountered!")
 endif()
 
 # We want all build properties to be encapsulated properly.
