@@ -88,17 +88,19 @@ inline std::vector<bool> CreateBitVector(size_t size, const std::vector<size_t>&
 template <typename T>
 inline bool TestSerializationRoundtrip(const T& obj)
 {
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << obj;
+    // Datastreams we will compare at the end
+    CDataStream ss_obj(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ss_obj_rt(SER_NETWORK, PROTOCOL_VERSION);
+    // A temporary datastream to perform serialization round-trip
+    CDataStream ss_tmp(SER_NETWORK, PROTOCOL_VERSION);
+    T obj_rt;
 
-    T deserialized;
-    ss >> deserialized;
+    ss_obj << obj;
+    ss_tmp << obj;
+    ss_tmp >> obj_rt;
+    ss_obj_rt << obj_rt;
 
-    // Re-serialize and compare
-    CDataStream ss2(SER_NETWORK, PROTOCOL_VERSION);
-    ss2 << deserialized;
-
-    return ss.str() == ss2.str();
+    return ss_obj.str() == ss_obj_rt.str();
 }
 
 // Helper to create deterministic test data
