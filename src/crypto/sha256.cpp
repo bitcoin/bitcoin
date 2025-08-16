@@ -10,7 +10,7 @@
 #include <cstring>
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
-#include <compat/cpuid.h>
+#include <compat/cpuid.h> // IWYU pragma: keep
 
 #if defined(__linux__) && defined(ENABLE_ARM_SHANI)
 #include <sys/auxv.h>
