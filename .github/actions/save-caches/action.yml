@@ -1,0 +1,36 @@
+name: 'Save Caches'
+description: 'Save ccache, depends sources, and built depends caches'
+inputs:
+  depends-sources-cache-hit:
+    required: true
+  depends-built-cache-hit:
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: debug cache hit inputs
+      shell: bash
+      run: |
+        echo "depends sources direct cache hit to primary key: ${{ inputs.depends-sources-cache-hit }}"
+        echo "depends built direct cache hit to primary key: ${{ inputs.depends-built-cache-hit }}"
+
+    - name: Save Ccache cache
+      uses: cirruslabs/cache/save@v4
+      if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) }}
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ env.CONTAINER_NAME }}-${{ github.run_id }}
+
+    - name: Save depends sources cache
+      uses: cirruslabs/cache/save@v4
+      if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) && (inputs.depends-sources-cache-hit != 'true') }}
+      with:
+        path: ${{ env.SOURCES_PATH }}
+        key: depends-sources-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
+
+    - name: Save built depends cache
+      uses: cirruslabs/cache/save@v4
+      if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) && (inputs.depends-built-cache-hit != 'true' )}}
+      with:
+        path: ${{ env.BASE_CACHE }}
+        key: depends-built-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
