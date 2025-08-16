@@ -77,6 +77,14 @@ public:
         return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
+    std::string operator()(const WitnessV3P2QRH& id) const
+    {
+        std::vector<unsigned char> data = {3};  // Version 3
+        data.reserve(53);  // Reserve space for the hash
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+    }
+
     std::string operator()(const CNoDestination& no) const { return {}; }
     std::string operator()(const PubKeyDestination& pk) const { return {}; }
 };
@@ -179,6 +187,16 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 WitnessV1Taproot tap;
                 std::copy(data.begin(), data.end(), tap.begin());
                 return tap;
+            }
+
+            if (version == 3) {
+                WitnessV3P2QRH qrh;
+                if (data.size() == qrh.size()) {
+                    std::copy(data.begin(), data.end(), qrh.begin());
+                    return qrh;
+                }
+                error_str = strprintf("Invalid P2QRH address program size (%d %s)", data.size(), byte_str);
+                return CNoDestination();
             }
 
             if (CScript::IsPayToAnchor(version, data)) {
