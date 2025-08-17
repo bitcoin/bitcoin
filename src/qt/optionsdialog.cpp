@@ -350,7 +350,10 @@ void OptionsDialog::checkLineEdit()
     if (lineedit->hasAcceptableInput()) {
         lineedit->setStyleSheet("");
     } else {
-        lineedit->setStyleSheet("color: red;");
+        // Check the line edit's actual background to choose appropriate warning color
+        const bool lineedit_dark = GUIUtil::isDarkMode(lineedit->palette().color(lineedit->backgroundRole()));
+        const QColor lineedit_warning = lineedit_dark ? QColor("#FF8080") : QColor("#FF0000");
+        lineedit->setStyleSheet(QStringLiteral("color: %1;").arg(lineedit_warning.name()));
     }
 }
 
@@ -539,6 +542,14 @@ void OptionsDialog::updateThemeColors()
     const QColor warning_color = dark_mode ? QColor("#FF8080") : QColor("#FF0000");
     ui->pruneWarning->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(warning_color.name()));
     ui->statusLabel->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(warning_color.name()));
+
+    // Update networkPort line edit color if it has validation errors
+    if (!ui->networkPort->hasAcceptableInput()) {
+        // Check networkPort's actual background for appropriate warning color
+        const bool networkport_dark = GUIUtil::isDarkMode(ui->networkPort->palette().color(ui->networkPort->backgroundRole()));
+        const QColor networkport_warning = networkport_dark ? QColor("#FF8080") : QColor("#FF0000");
+        ui->networkPort->setStyleSheet(QStringLiteral("color: %1;").arg(networkport_warning.name()));
+    }
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :
