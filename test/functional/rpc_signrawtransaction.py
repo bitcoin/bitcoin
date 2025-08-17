@@ -213,6 +213,57 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(signed["complete"], True)
         self.nodes[0].sendrawtransaction(signed["hex"])
 
+    def test_signing_with_missing_prevtx_info(self):
+        self.nodes[0].walletpassphrase("password", 9999)
+        txid = "1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000"
+        for type in ["legacy"]:
+            self.log.info(f"Test signing with missing prevtx info ({type})")
+            addr = self.nodes[0].getnewaddress("")
+            addrinfo = self.nodes[0].getaddressinfo(addr)
+            pubkey = addrinfo["scriptPubKey"]
+            inputs = [{'txid': txid, 'vout': 3, 'sequence': 1000}]
+            outputs = {self.nodes[0].getnewaddress(): 1}
+            rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+
+            prevtx = dict(txid=txid, scriptPubKey=pubkey, vout=3, amount=1)
+            succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
+            assert succ["complete"]
+
+            if type == "legacy":
+                del prevtx["amount"]
+                succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
+                assert succ["complete"]
+            else:
+                assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                    {
+                        "txid": txid,
+                        "scriptPubKey": pubkey,
+                        "vout": 3,
+                    }
+                ])
+
+            assert_raises_rpc_error(-3, "Missing vout", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                {
+                    "txid": txid,
+                    "scriptPubKey": pubkey,
+                    "amount": 1,
+                }
+            ])
+            assert_raises_rpc_error(-3, "Missing txid", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                {
+                    "scriptPubKey": pubkey,
+                    "vout": 3,
+                    "amount": 1,
+                }
+            ])
+            assert_raises_rpc_error(-3, "Missing scriptPubKey", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                {
+                    "txid": txid,
+                    "vout": 3,
+                    "amount": 1
+                }
+            ])
+
     def run_test(self):
         self.successful_signing_test()
         self.script_verification_error_test()
@@ -225,6 +276,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         if not self.options.descriptors:
             self.test_signing_with_csv()
             self.test_signing_with_cltv()
+        self.test_signing_with_missing_prevtx_info()
 
 
 if __name__ == '__main__':
