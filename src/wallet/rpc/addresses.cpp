@@ -46,12 +46,11 @@ RPCHelpMan getnewaddress()
     if (!request.params[0].isNull())
         label = LabelFromValue(request.params[0]);
 
-    CTxDestination dest;
-    bilingual_str error;
-    if (!pwallet->GetNewDestination(label, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
+    auto op_dest = pwallet->GetNewDestination(label);
+    if (!op_dest) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
     }
-    return EncodeDestination(dest);
+    return EncodeDestination(op_dest.GetObj());
 },
     };
 }
@@ -80,12 +79,11 @@ RPCHelpMan getrawchangeaddress()
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
 
-    CTxDestination dest;
-    bilingual_str error;
-    if (!pwallet->GetNewChangeDestination(dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error.original);
+    auto op_dest = pwallet->GetNewChangeDestination();
+    if (!op_dest) {
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
     }
-    return EncodeDestination(dest);
+    return EncodeDestination(op_dest.GetObj());
 },
     };
 }

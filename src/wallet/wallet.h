@@ -19,6 +19,7 @@
 #include <tinyformat.h>
 #include <util/hasher.h>
 #include <util/message.h>
+#include <util/result.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -51,7 +52,6 @@ class CKey;
 class CScript;
 class CTxDSIn;
 enum class FeeEstimateMode;
-struct FeeCalculation;
 struct bilingual_str;
 
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
@@ -790,8 +790,8 @@ public:
      */
     void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool GetNewDestination(const std::string label, CTxDestination& dest, bilingual_str& error);
-    bool GetNewChangeDestination(CTxDestination& dest, bilingual_str& error);
+    BResult<CTxDestination> GetNewDestination(const std::string label);
+    BResult<CTxDestination> GetNewChangeDestination();
 
     isminetype IsMine(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     isminetype IsMine(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

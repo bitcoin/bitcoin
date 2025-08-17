@@ -112,7 +112,7 @@ public:
     virtual std::string getWalletName() = 0;
 
     // Get a new address.
-    virtual bool getNewDestination(const std::string label, CTxDestination& dest) = 0;
+    virtual BResult<CTxDestination> getNewDestination(const std::string label) = 0;
 
     //! Get public key.
     virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
@@ -167,12 +167,11 @@ public:
     virtual std::vector<COutPoint> listProTxCoins() = 0;
 
     //! Create transaction.
-    virtual CTransactionRef createTransaction(const std::vector<wallet::CRecipient>& recipients,
+    virtual BResult<CTransactionRef> createTransaction(const std::vector<wallet::CRecipient>& recipients,
         const wallet::CCoinControl& coin_control,
         bool sign,
         int& change_pos,
-        CAmount& fee,
-        bilingual_str& fail_reason) = 0;
+        CAmount& fee) = 0;
 
     //! Commit transaction.
     virtual void commitTransaction(CTransactionRef tx,

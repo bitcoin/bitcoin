@@ -2345,38 +2345,36 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
-bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, bilingual_str& error)
+BResult<CTxDestination> CWallet::GetNewDestination(const std::string label)
 {
-    error.clear();
-    bool result = false;
-
     LOCK(cs_wallet);
     auto spk_man = GetScriptPubKeyMan(false /* internal */);
-    if (spk_man) {
-        spk_man->TopUp();
-        result = spk_man->GetNewDestination(dest, error);
-    } else {
-        error = _("Error: No addresses available.");
-    }
-    if (result) {
-        SetAddressBook(dest, label, "receive");
+    if (!spk_man) {
+        return _("Error: No addresses available.");
     }
 
-    return result;
+    spk_man->TopUp();
+    auto op_dest = spk_man->GetNewDestination();
+    if (op_dest) {
+        SetAddressBook(op_dest.GetObj(), label, "receive");
+    }
+
+    return op_dest;
 }
 
-bool CWallet::GetNewChangeDestination(CTxDestination& dest, bilingual_str& error)
+BResult<CTxDestination> CWallet::GetNewChangeDestination()
 {
     LOCK(cs_wallet);
-    error.clear();
 
+    CTxDestination dest;
+    bilingual_str error;
     ReserveDestination reservedest(this);
     if (!reservedest.GetReservedDestination(dest, true, error)) {
-        return false;
+        return error;
     }
 
     reservedest.KeepDestination();
-    return true;
+    return dest;
 }
 
 std::optional<int64_t> CWallet::GetOldestKeyPoolTime() const

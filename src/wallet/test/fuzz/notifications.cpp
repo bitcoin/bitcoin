@@ -68,15 +68,14 @@ struct FuzzedWallet {
     }
     CScript GetScriptPubKey(FuzzedDataProvider& fuzzed_data_provider)
     {
-        CTxDestination dest;
-        bilingual_str error;
+        BResult<CTxDestination> op_dest;
         if (fuzzed_data_provider.ConsumeBool()) {
-            assert(wallet->GetNewDestination("", dest, error));
+            op_dest = wallet->GetNewDestination("");
         } else {
-            assert(wallet->GetNewChangeDestination(dest, error));
+            op_dest = wallet->GetNewChangeDestination();
         }
-        assert(error.empty());
-        return GetScriptForDestination(dest);
+        assert(op_dest.HasRes());
+        return GetScriptForDestination(op_dest.GetObj());
     }
 };
 

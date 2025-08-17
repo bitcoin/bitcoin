@@ -366,23 +366,21 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     else if(type == Receive)
     {
         // Generate a new address to associate with given label
-        CTxDestination dest;
-        if(!walletModel->wallet().getNewDestination(strLabel, dest))
-        {
+        auto op_dest = walletModel->wallet().getNewDestination(strLabel);
+        if (!op_dest) {
             WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-            if(!ctx.isValid())
-            {
+            if (!ctx.isValid()) {
                 // Unlock wallet failed or was cancelled
                 editStatus = WALLET_UNLOCK_FAILURE;
                 return QString();
             }
-            if(!walletModel->wallet().getNewDestination(strLabel, dest))
-            {
+            op_dest = walletModel->wallet().getNewDestination(strLabel);
+            if (!op_dest) {
                 editStatus = KEY_GENERATION_FAILURE;
                 return QString();
             }
         }
-        strAddress = EncodeDestination(dest);
+        strAddress = EncodeDestination(op_dest.GetObj());
     }
     else
     {

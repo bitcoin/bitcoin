@@ -281,15 +281,12 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("No funds at specified address %s", EncodeDestination(fundDest)));
     }
 
-    bilingual_str strFailReason;
-    FeeCalculation fee_calc_out;
-    auto txr = CreateTransaction(wallet, vecSend, RANDOM_CHANGE_POSITION, strFailReason, coinControl, fee_calc_out,
-                                 true, tx.vExtraPayload.size());
-    if (!txr) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason.original);
+    auto res = CreateTransaction(wallet, vecSend, RANDOM_CHANGE_POSITION, coinControl, /*sign=*/true, tx.vExtraPayload.size());
+    if (!res) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, res.GetError().original);
     }
-    CTransactionRef newTx = txr->tx;
 
+    const CTransactionRef& newTx = res.GetObj().tx;
     tx.vin = newTx->vin;
     tx.vout = newTx->vout;
 

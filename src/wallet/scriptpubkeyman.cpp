@@ -17,20 +17,17 @@
 #include <wallet/scriptpubkeyman.h>
 
 namespace wallet {
-bool LegacyScriptPubKeyMan::GetNewDestination(CTxDestination& dest, bilingual_str& error)
+BResult<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination()
 {
     LOCK(cs_KeyStore);
-    error.clear();
 
     // Generate a new key that is added to wallet
     CPubKey new_key;
     if (!GetKeyFromPool(new_key, false)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first");
-        return false;
+        return _("Error: Keypool ran out, please call keypoolrefill first");
     }
     //LearnRelatedScripts(new_key);
-    dest = PKHash(new_key);
-    return true;
+    return CTxDestination(PKHash(new_key));
 }
 
 typedef std::vector<unsigned char> valtype;
@@ -1781,12 +1778,11 @@ bool LegacyScriptPubKeyMan::GetHDChain(CHDChain& hdChainRet) const
     return !m_hd_chain.IsNull();
 }
 
-bool DescriptorScriptPubKeyMan::GetNewDestination(CTxDestination& dest, bilingual_str& error)
+BResult<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination()
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
     if (!CanGetAddresses()) {
-        error = _("No addresses available");
-        return false;
+        return _("No addresses available");
     }
     {
         LOCK(cs_desc_man);
@@ -1799,15 +1795,14 @@ bool DescriptorScriptPubKeyMan::GetNewDestination(CTxDestination& dest, bilingua
         std::vector<CScript> scripts_temp;
         if (m_wallet_descriptor.range_end <= m_max_cached_index && !TopUp(1)) {
             // We can't generate anymore keys
-            error = _("Error: Keypool ran out, please call keypoolrefill first");
-            return false;
+            return _("Error: Keypool ran out, please call keypoolrefill first");
         }
         if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
             // We can't generate anymore keys
-            error = _("Error: Keypool ran out, please call keypoolrefill first");
-            return false;
+            return _("Error: Keypool ran out, please call keypoolrefill first");
         }
         const OutputType type{OutputType::LEGACY};
+        CTxDestination dest;
         std::optional<OutputType> out_script_type = m_wallet_descriptor.descriptor->GetOutputType();
         if (out_script_type && out_script_type == type) {
             ExtractDestination(scripts_temp[0], dest);
@@ -1816,7 +1811,7 @@ bool DescriptorScriptPubKeyMan::GetNewDestination(CTxDestination& dest, bilingua
         }
         m_wallet_descriptor.next_index++;
         WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
-        return true;
+        return dest;
     }
 }
 
@@ -1913,9 +1908,14 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
 bool DescriptorScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
 {
     LOCK(cs_desc_man);
-    bool result = GetNewDestination(address, error);
+    auto op_dest = GetNewDestination();
     index = m_wallet_descriptor.next_index - 1;
-    return result;
+    if (op_dest) {
+        address = op_dest.GetObj();
+    } else {
+        error = op_dest.GetError();
+    }
+    return op_dest.HasRes();
 }
 
 void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)

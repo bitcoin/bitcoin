@@ -282,12 +282,13 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     CTransactionRef tx;
     {
         LOCK2(m_wallet.cs_wallet, ::cs_main);
-        FeeCalculation fee_calc_out;
-        if (auto txr = wallet::CreateTransaction(m_wallet, vecSend, nChangePosRet, strResult, coinControl, fee_calc_out)) {
-            tx = txr->tx;
-            nFeeRet = txr->fee;
-            nChangePosRet = txr->change_pos;
+        auto ret = wallet::CreateTransaction(m_wallet, vecSend, nChangePosRet, coinControl);
+        if (ret) {
+            tx = ret.GetObj().tx;
+            nFeeRet = ret.GetObj().fee;
+            nChangePosRet = ret.GetObj().change_pos;
         } else {
+            strResult = ret.GetError();
             return false;
         }
     }

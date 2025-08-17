@@ -47,12 +47,11 @@ static void BenchUnloadWallet(std::shared_ptr<CWallet>&& wallet)
 
 static void AddTx(CWallet& wallet)
 {
-    bilingual_str error;
-    CTxDestination dest;
-    wallet.GetNewDestination("", dest, error);
+    const auto& dest = wallet.GetNewDestination("");
+    assert(dest.HasRes());
 
     CMutableTransaction mtx;
-    mtx.vout.push_back({COIN, GetScriptForDestination(dest)});
+    mtx.vout.push_back({COIN, GetScriptForDestination(dest.GetObj())});
     mtx.vin.push_back(CTxIn());
 
     wallet.AddToWallet(MakeTransactionRef(mtx), TxStateInactive{});

@@ -16,7 +16,6 @@
 #include <interfaces/coinjoin.h>
 #include <key_io.h>
 #include <node/blockstorage.h>
-#include <node/context.h>
 #include <policy/policy.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
@@ -554,13 +553,11 @@ public:
     CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
-        bilingual_str error;
         CCoinControl dummy;
-        FeeCalculation fee_calc_out;
         {
-            std::optional<CreatedTransactionResult> txr = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, error, dummy, fee_calc_out);
-            BOOST_CHECK(txr.has_value());
-            tx = txr->tx;
+            auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, dummy);
+            BOOST_CHECK(res);
+            tx = res.GetObj().tx;
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
@@ -646,9 +643,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
         wallet->SetMinVersion(FEATURE_LATEST);
         wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
         BOOST_CHECK(!wallet->TopUpKeyPool(1000));
-        CTxDestination dest;
-        bilingual_str error;
-        BOOST_CHECK(!wallet->GetNewDestination("", dest, error));
+        BOOST_CHECK(!wallet->GetNewDestination(""));
     }
     {
         const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(m_node.chain.get(), m_node.coinjoin_loader.get(), "", m_args, CreateDummyWalletDatabase());
@@ -656,9 +651,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
         wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
         wallet->SetMinVersion(FEATURE_LATEST);
         wallet->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
-        CTxDestination dest;
-        bilingual_str error;
-        BOOST_CHECK(!wallet->GetNewDestination("", dest, error));
+        BOOST_CHECK(!wallet->GetNewDestination(""));
     }
 }
 
@@ -1050,14 +1043,16 @@ public:
         int nChangePos = nChangePosRequest;
         bilingual_str strError;
 
-        FeeCalculation fee_calc_out;
         bool fCreationSucceeded{false};
         {
-            auto txr = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePos, strError, coinControl, fee_calc_out);
-            if (txr.has_value()) {
+            auto res = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePos, coinControl);
+            if (res) {
                 fCreationSucceeded = true;
-                tx = txr->tx;
-                nChangePos = txr->change_pos;
+                const auto& txr = res.GetObj();
+                tx = txr.tx;
+                nChangePos = txr.change_pos;
+            } else {
+                strError = res.GetError();
             }
         }
         bool fHitMaxTries = strError.original == strExceededMaxTries;
@@ -1109,14 +1104,13 @@ public:
     {
         CTransactionRef tx;
         int nChangePosRet{RANDOM_CHANGE_POSITION};
-        bilingual_str strError;
         CCoinControl coinControl;
-        FeeCalculation fee_calc_out;
         {
-            auto txr = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePosRet, strError, coinControl, fee_calc_out);
-            BOOST_CHECK(txr.has_value());
-            tx = txr->tx;
-            nChangePosRet = txr->change_pos;
+            auto res = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePosRet, coinControl);
+            BOOST_CHECK(res);
+            const auto& txr = res.GetObj();
+            tx = txr.tx;
+            nChangePosRet = txr.change_pos;
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
@@ -1444,18 +1438,18 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     }
 
     // Create two conflicting transactions, add one to the wallet and mine the other one.
-    bilingual_str error;
     CCoinControl dummy;
-    FeeCalculation fee_calc_out;
-    auto txr1 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
-                                  RANDOM_CHANGE_POSITION, error, dummy, fee_calc_out);
-    BOOST_CHECK(txr1.has_value());
-    auto txr2 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
-                                  RANDOM_CHANGE_POSITION, error, dummy, fee_calc_out);
-    BOOST_CHECK(txr2.has_value());
-    wallet->CommitTransaction(txr1->tx, {}, {});
+    auto ret1 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
+                                  RANDOM_CHANGE_POSITION, dummy);
+    BOOST_CHECK(ret1);
+    const auto& txr1 = ret1.GetObj().tx;
+    auto ret2 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
+                                  RANDOM_CHANGE_POSITION, dummy);
+    BOOST_CHECK(ret2);
+    const auto& txr2 = ret2.GetObj().tx;
+    wallet->CommitTransaction(txr1, {}, {});
     BOOST_CHECK_EQUAL(GetAvailableBalance(*wallet), 0);
-    CreateAndProcessBlock({CMutableTransaction(*txr2->tx)}, GetScriptForRawPubKey({}));
+    CreateAndProcessBlock({CMutableTransaction(*txr2)}, GetScriptForRawPubKey({}));
     {
         LOCK(wallet->cs_wallet);
         wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
@@ -1468,10 +1462,10 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
     {
         LOCK(wallet->cs_wallet);
-        const auto& conflicts = wallet->GetConflicts(txr2->tx->GetHash());
+        const auto& conflicts = wallet->GetConflicts(txr2->GetHash());
         BOOST_CHECK_EQUAL(conflicts.size(), 2);
-        BOOST_CHECK_EQUAL(conflicts.count(txr1->tx->GetHash()), 1);
-        BOOST_CHECK_EQUAL(conflicts.count(txr2->tx->GetHash()), 1);
+        BOOST_CHECK_EQUAL(conflicts.count(txr1->GetHash()), 1);
+        BOOST_CHECK_EQUAL(conflicts.count(txr2->GetHash()), 1);
     }
 
     // Committed tx is the one that should be marked as "conflicting".
@@ -1545,9 +1539,9 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestChain100Setup)
     }
 
     // Add tx to wallet
-    CTxDestination dest;
-    bilingual_str error;
-    BOOST_ASSERT(wallet.GetNewDestination("", dest, error));
+    const auto& op_dest = wallet.GetNewDestination("");
+    BOOST_ASSERT(op_dest.HasRes());
+    const CTxDestination& dest = op_dest.GetObj();
 
     CMutableTransaction mtx;
     mtx.vout.push_back({COIN, GetScriptForDestination(dest)});

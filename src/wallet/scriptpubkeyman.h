@@ -12,6 +12,7 @@
 #include <script/standard.h>
 #include <util/error.h>
 #include <util/message.h>
+#include <util/result.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
 #include <wallet/hdchain.h>
@@ -162,7 +163,7 @@ public:
     explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
 
     virtual ~ScriptPubKeyMan() {};
-    virtual bool GetNewDestination(CTxDestination& dest, bilingual_str& error) { return false; }
+    virtual BResult<CTxDestination> GetNewDestination() { return Untranslated("Not supported"); }
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
     virtual isminetype IsMine(const CTxDestination& dest) const { return ISMINE_NO; }
 
@@ -317,7 +318,7 @@ private:
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
-    bool GetNewDestination(CTxDestination& dest, bilingual_str& error) override;
+    BResult<CTxDestination> GetNewDestination() override;
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const override;
 
@@ -553,7 +554,7 @@ public:
 
     mutable RecursiveMutex cs_desc_man;
 
-    bool GetNewDestination(CTxDestination& dest, bilingual_str& error) override;
+    BResult<CTxDestination> GetNewDestination() override;
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const override;
 

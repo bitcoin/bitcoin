@@ -192,12 +192,12 @@ public:
         }
         for (CAmount nAmount : vecAmounts) {
             CTransactionRef tx;
-            FeeCalculation fee_calc_out;
             {
-                auto txr = CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, nChangePosRet, strError, coinControl, fee_calc_out);
-                BOOST_CHECK(txr.has_value());
-                tx = txr->tx;
-                nChangePosRet = txr->change_pos;
+                auto res = CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, nChangePosRet, coinControl);
+                BOOST_CHECK(res);
+                const auto& txr = res.GetObj();
+                tx = txr.tx;
+                nChangePosRet = txr.change_pos;
             }
             {
                 LOCK2(wallet->cs_wallet, ::cs_main);
