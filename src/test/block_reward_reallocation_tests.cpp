@@ -149,7 +149,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     auto& dmnman = *Assert(m_node.dmnman);
     const auto& consensus_params = Params().GetConsensus();
 
-    CScript coinbasePubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    CScript coinbasePubKey = GetScriptForRawPubKey(coinbaseKey.GetPubKey());
 
     BOOST_REQUIRE(DeploymentDIP0003Enforced(WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Height()),
                                             consensus_params));
@@ -160,7 +160,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
     auto tx = CreateProRegTx(m_node.chainman->ActiveChain(), *m_node.mempool, utxos, 1, GenerateRandomAddress(), coinbaseKey, ownerKey, operatorKey);
 
-    CreateAndProcessBlock({tx}, coinbaseKey);
+    CreateAndProcessBlock({tx}, coinbasePubKey);
 
     {
         LOCK(cs_main);
@@ -173,7 +173,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         BOOST_CHECK(tip->nHeight < Params().GetConsensus().BRRHeight);
     }
 
-    CreateAndProcessBlock({}, coinbaseKey);
+    CreateAndProcessBlock({}, coinbasePubKey);
 
     {
         LOCK(cs_main);
@@ -186,12 +186,12 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
         const auto pblocktemplate = BlockAssembler(m_node.chainman->ActiveChainstate(), m_node, m_node.mempool.get(), Params()).CreateNewBlock(coinbasePubKey);
     }
     for ([[maybe_unused]] auto _ : irange::range(499)) {
-        CreateAndProcessBlock({}, coinbaseKey);
+        CreateAndProcessBlock({}, coinbasePubKey);
         LOCK(cs_main);
         dmnman.UpdatedBlockTip(m_node.chainman->ActiveChain().Tip());
     }
     BOOST_CHECK(m_node.chainman->ActiveChain().Height() < Params().GetConsensus().BRRHeight);
-    CreateAndProcessBlock({}, coinbaseKey);
+    CreateAndProcessBlock({}, coinbasePubKey);
 
     {
         // Advance to ACTIVE at height = (BRRHeight - 1)
@@ -218,7 +218,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     }
 
     for ([[maybe_unused]] auto _ : irange::range(consensus_params.nSuperblockCycle - 1)) {
-        CreateAndProcessBlock({}, coinbaseKey);
+        CreateAndProcessBlock({}, coinbasePubKey);
     }
 
     {
@@ -237,7 +237,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     for ([[maybe_unused]] auto i : irange::range(19)) {
         for ([[maybe_unused]] auto j : irange::range(3)) {
             for ([[maybe_unused]] auto k : irange::range(consensus_params.nSuperblockCycle)) {
-                CreateAndProcessBlock({}, coinbaseKey);
+                CreateAndProcessBlock({}, coinbasePubKey);
             }
             LOCK(cs_main);
             const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};
@@ -274,7 +274,7 @@ BOOST_FIXTURE_TEST_CASE(block_reward_reallocation, TestChainBRRBeforeActivationS
     // check 10 next superblocks
     for ([[maybe_unused]] auto i : irange::range(10)) {
         for ([[maybe_unused]] auto k : irange::range(consensus_params.nSuperblockCycle)) {
-            CreateAndProcessBlock({}, coinbaseKey);
+            CreateAndProcessBlock({}, coinbasePubKey);
         }
         LOCK(cs_main);
         const CBlockIndex* const tip{m_node.chainman->ActiveChain().Tip()};

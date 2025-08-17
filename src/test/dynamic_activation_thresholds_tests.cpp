@@ -35,16 +35,17 @@ struct TestChainDATSetup : public TestChainSetup
     void signal(int num_blocks, bool expected_lockin)
     {
         const auto& consensus_params = Params().GetConsensus();
+        CScript coinbasePubKey = GetScriptForRawPubKey(coinbaseKey.GetPubKey());
         // Mine non-signalling blocks
         gArgs.ForceSetArg("-blockversion", "536870912");
         for (int i = 0; i < window - num_blocks; ++i) {
-            CreateAndProcessBlock({}, coinbaseKey);
+            CreateAndProcessBlock({}, coinbasePubKey);
         }
         gArgs.ForceRemoveArg("blockversion");
         if (num_blocks > 0) {
             // Mine signalling blocks
             for (int i = 0; i < num_blocks; ++i) {
-                CreateAndProcessBlock({}, coinbaseKey);
+                CreateAndProcessBlock({}, coinbasePubKey);
             }
         }
         LOCK(cs_main);
@@ -58,7 +59,7 @@ struct TestChainDATSetup : public TestChainSetup
     void test(int activation_index, bool check_activation_at_min)
     {
         const auto& consensus_params = Params().GetConsensus();
-        CScript coinbasePubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+        CScript coinbasePubKey = GetScriptForRawPubKey(coinbaseKey.GetPubKey());
 
         {
             LOCK(cs_main);
@@ -66,7 +67,7 @@ struct TestChainDATSetup : public TestChainSetup
             BOOST_CHECK_EQUAL(g_versionbitscache.State(m_node.chainman->ActiveChain().Tip(), consensus_params, deployment_id), ThresholdState::DEFINED);
         }
 
-        CreateAndProcessBlock({}, coinbaseKey);
+        CreateAndProcessBlock({}, coinbasePubKey);
 
         {
             LOCK(cs_main);
@@ -105,7 +106,7 @@ struct TestChainDATSetup : public TestChainSetup
         // activate
         signal(threshold(activation_index), true);
         for (int i = 0; i < window; ++i) {
-            CreateAndProcessBlock({}, coinbaseKey);
+            CreateAndProcessBlock({}, coinbasePubKey);
         }
         {
             LOCK(cs_main);
