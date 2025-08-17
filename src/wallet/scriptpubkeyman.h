@@ -163,7 +163,7 @@ public:
     explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
 
     virtual ~ScriptPubKeyMan() {};
-    virtual BResult<CTxDestination> GetNewDestination() { return Untranslated("Not supported"); }
+    virtual util::Result<CTxDestination> GetNewDestination() { return util::Error{Untranslated("Not supported")}; }
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
     virtual isminetype IsMine(const CTxDestination& dest) const { return ISMINE_NO; }
 
@@ -318,7 +318,7 @@ private:
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
-    BResult<CTxDestination> GetNewDestination() override;
+    util::Result<CTxDestination> GetNewDestination() override;
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const override;
 
@@ -554,7 +554,7 @@ public:
 
     mutable RecursiveMutex cs_desc_man;
 
-    BResult<CTxDestination> GetNewDestination() override;
+    util::Result<CTxDestination> GetNewDestination() override;
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const override;
 

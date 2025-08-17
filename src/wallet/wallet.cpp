@@ -2345,24 +2345,24 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
-BResult<CTxDestination> CWallet::GetNewDestination(const std::string label)
+util::Result<CTxDestination> CWallet::GetNewDestination(const std::string label)
 {
     LOCK(cs_wallet);
     auto spk_man = GetScriptPubKeyMan(false /* internal */);
     if (!spk_man) {
-        return _("Error: No addresses available.");
+        return util::Error{_("Error: No addresses available.")};
     }
 
     spk_man->TopUp();
     auto op_dest = spk_man->GetNewDestination();
     if (op_dest) {
-        SetAddressBook(op_dest.GetObj(), label, "receive");
+        SetAddressBook(*op_dest, label, "receive");
     }
 
     return op_dest;
 }
 
-BResult<CTxDestination> CWallet::GetNewChangeDestination()
+util::Result<CTxDestination> CWallet::GetNewChangeDestination()
 {
     LOCK(cs_wallet);
 
@@ -2370,7 +2370,7 @@ BResult<CTxDestination> CWallet::GetNewChangeDestination()
     bilingual_str error;
     ReserveDestination reservedest(this);
     if (!reservedest.GetReservedDestination(dest, true, error)) {
-        return error;
+        return util::Error{error};
     }
 
     reservedest.KeepDestination();

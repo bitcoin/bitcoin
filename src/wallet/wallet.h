@@ -790,8 +790,8 @@ public:
      */
     void MarkDestinationsDirty(const std::set<CTxDestination>& destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    BResult<CTxDestination> GetNewDestination(const std::string label);
-    BResult<CTxDestination> GetNewChangeDestination();
+    util::Result<CTxDestination> GetNewDestination(const std::string label);
+    util::Result<CTxDestination> GetNewChangeDestination();
 
     isminetype IsMine(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     isminetype IsMine(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

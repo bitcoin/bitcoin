@@ -32,7 +32,7 @@ public:
         {
             auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, dummy);
             BOOST_CHECK(res);
-            tx = res.GetObj().tx;
+            tx = res->tx;
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
@@ -56,7 +56,7 @@ public:
 BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, AvailableCoinsTestingSetup)
 {
     CoinsResult available_coins;
-    BResult<CTxDestination> dest;
+    util::Result<CTxDestination> dest{util::Error{}};
     LOCK(wallet->cs_wallet);
 
     // Verify our wallet has one usable coinbase UTXO before starting
@@ -74,8 +74,8 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, AvailableCoinsTestingSetup)
 
     // Legacy (P2PKH)
     dest = wallet->GetNewDestination("");
-    BOOST_ASSERT(dest.HasRes());
-    AddTx(CRecipient{{GetScriptForDestination(dest.GetObj())}, 4 * COIN, /*fSubtractFeeFromAmount=*/true});
+    BOOST_ASSERT(dest);
+    AddTx(CRecipient{{GetScriptForDestination(*dest)}, 4 * COIN, /*fSubtractFeeFromAmount=*/true});
     available_coins = AvailableCoins(*wallet);
     BOOST_CHECK_EQUAL(available_coins.legacy.size(), 2U);
 }

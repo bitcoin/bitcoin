@@ -195,9 +195,8 @@ public:
             {
                 auto res = CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, nChangePosRet, coinControl);
                 BOOST_CHECK(res);
-                const auto& txr = res.GetObj();
-                tx = txr.tx;
-                nChangePosRet = txr.change_pos;
+                tx = res->tx;
+                nChangePosRet = res->change_pos;
             }
             {
                 LOCK2(wallet->cs_wallet, ::cs_main);

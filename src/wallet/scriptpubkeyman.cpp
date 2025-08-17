@@ -17,14 +17,14 @@
 #include <wallet/scriptpubkeyman.h>
 
 namespace wallet {
-BResult<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination()
+util::Result<CTxDestination> LegacyScriptPubKeyMan::GetNewDestination()
 {
     LOCK(cs_KeyStore);
 
     // Generate a new key that is added to wallet
     CPubKey new_key;
     if (!GetKeyFromPool(new_key, false)) {
-        return _("Error: Keypool ran out, please call keypoolrefill first");
+        return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
     }
     //LearnRelatedScripts(new_key);
     return CTxDestination(PKHash(new_key));
@@ -1778,11 +1778,11 @@ bool LegacyScriptPubKeyMan::GetHDChain(CHDChain& hdChainRet) const
     return !m_hd_chain.IsNull();
 }
 
-BResult<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination()
+util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination()
 {
     // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
     if (!CanGetAddresses()) {
-        return _("No addresses available");
+        return util::Error{_("No addresses available")};
     }
     {
         LOCK(cs_desc_man);
@@ -1795,11 +1795,11 @@ BResult<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination()
         std::vector<CScript> scripts_temp;
         if (m_wallet_descriptor.range_end <= m_max_cached_index && !TopUp(1)) {
             // We can't generate anymore keys
-            return _("Error: Keypool ran out, please call keypoolrefill first");
+            return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
         }
         if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
             // We can't generate anymore keys
-            return _("Error: Keypool ran out, please call keypoolrefill first");
+            return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
         }
         const OutputType type{OutputType::LEGACY};
         CTxDestination dest;
@@ -1911,11 +1911,11 @@ bool DescriptorScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestina
     auto op_dest = GetNewDestination();
     index = m_wallet_descriptor.next_index - 1;
     if (op_dest) {
-        address = op_dest.GetObj();
+        address = *op_dest;
     } else {
-        error = op_dest.GetError();
+        error = util::ErrorString(op_dest);
     }
-    return op_dest.HasRes();
+    return bool(op_dest);
 }
 
 void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)

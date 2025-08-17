@@ -112,7 +112,7 @@ public:
     virtual std::string getWalletName() = 0;
 
     // Get a new address.
-    virtual BResult<CTxDestination> getNewDestination(const std::string label) = 0;
+    virtual util::Result<CTxDestination> getNewDestination(const std::string label) = 0;
 
     //! Get public key.
     virtual bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) = 0;
@@ -167,7 +167,7 @@ public:
     virtual std::vector<COutPoint> listProTxCoins() = 0;
 
     //! Create transaction.
-    virtual BResult<CTransactionRef> createTransaction(const std::vector<wallet::CRecipient>& recipients,
+    virtual util::Result<CTransactionRef> createTransaction(const std::vector<wallet::CRecipient>& recipients,
         const wallet::CCoinControl& coin_control,
         bool sign,
         int& change_pos,
@@ -360,7 +360,7 @@ public:
    virtual std::string getWalletDir() = 0;
 
    //! Restore backup wallet
-   virtual BResult<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) = 0;
+   virtual util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings) = 0;
 
    //! Return available wallets in wallet directory.
    virtual std::vector<std::string> listWalletDir() = 0;

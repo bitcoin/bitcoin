@@ -284,11 +284,11 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
         LOCK2(m_wallet.cs_wallet, ::cs_main);
         auto ret = wallet::CreateTransaction(m_wallet, vecSend, nChangePosRet, coinControl);
         if (ret) {
-            tx = ret.GetObj().tx;
-            nFeeRet = ret.GetObj().fee;
-            nChangePosRet = ret.GetObj().change_pos;
+            tx = ret->tx;
+            nFeeRet = ret->fee;
+            nChangePosRet = ret->change_pos;
         } else {
-            strResult = ret.GetError();
+            strResult = util::ErrorString(ret);
             return false;
         }
     }

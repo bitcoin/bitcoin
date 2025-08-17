@@ -283,10 +283,10 @@ static void FundSpecialTx(CWallet& wallet, CMutableTransaction& tx, const Specia
 
     auto res = CreateTransaction(wallet, vecSend, RANDOM_CHANGE_POSITION, coinControl, /*sign=*/true, tx.vExtraPayload.size());
     if (!res) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, res.GetError().original);
+        throw JSONRPCError(RPC_INTERNAL_ERROR, util::ErrorString(res).original);
     }
 
-    const CTransactionRef& newTx = res.GetObj().tx;
+    const CTransactionRef& newTx = res->tx;
     tx.vin = newTx->vin;
     tx.vout = newTx->vout;
 

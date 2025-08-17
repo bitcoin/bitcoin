@@ -557,7 +557,7 @@ public:
         {
             auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, dummy);
             BOOST_CHECK(res);
-            tx = res.GetObj().tx;
+            tx = res->tx;
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
@@ -1048,11 +1048,10 @@ public:
             auto res = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePos, coinControl);
             if (res) {
                 fCreationSucceeded = true;
-                const auto& txr = res.GetObj();
-                tx = txr.tx;
-                nChangePos = txr.change_pos;
+                tx = res->tx;
+                nChangePos = res->change_pos;
             } else {
-                strError = res.GetError();
+                strError = util::ErrorString(res);
             }
         }
         bool fHitMaxTries = strError.original == strExceededMaxTries;
@@ -1108,9 +1107,8 @@ public:
         {
             auto res = wallet::CreateTransaction(*wallet, GetRecipients(vecEntries), nChangePosRet, coinControl);
             BOOST_CHECK(res);
-            const auto& txr = res.GetObj();
-            tx = txr.tx;
-            nChangePosRet = txr.change_pos;
+            tx = res->tx;
+            nChangePosRet = res->change_pos;
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
@@ -1442,11 +1440,11 @@ BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup
     auto ret1 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
                                   RANDOM_CHANGE_POSITION, dummy);
     BOOST_CHECK(ret1);
-    const auto& txr1 = ret1.GetObj().tx;
+    const auto& txr1 = ret1->tx;
     auto ret2 = CreateTransaction(*wallet, {CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
                                   RANDOM_CHANGE_POSITION, dummy);
     BOOST_CHECK(ret2);
-    const auto& txr2 = ret2.GetObj().tx;
+    const auto& txr2 = ret2->tx;
     wallet->CommitTransaction(txr1, {}, {});
     BOOST_CHECK_EQUAL(GetAvailableBalance(*wallet), 0);
     CreateAndProcessBlock({CMutableTransaction(*txr2)}, GetScriptForRawPubKey({}));
@@ -1540,8 +1538,8 @@ BOOST_FIXTURE_TEST_CASE(wallet_sync_tx_invalid_state_test, TestChain100Setup)
 
     // Add tx to wallet
     const auto& op_dest = wallet.GetNewDestination("");
-    BOOST_ASSERT(op_dest.HasRes());
-    const CTxDestination& dest = op_dest.GetObj();
+    BOOST_ASSERT(op_dest);
+    const CTxDestination& dest = *op_dest;
 
     CMutableTransaction mtx;
     mtx.vout.push_back({COIN, GetScriptForDestination(dest)});

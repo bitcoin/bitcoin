@@ -48,9 +48,9 @@ RPCHelpMan getnewaddress()
 
     auto op_dest = pwallet->GetNewDestination(label);
     if (!op_dest) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
     }
-    return EncodeDestination(op_dest.GetObj());
+    return EncodeDestination(*op_dest);
 },
     };
 }
@@ -81,9 +81,9 @@ RPCHelpMan getrawchangeaddress()
 
     auto op_dest = pwallet->GetNewChangeDestination();
     if (!op_dest) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, op_dest.GetError().original);
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, util::ErrorString(op_dest).original);
     }
-    return EncodeDestination(op_dest.GetObj());
+    return EncodeDestination(*op_dest);
 },
     };
 }
