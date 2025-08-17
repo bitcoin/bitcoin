@@ -2356,7 +2356,7 @@ bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, b
         spk_man->TopUp();
         result = spk_man->GetNewDestination(dest, error);
     } else {
-        error = strprintf(_("Error: No addresses available."));
+        error = _("Error: No addresses available.");
     }
     if (result) {
         SetAddressBook(dest, label, "receive");
@@ -2365,14 +2365,13 @@ bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, b
     return result;
 }
 
-bool CWallet::GetNewChangeDestination(CTxDestination& dest,  bilingual_str& error)
+bool CWallet::GetNewChangeDestination(CTxDestination& dest, bilingual_str& error)
 {
     LOCK(cs_wallet);
     error.clear();
 
     ReserveDestination reservedest(this);
-    if (!reservedest.GetReservedDestination(dest, true)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first");
+    if (!reservedest.GetReservedDestination(dest, true, error)) {
         return false;
     }
 
@@ -2446,10 +2445,11 @@ std::set<std::string> CWallet::ListAddrBookLabels(const std::string& purpose) co
     return label_set;
 }
 
-bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInternalIn)
+bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInternalIn, bilingual_str& error)
 {
     m_spk_man = pwallet->GetScriptPubKeyMan(fInternalIn);
     if (!m_spk_man) {
+        error = _("Error: No addresses available.");
         return false;
     }
 
@@ -2459,7 +2459,7 @@ bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInte
 
         CKeyPool keypool;
         int64_t index;
-        if (!m_spk_man->GetReservedDestination(fInternalIn, address, index, keypool)) {
+        if (!m_spk_man->GetReservedDestination(fInternalIn, address, index, keypool, error)) {
             return false;
         }
         nIndex = index;

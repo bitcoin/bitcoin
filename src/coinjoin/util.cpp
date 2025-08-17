@@ -29,7 +29,8 @@ inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeN
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
     reserveDestination(pwallet)
 {
-    reserveDestination.GetReservedDestination(dest, false);
+    bilingual_str error;
+    reserveDestination.GetReservedDestination(dest, false, error);
 }
 
 void CKeyHolder::KeepKey()
@@ -100,8 +101,9 @@ CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBui
 {
     assert(pTxBuilder);
     CTxDestination txdest;
+    bilingual_str error;
     LOCK(wallet.cs_wallet);
-    dest.GetReservedDestination(txdest, false);
+    dest.GetReservedDestination(txdest, false, error);
     script = ::GetScriptForDestination(txdest);
 }
 

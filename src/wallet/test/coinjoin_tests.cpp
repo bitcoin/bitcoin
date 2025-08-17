@@ -188,7 +188,7 @@ public:
         coinControl.m_feerate = CFeeRate(1000);
         {
             LOCK(wallet->cs_wallet);
-            BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false));
+            BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false, strError));
         }
         for (CAmount nAmount : vecAmounts) {
             CTransactionRef tx;

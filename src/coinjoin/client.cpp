@@ -1576,8 +1576,9 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
         // make our change address
         CScript scriptChange;
         CTxDestination dest;
+        bilingual_str error;
         ReserveDestination reserveDest(m_wallet.get());
-        bool success = reserveDest.GetReservedDestination(dest, true);
+        bool success = reserveDest.GetReservedDestination(dest, true, error);
         assert(success); // should never fail, as we just unlocked
         scriptChange = GetScriptForDestination(dest);
         reserveDest.KeepDestination();

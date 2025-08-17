@@ -291,14 +291,16 @@ bool LegacyScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBat
     return true;
 }
 
-bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool)
+bool LegacyScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
 {
     LOCK(cs_KeyStore);
     if (!CanGetAddresses(internal)) {
+        error = _("Error: Keypool ran out, please call keypoolrefill first");
         return false;
     }
 
     if (!ReserveKeyFromKeyPool(index, keypool, internal)) {
+        error = _("Error: Keypool ran out, please call keypoolrefill first");
         return false;
     }
     // TODO: unify with bitcoin and use here GetDestinationForKey even if we have no type
@@ -1908,10 +1910,9 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
     return true;
 }
 
-bool DescriptorScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool)
+bool DescriptorScriptPubKeyMan::GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool, bilingual_str& error)
 {
     LOCK(cs_desc_man);
-    bilingual_str error;
     bool result = GetNewDestination(address, error);
     index = m_wallet_descriptor.next_index - 1;
     return result;

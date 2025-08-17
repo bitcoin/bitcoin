@@ -203,7 +203,7 @@ public:
     }
 
     //! Reserve an address
-    bool GetReservedDestination(CTxDestination& pubkey, bool internal);
+    bool GetReservedDestination(CTxDestination& pubkey, bool internal, bilingual_str& error);
     //! Return reserved address
     void ReturnDestination();
     //! Keep the address. Do not return its key to the keypool when this object goes out of scope
