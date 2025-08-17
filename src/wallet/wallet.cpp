@@ -166,6 +166,13 @@ std::vector<std::shared_ptr<CWallet>> GetWallets(WalletContext& context)
     return context.wallets;
 }
 
+std::shared_ptr<CWallet> GetDefaultWallet(WalletContext& context, size_t& count)
+{
+    LOCK(context.wallets_mutex);
+    count = context.wallets.size();
+    return count == 1 ? context.wallets[0] : nullptr;
+}
+
 std::shared_ptr<CWallet> GetWallet(WalletContext& context, const std::string& name)
 {
     LOCK(context.wallets_mutex);
