@@ -59,16 +59,19 @@ public:
     //! true. If this is not a spawned child process, return false.
     virtual bool startSpawnedProcess(int argc, char* argv[], int& exit_status) = 0;
 
-    //! Connect to a socket address and make a client interface proxy object
-    //! using provided callback. connectAddress returns an interface pointer if
-    //! the connection was established, returns null if address is empty ("") or
-    //! disabled ("0") or if a connection was refused but not required ("auto"),
-    //! and throws an exception if there was an unexpected error.
+    //! Connect to a socket address and return a pointer to its Init interface.
+    //! Returns a non-null pointer if the connection was established, returns
+    //! null if address is empty ("") or disabled ("0") or if a connection was
+    //! refused but not required ("auto"), and throws an exception if there was
+    //! an unexpected error.
     virtual std::unique_ptr<Init> connectAddress(std::string& address) = 0;
 
-    //! Connect to a socket address and make a client interface proxy object
-    //! using provided callback. Throws an exception if there was an error.
+    //! Listen on a socket address exposing this process's init interface to
+    //! clients. Throws an exception if there was an error.
     virtual void listenAddress(std::string& address) = 0;
+
+    //! Disconnect any incoming connections that are still connected.
+    virtual void disconnectIncoming() = 0;
 
     //! Add cleanup callback to remote interface that will run when the
     //! interface is deleted.
