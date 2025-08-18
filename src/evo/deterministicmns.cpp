@@ -1346,7 +1346,7 @@ bool CDeterministicMNManager::IsMigrationRequired() const
     AssertLockHeld(::cs_main);
 
     std::unique_ptr<CDBIterator> pcursor{m_evoDb.GetRawDB().NewIterator()};
-    auto start{std::make_tuple(DB_LIST_DIFF_LEGACY, uint256())};
+    auto start{std::make_tuple(DB_LIST_DIFF_LEGACY, uint256{})};
     pcursor->Seek(start);
 
     // If we find any entries with the legacy key, migration is needed
@@ -1470,7 +1470,7 @@ bool CDeterministicMNManager::MigrateLegacyDiffs(const CBlockIndex* const tip_in
 
     // Delete all dangling legacy format entries
     std::unique_ptr<CDBIterator> pcursor_dangling{m_evoDb.GetRawDB().NewIterator()};
-    auto start{std::make_tuple(DB_LIST_DIFF_LEGACY, uint256())};
+    auto start{std::make_tuple(DB_LIST_DIFF_LEGACY, uint256{})};
     pcursor_dangling->Seek(start);
     int count{0};
     while (pcursor_dangling->Valid()) {
