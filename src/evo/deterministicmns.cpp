@@ -779,11 +779,21 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
     for (const auto& diffIndex : listDiffIndexes) {
         const auto& diff = mnListDiffsCache.at(diffIndex->GetBlockHash());
         snapshot.ApplyDiff(diffIndex, diff);
-        if (!fReindex && snapshot.GetHeight() % 32 == 0) {
-            // Add this temporary mini-snapshot to cache.
-            // This extra cached mn-list helps to improve performance of GetListForBlock
-            // for close blocks, because in the worst cases each of them requires to retrieve
-            // and apply up to 575 diffs
+
+        static constexpr int MINI_SNAPSHOT_INTERVAL = 32;
+        if (!node::fReindex && snapshot.GetHeight() % MINI_SNAPSHOT_INTERVAL == 0) {
+            // Add this temporary mini-snapshot to the cache.
+            // Persistent masternode list snapshots are stored in evo-db every 576 blocks.
+            // To answer GetListForBlock() between these snapshots, the node must rebuild
+            // state by applying up to 575 diffs from the nearest persistent snapshot.
+            // If GetListForBlock() is called repeatedly in that range, the work multiplies
+            // (up to 575 diffs * number of calls).
+            // Mini-snapshots reduce this overhead by caching intermediate states
+            // every MINI_SNAPSHOT_INTERVAL blocks. Unlike persistent snapshots, these live
+            // only in memory and are cleaned up after a short time by the scheduled cleanup().
+            // There is also separate in-memory caching for the current tip and active quorums,
+            // but this mini-snapshot cache specifically speeds up repeated requests
+            // for nearby historical blocks.
             mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
         }
     }
