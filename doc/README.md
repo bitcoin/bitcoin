@@ -21,6 +21,13 @@ Unpack the files into a directory and run:
 
 The `bitcoin` command supports subcommands like `bitcoin gui`, `bitcoin node`, and `bitcoin rpc` exposing different functionality. Subcommands can be listed with `bitcoin help`.
 
+#### Linux GUI install notes
+
+- Extract the release tarball and run `bin/bitcoin-qt` as described above.
+- Depending on your distribution, additional system libraries may be required to run `bitcoin-qt`. On Debian/Ubuntu systems, you may need to install `libxcb-xinerama0` if you encounter a missing library error when launching the GUI:
+  - `sudo apt install libxcb-xinerama0`
+  - Background: `libxcb-xinerama0` has been reported as a required runtime dependency for some Ubuntu configurations when running the prebuilt binaries. See: `https://bitcoin.stackexchange.com/questions/122646/libxcb-xinerama0-library-required-by-bitcoin-qt` and related discussion in `https://github.com/bitcoin/bitcoin/issues/32097`.
+
 ### Windows
 
 Unpack the files into a directory, and then run bitcoin-qt.exe.
