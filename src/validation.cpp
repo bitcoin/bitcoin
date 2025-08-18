@@ -4171,8 +4171,7 @@ arith_uint256 CalculateClaimedHeadersWork(std::span<const CBlockHeader> headers)
 {
     arith_uint256 total_work{0};
     for (const CBlockHeader& header : headers) {
-        CBlockIndex dummy(header);
-        total_work += GetBlockProof(dummy);
+        total_work += GetBlockProof(header);
     }
     return total_work;
 }

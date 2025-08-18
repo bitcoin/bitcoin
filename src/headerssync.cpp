@@ -202,7 +202,7 @@ bool HeadersSyncState::ValidateAndProcessSingleHeader(const CBlockHeader& curren
         }
     }
 
-    m_current_chain_work += GetBlockProof(CBlockIndex(current));
+    m_current_chain_work += GetBlockProof(current);
     m_last_header_received = current;
     m_current_height = next_height;
 
@@ -238,7 +238,7 @@ bool HeadersSyncState::ValidateAndStoreRedownloadedHeader(const CBlockHeader& he
     }
 
     // Track work on the redownloaded chain
-    m_redownload_chain_work += GetBlockProof(CBlockIndex(header));
+    m_redownload_chain_work += GetBlockProof(header);
 
     if (m_redownload_chain_work >= m_minimum_required_work) {
         m_process_all_remaining_headers = true;
