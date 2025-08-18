@@ -133,22 +133,24 @@ std::vector<uint256> CMasternodeMetaMan::GetAndClearDirtyGovernanceObjectHashes(
 bool CMasternodeMetaMan::AlreadyHavePlatformBan(const uint256& inv_hash) const
 {
     LOCK(cs);
-    return m_seen_platform_bans.contains(inv_hash);
+    return m_seen_platform_bans.exists(inv_hash);
 }
 
 std::optional<PlatformBanMessage> CMasternodeMetaMan::GetPlatformBan(const uint256& inv_hash) const
 {
     LOCK(cs);
-    auto it = m_seen_platform_bans.find(inv_hash);
-    if (it == m_seen_platform_bans.end()) return std::nullopt;
+    PlatformBanMessage ret;
+    if (!m_seen_platform_bans.get(inv_hash, ret)) {
+        return std::nullopt;
+    }
 
-    return it->second;
+    return ret;
 }
 
 void CMasternodeMetaMan::RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg)
 {
     LOCK(cs);
-    m_seen_platform_bans.insert({inv_hash, std::move(msg)});
+    m_seen_platform_bans.insert(inv_hash, std::move(msg));
 }
 
 std::string MasternodeMetaStore::ToString() const

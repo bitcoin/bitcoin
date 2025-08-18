@@ -6,10 +6,12 @@
 #define BITCOIN_MASTERNODE_META_H
 
 #include <bls/bls.h>
+#include <saltedhasher.h>
 #include <serialize.h>
 #include <sync.h>
 #include <threadsafety.h>
 #include <uint256.h>
+#include <unordered_lru_cache.h>
 
 #include <atomic>
 #include <map>
@@ -213,7 +215,11 @@ private:
     bool is_valid{false};
 
     std::vector<uint256> vecDirtyGovernanceObjectHashes GUARDED_BY(cs);
-    std::map<uint256, PlatformBanMessage> m_seen_platform_bans GUARDED_BY(cs);
+
+    // equal to double of expected amount of all evo nodes, see DIP-0028
+    // it consumes no more than 1Mb of RAM but will cover extreme cases
+    static constexpr size_t SeenBanInventorySize = 900;
+    mutable unordered_lru_cache<uint256, PlatformBanMessage, StaticSaltedHasher> m_seen_platform_bans GUARDED_BY(cs) {SeenBanInventorySize};
 
 public:
     explicit CMasternodeMetaMan();
