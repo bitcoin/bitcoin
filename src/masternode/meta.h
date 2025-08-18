@@ -238,7 +238,7 @@ public:
 
     bool AlreadyHavePlatformBan(const uint256& inv_hash) const;
     std::optional<PlatformBanMessage> GetPlatformBan(const uint256& inv_hash) const;
-    void RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage& msg);
+    void RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg);
 };
 
 #endif // BITCOIN_MASTERNODE_META_H

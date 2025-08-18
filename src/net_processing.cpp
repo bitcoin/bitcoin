@@ -3605,7 +3605,7 @@ MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId from, 
     const auto meta_info = m_mn_metaman.GetMetaInfo(ban_msg.m_protx_hash);
     if (meta_info->SetPlatformBan(true, ban_msg.m_requested_height)) {
         LogPrintf("PLATFORMBAN -- forward message to other nodes\n");
-        m_mn_metaman.RememberPlatformBan(hash, ban_msg);
+        m_mn_metaman.RememberPlatformBan(hash, std::move(ban_msg));
         CInv platform_ban_inv{MSG_PLATFORM_BAN, hash};
         RelayInv(platform_ban_inv);
     }

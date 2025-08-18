@@ -145,10 +145,10 @@ std::optional<PlatformBanMessage> CMasternodeMetaMan::GetPlatformBan(const uint2
     return it->second;
 }
 
-void CMasternodeMetaMan::RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage& msg)
+void CMasternodeMetaMan::RememberPlatformBan(const uint256& inv_hash, PlatformBanMessage&& msg)
 {
     LOCK(cs);
-    m_seen_platform_bans.insert({inv_hash, msg});
+    m_seen_platform_bans.insert({inv_hash, std::move(msg)});
 }
 
 std::string MasternodeMetaStore::ToString() const
