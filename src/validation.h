@@ -664,9 +664,6 @@ public:
         return Assert(m_coins_views)->m_catcherview;
     }
 
-    //! Destructs all objects related to accessing the UTXO set.
-    void ResetCoinsViews() { m_coins_views.reset(); }
-
     //! Does this chainstate have a UTXO set attached?
     bool HasCoinsViews() const { return (bool)m_coins_views; }
 
