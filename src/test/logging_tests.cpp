@@ -417,30 +417,29 @@ void TestLogFromLocation(Location location, const std::string& message,
                          BCLog::LogRateLimiter::Status status, bool suppressions_active,
                          std::source_location source = std::source_location::current())
 {
+    BOOST_TEST_INFO_SCOPE("TestLogFromLocation called from " << source.file_name() << ":" << source.line());
     using Status = BCLog::LogRateLimiter::Status;
     if (!suppressions_active) assert(status == Status::UNSUPPRESSED); // developer error
 
     std::ofstream ofs(LogInstance().m_file_path, std::ios::out | std::ios::trunc); // clear debug log
     LogFromLocation(location, message);
     auto log_lines{ReadDebugLogLines()};
+    BOOST_TEST_INFO_SCOPE(log_lines.size() << " log_lines read: \n" << util::Join(log_lines, "\n"));
 
-    BOOST_TEST_CONTEXT("TestLogFromLocation failed from " << source.file_name() << ":" << source.line())
-    {
-        if (status == Status::STILL_SUPPRESSED) {
-            BOOST_CHECK_EQUAL(log_lines.size(), 0);
-            return;
-        }
-
-        if (status == Status::NEWLY_SUPPRESSED) {
-            BOOST_REQUIRE_EQUAL(log_lines.size(), 2);
-            BOOST_CHECK(log_lines[0].starts_with("[*] [warning] Excessive logging detected"));
-            log_lines.erase(log_lines.begin());
-        }
-        BOOST_REQUIRE_EQUAL(log_lines.size(), 1);
-        auto& payload{log_lines.back()};
-        BOOST_CHECK_EQUAL(suppressions_active, payload.starts_with("[*]"));
-        BOOST_CHECK(payload.ends_with(message));
+    if (status == Status::STILL_SUPPRESSED) {
+        BOOST_CHECK_EQUAL(log_lines.size(), 0);
+        return;
     }
+
+    if (status == Status::NEWLY_SUPPRESSED) {
+        BOOST_REQUIRE_EQUAL(log_lines.size(), 2);
+        BOOST_CHECK(log_lines[0].starts_with("[*] [warning] Excessive logging detected"));
+        log_lines.erase(log_lines.begin());
+    }
+    BOOST_REQUIRE_EQUAL(log_lines.size(), 1);
+    auto& payload{log_lines.back()};
+    BOOST_CHECK_EQUAL(suppressions_active, payload.starts_with("[*]"));
+    BOOST_CHECK(payload.ends_with(message));
 }
 
 } // namespace
@@ -454,9 +453,9 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
     LogInstance().EnableCategory(BCLog::LogFlags::HTTP);
 
     constexpr int64_t line_length{1024};
-    constexpr int64_t num_lines{1024};
+    constexpr int64_t num_lines{10};
     constexpr int64_t bytes_quota{line_length * num_lines};
-    constexpr auto time_window{20s};
+    constexpr auto time_window{1h};
 
     ScopedScheduler scheduler{};
     auto limiter{scheduler.GetLimiter(bytes_quota, time_window)};
