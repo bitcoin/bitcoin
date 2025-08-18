@@ -1654,13 +1654,14 @@ public:
 };
 
 /** A parsed sp(...) descriptor */
-class SpDescriptor final : public DescriptorImpl
+class SpDescriptorImpl final : public SpDescriptor, public DescriptorImpl
 {
+    std::unique_ptr<PubkeyProvider> m_scan_pubkey;
 protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return std::vector<CScript>(); }
 
 public:
-    SpDescriptor(std::unique_ptr<PubkeyProvider> scan_pubkey, std::unique_ptr<PubkeyProvider> spend_key) : DescriptorImpl(Vector(std::move(scan_pubkey), std::move(spend_key)), "sp") {};
+    SpDescriptorImpl(std::unique_ptr<PubkeyProvider> scan_pubkey, std::unique_ptr<PubkeyProvider> spend_key) : DescriptorImpl(Vector(std::move(spend_key)), "sp"), m_scan_pubkey(std::move(scan_pubkey)) {};
 
     std::optional<OutputType> GetOutputType() const override { return OutputType::SILENT_PAYMENTS; }
 
@@ -1674,13 +1675,11 @@ public:
         std::string scan_key;
         // This should never fail, since the ScankeyPubkeyProvider will always contain
         // the scan key.
-
-        // The scan key is stored at m_pubkey_args[0], the spend key at m_pubkey_args[1]
-        bool has_scan_key{m_pubkey_args.at(0)->ToPrivateString(dummy, scan_key)};
+        bool has_scan_key{m_scan_pubkey->ToPrivateString(dummy, scan_key)};
         assert(has_scan_key);
 
         std::string scan_key_str{m_name + "(" + scan_key + ","};
-        auto& spend_pubkey{m_pubkey_args.at(1)};
+        auto& spend_pubkey{m_pubkey_args.at(0)};
         std::string spend_key_str;
         switch (type) {
         case StringType::NORMALIZED:
@@ -1700,9 +1699,18 @@ public:
         return true;
     }
 
+    CKey GetScanKey() const override
+    {
+        FlatSigningProvider dummy, out;
+        m_scan_pubkey->GetPrivKey(0, dummy, out);
+        // The ScankeyPubkeyProvider will always contain the scan key
+        assert(out.keys.size() == 1);
+        return out.keys.begin()->second;
+    }
+
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
-        return std::make_unique<SpDescriptor>(m_pubkey_args.at(0)->Clone(), m_pubkey_args.at(1)->Clone());
+        return std::make_unique<SpDescriptorImpl>(m_scan_pubkey->Clone(), m_pubkey_args.at(0)->Clone());
     }
 };
 
@@ -2308,7 +2316,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
 
         for (auto& scan_pubkey : scan_pubkeys) {
             for (auto& spend_pubkey : spend_pubkeys) {
-                ret.emplace_back(std::make_unique<SpDescriptor>(std::move(scan_pubkey), std::move(spend_pubkey)));
+                ret.emplace_back(std::make_unique<SpDescriptorImpl>(std::move(scan_pubkey), std::move(spend_pubkey)));
             }
         }
 
