@@ -404,7 +404,7 @@ class AssumeutxoTest(BitcoinTestFramework):
                 # Create a stale block that forks off the main chain before the snapshot.
                 temp_invalid = n0.getbestblockhash()
                 n0.invalidateblock(temp_invalid)
-                stale_hash = self.generateblock(n0, output="raw(aaaa)", transactions=[], sync_fun=self.no_op)["hash"]
+                stale_hash = self.generateblock(n0, sync_fun=self.no_op)["hash"]
                 n0.invalidateblock(stale_hash)
                 n0.reconsiderblock(temp_invalid)
                 stale_block = n0.getblock(stale_hash, 0)

@@ -292,7 +292,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
 
         self.log.info("Check that verificationprogress is less than 1 as soon as a new header comes in")
-        self.nodes[0].submitheader(self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False, sync_fun=self.no_op)["hex"])
+        self.nodes[0].submitheader(self.generateblock(self.nodes[0], transactions=[], submit=False, sync_fun=self.no_op)["hex"])
         assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
 
     def _test_y2106(self):
