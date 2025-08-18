@@ -194,7 +194,7 @@ class MempoolTRUC(BitcoinTestFramework):
         tx_chain_3 = self.wallet.create_self_transfer(utxo_to_spend=tx_chain_2["new_utxo"], version=3)
 
         tx_to_mine = [tx_v3_block["hex"], tx_v2_block["hex"], tx_v3_block2["hex"], tx_chain_1["hex"], tx_chain_2["hex"], tx_chain_3["hex"]]
-        self.generateblock(node, output="raw(42)", transactions=tx_to_mine)
+        self.generateblock(node, transactions=tx_to_mine)
 
         self.check_mempool([])
 
