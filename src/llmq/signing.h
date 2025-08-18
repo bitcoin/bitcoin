@@ -8,6 +8,7 @@
 #include <bls/bls.h>
 #include <gsl/pointers.h>
 #include <llmq/params.h>
+#include <net_types.h>
 #include <protocol.h>
 #include <random.h>
 #include <saltedhasher.h>
@@ -15,6 +16,7 @@
 #include <util/threadinterrupt.h>
 #include <unordered_lru_cache.h>
 
+#include <string_view>
 #include <unordered_map>
 
 class CActiveMasternodeManager;
@@ -23,11 +25,8 @@ class CDataStream;
 class CDBBatch;
 class CDBWrapper;
 class CInv;
-class CNode;
 class PeerManager;
 class UniValue;
-
-using NodeId = int64_t;
 
 namespace llmq
 {
@@ -182,7 +181,7 @@ public:
     bool AlreadyHave(const CInv& inv) const;
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret) const;
 
-    PeerMsgRet ProcessMessage(const CNode& pnode, PeerManager& peerman, const std::string& msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv);
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks
@@ -195,9 +194,6 @@ public:
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
 private:
-    PeerMsgRet ProcessMessageRecoveredSig(const CNode& pfrom, PeerManager& peerman,
-                                          const std::shared_ptr<const CRecoveredSig>& recoveredSig);
-
     void CollectPendingRecoveredSigsToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
             std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);

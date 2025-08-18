@@ -6,6 +6,7 @@
 #define BITCOIN_LLMQ_DKGSESSIONHANDLER_H
 
 #include <net.h> // for NodeId
+#include <net_processing.h>
 
 #include <atomic>
 #include <list>
@@ -14,6 +15,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -24,7 +26,6 @@ class CChainState;
 class CConnman;
 class CDeterministicMNManager;
 class CMasternodeMetaMan;
-class CNode;
 class CSporkManager;
 class PeerManager;
 
@@ -64,7 +65,7 @@ public:
     using BinaryMessage = std::pair<NodeId, std::shared_ptr<CDataStream>>;
 
 private:
-    const int invType;
+    const uint32_t invType;
     const size_t maxMessagesPerNode;
     mutable Mutex cs_messages;
     std::list<BinaryMessage> pendingMessages GUARDED_BY(cs_messages);
@@ -72,10 +73,10 @@ private:
     std::set<uint256> seenMessages GUARDED_BY(cs_messages);
 
 public:
-    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType) :
+    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, uint32_t _invType) :
             invType(_invType), maxMessagesPerNode(_maxMessagesPerNode) {};
 
-    void PushPendingMessage(NodeId from, CDataStream& vRecv, PeerManager& peerman);
+    [[nodiscard]] MessageProcessingResult PushPendingMessage(NodeId from, CDataStream& vRecv);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount);
     bool HasSeen(const uint256& hash) const;
     void Misbehaving(NodeId from, int score, PeerManager& peerman);
@@ -86,7 +87,7 @@ public:
     {
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
         ds << msg;
-        PushPendingMessage(from, ds, peerman);
+        peerman.PostProcessMessage(PushPendingMessage(from, ds), from);
     }
 
     // Might return nullptr messages, which indicates that deserialization failed for some reason
@@ -165,7 +166,7 @@ public:
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
-    void ProcessMessage(const CNode& pfrom, PeerManager& peerman, const std::string& msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv);
 
     void StartThread(CConnman& connman, PeerManager& peerman);
     void StopThread();

@@ -147,7 +147,9 @@ MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer,
     LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
              qc.quorumHash.ToString(), ToUnderlying(qc.llmqType), qc.CountValidMembers(), qc.CountSigners(), peer.GetId());
 
-    ret.m_inventory = AddMineableCommitment(qc);
+    if (auto inv_opt = AddMineableCommitment(qc)) {
+        ret.m_inventory.emplace_back(inv_opt.value());
+    }
     return ret;
 }
 

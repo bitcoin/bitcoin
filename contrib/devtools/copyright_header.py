@@ -25,7 +25,6 @@ EXCLUDE = [
     'src/ctpl_stl.h',
     'src/test/fuzz/FuzzedDataProvider.h',
     'src/tinyformat.h',
-    'src/util/expected.h',
     'src/wallet/bip39.cpp',
     'src/wallet/bip39.h',
     'src/wallet/bip39_english.h',

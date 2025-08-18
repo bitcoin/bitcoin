@@ -12,6 +12,7 @@
 
 #include <map>
 #include <memory>
+#include <string_view>
 
 template <class T>
 class CBLSIESMultiRecipientObjects;
@@ -88,8 +89,8 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
-    PeerMsgRet ProcessMessage(CNode& pfrom, PeerManager& peerman, bool is_masternode, const std::string& msg_type,
-                              CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(CNode& pfrom, bool is_masternode, std::string_view msg_type,
+                                                         CDataStream& vRecv);
     bool AlreadyHave(const CInv& inv) const;
     bool GetContribution(const uint256& hash, CDKGContribution& ret) const;
     bool GetComplaint(const uint256& hash, CDKGComplaint& ret) const;

@@ -25,7 +25,6 @@ class CBlockIndex;
 class CChainState;
 class CDataStream;
 class CMasternodeSync;
-class CNode;
 class CSporkManager;
 class CTxMemPool;
 class PeerManager;
@@ -35,8 +34,6 @@ struct LLMQParams;
 namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
-
-using NodeId = int64_t;
 
 namespace llmq {
 class CChainLocksHandler;
@@ -98,7 +95,6 @@ public:
     void InterruptWorkerThread() { workInterrupt(); };
 
 private:
-    PeerMsgRet ProcessMessageInstantSendLock(const CNode& pfrom, PeerManager& peerman, const instantsend::InstantSendLockPtr& islock);
     bool ProcessPendingInstantSendLocks(PeerManager& peerman)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
@@ -133,7 +129,7 @@ public:
     bool IsWaitingForTx(const uint256& txHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks);
     instantsend::InstantSendLockPtr GetConflictingLock(const CTransaction& tx) const override;
 
-    PeerMsgRet ProcessMessage(const CNode& pfrom, PeerManager& peerman, std::string_view msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv);
 
     void TransactionAddedToMempool(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);

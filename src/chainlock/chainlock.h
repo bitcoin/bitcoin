@@ -7,6 +7,7 @@
 
 #include <chainlock/clsig.h>
 
+#include <net_types.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
 #include <saltedhasher.h>
@@ -27,8 +28,6 @@ class CMasternodeSync;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
-
-using NodeId = int64_t;
 
 namespace llmq {
 class CInstantSendManager;

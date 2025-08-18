@@ -11,7 +11,6 @@
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/expected.h>
 #include <util/time.h>
 
 #include <cstdint>
@@ -581,9 +580,6 @@ struct MisbehavingError
     {}
 };
 
-// TODO: replace usages of PeerMsgRet to MessageProcessingResult which is cover this one
-using PeerMsgRet = tl::expected<void, MisbehavingError>;
-
 /**
  * This struct is a helper to return values from handlers that are processing
  * network messages but implemented outside of net_processing.cpp,
@@ -600,8 +596,8 @@ struct MessageProcessingResult
     //! @m_error triggers Misbehaving error with score and optional message if not nullopt
     std::optional<MisbehavingError> m_error;
 
-    //! @m_inventory will relay this inventory to connected peers if not nullopt
-    std::optional<CInv> m_inventory;
+    //! @m_inventory will relay these inventories to connected peers
+    std::vector<CInv> m_inventory;
 
     //! @m_transactions will relay transactions to peers which is ready to accept it (some peers does not accept transactions)
     std::vector<uint256> m_transactions;
@@ -614,7 +610,7 @@ struct MessageProcessingResult
         m_error(error)
     {}
     MessageProcessingResult(CInv inv) :
-        m_inventory(inv)
+        m_inventory({inv})
     {
     }
 };
