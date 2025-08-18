@@ -16,6 +16,7 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <messagesigner.h>
+#include <node/blockstorage.h>
 #include <script/standard.h>
 #include <stats/client.h>
 #include <uint256.h>
@@ -778,7 +779,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
     for (const auto& diffIndex : listDiffIndexes) {
         const auto& diff = mnListDiffsCache.at(diffIndex->GetBlockHash());
         snapshot.ApplyDiff(diffIndex, diff);
-        if (snapshot.GetHeight() % 32 == 0) {
+        if (!fReindex && snapshot.GetHeight() % 32 == 0) {
             // Add this temporary mini-snapshot to cache.
             // This extra cached mn-list helps to improve performance of GetListForBlock
             // for close blocks, because in the worst cases each of them requires to retrieve
