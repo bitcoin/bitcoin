@@ -1,4 +1,4 @@
 EvoDB migration
 ---------------
 
-This release automatically handles migration from legacy masternode state diff format to a new one which should make future state diff upgrades seamless. No manual intervention required for node operators. This operation is irreversible and you'd have to reindex if you decide to downgrade to a previous version. #6813
+This release introduces a new internal format for masternode state data to support extended addresses and make future updates of this data seamless. Nodes will automatically migrate to the new format. Downgrading to an earlier version would require a full reindex. #6813
