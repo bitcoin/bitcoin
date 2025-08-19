@@ -189,7 +189,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             for node in self.nodes:
                 node.batch(batch_sendtx_reqs)
             self.sync_mempools(wait=0.1)
-            mined = mining_node.getblock(self.generate(mining_node, 1)[0], True)["tx"]
+            mined = mining_node.getblock(self.generate(mining_node, 1)[0], 1)["tx"]
             # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:

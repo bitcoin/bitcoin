@@ -83,14 +83,11 @@ void RPCTypeCheckObj(const UniValue& o,
     }
 }
 
-int ParseVerbosity(const UniValue& arg, int default_verbosity, bool allow_bool)
+int ParseVerbosity(const UniValue& arg, int default_verbosity)
 {
     if (!arg.isNull()) {
         if (arg.isBool()) {
-            if (!allow_bool) {
-                throw JSONRPCError(RPC_TYPE_ERROR, "Verbosity was boolean but only integer allowed");
-            }
-            return arg.get_bool(); // true = 1
+            throw JSONRPCError(RPC_TYPE_ERROR, "Verbosity was boolean but only integer allowed");
         } else {
             return arg.getInt<int>();
         }

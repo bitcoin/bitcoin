@@ -306,7 +306,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block_hash = int(self.generate(node, 1)[0], 16)
 
         # Store the raw block in our internal format.
-        block = from_hex(CBlock(), node.getblock("%064x" % block_hash, False))
+        block = from_hex(CBlock(), node.getblock("%064x" % block_hash, 0))
 
         # Wait until the block was announced (via compact blocks)
         test_node.wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30)
@@ -567,7 +567,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         current_height = chain_height
         while (current_height >= chain_height - MAX_GETBLOCKTXN_DEPTH):
             block_hash = node.getblockhash(current_height)
-            block = from_hex(CBlock(), node.getblock(block_hash, False))
+            block = from_hex(CBlock(), node.getblock(block_hash, 0))
 
             msg = msg_getblocktxn()
             msg.block_txn_request = BlockTransactionsRequest(int(block_hash, 16), [])
@@ -602,7 +602,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Request with out-of-bounds tx index results in disconnect
         bad_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
         block_hash = node.getblockhash(chain_height)
-        block = from_hex(CBlock(), node.getblock(block_hash, False))
+        block = from_hex(CBlock(), node.getblock(block_hash, 0))
         msg.block_txn_request = BlockTransactionsRequest(int(block_hash, 16), [len(block.vtx)])
         with node.assert_debug_log(['getblocktxn with out-of-bounds tx indices']):
             bad_peer.send_without_ping(msg)

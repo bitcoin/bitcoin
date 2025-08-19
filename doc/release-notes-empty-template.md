@@ -50,6 +50,11 @@ P2P and network changes
 Updated RPCs
 ------------
 
+- The following RPC methods no longer accept boolean values for their verbosity parameters:
+  `getblock`, `getrawtransaction`, and `getorphantxs`. Boolean verbosity has been
+  completely removed. Use integer values instead: `false` → `0`, `true` → `1`.
+  This is a breaking change that improves consistency across RPC methods and enables
+  support for additional verbosity levels in the future.
 
 Changes to wallet related RPCs can be found in the Wallet section below.
 

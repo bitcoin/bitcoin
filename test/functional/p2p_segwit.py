@@ -396,7 +396,7 @@ class SegWitTest(BitcoinTestFramework):
             all_heights = all_heights[0:10]
             for height in all_heights:
                 block_hash = self.nodes[0].getblockhash(height)
-                rpc_block = self.nodes[0].getblock(block_hash, False)
+                rpc_block = self.nodes[0].getblock(block_hash, 0)
                 block_hash = int(block_hash, 16)
                 block = self.test_node.request_block(block_hash, 2)
                 wit_block = self.test_node.request_block(block_hash, 2 | MSG_WITNESS_FLAG)
@@ -413,7 +413,7 @@ class SegWitTest(BitcoinTestFramework):
             assert len(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack) == 1
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
             # Now try to retrieve it...
-            rpc_block = self.nodes[0].getblock(block.hash_hex, False)
+            rpc_block = self.nodes[0].getblock(block.hash_hex, 0)
             non_wit_block = self.test_node.request_block(block.hash_int, 2)
             wit_block = self.test_node.request_block(block.hash_int, 2 | MSG_WITNESS_FLAG)
             assert_equal(wit_block.serialize(), bytes.fromhex(rpc_block))
@@ -421,7 +421,7 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(wit_block.serialize(), block.serialize())
 
             # Test size, vsize, weight
-            rpc_details = self.nodes[0].getblock(block.hash_hex, True)
+            rpc_details = self.nodes[0].getblock(block.hash_hex, 1)
             assert_equal(rpc_details["size"], len(block.serialize()))
             assert_equal(rpc_details["strippedsize"], len(block.serialize(False)))
             assert_equal(rpc_details["weight"], block.get_weight())
