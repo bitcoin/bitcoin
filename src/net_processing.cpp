@@ -3596,9 +3596,10 @@ MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId node, 
     const uint256 request_id = ::SerializeHash(std::make_pair(PLATFORM_BAN_REQUESTID_PREFIX, data));
     const uint256 msg_hash = ::SerializeHash(data);
 
-    auto recsig_status = llmq::VerifyRecoveredSig(llmq_type, m_chainman.ActiveChainstate().m_chain, *m_llmq_ctx->qman, ban_msg.m_requested_height, request_id, msg_hash, ban_msg.m_signature);
-    if (recsig_status != llmq::VerifyRecSigStatus::Valid) {
-        LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s request_id: %s msg_hash: %s sig validation failed: %d\n", hash.ToString(), ban_msg.m_protx_hash.ToString(), request_id.ToString(), msg_hash.ToString(), ToUnderlying(recsig_status));
+    uint256 signHash = llmq::BuildSignHash(llmq_type, quorum->qc->quorumHash, request_id, msg_hash);
+
+    if (!ban_msg.m_signature.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
+        LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s request_id: %s msg_hash: %s sig validation failed\n", hash.ToString(), ban_msg.m_protx_hash.ToString(), request_id.ToString(), msg_hash.ToString());
         ret.m_error = MisbehavingError{100};
         return ret;
     }
