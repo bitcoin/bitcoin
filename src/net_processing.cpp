@@ -736,7 +736,7 @@ private:
                                const std::vector<CBlockHeader>& headers,
                                bool via_compact_block)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
-    [[nodiscard]] MessageProcessingResult ProcessPlatformBanMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv)
+    [[nodiscard]] MessageProcessingResult ProcessPlatformBanMessage(NodeId node, std::string_view msg_type, CDataStream& vRecv)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex);
 
     /** Various helpers for headers processing, invoked by ProcessHeadersMessage() */
