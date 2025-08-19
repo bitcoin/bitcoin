@@ -59,6 +59,9 @@ bool CProRegTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, T
     if (netInfo->CanStorePlatform() != (nVersion == ProTxVersion::ExtAddr)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-netinfo-version");
     }
+    if (!netInfo->IsEmpty() && !netInfo->HasEntries(NetInfoPurpose::CORE_P2P)) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-empty");
+    }
     for (const auto& entry : netInfo->GetEntries()) {
         if (!entry.IsTriviallyValid()) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-bad");
@@ -135,7 +138,7 @@ bool CProUpServTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev
     if (netInfo->CanStorePlatform() != (nVersion == ProTxVersion::ExtAddr)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-netinfo-version");
     }
-    if (netInfo->IsEmpty()) {
+    if (netInfo->IsEmpty() || !netInfo->HasEntries(NetInfoPurpose::CORE_P2P)) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-empty");
     }
     for (const auto& entry : netInfo->GetEntries()) {

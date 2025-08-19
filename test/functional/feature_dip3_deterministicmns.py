@@ -277,8 +277,8 @@ class DIP3Test(BitcoinTestFramework):
         for node in self.nodes:
             protx_info = node.protx('info', mn.proTxHash)
             mn_list = node.masternode('list')
-            assert_equal(protx_info['state']['addresses'][0], '127.0.0.2:%d' % mn.nodePort)
-            assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['addresses'][0], '127.0.0.2:%d' % mn.nodePort)
+            assert_equal(protx_info['state']['addresses']['core_p2p'][0], '127.0.0.2:%d' % mn.nodePort)
+            assert_equal(mn_list['%s-%d' % (mn.collateral_txid, mn.collateral_vout)]['addresses']['core_p2p'][0], '127.0.0.2:%d' % mn.nodePort)
 
         # undo
         mn.update_service(self.nodes[0], submit=True)

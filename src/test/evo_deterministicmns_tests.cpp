@@ -108,7 +108,8 @@ static CMutableTransaction CreateProRegTx(const CChain& active_chain, const CTxM
     proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     proTx.netInfo = NetInfoInterface::MakeNetInfo(proTx.nVersion);
     proTx.collateralOutpoint.n = 0;
-    BOOST_CHECK_EQUAL(proTx.netInfo->AddEntry(strprintf("1.1.1.1:%d", port)), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(proTx.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, strprintf("1.1.1.1:%d", port)),
+                      NetInfoStatus::Success);
     proTx.keyIDOwner = ownerKeyRet.GetPubKey().GetID();
     proTx.pubKeyOperator.Set(operatorKeyRet.GetPublicKey(), bls::bls_legacy_scheme.load());
     proTx.keyIDVoting = ownerKeyRet.GetPubKey().GetID();
@@ -131,7 +132,8 @@ static CMutableTransaction CreateProUpServTx(const CChain& active_chain, const C
     proTx.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     proTx.netInfo = NetInfoInterface::MakeNetInfo(proTx.nVersion);
     proTx.proTxHash = proTxHash;
-    BOOST_CHECK_EQUAL(proTx.netInfo->AddEntry(strprintf("1.1.1.1:%d", port)), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(proTx.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, strprintf("1.1.1.1:%d", port)),
+                      NetInfoStatus::Success);
     proTx.scriptOperatorPayout = scriptOperatorPayout;
 
     CMutableTransaction tx;
@@ -645,7 +647,7 @@ void FuncTestMempoolReorg(TestChainSetup& setup)
     CProRegTx payload;
     payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     payload.netInfo = NetInfoInterface::MakeNetInfo(payload.nVersion);
-    BOOST_CHECK_EQUAL(payload.netInfo->AddEntry("1.1.1.1:1"), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(payload.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:1"), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
     payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
@@ -721,7 +723,7 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
     CProRegTx payload;
     payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     payload.netInfo = NetInfoInterface::MakeNetInfo(payload.nVersion);
-    BOOST_CHECK_EQUAL(payload.netInfo->AddEntry("1.1.1.1:2"), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(payload.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:2"), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
     payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
@@ -791,7 +793,7 @@ void FuncVerifyDB(TestChainSetup& setup)
     CProRegTx payload;
     payload.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
     payload.netInfo = NetInfoInterface::MakeNetInfo(payload.nVersion);
-    BOOST_CHECK_EQUAL(payload.netInfo->AddEntry("1.1.1.1:1"), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(payload.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:1"), NetInfoStatus::Success);
     payload.keyIDOwner = ownerKey.GetPubKey().GetID();
     payload.pubKeyOperator.Set(operatorKey.GetPublicKey(), bls::bls_legacy_scheme.load());
     payload.keyIDVoting = ownerKey.GetPubKey().GetID();
@@ -855,7 +857,7 @@ static CDeterministicMNCPtr create_mock_mn(uint64_t internal_id)
     dmnState->keyIDVoting = ownerKey.GetPubKey().GetID();
     dmnState->netInfo = NetInfoInterface::MakeNetInfo(
         ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false));
-    BOOST_CHECK_EQUAL(dmnState->netInfo->AddEntry("1.1.1.1:1"), NetInfoStatus::Success);
+    BOOST_CHECK_EQUAL(dmnState->netInfo->AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:1"), NetInfoStatus::Success);
 
     auto dmn = std::make_shared<CDeterministicMN>(internal_id, MnType::Regular);
     dmn->proTxHash = GetRandHash();

@@ -154,7 +154,7 @@ class NetInfoTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def check_netinfo_fields(self, val, core_p2p_port: int):
-        assert_equal(val[0], f"127.0.0.1:{core_p2p_port}")
+        assert_equal(val['core_p2p'][0], f"127.0.0.1:{core_p2p_port}")
 
     def run_test(self):
         self.node_evo: Node = Node(self.nodes[0], True)

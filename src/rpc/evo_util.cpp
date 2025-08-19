@@ -26,7 +26,7 @@ void ProcessNetInfoCore(T1& ptx, const UniValue& input, const bool optional)
             }
             return; // Nothing to do
         }
-        if (auto entryRet = ptx.netInfo->AddEntry(entry); entryRet != NetInfoStatus::Success) {
+        if (auto entryRet = ptx.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, entry); entryRet != NetInfoStatus::Success) {
             throw JSONRPCError(RPC_INVALID_PARAMETER,
                                strprintf("Error setting coreP2PAddrs[0] to '%s' (%s)", entry, NISToString(entryRet)));
         }
@@ -52,7 +52,7 @@ void ProcessNetInfoCore(T1& ptx, const UniValue& input, const bool optional)
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
                                    strprintf("Invalid param for coreP2PAddrs[%d], cannot be empty string", idx));
             }
-            if (auto entryRet = ptx.netInfo->AddEntry(entry); entryRet != NetInfoStatus::Success) {
+            if (auto entryRet = ptx.netInfo->AddEntry(NetInfoPurpose::CORE_P2P, entry); entryRet != NetInfoStatus::Success) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Error setting coreP2PAddrs[%d] to '%s' (%s)", idx,
                                                                     entry, NISToString(entryRet)));
             }
