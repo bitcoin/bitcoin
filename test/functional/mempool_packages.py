@@ -61,7 +61,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Check mempool has DEFAULT_ANCESTOR_LIMIT transactions in it, and descendant and ancestor
         # count and fees should look correct
-        mempool = self.nodes[0].getrawmempool(True)
+        mempool = self.nodes[0].getrawmempool(1)
         assert_equal(len(mempool), DEFAULT_ANCESTOR_LIMIT)
         descendant_count = 1
         descendant_fees = 0
@@ -191,8 +191,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(entry['fees']['descendant'], descendant_fees + Decimal("0.00002"))
 
         # Check that node1's mempool is as expected (-> custom ancestor limit)
-        mempool0 = self.nodes[0].getrawmempool(False)
-        mempool1 = self.nodes[1].getrawmempool(False)
+        mempool0 = self.nodes[0].getrawmempool(0)
+        mempool1 = self.nodes[1].getrawmempool(0)
         assert_equal(len(mempool1), CUSTOM_ANCESTOR_LIMIT)
         assert set(mempool1).issubset(set(mempool0))
         for tx in chain[:CUSTOM_ANCESTOR_LIMIT]:
@@ -224,7 +224,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
                 tx_children.append(txid)
             transaction_package.extend(new_tx["new_utxos"])
 
-        mempool = self.nodes[0].getrawmempool(True)
+        mempool = self.nodes[0].getrawmempool(1)
         assert_equal(mempool[parent_transaction]['descendantcount'], DEFAULT_DESCENDANT_LIMIT)
         assert_equal(sorted(mempool[parent_transaction]['spentby']), sorted(tx_children))
 
@@ -241,8 +241,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # - txs chained off parent tx (-> custom descendant limit)
         self.wait_until(lambda: len(self.nodes[1].getrawmempool()) ==
                                 CUSTOM_ANCESTOR_LIMIT + 1 + CUSTOM_DESCENDANT_LIMIT, timeout=10)
-        mempool0 = self.nodes[0].getrawmempool(False)
-        mempool1 = self.nodes[1].getrawmempool(False)
+        mempool0 = self.nodes[0].getrawmempool(0)
+        mempool1 = self.nodes[1].getrawmempool(0)
         assert set(mempool1).issubset(set(mempool0))
         assert parent_transaction in mempool1
         for tx in chain[:CUSTOM_DESCENDANT_LIMIT]:

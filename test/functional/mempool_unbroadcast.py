@@ -49,7 +49,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             unbroadcast_count += 1
         assert_equal(mempoolinfo['unbroadcastcount'], unbroadcast_count)
-        mempool = self.nodes[0].getrawmempool(True)
+        mempool = self.nodes[0].getrawmempool(1)
         for tx in mempool:
             assert_equal(mempool[tx]['unbroadcast'], True)
 
@@ -74,7 +74,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
             assert wallet_tx_hsh in mempool
 
         # check that transactions are no longer in first node's unbroadcast set
-        mempool = self.nodes[0].getrawmempool(True)
+        mempool = self.nodes[0].getrawmempool(1)
         for tx in mempool:
             assert_equal(mempool[tx]['unbroadcast'], False)
 

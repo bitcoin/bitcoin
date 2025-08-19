@@ -112,7 +112,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 assert_equal(self.nodes[n].getrawtransaction(txId, 0), tx['hex'])
 
                 # 3. valid parameters - supply txid and False for non-verbose
-                assert_equal(self.nodes[n].getrawtransaction(txId, False), tx['hex'])
+                assert_equal(self.nodes[n].getrawtransaction(txId, 0), tx['hex'])
 
                 # 4. valid parameters - supply txid and 1 for verbose.
                 # We only check the "hex" field of the output so we don't need to update this test every time the output format changes.
@@ -120,7 +120,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 assert_equal(self.nodes[n].getrawtransaction(txId, 2)["hex"], tx['hex'])
 
                 # 5. valid parameters - supply txid and True for non-verbose
-                assert_equal(self.nodes[n].getrawtransaction(txId, True)["hex"], tx['hex'])
+                assert_equal(self.nodes[n].getrawtransaction(txId, 1)["hex"], tx['hex'])
             else:
                 # Without -txindex, expect to raise.
                 for verbose in [None, 0, False, 1, True]:

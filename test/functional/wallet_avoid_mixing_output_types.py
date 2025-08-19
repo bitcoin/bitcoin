@@ -69,7 +69,7 @@ def is_legacy_address(node, addr):
 
 def is_same_type(node, tx):
     """Check that all inputs are of the same OutputType"""
-    vins = node.getrawtransaction(tx, True)['vin']
+    vins = node.getrawtransaction(tx, 1)['vin']
     inputs = []
     for vin in vins:
         prev_tx, n = vin['txid'], vin['vout']
