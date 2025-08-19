@@ -413,18 +413,21 @@ private:
     int64_t m_tx_time;
 
 public:
-    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const TxState& state, bool coinbase, bool tx_from_me, int64_t tx_time)
+    WalletTXO(const CWalletTx& wtx, const CTxOut& output, const TxState& state, bool coinbase, bool tx_from_me, int64_t tx_time, uint32_t tx_version)
     : m_wtx(wtx),
     m_output(output),
     m_tx_state(state),
     m_tx_coinbase(coinbase),
     m_tx_from_me(tx_from_me),
-    m_tx_time(tx_time)
+    m_tx_time(tx_time),
+    m_tx_version(tx_version)
     {
         Assume(std::ranges::find(wtx.tx->vout, output) != wtx.tx->vout.end());
     }
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }
+
+    const uint32_t m_tx_version;
 
     const CTxOut& GetTxOut() const { return m_output; }
 
