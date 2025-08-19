@@ -34,6 +34,12 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         if self.wait_until(check_tx, timeout=timeout, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
+    def create_fund_sign_tx(self):
+        rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
+        rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
+        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
+        return rawtx
+
     def run_test(self):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         # Turn mempool IS signing off
@@ -97,9 +103,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
 
         self.log.info("testing retroactive signing with unknown TX")
         self.isolate_node(3)
-        rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
-        rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
+        rawtx = self.create_fund_sign_tx()
         txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make node 3 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
@@ -137,16 +141,11 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
     def test_session_timeout(self, do_cycle_llmqs):
         set_node_times(self.nodes, self.mocktime)
         self.isolate_node(3)
-        rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
-        rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
+        rawtx = self.create_fund_sign_tx()
         txid_all_nodes = self.nodes[0].sendrawtransaction(rawtx)
         txid_all_nodes = self.nodes[3].sendrawtransaction(rawtx)
 
-
-        rawtx_1 = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
-        rawtx_1 = self.nodes[0].fundrawtransaction(rawtx_1)['hex']
-        rawtx_1 = self.nodes[0].signrawtransactionwithwallet(rawtx_1)['hex']
+        rawtx_1 = self.create_fund_sign_tx()
         txid_single_node = self.nodes[3].sendrawtransaction(rawtx_1)
 
         # Make sure nodes 1 and 2 received the TX before we continue
