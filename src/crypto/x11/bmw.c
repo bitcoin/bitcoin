@@ -47,8 +47,6 @@ extern "C"{
 #pragma warning (disable: 4146)
 #endif
 
-#if SPH_64
-
 static const sph_u64 IV512[] = {
 	SPH_C64(0x8081828384858687), SPH_C64(0x88898A8B8C8D8E8F),
 	SPH_C64(0x9091929394959697), SPH_C64(0x98999A9B9C9D9E9F),
@@ -59,11 +57,6 @@ static const sph_u64 IV512[] = {
 	SPH_C64(0xE0E1E2E3E4E5E6E7), SPH_C64(0xE8E9EAEBECEDEEEF),
 	SPH_C64(0xF0F1F2F3F4F5F6F7), SPH_C64(0xF8F9FAFBFCFDFEFF)
 };
-
-#endif
-
-#define XCAT(x, y)    XCAT_(x, y)
-#define XCAT_(x, y)   x ## y
 
 #define LPAR   (
 
@@ -124,38 +117,6 @@ static const sph_u64 IV512[] = {
 #define add_elt_s(mf, hf, j0m, j1m, j3m, j4m, j7m, j10m, j11m, j16) \
 	(SPH_T32(SPH_ROTL32(mf(j0m), j1m) + SPH_ROTL32(mf(j3m), j4m) \
 		- SPH_ROTL32(mf(j10m), j11m) + Ks(j16)) ^ hf(j7m))
-
-#define expand1s_inner(qf, mf, hf, i16, \
-		i0, i1, i2, i3, i4, i5, i6, i7, i8, \
-		i9, i10, i11, i12, i13, i14, i15, \
-		i0m, i1m, i3m, i4m, i7m, i10m, i11m) \
-	SPH_T32(ss1(qf(i0)) + ss2(qf(i1)) + ss3(qf(i2)) + ss0(qf(i3)) \
-		+ ss1(qf(i4)) + ss2(qf(i5)) + ss3(qf(i6)) + ss0(qf(i7)) \
-		+ ss1(qf(i8)) + ss2(qf(i9)) + ss3(qf(i10)) + ss0(qf(i11)) \
-		+ ss1(qf(i12)) + ss2(qf(i13)) + ss3(qf(i14)) + ss0(qf(i15)) \
-		+ add_elt_s(mf, hf, i0m, i1m, i3m, i4m, i7m, i10m, i11m, i16))
-
-#define expand1s(qf, mf, hf, i16) \
-	expand1s_(qf, mf, hf, i16, I16_ ## i16, M16_ ## i16)
-#define expand1s_(qf, mf, hf, i16, ix, iy) \
-	expand1s_inner LPAR qf, mf, hf, i16, ix, iy)
-
-#define expand2s_inner(qf, mf, hf, i16, \
-		i0, i1, i2, i3, i4, i5, i6, i7, i8, \
-		i9, i10, i11, i12, i13, i14, i15, \
-		i0m, i1m, i3m, i4m, i7m, i10m, i11m) \
-	SPH_T32(qf(i0) + rs1(qf(i1)) + qf(i2) + rs2(qf(i3)) \
-		+ qf(i4) + rs3(qf(i5)) + qf(i6) + rs4(qf(i7)) \
-		+ qf(i8) + rs5(qf(i9)) + qf(i10) + rs6(qf(i11)) \
-		+ qf(i12) + rs7(qf(i13)) + ss4(qf(i14)) + ss5(qf(i15)) \
-		+ add_elt_s(mf, hf, i0m, i1m, i3m, i4m, i7m, i10m, i11m, i16))
-
-#define expand2s(qf, mf, hf, i16) \
-	expand2s_(qf, mf, hf, i16, I16_ ## i16, M16_ ## i16)
-#define expand2s_(qf, mf, hf, i16, ix, iy) \
-	expand2s_inner LPAR qf, mf, hf, i16, ix, iy)
-
-#if SPH_64
 
 #define sb0(x)    (((x) >> 1) ^ SPH_T64((x) << 3) \
                   ^ SPH_ROTL64(x,  4) ^ SPH_ROTL64(x, 37))
@@ -251,13 +212,9 @@ static const sph_u64 Kb_tab[] = {
 
 #endif
 
-#endif
-
 #define MAKE_W(tt, i0, op01, i1, op12, i2, op23, i3, op34, i4) \
 	tt((M(i0) ^ H(i0)) op01 (M(i1) ^ H(i1)) op12 (M(i2) ^ H(i2)) \
 	op23 (M(i3) ^ H(i3)) op34 (M(i4) ^ H(i4)))
-
-#if SPH_64
 
 #define Wb0    MAKE_W(SPH_T64,  5, -,  7, +, 10, +, 13, +, 14)
 #define Wb1    MAKE_W(SPH_T64,  6, -,  8, +, 11, +, 14, -, 15)
@@ -364,8 +321,6 @@ static const sph_u64 Kb_tab[] = {
 
 #define Qb(j)   (qt[j])
 
-#endif
-
 #define FOLD(type, mkQ, tt, rol, mf, qf, dhf)   do { \
 		type qt[32], xl, xh; \
 		mkQ; \
@@ -407,13 +362,7 @@ static const sph_u64 Kb_tab[] = {
 			+ ((xl >> 2) ^ qf(22) ^ qf(15))); \
 	} while (0)
 
-#if SPH_64
-
 #define FOLDb   FOLD(sph_u64, MAKE_Qb, SPH_T64, SPH_ROTL64, M, Qb, dH)
-
-#endif
-
-#if SPH_64
 
 static void
 compress_big(const unsigned char *data, const sph_u64 h[16], sph_u64 dh[16])
@@ -540,10 +489,6 @@ bmw64_close(sph_bmw_big_context *sc, unsigned ub, unsigned n,
 		sph_enc64le(out + 8 * u, h1[v]);
 }
 
-#endif
-
-#if SPH_64
-
 /* see sph_bmw.h */
 void
 sph_bmw512_init(void *cc)
@@ -572,8 +517,6 @@ sph_bmw512_addbits_and_close(void *cc, unsigned ub, unsigned n, void *dst)
 	bmw64_close(cc, ub, n, dst, 8);
 	sph_bmw512_init(cc);
 }
-
-#endif
 
 #ifdef __cplusplus
 }

@@ -62,16 +62,10 @@ typedef struct {
 	unsigned char buf[64];    /* first field, for alignment */
 	size_t ptr;
 	union {
-#if SPH_64
 		sph_u64 wide[16];
-#endif
 		sph_u32 narrow[32];
 	} H;
-#if SPH_64
 	sph_u64 block_count;
-#else
-	sph_u32 block_count_high, block_count_low;
-#endif
 } sph_jh_context;
 
 /**

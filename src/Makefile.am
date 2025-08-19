@@ -73,6 +73,8 @@ LIBBITCOIN_WALLET_TOOL=libbitcoin_wallet_tool.a
 endif
 
 LIBBITCOIN_CRYPTO = $(LIBBITCOIN_CRYPTO_BASE)
+LIBBITCOIN_CRYPTO_SPH = crypto/libbitcoin_crypto_sph.la
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SPH)
 if ENABLE_SSE41
 LIBBITCOIN_CRYPTO_SSE41 = crypto/libbitcoin_crypto_sse41.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE41)
@@ -717,8 +719,16 @@ crypto_libbitcoin_crypto_avx2_la_CXXFLAGS += $(AVX2_CXXFLAGS)
 crypto_libbitcoin_crypto_avx2_la_CPPFLAGS += -DENABLE_AVX2
 crypto_libbitcoin_crypto_avx2_la_SOURCES = crypto/sha256_avx2.cpp
 
-# x11
-crypto_libbitcoin_crypto_base_la_SOURCES += \
+# See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libbitcoin_crypto_sph_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libbitcoin_crypto_sph_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libbitcoin_crypto_sph_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_sph_la_CFLAGS = $(SPHLIB_CFLAGS)
+crypto_libbitcoin_crypto_sph_la_CPPFLAGS += \
+  -DSPH_SMALL_FOOTPRINT_CUBEHASH=1 \
+  -DSPH_SMALL_FOOTPRINT_JH=1
+crypto_libbitcoin_crypto_sph_la_SOURCES = \
   crypto/x11/aes_helper.c \
   crypto/x11/blake.c \
   crypto/x11/bmw.c \
@@ -1008,7 +1018,7 @@ endif
 # dashconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libdashconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libdashconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_la_SOURCES) $(crypto_libbitcoin_crypto_sph_la_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 libdashconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
 libdashconsensus_la_LIBADD = $(LIBDASHBLS) $(LIBSECP256K1) $(GMP_LIBS)

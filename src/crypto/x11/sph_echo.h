@@ -64,9 +64,7 @@ typedef struct {
 	size_t ptr;
 	union {
 		sph_u32 Vs[8][4];
-#if SPH_64
 		sph_u64 Vb[8][2];
-#endif
 	} u;
 	sph_u32 C0, C1, C2, C3;
 } sph_echo_big_context;

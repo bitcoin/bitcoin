@@ -48,8 +48,6 @@ extern "C"{
 #include <stddef.h>
 #include "sph_types.h"
 
-#if SPH_64
-
 /**
  * Output size (in bits) for Skein-512.
  */
@@ -121,8 +119,6 @@ void sph_skein512_close(void *cc, void *dst);
  */
 void sph_skein512_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
-
-#endif
 
 #ifdef __cplusplus
 }

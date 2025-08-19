@@ -44,16 +44,10 @@ extern "C"{
 #include <stddef.h>
 #include "sph_types.h"
 
-#if SPH_64
-
 /**
  * Output size (in bits) for BLAKE-512.
  */
 #define SPH_SIZE_blake512   512
-
-#endif
-
-#if SPH_64
 
 /**
  * This structure is a context for BLAKE-384 and BLAKE-512 computations:
@@ -78,10 +72,6 @@ typedef struct {
  * identical to the common <code>sph_blake_small_context</code>.
  */
 typedef sph_blake_big_context sph_blake512_context;
-
-#endif
-
-#if SPH_64
 
 /**
  * Initialize a BLAKE-512 context. This process performs no memory allocation.
@@ -127,8 +117,6 @@ void sph_blake512_close(void *cc, void *dst);
  */
 void sph_blake512_addbits_and_close(
 	void *cc, unsigned ub, unsigned n, void *dst);
-
-#endif
 
 #ifdef __cplusplus
 }

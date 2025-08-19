@@ -43,6 +43,7 @@ bench_bench_dash_SOURCES = \
   bench/nanobench.cpp \
   bench/peer_eviction.cpp \
   bench/pool.cpp \
+  bench/pow_hash.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/strencodings.cpp \

@@ -58,18 +58,6 @@
 #endif
 
 /*
- * We want to define the types "sph_u32" and "sph_u64" which hold
- * unsigned values of at least, respectively, 32 and 64 bits. These
- * tests should select appropriate types for most platforms. The
- * macro "SPH_64" is defined if the 64-bit is supported.
- */
-
-#undef SPH_64
-#undef SPH_64_TRUE
-
-#if defined __STDC__ && __STDC_VERSION__ >= 199901L
-
-/*
  * On C99 implementations, we can use <stdint.h> to get an exact 64-bit
  * type, if any, or otherwise use a wider type (which must exist, for
  * C99 conformance).
@@ -84,7 +72,6 @@ typedef int32_t sph_s32;
 typedef uint_fast32_t sph_u32;
 typedef int_fast32_t sph_s32;
 #endif
-#if !SPH_NO_64
 #ifdef UINT64_MAX
 typedef uint64_t sph_u64;
 typedef int64_t sph_s64;
@@ -92,87 +79,9 @@ typedef int64_t sph_s64;
 typedef uint_fast64_t sph_u64;
 typedef int_fast64_t sph_s64;
 #endif
-#endif
 
 #define SPH_C32(x)    ((sph_u32)(x))
-#if !SPH_NO_64
 #define SPH_C64(x)    ((sph_u64)(x))
-#define SPH_64  1
-#endif
-
-#else
-
-/*
- * On non-C99 systems, we use "unsigned int" if it is wide enough,
- * "unsigned long" otherwise. This supports all "reasonable" architectures.
- * We have to be cautious: pre-C99 preprocessors handle constants
- * differently in '#if' expressions. Hence the shifts to test UINT_MAX.
- */
-
-#if ((UINT_MAX >> 11) >> 11) >= 0x3FF
-
-typedef unsigned int sph_u32;
-typedef int sph_s32;
-
-#define SPH_C32(x)    ((sph_u32)(x ## U))
-
-#else
-
-typedef unsigned long sph_u32;
-typedef long sph_s32;
-
-#define SPH_C32(x)    ((sph_u32)(x ## UL))
-
-#endif
-
-#if !SPH_NO_64
-
-/*
- * We want a 64-bit type. We use "unsigned long" if it is wide enough (as
- * is common on 64-bit architectures such as AMD64, Alpha or Sparcv9),
- * "unsigned long long" otherwise, if available. We use ULLONG_MAX to
- * test whether "unsigned long long" is available; we also know that
- * gcc features this type, even if the libc header do not know it.
- */
-
-#if ((ULONG_MAX >> 31) >> 31) >= 3
-
-typedef unsigned long sph_u64;
-typedef long sph_s64;
-
-#define SPH_C64(x)    ((sph_u64)(x ## UL))
-
-#define SPH_64  1
-
-#elif ((ULLONG_MAX >> 31) >> 31) >= 3 || defined __GNUC__
-
-typedef unsigned long long sph_u64;
-typedef long long sph_s64;
-
-#define SPH_C64(x)    ((sph_u64)(x ## ULL))
-
-#define SPH_64  1
-
-#else
-
-/*
- * No 64-bit type...
- */
-
-#endif
-
-#endif
-
-#endif
-
-/*
- * If the "unsigned long" type has length 64 bits or more, then this is
- * a "true" 64-bit architectures. This is also true with Visual C on
- * amd64, even though the "long" type is limited to 32 bits.
- */
-#if SPH_64 && (((ULONG_MAX >> 31) >> 31) >= 3 || defined _M_X64)
-#define SPH_64_TRUE   1
-#endif
 
 /*
  * Implementation note: some processors have specific opcodes to perform
@@ -184,13 +93,9 @@ typedef long long sph_s64;
 #define SPH_ROTL32(x, n)   SPH_T32(((x) << (n)) | ((x) >> (32 - (n))))
 #define SPH_ROTR32(x, n)   SPH_ROTL32(x, (32 - (n)))
 
-#if SPH_64
-
 #define SPH_T64(x)    ((x) & SPH_C64(0xFFFFFFFFFFFFFFFF))
 #define SPH_ROTL64(x, n)   SPH_T64(((x) << (n)) | ((x) >> (64 - (n))))
 #define SPH_ROTR64(x, n)   SPH_ROTL64(x, (64 - (n)))
-
-#endif
 
 /*
  * Define SPH_INLINE to be an "inline" qualifier, if available. We define
@@ -333,11 +238,7 @@ typedef long long sph_s64;
  * it again.
  */
 #if defined __GNUC__
-#if SPH_64_TRUE
 #define SPH_DETECT_PPC64_GCC         1
-#else
-#define SPH_DETECT_PPC32_GCC         1
-#endif
 #endif
 
 #if defined __BIG_ENDIAN__ || defined _BIG_ENDIAN
@@ -440,16 +341,12 @@ sph_bswap32(sph_u32 x)
 	return x;
 }
 
-#if SPH_64
-
 static SPH_INLINE sph_u64
 sph_bswap64(sph_u64 x)
 {
 	return ((sph_u64)sph_bswap32((sph_u32)x) << 32)
 		| (sph_u64)sph_bswap32((sph_u32)(x >> 32));
 }
-
-#endif
 
 #elif SPH_AMD64_GCC && !SPH_NO_ASM
 
@@ -465,16 +362,12 @@ sph_bswap32(sph_u32 x)
 	return x;
 }
 
-#if SPH_64
-
 static SPH_INLINE sph_u64
 sph_bswap64(sph_u64 x)
 {
 	__asm__ __volatile__ ("bswapq %0" : "=r" (x) : "0" (x));
 	return x;
 }
-
-#endif
 
 #else
 
@@ -486,8 +379,6 @@ sph_bswap32(sph_u32 x)
 		| ((x & SPH_C32(0x00FF00FF)) << 8);
 	return x;
 }
-
-#if SPH_64
 
 /**
  * Byte-swap a 64-bit value.
@@ -505,8 +396,6 @@ sph_bswap64(sph_u64 x)
 		| ((x & SPH_C64(0x00FF00FF00FF00FF)) << 8);
 	return x;
 }
-
-#endif
 
 #endif
 
@@ -830,8 +719,6 @@ sph_dec32le_aligned(const void *src)
 #endif
 }
 
-#if SPH_64
-
 /**
  * Encode a 64-bit value into the provided buffer (big endian convention).
  *
@@ -1130,7 +1017,5 @@ sph_dec64le_aligned(const void *src)
 		| ((sph_u64)(((const unsigned char *)src)[7]) << 56);
 #endif
 }
-
-#endif
 
 #endif
