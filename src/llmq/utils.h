@@ -5,6 +5,7 @@
 #ifndef BITCOIN_LLMQ_UTILS_H
 #define BITCOIN_LLMQ_UTILS_H
 
+#include <bls/bls.h>
 #include <gsl/pointers.h>
 #include <llmq/params.h>
 #include <saltedhasher.h>
@@ -56,8 +57,36 @@ void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, CConnman
                                const CSporkManager& sporkman, const CDeterministicMNList& tip_mn_list,
                                gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& myProTxHash);
 
+struct BlsCheck {
+    CBLSSignature m_sig;
+    std::vector<CBLSPublicKey> m_pubkeys;
+    uint256 m_msg_hash;
+    std::string m_id_string;
+
+    BlsCheck() = default;
+
+    BlsCheck(CBLSSignature sig, std::vector<CBLSPublicKey> pubkeys, uint256 msg_hash, std::string id_string) :
+        m_sig(sig),
+        m_pubkeys(pubkeys),
+        m_msg_hash(msg_hash),
+        m_id_string(id_string)
+    {
+    }
+
+    void swap(BlsCheck& obj)
+    {
+        std::swap(m_sig, obj.m_sig);
+        std::swap(m_pubkeys, obj.m_pubkeys);
+        std::swap(m_msg_hash, obj.m_msg_hash);
+        std::swap(m_id_string, obj.m_id_string);
+    }
+
+    bool operator()();
+};
+
 template <typename CacheType>
 void InitQuorumsCache(CacheType& cache, bool limit_by_connections = true);
+
 } // namespace utils
 } // namespace llmq
 

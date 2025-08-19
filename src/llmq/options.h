@@ -24,6 +24,11 @@ enum class QvvecSyncMode {
     OnlyIfTypeMember = 1,
 };
 
+/** Maximum number of dedicated script-checking threads allowed */
+static const int MAX_BLSCHECK_THREADS = 33;
+/** -parbls default (number of bls-checking threads, 0 = auto) */
+static const int DEFAULT_BLSCHECK_THREADS = 0;
+
 static constexpr bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY{true};
 
 // If true, we will connect to all new quorums and watch their communication
