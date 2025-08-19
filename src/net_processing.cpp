@@ -3537,7 +3537,7 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
     }
 }
 
-MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv)
+MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId node, std::string_view msg_type, CDataStream& vRecv)
 {
     if (msg_type != NetMsgType::PLATFORMBAN) return {};
 
@@ -3551,7 +3551,7 @@ MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId from, 
 
     const uint256 hash = ban_msg.GetHash();
 
-    LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s height: %d peer=%d\n", hash.ToString(), ban_msg.m_protx_hash.ToString(), ban_msg.m_requested_height, from);
+    LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s height: %d peer=%d\n", hash.ToString(), ban_msg.m_protx_hash.ToString(), ban_msg.m_requested_height, node);
 
     MessageProcessingResult ret{};
     const auto list = Assert(m_dmnman)->GetListAtChainTip();
