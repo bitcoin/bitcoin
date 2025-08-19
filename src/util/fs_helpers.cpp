@@ -193,8 +193,9 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
     int64_t nEndPos = (int64_t)offset + length;
     nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
     nFileSize.u.HighPart = nEndPos >> 32;
-    SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
-    SetEndOfFile(hFile);
+    if (SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN)) {
+        SetEndOfFile(hFile);
+    }
 #elif 0
     // OSX specific version
     // NOTE: Contrary to other OS versions, the OSX version assumes that
