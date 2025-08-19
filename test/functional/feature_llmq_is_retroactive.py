@@ -128,33 +128,31 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         assert txid in self.nodes[0].getblock(block, 1)['tx']
         self.wait_for_chainlocked_block_all_nodes(block)
 
-        self.log.info("testing retroactive signing with partially known TX and all nodes session timeout")
-        self.test_all_nodes_session_timeout(False)
+        self.log.info("testing retroactive signing with partially known TX and session timeout")
+        self.test_session_timeout(False)
         self.log.info("repeating test, but with cycled LLMQs")
-        self.test_all_nodes_session_timeout(True)
+        self.test_session_timeout(True)
 
-        self.log.info("testing retroactive signing with partially known TX and single node session timeout")
-        self.test_single_node_session_timeout(False)
-        self.log.info("repeating test, but with cycled LLMQs")
-        self.test_single_node_session_timeout(True)
 
-    def cycle_llmqs(self):
-        self.mine_quorum()
-        self.mine_quorum()
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
-
-    def test_all_nodes_session_timeout(self, do_cycle_llmqs):
+    def test_session_timeout(self, do_cycle_llmqs):
         set_node_times(self.nodes, self.mocktime)
         self.isolate_node(3)
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
-        txid = self.nodes[0].sendrawtransaction(rawtx)
-        txid = self.nodes[3].sendrawtransaction(rawtx)
+        txid_all_nodes = self.nodes[0].sendrawtransaction(rawtx)
+        txid_all_nodes = self.nodes[3].sendrawtransaction(rawtx)
+
+
+        rawtx_1 = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
+        rawtx_1 = self.nodes[0].fundrawtransaction(rawtx_1)['hex']
+        rawtx_1 = self.nodes[0].signrawtransactionwithwallet(rawtx_1)['hex']
+        txid_single_node = self.nodes[3].sendrawtransaction(rawtx_1)
+
         # Make sure nodes 1 and 2 received the TX before we continue
         self.bump_mocktime(30)
-        self.wait_for_tx(txid, self.nodes[1])
-        self.wait_for_tx(txid, self.nodes[2])
+        self.wait_for_tx(txid_all_nodes, self.nodes[1])
+        self.wait_for_tx(txid_all_nodes, self.nodes[2])
         # Make sure signing is done on nodes 1 and 2 (it's async)
         time.sleep(5)
         # Make the signing session for the IS lock timeout on nodes 1-3
@@ -164,48 +162,31 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # Make sure nodes actually try re-connecting quorum connections
         self.bump_mocktime(30)
         self.wait_for_mnauth(self.nodes[3], 2)
-        # node 3 fully reconnected but the signing session is already timed out on all nodes, so no IS lock
-        self.wait_for_instantlock(txid, self.nodes[0], False, 5)
-        if do_cycle_llmqs:
-            self.cycle_llmqs()
-            self.wait_for_instantlock(txid, self.nodes[0], False, 5)
-        # Make node 0 consider the TX as safe
-        self.bump_mocktime(10 * 60 + 1)
-        block = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
-        assert txid in self.nodes[0].getblock(block, 1)['tx']
-        self.wait_for_chainlocked_block_all_nodes(block)
 
-    def test_single_node_session_timeout(self, do_cycle_llmqs):
-        set_node_times(self.nodes, self.mocktime)
-        self.isolate_node(3)
-        rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
-        rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
-        txid = self.nodes[3].sendrawtransaction(rawtx)
-        time.sleep(2) # make sure signing is done on node 2 (it's async)
-        # Make the signing session for the IS lock timeout on node 3
-        self.bump_mocktime(61)
-        time.sleep(2) # make sure Cleanup() is called
-        self.reconnect_isolated_node(3, 0)
-        # Make sure nodes actually try re-connecting quorum connections
-        self.bump_mocktime(30)
-        self.wait_for_mnauth(self.nodes[3], 2)
-        self.nodes[0].sendrawtransaction(rawtx)
+        self.nodes[0].sendrawtransaction(rawtx_1)
         # Make sure nodes 1 and 2 received the TX
         self.bump_mocktime(30)
-        self.wait_for_tx(txid, self.nodes[1])
-        self.wait_for_tx(txid, self.nodes[2])
+        self.wait_for_tx(txid_single_node, self.nodes[1])
+        self.wait_for_tx(txid_single_node, self.nodes[2])
         self.bump_mocktime(30)
         # Make sure signing is done on nodes 1 and 2 (it's async)
-        # node 3 fully reconnected but the signing session is already timed out on it, so no IS lock
-        self.wait_for_instantlock(txid, self.nodes[0], False, 5)
+        time.sleep(5)
+
+        # node 3 fully reconnected but the signing session is already timed out, so no IS lock
+        self.wait_for_instantlock(txid_all_nodes, self.nodes[0], False, 5)
+        self.wait_for_instantlock(txid_single_node, self.nodes[0], False, 5)
         if do_cycle_llmqs:
-            self.cycle_llmqs()
-            self.wait_for_instantlock(txid, self.nodes[0], False, 5)
+            self.mine_quorum()
+            self.mine_quorum()
+            self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
+
+            self.wait_for_instantlock(txid_all_nodes, self.nodes[0], False, 5)
+            self.wait_for_instantlock(txid_single_node, self.nodes[0], False, 5)
         # Make node 0 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
         block = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
-        assert txid in self.nodes[0].getblock(block, 1)['tx']
+        assert txid_all_nodes in self.nodes[0].getblock(block, 1)['tx']
+        assert txid_single_node in self.nodes[0].getblock(block, 1)['tx']
         self.wait_for_chainlocked_block_all_nodes(block)
 
 if __name__ == '__main__':
