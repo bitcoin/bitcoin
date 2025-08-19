@@ -218,14 +218,27 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
 #endif
     // Fallback version
     // TODO: just write one byte per block
-    static const char buf[65536] = {};
+    uint8_t buf[65536];
     if (fseek(file, offset, SEEK_SET)) {
         return;
     }
+    clearerr(file);
     while (length > 0) {
         unsigned int now = 65536;
         if (length < now)
             now = length;
+        const size_t rlen = fread(buf, 1, now, file);
+        if (rlen < now) {
+            if (ferror(file)) {
+                // Don't clobber anything, just give up
+                clearerr(file);
+                return;
+            }
+            memset(&buf[rlen], 0, now - rlen);
+            if (0 != fseek(file, -rlen, SEEK_CUR)) {
+                return;
+            }
+        }
         fwrite(buf, 1, now, file); // allowed to fail; this function is advisory anyway
         length -= now;
     }
