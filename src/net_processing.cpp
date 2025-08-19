@@ -3567,13 +3567,13 @@ MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId node, 
         ret.m_error = MisbehavingError{100};
         return ret;
     }
-    constexpr int day_of_blocks = 576;
+    static constexpr int PLATFORM_BAN_WINDOW_BLOCKS = 576;
     int tipHeight = WITH_LOCK(cs_main, return m_chainman.ActiveChainstate().m_chain.Height());
-    if (tipHeight < ban_msg.m_requested_height || tipHeight - day_of_blocks > ban_msg.m_requested_height) {
-        // m_requested_height is inside the range [TipHeight - 576 - 5, TipHeight + 5]
+    if (tipHeight < ban_msg.m_requested_height || tipHeight - PLATFORM_BAN_WINDOW_BLOCKS > ban_msg.m_requested_height) {
+        // m_requested_height is inside the range [TipHeight - PLATFORM_BAN_WINDOW_BLOCKS - 5, TipHeight + 5]
         LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s unexpected height: %d tip: %d\n", hash.ToString(), ban_msg.m_protx_hash.ToString(), ban_msg.m_requested_height, tipHeight);
-        if (tipHeight + 5 < ban_msg.m_requested_height || tipHeight - day_of_blocks - 5 > ban_msg.m_requested_height) {
-            // m_requested_height is outside the range [TipHeight - 576 - 5, TipHeight + 5]
+        if (tipHeight + 5 < ban_msg.m_requested_height || tipHeight - PLATFORM_BAN_WINDOW_BLOCKS - 5 > ban_msg.m_requested_height) {
+            // m_requested_height is outside the range [TipHeight - PLATFORM_BAN_WINDOW_BLOCKS - 5, TipHeight + 5]
             ret.m_error = MisbehavingError{10};
             return ret;
         }
