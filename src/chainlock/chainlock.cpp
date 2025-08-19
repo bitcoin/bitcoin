@@ -153,13 +153,14 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
     }
 
     const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(clsig.getBlockHash()));
+    const CInv clsig_inv(MSG_CLSIG, hash);
 
     {
         LOCK(cs);
         bestChainLockHash = hash;
         bestChainLock = clsig;
 
-        if (pindex != nullptr) {
+        if (pindex) {
             if (pindex->nHeight != clsig.getHeight()) {
                 // Should not happen, same as the conflict check from above.
                 LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
@@ -167,20 +168,13 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
                 // Note: not relaying clsig here
                 return {};
             }
-
             bestChainLockWithKnownBlock = bestChainLock;
             bestChainLockBlockIndex = pindex;
+        } else {
+            // We don't know the block/header for this CLSIG yet, so bail out for now and when the
+            // block/header later comes in, we will enforce the correct chain. We still relay further.
+            return clsig_inv;
         }
-        // else if (pindex == nullptr)
-        // Note: make sure to still relay clsig further.
-    }
-
-    CInv clsigInv(MSG_CLSIG, hash);
-
-    if (pindex == nullptr) {
-        // we don't know the block/header for this CLSIG yet, so bail out for now
-        // when the block or the header later comes in, we will enforce the correct chain
-        return clsigInv;
     }
 
     scheduler->scheduleFromNow(
@@ -192,7 +186,8 @@ MessageProcessingResult CChainLocksHandler::ProcessNewChainLock(const NodeId fro
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n", __func__,
              clsig.ToString(), from);
-    return clsigInv;
+
+    return clsig_inv;
 }
 
 void CChainLocksHandler::AcceptedBlockHeader(gsl::not_null<const CBlockIndex*> pindexNew)
