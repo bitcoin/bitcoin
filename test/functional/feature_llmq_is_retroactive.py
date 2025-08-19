@@ -27,13 +27,13 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
     def check_no_is(self, txid, node):
         try:
             self.log.info(f"Expecting no InstantLock for {txid}")
-            return node.getrawtransaction(txid, True)["instantlock"]
+            assert not node.getrawtransaction(txid, True)["instantlock"]
         except:
-            return False
+            assert False
 
     def sleep_and_check_no_is(self, txid, node, sleep):
         time.sleep(sleep)
-        return self.check_no_is(node, txid)
+        self.check_no_is(txid, node)
 
     # random delay before tx is actually send by network could take up to 30 seconds
     def wait_for_tx(self, txid, node, expected=True, timeout=60):
