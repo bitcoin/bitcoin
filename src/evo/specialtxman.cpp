@@ -459,14 +459,6 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             }
         }
         newList.UpdateMN(payee->proTxHash, newState);
-        if (debugLogs) {
-            dmn = newList.GetMN(payee->proTxHash);
-            // Since the previous GetMN query returned a value, after an update, querying the same
-            // hash *must* give us a result. If it doesn't, that would be a potential logic bug.
-            assert(dmn);
-            LogPrint(BCLog::MNPAYMENTS, "%s -- MN %s, nConsecutivePayments=%d\n", __func__, dmn->proTxHash.ToString(),
-                     dmn->pdmnState->nConsecutivePayments);
-        }
     }
 
     // reset nConsecutivePayments on non-paid EvoNodes
