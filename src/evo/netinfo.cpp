@@ -244,13 +244,18 @@ NetInfoStatus MnNetInfo::Validate() const
 
 UniValue MnNetInfo::ToJson() const
 {
+    if (IsEmpty()) {
+        return UniValue{UniValue::VARR};
+    }
     return ArrFromService(GetPrimary());
 }
 
 std::string MnNetInfo::ToString() const
 {
-    // Extra padding to account for padding done by the calling function.
-    return strprintf("MnNetInfo()\n"
-                     "    %s\n",
-                     m_addr.ToString());
+    std::string ret{"MnNetInfo()\n"};
+    if (!IsEmpty()) {
+        // Extra padding to account for padding done by the calling function.
+        ret += strprintf("    %s\n", m_addr.ToString());
+    }
+    return ret;
 }
