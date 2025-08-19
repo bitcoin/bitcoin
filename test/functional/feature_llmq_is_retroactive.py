@@ -175,8 +175,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.wait_for_instantlock(txid_all_nodes, self.nodes[0], False, 5)
         self.wait_for_instantlock(txid_single_node, self.nodes[0], False, 5)
         if do_cycle_llmqs:
-            self.mine_quorum()
-            self.mine_quorum()
+            self.mine_cycle_quorum()
+            self.mine_cycle_quorum()
             self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
 
             self.wait_for_instantlock(txid_all_nodes, self.nodes[0], False, 5)
