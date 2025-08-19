@@ -26,6 +26,8 @@ DEFAULT_PORT_MAINNET_CORE_P2P = 9999
 # See CRegTestParams in src/chainparams.cpp
 DEFAULT_PORT_PLATFORM_P2P = 22200
 DEFAULT_PORT_PLATFORM_HTTP = 22201
+# See CDeterministicMNStateDiff::ToJson() in src/evo/dmnstate.h
+DMNSTATE_DIFF_DUMMY_ADDR = "255.255.255.255"
 
 class Node:
     mn: MasternodeInfo
@@ -240,13 +242,18 @@ class NetInfoTest(BitcoinTestFramework):
         self.connect_nodes(self.node_evo.mn.nodeIdx, self.node_simple.index) # Needed as restarts don't reconnect nodes
 
         # CProUpServTx::ToJson() <- TxToUniv() <- TxToJSON() <- getrawtransaction
-        proupservtx_hash = self.node_evo.update_mn(self, f"127.0.0.1:{self.node_evo.mn.nodePort+1}", DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP)
+        # We need to update *thrice*, the first time to incorrect values and the second time, (back) to correct values and the third time, only
+        # updating Platform fields to trigger the conditions needed to report the dummy address
+        proupservtx_hash = self.node_evo.update_mn(self, f"127.0.0.1:{self.node_evo.mn.nodePort + 10}", DEFAULT_PORT_PLATFORM_P2P + 10, DEFAULT_PORT_PLATFORM_HTTP + 10)
         proupservtx_rpc = self.node_evo.node.getrawtransaction(proupservtx_hash, True)
 
-        # We need to update *twice*, the first time to incorrect values and the second time, back to correct values.
-        # This is to make sure that the fields we need to check against are reflected in the diff.
+        # Restore back to defaults
         proupservtx_hash = self.node_evo.update_mn(self, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP)
         proupservtx_rpc = self.node_evo.node.getrawtransaction(proupservtx_hash, True)
+
+        # Revert back to incorrect values but only for Platform fields
+        proupservtx_hash_pl = self.node_evo.update_mn(self, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P + 10, DEFAULT_PORT_PLATFORM_HTTP + 10)
+        proupservtx_rpc_pl = self.node_evo.node.getrawtransaction(proupservtx_hash_pl, True)
 
         # CSimplifiedMNListEntry::ToJson() <- CSimplifiedMNListDiff::mnList <- CSimplifiedMNListDiff::ToJson() <- protx_diff
         masternode_active_height: int = masternode_status['dmnState']['registeredHeight']
@@ -255,6 +262,10 @@ class NetInfoTest(BitcoinTestFramework):
         # CDeterministicMNStateDiff::ToJson() <- CDeterministicMNListDiff::updatedMns <- protx_listdiff
         proupservtx_height = proupservtx_rpc['height']
         protx_listdiff_rpc = self.node_evo.node.protx('listdiff', proupservtx_height - 1, proupservtx_height)
+
+        # If the core P2P address wasn't updated and the platform fields were, CDeterministicMNStateDiff will return a dummy address
+        proupservtx_height_pl = proupservtx_rpc_pl['height']
+        protx_listdiff_rpc_pl = self.node_evo.node.protx('listdiff', proupservtx_height_pl - 1, proupservtx_height_pl)
 
         self.log.info("Test RPCs return an 'addresses' field")
         assert "addresses" in proregtx_rpc['proRegTx'].keys()
@@ -269,8 +280,12 @@ class NetInfoTest(BitcoinTestFramework):
         self.check_netinfo_fields(proupservtx_rpc['proUpServTx']['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, DEFAULT_PORT_PLATFORM_P2P)
         # CSimplifiedMNListEntry doesn't store platform P2P network information before extended addresses
         self.check_netinfo_fields(protx_diff_rpc['mnList'][0]['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, None)
-        # TODO: Fix reporting for CDeterministicMNStateDiff
-        self.check_netinfo_fields(protx_listdiff_rpc['updatedMNs'][0][proregtx_hash]['addresses'], self.node_evo.mn.nodePort, None, None)
+        # CDeterministicMNStateDiff will fill in the correct address if the core P2P address was updated *alongside* platform fields
+        self.check_netinfo_fields(protx_listdiff_rpc['updatedMNs'][0][proregtx_hash]['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, DEFAULT_PORT_PLATFORM_P2P)
+        # CDeterministicMNStateDiff will use a dummy address if the core P2P address wasn't updated but Platform fields were to ensure changes are reported
+        assert "core_p2p" not in protx_listdiff_rpc_pl['updatedMNs'][0][proregtx_hash]['addresses'].keys()
+        assert_equal(protx_listdiff_rpc_pl['updatedMNs'][0][proregtx_hash]['addresses']['platform_https'][0], f"{DMNSTATE_DIFF_DUMMY_ADDR}:{DEFAULT_PORT_PLATFORM_HTTP + 10}")
+        assert_equal(protx_listdiff_rpc_pl['updatedMNs'][0][proregtx_hash]['addresses']['platform_p2p'][0], f"{DMNSTATE_DIFF_DUMMY_ADDR}:{DEFAULT_PORT_PLATFORM_P2P + 10}")
 
         self.log.info("Test RPCs by default no longer return a 'service' field")
         assert "service" not in proregtx_rpc['proRegTx'].keys()
