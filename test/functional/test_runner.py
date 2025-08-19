@@ -138,6 +138,7 @@ BASE_SCRIPTS = [
     'feature_llmq_singlenode.py', # NOTE: needs dash_hash to pass
     'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
     'feature_mnehf.py', # NOTE: needs dash_hash to pass
+    'feature_masternode_params.py', # NOTE: needs dash_hash to pass
     'feature_governance.py --legacy-wallet',
     'feature_governance.py --descriptors',
     'feature_governance_cl.py --legacy-wallet',
