@@ -34,8 +34,6 @@ using node::fReindex;
 using node::GetTransaction;
 
 namespace llmq {
-static constexpr std::string_view INPUTLOCK_REQUESTID_PREFIX{"inlock"};
-
 namespace {
 template <typename T>
     requires std::same_as<T, CTxIn> || std::same_as<T, COutPoint>
@@ -45,7 +43,7 @@ std::unordered_set<uint256, StaticSaltedHasher> GetIdsFromLockable(const std::ve
     if (vec.empty()) return ret;
     ret.reserve(vec.size());
     for (const auto& in : vec) {
-        ret.emplace(::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in)));
+        ret.emplace(instantsend::GenInputLockRequestId(in));
     }
     return ret;
 }

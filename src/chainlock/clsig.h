@@ -13,8 +13,6 @@
 #include <cstdint>
 
 namespace chainlock {
-extern const std::string CLSIG_REQUESTID_PREFIX;
-
 struct ChainLockSig {
 private:
     int32_t nHeight{-1};
@@ -38,6 +36,9 @@ public:
         READWRITE(obj.nHeight, obj.blockHash, obj.sig);
     }
 };
+
+//! Generate clsig request ID with block height
+uint256 GenSigRequestId(const int32_t nHeight);
 } // namespace chainlock
 
 #endif // BITCOIN_CHAINLOCK_CLSIG_H

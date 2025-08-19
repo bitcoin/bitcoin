@@ -6,8 +6,10 @@
 
 #include <tinyformat.h>
 
+#include <string_view>
+
 namespace chainlock {
-const std::string CLSIG_REQUESTID_PREFIX = "clsig";
+static constexpr std::string_view CLSIG_REQUESTID_PREFIX{"clsig"};
 
 ChainLockSig::ChainLockSig() = default;
 ChainLockSig::~ChainLockSig() = default;
@@ -22,5 +24,10 @@ ChainLockSig::ChainLockSig(int32_t nHeight, const uint256& blockHash, const CBLS
 std::string ChainLockSig::ToString() const
 {
     return strprintf("ChainLockSig(nHeight=%d, blockHash=%s)", nHeight, blockHash.ToString());
+}
+
+uint256 GenSigRequestId(const int32_t nHeight)
+{
+    return ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, nHeight));
 }
 } // namespace chainlock

@@ -15,9 +15,9 @@
 using node::ReadBlockFromDisk;
 
 namespace chainlock {
-ChainLockSigner::ChainLockSigner(CChainState& chainstate, ChainLockSignerParent& clhandler, llmq::CSigningManager& sigman,
-                                 llmq::CSigSharesManager& shareman, CSporkManager& sporkman,
-                                 const CMasternodeSync& mn_sync) :
+ChainLockSigner::ChainLockSigner(CChainState& chainstate, ChainLockSignerParent& clhandler,
+                                 llmq::CSigningManager& sigman, llmq::CSigSharesManager& shareman,
+                                 CSporkManager& sporkman, const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     m_clhandler{clhandler},
     m_sigman{sigman},
@@ -56,7 +56,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
 
     const CBlockIndex* pindex = WITH_LOCK(::cs_main, return m_chainstate.m_chain.Tip());
 
-    if (pindex->pprev == nullptr) {
+    if (!pindex || !pindex->pprev) {
         return;
     }
 
@@ -85,7 +85,8 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
         return;
     }
 
-    LogPrint(BCLog::CHAINLOCKS, "%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
+    LogPrint(BCLog::CHAINLOCKS, "%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(),
+             pindex->nHeight);
 
     // When the new IX system is activated, we only try to ChainLock blocks which include safe transactions. A TX is
     // considered safe when it is islocked or at least known since 10 minutes (from mempool or block). These checks are
@@ -94,10 +95,10 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
     if (isman.IsInstantSendEnabled() && isman.RejectConflictingBlocks()) {
         const auto* pindexWalk = pindex;
         while (pindexWalk != nullptr) {
-            if (pindex->nHeight - pindexWalk->nHeight > 5) {
-                // no need to check further down, 6 confs is safe to assume that TXs below this height won't be
+            if (pindex->nHeight - pindexWalk->nHeight > TX_CONFIRM_THRESHOLD) {
+                // no need to check further down, safe to assume that TXs below this height won't be
                 // islocked anymore if they aren't already
-                LogPrint(BCLog::CHAINLOCKS, "%s -- tip and previous 5 blocks all safe\n", __func__);
+                LogPrint(BCLog::CHAINLOCKS, "%s -- tip and previous %d blocks all safe\n", __func__, TX_CONFIRM_THRESHOLD);
                 break;
             }
             if (m_clhandler.HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
@@ -114,8 +115,9 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
 
             for (const auto& txid : *txids) {
                 if (!m_clhandler.IsTxSafeForMining(txid) && !isman.IsLocked(txid)) {
-                    LogPrint(BCLog::CHAINLOCKS, "%s -- not signing block %s due to TX %s not being islocked and not old enough.\n", __func__,
-                              pindexWalk->GetBlockHash().ToString(), txid.ToString());
+                    LogPrint(BCLog::CHAINLOCKS, /* Continued */
+                             "%s -- not signing block %s due to TX %s not being islocked and not old enough.\n",
+                             __func__, pindexWalk->GetBlockHash().ToString(), txid.ToString());
                     return;
                 }
             }
@@ -124,7 +126,7 @@ void ChainLockSigner::TrySignChainTip(const llmq::CInstantSendManager& isman)
         }
     }
 
-    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
+    uint256 requestId = GenSigRequestId(pindex->nHeight);
     uint256 msgHash = pindex->GetBlockHash();
 
     if (m_clhandler.GetBestChainLockHeight() >= pindex->nHeight) {
@@ -190,6 +192,9 @@ ChainLockSigner::BlockTxs::mapped_type ChainLockSigner::GetBlockTxs(const uint25
         {
             LOCK(::cs_main);
             const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(blockHash);
+            if (!pindex) {
+                return nullptr;
+            }
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
                 return nullptr;
@@ -243,9 +248,11 @@ std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> Ch
     AssertLockNotHeld(cs_signer);
     std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> removed;
     LOCK2(::cs_main, cs_signer);
-    for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
+    for (auto it = blockTxs.begin(); it != blockTxs.end();) {
         const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);
-        if (m_clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        if (!pindex) {
+            it = blockTxs.erase(it);
+        } else if (m_clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             removed.push_back(it->second);
             it = blockTxs.erase(it);
         } else if (m_clhandler.HasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {

@@ -8,9 +8,10 @@
 #include <primitives/transaction.h>
 #include <util/hasher.h>
 
-#include <string>
+#include <string_view>
 #include <unordered_set>
 
+static constexpr std::string_view INPUTLOCK_REQUESTID_PREFIX{"inlock"};
 static constexpr std::string_view ISLOCK_REQUESTID_PREFIX{"islock"};
 
 namespace instantsend {
@@ -36,4 +37,12 @@ bool InstantSendLock::TriviallyValid() const
     const std::unordered_set<COutPoint, SaltedOutpointHasher> inputs_set{inputs.begin(), inputs.end()};
     return inputs_set.size() == inputs.size();
 }
+
+template <typename T>
+uint256 GenInputLockRequestId(const T& val)
+{
+    return ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, val));
+}
+template uint256 GenInputLockRequestId(const COutPoint& val);
+template uint256 GenInputLockRequestId(const CTxIn& val);
 } // namespace instantsend
