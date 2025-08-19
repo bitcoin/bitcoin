@@ -3553,9 +3553,9 @@ MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId node, 
 
     LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s height: %d peer=%d\n", hash.ToString(), ban_msg.m_protx_hash.ToString(), ban_msg.m_requested_height, node);
 
-    WITH_LOCK(::cs_main, EraseObjectRequest(node, CInv{MSG_PLATFORM_BAN, hash}));
-
     MessageProcessingResult ret{};
+    ret.m_to_erase = CInv{MSG_PLATFORM_BAN, hash};
+
     const auto list = Assert(m_dmnman)->GetListAtChainTip();
     auto dmn = list.GetMN(ban_msg.m_protx_hash);
     if (!dmn) {
