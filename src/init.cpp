@@ -2043,6 +2043,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             case ChainstateLoadingError::ERROR_COMMITING_EVO_DB:
                 strLoadError = _("Failed to commit Evo database");
                 break;
+            case ChainstateLoadingError::ERROR_UPGRADING_EVO_DB:
+                strLoadError = _("Failed to upgrade Evo database");
+                break;
             case ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB:
                 strLoadError = _("Error upgrading evo database for EHF");
                 break;

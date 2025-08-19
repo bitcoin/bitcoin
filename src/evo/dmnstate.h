@@ -35,6 +35,7 @@ private:
     int nPoSeBanHeight{-1};
 
     friend class CDeterministicMNStateDiff;
+    friend class CDeterministicMNStateDiffLegacy;
 
 public:
     int nVersion{ProTxVersion::LegacyBLS};
@@ -153,25 +154,25 @@ class CDeterministicMNStateDiff
 {
 public:
     enum Field : uint32_t {
-        Field_nRegisteredHeight = 0x0001,
-        Field_nLastPaidHeight = 0x0002,
-        Field_nPoSePenalty = 0x0004,
-        Field_nPoSeRevivedHeight = 0x0008,
-        Field_nPoSeBanHeight = 0x0010,
-        Field_nRevocationReason = 0x0020,
-        Field_confirmedHash = 0x0040,
-        Field_confirmedHashWithProRegTxHash = 0x0080,
-        Field_keyIDOwner = 0x0100,
-        Field_pubKeyOperator = 0x0200,
-        Field_keyIDVoting = 0x0400,
-        Field_netInfo = 0x0800,
-        Field_scriptPayout = 0x1000,
-        Field_scriptOperatorPayout = 0x2000,
-        Field_nConsecutivePayments = 0x4000,
-        Field_platformNodeID = 0x8000,
-        Field_platformP2PPort = 0x10000,
-        Field_platformHTTPPort = 0x20000,
-        Field_nVersion = 0x40000,
+        Field_nVersion = 0x0001,
+        Field_nRegisteredHeight = 0x0002,
+        Field_nLastPaidHeight = 0x0004,
+        Field_nPoSePenalty = 0x0008,
+        Field_nPoSeRevivedHeight = 0x0010,
+        Field_nPoSeBanHeight = 0x0020,
+        Field_nRevocationReason = 0x0040,
+        Field_confirmedHash = 0x0080,
+        Field_confirmedHashWithProRegTxHash = 0x0100,
+        Field_keyIDOwner = 0x0200,
+        Field_pubKeyOperator = 0x0400,
+        Field_keyIDVoting = 0x0800,
+        Field_netInfo = 0x1000,
+        Field_scriptPayout = 0x2000,
+        Field_scriptOperatorPayout = 0x4000,
+        Field_nConsecutivePayments = 0x8000,
+        Field_platformNodeID = 0x10000,
+        Field_platformP2PPort = 0x20000,
+        Field_platformHTTPPort = 0x40000,
     };
 
 private:
@@ -185,6 +186,7 @@ private:
 
 #define DMN_STATE_MEMBER(name) Member<&CDeterministicMNState::name, Field_##name>{}
     static constexpr auto members = boost::hana::make_tuple(
+        DMN_STATE_MEMBER(nVersion),
         DMN_STATE_MEMBER(nRegisteredHeight),
         DMN_STATE_MEMBER(nLastPaidHeight),
         DMN_STATE_MEMBER(nPoSePenalty),
@@ -202,8 +204,7 @@ private:
         DMN_STATE_MEMBER(nConsecutivePayments),
         DMN_STATE_MEMBER(platformNodeID),
         DMN_STATE_MEMBER(platformP2PPort),
-        DMN_STATE_MEMBER(platformHTTPPort),
-        DMN_STATE_MEMBER(nVersion)
+        DMN_STATE_MEMBER(platformHTTPPort)
     );
 #undef DMN_STATE_MEMBER
 
@@ -230,8 +231,8 @@ public:
                 }
             }
         });
-        if (fields & Field_pubKeyOperator) {
-            // pubKeyOperator needs nVersion
+        if ((fields & Field_pubKeyOperator) || (fields & Field_netInfo)) {
+            // pubKeyOperator and netInfo need nVersion
             state.nVersion = b.nVersion;
             fields |= Field_nVersion;
         }
@@ -245,21 +246,21 @@ public:
     {
         READWRITE(VARINT(obj.fields));
 
-        // NOTE: reading pubKeyOperator requires nVersion
-        bool read_pubkey{false};
+        if (((obj.fields & Field_pubKeyOperator) || (obj.fields & Field_netInfo)) && !(obj.fields & Field_nVersion)) {
+            // pubKeyOperator and netInfo need nVersion
+            throw std::ios_base::failure("Invalid data, nVersion unset when pubKeyOperator or netInfo set");
+        }
+
         boost::hana::for_each(members, [&](auto&& member) {
             using BaseType = std::decay_t<decltype(member)>;
             if constexpr (BaseType::mask == Field_pubKeyOperator) {
                 if (obj.fields & member.mask) {
-                    SER_READ(obj, read_pubkey = true);
                     READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator), obj.state.nVersion == ProTxVersion::LegacyBLS));
                 }
             } else if constexpr (BaseType::mask == Field_netInfo) {
                 if (obj.fields & member.mask) {
-                    // As nVersion is stored after netInfo, we use a magic word to determine the underlying implementation
-                    // TODO: Implement this
                     READWRITE(NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.state.netInfo),
-                                                /*is_extended=*/false));
+                                                obj.state.nVersion >= ProTxVersion::ExtAddr));
                 }
             } else {
                 if (obj.fields & member.mask) {
@@ -267,11 +268,6 @@ public:
                 }
             }
         });
-
-        if (read_pubkey) {
-            SER_READ(obj, obj.fields |= Field_nVersion);
-            SER_READ(obj, obj.state.pubKeyOperator.SetLegacy(obj.state.nVersion == ProTxVersion::LegacyBLS));
-        }
     }
 
     void ApplyToState(CDeterministicMNState& target) const
@@ -281,6 +277,139 @@ public:
                 member.get(target) = member.get(state);
             }
         });
+    }
+};
+
+// Legacy deserializer class
+class CDeterministicMNStateDiffLegacy
+{
+private:
+    // Legacy field enum with original bit positions
+    enum LegacyField : uint32_t {
+        LegacyField_nRegisteredHeight = 0x0001,
+        LegacyField_nLastPaidHeight = 0x0002,
+        LegacyField_nPoSePenalty = 0x0004,
+        LegacyField_nPoSeRevivedHeight = 0x0008,
+        LegacyField_nPoSeBanHeight = 0x0010,
+        LegacyField_nRevocationReason = 0x0020,
+        LegacyField_confirmedHash = 0x0040,
+        LegacyField_confirmedHashWithProRegTxHash = 0x0080,
+        LegacyField_keyIDOwner = 0x0100,
+        LegacyField_pubKeyOperator = 0x0200,
+        LegacyField_keyIDVoting = 0x0400,
+        LegacyField_netInfo = 0x0800,
+        LegacyField_scriptPayout = 0x1000,
+        LegacyField_scriptOperatorPayout = 0x2000,
+        LegacyField_nConsecutivePayments = 0x4000,
+        LegacyField_platformNodeID = 0x8000,
+        LegacyField_platformP2PPort = 0x10000,
+        LegacyField_platformHTTPPort = 0x20000,
+        LegacyField_nVersion = 0x40000,
+    };
+
+    // Legacy member template with old bit positions
+    template <auto CDeterministicMNState::*Field, uint32_t Mask>
+    struct LegacyMember {
+        static constexpr uint32_t mask = Mask;
+        static auto& get(CDeterministicMNState& state) { return state.*Field; }
+        static const auto& get(const CDeterministicMNState& state) { return state.*Field; }
+    };
+
+#define LEGACY_DMN_STATE_MEMBER(name) \
+    LegacyMember<&CDeterministicMNState::name, LegacyField_##name> {}
+    static constexpr auto legacy_members = boost::hana::make_tuple(
+        LEGACY_DMN_STATE_MEMBER(nRegisteredHeight),
+        LEGACY_DMN_STATE_MEMBER(nLastPaidHeight),
+        LEGACY_DMN_STATE_MEMBER(nPoSePenalty),
+        LEGACY_DMN_STATE_MEMBER(nPoSeRevivedHeight),
+        LEGACY_DMN_STATE_MEMBER(nPoSeBanHeight),
+        LEGACY_DMN_STATE_MEMBER(nRevocationReason),
+        LEGACY_DMN_STATE_MEMBER(confirmedHash),
+        LEGACY_DMN_STATE_MEMBER(confirmedHashWithProRegTxHash),
+        LEGACY_DMN_STATE_MEMBER(keyIDOwner),
+        LEGACY_DMN_STATE_MEMBER(pubKeyOperator),
+        LEGACY_DMN_STATE_MEMBER(keyIDVoting),
+        LEGACY_DMN_STATE_MEMBER(netInfo),
+        LEGACY_DMN_STATE_MEMBER(scriptPayout),
+        LEGACY_DMN_STATE_MEMBER(scriptOperatorPayout),
+        LEGACY_DMN_STATE_MEMBER(nConsecutivePayments),
+        LEGACY_DMN_STATE_MEMBER(platformNodeID),
+        LEGACY_DMN_STATE_MEMBER(platformP2PPort),
+        LEGACY_DMN_STATE_MEMBER(platformHTTPPort),
+        LEGACY_DMN_STATE_MEMBER(nVersion)
+    );
+#undef LEGACY_DMN_STATE_MEMBER
+
+public:
+    uint32_t fields{0};
+    CDeterministicMNState state;
+
+    CDeterministicMNStateDiffLegacy() = default;
+
+    template <typename Stream>
+    CDeterministicMNStateDiffLegacy(deserialize_type, Stream& s)
+    {
+        s >> *this;
+    }
+
+    // Deserialize using legacy format
+    SERIALIZE_METHODS(CDeterministicMNStateDiffLegacy, obj)
+    {
+        READWRITE(VARINT(obj.fields));
+
+        boost::hana::for_each(legacy_members, [&](auto&& member) {
+            using BaseType = std::decay_t<decltype(member)>;
+            if constexpr (BaseType::mask == LegacyField_pubKeyOperator) {
+                if (obj.fields & member.mask) {
+                    // We'll set proper scheme later in MigrateLegacyDiffs()
+                    READWRITE(CBLSLazyPublicKeyVersionWrapper(const_cast<CBLSLazyPublicKey&>(obj.state.pubKeyOperator),
+                                                              /*legacy=*/true));
+                }
+            } else if constexpr (BaseType::mask == LegacyField_netInfo) {
+                if (obj.fields & member.mask) {
+                    // Legacy format supports non-extended addresses only
+                    READWRITE(NetInfoSerWrapper(const_cast<std::shared_ptr<NetInfoInterface>&>(obj.state.netInfo),
+                                                /*is_extended=*/false));
+                }
+            } else {
+                if (obj.fields & member.mask) {
+                    READWRITE(member.get(obj.state));
+                }
+            }
+        });
+    }
+
+    // Convert to new format
+    CDeterministicMNStateDiff ToNewFormat() const
+    {
+        CDeterministicMNStateDiff newDiff;
+        newDiff.state = state;
+
+        // Convert field bits to new positions
+#define LEGACY_DMN_STATE_BITS(name) \
+    if (fields & LegacyField_##name) newDiff.fields |= CDeterministicMNStateDiff::Field_##name;
+        LEGACY_DMN_STATE_BITS(nVersion)
+        LEGACY_DMN_STATE_BITS(nRegisteredHeight)
+        LEGACY_DMN_STATE_BITS(nLastPaidHeight)
+        LEGACY_DMN_STATE_BITS(nPoSePenalty)
+        LEGACY_DMN_STATE_BITS(nPoSeRevivedHeight)
+        LEGACY_DMN_STATE_BITS(nPoSeBanHeight)
+        LEGACY_DMN_STATE_BITS(nRevocationReason)
+        LEGACY_DMN_STATE_BITS(confirmedHash)
+        LEGACY_DMN_STATE_BITS(confirmedHashWithProRegTxHash)
+        LEGACY_DMN_STATE_BITS(keyIDOwner)
+        LEGACY_DMN_STATE_BITS(pubKeyOperator)
+        LEGACY_DMN_STATE_BITS(keyIDVoting)
+        LEGACY_DMN_STATE_BITS(netInfo)
+        LEGACY_DMN_STATE_BITS(scriptPayout)
+        LEGACY_DMN_STATE_BITS(scriptOperatorPayout)
+        LEGACY_DMN_STATE_BITS(nConsecutivePayments)
+        LEGACY_DMN_STATE_BITS(platformNodeID)
+        LEGACY_DMN_STATE_BITS(platformP2PPort)
+        LEGACY_DMN_STATE_BITS(platformHTTPPort)
+#undef LEGACY_DMN_STATE_BITS
+
+        return newDiff;
     }
 };
 

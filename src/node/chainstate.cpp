@@ -192,6 +192,11 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
         return ChainstateLoadingError::ERROR_UPGRADING_SIGNALS_DB;
     }
 
+    // Check if nVersion-first migration is needed and perform it
+    if (dmnman->IsMigrationRequired() && !dmnman->MigrateLegacyDiffs(chainman.ActiveChainstate().m_chain.Tip())) {
+        return ChainstateLoadingError::ERROR_UPGRADING_EVO_DB;
+    }
+
     return std::nullopt;
 }
 

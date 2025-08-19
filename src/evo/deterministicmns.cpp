@@ -27,7 +27,8 @@
 #include <memory>
 
 static const std::string DB_LIST_SNAPSHOT = "dmn_S3";
-static const std::string DB_LIST_DIFF = "dmn_D3";
+static const std::string DB_LIST_DIFF = "dmn_D4";        // Bumped for nVersion-first format
+static const std::string DB_LIST_DIFF_LEGACY = "dmn_D3"; // Legacy format key
 
 uint64_t CDeterministicMN::GetInternalId() const
 {
@@ -1333,4 +1334,176 @@ void CDeterministicMNManager::DoMaintenance() {
     LOCK(cs);
     CleanupCache(loc_to_cleanup);
     did_cleanup = loc_to_cleanup;
+}
+
+bool CDeterministicMNManager::IsMigrationRequired() const
+{
+    // Check if there are any legacy format diffs in the database
+    // by looking for DB_LIST_DIFF_LEGACY entries
+
+    AssertLockHeld(::cs_main);
+
+    std::unique_ptr<CDBIterator> pcursor{m_evoDb.GetRawDB().NewIterator()};
+    auto start{std::make_tuple(DB_LIST_DIFF_LEGACY, uint256{})};
+    pcursor->Seek(start);
+
+    // If we find any entries with the legacy key, migration is needed
+    if (pcursor->Valid()) {
+        decltype(start) k;
+        if (pcursor->GetKey(k) && std::get<0>(k) == DB_LIST_DIFF_LEGACY) {
+            LogPrintf("CDeterministicMNManager::%s -- Migration to nVersion-first format is needed\n", __func__);
+            pcursor.reset();
+            return true;
+        }
+    }
+
+    LogPrintf("CDeterministicMNManager::%s -- Migration to nVersion-first format is not needed\n", __func__);
+    pcursor.reset();
+    return false; // No legacy format found
+}
+
+bool CDeterministicMNManager::MigrateLegacyDiffs(const CBlockIndex* const tip_index)
+{
+    // CRITICAL: This migration converts ALL stored CDeterministicMNListDiff entries
+    // from legacy database key (DB_LIST_DIFF_LEGACY) to new key (DB_LIST_DIFF) format
+
+    AssertLockHeld(::cs_main);
+
+    LogPrintf("CDeterministicMNManager::%s -- Starting migration to nVersion-first format\n", __func__);
+
+    std::vector<const CBlockIndex*> keys_to_erase;
+
+    CDBBatch batch(m_evoDb.GetRawDB());
+    std::unique_ptr<CDBIterator> pcursor{m_evoDb.GetRawDB().NewIterator()};
+
+    // Keep track of the list to get correct nVersion at the current height
+    CDeterministicMNList snapshot;
+
+    const auto start_height{Params().GetConsensus().DeploymentHeight(Consensus::DEPLOYMENT_DIP0003)};
+    for (auto current_height : irange::range(start_height, tip_index->nHeight + 1)) {
+        auto current_index = tip_index->GetAncestor(current_height);
+        auto target_key{std::make_tuple(DB_LIST_DIFF_LEGACY, current_index->GetBlockHash())};
+        pcursor->Seek(target_key);
+
+        decltype(target_key) key;
+        if (!pcursor->Valid() || !pcursor->GetKey(key) || std::get<0>(key) != DB_LIST_DIFF_LEGACY) {
+            break;
+        }
+
+        if (std::get<1>(key) != current_index->GetBlockHash()) {
+            throw std::ios_base::failure("Invalid data, we must have legacy diffs for each height");
+        }
+
+        // Use legacy-aware deserialization for DB_LIST_DIFF_LEGACY entries
+        CDataStream s(SER_DISK, CLIENT_VERSION);
+        if (!m_evoDb.GetRawDB().ReadDataStream(key, s)) {
+            break;
+        }
+
+        CDeterministicMNListDiff legacyDiff;
+        legacyDiff.UnserializeLegacyFormat(s); // Use legacy format deserializer
+        snapshot.ApplyDiff(current_index, legacyDiff);
+
+        CDeterministicMNListDiff convertedDiff;
+        convertedDiff.addedMNs = legacyDiff.addedMNs;
+        convertedDiff.removedMns = legacyDiff.removedMns;
+
+        // The conversion is already done by UnserializeLegacyFormat()!
+        // CDeterministicMNStateDiffLegacy.ToNewFormat() was called during deserialization
+        // So legacyDiff.updatedMNs already contains properly converted CDeterministicMNStateDiff objects
+
+        // Copy the already-converted state diffs but make sure pubKeyOperator, nVersion and fields are set properly
+        for (auto& [internalId, stateDiff] : legacyDiff.updatedMNs) {
+            auto dmn = snapshot.GetMNByInternalId(internalId);
+            if (!dmn) {
+                // shouldn't happen
+                throw std::runtime_error(strprintf("%s: can't find an updated masternode, id=%d", __func__, internalId));
+            }
+            if (!(stateDiff.fields & CDeterministicMNStateDiff::Field_nVersion)) {
+                if ((stateDiff.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) ||
+                    (stateDiff.fields & CDeterministicMNStateDiff::Field_netInfo)) {
+                    stateDiff.fields |= CDeterministicMNStateDiff::Field_nVersion;
+                    stateDiff.state.nVersion = dmn->pdmnState->nVersion;
+                }
+                if (stateDiff.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) {
+                    stateDiff.state.pubKeyOperator.SetLegacy(stateDiff.state.nVersion == ProTxVersion::LegacyBLS);
+                }
+            }
+            convertedDiff.updatedMNs.emplace(internalId, stateDiff);
+        }
+
+        // Write the converted diff to new database key
+        batch.Write(std::make_pair(DB_LIST_DIFF, std::get<1>(key)), convertedDiff);
+        keys_to_erase.push_back(current_index);
+
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            LogPrintf("CDeterministicMNManager::%s -- Writing new diffs, height=%d...\n", __func__, current_height);
+            m_evoDb.GetRawDB().WriteBatch(batch);
+            batch.Clear();
+        }
+    }
+    pcursor.reset();
+
+    LogPrintf("CDeterministicMNManager::%s -- Writing new diffs, height=%d...\n", __func__, tip_index->nHeight);
+    m_evoDb.GetRawDB().WriteBatch(batch);
+    batch.Clear();
+    LogPrintf("CDeterministicMNManager::%s -- Wrote %d new diffs\n", __func__, keys_to_erase.size());
+
+    // Delete all found legacy format entries
+    for (const auto& index : keys_to_erase) {
+        batch.Erase(std::make_pair(DB_LIST_DIFF_LEGACY, index->GetBlockHash()));
+
+        if (batch.SizeEstimate() >= (1 << 24)) {
+            LogPrintf("CDeterministicMNManager::%s -- Erasing found legacy diffs, height=%d...\n", __func__,
+                      index->nHeight);
+            m_evoDb.GetRawDB().WriteBatch(batch);
+            batch.Clear();
+        }
+    }
+
+    LogPrintf("CDeterministicMNManager::%s -- Erasing found legacy diffs, height=%d...\n", __func__, tip_index->nHeight);
+    m_evoDb.GetRawDB().WriteBatch(batch);
+    batch.Clear();
+    LogPrintf("CDeterministicMNManager::%s -- Erased %d found legacy diffs\n", __func__, keys_to_erase.size());
+
+    // Delete all dangling legacy format entries
+    std::unique_ptr<CDBIterator> pcursor_dangling{m_evoDb.GetRawDB().NewIterator()};
+    auto start{std::make_tuple(DB_LIST_DIFF_LEGACY, uint256{})};
+    pcursor_dangling->Seek(start);
+    int count{0};
+    while (pcursor_dangling->Valid()) {
+        decltype(start) key;
+        if (!pcursor_dangling->GetKey(key) || std::get<0>(key) != DB_LIST_DIFF_LEGACY) {
+            break;
+        }
+        LogPrintf("CDeterministicMNManager::%s -- Erasing dangling legacy diff, hash=%s\n", __func__,
+                  std::get<1>(key).ToString());
+        batch.Erase(std::make_pair(DB_LIST_DIFF_LEGACY, std::get<1>(key)));
+        pcursor_dangling->Next();
+        ++count;
+    }
+    pcursor_dangling.reset();
+
+    m_evoDb.GetRawDB().WriteBatch(batch);
+    batch.Clear();
+    LogPrintf("CDeterministicMNManager::%s -- Erased %d dangling legacy diffs\n", __func__, count);
+
+    LogPrintf("CDeterministicMNManager::%s -- Compacting database...\n", __func__);
+    m_evoDb.GetRawDB().CompactFull();
+
+    // flush it to disk
+    if (!m_evoDb.CommitRootTransaction()) {
+        LogPrintf("CDeterministicMNManager::%s -- Failed to commit to evoDB\n", __func__);
+        return false;
+    }
+
+    // Clear caches to force reload with new format
+    LOCK(cs);
+    mnListsCache.clear();
+    mnListDiffsCache.clear();
+
+    LogPrintf("CDeterministicMNManager::%s -- Successfully migrated %d diffs to nVersion-first format\n", __func__,
+              keys_to_erase.size());
+
+    return true;
 }
