@@ -3610,7 +3610,7 @@ MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId node, 
         m_mn_metaman.RememberPlatformBan(hash, std::move(ban_msg));
         ret.m_inventory = CInv{MSG_PLATFORM_BAN, hash};
     }
-    return {};
+    return ret;
 }
 
 void PeerManagerImpl::ProcessMessage(
