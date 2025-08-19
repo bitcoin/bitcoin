@@ -85,7 +85,7 @@ std::vector<CBlockHeader> HeadersGeneratorSetup::GenerateHeaders(
 //    phases is successful.
 BOOST_FIXTURE_TEST_SUITE(headers_sync_chainwork_tests, HeadersGeneratorSetup)
 
-BOOST_AUTO_TEST_CASE(headers_sync_state)
+BOOST_AUTO_TEST_CASE(sneaky_redownload)
 {
     const auto& first_chain{FirstChain()};
     const auto& second_chain{SecondChain()};
@@ -109,7 +109,14 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     result = hss->ProcessNextHeaders(second_chain, true);
     BOOST_CHECK(!result.success); // foiled!
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
+}
 
+BOOST_AUTO_TEST_CASE(happy_path)
+{
+    const auto& first_chain{FirstChain()};
+
+    std::unique_ptr<HeadersSyncState> hss;
+    HeadersSyncState::ProcessingResult result;
     // Now try again, this time feeding the first chain twice.
     hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, CHAIN_WORK));
     (void)hss->ProcessNextHeaders(first_chain, true);
@@ -122,7 +129,14 @@ BOOST_AUTO_TEST_CASE(headers_sync_state)
     BOOST_CHECK(result.pow_validated_headers.size() == first_chain.size());
     // Nothing left for the sync logic to do:
     BOOST_CHECK(hss->GetState() == HeadersSyncState::State::FINAL);
+}
 
+BOOST_AUTO_TEST_CASE(too_little_work)
+{
+    const auto& second_chain{SecondChain()};
+
+    std::unique_ptr<HeadersSyncState> hss;
+    HeadersSyncState::ProcessingResult result;
     // Finally, verify that just trying to process the second chain would not
     // succeed (too little work)
     hss.reset(new HeadersSyncState(0, Params().GetConsensus(), chain_start, CHAIN_WORK));
