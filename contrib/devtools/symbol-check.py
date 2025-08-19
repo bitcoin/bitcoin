@@ -122,7 +122,6 @@ ELF_ALLOWED_LIBRARIES = {
 'libxcb-shape.so.0',
 'libxcb-sync.so.1',
 'libxcb-xfixes.so.0',
-'libxcb-xinerama.so.0',
 'libxcb-xkb.so.1',
 }
 
