@@ -324,7 +324,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         credit_outputs = [CTxOut(int(amount_locked * COIN), key_to_p2pkh_script(pubkey))]
 
         # AssetLock payload
-        lockTx_payload = CAssetLockTx(1, credit_outputs)
+        lock_tx_payload = CAssetLockTx(1, credit_outputs)
 
         # Calculate remaining amount (minus small fee)
         fee = Decimal("0.0001")
@@ -345,7 +345,7 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         lock_tx.nVersion = 3
         lock_tx.nType = 8  # asset lock type
-        lock_tx.vExtraPayload = lockTx_payload.serialize()
+        lock_tx.vExtraPayload = lock_tx_payload.serialize()
 
         # Sign the transaction
         tx_hex = lock_tx.serialize().hex()
@@ -408,6 +408,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         assert found_tx is not None, f"Transaction {txid} not found in block"
         assert 'assetLockTx' in found_tx, "Mined transaction should have assetLockTx field"
         assert 'creditOutputs' in found_tx['assetLockTx'], "AssetLockTx should have creditOutputs"
+        assert len(found_tx['assetLockTx']['creditOutputs']) >= 1, "Expected at least one credit output"
 
         # Get the filter
         filter_result = node.getblockfilter(block_hash, 'basic')
@@ -422,8 +423,8 @@ class CompactFiltersTest(BitcoinTestFramework):
         special_filter_size = len(filter_result['filter'])
         control_filter_size = len(control_filter['filter'])
 
-        self.log.info(f"Filter with AssetLockTx: {special_filter_size} hex chars")
-        self.log.info(f"Control filter: {control_filter_size} hex chars")
+        self.log.debug(f"Filter with AssetLockTx: {special_filter_size} hex chars")
+        self.log.debug(f"Control filter: {control_filter_size} hex chars")
 
         # The filter with special tx should be larger (credit outputs add data)
         assert special_filter_size > control_filter_size, \
@@ -464,7 +465,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         ]
 
         # AssetLock payload
-        lockTx_payload = CAssetLockTx(1, credit_outputs)
+        lock_tx_payload = CAssetLockTx(1, credit_outputs)
 
         # Calculate remaining amount
         fee = Decimal("0.0001")
@@ -486,15 +487,21 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         lock_tx.nVersion = 3
         lock_tx.nType = 8  # asset lock type
-        lock_tx.vExtraPayload = lockTx_payload.serialize()
+        lock_tx.vExtraPayload = lock_tx_payload.serialize()
 
         # Sign and send the transaction
-        signed_tx = node.signrawtransactionwithwallet(lock_tx.serialize().hex())
-        final_tx = tx_from_hex(signed_tx["hex"])
-        txid = node.sendrawtransaction(final_tx.serialize().hex())
+        signed_hex = node.signrawtransactionwithwallet(lock_tx.serialize().hex())["hex"]
+        txid = node.sendrawtransaction(signed_hex)
 
         # Mine it into a block
         block_hash = self.generate(node, 1, sync_fun=self.no_op)[0]
+
+        # Verify our tx is included and has the expected special payload
+        block = node.getblock(block_hash, 2)
+        tx = next((t for t in block["tx"] if t["txid"] == txid), None)
+        assert tx is not None, f"AssetLockTx {txid} not found in block {block_hash}"
+        assert "assetLockTx" in tx, "Mined transaction should have assetLockTx field"
+        assert "creditOutputs" in tx["assetLockTx"], "AssetLockTx should have creditOutputs"
 
         # Get the filter to verify it was created
         filter_result = node.getblockfilter(block_hash, 'basic')
@@ -508,8 +515,8 @@ class CompactFiltersTest(BitcoinTestFramework):
         multi_output_filter_size = len(filter_result['filter'])
         control_filter_size = len(control_filter['filter'])
 
-        self.log.info(f"Filter with multiple outputs: {multi_output_filter_size} hex chars")
-        self.log.info(f"Control filter: {control_filter_size} hex chars")
+        self.log.debug(f"Filter with multiple outputs: {multi_output_filter_size} hex chars")
+        self.log.debug(f"Control filter: {control_filter_size} hex chars")
 
         assert multi_output_filter_size > control_filter_size, \
             "Filter with multiple AssetLockTx credit outputs should be larger than control"
