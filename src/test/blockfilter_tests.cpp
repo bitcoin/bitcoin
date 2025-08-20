@@ -215,7 +215,6 @@ BOOST_AUTO_TEST_CASE(blockfilter_special_transactions_test)
     proRegPayload.collateralOutpoint = COutPoint(uint256S("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"), 0);
 
     // Set up network info (required for serialization)
-    CService service(LookupNumeric("127.0.0.1", 9999));
     proRegPayload.netInfo = NetInfoInterface::MakeNetInfo(1);  // Version 1
 
     proRegPayload.keyIDOwner = CKeyID(uint160(ParseHex("1111111111111111111111111111111111111111")));
