@@ -17,9 +17,6 @@ class BlockFilterVersionTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [["-blockfilterindex"]]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def run_test(self):
         self.log.info("Testing blockfilter index version checking...")
         
