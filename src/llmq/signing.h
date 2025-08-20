@@ -8,6 +8,7 @@
 #include <bls/bls.h>
 #include <gsl/pointers.h>
 #include <llmq/params.h>
+#include <llmq/signhash.h>
 #include <net_types.h>
 #include <protocol.h>
 #include <random.h>
@@ -67,7 +68,7 @@ public:
         return msgHash;
     }
 
-    [[nodiscard]] uint256 buildSignHash() const;
+    [[nodiscard]] SignHash buildSignHash() const;
 };
 
 class CRecoveredSig : virtual public CSigBase

@@ -103,8 +103,8 @@ bool MNHFTx::Verify(const llmq::CQuorumManager& qman, const uint256& quorumHash,
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-missing-quorum");
     }
 
-    const uint256 signHash = llmq::SignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash).Get();
-    if (!sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
+    const llmq::SignHash signHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
+    if (!sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get())) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-mnhf-invalid");
     }
 

@@ -146,8 +146,8 @@ bool CAssetUnlockPayload::VerifySig(const llmq::CQuorumManager& qman, const uint
 
     const uint256 requestId = ::SerializeHash(std::make_pair(ASSETUNLOCK_REQUESTID_PREFIX, index));
 
-    if (const uint256 signHash = llmq::SignHash(llmqType, quorum->qc->quorumHash, requestId, msgHash).Get();
-            quorumSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
+    if (const llmq::SignHash signHash(llmqType, quorum->qc->quorumHash, requestId, msgHash);
+            quorumSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get())) {
         return true;
     }
 

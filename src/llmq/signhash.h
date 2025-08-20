@@ -8,6 +8,7 @@
 #include <llmq/params.h>
 #include <uint256.h>
 
+#include <cstring>
 #include <vector>
 
 #include <util/hash_type.h>
@@ -34,8 +35,33 @@ public:
      * Get the underlying uint256 hash value.
      */
     const uint256& Get() const { return m_hash; }
+
+    // Serialization support
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_hash;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        s >> m_hash;
+    }
 };
 
 } // namespace llmq
+
+// Make SignHash hashable for use in unordered_map
+template<>
+struct std::hash<llmq::SignHash> {
+    std::size_t operator()(const llmq::SignHash& signHash) const noexcept {
+        // Use the first 8 bytes of the hash as the hash value
+        const unsigned char* data = signHash.data();
+        std::size_t result;
+        std::memcpy(&result, data, sizeof(result));
+        return result;
+    }
+};
 
 #endif // BITCOIN_LLMQ_SIGNHASH_H

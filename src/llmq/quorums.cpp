@@ -1278,8 +1278,8 @@ VerifyRecSigStatus VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain
         return VerifyRecSigStatus::NoQuorum;
     }
 
-    uint256 signHash = SignHash(llmqType, quorum->qc->quorumHash, id, msgHash).Get();
-    const bool ret = sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+    SignHash signHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    const bool ret = sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get());
     return ret ? VerifyRecSigStatus::Valid : VerifyRecSigStatus::Invalid;
 }
 } // namespace llmq

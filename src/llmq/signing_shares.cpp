@@ -28,7 +28,7 @@ namespace llmq
 {
 void CSigShare::UpdateKey()
 {
-    key.first = this->buildSignHash();
+    key.first = this->buildSignHash().Get();
     key.second = quorumMember;
 }
 
@@ -126,9 +126,9 @@ CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSessionFromShare(c
 CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSessionFromAnn(const llmq::CSigSesAnn& ann)
 {
     auto signHash = ann.buildSignHash();
-    auto& s = sessions[signHash];
+    auto& s = sessions[signHash.Get()];
     if (s.announced.inv.empty()) {
-        InitSession(s, signHash, ann);
+        InitSession(s, signHash.Get(), ann);
     }
     return s;
 }
@@ -831,7 +831,7 @@ void CSigSharesManager::TryRecoverSig(PeerManager& peerman, const CQuorumCPtr& q
     // verification because this is unbatched and thus slow verification that happens here.
     if (((recoveredSigsCounter++) % 100) == 0) {
         auto signHash = rs->buildSignHash();
-        bool valid = recoveredSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+        bool valid = recoveredSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get());
         if (!valid) {
             // this should really not happen as we have verified all signature shares before
             LogPrintf("CSigSharesManager::%s -- own recovered signature is invalid. id=%s, msgHash=%s\n", __func__,
@@ -1557,7 +1557,7 @@ std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorumCPtr& qu
         }
 
         CSigShare sigShare(quorum->params.type, quorum->qc->quorumHash, id, msgHash, uint16_t(memberIdx), {});
-        uint256 signHash = sigShare.buildSignHash();
+        uint256 signHash = sigShare.buildSignHash().Get();
 
         // TODO: This one should be SIGN by QUORUM key, not by OPERATOR key
         // see TODO in CDKGSession::FinalizeSingleCommitment for details
@@ -1593,7 +1593,7 @@ std::optional<CSigShare> CSigSharesManager::CreateSigShare(const CQuorumCPtr& qu
     }
 
     CSigShare sigShare(quorum->params.type, quorum->qc->quorumHash, id, msgHash, uint16_t(memberIdx), {});
-    uint256 signHash = sigShare.buildSignHash();
+    uint256 signHash = sigShare.buildSignHash().Get();
 
     sigShare.sigShare.Set(skShare.Sign(signHash, bls::bls_legacy_scheme.load()), bls::bls_legacy_scheme.load());
     if (!sigShare.sigShare.Get().IsValid()) {
@@ -1640,7 +1640,7 @@ void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus
 MessageProcessingResult CSigSharesManager::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
     LOCK(cs);
-    RemoveSigSharesForSession(recoveredSig.buildSignHash());
+    RemoveSigSharesForSession(recoveredSig.buildSignHash().Get());
     return {};
 }
 

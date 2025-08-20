@@ -608,8 +608,8 @@ static RPCHelpMan quorum_verify()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
 
-    uint256 signHash = llmq::SignHash(llmqType, quorum->qc->quorumHash, id, msgHash).Get();
-    return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
+    llmq::SignHash signHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash.Get());
 },
     };
 }
