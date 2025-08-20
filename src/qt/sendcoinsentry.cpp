@@ -71,8 +71,18 @@ void SendCoinsEntry::setModel(WalletModel *_model)
 {
     this->model = _model;
 
+    if (_model) {
+        ui->payTo->setWarningValidator(new BitcoinAddressUnusedInWalletValidator(*_model));
+    } else {
+        ui->payTo->setWarningValidator(nullptr);
+    }
+
     if (_model && _model->getOptionsModel())
+    {
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsEntry::updateDisplayUnit);
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &SendCoinsEntry::updateFontForMoney);
+        updateFontForMoney();
+    }
 
     clear();
 }
@@ -144,6 +154,11 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
     return retval;
 }
 
+bool SendCoinsEntry::hasPaytoWarning() const
+{
+    return ui->payTo->hasWarning();
+}
+
 SendCoinsRecipient SendCoinsEntry::getValue()
 {
     recipient.address = ui->payTo->text();
@@ -209,6 +224,13 @@ void SendCoinsEntry::updateDisplayUnit()
 {
     if (model && model->getOptionsModel()) {
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    }
+}
+
+void SendCoinsEntry::updateFontForMoney()
+{
+    if (model && model->getOptionsModel()) {
+        ui->payAmount->setFontForMoney(model->getOptionsModel()->getFontForMoney());
     }
 }
 

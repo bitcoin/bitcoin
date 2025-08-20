@@ -101,6 +101,7 @@ private Q_SLOTS:
     void removeEntry(SendCoinsEntry* entry);
     void useAvailableBalance(SendCoinsEntry* entry);
     void refreshBalance();
+    void updateFontForMoney();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
     void coinControlChangeChecked(int);
@@ -123,12 +124,18 @@ Q_SIGNALS:
 
 
 #define SEND_CONFIRM_DELAY   3
+#define ADDRESS_REUSE_OVERRIDE_DELAY   10
 
 class SendConfirmationDialog : public QMessageBox
 {
     Q_OBJECT
 
 public:
+    bool m_delete_on_close{false};
+    QString confirmButtonText{tr("Send")};
+    QMessageBox::StandardButton m_yes_button{QMessageBox::Yes};
+    QMessageBox::StandardButton m_cancel_button{QMessageBox::Cancel};
+
     SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text = "", const QString& detailed_text = "", int secDelay = SEND_CONFIRM_DELAY, bool enable_send = true, bool always_show_unsigned = true, QWidget* parent = nullptr);
     /* Returns QMessageBox::Cancel, QMessageBox::Yes when "Send" is
        clicked and QMessageBox::Save when "Create Unsigned" is clicked. */
@@ -143,7 +150,7 @@ private:
     QAbstractButton *m_psbt_button;
     QTimer countDownTimer;
     int secDelay;
-    QString confirmButtonText{tr("Send")};
+    bool m_enable_save;
     bool m_enable_send;
     QString m_psbt_button_text{tr("Create Unsigned")};
 };

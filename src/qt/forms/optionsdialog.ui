@@ -766,7 +766,7 @@
          <item>
           <widget class="QLabel" name="moneyFontLabel">
            <property name="text">
-            <string>Font in the Overview tab: </string>
+            <string>Font for amounts: </string>
            </property>
            <property name="buddy">
             <cstring>moneyFont</cstring>
