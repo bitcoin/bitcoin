@@ -49,6 +49,11 @@ static void AddHashElement(const T& hash,
     addElement(std::vector<unsigned char>(hash.begin(), hash.end()));
 }
 
+// NOTE(maintenance): Keep this in sync with
+// CBloomFilter::CheckSpecialTransactionMatchesAndUpdate in
+// src/common/bloom.cpp. If you add or remove fields for a special
+// transaction type here, update the bloom filter routine accordingly
+// (and vice versa) to avoid compact-filter vs bloom-filter divergence.
 void ExtractSpecialTxFilterElements(const CTransaction& tx,
                                    const std::function<void(const std::vector<unsigned char>&)>& addElement)
 {
