@@ -103,7 +103,11 @@ private Q_SLOTS:
     void refreshBalance();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 7, 0))
+    void coinControlChangeChecked(Qt::CheckState);
+#else
     void coinControlChangeChecked(int);
+#endif
     void coinControlChangeEdited(const QString &);
     void coinControlUpdateLabels();
     void coinControlClipboardQuantity();
