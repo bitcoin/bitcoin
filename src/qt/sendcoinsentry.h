@@ -33,6 +33,7 @@ public:
 
     void setModel(WalletModel *model);
     bool validate(interfaces::Node& node);
+    bool hasPaytoWarning() const;
     SendCoinsRecipient getValue();
 
     /** Return whether the entry is still empty and unedited */
@@ -66,6 +67,7 @@ private Q_SLOTS:
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
+    void updateFontForMoney();
 
 protected:
     void changeEvent(QEvent* e) override;

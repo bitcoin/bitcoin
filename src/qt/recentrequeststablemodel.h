@@ -85,6 +85,7 @@ public:
 
 public Q_SLOTS:
     void updateDisplayUnit();
+    void updateFontForMoney();
 
 private:
     WalletModel *walletModel;

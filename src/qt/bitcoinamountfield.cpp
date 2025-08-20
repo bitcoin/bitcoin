@@ -112,6 +112,11 @@ public:
             clear();
     }
 
+    void setFont(const QFont& font)
+    {
+        lineEdit()->setFont(font);
+    }
+
     void setSingleStep(const CAmount& step)
     {
         singleStep = step;
@@ -335,6 +340,11 @@ void BitcoinAmountField::unitChanged(int idx)
 void BitcoinAmountField::setDisplayUnit(BitcoinUnit new_unit)
 {
     unit->setValue(QVariant::fromValue(new_unit));
+}
+
+void BitcoinAmountField::setFontForMoney(const QFont& font_for_money)
+{
+    amount->setFont(font_for_money);
 }
 
 void BitcoinAmountField::setSingleStep(const CAmount& step)

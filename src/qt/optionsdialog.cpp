@@ -58,7 +58,7 @@ void setupFontOptions(QComboBox* cb, QLabel* preview)
 {
     QFont embedded_font{GUIUtil::fixedPitchFont(true)};
     QFont system_font{GUIUtil::fixedPitchFont(false)};
-    cb->addItem(QObject::tr("Embedded \"%1\"").arg(QFontInfo(embedded_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::EmbeddedFont}));
+    cb->addItem(QObject::tr("%1").arg(QFontInfo(embedded_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::EmbeddedFont}));
     cb->addItem(QObject::tr("Default system font \"%1\"").arg(QFontInfo(system_font).family()), QVariant::fromValue(OptionsModel::FontChoice{OptionsModel::FontChoiceAbstract::BestSystemFont}));
     cb->addItem(QObject::tr("Custom…"));
 

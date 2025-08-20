@@ -93,14 +93,19 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
+        QFont font_saved = painter->font();
         QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::SeparatorStyle::ALWAYS);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
         }
 
+        if (QVariant font_variant = index.siblingAtColumn(TransactionTableModel::Amount).data(Qt::FontRole); font_variant.canConvert<QFont>()) {
+            painter->setFont(font_variant.value<QFont>());
+        }
         QRect amount_bounding_rect;
         painter->drawText(amountRect, Qt::AlignRight | Qt::AlignVCenter, amountText, &amount_bounding_rect);
+        painter->setFont(font_saved);
 
         painter->setPen(option.palette.color(QPalette::Text));
         QRect date_bounding_rect;

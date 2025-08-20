@@ -134,6 +134,9 @@ public:
     //! Display address on external signer
     virtual util::Result<void> displayAddress(const CTxDestination& dest) = 0;
 
+    virtual bool checkAddressForUsage(const std::vector<std::string>& addresses) const = 0;
+    virtual bool findAddressUsage(const std::vector<std::string>& addresses, std::function<void(const std::string&, const WalletTx&, uint32_t)> callback) const = 0;
+
     //! Lock coin.
     virtual bool lockCoin(const COutPoint& output, const bool write_to_db) = 0;
 
