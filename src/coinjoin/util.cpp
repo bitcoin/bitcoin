@@ -29,7 +29,9 @@ inline unsigned int GetSizeOfCompactSizeDiff(uint64_t nSizePrev, uint64_t nSizeN
 CKeyHolder::CKeyHolder(CWallet* pwallet) :
     reserveDestination(pwallet)
 {
-    reserveDestination.GetReservedDestination(dest, false);
+    auto dest_opt = reserveDestination.GetReservedDestination(false);
+    assert(dest_opt);
+    dest = *dest_opt;
 }
 
 void CKeyHolder::KeepKey()
@@ -99,10 +101,10 @@ CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBui
     nAmount(nAmountIn)
 {
     assert(pTxBuilder);
-    CTxDestination txdest;
     LOCK(wallet.cs_wallet);
-    dest.GetReservedDestination(txdest, false);
-    script = ::GetScriptForDestination(txdest);
+    auto dest_opt = dest.GetReservedDestination(false);
+    assert(dest_opt);
+    script = ::GetScriptForDestination(*dest_opt);
 }
 
 bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
@@ -280,12 +282,13 @@ bool CTransactionBuilder::Commit(bilingual_str& strResult)
     CTransactionRef tx;
     {
         LOCK2(m_wallet.cs_wallet, ::cs_main);
-        FeeCalculation fee_calc_out;
-        if (auto txr = wallet::CreateTransaction(m_wallet, vecSend, nChangePosRet, strResult, coinControl, fee_calc_out)) {
-            tx = txr->tx;
-            nFeeRet = txr->fee;
-            nChangePosRet = txr->change_pos;
+        auto ret = wallet::CreateTransaction(m_wallet, vecSend, nChangePosRet, coinControl);
+        if (ret) {
+            tx = ret->tx;
+            nFeeRet = ret->fee;
+            nChangePosRet = ret->change_pos;
         } else {
+            strResult = util::ErrorString(ret);
             return false;
         }
     }

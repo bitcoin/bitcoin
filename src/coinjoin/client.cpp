@@ -1552,7 +1552,7 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     AssertLockHeld(m_wallet->cs_wallet);
 
     CCoinControl coin_control(CoinType::ONLY_COINJOIN_COLLATERAL);
-    std::vector<COutput> vCoins{AvailableCoinsListUnspent(*m_wallet, &coin_control).coins};
+    std::vector<COutput> vCoins{AvailableCoinsListUnspent(*m_wallet, &coin_control).all()};
     if (vCoins.empty()) {
         strReason = strprintf("%s requires a collateral transaction and could not locate an acceptable input!", gCoinJoinName);
         return false;
@@ -1571,11 +1571,10 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     if (txout.nValue >= CoinJoin::GetCollateralAmount() * 2) {
         // make our change address
         CScript scriptChange;
-        CTxDestination dest;
         ReserveDestination reserveDest(m_wallet.get());
-        bool success = reserveDest.GetReservedDestination(dest, true);
-        assert(success); // should never fail, as we just unlocked
-        scriptChange = GetScriptForDestination(dest);
+        auto dest_opt = reserveDest.GetReservedDestination(true);
+        assert(dest_opt); // should never fail, as we just unlocked
+        scriptChange = GetScriptForDestination(*dest_opt);
         reserveDest.KeepDestination();
         // return change
         txCollateral.vout.emplace_back(txout.nValue - CoinJoin::GetCollateralAmount(), scriptChange);

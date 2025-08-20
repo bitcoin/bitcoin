@@ -189,6 +189,28 @@ public:
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
 using MutableTransactionSignatureChecker = GenericTransactionSignatureChecker<CMutableTransaction>;
 
+class DeferringSignatureChecker : public BaseSignatureChecker
+{
+protected:
+    BaseSignatureChecker& m_checker;
+
+public:
+    DeferringSignatureChecker(BaseSignatureChecker& checker) : m_checker(checker) {}
+
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override
+    {
+        return m_checker.CheckSig(scriptSig, vchPubKey, scriptCode, sigversion);
+    }
+    bool CheckLockTime(const CScriptNum& nLockTime) const override
+    {
+        return m_checker.CheckLockTime(nLockTime);
+    }
+    bool CheckSequence(const CScriptNum& nSequence) const override
+    {
+        return m_checker.CheckSequence(nSequence);
+    }
+};
+
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = nullptr);
 

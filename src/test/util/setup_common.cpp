@@ -442,7 +442,7 @@ TestChainSetup::TestChainSetup(int num_blocks, const std::string& chain_name, co
 
 void TestChainSetup::mineBlocks(int num_blocks)
 {
-    CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    CScript scriptPubKey = GetScriptForRawPubKey(coinbaseKey.GetPubKey());
     for (int i = 0; i < num_blocks; i++) {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
@@ -472,15 +472,6 @@ CBlock TestChainSetup::CreateAndProcessBlock(
     Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr);
 
     return block;
-}
-
-CBlock TestChainSetup::CreateAndProcessBlock(
-    const std::vector<CMutableTransaction>& txns,
-    const CKey& scriptKey,
-    CChainState* chainstate)
-{
-    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    return CreateAndProcessBlock(txns, scriptPubKey, chainstate);
 }
 
 CBlock TestChainSetup::CreateBlock(
@@ -545,16 +536,6 @@ CBlock TestChainSetup::CreateBlock(
     CBlock result = block;
     return result;
 }
-
-CBlock TestChainSetup::CreateBlock(
-    const std::vector<CMutableTransaction>& txns,
-    const CKey& scriptKey,
-    CChainState& chainstate)
-{
-    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    return CreateBlock(txns, scriptPubKey, chainstate);
-}
-
 
 CMutableTransaction TestChainSetup::CreateValidMempoolTransaction(CTransactionRef input_transaction,
                                                                   int input_vout,

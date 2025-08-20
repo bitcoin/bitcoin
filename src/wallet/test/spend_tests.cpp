@@ -30,13 +30,13 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
-        FeeCalculation fee_calc;
-        std::optional<CreatedTransactionResult> txr = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, error, coin_control, fee_calc);
-        BOOST_CHECK(txr.has_value());
-        BOOST_CHECK_EQUAL(txr->tx->vout.size(), 1);
-        BOOST_CHECK_EQUAL(txr->tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - txr->fee);
-        BOOST_CHECK_GT(txr->fee, 0);
-        return txr->fee;
+        auto res = CreateTransaction(*wallet, {recipient}, RANDOM_CHANGE_POSITION, coin_control);
+        BOOST_CHECK(res);
+        const auto& txr = *res;
+        BOOST_CHECK_EQUAL(txr.tx->vout.size(), 1);
+        BOOST_CHECK_EQUAL(txr.tx->vout[0].nValue, recipient.nAmount + leftover_input_amount - txr.fee);
+        BOOST_CHECK_GT(txr.fee, 0);
+        return txr.fee;
     };
 
     // Send full input amount to recipient, check that only nonzero fee is

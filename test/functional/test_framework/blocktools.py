@@ -33,7 +33,6 @@ from .script_util import (
     key_to_p2pk_script,
 )
 from .util import assert_equal
-from io import BytesIO
 
 MAX_BLOCK_SIGOPS = 40000
 
@@ -213,31 +212,6 @@ def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=C
     tx.vout.append(CTxOut(amount, script_pub_key))
     tx.calc_sha256()
     return tx
-
-def create_transaction(node, txid, to_address, *, amount):
-    """ Return signed transaction spending the first output of the
-        input txid. Note that the node must have a wallet that can
-        sign for the output that is being spent.
-    """
-    raw_tx = create_raw_transaction(node, txid, to_address, amount=amount)
-    tx = CTransaction()
-    tx.deserialize(BytesIO(bytes.fromhex(raw_tx)))
-    return tx
-
-def create_raw_transaction(node, txid, to_address, *, amount):
-    """ Return raw signed transaction spending the first output of the
-        input txid. Note that the node must have a wallet that can sign
-        for the output that is being spent.
-    """
-    psbt = node.createpsbt(inputs=[{"txid": txid, "vout": 0}], outputs={to_address: amount})
-    for _ in range(2):
-        for w in node.listwallets():
-            wrpc = node.get_wallet_rpc(w)
-            signed_psbt = wrpc.walletprocesspsbt(psbt)
-            psbt = signed_psbt['psbt']
-    final_psbt = node.finalizepsbt(psbt)
-    assert_equal(final_psbt["complete"], True)
-    return final_psbt['hex']
 
 def get_legacy_sigopcount_block(block, accurate=True):
     count = 0

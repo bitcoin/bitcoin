@@ -162,6 +162,7 @@ BITCOIN_TESTS =\
   test/random_tests.cpp \
   test/ratecheck_tests.cpp \
   test/rest_tests.cpp \
+  test/result_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
@@ -214,6 +215,7 @@ BITCOIN_TESTS += \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/wallet_transaction_tests.cpp \
   wallet/test/coinselector_tests.cpp \
+  wallet/test/availablecoins_tests.cpp \
   wallet/test/init_tests.cpp \
   wallet/test/ismine_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp

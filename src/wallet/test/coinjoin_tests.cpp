@@ -183,21 +183,21 @@ public:
         CompactTallyItem tallyItem;
         ReserveDestination reserveDest(wallet.get());
         int nChangePosRet{RANDOM_CHANGE_POSITION};
-        bilingual_str strError;
         CCoinControl coinControl;
         coinControl.m_feerate = CFeeRate(1000);
         {
             LOCK(wallet->cs_wallet);
-            BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false));
+            auto dest_opt = reserveDest.GetReservedDestination(false);
+            BOOST_CHECK(dest_opt);
+            tallyItem.txdest = *dest_opt;
         }
         for (CAmount nAmount : vecAmounts) {
             CTransactionRef tx;
-            FeeCalculation fee_calc_out;
             {
-                auto txr = CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, nChangePosRet, strError, coinControl, fee_calc_out);
-                BOOST_CHECK(txr.has_value());
-                tx = txr->tx;
-                nChangePosRet = txr->change_pos;
+                auto res = CreateTransaction(*wallet, {{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, nChangePosRet, coinControl);
+                BOOST_CHECK(res);
+                tx = res->tx;
+                nChangePosRet = res->change_pos;
             }
             {
                 LOCK2(wallet->cs_wallet, ::cs_main);

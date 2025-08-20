@@ -65,18 +65,16 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     }
 
     // Send
-    bilingual_str error;
-    FeeCalculation fee_calc_out;
-    std::optional<CreatedTransactionResult> txr = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, error, coin_control, fee_calc_out, true);
-    if (!txr) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    auto res = CreateTransaction(wallet, recipients, RANDOM_CHANGE_POSITION, coin_control, /*sign=*/true);
+    if (!res) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(res).original);
     }
-    CTransactionRef tx = txr->tx;
+    const CTransactionRef& tx = res->tx;
     wallet.CommitTransaction(tx, std::move(map_value), {} /* orderForm */);
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
-        entry.pushKV("fee_reason", StringForFeeReason(fee_calc_out.reason));
+        entry.pushKV("fee_reason", StringForFeeReason(res->fee_calc.reason));
         return entry;
     }
     return tx->GetHash().GetHex();

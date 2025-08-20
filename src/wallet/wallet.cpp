@@ -166,6 +166,13 @@ std::vector<std::shared_ptr<CWallet>> GetWallets(WalletContext& context)
     return context.wallets;
 }
 
+std::shared_ptr<CWallet> GetDefaultWallet(WalletContext& context, size_t& count)
+{
+    LOCK(context.wallets_mutex);
+    count = context.wallets.size();
+    return count == 1 ? context.wallets[0] : nullptr;
+}
+
 std::shared_ptr<CWallet> GetWallet(WalletContext& context, const std::string& name)
 {
     LOCK(context.wallets_mutex);
@@ -421,8 +428,7 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
         error += strprintf(Untranslated("Unexpected exception: %s"), e.what());
     }
     if (!wallet) {
-        fs::remove(wallet_file);
-        fs::remove(wallet_path);
+        fs::remove_all(wallet_path);
     }
 
     return wallet;
@@ -2345,39 +2351,32 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     return res;
 }
 
-bool CWallet::GetNewDestination(const std::string label, CTxDestination& dest, bilingual_str& error)
+util::Result<CTxDestination> CWallet::GetNewDestination(const std::string label)
 {
-    error.clear();
-    bool result = false;
-
     LOCK(cs_wallet);
     auto spk_man = GetScriptPubKeyMan(false /* internal */);
-    if (spk_man) {
-        spk_man->TopUp();
-        result = spk_man->GetNewDestination(dest, error);
-    } else {
-        error = strprintf(_("Error: No addresses available."));
-    }
-    if (result) {
-        SetAddressBook(dest, label, "receive");
+    if (!spk_man) {
+        return util::Error{_("Error: No addresses available.")};
     }
 
-    return result;
+    spk_man->TopUp();
+    auto op_dest = spk_man->GetNewDestination();
+    if (op_dest) {
+        SetAddressBook(*op_dest, label, "receive");
+    }
+
+    return op_dest;
 }
 
-bool CWallet::GetNewChangeDestination(CTxDestination& dest,  bilingual_str& error)
+util::Result<CTxDestination> CWallet::GetNewChangeDestination()
 {
     LOCK(cs_wallet);
-    error.clear();
 
     ReserveDestination reservedest(this);
-    if (!reservedest.GetReservedDestination(dest, true)) {
-        error = _("Error: Keypool ran out, please call keypoolrefill first");
-        return false;
-    }
+    auto op_dest = reservedest.GetReservedDestination(true);
+    if (op_dest) reservedest.KeepDestination();
 
-    reservedest.KeepDestination();
-    return true;
+    return op_dest;
 }
 
 std::optional<int64_t> CWallet::GetOldestKeyPoolTime() const
@@ -2446,11 +2445,11 @@ std::set<std::string> CWallet::ListAddrBookLabels(const std::string& purpose) co
     return label_set;
 }
 
-bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInternalIn)
+util::Result<CTxDestination> ReserveDestination::GetReservedDestination(bool fInternalIn)
 {
     m_spk_man = pwallet->GetScriptPubKeyMan(fInternalIn);
     if (!m_spk_man) {
-        return false;
+        return util::Error{_("Error: No addresses available.")};
     }
 
     if (nIndex == -1)
@@ -2459,14 +2458,13 @@ bool ReserveDestination::GetReservedDestination(CTxDestination& dest, bool fInte
 
         CKeyPool keypool;
         int64_t index;
-        if (!m_spk_man->GetReservedDestination(fInternalIn, address, index, keypool)) {
-            return false;
-        }
+        auto op_address = m_spk_man->GetReservedDestination(fInternalIn, index, keypool);
+        if (!op_address) return op_address;
+        address = *op_address;
         nIndex = index;
         fInternal = keypool.fInternal;
     }
-    dest = address;
-    return true;
+    return address;
 }
 
 void ReserveDestination::KeepDestination()
@@ -3092,6 +3090,20 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     // allow setting the chain if it hasn't been set already but prevent changing it
     assert(!walletInstance->m_chain || walletInstance->m_chain == &chain);
     walletInstance->m_chain = &chain;
+
+    // Unless allowed, ensure wallet files are not reused across chains:
+    if (!gArgs.GetBoolArg("-walletcrosschain", DEFAULT_WALLETCROSSCHAIN)) {
+        WalletBatch batch(walletInstance->GetDatabase());
+        CBlockLocator locator;
+        if (batch.ReadBestBlock(locator) && locator.vHave.size() > 0 && chain.getHeight()) {
+            // Wallet is assumed to be from another chain, if genesis block in the active
+            // chain differs from the genesis block known to the wallet.
+            if (chain.getBlockHash(0) != locator.vHave.back()) {
+                error = Untranslated("Wallet files should not be reused across chains. Restart dashd with -walletcrosschain to override.");
+                return false;
+            }
+        }
+    }
 
     // Register wallet with validationinterface. It's done before rescan to avoid
     // missing block connections between end of rescan and validation subscribing.

@@ -12,6 +12,7 @@
 #include <script/standard.h>
 #include <util/error.h>
 #include <util/message.h>
+#include <util/result.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
 #include <wallet/hdchain.h>
@@ -162,7 +163,7 @@ public:
     explicit ScriptPubKeyMan(WalletStorage& storage) : m_storage(storage) {}
 
     virtual ~ScriptPubKeyMan() {};
-    virtual bool GetNewDestination(CTxDestination& dest, bilingual_str& error) { return false; }
+    virtual util::Result<CTxDestination> GetNewDestination() { return util::Error{Untranslated("Not supported")}; }
     virtual isminetype IsMine(const CScript& script) const { return ISMINE_NO; }
     virtual isminetype IsMine(const CTxDestination& dest) const { return ISMINE_NO; }
 
@@ -170,7 +171,7 @@ public:
     virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) { return false; }
     virtual bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) { return false; }
 
-    virtual bool GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) { return false; }
+    virtual util::Result<CTxDestination> GetReservedDestination(bool internal, int64_t& index, CKeyPool& keypool) { return util::Error{Untranslated("Not supported")}; }
     virtual void KeepDestination(int64_t index) {}
     virtual void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) {}
 
@@ -317,14 +318,14 @@ private:
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
-    bool GetNewDestination(CTxDestination& dest, bilingual_str& error) override;
+    util::Result<CTxDestination> GetNewDestination() override;
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
-    bool GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
+    util::Result<CTxDestination> GetReservedDestination(bool internal, int64_t& index, CKeyPool& keypool) override;
     void KeepDestination(int64_t index) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination&) override;
 
@@ -553,14 +554,14 @@ public:
 
     mutable RecursiveMutex cs_desc_man;
 
-    bool GetNewDestination(CTxDestination& dest, bilingual_str& error) override;
+    util::Result<CTxDestination> GetNewDestination() override;
     isminetype IsMine(const CScript& script) const override;
     isminetype IsMine(const CTxDestination& dest) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
-    bool GetReservedDestination(bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
+    util::Result<CTxDestination> GetReservedDestination(bool internal, int64_t& index, CKeyPool& keypool) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
 
     // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file

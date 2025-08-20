@@ -12,6 +12,9 @@ import time
 from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
+from test_framework.address import key_to_p2pkh
+from test_framework.wallet_util import bytes_to_wif
+from test_framework.key import ECKey
 
 
 class MempoolUpdateFromBlockTest(BitcoinTestFramework):
@@ -19,8 +22,13 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000', '-limitancestorcount=100']]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
+    def get_new_address(self):
+        key = ECKey()
+        key.generate()
+        pubkey = key.get_pubkey().get_bytes()
+        address = key_to_p2pkh(pubkey)
+        self.priv_keys.append(bytes_to_wif(key.get_bytes()))
+        return address
 
     def transaction_graph_test(self, size, n_tx_to_mine=None, start_input_txid='', end_address='', fee=Decimal(0.00100000)):
         """Create an acyclic tournament (a type of directed graph) of transactions and use it for testing.
@@ -38,11 +46,12 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         More details: https://en.wikipedia.org/wiki/Tournament_(graph_theory)
         """
 
+        self.priv_keys = [self.nodes[0].get_deterministic_priv_key().key]
         if not start_input_txid:
             start_input_txid = self.nodes[0].getblock(self.nodes[0].getblockhash(1))['tx'][0]
 
         if not end_address:
-            end_address = self.nodes[0].getnewaddress()
+            end_address = self.get_new_address()
 
         first_block_hash = ''
         tx_id = []
@@ -74,7 +83,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
                 output_value = ((inputs_value - fee) / Decimal(n_outputs)).quantize(Decimal('0.00000001'))
                 outputs = {}
                 for _ in range(n_outputs):
-                    outputs[self.nodes[0].getnewaddress()] = output_value
+                    outputs[self.get_new_address()] = output_value
             else:
                 output_value = (inputs_value - fee).quantize(Decimal('0.00000001'))
                 outputs = {end_address: output_value}
@@ -84,7 +93,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
             # Create a new transaction.
             unsigned_raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
-            signed_raw_tx = self.nodes[0].signrawtransactionwithwallet(unsigned_raw_tx)
+            signed_raw_tx = self.nodes[0].signrawtransactionwithkey(unsigned_raw_tx, self.priv_keys)
             tx_id.append(self.nodes[0].sendrawtransaction(signed_raw_tx['hex']))
             tx_size.append(self.nodes[0].getmempoolentry(tx_id[-1])['vsize'])
 
