@@ -25,11 +25,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.set_dash_test_params(5, 4, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"]])
 
     def check_no_is(self, txid, node):
-        try:
-            self.log.info(f"Expecting no InstantLock for {txid}")
-            assert not node.getrawtransaction(txid, True)["instantlock"]
-        except:
-            assert False
+        self.log.info(f"Expecting no InstantLock for {txid}")
+        assert not node.getrawtransaction(txid, True)["instantlock"]
 
     def sleep_and_check_no_is(self, txid, node, sleep):
         time.sleep(sleep)
