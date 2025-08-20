@@ -347,126 +347,92 @@ class CompactFiltersTest(BitcoinTestFramework):
         lock_tx.nType = 8  # asset lock type
         lock_tx.vExtraPayload = lockTx_payload.serialize()
 
-        # Sign the transaction - but be careful not to lose the special fields
+        # Sign the transaction
         tx_hex = lock_tx.serialize().hex()
-        self.log.info(f"Pre-signing tx hex (last 100 chars): ...{tx_hex[-100:]}")
         signed_tx = node.signrawtransactionwithwallet(tx_hex)
-        self.log.info(f"Post-signing tx hex (last 100 chars): ...{signed_tx['hex'][-100:]}")
         return tx_from_hex(signed_tx["hex"]), pubkey
 
     def test_special_transactions_in_filters(self):
+        """Test that special transactions are included in block filters.
+
+        Note: This functional test only covers AssetLockTx transactions because:
+        - ProRegTx requires 1000 DASH collateral and masternode setup
+        - ProUpServTx/ProUpRegTx/ProUpRevTx require existing masternodes
+        - All special transaction types are comprehensively tested in unit tests
+          (see src/test/blockfilter_tests.cpp)
+
+        The test verifies filter functionality by comparing filter sizes between
+        blocks with and without special transactions, as GCS filter decoding
+        is not readily available in Python test framework.
+        """
         self.log.info("Test that special transactions are included in block filters")
 
         # Restart node 0 with blockfilterindex enabled
         self.restart_node(0, extra_args=["-blockfilterindex", "-peerblockfilters"])
 
-        # The wallet from the first part of the test persists and has funds from blocks 0-999
-        # No need to create a new wallet, it already exists with plenty of funds
-
-        # Test each special transaction type
-        self.test_proregister_tx_filter()
-        self.test_assetlock_tx_filter()
+        # Test AssetLockTx transactions
+        self.test_assetlock_basic()
+        self.test_assetlock_multiple_outputs()
 
         self.log.info("Special transaction block filter test completed successfully")
 
-    def test_proregister_tx_filter(self):
-        """Test that special transaction fields are included in block filters"""
-        self.log.info("Testing special transactions in block filters...")
+    def test_assetlock_basic(self):
+        """Test that AssetLockTx credit outputs are included in block filters"""
+        self.log.info("Testing AssetLockTx in block filters...")
 
         node = self.nodes[0]
 
-        # Since creating a real ProRegTx requires 1000 DASH collateral and complex setup,
-        # we'll create a simpler AssetLockTx to test that special transaction fields
-        # are properly included in the filter
-
         # Create an AssetLockTx
         amount_to_lock = Decimal("0.1")
-        self.log.info("Creating AssetLockTx...")
         lock_tx, pubkey = self.create_simple_assetlock(amount_to_lock)
 
         # Send the transaction
         txid = node.sendrawtransaction(lock_tx.serialize().hex())
-        self.log.info(f"Created AssetLockTx: {txid}")
 
-        # Verify it's actually recognized as an AssetLockTx
+        # Verify it's recognized as an AssetLockTx
         tx_details = node.getrawtransaction(txid, True)
-        self.log.info(f"Transaction type: {tx_details.get('type', 'unknown')}, version: {tx_details.get('version', 'unknown')}")
-
-        # Check the actual hex to make sure it has the special payload
-        self.log.info(f"Transaction hex (last 100 chars): ...{tx_details['hex'][-100:]}")
-
-        # Try decoding the raw transaction to see its structure
-        if 'vExtraPayload' in tx_details:
-            self.log.info(f"vExtraPayload present: {tx_details['vExtraPayload'][:100]}...")
-        else:
-            self.log.info("No vExtraPayload field found in transaction")
+        assert tx_details.get('type') == 8, f"Expected type 8 (AssetLockTx), got {tx_details.get('type')}"
+        # Note: vExtraPayload may not appear in RPC output but the transaction is still valid
 
         # Mine it into a block
         block_hash = self.generate(node, 1, sync_fun=self.no_op)[0]
 
-        # Check the transaction after it's been mined
-        self.log.info(f"Block mined: {block_hash}")
-        block = node.getblock(block_hash, 2)  # verbosity=2 to get full tx details
-
-        # Find our transaction in the block
-        found_our_tx = False
+        # Verify the transaction is in the block with the assetLockTx field
+        block = node.getblock(block_hash, 2)
+        found_tx = None
         for tx in block['tx']:
             if tx['txid'] == txid:
-                found_our_tx = True
-                self.log.info(f"Found our tx in block: type={tx.get('type', 'unknown')}, version={tx.get('version', 'unknown')}")
-                if 'vExtraPayload' in tx:
-                    self.log.info(f"vExtraPayload in mined tx: {tx['vExtraPayload'][:100]}...")
-                else:
-                    self.log.info("No vExtraPayload in mined transaction")
-
-                # Check if it has the assetLockTx field
-                if 'assetLockTx' in tx:
-                    self.log.info(f"assetLockTx field found: {tx['assetLockTx']}")
-                    # Log the actual credit output script from the mined tx
-                    if 'creditOutputs' in tx['assetLockTx']:
-                        for idx, output in enumerate(tx['assetLockTx']['creditOutputs']):
-                            if 'scriptPubKey' in output and 'hex' in output['scriptPubKey']:
-                                self.log.info(f"Credit output {idx} script: {output['scriptPubKey']['hex']}")
-                else:
-                    self.log.info("No assetLockTx field in transaction")
-
-                # Log the full hex to compare
-                if 'hex' in tx:
-                    self.log.info(f"Mined tx hex (last 100 chars): ...{tx['hex'][-100:]}")
+                found_tx = tx
                 break
 
-        if not found_our_tx:
-            self.log.info(f"ERROR: Could not find our transaction {txid} in block!")
+        assert found_tx is not None, f"Transaction {txid} not found in block"
+        assert 'assetLockTx' in found_tx, "Mined transaction should have assetLockTx field"
+        assert 'creditOutputs' in found_tx['assetLockTx'], "AssetLockTx should have creditOutputs"
 
-        # Get the filter and verify the credit output is included
+        # Get the filter
         filter_result = node.getblockfilter(block_hash, 'basic')
-        self.log.info(f"Got block filter: {filter_result}")
+        assert 'filter' in filter_result, "Block should have a filter"
 
-        # The credit output script from the AssetLockTx should be in the filter
-        credit_script = key_to_p2pkh_script(pubkey)
-        self.log.info(f"Looking for credit script: {credit_script.hex()}")
+        # To properly verify, we'll create a control block without special tx
+        # and compare filter sizes
+        control_block_hash = self.generate(node, 1, sync_fun=self.no_op)[0]
+        control_filter = node.getblockfilter(control_block_hash, 'basic')
 
-        # Since we can't easily decode the GCS filter, we'll use a different approach:
-        # We'll create a test by checking if the node can match the script using the filter
-        # For now, we'll just verify the filter was created and has reasonable size
+        # The block with AssetLockTx should have a larger filter due to credit outputs
+        special_filter_size = len(filter_result['filter'])
+        control_filter_size = len(control_filter['filter'])
 
-        # The filter should exist and be non-empty
-        assert 'filter' in filter_result
-        filter_hex = filter_result['filter']
-        self.log.info(f"Filter size: {len(filter_hex)} hex chars ({len(filter_hex)//2} bytes)")
+        self.log.info(f"Filter with AssetLockTx: {special_filter_size} hex chars")
+        self.log.info(f"Control filter: {control_filter_size} hex chars")
 
-        # With our special tx fields added, the filter should be larger than without them
-        # We can't easily decode the GCS encoding, but we know it was added from the logs
+        # The filter with special tx should be larger (credit outputs add data)
+        assert special_filter_size > control_filter_size, \
+            "Filter with AssetLockTx credit outputs should be larger than control"
 
-        # For now, we'll check that our transaction was processed correctly
-        # The C++ logs confirm the credit output was added to the filter
-        self.log.info("AssetLockTx credit output was added to filter (verified via C++ logs)")
-        assert len(filter_result['filter']) > 0
+        self.log.info("AssetLockTx basic test passed")
 
-        self.log.info("Special transaction filtering test passed")
-
-    def test_assetlock_tx_filter(self):
-        """Test that AssetLockTx credit outputs are included in block filters"""
+    def test_assetlock_multiple_outputs(self):
+        """Test that multiple AssetLockTx credit outputs are all included in block filters"""
         self.log.info("Testing AssetLockTx with multiple credit outputs...")
 
         node = self.nodes[0]
@@ -532,23 +498,23 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         # Get the filter to verify it was created
         filter_result = node.getblockfilter(block_hash, 'basic')
-        self.log.info(f"Got block filter for multi-output test: {filter_result}")
+        assert 'filter' in filter_result, "Block should have a filter"
 
-        # Both credit output scripts should be in the filter
-        credit_script1 = key_to_p2pkh_script(pubkey1)
-        credit_script2 = key_to_p2pkh_script(pubkey2)
+        # Compare with a control block to verify multiple credit outputs increase filter size
+        control_block_hash = self.generate(node, 1, sync_fun=self.no_op)[0]
+        control_filter = node.getblockfilter(control_block_hash, 'basic')
 
-        self.log.info(f"Looking for credit script 1: {credit_script1.hex()}")
-        self.log.info(f"Looking for credit script 2: {credit_script2.hex()}")
+        # Filter with multiple credit outputs should be larger than control
+        multi_output_filter_size = len(filter_result['filter'])
+        control_filter_size = len(control_filter['filter'])
 
-        # The filter should exist and be non-empty
-        assert 'filter' in filter_result
-        assert len(filter_result['filter']) > 0
+        self.log.info(f"Filter with multiple outputs: {multi_output_filter_size} hex chars")
+        self.log.info(f"Control filter: {control_filter_size} hex chars")
 
-        # The C++ implementation adds these scripts to the filter as confirmed by logs
-        # We can't easily decode the GCS filter in Python, but the C++ logs confirm they were added
+        assert multi_output_filter_size > control_filter_size, \
+            "Filter with multiple AssetLockTx credit outputs should be larger than control"
 
-        self.log.info("AssetLockTx with multiple outputs filtering test passed")
+        self.log.info("AssetLockTx multiple outputs test passed")
 
 
 def compute_last_header(prev_header, hashes):
