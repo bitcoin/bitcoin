@@ -191,10 +191,12 @@ void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length)
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
     LARGE_INTEGER nFileSize;
     int64_t nEndPos = (int64_t)offset + length;
-    nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
-    nFileSize.u.HighPart = nEndPos >> 32;
-    if (SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN)) {
-        SetEndOfFile(hFile);
+    if (GetFileSizeEx(hFile, &nFileSize) && (int64_t{nFileSize.u.HighPart} << 32 | nFileSize.u.LowPart) <= nEndPos) {
+        nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
+        nFileSize.u.HighPart = nEndPos >> 32;
+        if (SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN)) {
+            SetEndOfFile(hFile);
+        }
     }
 #elif 0
     // OSX specific version
