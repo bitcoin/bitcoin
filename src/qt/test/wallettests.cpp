@@ -58,19 +58,46 @@ using wallet::WalletRescanReserver;
 
 namespace
 {
-//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
-void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+void ConfirmSendAttempt(QString* text, QMessageBox::StandardButton confirm_type)
 {
-    QTimer::singleShot(0, [text, confirm_type]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
                 if (text) *text = dialog->text();
                 QAbstractButton* button = dialog->button(confirm_type);
+                const QMessageBox::ButtonRole confirm_role = [confirm_type, button](){
+                    if (button) return QMessageBox::InvalidRole;
+                    switch (confirm_type) {
+                        case QMessageBox::Yes: return QMessageBox::YesRole;
+                        case QMessageBox::Cancel: return QMessageBox::NoRole;
+                        default: return QMessageBox::InvalidRole;
+                    }
+                }();
+                for (QAbstractButton* maybe_button : dialog->buttons()) {
+                    if (dialog->buttonRole(maybe_button) == confirm_role) {
+                        button = maybe_button;
+                    } else if (maybe_button->text().startsWith("Override")) {
+                        button = maybe_button;
+                        break;
+                    }
+                }
                 button->setEnabled(true);
                 button->click();
+                if (!button->text().startsWith("Override")) return;
             }
         }
+
+    // Try again
+    QTimer::singleShot(0, [text, confirm_type]{
+        ConfirmSendAttempt(text, confirm_type);
+    });
+}
+
+//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
+void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+{
+    QTimer::singleShot(0, [text, confirm_type]{
+        ConfirmSendAttempt(text, confirm_type);
     });
 }
 
@@ -136,10 +163,16 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
     QVERIFY(text.indexOf(QString::fromStdString(expectError)) != -1);
 }
 
-void CompareBalance(WalletModel& walletModel, CAmount expected_balance, QLabel* balance_label_to_check)
+void CompareBalance(WalletModel& walletModel, CAmount expected_balance, QLabel* balance_label_to_check, bool privacy = false)
 {
     BitcoinUnit unit = walletModel.getOptionsModel()->getDisplayUnit();
-    QString balanceComparison = BitcoinUnits::formatWithUnit(unit, expected_balance, false, BitcoinUnits::SeparatorStyle::ALWAYS);
+    QString balanceComparison;
+    if (privacy) {
+        balanceComparison = BitcoinUnits::formatWithPrivacy(unit, expected_balance, BitcoinUnits::SeparatorStyle::ALWAYS, false);
+    } else {
+        const QFont font_for_money = walletModel.getOptionsModel()->getFontForMoney(unit);
+        balanceComparison = BitcoinUnits::formatHtmlWithUnit(font_for_money, unit, expected_balance, false, BitcoinUnits::SeparatorStyle::ALWAYS);
+    }
     QCOMPARE(balance_label_to_check->text().trimmed(), balanceComparison);
 }
 
@@ -310,7 +343,7 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
     OverviewPage overviewPage(platformStyle.get());
     overviewPage.setWalletModel(&walletModel);
     walletModel.pollBalanceChanged(); // Manual balance polling update
-    CompareBalance(walletModel, walletModel.wallet().getBalance(), overviewPage.findChild<QLabel*>("labelBalance"));
+    CompareBalance(walletModel, walletModel.wallet().getBalance(), overviewPage.findChild<QLabel*>("labelBalance"), /*privacy=*/true);
 
     // Check Request Payment button
     ReceiveCoinsDialog receiveCoinsDialog(platformStyle.get());
@@ -346,7 +379,7 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
 
             QCOMPARE(uri.count("amount=0.00000001"), 2);
             QCOMPARE(receiveRequestDialog->QObject::findChild<QLabel*>("amount_tag")->text(), QString("Amount:"));
-            QCOMPARE(receiveRequestDialog->QObject::findChild<QLabel*>("amount_content")->text(), QString::fromStdString("0.00000001 " + CURRENCY_UNIT));
+            CompareBalance(walletModel, 1, receiveRequestDialog->QObject::findChild<QLabel*>("amount_content"));
 
             QCOMPARE(uri.count("label=TEST_LABEL_1"), 2);
             QCOMPARE(receiveRequestDialog->QObject::findChild<QLabel*>("label_tag")->text(), QString("Label:"));

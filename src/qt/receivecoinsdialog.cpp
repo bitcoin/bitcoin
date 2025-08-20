@@ -76,6 +76,7 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
     {
         _model->getRecentRequestsTableModel()->sort(RecentRequestsTableModel::Date, Qt::DescendingOrder);
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveCoinsDialog::updateDisplayUnit);
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &ReceiveCoinsDialog::updateFontForMoney);
         updateDisplayUnit();
 
         QTableView* tableView = ui->recentRequestsView;
@@ -140,6 +141,17 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     if(model && model->getOptionsModel())
     {
         ui->reqAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+        updateFontForMoney();
+    }
+}
+
+void ReceiveCoinsDialog::updateFontForMoney()
+{
+    if(model && model->getOptionsModel())
+    {
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        ui->reqAmount->setFontForMoney(font_for_money);
     }
 }
 

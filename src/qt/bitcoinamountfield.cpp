@@ -94,7 +94,11 @@ public:
     {
         bool valid = false;
         CAmount val = value(&valid);
-        val = val + steps * singleStep;
+        CAmount currentSingleStep = singleStep;
+        if (!currentSingleStep) {
+            currentSingleStep = BitcoinUnits::singlestep(currentUnit);
+        }
+        val = val + steps * currentSingleStep;
         val = qBound(m_min_amount, val, m_max_amount);
         setValue(val);
     }
@@ -110,6 +114,11 @@ public:
             setValue(val);
         else
             clear();
+    }
+
+    void setFont(const QFont& font)
+    {
+        lineEdit()->setFont(font);
     }
 
     void setSingleStep(const CAmount& step)
@@ -151,7 +160,7 @@ public:
 
 private:
     BitcoinUnit currentUnit{BitcoinUnit::BTC};
-    CAmount singleStep{CAmount(100000)}; // satoshis
+    CAmount singleStep{CAmount(0)};
     mutable QSize cachedMinimumSizeHint;
     bool m_allow_empty{true};
     CAmount m_min_amount{CAmount(0)};
@@ -335,6 +344,11 @@ void BitcoinAmountField::unitChanged(int idx)
 void BitcoinAmountField::setDisplayUnit(BitcoinUnit new_unit)
 {
     unit->setValue(QVariant::fromValue(new_unit));
+}
+
+void BitcoinAmountField::setFontForMoney(const QFont& font_for_money)
+{
+    amount->setFont(font_for_money);
 }
 
 void BitcoinAmountField::setSingleStep(const CAmount& step)
