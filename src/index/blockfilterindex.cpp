@@ -30,6 +30,7 @@ using node::UndoReadFromDisk;
 constexpr uint8_t DB_BLOCK_HASH{'s'};
 constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
 constexpr uint8_t DB_FILTER_POS{'P'};
+constexpr uint8_t DB_VERSION{'V'};
 
 constexpr unsigned int MAX_FLTR_FILE_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for fltr?????.dat files */
@@ -116,6 +117,35 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
 
 bool BlockFilterIndex::Init()
 {
+    // Check version compatibility first
+    int version = 0;
+    if (m_db->Exists(DB_VERSION)) {
+        if (!m_db->Read(DB_VERSION, version)) {
+            return error("%s: Failed to read %s index version from database", __func__, GetName());
+        }
+        if (version > CURRENT_VERSION) {
+            return error("%s: %s index version %d is too high (expected <= %d)",
+                        __func__, GetName(), version, CURRENT_VERSION);
+        }
+    }
+
+    // Check if we have an existing index that needs migration
+    if (m_db->Exists(DB_FILTER_POS) && version < CURRENT_VERSION) {
+        if (version == 0) {
+            // No version means this is an old index from before versioning was added
+            return error("%s: The %s index is incompatible with this version of Dash Core. "
+                        "The index format has been updated to include special transaction data. "
+                        "Please restart with -reindex to rebuild the blockfilter index, "
+                        "or manually delete the indexes/blockfilter directory from your datadir.",
+                        __func__, GetName());
+        } else {
+            // Handle future version upgrades here
+            return error("%s: %s index version %d is outdated (current version is %d). "
+                        "Please restart with -reindex to rebuild the index.",
+                        __func__, GetName(), version, CURRENT_VERSION);
+        }
+    }
+
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
         // Check that the cause of the read failure is that the key does not exist. Any other errors
         // indicate database corruption or a disk failure, and starting the index would cause
@@ -135,6 +165,11 @@ bool BlockFilterIndex::Init()
 bool BlockFilterIndex::CommitInternal(CDBBatch& batch)
 {
     const FlatFilePos& pos = m_next_filter_pos;
+
+    // Write the current version if this is a new index
+    if (!m_db->Exists(DB_VERSION)) {
+        batch.Write(DB_VERSION, CURRENT_VERSION);
+    }
 
     // Flush current filter file to disk.
     CAutoFile file(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
