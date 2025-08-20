@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Dash Core developers
+// Copyright (c) 2025 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -127,8 +127,5 @@ void ExtractSpecialTxFilterElements(const CTransaction& tx,
         // No additional special fields needed for these transaction types
         // Their standard outputs are already included in the base filter
         break;
-    default:
-        // Unknown special transaction type - ignore
-        break;
-    }
+    } // no default case, so the compiler can warn about missing cases
 }
