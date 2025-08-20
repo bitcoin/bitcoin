@@ -36,6 +36,7 @@ from test_framework.script_util import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
 )
 from test_framework.key import ECKey
 from decimal import Decimal
@@ -427,8 +428,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.log.debug(f"Control filter: {control_filter_size} hex chars")
 
         # The filter with special tx should be larger (credit outputs add data)
-        assert special_filter_size > control_filter_size, \
-            "Filter with AssetLockTx credit outputs should be larger than control"
+        assert_greater_than(special_filter_size, control_filter_size)
 
         self.log.info("AssetLockTx basic test passed")
 
@@ -475,8 +475,7 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.log.debug(f"Filter with multiple outputs: {multi_output_filter_size} hex chars")
         self.log.debug(f"Control filter: {control_filter_size} hex chars")
 
-        assert multi_output_filter_size > control_filter_size, \
-            "Filter with multiple AssetLockTx credit outputs should be larger than control"
+        assert_greater_than(multi_output_filter_size, control_filter_size)
 
         self.log.info("AssetLockTx multiple outputs test passed")
 
