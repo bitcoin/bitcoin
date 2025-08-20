@@ -16,6 +16,8 @@
 
 namespace init {
 namespace {
+const char* EXE_NAME = "bitcoin-qt";
+
 class BitcoinQtInit : public interfaces::Init
 {
 public:
@@ -32,6 +34,7 @@ public:
         return MakeWalletLoader(chain, *Assert(m_node.args));
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
+    const char* exeName() override { return EXE_NAME; }
     node::NodeContext m_node;
 };
 } // namespace
