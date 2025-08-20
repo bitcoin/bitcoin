@@ -23,7 +23,7 @@ CMD_GREP_WALLET_ARGS = r"git grep --function-context 'void WalletInit::AddWallet
 CMD_GREP_WALLET_HIDDEN_ARGS = r"git grep --function-context 'void DummyWalletInit::AddWalletOptions' -- {}".format(CMD_ROOT_DIR)
 CMD_GREP_DOCS = r"git grep --perl-regexp '{}' {}".format(REGEX_DOC, CMD_ROOT_DIR)
 # list unsupported, deprecated and duplicate args as they need no documentation
-SET_DOC_OPTIONAL = set(['-h', '-?', '-dbcrashratio', '-forcecompactdb'])
+SET_DOC_OPTIONAL = set(['-h', '-?', '-dbcrashratio', '-forcecompactdb', '-ipcconnect', '-ipcfd'])
 
 
 def lint_missing_argument_documentation():

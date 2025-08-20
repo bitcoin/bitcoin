@@ -7,7 +7,10 @@ from test_framework.test_framework import (
     BitcoinTestFramework,
     SkipTest,
 )
-from test_framework.util import assert_equal
+from test_framework.util import (
+    append_config,
+    assert_equal,
+)
 
 import platform
 import re
@@ -55,11 +58,10 @@ class ToolBitcoinTest(BitcoinTestFramework):
                 raise RuntimeError(f"Unexpected output from {node.args + extra_args}: {out=!r} {err=!r} {ret=!r}") from e
 
     def run_test(self):
+        node = self.nodes[0]
+
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")
-
-        self.log.info("Ensure bitcoin command does not accept -ipcbind by default")
-        self.test_args(["-M"], ["-ipcbind=unix"], expect_error='Error: Error parsing command line arguments: Invalid parameter -ipcbind=unix')
 
         self.log.info("Ensure bitcoin -M invokes bitcoind")
         self.test_args(["-M"], [], expect_exe="bitcoind")
@@ -73,6 +75,13 @@ class ToolBitcoinTest(BitcoinTestFramework):
 
             self.log.info("Ensure bitcoin -m does accept -ipcbind")
             self.test_args(["-m"], ["-ipcbind=unix"], expect_exe="bitcoin-node")
+
+            self.log.info("Ensure bitcoin accepts -ipcbind by default")
+            self.test_args([], ["-ipcbind=unix"], expect_exe="bitcoin-node")
+
+            self.log.info("Ensure bitcoin recognizes -ipcbind in config file")
+            append_config(node.datadir_path, ["ipcbind=unix"])
+            self.test_args([], [], expect_exe="bitcoin-node")
 
 
 def get_node_output(node):
