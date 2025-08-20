@@ -6,6 +6,7 @@
 
 #include <llmq/commitment.h>
 #include <llmq/quorums.h>
+#include <llmq/signhash.h>
 #include <llmq/signing_shares.h>
 
 #include <bls/bls_batchverifier.h>
@@ -838,18 +839,9 @@ void CSigningManager::WorkThreadMain(PeerManager& peerman)
 
 uint256 CSigBase::buildSignHash() const
 {
-    return BuildSignHash(llmqType, quorumHash, id, msgHash);
+    return SignHash(llmqType, quorumHash, id, msgHash).Get();
 }
 
-uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
-{
-    CHashWriter h(SER_GETHASH, 0);
-    h << llmqType;
-    h << quorumHash;
-    h << id;
-    h << msgHash;
-    return h.GetHash();
-}
 
 bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash)
 {

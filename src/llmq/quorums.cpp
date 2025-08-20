@@ -8,6 +8,7 @@
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
 #include <llmq/params.h>
+#include <llmq/signhash.h>
 #include <llmq/utils.h>
 
 #include <bls/bls.h>
@@ -36,8 +37,6 @@ static const std::string DB_QUORUM_QUORUM_VVEC = "q_Qqvvec";
 RecursiveMutex cs_data_requests;
 static std::unordered_map<CQuorumDataRequestKey, CQuorumDataRequest, StaticSaltedHasher> mapQuorumDataRequests GUARDED_BY(cs_data_requests);
 
-// forward declaration to avoid circular dependency
-uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
 
 static uint256 MakeQuorumKey(const CQuorum& q)
 {
@@ -1279,7 +1278,7 @@ VerifyRecSigStatus VerifyRecoveredSig(Consensus::LLMQType llmqType, const CChain
         return VerifyRecSigStatus::NoQuorum;
     }
 
-    uint256 signHash = BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    uint256 signHash = SignHash(llmqType, quorum->qc->quorumHash, id, msgHash).Get();
     const bool ret = sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
     return ret ? VerifyRecSigStatus::Valid : VerifyRecSigStatus::Invalid;
 }

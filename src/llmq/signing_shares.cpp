@@ -7,6 +7,7 @@
 #include <llmq/options.h>
 #include <llmq/quorums.h>
 #include <llmq/commitment.h>
+#include <llmq/signhash.h>
 #include <llmq/signing.h>
 
 #include <bls/bls_batchverifier.h>
@@ -772,7 +773,7 @@ void CSigSharesManager::TryRecoverSig(PeerManager& peerman, const CQuorumCPtr& q
     {
         LOCK(cs);
 
-        auto signHash = BuildSignHash(quorum->params.type, quorum->qc->quorumHash, id, msgHash);
+        auto signHash = SignHash(quorum->params.type, quorum->qc->quorumHash, id, msgHash).Get();
         const auto* sigSharesForSignHash = sigShares.GetAllForSignHash(signHash);
         if (sigSharesForSignHash == nullptr) {
             return;
@@ -1617,7 +1618,7 @@ void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus
     }
 
     LOCK(cs);
-    auto signHash = BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    auto signHash = SignHash(llmqType, quorum->qc->quorumHash, id, msgHash).Get();
     if (const auto *const sigs = sigShares.GetAllForSignHash(signHash)) {
         for (const auto& [quorumMemberIndex, _] : *sigs) {
             // re-announce every sigshare to every node

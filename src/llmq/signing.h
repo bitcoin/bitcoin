@@ -263,8 +263,6 @@ void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& 
     }
 }
 
-uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
-
 bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash);
 
 } // namespace llmq
