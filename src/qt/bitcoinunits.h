@@ -43,7 +43,10 @@ public:
         BTC,
         mBTC,
         uBTC,
-        SAT
+        SAT,
+        bTBC,
+        sTBC,
+        TBC,
     };
     Q_ENUM(Unit)
 
@@ -60,6 +63,10 @@ public:
 
     //! Get list of units, for drop-down box
     static QList<Unit> availableUnits();
+    //! String for setting(s)
+    static std::variant<qint8, QString> ToSetting(Unit unit);
+    //! Convert setting(s) string to unit
+    static Unit FromSetting(const QString&, Unit def);
     //! Long name
     static QString longName(Unit unit);
     //! Short name
@@ -68,8 +75,16 @@ public:
     static QString description(Unit unit);
     //! Number of Satoshis (1e-8) per unit
     static qint64 factor(Unit unit);
-    //! Number of decimals left
+    //! Number of fractional places
     static int decimals(Unit unit);
+    //! Radix
+    static int radix(Unit unit);
+    //! Number system
+    static Unit numsys(Unit unit);
+    //! Number of digits total in maximum value
+    static qint64 max_digits(Unit unit);
+    //! "Single step" amount, in satoshis
+    static qint64 singlestep(Unit unit);
     //! Format as string
     static QString format(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
     //! Format as string (with unit)
