@@ -33,8 +33,7 @@
  * - AssetLockTx: Credit output scripts (platform credits)
  */
 // Helper function to add a script to the filter if it's not empty
-static void AddScriptElement(const CScript& script,
-                            const std::function<void(Span<const unsigned char>)>& addElement)
+static void AddScriptElement(const CScript& script, const std::function<void(Span<const unsigned char>)>& addElement)
 {
     if (!script.empty()) {
         addElement(MakeUCharSpan(script));
@@ -42,9 +41,8 @@ static void AddScriptElement(const CScript& script,
 }
 
 // Helper function to add a hash/key to the filter
-template<typename T>
-static void AddHashElement(const T& hash,
-                          const std::function<void(Span<const unsigned char>)>& addElement)
+template <typename T>
+static void AddHashElement(const T& hash, const std::function<void(Span<const unsigned char>)>& addElement)
 {
     addElement(MakeUCharSpan(hash));
 }
@@ -54,14 +52,13 @@ static void AddHashElement(const T& hash,
 // src/common/bloom.cpp. If you add or remove fields for a special
 // transaction type here, update the bloom filter routine accordingly
 // (and vice versa) to avoid compact-filter vs bloom-filter divergence.
-void ExtractSpecialTxFilterElements(const CTransaction& tx,
-                                   const std::function<void(Span<const unsigned char>)>& addElement)
+void ExtractSpecialTxFilterElements(const CTransaction& tx, const std::function<void(Span<const unsigned char>)>& addElement)
 {
     if (!tx.HasExtraPayloadField()) {
         return; // not a special transaction
     }
 
-    switch(tx.nType) {
+    switch (tx.nType) {
     case TRANSACTION_PROVIDER_REGISTER: {
         if (const auto opt_proTx = GetTxPayload<CProRegTx>(tx)) {
             // Add collateral outpoint

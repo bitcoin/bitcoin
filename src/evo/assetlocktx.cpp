@@ -21,11 +21,10 @@
 
 using node::BlockManager;
 
-namespace llmq
-{
+namespace llmq {
 // forward declaration to avoid circular dependency
 uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
-} // llmq
+} // namespace llmq
 
 /**
  *  Common code for Asset Lock and Asset Unlock

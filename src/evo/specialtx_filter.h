@@ -21,6 +21,6 @@ class CTransaction;
  *                   allocations.
  */
 void ExtractSpecialTxFilterElements(const CTransaction& tx,
-                                   const std::function<void(Span<const unsigned char>)>& addElement);
+                                    const std::function<void(Span<const unsigned char>)>& addElement);
 
 #endif // BITCOIN_EVO_SPECIALTX_FILTER_H
