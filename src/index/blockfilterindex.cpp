@@ -112,6 +112,17 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
 
     m_name = filter_name + " block filter index";
     m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
+
+    // Check version
+    int version = 0;
+    if (!m_db->Read(DB_VERSION, version) || version < CURRENT_VERSION) {
+        // No version or too old version means we need to start from scratch
+        LogPrintf("%s: Outdated or no version blockfilter, starting from scratch\n", __func__);
+        m_db.reset();
+        m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, /*f_wipe=*/true);
+        m_db->Write(DB_VERSION, CURRENT_VERSION);
+    }
+
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
@@ -125,23 +136,6 @@ bool BlockFilterIndex::Init()
         }
         if (version > CURRENT_VERSION) {
             return error("%s: %s index version %d is too high (expected <= %d)",
-                        __func__, GetName(), version, CURRENT_VERSION);
-        }
-    }
-
-    // Check if we have an existing index that needs migration
-    if (m_db->Exists(DB_FILTER_POS) && version < CURRENT_VERSION) {
-        if (version == 0) {
-            // No version means this is an old index from before versioning was added
-            return error("%s: The %s index is incompatible with this version of Dash Core. "
-                        "The index format has been updated to include special transaction data. "
-                        "Please restart with -reindex to rebuild the blockfilter index, "
-                        "or manually delete the indexes/blockfilter directory from your datadir.",
-                        __func__, GetName());
-        } else {
-            // Handle future version upgrades here
-            return error("%s: %s index version %d is outdated (current version is %d). "
-                        "Please restart with -reindex to rebuild the index.",
                         __func__, GetName(), version, CURRENT_VERSION);
         }
     }
