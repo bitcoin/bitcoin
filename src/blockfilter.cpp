@@ -198,7 +198,7 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
         }
 
         // Extract special transaction elements using delegation pattern
-        ExtractSpecialTxFilterElements(*tx, [&elements](const std::vector<unsigned char>& data) {
+        ExtractSpecialTxFilterElements(*tx, [&elements](Span<const unsigned char> data) {
             elements.emplace(data.begin(), data.end());
         });
     }

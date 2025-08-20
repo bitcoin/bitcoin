@@ -34,19 +34,19 @@
  */
 // Helper function to add a script to the filter if it's not empty
 static void AddScriptElement(const CScript& script,
-                            const std::function<void(const std::vector<unsigned char>&)>& addElement)
+                            const std::function<void(Span<const unsigned char>)>& addElement)
 {
     if (!script.empty()) {
-        addElement(std::vector<unsigned char>(script.begin(), script.end()));
+        addElement(MakeUCharSpan(script));
     }
 }
 
 // Helper function to add a hash/key to the filter
 template<typename T>
 static void AddHashElement(const T& hash,
-                          const std::function<void(const std::vector<unsigned char>&)>& addElement)
+                          const std::function<void(Span<const unsigned char>)>& addElement)
 {
-    addElement(std::vector<unsigned char>(hash.begin(), hash.end()));
+    addElement(MakeUCharSpan(hash));
 }
 
 // NOTE(maintenance): Keep this in sync with
@@ -55,7 +55,7 @@ static void AddHashElement(const T& hash,
 // transaction type here, update the bloom filter routine accordingly
 // (and vice versa) to avoid compact-filter vs bloom-filter divergence.
 void ExtractSpecialTxFilterElements(const CTransaction& tx,
-                                   const std::function<void(const std::vector<unsigned char>&)>& addElement)
+                                   const std::function<void(Span<const unsigned char>)>& addElement)
 {
     if (!tx.HasExtraPayloadField()) {
         return; // not a special transaction
@@ -67,8 +67,7 @@ void ExtractSpecialTxFilterElements(const CTransaction& tx,
             // Add collateral outpoint
             CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
             stream << opt_proTx->collateralOutpoint;
-            auto span = MakeUCharSpan(stream);
-            addElement(std::vector<unsigned char>(span.begin(), span.end()));
+            addElement(MakeUCharSpan(stream));
 
             // Add owner key ID
             AddHashElement(opt_proTx->keyIDOwner, addElement);

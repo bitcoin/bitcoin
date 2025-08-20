@@ -6,7 +6,7 @@
 #define BITCOIN_EVO_SPECIALTX_FILTER_H
 
 #include <functional>
-#include <vector>
+#include <span.h>
 
 class CTransaction;
 
@@ -16,9 +16,11 @@ class CTransaction;
  * SPV clients can detect special transactions using either filtering mechanism.
  *
  * @param tx The transaction to extract elements from
- * @param addElement Callback function to add extracted elements to the filter
+ * @param addElement Callback to add extracted elements to the filter. Uses
+ *                   Span<const unsigned char> to avoid intermediate
+ *                   allocations.
  */
 void ExtractSpecialTxFilterElements(const CTransaction& tx,
-                                   const std::function<void(const std::vector<unsigned char>&)>& addElement);
+                                   const std::function<void(Span<const unsigned char>)>& addElement);
 
 #endif // BITCOIN_EVO_SPECIALTX_FILTER_H
