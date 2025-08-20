@@ -66,6 +66,9 @@ class CompactFiltersTest(BitcoinTestFramework):
             ["-blockfilterindex"],
         ]
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def run_test(self):
         # Node 0 supports COMPACT_FILTERS, node 1 does not.
         peer_0 = self.nodes[0].add_p2p_connection(FiltersClient())
