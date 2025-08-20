@@ -49,3 +49,7 @@ Bitcoin Core requires one of the following compilers.
 | --- | --- | --- |
 | [Fontconfig](../depends/packages/fontconfig.mk) (gui) | [link](https://www.freedesktop.org/wiki/Software/fontconfig/) | 2.6 |
 | [FreeType](../depends/packages/freetype.mk) (gui) | [link](https://freetype.org) | 2.3.0 |
+
+### Multiprocess support
+| Dependency | Releases | Version used | Minimum required | Runtime |
+| [Cap'n Proto](../depends/packages/capnp.mk) | [link](https://capnproto.org) | [0.6.1](https://capnproto.org/install.html) | 0.5.3 | Yes |
