@@ -22,6 +22,8 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "wallet/wallet -> wallet/walletdb -> wallet/wallet",
     "node/coinstats -> validation -> node/coinstats",
     # Dash
+    "blockfilter -> evo/specialtx_filter -> evo/assetlocktx -> llmq/signing -> net_processing -> blockfilter",
+    "blockfilter -> evo/specialtx_filter -> evo/assetlocktx -> llmq/signing -> net_processing -> index/blockfilterindex -> blockfilter",
     "banman -> common/bloom -> evo/assetlocktx -> llmq/quorums -> net -> banman",
     "banman -> common/bloom -> evo/assetlocktx -> llmq/signing -> net_processing -> banman",
     "chainlock/chainlock -> instantsend/instantsend -> chainlock/chainlock",
