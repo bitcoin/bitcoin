@@ -74,15 +74,11 @@ class CompactFiltersTest(BitcoinTestFramework):
         peer_0 = self.nodes[0].add_p2p_connection(FiltersClient())
         peer_1 = self.nodes[1].add_p2p_connection(FiltersClient())
 
-        # Ensure node 0 has a wallet so block rewards are saved for later use
-        if not self.nodes[0].listwallets():
-            self.nodes[0].createwallet(wallet_name="")
-
-        # Get an address to mine to so we receive the rewards
-        mining_addr = self.nodes[0].getnewaddress()
+        self.privkeys = [self.nodes[0].get_deterministic_priv_key().key]
+        self.change_addr = self.nodes[0].get_deterministic_priv_key().address
 
         # Nodes 0 & 1 share the same first 999 blocks in the chain.
-        self.generatetoaddress(self.nodes[0], 999, mining_addr)
+        self.generate(self.nodes[0], 999)
 
         # Stale blocks by disconnecting nodes 0 & 1, mining, then reconnecting
         self.disconnect_nodes(0, 1)
@@ -308,30 +304,31 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         self.test_special_transactions_in_filters()
 
-    def create_simple_assetlock(self, amount_locked):
+    def create_simple_assetlock(self, base_tx, base_tx_value, amount_locked_1, amount_locked_2=0):
         """Create a simple AssetLockTx for testing"""
         node = self.nodes[0]
 
-        # Get a coin to lock
-        unspent = node.listunspent()[0]
-
-        # Create a key for the credit outputs
-        key = ECKey()
-        key.generate()
-        pubkey = key.get_pubkey().get_bytes()
-
         # Create the AssetLockTx
-        inputs = [CTxIn(COutPoint(int(unspent["txid"], 16), unspent["vout"]))]
+        inputs = [CTxIn(outpoint=COutPoint(int(base_tx, 16), 0))]
 
         # Credit outputs (what will be credited on Platform)
-        credit_outputs = [CTxOut(int(amount_locked * COIN), key_to_p2pkh_script(pubkey))]
+        credit_outputs = []
+        for amount in [amount_locked_1, amount_locked_2]:
+            if amount == 0:
+                continue
+
+            # Create a key for the credit outputs
+            key = ECKey()
+            key.generate()
+            pubkey = key.get_pubkey().get_bytes()
+            credit_outputs.append(CTxOut(int(amount * COIN), key_to_p2pkh_script(pubkey)))
 
         # AssetLock payload
         lock_tx_payload = CAssetLockTx(1, credit_outputs)
 
         # Calculate remaining amount (minus small fee)
         fee = Decimal("0.0001")
-        remaining = Decimal(str(unspent['amount'])) - amount_locked - fee
+        remaining = base_tx_value - amount_locked_1 - amount_locked_2 - fee
 
         # Create the transaction
         lock_tx = CTransaction()
@@ -339,12 +336,11 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         # Add change output if there's remaining amount
         if remaining > 0:
-            change_addr = node.getnewaddress()
-            change_script = bytes.fromhex(node.validateaddress(change_addr)['scriptPubKey'])
+            change_script = bytes.fromhex(node.validateaddress(self.change_addr)['scriptPubKey'])
             lock_tx.vout = [CTxOut(int(remaining * COIN), change_script)]
 
         # Add OP_RETURN output with the locked amount
-        lock_tx.vout.append(CTxOut(int(amount_locked * COIN), CScript([OP_RETURN, b""])))
+        lock_tx.vout.append(CTxOut(int((amount_locked_1 + amount_locked_2) * COIN), CScript([OP_RETURN, b""])))
 
         lock_tx.nVersion = 3
         lock_tx.nType = 8  # asset lock type
@@ -352,8 +348,8 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         # Sign the transaction
         tx_hex = lock_tx.serialize().hex()
-        signed_tx = node.signrawtransactionwithwallet(tx_hex)
-        return tx_from_hex(signed_tx["hex"]), pubkey
+        signed_tx = node.signrawtransactionwithkey(tx_hex, self.privkeys)
+        return tx_from_hex(signed_tx["hex"]).serialize().hex()
 
     def test_special_transactions_in_filters(self):
         """Test that special transactions are included in block filters.
@@ -387,10 +383,11 @@ class CompactFiltersTest(BitcoinTestFramework):
 
         # Create an AssetLockTx
         amount_to_lock = Decimal("0.1")
-        lock_tx, pubkey = self.create_simple_assetlock(amount_to_lock)
-
-        # Send the transaction
-        txid = node.sendrawtransaction(lock_tx.serialize().hex())
+        block = node.getblock(node.getblockhash(300), 2)
+        base_tx = block['tx'][0]['txid']
+        base_tx_value = block['tx'][0]['vout'][0]['value']
+        signed_hex = self.create_simple_assetlock(base_tx, base_tx_value, amount_to_lock)
+        txid = node.sendrawtransaction(signed_hex)
 
         # Verify it's recognized as an AssetLockTx
         tx_details = node.getrawtransaction(txid, True)
@@ -444,56 +441,13 @@ class CompactFiltersTest(BitcoinTestFramework):
         # Create an AssetLockTx with multiple credit outputs
         # This tests that all credit outputs are properly included in the filter
 
-        # Create keys for multiple credit outputs
-        key1 = ECKey()
-        key1.generate()
-        pubkey1 = key1.get_pubkey().get_bytes()
-
-        key2 = ECKey()
-        key2.generate()
-        pubkey2 = key2.get_pubkey().get_bytes()
-
-        # Get a coin to lock
-        unspent = node.listunspent()[0]
-
-        # Create the AssetLockTx with multiple credit outputs
-        inputs = [CTxIn(COutPoint(int(unspent["txid"], 16), unspent["vout"]))]
-
-        # Multiple credit outputs
         amount1 = Decimal("0.03")
         amount2 = Decimal("0.04")
-        credit_outputs = [
-            CTxOut(int(amount1 * COIN), key_to_p2pkh_script(pubkey1)),
-            CTxOut(int(amount2 * COIN), key_to_p2pkh_script(pubkey2))
-        ]
 
-        # AssetLock payload
-        lock_tx_payload = CAssetLockTx(1, credit_outputs)
-
-        # Calculate remaining amount
-        fee = Decimal("0.0001")
-        total_locked = amount1 + amount2
-        remaining = Decimal(str(unspent['amount'])) - total_locked - fee
-
-        # Create the transaction
-        lock_tx = CTransaction()
-        lock_tx.vin = inputs
-
-        # Add change output
-        if remaining > 0:
-            change_addr = node.getnewaddress()
-            change_script = bytes.fromhex(node.validateaddress(change_addr)['scriptPubKey'])
-            lock_tx.vout = [CTxOut(int(remaining * COIN), change_script)]
-
-        # Add OP_RETURN output
-        lock_tx.vout.append(CTxOut(int(total_locked * COIN), CScript([OP_RETURN, b""])))
-
-        lock_tx.nVersion = 3
-        lock_tx.nType = 8  # asset lock type
-        lock_tx.vExtraPayload = lock_tx_payload.serialize()
-
-        # Sign and send the transaction
-        signed_hex = node.signrawtransactionwithwallet(lock_tx.serialize().hex())["hex"]
+        block = node.getblock(node.getblockhash(301), 2)
+        base_tx = block['tx'][0]['txid']
+        base_tx_value = block['tx'][0]['vout'][0]['value']
+        signed_hex = self.create_simple_assetlock(base_tx, base_tx_value, amount1, amount2)
         txid = node.sendrawtransaction(signed_hex)
 
         # Mine it into a block
