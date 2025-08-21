@@ -92,6 +92,14 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
 {
 }
 
+BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options, AllowOversizedBlocks_tag)
+    : chainparams{chainstate.m_chainman.GetParams()},
+      m_mempool{options.use_mempool ? mempool : nullptr},
+      m_chainstate{chainstate},
+      m_options{options}
+{
+}
+
 void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
 {
     // Block resource limits
