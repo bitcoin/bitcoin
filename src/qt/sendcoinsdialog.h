@@ -100,7 +100,6 @@ private Q_SLOTS:
     void coinControlClipboardFee();
     void coinControlClipboardAfterFee();
     void coinControlClipboardBytes();
-    void coinControlClipboardLowOutput();
     void coinControlClipboardChange();
     void updateFeeSectionControls();
     void updateNumberOfBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header, SynchronizationState sync_state);
