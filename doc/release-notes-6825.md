@@ -1,7 +1,7 @@
 # Breaking Change: Block Filter Index Format Update
 
 ## Summary
-The compact block filter index format has been updated to include Dash special transaction data, providing feature parity with bloom filters for SPV client support. This change is **incompatible** with existing blockfilter indexes.
+The compact block filter index format has been updated to include Dash special transaction data, providing feature parity with bloom filters for SPV client support. This change is **incompatible** with existing blockfilter indexes. Existing blockfilter indexes will automatically be re-created with the new version.
 
 ## Technical Details
 - The blockfilter index now includes fields from Dash special transactions:
