@@ -28,7 +28,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.log.info(f"Expecting no InstantLock for {txid}")
         assert not node.getrawtransaction(txid, True)["instantlock"]
 
-    def sleep_and_check_no_is(self, txid, node, sleep):
+    def sleep_and_check_no_is(self, txid, node, sleep=5):
         time.sleep(sleep)
         self.check_no_is(txid, node)
 
@@ -64,7 +64,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         # 3 nodes should be enough to create an IS lock even if nodes 4 and 5 (which have no tx itself)
         # are the only "neighbours" in intra-quorum connections for one of them.
         self.bump_mocktime(30)
-        self.sleep_and_check_no_is(txid, self.nodes[0], 5)
+        self.sleep_and_check_no_is(txid, self.nodes[0])
         # Have to disable ChainLocks to avoid signing a block with a "safe" tx too early
         self.nodes[0].sporkupdate("SPORK_19_CHAINLOCKS_ENABLED", 4000000000)
         self.wait_for_sporks_same()
@@ -102,7 +102,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.bump_mocktime(30)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the TX wasn't relayed to it, so there should be no IS lock
-        self.sleep_and_check_no_is(txid, self.nodes[0], 5)
+        self.sleep_and_check_no_is(txid, self.nodes[0])
         # push the tx directly via rpc
         self.nodes[3].sendrawtransaction(self.nodes[0].getrawtransaction(txid))
         # node 3 should vote on a tx now since it became aware of it via sendrawtransaction
@@ -133,7 +133,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.bump_mocktime(30)
         self.wait_for_mnauth(self.nodes[3], 2)
         # node 3 fully reconnected but the TX wasn't relayed to it, so there should be no IS lock
-        self.sleep_and_check_no_is(txid, self.nodes[0], 5)
+        self.sleep_and_check_no_is(txid, self.nodes[0])
         # Make node0 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
         block = self.generate(self.nodes[0], 1, sync_fun=self.no_op)[0]
