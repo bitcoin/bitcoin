@@ -695,7 +695,7 @@ private:
      *
      * Changes here may need to be reflected in TxRelayMayResultInDisconnect().
      */
-    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message = "")
+    bool MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
     /** Maybe disconnect a peer and discourage future connections from its address.
@@ -1872,7 +1872,7 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
     return false;
 }
 
-bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state, const std::string& message) {
+bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& state) {
     switch (state.GetResult()) {
     case TxValidationResult::TX_RESULT_UNSET:
         break;
@@ -1880,7 +1880,7 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
     case TxValidationResult::TX_CONSENSUS:
         {
             LOCK(cs_main);
-            Misbehaving(nodeid, 100, message);
+            Misbehaving(nodeid, 100);
             return true;
         }
     // Conflicting (but not necessarily invalid) data or different policy:
@@ -1896,9 +1896,6 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
     case TxValidationResult::TX_BAD_SPECIAL:
     case TxValidationResult::TX_CONFLICT_LOCK:
         break;
-    }
-    if (message != "") {
-        LogPrint(BCLog::NET, "peer=%d: %s\n", nodeid, message);
     }
     return false;
 }
