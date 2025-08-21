@@ -842,6 +842,7 @@ void InitParameterInteraction(ArgsManager& args)
         if (!args.IsArgSet("-minrelaytxfee")) {
             args.ForceSetArg("-minrelaytxfee", FormatMoney(std::max(ParseMoney(args.GetArg("-incrementalrelayfee", "")).value_or(0), CORE_INCREMENTAL_RELAY_FEE)));
         }
+        args.SoftSetArg("-blockmintxfee", "0.00000001");
         args.SoftSetArg("-acceptnonstddatacarrier", "1");
         args.SoftSetArg("-blockreconstructionextratxn", "100");
         args.SoftSetArg("-blockreconstructionextratxnsize", strprintf("%s", std::numeric_limits<size_t>::max() / 1000000 + 1));
