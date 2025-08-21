@@ -77,8 +77,6 @@ struct CoinFilterParams {
     CAmount min_sum_amount{MAX_MONEY};
     // Maximum number of outputs that can be returned
     uint64_t max_count{0};
-    // By default, return only spendable outputs
-    bool only_spendable{true};
     // By default, do not include immature coinbase outputs
     bool include_immature_coinbase{false};
     // By default, skip locked UTXOs
@@ -95,12 +93,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                            const CCoinControl* coinControl = nullptr,
                            std::optional<CFeeRate> feerate = std::nullopt,
                            const CoinFilterParams& params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-
-/**
- * Wrapper function for AvailableCoins which skips the `feerate` and `CoinFilterParams::only_spendable` parameters. Use this function
- * to list all available coins (e.g. listunspent RPC) while not intending to fund a transaction.
- */
-CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl = nullptr, CoinFilterParams params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Find non-change parent output.

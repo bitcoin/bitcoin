@@ -309,8 +309,8 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
             return util::Error{strprintf(_("Not solvable pre-selected input %s"), outpoint.ToString())}; // Not solvable, can't estimate size for fee
         }
 
-        /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
-        COutput output(outpoint, txout, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
+        /* Set some defaults for depth, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
+        COutput output(outpoint, txout, /*depth=*/0, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, coin_selection_params.m_effective_feerate);
         output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
         result.Insert(output, coin_selection_params.m_subtract_fee_outputs);
     }
@@ -437,14 +437,11 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         if (wallet.IsSpent(outpoint))
             continue;
 
-        isminetype mine = wallet.IsMine(output);
-        assert(mine != ISMINE_NO);
-
         if (!allow_used_addresses && wallet.IsSpentKey(output.scriptPubKey)) {
             continue;
         }
 
-        bool tx_from_me = CachedTxIsFromMe(wallet, wtx, ISMINE_ALL);
+        bool tx_from_me = CachedTxIsFromMe(wallet, wtx);
 
         std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(output.scriptPubKey);
 
@@ -452,10 +449,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         // Because CalculateMaximumSignedInputSize infers a solvable descriptor to get the satisfaction size,
         // it is safe to assume that this input is solvable if input_bytes is greater than -1.
         bool solvable = input_bytes > -1;
-        bool spendable = (mine & ISMINE_SPENDABLE) != ISMINE_NO;
-
-        // Filter by spendable outputs only
-        if (!spendable && params.only_spendable) continue;
 
         // Obtain script type
         std::vector<std::vector<uint8_t>> script_solutions;
@@ -474,7 +467,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
         }
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
-        auto available_output = COutput(outpoint, output, nDepth, input_bytes, spendable, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
+        auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
         if (wtx.tx->version == TRUC_VERSION && nDepth == 0 && params.check_version_trucness) {
             unconfirmed_truc_coins.emplace_back(available_output_type, available_output);
             auto [it, _] = truc_txid_by_value.try_emplace(wtx.tx->GetHash(), 0);
@@ -528,13 +521,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     return result;
 }
 
-CoinsResult AvailableCoinsListUnspent(const CWallet& wallet, const CCoinControl* coinControl, CoinFilterParams params)
-{
-    params.only_spendable = false;
-    params.check_version_trucness = false;
-    return AvailableCoins(wallet, coinControl, /*feerate=*/ std::nullopt, params);
-}
-
 const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -563,21 +549,18 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
 
     CCoinControl coin_control;
     CoinFilterParams coins_params;
-    coins_params.only_spendable = false;
     coins_params.skip_locked = false;
     for (const COutput& coin : AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
         CTxDestination address;
-        if ((coin.spendable || (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && coin.solvable))) {
-            if (!ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
-                // For backwards compatibility, we convert P2PK output scripts into PKHash destinations
-                if (auto pk_dest = std::get_if<PubKeyDestination>(&address)) {
-                    address = PKHash(pk_dest->GetPubKey());
-                } else {
-                    continue;
-                }
+        if (!ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
+            // For backwards compatibility, we convert P2PK output scripts into PKHash destinations
+            if (auto pk_dest = std::get_if<PubKeyDestination>(&address)) {
+                address = PKHash(pk_dest->GetPubKey());
+            } else {
+                continue;
             }
-            result[address].emplace_back(coin);
         }
+        result[address].emplace_back(coin);
     }
     return result;
 }

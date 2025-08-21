@@ -43,10 +43,8 @@ namespace wallet {
 class CCoinControl;
 class CWallet;
 enum class AddressPurpose;
-enum isminetype : unsigned int;
 struct CRecipient;
 struct WalletContext;
-using isminefilter = std::underlying_type_t<isminetype>;
 } // namespace wallet
 
 namespace interfaces {
@@ -117,7 +115,6 @@ public:
     //! Look up address in wallet, return whether exists.
     virtual bool getAddress(const CTxDestination& dest,
         std::string* name,
-        wallet::isminetype* is_mine,
         wallet::AddressPurpose* purpose) = 0;
 
     //! Get wallet address list.
@@ -225,16 +222,16 @@ public:
     virtual CAmount getAvailableBalance(const wallet::CCoinControl& coin_control) = 0;
 
     //! Return whether transaction input belongs to wallet.
-    virtual wallet::isminetype txinIsMine(const CTxIn& txin) = 0;
+    virtual bool txinIsMine(const CTxIn& txin) = 0;
 
     //! Return whether transaction output belongs to wallet.
-    virtual wallet::isminetype txoutIsMine(const CTxOut& txout) = 0;
+    virtual bool txoutIsMine(const CTxOut& txout) = 0;
 
     //! Return debit amount if transaction input belongs to wallet.
-    virtual CAmount getDebit(const CTxIn& txin, wallet::isminefilter filter) = 0;
+    virtual CAmount getDebit(const CTxIn& txin) = 0;
 
     //! Return credit amount if transaction input belongs to wallet.
-    virtual CAmount getCredit(const CTxOut& txout, wallet::isminefilter filter) = 0;
+    virtual CAmount getCredit(const CTxOut& txout) = 0;
 
     //! Return AvailableCoins + LockedCoins grouped by wallet address.
     //! (put change in one group with wallet address)
@@ -356,11 +353,11 @@ public:
 struct WalletAddress
 {
     CTxDestination dest;
-    wallet::isminetype is_mine;
+    bool is_mine;
     wallet::AddressPurpose purpose;
     std::string name;
 
-    WalletAddress(CTxDestination dest, wallet::isminetype is_mine, wallet::AddressPurpose purpose, std::string name)
+    WalletAddress(CTxDestination dest, bool is_mine, wallet::AddressPurpose purpose, std::string name)
         : dest(std::move(dest)), is_mine(is_mine), purpose(std::move(purpose)), name(std::move(name))
     {
     }
@@ -384,11 +381,11 @@ struct WalletBalances
 struct WalletTx
 {
     CTransactionRef tx;
-    std::vector<wallet::isminetype> txin_is_mine;
-    std::vector<wallet::isminetype> txout_is_mine;
+    std::vector<bool> txin_is_mine;
+    std::vector<bool> txout_is_mine;
     std::vector<bool> txout_is_change;
     std::vector<CTxDestination> txout_address;
-    std::vector<wallet::isminetype> txout_address_is_mine;
+    std::vector<bool> txout_address_is_mine;
     CAmount credit;
     CAmount debit;
     CAmount change;

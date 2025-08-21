@@ -23,7 +23,6 @@
 #include <wallet/context.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
-#include <wallet/types.h>
 #include <wallet/load.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
@@ -74,10 +73,10 @@ WalletTx MakeWalletTx(CWallet& wallet, const CWalletTx& wtx)
         result.txout_address.emplace_back();
         result.txout_address_is_mine.emplace_back(ExtractDestination(txout.scriptPubKey, result.txout_address.back()) ?
                                                       wallet.IsMine(result.txout_address.back()) :
-                                                      ISMINE_NO);
+                                                      false);
     }
-    result.credit = CachedTxGetCredit(wallet, wtx, ISMINE_ALL);
-    result.debit = CachedTxGetDebit(wallet, wtx, ISMINE_ALL);
+    result.credit = CachedTxGetCredit(wallet, wtx, /*avoid_reuse=*/true);
+    result.debit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/true);
     result.change = CachedTxGetChange(wallet, wtx);
     result.time = wtx.GetTxTime();
     result.value_map = wtx.mapValue;
@@ -173,7 +172,7 @@ public:
     bool isSpendable(const CTxDestination& dest) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->IsMine(dest) & ISMINE_SPENDABLE;
+        return m_wallet->IsMine(dest);
     }
     bool setAddressBook(const CTxDestination& dest, const std::string& name, const std::optional<AddressPurpose>& purpose) override
     {
@@ -185,7 +184,6 @@ public:
     }
     bool getAddress(const CTxDestination& dest,
         std::string* name,
-        isminetype* is_mine,
         AddressPurpose* purpose) override
     {
         LOCK(m_wallet->cs_wallet);
@@ -194,16 +192,9 @@ public:
         if (name) {
             *name = entry->GetLabel();
         }
-        std::optional<isminetype> dest_is_mine;
-        if (is_mine || purpose) {
-            dest_is_mine = m_wallet->IsMine(dest);
-        }
-        if (is_mine) {
-            *is_mine = *dest_is_mine;
-        }
         if (purpose) {
             // In very old wallets, address purpose may not be recorded so we derive it from IsMine
-            *purpose = entry->purpose.value_or(*dest_is_mine ? AddressPurpose::RECEIVE : AddressPurpose::SEND);
+            *purpose = entry->purpose.value_or(m_wallet->IsMine(dest) ? AddressPurpose::RECEIVE : AddressPurpose::SEND);
         }
         return true;
     }
@@ -213,7 +204,7 @@ public:
         std::vector<WalletAddress> result;
         m_wallet->ForEachAddrBookEntry([&](const CTxDestination& dest, const std::string& label, bool is_change, const std::optional<AddressPurpose>& purpose) EXCLUSIVE_LOCKS_REQUIRED(m_wallet->cs_wallet) {
             if (is_change) return;
-            isminetype is_mine = m_wallet->IsMine(dest);
+            bool is_mine = m_wallet->IsMine(dest);
             // In very old wallets, address purpose may not be recorded so we derive it from IsMine
             result.emplace_back(dest, is_mine, purpose.value_or(is_mine ? AddressPurpose::RECEIVE : AddressPurpose::SEND), label);
         });
@@ -431,25 +422,25 @@ public:
 
         return total_amount;
     }
-    isminetype txinIsMine(const CTxIn& txin) override
+    bool txinIsMine(const CTxIn& txin) override
     {
         LOCK(m_wallet->cs_wallet);
         return InputIsMine(*m_wallet, txin);
     }
-    isminetype txoutIsMine(const CTxOut& txout) override
+    bool txoutIsMine(const CTxOut& txout) override
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->IsMine(txout);
     }
-    CAmount getDebit(const CTxIn& txin, isminefilter filter) override
+    CAmount getDebit(const CTxIn& txin) override
     {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->GetDebit(txin, filter);
+        return m_wallet->GetDebit(txin);
     }
-    CAmount getCredit(const CTxOut& txout, isminefilter filter) override
+    CAmount getCredit(const CTxOut& txout) override
     {
         LOCK(m_wallet->cs_wallet);
-        return OutputGetCredit(*m_wallet, txout, filter);
+        return OutputGetCredit(*m_wallet, txout);
     }
     CoinsList listCoins() override
     {

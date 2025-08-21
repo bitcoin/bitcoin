@@ -5,7 +5,6 @@
 #include <common/system.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
-#include <node/types.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <util/moneystr.h>
@@ -48,8 +47,7 @@ static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWallet
     if (require_mine) {
         // check that original tx consists entirely of our inputs
         // if not, we can't bump the fee, because the wallet has no way of knowing the value of the other inputs (thus the fee)
-        isminefilter filter = ISMINE_SPENDABLE;
-        if (!AllInputsMine(wallet, *wtx.tx, filter)) {
+        if (!AllInputsMine(wallet, *wtx.tx)) {
             errors.emplace_back(Untranslated("Transaction contains inputs that don't belong to this wallet"));
             return feebumper::Result::WALLET_ERROR;
         }

@@ -525,8 +525,6 @@ RPCHelpMan simulaterawtransaction()
 
     LOCK(wallet.cs_wallet);
 
-    isminefilter filter = ISMINE_SPENDABLE;
-
     const auto& txs = request.params[0].get_array();
     CAmount changes{0};
     std::map<COutPoint, CAmount> new_utxos; // UTXO:s that were made available in transaction array
@@ -559,7 +557,7 @@ RPCHelpMan simulaterawtransaction()
                 if (coins.at(outpoint).IsSpent()) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already");
                 }
-                changes -= wallet.GetDebit(txin, filter);
+                changes -= wallet.GetDebit(txin);
             }
             spent.insert(outpoint);
         }
@@ -572,7 +570,7 @@ RPCHelpMan simulaterawtransaction()
         const auto& hash = mtx.GetHash();
         for (size_t i = 0; i < mtx.vout.size(); ++i) {
             const auto& txout = mtx.vout[i];
-            bool is_mine = 0 < (wallet.IsMine(txout) & filter);
+            bool is_mine = wallet.IsMine(txout);
             changes += new_utxos[COutPoint(hash, i)] = is_mine ? txout.nValue : 0;
         }
     }

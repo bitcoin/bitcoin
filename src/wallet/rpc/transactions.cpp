@@ -83,8 +83,6 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
     if (!params[1].isNull())
         fIncludeEmpty = params[1].get_bool();
 
-    isminefilter filter = ISMINE_SPENDABLE;
-
     std::optional<CTxDestination> filtered_address{std::nullopt};
     if (!by_label && !params[3].isNull() && !params[3].get_str().empty()) {
         if (!IsValidDestinationString(params[3].get_str())) {
@@ -116,8 +114,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
                 continue;
             }
 
-            isminefilter mine = wallet.IsMine(address);
-            if (!(mine & filter))
+            if (!wallet.IsMine(address))
                 continue;
 
             tallyitem& item = mapTally[address];
@@ -302,12 +299,11 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  nMinDepth      The minimum confirmation depth.
  * @param  fLong          Whether to include the JSON version of the transaction.
  * @param  ret            The vector into which the result is stored.
- * @param  filter_ismine  The "is mine" filter flags.
  * @param  filter_label   Optional label string to filter incoming transactions.
  */
 template <class Vec>
 static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
-                             Vec& ret, const isminefilter& filter_ismine, const std::optional<std::string>& filter_label,
+                             Vec& ret, const std::optional<std::string>& filter_label,
                              bool include_change = false)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
@@ -315,7 +311,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
-    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, filter_ismine, include_change);
+    CachedTxGetAmounts(wallet, wtx, listReceived, listSent, nFee, include_change);
 
     // Sent
     if (!filter_label.has_value())
@@ -484,7 +480,6 @@ RPCHelpMan listtransactions()
     int nFrom = 0;
     if (!request.params[2].isNull())
         nFrom = request.params[2].getInt<int>();
-    isminefilter filter = ISMINE_SPENDABLE;
 
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
@@ -501,7 +496,7 @@ RPCHelpMan listtransactions()
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter, filter_label);
+            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -589,7 +584,6 @@ RPCHelpMan listsinceblock()
     std::optional<int> height;    // Height of the specified block or the common ancestor, if the block provided was in a deactivated chain.
     std::optional<int> altheight; // Height of the specified block, even if it's in a deactivated chain.
     int target_confirms = 1;
-    isminefilter filter = ISMINE_SPENDABLE;
 
     uint256 blockId;
     if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
@@ -623,7 +617,7 @@ RPCHelpMan listsinceblock()
     for (const auto& [_, tx] : wallet.mapWallet) {
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
-            ListTransactions(wallet, tx, 0, true, transactions, filter, filter_label, include_change);
+            ListTransactions(wallet, tx, 0, true, transactions, filter_label, include_change);
         }
     }
 
@@ -640,7 +634,7 @@ RPCHelpMan listsinceblock()
             if (it != wallet.mapWallet.end()) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter, filter_label, include_change);
+                ListTransactions(wallet, it->second, -100000000, true, removed, filter_label, include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -730,8 +724,6 @@ RPCHelpMan gettransaction()
 
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
-    isminefilter filter = ISMINE_SPENDABLE;
-
     bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
 
     UniValue entry(UniValue::VOBJ);
@@ -741,19 +733,19 @@ RPCHelpMan gettransaction()
     }
     const CWalletTx& wtx = it->second;
 
-    CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, filter);
-    CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, filter);
+    CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, /*avoid_reuse=*/false);
+    CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx, filter) ? wtx.tx->GetValueOut() - nDebit : 0);
+    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.tx->GetValueOut() - nDebit : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
-    if (CachedTxIsFromMe(*pwallet, wtx, filter))
+    if (CachedTxIsFromMe(*pwallet, wtx))
         entry.pushKV("fee", ValueFromAmount(nFee));
 
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, filter, /*filter_label=*/std::nullopt);
+    ListTransactions(*pwallet, wtx, 0, false, details, /*filter_label=*/std::nullopt);
     entry.pushKV("details", std::move(details));
 
     entry.pushKV("hex", EncodeHexTx(*wtx.tx));
