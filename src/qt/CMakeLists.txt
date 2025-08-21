@@ -120,7 +120,7 @@ add_custom_command(
 set(testnet_ico "${ICON_PATH}/bitcoin_testnet.ico")
 add_custom_command(
   OUTPUT "${testnet_ico}"
-  COMMAND "${IMAGEMAGICK_CONVERT}" ${bitcoin_ico} -modulate 100,87,9 "${testnet_ico}"
+  COMMAND "${IMAGEMAGICK_CONVERT}" ${bitcoin_ico} -modulate 100,100,138.9 -colorspace HSL -channel G -evaluate subtract "11.76%" +channel -colorspace sRGB "${testnet_ico}"
   DEPENDS ${bitcoin_ico}
   COMMENT "Generating ${testnet_ico} from ${bitcoin_ico}"
   VERBATIM
