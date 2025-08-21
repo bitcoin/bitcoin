@@ -2309,13 +2309,16 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info_0["height"], q_0, quorum_info_0["quorumIndex"], quorum_info_0["minedBlock"]))
         self.log.info("New quorum: height=%d, quorumHash=%s, quorumIndex=%d, minedBlock=%s" % (quorum_info_1["height"], q_1, quorum_info_1["quorumIndex"], quorum_info_1["minedBlock"]))
 
-        self.log.info("quorum_info_0:"+str(quorum_info_0))
-        self.log.info("quorum_info_1:"+str(quorum_info_1))
+        extra_debug_rotation_info = False
+        if extra_debug_rotation_info:
+            # these logs are useful to debug quorum rotation but it is not usefull for all other cases
+            self.log.info("quorum_info_0:"+str(quorum_info_0))
+            self.log.info("quorum_info_1:"+str(quorum_info_1))
 
-        best_block_hash = self.nodes[0].getbestblockhash()
-        block_height = self.nodes[0].getblockcount()
-        quorum_rotation_info = self.nodes[0].quorum("rotationinfo", best_block_hash)
-        self.log.info("h("+str(block_height)+"):"+str(quorum_rotation_info))
+            best_block_hash = self.nodes[0].getbestblockhash()
+            block_height = self.nodes[0].getblockcount()
+            quorum_rotation_info = self.nodes[0].quorum("rotationinfo", best_block_hash)
+            self.log.info("h("+str(block_height)+"):"+str(quorum_rotation_info))
 
         return (quorum_info_0, quorum_info_1)
 
