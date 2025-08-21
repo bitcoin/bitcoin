@@ -838,6 +838,10 @@ static bool AppInitServers(NodeContext& node)
 void InitParameterInteraction(ArgsManager& args)
 {
     if (args.GetBoolArg("-corepolicy", DEFAULT_COREPOLICY)) {
+        args.SoftSetArg("-incrementalrelayfee", FormatMoney(CORE_INCREMENTAL_RELAY_FEE));
+        if (!args.IsArgSet("-minrelaytxfee")) {
+            args.ForceSetArg("-minrelaytxfee", FormatMoney(std::max(ParseMoney(args.GetArg("-incrementalrelayfee", "")).value_or(0), CORE_INCREMENTAL_RELAY_FEE)));
+        }
         args.SoftSetArg("-acceptnonstddatacarrier", "1");
         args.SoftSetArg("-blockreconstructionextratxn", "100");
         args.SoftSetArg("-blockreconstructionextratxnsize", strprintf("%s", std::numeric_limits<size_t>::max() / 1000000 + 1));
