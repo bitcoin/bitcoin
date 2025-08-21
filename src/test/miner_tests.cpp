@@ -12,6 +12,7 @@
 #include <node/miner.h>
 #include <policy/policy.h>
 #include <test/util/random.h>
+#include <test/util/transaction_utils.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>
@@ -210,6 +211,9 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     tx.vout.resize(2);
     tx.vout[0].nValue = 5000000000LL - 100000000;
     tx.vout[1].nValue = 100000000; // 1BTC output
+    // Increase size to avoid rounding errors: when the feerate is extremely small (i.e. 1sat/kvB), evaluating the fee
+    // at a smaller transaction size gives us a rounded value of 0.
+    BulkTransaction(tx, 4000);
     Txid hashFreeTx2 = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(0).SpendsCoinbase(true).FromTx(tx));
 
