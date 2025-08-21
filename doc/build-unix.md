@@ -122,7 +122,7 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
-    sudo dnf install capnproto
+    sudo dnf install capnproto capnproto-devel
 
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
