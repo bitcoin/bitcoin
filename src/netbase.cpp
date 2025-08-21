@@ -28,14 +28,6 @@
 #include <sys/un.h>
 #endif
 
-#ifndef WIN32
-#include <fcntl.h>
-#endif
-
-#ifdef USE_POLL
-#include <poll.h>
-#endif
-
 // Settings
 static Mutex g_proxyinfo_mutex;
 static Proxy proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);
