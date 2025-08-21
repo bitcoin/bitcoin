@@ -51,7 +51,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQQuorumRotationTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(9, 8)
+        self.set_dash_test_params(9, 8, extra_args=[["-vbparams=testdummy:999999999999:999999999999"]] * 9)
         self.set_dash_llmq_test_params(4, 4)
         self.delay_v20_and_mn_rr(height=900)
 
@@ -161,13 +161,12 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.log.info("Quorum #0_1 members: " + str(quorum_members_0_1))
 
         q_100_0 = QuorumId(100, int(quorum_info_0_0["quorumHash"], 16))
-        q_102_0 = QuorumId(102, int(quorum_info_0_0["quorumHash"], 16))
         q_103_0_0 = QuorumId(103, int(quorum_info_0_0["quorumHash"], 16))
         q_103_0_1 = QuorumId(103, int(quorum_info_0_1["quorumHash"], 16))
 
         b_1 = self.nodes[0].getbestblockhash()
         expectedDeleted = [h_100_0]
-        expectedNew = [q_100_0, q_102_0, q_103_0_0, q_103_0_1]
+        expectedNew = [q_100_0, q_103_0_0, q_103_0_1]
         quorumList = self.test_getmnlistdiff_quorums(b_0, b_1, quorumList, expectedDeleted, expectedNew)
 
         self.log.info("Wait for chainlock")
@@ -183,13 +182,12 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.log.info("Quorum #1_1 members: " + str(quorum_members_1_1))
 
         q_100_1 = QuorumId(100, int(quorum_info_1_0["quorumHash"], 16))
-        q_102_1 = QuorumId(102, int(quorum_info_1_0["quorumHash"], 16))
         q_103_1_0 = QuorumId(103, int(quorum_info_1_0["quorumHash"], 16))
         q_103_1_1 = QuorumId(103, int(quorum_info_1_1["quorumHash"], 16))
 
         b_2 = self.nodes[0].getbestblockhash()
         expectedDeleted = [h_100_1, q_103_0_0, q_103_0_1]
-        expectedNew = [q_100_1, q_102_1, q_103_1_0, q_103_1_1]
+        expectedNew = [q_100_1, q_103_1_0, q_103_1_1]
         quorumList = self.test_getmnlistdiff_quorums(b_1, b_2, quorumList, expectedDeleted, expectedNew)
 
         mninfos_online = self.mninfo.copy()
@@ -374,7 +372,6 @@ class LLMQQuorumRotationTest(DashTestFramework):
     def get_llmq_size(self, llmq_type):
         return {
             100: 4, # In this test size for llmqType 100 is overwritten to 4
-            102: 3,
             103: 4,
             106: 3
         }.get(llmq_type, -1)
