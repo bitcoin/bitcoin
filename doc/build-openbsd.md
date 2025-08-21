@@ -1,6 +1,6 @@
 OpenBSD build guide
 ======================
-(updated for OpenBSD 6.7)
+**Updated for OpenBSD [7.4](https://www.openbsd.org/74.html)**
 
 This guide describes how to build dashd, dash-qt, and command-line utilities on OpenBSD.
 
@@ -39,6 +39,8 @@ It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
 from ports, for the same reason as boost above (g++/libstd++ incompatibility).
 If you have to build it yourself, you can use [the installation script included
 in contrib/](/contrib/install_db4.sh) like so:
+
+Refer to [depends/README.md](/depends/README.md) for detailed instructions.
 
 ```bash
 ./contrib/install_db4.sh `pwd` CC=cc CXX=c++
