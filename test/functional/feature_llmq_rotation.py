@@ -53,7 +53,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(9, 8, extra_args=[["-vbparams=testdummy:999999999999:999999999999"]] * 9)
         self.set_dash_llmq_test_params(4, 4)
-        self.delay_v20_and_mn_rr(height=900)
+        self.delay_v20_and_mn_rr(height=300)
 
     def run_test(self):
         llmq_type=103
@@ -106,14 +106,8 @@ class LLMQQuorumRotationTest(DashTestFramework):
         expectedNew = [h_100_0, h_100_1]
         quorumList = self.test_getmnlistdiff_quorums(b_h_0, b_h_1, {}, expectedDeleted, expectedNew, testQuorumsCLSigs=False)
 
-        projected_activation_height = 900
-
-        self.activate_v20(expected_activation_height=900)
-        self.log.info("Activated v20 at height:" + str(self.nodes[0].getblockcount()))
-
-        softfork_info = self.nodes[0].getblockchaininfo()['softforks']['v20']
-        assert_equal(softfork_info['active'], True)
-        assert_equal(projected_activation_height, softfork_info['height'])
+        self.activate_v20(expected_activation_height=self.mn_rr_height)
+        self.log.info(f"Activated v20 at height: {self.nodes[0].getblockcount()}")
 
         # v20 is active for the next block, not for the tip
         self.generate(self.nodes[0], 1)
