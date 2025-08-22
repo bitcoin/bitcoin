@@ -1253,6 +1253,88 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("tr(musig()/0)", "tr(musig()/0)", "tr(): musig(): Must contain key expressions");
     CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)","tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)", "tr(): musig(): Cannot have ranged participant keys if musig() also has derivation");
 
+    // Tests for Bitcoin Core issue #28179: 999-of-999 Taproot multisig functionality
+    // Test that 999-of-999 multi_a is valid (at the limit)
+    {
+        // Generate a string with 999 identical keys for testing
+        std::string keys_999;
+        for (int i = 0; i < 999; ++i) {
+            if (i > 0) keys_999 += ",";
+            keys_999 += "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
+        }
+        std::string desc_999 = "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(999," + keys_999 + "))";
+        
+        // This should parse successfully - proving 999-of-999 is possible
+        FlatSigningProvider keys_provider;
+        std::string error;
+        auto parsed = Parse(desc_999, keys_provider, error);
+        BOOST_CHECK_MESSAGE(!parsed.empty(), "999-of-999 multi_a should be valid but got error: " + error);
+        if (!parsed.empty()) {
+            BOOST_CHECK(parsed[0]->IsSolvable());  // Verify it's solvable (spendable)
+        }
+    }
+
+    // Test edge cases around the 999 limit
+    {
+        // Test 998 keys (under limit)
+        std::string keys_998;
+        for (int i = 0; i < 998; ++i) {
+            if (i > 0) keys_998 += ",";
+            keys_998 += "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
+        }
+        std::string desc_998 = "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(998," + keys_998 + "))";
+        
+        FlatSigningProvider keys_provider;
+        std::string error;
+        auto parsed = Parse(desc_998, keys_provider, error);
+        BOOST_CHECK_MESSAGE(!parsed.empty(), "998-of-998 multi_a should be valid");
+    }
+
+    // Test rejection of 1000 keys (over limit) - issue #28179 requirement
+    {
+        std::string keys_1000;
+        for (int i = 0; i < 1000; ++i) {
+            if (i > 0) keys_1000 += ",";
+            keys_1000 += "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
+        }
+        
+        // Test 1-of-1000 (specifically mentioned in issue #28179)
+        CheckUnparsable("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(1," + keys_1000 + "))",
+                       "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(1," + keys_1000 + "))",
+                       "Cannot have 1000 keys in multi_a; must have between 1 and 999 keys, inclusive");
+        
+        // Test 999-of-1000 (specifically mentioned in issue #28179)  
+        CheckUnparsable("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(999," + keys_1000 + "))",
+                       "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(999," + keys_1000 + "))",
+                       "Cannot have 1000 keys in multi_a; must have between 1 and 999 keys, inclusive");
+        
+        // Test 1000-of-1000 (over limit)
+        CheckUnparsable("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(1000," + keys_1000 + "))",
+                       "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(1000," + keys_1000 + "))",
+                       "Cannot have 1000 keys in multi_a; must have between 1 and 999 keys, inclusive");
+    }
+
+    // Test threshold validation with 999 keys
+    {
+        std::string keys_999;
+        for (int i = 0; i < 999; ++i) {
+            if (i > 0) keys_999 += ",";
+            keys_999 += "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd";
+        }
+        
+        // Test threshold > number of keys (should fail)
+        CheckUnparsable("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(1000," + keys_999 + "))",
+                       "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(1000," + keys_999 + "))",
+                       "Multisig threshold cannot be larger than the number of keys; threshold is 1000 but only 999 keys specified");
+        
+        // Test 1-of-999 (should work)
+        std::string desc_1_of_999 = "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,multi_a(1," + keys_999 + "))";
+        FlatSigningProvider keys_provider;
+        std::string error;
+        auto parsed = Parse(desc_1_of_999, keys_provider, error);
+        BOOST_CHECK_MESSAGE(!parsed.empty(), "1-of-999 multi_a should be valid");
+    }
+
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "Invalid musig() expression");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
