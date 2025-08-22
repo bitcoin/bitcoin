@@ -104,10 +104,7 @@ public:
     bool SetPlatformBan(bool is_banned, int height)
     {
         LOCK(cs);
-        if (height <= m_platform_ban_updated) {
-            return false;
-        }
-        if (height == m_platform_ban_updated && !is_banned) {
+        if (height < m_platform_ban_updated) {
             return false;
         }
         m_platform_ban = is_banned;
