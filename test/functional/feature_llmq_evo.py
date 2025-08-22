@@ -49,8 +49,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQEvoNodesTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, evo_count=5)
-        self.set_dash_llmq_test_params(4, 4)
+        self.set_dash_test_params(4, 3, evo_count=5)
         self.mn_rr_height = 400
 
     def run_test(self):
@@ -62,18 +61,12 @@ class LLMQEvoNodesTest(DashTestFramework):
         null_hash = format(0, "064x")
 
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 1)
-        self.wait_for_sporks_same()
 
         expectedUpdated = [mn.proTxHash for mn in self.mninfo]
         b_0 = self.nodes[0].getbestblockhash()
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expectedUpdated)
 
-        self.test_masternode_count(expected_mns_count=4, expected_evo_count=0)
-
-        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
-        self.wait_for_sporks_same()
-
+        self.test_masternode_count(expected_mns_count=3, expected_evo_count=0)
         evo_protxhash_list = list()
         for i in range(self.evo_count):
             evo_info: MasternodeInfo = self.dynamically_add_masternode(evo=True)
@@ -84,7 +77,7 @@ class LLMQEvoNodesTest(DashTestFramework):
             b_i = self.nodes[0].getbestblockhash()
             self.test_getmnlistdiff(null_hash, b_i, {}, [], expectedUpdated)
 
-            self.test_masternode_count(expected_mns_count=4, expected_evo_count=i+1)
+            self.test_masternode_count(expected_mns_count=3, expected_evo_count=i+1)
             self.dynamically_evo_update_service(evo_info)
 
         self.log.info("Test llmq_platform are formed only with EvoNodes")
