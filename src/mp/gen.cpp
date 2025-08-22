@@ -146,7 +146,7 @@ static void Generate(kj::StringPtr src_prefix,
     const std::vector<kj::Own<const kj::ReadableDirectory>>& import_dirs)
 {
     std::string output_path;
-    if (src_prefix == ".") {
+    if (src_prefix == kj::StringPtr{"."}) {
         output_path = src_file;
     } else if (!src_file.startsWith(src_prefix) || src_file.size() <= src_prefix.size() ||
                src_file[src_prefix.size()] != '/') {
@@ -156,7 +156,7 @@ static void Generate(kj::StringPtr src_prefix,
     }
 
     std::string include_path;
-    if (include_prefix == ".") {
+    if (include_prefix == kj::StringPtr{"."}) {
         include_path = src_file;
     } else if (!src_file.startsWith(include_prefix) || src_file.size() <= include_prefix.size() ||
                src_file[include_prefix.size()] != '/') {
@@ -425,8 +425,8 @@ static void Generate(kj::StringPtr src_prefix,
 
                 const std::string method_prefix = Format() << message_namespace << "::" << method_interface.getShortDisplayName()
                                                            << "::" << Cap(method_name);
-                const bool is_construct = method_name == "construct";
-                const bool is_destroy = method_name == "destroy";
+                const bool is_construct = method_name == kj::StringPtr{"construct"};
+                const bool is_destroy = method_name == kj::StringPtr{"destroy"};
 
                 struct Field
                 {
@@ -465,7 +465,7 @@ static void Generate(kj::StringPtr src_prefix,
                         field.result_is_set = true;
                     }
 
-                    if (!param && field_name == "result") {
+                    if (!param && field_name == kj::StringPtr{"result"}) {
                         field.retval = true;
                         has_result = true;
                     }

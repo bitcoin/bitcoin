@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <system_error>
+#include <thread> // NOLINT(misc-include-cleaner) // IWYU pragma: keep
 #include <unistd.h>
 #include <utility>
 #include <vector>
