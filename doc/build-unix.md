@@ -122,7 +122,7 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
-    sudo dnf install capnproto
+    sudo dnf install capnproto capnproto-devel
 
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
@@ -162,6 +162,12 @@ SQLite is required for the wallet:
     apk add sqlite-dev
 
 To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+
+Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
+
+    apk add capnproto capnproto-dev
+
+Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
 ZMQ dependencies (provides ZMQ API):
 
@@ -205,7 +211,7 @@ Setup and Build Example: Arch Linux
 -----------------------------------
 This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
-    pacman --sync --needed cmake boost gcc git libevent make python sqlite
+    pacman --sync --needed capnproto cmake boost gcc git libevent make python sqlite
     git clone https://github.com/bitcoin/bitcoin.git
     cd bitcoin/
     cmake -B build
