@@ -38,7 +38,7 @@ class SweepPrivKeysTest(BitcoinTestFramework):
 
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
-        self.tx_feerate = self.nodes[0].getnetworkinfo()['relayfee'] * 2
+        self.tx_feerate = max(self.nodes[0].getnetworkinfo()['relayfee'], self.nodes[0].getwalletinfo()['mintxfee']) * 2
         node.settxfee(self.tx_feerate)
 
         self.generate(miner, 120)
