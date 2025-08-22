@@ -103,10 +103,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.test_evo_payments(window_analysis=48, mnrr_active=True)
         self.test_masternode_winners(mn_rr_active=True)
 
-        self.log.info(self.nodes[0].masternodelist())
-
-        return
-
     def test_evo_payments(self, window_analysis, mnrr_active):
         current_evo: MasternodeInfo = None
         consecutive_payments = 0
@@ -176,13 +172,21 @@ class LLMQEvoNodesTest(DashTestFramework):
 
     def test_evo_protx_are_in_mnlist(self, evo_protx_list):
         mn_list = self.nodes[0].masternodelist()
+        mn_list_evo = self.nodes[0].masternodelist(mode="evo")
         for evo_protx in evo_protx_list:
-            found = False
-            for mn in mn_list:
-                if mn_list.get(mn)['proTxHash'] == evo_protx:
-                    found = True
-                    assert_equal(mn_list.get(mn)['type'], "Evo")
-            assert_equal(found, True)
+            found_in_mns = False
+            for _, mn in mn_list.items():
+                if mn['proTxHash'] == evo_protx:
+                    found_in_mns = True
+                    assert_equal(mn['type'], "Evo")
+            assert_equal(found_in_mns, True)
+
+            found_in_evos = False
+            for _, mn in mn_list_evo.items():
+                assert_equal(mn['type'], "Evo")
+                if mn['proTxHash'] == evo_protx:
+                    found_in_evos = True
+            assert_equal(found_in_evos, True)
 
     def test_masternode_count(self, expected_mns_count, expected_evo_count):
         mn_count = self.nodes[0].masternode('count')
