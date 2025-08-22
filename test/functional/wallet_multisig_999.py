@@ -260,7 +260,7 @@ class WalletTaprootMultisig999OptimizedTest(BitcoinTestFramework):
         self.log.info("✅ 999-of-999 Taproot multisig: ADDRESS GENERATION works")
         self.log.info("✅ SPENDING CAPABILITY: Demonstrated via pattern validation")
         self.log.info("✅ 999-of-1000 rejection: works")
-        self.log.info("✅ 1-of-1000 rejection: works") 
+        self.log.info("✅ 1-of-1000 rejection: works")
         self.log.info("✅ All boundary conditions tested")
         self.log.info("✅ Performance optimized: No 40-second delays")
         self.log.info("=" * 60)
@@ -268,3 +268,4 @@ class WalletTaprootMultisig999OptimizedTest(BitcoinTestFramework):
 
 if __name__ == '__main__':
     WalletTaprootMultisig999OptimizedTest(__file__).main()
+
