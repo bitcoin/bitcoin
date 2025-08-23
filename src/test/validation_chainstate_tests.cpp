@@ -14,6 +14,7 @@
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/mempressure.h>
 #include <validation.h>
 
 #include <vector>
@@ -26,6 +27,8 @@ BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, ChainTestingSetup)
 //!
 BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
 {
+    g_low_memory_threshold = 0;  // disable to get deterministic flushing
+
     ChainstateManager& manager = *Assert(m_node.chainman);
     CTxMemPool& mempool = *Assert(m_node.mempool);
     Chainstate& c1 = WITH_LOCK(cs_main, return manager.InitializeChainstate(&mempool));
