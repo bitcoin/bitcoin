@@ -618,9 +618,9 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY FALSE)
 endif()
 
-# TODO: The `CMAKE_SKIP_BUILD_RPATH` variable setting can be deleted
-#       in the future after reordering Guix script commands to
-#       perform binary checks after the installation step.
+# TODO: The `CMAKE_SKIP_BUILD_RPATH` variable setting has been removed
+#       after reordering Guix script commands to perform binary checks
+#       after the installation step.
 # Relevant discussions:
 # - https://github.com/hebasto/bitcoin/pull/236#issuecomment-2183120953
 # - https://github.com/bitcoin/bitcoin/pull/30312#issuecomment-2191235833
@@ -628,7 +628,6 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 else()
-  set(CMAKE_SKIP_BUILD_RPATH TRUE)
   set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 endif()
 add_subdirectory(test)
