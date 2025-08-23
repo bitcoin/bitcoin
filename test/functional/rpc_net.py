@@ -163,7 +163,7 @@ class NetTest(BitcoinTestFramework):
                 "lastsend": 0 if not self.options.v2transport else no_version_peer_conntime,
                 "minfeefilter": Decimal("0E-8"),
                 "network": "not_publicly_routable",
-                "permissions": [],
+                "permissions": ['bloomfilter'],
                 "forced_inbound": False,
                 "presynced_headers": -1,
                 "relaytxes": False,
