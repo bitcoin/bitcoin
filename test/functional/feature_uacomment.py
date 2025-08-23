@@ -43,6 +43,27 @@ class UacommentTest(BitcoinTestFramework):
         self.restart_node(0, ["-uaappend=foo:9/"])
         assert_equal(self.nodes[0].getnetworkinfo()["subversion"][-7:], '/foo:9/')
 
+        self.nodes[0].args.remove("-uacomment=testnode0")
+
+        self.log.info("test -uaspoof")
+        self.restart_node(0, ["-uaspoof=/foo:0/"])
+        assert_equal(self.nodes[0].getnetworkinfo()["subversion"], '/foo:0/')
+
+        exp_warning = "Specified uaspoof option is not in BIP 14 format. User-agent strings should look like '/Name:Version/Name:Version/.../'."
+        with self.nodes[0].assert_debug_log(expected_msgs=[exp_warning]):
+            self.restart_node(0, ["-uaspoof=foo:9"])
+            assert_equal(self.nodes[0].getnetworkinfo()["subversion"], 'foo:9')
+            self.stop_node(0, expected_stderr='Warning: ' + exp_warning)
+
+        exp_warning = 'Both uaspoof and uacomment(s) are specified, but uacomment(s) are ignored when uaspoof is in use.'
+        with self.nodes[0].assert_debug_log(expected_msgs=[exp_warning]):
+            self.restart_node(0, ["-uaspoof=/foo:0/", "-uacomment=foo"])
+            assert_equal(self.nodes[0].getnetworkinfo()["subversion"], '/foo:0/')
+            self.stop_node(0, expected_stderr='Warning: ' + exp_warning)
+
+        self.restart_node(0, ["-uaspoof=/foo:0/", "-uaappend=foo:9"])
+        assert_equal(self.nodes[0].getnetworkinfo()["subversion"], '/foo:0/foo:9/')
+
 
 if __name__ == '__main__':
     UacommentTest(__file__).main()

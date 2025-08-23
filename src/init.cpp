@@ -441,6 +441,8 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 }
 #endif
 
+static constexpr std::string_view BIP14_EXAMPLE_UA{"/Name:Version/Name:Version/.../"};
+
 void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 {
     SetupHelpOptions(argsman);
@@ -627,6 +629,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-printpriority", strprintf("Log transaction fee rate in %s/kvB when mining blocks (default: %u)", CURRENCY_UNIT, DEFAULT_PRINT_MODIFIED_FEE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-uaappend=<uafragment>", "Append literal string to the user agent string (should only be used for software embedding)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-uacomment=<cmt>", "Append comment to the user agent string", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-uaspoof=<ua>", strprintf("Replace entire user agent string with custom identifier (should be formatted '%s' as specified in BIP 14)", BIP14_EXAMPLE_UA), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
 
     SetupChainParamsBaseOptions(argsman);
 
@@ -1528,6 +1531,23 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uacomments.push_back(cmt);
     }
     strSubVersion = FormatSubVersion(UA_NAME, CLIENT_VERSION, uacomments);
+    if (gArgs.IsArgSet("-uaspoof")) {
+        std::string uaspoof_val = gArgs.GetArg("-uaspoof", "");
+        if (uaspoof_val == "0" || uaspoof_val.empty()) {
+            // explicitly disabled, do nothing
+        } else if (uaspoof_val == "1") {
+            // enabled, but not specified: just use base name for now
+            // TODO
+        } else {
+            if (uaspoof_val.at(0) != '/') {
+                InitWarning(strprintf(_("Specified %s option is not in BIP 14 format. User-agent strings should look like '%s'."), "uaspoof", BIP14_EXAMPLE_UA));
+            }
+            if (!uacomments.empty()) {
+                InitWarning(_("Both uaspoof and uacomment(s) are specified, but uacomment(s) are ignored when uaspoof is in use."));
+            }
+            strSubVersion = uaspoof_val;
+        }
+    }
     for (auto append : gArgs.GetArgs("-uaappend")) {
         if (append.back() != '/') append += '/';
         strSubVersion += append;
