@@ -6,17 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>413</width>
-    <height>229</height>
+    <width>487</width>
+    <height>597</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Request payment to …</string>
   </property>
   <layout class="QGridLayout" name="gridLayout" columnstretch="0,1">
-   <property name="sizeConstraint">
-    <enum>QLayout::SetFixedSize</enum>
-   </property>
    <item row="0" column="0" colspan="2" alignment="Qt::AlignHCenter">
     <widget class="QRImageWidget" name="qr_code">
      <property name="text">

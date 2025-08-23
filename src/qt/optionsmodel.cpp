@@ -9,6 +9,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/tonalutils.h>
 
 #include <common/args.h>
 #include <interfaces/node.h>
@@ -189,14 +190,26 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // Display
     if (!settings.contains("DisplayBitcoinUnit")) {
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(BitcoinUnit::BTC));
+        auto init_unit = BitcoinUnit::BTC;
+        if (settings.contains("nDisplayUnit")) {
+            // Migrate to new setting
+            init_unit = BitcoinUnits::FromSetting(settings.value("nDisplayUnit").toString(), init_unit);
+        }
+        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(init_unit));
     }
-    QVariant unit = settings.value("DisplayBitcoinUnit");
-    if (unit.canConvert<BitcoinUnit>()) {
-        m_display_bitcoin_unit = unit.value<BitcoinUnit>();
-    } else {
-        m_display_bitcoin_unit = BitcoinUnit::BTC;
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
+
+    constexpr auto unit_set_to_variant = [](BitcoinUnit& out, const QVariant& unit_variant){
+        if (unit_variant.isNull()) return false;
+        if (!unit_variant.canConvert<BitcoinUnit>()) return false;
+        const auto unit = unit_variant.value<BitcoinUnit>();
+        if (!BitcoinUnits::availableUnits().contains(unit)) return false;
+        out = unit;
+        return true;
+    };
+    if (!unit_set_to_variant(m_display_bitcoin_unit, settings.value("DisplayBitcoinUnitKnots"))) {
+        if (!unit_set_to_variant(m_display_bitcoin_unit, settings.value("DisplayBitcoinUnit"))) {
+            m_display_bitcoin_unit = BitcoinUnit::BTC;
+        }
     }
 
     if (!settings.contains("strThirdPartyTxUrls"))
@@ -253,7 +266,19 @@ bool OptionsModel::Init(bilingual_str& error)
             m_font_money = FontChoiceAbstract::BestSystemFont;
         }
     }
-    Q_EMIT fontForMoneyChanged(getFontForMoney());
+    m_font_money_supports_tonal = TonalUtils::font_supports_tonal(getFontForMoney(BitcoinUnit::BTC));
+    Q_EMIT fontForMoneyChanged(getFontForMoney(BitcoinUnit::BTC));
+
+    if (settings.contains("FontForQRCodes")) {
+        m_font_qrcodes = FontChoiceFromString(settings.value("FontForQRCodes").toString());
+    }
+    Q_EMIT fontForQRCodesChanged(getFontChoiceForQRCodes());
+
+    if (!settings.contains("PeersTabAlternatingRowColors")) {
+        settings.setValue("PeersTabAlternatingRowColors", "false");
+    }
+    m_peers_tab_alternating_row_colors = settings.value("PeersTabAlternatingRowColors").toBool();
+    Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
 
     m_mask_values = settings.value("mask_values", false).toBool();
 
@@ -459,6 +484,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return QString::fromStdString(SettingToString(setting(), ""));
     case FontForMoney:
         return QVariant::fromValue(m_font_money);
+    case FontForQRCodes:
+        return QVariant::fromValue(m_font_qrcodes);
+    case PeersTabAlternatingRowColors:
+        return m_peers_tab_alternating_row_colors;
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -496,8 +525,11 @@ QFont OptionsModel::getFontForChoice(const FontChoice& fc)
     return f;
 }
 
-QFont OptionsModel::getFontForMoney() const
+QFont OptionsModel::getFontForMoney(const BitcoinUnit unit) const
 {
+    if (BitcoinUnits::numsys(unit) == BitcoinUnits::Unit::TBC && !m_font_money_supports_tonal) {
+        return getFontForChoice(FontChoiceAbstract::EmbeddedFont);
+    }
     return getFontForChoice(m_font_money);
 }
 
@@ -634,9 +666,24 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         if (m_font_money == new_font) break;
         settings.setValue("FontForMoney", FontChoiceToString(new_font));
         m_font_money = new_font;
-        Q_EMIT fontForMoneyChanged(getFontForMoney());
+        m_font_money_supports_tonal = TonalUtils::font_supports_tonal(getFontForMoney(BitcoinUnit::BTC));
+        Q_EMIT fontForMoneyChanged(getFontForMoney(BitcoinUnit::BTC));
         break;
     }
+    case FontForQRCodes:
+    {
+        const auto& new_font = value.value<FontChoice>();
+        if (m_font_qrcodes == new_font) break;
+        settings.setValue("FontForQRCodes", FontChoiceToString(new_font));
+        m_font_qrcodes = new_font;
+        Q_EMIT fontForQRCodesChanged(new_font);
+        break;
+    }
+    case PeersTabAlternatingRowColors:
+        m_peers_tab_alternating_row_colors = value.toBool();
+        settings.setValue("PeersTabAlternatingRowColors", m_peers_tab_alternating_row_colors);
+        Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
+        break;
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
@@ -699,7 +746,21 @@ void OptionsModel::setDisplayUnit(const QVariant& new_unit)
     if (new_unit.isNull() || new_unit.value<BitcoinUnit>() == m_display_bitcoin_unit) return;
     m_display_bitcoin_unit = new_unit.value<BitcoinUnit>();
     QSettings settings;
-    settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
+    if (BitcoinUnits::numsys(m_display_bitcoin_unit) == BitcoinUnit::BTC) {
+        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
+        settings.remove("DisplayBitcoinUnitKnots");
+    } else {
+        settings.setValue("DisplayBitcoinUnitKnots", QVariant::fromValue(m_display_bitcoin_unit));
+    }
+    {
+        // For older versions:
+        auto setting_val = BitcoinUnits::ToSetting(m_display_bitcoin_unit);
+        if (const QString* setting_str = std::get_if<QString>(&setting_val)) {
+            settings.setValue("nDisplayUnit", *setting_str);
+        } else {
+            settings.setValue("nDisplayUnit", std::get<qint8>(setting_val));
+        }
+    }
     Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
 }
 

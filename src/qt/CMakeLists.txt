@@ -47,7 +47,17 @@ file(GLOB ts_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} locale/*.ts)
 set_source_files_properties(${ts_files} PROPERTIES OUTPUT_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/locale)
 qt5_add_translation(qm_files ${ts_files})
 
+set(FONT_PATH "res/fonts/RobotoTonalMono-Bold.ttf")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/res/fonts")
+add_custom_command(
+  OUTPUT ${FONT_PATH}
+  COMMAND ${PYTHON_COMMAND} -c "import base64, lzma, sys; sys.stdout.buffer.write(lzma.decompress(base64.b85decode(sys.stdin.read())))" < "${CMAKE_CURRENT_SOURCE_DIR}/${FONT_PATH}.in" > "${FONT_PATH}.new" && mv "${FONT_PATH}.new" "${FONT_PATH}"
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FONT_PATH}.in
+  VERBATIM
+)
+
 configure_file(bitcoin_locale.qrc bitcoin_locale.qrc USE_SOURCE_PERMISSIONS COPYONLY)
+configure_file(font.qrc font.qrc USE_SOURCE_PERMISSIONS COPYONLY)
 
 # The bitcoinqt sources have to include headers in
 # order to parse them to collect translatable strings.
@@ -106,6 +116,8 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   rpcconsole.h
   splashscreen.cpp
   splashscreen.h
+  tonalutils.cpp
+  tonalutils.h
   trafficgraphwidget.cpp
   trafficgraphwidget.h
   utilitydialog.cpp
@@ -114,6 +126,7 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   $<$<PLATFORM_ID:Windows>:winshutdownmonitor.h>
   bitcoin.qrc
   ${CMAKE_CURRENT_BINARY_DIR}/bitcoin_locale.qrc
+  ${CMAKE_CURRENT_BINARY_DIR}/font.qrc
 )
 target_compile_definitions(bitcoinqt
   PUBLIC

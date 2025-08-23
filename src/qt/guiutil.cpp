@@ -110,9 +110,75 @@ QString dateTimeStr(qint64 nTime)
 QFont fixedPitchFont(bool use_embedded_font)
 {
     if (use_embedded_font) {
-        return {"Roboto Mono"};
+        // If we don't specify a size, various contexts will initialize it differently
+        return {"Embedded variant of Roboto Mono", QFont().pointSize()};
     }
     return QFontDatabase::systemFont(QFontDatabase::FixedFont);
+}
+
+static void escapeForCssString(QString& s)
+{
+    for (qsizetype i{s.size()}; i; ) {
+        switch (s.at(--i).unicode()) {
+            case '\\': case '\"':
+                s.insert(i, '\\');
+        }
+    }
+}
+
+QString fontToCss(const QFont& font)
+{
+    QString css;
+    auto families = font.families();
+    if (families.isEmpty()) {
+        auto family = font.family();
+        if (!family.isEmpty()) families.append(family);
+    }
+    if (!families.isEmpty()) {
+        css += "font-family:";
+        for (auto& family : families) {
+            escapeForCssString(family);
+            css += "\"" + family + "\", ";
+        }
+        css.chop(2);
+        css += ";";
+    }
+    if (const auto point_size{font.pointSize()}; point_size != -1) {
+        css += "font-size:" + QString::number(point_size) + "pt;";
+    } else if (const auto pixel_size{font.pixelSize()}; pixel_size != -1) {
+        css += "font-size:" + QString::number(pixel_size) + "px;";
+    }
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    css += "font-weight:" + QString::number((int)font.weight()) + ";";
+#else
+    css += "font-weight:" + QString::number(font.weight() * 8) + ";";
+#endif
+    switch (font.style()) {
+    default:
+        css += "font-style:normal;";
+        break;
+    case QFont::StyleItalic:
+        css += "font-style:italic;";
+        break;
+    case QFont::StyleOblique:
+        css += "font-style:oblique;";
+        break;
+    }
+    css += "text-decoration:";
+    if (font.underline()) {
+        css += " underline";
+    }
+    if (font.overline()) {
+        css += " overline";
+    }
+    if (font.strikeOut()) {
+        css += " line-through";
+    }
+    if (!(font.underline() || font.overline() || font.strikeOut())) {
+        css += "none";
+    }
+    css += ";";
+    return css;
 }
 
 // Return a pre-generated dummy bech32m address (P2TR) with invalid checksum.
