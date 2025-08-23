@@ -79,10 +79,10 @@ found at the URLs below:
 - Block versions over the last 2,000 blocks showing the days to the
   earliest possible BIP65 consensus-enforced block: <http://bitcoin.sipa.be/ver-2k.png>
 
-**Notice to miners:** Bitcoin Core’s block templates are now for
+**Notice to miners:** Bitcoin Core's block templates are now for
 version 4 blocks only, and any mining software relying on its
 getblocktemplate must be updated in parallel to use libblkmaker either
-version FIXME or any version from FIXME onward.
+version 0.4.2 or any version from 0.5.1 onward.
 
 - If you are solo mining, this will affect you the moment you upgrade
   Bitcoin Core, which must be done prior to BIP65 achieving its 951/1001
