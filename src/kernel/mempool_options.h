@@ -25,6 +25,8 @@ static constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
 static constexpr bool DEFAULT_PERSIST_V1_DAT{false};
 /** Default for -acceptnonstdtxn */
 static constexpr bool DEFAULT_ACCEPT_NON_STD_TXN{false};
+/** Default for -acceptunknownwitness */
+static constexpr bool DEFAULT_ACCEPTUNKNOWNWITNESS{true};
 
 namespace kernel {
 /**
@@ -53,6 +55,7 @@ struct MemPoolOptions {
     std::optional<unsigned> max_datacarrier_bytes{DEFAULT_ACCEPT_DATACARRIER ? std::optional{MAX_OP_RETURN_RELAY} : std::nullopt};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
     bool require_standard{true};
+    bool acceptunknownwitness{DEFAULT_ACCEPTUNKNOWNWITNESS};
     bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
     MemPoolLimits limits{};
 
