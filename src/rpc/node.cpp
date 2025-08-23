@@ -892,7 +892,7 @@ static RPCHelpMan getmemoryinfo()
         {
             {"mode", RPCArg::Type::STR, RPCArg::Default{"stats"}, "determines what kind of information is returned.\n"
     "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
-    "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+)."},
+    "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc)."},
         },
         {
             RPCResult{"mode \"stats\"",
