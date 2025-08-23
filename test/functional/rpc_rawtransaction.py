@@ -409,12 +409,22 @@ class RawTransactionsTest(BitcoinTestFramework):
         testres = self.nodes[2].testmempoolaccept([tx['hex']], 0.00001000)[0]
         assert_equal(testres['allowed'], False)
         assert_equal(testres['reject-reason'], 'max-fee-exceeded')
+        testres = self.nodes[2].testmempoolaccept([tx['hex']], 0.00001000, ['foobar'])[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], 'max-fee-exceeded')
+        # unless ignored explicitly
+        testres = self.nodes[2].testmempoolaccept([tx['hex']], 0.00001000, ['max-fee-exceeded'])[0]
+        assert_equal(testres['allowed'], True)
+        assert('reject-reason' not in testres)
+        testres = self.nodes[2].testmempoolaccept([tx['hex']], 0.00001000, ['absurdly-high-fee'])[0]
+        assert_equal(testres['allowed'], True)
+        assert('reject-reason' not in testres)
         # and sendrawtransaction should throw
         assert_raises_rpc_error(-25, fee_exceeds_max, self.nodes[2].sendrawtransaction, tx['hex'], 0.00001000)
         # and the following calls should both succeed
         testres = self.nodes[2].testmempoolaccept(rawtxs=[tx['hex']])[0]
         assert_equal(testres['allowed'], True)
-        self.nodes[2].sendrawtransaction(hexstring=tx['hex'])
+        self.nodes[2].sendrawtransaction(hexstring=tx['hex'], maxfeerate=0.00001000, ignore_rejects=['max-fee-exceeded'])
 
         # Test a transaction with a large fee.
         # Fee rate is 0.20000000 BTC/kvB
