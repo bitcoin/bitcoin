@@ -11,11 +11,15 @@
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <crypto/ripemd160.h>
 #include <logging.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <random.h>
+#include <scheduler.h>
 #include <tinyformat.h>
+#include <script/script.h>
 #include <util/check.h>
 #include <util/feefrac.h>
 #include <util/moneystr.h>
@@ -52,6 +56,13 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 
     // LockPoints still valid
     return true;
+}
+
+uint160 ScriptHashkey(const CScript& script)
+{
+    uint160 hash;
+    CRIPEMD160().Write(script.data(), script.size()).Finalize(hash.begin());
+    return hash;
 }
 
 void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap& cachedDescendants,
@@ -414,6 +425,17 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
     : m_opts{Flatten(std::move(opts), error)}
 {
+    Assert(m_opts.scheduler || !m_opts.dust_relay_target);
+    m_opts.dust_relay_feerate_floor = m_opts.dust_relay_feerate;
+#ifdef BUILDING_FOR_LIBBITCOINKERNEL
+    assert(!m_opts.scheduler);
+#else
+    if (m_opts.scheduler) {
+        m_opts.scheduler->scheduleEvery([this]{
+            UpdateDynamicDustFeerate();
+        }, DYNAMIC_DUST_FEERATE_UPDATE_INTERVAL);
+    }
+#endif
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -510,6 +532,17 @@ void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit, CTxMemPool::setEntr
     txns_randomized.emplace_back(newit->GetSharedTx());
     newit->idx_randomized = txns_randomized.size() - 1;
 
+    for (auto& vSPK : entry.mapSPK) {
+        const uint160& SPKKey = vSPK.first;
+        const MemPool_SPK_State& claims = vSPK.second;
+        if (claims & MSS_CREATED) {
+            mapUsedSPK[SPKKey].first = &tx;
+        }
+        if (claims & MSS_SPENT) {
+            mapUsedSPK[SPKKey].second = &tx;
+        }
+    }
+
     TRACEPOINT(mempool, added,
         entry.GetTx().GetHash().data(),
         entry.GetTxSize(),
@@ -538,6 +571,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         std::chrono::duration_cast<std::chrono::duration<std::uint64_t>>(it->GetTime()).count()
     );
 
+    const CTransaction& tx = it->GetTx();
     for (const CTxIn& txin : it->GetTx().vin)
         mapNextTx.erase(txin.prevout);
 
@@ -553,6 +587,19 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
             txns_randomized.shrink_to_fit();
     } else
         txns_randomized.clear();
+
+    for (auto& vSPK : it->mapSPK) {
+        const uint160& SPKKey = vSPK.first;
+        if (mapUsedSPK[SPKKey].first == &tx) {
+            mapUsedSPK[SPKKey].first = NULL;
+        }
+        if (mapUsedSPK[SPKKey].second == &tx) {
+            mapUsedSPK[SPKKey].second = NULL;
+        }
+        if (!(mapUsedSPK[SPKKey].first || mapUsedSPK[SPKKey].second)) {
+            mapUsedSPK.erase(SPKKey);
+        }
+    }
 
     totalTxSize -= it->GetTxSize();
     m_total_fee -= it->GetFee();
@@ -688,6 +735,38 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
 }
+
+#ifndef BUILDING_FOR_LIBBITCOINKERNEL
+void CTxMemPool::UpdateDynamicDustFeerate()
+{
+    CFeeRate est_feerate{0};
+    if (m_opts.dust_relay_target < 0 && m_opts.estimator) {
+        static constexpr double target_success_threshold{0.8};
+        est_feerate = m_opts.estimator->estimateRawFee(-m_opts.dust_relay_target, target_success_threshold, FeeEstimateHorizon::LONG_HALFLIFE, nullptr);
+    } else if (m_opts.dust_relay_target > 0) {
+        auto bytes_remaining = int64_t{m_opts.dust_relay_target} * 1'000;
+        LOCK(cs);
+        for (auto mi = mapTx.get<ancestor_score>().begin(); mi != mapTx.get<ancestor_score>().end(); ++mi) {
+            bytes_remaining -= mi->GetTxSize();
+            if (bytes_remaining <= 0) {
+                est_feerate = CFeeRate(mi->GetFee(), mi->GetTxSize());
+                break;
+            }
+        }
+    }
+
+    est_feerate = (est_feerate * m_opts.dust_relay_multiplier) / 1'000;
+
+    if (est_feerate < m_opts.dust_relay_feerate_floor) {
+        est_feerate = m_opts.dust_relay_feerate_floor;
+    }
+
+    if (m_opts.dust_relay_feerate != est_feerate) {
+        LogDebug(BCLog::MEMPOOL, "Updating dust feerate to %s\n", est_feerate.ToString(FeeEstimateMode::SAT_VB));
+        m_opts.dust_relay_feerate = est_feerate;
+    }
+}
+#endif
 
 void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const
 {

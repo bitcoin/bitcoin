@@ -17,6 +17,7 @@
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
 #include <sync.h>
 #include <util/epochguard.h>
 #include <util/hasher.h>
@@ -44,6 +45,8 @@ class CChain;
 class ValidationSignals;
 
 struct bilingual_str;
+
+static constexpr std::chrono::minutes DYNAMIC_DUST_FEERATE_UPDATE_INTERVAL{15};
 
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -200,11 +203,15 @@ public:
     }
 };
 
+uint160 ScriptHashkey(const CScript& script);
+
 // Multi_index tag names
 struct descendant_score {};
 struct entry_time {};
 struct ancestor_score {};
 struct index_by_wtxid {};
+
+class CBlockPolicyEstimator;
 
 /**
  * Information about a mempool transaction.
@@ -398,6 +405,9 @@ public:
     using Limits = kernel::MemPoolLimits;
 
     uint64_t CalculateDescendantMaximum(txiter entry) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    std::map<uint160, std::pair<const CTransaction *, const CTransaction *>> mapUsedSPK;
+
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
@@ -475,6 +485,8 @@ public:
      * the tx is not dependent on other mempool transactions to be included in a block.
      */
     bool HasNoInputsOf(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void UpdateDynamicDustFeerate();
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
@@ -870,9 +882,9 @@ public:
 
         void Apply() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    private:
         CTxMemPool* m_pool;
         CTxMemPool::indexed_transaction_set m_to_add;
+    private:
         std::vector<CTxMemPool::txiter> m_entry_vec; // track the added transactions' insertion order
         // map from the m_to_add index to the ancestors for the transaction
         std::map<CTxMemPool::txiter, CTxMemPool::setEntries, CompareIteratorByHash> m_ancestors;

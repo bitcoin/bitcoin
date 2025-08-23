@@ -35,6 +35,15 @@ struct LockPoints {
     CBlockIndex* maxInputBlock{nullptr};
 };
 
+enum MemPool_SPK_State {
+    MSS_UNSEEN  = 0,
+    MSS_SPENT   = 1,  // .second
+    MSS_CREATED = 2,  // .first
+    MSS_BOTH    = 3,
+};
+
+typedef std::map<uint160, enum MemPool_SPK_State> SPKStates_t;
+
 struct CompareIteratorByHash {
     // SFINAE for T where T is either a pointer type (e.g., a txiter) or a reference_wrapper<T>
     // (e.g. a wrapped CTxMemPoolEntry&)
@@ -186,6 +195,8 @@ public:
 
     mutable size_t idx_randomized; //!< Index in mempool's txns_randomized
     mutable Epoch::Marker m_epoch_marker; //!< epoch when last touched, useful for graph algorithms
+
+    SPKStates_t mapSPK;
 };
 
 using CTxMemPoolEntryRef = CTxMemPoolEntry::CTxMemPoolEntryRef;
@@ -226,7 +237,7 @@ struct NewMempoolTransactionInfo {
      * This boolean indicates whether the transaction was added
      * without enforcing mempool fee limits.
      */
-    const bool m_mempool_limit_bypassed;
+    const ignore_rejects_type m_ignore_rejects;
     /* This boolean indicates whether the transaction is part of a package. */
     const bool m_submitted_in_package;
     /*
@@ -239,11 +250,11 @@ struct NewMempoolTransactionInfo {
 
     explicit NewMempoolTransactionInfo(const CTransactionRef& tx, const CAmount& fee,
                                        const int64_t vsize, const unsigned int height,
-                                       const bool mempool_limit_bypassed, const bool submitted_in_package,
+                                       const ignore_rejects_type& ignore_rejects, const bool submitted_in_package,
                                        const bool chainstate_is_current,
                                        const bool has_no_mempool_parents)
         : info{tx, fee, vsize, height},
-          m_mempool_limit_bypassed{mempool_limit_bypassed},
+          m_ignore_rejects{ignore_rejects},
           m_submitted_in_package{submitted_in_package},
           m_chainstate_is_current{chainstate_is_current},
           m_has_no_mempool_parents{has_no_mempool_parents} {}

@@ -66,6 +66,7 @@ add_library(bitcoinkernel
   ../util/fs.cpp
   ../util/fs_helpers.cpp
   ../util/hasher.cpp
+  ../util/mempressure.cpp
   ../util/moneystr.cpp
   ../util/rbf.cpp
   ../util/serfloat.cpp
@@ -79,6 +80,10 @@ add_library(bitcoinkernel
   ../validation.cpp
   ../validationinterface.cpp
   ../versionbits.cpp
+)
+target_compile_definitions(bitcoinkernel
+  PRIVATE
+    BUILDING_FOR_LIBBITCOINKERNEL
 )
 target_link_libraries(bitcoinkernel
   PRIVATE
