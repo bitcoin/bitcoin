@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 class CCoinsViewCache;
 class CFeeRate;
@@ -85,6 +86,8 @@ static const bool DEFAULT_ACCEPT_DATACARRIER = true;
  * +2 for the pushdata opcodes.
  */
 static const unsigned int MAX_OP_RETURN_RELAY = 83;
+/** Default for -datacarrierfullcount */
+static constexpr bool DEFAULT_DATACARRIER_FULLCOUNT{false};
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
@@ -192,5 +195,9 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
 {
     return GetVirtualTransactionInputSize(tx, 0, 0);
 }
+
+std::pair<CScript, unsigned int> GetScriptForTransactionInput(CScript prevScript, const CTxIn&);
+
+size_t DatacarrierBytes(const CTransaction& tx, const CCoinsViewCache& view);
 
 #endif // BITCOIN_POLICY_POLICY_H
