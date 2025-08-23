@@ -33,22 +33,22 @@ class BlockTemplate
 public:
     virtual ~BlockTemplate() = default;
 
-    virtual CBlockHeader getBlockHeader() = 0;
-    virtual CBlock getBlock() = 0;
+    virtual const CBlockHeader& getBlockHeader() const = 0;
+    virtual const CBlock& getBlock() const = 0;
 
-    virtual std::vector<CAmount> getTxFees() = 0;
-    virtual std::vector<int64_t> getTxSigops() = 0;
+    virtual const std::vector<CAmount>& getTxFees() const = 0;
+    virtual const std::vector<int64_t>& getTxSigops() const = 0;
 
-    virtual CTransactionRef getCoinbaseTx() = 0;
-    virtual std::vector<unsigned char> getCoinbaseCommitment() = 0;
-    virtual int getWitnessCommitmentIndex() = 0;
+    virtual CTransactionRef getCoinbaseTx() const = 0;
+    virtual const std::vector<unsigned char>& getCoinbaseCommitment() const = 0;
+    virtual int getWitnessCommitmentIndex() const = 0;
 
     /**
      * Compute merkle path to the coinbase transaction
      *
      * @return merkle path ordered from the deepest
      */
-    virtual std::vector<uint256> getCoinbaseMerklePath() = 0;
+    virtual std::vector<uint256> getCoinbaseMerklePath() const = 0;
 
     /**
      * Construct and broadcast the block.
@@ -86,12 +86,13 @@ public:
     virtual BlockRef waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
 
    /**
-     * Construct a new block template
+     * Construct a new block template. For the createNewBlock variant, subclass options (if any) are silently lost and overridden by any config args. For createNewBlock2, the options are assumed to be complete.
      *
      * @param[in] options options for creating the block
      * @returns a block template
      */
     virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}) = 0;
+    virtual std::unique_ptr<BlockTemplate> createNewBlock2(const node::BlockCreateOptions& assemble_options) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
