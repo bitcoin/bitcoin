@@ -329,6 +329,12 @@ enum ServiceFlags : uint64_t {
     // NODE_P2P_V2 means the node supports BIP324 transport
     NODE_P2P_V2 = (1 << 11),
 
+    // NODE_UTREEXO means the node can provide utreexo inclusion proofs for new and otherwise available blocks
+    NODE_UTREEXO = (1 << 12),
+
+    // NODE_UTREEXO_ARCHIVE means the node can provide utreexo inclusion proofs for all historical blocks
+    NODE_UTREEXO_ARCHIVE = (1 << 13),
+
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
     // bitcoin-development mailing list. Remember that service bits are just
