@@ -38,6 +38,8 @@ The following rules are enforced for all packages:
 
 * Only limited package replacements are currently considered. (#28984)
 
+   - If `-mempoolfullrbf=0` (the value is 1 by default), all direct conflicts must signal replacement.
+
    - Packages are 1-parent-1-child, with no in-mempool ancestors of the package.
 
    - All conflicting clusters (connected components of mempool transactions) must be clusters of up to size 2.
