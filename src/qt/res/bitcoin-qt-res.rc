@@ -22,7 +22,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        CLIENT_NAME " project"
-            VALUE "FileDescription",    CLIENT_NAME " (GUI node for Bitcoin)"
+            VALUE "FileDescription",    CLIENT_NAME
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "bitcoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
