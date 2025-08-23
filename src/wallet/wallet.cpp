@@ -3038,18 +3038,11 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         return nullptr;
     }
 
-    // Load wallet
-    auto nLoadWalletRet = walletInstance->PopulateWalletFromDB(error, warnings);
-    bool rescan_required = nLoadWalletRet == DBErrors::NEED_RESCAN;
-    if (nLoadWalletRet != DBErrors::LOAD_OK && nLoadWalletRet != DBErrors::NONCRITICAL_ERROR && !rescan_required) {
+    // Initialize version key.
+    if(!WalletBatch(walletInstance->GetDatabase()).WriteVersion(CLIENT_VERSION)) {
+        error = strprintf(_("Error creating %s: Could not write version metadata."), walletFile);
         return nullptr;
     }
-
-    // This wallet is in its first run if there are no ScriptPubKeyMans and it isn't blank or no privkeys
-    const bool fFirstRun = walletInstance->m_spk_managers.empty() &&
-                     !walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) &&
-                     !walletInstance->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
-    if (fFirstRun)
     {
         LOCK(walletInstance->cs_wallet);
 
@@ -3070,25 +3063,14 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                 walletInstance->SetLastBlockProcessed(*tip_height, chain->getBlockHash(*tip_height));
             }
         }
-    } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
-        // Make it impossible to disable private keys after creation
-        error = strprintf(_("Error loading %s: Private keys can only be disabled during creation"), walletFile);
-        return nullptr;
-    } else if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        for (auto spk_man : walletInstance->GetActiveScriptPubKeyMans()) {
-            if (spk_man->HavePrivateKeys()) {
-                warnings.push_back(strprintf(_("Warning: Private keys detected in wallet {%s} with disabled private keys"), walletFile));
-                break;
-            }
-        }
     }
 
-    walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
+    walletInstance->WalletLogPrintf("Wallet completed creation in %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 
     // Try to top up keypool. No-op if the wallet is locked.
     walletInstance->TopUpKeyPool();
 
-    if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
+    if (chain && !AttachChain(walletInstance, *chain, /*rescan_required=*/false, error, warnings)) {
         walletInstance->m_chain_notifications_handler.reset(); // Reset this pointer so that the wallet will actually be unloaded
         return nullptr;
     }
