@@ -157,6 +157,13 @@ protected:
      * has been received and connected to the headers tree, though not validated yet.
      */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    /**
+     * Notifies the validation interface that it is being unregistered
+     */
+    virtual void ValidationInterfaceUnregistering() {};
+
+    friend void UnregisterValidationInterface(CValidationInterface*);
+    friend void UnregisterAllValidationInterfaces();
     friend class ValidationSignals;
     friend class ValidationInterfaceTest;
 };
