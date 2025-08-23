@@ -53,6 +53,7 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/hasher.h>
+#include <util/mempressure.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/result.h>
@@ -90,10 +91,12 @@ using node::SnapshotMetadata;
 
 /** Size threshold for warning about slow UTXO set flush to disk. */
 static constexpr size_t WARN_FLUSH_COINS_SIZE = 1 << 30; // 1 GiB
-/** Time to wait between writing blocks/block index to disk. */
-static constexpr std::chrono::hours DATABASE_WRITE_INTERVAL{1};
-/** Time to wait between flushing chainstate to disk. */
-static constexpr std::chrono::hours DATABASE_FLUSH_INTERVAL{24};
+/** Time window to wait between writing blocks/block index and chainstate to disk.
+ *  Randomize writing time inside the window to prevent a situation where the
+ *  network over time settles into a few cohorts of synchronized writers.
+*/
+static constexpr auto DATABASE_WRITE_INTERVAL_MIN{50min};
+static constexpr auto DATABASE_WRITE_INTERVAL_MAX{70min};
 /** Maximum age of our tip for us to be considered current for fee estimation */
 static constexpr std::chrono::hours MAX_FEE_ESTIMATION_TIP_AGE{3};
 const std::vector<std::string> CHECKLEVEL_DOC {
@@ -805,6 +808,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (tx.IsCoinBase())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "coinbase");
 
+    if (tx.version == TRUC_VERSION && m_pool.m_opts.truc_policy == TRUCPolicy::Reject) {
+        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "version");
+    }
+
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
     if (m_pool.m_opts.require_standard && !IsStandardTx(tx, m_pool.m_opts, reason, ignore_rejects)) {
@@ -837,10 +844,37 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         const CTransaction* ptxConflicting = m_pool.GetConflictTx(txin.prevout);
         if (ptxConflicting) {
             if (!args.m_allow_replacement) {
-                // Transaction conflicts with a mempool tx, but we're not allowing replacements in this context.
+                // Transaction conflicts with a mempool tx, but we're not allowing replacements.
                 return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "bip125-replacement-disallowed");
             }
-            ws.m_conflicts.insert(ptxConflicting->GetHash());
+            if (!ws.m_conflicts.count(ptxConflicting->GetHash()))
+            {
+                // Transactions that don't explicitly signal replaceability are
+                // *not* replaceable with the current logic, even if one of their
+                // unconfirmed ancestors signals replaceability. This diverges
+                // from BIP125's inherited signaling description (see CVE-2021-31876).
+                // Applications relying on first-seen mempool behavior should
+                // check all unconfirmed ancestors; otherwise an opt-in ancestor
+                // might be replaced, causing removal of this descendant.
+                //
+                // All TRUC transactions are considered replaceable.
+                //
+                // Replaceability signaling of the original transactions may be
+                // ignored due to node setting.
+                bool allow_rbf;
+                if (m_pool.m_opts.rbf_policy == RBFPolicy::Always || ignore_rejects.count("txn-mempool-conflict")) {
+                    allow_rbf = true;
+                } else if (m_pool.m_opts.rbf_policy == RBFPolicy::Never) {
+                    allow_rbf = false;
+                } else {
+                    allow_rbf = SignalsOptInRBF(*ptxConflicting) || ptxConflicting->version == TRUC_VERSION;
+                }
+                if (!allow_rbf) {
+                    return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
+                }
+
+                ws.m_conflicts.insert(ptxConflicting->GetHash());
+            }
         }
     }
 
@@ -948,7 +982,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // method of ensuring the tx remains bumped. For example, the fee-bumping child could disappear
     // due to a replacement.
     // The only exception is TRUC transactions.
-    if (ws.m_ptx->version != TRUC_VERSION && ws.m_modified_fees < m_pool.m_opts.min_relay_feerate.GetFee(ws.m_vsize) && !args.m_ignore_rejects.count(rejectmsg_lowfee_relay)) {
+    if ((ws.m_ptx->version != TRUC_VERSION || m_pool.m_opts.truc_policy != TRUCPolicy::Enforce) && ws.m_modified_fees < m_pool.m_opts.min_relay_feerate.GetFee(ws.m_vsize) && !args.m_ignore_rejects.count(rejectmsg_lowfee_relay)) {
         // Even though this is a fee-related failure, this result is TX_MEMPOOL_POLICY, not
         // TX_RECONSIDERABLE, because it cannot be bypassed using package validation.
         return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "min relay fee not met",
@@ -1036,7 +1070,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             .descendant_count = maybe_rbf_limits.descendant_count + 1,
             .descendant_size_vbytes = maybe_rbf_limits.descendant_size_vbytes + EXTRA_DESCENDANT_TX_SIZE_LIMIT,
         };
-        if (ws.m_vsize > EXTRA_DESCENDANT_TX_SIZE_LIMIT || ws.m_ptx->version == TRUC_VERSION) {
+        if (ws.m_vsize > EXTRA_DESCENDANT_TX_SIZE_LIMIT || (ws.m_ptx->version == TRUC_VERSION && m_pool.m_opts.truc_policy == TRUCPolicy::Enforce)) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", error_message);
         }
         if (auto ancestors_retry{m_subpackage.m_changeset->CalculateMemPoolAncestors(ws.m_tx_handle, cpfp_carve_out_limits)}) {
@@ -1049,6 +1083,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Even though just checking direct mempool parents for inheritance would be sufficient, we
     // check using the full ancestor set here because it's more convenient to use what we have
     // already calculated.
+    if (m_pool.m_opts.truc_policy == TRUCPolicy::Enforce) {
     if (const auto err{SingleTRUCChecks(ws.m_ptx, "truc-", reason, ignore_rejects, ws.m_ancestors, ws.m_conflicts, ws.m_vsize)}) {
         // Single transaction contexts only.
         if (args.m_allow_sibling_eviction && err->second != nullptr) {
@@ -1070,7 +1105,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         } else {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, reason, err->first);
         }
-    }
+    }}
 
     // A transaction that spends outputs that would be replaced by it is invalid. Now
     // that we have the set of all ancestors we can detect this
@@ -1657,13 +1692,14 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 
     // At this point we have all in-mempool ancestors, and we know every transaction's vsize.
     // Run the TRUC checks on the package.
+    if (m_pool.m_opts.truc_policy == TRUCPolicy::Enforce) {
     std::string reason;
     for (Workspace& ws : workspaces) {
         if (auto err{PackageTRUCChecks(ws.m_ptx, ws.m_vsize, "truc-", reason, args.m_ignore_rejects, txns, ws.m_ancestors)}) {
             package_state.Invalid(PackageValidationResult::PCKG_POLICY, reason, err.value());
             return PackageMempoolAcceptResult(package_state, {});
         }
-    }
+    }}
 
     // Transactions must meet two minimum feerates: the mempool minimum fee and min relay fee.
     // For transactions consisting of exactly one child and its parents, it suffices to use the
@@ -2942,7 +2978,6 @@ bool Chainstate::FlushStateToDisk(
     try {
     {
         bool fFlushForPrune = false;
-        bool fDoFullFlush = false;
 
         CoinsCacheSizeState cache_state = GetCoinsCacheSizeState();
         LOCK(m_blockman.cs_LastBlockFile);
@@ -2987,26 +3022,24 @@ bool Chainstate::FlushStateToDisk(
                 }
             }
         }
-        const auto nNow{SteadyClock::now()};
-        // Avoid writing/flushing immediately after startup.
-        if (m_last_write == decltype(m_last_write){}) {
-            m_last_write = nNow;
-        }
-        if (m_last_flush == decltype(m_last_flush){}) {
-            m_last_flush = nNow;
-        }
+        const auto nNow{NodeClock::now()};
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
-        // The cache is over the limit, we have to write now.
-        bool fCacheCritical = mode == FlushStateMode::IF_NEEDED && cache_state >= CoinsCacheSizeState::CRITICAL;
-        // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
-        bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > m_last_write + DATABASE_WRITE_INTERVAL;
-        // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
-        bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > m_last_flush + DATABASE_FLUSH_INTERVAL;
-        // Combine all conditions that result in a full cache flush.
-        fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
-        // Write blocks and block index to disk.
-        if (fDoFullFlush || fPeriodicWrite) {
+        bool fCacheCritical = false;
+        if (mode == FlushStateMode::IF_NEEDED) {
+            if (cache_state >= CoinsCacheSizeState::CRITICAL) {
+                // The cache is over the limit, we have to write now.
+                fCacheCritical = true;
+            } else if (SystemNeedsMemoryReleased()) {
+                fCacheCritical = true;
+            }
+        }
+        // It's been a while since we wrote the block index and chain state to disk. Do this frequently, so we don't need to redownload or reindex after a crash.
+        bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow >= m_next_write;
+        // Combine all conditions that result in a write to disk.
+        bool should_write = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicWrite || fFlushForPrune;
+        // Write blocks, block index and best chain related state to disk.
+        if (should_write) {
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
@@ -3036,10 +3069,9 @@ bool Chainstate::FlushStateToDisk(
 
                 m_blockman.UnlinkPrunedFiles(setFilesToPrune);
             }
-            m_last_write = nNow;
-        }
-        // Flush best chain related state. This can only be done if the blocks / block index write was also done.
-        if (fDoFullFlush && !CoinsTip().GetBestBlock().IsNull()) {
+
+            if (!CoinsTip().GetBestBlock().IsNull()) {
+
             if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
             LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
                 coins_count, coins_mem_usage >> 10), BCLog::BENCH);
@@ -3057,14 +3089,20 @@ bool Chainstate::FlushStateToDisk(
             if (empty_cache ? !CoinsTip().Flush() : !CoinsTip().Sync()) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Failed to write to coin database."));
             }
-            m_last_flush = nNow;
             full_flush_completed = true;
             TRACEPOINT(utxocache, flush,
-                   int64_t{Ticks<std::chrono::microseconds>(SteadyClock::now() - nNow)},
+                    int64_t{Ticks<std::chrono::microseconds>(NodeClock::now() - nNow)},
                    (uint32_t)mode,
                    (uint64_t)coins_count,
                    (uint64_t)coins_mem_usage,
                    (bool)fFlushForPrune);
+
+            }
+        }
+
+        if (should_write || m_next_write == NodeClock::time_point::max()) {
+            constexpr auto range{DATABASE_WRITE_INTERVAL_MAX - DATABASE_WRITE_INTERVAL_MIN};
+            m_next_write = FastRandomContext().rand_uniform_delay(NodeClock::now() + DATABASE_WRITE_INTERVAL_MIN, range);
         }
     }
     if (full_flush_completed && m_chainman.m_options.signals) {
@@ -3711,6 +3749,11 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             m_chainman.MaybeRebalanceCaches();
         }
 
+        // Write changes periodically to disk, after relay.
+        if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
+            return false;
+        }
+
         if (WITH_LOCK(::cs_main, return m_disabled)) {
             // Background chainstate has reached the snapshot base block, so exit.
 
@@ -3734,11 +3777,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     } while (pindexNewTip != pindexMostWork);
 
     m_chainman.CheckBlockIndex();
-
-    // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
-        return false;
-    }
 
     return true;
 }
