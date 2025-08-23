@@ -12,10 +12,12 @@
 #include <consensus/amount.h>
 #include <kernel/chainparams.h>
 #include <logging.h>
+#include <node/interface_ui.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <tinyformat.h>
 #include <util/moneystr.h>
+#include <util/string.h>
 #include <util/translation.h>
 
 #include <chrono>
@@ -79,6 +81,8 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         }
     }
 
+    mempool_opts.permit_bare_pubkey = argsman.GetBoolArg("-permitbarepubkey", DEFAULT_PERMIT_BAREPUBKEY);
+
     mempool_opts.permit_bare_multisig = argsman.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
 
     if (argsman.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER)) {
@@ -88,8 +92,89 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
     }
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
-    if (!chainparams.IsTestChain() && !mempool_opts.require_standard) {
-        return util::Error{Untranslated(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.GetChainTypeString()))};
+
+    mempool_opts.acceptunknownwitness = argsman.GetBoolArg("-acceptunknownwitness", mempool_opts.acceptunknownwitness);
+
+    if (argsman.IsArgSet("-mempoolreplacement") || argsman.IsArgSet("-mempoolfullrbf")) {
+        // Generally, mempoolreplacement overrides mempoolfullrbf, but the latter is used to infer intent in some cases
+        std::optional<bool> optin_flag;
+        bool fee_flag{false};
+        if (argsman.GetBoolArg("-mempoolreplacement", false)) {
+            fee_flag = true;
+        } else {
+            for (auto& opt : util::SplitString(argsman.GetArg("-mempoolreplacement", ""), ",+")) {
+                if (opt == "optin") {
+                    optin_flag = true;
+                } else if (opt == "-optin") {
+                    optin_flag = false;
+                } else if (opt == "fee") {
+                    fee_flag = true;
+                }
+            }
+        }
+        if (optin_flag.value_or(false)) {
+            // "optin" is explicitly specified
+            mempool_opts.rbf_policy = RBFPolicy::OptIn;
+        } else if (argsman.GetBoolArg("-mempoolfullrbf", false)) {
+            const bool mempoolreplacement_false{argsman.IsArgSet("-mempoolreplacement") && !(fee_flag || optin_flag.has_value())};
+            if (mempoolreplacement_false) {
+                // This is a contradiction, but override rather than error
+                InitWarning(_("False mempoolreplacement option contradicts true mempoolfullrbf; disallowing all RBF"));
+                mempool_opts.rbf_policy = RBFPolicy::Never;
+            } else {
+                mempool_opts.rbf_policy = RBFPolicy::Always;
+            }
+        } else if (!optin_flag.value_or(true)) {
+            // "-optin" is explicitly specified
+            mempool_opts.rbf_policy = fee_flag ? RBFPolicy::Always : RBFPolicy::Never;
+        } else if (fee_flag) {
+            // Just "fee" by itself
+            if (!argsman.GetBoolArg("-mempoolfullrbf", true)) {
+                mempool_opts.rbf_policy = RBFPolicy::OptIn;
+            } else {
+                // Fallback to default, unless it's been changed to Never
+                if (mempool_opts.rbf_policy == RBFPolicy::Never) {
+                    mempool_opts.rbf_policy = RBFPolicy::Always;
+                }
+            }
+        } else if (!argsman.IsArgSet("-mempoolreplacement")) {
+            // mempoolfullrbf is always explicitly false here
+            // Fallback to default, as long as it isn't Always
+            if (mempool_opts.rbf_policy == RBFPolicy::Always) {
+                mempool_opts.rbf_policy = RBFPolicy::OptIn;
+            }
+        } else {
+            // mempoolreplacement is explicitly false here
+            mempool_opts.rbf_policy = RBFPolicy::Never;
+        }
+    }
+
+    if (argsman.IsArgSet("-mempooltruc")) {
+        std::optional<bool> accept_flag, enforce_flag;
+        if (argsman.GetBoolArg("-mempooltruc", false)) {
+            enforce_flag = true;
+        }
+        for (auto& opt : util::SplitString(argsman.GetArg("-mempooltruc", ""), ",+")) {
+            if (opt == "optin" || opt == "enforce") {
+                enforce_flag = true;
+            } else if (opt == "-optin" || opt == "-enforce") {
+                enforce_flag = false;
+            } else if (opt == "accept") {
+                accept_flag = true;
+            } else if (opt == "reject" || opt == "0") {
+                accept_flag = false;
+            }
+        }
+
+        if (accept_flag && !*accept_flag) {  // reject
+            mempool_opts.truc_policy = TRUCPolicy::Reject;
+        } else if (enforce_flag && *enforce_flag) {  // enforce
+            mempool_opts.truc_policy = TRUCPolicy::Enforce;
+        } else if ((!accept_flag) && !enforce_flag) {
+            // nothing specified, leave at default
+        } else {  // accept or -enforce
+            mempool_opts.truc_policy = TRUCPolicy::Accept;
+        }
     }
 
     mempool_opts.persist_v1_dat = argsman.GetBoolArg("-persistmempoolv1", mempool_opts.persist_v1_dat);

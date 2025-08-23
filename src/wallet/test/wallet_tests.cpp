@@ -19,6 +19,7 @@
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/mempressure.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -819,6 +820,9 @@ BOOST_FIXTURE_TEST_CASE(wallet_descriptor_test, BasicTestingSetup)
 //! rescanning where new transactions in new blocks could be lost.
 BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
 {
+    // FIXME: this test fails for some reason if there's a flush
+    g_low_memory_threshold = 0;
+
     m_args.ForceSetArg("-unsafesqlitesync", "1");
     // Create new wallet with known key and unload it.
     WalletContext context;

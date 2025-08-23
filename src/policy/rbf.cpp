@@ -7,6 +7,7 @@
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
 #include <policy/feerate.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -59,7 +60,8 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                                                   CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
-                                                  CTxMemPool::setEntries& all_conflicts)
+                                                  CTxMemPool::setEntries& all_conflicts,
+                                                  const ignore_rejects_type& ignore_rejects)
 {
     AssertLockHeld(pool.cs);
     const uint256 txid = tx.GetHash();
@@ -70,7 +72,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
         // entries from the mempool. This potentially overestimates the number of actual
         // descendants (i.e. if multiple conflicts share a descendant, it will be counted multiple
         // times), but we just want to be conservative to avoid doing too much work.
-        if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES) {
+        if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES && !ignore_rejects.count("too-many-replacements") && !ignore_rejects.count("too many potential replacements")) {
             return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)",
                              txid.ToString(),
                              nConflictingCount,
