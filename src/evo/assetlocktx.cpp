@@ -6,7 +6,6 @@
 #include <evo/specialtx.h>
 
 #include <llmq/commitment.h>
-#include <llmq/signing.h>
 #include <llmq/quorums.h>
 
 #include <chainparams.h>
@@ -21,6 +20,11 @@
 #include <algorithm>
 
 using node::BlockManager;
+
+namespace llmq {
+// forward declaration to avoid circular dependency
+uint256 BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash);
+} // namespace llmq
 
 /**
  *  Common code for Asset Lock and Asset Unlock

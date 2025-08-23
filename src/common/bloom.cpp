@@ -119,6 +119,11 @@ bool CBloomFilter::CheckScript(const CScript &script) const
 // Filter is updated only if it has BLOOM_UPDATE_ALL flag to be able to have
 // simple SPV wallets that doesn't work with DIP2 transactions (multicoin
 // wallets, etc.)
+// NOTE(maintenance): Keep this implementation in sync with
+// ExtractSpecialTxFilterElements in src/evo/specialtx_filter.cpp.
+// Both routines must handle the same set of special-transaction fields.
+// If you modify one, update the other to prevent mismatches between
+// bloom filter relevance and compact filter element extraction.
 bool CBloomFilter::CheckSpecialTransactionMatchesAndUpdate(const CTransaction &tx)
 {
     if (!tx.HasExtraPayloadField()) {

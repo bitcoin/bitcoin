@@ -7,6 +7,7 @@
 
 #include <blockfilter.h>
 #include <crypto/siphash.h>
+#include <evo/specialtx_filter.h>
 #include <hash.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -195,6 +196,11 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
             if (script.empty() || script[0] == OP_RETURN) continue;
             elements.emplace(script.begin(), script.end());
         }
+
+        // Extract special transaction elements using delegation pattern
+        ExtractSpecialTxFilterElements(*tx, [&elements](Span<const unsigned char> data) {
+            elements.emplace(data.begin(), data.end());
+        });
     }
 
     for (const CTxUndo& tx_undo : block_undo.vtxundo) {
