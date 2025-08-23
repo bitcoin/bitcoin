@@ -22,13 +22,14 @@ class UacommentTest(BitcoinTestFramework):
         assert_equal(test_uacomment, "(testnode0)")
 
         self.restart_node(0, ["-uacomment=foo"])
-        foo_uacomment = self.nodes[0].getnetworkinfo()["subversion"][-17:-1]
-        assert_equal(foo_uacomment, "(testnode0; foo)")
+        foo_uacomment = self.nodes[0].getnetworkinfo()["subversion"]
+        assert_equal(foo_uacomment[-17:-1], "(testnode0; foo)")
+        foo_uacomment_len = len(foo_uacomment)
 
         self.log.info("test -uacomment max length")
         self.stop_node(0)
         expected = r"Error: Total length of network version string \([0-9]+\) exceeds maximum length \(256\). Reduce the number or size of uacomments."
-        self.nodes[0].assert_start_raises_init_error(["-uacomment=" + 'a' * 256], expected, match=ErrorMatch.FULL_REGEX)
+        self.nodes[0].assert_start_raises_init_error(["-uacomment=foo" + ('a' * (257 - foo_uacomment_len))], expected, match=ErrorMatch.FULL_REGEX)
 
         self.log.info("test -uacomment unsafe characters")
         for unsafe_char in ['/', ':', '(', ')', '₿', '🏃']:
