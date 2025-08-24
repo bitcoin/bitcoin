@@ -80,7 +80,6 @@
 const int64_t nStartupTime = GetTime();
 
 //Dash only features
-bool fMasternodeMode = false;
 const std::string gCoinJoinName = "CoinJoin";
 
 /**

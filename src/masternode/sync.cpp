@@ -124,7 +124,7 @@ void CMasternodeSync::ProcessTick(const PeerManager& peerman, const CGovernanceM
 
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
-    if (!Params().IsMockableChain() && GetTime() - nTimeLastProcess > 60 * 60 && !fMasternodeMode) {
+    if (!Params().IsMockableChain() && GetTime() - nTimeLastProcess > 60 * 60 && !connman.IsActiveMasternode()) {
         LogPrintf("CMasternodeSync::ProcessTick -- WARNING: no actions for too long, restarting sync...\n");
         Reset(true);
         nTimeLastProcess = GetTime();
@@ -157,7 +157,7 @@ void CMasternodeSync::ProcessTick(const PeerManager& peerman, const CGovernanceM
         // Don't try to sync any data from outbound non-relay "masternode" connections.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if (!pnode->CanRelay() || (fMasternodeMode && pnode->IsInboundConn())) continue;
+        if (!pnode->CanRelay() || (connman.IsActiveMasternode() && pnode->IsInboundConn())) continue;
 
         {
             if ((pnode->HasPermission(NetPermissionFlags::NoBan) || pnode->IsManualConn()) && !m_netfulfilledman.HasFulfilledRequest(pnode->addr, strAllow)) {

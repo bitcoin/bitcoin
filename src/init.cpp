@@ -1692,19 +1692,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    fMasternodeMode = false;
     std::string strMasterNodeBLSPrivKey = args.GetArg("-masternodeblsprivkey", "");
     if (!strMasterNodeBLSPrivKey.empty()) {
         CBLSSecretKey keyOperator(ParseHex(strMasterNodeBLSPrivKey));
         if (!keyOperator.IsValid()) {
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         }
-        fMasternodeMode = true;
-        {
-            // Create and register mn_activeman, will init later in ThreadImport
-            node.mn_activeman = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, node.dmnman);
-            RegisterValidationInterface(node.mn_activeman.get());
-        }
+        // Create and register mn_activeman, will init later in ThreadImport
+        node.mn_activeman = std::make_unique<CActiveMasternodeManager>(keyOperator, *node.connman, node.dmnman);
+        RegisterValidationInterface(node.mn_activeman.get());
     }
 
     // Check port numbers
@@ -2428,6 +2424,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.nMaxOutboundLimit = *opt_max_upload;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
     connOptions.socketEventsMode = ::g_socket_events_mode;
+    connOptions.m_active_masternode = node.mn_activeman != nullptr;
 
     // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
     const uint16_t default_bind_port =
