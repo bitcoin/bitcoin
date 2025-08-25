@@ -5,18 +5,47 @@ on:
   pull_request:
 
 jobs:
+  build-openbsd:
+    runs-on: ubuntu-latest
+    name: build • openbsd
+    defaults:
+      run:
+        shell: openbsd {0}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Start OpenBSD VM
+        uses: vmactions/openbsd-vm@v1
+        with:
+          prepare: |
+            pkg_add -v cmake ninja git python bash
+          run: |
+            git clone --depth=1 https://codeberg.org/OpenBSD/ports.git /usr/ports
+          sync: 'rsync'
+          copyback: false
+
+      - name: Install capnproto
+        run: |
+          cd /usr/ports/devel/capnproto/
+          make install
+
+      - name: Run CI script
+        run: |
+          cd ${{ github.workspace }}
+          CI_CONFIG="ci/configs/openbsd.bash" bash ci/scripts/ci.sh
+
   build:
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        config: [default, llvm, gnu32, sanitize]
+        config: [default, llvm, gnu32, sanitize, olddeps]
 
     name: build • ${{ matrix.config }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31       # 2025-05-27, from https://github.com/cachix/install-nix-action/tags
