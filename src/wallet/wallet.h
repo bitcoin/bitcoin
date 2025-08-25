@@ -103,6 +103,12 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
 
 //! -paytxfee default
 constexpr CAmount DEFAULT_PAY_TX_FEE = 0;
+//! Default/unset fee rate (user hasn't set a custom fee)
+constexpr CFeeRate DEFAULT_FEERATE = CFeeRate(0);
+//! Fee rate indicating "no data available" for estimation
+constexpr CFeeRate NO_FEE_DATA = CFeeRate(0);
+//! Fee rate indicating "disabled" feature
+constexpr CFeeRate FEERATE_DISABLED = CFeeRate(0);
 //! -fallbackfee default
 static const CAmount DEFAULT_FALLBACK_FEE = 0;
 //! -discardfee default

@@ -39,9 +39,9 @@ private:
 
 public:
     /** Fee rate of 0 satoshis per 0 vB */
-    CFeeRate() = default;
+    constexpr CFeeRate() = default;
     template<std::integral I> // Disallow silent float -> int conversion
-    explicit CFeeRate(const I m_feerate_kvb) : m_feerate(FeePerVSize(m_feerate_kvb, 1000)) {}
+    constexpr explicit CFeeRate(const I m_feerate_kvb) : m_feerate(FeePerVSize(m_feerate_kvb, 1000)) {}
 
     /**
      * Construct a fee rate from a fee in satoshis and a vsize in vB.
