@@ -2165,8 +2165,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.active_ctx);
     if (node.mn_activeman) {
         node.active_ctx = std::make_unique<ActiveContext>(chainman, *node.connman, *node.dmnman, *node.cj_ctx->dstxman, *node.mn_metaman,
-                                                          *node.llmq_ctx, *node.sporkman, *node.mempool, *node.mn_activeman, *node.mn_sync,
-                                                          node.peerman);
+                                                          *node.llmq_ctx, *node.sporkman, *node.mempool, *node.peerman, *node.mn_activeman,
+                                                          *node.mn_sync);
     }
 
     // ********************************************************* Step 7e: Setup other Dash services

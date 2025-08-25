@@ -41,10 +41,9 @@ private:
 public:
     ActiveContext() = delete;
     ActiveContext(const ActiveContext&) = delete;
-    ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                  CDSTXManager& dstxman, CMasternodeMetaMan& mn_metaman, LLMQContext& llmq_ctx, CSporkManager& sporkman,
-                  CTxMemPool& mempool, const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync,
-                  std::unique_ptr<PeerManager>& peerman);
+    ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman, CDSTXManager& dstxman,
+                  CMasternodeMetaMan& mn_metaman, LLMQContext& llmq_ctx, CSporkManager& sporkman, CTxMemPool& mempool,
+                  PeerManager& peerman, const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync);
     ~ActiveContext();
 
     /*
