@@ -64,14 +64,23 @@ static const char* SettingName(OptionsModel::OptionID option)
     }
 }
 
+static bool RequiresNumWorkaround(OptionsModel::OptionID option)
+{
+    switch (option) {
+    case OptionsModel::DatabaseCache:
+    case OptionsModel::Prune:
+    case OptionsModel::PruneSize:
+    case OptionsModel::ThreadsScriptVerif:
+        return true;
+    default:
+        return false;
+    }
+}
+
 /** Call node.updateRwSetting() with Bitcoin 22.x workaround. */
 static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID option, const util::SettingsValue& value)
 {
-    if (value.isNum() &&
-        (option == OptionsModel::DatabaseCache ||
-         option == OptionsModel::ThreadsScriptVerif ||
-         option == OptionsModel::Prune ||
-         option == OptionsModel::PruneSize)) {
+    if (value.isNum() && RequiresNumWorkaround(option)) {
         // Write certain old settings as strings, even though they are numbers,
         // because Bitcoin 22.x releases try to read these specific settings as
         // strings in addOverriddenOption() calls at startup, triggering
