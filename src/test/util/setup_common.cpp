@@ -46,6 +46,7 @@
 #include <txmempool.h>
 #include <util/chaintype.h>
 #include <util/check.h>
+#include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
@@ -101,6 +102,7 @@ void SetupCommonTestArgs(ArgsManager& argsman)
 {
     argsman.AddArg("-testdatadir", strprintf("Custom data directory (default: %s<random_string>)", fs::PathToString(fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / "")),
                    ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-fuzzcopydatadir", "Copies the passed data directory to a temporary directory to use during a single fuzz iteration", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
 }
 
 /** Test setup failure */
@@ -156,22 +158,31 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     }
 
     const std::string test_name{G_TEST_GET_FULL_NAME ? G_TEST_GET_FULL_NAME() : ""};
-    if (!m_node.args->IsArgSet("-testdatadir")) {
+
+    auto rand_path = [&]() {
         // To avoid colliding with a leftover prior datadir, and to allow
         // tests, such as the fuzz tests to run in several processes at the
         // same time, add a random element to the path. Keep it small enough to
         // avoid a MAX_PATH violation on Windows.
         const auto rand{HexStr(g_rng_temp_path.randbytes(10))};
-        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
-        TryCreateDirectories(m_path_root);
-    } else {
+        return fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
+    };
+
+    if (m_node.args->IsArgSet("-testdatadir")) {
         // Custom data directory
         m_has_custom_datadir = true;
         fs::path root_dir{m_node.args->GetPathArg("-testdatadir")};
         if (root_dir.empty()) ExitFailure("-testdatadir argument is empty, please specify a path");
 
         root_dir = fs::absolute(root_dir);
-        m_path_lock = root_dir / TEST_DIR_PATH_ELEMENT / fs::PathFromString(test_name);
+        if (EnableFuzzDeterminism()) {
+            // Do not add a random path element when fuzzing. Fuzz iterations need to know the exact path when they
+            // eventually pass this created directory to -fuzzcopydatadir.
+            m_path_lock = root_dir;
+        } else {
+            m_path_lock = root_dir / TEST_DIR_PATH_ELEMENT / fs::PathFromString(test_name);
+        }
+
         m_path_root = m_path_lock / "datadir";
 
         // Try to obtain the lock; if unsuccessful don't disturb the existing test.
@@ -184,8 +195,27 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         fs::remove_all(m_path_root);
         if (!TryCreateDirectories(m_path_root)) ExitFailure("Cannot create test data directory");
 
-        // Print the test directory name if custom.
-        std::cout << "Test directory (will not be deleted): " << m_path_root << std::endl;
+        // Print the test directory name if custom and not fuzzing.
+        if (!EnableFuzzDeterminism()) {
+            std::cout << "Test directory (will not be deleted): " << m_path_root << std::endl;
+        }
+    } else if (m_node.args->IsArgSet("-fuzzcopydatadir")) {
+        // Copy passed directory
+        fs::path cached_dir{m_node.args->GetPathArg("-fuzzcopydatadir")};
+        if (cached_dir.empty()) ExitFailure("-fuzzcopydatadir argument is empty, please specify a path");
+
+        // Traverse lower into /datadir
+        cached_dir = cached_dir / "datadir";
+
+        m_path_root = rand_path();
+        TryCreateDirectories(m_path_root);
+
+        // Copy the cached directory into the newly created temporary directory.
+        fs::copy(cached_dir, m_path_root, fs::copy_options::recursive);
+    } else {
+        // If neither -testdatadir nor -fuzzcopydatadir is set, create an ephemeral datadir that will get deleted.
+        m_path_root = rand_path();
+        TryCreateDirectories(m_path_root);
     }
     m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
