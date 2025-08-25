@@ -2,8 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <QMessageBox>
 #include <qt/forms/ui_governancelist.h>
 #include <qt/governancelist.h>
+#include <qt/proposalwizard.h>
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -26,7 +28,6 @@
 
 #include <QAbstractItemView>
 #include <QDesktopServices>
-#include <QMessageBox>
 #include <QTableWidgetItem>
 #include <QUrl>
 #include <QtGui/QClipboard>
@@ -341,6 +342,9 @@ GovernanceList::GovernanceList(QWidget* parent) :
     // Enable CustomContextMenu on the table to make the view emit customContextMenuRequested signal.
     ui->govTableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->govTableView, &QTableView::customContextMenuRequested, this, &GovernanceList::showProposalContextMenu);
+
+    // Create Proposal button
+    connect(ui->btnCreateProposal, &QPushButton::clicked, this, &GovernanceList::showCreateProposalDialog);
     connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
 
     connect(timer, &QTimer::timeout, this, &GovernanceList::updateProposalList);
@@ -415,6 +419,22 @@ void GovernanceList::updateProposalList()
 void GovernanceList::updateProposalCount() const
 {
     ui->countLabel->setText(QString::number(proposalModelProxy->rowCount()));
+}
+
+void GovernanceList::showCreateProposalDialog()
+{
+    if (!this->clientModel || !this->walletModel) {
+        QMessageBox::warning(this, tr("Unavailable"), tr("A synced node and an unlocked wallet are required."));
+        return;
+    }
+    ProposalWizard* proposalWizard = new ProposalWizard(this->clientModel->node(), this->walletModel, this);
+    // Ensure closing the dialog actually destroys it so a fresh flow starts next time
+    proposalWizard->setAttribute(Qt::WA_DeleteOnClose, true);
+    // Modeless window that does not block the parent
+    proposalWizard->setWindowModality(Qt::NonModal);
+    proposalWizard->setModal(false);
+    proposalWizard->setWindowFlag(Qt::Window, true);
+    proposalWizard->show();
 }
 
 void GovernanceList::showProposalContextMenu(const QPoint& pos)

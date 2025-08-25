@@ -337,6 +337,11 @@ public:
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
 
+    //! Prepare a governance proposal (burns fee).
+    virtual bool prepareProposal(const uint256& govobj_hash, CAmount fee, int32_t revision, int64_t created_time,
+                                 const std::string& data_hex, const COutPoint& outpoint,
+                                 std::string& out_fee_txid, std::string& error) = 0;
+
     //! Return pointer to internal wallet class, useful for testing.
     virtual wallet::CWallet* wallet() { return nullptr; }
 };

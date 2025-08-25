@@ -26,6 +26,7 @@ src/messagesigner.*
 src/netfulfilledman.*
 src/qt/governancelist.*
 src/qt/masternodelist.*
+src/qt/proposalwizard.*
 src/rpc/coinjoin.cpp
 src/rpc/evo.cpp
 src/rpc/evo_util.*

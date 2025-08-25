@@ -1,0 +1,781 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ProposalWizard</class>
+ <widget class="QDialog" name="ProposalWizard">
+  <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>640</width>
+      <height>420</height>
+     </rect>
+  </property>
+   <property name="windowTitle">
+   <string>Create Governance Proposal</string>
+  </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>12</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>12</number>
+    </property>
+    <property name="bottomMargin">
+     <number>10</number>
+    </property>
+    <property name="spacing">
+     <number>6</number>
+    </property>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <widget class="QWidget" name="pageDetails">
+      <layout class="QVBoxLayout" name="detailsLayout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+        <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <property name="spacing">
+        <number>8</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="labelHeader">
+         <property name="text">
+          <string>Enter proposal details</string>
+         </property>
+         <property name="margin">
+          <number>0</number>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignHCenter|Qt::AlignVCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelSubheader">
+         <property name="text">
+          <string>A fee will be burned when you prepare the proposal.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignHCenter|Qt::AlignVCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+         <layout class="QFormLayout" name="formLayout">
+         <property name="horizontalSpacing">
+          <number>8</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>6</number>
+         </property>
+          <property name="fieldGrowthPolicy">
+           <enum>QFormLayout::ExpandingFieldsGrow</enum>
+          </property>
+         <property name="labelAlignment">
+          <set>Qt::AlignRight|Qt::AlignVCenter</set>
+         </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="labelName">
+            <property name="text">
+             <string>Proposal &amp;name</string>
+            </property>
+            <property name="buddy">
+             <cstring>editName</cstring>
+            </property>
+           </widget>
+          </item>
+         <item row="0" column="1">
+           <widget class="QLineEdit" name="editName">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           <property name="placeholderText">
+            <string>short-unique-name</string>
+           </property>
+            <property name="maximumHeight">
+             <number>24</number>
+            </property>
+          </widget>
+         </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="labelUrl">
+            <property name="text">
+             <string>&amp;Description URL</string>
+            </property>
+            <property name="buddy">
+             <cstring>editUrl</cstring>
+            </property>
+           </widget>
+          </item>
+         <item row="1" column="1">
+           <widget class="QLineEdit" name="editUrl">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           <property name="placeholderText">
+            <string>https://example.com/my-proposal</string>
+           </property>
+            <property name="maximumHeight">
+             <number>24</number>
+            </property>
+          </widget>
+         </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="labelPayAddr">
+            <property name="text">
+             <string>Payment &amp;address</string>
+            </property>
+            <property name="buddy">
+             <cstring>editPayAddr</cstring>
+            </property>
+           </widget>
+          </item>
+           <item row="2" column="1">
+           <widget class="QValidatedLineEdit" name="editPayAddr">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumHeight">
+             <number>24</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="labelPayAmt">
+            <property name="text">
+             <string>Payment &amp;amount</string>
+            </property>
+            <property name="buddy">
+             <cstring>paymentAmount</cstring>
+            </property>
+           </widget>
+          </item>
+         <item row="3" column="1">
+           <widget class="BitcoinAmountField" name="paymentAmount">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>The amount to request in a single payment</string>
+            </property>
+          </widget>
+         </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="labelFirstPayment">
+             <property name="text">
+              <string>&amp;First payment</string>
+             </property>
+             <property name="buddy">
+              <cstring>comboFirstPayment</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <layout class="QHBoxLayout" name="firstAndPaymentsLayout">
+             <property name="spacing">
+              <number>8</number>
+             </property>
+             <item>
+              <widget class="QComboBox" name="comboFirstPayment">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumHeight">
+                <number>24</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelPaymentsInline">
+               <property name="text">
+                <string>Pa&amp;yments</string>
+               </property>
+               <property name="buddy">
+                <cstring>comboPayments</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboPayments">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumHeight">
+                <number>24</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="6" column="0">
+           <widget class="QLabel" name="labelTotal">
+            <property name="text">
+             <string>To&amp;tal amount</string>
+            </property>
+            <property name="buddy">
+             <cstring>labelTotalValue</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="labelTotalValue">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+          <widget class="QLabel" name="labelFee">
+           <property name="text">
+            <string>Proposal &amp;fee</string>
+           </property>
+           <property name="buddy">
+            <cstring>labelFeeValue</cstring>
+           </property>
+          </widget>
+         </item>
+          <item row="7" column="1">
+           <widget class="QLabel" name="labelFeeValue">
+           <property name="text">
+            <string notr="true">-</string>
+           </property>
+            <property name="maximumHeight">
+             <number>20</number>
+            </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="detailsButtons">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <spacer name="spacer1">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnNext1">
+           <property name="text">
+            <string>Next</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageReview">
+      <layout class="QVBoxLayout" name="reviewLayout">
+       <item>
+        <widget class="QLabel" name="labelReview">
+         <property name="text">
+          <string>Review proposal JSON and validate.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="plainJson">
+         <property name="maximumHeight">
+          <number>120</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="editHex">
+         <property name="placeholderText">
+          <string>Hex-encoded JSON</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="labelValidateStatus">
+         <property name="text">
+          <string>-</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="reviewButtons">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+           <spacer name="spacer2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+              <width>20</width>
+              <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnBack1">
+           <property name="text">
+            <string>Back</string>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnValidate">
+           <property name="text">
+            <string>Validate</string>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnNext2">
+           <property name="text">
+            <string>Next</string>
+           </property>
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pagePrepare">
+      <layout class="QVBoxLayout" name="prepareLayout">
+       <item>
+        <widget class="QLabel" name="labelPrepare">
+         <property name="text">
+          <string>Prepare (burn fee) and wait for confirmations.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+         <layout class="QHBoxLayout" name="txidLayout">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+         <item>
+          <widget class="QLabel" name="labelTxidCaption">
+           <property name="text">
+            <string>TxID:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QLineEdit" name="editTxid">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="placeholderText">
+            <string>-</string>
+           </property>
+            <property name="maximumHeight">
+             <number>24</number>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnCopyTxid">
+           <property name="text">
+            <string>Copy</string>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="confirmationsLayout">
+         <item>
+           <widget class="QLabel" name="labelConfStatus">
+           <property name="text">
+            <string></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelRelayHint">
+           <property name="text">
+            <string>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QProgressBar" name="progressConfirmations">
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>6</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+           <property name="textVisible">
+             <bool>false</bool>
+           </property>
+            <property name="maximumHeight">
+             <number>10</number>
+            </property>
+            <property name="accessibleName">
+             <string>Confirmations progress</string>
+            </property>
+            <property name="accessibleDescription">
+             <string>Shows progress toward the required number of confirmations for the proposal fee transaction.</string>
+            </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelEta">
+           <property name="text">
+            <string>Estimated time remaining: -</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="prepareButtons">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+           <spacer name="spacer3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+              <width>20</width>
+              <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnBack2">
+           <property name="text">
+            <string>Back</string>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnPrepare">
+           <property name="text">
+            <string>Prepare Proposal</string>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnNext3">
+           <property name="text">
+            <string>Next</string>
+           </property>
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pageSubmit">
+      <layout class="QVBoxLayout" name="submitLayout">
+       <item>
+         <widget class="QLabel" name="labelSubmit">
+          <property name="text">
+           <string>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</string>
+          </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="confirmationsLayoutSubmit">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <item>
+           <widget class="QLabel" name="labelConfStatus2">
+            <property name="text">
+             <string></string>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QProgressBar" name="progressConfirmations2">
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>6</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+           <property name="textVisible">
+             <bool>false</bool>
+           </property>
+            <property name="maximumHeight">
+             <number>10</number>
+            </property>
+            <property name="accessibleName">
+             <string>Confirmations progress</string>
+            </property>
+            <property name="accessibleDescription">
+             <string>Shows progress toward the required number of confirmations for the proposal fee transaction.</string>
+            </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelEta2">
+           <property name="text">
+            <string>Estimated time remaining: -</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+         <layout class="QHBoxLayout" name="govidLayout">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+         <item>
+          <widget class="QLabel" name="labelGovObjCaption">
+           <property name="text">
+            <string>Proposal ID:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QLineEdit" name="editGovObjId">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="placeholderText">
+            <string>-</string>
+           </property>
+            <property name="maximumHeight">
+             <number>24</number>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnCopyGovId">
+           <property name="text">
+            <string>Copy</string>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="submitButtons">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+           <spacer name="spacer4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+              <width>20</width>
+              <height>10</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnSubmit">
+           <property name="text">
+            <string>Submit Proposal</string>
+           </property>
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+         <item>
+           <widget class="QPushButton" name="btnClose">
+           <property name="text">
+            <string>Close</string>
+           </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>28</height>
+             </size>
+            </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QValidatedLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qt/qvalidatedlineedit.h</header>
+   <container>0</container>
+  </customwidget>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QLineEdit</extends>
+   <header>qt/bitcoinamountfield.h</header>
+  </customwidget>
+ </customwidgets>
+  <tabstops>
+   <tabstop>editName</tabstop>
+   <tabstop>editUrl</tabstop>
+   <tabstop>editPayAddr</tabstop>
+   <tabstop>paymentAmount</tabstop>
+   <tabstop>comboFirstPayment</tabstop>
+   <tabstop>comboPayments</tabstop>
+   <tabstop>btnNext1</tabstop>
+   <tabstop>plainJson</tabstop>
+   <tabstop>editHex</tabstop>
+   <tabstop>btnBack1</tabstop>
+   <tabstop>btnValidate</tabstop>
+   <tabstop>btnNext2</tabstop>
+   <tabstop>editTxid</tabstop>
+   <tabstop>btnCopyTxid</tabstop>
+   <tabstop>btnBack2</tabstop>
+   <tabstop>btnPrepare</tabstop>
+   <tabstop>btnNext3</tabstop>
+   <tabstop>editGovObjId</tabstop>
+   <tabstop>btnCopyGovId</tabstop>
+   <tabstop>btnSubmit</tabstop>
+   <tabstop>btnClose</tabstop>
+  </tabstops>
+ <resources/>
+ <connections/>
+</ui>
+
+

@@ -30,6 +30,12 @@
 #include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
+#include <governance/object.h>
+#include <governance/validators.h>
+#include <evo/deterministicmns.h>
+#include <masternode/sync.h>
+#include <txdb.h>
+#include <node/context.h>
 
 #include <memory>
 #include <string>
@@ -558,6 +564,24 @@ public:
     std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) override
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
+    }
+    bool prepareProposal(const uint256& govobj_hash, CAmount fee, int32_t revision, int64_t created_time,
+                         const std::string& data_hex, const COutPoint& outpoint,
+                         std::string& out_fee_txid, std::string& error) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        CTransactionRef tx;
+        if (!GenBudgetSystemCollateralTx(*m_wallet, tx, govobj_hash, fee, outpoint)) {
+            error = "Error making collateral transaction for governance object.";
+            return false;
+        }
+        if (!m_wallet->WriteGovernanceObject(Governance::Object{uint256{}, revision, created_time, tx->GetHash(), data_hex})) {
+            error = "WriteGovernanceObject failed";
+            return false;
+        }
+        m_wallet->CommitTransaction(tx, {}, {});
+        out_fee_txid = tx->GetHash().ToString();
+        return true;
     }
     CWallet* wallet() override { return m_wallet.get(); }
 

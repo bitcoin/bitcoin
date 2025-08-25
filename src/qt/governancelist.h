@@ -20,6 +20,7 @@
 #include <QWidget>
 
 #include <map>
+#include <memory>
 
 inline constexpr int GOVERNANCELIST_UPDATE_SECONDS = 10;
 
@@ -31,6 +32,7 @@ class CDeterministicMNList;
 class ClientModel;
 class ProposalModel;
 class WalletModel;
+class ProposalWizard;
 
 /** Governance Manager page widget */
 class GovernanceList : public QWidget
@@ -68,6 +70,7 @@ private Q_SLOTS:
     void updateMasternodeCount() const;
     void showProposalContextMenu(const QPoint& pos);
     void showAdditionalInfo(const QModelIndex& index);
+    void showCreateProposalDialog();
 
     // Voting slots
     void voteYes();

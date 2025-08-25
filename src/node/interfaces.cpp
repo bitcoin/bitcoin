@@ -42,6 +42,7 @@
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <shutdown.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
@@ -53,6 +54,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+
+#include <governance/validators.h>
 
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
@@ -154,6 +157,92 @@ public:
         }
         error = "Governance manager not available";
         return false;
+    }
+    GovernanceInfo getGovernanceInfo() override
+    {
+        GovernanceInfo info;
+        const NodeContext& ctx = context();
+        const Consensus::Params& consensusParams = Params().GetConsensus();
+
+        if (ctx.chainman) {
+            const CBlockIndex* tip = WITH_LOCK(::cs_main, return ctx.chainman->ActiveChain().Tip());
+            int last = 0;
+            int next = 0;
+            const int height = tip ? tip->nHeight : 0;
+            CSuperblock::GetNearestSuperblocksHeights(height, last, next);
+            info.lastsuperblock = last;
+            info.nextsuperblock = next;
+        }
+        info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
+        info.superblockcycle = consensusParams.nSuperblockCycle;
+        info.superblockmaturitywindow = consensusParams.nSuperblockMaturityWindow;
+        info.relayRequiredConfs = GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS;
+        info.requiredConfs = GOVERNANCE_FEE_CONFIRMATIONS;
+        if (ctx.dmnman) {
+            info.fundingthreshold = ctx.dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
+        }
+        if (ctx.chainman) {
+            info.governancebudget = CSuperblock::GetPaymentsLimit(ctx.chainman->ActiveChain(), info.nextsuperblock);
+        }
+        return info;
+    }
+    std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
+                        const std::string& data_hex, std::string& error) override
+    {
+        CGovernanceObject govobj(uint256{}, revision, created_time, uint256{}, data_hex);
+        if (govobj.GetObjectType() != GovernanceObject::PROPOSAL) {
+            error = "Invalid object type, only proposals can be validated";
+            return std::nullopt;
+        }
+        CProposalValidator validator(data_hex);
+        if (!validator.Validate()) {
+            error = "Invalid proposal data: " + validator.GetErrorMessages();
+            return std::nullopt;
+        }
+        const ChainstateManager& chainman = *Assert(context().chainman);
+        {
+            LOCK(::cs_main);
+            std::string strError;
+            if (!govobj.IsValidLocally(Assert(context().dmnman)->GetListAtChainTip(), chainman, strError, false)) {
+                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
+                return std::nullopt;
+            }
+        }
+        return govobj;
+    }
+
+    bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
+                        const uint256& fee_txid, std::string& out_object_hash, std::string& error) override
+    {
+        if (!context().govman || !context().dmnman || !context().chainman) { error = "Governance not available"; return false; }
+        if(!Assert(context().mn_sync)->IsBlockchainSynced()) { error = "Client not synced"; return false; }
+        const auto mnList = Assert(context().dmnman)->GetListAtChainTip();
+        CGovernanceObject govobj(parent, revision, created_time, fee_txid, data_hex);
+        if (govobj.GetObjectType() == GovernanceObject::TRIGGER) { error = "Submission of triggers is not available"; return false; }
+        if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
+            CProposalValidator validator(data_hex);
+            if (!validator.Validate()) { error = "Invalid proposal data: " + validator.GetErrorMessages(); return false; }
+        }
+        const CTxMemPool& mempool = *Assert(context().mempool);
+        bool fMissingConfirmations{false};
+        {
+            LOCK2(cs_main, mempool.cs);
+            std::string strError;
+            if (!govobj.IsValidLocally(mnList, *Assert(context().chainman), strError, fMissingConfirmations, true) && !fMissingConfirmations) {
+                error = "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError;
+                return false;
+            }
+        }
+        if (!Assert(context().govman)->MasternodeRateCheck(govobj)) { error = "Object creation rate limit exceeded"; return false; }
+        PeerManager& peerman = EnsurePeerman(context());
+        if (fMissingConfirmations) {
+            context().govman->AddPostponedObject(govobj);
+            govobj.Relay(peerman, *Assert(context().mn_sync));
+        } else {
+            context().govman->AddGovernanceObject(govobj, peerman);
+        }
+        out_object_hash = govobj.GetHash().ToString();
+        return true;
     }
     void setContext(NodeContext* context) override
     {
