@@ -65,7 +65,7 @@ static void BlockEncodingBench(benchmark::Bench& bench, size_t n_pool, size_t n_
 
     LOCK2(cs_main, pool.cs);
 
-    std::vector<CTransactionRef> extratxn;
+    std::vector<std::pair<Wtxid, CTransactionRef>> extratxn;
     extratxn.reserve(n_extra);
 
     // bump up the size of txs
@@ -94,7 +94,7 @@ static void BlockEncodingBench(benchmark::Bench& bench, size_t n_pool, size_t n_
         AddTx(refs[i], /*fee=*/refs[i]->vout[0].nValue, pool);
     }
     for (size_t i = n_pool; i < n_pool + n_extra; ++i) {
-        extratxn.push_back(refs[i]);
+        extratxn.emplace_back(refs[i]->GetWitnessHash(), refs[i]);
     }
 
     BenchCBHAST cmpctblock{rng, 3000};
