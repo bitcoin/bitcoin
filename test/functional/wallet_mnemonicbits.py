@@ -47,13 +47,14 @@ class WalletMnemonicbitsTest(BitcoinTestFramework):
                 assert_equal(len(desc['mnemonic'].split()), 12)
                 mnemonic_count += 1
                 assert desc['mnemonic'] == mnemonic_pre
-                assert desc['active']
+                assert_equal(desc['active'], ("coinjoin" not in desc or not desc['coinjoin']))
+
             # there should 3 descriptors in total
             # One of them is inactive imported private key for coinbase. It has no mnemonic
             # Two other should be active and have mnemonic
-            assert_equal(mnemonic_count, 2)
+            assert_equal(mnemonic_count, 3)
             assert_equal(cb_count, 1)
-            assert_equal(len(descriptors), 3)
+            assert_equal(len(descriptors), 4)
         else:
             assert_equal(len(self.nodes[0].dumphdinfo()["mnemonic"].split()), 12)  # 12 words by default
             # legacy HD wallets could have only one chain
