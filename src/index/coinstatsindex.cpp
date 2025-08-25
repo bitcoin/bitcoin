@@ -426,6 +426,10 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
         const auto& tx{block.data->vtx.at(i)};
         const bool is_coinbase{tx->IsCoinBase()};
 
+        if (is_coinbase && IsBIP30Unspendable(block.hash, block.height)) {
+            continue;
+        }
+
         for (uint32_t j = 0; j < tx->vout.size(); ++j) {
             const CTxOut& out{tx->vout[j]};
             const COutPoint outpoint{tx->GetHash(), j};
