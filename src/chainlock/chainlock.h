@@ -33,7 +33,6 @@ namespace llmq {
 class CInstantSendManager;
 class CQuorumManager;
 class CSigningManager;
-class CSigSharesManager;
 enum class VerifyRecSigStatus;
 
 class CChainLocksHandler final : public chainlock::ChainLockSignerParent
@@ -47,7 +46,7 @@ private:
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
 
-    std::unique_ptr<chainlock::ChainLockSigner> m_signer{nullptr};
+    chainlock::ChainLockSigner* m_signer{nullptr};
 
     mutable Mutex cs;
     std::atomic<bool> tryLockChainTipScheduled{false};
@@ -68,9 +67,16 @@ private:
 
 public:
     explicit CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
-                                CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
-                                const CMasternodeSync& mn_sync, bool is_masternode);
+                                CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync);
     ~CChainLocksHandler();
+
+    void ConnectSigner(gsl::not_null<chainlock::ChainLockSigner*> signer)
+    {
+        // Prohibit double initialization
+        assert(m_signer == nullptr);
+        m_signer = signer;
+    }
+    void DisconnectSigner() { m_signer = nullptr; }
 
     void Start(const llmq::CInstantSendManager& isman);
     void Stop();

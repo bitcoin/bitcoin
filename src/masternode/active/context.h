@@ -12,6 +12,9 @@ class CMasternodeSync;
 class CSporkManager;
 class CTxMemPool;
 struct LLMQContext;
+namespace chainlock {
+class ChainLockSigner;
+} // namespace chainlock
 namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
@@ -24,6 +27,7 @@ private:
      * Entities that are registered with LLMQContext members are not accessible
      * and are managed with (Dis)connectSigner() in the (c/d)tor instead
      */
+    const std::unique_ptr<chainlock::ChainLockSigner> cl_signer;
     const std::unique_ptr<instantsend::InstantSendSigner> is_signer;
 
 public:

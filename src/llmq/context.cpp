@@ -35,8 +35,8 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
                                                 unit_tests, wipe)},
     sigman{std::make_unique<llmq::CSigningManager>(mn_activeman, chainman.ActiveChainstate(), *qman, unit_tests, wipe)},
     shareman{std::make_unique<llmq::CSigSharesManager>(*sigman, mn_activeman, *qman, sporkman)},
-    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, *sigman, *shareman,
-                                                         sporkman, mempool, mn_sync, is_masternode)},
+    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, *sigman, sporkman, mempool,
+                                                         mn_sync)},
     isman{std::make_unique<llmq::CInstantSendManager>(*clhandler, chainman.ActiveChainstate(), *qman, *sigman, sporkman,
                                                       mempool, mn_sync, unit_tests, wipe)},
     ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, *sigman, *shareman, *qman)}
