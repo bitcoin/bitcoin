@@ -47,7 +47,7 @@ using namespace util::hex_literals;
 using util::SplitString;
 using util::ToString;
 
-typedef std::vector<unsigned char> valtype;
+using valtype = std::vector<unsigned char>;
 
 static CFeeRate g_dust{DUST_RELAY_TX_FEE};
 static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};

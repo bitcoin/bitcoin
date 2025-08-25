@@ -145,12 +145,12 @@ std::atomic<size_t> FakeCheckCheckCompletion::n_calls{0};
 std::atomic<size_t> MemoryCheck::fake_allocated_memory{0};
 
 // Queue Typedefs
-typedef CCheckQueue<FakeCheckCheckCompletion> Correct_Queue;
-typedef CCheckQueue<FakeCheck> Standard_Queue;
-typedef CCheckQueue<FixedCheck> Fixed_Queue;
-typedef CCheckQueue<UniqueCheck> Unique_Queue;
-typedef CCheckQueue<MemoryCheck> Memory_Queue;
-typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
+using Correct_Queue = CCheckQueue<FakeCheckCheckCompletion>;
+using Standard_Queue = CCheckQueue<FakeCheck>;
+using Fixed_Queue = CCheckQueue<FixedCheck>;
+using Unique_Queue = CCheckQueue<UniqueCheck>;
+using Memory_Queue = CCheckQueue<MemoryCheck>;
+using FrozenCleanup_Queue = CCheckQueue<FrozenCleanupCheck>;
 
 
 /** This test case checks that the CCheckQueue works properly
