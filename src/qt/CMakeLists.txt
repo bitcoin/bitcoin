@@ -149,10 +149,11 @@ add_custom_command(
 )
 set(nsis_header_input "res/src/nsis-header.svg")
 set(nsis_header_bmp "${ICON_PATH}/nsis-header.bmp")
+set(ABS_FONT_DIR ${CMAKE_CURRENT_BINARY_DIR}/res/fonts)
 add_custom_command(
   OUTPUT "${nsis_header_bmp}"
-  COMMAND sed s/CLIENT_NAME/${CLIENT_NAME}/ < ${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input} | ${RSVG_CONVERT} -f png -d 57 -p 57 | ${IMAGEMAGICK_CONVERT} - -background white -alpha remove BMP3:${nsis_header_bmp}
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input}"
+  COMMAND echo <fontconfig><dir>${ABS_FONT_DIR}</dir></fontconfig> > res/fonts/fonts.conf && FONTCONFIG_PATH=${ABS_FONT_DIR} ${RSVG_CONVERT} -f png -d 57 -p 57 ${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input} | ${IMAGEMAGICK_CONVERT} - -background white -alpha remove BMP3:${nsis_header_bmp}
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${nsis_header_input}" "${FONT_PATH}"
   COMMENT "Generating ${nsis_header_bmp} from ${nsis_header_input}"
   VERBATIM
 )

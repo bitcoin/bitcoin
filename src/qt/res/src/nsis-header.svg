@@ -1,25 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--
-  	 License: MIT
--->
-
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1"
-	 id="svg2" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg"
-	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="2.632in" height="1in"
-	 viewBox="-34 -34 1526 580" enable-background="new 0 0 1024 1024" xml:space="preserve">
-	
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 x="0px" y="0px" width="2.632in" height="1in"
+	 viewBox="-395 -8 1526 580">
+<!-- Designers: Kurtis Stirling, Blissmode, Skyler, and Steven Hay
+     License: MIT
+-->
 	<style type="text/css"><![CDATA[
 		text {
-			font-family: "Tuffy";
+			font-family: "OCR-Bitcoin";
 			font-size: 170px;
 			fill: black;
 			text-anchor: left;
 		}
 	]]></style>
-	<g transform="scale(0.28) translate(-60, 430)">
-		<use xlink:href="bitcoin.svg#icon" />
+	<g transform="scale(0.66) translate(-440, -80)">
+		<use xlink:href="bitcoinknots-logo.svg#logo" />
 	</g>
-    <text x="320" y="336">CLIENT_NAME</text>
+    <text x="320" y="236" style="letter-spacing: -0.14em">Bitcoin</text>
+    <text x="308.5" y="455" style="font-size: 240px; letter-spacing: -0.13em">Knots</text>
 </svg>
