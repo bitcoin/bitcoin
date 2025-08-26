@@ -1233,6 +1233,40 @@ bool CheckHostPortOptions(const ArgsManager& args) {
     return true;
 }
 
+/**
+ * @brief Checks for duplicate bindings across all binding configuration.
+ *
+ * @param connOptions Connection options containing the binding vectors to check
+ * @return std::optional<CService> containing the first duplicate found, or std::nullopt if no duplicates
+ */
+std::optional<CService> CheckBindingConflicts(const CConnman::Options& connOptions)
+{
+    std::set<CService> seen;
+
+    // Check all whitelisted bindings
+    for (const auto& wb : connOptions.vWhiteBinds) {
+        if (!seen.insert(wb.m_service).second) {
+            return wb.m_service;
+        }
+    }
+
+    // Check regular bindings
+    for (const auto& bind : connOptions.vBinds) {
+        if (!seen.insert(bind).second) {
+            return bind;
+        }
+    }
+
+    // Check onion bindings
+    for (const auto& onion_bind : connOptions.onion_binds) {
+        if (!seen.insert(onion_bind).second) {
+            return onion_bind;
+        }
+    }
+
+    return std::nullopt;
+}
+
 // A GUI user may opt to retry once with do_reindex set if there is a failure during chainstate initialization.
 // The function therefore has to support re-entry.
 static ChainstateLoadResult InitAndLoadChainstate(
@@ -2141,6 +2175,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     connOptions.m_i2p_accept_incoming = args.GetBoolArg("-i2pacceptincoming", DEFAULT_I2P_ACCEPT_INCOMING);
+
+    if (auto conflict = CheckBindingConflicts(connOptions)) {
+        return InitError(Untranslated(strprintf("Duplicate binding configuration for address %s. "
+            "Please check your -bind, -whitebind, and onion binding settings.",
+            conflict->ToStringAddrPort())));
+    }
 
     if (!node.connman->Start(scheduler, connOptions)) {
         return false;
