@@ -58,6 +58,8 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
     if (!mtx) {
         return;
     }
+    const CTransaction tx{*mtx};
+    if (!SanityCheckForConsumeTxMemPoolEntry(tx)) return;
 
     bilingual_str error;
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
@@ -70,6 +72,7 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
             break;
         }
         const CTransaction another_tx{*another_mtx};
+        if (!SanityCheckForConsumeTxMemPoolEntry(another_tx)) break;
         if (fuzzed_data_provider.ConsumeBool() && !mtx->vin.empty()) {
             mtx->vin[0].prevout = COutPoint{another_tx.GetHash(), 0};
         }
@@ -78,7 +81,6 @@ FUZZ_TARGET(rbf, .init = initialize_rbf)
             AddToMempool(pool, ConsumeTxMemPoolEntry(fuzzed_data_provider, another_tx));
         }
     }
-    const CTransaction tx{*mtx};
     if (fuzzed_data_provider.ConsumeBool()) {
         LOCK2(cs_main, pool.cs);
         if (!pool.GetIter(tx.GetHash())) {
@@ -120,6 +122,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     replacement_tx->vin.resize(1);
     replacement_tx->vin[0].prevout = g_outpoints[iter++];
     CTransaction replacement_tx_final{*replacement_tx};
+    if (!SanityCheckForConsumeTxMemPoolEntry(replacement_tx_final)) return;
     auto replacement_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, replacement_tx_final);
     int32_t replacement_vsize = replacement_entry.GetTxSize();
     int64_t running_vsize_total{replacement_vsize};
@@ -136,6 +139,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         parent.vout.emplace_back(0, CScript());
 
         mempool_txs.emplace_back(parent);
+        if (!SanityCheckForConsumeTxMemPoolEntry(mempool_txs.back())) break;
         const auto parent_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
         running_vsize_total += parent_entry.GetTxSize();
         if (running_vsize_total > std::numeric_limits<int32_t>::max()) {
@@ -149,6 +153,7 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
             child.vin[0].prevout = COutPoint{mempool_txs.back().GetHash(), 0};
         }
         mempool_txs.emplace_back(child);
+        if (!SanityCheckForConsumeTxMemPoolEntry(mempool_txs.back())) break;
         const auto child_entry = ConsumeTxMemPoolEntry(fuzzed_data_provider, mempool_txs.back());
         running_vsize_total += child_entry.GetTxSize();
         if (running_vsize_total > std::numeric_limits<int32_t>::max()) {
@@ -180,13 +185,16 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
     }
 
     CAmount replacement_fees = ConsumeMoney(fuzzed_data_provider);
+    const auto replacement_entry_coin_age_cache = replacement_entry.GetInternalCoinAgeCache();
     auto changeset = pool.GetChangeSet();
     for (auto& txiter : all_conflicts) {
         changeset->StageRemoval(txiter);
     }
     changeset->StageAddition(replacement_entry.GetSharedTx(), replacement_fees,
             replacement_entry.GetTime().count(), replacement_entry.GetHeight(),
-            replacement_entry.GetSequence(), replacement_entry.GetSpendsCoinbase(),
+            replacement_entry.GetSequence(),
+            replacement_entry_coin_age_cache,
+            replacement_entry.GetSpendsCoinbase(),
             replacement_entry.GetSigOpCost(), replacement_entry.GetLockPoints());
     // Calculate the chunks for a replacement.
     auto calc_results{changeset->CalculateChunksForRBF()};

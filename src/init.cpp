@@ -442,6 +442,8 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 }
 #endif
 
+static constexpr std::string_view BIP14_EXAMPLE_UA{"/Name:Version/Name:Version/.../"};
+
 void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 {
     SetupHelpOptions(argsman);
@@ -626,8 +628,10 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)",
                              Ticks<std::chrono::seconds>(DEFAULT_MAX_TIP_AGE)),
                    ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-printpriority", strprintf("Log transaction fee rate in %s/kvB when mining blocks (default: %u)", CURRENCY_UNIT, DEFAULT_PRINT_MODIFIED_FEE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-uacomment=<cmt>", "Append comment to the user agent string", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-printpriority", strprintf("Log transaction priority and fee rate in %s/kvB when mining blocks (default: %u)", CURRENCY_UNIT, DEFAULT_PRINT_MODIFIED_FEE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-uaappend=<uafragment>", "Append literal string to the user agent string (should only be used for software embedding)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-uacomment=<cmt>", "Append comment to the user agent string", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-uaspoof=<ua>", strprintf("Replace entire user agent string with custom identifier (should be formatted '%s' as specified in BIP 14)", BIP14_EXAMPLE_UA), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
 
     SetupChainParamsBaseOptions(argsman);
 
@@ -660,9 +664,11 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
 
+    argsman.AddArg("-blockmaxsize=<n>", strprintf("Set maximum block size in bytes (default: %d)", DEFAULT_BLOCK_MAX_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d)", DEFAULT_BLOCK_MAX_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockreservedweight=<n>", strprintf("Reserve space for the fixed-size block header plus the largest coinbase transaction the mining software may add to the block. (default: %d).", DEFAULT_BLOCK_RESERVED_WEIGHT), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kvB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
+    argsman.AddArg("-blockprioritysize=<n>", strprintf("Set maximum size of high-priority/low-fee transactions in bytes (default: %d)", DEFAULT_BLOCK_PRIORITY_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockversion=<n>", "Override block version to test forking scenarios", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
 
     argsman.AddArg("-rest", strprintf("Accept public REST requests (default: %u)", DEFAULT_REST_ENABLE), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
@@ -1552,6 +1558,27 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uacomments.push_back(cmt);
     }
     strSubVersion = FormatSubVersion(UA_NAME, CLIENT_VERSION, uacomments);
+    if (gArgs.IsArgSet("-uaspoof")) {
+        std::string uaspoof_val = gArgs.GetArg("-uaspoof", "");
+        if (uaspoof_val == "0" || uaspoof_val.empty()) {
+            // explicitly disabled, do nothing
+        } else if (uaspoof_val == "1") {
+            // enabled, but not specified: just use base name for now
+            // TODO
+        } else {
+            if (uaspoof_val.at(0) != '/') {
+                InitWarning(strprintf(_("Specified %s option is not in BIP 14 format. User-agent strings should look like '%s'."), "uaspoof", BIP14_EXAMPLE_UA));
+            }
+            if (!uacomments.empty()) {
+                InitWarning(_("Both uaspoof and uacomment(s) are specified, but uacomment(s) are ignored when uaspoof is in use."));
+            }
+            strSubVersion = uaspoof_val;
+        }
+    }
+    for (auto append : gArgs.GetArgs("-uaappend")) {
+        if (append.back() != '/') append += '/';
+        strSubVersion += append;
+    }
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
         return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
@@ -1875,7 +1902,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         // Load mempool from disk
         if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
-            LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
+            LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {
+                .load_knots_data = true,
+            });
             pool->SetLoadTried(!chainman.m_interrupt);
         }
     });

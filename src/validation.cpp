@@ -32,6 +32,7 @@
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
+#include <policy/coin_age_priority.h>
 #include <policy/ephemeral_policy.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -988,13 +989,16 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         }
     }
 
+    // Since entries arrive *after* the tip's height, their priority is for the height+1
+    const auto coin_age = GetCoinAge(tx, m_view, m_active_chainstate.m_chain.Height() + 1);
+
     // Set entry_sequence to 0 when rejectmsg_zero_mempool_entry_seq is used; this allows txs from a block
     // reorg to be marked earlier than any child txs that were already in the mempool.
     const uint64_t entry_sequence = args.m_ignore_rejects.count(rejectmsg_zero_mempool_entry_seq) ? 0 : m_pool.GetSequence();
     if (!m_subpackage.m_changeset) {
         m_subpackage.m_changeset = m_pool.GetChangeSet();
     }
-    ws.m_tx_handle = m_subpackage.m_changeset->StageAddition(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(), entry_sequence, fSpendsCoinbase, nSigOpsCost, lock_points.value());
+    ws.m_tx_handle = m_subpackage.m_changeset->StageAddition(ptx, ws.m_base_fees, nAcceptTime, m_active_chainstate.m_chain.Height(), entry_sequence, coin_age, fSpendsCoinbase, nSigOpsCost, lock_points.value());
 
     // ws.m_modified_fees includes any fee deltas from PrioritiseTransaction
     ws.m_modified_fees = ws.m_tx_handle->GetModifiedFee();
@@ -3290,6 +3294,9 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     }
 
     if (disconnectpool && m_mempool) {
+        for (auto it = block.vtx.rbegin(); it != block.vtx.rend(); ++it) {
+            m_mempool->UpdateDependentPriorities(*(*it), pindexDelete->nHeight, false);
+        }
         // Save transactions to re-add to mempool at end of reorg. If any entries are evicted for
         // exceeding memory limits, remove them and their descendants from the mempool.
         for (auto&& evicted_tx : disconnectpool->AddTransactionsFromBlock(block.vtx)) {
