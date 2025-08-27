@@ -811,6 +811,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     CheckIsStandard(t);
 
+    g_mempool_opts.permitephemeral_anchor = true;
+    g_mempool_opts.permitephemeral_dust = true;
+    g_mempool_opts.permitephemeral_send = true;
+
     // Check dust with default relay fee:
     CAmount nDustThreshold = 182 * g_mempool_opts.dust_relay_feerate.GetFeePerK() / 1000;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
@@ -860,6 +864,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsNotStandard(t, "scriptpubkey");
 
     // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
+    g_mempool_opts.permitbaredatacarrier = true;
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY, t.vout[0].scriptPubKey.size());
     CheckIsStandard(t);
@@ -904,6 +909,16 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
     CheckIsNotStandard(t, "multi-op-return");
+
+    // Test permitbaredatacarrier
+    g_mempool_opts.permitbaredatacarrier = false;
+    t.vout[1].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    t.vout[1].nValue = COIN;
+    CheckIsStandard(t);
+    t.vout.resize(1);
+    CheckIsNotStandard(t, "bare-datacarrier");
+    g_mempool_opts.permitbaredatacarrier = true;
+    CheckIsStandard(t);
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
     t.vout.resize(1);
@@ -1052,6 +1067,34 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsStandard(t);
     t.vout[0].nValue = 239;
     CheckIsNotStandard(t, "dust");
+
+    // Test permitbareanchor
+    g_mempool_opts.permitbareanchor = false;
+    t.vout[1].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    t.vout[1].nValue = COIN;
+    CheckIsStandard(t);
+    t.vout.resize(1);
+    CheckIsNotStandard(t, "bare-anchor");
+    g_mempool_opts.permitbareanchor = true;
+    CheckIsStandard(t);
+
+    // Test permitephemeral
+    g_mempool_opts.permitephemeral_anchor = false;
+    CheckIsNotStandard(t, "anchor");
+    t.vout[0].nValue = 0;
+    CheckIsNotStandard(t, "anchor");
+    g_mempool_opts.permitephemeral_anchor = true;
+    g_mempool_opts.permitephemeral_dust = false;
+    CheckIsStandard(t);
+    t.vout[0].nValue = 1;
+    CheckIsNotStandard(t, "dust-nonzero");
+    g_mempool_opts.permitephemeral_dust = true;
+    g_mempool_opts.permitephemeral_send = false;
+    CheckIsStandard(t);
+    t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+    CheckIsNotStandard(t, "dust-nonanchor");
+    g_mempool_opts.permitephemeral_send = true;
+    CheckIsStandard(t);
 }
 
 BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)

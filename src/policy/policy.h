@@ -61,6 +61,17 @@ static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT{20};
 /** Default for -datacarriercost (multiplied by WITNESS_SCALE_FACTOR) */
 static constexpr unsigned int DEFAULT_WEIGHT_PER_DATA_BYTE{1};
+
+// NOTE: Changes to these three require manually adjusting doc in init.cpp
+/** Default for -permitephemeral=send */
+static constexpr bool DEFAULT_PERMITEPHEMERAL_SEND{true};
+/** Default for -permitephemeral=dust */
+static constexpr bool DEFAULT_PERMITEPHEMERAL_DUST{true};
+/** Default for -permitephemeral=anchor */
+static constexpr bool DEFAULT_PERMITEPHEMERAL_ANCHOR{true};
+
+/** Default for -permitbareanchor */
+static constexpr bool DEFAULT_PERMITBAREANCHOR{true};
 /** Default for -permitbarepubkey */
 static constexpr bool DEFAULT_PERMIT_BAREPUBKEY{true};
 /** Default for -permitbaremultisig */
@@ -81,6 +92,8 @@ static constexpr unsigned int MAX_STANDARD_SCRIPTSIG_SIZE{1650};
  * only increase the dust limit after prior releases were already not creating
  * outputs below the new threshold */
 static constexpr unsigned int DUST_RELAY_TX_FEE{3000};
+static const std::string DEFAULT_DUST_DYNAMIC{"off"};
+static const int DEFAULT_DUST_RELAY_MULTIPLIER{3'000};
 static const std::string DEFAULT_SPKREUSE{"allow"};
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
 static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{1000};
@@ -98,6 +111,8 @@ static const bool DEFAULT_ACCEPT_DATACARRIER = true;
  * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
  * +2 for the pushdata opcodes.
  */
+/** Default for -permitbaredatacarrier */
+static const bool DEFAULT_PERMITBAREDATACARRIER{true};
 static const unsigned int MAX_OP_RETURN_RELAY = 83;
 /** Default for -datacarrierfullcount */
 static constexpr bool DEFAULT_DATACARRIER_FULLCOUNT{false};

@@ -9,19 +9,27 @@
 
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/settings.h>
 #include <consensus/amount.h>
 #include <kernel/chainparams.h>
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <policy/feerate.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <tinyformat.h>
+#include <univalue.h>
 #include <util/moneystr.h>
+#include <util/result.h>
+#include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
+#include <string_view>
+#include <utility>
 
 using common::AmountErrMsg;
 using kernel::MemPoolLimits;
@@ -41,6 +49,86 @@ void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolLimits& mempool_limi
 
     if (auto vkb = argsman.GetIntArg("-limitdescendantsize")) mempool_limits.descendant_size_vbytes = *vkb * 1'000;
 }
+}
+
+util::Result<std::pair<int32_t, int>> ParseDustDynamicOpt(std::string_view optstr, const unsigned int max_fee_estimate_blocks)
+{
+    if (optstr == "0" || optstr == "off") {
+        return std::pair<int32_t, int>(0, DEFAULT_DUST_RELAY_MULTIPLIER);
+    }
+
+    int multiplier{DEFAULT_DUST_RELAY_MULTIPLIER};
+    if (auto pos = optstr.find('*'); pos != optstr.npos) {
+        int64_t parsed;
+        if ((!ParseFixedPoint(optstr.substr(0, pos), 3, &parsed)) || parsed > std::numeric_limits<int>::max() || parsed < 1) {
+            return util::Error{_("failed to parse multiplier")};
+        }
+        multiplier = parsed;
+        optstr.remove_prefix(pos + 1);
+    }
+
+    if (optstr.rfind("target:", 0) == 0) {
+        const auto val = ToIntegral<uint16_t>(optstr.substr(7));
+        if (!val) {
+            return util::Error{_("failed to parse target block count")};
+        }
+        if (*val < 2) {
+            return util::Error{_("target must be at least 2 blocks")};
+        }
+        if (Assume(max_fee_estimate_blocks) && *val > max_fee_estimate_blocks) {
+            return util::Error{strprintf(_("target can only be at most %s blocks"), max_fee_estimate_blocks)};
+        }
+        return std::pair<int32_t, int>(-*val, multiplier);
+    } else if (optstr.rfind("mempool:", 0) == 0) {
+        const auto val = ToIntegral<int32_t>(optstr.substr(8));
+        if (!val) {
+            return util::Error{_("failed to parse mempool position")};
+        }
+        if (*val < 1) {
+            return util::Error{_("mempool position must be at least 1 kB")};
+        }
+        return std::pair<int32_t, int>(*val, multiplier);
+    } else {
+        return util::Error{strprintf(_("\"%s\""), optstr)};
+    }
+}
+
+void ApplyPermitEphemeralOption(const common::SettingsValue& value, MemPoolOptions& mempool_opts)
+{
+    std::optional<bool> flag_anchor, flag_send, flag_dust;
+    if (SettingToBool(value, false)) {
+        flag_anchor = flag_send = flag_dust = true;
+    }
+    for (auto& opt : util::SplitString(SettingToString(value).value_or(""), ",+")) {
+        bool v{true};
+        if (opt.size() && opt[0] == '-') {
+            opt.erase(opt.begin());
+            v = false;
+        }
+        if (opt == "anchor") {
+            flag_anchor = v;
+        } else if (opt == "dust") {
+            flag_dust = v;
+        } else if (opt == "send") {
+            flag_send = v;
+        } else if (opt == "reject" || opt == "0") {
+            flag_anchor = flag_send = flag_dust = !v;
+        }
+    }
+
+    if (!flag_send) {
+        flag_send = flag_dust.value_or(false) && !flag_anchor.value_or(false);
+    }
+    if (!flag_dust) {
+        flag_dust = flag_send;
+    }
+    if (!flag_anchor) {
+        flag_anchor = true;
+    }
+
+    mempool_opts.permitephemeral_dust = *flag_dust;
+    mempool_opts.permitephemeral_anchor = *flag_anchor;
+    mempool_opts.permitephemeral_send = *flag_send;
 }
 
 util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, MemPoolOptions& mempool_opts)
@@ -89,6 +177,19 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
             return util::Error{AmountErrMsg("dustrelayfee", argsman.GetArg("-dustrelayfee", ""))};
         }
     }
+    if (argsman.IsArgSet("-dustdynamic")) {
+        const auto optstr = argsman.GetArg("-dustdynamic", DEFAULT_DUST_DYNAMIC);
+        // TODO: Should probably reject target-based dustdynamic if there's no estimator, but currently we're checking parameters long before we have the fee estimator initialised
+        const auto max_fee_estimate_blocks = mempool_opts.estimator ? mempool_opts.estimator->HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE) : (CBlockPolicyEstimator::LONG_BLOCK_PERIODS * CBlockPolicyEstimator::LONG_SCALE);
+        const auto parsed = ParseDustDynamicOpt(optstr, max_fee_estimate_blocks);
+        if (!parsed) {
+            return util::Error{strprintf(_("Invalid mode for dustdynamic: %s"), util::ErrorString(parsed))};
+        }
+        mempool_opts.dust_relay_target = parsed->first;
+        mempool_opts.dust_relay_multiplier = parsed->second;
+    }
+
+    mempool_opts.permitbareanchor = argsman.GetBoolArg("-permitbareanchor", mempool_opts.permitbareanchor);
 
     mempool_opts.permit_bare_pubkey = argsman.GetBoolArg("-permitbarepubkey", DEFAULT_PERMIT_BAREPUBKEY);
 
@@ -101,6 +202,8 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
     }
     mempool_opts.datacarrier_fullcount = argsman.GetBoolArg("-datacarrierfullcount", DEFAULT_DATACARRIER_FULLCOUNT);
     mempool_opts.accept_non_std_datacarrier = argsman.GetBoolArg("-acceptnonstddatacarrier", DEFAULT_ACCEPT_NON_STD_DATACARRIER);
+
+    mempool_opts.permitbaredatacarrier = argsman.GetBoolArg("-permitbaredatacarrier", mempool_opts.permitbaredatacarrier);
 
     mempool_opts.require_standard = !argsman.GetBoolArg("-acceptnonstdtxn", DEFAULT_ACCEPT_NON_STD_TXN);
 
@@ -186,6 +289,10 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         } else {  // accept or -enforce
             mempool_opts.truc_policy = TRUCPolicy::Accept;
         }
+    }
+
+    if (argsman.IsArgSet("-permitephemeral")) {
+        ApplyPermitEphemeralOption(argsman.GetSetting("-permitephemeral"), mempool_opts);
     }
 
     mempool_opts.persist_v1_dat = argsman.GetBoolArg("-persistmempoolv1", mempool_opts.persist_v1_dat);

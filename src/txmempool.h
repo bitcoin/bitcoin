@@ -46,6 +46,8 @@ class ValidationSignals;
 
 struct bilingual_str;
 
+static constexpr std::chrono::minutes DYNAMIC_DUST_FEERATE_UPDATE_INTERVAL{15};
+
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
@@ -212,6 +214,8 @@ struct descendant_score {};
 struct entry_time {};
 struct ancestor_score {};
 struct index_by_wtxid {};
+
+class CBlockPolicyEstimator;
 
 /**
  * Information about a mempool transaction.
@@ -491,6 +495,8 @@ public:
      * either just been added to the chain or just been removed.
      */
     void UpdateDependentPriorities(const CTransaction &tx, unsigned int nBlockHeight, bool addToChain);
+
+    void UpdateDynamicDustFeerate();
 
     /** Affect CreateNewBlock prioritisation of transactions */
     void PrioritiseTransaction(const uint256& hash, double dPriorityDelta, const CAmount& nFeeDelta);

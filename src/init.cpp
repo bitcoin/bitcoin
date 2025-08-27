@@ -645,7 +645,11 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-incrementalrelayfee=<amt>", strprintf("Fee rate (in %s/kvB) used to define cost of relay, used for mempool limiting and replacement policy. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_INCREMENTAL_RELAY_FEE)), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::NODE_RELAY);
-    argsman.AddArg("-dustrelayfee=<amt>", strprintf("Fee rate (in %s/kvB) used to define dust, the value of an output such that it will cost more than its value in fees at this fee rate to spend it. (default: %s)", CURRENCY_UNIT, FormatMoney(DUST_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-dustrelayfee=<amt>", strprintf("Fee rate (in %s/kvB) used to define dust, the value of an output such that it will cost more than its value in fees at this fee rate to spend it. (default: %s)", CURRENCY_UNIT, FormatMoney(DUST_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-dustdynamic=off|[<multiplier>*]target:<blocks>|[<multiplier>*]mempool:<kvB>",
+                   strprintf("Automatically raise dustrelayfee based on either the expected fee to be mined within <blocks> blocks, or to be within the best <kvB> kvB of this node's mempool. If unspecified, multiplier is %s. (default: %s)",
+                             DEFAULT_DUST_RELAY_MULTIPLIER / 1000.,
+                             DEFAULT_DUST_DYNAMIC), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-acceptstalefeeestimates", strprintf("Read fee estimates even if they are stale (%sdefault: %u) fee estimates are considered stale if they are %s hours old", "regtest only; ", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES, Ticks<std::chrono::hours>(MAX_FILE_AGE)), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-bytespersigop", strprintf("Equivalent bytes per sigop in transactions for relay and mining (default: %u)", DEFAULT_BYTES_PER_SIGOP), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-bytespersigopstrict", strprintf("Minimum bytes per sigop in transactions we relay and mine (default: %u)", DEFAULT_BYTES_PER_SIGOP_STRICT), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
@@ -659,9 +663,21 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-mempoolfullrbf", strprintf("Accept transaction replace-by-fee without requiring replaceability signaling (default: %u)", (DEFAULT_MEMPOOL_RBF_POLICY == RBFPolicy::Always)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempoolreplacement", strprintf("Set to 0 to disable RBF entirely, \"fee,optin\" to honour RBF opt-out signal, or \"fee,-optin\" to always RBF aka full RBF (default: %s)", "fee,-optin"), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempooltruc", strprintf("Behaviour for transactions requesting TRUC limits: \"reject\" the transactions entirely, \"accept\" them just like any other, or \"enforce\" to impose their requested restrictions (default: %s)", "enforce"), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-permitbareanchor",
+                   strprintf("Relay transactions that only have ephemeral anchor outputs (default: %u)", DEFAULT_PERMITBAREANCHOR),
+                   ArgsManager::ALLOW_ANY,
+                   OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-permitbaredatacarrier",
+                   strprintf("Relay transactions that only have data carrier outputs (default: %u)", DEFAULT_PERMITBAREDATACARRIER),
+                   ArgsManager::ALLOW_ANY,
+                   OptionsCategory::NODE_RELAY);
     argsman.AddArg("-permitbarepubkey", strprintf("Relay legacy pubkey outputs (default: %u)", DEFAULT_PERMIT_BAREPUBKEY), ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-permitbaremultisig", strprintf("Relay transactions creating non-P2SH multisig outputs (default: %u)", DEFAULT_PERMIT_BAREMULTISIG), ArgsManager::ALLOW_ANY,
+                   OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-permitephemeral=<options>",
+                   strprintf("Relay transaction packages that include ephemeral outputs defined by comma-separated options (prefix each by '-' to force off): \"anchor\" to allow minimal anyone-can-spend anchors, \"send\" to allow ordinary output types to be considered ephemeral, and \"dust\" to allow for dust-amount outputs rather than strictly zero-value (default: %s)", "anchor,send,dust"),
+                   ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kvB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
@@ -1269,6 +1285,8 @@ static ChainstateLoadResult InitAndLoadChainstate(
 {
     const CChainParams& chainparams = Params();
     CTxMemPool::Options mempool_opts{
+        .estimator = node.fee_estimator.get(),
+        .scheduler = &*node.scheduler,
         .check_ratio = chainparams.DefaultConsistencyChecks() ? 1 : 0,
         .signals = node.validation_signals.get(),
     };
