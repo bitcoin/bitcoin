@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
@@ -169,6 +170,9 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
         if (whichType == TxoutType::NULL_DATA) {
             nDataOut++;
             continue;
+        }
+        else if ((whichType == TxoutType::PUBKEY) && (!opts.permit_bare_pubkey)) {
+            MaybeReject("bare-pubkey");
         }
         else if ((whichType == TxoutType::MULTISIG) && (!opts.permit_bare_multisig)) {
             MaybeReject("bare-multisig");
@@ -414,4 +418,98 @@ int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost, un
 int64_t GetVirtualTransactionInputSize(const CTxIn& txin, int64_t nSigOpCost, unsigned int bytes_per_sigop)
 {
     return GetVirtualTransactionSize(GetTransactionInputWeight(txin), nSigOpCost, bytes_per_sigop);
+}
+
+std::pair<CScript, unsigned int> GetScriptForTransactionInput(CScript prevScript, const CTxIn& txin)
+{
+    bool p2sh = false;
+    if (prevScript.IsPayToScriptHash()) {
+        std::vector <std::vector<unsigned char> > stack;
+        if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE)) {
+            return std::make_pair(CScript(), 0);
+        }
+        if (stack.empty()) {
+            return std::make_pair(CScript(), 0);
+        }
+        prevScript = CScript(stack.back().begin(), stack.back().end());
+        p2sh = true;
+    }
+
+    int witnessversion = 0;
+    std::vector<unsigned char> witnessprogram;
+
+    if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram)) {
+        // For P2SH, scriptSig is always push-only, so the actual script is only the last stack item
+        // For non-P2SH, prevScript is likely the real script, but not part of this transaction, and scriptSig could very well be executable, so return the latter instead
+        return std::make_pair(p2sh ? prevScript : txin.scriptSig, WITNESS_SCALE_FACTOR);
+    }
+
+    Span stack{txin.scriptWitness.stack};
+
+    if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+        if (stack.empty()) return std::make_pair(CScript(), 0);  // invalid
+        auto& script_data = stack.back();
+        prevScript = CScript(script_data.begin(), script_data.end());
+        return std::make_pair(prevScript, 1);
+    }
+
+    if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
+        if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+            SpanPopBack(stack);
+        }
+        if (stack.size() >= 2) {
+            SpanPopBack(stack);  // Ignore control block
+            prevScript = CScript(stack.back().begin(), stack.back().end());
+            return std::make_pair(prevScript, 1);
+        }
+    }
+
+    return std::make_pair(CScript(), 0);
+}
+
+std::pair<size_t, size_t> DatacarrierBytes(const CTransaction& tx, const CCoinsViewCache& view)
+{
+    std::pair<size_t, size_t> ret{0, 0};
+
+    for (const CTxIn& txin : tx.vin) {
+        const CTxOut &utxo = view.AccessCoin(txin.prevout).out;
+        auto[script, consensus_weight_per_byte] = GetScriptForTransactionInput(utxo.scriptPubKey, txin);
+        const auto dcb = script.DatacarrierBytes(0);
+        ret.first += dcb.first;
+        ret.second += dcb.second;
+    }
+    for (size_t i{tx.vout.size()}; i; ) {
+        const CTxOut& txout = tx.vout[--i];
+        const auto dcb = txout.scriptPubKey.DatacarrierBytes(tx.vout.size() - i);
+        ret.first += dcb.first;
+        ret.second += dcb.second;
+    }
+
+    return ret;
+}
+
+int32_t CalculateExtraTxWeight(const CTransaction& tx, const CCoinsViewCache& view, const unsigned int weight_per_data_byte)
+{
+    int32_t mod_weight{0};
+
+    // Add in any extra weight for data bytes
+    if (weight_per_data_byte > 1) {
+        for (const CTxIn& txin : tx.vin) {
+            const CTxOut &utxo = view.AccessCoin(txin.prevout).out;
+            auto[script, consensus_weight_per_byte] = GetScriptForTransactionInput(utxo.scriptPubKey, txin);
+            if (weight_per_data_byte > consensus_weight_per_byte) {
+                const auto dcb = script.DatacarrierBytes(0);
+                mod_weight += (dcb.first + dcb.second) * (weight_per_data_byte - consensus_weight_per_byte);
+            }
+        }
+        if (weight_per_data_byte > WITNESS_SCALE_FACTOR) {
+            for (size_t i{tx.vout.size()}; i; ) {
+                const CTxOut& txout = tx.vout[--i];
+                const auto dcb = txout.scriptPubKey.DatacarrierBytes(tx.vout.size() - i);
+                mod_weight += (dcb.first + dcb.second) * (weight_per_data_byte - WITNESS_SCALE_FACTOR);
+            }
+        }
+    }
+
+    return mod_weight;
 }

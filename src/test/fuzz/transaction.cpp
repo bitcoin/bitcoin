@@ -62,8 +62,8 @@ FUZZ_TARGET(transaction, .init = initialize_transaction)
     }
 
     std::string reason;
-    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, kernel::MemPoolOptions{.permit_bare_multisig = true}, reason);
-    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, kernel::MemPoolOptions{.permit_bare_multisig = false}, reason);
+    const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, kernel::MemPoolOptions{.permit_bare_pubkey = true, .permit_bare_multisig = true}, reason);
+    const bool is_standard_without_permit_bare_multisig = IsStandardTx(tx, kernel::MemPoolOptions{.permit_bare_pubkey = true, .permit_bare_multisig = false}, reason);
     if (is_standard_without_permit_bare_multisig) {
         assert(is_standard_with_permit_bare_multisig);
     }

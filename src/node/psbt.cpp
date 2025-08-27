@@ -5,6 +5,7 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/tx_verify.h>
+#include <consensus/validation.h>
 #include <node/psbt.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -137,7 +138,7 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
 
         if (success) {
             CTransaction ctx = CTransaction(mtx);
-            size_t size(GetVirtualTransactionSize(ctx, GetTransactionSigOpCost(ctx, view, STANDARD_SCRIPT_VERIFY_FLAGS), ::nBytesPerSigOp));
+            size_t size(GetVirtualTransactionSize(GetTransactionWeight(ctx) + CalculateExtraTxWeight(ctx, view, ::g_weight_per_data_byte), GetTransactionSigOpCost(ctx, view, STANDARD_SCRIPT_VERIFY_FLAGS), ::nBytesPerSigOp));
             result.estimated_vsize = size;
             // Estimate fee rate
             CFeeRate feerate(fee, size);

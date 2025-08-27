@@ -339,6 +339,8 @@ std::optional<LockPoints> CalculateLockPointsAtTip(
 bool CheckSequenceLocksAtTip(CBlockIndex* tip,
                              const LockPoints& lock_points);
 
+void LimitMempoolSize(CTxMemPool&, CCoinsViewCache&);
+
 /**
  * Closure representing one script verification
  * Note that this stores references to the spending transaction

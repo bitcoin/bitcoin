@@ -19,6 +19,7 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/serfloat.h>
+#include <util/syserror.h>
 #include <util/time.h>
 
 #include <algorithm>
@@ -955,6 +956,9 @@ void CBlockPolicyEstimator::FlushFeeEstimates()
     AutoFile est_file{fsbridge::fopen(m_estimation_filepath, "wb")};
     if (est_file.IsNull() || !Write(est_file)) {
         LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", fs::PathToString(m_estimation_filepath));
+        (void)est_file.fclose();
+    } else if (est_file.fclose() != 0) {
+        LogError("Failed to close fee estimates file %s: %s. Continuing anyway.", fs::PathToString(m_estimation_filepath), SysErrorString(errno));
     } else {
         LogPrintf("Flushed fee estimates to %s.\n", fs::PathToString(m_estimation_filepath.filename()));
     }
