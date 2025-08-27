@@ -7,6 +7,7 @@
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
 #include <policy/feerate.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -59,7 +60,8 @@ RBFTransactionState IsRBFOptInEmptyMempool(const CTransaction& tx)
 std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
                                                   CTxMemPool& pool,
                                                   const CTxMemPool::setEntries& iters_conflicting,
-                                                  CTxMemPool::setEntries& all_conflicts)
+                                                  CTxMemPool::setEntries& all_conflicts,
+                                                  const ignore_rejects_type& ignore_rejects)
 {
     AssertLockHeld(pool.cs);
     const uint256 txid = tx.GetHash();
@@ -70,7 +72,7 @@ std::optional<std::string> GetEntriesForConflicts(const CTransaction& tx,
         // entries from the mempool. This potentially overestimates the number of actual
         // descendants (i.e. if multiple conflicts share a descendant, it will be counted multiple
         // times), but we just want to be conservative to avoid doing too much work.
-        if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES) {
+        if (nConflictingCount > MAX_REPLACEMENT_CANDIDATES && !ignore_rejects.count("too-many-replacements") && !ignore_rejects.count("too many potential replacements")) {
             return strprintf("rejecting replacement %s; too many potential replacements (%d > %d)",
                              txid.ToString(),
                              nConflictingCount,
@@ -117,12 +119,17 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
 }
 
 std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries& ancestors,
-                                                   const std::set<Txid>& direct_conflicts,
-                                                   const uint256& txid)
+                                                   const std::map<Txid, bool>& direct_conflicts,
+                                                   const uint256& txid, bool* const out_violates_policy)
 {
     for (CTxMemPool::txiter ancestorIt : ancestors) {
         const Txid& hashAncestor = ancestorIt->GetTx().GetHash();
-        if (direct_conflicts.count(hashAncestor)) {
+        const auto& conflictit = direct_conflicts.find(hashAncestor);
+        if (conflictit != direct_conflicts.end()) {
+            if (!conflictit->second /* mere SPK conflict, NOT invalid */) {
+                if (out_violates_policy) *out_violates_policy = true;
+                continue;
+            }
             return strprintf("%s spends conflicting transaction %s",
                              txid.ToString(),
                              hashAncestor.ToString());

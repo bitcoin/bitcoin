@@ -33,6 +33,7 @@
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
+#include <util/syserror.h>
 #include <util/translation.h>
 #include <validation.h>
 
@@ -675,27 +676,28 @@ bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index
     const FlatFilePos pos{WITH_LOCK(::cs_main, return index.GetUndoPos())};
 
     // Open history file to read
-    AutoFile filein{OpenUndoFile(pos, true)};
-    if (filein.IsNull()) {
-        LogError("OpenUndoFile failed for %s", pos.ToString());
+    AutoFile file{OpenUndoFile(pos, true)};
+    if (file.IsNull()) {
+        LogError("OpenUndoFile failed for %s while reading block undo", pos.ToString());
         return false;
     }
+    BufferedReader filein{std::move(file)};
 
+    try {
     // Read block
     uint256 hashChecksum;
     HashVerifier verifier{filein}; // Use HashVerifier as reserializing may lose data, c.f. commit d342424301013ec47dc146a4beb49d5c9319d80a
-    try {
         verifier << index.pprev->GetBlockHash();
         verifier >> blockundo;
         filein >> hashChecksum;
-    } catch (const std::exception& e) {
-        LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
-        return false;
-    }
 
     // Verify checksum
     if (hashChecksum != verifier.GetHash()) {
         LogError("%s: Checksum mismatch at %s\n", __func__, pos.ToString());
+        return false;
+    }
+    } catch (const std::exception& e) {
+        LogError("Deserialize or I/O error - %s at %s while reading block undo", e.what(), pos.ToString());
         return false;
     }
 
@@ -946,29 +948,39 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
     // Write undo information to disk
     if (block.GetUndoPos().IsNull()) {
         FlatFilePos pos;
-        const unsigned int blockundo_size{static_cast<unsigned int>(GetSerializeSize(blockundo))};
+        const auto blockundo_size{static_cast<uint32_t>(GetSerializeSize(blockundo))};
         if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
-            LogError("FindUndoPos failed");
+            LogError("FindUndoPos failed for %s while writing block undo", pos.ToString());
             return false;
         }
+
         // Open history file to append
-        AutoFile fileout{OpenUndoFile(pos)};
-        if (fileout.IsNull()) {
-            LogError("OpenUndoFile failed");
+            AutoFile file{OpenUndoFile(pos)};
+            if (file.IsNull()) {
+                LogError("OpenUndoFile failed for %s while writing block undo", pos.ToString());
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
+        {
+            BufferedWriter fileout{file};
 
         // Write index header
         fileout << GetParams().MessageStart() << blockundo_size;
-        // Write undo data
         pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
-        fileout << blockundo;
+            {
+                // Calculate checksum
+                HashWriter hasher{};
+                hasher << block.pprev->GetBlockHash() << blockundo;
+                // Write undo data & checksum
+                fileout << blockundo << hasher.GetHash();
+            }
+            // BufferedWriter will flush pending data to file when fileout goes out of scope.
+        }
 
-        // Calculate & write checksum
-        HashWriter hasher{};
-        hasher << block.pprev->GetBlockHash();
-        hasher << blockundo;
-        fileout << hasher.GetHash();
+        // Make sure that the file is closed before we call `FlushUndoFile`.
+        if (file.fclose() != 0) {
+            LogError("Failed to close block undo file %s: %s", pos.ToString(), SysErrorString(errno));
+            return FatalError(m_opts.notifications, state, _("Failed to close block undo file."));
+        }
 
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
@@ -1001,15 +1013,14 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos) const
     block.SetNull();
 
     // Open history file to read
-    AutoFile filein{OpenBlockFile(pos, true)};
-    if (filein.IsNull()) {
-        LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
+    std::vector<uint8_t> block_data;
+    if (!ReadRawBlock(block_data, pos)) {
         return false;
     }
 
     // Read block
     try {
-        filein >> TX_WITH_WITNESS(block);
+        SpanReader{block_data} >> TX_WITH_WITNESS(block);
     } catch (const std::exception& e) {
         LogError("%s: Deserialize or I/O error - %s at %s\n", __func__, e.what(), pos.ToString());
         return false;
@@ -1046,15 +1057,14 @@ bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
 
 bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& pos) const
 {
-    FlatFilePos hpos = pos;
-    // If nPos is less than 8 the pos is null and we don't have the block data
-    // Return early to prevent undefined behavior of unsigned int underflow
-    if (hpos.nPos < 8) {
+    if (pos.nPos < BLOCK_SERIALIZATION_HEADER_SIZE) {
+        // If nPos is less than BLOCK_SERIALIZATION_HEADER_SIZE, we can't read the header that precedes the block data
+        // This would cause an unsigned integer underflow when trying to position the file cursor
+        // This can happen after pruning or default constructed positions
         LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
         return false;
     }
-    hpos.nPos -= 8; // Seek back 8 bytes for meta header
-    AutoFile filein{OpenBlockFile(hpos, true)};
+    AutoFile filein{OpenBlockFile({pos.nFile, pos.nPos - BLOCK_SERIALIZATION_HEADER_SIZE}, /*fReadOnly=*/true)};
     if (filein.IsNull()) {
         LogError("%s: OpenBlockFile failed for %s\n", __func__, pos.ToString());
         return false;
@@ -1094,21 +1104,31 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
     FlatFilePos pos{FindNextBlockPos(block_size + BLOCK_SERIALIZATION_HEADER_SIZE, nHeight, block.GetBlockTime())};
     if (pos.IsNull()) {
-        LogError("FindNextBlockPos failed");
+        LogError("FindNextBlockPos failed for %s while writing block", pos.ToString());
         return FlatFilePos();
     }
-    AutoFile fileout{OpenBlockFile(pos)};
-    if (fileout.IsNull()) {
-        LogError("OpenBlockFile failed");
+    AutoFile file{OpenBlockFile(pos, /*fReadOnly=*/false)};
+    if (file.IsNull()) {
+        LogError("OpenBlockFile failed for %s while writing block", pos.ToString());
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
+    {
+        BufferedWriter fileout{file};
 
     // Write index header
     fileout << GetParams().MessageStart() << block_size;
     // Write block
     pos.nPos += BLOCK_SERIALIZATION_HEADER_SIZE;
     fileout << TX_WITH_WITNESS(block);
+    }
+
+    if (file.fclose() != 0) {
+        LogError("Failed to close block file %s: %s", pos.ToString(), SysErrorString(errno));
+        m_opts.notifications.fatalError(_("Failed to close file when writing block."));
+        return FlatFilePos();
+    }
+
     return pos;
 }
 
@@ -1151,6 +1171,11 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 #endif
         )};
         xor_key_file << xor_key;
+        if (xor_key_file.fclose() != 0) {
+            throw std::runtime_error{strprintf("Error closing XOR key file %s: %s",
+                                               fs::PathToString(xor_key_path),
+                                               SysErrorString(errno))};
+        }
     }
     // If the user disabled the key, it must be zero.
     if (!opts.use_xor && xor_key != decltype(xor_key){}) {
