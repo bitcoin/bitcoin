@@ -136,6 +136,7 @@ function signature instead of just the function name. (#32604)
 - #32943 depends: Force CMAKE_EXPORT_NO_PACKAGE_REGISTRY=TRUE
 - #32954 cmake: Drop no longer necessary "cmakeMinimumRequired" object
 - #33073 guix: warn SOURCE_DATE_EPOCH set in guix-codesign
+- #33217 depends: remove xinerama extension from libxcb
 
 ### Gui
 
