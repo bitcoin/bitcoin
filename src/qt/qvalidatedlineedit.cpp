@@ -54,12 +54,14 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vec
     }
     else
     {
-        setStyleSheet("QValidatedLineEdit { " STYLE_INVALID "}");
+        // Use theme-aware red color for invalid state
+        const QColor bg_colour = palette().color(backgroundRole());
+        const bool dark_mode = GUIUtil::isDarkMode(bg_colour);
+        QColor error_colour = dark_mode ? QColor("#FF8080") : QColor("#FF0000");
+        setStyleSheet(QStringLiteral("QValidatedLineEdit { border: 3px solid %1; }").arg(error_colour.name()));
+
         if (!error_locations.empty()) {
             const QColor normal_text_colour = palette().color(foregroundRole());
-            const QColor bg_colour = palette().color(backgroundRole());
-            const bool dark_mode = GUIUtil::isDarkMode(bg_colour);
-            QColor error_colour;
             if (normal_text_colour.red() > normal_text_colour.green() && normal_text_colour.red() > normal_text_colour.blue()) {
                 // red is dominant, avoid fg red
                 if (bg_colour.red() > bg_colour.blue() && bg_colour.green() > bg_colour.blue()) {
@@ -68,8 +70,6 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vec
                 } else {
                     error_colour = dark_mode ? Qt::yellow : Qt::darkYellow;
                 }
-            } else {
-                error_colour = dark_mode ? QColor(255, 159, 159) : Qt::red;
             }
 
             QTextCharFormat format;
