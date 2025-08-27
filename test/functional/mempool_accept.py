@@ -394,7 +394,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         anchor_nonempty_wit_spend.rehash()
 
         self.check_mempool_result(
-            result_expected=[{'txid': anchor_nonempty_wit_spend.rehash(), 'allowed': False, 'reject-reason': 'bad-witness-nonstandard'}],
+            result_expected=[{'txid': anchor_nonempty_wit_spend.rehash(), 'allowed': False, 'reject-reason': 'bad-witness-anchor-not-empty'}],
             rawtxs=[anchor_nonempty_wit_spend.serialize().hex()],
             maxfeerate=0,
         )
