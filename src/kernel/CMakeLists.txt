@@ -80,6 +80,10 @@ add_library(bitcoinkernel
   ../validationinterface.cpp
   ../versionbits.cpp
 )
+target_compile_definitions(bitcoinkernel
+  PRIVATE
+    BUILDING_FOR_LIBBITCOINKERNEL
+)
 target_link_libraries(bitcoinkernel
   PRIVATE
     core_interface
