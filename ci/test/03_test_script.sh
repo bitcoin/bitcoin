@@ -92,7 +92,7 @@ fi
 
 if [ -z "$NO_DEPENDS" ]; then
   if [[ $CI_IMAGE_NAME_TAG == *centos* ]]; then
-    SHELL_OPTS="CONFIG_SHELL=/bin/ksh"  # Temporarily use ksh instead of dash, until https://bugzilla.redhat.com/show_bug.cgi?id=2335416 is fixed.
+    SHELL_OPTS="CONFIG_SHELL=/bin/dash"
   else
     SHELL_OPTS="CONFIG_SHELL="
   fi
