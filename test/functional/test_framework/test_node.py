@@ -364,6 +364,14 @@ class TestNode():
         assert called_by_framework, "Direct call of this mining RPC is discouraged. Please use one of the self.generate* methods on the test framework, which sync the nodes to avoid intermittent test issues. You may use sync_fun=self.no_op to disable the sync explicitly."
         return self.__getattr__('generatetodescriptor')(*args, **kwargs)
 
+    def getprioritisedtransactions(self, *args, **kwargs):
+        res = self.__getattr__('getprioritisedtransactions')(*args, **kwargs)
+        assert not (args or kwargs)
+        for res_val in res.values():
+            if res_val['priority_delta'] == 0:
+                del res_val['priority_delta']
+        return res
+
     def setmocktime(self, timestamp):
         """Wrapper for setmocktime RPC, sets self.mocktime"""
         if timestamp == 0:

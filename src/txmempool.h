@@ -51,6 +51,10 @@ static constexpr std::chrono::minutes DYNAMIC_DUST_FEERATE_UPDATE_INTERVAL{15};
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
+inline int64_t maxmempoolMinimumBytes(const int64_t descendant_size_vbytes) {
+    return descendant_size_vbytes * 40;
+}
+
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
  */
@@ -442,11 +446,11 @@ private:
 
 public:
     indirectmap<COutPoint, const CTransaction*> mapNextTx GUARDED_BY(cs);
-    std::map<uint256, CAmount> mapDeltas GUARDED_BY(cs);
+    std::map<uint256, std::pair<double, CAmount> > mapDeltas GUARDED_BY(cs);
 
     using Options = kernel::MemPoolOptions;
 
-    const Options m_opts;
+    Options m_opts;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
@@ -485,12 +489,19 @@ public:
      * the tx is not dependent on other mempool transactions to be included in a block.
      */
     bool HasNoInputsOf(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /**
+     * Update all transactions in the mempool which depend on tx to recalculate their priority
+     * and adjust the input value that will age to reflect that the inputs from this transaction have
+     * either just been added to the chain or just been removed.
+     */
+    void UpdateDependentPriorities(const CTransaction &tx, unsigned int nBlockHeight, bool addToChain);
 
     void UpdateDynamicDustFeerate();
 
     /** Affect CreateNewBlock prioritisation of transactions */
-    void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta);
-    void ApplyDelta(const uint256& hash, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void PrioritiseTransaction(const uint256& hash, double dPriorityDelta, const CAmount& nFeeDelta);
+    void PrioritiseTransaction(const uint256& hash, const CAmount& nFeeDelta) { PrioritiseTransaction(hash, 0., nFeeDelta); }
+    void ApplyDeltas(const uint256& hash, double &dPriorityDelta, CAmount &nFeeDelta) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     void ClearPrioritisation(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     struct delta_info {
@@ -498,6 +509,7 @@ public:
         const bool in_mempool;
         /** The fee delta added using PrioritiseTransaction(). */
         const CAmount delta;
+        const double priority_delta;
         /** The modified fee (base fee + delta) of this entry. Only present if in_mempool=true. */
         std::optional<CAmount> modified_fee;
         /** The prioritised transaction's txid. */
@@ -841,7 +853,7 @@ public:
 
         using TxHandle = CTxMemPool::txiter;
 
-        TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
+        TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, CoinAgeCache coin_age_cache, bool spends_coinbase, int32_t extra_weight, int64_t sigops_cost, LockPoints lp);
         void StageRemoval(CTxMemPool::txiter it) { m_to_remove.insert(it); }
 
         const CTxMemPool::setEntries& GetRemovals() const { return m_to_remove; }

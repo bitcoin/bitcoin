@@ -732,7 +732,7 @@ public:
     {
         if (!m_node.mempool) return {};
         LockPoints lp;
-        CTxMemPoolEntry entry(tx, 0, 0, 0, 0, false, 0, lp);
+        CTxMemPoolEntry entry(tx, 0, 0, 0, 0, COIN_AGE_CACHE_ZERO, false, /*extra_weight=*/0, 0, lp);
         LOCK(m_node.mempool->cs);
         return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize());
     }
@@ -882,42 +882,47 @@ public:
         assert(m_block_template);
     }
 
-    CBlockHeader getBlockHeader() override
+    const CBlockHeader& getBlockHeader() const override
     {
         return m_block_template->block;
     }
 
-    CBlock getBlock() override
+    const CBlock& getBlock() const override
     {
         return m_block_template->block;
     }
 
-    std::vector<CAmount> getTxFees() override
+    const std::vector<CAmount>& getTxFees() const override
     {
         return m_block_template->vTxFees;
     }
 
-    std::vector<int64_t> getTxSigops() override
+    const std::vector<int64_t>& getTxSigops() const override
     {
         return m_block_template->vTxSigOpsCost;
     }
 
-    CTransactionRef getCoinbaseTx() override
+    const std::vector<double>& getTxCoinAgePriorities() const override
+    {
+        return m_block_template->vTxPriorities;
+    }
+
+    CTransactionRef getCoinbaseTx() const override
     {
         return m_block_template->block.vtx[0];
     }
 
-    std::vector<unsigned char> getCoinbaseCommitment() override
+    const std::vector<unsigned char>& getCoinbaseCommitment() const override
     {
         return m_block_template->vchCoinbaseCommitment;
     }
 
-    int getWitnessCommitmentIndex() override
+    int getWitnessCommitmentIndex() const override
     {
         return GetWitnessCommitmentIndex(m_block_template->block);
     }
 
-    std::vector<uint256> getCoinbaseMerklePath() override
+    std::vector<uint256> getCoinbaseMerklePath() const override
     {
         return TransactionMerklePath(m_block_template->block, 0);
     }
