@@ -32,6 +32,7 @@ void initialize_miner()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
+    MineBlock(g_setup->m_node, {.coinbase_output_script = CScript() << OP_FALSE});
     for (uint32_t i = 0; i < uint32_t{100}; ++i) {
         g_available_coins.emplace_back(Txid::FromUint256(uint256::ZERO), i);
     }
