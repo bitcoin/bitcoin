@@ -22,6 +22,7 @@
 static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     int64_t nTime = 0;
+    double dPriority = 10.0;
     unsigned int nHeight = 1;
     uint64_t sequence = 0;
     bool spendsCoinbase = false;
@@ -29,7 +30,11 @@ static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& po
     LockPoints lp;
     AddToMempool(pool, CTxMemPoolEntry(
         tx, nFee, nTime, nHeight, sequence,
-        spendsCoinbase, sigOpCost, lp));
+        {
+            .inputs_coin_age = dPriority * tx->GetValueOut(),
+            .in_chain_input_value = tx->GetValueOut(),
+        },
+        spendsCoinbase, /*extra_weight=*/0, sigOpCost, lp));
 }
 
 // Right now this is only testing eviction performance in an extremely small

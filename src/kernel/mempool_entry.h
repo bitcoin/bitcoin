@@ -8,12 +8,14 @@
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <core_memusage.h>
+#include <policy/coin_age_priority.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <util/epochguard.h>
 #include <util/overflow.h>
 
+#include <cassert>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -84,9 +86,15 @@ private:
     const size_t nUsageSize;        //!< ... and total memory usage
     const int64_t nTime;            //!< Local time when entering the mempool
     const uint64_t entry_sequence;  //!< Sequence number used to determine whether this transaction is too recent for relay
-    const unsigned int entryHeight; //!< Chain height when entering the mempool
-    const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     const int64_t sigOpCost;        //!< Total sigop cost
+    const int32_t m_extra_weight;   //!< Policy-only additional transaction weight beyond nTxWeight
+    const size_t nModSize;          //!< Cached modified size for priority
+    const double entryPriority;     //!< Priority when entering the mempool
+    const unsigned int entryHeight; //!< Chain height when entering the mempool
+    double cachedPriority;          //!< Last calculated priority
+    unsigned int cachedHeight;      //!< Height at which priority was last calculated
+    CAmount inChainInputValue;      //!< Sum of all txin values that are already in blockchain
+    const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
     CAmount m_modified_fee;         //!< Used for determining the priority of the transaction for mining in a block
     mutable LockPoints lockPoints;  //!< Track the height and time at which tx was final
 
@@ -108,7 +116,9 @@ private:
 public:
     CTxMemPoolEntry(const CTransactionRef& tx, CAmount fee,
                     int64_t time, unsigned int entry_height, uint64_t entry_sequence,
+                    CoinAgeCache coin_age_cache,
                     bool spends_coinbase,
+                    int32_t extra_weight,
                     int64_t sigops_cost, LockPoints lp)
         : tx{tx},
           nFee{fee},
@@ -116,16 +126,26 @@ public:
           nUsageSize{RecursiveDynamicUsage(tx)},
           nTime{time},
           entry_sequence{entry_sequence},
-          entryHeight{entry_height},
-          spendsCoinbase{spends_coinbase},
           sigOpCost{sigops_cost},
+          m_extra_weight{extra_weight},
+          nModSize{CalculateModifiedSize(*tx, GetTxSize())},
+          entryPriority{ComputePriority2(coin_age_cache.inputs_coin_age, nModSize)},
+          entryHeight{entry_height},
+          cachedPriority{entryPriority},
+          // Since entries arrive *after* the tip's height, their entry priority is for the height+1
+          cachedHeight{entry_height + 1},
+          inChainInputValue{coin_age_cache.in_chain_input_value},
+          spendsCoinbase{spends_coinbase},
           m_modified_fee{nFee},
           lockPoints{lp},
           nSizeWithDescendants{GetTxSize()},
           nModFeesWithDescendants{nFee},
           nSizeWithAncestors{GetTxSize()},
           nModFeesWithAncestors{nFee},
-          nSigOpCostWithAncestors{sigOpCost} {}
+          nSigOpCostWithAncestors{sigOpCost} {
+            CAmount nValueIn = tx->GetValueOut() + nFee;
+            assert(inChainInputValue <= nValueIn);
+        }
 
     CTxMemPoolEntry(ExplicitCopyTag, const CTxMemPoolEntry& entry) : CTxMemPoolEntry(entry) {}
     CTxMemPoolEntry& operator=(const CTxMemPoolEntry&) = delete;
@@ -136,15 +156,33 @@ public:
 
     const CTransaction& GetTx() const { return *this->tx; }
     CTransactionRef GetSharedTx() const { return this->tx; }
+    double GetStartingPriority() const {return entryPriority; }
+    CoinAgeCache GetInternalCoinAgeCache() const {
+        return {
+            .inputs_coin_age = ReversePriority2(cachedPriority, nModSize),
+            .in_chain_input_value = inChainInputValue,
+        };
+    }
+    /**
+     * Fast calculation of priority as update from cached value, but only valid if
+     * currentHeight is greater than last height it was recalculated.
+     */
+    double GetPriority(unsigned int currentHeight) const;
+    /**
+     * Recalculate the cached priority as of currentHeight and adjust inChainInputValue by
+     * valueInCurrentBlock which represents input that was just added to or removed from the blockchain.
+     */
+    void UpdateCachedPriority(unsigned int currentHeight, CAmount valueInCurrentBlock);
     const CAmount& GetFee() const { return nFee; }
     int32_t GetTxSize() const
     {
-        return GetVirtualTransactionSize(nTxWeight, sigOpCost, ::nBytesPerSigOp);
+        return GetVirtualTransactionSize(nTxWeight + m_extra_weight, sigOpCost, ::nBytesPerSigOp);
     }
     int32_t GetTxWeight() const { return nTxWeight; }
     std::chrono::seconds GetTime() const { return std::chrono::seconds{nTime}; }
     unsigned int GetHeight() const { return entryHeight; }
     uint64_t GetSequence() const { return entry_sequence; }
+    int32_t GetExtraWeight() const { return m_extra_weight; }
     int64_t GetSigOpCost() const { return sigOpCost; }
     CAmount GetModifiedFee() const { return m_modified_fee; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
@@ -226,7 +264,7 @@ struct NewMempoolTransactionInfo {
      * This boolean indicates whether the transaction was added
      * without enforcing mempool fee limits.
      */
-    const bool m_mempool_limit_bypassed;
+    const ignore_rejects_type m_ignore_rejects;
     /* This boolean indicates whether the transaction is part of a package. */
     const bool m_submitted_in_package;
     /*
@@ -239,11 +277,11 @@ struct NewMempoolTransactionInfo {
 
     explicit NewMempoolTransactionInfo(const CTransactionRef& tx, const CAmount& fee,
                                        const int64_t vsize, const unsigned int height,
-                                       const bool mempool_limit_bypassed, const bool submitted_in_package,
+                                       const ignore_rejects_type& ignore_rejects, const bool submitted_in_package,
                                        const bool chainstate_is_current,
                                        const bool has_no_mempool_parents)
         : info{tx, fee, vsize, height},
-          m_mempool_limit_bypassed{mempool_limit_bypassed},
+          m_ignore_rejects{ignore_rejects},
           m_submitted_in_package{submitted_in_package},
           m_chainstate_is_current{chainstate_is_current},
           m_has_no_mempool_parents{has_no_mempool_parents} {}

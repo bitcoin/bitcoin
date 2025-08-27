@@ -8,6 +8,7 @@
 #include <common/system.h>
 #include <core_io.h>
 #include <key.h>
+#include <policy/policy.h>
 #include <rpc/util.h>
 #include <script/script.h>
 #include <script/script_error.h>
@@ -1495,6 +1496,261 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     BOOST_CHECK(!script.HasValidOps());
     script = ToScript("88acc0"_hex); // Script with undefined opcode
     BOOST_CHECK(!script.HasValidOps());
+}
+
+BOOST_AUTO_TEST_CASE(script_DataCarrierBytes)
+{
+    using zeros = std::vector<unsigned char>;
+
+    // empty script
+    BOOST_CHECK_EQUAL(0, (CScript()).DatacarrierBytes());
+    // series of pushes are not data
+    BOOST_CHECK_EQUAL(0, (CScript() << OP_0 << OP_0 << OP_0).DatacarrierBytes());
+    // unspendable if first op is OP_RETURN, then length(1), zeros(11)
+    BOOST_CHECK_EQUAL(13, (CScript() << OP_RETURN << zeros(11)).DatacarrierBytes());
+    // invalid script (no data following PUSHDATA) makes it all data
+    BOOST_CHECK_EQUAL(2, (CScript() << OP_0 << OP_PUSHDATA4).DatacarrierBytes());
+    // no data here
+    BOOST_CHECK_EQUAL(0, (CScript() << OP_TRUE << OP_IF << OP_ENDIF).DatacarrierBytes());
+    // specific data pattern, entire script is data
+    BOOST_CHECK_EQUAL(4, (CScript() << OP_FALSE << OP_IF << OP_7 << OP_ENDIF).DatacarrierBytes());
+    // consecutive data
+    BOOST_CHECK_EQUAL(6, (CScript() << OP_FALSE << OP_IF << OP_ENDIF << OP_FALSE << OP_IF << OP_ENDIF).DatacarrierBytes());
+    // nested data (all is data)
+    BOOST_CHECK_EQUAL(6, (CScript() << OP_FALSE << OP_IF << OP_TRUE << OP_IF << OP_ENDIF << OP_ENDIF).DatacarrierBytes());
+    // pushing then immediately dropping is data: length(1), zero(11), OP_DROP
+    BOOST_CHECK_EQUAL(13, (CScript() << zeros(11) << OP_DROP).DatacarrierBytes());
+}
+
+BOOST_AUTO_TEST_CASE(script_GetScriptForTransactionInput)
+{
+    using zeros = std::vector<unsigned char>;
+
+    { // P2PK - no datacarrier bytes (tx_in doesn't matter)
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << zeros(65) << OP_CHECKSIG;
+        tx_in.scriptSig = CScript();
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == tx_in.scriptSig);
+        BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2PKH - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << OP_DUP << OP_HASH160 << zeros(20) << OP_EQUALVERIFY << OP_CHECKSIG;
+        // signature, pubkey
+        tx_in.scriptSig = CScript() << zeros(72) << zeros(33);
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == tx_in.scriptSig);
+        BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2SH - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        CScript redeem_script = CScript() << OP_DROP << OP_TRUE;
+        prev_script = CScript() << OP_HASH160 << zeros(20) << OP_EQUAL;
+        // signature, pubkey, redeem_script
+        tx_in.scriptSig = CScript() << OP_7 << std::vector<unsigned char>(redeem_script.begin(), redeem_script.end());
+        // this should return the redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == redeem_script);
+        BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2SH - with datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        // arbitrary amount of data (27 bytes)
+        CScript redeem_script = CScript() << OP_RETURN << zeros(27);
+        prev_script = CScript() << OP_HASH160 << zeros(20) << OP_EQUAL;
+        // signature, pubkey, redeem_script
+        tx_in.scriptSig = CScript() << OP_7 << std::vector<unsigned char>(redeem_script.begin(), redeem_script.end());
+        // this should return the redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == redeem_script);
+        BOOST_CHECK_EQUAL(scale, WITNESS_SCALE_FACTOR);
+        // OP_RETURN(1), length(1), zeros(27) = 29
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 29);
+    }
+    { // P2WPKH - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        // P2WPKH is [OP_0, hash160(pubkey)]
+        prev_script = CScript() << OP_0 << zeros(20);
+        // segwit: empty scriptsig
+        tx_in.scriptSig = CScript();
+        tx_in.scriptWitness.stack.emplace_back(65); // signature
+        tx_in.scriptWitness.stack.emplace_back(33); // pubkey
+        // this should return the redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        // should have no script at all since it's wrapped P2WPKH
+        BOOST_CHECK(ret_script == CScript());
+        BOOST_CHECK_EQUAL(scale, 0);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2WSH - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << OP_0 << zeros(32);
+        // segwit: empty scriptsig
+        tx_in.scriptSig = CScript();
+        tx_in.scriptWitness.stack.emplace_back(65); // arbitrary value to satisfy redeem script
+        CScript redeem_script = CScript() << OP_0;
+        auto redeem_vec{std::vector<unsigned char>(redeem_script.begin(), redeem_script.end())};
+        tx_in.scriptWitness.stack.push_back(redeem_vec);
+        // this should return the redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == redeem_script);
+        BOOST_CHECK_EQUAL(scale, 1);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2WSH - some datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << OP_0 << zeros(32);
+        // segwit: empty scriptsig
+        tx_in.scriptSig = CScript();
+        tx_in.scriptWitness.stack.emplace_back(65); // arbitrary value to satisfy redeem script
+        CScript redeem_script = CScript() << OP_FALSE << OP_IF << zeros(10) << OP_ENDIF;
+        auto redeem_vec{std::vector<unsigned char>(redeem_script.begin(), redeem_script.end())};
+        tx_in.scriptWitness.stack.push_back(redeem_vec);
+        // this should return the redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == redeem_script);
+        BOOST_CHECK_EQUAL(scale, 1);
+        // OP_FALSE(1), OP_IF(1), length(1), zeros(10), OP_ENDIF(1)
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 14);
+    }
+    { // P2SH-P2WPKH - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        // P2WPKH is [OP_0, hash160(pubkey)]
+        CScript redeem_script = CScript() << OP_0 << zeros(20);
+        prev_script = CScript() << OP_HASH160 << zeros(20) << OP_EQUAL;
+        tx_in.scriptSig = CScript() << std::vector<unsigned char>(redeem_script.begin(), redeem_script.end());
+        // this should return the redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        // should have no script at all since it's wrapped P2WPKH
+        BOOST_CHECK(ret_script == CScript());
+        // data bytes in the witness get discounted (*1 instead of *4)
+        BOOST_CHECK_EQUAL(scale, 0);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2SH-P2WSH - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        // P2WSH is [OP_0, sha256(redeem_script)]
+        CScript redeem_script = CScript() << OP_0 << zeros(32);
+        prev_script = CScript() << OP_HASH160 << zeros(20) << OP_EQUAL;
+        tx_in.scriptSig = CScript() << std::vector<unsigned char>(redeem_script.begin(), redeem_script.end());
+        CScript witness_redeem_script = CScript() << OP_TRUE << OP_IF << zeros(10) << OP_ENDIF;
+
+        // in real life, one or more values (to satisfy the redeem script) would be pushed to the stack
+        CScript wit = CScript() << OP_7;
+        tx_in.scriptWitness.stack.emplace_back(wit.begin(), wit.end());
+        // and then finally the redeem script itself (as the last stack element)
+        auto redeem_vec{std::vector<unsigned char>(witness_redeem_script.begin(), witness_redeem_script.end())};
+        tx_in.scriptWitness.stack.push_back(redeem_vec);
+
+        // this should return the witness redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        // should have no script at all since it's wrapped P2WPKH
+        BOOST_CHECK(ret_script == witness_redeem_script);
+        // data bytes in the witness get discounted (*1 instead of *4)
+        BOOST_CHECK_EQUAL(scale, 1);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2SH-P2WSH - some datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        // P2WSH is [OP_0, sha256(redeem_script)]
+        CScript redeem_script = CScript() << OP_0 << zeros(32);
+        prev_script = CScript() << OP_HASH160 << zeros(20) << OP_EQUAL;
+        tx_in.scriptSig = CScript() << std::vector<unsigned char>(redeem_script.begin(), redeem_script.end());
+        CScript witness_redeem_script = CScript() << OP_FALSE << OP_IF << zeros(10) << OP_ENDIF;
+
+        // in real life, one or more values (to satisfy the redeem script) would be pushed to the stack
+        CScript wit = CScript() << OP_7;
+        tx_in.scriptWitness.stack.emplace_back(wit.begin(), wit.end());
+        // and then finally the redeem script itself (as the last stack element)
+        auto redeem_vec{std::vector<unsigned char>(witness_redeem_script.begin(), witness_redeem_script.end())};
+        tx_in.scriptWitness.stack.push_back(redeem_vec);
+
+        // this should return the witness redeem script
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        // should have no script at all since it's wrapped P2WPKH
+        BOOST_CHECK(ret_script == witness_redeem_script);
+        // data bytes in the witness get discounted (*1 instead of *4)
+        BOOST_CHECK_EQUAL(scale, 1);
+        // OP_FALSE(1), OP_IF(1), length(1), zeros(10), OP_ENDIF(1) = 14
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 14);
+    }
+    { // P2TR keypath - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << OP_1 << zeros(32);
+        // segwit: empty scriptsig
+        tx_in.scriptSig = CScript();
+        tx_in.scriptWitness.stack.emplace_back(65); // signature
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == CScript());
+        BOOST_CHECK_EQUAL(scale, 0);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2TR keypath - annex but no script - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << OP_1 << zeros(32);
+        // segwit: empty scriptsig
+        tx_in.scriptSig = CScript();
+        tx_in.scriptWitness.stack.emplace_back(65); // signature
+        std::vector<unsigned char> annex{0x50, 0, 0};
+        tx_in.scriptWitness.stack.push_back(annex);
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == CScript());
+        BOOST_CHECK_EQUAL(scale, 0);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2TR scriptpath - no datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << OP_1 << zeros(32);
+        // segwit: empty scriptsig
+        tx_in.scriptSig = CScript();
+        // stack: zero or more arbitrary values (script arguments); script; control block
+        // (here we have two arbitrary values)
+        tx_in.scriptWitness.stack.emplace_back(85); // arbitrary value
+        tx_in.scriptWitness.stack.emplace_back(10); // arbitrary value
+        CScript script = CScript() << OP_7 << OP_8;
+        auto script_vec{std::vector<unsigned char>(script.begin(), script.end())};
+        tx_in.scriptWitness.stack.push_back(script_vec);
+        tx_in.scriptWitness.stack.emplace_back(33); // control block
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == script);
+        BOOST_CHECK_EQUAL(scale, 1);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 0);
+    }
+    { // P2TR scriptpath - some datacarrier bytes
+        CScript prev_script; // scriptPubKey
+        CTxIn tx_in;
+        prev_script = CScript() << OP_1 << zeros(32);
+        // segwit: empty scriptsig
+        tx_in.scriptSig = CScript();
+        // stack: zero or more arbitrary values (script arguments); script; control block
+        // (here we have one arbitrary value)
+        tx_in.scriptWitness.stack.emplace_back(85); // arbitrary value
+        CScript script = CScript() << OP_RETURN << OP_7 << OP_8;
+        auto script_vec{std::vector<unsigned char>(script.begin(), script.end())};
+        tx_in.scriptWitness.stack.push_back(script_vec);
+        tx_in.scriptWitness.stack.emplace_back(33); // control block
+        auto [ret_script, scale] = GetScriptForTransactionInput(prev_script, tx_in);
+        BOOST_CHECK(ret_script == script);
+        BOOST_CHECK_EQUAL(scale, 1);
+        BOOST_CHECK_EQUAL(ret_script.DatacarrierBytes(), 3);
+    }
 }
 
 static CMutableTransaction TxFromHex(const std::string& str)
