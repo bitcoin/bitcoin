@@ -270,7 +270,7 @@ public:
     MiniGUI(interfaces::Node& node, const PlatformStyle* platformStyle) : sendCoinsDialog(platformStyle), transactionView(platformStyle), optionsModel(node) {
         bilingual_str error;
         QVERIFY(optionsModel.Init(error));
-        clientModel = std::make_unique<ClientModel>(node, &optionsModel);
+        clientModel = std::make_unique<ClientModel>(node, &optionsModel, *platformStyle);
     }
 
     void initModelForWallet(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet, const PlatformStyle* platformStyle)
