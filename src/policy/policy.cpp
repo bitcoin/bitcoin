@@ -13,6 +13,7 @@
 #include <consensus/validation.h>
 #include <kernel/mempool_options.h>
 #include <policy/feerate.h>
+#include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -22,7 +23,10 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <utility>
 #include <vector>
+
+unsigned int g_script_size_policy_limit{DEFAULT_SCRIPT_SIZE_POLICY_LIMIT};
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
@@ -147,7 +151,7 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
         // some minor future-proofing. That's also enough to spend a
         // 20-of-20 CHECKMULTISIG scriptPubKey, though such a scriptPubKey
         // is not considered standard.
-        if (txin.scriptSig.size() > MAX_STANDARD_SCRIPTSIG_SIZE) {
+        if (txin.scriptSig.size() > std::min(MAX_STANDARD_SCRIPTSIG_SIZE, g_script_size_policy_limit)) {
             MaybeReject("scriptsig-size");
         }
         if (!txin.scriptSig.IsPushOnly()) {
@@ -159,7 +163,13 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
     unsigned int n_dust{0};
     unsigned int n_monetary{0};
     TxoutType whichType;
-    for (const CTxOut& txout : tx.vout) {
+    for (size_t i{tx.vout.size()}; i; ) {
+        const CTxOut& txout = tx.vout[--i];
+
+        if (txout.scriptPubKey.size() > g_script_size_policy_limit) {
+            MaybeReject("scriptpubkey-size");
+        }
+
         if (!::IsStandard(txout.scriptPubKey, opts.max_datacarrier_bytes, whichType)) {
             MaybeReject("scriptpubkey");
         }
@@ -185,6 +195,9 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
         }
 
         if (whichType == TxoutType::NULL_DATA) {
+            if (txout.scriptPubKey.size() > 2 && txout.scriptPubKey[1] == OP_13 && opts.reject_tokens) {
+                MaybeReject("tokens-runes");
+            }
             nDataOut++;
             continue;
         }
@@ -193,6 +206,9 @@ bool IsStandardTx(const CTransaction& tx, const kernel::MemPoolOptions& opts, st
         }
         else if ((whichType == TxoutType::MULTISIG) && (!opts.permit_bare_multisig)) {
             MaybeReject("bare-multisig");
+        }
+        else if (whichType == TxoutType::WITNESS_V0_SCRIPTHASH && opts.reject_tokens && txout.scriptPubKey.IsOLGA(tx.vout.size() - i))  {
+            MaybeReject("tokens-olga");
         }
     }
 
@@ -280,6 +296,10 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
+        if (prev.scriptPubKey.size() > g_script_size_policy_limit) {
+            MaybeReject("script-size");
+        }
+
         std::vector<std::vector<unsigned char> > vSolutions;
         TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
         if (whichType == TxoutType::NONSTANDARD) {
@@ -312,6 +332,9 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
                 return false;
             }
             CScript subscript(stack.back().begin(), stack.back().end());
+            if (subscript.size() > g_script_size_policy_limit) {
+                MaybeReject("scriptcheck-size");
+            }
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
                 MaybeReject("scriptcheck-sigops");
             }
@@ -371,6 +394,10 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
         {
             out_reason = reason_prefix + "nonwitness-input";
             return false;
+        }
+
+        if (GetSerializeSize(tx.vin[i].scriptWitness.stack) > g_script_size_policy_limit) {
+            MaybeReject("witness-size");
         }
 
         // Check P2WSH standard limits
@@ -493,17 +520,22 @@ std::pair<CScript, unsigned int> GetScriptForTransactionInput(CScript prevScript
     return std::make_pair(CScript(), 0);
 }
 
-size_t DatacarrierBytes(const CTransaction& tx, const CCoinsViewCache& view)
+std::pair<size_t, size_t> DatacarrierBytes(const CTransaction& tx, const CCoinsViewCache& view)
 {
-    size_t ret{0};
+    std::pair<size_t, size_t> ret{0, 0};
 
     for (const CTxIn& txin : tx.vin) {
         const CTxOut &utxo = view.AccessCoin(txin.prevout).out;
         auto[script, consensus_weight_per_byte] = GetScriptForTransactionInput(utxo.scriptPubKey, txin);
-        ret += script.DatacarrierBytes();
+        const auto dcb = script.DatacarrierBytes(0);
+        ret.first += dcb.first;
+        ret.second += dcb.second;
     }
-    for (const CTxOut& txout : tx.vout) {
-        ret += txout.scriptPubKey.DatacarrierBytes();
+    for (size_t i{tx.vout.size()}; i; ) {
+        const CTxOut& txout = tx.vout[--i];
+        const auto dcb = txout.scriptPubKey.DatacarrierBytes(tx.vout.size() - i);
+        ret.first += dcb.first;
+        ret.second += dcb.second;
     }
 
     return ret;
@@ -519,12 +551,15 @@ int32_t CalculateExtraTxWeight(const CTransaction& tx, const CCoinsViewCache& vi
             const CTxOut &utxo = view.AccessCoin(txin.prevout).out;
             auto[script, consensus_weight_per_byte] = GetScriptForTransactionInput(utxo.scriptPubKey, txin);
             if (weight_per_data_byte > consensus_weight_per_byte) {
-                mod_weight += script.DatacarrierBytes() * (weight_per_data_byte - consensus_weight_per_byte);
+                const auto dcb = script.DatacarrierBytes(0);
+                mod_weight += (dcb.first + dcb.second) * (weight_per_data_byte - consensus_weight_per_byte);
             }
         }
         if (weight_per_data_byte > WITNESS_SCALE_FACTOR) {
-            for (const CTxOut& txout : tx.vout) {
-                mod_weight += txout.scriptPubKey.DatacarrierBytes() * (weight_per_data_byte - WITNESS_SCALE_FACTOR);
+            for (size_t i{tx.vout.size()}; i; ) {
+                const CTxOut& txout = tx.vout[--i];
+                const auto dcb = txout.scriptPubKey.DatacarrierBytes(tx.vout.size() - i);
+                mod_weight += (dcb.first + dcb.second) * (weight_per_data_byte - WITNESS_SCALE_FACTOR);
             }
         }
     }

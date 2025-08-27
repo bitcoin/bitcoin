@@ -863,6 +863,29 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
 
+    // Test rejecttokens
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_13 << OP_FALSE;
+    g_mempool_opts.reject_tokens = false;
+    CheckIsStandard(t);
+    g_mempool_opts.reject_tokens = true;
+    CheckIsNotStandard(t, "tokens-runes");
+    // At least one data push is needed after OP_13 to match
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_13;
+    CheckIsStandard(t);
+    // Test rejecttokens applying to OLGA
+    const auto olga_header = CScript() << OP_0 << "003e7374616d703a000000000000000000000000000000000000000000000000"_hex;
+    t.vout[0].scriptPubKey = olga_header;
+    t.vout.resize(1);
+    // Missing a second output, so not OLGA
+    CheckIsStandard(t);
+    t.vout.emplace_back(1000, olga_header);
+    CheckIsNotStandard(t, "tokens-olga");
+    t.vout.emplace_back(1000, olga_header);
+    CheckIsNotStandard(t, "tokens-olga");
+    g_mempool_opts.reject_tokens = false;
+    CheckIsStandard(t);
+    t.vout.resize(1);
+
     // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
     g_mempool_opts.permitbaredatacarrier = true;
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
