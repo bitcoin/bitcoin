@@ -15,7 +15,7 @@ In this tutorial we have two hosts, both running Bitcoin v25.0
 * `offline` host which is disconnected from all networks (internet, Tor, wifi, bluetooth etc.) and does not have, or need, a copy of the blockchain.
 * `online` host which is a regular online node with a synced blockchain.
 
-We are going to first create an `offline_wallet` on the offline host. We will then create a `watch_only_wallet` on the online host using public key descriptors exported from the `offline_wallet`. Next we will receive some coins into the wallet. In order to spend these coins we'll create an unsigned PSBT using the `watch_only_wallet`, sign the PSBT using the private keys in the `offline_wallet`, and finally broadcast the signed PSBT using the online host.
+We are going to first create an `offline_wallet` on the offline host. We will then create a `watch_only_wallet` on the online host using a wallet file exported from the `offline_wallet`. Next we will receive some coins into the wallet. In order to spend these coins we'll create an unsigned PSBT using the `watch_only_wallet`, sign the PSBT using the private keys in the `offline_wallet`, and finally broadcast the signed PSBT using the online host.
 
 ### Requirements
 - [jq](https://jqlang.github.io/jq/) installation - This tutorial uses jq to process certain fields from JSON RPC responses, but this convenience is optional.
@@ -39,71 +39,29 @@ We are going to first create an `offline_wallet` on the offline host. We will th
 > [!NOTE]
 > The use of a passphrase is crucial to encrypt the wallet.dat file. This encryption ensures that even if an unauthorized individual gains access to the offline host, they won't be able to access the wallet's contents. Further details about securing your wallet can be found in  [Managing the Wallet](https://github.com/bitcoin/bitcoin/blob/master/doc/managing-wallets.md#12-encrypting-the-wallet)
 
-2. Export the public key-only descriptors from the offline host to a JSON file named `descriptors.json`. We use `jq` here to extract the `.descriptors` field from the full RPC response.
-
+2. Export the wallet in a watch-only format to a .dat file named `watch_only_wallet.dat`.
 ```sh
-[offline]$ ./build/bin/bitcoin-cli -signet -rpcwallet="offline_wallet" listdescriptors \
-             | jq -r '.descriptors' \
-             >> /path/to/descriptors.json
+[offline]$ ./build/bin/bitcoin-cli -signet -named exportwatchonlywallet \
+             destination=/path/to/watch_only_wallet.dat
 ```
 
 > [!NOTE]
-> The `descriptors.json` file will be transferred to the online machine (e.g. using a USB flash drive) where it can be imported to create a related watch-only wallet.
+> The `watch_only_wallet.dat` file will be transferred to the online machine (e.g. using a USB flash drive) where it can be imported to create a related watch-only wallet.
 
 ### Create the online `watch_only_wallet`
 
-1. On the online machine create a blank watch-only wallet which has private keys disabled and is named `watch_only_wallet`. This is achieved by using the `createwallet` options: `disable_private_keys=true, blank=true`.
-
+On the online machine import the watch-only wallet. This wallet will have the private keys disabled and is named `watch_only_wallet`. This is achieved by using the `restorewallet` rpc call.
 The `watch_only_wallet` wallet will be used to track and validate incoming transactions, create unsigned PSBTs when spending coins, and broadcast signed and finalized PSBTs.
 
-> [!NOTE]
-> `disable_private_keys` indicates that the wallet should refuse to import private keys, i.e. will be a dedicated watch-only wallet.
-
 ```sh
-[online]$ ./build/bin/bitcoin-cli -signet -named createwallet \
+[online]$ ./build/bin/bitcoin-cli -signet -named restorewallet \
               wallet_name="watch_only_wallet" \
-              disable_private_keys=true \
-              blank=true
+              backup_file=/path/to/watch_only_wallet.dat
 
 {
   "name": "watch_only_wallet"
 }
 ```
-
-2. Import the `offline_wallet`s public key descriptors to the online `watch_only_wallet` using the `descriptors.json` file created on the offline wallet.
-
-```sh
-[online]$ ./build/bin/bitcoin-cli -signet -rpcwallet="watch_only_wallet" importdescriptors "$(cat /path/to/descriptors.json)"
-
-[
-  {
-    "success": true
-  },
-  {
-    "success": true
-  },
-  {
-    "success": true
-  },
-  {
-    "success": true
-  },
-  {
-    "success": true
-  },
-  {
-    "success": true
-  },
-  {
-    "success": true
-  },
-  {
-    "success": true
-  }
-]
-```
-> [!NOTE]
-> Multiple success values indicate that multiple descriptors, for different address types, have been successfully imported. This allows generating different address types on the `watch_only_wallet`.
 
 ### Fund the `offline_wallet`
 
