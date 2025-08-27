@@ -290,7 +290,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
     }
 
     if (!CheckSigopsBIP54(tx, mapInputs)) {
-        return false;
+        MaybeReject("sigops-toomany-overall");
     }
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
