@@ -99,6 +99,11 @@ static std::string serviceFlagToStr(size_t bit)
     case NODE_COMPACT_FILTERS: return "COMPACT_FILTERS";
     case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
     case NODE_P2P_V2:          return "P2P_V2";
+    case NODE_UTREEXO:         return "UTREEXO";
+    case NODE_UTREEXO_ARCHIVE: return "UTREEXO_ARCHIVE";
+    case NODE_UTREEXO_TMP:     return "UTREEXO_TMP?";
+    case NODE_REPLACE_BY_FEE:  return "REPLACE_BY_FEE?";
+    case NODE_MALICIOUS:       return "MALICIOUS?";
     // Not using default, so we get warned when a case is missing
     }
 

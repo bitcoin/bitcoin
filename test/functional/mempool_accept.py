@@ -59,6 +59,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             '-txindex','-permitbaremultisig=0',
+            '-mempoolfullrbf=0',
         ]] * self.num_nodes
         self.supports_cli = False
 
@@ -165,13 +166,25 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.log.info('A transaction that replaces a mempool transaction')
         tx = tx_from_hex(raw_tx_0)
         tx.vout[0].nValue -= int(fee * COIN)  # Double the fee
+        tx.vin[0].nSequence = MAX_BIP125_RBF_SEQUENCE + 1  # Now, opt out of RBF
         raw_tx_0 = tx.serialize().hex()
         txid_0 = tx.rehash()
         self.check_mempool_result(
             result_expected=[{'txid': txid_0, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': (2 * fee)}}],
             rawtxs=[raw_tx_0],
         )
+
+        self.log.info('A transaction that conflicts with an unconfirmed tx')
+        # Send the transaction that replaces the mempool transaction and opts out of replaceability
         node.sendrawtransaction(hexstring=tx.serialize().hex(), maxfeerate=0)
+        # take original raw_tx_0
+        tx = tx_from_hex(raw_tx_0)
+        tx.vout[0].nValue -= int(4 * fee * COIN)  # Set more fee
+        self.check_mempool_result(
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'txn-mempool-conflict'}],
+            rawtxs=[tx.serialize().hex()],
+            maxfeerate=0,
+        )
 
         self.log.info('A transaction with missing inputs, that never existed')
         tx = tx_from_hex(raw_tx_0)
@@ -403,7 +416,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         anchor_nonempty_wit_spend.rehash()
 
         self.check_mempool_result(
-            result_expected=[{'txid': anchor_nonempty_wit_spend.rehash(), 'allowed': False, 'reject-reason': 'bad-witness-nonstandard'}],
+            result_expected=[{'txid': anchor_nonempty_wit_spend.rehash(), 'allowed': False, 'reject-reason': 'bad-witness-anchor-not-empty'}],
             rawtxs=[anchor_nonempty_wit_spend.serialize().hex()],
             maxfeerate=0,
         )

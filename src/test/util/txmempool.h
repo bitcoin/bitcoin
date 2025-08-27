@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_TXMEMPOOL_H
 #define BITCOIN_TEST_UTIL_TXMEMPOOL_H
 
+#include <policy/coin_age_priority.h>
 #include <policy/packages.h>
 #include <txmempool.h>
 #include <util/time.h>
