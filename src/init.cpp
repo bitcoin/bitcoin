@@ -1537,7 +1537,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             // explicitly disabled, do nothing
         } else if (uaspoof_val == "1") {
             // enabled, but not specified: just use base name for now
-            // TODO
+            strSubVersion = FormatSubVersion(UA_NAME, CLIENT_VERSION, uacomments, /*base_name_only=*/ true);
         } else {
             if (uaspoof_val.at(0) != '/') {
                 InitWarning(strprintf(_("Specified %s option is not in BIP 14 format. User-agent strings should look like '%s'."), "uaspoof", BIP14_EXAMPLE_UA));
