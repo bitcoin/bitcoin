@@ -11,6 +11,7 @@ from test_framework.netutil import (
     addr_to_hex,
     get_bind_addrs,
 )
+from test_framework.test_node import ErrorMatch
 from test_framework.test_framework import (
     BitcoinTestFramework,
 )
@@ -86,6 +87,27 @@ class BindExtraTest(BitcoinTestFramework):
             # Remove RPC ports. They are not relevant for this test.
             binds = set(filter(lambda e: e[1] != rpc_port(i), binds))
             assert_equal(binds, set(expected_services))
+
+        self.stop_node(0)
+
+        # Test all combinations of duplicate bindings (each should fail)
+        error_msg = "Error: Duplicate binding configuration for address 127.0.0.1:11012. " \
+                   "Please check your -bind, -whitebind, and onion binding settings."
+
+        bind_options = [
+            "-bind=127.0.0.1:11012",
+            "-bind=127.0.0.1:11012=onion",
+            "-whitebind=noban@127.0.0.1:11012"
+        ]
+
+        # Test all combinations (including same option repeated)
+        for i, opt1 in enumerate(bind_options):
+            for j, opt2 in enumerate(bind_options):
+                if i <= j:  # Avoid testing reverse duplicates (A,B) and (B,A)
+                    self.nodes[0].assert_start_raises_init_error(
+                        [opt1, opt2],
+                        error_msg,
+                        match=ErrorMatch.FULL_TEXT)
 
 if __name__ == '__main__':
     BindExtraTest(__file__).main()
