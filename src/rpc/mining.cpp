@@ -704,8 +704,6 @@ static RPCHelpMan getblocktemplate()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
     Mining& miner = EnsureMining(node);
-    WAIT_LOCK(cs_main, csmain_lock);
-    uint256 tip{CHECK_NONFATAL(miner.getTip()).value().hash};
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -735,6 +733,7 @@ static RPCHelpMan getblocktemplate()
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
             uint256 hash = block.GetHash();
+            LOCK(cs_main);
             const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
             if (pindex) {
                 if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
@@ -772,6 +771,9 @@ static RPCHelpMan getblocktemplate()
 
     static unsigned int nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(node);
+
+    WAIT_LOCK(cs_main, cs_main_lock);
+    uint256 tip{CHECK_NONFATAL(miner.getTip()).value().hash};
 
     // Long Polling (BIP22)
     if (!lpval.isNull()) {
@@ -811,7 +813,7 @@ static RPCHelpMan getblocktemplate()
 
         // Release lock while waiting
         {
-            REVERSE_LOCK(csmain_lock, cs_main);
+            REVERSE_LOCK(cs_main_lock, cs_main);
             MillisecondsDouble checktxtime{std::chrono::minutes(1)};
             while (IsRPCRunning()) {
                 // If hashWatchedChain is not a real block hash, this will
