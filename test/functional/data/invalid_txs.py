@@ -70,6 +70,9 @@ class BadTxTemplate:
     # The expected error code given by bitcoind upon submission of the tx.
     reject_reason: Optional[str] = ""
 
+    # The expected error code with -acceptnonstdtxn=0 if different.
+    std_reject_reason: Optional[str] = None
+
     # Only specified if it differs from mempool acceptance error.
     block_reject_reason = ""
 
@@ -210,6 +213,8 @@ class CreateSumTooLarge(BadTxTemplate):
 
 class InvalidOPIFConstruction(BadTxTemplate):
     reject_reason = "mempool-script-verify-flag-failed (Invalid OP_IF construction)"
+    std_reject_reason = "scriptsig-not-pushonly"
+    block_reject_reason = "block-script-verify-flag-failed (Invalid OP_IF construction)"
 
     def get_tx(self):
         return create_tx_with_script(
@@ -219,6 +224,7 @@ class InvalidOPIFConstruction(BadTxTemplate):
 
 class TooManySigopsPerBlock(BadTxTemplate):
     reject_reason = "bad-txns-too-many-sigops"
+    std_reject_reason = "scriptpubkey"
     block_reject_reason = "bad-blk-sigops, out-of-bounds SigOpCount"
 
     def get_tx(self):
@@ -231,6 +237,7 @@ class TooManySigopsPerBlock(BadTxTemplate):
 
 class TooManySigopsPerTransaction(BadTxTemplate):
     reject_reason = "bad-txns-too-many-sigops"
+    std_reject_reason = "scriptpubkey"
     valid_in_block = True
 
     def get_tx(self):
@@ -253,6 +260,7 @@ def getDisabledOpcodeTemplate(opcode):
 
     return type('DisabledOpcode_' + str(opcode), (BadTxTemplate,), {
         'reject_reason': "disabled opcode",
+        'std_reject_reason': "scriptsig-not-pushonly",
         'get_tx': get_tx,
         'valid_in_block' : False
         })
@@ -260,6 +268,7 @@ def getDisabledOpcodeTemplate(opcode):
 class NonStandardAndInvalid(BadTxTemplate):
     """A non-standard transaction which is also consensus-invalid should return the first error."""
     reject_reason = "mempool-script-verify-flag-failed (Using OP_CODESEPARATOR in non-witness script)"
+    std_reject_reason = "scriptsig-not-pushonly"
     block_reject_reason = "block-script-verify-flag-failed (OP_RETURN was encountered)"
     valid_in_block = False
 
