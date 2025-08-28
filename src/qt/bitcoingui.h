@@ -27,6 +27,7 @@
 
 #include <memory>
 
+class GuiNetWatch;
 class NetworkStyle;
 class Notificator;
 class OptionsModel;
@@ -134,6 +135,7 @@ private:
     QMenuBar* appMenuBar = nullptr;
     QToolBar* appToolBar = nullptr;
     QAction* overviewAction = nullptr;
+    QAction* m_action_pairing = nullptr;
     QAction* historyAction = nullptr;
     QAction* quitAction = nullptr;
     QAction* sendCoinsAction = nullptr;
@@ -150,6 +152,7 @@ private:
     QAction* backupWalletAction = nullptr;
     QAction* changePassphraseAction = nullptr;
     QAction* aboutQtAction = nullptr;
+    QAction* m_show_netwatch_action = nullptr;
     QAction* openRPCConsoleAction = nullptr;
     QAction* openAction = nullptr;
     QAction* showHelpMessageAction = nullptr;
@@ -172,6 +175,7 @@ private:
     QSystemTrayIcon* trayIcon = nullptr;
     const std::unique_ptr<QMenu> trayIconMenu;
     Notificator* notificator = nullptr;
+    GuiNetWatch* NetWatch = nullptr;
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
     ModalOverlay* modalOverlay = nullptr;
@@ -280,6 +284,8 @@ public Q_SLOTS:
 #ifdef ENABLE_WALLET
     /** Switch to overview (home) page */
     void gotoOverviewPage();
+    /** Switch to pairing page */
+    void gotoPairingPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to receive coins page */
@@ -303,6 +309,7 @@ public Q_SLOTS:
     void optionsClicked();
     /** Show about dialog */
     void aboutClicked();
+    void showNetWatch();
     /** Show debug window */
     void showDebugWindow();
     /** Show debug window and set focus to the console */

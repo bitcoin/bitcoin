@@ -28,6 +28,8 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 #define STYLE_INVALID "border: 3px solid #FF8080"
 /* "Warning" field background style */
 #define STYLE_INCORRECT "border: 3px solid #FFFF80"
+/* Background style for active search in NetWatch */
+#define STYLE_ACTIVE "border: 3px solid #80FF80"
 
 /* Transaction list -- unconfirmed transaction */
 #define COLOR_UNCONFIRMED QColor(128, 128, 128)

@@ -83,6 +83,7 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   modaloverlay.cpp
   mempoolstats.cpp
   modaloverlay.h
+  netwatch.cpp
   networkstyle.cpp
   networkstyle.h
   notificator.cpp
@@ -91,12 +92,16 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   optionsdialog.h
   optionsmodel.cpp
   optionsmodel.h
+  pairingpage.cpp
+  pairingpage.h
   peertablemodel.cpp
   peertablemodel.h
   peertablesortproxy.cpp
   peertablesortproxy.h
   platformstyle.cpp
   platformstyle.h
+  qrimagewidget.cpp
+  qrimagewidget.h
   qvalidatedlineedit.cpp
   qvalidatedlineedit.h
   qvaluecombobox.cpp
