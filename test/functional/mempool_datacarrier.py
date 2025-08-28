@@ -103,9 +103,9 @@ class DataCarrierTest(BitcoinTestFramework):
         # Clean shutdown boilerplate due to deprecation
         self.expected_stderr = [
             "",  # node 0 has no deprecated options
-            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.",
-            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.",
-            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.",
+            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated and are expected to be removed in a future version.",
+            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated and are expected to be removed in a future version.",
+            "Warning: Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated and are expected to be removed in a future version.",
         ]
 
         for i in range(self.num_nodes):
