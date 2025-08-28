@@ -112,6 +112,19 @@ Otherwise, if you don't need QR encoding support, you can pass `-DWITH_QRENCODE=
 
 ---
 
+#### Port Mapping Dependencies
+
+###### miniupnpc
+
+miniupnpc may be used for UPnP port mapping.
+Skip if you do not need this functionality.
+
+``` bash
+brew install miniupnpc
+```
+
+---
+
 #### ZMQ Dependencies
 
 Support for ZMQ notifications requires the following dependency.

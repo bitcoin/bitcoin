@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <memory>
+#include <stats/stats.h>
 #include <sync.h>
 #include <uint256.h>
 
@@ -20,6 +21,7 @@ class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
 class PeerTableSortProxy;
+class PlatformStyle;
 enum class SynchronizationState;
 struct LocalServiceInfo;
 
@@ -58,7 +60,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, const PlatformStyle&, QObject *parent = nullptr);
     ~ClientModel();
 
     void stop();
@@ -90,6 +92,7 @@ public:
     QString blocksDir() const;
 
     bool getProxyInfo(std::string& ip_port) const;
+    bool getTorInfo(QString& out_onion) const;
 
     // caches for the best header: hash, number of blocks and block time
     mutable std::atomic<int> cachedBestHeaderHeight;
@@ -99,9 +102,12 @@ public:
     Mutex m_cached_tip_mutex;
     uint256 m_cached_tip_blocks GUARDED_BY(m_cached_tip_mutex){};
 
+    mempoolSamples_t getMempoolStatsInRange(QDateTime &from, QDateTime &to);
+
 private:
     interfaces::Node& m_node;
     std::vector<std::unique_ptr<interfaces::Handler>> m_event_handlers;
+    boost::signals2::scoped_connection m_connection_mempool_stats_did_change;
     OptionsModel *optionsModel;
     PeerTableModel* peerTableModel{nullptr};
     PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
@@ -119,6 +125,7 @@ Q_SIGNALS:
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType header, SynchronizationState sync_state);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes, size_t mempoolMaxSizeInBytes);
     void networkActiveChanged(bool networkActive);
+    void networkLocalChanged();
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 
@@ -127,6 +134,12 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
+
+    void mempoolStatsDidUpdate();
+
+public Q_SLOTS:
+    /* stats stack */
+    void updateMempoolStats();
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H

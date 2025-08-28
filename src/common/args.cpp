@@ -548,8 +548,18 @@ bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 
 void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
+    ForceSetArgV(strArg, common::SettingsValue{strValue});
+}
+
+void ArgsManager::ForceSetArg(const std::string& arg, const int64_t value)
+{
+    ForceSetArg(arg, util::ToString(value));
+}
+
+void ArgsManager::ForceSetArgV(const std::string& arg, const common::SettingsValue& value)
+{
     LOCK(cs_args);
-    m_settings.forced_settings[SettingName(strArg)] = strValue;
+    m_settings.forced_settings[SettingName(arg)] = value;
 }
 
 void ArgsManager::AddCommand(const std::string& cmd, const std::string& help)
@@ -661,6 +671,9 @@ std::string ArgsManager::GetHelpMessage() const
                 break;
             case OptionsCategory::CLI_COMMANDS:
                 usage += HelpMessageGroup("CLI Commands:");
+                break;
+            case OptionsCategory::STATS:
+                usage += HelpMessageGroup("Statistic options:");
                 break;
             default:
                 break;

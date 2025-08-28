@@ -22,6 +22,7 @@ add_library(bitcoin_util STATIC EXCLUDE_FROM_ALL
   sock.cpp
   strencodings.cpp
   string.cpp
+  subprocess.cpp
   syserror.cpp
   thread.cpp
   threadinterrupt.cpp

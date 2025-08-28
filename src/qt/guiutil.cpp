@@ -37,6 +37,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QClipboard>
+#include <QColor>
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDialog>
@@ -71,6 +72,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <exception>
 #include <fstream>
 #include <string>
@@ -87,9 +89,19 @@ using namespace std::chrono_literals;
 
 namespace GUIUtil {
 
+QString dateStr(const QDate &date)
+{
+    return QLocale::system().toString(date, QLocale::ShortFormat);
+}
+
+QString dateStr(qint64 nTime)
+{
+    return dateStr(QDateTime::fromSecsSinceEpoch(nTime).date());
+}
+
 QString dateTimeStr(const QDateTime &date)
 {
-    return QLocale::system().toString(date.date(), QLocale::ShortFormat) + QString(" ") + date.toString("hh:mm");
+    return dateStr(date.date()) + QString(" ") + date.toString("hh:mm");
 }
 
 QString dateTimeStr(qint64 nTime)
@@ -831,6 +843,52 @@ QString formatBytes(uint64_t bytes)
         return QObject::tr("%1 MB").arg(bytes / 1'000'000);
 
     return QObject::tr("%1 GB").arg(bytes / 1'000'000'000);
+}
+
+QString formatBytesps(float val)
+{
+    if (val < 10)
+        //: "Bytes per second"
+        return QObject::tr("%1 B/s").arg(0.01 * int(val * 100 + 0.5));
+    if (val < 100)
+        //: "Bytes per second"
+        return QObject::tr("%1 B/s").arg(0.1 * int(val * 10 + 0.5));
+    if (val < 1'000)
+        //: "Bytes per second"
+        return QObject::tr("%1 B/s").arg(int(val + 0.5));
+    if (val < 10'000)
+        //: "Kilobytes per second"
+        return QObject::tr("%1 kB/s").arg(0.01 * int(val / 10 + 0.5));
+    if (val < 100'000)
+        //: "Kilobytes per second"
+        return QObject::tr("%1 kB/s").arg(0.1 * int(val / 100 + 0.5));
+    if (val < 1'000'000)
+        //: "Kilobytes per second"
+        return QObject::tr("%1 kB/s").arg(int(val / 1'000 + 0.5));
+    if (val < 10'000'000)
+        //: "Megabytes per second"
+        return QObject::tr("%1 MB/s").arg(0.01 * int(val / 10'000 + 0.5));
+    if (val < 100'000'000)
+        //: "Megabytes per second"
+        return QObject::tr("%1 MB/s").arg(0.1 * int(val / 100'000 + 0.5));
+    if (val < 10'000'000'000)
+        //: "Megabytes per second"
+        return QObject::tr("%1 MB/s").arg(long(val / 1'000'000 + 0.5));
+
+    //: "Gigabytes per second"
+    return QObject::tr("%1 GB/s").arg(long(val / 1'000'000'000 + 0.5));
+}
+
+static double ColourLuminosity(const QColor& c)
+{
+    const auto Lr = std::pow(c.redF(),   2.2) * .2126;
+    const auto Lg = std::pow(c.greenF(), 2.2) * .7152;
+    const auto Lb = std::pow(c.blueF(),  2.2) * .0722;
+    return Lr + Lg + Lb;
+}
+
+bool isDarkMode(const QColor& color) {
+    return ColourLuminosity(color) < .36;
 }
 
 qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize, qreal font_size) {

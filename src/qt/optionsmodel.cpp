@@ -10,6 +10,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
+#include <chainparams.h>
 #include <common/args.h>
 #include <interfaces/node.h>
 #include <mapport.h>
@@ -41,6 +42,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::ThreadsScriptVerif: return "par";
     case OptionsModel::SpendZeroConfChange: return "spendzeroconfchange";
     case OptionsModel::ExternalSignerPath: return "signer";
+    case OptionsModel::MapPortUPnP: return "upnp";
     case OptionsModel::MapPortNatpmp: return "natpmp";
     case OptionsModel::Listen: return "listen";
     case OptionsModel::Server: return "server";
@@ -214,7 +216,7 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
-    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath,
+    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
                             MapPortNatpmp, Listen, Server, Prune, ProxyUse, ProxyUseTor, Language}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
@@ -243,6 +245,12 @@ bool OptionsModel::Init(bilingual_str& error)
     m_sub_fee_from_amount = settings.value("SubFeeFromAmount", false).toBool();
 #endif
 
+    // Network
+    if (!settings.contains("nNetworkPort"))
+        settings.setValue("nNetworkPort", (quint16)Params().GetDefaultPort());
+    if (!gArgs.SoftSetArg("-port", settings.value("nNetworkPort").toString().toStdString()))
+        addOverriddenOption("-port");
+
     // Display
     if (settings.contains("FontForMoney")) {
         m_font_money = FontChoiceFromString(settings.value("FontForMoney").toString());
@@ -254,6 +262,17 @@ bool OptionsModel::Init(bilingual_str& error)
         }
     }
     Q_EMIT fontForMoneyChanged(getFontForMoney());
+
+    if (settings.contains("FontForQRCodes")) {
+        m_font_qrcodes = FontChoiceFromString(settings.value("FontForQRCodes").toString());
+    }
+    Q_EMIT fontForQRCodesChanged(getFontChoiceForQRCodes());
+
+    if (!settings.contains("PeersTabAlternatingRowColors")) {
+        settings.setValue("PeersTabAlternatingRowColors", "false");
+    }
+    m_peers_tab_alternating_row_colors = settings.value("PeersTabAlternatingRowColors").toBool();
+    Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
 
     m_mask_values = settings.value("mask_values", false).toBool();
 
@@ -414,6 +433,14 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return m_show_tray_icon;
     case MinimizeToTray:
         return fMinimizeToTray;
+    case NetworkPort:
+        return settings.value("nNetworkPort");
+    case MapPortUPnP:
+#ifdef USE_UPNP
+        return SettingToBool(setting(), DEFAULT_UPNP);
+#else
+        return false;
+#endif // USE_UPNP
     case MapPortNatpmp:
         return SettingToBool(setting(), DEFAULT_NATPMP);
     case MinimizeOnClose:
@@ -462,6 +489,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return QString::fromStdString(SettingToString(setting(), ""));
     case FontForMoney:
         return QVariant::fromValue(m_font_money);
+    case FontForQRCodes:
+        return QVariant::fromValue(m_font_qrcodes);
+    case PeersTabAlternatingRowColors:
+        return m_peers_tab_alternating_row_colors;
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -526,10 +557,28 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         fMinimizeToTray = value.toBool();
         settings.setValue("fMinimizeToTray", fMinimizeToTray);
         break;
+    case NetworkPort:
+        if (settings.value("nNetworkPort") != value) {
+            // If the port input box is empty, set to default port
+            if (value.toString().isEmpty()) {
+                settings.setValue("nNetworkPort", (quint16)Params().GetDefaultPort());
+            }
+            else {
+                settings.setValue("nNetworkPort", (quint16)value.toInt());
+            }
+            setRestartRequired(true);
+        }
+        break;
+    case MapPortUPnP: // core option - can be changed on-the-fly
+        if (changed()) {
+            update(value.toBool());
+            node().mapPort(value.toBool(), getOption(MapPortNatpmp).toBool());
+        }
+        break;
     case MapPortNatpmp: // core option - can be changed on-the-fly
         if (changed()) {
             update(value.toBool());
-            node().mapPort(value.toBool());
+            node().mapPort(getOption(MapPortUPnP).toBool(), value.toBool());
         }
         break;
     case MinimizeOnClose:
@@ -640,6 +689,20 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
     }
+    case FontForQRCodes:
+    {
+        const auto& new_font = value.value<FontChoice>();
+        if (m_font_qrcodes == new_font) break;
+        settings.setValue("FontForQRCodes", FontChoiceToString(new_font));
+        m_font_qrcodes = new_font;
+        Q_EMIT fontForQRCodesChanged(new_font);
+        break;
+    }
+    case PeersTabAlternatingRowColors:
+        m_peers_tab_alternating_row_colors = value.toBool();
+        settings.setValue("PeersTabAlternatingRowColors", m_peers_tab_alternating_row_colors);
+        Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
+        break;
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
@@ -779,6 +842,7 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(SpendZeroConfChange, "bSpendZeroConfChange");
     migrate_setting(ExternalSignerPath, "external_signer_path");
 #endif
+    migrate_setting(MapPortUPnP, "fUseUPnP");
     migrate_setting(MapPortNatpmp, "fUseNatpmp");
     migrate_setting(Listen, "fListen");
     migrate_setting(Server, "server");
@@ -792,7 +856,7 @@ void OptionsModel::checkAndMigrate()
 
     // In case migrating QSettings caused any settings value to change, rerun
     // parameter interaction code to update other settings. This is particularly
-    // important for the -listen setting, which should cause -listenonion
+    // important for the -listen setting, which should cause -listenonion, -upnp,
     // and other settings to default to false if it was set to false.
     // (https://github.com/bitcoin-core/gui/issues/567).
     node().initParameterInteraction();

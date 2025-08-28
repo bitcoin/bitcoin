@@ -121,7 +121,7 @@ public:
     virtual void resetSettings() = 0;
 
     //! Map port.
-    virtual void mapPort(bool enable) = 0;
+    virtual void mapPort(bool use_upnp, bool use_pcp) = 0;
 
     //! Get proxy.
     virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
@@ -251,6 +251,10 @@ public:
     //! Register handler for network active messages.
     using NotifyNetworkActiveChangedFn = std::function<void(bool network_active)>;
     virtual std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) = 0;
+
+    //! Register handler for network local changed messages.
+    using NotifyNetworkLocalChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleNotifyNetworkLocalChanged(NotifyNetworkLocalChangedFn fn) = 0;
 
     //! Register handler for notify alert messages.
     using NotifyAlertChangedFn = std::function<void()>;
