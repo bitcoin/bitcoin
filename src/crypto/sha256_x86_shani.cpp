@@ -8,6 +8,7 @@
 
 #if defined(ENABLE_SSE41) && defined(ENABLE_X86_SHANI)
 
+#include <cstddef>
 #include <cstdint>
 #include <immintrin.h>
 
