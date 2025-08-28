@@ -149,7 +149,7 @@ bool FillableSigningProvider::AddKeyPubKey(const CKey& key, const CPubKey &pubke
 bool FillableSigningProvider::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);
-    return mapKeys.count(address) > 0;
+    return mapKeys.contains(address);
 }
 
 std::set<CKeyID> FillableSigningProvider::GetKeys() const
@@ -188,7 +188,7 @@ bool FillableSigningProvider::AddCScript(const CScript& redeemScript)
 bool FillableSigningProvider::HaveCScript(const CScriptID& hash) const
 {
     LOCK(cs_KeyStore);
-    return mapScripts.count(hash) > 0;
+    return mapScripts.contains(hash);
 }
 
 std::set<CScriptID> FillableSigningProvider::GetCScripts() const
