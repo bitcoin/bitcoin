@@ -303,9 +303,9 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(result_v2_from_v3->second, nullptr);
 
         Package package_v3_v2{mempool_tx_v3, tx_v2_from_v3};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v2_from_v3, GetVirtualTransactionSize(*tx_v2_from_v3), package_v3_v2, empty_ancestors), expected_error_str);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v2_from_v3, GetVirtualTransactionSize(*tx_v2_from_v3), package_v3_v2, empty_ancestors, 1, BuildInPackageRelations(package_v3_v2)), expected_error_str);
         CTxMemPool::setEntries entries_mempool_v3{pool.GetIter(mempool_tx_v3->GetHash()).value()};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v2_from_v3, GetVirtualTransactionSize(*tx_v2_from_v3), {tx_v2_from_v3}, entries_mempool_v3), expected_error_str);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v2_from_v3, GetVirtualTransactionSize(*tx_v2_from_v3), {tx_v2_from_v3}, entries_mempool_v3, 0, BuildInPackageRelations({tx_v2_from_v3})), expected_error_str);
 
         // mempool_tx_v3  mempool_tx_v2
         //            ^    ^
@@ -320,7 +320,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(result_v2_from_both->second, nullptr);
 
         Package package_v3_v2_v2{mempool_tx_v3, mempool_tx_v2, tx_v2_from_v2_and_v3};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v2_from_v2_and_v3, GetVirtualTransactionSize(*tx_v2_from_v2_and_v3), package_v3_v2_v2, empty_ancestors), expected_error_str_2);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v2_from_v2_and_v3, GetVirtualTransactionSize(*tx_v2_from_v2_and_v3), package_v3_v2_v2, empty_ancestors, 2, BuildInPackageRelations(package_v3_v2_v2)), expected_error_str_2);
     }
 
     // TRUC cannot spend from an unconfirmed non-TRUC transaction.
@@ -338,9 +338,9 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(result_v3_from_v2->second, nullptr);
 
         Package package_v2_v3{mempool_tx_v2, tx_v3_from_v2};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_from_v2, GetVirtualTransactionSize(*tx_v3_from_v2), package_v2_v3, empty_ancestors), expected_error_str);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_from_v2, GetVirtualTransactionSize(*tx_v3_from_v2), package_v2_v3, empty_ancestors, 1, BuildInPackageRelations(package_v2_v3)), expected_error_str);
         CTxMemPool::setEntries entries_mempool_v2{pool.GetIter(mempool_tx_v2->GetHash()).value()};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_from_v2, GetVirtualTransactionSize(*tx_v3_from_v2), {tx_v3_from_v2}, entries_mempool_v2), expected_error_str);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_from_v2, GetVirtualTransactionSize(*tx_v3_from_v2), {tx_v3_from_v2}, entries_mempool_v2, 0, BuildInPackageRelations({tx_v3_from_v2})), expected_error_str);
 
         // mempool_tx_v3  mempool_tx_v2
         //            ^    ^
@@ -358,7 +358,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         const auto expected_error_str_3{strprintf("tx %s (wtxid=%s) would have too many ancestors",
             tx_v3_from_v2_and_v3->GetHash().ToString(), tx_v3_from_v2_and_v3->GetWitnessHash().ToString())};
         Package package_v3_v2_v3{mempool_tx_v3, mempool_tx_v2, tx_v3_from_v2_and_v3};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_from_v2_and_v3, GetVirtualTransactionSize(*tx_v3_from_v2_and_v3), package_v3_v2_v3, empty_ancestors), expected_error_str_3);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_from_v2_and_v3, GetVirtualTransactionSize(*tx_v3_from_v2_and_v3), package_v3_v2_v3, empty_ancestors, 2, BuildInPackageRelations(package_v3_v2_v3)), expected_error_str_3);
     }
     // V3 from V3 is ok, and non-V3 from non-V3 is ok.
     {
@@ -371,7 +371,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
                     == std::nullopt);
 
         Package package_v3_v3{mempool_tx_v3, tx_v3_from_v3};
-        BOOST_CHECK(PackageTRUCChecks(tx_v3_from_v3, GetVirtualTransactionSize(*tx_v3_from_v3), package_v3_v3, empty_ancestors) == std::nullopt);
+        BOOST_CHECK(PackageTRUCChecks(tx_v3_from_v3, GetVirtualTransactionSize(*tx_v3_from_v3), package_v3_v3, empty_ancestors, 1, BuildInPackageRelations(package_v3_v3)) == std::nullopt);
 
         // mempool_tx_v2
         //      ^
@@ -382,7 +382,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
                     == std::nullopt);
 
         Package package_v2_v2{mempool_tx_v2, tx_v2_from_v2};
-        BOOST_CHECK(PackageTRUCChecks(tx_v2_from_v2, GetVirtualTransactionSize(*tx_v2_from_v2), package_v2_v2, empty_ancestors) == std::nullopt);
+        BOOST_CHECK(PackageTRUCChecks(tx_v2_from_v2, GetVirtualTransactionSize(*tx_v2_from_v2), package_v2_v2, empty_ancestors, 1, BuildInPackageRelations(package_v2_v2)) == std::nullopt);
     }
 
     // Tx spending TRUC cannot have too many mempool ancestors
@@ -408,8 +408,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(result->first, expected_error_str);
         BOOST_CHECK_EQUAL(result->second, nullptr);
 
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_multi_parent, GetVirtualTransactionSize(*tx_v3_multi_parent), package_multi_parents, empty_ancestors),
-                          expected_error_str);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_multi_parent, GetVirtualTransactionSize(*tx_v3_multi_parent), package_multi_parents, empty_ancestors, 3, BuildInPackageRelations(package_multi_parents)), expected_error_str);
     }
 
     // Configuration where the tx is in a multi-generation chain.
@@ -434,8 +433,8 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(result->second, nullptr);
 
         // Middle tx is what triggers a failure for the grandchild:
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(middle_tx, GetVirtualTransactionSize(*middle_tx), package_multi_gen, empty_ancestors), expected_error_str);
-        BOOST_CHECK(PackageTRUCChecks(tx_v3_multi_gen, GetVirtualTransactionSize(*tx_v3_multi_gen), package_multi_gen, empty_ancestors) == std::nullopt);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(middle_tx, GetVirtualTransactionSize(*middle_tx), package_multi_gen, empty_ancestors, 1, BuildInPackageRelations(package_multi_gen)), expected_error_str);
+        BOOST_CHECK(PackageTRUCChecks(tx_v3_multi_gen, GetVirtualTransactionSize(*tx_v3_multi_gen), package_multi_gen, empty_ancestors, 2, BuildInPackageRelations(package_multi_gen)) == std::nullopt);
     }
 
     // Tx spending TRUC cannot be too large in virtual size.
@@ -452,8 +451,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(result->second, nullptr);
 
         Package package_child_big{mempool_tx_v3, tx_v3_child_big};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_child_big, GetVirtualTransactionSize(*tx_v3_child_big), package_child_big, empty_ancestors),
-                          expected_error_str);
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_child_big, GetVirtualTransactionSize(*tx_v3_child_big), package_child_big, empty_ancestors, 1, BuildInPackageRelations(package_child_big)), expected_error_str);
     }
 
     // Tx spending TRUC cannot have too many sigops.
@@ -496,7 +494,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         BOOST_CHECK_EQUAL(result->second, nullptr);
 
         Package package_child_sigops{mempool_tx_v3, tx_many_sigops};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_many_sigops, total_sigops * DEFAULT_BYTES_PER_SIGOP / WITNESS_SCALE_FACTOR, package_child_sigops, empty_ancestors),
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_many_sigops, total_sigops * DEFAULT_BYTES_PER_SIGOP / WITNESS_SCALE_FACTOR, package_child_sigops, empty_ancestors, 1, BuildInPackageRelations(package_child_sigops)),
                           expected_error_str);
     }
 
@@ -509,7 +507,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         AddToMempool(pool, entry.FromTx(tx_mempool_v3_child));
 
         Package package_v3_1p1c{mempool_tx_v3, tx_mempool_v3_child};
-        BOOST_CHECK(PackageTRUCChecks(tx_mempool_v3_child, GetVirtualTransactionSize(*tx_mempool_v3_child), package_v3_1p1c, empty_ancestors) == std::nullopt);
+        BOOST_CHECK(PackageTRUCChecks(tx_mempool_v3_child, GetVirtualTransactionSize(*tx_mempool_v3_child), package_v3_1p1c, empty_ancestors, 1, BuildInPackageRelations(package_v3_1p1c)) == std::nullopt);
     }
 
     // A TRUC transaction cannot have more than 1 descendant. Sibling is returned when exactly 1 exists.
@@ -530,7 +528,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
                     == std::nullopt);
 
         Package package_v3_1p2c{mempool_tx_v3, tx_mempool_v3_child, tx_v3_child2};
-        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_child2, GetVirtualTransactionSize(*tx_v3_child2), package_v3_1p2c, empty_ancestors),
+        BOOST_CHECK_EQUAL(*PackageTRUCChecks(tx_v3_child2, GetVirtualTransactionSize(*tx_v3_child2), package_v3_1p2c, empty_ancestors, 2, BuildInPackageRelations(package_v3_1p2c)),
                           expected_error_str);
 
         // Configuration where parent already has 2 other children in mempool (no sibling eviction allowed). This may happen as the result of a reorg.
