@@ -23,10 +23,11 @@ from data import invalid_txs
 
 class InvalidTxRequestTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
-        self.extra_args = [[
-            "-acceptnonstdtxn=1",
-        ]]
+        self.num_nodes = 2
+        self.extra_args = [
+            ["-acceptnonstdtxn=1"],
+            ["-acceptnonstdtxn=0"],
+        ]
         self.setup_clean_chain = True
 
     def bootstrap_p2p(self, *, num_connections=1):
@@ -46,8 +47,12 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node
+        std_node = self.nodes[1]  # convenience reference to the node
 
         self.bootstrap_p2p()  # Add one p2p connection to the node
+
+        # Add a p2p connection for the std node
+        std_node.add_p2p_connection(P2PDataStore())
 
         best_block = self.nodes[0].getbestblockhash()
         tip = int(best_block, 16)
@@ -74,6 +79,11 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             node.p2ps[0].send_txs_and_test(
                 [tx], node, success=False,
                 reject_reason=template.reject_reason,
+            )
+            std_reject = template.std_reject_reason or template.reject_reason
+            std_node.p2ps[0].send_txs_and_test(
+                [tx], std_node, success=False,
+                reject_reason=std_reject,
             )
 
         # Make two p2p connections to provide the node with orphans
@@ -116,7 +126,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         node.p2ps[1].send_txs_and_test([tx_orphan_2_invalid], node, success=False)
 
         assert_equal(0, node.getmempoolinfo()['size'])  # Mempool should be empty
-        assert_equal(2, len(node.getpeerinfo()))  # p2ps[1] is still connected
+        assert_equal(3, len(node.getpeerinfo()))  # nonstd node and both p2ps still connected
 
         self.log.info('Send the withhold tx ... ')
         with node.assert_debug_log(expected_msgs=["bad-txns-in-belowout"]):
