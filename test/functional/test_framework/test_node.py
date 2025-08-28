@@ -11,6 +11,7 @@ from enum import Enum
 import json
 import logging
 import os
+import pathlib
 import platform
 import re
 import subprocess
@@ -19,6 +20,7 @@ import time
 import urllib.parse
 import collections
 import shlex
+import shutil
 import sys
 from pathlib import Path
 
@@ -52,6 +54,13 @@ CLI_MAX_ARG_SIZE = 131071 # many systems have a 128kb limit per arg (MAX_ARG_STR
 NULL_BLK_XOR_KEY = bytes([0] * NUM_XOR_BYTES)
 BITCOIN_PID_FILENAME_DEFAULT = "bitcoind.pid"
 
+if sys.platform.startswith("linux"):
+    UNIX_PATH_MAX = 108          # includes the trailing NUL
+elif sys.platform.startswith(("darwin", "freebsd", "netbsd", "openbsd")):
+    UNIX_PATH_MAX = 104
+else:                            # safest portable value
+    UNIX_PATH_MAX = 92
+
 
 class FailedToStartError(Exception):
     """Raised when a node fails to start correctly."""
@@ -77,7 +86,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, v2transport=False, uses_wallet=False):
+    def __init__(self, i, datadir_path, *, chain, rpchost, timewait, timeout_factor, binaries, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, v2transport=False, uses_wallet=False, ipcbind=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -109,7 +118,7 @@ class TestNode():
         # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
         # This means that starting a bitcoind using the temp dir to debug a failed test won't
         # spam debug.log.
-        self.args = self.binaries.node_argv() + [
+        self.args = self.binaries.node_argv(need_ipc=ipcbind) + [
             f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
@@ -120,6 +129,17 @@ class TestNode():
         ]
         if uses_wallet is not None and not uses_wallet:
             self.args.append("-disablewallet")
+
+        self.ipc_tmp_dir = None
+        if ipcbind:
+            self.ipc_socket_path = self.chain_path / "node.sock"
+            if len(os.fsencode(self.ipc_socket_path)) < UNIX_PATH_MAX:
+                self.args.append("-ipcbind=unix")
+            else:
+                # Work around default CI path exceeding maximum socket path length.
+                self.ipc_tmp_dir = pathlib.Path(tempfile.mkdtemp(prefix="test-ipc-"))
+                self.ipc_socket_path = self.ipc_tmp_dir / "node.sock"
+                self.args.append(f"-ipcbind=unix:{self.ipc_socket_path}")
 
         # Use valgrind, expect for previous release binaries
         if use_valgrind and version is None:
@@ -208,6 +228,9 @@ class TestNode():
             # this destructor is called.
             print(self._node_msg("Cleaning up leftover process"), file=sys.stderr)
             self.process.kill()
+        if self.ipc_tmp_dir:
+            print(self._node_msg(f"Cleaning up ipc directory {str(self.ipc_tmp_dir)!r}"))
+            shutil.rmtree(self.ipc_tmp_dir)
 
     def __getattr__(self, name):
         """Dispatches any unrecognised messages to the RPC connection or a CLI instance."""

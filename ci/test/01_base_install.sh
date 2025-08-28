@@ -52,7 +52,7 @@ fi
 
 if [ -n "$PIP_PACKAGES" ]; then
   # shellcheck disable=SC2086
-  ${CI_RETRY_EXE} pip3 install --user $PIP_PACKAGES
+  ${CI_RETRY_EXE} pip3 install --break-system-packages --user $PIP_PACKAGES
 fi
 
 if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then

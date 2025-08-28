@@ -76,9 +76,9 @@ class Binaries:
         self.paths = paths
         self.bin_dir = bin_dir
 
-    def node_argv(self):
+    def node_argv(self, **kwargs):
         "Return argv array that should be used to invoke bitcoind"
-        return self._argv("node", self.paths.bitcoind)
+        return self._argv("node", self.paths.bitcoind, **kwargs)
 
     def rpc_argv(self):
         "Return argv array that should be used to invoke bitcoin-cli"
@@ -101,16 +101,19 @@ class Binaries:
         "Return argv array that should be used to invoke bitcoin-chainstate"
         return self._argv("chainstate", self.paths.bitcoinchainstate)
 
-    def _argv(self, command, bin_path):
+    def _argv(self, command, bin_path, need_ipc=False):
         """Return argv array that should be used to invoke the command. It
-        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set), or
-        the direct binary path (bitcoind, etc). When bin_dir is set (by tests
-        calling binaries from previous releases) it always uses the direct
-        path."""
+        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set or
+        need_ipc is True), or the direct binary path (bitcoind, etc). When
+        bin_dir is set (by tests calling binaries from previous releases) it
+        always uses the direct path."""
         if self.bin_dir is not None:
             return [os.path.join(self.bin_dir, os.path.basename(bin_path))]
-        elif self.paths.bitcoin_cmd is not None:
-            return self.paths.bitcoin_cmd + [command]
+        elif self.paths.bitcoin_cmd is not None or need_ipc:
+            # If the current test needs IPC functionality, use the bitcoin
+            # wrapper binary and append -m so it calls multiprocess binaries.
+            bitcoin_cmd = self.paths.bitcoin_cmd or [self.paths.bitcoin_bin]
+            return bitcoin_cmd + (["-m"] if need_ipc else []) + [command]
         else:
             return [bin_path]
 
@@ -158,6 +161,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.noban_tx_relay: bool = False
         self.nodes: list[TestNode] = []
         self.extra_args = None
+        self.extra_init = None
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
@@ -278,6 +282,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         paths = types.SimpleNamespace()
         binaries = {
+            "bitcoin": "BITCOIN_BIN",
             "bitcoind": "BITCOIND",
             "bitcoin-cli": "BITCOINCLI",
             "bitcoin-util": "BITCOINUTIL",
@@ -285,6 +290,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "bitcoin-chainstate": "BITCOINCHAINSTATE",
             "bitcoin-wallet": "BITCOINWALLET",
         }
+        # Set paths to bitcoin core binaries allowing overrides with environment
+        # variables.
         for binary, env_variable_name in binaries.items():
             default_filename = os.path.join(
                 self.config["environment"]["BUILDDIR"],
@@ -550,15 +557,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
             bin_dirs.append(bin_dir)
 
+        extra_init = [{}] * num_nodes if self.extra_init is None else self.extra_init # type: ignore[var-annotated]
+        assert_equal(len(extra_init), num_nodes)
         assert_equal(len(extra_confs), num_nodes)
         assert_equal(len(extra_args), num_nodes)
         assert_equal(len(versions), num_nodes)
         assert_equal(len(bin_dirs), num_nodes)
         for i in range(num_nodes):
             args = list(extra_args[i])
-            test_node_i = TestNode(
-                i,
-                get_datadir_path(self.options.tmpdir, i),
+            init = dict(
                 chain=self.chain,
                 rpchost=rpchost,
                 timewait=self.rpc_timeout,
@@ -575,6 +582,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 v2transport=self.options.v2transport,
                 uses_wallet=self.uses_wallet,
             )
+            init.update(extra_init[i])
+            test_node_i = TestNode(
+                i,
+                get_datadir_path(self.options.tmpdir, i),
+                **init)
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(170000):
                 # adjust conf for pre 17
@@ -952,6 +964,13 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         except ImportError:
             raise SkipTest("sqlite3 module not available.")
 
+    def skip_if_no_py_capnp(self):
+        """Attempt to import the capnp package and skip the test if the import fails."""
+        try:
+            import capnp  # type: ignore[import] # noqa: F401
+        except ImportError:
+            raise SkipTest("capnp module not available.")
+
     def skip_if_no_python_bcc(self):
         """Attempt to import the bcc package and skip the tests if the import fails."""
         try:
@@ -1016,6 +1035,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_cli_compiled():
             raise SkipTest("bitcoin-cli has not been compiled.")
 
+    def skip_if_no_ipc(self):
+        """Skip the running test if ipc is not compiled."""
+        if not self.is_ipc_compiled():
+            raise SkipTest("ipc has not been compiled.")
+
     def skip_if_no_previous_releases(self):
         """Skip the running test if previous releases are not available."""
         if not self.has_previous_releases():
@@ -1074,6 +1098,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_usdt_compiled(self):
         """Checks whether the USDT tracepoints were compiled."""
         return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
+
+    def is_ipc_compiled(self):
+        """Checks whether ipc was compiled."""
+        return self.config["components"].getboolean("ENABLE_IPC")
 
     def has_blockfile(self, node, filenum: str):
         return (node.blocks_path/ f"blk{filenum}.dat").is_file()
