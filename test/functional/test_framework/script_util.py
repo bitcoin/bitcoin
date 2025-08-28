@@ -66,6 +66,7 @@ DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
 assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
 
 PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
+ANCHOR_ADDRESS = "bcrt1pfeesnyr2tx"
 
 def key_to_p2pk_script(key):
     key = check_key(key)
