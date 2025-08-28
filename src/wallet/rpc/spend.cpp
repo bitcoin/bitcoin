@@ -1521,7 +1521,6 @@ RPCHelpMan sendall()
                 CoinFilterParams coins_params;
                 coins_params.min_amount = 0;
                 for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params).All()) {
-                    CHECK_NONFATAL(output.input_bytes > 0);
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }
@@ -1544,6 +1543,9 @@ RPCHelpMan sendall()
 
             // estimate final size of tx
             const TxSize tx_size{CalculateMaximumSignedTxSize(CTransaction(rawTx), pwallet.get())};
+            if (tx_size.vsize == -1) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Unable to determine the size of the transaction, the wallet contains unsolvable descriptors");
+            }
             const CAmount fee_from_size{fee_rate.GetFee(tx_size.vsize)};
             const std::optional<CAmount> total_bump_fees{pwallet->chain().calculateCombinedBumpFee(outpoints_spent, fee_rate)};
             CAmount effective_value = total_input_value - fee_from_size - total_bump_fees.value_or(0);
