@@ -107,6 +107,9 @@ public:
         if (height < m_platform_ban_updated) {
             return false;
         }
+        if (height == m_platform_ban_updated && !is_banned) {
+            return false;
+        }
         m_platform_ban = is_banned;
         m_platform_ban_updated = height;
         return true;
