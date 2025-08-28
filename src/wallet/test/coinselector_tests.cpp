@@ -1240,6 +1240,26 @@ BOOST_AUTO_TEST_CASE(srd_tests)
         BOOST_CHECK(res);
         BOOST_CHECK(res->GetWeight() <= max_selection_weight);
     }
+
+    {
+        // ################################################################################################################
+        // 4) Test that SRD result does not exceed the max weight when all UTXOs have same effective value
+        // ################################################################################################################
+        CAmount target = 1L * COIN;
+        int max_selection_weight = 4000; // WU
+        const auto& res = SelectCoinsSRD(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
+            CoinsResult available_coins;
+            for (int j = 0; j < 5; ++j) {
+                add_coin(available_coins, wallet, CAmount(0.27 * COIN), CFeeRate(0), 144, false, 0, true, 250);
+            }
+            for (int i = 0; i < 195; i++) {
+                add_coin(available_coins, wallet, CAmount(0.27 * COIN), CFeeRate(0), 144, false, 0, true, 251);
+            }
+            return available_coins;
+        });
+        BOOST_CHECK(res);
+        BOOST_CHECK(res->GetWeight() <= max_selection_weight);
+    }
 }
 
 static util::Result<SelectionResult> select_coins(const CAmount& target, const CoinSelectionParams& cs_params, const CCoinControl& cc, std::function<CoinsResult(CWallet&)> coin_setup, const node::NodeContext& m_node)
