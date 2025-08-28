@@ -1419,4 +1419,25 @@ bool IsBIP30Unspendable(const uint256& block_hash, int block_height);
 // Returns the script flags which should be checked for a given block
 script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
 
+/** The context CheckInputScripts is called in, which decides how a
+ *  script failure is reported: as a consensus failure for blocks,
+ *  or as a standardness failure for the mempool. The flags alone can't
+ *  determine this, as the mempool may check with consensus flags only
+ *  (-acceptnonstdtxn).
+ */
+enum class CheckInputScriptsFor {
+    Block,
+    Mempool,
+};
+
+bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
+                       const CCoinsViewCache& inputs,
+                       script_verify_flags flags,
+                       CheckInputScriptsFor check_for,
+                       bool cacheSigStore,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       ValidationCache& validation_cache,
+                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 #endif // BITCOIN_VALIDATION_H
