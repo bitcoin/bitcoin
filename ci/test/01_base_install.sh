@@ -59,7 +59,7 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   if [ -n "${APT_LLVM_V}" ]; then
     ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-$( clang --version | sed --silent 's@.*clang version \([0-9.]*\).*@\1@p' )" /llvm-project
   else
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-20.1.8" /llvm-project
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-21.1.0" /llvm-project
 
     cmake -G Ninja -B /clang_build/ \
       -DLLVM_ENABLE_PROJECTS="clang" \
