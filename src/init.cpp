@@ -486,6 +486,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Disables automatic broadcast and rebroadcast of transactions, unless the source peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-coinstatsindex", strprintf("Maintain coinstats index used by the gettxoutsetinfo RPC (default: %u)", DEFAULT_COINSTATSINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-conf=<file>", strprintf("Specify path to read-only configuration file. Relative paths will be prefixed by datadir location (only useable from command line, not configuration file) (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-confrw=<file>", strprintf("Specify read/write configuration file. Relative paths will be prefixed by the network-specific datadir location (default: %s)", BITCOIN_RW_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-dbbatchsize", strprintf("Maximum database write batch size in bytes (default: %u)", nDefaultDbBatchSize), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-dbcache=<n>", strprintf("Maximum database cache size <n> MiB (minimum %d, default: %d). Make sure you have enough RAM. In addition, unused memory allocated to the mempool is shared with this cache (see -maxmempool).", MIN_DB_CACHE >> 20, DEFAULT_DB_CACHE >> 20), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -688,9 +689,8 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 #if HAVE_SYSTEM
 static void StartupNotify(const ArgsManager& args)
 {
-    std::string cmd = args.GetArg("-startupnotify", "");
-    if (!cmd.empty()) {
-        std::thread t(runCommand, cmd);
+    for (const std::string& command : args.GetArgs("-startupnotify")) {
+        std::thread t(runCommand, command);
         t.detach(); // thread runs free
     }
 }
@@ -1813,14 +1813,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
 #if HAVE_SYSTEM
-    const std::string block_notify = args.GetArg("-blocknotify", "");
-    if (!block_notify.empty()) {
-        uiInterface.NotifyBlockTip_connect([block_notify](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
+    if (args.IsArgSet("-blocknotify")) {
+        auto blocknotify_commands = args.GetArgs("-blocknotify");
+        uiInterface.NotifyBlockTip_connect([blocknotify_commands](SynchronizationState sync_state, const CBlockIndex* pBlockIndex) {
             if (sync_state != SynchronizationState::POST_INIT || !pBlockIndex) return;
-            std::string command = block_notify;
-            ReplaceAll(command, "%s", pBlockIndex->GetBlockHash().GetHex());
-            std::thread t(runCommand, command);
-            t.detach(); // thread runs free
+            const std::string blockhash_hex = pBlockIndex->GetBlockHash().GetHex();
+            for (std::string command : blocknotify_commands) {
+                ReplaceAll(command, "%s", blockhash_hex);
+
+                std::thread t(runCommand, command);
+                t.detach(); // thread runs free
+            }
         });
     }
 #endif
