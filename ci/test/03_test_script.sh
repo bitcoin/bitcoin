@@ -144,6 +144,59 @@ if [ -n "${CI_LIMIT_STACK_SIZE}" ]; then
   ulimit -s 512
 fi
 
+if [[ ${BARE_METAL_RISCV} == "true" ]]; then
+    echo -e "#include <script/script_error.h>\n int main() { return ScriptErrorString(ScriptError_t::SCRIPT_ERR_UNKNOWN_ERROR).size() > 0; }" > test.cpp
+
+    /opt/riscv-ilp32/bin/riscv32-unknown-elf-g++ -I "${BASE_ROOT_DIR}"/src -g -std=c++20 -march=rv32gc -mabi=ilp32 -c test.cpp -o test.o
+
+    echo -e ".section .text
+          .global _start
+          .type _start, @function
+
+          _start:
+              .option push
+              .option norelax
+              la gp, __global_pointer$
+              .option pop
+
+              call main
+
+              # Put Exit2 system call number into the a7 register
+              li a7, 93
+              ecall" > start.s
+
+    /opt/riscv-ilp32/bin/riscv32-unknown-elf-gcc -c start.s -o start.o
+
+    echo -e "#include <sys/stat.h>
+          void _exit(int code) { while(1); }
+          int _sbrk(int incr) { return 0; }
+          int _write(int file, char *ptr, int len) { return 0; }
+          int _close(int file) { return -1; }
+          int _fstat(int file, struct stat *st) { st->st_mode = S_IFCHR; return 0; }
+          int _isatty(int file) { return 1; }
+          int _lseek(int file, int ptr, int dir) { return 0; }
+          int _read(int file, char *ptr, int len) { return 0; }
+          int _kill(int pid, int sig) { return -1; }
+          int _getpid(void) { return -1; }" > syscalls.c
+
+    /opt/riscv-ilp32/bin/riscv32-unknown-elf-gcc -g -march=rv32i -mabi=ilp32 -c syscalls.c -o syscalls.o
+
+    /opt/riscv-ilp32/bin/riscv32-unknown-elf-g++ -g -std=c++20 -march=rv32gc -mabi=ilp32 \
+        -nostdlib \
+        /opt/riscv-ilp32/lib/gcc/riscv32-unknown-elf/14.2.0/crtbegin.o \
+        test.o \
+        start.o \
+        syscalls.o \
+        "${BASE_BUILD_DIR}"/lib/libbitcoin_consensus.a \
+        "${BASE_BUILD_DIR}"/lib/libbitcoin_crypto.a \
+        "${BASE_BUILD_DIR}"/src/secp256k1/lib/libsecp256k1.a \
+        /opt/riscv-ilp32/riscv32-unknown-elf/lib/libstdc++.a \
+        /opt/newlib/riscv32-unknown-elf/lib/libc.a \
+        /opt/newlib/riscv32-unknown-elf/lib/libm.a \
+        /opt/riscv-ilp32/lib/gcc/riscv32-unknown-elf/14.2.0/libgcc.a \
+        -o test.elf
+fi
+
 if [ -n "$USE_VALGRIND" ]; then
   "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 fi
