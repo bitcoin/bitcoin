@@ -24,6 +24,7 @@
 #include <index/coinstatsindex.h>
 #include <interfaces/mining.h>
 #include <kernel/coinstats.h>
+#include <logging.h>
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
@@ -40,6 +41,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
 #include <undo.h>
@@ -1226,7 +1228,7 @@ static RPCHelpMan verifychain()
                     {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check."},
                 },
                 RPCResult{
-                    RPCResult::Type::BOOL, "", "Verification finished successfully. If false, check debug.log for reason."},
+                    RPCResult::Type::BOOL, "", strprintf("Verification finished successfully. If false, check %s for reason.", fs::PathToString(LogInstance().m_file_path))},
                 RPCExamples{
                     HelpExampleCli("verifychain", "")
             + HelpExampleRpc("verifychain", "")

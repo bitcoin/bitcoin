@@ -435,7 +435,7 @@ void handleCloseWindowShortcut(QWidget* w)
 
 void openDebugLogfile()
 {
-    fs::path pathDebug = gArgs.GetDataDirNet() / "debug.log";
+    fs::path pathDebug = LogInstance().m_file_path;
 
     /* Open debug.log with the associated application */
     if (fs::exists(pathDebug))
