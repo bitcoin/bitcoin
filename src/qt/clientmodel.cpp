@@ -33,7 +33,7 @@
 static SteadyClock::time_point g_last_header_tip_update_notification{};
 static SteadyClock::time_point g_last_block_tip_update_notification{};
 
-ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
+ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, const PlatformStyle& platform_style, QObject *parent) :
     QObject(parent),
     m_node(node),
     optionsModel(_optionsModel),
@@ -42,7 +42,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;
 
-    peerTableModel = new PeerTableModel(m_node, this);
+    peerTableModel = new PeerTableModel(m_node, platform_style, this);
     m_peer_table_sort_proxy = new PeerTableSortProxy(this);
     m_peer_table_sort_proxy->setSourceModel(peerTableModel);
 
@@ -246,6 +246,11 @@ void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockT
     nLastUpdateNotification = now;
 }
 
+static void MempoolStatsDidChange(ClientModel *clientmodel)
+{
+    QMetaObject::invokeMethod(clientmodel, "updateMempoolStats", Qt::QueuedConnection);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     m_event_handlers.emplace_back(m_node.handleShowProgress(
@@ -259,6 +264,10 @@ void ClientModel::subscribeToCoreSignals()
     m_event_handlers.emplace_back(m_node.handleNotifyNetworkActiveChanged(
         [this](bool network_active) {
             Q_EMIT networkActiveChanged(network_active);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyNetworkLocalChanged(
+        [this]() {
+            Q_EMIT networkLocalChanged();
         }));
     m_event_handlers.emplace_back(m_node.handleNotifyAlertChanged(
         [this]() {
@@ -278,11 +287,15 @@ void ClientModel::subscribeToCoreSignals()
         [this](SynchronizationState sync_state, interfaces::BlockTip tip, bool presync) {
             TipChanged(sync_state, tip, /*verification_progress=*/0.0, presync ? SyncType::HEADER_PRESYNC : SyncType::HEADER_SYNC);
         }));
+
+    m_connection_mempool_stats_did_change = CStats::DefaultStats()->MempoolStatsDidChange.connect(std::bind(MempoolStatsDidChange, this));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
 {
     m_event_handlers.clear();
+
+    m_connection_mempool_stats_did_change.disconnect();
 }
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const
@@ -293,4 +306,32 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
       return true;
     }
     return false;
+}
+
+bool ClientModel::getTorInfo(QString& out_onion) const
+{
+    for (const auto& [addr, info] : m_node.getNetLocalAddresses()) {
+        if (addr.IsTor()) {
+            out_onion = QString::fromStdString(addr.ToStringAddr());
+            return true;
+        }
+    }
+    return false;
+}
+
+mempoolSamples_t ClientModel::getMempoolStatsInRange(QDateTime &from, QDateTime &to)
+{
+    // get stats from the core stats model
+    uint64_t timeFrom = from.toSecsSinceEpoch();
+    uint64_t timeTo = to.toSecsSinceEpoch();
+
+    mempoolSamples_t samples = CStats::DefaultStats()->mempoolGetValuesInRange(timeFrom,timeTo);
+    from.setSecsSinceEpoch(timeFrom);
+    to.setSecsSinceEpoch(timeTo);
+    return samples;
+}
+
+void ClientModel::updateMempoolStats()
+{
+    Q_EMIT mempoolStatsDidUpdate();
 }

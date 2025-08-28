@@ -58,19 +58,46 @@ using wallet::WalletRescanReserver;
 
 namespace
 {
-//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
-void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+void ConfirmSendAttempt(QString* text, QMessageBox::StandardButton confirm_type)
 {
-    QTimer::singleShot(0, [text, confirm_type]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
                 if (text) *text = dialog->text();
                 QAbstractButton* button = dialog->button(confirm_type);
+                const QMessageBox::ButtonRole confirm_role = [confirm_type, button](){
+                    if (button) return QMessageBox::InvalidRole;
+                    switch (confirm_type) {
+                        case QMessageBox::Yes: return QMessageBox::YesRole;
+                        case QMessageBox::Cancel: return QMessageBox::NoRole;
+                        default: return QMessageBox::InvalidRole;
+                    }
+                }();
+                for (QAbstractButton* maybe_button : dialog->buttons()) {
+                    if (dialog->buttonRole(maybe_button) == confirm_role) {
+                        button = maybe_button;
+                    } else if (maybe_button->text().startsWith("Override")) {
+                        button = maybe_button;
+                        break;
+                    }
+                }
                 button->setEnabled(true);
                 button->click();
+                if (!button->text().startsWith("Override")) return;
             }
         }
+
+    // Try again
+    QTimer::singleShot(0, [text, confirm_type]{
+        ConfirmSendAttempt(text, confirm_type);
+    });
+}
+
+//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
+void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+{
+    QTimer::singleShot(0, [text, confirm_type]{
+        ConfirmSendAttempt(text, confirm_type);
     });
 }
 
@@ -243,7 +270,7 @@ public:
     MiniGUI(interfaces::Node& node, const PlatformStyle* platformStyle) : sendCoinsDialog(platformStyle), transactionView(platformStyle), optionsModel(node) {
         bilingual_str error;
         QVERIFY(optionsModel.Init(error));
-        clientModel = std::make_unique<ClientModel>(node, &optionsModel);
+        clientModel = std::make_unique<ClientModel>(node, &optionsModel, *platformStyle);
     }
 
     void initModelForWallet(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet, const PlatformStyle* platformStyle)

@@ -116,6 +116,14 @@ std::optional<int64_t> ParseISO8601DateTime(std::string_view str)
     return int64_t{TicksSinceEpoch<std::chrono::seconds>(tp)};
 }
 
+std::string FormatISO8601Time(int64_t nTime)
+{
+    const std::chrono::sys_seconds secs{std::chrono::seconds{nTime}};
+    const auto days{std::chrono::floor<std::chrono::days>(secs)};
+    const std::chrono::hh_mm_ss hms{secs - days};
+    return strprintf("%02i:%02i:%02iZ", hms.hours().count(), hms.minutes().count(), hms.seconds().count());
+}
+
 struct timeval MillisToTimeval(int64_t nTimeout)
 {
     struct timeval timeout;

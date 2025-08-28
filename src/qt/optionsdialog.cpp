@@ -217,6 +217,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 #endif
 
     GUIUtil::handleCloseWindowShortcut(this);
+    updateThemeColors();
 }
 
 OptionsDialog::~OptionsDialog()
@@ -420,6 +421,15 @@ void OptionsDialog::on_showTrayIcon_stateChanged(int state)
     }
 }
 
+void OptionsDialog::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::PaletteChange) {
+        updateThemeColors();
+    }
+
+    QWidget::changeEvent(e);
+}
+
 void OptionsDialog::togglePruneWarning(bool enabled)
 {
     ui->pruneWarning->setVisible(!ui->pruneWarning->isVisible());
@@ -427,8 +437,6 @@ void OptionsDialog::togglePruneWarning(bool enabled)
 
 void OptionsDialog::showRestartWarning(bool fPersistent)
 {
-    ui->statusLabel->setStyleSheet("QLabel { color: red; }");
-
     if(fPersistent)
     {
         ui->statusLabel->setText(tr("Client restart required to activate changes."));
@@ -462,7 +470,6 @@ void OptionsDialog::updateProxyValidationState()
     else
     {
         setOkButtonState(false);
-        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel->setText(tr("The supplied proxy address is invalid."));
     }
 }
@@ -487,6 +494,17 @@ void OptionsDialog::updateDefaultProxyNets()
 
     has_proxy = model->node().getProxy(NET_ONION, proxy);
     ui->proxyReachTor->setChecked(has_proxy && proxy.ToString() == proxyIpText);
+}
+
+void OptionsDialog::updateThemeColors()
+{
+    // Detect dark mode for color palette selection
+    const bool dark_mode = GUIUtil::isDarkMode(palette().color(backgroundRole()));
+
+    // set message warning color based on dark mode
+    const QColor warning_color = dark_mode ? QColor("#FF8080") : QColor("#FF0000");
+    ui->pruneWarning->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(warning_color.name()));
+    ui->statusLabel->setStyleSheet(QStringLiteral("QLabel { color: %1; }").arg(warning_color.name()));
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :
