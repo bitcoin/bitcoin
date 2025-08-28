@@ -37,7 +37,7 @@ enum class OutputType;
 struct FlatSigningProvider;
 struct bilingual_str;
 namespace common {
-enum class PSBTError;
+enum class PSBTResult;
 } // namespace common
 namespace node {
 enum class TransactionError;
@@ -147,7 +147,7 @@ std::optional<int> ParseSighashString(const UniValue& sighash);
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 
 RPCErrorCode RPCErrorFromTransactionError(node::TransactionError terr);
-UniValue JSONRPCPSBTError(common::PSBTError err);
+UniValue JSONRPCPSBTError(common::PSBTResult result);
 UniValue JSONRPCTransactionError(node::TransactionError terr, const std::string& err_string = "");
 
 //! Parse a JSON range specified as int64, or [int64, int64]
