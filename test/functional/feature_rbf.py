@@ -13,7 +13,6 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     get_fee,
@@ -584,7 +583,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['tx']
 
         # Higher fee, higher feerate, different txid, but the replacement does not provide a relay
-        # fee conforming to node's `incrementalrelayfee` policy of 1000 sat per KB.
+        # fee conforming to node's `incrementalrelayfee` policy of 100 sat per KB.
         assert_equal(self.nodes[0].getmempoolinfo()["incrementalrelayfee"], Decimal("0.000001"))
         tx.vout[0].nValue -= 1
         assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
@@ -594,7 +593,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         node = self.nodes[0]
         for incremental_setting in (0, 5, 10, 50, 100, 234, 1000, 5000, 21000):
             incremental_setting_decimal = incremental_setting / Decimal(COIN)
-            self.log.info(f"-> Test -incrementalrelayfee={incremental_setting_decimal:.8f}sat/kvB...")
+            self.log.info(f"-> Test -incrementalrelayfee={incremental_setting:.8f}sat/kvB...")
             self.restart_node(0, extra_args=[f"-incrementalrelayfee={incremental_setting_decimal:.8f}", "-persistmempool=0"])
 
             # When incremental relay feerate is higher than min relay feerate, min relay feerate is automatically increased.
@@ -603,23 +602,27 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
             low_feerate = min_relay_feerate * 2
             confirmed_utxo = self.wallet.get_utxo(confirmed_only=True)
-            replacee_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee_rate=low_feerate, target_vsize=5000)
+            # Use different versions to avoid creating an identical transaction when failed_replacement_tx is created.
+            # Use a target vsize that is small, but something larger than the minimum so that we can create a transaction that is 1vB smaller later.
+            replacee_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee_rate=low_feerate, version=3, target_vsize=200)
             node.sendrawtransaction(replacee_tx['hex'])
 
-            replacement_placeholder_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo)
+            replacement_placeholder_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, target_vsize=200)
             replacement_expected_size = replacement_placeholder_tx['tx'].get_vsize()
             replacement_required_fee = get_fee(replacement_expected_size, incremental_setting_decimal) + replacee_tx['fee']
 
-            # Should always be required to pay additional fees
-            if incremental_setting > 0:
-                assert_greater_than(replacement_required_fee, replacee_tx['fee'])
-
-            # 1 satoshi shy of the required fee
-            failed_replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee - Decimal("0.00000001"))
+            # Show that replacement fails when paying 1 satoshi shy of the required fee
+            failed_replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee - Decimal("0.00000001"), version=2, target_vsize=200)
             assert_raises_rpc_error(-26, "insufficient fee", node.sendrawtransaction, failed_replacement_tx['hex'])
+            replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee, version=2, target_vsize=200)
 
-            replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee)
-            node.sendrawtransaction(replacement_tx['hex'])
+            if incremental_setting == 0:
+                # When incremental relay feerate is 0, additional fees are not required, but higher feerate is still required.
+                assert_raises_rpc_error(-26, "insufficient fee", node.sendrawtransaction, replacement_tx['hex'])
+                replacement_tx_smaller = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee, version=2, target_vsize=199)
+                node.sendrawtransaction(replacement_tx_smaller['hex'])
+            else:
+                node.sendrawtransaction(replacement_tx['hex'])
 
     def test_fullrbf(self):
         # BIP125 signaling is not respected
