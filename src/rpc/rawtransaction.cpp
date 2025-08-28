@@ -333,7 +333,7 @@ static RPCHelpMan getrawtransaction()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
     }
 
-    int verbosity{ParseVerbosity(request.params[1], /*default_verbosity=*/0, /*allow_bool=*/true)};
+    int verbosity{ParseVerbosity(request.params[1], /*default_verbosity=*/0)};
 
     if (!request.params[2].isNull()) {
         LOCK(cs_main);
