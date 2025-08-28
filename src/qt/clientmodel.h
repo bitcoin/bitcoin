@@ -21,6 +21,7 @@ class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
 class PeerTableSortProxy;
+class PlatformStyle;
 enum class SynchronizationState;
 struct LocalServiceInfo;
 
@@ -59,7 +60,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, const PlatformStyle&, QObject *parent = nullptr);
     ~ClientModel();
 
     void stop();
@@ -91,6 +92,7 @@ public:
     QString blocksDir() const;
 
     bool getProxyInfo(std::string& ip_port) const;
+    bool getTorInfo(QString& out_onion) const;
 
     // caches for the best header: hash, number of blocks and block time
     mutable std::atomic<int> cachedBestHeaderHeight;
@@ -123,6 +125,7 @@ Q_SIGNALS:
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType header, SynchronizationState sync_state);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes, size_t mempoolMaxSizeInBytes);
     void networkActiveChanged(bool networkActive);
+    void networkLocalChanged();
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 

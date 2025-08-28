@@ -28,9 +28,18 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *) override;
+    int y_value(float value);
+    void mousePressEvent(QMouseEvent *event) override;
+    bool fToggle = true;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    int ttpoint = -1;
+    int x_offset = 0;
+    int y_offset = 0;
+    int64_t tt_time = 0;
 
 public Q_SLOTS:
     void updateRates();
+    void updateToolTip();
     void setGraphRange(std::chrono::minutes new_range);
     void clear();
 
@@ -38,10 +47,12 @@ private:
     void paintPath(QPainterPath &path, QQueue<float> &samples);
 
     QTimer* timer{nullptr};
+    QTimer* tt_timer{nullptr};
     float fMax{0.0f};
     std::chrono::minutes m_range{0};
     QQueue<float> vSamplesIn;
     QQueue<float> vSamplesOut;
+    QQueue<int64_t> vTimeStamp;
     quint64 nLastBytesIn{0};
     quint64 nLastBytesOut{0};
     ClientModel* clientModel{nullptr};

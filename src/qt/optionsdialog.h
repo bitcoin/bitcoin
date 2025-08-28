@@ -14,6 +14,7 @@ class QValidatedLineEdit;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
+class QEvent;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -52,6 +53,8 @@ public:
     void setCurrentTab(OptionsDialog::Tab tab);
 
 private Q_SLOTS:
+    void updateThemeColors();
+
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
@@ -71,6 +74,9 @@ private Q_SLOTS:
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, uint16_t nProxyPort);
     void quitOnReset();
+
+protected:
+    void changeEvent(QEvent *e) override;
 
 private:
     Ui::OptionsDialog *ui;

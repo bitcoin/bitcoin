@@ -11,6 +11,10 @@
 
 #include <math.h>
 
+#include <QApplication>
+#include <QColor>
+#include <QPalette>
+
 static const char *LABEL_FONT = "Arial";
 static int LABEL_TITLE_SIZE = 22;
 static int LABEL_KV_SIZE = 12;
@@ -28,6 +32,18 @@ static const int GRAPH_PADDING_TOP_LABEL = 150;
 static const int GRAPH_PADDING_BOTTOM = 50;
 static const int LABEL_HEIGHT = 15;
 
+static const MempoolStats::ThemeColors LIGHT_THEME_COLORS = {
+    .orange = QColor(216, 92, 1, 250),
+    .green = QColor(0, 125, 50, 250),
+    .blue = QColor(2, 61, 204, 250),
+};
+
+static const MempoolStats::ThemeColors DARK_THEME_COLORS = {
+    .orange = QColor(247, 147, 26, 250),
+    .green = QColor(69, 222, 181, 250),
+    .blue = QColor(137, 170, 255, 250),
+};
+
 void ClickableTextItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_EMIT objectClicked(this);
@@ -36,9 +52,11 @@ void ClickableTextItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 void ClickableTextItem::setEnabled(bool state)
 {
     if (state)
-        setDefaultTextColor(QColor(15,68,113, 250));
+        // Use system default text color for active item
+        setDefaultTextColor(QApplication::palette().color(QPalette::WindowText));
     else
-        setDefaultTextColor(QColor(100,100,100, 200));
+        // Use system disabled color
+        setDefaultTextColor(QApplication::palette().color(QPalette::Disabled, QPalette::WindowText));
 }
 
 MempoolStats::MempoolStats(QWidget *parent) :
@@ -61,6 +79,8 @@ ui(new Ui::MempoolStats)
     scene = new QGraphicsScene();
     ui->graphicsView->setScene(scene);
     ui->graphicsView->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
+    updateThemeColors();
 
     if (clientModel)
         drawChart();
@@ -104,7 +124,7 @@ void MempoolStats::drawChart()
         txCountValueItem = scene->addText("N/A");
         txCountValueItem->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Bold));
 
-        cbShowMinFeerate = new QCheckBox("MinRelayFee per KB");
+        cbShowMinFeerate = new QCheckBox("Min relay fee per kB");
         cbShowMinFeerate->setChecked(false);
         minFeeSwitch = scene->addWidget(cbShowMinFeerate);
         scene->addItem(minFeeSwitch);
@@ -135,15 +155,24 @@ void MempoolStats::drawChart()
         allDataLabel->setFont(QFont(LABEL_FONT, LABEL_KV_SIZE, QFont::Light));
     }
 
-    static const QString checkbox_style_base = QStringLiteral("background-color:rgb(255,255,255);");
-    cbShowNumTxns->setStyleSheet(cbShowNumTxns->isChecked() ? (checkbox_style_base + "color:rgb(188,49,62);") : checkbox_style_base);
-    cbShowMinFeerate->setStyleSheet(cbShowMinFeerate->isChecked() ? (checkbox_style_base + "color:rgb(49,113,62);") : checkbox_style_base);
-    cbShowMemUsage->setStyleSheet(cbShowMemUsage->isChecked() ? (checkbox_style_base + "color:rgb(15,68,113);") : checkbox_style_base);
+    // Use transparent background to respect system theme
+    static const QString checkbox_style_base = QStringLiteral("background-color:transparent;");
+
+    // Set checkbox colors based on theme, using HexRgb to intentionally omit alpha channel
+    cbShowNumTxns->setStyleSheet(cbShowNumTxns->isChecked() ? (checkbox_style_base + "color:" + m_theme_colors->orange.name(QColor::HexRgb) + ";") : checkbox_style_base);
+    cbShowMinFeerate->setStyleSheet(cbShowMinFeerate->isChecked() ? (checkbox_style_base + "color:" + m_theme_colors->green.name(QColor::HexRgb) + ";") : checkbox_style_base);
+    cbShowMemUsage->setStyleSheet(cbShowMemUsage->isChecked() ? (checkbox_style_base + "color:" + m_theme_colors->blue.name(QColor::HexRgb) + ";") : checkbox_style_base);
 
     last10MinLabel->setEnabled((timeFilter == TEN_MINS));
     lastHourLabel->setEnabled((timeFilter == ONE_HOUR));
     lastDayLabel->setEnabled((timeFilter == ONE_DAY));
     allDataLabel->setEnabled((timeFilter == 0));
+
+    // Update text items with system text color
+    if (titleItem) titleItem->setDefaultTextColor(m_text_color);
+    if (dynMemUsageValueItem) dynMemUsageValueItem->setDefaultTextColor(m_text_color);
+    if (txCountValueItem) txCountValueItem->setDefaultTextColor(m_text_color);
+    if (minFeeValueItem) minFeeValueItem->setDefaultTextColor(m_text_color);
 
     // remove the items which needs to be redrawn
     for (QGraphicsItem * item : redrawItems)
@@ -304,6 +333,8 @@ void MempoolStats::drawChart()
 
         QGraphicsTextItem *itemDynSize = scene->addText(GUIUtil::formatBytes(gridDynSize), gridFont);
         QGraphicsTextItem *itemTxCount = scene->addText(QString::number(gridTxCount), gridFont);
+        itemDynSize->setDefaultTextColor(m_text_color);
+        itemTxCount->setDefaultTextColor(m_text_color);
 
         itemDynSize->setPos(GRAPH_PADDING_LEFT-itemDynSize->boundingRect().width(), lY-(itemDynSize->boundingRect().height()/2));
         itemTxCount->setPos(GRAPH_PADDING_LEFT+maxwidth, lY-(itemDynSize->boundingRect().height()/2));
@@ -324,6 +355,7 @@ void MempoolStats::drawChart()
         dynMemUsageGridPath.lineTo(GRAPH_PADDING_LEFT+lX, bottom-maxheightG);
 
         QGraphicsTextItem *item = scene->addText(drawTime.toString("HH:mm"), gridFont);
+        item->setDefaultTextColor(m_text_color);
         item->setPos(GRAPH_PADDING_LEFT+lX-(item->boundingRect().width()/2), bottom);
         redrawItems.append(item);
         qint64 step = secsTotal/amountOfLinesV;
@@ -336,23 +368,25 @@ void MempoolStats::drawChart()
 
     // draw semi-transparent gradient for the dynamic memory size fill
     QLinearGradient gradient(currentX, bottom, currentX, 0);
-    gradient.setColorAt(1.0, QColor(15,68,113, 250));
-    gradient.setColorAt(0, QColor(255,255,255,0));
+    gradient.setColorAt(1.0, m_theme_colors->blue);
+    QColor gradientBase = m_bg_color;
+    gradientBase.setAlpha(0);
+    gradient.setColorAt(0, gradientBase);
     QBrush graBru(gradient);
 
-    QPen linePenBlue(QColor(15,68,113, 250), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    QPen linePenRed(QColor(188,49,62, 250), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    QPen linePenGreen(QColor(49,188,62, 250), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QPen linePenBlue(m_theme_colors->blue, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QPen linePenRed(m_theme_colors->orange, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QPen linePenGreen(m_theme_colors->green, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 
+    // Draw gradient fill first (underneath everything)
+    if (cbShowMemUsage->isChecked()) {
+        redrawItems.append(scene->addPath(dynMemUsagePathFill, QPen(Qt::NoPen), graBru));
+        redrawItems.append(scene->addPath(dynMemUsagePath, linePenBlue));
+    }
     if (cbShowNumTxns->isChecked())
         redrawItems.append(scene->addPath(txCountPath, linePenRed));
     if (cbShowMinFeerate->isChecked())
         redrawItems.append(scene->addPath(minFeePath, linePenGreen));
-    if (cbShowMemUsage->isChecked())
-    {
-        redrawItems.append(scene->addPath(dynMemUsagePath, linePenBlue));
-        redrawItems.append(scene->addPath(dynMemUsagePathFill, QPen(Qt::NoPen), graBru));
-    }
 }
 
 // We override the virtual resizeEvent of the QWidget to adjust tables column
@@ -372,6 +406,15 @@ void MempoolStats::showEvent(QShowEvent *event)
         drawChart();
 }
 
+void MempoolStats::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::PaletteChange) {
+        updateThemeColors();
+        drawChart();  // Redraw with new theme colors
+    }
+    QWidget::changeEvent(e);
+}
+
 void MempoolStats::objectClicked(QGraphicsItem *item)
 {
     if (item == last10MinLabel)
@@ -387,6 +430,21 @@ void MempoolStats::objectClicked(QGraphicsItem *item)
         timeFilter = 0;
 
     drawChart();
+}
+
+void MempoolStats::updateThemeColors()
+{
+    // Detect dark mode for color palette selection
+    const QColor bg_colour = palette().color(backgroundRole());
+    const bool dark_mode = GUIUtil::isDarkMode(bg_colour);
+
+    // Store background color for gradient use
+    m_bg_color = bg_colour;
+
+    // Store text color for labels
+    m_text_color = palette().color(foregroundRole());
+
+    m_theme_colors = dark_mode ? &DARK_THEME_COLORS : &LIGHT_THEME_COLORS;
 }
 
 MempoolStats::~MempoolStats()
