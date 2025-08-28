@@ -420,6 +420,7 @@ class ToolWalletTest(BitcoinTestFramework):
         assert not (self.nodes[0].wallets_path / "legacy").exists()
         self.assert_raises_tool_error("Invalid parameter -descriptors", "-wallet=legacy", "-descriptors=false", "create")
         assert not (self.nodes[0].wallets_path / "legacy").exists()
+        self.assert_raises_tool_error("The -dumpfile option cannot be used with the 'create' command.", "-wallet=legacy", "-dumpfile=wallet.dump", "create")
 
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
