@@ -142,15 +142,13 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacrosDeprecated, LogSetup)
 {
     LogInstance().EnableCategory(BCLog::NET);
-    LogPrintf("foo5: %s\n", "bar5");
     LogPrintLevel(BCLog::NET, BCLog::Level::Trace, "foo4: %s\n", "bar4"); // not logged
     LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "foo7: %s\n", "bar7");
     LogPrintLevel(BCLog::NET, BCLog::Level::Info, "foo8: %s\n", "bar8");
     LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "foo9: %s\n", "bar9");
     LogPrintLevel(BCLog::NET, BCLog::Level::Error, "foo10: %s\n", "bar10");
     std::vector<std::string> log_lines{ReadDebugLogLines()};
-    std::vector<std::string> expected = {
-        "foo5: bar5",
+    std::vector<std::string> expected{
         "[net] foo7: bar7",
         "[net:info] foo8: bar8",
         "[net:warning] foo9: bar9",
