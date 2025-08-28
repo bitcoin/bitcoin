@@ -1101,6 +1101,18 @@ https://explore.transifex.com/dash/dash/</string>
           <string>Monospaced font in the Overview tab:</string>
          </property>
          <layout class="QVBoxLayout" name="font_verticalLayout">
+          <property name="leftMargin">
+           <number>18</number>
+          </property>
+          <property name="topMargin">
+           <number>18</number>
+          </property>
+          <property name="rightMargin">
+           <number>18</number>
+          </property>
+          <property name="bottomMargin">
+           <number>18</number>
+          </property>
           <item>
            <layout class="QHBoxLayout" name="embeddedFont_horizontalLayout">
             <item>
