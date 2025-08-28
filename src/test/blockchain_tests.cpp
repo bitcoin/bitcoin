@@ -130,28 +130,21 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
 
     // tip_to_invalidate just got invalidated, so it's BLOCK_FAILED_VALID
     WITH_LOCK(::cs_main, assert(tip_to_invalidate->nStatus & BLOCK_FAILED_VALID));
-    WITH_LOCK(::cs_main, assert((tip_to_invalidate->nStatus & BLOCK_FAILED_CHILD) == 0));
 
     // check all ancestors of the invalidated block are validated up to BLOCK_VALID_TRANSACTIONS and are not invalid
     auto pindex = tip_to_invalidate->pprev;
     while (pindex) {
         WITH_LOCK(::cs_main, assert(pindex->IsValid(BLOCK_VALID_TRANSACTIONS)));
-        WITH_LOCK(::cs_main, assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0));
+        WITH_LOCK(::cs_main, assert((pindex->nStatus & BLOCK_FAILED_VALID) == 0));
         pindex = pindex->pprev;
     }
 
-    // check all descendants of the invalidated block are BLOCK_FAILED_CHILD
+    // check all descendants of the invalidated block are BLOCK_FAILED_VALID
     pindex = orig_tip;
     while (pindex && pindex != tip_to_invalidate) {
-        WITH_LOCK(::cs_main, assert((pindex->nStatus & BLOCK_FAILED_VALID) == 0));
-        WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_FAILED_CHILD));
+        WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_FAILED_VALID));
         pindex = pindex->pprev;
     }
-
-    // don't mark already invalidated block (orig_tip is BLOCK_FAILED_CHILD) with BLOCK_FAILED_VALID again
-    m_node.chainman->ActiveChainstate().InvalidateBlock(state, orig_tip);
-    WITH_LOCK(::cs_main, assert(orig_tip->nStatus & BLOCK_FAILED_CHILD));
-    WITH_LOCK(::cs_main, assert((orig_tip->nStatus & BLOCK_FAILED_VALID) == 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
