@@ -89,7 +89,7 @@ private:
     std::map<std::string, std::vector<const CRPCCommand*>> mapCommands;
 public:
     CRPCTable();
-    std::string help(const std::string& name, const JSONRPCRequest& helpreq) const;
+    std::string help(std::string_view name, const JSONRPCRequest& helpreq) const;
 
     /**
      * Execute a method.

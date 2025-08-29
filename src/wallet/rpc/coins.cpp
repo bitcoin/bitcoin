@@ -196,8 +196,7 @@ RPCHelpMan getbalance()
 
     LOCK(pwallet->cs_wallet);
 
-    const auto dummy_value{self.MaybeArg<std::string>("dummy")};
-    if (dummy_value && *dummy_value != "*") {
+    if (self.MaybeArg<std::string_view>("dummy").value_or("*") != "*") {
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
     }
 
