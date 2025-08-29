@@ -1734,6 +1734,58 @@ class msg_no_witness_blocktxn(msg_blocktxn):
         return self.block_transactions.serialize(with_witness=False)
 
 
+class msg_sendtemplate:
+    __slots__ = ()
+    msgtype = b"sendtemplate"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_sendtemplate()"
+
+class msg_gettemplate:
+    __slots__ = ()
+    msgtype = b"gettemplate"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_gettemplate()"
+
+class msg_template:
+    __slots__ = ("header_and_shortids",)
+    msgtype = b"template"
+
+    def __init__(self, header_and_shortids = None):
+        self.header_and_shortids = header_and_shortids
+
+    def deserialize(self, f):
+        self.header_and_shortids = P2PHeaderAndShortIDs()
+        self.header_and_shortids.deserialize(f)
+
+    def serialize(self):
+        r = b""
+        r += self.header_and_shortids.serialize()
+        return r
+
+    def __repr__(self):
+        return "msg_template(HeaderAndShortIDs=%s)" % repr(self.header_and_shortids)
+
+
 class msg_getcfilters:
     __slots__ = ("filter_type", "start_height", "stop_hash")
     msgtype =  b"getcfilters"
