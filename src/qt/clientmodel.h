@@ -46,7 +46,6 @@ enum NumConnections {
 
 class CDeterministicMNList;
 class CGovernanceObject;
-typedef std::shared_ptr<CDeterministicMNList> CDeterministicMNListPtr;
 
 /** Model for Dash network client. */
 class ClientModel : public QObject
@@ -116,8 +115,8 @@ private:
     // The cache for mn list is not technically needed because CDeterministicMNManager
     // caches it internally for recent blocks but it's not enough to get consistent
     // representation of the list in UI during initial sync/reindex, so we cache it here too.
-    mutable RecursiveMutex cs_mnlinst; // protects mnListCached
-    CDeterministicMNListPtr mnListCached;
+    mutable RecursiveMutex cs_mnlist; // protects mnListCached
+    std::unique_ptr<CDeterministicMNList> mnListCached GUARDED_BY(cs_mnlist){};
     const CBlockIndex* mnListTip{nullptr};
 
     void TipChanged(SynchronizationState sync_state, interfaces::BlockTip tip, double verification_progress, bool header);
