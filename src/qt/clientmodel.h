@@ -130,7 +130,7 @@ Q_SIGNALS:
     void chainLockChanged(const QString& bestChainLockHash, int bestChainLockHeight);
     void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header, SynchronizationState sync_state);
     void additionalDataSyncProgressChanged(double nSyncProgress);
-    void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
+    void mempoolSizeChanged(long count, size_t mempoolSizeInBytes, size_t mempoolMaxSizeInBytes);
     void islockCountChanged(size_t count);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
