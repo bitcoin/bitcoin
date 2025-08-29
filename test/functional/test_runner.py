@@ -156,6 +156,7 @@ BASE_SCRIPTS = [
     'wallet_labels.py',
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
+    'p2p_compactblocks_extratxs.py',
     'wallet_hd.py',
     'wallet_blank.py',
     'wallet_keypool_topup.py',
