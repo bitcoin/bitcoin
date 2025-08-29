@@ -135,7 +135,7 @@ TransactionView::TransactionView(QWidget* parent) :
     vlayout->addWidget(createDateRangeWidget());
     vlayout->addWidget(transactionView);
     vlayout->setSpacing(0);
-#ifndef Q_OS_MAC
+#ifndef Q_OS_MACOS
     int width = transactionView->verticalScrollBar()->sizeHint().width();
     // Cover scroll bar width with spacing
     hlayout->addSpacing(width);

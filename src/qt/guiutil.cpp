@@ -80,7 +80,7 @@
 #include <string>
 #include <vector>
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
 
 #include <QProcess>
 
@@ -118,7 +118,7 @@ static std::unique_ptr<QFont> osDefaultFont;
 static const FontFamily defaultFontFamily = FontFamily::SystemDefault;
 static const int defaultFontSize = 12;
 static const double fontScaleSteps = 0.01;
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 static const QFont::Weight defaultFontWeightNormal = QFont::ExtraLight;
 static const QFont::Weight defaultFontWeightBold = QFont::Medium;
 static const int defaultFontScale = 0;
@@ -141,7 +141,7 @@ static std::map<QPointer<QWidget>, std::tuple<FontWeight, bool, int>> mapFontUpd
 // Contains a list of supported font weights for all members of GUIUtil::FontFamily
 static std::map<FontFamily, std::vector<QFont::Weight>> mapSupportedWeights;
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 // Contains all widgets where the macOS focus rect has been disabled.
 static std::set<QWidget*> setRectsDisabled;
 #endif
@@ -618,7 +618,7 @@ bool isObscured(QWidget *w)
 
 void bringToFront(QWidget* w)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     ForceActivation();
 #endif
 
@@ -656,7 +656,7 @@ void openConfigfile()
     if (fs::exists(pathConfig)) {
         // Workaround for macOS-specific behavior; see #15409.
         if (!QDesktopServices::openUrl(QUrl::fromLocalFile(PathToQString(pathConfig)))) {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
             QProcess::startDetached("/usr/bin/open", QStringList{"-t", PathToQString(pathConfig)});
 #endif
             return;
@@ -1308,7 +1308,7 @@ void setApplicationFont()
 
     if (fontFamily == FontFamily::Montserrat) {
         QString family = fontFamilyToString(FontFamily::Montserrat);
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
         if (getFontWeightNormal() != getFontWeightNormalDefault()) {
             font = std::make_unique<QFont>(getFontNormal());
         } else {
@@ -1465,7 +1465,7 @@ QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPoint
             {QFont::DemiBold, "SemiBold"},
             {QFont::ExtraBold, "ExtraBold"},
             {QFont::Black, "Black"},
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
             {QFont::Normal, "Regular"},
             {QFont::Bold, "Bold"},
 #else
@@ -1476,7 +1476,7 @@ QFont getFont(FontFamily family, QFont::Weight qWeight, bool fItalic, int nPoint
 
         assert(mapMontserratMapping.count(qWeight));
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 
         QString styleName = mapMontserratMapping[qWeight];
 
@@ -1602,7 +1602,7 @@ void loadTheme(bool fForce)
 
 void disableMacFocusRect(const QWidget* w)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     for (const auto& c : w->findChildren<QWidget*>()) {
         if (c->testAttribute(Qt::WA_MacShowFocusRect)) {
             c->setAttribute(Qt::WA_MacShowFocusRect, !dashThemeActive());
@@ -1614,7 +1614,7 @@ void disableMacFocusRect(const QWidget* w)
 
 void updateMacFocusRects()
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     QWidgetList allWidgets = QApplication::allWidgets();
     auto it = setRectsDisabled.begin();
     while (it != setRectsDisabled.end()) {
@@ -1633,7 +1633,7 @@ void updateButtonGroupShortcuts(QButtonGroup* buttonGroup)
     if (buttonGroup == nullptr) {
         return;
     }
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     auto modifier = "Ctrl";
 #else
     auto modifier = "Alt";
@@ -1845,7 +1845,7 @@ bool ItemDelegate::eventFilter(QObject *object, QEvent *event)
 
 void PolishProgressDialog(QProgressDialog* dialog)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // Workaround for macOS-only Qt bug; see: QTBUG-65750, QTBUG-70357.
     const int margin = TextWidth(dialog->fontMetrics(), ("X"));
     dialog->resize(dialog->width() + 2 * margin, dialog->height());
