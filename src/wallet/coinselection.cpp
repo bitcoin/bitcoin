@@ -589,15 +589,15 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
 
 /** Find a subset of the OutputGroups that is at least as large as, but as close as possible to, the
  * target amount; solve subset sum.
- * param@[in]   groups          OutputGroups to choose from, sorted by value in descending order.
- * param@[in]   nTotalLower     Total (effective) value of the UTXOs in groups.
- * param@[in]   nTargetValue    Subset sum target, not including change.
- * param@[out]  vfBest          Boolean vector representing the subset chosen that is closest to
+ * @param[in]   groups          OutputGroups to choose from, sorted by value in descending order.
+ * @param[in]   nTotalLower     Total (effective) value of the UTXOs in groups.
+ * @param[in]   nTargetValue    Subset sum target, not including change.
+ * @param[out]  vfBest          Boolean vector representing the subset chosen that is closest to
  *                              nTargetValue, with indices corresponding to groups. If the ith
  *                              entry is true, that means the ith group in groups was selected.
- * param@[out]  nBest           Total amount of subset chosen that is closest to nTargetValue.
- * paramp[in]   max_selection_weight  The maximum allowed weight for a selection result to be valid.
- * param@[in]   iterations      Maximum number of tries.
+ * @param[out]  nBest           Total amount of subset chosen that is closest to nTargetValue.
+ * @param[in]   max_selection_weight  The maximum allowed weight for a selection result to be valid.
+ * @param[in]   iterations      Maximum number of tries.
  */
 static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups,
                                   const CAmount& nTotalLower, const CAmount& nTargetValue,
