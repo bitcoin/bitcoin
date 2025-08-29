@@ -67,4 +67,17 @@ void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool);
  *  and applying it. */
 void AddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry);
 
+/** Mock the mempool minimum feerate by adding a transaction and calling TrimToSize(0),
+ * simulating the mempool "reaching capacity" and evicting by descendant feerate.  Note that
+ * this clears the mempool, and the new minimum feerate will depend on the maximum feerate of
+ * transactions removed, so this must be called while the mempool is empty.
+ *
+ * @param target_feerate    The new mempool minimum feerate after this function returns.
+ *                          Must be above max(incremental feerate, min relay feerate),
+ *                          or 1sat/vB with default settings.
+ * @param mempool           The mempool to mock the minimum feerate for. Must be empty
+ *                          when called.
+ */
+void MockMempoolMinFee(const CFeeRate& target_feerate, CTxMemPool& mempool);
+
 #endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H
