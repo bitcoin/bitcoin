@@ -6,6 +6,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <test/util/txmempool.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
@@ -74,6 +75,11 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator = std::make_unique<FuzzedBlockPolicyEstimator>(fuzzed_data_provider);
     g_setup->SetFeeEstimator(std::move(fee_estimator));
+    auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};
+    if (target_feerate > node.mempool->m_opts.incremental_relay_feerate &&
+        target_feerate > node.mempool->m_opts.min_relay_feerate) {
+        MockMempoolMinFee(target_feerate, *node.mempool);
+    }
     std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
     CWallet& wallet{*wallet_ptr};
     {
