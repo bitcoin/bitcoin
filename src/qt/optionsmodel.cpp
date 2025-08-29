@@ -64,6 +64,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::CoinJoinAmount: return "coinjoinamount";
     case OptionsModel::CoinJoinDenomsGoal: return "coinjoindenomsgoal";
     case OptionsModel::CoinJoinDenomsHardCap: return "coinjoindenomshardcap";
+    case OptionsModel::CoinJoinEnabled: return "enablecoinjoin";
     case OptionsModel::CoinJoinMultiSession: return "coinjoinmultisession";
     case OptionsModel::CoinJoinRounds: return "coinjoinrounds";
     case OptionsModel::CoinJoinSessions: return "coinjoinsessions";
@@ -339,13 +340,6 @@ bool OptionsModel::Init(bilingual_str& error)
         settings.setValue("digits", "2");
 
     // CoinJoin
-    if (!settings.contains("fCoinJoinEnabled")) {
-        settings.setValue("fCoinJoinEnabled", true);
-    }
-    if (!gArgs.SoftSetBoolArg("-enablecoinjoin", settings.value("fCoinJoinEnabled").toBool())) {
-        addOverriddenOption("-enablecoinjoin");
-    }
-
     if (!settings.contains("fShowAdvancedCJUI"))
         settings.setValue("fShowAdvancedCJUI", false);
     fShowAdvancedCJUI = settings.value("fShowAdvancedCJUI", false).toBool();
@@ -361,8 +355,8 @@ bool OptionsModel::Init(bilingual_str& error)
     // and we want command-line parameters to overwrite the GUI settings.
     for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
                             MapPortNatpmp, Listen, Server, Prune, ProxyUse, ProxyUseTor, Language, CoinJoinAmount,
-                            CoinJoinDenomsGoal, CoinJoinDenomsHardCap, CoinJoinMultiSession, CoinJoinRounds,
-                            CoinJoinSessions}) {
+                            CoinJoinDenomsGoal, CoinJoinDenomsHardCap, CoinJoinEnabled, CoinJoinMultiSession,
+                            CoinJoinRounds, CoinJoinSessions}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
         try {
@@ -624,7 +618,7 @@ QVariant OptionsModel::getOption(OptionID option) const
     case ShowGovernanceTab:
         return settings.value("fShowGovernanceTab");
     case CoinJoinEnabled:
-        return settings.value("fCoinJoinEnabled");
+        return SettingToBool(setting(), /*fDefault=*/true);
     case ShowAdvancedCJUI:
         return fShowAdvancedCJUI;
     case ShowCoinJoinPopups:
@@ -826,8 +820,8 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
         }
         break;
     case CoinJoinEnabled:
-        if (settings.value("fCoinJoinEnabled") != value) {
-            settings.setValue("fCoinJoinEnabled", value.toBool());
+        if (changed()) {
+            update(value.toBool());
             Q_EMIT coinJoinEnabledChanged();
         }
         break;
@@ -1127,6 +1121,7 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(CoinJoinAmount, "nCoinJoinAmount");
     migrate_setting(CoinJoinDenomsGoal, "nCoinJoinDenomsGoal");
     migrate_setting(CoinJoinDenomsHardCap, "nCoinJoinDenomsHardCap");
+    migrate_setting(CoinJoinEnabled, "fCoinJoinEnabled");
     migrate_setting(CoinJoinMultiSession, "fCoinJoinMultiSession");
     migrate_setting(CoinJoinRounds, "nCoinJoinRounds");
     migrate_setting(CoinJoinSessions, "nCoinJoinSessions");
