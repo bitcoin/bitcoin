@@ -242,6 +242,9 @@ public:
     //! Get num blocks.
     virtual int getNumBlocks() = 0;
 
+    //! Get network local addresses.
+    virtual std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() = 0;
+
     //! Get best block hash.
     virtual uint256 getBestBlockHash() = 0;
 

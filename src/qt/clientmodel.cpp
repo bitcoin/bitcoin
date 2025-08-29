@@ -157,6 +157,11 @@ void ClientModel::getAllGovernanceObjects(std::vector<CGovernanceObject> &obj)
     m_node.gov().getAllNewerThan(obj, 0);
 }
 
+std::map<CNetAddr, LocalServiceInfo> ClientModel::getNetLocalAddresses() const
+{
+    return m_node.getNetLocalAddresses();
+}
+
 int ClientModel::getNumBlocks() const
 {
     if (m_cached_num_blocks == -1) {
