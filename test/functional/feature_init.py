@@ -79,6 +79,7 @@ class InitTest(BitcoinTestFramework):
             b'txindex thread start',
             b'block filter index thread start',
             b'coinstatsindex thread start',
+            b'locationsindex thread start',
             b'msghand thread start',
             b'net thread start',
             b'addcon thread start',
@@ -86,7 +87,7 @@ class InitTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             lines_to_terminate_after.append(b'Verifying wallet')
 
-        args = ['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1']
+        args = ['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1', '-locationsindex=1']
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will terminate after line {terminate_line}")
             with node.busy_wait_for_debug_log([terminate_line]):
@@ -126,6 +127,11 @@ class InitTest(BitcoinTestFramework):
                 'filepath_glob': 'indexes/txindex/MANIFEST*',
                 'error_message': 'LevelDB error: Corruption: CURRENT points to a non-existent file',
                 'startup_args': ['-txindex=1'],
+            },
+            {
+                'filepath_glob': 'indexes/locations/db/MANIFEST*',
+                'error_message': 'LevelDB error: Corruption: CURRENT points to a non-existent file',
+                'startup_args': ['-locationsindex=1'],
             },
             # Removing these files does not result in a startup error:
             # 'indexes/blockfilter/basic/*.dat', 'indexes/blockfilter/basic/db/*.*', 'indexes/coinstats/db/*.*',
@@ -167,6 +173,16 @@ class InitTest(BitcoinTestFramework):
                 'filepath_glob': 'indexes/txindex/CURRENT',
                 'error_message': 'LevelDB error: Corruption',
                 'startup_args': ['-txindex=1'],
+            },
+            {
+                'filepath_glob': 'indexes/locations/db/*.log',
+                'error_message': 'LevelDB error: Corruption',
+                'startup_args': ['-locationsindex=1'],
+            },
+            {
+                'filepath_glob': 'indexes/locations/db/CURRENT',
+                'error_message': 'LevelDB error: Corruption',
+                'startup_args': ['-locationsindex=1'],
             },
             # Perturbing these files does not result in a startup error:
             # 'indexes/blockfilter/basic/*.dat', 'indexes/txindex/MANIFEST*', 'indexes/txindex/LOCK'

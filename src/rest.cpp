@@ -14,6 +14,7 @@
 #include <flatfile.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
+#include <index/locationsindex.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -498,29 +499,38 @@ static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const 
     const uint32_t index{*parsed_index};
 
     CTransactionRef tx{};
-    ChainstateManager* chainman = GetChainman(context, req);
-    if (!chainman) return false;
+    std::vector<std::byte> tx_bytes{};
+    if (const LocationsIndex* locations_index = g_locations_index.get()) {
+        if (!locations_index->BlockUntilSyncedToCurrentChain()) {
+            return RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Locations index is still syncing");
+        }
 
-    FlatFilePos block_pos{};
-    {
-        LOCK(cs_main);
-        const CBlockIndex* block{chainman->m_blockman.LookupBlockIndex(*block_hash)};
-        if (block == nullptr) {
-            return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not found", uri_parts[0]));
+        tx_bytes = locations_index->ReadRawTransaction(*block_hash, index);
+    } else {
+        ChainstateManager* chainman = GetChainman(context, req);
+        if (!chainman) return false;
+
+        FlatFilePos block_pos{};
+        {
+            LOCK(cs_main);
+            const CBlockIndex* block{chainman->m_blockman.LookupBlockIndex(*block_hash)};
+            if (block == nullptr) {
+                return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not found", uri_parts[0]));
+            }
+            if (block->nHeight > 0 && !block->IsValid(BLOCK_VALID_SCRIPTS)) {
+                return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not validated", uri_parts[0]));
+            }
+            if (index >= block->nTx) {
+                return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Block %s has only %d transactions", uri_parts[0], block->nTx));
+            }
+            block_pos = block->GetBlockPos();
         }
-        if (block->nHeight > 0 && !block->IsValid(BLOCK_VALID_SCRIPTS)) {
-            return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not validated", uri_parts[0]));
-        }
-        if (index >= block->nTx) {
-            return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Block %s has only %d transactions", uri_parts[0], block->nTx));
-        }
-        block_pos = block->GetBlockPos();
+
+        // Read full block and skip irrelevant transactions
+        tx = chainman->m_blockman.ReadTxFromBlock(block_pos, index);
     }
 
-    // Read full block and skip irrelevant transactions
-    tx = chainman->m_blockman.ReadTxFromBlock(block_pos, index);
-
-    if (!tx) {
+    if (!tx && tx_bytes.empty()) {
         return RESTERR(req, HTTP_NOT_FOUND, strprintf("Failed to read transaction #%d from block %s", index, block_hash->ToString()));
     }
 
@@ -528,19 +538,31 @@ static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const 
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         req->WriteHeader("Content-Type", "application/octet-stream");
-        serialized << TX_WITH_WITNESS(tx);
-        req->WriteReply(HTTP_OK, std::span{serialized});
+        std::span<std::byte> result{tx_bytes};
+        if (tx) {
+            serialized << TX_WITH_WITNESS(tx);
+            result = serialized;
+        }
+        req->WriteReply(HTTP_OK, result);
         return true;
     }
     case RESTResponseFormat::HEX: {
-        serialized << TX_WITH_WITNESS(tx);
-        std::string str_hex{HexStr(serialized)};
+        std::string str_hex{};
+        if (tx) {
+            serialized << TX_WITH_WITNESS(tx);
+            str_hex = HexStr(serialized);
+        } else {
+            str_hex = HexStr(tx_bytes);
+        }
         str_hex.push_back('\n');
         req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_OK, str_hex);
         return true;
     }
     case RESTResponseFormat::JSON: {
+        if (!tx) {
+            DataStream{tx_bytes} >> TX_WITH_WITNESS(tx);
+        }
         UniValue obj_tx(UniValue::VOBJ);
         TxToUniv(*tx, /*block_hash=*/{}, /*entry=*/obj_tx);
         std::string str_JSON = obj_tx.write() + '\n';
