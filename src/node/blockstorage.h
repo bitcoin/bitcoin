@@ -417,6 +417,8 @@ public:
 
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;
 
+    CTransactionRef ReadTxFromBlock(const FlatFilePos& block_pos, uint32_t tx_index) const;
+
     void CleanupBlockRevFiles() const;
 };
 
