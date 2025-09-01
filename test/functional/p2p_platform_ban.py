@@ -66,7 +66,6 @@ class PlatformBanMessagesTest(DashTestFramework):
         wait_until_helper(lambda: p2p_node2.message_count["platformban"] > 0, timeout=10, lock=p2p_lock)
         p2p_node2.message_count["platformban"] = 0
 
-
         assert not self.check_banned(self.mninfo[0])
 
         mninfos_valid = self.mninfo.copy()[1:]
@@ -79,6 +78,7 @@ class PlatformBanMessagesTest(DashTestFramework):
 
         self.dynamically_evo_update_service(evo_info_0)
         assert not self.check_banned(self.mninfo[0])
+
 
 if __name__ == '__main__':
     PlatformBanMessagesTest().main()
