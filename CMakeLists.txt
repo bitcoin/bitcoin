@@ -187,9 +187,6 @@ string(APPEND CMAKE_CXX_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
 
 set(configure_warnings)
 
-include(CheckLinkerSupportsPIE)
-check_linker_supports_pie(configure_warnings)
-
 # The core_interface library aims to encapsulate common build flags.
 # It is a usage requirement for all targets except for secp256k1, which
 # gets its flags by other means.
@@ -200,6 +197,14 @@ target_link_libraries(core_interface INTERFACE
   $<$<CONFIG:RelWithDebInfo>:core_interface_relwithdebinfo>
   $<$<CONFIG:Debug>:core_interface_debug>
 )
+
+include(CheckLinkerSupportsPIE)
+check_linker_supports_pie()
+if (PIE_REQUIRED)
+  set_target_properties(core_interface PROPERTIES
+    INTERFACE_POSITION_INDEPENDENT_CODE TRUE
+  )
+endif()
 
 if(BUILD_FOR_FUZZING)
   message(WARNING "BUILD_FOR_FUZZING=ON will disable all other targets and force BUILD_FUZZ_BINARY=ON.")
