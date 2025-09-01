@@ -131,7 +131,7 @@ public:
         pchMessageStart[3] = 0xd9;
         nDefaultPort = 8333;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 720;
+        m_assumed_blockchain_size = 810;
         m_assumed_chain_state_size = 14;
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
@@ -256,7 +256,7 @@ public:
         pchMessageStart[3] = 0x07;
         nDefaultPort = 18333;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 200;
+        m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 19;
 
         genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN);
@@ -355,8 +355,8 @@ public:
         pchMessageStart[3] = 0x28;
         nDefaultPort = 48333;
         nPruneAfterHeight = 1000;
-        m_assumed_blockchain_size = 11;
-        m_assumed_chain_state_size = 1;
+        m_assumed_blockchain_size = 22;
+        m_assumed_chain_state_size = 2;
 
         const char* testnet4_genesis_msg = "03/May/2024 000000000000000000001ebd58c244970b3aa9d783bb001011fbe8ea8e98e00e";
         const CScript testnet4_genesis_script = CScript() << "000000000000000000000000000000000000000000000000000000000000000000"_hex << OP_CHECKSIG;
@@ -428,8 +428,8 @@ public:
 
             consensus.nMinimumChainWork = uint256{"000000000000000000000000000000000000000000000000000002b517f3d1a1"};
             consensus.defaultAssumeValid = uint256{"000000895a110f46e59eb82bbc5bfb67fa314656009c295509c21b4999f5180a"}; // 237722
-            m_assumed_blockchain_size = 9;
-            m_assumed_chain_state_size = 1;
+            m_assumed_blockchain_size = 20;
+            m_assumed_chain_state_size = 4;
             chainTxData = ChainTxData{
                 // Data from RPC: getchaintxstats 4096 000000895a110f46e59eb82bbc5bfb67fa314656009c295509c21b4999f5180a
                 .nTime    = 1741019645,
