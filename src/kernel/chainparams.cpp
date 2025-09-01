@@ -403,7 +403,12 @@ public:
         };
 
         m_assumeutxo_data = {
-            {}
+            {
+                .height = 90'000,
+                .hash_serialized = AssumeutxoHash{uint256{"784fb5e98241de66fdd429f4392155c9e7db5c017148e66e8fdbc95746f8b9b5"}},
+                .m_chain_tx_count = 11347043,
+                .blockhash = consteval_ctor(uint256{"0000000002ebe8bcda020e0dd6ccfbdfac531d2f6a81457191b99fc2df2dbe3b"}),
+            }
         };
 
         chainTxData = ChainTxData{
