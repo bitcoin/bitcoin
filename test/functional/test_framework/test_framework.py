@@ -1920,11 +1920,12 @@ class DashTestFramework(BitcoinTestFramework):
         message_hash = tx.hash
 
         llmq_type = 103
+        llmq_cycle_len = 24
 
         rec_sig = self.get_recovered_sig(request_id, message_hash, llmq_type=llmq_type)
 
         block_count = self.mninfo[0].get_node(self).getblockcount()
-        cycle_hash = int(self.mninfo[0].get_node(self).getblockhash(block_count - (block_count % 24)), 16)
+        cycle_hash = int(self.mninfo[0].get_node(self).getblockhash(block_count - (block_count % llmq_cycle_len)), 16)
         isdlock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, bytes.fromhex(rec_sig['sig']))
 
         return isdlock
@@ -2131,7 +2132,8 @@ class DashTestFramework(BitcoinTestFramework):
         nodes = [self.nodes[0]] + [mn.get_node(self) for mn in mninfos_online]
 
         # move forward to next DKG
-        skip_count = 24 - (self.nodes[0].getblockcount() % 24)
+        llmq_cycle_len = 24
+        skip_count = llmq_cycle_len - (self.nodes[0].getblockcount() % llmq_cycle_len)
         if skip_count != 0:
             self.bump_mocktime(1)
             self.generate(self.nodes[0], skip_count, sync_fun=lambda: self.sync_blocks(nodes))
@@ -2202,6 +2204,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         llmq_type_name="llmq_test_dip0024"
         llmq_type=103
+        llmq_cycle_len = 24
         expected_connections = (self.llmq_size_dip0024 - 1) if spork21_active else 2
         expected_members = self.llmq_size_dip0024
         expected_contributions = self.llmq_size_dip0024
@@ -2214,12 +2217,11 @@ class DashTestFramework(BitcoinTestFramework):
 
         nodes = [self.nodes[0]] + [mn.get_node(self) for mn in mninfos_online]
 
-        cycle_length = 24
         cur_block = self.nodes[0].getblockcount()
 
-        skip_count = cycle_length - (cur_block % cycle_length)
+        skip_count = llmq_cycle_len - (cur_block % llmq_cycle_len)
         # move forward to next 3 DKG rounds for the first quorum
-        extra_blocks = 0 if self.cycle_quorum_is_ready else 24 * 3
+        extra_blocks = 0 if self.cycle_quorum_is_ready else llmq_cycle_len * 3
         self.move_blocks(nodes, extra_blocks + skip_count)
         self.log.info('Moved from block %d to %d' % (cur_block, self.nodes[0].getblockcount()))
 
