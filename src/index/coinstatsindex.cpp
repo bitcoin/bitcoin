@@ -139,15 +139,9 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     if (block.height > 0) {
         uint256 expected_block_hash{*Assert(block.prev_hash)};
         if (m_current_block_hash != expected_block_hash) {
-            LogWarning("previous block header belongs to unexpected block %s; expected %s",
+            LogError("previous block header belongs to unexpected block %s; expected %s",
                       m_current_block_hash.ToString(), expected_block_hash.ToString());
-
-            std::pair<uint256, DBVal> read_out;
-            if (!m_db->Read(DBHashKey(expected_block_hash), read_out)) {
-                LogError("previous block header not found; expected %s",
-                          expected_block_hash.ToString());
-                return false;
-            }
+            return false;
         }
 
         // Add the new utxos created from the block
