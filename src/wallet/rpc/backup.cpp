@@ -11,6 +11,7 @@
 #include <merkleblock.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <script/parsing.h>
 #include <script/script.h>
 #include <script/solver.h>
 #include <sync.h>
@@ -158,6 +159,31 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
         if (parsed_descs.empty()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
         }
+
+        // Additional safety checks for valid descriptors
+        size_t pos{0};
+        while ((pos = descriptor.find("older(", pos)) != std::string::npos) {
+            auto sp{std::span(descriptor).subspan(pos + sizeof("older(") -1)};
+            // BIP 379 allows height and time locks that have no consensus
+            // meaning in BIP 68 / BIP 112. This is used by some protocols like
+            // Lightning to encode extra data, but is unsafe when used
+            // unintentionally. E.g. older(65536) is equivalent to older(1).
+            int arg_size{script::FindNextChar(sp, ')')};
+            CHECK_NONFATAL(arg_size > 0);
+            const auto num{ToIntegral<uint32_t>(std::string_view(sp.data(), arg_size))};
+            CHECK_NONFATAL(num >= 0);
+            const bool is_time_lock{(*num & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) != 0};
+            if ((*num & ~CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) > 65535) {
+                if (!is_time_lock) {
+                    warnings.push_back(strprintf("older(%d) > 65535 is unsafe", *num));
+                } else {
+                    warnings.push_back(strprintf("older(%d - 1<<22) > 65535 is unsafe", *num));
+                }
+                break;
+            }
+            pos++;
+        }
+
         std::optional<bool> internal;
         if (data.exists("internal")) {
             if (parsed_descs.size() > 1) {
