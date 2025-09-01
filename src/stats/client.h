@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 
 class ArgsManager;
 
@@ -40,19 +41,19 @@ public:
     virtual ~StatsdClient() = default;
 
     /* Statsd-defined APIs */
-    virtual bool dec(const std::string& key, float sample_rate = 1.f) { return false; }
-    virtual bool inc(const std::string& key, float sample_rate = 1.f) { return false; }
-    virtual bool count(const std::string& key, int64_t delta, float sample_rate = 1.f) { return false; }
-    virtual bool gauge(const std::string& key, int64_t value, float sample_rate = 1.f) { return false; }
-    virtual bool gaugeDouble(const std::string& key, double value, float sample_rate = 1.f) { return false; }
-    virtual bool timing(const std::string& key, uint64_t ms, float sample_rate = 1.f) { return false; }
+    virtual bool dec(std::string_view key, float sample_rate = 1.f) { return false; }
+    virtual bool inc(std::string_view key, float sample_rate = 1.f) { return false; }
+    virtual bool count(std::string_view key, int64_t delta, float sample_rate = 1.f) { return false; }
+    virtual bool gauge(std::string_view key, int64_t value, float sample_rate = 1.f) { return false; }
+    virtual bool gaugeDouble(std::string_view key, double value, float sample_rate = 1.f) { return false; }
+    virtual bool timing(std::string_view key, uint64_t ms, float sample_rate = 1.f) { return false; }
 
     /* Statsd-compatible APIs */
-    virtual bool send(const std::string& key, double value, const std::string& type, float sample_rate = 1.f) { return false; }
-    virtual bool send(const std::string& key, int32_t value, const std::string& type, float sample_rate = 1.f) { return false; }
-    virtual bool send(const std::string& key, int64_t value, const std::string& type, float sample_rate = 1.f) { return false; }
-    virtual bool send(const std::string& key, uint32_t value, const std::string& type, float sample_rate = 1.f) { return false; }
-    virtual bool send(const std::string& key, uint64_t value, const std::string& type, float sample_rate = 1.f) { return false; }
+    virtual bool send(std::string_view key, double value, std::string_view type, float sample_rate = 1.f) { return false; }
+    virtual bool send(std::string_view key, int32_t value, std::string_view type, float sample_rate = 1.f) { return false; }
+    virtual bool send(std::string_view key, int64_t value, std::string_view type, float sample_rate = 1.f) { return false; }
+    virtual bool send(std::string_view key, uint32_t value, std::string_view type, float sample_rate = 1.f) { return false; }
+    virtual bool send(std::string_view key, uint64_t value, std::string_view type, float sample_rate = 1.f) { return false; }
 
     /* Check if a StatsdClient instance is ready to send messages */
     virtual bool active() const { return false; }

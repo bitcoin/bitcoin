@@ -39,24 +39,24 @@ public:
     ~StatsdClientImpl() = default;
 
 public:
-    bool dec(const std::string& key, float sample_rate) override { return count(key, -1, sample_rate); }
-    bool inc(const std::string& key, float sample_rate) override { return count(key, 1, sample_rate); }
-    bool count(const std::string& key, int64_t delta, float sample_rate) override { return _send(key, delta, STATSD_METRIC_COUNT, sample_rate); }
-    bool gauge(const std::string& key, int64_t value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
-    bool gaugeDouble(const std::string& key, double value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
-    bool timing(const std::string& key, uint64_t ms, float sample_rate) override { return _send(key, ms, STATSD_METRIC_TIMING, sample_rate); }
+    bool dec(std::string_view key, float sample_rate) override { return count(key, -1, sample_rate); }
+    bool inc(std::string_view key, float sample_rate) override { return count(key, 1, sample_rate); }
+    bool count(std::string_view key, int64_t delta, float sample_rate) override { return _send(key, delta, STATSD_METRIC_COUNT, sample_rate); }
+    bool gauge(std::string_view key, int64_t value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
+    bool gaugeDouble(std::string_view key, double value, float sample_rate) override { return _send(key, value, STATSD_METRIC_GAUGE, sample_rate); }
+    bool timing(std::string_view key, uint64_t ms, float sample_rate) override { return _send(key, ms, STATSD_METRIC_TIMING, sample_rate); }
 
-    bool send(const std::string& key, double value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(const std::string& key, int32_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(const std::string& key, int64_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(const std::string& key, uint32_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
-    bool send(const std::string& key, uint64_t value, const std::string& type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(std::string_view key, double value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(std::string_view key, int32_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(std::string_view key, int64_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(std::string_view key, uint32_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
+    bool send(std::string_view key, uint64_t value, std::string_view type, float sample_rate) override { return _send(key, value, type, sample_rate); }
 
     bool active() const override { return m_sender != nullptr; }
 
 private:
     template <typename T1>
-    inline bool _send(const std::string& key, T1 value, const std::string& type, float sample_rate);
+    inline bool _send(std::string_view key, T1 value, std::string_view type, float sample_rate);
 
 private:
     /* Mutex to protect PRNG */
@@ -122,7 +122,7 @@ StatsdClientImpl::StatsdClientImpl(const std::string& host, uint16_t port, uint6
 }
 
 template <typename T1>
-inline bool StatsdClientImpl::_send(const std::string& key, T1 value, const std::string& type, float sample_rate)
+inline bool StatsdClientImpl::_send(std::string_view key, T1 value, std::string_view type, float sample_rate)
 {
     static_assert(std::is_arithmetic<T1>::value, "Must specialize to an arithmetic type");
 
