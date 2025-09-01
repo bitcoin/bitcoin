@@ -17,7 +17,7 @@ Do not submit patches solely to modify the style of existing code.
 [clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
 tool to clean up patches automatically before submission.
   - Braces on new lines for classes, functions, methods.
-  - Braces on the same line for everything else.
+  - Braces on the same line for everything else (including structs).
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
   - No extra spaces inside parentheses; don't do `( this )`.
