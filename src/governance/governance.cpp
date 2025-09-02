@@ -1291,12 +1291,20 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
                                                      const PeerManager& peerman) const
 {
     static std::map<uint256, std::map<CService, int64_t> > mapAskedRecently;
+    // Maximum number of nodes to request votes from for the same object hash on real networks
+    // (mainnet, testnet, devnets). Keep this low to avoid unnecessary bandwidth usage.
+    static constexpr size_t REALNET_PEERS_PER_HASH{3};
+    // Maximum number of nodes to request votes from for the same object hash on regtest.
+    // During testing, nodes are isolated to create conflicting triggers. Using the real
+    // networks limit of 3 nodes often results in querying only "non-isolated" nodes, missing the
+    // isolated ones we need to test. This high limit ensures all available nodes are queried.
+    static constexpr size_t REGTEST_PEERS_PER_HASH{std::numeric_limits<size_t>::max()};
 
     if (vNodesCopy.empty()) return -1;
 
     int64_t nNow = GetTime();
     int nTimeout = 60 * 60;
-    size_t nPeersPerHashMax = 3;
+    size_t nPeersPerHashMax = Params().IsMockableChain() ? REGTEST_PEERS_PER_HASH : REALNET_PEERS_PER_HASH;
 
     std::vector<uint256> vTriggerObjHashes;
     std::vector<uint256> vOtherObjHashes;

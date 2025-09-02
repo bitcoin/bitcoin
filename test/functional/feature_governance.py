@@ -166,6 +166,9 @@ class DashGovernanceTest (DashTestFramework):
         self.wait_until(lambda: self.nodes[1].gobject("get", self.p2_hash)["FundingResult"]["NoCount"] == 2, timeout = 5)
 
         assert_equal(len(self.nodes[0].gobject("list", "valid", "triggers")), 0)
+        # 5 nodes voted on 3 proposals so we expect to see 15 votes total
+        assert_equal(self.nodes[0].gobject("count")["votes"], 15)
+        assert_equal(self.nodes[1].gobject("count")["votes"], 15)
 
         block_count = self.nodes[0].getblockcount()
 
@@ -209,6 +212,10 @@ class DashGovernanceTest (DashTestFramework):
         self.wait_until(lambda: list(isolated.gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
         more_votes = self.wait_until(lambda: list(isolated.gobject("list", "valid", "triggers").values())[0]['YesCount'] > 1, timeout=5, do_assert=False)
         assert_equal(more_votes, False)
+        # Isolated node created a trigger and voted YES for it (16 votes total)
+        assert_equal(isolated.gobject("count")["votes"], 16)
+        # Non-isolated nodes don't see this (still 15 votes total)
+        assert_equal(self.nodes[0].gobject("count")["votes"], 15)
 
         self.log.info("Move 1 block enabling the Superblock maturity window on non-isolated nodes")
         self.bump_mocktime(1)
@@ -231,6 +238,10 @@ class DashGovernanceTest (DashTestFramework):
         self.wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == 1, timeout=5)
         more_votes = self.wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] > 1, timeout=5, do_assert=False)
         assert_equal(more_votes, False)
+        # Non-isolated node created a trigger and voted YES for it (16 votes total)
+        assert_equal(self.nodes[0].gobject("count")["votes"], 16)
+        # Isolated node don't see this (still 16 votes total)
+        assert_equal(isolated.gobject("count")["votes"], 16)
 
         self.log.info("Make sure amounts aren't trimmed")
         payment_amounts_expected = [str(satoshi_round(str(self.p0_amount))), str(satoshi_round(str(self.p1_amount))), str(satoshi_round(str(self.p2_amount)))]
@@ -247,6 +258,10 @@ class DashGovernanceTest (DashTestFramework):
         self.wait_until(lambda: list(self.nodes[0].gobject("list", "valid", "triggers").values())[0]['YesCount'] == self.mn_count - 1, timeout=5)
         more_triggers = self.wait_until(lambda: len(self.nodes[0].gobject("list", "valid", "triggers")) > 1, timeout=5, do_assert=False)
         assert_equal(more_triggers, False)
+        # All 4 non-isolated nodes voted YES for a trigger created by a non-isolated node earlier (19 votes total)
+        assert_equal(self.nodes[0].gobject("count")["votes"], 19)
+        # Isolated node don't see this (still 16 votes total)
+        assert_equal(isolated.gobject("count")["votes"], 16)
 
         self.reconnect_isolated_node(payee_idx, 0)
         # self.connect_nodes(0, payee_idx)
@@ -279,11 +294,21 @@ class DashGovernanceTest (DashTestFramework):
         self.bump_mocktime(1)
         self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
 
-        self.log.info("Should see NO votes on both triggers now")
-        self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
-        self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'] == self.mn_count - 1, timeout=5)
-        self.log.info("Should wait until all 24 votes are counted for success on next stages")
-        self.wait_until(lambda: self.nodes[1].gobject("count")["votes"] == 24, timeout=5)
+        self.log.info("Should see same YES and NO vote count for both triggers on all nodes now")
+        for node in self.nodes:
+            self.wait_until(lambda: node.gobject("list", "valid", "triggers")[winning_trigger_hash]['YesCount'] == self.mn_count - 1, timeout=5)
+            self.wait_until(lambda: node.gobject("list", "valid", "triggers")[winning_trigger_hash]['NoCount'] == 1, timeout=5)
+            self.wait_until(lambda: node.gobject("list", "valid", "triggers")[isolated_trigger_hash]['YesCount'] == 1, timeout=5)
+            self.wait_until(lambda: node.gobject("list", "valid", "triggers")[isolated_trigger_hash]['NoCount'] == self.mn_count - 1, timeout=5)
+
+        self.log.info("Should have 25 votes on all nodes")
+        # All 4 non-isolated nodes voted NO for a trigger created by a now reconnected node.
+        # They also see 1 YES vote for this trigger the reconnected node created earlier.
+        # The reconnected node received earlier votes from non-isolated ones and
+        # voted NO vote for the trigger non-isolated node created.
+        # So everyone should be on the same page now with 25 votes total.
+        for node in self.nodes:
+            assert_equal(node.gobject("count")["votes"], 25)
 
         self.log.info("Remember vote count")
         before = self.nodes[1].gobject("count")["votes"]
