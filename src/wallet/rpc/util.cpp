@@ -5,6 +5,7 @@
 #include <wallet/rpc/util.h>
 
 #include <common/url.h>
+#include <httprpc.h>
 #include <rpc/util.h>
 #include <util/any.h>
 #include <util/translation.h>
@@ -44,6 +45,27 @@ bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWallet& wal
     return include_watchonly.get_bool();
 }
 
+std::string EnsureUniqueWalletName(const JSONRPCRequest& request, const std::string* wallet_name)
+{
+    std::string endpoint_wallet;
+    if (GetWalletNameFromJSONRPCRequest(request, endpoint_wallet)) {
+        // wallet endpoint was used
+        if (wallet_name && *wallet_name != endpoint_wallet) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                "The RPC endpoint wallet and the wallet name parameter specify different wallets");
+        }
+        return endpoint_wallet;
+    }
+
+    // Not a wallet endpoint; parameter must be provided
+    if (!wallet_name) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            "Either the RPC endpoint wallet or the wallet name parameter must be provided");
+    }
+
+    return *wallet_name;
+}
+
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
     if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
@@ -59,18 +81,43 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
     CHECK_NONFATAL(request.mode == JSONRPCRequest::EXECUTE);
     WalletContext& context = EnsureWalletContext(request.context);
 
-    std::string wallet_name;
-    if (GetWalletNameFromJSONRPCRequest(request, wallet_name)) {
-        std::shared_ptr<CWallet> pwallet = GetWallet(context, wallet_name);
-        if (!pwallet) throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
+    bool have_wallet_restriction;
+    std::string authorized_wallet_name;
+    have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+
+    bool have_requested_wallet;
+    std::string requested_wallet_name;
+    have_requested_wallet = GetWalletNameFromJSONRPCRequest(request, requested_wallet_name);
+
+    std::shared_ptr<CWallet> pwallet;
+    size_t count{0};
+
+    if (!have_wallet_restriction) {
+        // Any wallet is permitted; select by endpoint, or use the sole wallet
+        if (have_requested_wallet) {
+            pwallet = GetWallet(context, requested_wallet_name);
+        } else {
+            auto wallet = GetDefaultWallet(context, count);
+            if (wallet) pwallet = wallet;
+        }
+    } else if (authorized_wallet_name == "-") {
+        // Block wallet access always
+    } else if ((!have_requested_wallet) || requested_wallet_name == authorized_wallet_name) {
+        // Select specifically the authorized wallet
+        pwallet = GetWallet(context, authorized_wallet_name);
+    }
+
+    if (pwallet) {
         return pwallet;
     }
 
-    size_t count{0};
-    auto wallet = GetDefaultWallet(context, count);
-    if (wallet) return wallet;
-
-    if (count == 0) {
+    if (have_requested_wallet) {
+        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
+    }
+    if (have_wallet_restriction
+    ? (authorized_wallet_name == "-" || !GetWallet(context, authorized_wallet_name))
+    : (count == 0)
+     ) {
         throw JSONRPCError(
             RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)");
     }
