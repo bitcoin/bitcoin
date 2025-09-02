@@ -20,6 +20,7 @@ endfunction()
 
 function(add_maintenance_targets)
   if(NOT TARGET Python3::Interpreter)
+    message(WARNING "Maintenance targets skipped, minimum required Python not found")
     return()
   endif()
 
