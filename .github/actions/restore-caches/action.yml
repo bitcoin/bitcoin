@@ -1,0 +1,43 @@
+name: 'Restore Caches'
+description: 'Restore ccache, depends sources, and built depends caches'
+outputs:
+  depends-sources-cache-hit:
+    description: 'A boolean value to indicate an exact match was found for depends sources'
+  depends-built-cache-hit:
+    description: 'A boolean value to indicate an exact match was found for depends built'
+runs:
+  using: 'composite'
+  steps:
+    - name: Restore Ccache cache
+      id: ccache-cache
+      uses: cirruslabs/cache/restore@v4
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ env.CONTAINER_NAME }}-${{ github.run_id }}
+        restore-keys: |
+          ccache-${{ env.CONTAINER_NAME }}-
+
+    - name: Restore depends sources cache
+      id: depends-sources
+      uses: cirruslabs/cache/restore@v4
+      with:
+        path: ${{ env.SOURCES_PATH }}
+        key: depends-sources-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
+        restore-keys: |
+          depends-sources-${{ env.CONTAINER_NAME }}-
+
+    - name: Restore built depends cache
+      id: depends-built
+      uses: cirruslabs/cache/restore@v4
+      with:
+        path: ${{ env.BASE_CACHE }}
+        key: depends-built-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
+        restore-keys: |
+          depends-built-${{ env.CONTAINER_NAME }}-
+
+    - name: export cache hit
+      id: export-cache-hit
+      shell: bash
+      run: |
+        echo "depends-sources-cache-hit=${{ steps.depends-sources.outputs.cache-hit }}" >> $GITHUB_OUTPUT
+        echo "depends-built-cache-hit=${{ steps.depends-built.outputs.cache-hit }}" >> $GITHUB_OUTPUT
