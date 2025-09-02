@@ -30,6 +30,10 @@ function(create_test_config)
   configure_file(config.ini.in config.ini USE_SOURCE_PERMISSIONS @ONLY)
 endfunction()
 
+if(NOT TARGET Python3::Interpreter)
+  message(FATAL_ERROR "Minimum required Python not found. Consider configuring with -DBUILD_FUNCTIONAL_TESTS=0.")
+endif()
+
 create_test_config()
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional)
