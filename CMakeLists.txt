@@ -100,6 +100,7 @@ option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
 
 option(BUILD_TESTS "Build test_bitcoin and other unit test executables." ON)
+option(BUILD_FUNCTIONAL_TESTS "Build functional tests." ON)
 option(BUILD_TX "Build bitcoin-tx executable." ${BUILD_TESTS})
 option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
 
@@ -631,7 +632,9 @@ else()
   set(CMAKE_SKIP_BUILD_RPATH TRUE)
   set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 endif()
-add_subdirectory(test)
+if (BUILD_FUNCTIONAL_TESTS)
+  add_subdirectory(test)
+endif()
 add_subdirectory(doc)
 
 add_subdirectory(src)
