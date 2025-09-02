@@ -44,14 +44,14 @@ wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRm
 The suffix (after #) is the checksum. Descriptors can optionally be suffixed with a checksum to protect against typos or copy-paste errors.
 All RPCs in Bitcoin Core will include the checksum in their output.
 
+Note that previously at least two descriptors were usually used, one for internal derivation paths and one for external ones. Since https://github.com/bitcoin/bitcoin/pull/22838 this redundancy has been eliminated by a multipath descriptor with <code><0;1></code> as the change index.
+
 ```bash
 declare -A xpubs
 
 for ((n=1;n<=3;n++))
 do
- xpubs["internal_xpub_${n}"]=$(./build/bin/bitcoin-cli -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpkh") and contains("/1/*"))][0] | .desc' | grep -Po '(?<=\().*(?=\))')
-
- xpubs["external_xpub_${n}"]=$(./build/bin/bitcoin-cli -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpkh") and contains("/0/*") )][0] | .desc' | grep -Po '(?<=\().*(?=\))')
+ xpubs["xpub_${n}"]=$(./build/bin/bitcoin-cli -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpkh") and contains("/0/*") )][0] | .desc' | grep -Po '(?<=\().*(?=\))' | sed 's /0/\* /<0;1>/* ')
 done
 ```
 
@@ -65,46 +65,41 @@ for x in "${!xpubs[@]}"; do printf "[%s]=%s\n" "$x" "${xpubs[$x]}" ; done
 
 As previously mentioned, this step extracts the `m/84'/1'/0'` account instead of the path defined in [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki), since there is no way to extract a specific path in Bitcoin Core at the time of writing.
 
-### 1.2 Define the Multisig Descriptors
+### 1.2 Define the Multisig Descriptor
 
-Define the external and internal multisig descriptors, add the checksum and then, join both in a JSON array.
+Define the multisig descriptor, add the checksum and then, wrap it in a JSON array.
 
 ```bash
-external_desc="wsh(sortedmulti(2,${xpubs["external_xpub_1"]},${xpubs["external_xpub_2"]},${xpubs["external_xpub_3"]}))"
-internal_desc="wsh(sortedmulti(2,${xpubs["internal_xpub_1"]},${xpubs["internal_xpub_2"]},${xpubs["internal_xpub_3"]}))"
+desc="wsh(sortedmulti(2,${xpubs["xpub_1"]},${xpubs["xpub_2"]},${xpubs["xpub_3"]}))"
 
-external_desc_sum=$(./build/bin/bitcoin-cli -signet getdescriptorinfo $external_desc | jq '.descriptor')
-internal_desc_sum=$(./build/bin/bitcoin-cli -signet getdescriptorinfo $internal_desc | jq '.descriptor')
+checksum=$(./build/bin/bitcoin-cli -signet getdescriptorinfo $desc | jq -r '.checksum')
 
-multisig_ext_desc="{\"desc\": $external_desc_sum, \"active\": true, \"internal\": false, \"timestamp\": \"now\"}"
-multisig_int_desc="{\"desc\": $internal_desc_sum, \"active\": true, \"internal\": true, \"timestamp\": \"now\"}"
-
-multisig_desc="[$multisig_ext_desc, $multisig_int_desc]"
+multisig_desc="[{\"desc\": \"${desc}#${checksum}\", \"active\": true, \"timestamp\": \"now\"}]"
 ```
 
-`external_desc` and `internal_desc` specify the output type (`wsh`, in this case) and the xpubs involved. They also use BIP 67 (`sortedmulti`), so the wallet can be recreated without worrying about the order of xpubs. Conceptually, descriptors describe a list of scriptPubKey (along with information for spending from it) [[source](https://github.com/bitcoin/bitcoin/issues/21199#issuecomment-780772418)].
+`desc` specifies the output type (`wsh`, in this case) and the xpubs involved. It also uses BIP 67 (`sortedmulti`), so the wallet can be recreated without worrying about the order of xpubs. Conceptually, descriptors describe a list of scriptPubKey (along with information for spending from it) [[source](https://github.com/bitcoin/bitcoin/issues/21199#issuecomment-780772418)].
 
-Note that at least two descriptors are usually used, one for internal derivation paths and one for external ones. There are discussions about eliminating this redundancy, as can be seen in the issue [#17190](https://github.com/bitcoin/bitcoin/issues/17190).
-
-After creating the descriptors, it is necessary to add the checksum, which is required by the `importdescriptors` RPC.
+After creating the descriptor, it is necessary to add the checksum, which is required by the `importdescriptors` RPC.
 
 The checksum for a descriptor without one can be computed using the `getdescriptorinfo` RPC. The response has the `descriptor` field, which is the descriptor with the checksum added.
 
-There are other fields that can be added to the descriptors:
+There are other fields that can be added to the descriptor:
 
 * `active`: Sets the descriptor to be the active one for the corresponding output type (`wsh`, in this case).
 * `internal`: Indicates whether matching outputs should be treated as something other than incoming payments (e.g. change).
 * `timestamp`: Sets the time from which to start rescanning the blockchain for the descriptor, in UNIX epoch time.
 
+Note: when a multipath descriptor is imported, it is expanded into two descriptors which are imported separately, with the second implicitly used for internal (change) addresses.
+
 Documentation for these and other parameters can be found by typing `./build/bin/bitcoin-cli help importdescriptors`.
 
-`multisig_desc` concatenates external and internal descriptors in a JSON array and then it will be used to create the multisig wallet.
+`multisig_desc` wraps the descriptor in a JSON array and will be used to create the multisig wallet.
 
 ### 1.3 Create the Multisig Wallet
 
 To create the multisig wallet, first create an empty one (no keys, HD seed and private keys disabled).
 
-Then import the descriptors created in the previous step using the `importdescriptors` RPC.
+Then import the descriptor created in the previous step using the `importdescriptors` RPC.
 
 After that, `getwalletinfo` can be used to check if the wallet was created successfully.
 
@@ -120,6 +115,7 @@ Once the wallets have already been created and this tutorial needs to be repeate
 
 ```bash
 for ((n=1;n<=3;n++)); do ./build/bin/bitcoin-cli -signet loadwallet "participant_${n}"; done
+./build/bin/bitcoin-cli -signet loadwallet "multisig_wallet_01"
 ```
 
 ### 1.4 Fund the wallet
