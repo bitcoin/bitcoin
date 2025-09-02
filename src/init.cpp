@@ -904,7 +904,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     if (args.IsArgSet("-datacarriersize") || args.IsArgSet("-datacarrier")) {
-        InitWarning(_("Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version."));
+        InitWarning(_("Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated and are expected to be removed in a future version."));
     }
 
     // We no longer limit the orphanage based on number of transactions but keep the option to warn users who still have it in their config.
