@@ -77,6 +77,10 @@ endfunction()
 
 function(add_macos_deploy_target)
   if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND TARGET bitcoin-qt)
+    if(NOT TARGET Python3::Interpreter)
+      message(WARNING "Deploy target skipped, minimum required Python not found")
+      return()
+    endif()
     set(macos_app "Bitcoin-Qt.app")
     # Populate Contents subdirectory.
     configure_file(${PROJECT_SOURCE_DIR}/share/qt/Info.plist.in ${macos_app}/Contents/Info.plist NO_SOURCE_PERMISSIONS)
