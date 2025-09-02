@@ -792,13 +792,13 @@ void BlockManager::UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const
 
 AutoFile BlockManager::OpenBlockFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{m_block_file_seq.Open(pos, fReadOnly), m_obfuscation};
+    return AutoFile{m_block_file_seq.Open(pos, fReadOnly), m_xor_key};
 }
 
 /** Open an undo file (rev?????.dat) */
 AutoFile BlockManager::OpenUndoFile(const FlatFilePos& pos, bool fReadOnly) const
 {
-    return AutoFile{m_undo_file_seq.Open(pos, fReadOnly), m_obfuscation};
+    return AutoFile{m_undo_file_seq.Open(pos, fReadOnly), m_xor_key};
 }
 
 fs::path BlockManager::GetBlockPosFilename(const FlatFilePos& pos) const
@@ -1137,7 +1137,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 {
     // Bytes are serialized without length indicator, so this is also the exact
     // size of the XOR-key file.
-    std::array<std::byte, Obfuscation::KEY_SIZE> obfuscation{};
+    std::array<std::byte, 8> xor_key{};
 
     // Consider this to be the first run if the blocksdir contains only hidden
     // files (those which start with a .). Checking for a fully-empty dir would
@@ -1154,14 +1154,14 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
     if (opts.use_xor && first_run) {
         // Only use random fresh key when the boolean option is set and on the
         // very first start of the program.
-        FastRandomContext{}.fillrand(obfuscation);
+        FastRandomContext{}.fillrand(xor_key);
     }
 
     const fs::path xor_key_path{opts.blocks_dir / "xor.dat"};
     if (fs::exists(xor_key_path)) {
         // A pre-existing xor key file has priority.
         AutoFile xor_key_file{fsbridge::fopen(xor_key_path, "rb")};
-        xor_key_file >> obfuscation;
+        xor_key_file >> xor_key;
     } else {
         // Create initial or missing xor key file
         AutoFile xor_key_file{fsbridge::fopen(xor_key_path,
@@ -1171,7 +1171,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
             "wbx"
 #endif
         )};
-        xor_key_file << obfuscation;
+        xor_key_file << xor_key;
         if (xor_key_file.fclose() != 0) {
             throw std::runtime_error{strprintf("Error closing XOR key file %s: %s",
                                                fs::PathToString(xor_key_path),
@@ -1179,20 +1179,20 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
         }
     }
     // If the user disabled the key, it must be zero.
-    if (!opts.use_xor && obfuscation != decltype(obfuscation){}) {
+    if (!opts.use_xor && xor_key != decltype(xor_key){}) {
         throw std::runtime_error{
             strprintf("The blocksdir XOR-key can not be disabled when a random key was already stored! "
                       "Stored key: '%s', stored path: '%s'.",
-                      HexStr(obfuscation), fs::PathToString(xor_key_path)),
+                      HexStr(xor_key), fs::PathToString(xor_key_path)),
         };
     }
-    LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(obfuscation));
-    return Obfuscation{obfuscation};
+    LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(xor_key));
+    return Obfuscation{xor_key};
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
     : m_prune_mode{opts.prune_target > 0},
-      m_obfuscation{InitBlocksdirXorKey(opts)},
+      m_xor_key{InitBlocksdirXorKey(opts)},
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},

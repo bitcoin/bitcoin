@@ -18,6 +18,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
@@ -62,7 +63,8 @@ namespace dbwrapper_private {
  * Database obfuscation should be considered an implementation detail of the
  * specific database.
  */
-const Obfuscation& GetObfuscation(const CDBWrapper&);
+const Obfuscation& GetObfuscateKey(const CDBWrapper&);
+
 }; // namespace dbwrapper_private
 
 bool DestroyDB(const std::string& path_str);
@@ -166,7 +168,7 @@ public:
     template<typename V> bool GetValue(V& value) {
         try {
             DataStream ssValue{GetValueImpl()};
-            dbwrapper_private::GetObfuscation(parent)(ssValue);
+            ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
             ssValue >> value;
         } catch (const std::exception&) {
             return false;
@@ -179,7 +181,7 @@ struct LevelDBContext;
 
 class CDBWrapper
 {
-    friend const Obfuscation& dbwrapper_private::GetObfuscation(const CDBWrapper&);
+    friend const Obfuscation& dbwrapper_private::GetObfuscateKey(const CDBWrapper&);
 private:
     //! holds all leveldb-specific fields of this class
     std::unique_ptr<LevelDBContext> m_db_context;
@@ -188,10 +190,12 @@ private:
     std::string m_name;
 
     //! optional XOR-obfuscation of the database
-    Obfuscation m_obfuscation;
+    Obfuscation obfuscate_key;
 
-    //! obfuscation key storage key, null-prefixed to avoid collisions
-    inline static const std::string OBFUSCATION_KEY_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
+    //! the key under which the obfuscation key is stored
+    static const std::string OBFUSCATE_KEY_KEY;
+
+    std::vector<unsigned char> CreateObfuscateKey() const;
 
     //! path to filesystem storage
     const fs::path m_path;
@@ -223,7 +227,7 @@ public:
         }
         try {
             DataStream ssValue{MakeByteSpan(*strValue)};
-            m_obfuscation(ssValue);
+            ssValue.Xor(obfuscate_key);
             ssValue >> value;
         } catch (const std::exception&) {
             return false;

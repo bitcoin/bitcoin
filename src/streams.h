@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
@@ -244,11 +245,21 @@ public:
         return (*this);
     }
 
-    template <typename T>
+    template<typename T>
     DataStream& operator>>(T&& obj)
     {
         ::Unserialize(*this, obj);
         return (*this);
+    }
+
+    /**
+     * XOR the contents of this stream with a certain key.
+     *
+     * @param[in] key    The key used to XOR the data in this stream.
+     */
+    void Xor(const Obfuscation& key)
+    {
+        key(*this);
     }
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
@@ -424,7 +435,7 @@ public:
     bool IsNull() const { return m_file == nullptr; }
 
     /** Continue with a different XOR key */
-    void SetObfuscation(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
+    void SetXor(const Obfuscation& obfuscation) { m_obfuscation = obfuscation; }
 
     /** Implementation detail, only used internally. */
     std::size_t detail_fread(Span<std::byte> dst);

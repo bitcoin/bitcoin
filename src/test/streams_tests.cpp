@@ -114,11 +114,11 @@ BOOST_AUTO_TEST_CASE(xor_file)
     auto raw_file{[&](const auto& mode) { return fsbridge::fopen(xor_path, mode); }};
     const std::vector<uint8_t> test1{1, 2, 3};
     const std::vector<uint8_t> test2{4, 5};
-    const Obfuscation obfuscation{"ff00ff00ff00ff00"_hex};
+    const Obfuscation xor_pat{"ff00ff00ff00ff00"_hex};
 
     {
         // Check errors for missing file
-        AutoFile xor_file{raw_file("rb"), obfuscation};
+        AutoFile xor_file{raw_file("rb"), xor_pat};
         BOOST_CHECK_EXCEPTION(xor_file << std::byte{}, std::ios_base::failure, HasReason{"AutoFile::write: file handle is nullptr"});
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullptr"});
         BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullptr"});
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #else
         const char* mode = "wbx";
 #endif
-        AutoFile xor_file{raw_file(mode), obfuscation};
+        AutoFile xor_file{raw_file(mode), xor_pat};
         xor_file << test1 << test2;
         BOOST_REQUIRE_EQUAL(xor_file.fclose(), 0);
     }
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), obfuscation};
+        AutoFile xor_file{raw_file("rb"), xor_pat};
         std::vector<std::byte> read1, read2;
         xor_file >> read1 >> read2;
         BOOST_CHECK_EQUAL(HexStr(read1), HexStr(test1));
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(xor_file)
         BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
     }
     {
-        AutoFile xor_file{raw_file("rb"), obfuscation};
+        AutoFile xor_file{raw_file("rb"), xor_pat};
         std::vector<std::byte> read2;
         // Check that ignore works
         xor_file.ignore(4);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
 {
     unsigned char a(1);
     unsigned char b(2);
-    unsigned char bytes[] = {3, 4, 5, 6};
+    unsigned char bytes[] = { 3, 4, 5, 6 };
     std::vector<unsigned char> vch;
 
     // Each test runs twice. Serializing a second time at the same starting
@@ -316,25 +316,37 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
+    std::vector<std::byte> in;
+
     // Degenerate case
     {
-        DataStream ds{};
+        DataStream ds{in};
         Obfuscation{}(ds);
         BOOST_CHECK_EQUAL(""s, ds.str());
     }
 
+    in.push_back(std::byte{0x0f});
+    in.push_back(std::byte{0xf0});
+
+    // Single character key
     {
         const Obfuscation obfuscation{"ffffffffffffffff"_hex};
 
-        DataStream ds{"0ff0"_hex};
+        DataStream ds{in};
         obfuscation(ds);
         BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
     }
 
+    // Multi character key
+
+    in.clear();
+    in.push_back(std::byte{0xf0});
+    in.push_back(std::byte{0x0f});
+
     {
         const Obfuscation obfuscation{"ff0fff0fff0fff0f"_hex};
 
-        DataStream ds{"f00f"_hex};
+        DataStream ds{in};
         obfuscation(ds);
         BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
     }

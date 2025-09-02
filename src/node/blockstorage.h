@@ -235,7 +235,7 @@ private:
 
     const bool m_prune_mode;
 
-    const Obfuscation m_obfuscation;
+    const Obfuscation m_xor_key;
 
     /** Dirty block index entries. */
     std::set<CBlockIndex*> m_dirty_blockindex;

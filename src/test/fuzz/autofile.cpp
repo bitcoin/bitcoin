@@ -4,8 +4,8 @@
 
 #include <span.h>
 #include <streams.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/obfuscation.h>
 

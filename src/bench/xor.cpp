@@ -4,12 +4,14 @@
 
 #include <bench/bench.h>
 #include <random.h>
+#include <span.h>
+#include <streams.h>
 #include <util/obfuscation.h>
 
 #include <cstddef>
 #include <vector>
 
-static void ObfuscationBench(benchmark::Bench& bench)
+static void Xor(benchmark::Bench& bench)
 {
     FastRandomContext frc{/*fDeterministic=*/true};
     auto data{frc.randbytes<std::byte>(1024)};
@@ -22,4 +24,4 @@ static void ObfuscationBench(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(ObfuscationBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(Xor, benchmark::PriorityLevel::HIGH);
