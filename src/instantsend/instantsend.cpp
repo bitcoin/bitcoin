@@ -286,7 +286,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
             // should not happen, but if one fails to select, all others will also fail to select
             return {};
         }
-        uint256 signHash = llmq::SignHash(llmq_params.type, quorum->qc->quorumHash, id, islock->txid).Get();
+        uint256 signHash = llmq::SignHash{llmq_params.type, quorum->qc->quorumHash, id, islock->txid}.Get();
         batchVerifier.PushMessage(nodeId, hash, signHash, islock->sig.Get(), quorum->qc->quorumPublicKey);
         verifyCount++;
 
