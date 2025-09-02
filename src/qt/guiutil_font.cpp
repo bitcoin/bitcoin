@@ -316,7 +316,7 @@ bool loadFonts()
         QFont::Weight boldWeight = getBestMatch(family, defaultFontWeightBold);
         if (normalWeight == boldWeight) {
             // If the results are the same use the next possible weight for bold font
-            auto& vecSupported = mapSupportedWeights[fontFamily];
+            auto& vecSupported = mapSupportedWeights[family];
             auto it = std::find(vecSupported.begin(), vecSupported.end(), normalWeight);
             if (++it != vecSupported.end()) {
                 boldWeight = *it;
