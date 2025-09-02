@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <limits>
 #include <string>
+#include <variant>
 
 /** Message header.
  * (4) message start.
@@ -598,6 +599,12 @@ struct MessageProcessingResult
 
     //! @m_inventory will relay these inventories to connected peers
     std::vector<CInv> m_inventory;
+
+    //! @m_inv_filter will relay this inventory if filter matches to connected peers if not nullopt
+    std::optional<std::pair<CInv, std::variant<CTransactionRef, uint256>>> m_inv_filter;
+
+    //! @m_request_tx will ask connected peers to relay transaction if not nullopt
+    std::optional<uint256> m_request_tx;
 
     //! @m_transactions will relay transactions to peers which is ready to accept it (some peers does not accept transactions)
     std::vector<uint256> m_transactions;

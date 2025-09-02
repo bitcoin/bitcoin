@@ -3492,6 +3492,19 @@ void PeerManagerImpl::PostProcessMessage(MessageProcessingResult&& result, NodeI
     for (const auto& inv : result.m_inventory) {
         RelayInv(inv);
     }
+    if (result.m_inv_filter) {
+        const auto& [inv, filter] = result.m_inv_filter.value();
+        if (std::holds_alternative<CTransactionRef>(filter)) {
+            RelayInvFiltered(inv, *std::get<CTransactionRef>(filter), ISDLOCK_PROTO_VERSION);
+        } else if (std::holds_alternative<uint256>(filter)) {
+            RelayInvFiltered(inv, std::get<uint256>(filter), ISDLOCK_PROTO_VERSION);
+        } else {
+            assert(false);
+        }
+    }
+    if (result.m_request_tx) {
+        AskPeersForTransaction(result.m_request_tx.value());
+    }
 }
 
 void PeerManagerImpl::ProcessMessage(
