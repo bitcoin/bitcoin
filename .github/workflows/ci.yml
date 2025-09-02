@@ -1,7 +1,7 @@
 # Copyright (c) 2023-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit.
-
+[![CI](https://github.com/bitcoin/bitcoin/actions/workflows/ci.yml/badge.svg)](https://github.com/bitcoin/bitcoin/actions/workflows/ci.yml)
 name: CI
 on:
   # See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request.
