@@ -26,7 +26,7 @@ MAX_SEEDS_PER_ASN = {
     'ipv6': 10,
 }
 
-MIN_BLOCKS = 868000
+MIN_BLOCKS = 910000
 
 PATTERN_IPV4 = re.compile(r"^(([0-2]?\d{1,2})\.([0-2]?\d{1,2})\.([0-2]?\d{1,2})\.([0-2]?\d{1,2})):(\d{1,5})$")
 PATTERN_IPV6 = re.compile(r"^\[([\da-f:]+)]:(\d{1,5})$", re.IGNORECASE)
