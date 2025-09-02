@@ -14,8 +14,8 @@
 #include <random.h>
 #include <saltedhasher.h>
 #include <sync.h>
-#include <util/threadinterrupt.h>
 #include <unordered_lru_cache.h>
+#include <util/threadinterrupt.h>
 
 #include <string_view>
 #include <unordered_map>

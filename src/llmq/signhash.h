@@ -11,19 +11,21 @@
 #include <cstring>
 #include <vector>
 
+#include <saltedhasher.h>
 #include <util/hash_type.h>
 
-namespace llmq
-{
+namespace llmq {
 
 /**
  * SignHash is a strongly-typed wrapper for the hash used in LLMQ signing operations.
  * It encapsulates the hash calculation for quorum signatures, replacing the need for
  * BuildSignHash function and avoiding circular dependencies.
  */
-class SignHash : public BaseHash<uint256> {
+class SignHash : public BaseHash<uint256>
+{
 public:
     SignHash() = default;
+    using BaseHash<uint256>::BaseHash;
 
     /**
      * Constructs a SignHash from the given parameters.
@@ -37,25 +39,31 @@ public:
     const uint256& Get() const { return m_hash; }
 
     // Serialization support
-    template<typename Stream>
+    template <typename Stream>
     void Serialize(Stream& s) const
     {
         s << m_hash;
     }
 
-    template<typename Stream>
+    template <typename Stream>
     void Unserialize(Stream& s)
     {
         s >> m_hash;
     }
 };
 
+// Salted hasher for llmq::SignHash that reuses the salted hasher for uint256
+struct SignHashSaltedHasher {
+    std::size_t operator()(const SignHash& signHash) const noexcept { return StaticSaltedHasher{}(signHash.Get()); }
+};
+
 } // namespace llmq
 
 // Make SignHash hashable for use in unordered_map
-template<>
+template <>
 struct std::hash<llmq::SignHash> {
-    std::size_t operator()(const llmq::SignHash& signHash) const noexcept {
+    std::size_t operator()(const llmq::SignHash& signHash) const noexcept
+    {
         // Use the first 8 bytes of the hash as the hash value
         const unsigned char* data = signHash.data();
         std::size_t result;
@@ -63,5 +71,6 @@ struct std::hash<llmq::SignHash> {
         return result;
     }
 };
+
 
 #endif // BITCOIN_LLMQ_SIGNHASH_H

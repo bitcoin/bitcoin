@@ -9,8 +9,7 @@
 
 #include <vector>
 
-namespace llmq
-{
+namespace llmq {
 
 SignHash::SignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
 {

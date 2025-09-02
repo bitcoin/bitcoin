@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(deserialize_instantlock_from_realdata2)
     ss >> islock;
 
     // Verify the calculated signHash
-    auto signHash = llmq::SignHash(Consensus::LLMQType::LLMQ_60_75, uint256S(quorumHashStr), islock.GetRequestId(),
-                                        islock.txid).Get();
+    auto signHash =
+        llmq::SignHash(Consensus::LLMQType::LLMQ_60_75, uint256S(quorumHashStr), islock.GetRequestId(), islock.txid).Get();
     BOOST_CHECK_EQUAL(signHash.ToString(), expectedSignHashStr);
 
     // Verify the txid field.

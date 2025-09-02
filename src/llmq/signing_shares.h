@@ -308,7 +308,7 @@ public:
         uint256 quorumHash;
         uint256 id;
         uint256 msgHash;
-        uint256 signHash;
+        llmq::SignHash signHash;
 
         CQuorumCPtr quorum;
     };
@@ -321,7 +321,7 @@ public:
         uint256 quorumHash;
         uint256 id;
         uint256 msgHash;
-        uint256 signHash;
+        llmq::SignHash signHash;
 
         CQuorumCPtr quorum;
 

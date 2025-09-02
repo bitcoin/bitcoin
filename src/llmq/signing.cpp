@@ -191,7 +191,7 @@ void CRecoveredSigsDb::RemoveRecoveredSig(CDBBatch& batch, Consensus::LLMQType l
     auto k1 = std::make_tuple(std::string("rs_r"), recSig.getLlmqType(), recSig.getId());
     auto k2 = std::make_tuple(std::string("rs_r"), recSig.getLlmqType(), recSig.getId(), recSig.getMsgHash());
     auto k3 = std::make_tuple(std::string("rs_h"), recSig.GetHash());
-    auto k4 = std::make_tuple(std::string("rs_s"), signHash);
+    auto k4 = std::make_tuple(std::string("rs_s"), signHash.Get());
     batch.Erase(k1);
     batch.Erase(k2);
     if (deleteHashKey) {
@@ -554,7 +554,8 @@ bool CSigningManager::ProcessPendingRecoveredSigs(PeerManager& peerman)
             }
 
             const auto& quorum = quorums.at(std::make_pair(recSig->getLlmqType(), recSig->getQuorumHash()));
-            batchVerifier.PushMessage(nodeId, recSig->GetHash(), recSig->buildSignHash().Get(), recSig->sig.Get(), quorum->qc->quorumPublicKey);
+            batchVerifier.PushMessage(nodeId, recSig->GetHash(), recSig->buildSignHash().Get(), recSig->sig.Get(),
+                                      quorum->qc->quorumPublicKey);
             verifyCount++;
         }
     }
@@ -837,10 +838,7 @@ void CSigningManager::WorkThreadMain(PeerManager& peerman)
     }
 }
 
-SignHash CSigBase::buildSignHash() const
-{
-    return SignHash(llmqType, quorumHash, id, msgHash);
-}
+SignHash CSigBase::buildSignHash() const { return SignHash(llmqType, quorumHash, id, msgHash); }
 
 
 bool IsQuorumActive(Consensus::LLMQType llmqType, const CQuorumManager& qman, const uint256& quorumHash)

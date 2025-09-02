@@ -4,9 +4,9 @@
 
 #include <llmq/signing_shares.h>
 
+#include <llmq/commitment.h>
 #include <llmq/options.h>
 #include <llmq/quorums.h>
-#include <llmq/commitment.h>
 #include <llmq/signhash.h>
 #include <llmq/signing.h>
 
@@ -98,7 +98,7 @@ std::string CBatchedSigShares::ToInvString() const
     return inv.ToString();
 }
 
-static void InitSession(CSigSharesNodeState::Session& s, const uint256& signHash, CSigBase from)
+static void InitSession(CSigSharesNodeState::Session& s, const llmq::SignHash& signHash, CSigBase from)
 {
     const auto& llmq_params_opt = Params().GetLLMQ(from.getLlmqType());
     assert(llmq_params_opt.has_value());
@@ -118,7 +118,7 @@ CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSessionFromShare(c
 {
     auto& s = sessions[sigShare.GetSignHash()];
     if (s.announced.inv.empty()) {
-        InitSession(s, sigShare.GetSignHash(), sigShare);
+        InitSession(s, sigShare.buildSignHash(), sigShare);
     }
     return s;
 }
@@ -128,7 +128,7 @@ CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSessionFromAnn(con
     auto signHash = ann.buildSignHash();
     auto& s = sessions[signHash.Get()];
     if (s.announced.inv.empty()) {
-        InitSession(s, signHash.Get(), ann);
+        InitSession(s, signHash, ann);
     }
     return s;
 }
@@ -348,7 +348,7 @@ bool CSigSharesManager::ProcessMessageSigSharesInv(const CNode& pfrom, const CSi
     }
 
     // TODO for PoSe, we should consider propagating shares even if we already have a recovered sig
-    if (sigman.HasRecoveredSigForSession(sessionInfo.signHash)) {
+    if (sigman.HasRecoveredSigForSession(sessionInfo.signHash.Get())) {
         return true;
     }
 
@@ -385,7 +385,7 @@ bool CSigSharesManager::ProcessMessageGetSigShares(const CNode& pfrom, const CSi
     }
 
     // TODO for PoSe, we should consider propagating shares even if we already have a recovered sig
-    if (sigman.HasRecoveredSigForSession(sessionInfo.signHash)) {
+    if (sigman.HasRecoveredSigForSession(sessionInfo.signHash.Get())) {
         return true;
     }
 
