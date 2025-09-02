@@ -10,6 +10,9 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+#include <array>
+#include <bit>
+#include <climits>
 #include <ios>
 
 class Obfuscation
@@ -18,57 +21,76 @@ public:
     using KeyType = uint64_t;
     static constexpr size_t KEY_SIZE{sizeof(KeyType)};
 
-    Obfuscation() : m_key{KEY_SIZE, std::byte{0}} {}
+    Obfuscation() { SetRotations(0); }
     explicit Obfuscation(std::span<const std::byte, KEY_SIZE> key_bytes)
     {
-        m_key = {key_bytes.begin(), key_bytes.end()};
+        SetRotations(ToKey(key_bytes));
     }
 
-    operator bool() const { return ToKey() != 0; }
+    operator bool() const { return m_rotations[0] != 0; }
 
-    void operator()(Span<std::byte> write, size_t key_offset = 0) const
+    void operator()(Span<std::byte> target, size_t key_offset = 0) const
     {
-        assert(m_key.size() == KEY_SIZE);
-        key_offset %= KEY_SIZE;
+        if (!*this) return;
 
-        for (size_t i = 0, j = key_offset; i != write.size(); i++) {
-            write[i] ^= m_key[j++];
-
-            // This potentially acts on very many bytes of data, so it's
-            // important that we calculate `j`, i.e. the `key` index in this
-            // way instead of doing a %, which would effectively be a division
-            // for each byte Xor'd -- much slower than need be.
-            if (j == KEY_SIZE)
-                j = 0;
+        const KeyType rot_key{m_rotations[key_offset % KEY_SIZE]}; // Continue obfuscation from where we left off
+        for (; target.size() >= KEY_SIZE; target = target.subspan(KEY_SIZE)) {
+            XorWord(target.first(KEY_SIZE), rot_key);
         }
+        XorWord(target, rot_key);
     }
 
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        s << m_key;
+        // Use vector serialization for convenient compact size prefix.
+        std::vector<std::byte> bytes{KEY_SIZE};
+        std::memcpy(bytes.data(), &m_rotations[0], KEY_SIZE);
+        s << bytes;
     }
 
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        s >> m_key;
-        if (m_key.size() != KEY_SIZE) throw std::ios_base::failure(strprintf("Obfuscation key size should be exactly %s bytes long", KEY_SIZE));
+        std::vector<std::byte> bytes{KEY_SIZE};
+        s >> bytes;
+        if (bytes.size() != KEY_SIZE) throw std::ios_base::failure(strprintf("Obfuscation key size should be exactly %s bytes long", KEY_SIZE));
+        SetRotations(ToKey(std::span<std::byte, KEY_SIZE>(bytes)));
     }
 
     std::string HexKey() const
     {
-        return HexStr(m_key);
+        return HexStr(std::bit_cast<std::array<uint8_t, KEY_SIZE>>(m_rotations[0]));
     }
 
 private:
-    std::vector<std::byte> m_key;
+    // Cached key rotations for different offsets.
+    std::array<KeyType, KEY_SIZE> m_rotations;
 
-    KeyType ToKey() const
+    void SetRotations(KeyType key)
+    {
+        for (size_t i{0}; i < KEY_SIZE; ++i) {
+            int key_rotation_bits{int(CHAR_BIT * i)};
+            if constexpr (std::endian::native == std::endian::big) key_rotation_bits *= -1;
+            m_rotations[i] = std::rotr(key, key_rotation_bits);
+        }
+    }
+
+    static KeyType ToKey(std::span<const std::byte, KEY_SIZE> key_span)
     {
         KeyType key{};
-        std::memcpy(&key, m_key.data(), KEY_SIZE);
+        std::memcpy(&key, key_span.data(), KEY_SIZE);
         return key;
+    }
+
+    static void XorWord(Span<std::byte> target, KeyType key)
+    {
+        assert(target.size() <= KEY_SIZE);
+        if (target.empty()) return;
+        KeyType raw{};
+        std::memcpy(&raw, target.data(), target.size());
+        raw ^= key;
+        std::memcpy(target.data(), &raw, target.size());
     }
 };
 
