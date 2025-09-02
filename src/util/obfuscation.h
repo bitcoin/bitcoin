@@ -14,6 +14,7 @@
 #include <bit>
 #include <climits>
 #include <ios>
+#include <memory>
 
 class Obfuscation
 {
@@ -33,9 +34,26 @@ public:
     {
         if (!*this) return;
 
-        const KeyType rot_key{m_rotations[key_offset % KEY_SIZE]}; // Continue obfuscation from where we left off
-        for (; target.size() >= KEY_SIZE; target = target.subspan(KEY_SIZE)) {
-            XorWord(target.first(KEY_SIZE), rot_key);
+        KeyType rot_key{m_rotations[key_offset % KEY_SIZE]}; // Continue obfuscation from where we left off
+        if (target.size() > KEY_SIZE) {
+            // Obfuscate until 64-bit alignment boundary
+            if (const auto misalign{std::bit_cast<uintptr_t>(target.data()) % KEY_SIZE}) {
+                const size_t alignment{std::min(KEY_SIZE - misalign, target.size())};
+                XorWord(target.first(alignment), rot_key);
+
+                target = {std::assume_aligned<KEY_SIZE>(target.data() + alignment), target.size() - alignment};
+                rot_key = m_rotations[(key_offset + alignment) % KEY_SIZE];
+            }
+            // Aligned obfuscation in 64-byte chunks
+            for (constexpr auto unroll{8}; target.size() >= KEY_SIZE * unroll; target = target.subspan(KEY_SIZE * unroll)) {
+                for (size_t i{0}; i < unroll; ++i) {
+                    XorWord(target.subspan(i * KEY_SIZE, KEY_SIZE), rot_key);
+                }
+            }
+            // Aligned obfuscation in 64-bit chunks
+            for (; target.size() >= KEY_SIZE; target = target.subspan(KEY_SIZE)) {
+                XorWord(target.first(KEY_SIZE), rot_key);
+            }
         }
         XorWord(target, rot_key);
     }
