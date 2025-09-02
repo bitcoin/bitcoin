@@ -141,64 +141,48 @@ struct TxMempoolInfo
  * requirements as defined in doc/policy/mempool-replacements.md.
  * - a non-standard transaction.
  *
- * CTxMemPool::mapTx, and CTxMemPoolEntry bookkeeping:
+ * TxGraph (CTxMemPool::m_txgraph) provides an abstraction layer for separating
+ * the transaction graph parts of the mempool from the rest of the
+ * Bitcoin-specific logic. Specifically, TxGraph handles (for each transaction)
+ * managing the in-mempool parents and children, and has knowledge of the fee
+ * and size of every transaction. It uses this to partition the mempool into
+ * connected clusters, and it implements (among other things):
+ *  - limits on the size of a cluster (in both number of transactions
+ *    and total weight)
+ *  - sorting the mempool optimally for block inclusion, taking into account
+ *    dependencies
+ *  - selecting transactions for removal due to cluster size limit violations
+ *    after a reorg.
+ * See txgraph.h and txgraph.cpp for more details.
  *
- * mapTx is a boost::multi_index that sorts the mempool on 5 criteria:
+ * CTxMemPool itself handles the Bitcoin-specific parts of mempool
+ * transactions; it stores the full transaction inside CTxMemPoolEntry, along
+ * with other consensus-specific fields (such as whether a transaction spends a
+ * coinbase, or the LockPoints for transaction finality). And it provides
+ * interfaces to the rest of the codebase, such as:
+ *  - to validation for replace-by-fee calculations and cluster size limits
+ *    when evaluating unconfirmed transactions
+ *  - to validation for evicting transactions due to expiry or the mempool size
+ *    limit being hit
+ *  - to validation for updating the mempool to be consistent with the best
+ *    chain after a new block is connected or after a reorg.
+ *  - to net_processing for ordering transactions that are to-be-announced to
+ *    other peers
+ *  - to RPC code for inspecting the mempool
+ *
+ * (Many of these interfaces are just wrappers around corresponding TxGraph
+ * functions.)
+ *
+ * Within CTxMemPool, the mempool entries are stored in a boost::multi_index
+ * mapTx, which sorts the mempool on 3 criteria:
  * - transaction hash (txid)
  * - witness-transaction hash (wtxid)
- * - descendant feerate [we use max(feerate of tx, feerate of tx with all descendants)]
  * - time in mempool
- * - ancestor feerate [we use min(feerate of tx, feerate of tx with all unconfirmed ancestors)]
  *
- * Note: the term "descendant" refers to in-mempool transactions that depend on
- * this one, while "ancestor" refers to in-mempool transactions that a given
- * transaction depends on.
- *
- * In order for the feerate sort to remain correct, we must update transactions
- * in the mempool when new descendants arrive.  To facilitate this, we track
- * the set of in-mempool direct parents and direct children in mapLinks.  Within
- * each CTxMemPoolEntry, we track the size and fees of all descendants.
- *
- * Usually when a new transaction is added to the mempool, it has no in-mempool
- * children (because any such children would be an orphan).  So in
- * addNewTransaction(), we:
- * - update a new entry's m_parents to include all in-mempool parents
- * - update each of those parent entries to include the new tx as a child
- * - update all ancestors of the transaction to include the new tx's size/fee
- *
- * When a transaction is removed from the mempool, we must:
- * - update all in-mempool parents to not track the tx in their m_children
- * - update all ancestors to not include the tx's size/fees in descendant state
- * - update all in-mempool children to not include it as a parent
- *
- * These happen in UpdateForRemoveFromMempool().  (Note that when removing a
- * transaction along with its descendants, we must calculate that set of
- * transactions to be removed before doing the removal, or else the mempool can
- * be in an inconsistent state where it's impossible to walk the ancestors of
- * a transaction.)
- *
- * In the event of a reorg, the assumption that a newly added tx has no
- * in-mempool children is false.  In particular, the mempool is in an
- * inconsistent state while new transactions are being added, because there may
- * be descendant transactions of a tx coming from a disconnected block that are
- * unreachable from just looking at transactions in the mempool (the linking
- * transactions may also be in the disconnected block, waiting to be added).
- * Because of this, there's not much benefit in trying to search for in-mempool
- * children in addNewTransaction().  Instead, in the special case of transactions
- * being added from a disconnected block, we require the caller to clean up the
- * state, to account for in-mempool, out-of-block descendants for all the
- * in-block transactions by calling UpdateTransactionsFromBlock().  Note that
- * until this is called, the mempool state is not consistent, and in particular
- * mapLinks may not be correct (and therefore functions like
- * CalculateMemPoolAncestors() and CalculateDescendants() that rely
- * on them to walk the mempool are not generally safe to use).
- *
- * Computational limits:
- *
- * Updating all in-mempool ancestors of a newly added transaction can be slow,
- * if no bound exists on how many in-mempool ancestors there may be.
- * CalculateMemPoolAncestors() takes configurable limits that are designed to
- * prevent these calculations from being too CPU intensive.
+ * We also maintain a map from COutPoint to the (in-mempool) transaction that
+ * spends it (mapNextTx). This allows us to recover from a reorg and find
+ * transactions in the mempool that conflict with transactions that are
+ * confirmed in a block.
  *
  */
 class CTxMemPool
