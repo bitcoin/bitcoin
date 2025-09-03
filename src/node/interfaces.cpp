@@ -431,6 +431,7 @@ public:
     }
     ArgsManager& args() { return *Assert(Assert(m_context)->args); }
     ChainstateManager& chainman() { return *Assert(m_context->chainman); }
+    CTxMemPool& mempool() override { return *Assert(m_context->mempool); }
     NodeContext* m_context{nullptr};
 };
 

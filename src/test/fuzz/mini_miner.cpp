@@ -36,6 +36,7 @@ void initialize_miner()
     for (uint32_t i = 0; i < uint32_t{100}; ++i) {
         g_available_coins.emplace_back(Txid::FromUint256(uint256::ZERO), i);
     }
+    g_setup->m_node.args->ForceSetArg("-blockprioritysize", "0");
 }
 
 // Test that the MiniMiner can run with various outpoints and feerates.

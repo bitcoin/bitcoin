@@ -238,8 +238,8 @@ BOOST_FIXTURE_TEST_CASE(rbf_helper_functions, TestChain100Setup)
     // TODO: Add tests for policy-only conflicts
 
     // Tests for PaysForRBF
-    const CFeeRate incremental_relay_feerate{DEFAULT_INCREMENTAL_RELAY_FEE};
-    const CFeeRate higher_relay_feerate{2 * DEFAULT_INCREMENTAL_RELAY_FEE};
+    const CFeeRate incremental_relay_feerate{CORE_INCREMENTAL_RELAY_FEE};
+    const CFeeRate higher_relay_feerate{2 * incremental_relay_feerate};
     // Must pay at least as much as the original.
     BOOST_CHECK(PaysForRBF(/*original_fees=*/high_fee,
                            /*replacement_fees=*/high_fee,

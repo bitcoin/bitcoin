@@ -55,6 +55,9 @@ static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 inline int64_t maxmempoolMinimumBytes(const int64_t descendant_size_vbytes) {
     return descendant_size_vbytes * 40;
 }
+inline int64_t limitdescendantsizeMaximumVBytes(const int64_t maxmempool) {
+    return maxmempool / 40;
+}
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain

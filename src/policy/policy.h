@@ -25,13 +25,13 @@ struct MemPoolOptions;
 };
 
 /** Default for -blockmaxsize, which controls the maximum size of block the mining code will create **/
-static const unsigned int DEFAULT_BLOCK_MAX_SIZE = MAX_BLOCK_SERIALIZED_SIZE;
+static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 300000;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
-static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 0;
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 100000;
 /** Minimum priority for transactions to be accepted into the priority area **/
 static const double MINIMUM_TX_PRIORITY = COIN * 144 / 250;
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
-static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT};
+static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{DEFAULT_BLOCK_MAX_SIZE * WITNESS_SCALE_FACTOR};
 /** Default for BlockCreateOptions.block_reserved_size **/
 static constexpr unsigned int DEFAULT_BLOCK_RESERVED_SIZE{1000};
 /** Default for -blockreservedweight **/
@@ -42,7 +42,7 @@ static constexpr unsigned int DEFAULT_BLOCK_RESERVED_WEIGHT{8000};
  * Setting a lower value is prevented at startup. */
 static constexpr unsigned int MINIMUM_BLOCK_RESERVED_WEIGHT{2000};
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
-static constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1};
+static constexpr unsigned int DEFAULT_BLOCK_MIN_TX_FEE{1000};
 /** The maximum weight for transactions we're willing to relay/mine */
 static constexpr int32_t MAX_STANDARD_TX_WEIGHT{400000};
 /** The minimum non-witness size for transactions we're willing to relay/mine: one larger than 64  */
@@ -52,36 +52,37 @@ static constexpr unsigned int MAX_P2SH_SIGOPS{15};
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
 static constexpr unsigned int MAX_STANDARD_TX_SIGOPS_COST{MAX_BLOCK_SIGOPS_COST/5};
 /** The maximum number of potentially executed legacy signature operations in a single standard tx */
-static constexpr unsigned int MAX_TX_LEGACY_SIGOPS{std::numeric_limits<unsigned int>::max()};
+static constexpr unsigned int MAX_TX_LEGACY_SIGOPS{2'500};
 /** Default for -incrementalrelayfee, which sets the minimum feerate increase for mempool limiting or replacement **/
-static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{100};
+static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{1000};
+static constexpr CAmount CORE_INCREMENTAL_RELAY_FEE{100};
 /** Default for -maxscriptsize */
-static constexpr unsigned int DEFAULT_SCRIPT_SIZE_POLICY_LIMIT{std::numeric_limits<unsigned int>::max()};
+static constexpr unsigned int DEFAULT_SCRIPT_SIZE_POLICY_LIMIT{1650};
 /** Default for -bytespersigop */
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 /** Default for -bytespersigopstrict */
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT{20};
 /** Default for -datacarriercost (multiplied by WITNESS_SCALE_FACTOR) */
-static constexpr unsigned int DEFAULT_WEIGHT_PER_DATA_BYTE{1};
+static constexpr unsigned int DEFAULT_WEIGHT_PER_DATA_BYTE{4};
 /** Default for -rejecttokens */
 static constexpr bool DEFAULT_REJECT_TOKENS{false};
 
 // NOTE: Changes to these three require manually adjusting doc in init.cpp
 /** Default for -permitephemeral=send */
-static constexpr bool DEFAULT_PERMITEPHEMERAL_SEND{true};
+static constexpr bool DEFAULT_PERMITEPHEMERAL_SEND{false};
 /** Default for -permitephemeral=dust */
-static constexpr bool DEFAULT_PERMITEPHEMERAL_DUST{true};
+static constexpr bool DEFAULT_PERMITEPHEMERAL_DUST{false};
 /** Default for -permitephemeral=anchor */
 static constexpr bool DEFAULT_PERMITEPHEMERAL_ANCHOR{true};
 
 /** Default for -permitbareanchor */
 static constexpr bool DEFAULT_PERMITBAREANCHOR{true};
 /** Default for -permitbarepubkey */
-static constexpr bool DEFAULT_PERMIT_BAREPUBKEY{true};
+static constexpr bool DEFAULT_PERMIT_BAREPUBKEY{false};
 /** Default for -permitbaremultisig */
-static constexpr bool DEFAULT_PERMIT_BAREMULTISIG{true};
+static constexpr bool DEFAULT_PERMIT_BAREMULTISIG{false};
 /** Default for -rejectparasites */
-static constexpr bool DEFAULT_REJECT_PARASITES{false};
+static constexpr bool DEFAULT_REJECT_PARASITES{true};
 /** The maximum number of witness stack items in a standard P2WSH script */
 static constexpr unsigned int MAX_STANDARD_P2WSH_STACK_ITEMS{100};
 /** The maximum size in bytes of each witness stack item in a standard P2WSH script */
@@ -102,7 +103,7 @@ static const std::string DEFAULT_DUST_DYNAMIC{"off"};
 static const int DEFAULT_DUST_RELAY_MULTIPLIER{3'000};
 static const std::string DEFAULT_SPKREUSE{"allow"};
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
-static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{100};
+static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{1000};
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static constexpr unsigned int DEFAULT_ANCESTOR_LIMIT{25};
 /** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
@@ -114,14 +115,14 @@ static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 /**
- * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
- * +2 for the pushdata opcodes.
+ * Default setting for -datacarriersize. 40 bytes of data, +1 for OP_RETURN,
+ * +1 for the pushdata opcode.
  */
 /** Default for -permitbaredatacarrier */
-static const bool DEFAULT_PERMITBAREDATACARRIER{true};
-static const unsigned int MAX_OP_RETURN_RELAY = 83;
+static const bool DEFAULT_PERMITBAREDATACARRIER{false};
+static constexpr unsigned int MAX_OP_RETURN_RELAY{42};
 /** Default for -datacarrierfullcount */
-static constexpr bool DEFAULT_DATACARRIER_FULLCOUNT{false};
+static constexpr bool DEFAULT_DATACARRIER_FULLCOUNT{true};
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this

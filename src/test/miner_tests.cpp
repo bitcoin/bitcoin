@@ -220,7 +220,8 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // This tx can't be mined by itself
     tx.vin[0].prevout.hash = hashFreeTx2;
     tx.vout.resize(1);
-    feeToUse = blockMinFeeRate.GetFee(freeTxSize);
+    const size_t lowFeeTx2VSize = GetVirtualTransactionSize(CTransaction{tx});
+    feeToUse = blockMinFeeRate.GetFee(lowFeeTx2VSize);
     tx.vout[0].nValue = 5000000000LL - 100000000 - feeToUse;
     Txid hashLowFeeTx2 = tx.GetHash();
     AddToMempool(tx_mempool, entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
@@ -658,6 +659,8 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
+    gArgs.ForceSetArg("-blockprioritysize", "0");
+
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
