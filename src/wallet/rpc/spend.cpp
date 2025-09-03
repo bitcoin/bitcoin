@@ -94,17 +94,8 @@ std::set<int> InterpretSubtractFeeFromOutputInstructions(const UniValue& sffo_in
 
 static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx)
 {
-    bool can_anti_fee_snipe = !options.exists("locktime");
-
-    for (const CTxIn& tx_in : rawTx.vin) {
-        // Checks sequence values consistent with DiscourageFeeSniping
-        can_anti_fee_snipe &= (tx_in.nSequence == CTxIn::MAX_SEQUENCE_NONFINAL || tx_in.nSequence == MAX_BIP125_RBF_SEQUENCE);
-    }
-
-    if (can_anti_fee_snipe) {
-        LOCK(pwallet->cs_wallet);
-        FastRandomContext rng_fast;
-        DiscourageFeeSniping(rawTx, rng_fast, pwallet->chain(), pwallet->GetLastBlockHash(), pwallet->GetLastBlockHeight());
+    if (!options.exists("locktime")) {
+        MaybeDiscourageFeeSniping2(*pwallet, rawTx);
     }
 
     // Make a blank psbt
@@ -1705,7 +1696,7 @@ RPCHelpMan walletcreatefundedpsbt()
                             "accepted as second parameter.",
                         OutputsDoc(),
                         RPCArgOptions{.skip_type_check = true}},
-                    {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"locktime", RPCArg::Type::NUM, RPCArg::DefaultHint{"locktime close to block height to prevent fee sniping"}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         Cat<std::vector<RPCArg>>(
                         {
@@ -1779,9 +1770,14 @@ RPCHelpMan walletcreatefundedpsbt()
     // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
     rawTx.vout.clear();
     auto txr = FundTransaction(wallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/true);
+    rawTx = CMutableTransaction(*txr.tx);
+
+    if (request.params[2].isNull()) {
+        MaybeDiscourageFeeSniping2(*pwallet, rawTx);
+    }
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx(CMutableTransaction(*txr.tx));
+    PartiallySignedTransaction psbtx(rawTx);
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
