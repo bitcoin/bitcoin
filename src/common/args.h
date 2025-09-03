@@ -355,7 +355,7 @@ protected:
     /**
      * Add many hidden arguments
      */
-    void AddHiddenArgs(const std::vector<std::string>& args);
+    void AddHiddenArgs(const std::vector<std::string>& args, unsigned int flags = ArgsManager::ALLOW_ANY);
 
     /**
      * Clear available arguments
