@@ -108,7 +108,7 @@
             <string extracomment="Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.">Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</string>
            </property>
            <property name="text">
-            <string>Size of &amp;database cache</string>
+            <string>S&amp;ize of database cache</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
@@ -238,7 +238,7 @@
              <string>Whether to show coin control features or not.</string>
             </property>
             <property name="text">
-             <string>Enable coin &amp;control features</string>
+             <string>Enable co&amp;in control features</string>
             </property>
            </widget>
           </item>
@@ -341,7 +341,7 @@
           <string>Connect to the Bitcoin network through a SOCKS5 proxy.</string>
          </property>
          <property name="text">
-          <string>&amp;Connect through SOCKS5 proxy (default proxy):</string>
+          <string>Connect through &amp;SOCKS5 proxy (default proxy):</string>
          </property>
         </widget>
        </item>
@@ -652,7 +652,7 @@
           <string>Show only a tray icon after minimizing the window.</string>
          </property>
          <property name="text">
-          <string>&amp;Minimize to the tray instead of the taskbar</string>
+          <string>Minimize to the &amp;tray instead of the taskbar</string>
          </property>
         </widget>
        </item>
@@ -742,7 +742,7 @@
             <string>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</string>
            </property>
            <property name="text">
-            <string>&amp;Third-party transaction URLs</string>
+            <string>&amp;Third-party transaction URLs:</string>
            </property>
            <property name="buddy">
             <cstring>thirdPartyTxUrls</cstring>
