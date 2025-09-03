@@ -682,6 +682,10 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 
     SetupChainParamsBaseOptions(argsman);
 
+    argsman.AddArg("-acceptnonstddatacarrier",
+                   strprintf("Relay and mine non-OP_RETURN datacarrier injection (default: %u)",
+                             DEFAULT_ACCEPT_NON_STD_DATACARRIER),
+                   ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (default: %u)", DEFAULT_ACCEPT_NON_STD_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-acceptunknownwitness",
                    strprintf("Relay transactions sending to unknown/future witness script versions (default: %u)", DEFAULT_ACCEPTUNKNOWNWITNESS),
