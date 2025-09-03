@@ -106,14 +106,13 @@ class WalletTest(BitcoinTestFramework):
         self.log.info("Test getbalance with different arguments")
         assert_equal(self.nodes[0].getbalance("*"), 50)
         assert_equal(self.nodes[0].getbalance("*", 1), 50)
-        assert_equal(self.nodes[0].getbalance(minconf=1), 50)
+        assert_raises_rpc_error(-8, "getbalance minconf option is only currently supported if dummy is set to \"*\"", self.nodes[0].getbalance, minconf=1)
+        assert_raises_rpc_error(-8, "getbalance minconf option is only currently supported if dummy is set to \"*\"", self.nodes[0].getbalance, minconf=0, include_watchonly=True)
         if not self.options.descriptors:
-            assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 100)
             assert_equal(self.nodes[0].getbalance("*", 1, True), 100)
         else:
-            assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 50)
             assert_equal(self.nodes[0].getbalance("*", 1, True), 50)
-        assert_equal(self.nodes[1].getbalance(minconf=0, include_watchonly=True), 50)
+        assert_raises_rpc_error(-8, "getbalance minconf option is only currently supported if dummy is set to \"*\"", self.nodes[1].getbalance, minconf=0, include_watchonly=True)
 
         # Send 40 BTC from 0 to 1 and 60 BTC from 1 to 0.
         txs = create_transactions(self.nodes[0], self.nodes[1].getnewaddress(), 40, [Decimal('0.01')])
@@ -192,13 +191,12 @@ class WalletTest(BitcoinTestFramework):
             # getbalance without any arguments includes unconfirmed transactions, but not untrusted transactions
             assert_equal(self.nodes[0].getbalance(), Decimal('9.99'))  # change from node 0's send
             assert_equal(self.nodes[1].getbalance(), Decimal('0'))  # node 1's send had an unsafe input
-            # Same with minconf=0
-            assert_equal(self.nodes[0].getbalance(minconf=0), Decimal('9.99'))
-            assert_equal(self.nodes[1].getbalance(minconf=0), Decimal('0'))
-            # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
-            # TODO: fix getbalance tracking of coin spentness depth
-            assert_equal(self.nodes[0].getbalance(minconf=1), Decimal('0'))
-            assert_equal(self.nodes[1].getbalance(minconf=1), Decimal('0'))
+            # getbalance with '*' and minconf=0 includes unconfirmed transactions, AND untrusted transactions
+            assert_equal(self.nodes[0].getbalance('*', 0), Decimal('69.99'))
+            assert_equal(self.nodes[1].getbalance('*', 0), Decimal('30') - fee_node_1)
+            # getbalance with '*' and minconf=1 includes only confirmed and sent transactions
+            assert_equal(self.nodes[0].getbalance('*', 1), Decimal('9.99'))
+            assert_equal(self.nodes[1].getbalance('*', 1), Decimal('-10') - fee_node_1)
             # getunconfirmedbalance
             assert_equal(self.nodes[0].getunconfirmedbalance(), Decimal('60'))  # output of node 1's spend
             assert_equal(self.nodes[1].getunconfirmedbalance(), Decimal('30') - fee_node_1)  # Doesn't include output of node 0's send since it was spent
@@ -231,14 +229,6 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(txs[0]['hex'])
         self.generatetoaddress(self.nodes[1], 2, ADDRESS_WATCHONLY)
 
-        # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
-        # TODO: fix getbalance tracking of coin spentness depth
-        # getbalance with minconf=3 should still show the old balance
-        assert_equal(self.nodes[1].getbalance(minconf=3), Decimal('0'))
-
-        # getbalance with minconf=2 will show the new balance.
-        assert_equal(self.nodes[1].getbalance(minconf=2), Decimal('0'))
-
         # check mempool transactions count for wallet unconfirmed balance after
         # dynamically loading the wallet.
         before = self.nodes[1].getbalances()['mine']['untrusted_pending']
@@ -259,7 +249,7 @@ class WalletTest(BitcoinTestFramework):
         self.log.info('Check that wallet txs not in the mempool are untrusted')
         assert txid not in self.nodes[0].getrawmempool()
         assert_equal(self.nodes[0].gettransaction(txid)['trusted'], False)
-        assert_equal(self.nodes[0].getbalance(minconf=0), 0)
+        assert_equal(self.nodes[0].getbalances()['mine']['trusted'], 0)
 
         self.log.info("Test replacement and reorg of non-mempool tx")
         tx_orig = self.nodes[0].gettransaction(txid)['hex']
@@ -276,12 +266,12 @@ class WalletTest(BitcoinTestFramework):
 
         # Now confirm tx_replace
         block_reorg = self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)[0]
-        assert_equal(self.nodes[0].getbalance(minconf=0), total_amount)
+        assert_equal(self.nodes[0].getbalances()['mine']['trusted'], total_amount)
 
         self.log.info('Put txs back into mempool of node 1 (not node 0)')
         self.nodes[0].invalidateblock(block_reorg)
         self.nodes[1].invalidateblock(block_reorg)
-        assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
+        assert_equal(self.nodes[0].getbalances()['mine']['trusted'], 0)  # wallet txs not in the mempool are untrusted
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_WATCHONLY, sync_fun=self.no_op)
 
         # Now confirm tx_orig
@@ -290,7 +280,7 @@ class WalletTest(BitcoinTestFramework):
         self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
         self.generatetoaddress(self.nodes[1], 1, ADDRESS_WATCHONLY)
-        assert_equal(self.nodes[0].getbalance(minconf=0), total_amount + 1)  # The reorg recovered our fee of 1 coin
+        assert_equal(self.nodes[0].getbalances()['mine']['trusted'], total_amount + 1)  # The reorg recovered our fee of 1 coin
 
         if not self.options.descriptors:
             self.log.info('Check if mempool is taken into account after import*')
