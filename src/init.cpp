@@ -710,9 +710,21 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-mempoolfullrbf", strprintf("Accept transaction replace-by-fee without requiring replaceability signaling (default: %u)", (DEFAULT_MEMPOOL_RBF_POLICY == RBFPolicy::Always)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempoolreplacement", strprintf("Set to 0 to disable RBF entirely, \"fee,optin\" to honour RBF opt-out signal, or \"fee,-optin\" to always RBF aka full RBF (default: %s)", "fee,-optin"), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-mempooltruc", strprintf("Behaviour for transactions requesting TRUC limits: \"reject\" the transactions entirely, \"accept\" them just like any other, or \"enforce\" to impose their requested restrictions (default: %s)", "enforce"), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-permitbareanchor",
+                   strprintf("Relay transactions that only have ephemeral anchor outputs (default: %u)", DEFAULT_PERMITBAREANCHOR),
+                   ArgsManager::ALLOW_ANY,
+                   OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-permitbaredatacarrier",
+                   strprintf("Relay transactions that only have data carrier outputs (default: %u)", DEFAULT_PERMITBAREDATACARRIER),
+                   ArgsManager::ALLOW_ANY,
+                   OptionsCategory::NODE_RELAY);
     argsman.AddArg("-permitbarepubkey", strprintf("Relay legacy pubkey outputs (default: %u)", DEFAULT_PERMIT_BAREPUBKEY), ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-permitbaremultisig", strprintf("Relay transactions creating non-P2SH multisig outputs (default: %u)", DEFAULT_PERMIT_BAREMULTISIG), ArgsManager::ALLOW_ANY,
+                   OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-permitephemeral=<options>",
+                   strprintf("Relay transaction packages that include ephemeral outputs defined by comma-separated options (prefix each by '-' to force off): \"anchor\" to allow minimal anyone-can-spend anchors, \"send\" to allow ordinary output types to be considered ephemeral, and \"dust\" to allow for dust-amount outputs rather than strictly zero-value (default: %s)", "anchor,send,dust"),
+                   ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kvB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);

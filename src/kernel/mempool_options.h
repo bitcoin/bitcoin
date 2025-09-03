@@ -73,6 +73,8 @@ struct MemPoolOptions {
      */
     std::optional<unsigned> max_datacarrier_bytes{DEFAULT_ACCEPT_DATACARRIER ? std::optional{MAX_OP_RETURN_RELAY} : std::nullopt};
     bool datacarrier_fullcount{DEFAULT_DATACARRIER_FULLCOUNT};
+    bool permitbaredatacarrier{DEFAULT_PERMITBAREDATACARRIER};
+    bool permitbareanchor{DEFAULT_PERMITBAREANCHOR};
     bool permit_bare_pubkey{DEFAULT_PERMIT_BAREPUBKEY};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
     bool accept_non_std_datacarrier{DEFAULT_ACCEPT_NON_STD_DATACARRIER};
@@ -80,6 +82,9 @@ struct MemPoolOptions {
     bool acceptunknownwitness{DEFAULT_ACCEPTUNKNOWNWITNESS};
     RBFPolicy rbf_policy{DEFAULT_MEMPOOL_RBF_POLICY};
     TRUCPolicy truc_policy{DEFAULT_MEMPOOL_TRUC_POLICY};
+    bool permitephemeral_anchor{DEFAULT_PERMITEPHEMERAL_ANCHOR};
+    bool permitephemeral_send{DEFAULT_PERMITEPHEMERAL_SEND};
+    bool permitephemeral_dust{DEFAULT_PERMITEPHEMERAL_DUST};
     bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
     MemPoolLimits limits{};
 
