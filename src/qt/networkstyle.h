@@ -23,6 +23,9 @@ public:
     const QIcon &getTrayAndWindowIcon() const { return trayAndWindowIcon; }
     const QString &getTitleAddText() const { return titleAddText; }
 
+    QColor AdjustColour(QColor colour) const;
+    const std::pair<int, int> m_colour_shift;
+
 private:
     NetworkStyle(const QString &appName, const int iconColorHueShift, const int iconColorSaturationReduction, const char *titleAddText);
 

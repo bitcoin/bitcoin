@@ -5,11 +5,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## This issue tracker is only for technical issues related to Bitcoin Core.
+        ## This issue tracker is only for technical issues related to Bitcoin Knots.
 
         * General bitcoin questions and/or support requests should use Bitcoin StackExchange at https://bitcoin.stackexchange.com.
-        * For reporting security issues, please read instructions at https://bitcoincore.org/en/contact/.
+        * For reporting security issues, please read instructions at https://bitcoinknots.org/contact/
         * If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running `memtest` and observe CPU temperature with a load-test tool such as `linpack` before creating an issue.
+        * If your issue also affects Bitcoin Core, report it at https://github.com/bitcoin/bitcoin/issues/new?labels=bug&template=bug.yml
 
         ----
   - type: checkboxes
@@ -57,7 +58,7 @@ body:
       required: false
   - type: dropdown
     attributes:
-      label: How did you obtain Bitcoin Core
+      label: How did you obtain Bitcoin Knots
       multiple: false
       options:
         - Compiled from source
@@ -67,10 +68,10 @@ body:
     validations:
       required: true
   - type: input
-    id: core-version
+    id: knots-version
     attributes:
-      label: What version of Bitcoin Core are you using?
-      description: Run `bitcoind --version` or in Bitcoin-QT use `Help > About Bitcoin Core`
+      label: What version of Bitcoin Knots are you using?
+      description: Run `bitcoind --version` or in Bitcoin-QT use `Help > About Bitcoin Knots`
       placeholder: e.g. v24.0.1 or master@e1bf547
     validations:
       required: true

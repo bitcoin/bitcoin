@@ -1,13 +1,12 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
-Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin-core-dev@libera.chat
-Source: https://github.com/bitcoin/bitcoin
+Upstream-Name: Bitcoin Knots
+Upstream-Contact: Luke Dashjr <luke+knots+debian@dashjr.org>
+Source: https://github.com/bitcoinknots/bitcoin
 
 Files: *
-Copyright: 2009-2025, Bitcoin Core Developers
+Copyright: 2009-2025, Bitcoin Core & Knots Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses all contributors to the
+Comment: The Bitcoin Core & Knots Developers encompasses all contributors to the
          project, listed in the release notes or the git log.
 
 Files: debian/*
