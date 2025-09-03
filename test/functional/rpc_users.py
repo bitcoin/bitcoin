@@ -12,6 +12,7 @@ from test_framework.util import (
 
 import http.client
 import os
+from pathlib import Path
 import platform
 import urllib.parse
 import subprocess
@@ -40,6 +41,8 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def conf_setup(self):
+        self.authinfo = []
+
         #Append rpcauth to bitcoin.conf before initialization
         self.rtpassword = "cA773lm788buwYe4g4WT+05pKyNruVKjQ25x3n0DQcM="
         rpcauth = "rpcauth=rt:93648e835a54c573682c2eb19f882535$7681e9c5b74bdd85e78166031d2058e1069b3ed7ed967c93fc63abba06f31144"
@@ -64,10 +67,42 @@ class HTTPBasicsTest(BitcoinTestFramework):
         rpcauth3 = lines[1]
         self.password = lines[3]
 
+        # Generate rpcauthfile with one entry
+        username = 'rpcauth_single_' + ''.join(SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(10))
+        p = subprocess.Popen([sys.executable, gen_rpcauth, "--output", Path(self.options.tmpdir) / 'rpcauth_single', username], stdout=subprocess.PIPE, universal_newlines=True)
+        lines = p.stdout.read().splitlines()
+        self.authinfo.append( (username, lines[1]) )
+
+        # Generate rpcauthfile with two entries
+        username = 'rpcauth_multi1_' + ''.join(SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(10))
+        p = subprocess.Popen([sys.executable, gen_rpcauth, "--output", Path(self.options.tmpdir) / 'rpcauth_multi', username], stdout=subprocess.PIPE, universal_newlines=True)
+        lines = p.stdout.read().splitlines()
+        self.authinfo.append( (username, lines[1]) )
+        # Blank lines in between should get ignored
+        with open(Path(self.options.tmpdir) / 'rpcauth_multi', "a", encoding='utf8') as f:
+            f.write("\n\n")
+        username = 'rpcauth_multi2_' + ''.join(SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(10))
+        p = subprocess.Popen([sys.executable, gen_rpcauth, "--output", Path(self.options.tmpdir) / 'rpcauth_multi', username], stdout=subprocess.PIPE, universal_newlines=True)
+        lines = p.stdout.read().splitlines()
+        self.authinfo.append( (username, lines[1]) )
+
+        # Hand-generated rpcauthfile with one entry and no newline
+        username = 'rpcauth_nonewline_' + ''.join(SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(10))
+        p = subprocess.Popen([sys.executable, gen_rpcauth, username], stdout=subprocess.PIPE, universal_newlines=True)
+        lines = p.stdout.read().splitlines()
+        assert "\n" not in lines[1]
+        assert lines[1][:8] == 'rpcauth='
+        with open(Path(self.options.tmpdir) / 'rpcauth_nonewline', "a", encoding='utf8') as f:
+            f.write(lines[1][8:])
+        self.authinfo.append( (username, lines[3]) )
+
         with open(self.nodes[0].datadir_path / "bitcoin.conf", "a", encoding="utf8") as f:
             f.write(rpcauth + "\n")
             f.write(rpcauth2 + "\n")
             f.write(rpcauth3 + "\n")
+            f.write("rpcauthfile=rpcauth_single\n")
+            f.write("rpcauthfile=rpcauth_multi\n")
+            f.write("rpcauthfile=rpcauth_nonewline\n")
         with open(self.nodes[1].datadir_path / "bitcoin.conf", "a", encoding="utf8") as f:
             f.write("rpcuser={}\n".format(self.rpcuser))
             f.write("rpcpassword={}\n".format(self.rpcpassword))
@@ -149,6 +184,8 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.test_auth(self.nodes[0], 'rt', self.rtpassword)
         self.test_auth(self.nodes[0], 'rt2', self.rt2password)
         self.test_auth(self.nodes[0], self.user, self.password)
+        for info in self.authinfo:
+            self.test_auth(self.nodes[0], *info)
 
         self.log.info('Check correctness of the rpcuser/rpcpassword config options')
         url = urllib.parse.urlparse(self.nodes[1].url)
@@ -166,24 +203,34 @@ class HTTPBasicsTest(BitcoinTestFramework):
         # ...without disrupting usage of other -rpcauth tokens
         assert_equal(200, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
 
-        self.log.info('Check -norpcauth disables all previous -rpcauth params')
+        self.log.info('Check -norpcauth disables all previous -rpcauth* params')
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth'])
         assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(401, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(401, call_with_auth(self.nodes[0], *info).status)
 
         self.log.info('Check -norpcauth can be reversed with -rpcauth')
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', '-rpcauth'])
         # FIXME: assert_equal(200, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
 
         self.log.info('Check -norpcauth followed by a specific -rpcauth=* restores config file -rpcauth=* values too')
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', rpcauth_abc])
         assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
         self.restart_node(0, extra_args=[rpcauth_def, '-norpcauth', '-rpcauth='])
         assert_equal(401, call_with_auth(self.nodes[0], 'def', 'abc').status)
         assert_equal(200, call_with_auth(self.nodes[0], 'rt', self.rtpassword).status)
+        for info in self.authinfo:
+            assert_equal(200, call_with_auth(self.nodes[0], *info).status)
 
         self.log.info('Check -rpcauth are validated')
         self.stop_node(0)

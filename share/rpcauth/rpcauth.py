@@ -26,6 +26,7 @@ def main():
     parser.add_argument('username', help='the username for authentication')
     parser.add_argument('password', help='leave empty to generate a random password or specify "-" to prompt for password', nargs='?')
     parser.add_argument("-j", "--json", help="output to json instead of plain-text", action='store_true')
+    parser.add_argument('--output', dest='output', help='file to store credentials, to be used with -rpcauthfile')
     args = parser.parse_args()
 
     if not args.password:
@@ -36,13 +37,21 @@ def main():
     # Create 16 byte hex salt
     salt = generate_salt(16)
     password_hmac = password_to_hmac(salt, args.password)
+    rpcauth = f'{args.username}:{salt}${password_hmac}'
+
+    if args.output:
+        file = open(args.output, "a", encoding="utf8")
+        file.write(rpcauth + "\n")
 
     if args.json:
-        odict={'username':args.username, 'password':args.password, 'rpcauth':f'{args.username}:{salt}${password_hmac}'}
+        odict={'username':args.username, 'password':args.password}
+        if not args.output:
+            odict['rpcauth'] = rpcauth
         print(json.dumps(odict))
     else:
-        print('String to be appended to bitcoin.conf:')
-        print(f'rpcauth={args.username}:{salt}${password_hmac}')
+        if not args.output:
+            print('String to be appended to bitcoin.conf:')
+            print(f'rpcauth={rpcauth}')
         print(f'Your password:\n{args.password}')
 
 if __name__ == '__main__':
