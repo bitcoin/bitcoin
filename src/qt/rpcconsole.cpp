@@ -787,7 +787,6 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
             ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::ConnectionType, GUIUtil::TextWidth(fm, GUIUtil::ConnectionTypeToQString(ConnectionType::ADDR_FETCH /* TODO: Find the WIDEST string? */, /*prepend_direction=*/false)));
             const auto bytesize_width = GUIUtil::TextWidth(fm, GUIUtil::formatBytes(999'000'000'000) + QStringLiteral("xx"));
-            ui->peerWidget->setColumnWidth(PeerTableModel::Network, GUIUtil::TextWidth(fm, qvariant_cast<QString>(model->peerTableSortProxy()->headerData(PeerTableModel::ColumnIndex::Network, Qt::Horizontal, Qt::DisplayRole)) /* TODO: Find the WIDEST string? */ + QStringLiteral("x")));
             ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Sent, bytesize_width);
