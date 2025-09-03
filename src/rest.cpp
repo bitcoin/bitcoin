@@ -647,6 +647,45 @@ static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const
 
 }
 
+static bool rest_mempool_transactions(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
+{
+    if (!CheckWarmup(req))
+        return false;
+
+    std::string param;
+    const RESTResponseFormat rf = ParseDataFormat(param, str_uri_part);
+    if (param != "contents" && param != "info") {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid URI format. Expected /rest/mempool/transactions/<info|contents>.json");
+    }
+
+    const CTxMemPool* mempool = GetMemPool(context, req);
+    if (!mempool) return false;
+
+    switch (rf) {
+    case RESTResponseFormat::JSON: {
+        std::string str_json;
+        std::string raw_sequence_start;
+        const bool verbose = param == "contents";
+
+        try {
+            raw_sequence_start = req->GetQueryParameter("sequence_start").value_or("0");
+        } catch (const std::runtime_error& e) {
+            return RESTERR(req, HTTP_BAD_REQUEST, e.what());
+        }
+
+        const auto sequence_start{ToIntegral<uint64_t>(raw_sequence_start)};
+        str_json = MempoolTxsToJSON(*mempool, verbose, sequence_start.value()).write() + "\n";
+
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, str_json);
+        return true;
+    }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+}
+
 static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
 {
     if (!CheckWarmup(req))
@@ -1019,6 +1058,7 @@ static const struct {
       {"/rest/blockfilterheaders/", rest_filter_header},
       {"/rest/chaininfo", rest_chaininfo},
       {"/rest/mempool/", rest_mempool},
+      {"/rest/mempool/transactions", rest_mempool_transactions},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
       {"/rest/deploymentinfo/", rest_deploymentinfo},

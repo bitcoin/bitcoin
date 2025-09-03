@@ -339,6 +339,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "stop", 0, "wait" },
     { "addnode", 2, "v2transport" },
     { "addconnection", 2, "v2transport" },
+    { "listmempooltransactions", 0, "start_sequence"},
+    { "listmempooltransactions", 1, "verbose"},
 };
 // clang-format on
 

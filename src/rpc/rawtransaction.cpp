@@ -24,6 +24,7 @@
 #include <psbt.h>
 #include <random.h>
 #include <rpc/blockchain.h>
+#include <rpc/rawtransaction.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -88,7 +89,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
     }
 }
 
-static std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
+std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc)
 {
     return {
         {RPCResult::Type::STR_HEX, "txid", txid_field_doc},

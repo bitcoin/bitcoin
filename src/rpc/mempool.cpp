@@ -19,6 +19,8 @@
 #include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <rpc/mempool.h>
+#include <rpc/rawtransaction.h>
+#include <rpc/mempool.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
@@ -415,6 +417,100 @@ static RPCHelpMan maxmempool()
     return NullUniValue;
 }
     };
+}
+
+static RPCHelpMan listmempooltransactions()
+{
+    return RPCHelpMan{"listmempooltransactions",
+        "\nReturns all transactions in the mempool. Can be filtered by mempool_sequence\n"
+        "\nAllows for syncing with current mempool entries via polling (not zmq).",
+        {
+            {"start_sequence", RPCArg::Type::NUM, RPCArg::Default{0}, "The mempool_sequence to start the results to. Defaults to 0 (zero, all transactions)."},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "True for a json object, false for array of transaction ids"},
+        },
+        {
+            RPCResult{"for verbose = false",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "mempool_sequence", "The current max mempool sequence value."},
+                    {RPCResult::Type::ARR, "txs", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM, "entry_sequence", "The mempool sequence value for this transaction entry."},
+                            {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+                        }},
+                    }},
+                }},
+            RPCResult{"for verbose = true",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "mempool_sequence", "The current max mempool sequence value."},
+                    {RPCResult::Type::ARR, "txs", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                         Cat<std::vector<RPCResult>>(
+                            {
+                                {RPCResult::Type::NUM, "entry_sequence", "The mempool sequence value for this transaction entry."},
+                            },
+                            DecodeTxDoc(/*txid_field_doc=*/"The transaction id of the mempool transaction")),
+                        }},
+                    }},
+                }},
+        },
+        RPCExamples{
+            HelpExampleCli("listmempooltransactions", "true")
+            + HelpExampleRpc("listmempooltransactions", "true")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            uint64_t start_mempool_sequence = 0;
+            if (!request.params[0].isNull()) {
+                start_mempool_sequence = request.params[0].getInt<uint64_t>();
+            }
+
+            bool fVerbose = false;
+            if (!request.params[1].isNull())
+                fVerbose = request.params[1].get_bool();
+
+            return MempoolTxsToJSON(EnsureAnyMemPool(request.context), fVerbose, start_mempool_sequence);
+        },
+    };
+}
+
+UniValue MempoolTxsToJSON(const CTxMemPool& pool, bool verbose, uint64_t sequence_start)
+{
+    uint64_t mempool_sequence;
+
+    LOCK(pool.cs);
+    mempool_sequence = pool.GetSequence();
+
+    UniValue o(UniValue::VOBJ);
+    o.pushKV("mempool_sequence", mempool_sequence);
+
+    UniValue a(UniValue::VARR);
+    for (const CTxMemPoolEntry& e : pool.mapTx) {
+        UniValue txentry(UniValue::VOBJ);
+
+        // We skip anything not requested.
+        if (e.GetSequence() < sequence_start)
+            continue;
+
+        txentry.pushKV("entry_sequence", e.GetSequence());
+
+        if (verbose) {
+            // We could also calculate fees etc for this transaction, but yolo.
+            TxToUniv(e.GetTx(), /*block_hash=*/uint256::ZERO, /*entry=*/txentry, /*include_hex=*/false);
+        } else {
+            txentry.pushKV("txid", e.GetTx().GetHash().ToString());
+        }
+
+        a.push_back(txentry);
+    }
+
+    o.pushKV("txs", a);
+    return o;
 }
 
 static RPCHelpMan getrawmempool()
@@ -1281,6 +1377,7 @@ void RegisterMempoolRPCCommands(CRPCTable& t)
         {"blockchain", &maxmempool},
         {"hidden", &getorphantxs},
         {"rawtransactions", &submitpackage},
+        {"rawtransactions", &listmempooltransactions},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
