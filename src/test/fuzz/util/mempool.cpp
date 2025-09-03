@@ -14,6 +14,17 @@
 #include <cstdint>
 #include <limits>
 
+bool SanityCheckForConsumeTxMemPoolEntry(const CTransaction& tx) noexcept
+{
+    try {
+        (void)tx.GetValueOut();
+        return true;
+    } catch (const std::runtime_error&) {
+        return false;
+    }
+}
+
+// NOTE: Transaction must pass SanityCheckForConsumeTxMemPoolEntry first
 CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx) noexcept
 {
     // Avoid:
@@ -24,8 +35,12 @@ CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, 
     assert(MoneyRange(fee));
     const int64_t time = fuzzed_data_provider.ConsumeIntegral<int64_t>();
     const uint64_t entry_sequence{fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
-    const unsigned int entry_height = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
+    const double coin_age = fuzzed_data_provider.ConsumeFloatingPoint<double>();
+    const unsigned int entry_height = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, std::numeric_limits<unsigned int>::max() - 1);
     const bool spends_coinbase = fuzzed_data_provider.ConsumeBool();
     const unsigned int sig_op_cost = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, MAX_BLOCK_SIGOPS_COST);
-    return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, entry_sequence, spends_coinbase, sig_op_cost, {}};
+    return CTxMemPoolEntry{MakeTransactionRef(tx), fee, time, entry_height, entry_sequence, {
+        .inputs_coin_age = coin_age,
+        .in_chain_input_value = tx.GetValueOut(),
+    }, spends_coinbase, sig_op_cost, {}};
 }
