@@ -262,6 +262,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importmulti", 1, "options" },
     { "importmulti", 1, "rescan" },
     { "importdescriptors", 0, "requests" },
+    { "importdescriptors", 1, "seeds" },
     { "listdescriptors", 0, "private" },
     { "verifychain", 0, "checklevel" },
     { "verifychain", 1, "nblocks" },
