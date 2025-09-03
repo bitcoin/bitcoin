@@ -241,6 +241,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             .chainparams = chainparams,
             .datadir = m_args.GetDataDirNet(),
             .check_block_index = 1,
+            .checkpoints_enabled = false,
             .notifications = *m_node.notifications,
             .signals = m_node.validation_signals.get(),
             .worker_threads_num = 2,
