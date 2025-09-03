@@ -517,9 +517,21 @@ std::optional<bool> ArgsManager::GetBoolArg(const std::string& strArg) const
 
 std::optional<bool> SettingToBool(const common::SettingsValue& value)
 {
-    if (value.isNull()) return std::nullopt;
-    if (value.isBool()) return value.get_bool();
-    return InterpretBool(value.get_str());
+    switch (value.getType()) {
+        case UniValue::VNULL:
+            return std::nullopt;
+        case UniValue::VBOOL:
+            return value.get_bool();
+        case UniValue::VOBJ:
+        case UniValue::VARR:
+            // Throws an exception
+            value.get_str();
+            assert(false);
+        case UniValue::VSTR:
+        case UniValue::VNUM:
+            return InterpretBool(value.getValStr());
+    }
+    assert(false);
 }
 
 bool SettingToBool(const common::SettingsValue& value, bool fDefault)
