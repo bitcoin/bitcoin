@@ -5,6 +5,7 @@
 #include <qt/qrimagewidget.h>
 
 #include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
 
 #include <QApplication>
 #include <QClipboard>
@@ -29,7 +30,7 @@ QRImageWidget::QRImageWidget(QWidget* parent)
     contextMenu->addAction(tr("&Copy Image"), this, &QRImageWidget::copyImage);
 }
 
-bool QRImageWidget::setQR(const QString& data, const QString& text)
+bool QRImageWidget::setQR(const QString& data, const QString& text, const OptionsModel::FontChoice& fontchoice)
 {
 #ifdef USE_QRCODE
     setText("");
@@ -66,13 +67,20 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
     if (text.isEmpty()) {
         text_lines = 0;
     } else {
-        // Determine font to use
-        font = GUIUtil::fixedPitchFont();
-        font.setStretch(QFont::SemiCondensed);
-        font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
         const int max_text_width = qr_image_width - (2 * QR_IMAGE_TEXT_MARGIN);
-        const qreal font_size = GUIUtil::calculateIdealFontSize(max_text_width, text, font);
-        font.setPointSizeF(font_size);
+
+        // Determine font to use
+        if (std::holds_alternative<OptionsModel::FontChoiceAbstract>(fontchoice)) {
+            font = GUIUtil::fixedPitchFont(fontchoice != OptionsModel::UseBestSystemFont);
+            font.setWeight(QFont::Bold);
+            font.setStretch(QFont::SemiCondensed);
+            font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
+
+            const qreal font_size = GUIUtil::calculateIdealFontSize(max_text_width, text, font);
+            font.setPointSizeF(font_size);
+        } else {
+            font = std::get<QFont>(fontchoice);
+        }
 
         // Plan how many lines are needed
         QFontMetrics fm(font);
@@ -116,6 +124,11 @@ bool QRImageWidget::setQR(const QString& data, const QString& text)
     setText(tr("QR code support not available."));
     return false;
 #endif
+}
+
+bool QRImageWidget::setQR(const QString& data)
+{
+    return setQR(data, "", OptionsModel::FontChoiceAbstract::EmbeddedFont);
 }
 
 QImage QRImageWidget::exportImage()

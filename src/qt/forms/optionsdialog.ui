@@ -787,6 +787,31 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_qrFont">
+         <item>
+          <widget class="QLabel" name="qrFontLabel">
+           <property name="text">
+            <string>Font in QR Codes: </string>
+           </property>
+           <property name="buddy">
+            <cstring>qrFont</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="qrFont"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="qrFont_preview">
+           <property name="text">
+            <string notr="true">1NS17iag9jJgT…
+bc1p2q3rvn3gp…</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QCheckBox" name="peersTabAlternatingRowColors">
          <property name="toolTip">
           <string>Alternate the row colors for the &quot;Peers&quot; and &quot;Banned peers&quot; tables in the Peers tab.</string>
