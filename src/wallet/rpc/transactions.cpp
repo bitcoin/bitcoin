@@ -20,7 +20,12 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
 {
     interfaces::Chain& chain = wallet.chain();
     int confirms = wallet.GetTxDepthInMainChain(wtx);
+    if (confirms > 0 && wallet.IsTxAssumed(wtx)) {
+        entry.pushKV("confirmations", 0);
+        entry.pushKV("confirmations_assumed", confirms);
+    } else {
     entry.pushKV("confirmations", confirms);
+    }
     if (wtx.IsCoinBase())
         entry.pushKV("generated", true);
     if (auto* conf = wtx.state<TxStateConfirmed>())
@@ -407,6 +412,7 @@ static std::vector<RPCResult> TransactionDescriptionString()
 {
     return{{RPCResult::Type::NUM, "confirmations", "The number of confirmations for the transaction. Negative confirmations means the\n"
                "transaction conflicted that many blocks ago."},
+           {RPCResult::Type::NUM, "confirmations_assumed", /*optional=*/true, "The number of unverified confirmations for the transaction (eg, in an assumed-valid UTXO set)."},
            {RPCResult::Type::BOOL, "generated", /*optional=*/true, "Only present if the transaction's only input is a coinbase one."},
            {RPCResult::Type::BOOL, "trusted", /*optional=*/true, "Whether we consider the transaction to be trusted and safe to spend from.\n"
                 "Only present when the transaction has 0 confirmations (or negative confirmations, if conflicted)."},
