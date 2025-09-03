@@ -101,7 +101,6 @@ private Q_SLOTS:
     void removeEntry(SendCoinsEntry* entry);
     void useAvailableBalance(SendCoinsEntry* entry);
     void refreshBalance();
-    void updateFontForMoney();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 7, 0))

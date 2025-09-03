@@ -155,7 +155,10 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
 void ReceiveRequestDialog::updateDisplayUnit()
 {
     if (!model) return;
-    ui->amount_content->setText(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getFontForMoney(), model->getOptionsModel()->getDisplayUnit(), info.amount));
+
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+    ui->amount_content->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, info.amount));
     updateInfoWidget();
 }
 

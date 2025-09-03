@@ -166,9 +166,8 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 
         connect(_model, &WalletModel::balanceChanged, this, &SendCoinsDialog::setBalance);
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsDialog::refreshBalance);
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &SendCoinsDialog::refreshBalance);
         refreshBalance();
-        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &SendCoinsDialog::updateFontForMoney);
-        updateFontForMoney();
 
         // Coin Control
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsDialog::coinControlUpdateLabels);
@@ -300,11 +299,12 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     coin_control.m_allow_other_inputs = !coin_control.HasSelected(); // future, could introduce a checkbox to customize this value.
     prepareStatus = model->prepareTransaction(*m_current_transaction, coin_control);
 
-    const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), m_current_transaction->getTransactionFee()));
+        BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, m_current_transaction->getTransactionFee()));
 
     if(prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
@@ -316,7 +316,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     for (const SendCoinsRecipient &rcp : m_current_transaction->getRecipients())
     {
         // generate amount string with wallet name in case of multiwallet
-        QString amount = BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, rcp.amount);
         if (model->isMultiwallet()) {
             amount = tr("%1 from wallet '%2'").arg(amount, GUIUtil::HtmlEscape(model->getWalletName()));
         }
@@ -373,7 +373,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
 
         // append transaction fee value
         question_string.append("<span style='color:#aa0000; font-weight:bold;'>");
-        question_string.append(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), txFee));
+        question_string.append(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, txFee));
         question_string.append("</span><br />");
 
         // append RBF message according to transaction's signalling
@@ -392,10 +392,13 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     QStringList alternativeUnits;
     for (const BitcoinUnit u : BitcoinUnits::availableUnits()) {
         if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(font_for_money, u, totalAmount));
+        {
+            const QFont font_for_money_u = model->getOptionsModel()->getFontForMoney(u);
+            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(font_for_money_u, u, totalAmount));
+        }
     }
     question_string.append(QString("<b>%1</b>: <b>%2</b>").arg(tr("Total Amount"))
-        .arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), totalAmount)));
+        .arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, totalAmount)));
     question_string.append(QString("<br /><span style='font-size:10pt; font-weight:normal;'>(=%1)</span>")
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
@@ -546,7 +549,8 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             reuse_question = tr("You've already paid this address.");
         }
 
-        const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
         for (const auto& rcp : recipients) {
             if (!prior_usage_info.contains(rcp.address)) continue;
             if (!reuse_details.isEmpty()) reuse_details.append("<br /><br />");
@@ -554,10 +558,10 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
             const QString label_and_address = rcp.label.isEmpty() ? rcp.address : (QString("'") + GUIUtil::HtmlEscape(rcp.label) + "' (" + rcp.address + ")");
             if (rcp_prior_usage_info.num_txs == 1) {
                 //: %1 is an amount (eg, "1 BTC"); %2 is a Bitcoin address and its label; %3 is a date (eg, "2019-05-08")
-                reuse_details.append(tr("Sent %1 to %2 on %3").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), rcp_prior_usage_info.total_amount), label_and_address, GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
+                reuse_details.append(tr("Sent %1 to %2 on %3").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, rcp_prior_usage_info.total_amount), label_and_address, GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
             } else {
                 //: %1 is an amount (eg, "1 BTC"); %2 is a Bitcoin address and its label; %3 is the number of transactions; %4 and %5 are dates (eg, "2019-05-08"), earlier first
-                reuse_details.append(tr("Sent %1 to %2 across %3 transactions from %4 through %5").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), rcp_prior_usage_info.total_amount), label_and_address, QString::number(rcp_prior_usage_info.num_txs), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_oldest), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
+                reuse_details.append(tr("Sent %1 to %2 across %3 transactions from %4 through %5").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, rcp_prior_usage_info.total_amount), label_and_address, QString::number(rcp_prior_usage_info.num_txs), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_oldest), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
             }
         }
 
@@ -805,22 +809,21 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
             balance = balances.watch_only_balance;
             ui->labelBalanceName->setText(tr("Watch-only balance:"));
         }
-        const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
-        ui->labelBalance->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), balance));
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        ui->labelBalance->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, balance));
     }
 }
 
 void SendCoinsDialog::refreshBalance()
 {
-    setBalance(model->getCachedBalance());
-    ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
-    updateSmartFeeLabel();
-}
-
-void SendCoinsDialog::updateFontForMoney()
-{
-    ui->customFee->setFontForMoney(model->getOptionsModel()->getFontForMoney());
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+    ui->customFee->setFontForMoney(font_for_money);
     coinControlUpdateLabels();
+    setBalance(model->getCachedBalance());
+    ui->customFee->setDisplayUnit(display_unit);
+    updateSmartFeeLabel();
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
@@ -854,8 +857,9 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         break;
     case WalletModel::AbsurdFee:
     {
-        const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
-        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), model->wallet().getDefaultMaxTxFee()));
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, model->wallet().getDefaultMaxTxFee()));
         break;
     }
     // included to prevent a compiler warning.
@@ -935,8 +939,9 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
     if (ui->radioSmartFee->isChecked())
         ui->labelFeeMinimized->setText(ui->labelSmartFee->text());
     else {
-        const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
-        ui->labelFeeMinimized->setText(tr("%1/kvB").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), ui->customFee->value())));
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        ui->labelFeeMinimized->setText(tr("%1/kvB").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, ui->customFee->value())));
     }
 }
 
@@ -975,8 +980,9 @@ void SendCoinsDialog::updateSmartFeeLabel()
     FeeReason reason;
     CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
-    const QFont font_for_money = model->getOptionsModel()->getFontForMoney();
-    ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())));
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+    ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, feeRate.GetFeePerK())));
 
     if (reason == FeeReason::FALLBACK) {
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)

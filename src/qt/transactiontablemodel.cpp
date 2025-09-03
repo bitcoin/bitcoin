@@ -573,7 +573,8 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         assert(false);
     case Qt::FontRole:
         if (column == Amount) {
-            return walletModel->getOptionsModel()->getFontForMoney();
+            const BitcoinUnit display_unit = walletModel->getOptionsModel()->getDisplayUnit();
+            return walletModel->getOptionsModel()->getFontForMoney(display_unit);
         }
         break;
     case Qt::ToolTipRole:
@@ -610,8 +611,9 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return txWatchonlyDecoration(rec);
     case LongDescriptionRole:
     {
-        const QFont font_for_money = walletModel->getOptionsModel()->getFontForMoney();
-        return priv->describe(walletModel->node(), walletModel->wallet(), rec, walletModel->getOptionsModel()->getDisplayUnit(), font_for_money);
+        const BitcoinUnit display_unit = walletModel->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = walletModel->getOptionsModel()->getFontForMoney(display_unit);
+        return priv->describe(walletModel->node(), walletModel->wallet(), rec, display_unit, font_for_money);
     }
     case AddressRole:
         return QString::fromStdString(rec->address);

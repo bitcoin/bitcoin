@@ -12,9 +12,7 @@
 
 static const QList<QChar> tonal_digits{QChar(0xe8ef), QChar(0xe8ee), QChar(0xe8ed), QChar(0xe8ec), QChar(0xe8eb), QChar(0xe8ea), QChar(0xe8e9), '8', '7', '6', '5', '4', '3', '2', '1', '0'};
 
-namespace {
-
-bool font_supports_tonal(const QFont& font)
+bool TonalUtils::font_supports_tonal(const QFont& font)
 {
     const QFontMetrics fm(font);
     QString s = "000";
@@ -25,17 +23,6 @@ bool font_supports_tonal(const QFont& font)
         if (sz != fm.size(0, s)) return false;
     }
     return true;
-}
-
-} // anon namespace
-
-bool TonalUtils::Supported()
-{
-    QFont default_font;
-    if (font_supports_tonal(default_font)) return true;
-    // FIXME: This will fail if the default font has some non-Tonal glyphs but a fallback supports Tonal
-    // TODO: Check other fonts and ensure their usage when appropriate
-    return false;
 }
 
 #define RE_TONAL_DIGIT "[\\d\\xe8e0-\\xe8ef\\xe9d0-\\xe9df]"

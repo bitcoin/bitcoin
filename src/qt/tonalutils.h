@@ -8,13 +8,14 @@
 #include <QValidator>
 
 QT_BEGIN_NAMESPACE
+class QFont;
 class QString;
 QT_END_NAMESPACE
 
 class TonalUtils
 {
 public:
-    static bool Supported();
+    static bool font_supports_tonal(const QFont& font);
 
     static QValidator::State validate(QString&input, int&pos);
 
