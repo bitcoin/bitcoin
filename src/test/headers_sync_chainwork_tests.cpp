@@ -40,8 +40,11 @@ using State = HeadersSyncState::State;
         }                                                                                                \
     } while (false)
 
-constexpr size_t TARGET_BLOCKS{15'000};
+constexpr size_t TARGET_BLOCKS{15'012};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
+
+// Copied from headerssync.cpp, will be redefined in next commit.
+constexpr size_t REDOWNLOAD_BUFFER_SIZE{15'009};
 
 struct HeadersGeneratorSetup : public RegTestingSetup {
     const CBlock& genesis{Params().GenesisBlock()};
@@ -180,12 +183,28 @@ BOOST_AUTO_TEST_CASE(happy_path)
             /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
             /*exp_locator_hash=*/genesis_hash);
 
-        CHECK_RESULT(hss.ProcessNextHeaders(first_chain, full_headers_message),
-            // Nothing left for the sync logic to do:
+        // Process only so that the internal threshold isn't exceeded, meaning
+        // validated headers shouldn't be returned yet:
+        CHECK_RESULT(hss.ProcessNextHeaders({first_chain.begin(), REDOWNLOAD_BUFFER_SIZE}, true),
+            hss, /*exp_state=*/State::REDOWNLOAD,
+            /*exp_success*/true, /*exp_request_more=*/true,
+            /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
+            /*exp_locator_hash=*/first_chain[REDOWNLOAD_BUFFER_SIZE - 1].GetHash());
+
+        // We start receiving headers for permanent storage before completing:
+        CHECK_RESULT(hss.ProcessNextHeaders({{first_chain[REDOWNLOAD_BUFFER_SIZE]}}, true),
+            hss, /*exp_state=*/State::REDOWNLOAD,
+            /*exp_success*/true, /*exp_request_more=*/true,
+            /*exp_headers_size=*/1, /*exp_pow_validated_prev=*/genesis_hash,
+            /*exp_locator_hash=*/first_chain[REDOWNLOAD_BUFFER_SIZE].GetHash());
+
+        // Feed in remaining headers, meeting the work threshold again and
+        // completing the REDOWNLOAD phase:
+        CHECK_RESULT(hss.ProcessNextHeaders({first_chain.begin() + REDOWNLOAD_BUFFER_SIZE + 1, first_chain.end()}, full_headers_message),
             hss, /*exp_state=*/State::FINAL,
             /*exp_success*/true, /*exp_request_more=*/false,
             // All headers except the one already returned above:
-            /*exp_headers_size=*/first_chain.size(), /*exp_pow_validated_prev=*/genesis_hash,
+            /*exp_headers_size=*/first_chain.size() - 1, /*exp_pow_validated_prev=*/first_chain.front().GetHash(),
             /*exp_locator_hash=*/std::nullopt);
     }
 }
