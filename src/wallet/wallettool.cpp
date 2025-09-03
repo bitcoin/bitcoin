@@ -253,19 +253,23 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
             return false;
         }
 
+        if (database->Format().starts_with("bdb")) {
+            tfm::format(std::cerr, "dump: WARNING: BDB-backed wallets have a wallet id that is not currently dumped.\n");
+        }
+
         bool ret = DumpWallet(*database, error, dump_filename);
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
             return ret;
         }
-        tfm::format(std::cout, "The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n");
+        tfm::format(std::cerr, "The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n");
         return ret;
     } else if (command == "createfromdump") {
         bilingual_str error;
         std::vector<bilingual_str> warnings;
         bool ret = CreateFromDump(args, name, path, error, warnings);
         for (const auto& warning : warnings) {
-            tfm::format(std::cout, "%s\n", warning.original);
+            tfm::format(std::cerr, "%s\n", warning.original);
         }
         if (!ret && !error.empty()) {
             tfm::format(std::cerr, "%s\n", error.original);
