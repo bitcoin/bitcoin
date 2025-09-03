@@ -72,9 +72,11 @@ bool QRImageWidget::setQR(const QString& data, const QString& text, const Option
         // Determine font to use
         if (std::holds_alternative<OptionsModel::FontChoiceAbstract>(fontchoice)) {
             font = GUIUtil::fixedPitchFont(fontchoice != OptionsModel::UseBestSystemFont);
-            font.setWeight(QFont::Bold);
-            font.setStretch(QFont::SemiCondensed);
-            font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
+            if (fontchoice == OptionsModel::UseBestSystemFont) {
+                font.setWeight(QFont::Bold);
+                font.setStretch(QFont::SemiCondensed);
+                font.setLetterSpacing(QFont::AbsoluteSpacing, 1);
+            }
 
             const qreal font_size = GUIUtil::calculateIdealFontSize(max_text_width, text, font);
             font.setPointSizeF(font_size);
