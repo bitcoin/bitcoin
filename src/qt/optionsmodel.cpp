@@ -260,6 +260,12 @@ bool OptionsModel::Init(bilingual_str& error)
     }
     Q_EMIT fontForMoneyChanged(getFontForMoney());
 
+    if (!settings.contains("PeersTabAlternatingRowColors")) {
+        settings.setValue("PeersTabAlternatingRowColors", "false");
+    }
+    m_peers_tab_alternating_row_colors = settings.value("PeersTabAlternatingRowColors").toBool();
+    Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
+
     m_mask_values = settings.value("mask_values", false).toBool();
 
     return true;
@@ -464,6 +470,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return QString::fromStdString(SettingToString(setting(), ""));
     case FontForMoney:
         return QVariant::fromValue(m_font_money);
+    case PeersTabAlternatingRowColors:
+        return m_peers_tab_alternating_row_colors;
     case CoinControlFeatures:
         return fCoinControlFeatures;
     case EnablePSBTControls:
@@ -642,6 +650,11 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         Q_EMIT fontForMoneyChanged(getFontForMoney());
         break;
     }
+    case PeersTabAlternatingRowColors:
+        m_peers_tab_alternating_row_colors = value.toBool();
+        settings.setValue("PeersTabAlternatingRowColors", m_peers_tab_alternating_row_colors);
+        Q_EMIT peersTabAlternatingRowColorsChanged(m_peers_tab_alternating_row_colors);
+        break;
     case CoinControlFeatures:
         fCoinControlFeatures = value.toBool();
         settings.setValue("fCoinControlFeatures", fCoinControlFeatures);
