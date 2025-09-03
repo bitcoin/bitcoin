@@ -254,6 +254,14 @@ static RPCHelpMan loadwallet()
     WalletContext& context = EnsureWalletContext(request.context);
     const std::string name(request.params[0].get_str());
 
+    {
+        std::string authorized_wallet_name;
+        const bool have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+        if (have_wallet_restriction && authorized_wallet_name != name) {
+            throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet usage is restricted.");
+        }
+    }
+
     DatabaseOptions options;
     DatabaseStatus status;
     ReadDatabaseArgs(*context.args, options);
@@ -394,6 +402,14 @@ static RPCHelpMan createwallet()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    {
+        std::string authorized_wallet_name;
+        const bool have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+        if (have_wallet_restriction && authorized_wallet_name != request.params[0].get_str()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet usage is restricted.");
+        }
+    }
+
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
     if (!request.params[1].isNull() && request.params[1].get_bool()) {
@@ -489,7 +505,14 @@ static RPCHelpMan unloadwallet()
     const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string>("wallet_name"))};
 
     WalletContext& context = EnsureWalletContext(request.context);
-    std::shared_ptr<CWallet> wallet = GetWallet(context, wallet_name);
+    std::shared_ptr<CWallet> wallet;
+    {
+        std::string authorized_wallet_name;
+        const bool have_wallet_restriction = GetWalletRestrictionFromJSONRPCRequest(request, authorized_wallet_name);
+        if ((!have_wallet_restriction) || authorized_wallet_name == wallet_name) {
+            wallet = GetWallet(context, wallet_name);
+        }
+    }
     if (!wallet) {
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
     }
@@ -791,6 +814,9 @@ static RPCHelpMan migratewallet()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
+            // New wallets do not necessarily have the same name as the migrated wallet
+            EnsureNotWalletRestricted(request);
+
             const std::string wallet_name{EnsureUniqueWalletName(request, self.MaybeArg<std::string>("wallet_name"))};
 
             SecureString wallet_pass;

@@ -351,6 +351,7 @@ public:
         req.params = params;
         req.strMethod = command;
         req.URI = uri;
+        req.m_wallet_restriction.clear();
         return ::tableRPC.execute(req);
     }
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
