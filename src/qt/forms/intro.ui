@@ -223,7 +223,7 @@
    <item>
     <widget class="QLabel" name="lblExplanation3">
      <property name="text">
-      <string>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</string>
+      <string>If you choose to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
