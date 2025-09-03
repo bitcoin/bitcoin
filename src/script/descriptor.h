@@ -185,6 +185,11 @@ std::vector<std::unique_ptr<Descriptor>> Parse(const std::string& descriptor, Fl
  */
 std::string GetDescriptorChecksum(const std::string& descriptor);
 
+/**
+ * Simple wrapper to add the checksum at the end of the descriptor
+ */
+std::string AddChecksum(const std::string& str);
+
 /** Find a descriptor for the specified `script`, using information from `provider` where possible.
  *
  * A non-ranged descriptor which only generates the specified script will be returned in all
