@@ -14,14 +14,20 @@
 #include <logging.h>
 #include <node/interface_ui.h>
 #include <policy/feerate.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <tinyformat.h>
 #include <util/moneystr.h>
+#include <util/result.h>
+#include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
+#include <string_view>
+#include <utility>
 
 using common::AmountErrMsg;
 using kernel::MemPoolLimits;
@@ -41,6 +47,48 @@ void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolLimits& mempool_limi
 
     if (auto vkb = argsman.GetIntArg("-limitdescendantsize")) mempool_limits.descendant_size_vbytes = *vkb * 1'000;
 }
+}
+
+util::Result<std::pair<int32_t, int>> ParseDustDynamicOpt(std::string_view optstr, const unsigned int max_fee_estimate_blocks)
+{
+    if (optstr == "0" || optstr == "off") {
+        return std::pair<int32_t, int>(0, DEFAULT_DUST_RELAY_MULTIPLIER);
+    }
+
+    int multiplier{DEFAULT_DUST_RELAY_MULTIPLIER};
+    if (auto pos = optstr.find('*'); pos != optstr.npos) {
+        int64_t parsed;
+        if ((!ParseFixedPoint(optstr.substr(0, pos), 3, &parsed)) || parsed > std::numeric_limits<int>::max() || parsed < 1) {
+            return util::Error{_("failed to parse multiplier")};
+        }
+        multiplier = parsed;
+        optstr.remove_prefix(pos + 1);
+    }
+
+    if (optstr.rfind("target:", 0) == 0) {
+        const auto val = ToIntegral<uint16_t>(optstr.substr(7));
+        if (!val) {
+            return util::Error{_("failed to parse target block count")};
+        }
+        if (*val < 2) {
+            return util::Error{_("target must be at least 2 blocks")};
+        }
+        if (Assume(max_fee_estimate_blocks) && *val > max_fee_estimate_blocks) {
+            return util::Error{strprintf(_("target can only be at most %s blocks"), max_fee_estimate_blocks)};
+        }
+        return std::pair<int32_t, int>(-*val, multiplier);
+    } else if (optstr.rfind("mempool:", 0) == 0) {
+        const auto val = ToIntegral<int32_t>(optstr.substr(8));
+        if (!val) {
+            return util::Error{_("failed to parse mempool position")};
+        }
+        if (*val < 1) {
+            return util::Error{_("mempool position must be at least 1 kB")};
+        }
+        return std::pair<int32_t, int>(*val, multiplier);
+    } else {
+        return util::Error{strprintf(_("\"%s\""), optstr)};
+    }
 }
 
 util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainParams& chainparams, MemPoolOptions& mempool_opts)
@@ -89,6 +137,17 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         } else {
             return util::Error{AmountErrMsg("dustrelayfee", argsman.GetArg("-dustrelayfee", ""))};
         }
+    }
+    if (argsman.IsArgSet("-dustdynamic")) {
+        const auto optstr = argsman.GetArg("-dustdynamic", DEFAULT_DUST_DYNAMIC);
+        // TODO: Should probably reject target-based dustdynamic if there's no estimator, but currently we're checking parameters long before we have the fee estimator initialised
+        const auto max_fee_estimate_blocks = mempool_opts.estimator ? mempool_opts.estimator->HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE) : (CBlockPolicyEstimator::LONG_BLOCK_PERIODS * CBlockPolicyEstimator::LONG_SCALE);
+        const auto parsed = ParseDustDynamicOpt(optstr, max_fee_estimate_blocks);
+        if (!parsed) {
+            return util::Error{strprintf(_("Invalid mode for dustdynamic: %s"), util::ErrorString(parsed))};
+        }
+        mempool_opts.dust_relay_target = parsed->first;
+        mempool_opts.dust_relay_multiplier = parsed->second;
     }
 
     mempool_opts.permit_bare_pubkey = argsman.GetBoolArg("-permitbarepubkey", DEFAULT_PERMIT_BAREPUBKEY);
