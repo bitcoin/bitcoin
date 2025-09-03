@@ -437,3 +437,20 @@ void StopHTTPRPC()
         httpRPCTimerInterface.reset();
     }
 }
+
+std::set<std::string> GetWhitelistedRpcs(const std::string& user_name)
+{
+    if (auto it = g_rpc_whitelist.find(user_name); it != g_rpc_whitelist.end()) {
+        return it->second;
+    }
+    if (g_rpc_whitelist_default) {
+        return std::set<std::string>();
+    }
+
+    // Build a list of every method
+    std::set<std::string> allowed_methods;
+    for (const auto& method_name : tableRPC.listCommands()) {
+        allowed_methods.insert(method_name);
+    }
+    return allowed_methods;
+}
