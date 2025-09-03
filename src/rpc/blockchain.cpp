@@ -3664,6 +3664,77 @@ return RPCHelpMan{
     };
 }
 
+static RPCHelpMan getblocklocations()
+{
+    return RPCHelpMan{"getblocklocations",
+                "\nEXPERIMENTAL warning: this call may be removed or changed in future releases.\n"
+                "\nReturns a JSON for the file system location of 'blockhash' block and undo data.\n"
+                "\nIt is possible to return also the locations of previous blocks, by specifying 'nblocks' > 1.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "Maximum number locations to return (up to genesis block)"},
+                },
+                {
+                    RPCResult{
+                        RPCResult::Type::ARR, "", "",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::NUM, "file", "blk*.dat/rev*.dat file index"},
+                                {RPCResult::Type::NUM, "data", "block data file offset"},
+                                {RPCResult::Type::NUM, "undo", /*optional=*/true, "undo data file offset (if exists)"},
+                                {RPCResult::Type::STR_HEX, "prev", "previous block hash"},
+                            }},
+                        }
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("getblocklocations", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 10")
+                },
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    if (chainman.m_blockman.IsPruneMode()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block locations are not available in prune mode");
+    }
+
+    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    size_t nblocks = request.params[1].getInt<size_t>();
+
+    const CBlockIndex* pblockindex = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(hash));
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+
+    UniValue result(UniValue::VARR);
+    do {
+        int64_t file_num;
+        uint64_t data_pos, undo_pos;
+        {
+            LOCK(::cs_main);
+            file_num = pblockindex->nFile;
+            data_pos = pblockindex->nDataPos;
+            undo_pos = pblockindex->nUndoPos;
+        }
+        UniValue location(UniValue::VOBJ);
+        location.pushKV("file", file_num);
+        location.pushKV("data", data_pos);
+        if (undo_pos) {
+            location.pushKV("undo", undo_pos);
+        }
+        if (pblockindex->pprev) {
+            location.pushKV("prev", pblockindex->pprev->GetBlockHash().GetHex());
+        } else {
+            location.pushKV("prev", uint256().GetHex());
+        }
+        result.push_back(location);
+        pblockindex = pblockindex->pprev;
+    } while (result.size() < nblocks && pblockindex);
+    return result;
+},
+    };
+}
+
 
 void RegisterBlockchainRPCCommands(CRPCTable& t)
 {
@@ -3700,6 +3771,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"hidden", &waitforblock},
         {"hidden", &waitforblockheight},
         {"hidden", &syncwithvalidationinterfacequeue},
+        {"hidden", &getblocklocations},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
