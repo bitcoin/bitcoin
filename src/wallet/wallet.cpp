@@ -2726,6 +2726,13 @@ void CWallet::ForEachAddrBookEntry(const ListAddrBookFunc& func) const
     }
 }
 
+bool CWallet::IsDestinationActive(const CTxDestination& dest) const
+{
+    const CScript& script{GetScriptForDestination(dest)};
+    const std::set<ScriptPubKeyMan*>& spkms{GetActiveScriptPubKeyMans()};
+    return std::any_of(spkms.cbegin(), spkms.cend(), [&script](const auto& spkm) { return spkm->IsKeyActive(script); });
+}
+
 std::vector<CTxDestination> CWallet::ListAddrBookAddresses(const std::optional<AddrBookFilter>& _filter) const
 {
     AssertLockHeld(cs_wallet);
