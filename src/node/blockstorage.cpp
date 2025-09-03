@@ -364,6 +364,26 @@ void BlockManager::FindFilesToPruneManual(
         chain.GetRole(), last_block_can_prune, count);
 }
 
+uint64_t BlockManager::GetPruneTargetForChainstate(const Chainstate& chain, ChainstateManager& chainman) const
+{
+    const auto number_of_chainstates{chainman.GetAll().size()};
+    const uint64_t min_overall_target{MIN_DISK_SPACE_FOR_BLOCK_FILES * number_of_chainstates};
+    auto target = std::max(min_overall_target, GetPruneTarget());
+    uint64_t target_boost{0};
+    if (m_opts.prune_target_during_init > -1 && chainman.IsInitialBlockDownload()) {
+        if ((uint64_t)m_opts.prune_target_during_init <= target) {
+            target = std::max(min_overall_target, (uint64_t)m_opts.prune_target_during_init);
+        } else if (chain.GetRole() != ChainstateRole::ASSUMEDVALID) {
+            // Only the background/normal gets the benefit
+            // NOTE: This assumes only one such chainstate exists
+            target_boost = m_opts.prune_target_during_init - target;
+        }
+    }
+    // Distribute our -prune budget over all chainstates.
+    target = (target / number_of_chainstates) + target_boost;
+    return target;
+}
+
 void BlockManager::FindFilesToPrune(
     std::set<int>& setFilesToPrune,
     int last_prune,
@@ -371,9 +391,7 @@ void BlockManager::FindFilesToPrune(
     ChainstateManager& chainman)
 {
     LOCK2(cs_main, cs_LastBlockFile);
-    // Distribute our -prune budget over all chainstates.
-    const auto target = std::max(
-        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / chainman.GetAll().size());
+    const auto target{GetPruneTargetForChainstate(chain, chainman)};
     const uint64_t target_sync_height = chainman.m_best_header->nHeight;
 
     if (chain.m_chain.Height() < 0 || target == 0) {
