@@ -32,7 +32,7 @@ def process_mapping(fname):
                 if line.startswith('};'):
                     in_rpcs = False
                 elif '{' in line and '"' in line:
-                    m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *},', line)
+                    m = re.search(r'{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *(, \/\*also_string=\*\/true *)?},', line)
                     assert m, 'No match to table expression: %s' % line
                     name = parse_string(m.group(1))
                     idx = int(m.group(2))
