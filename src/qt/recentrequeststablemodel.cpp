@@ -34,6 +34,7 @@ RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
     columns << tr("Date") << tr("Label") << tr("Message") << getAmountTitle();
 
     connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &RecentRequestsTableModel::updateDisplayUnit);
+    connect(walletModel->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &RecentRequestsTableModel::updateFontForMoney);
 }
 
 RecentRequestsTableModel::~RecentRequestsTableModel() = default;
@@ -93,6 +94,12 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, false, BitcoinUnits::SeparatorStyle::NEVER);
             else
                 return BitcoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
+        }
+    }
+    else if (role == Qt::FontRole) {
+        const RecentRequestEntry * const rec = &list[index.row()];
+        if (index.column() == Amount && rec->recipient.amount) {
+            return walletModel->getOptionsModel()->getFontForMoney();
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -231,6 +238,12 @@ void RecentRequestsTableModel::addNewRequest(RecentRequestEntry &recipient)
 void RecentRequestsTableModel::updateDisplayUnit()
 {
     updateAmountColumnTitle();
+    updateFontForMoney();
+}
+
+void RecentRequestsTableModel::updateFontForMoney()
+{
+    Q_EMIT dataChanged(index(0, Amount), index(rowCount(QModelIndex()) - 1, Amount));
 }
 
 bool RecentRequestEntryLessThan::operator()(const RecentRequestEntry& left, const RecentRequestEntry& right) const

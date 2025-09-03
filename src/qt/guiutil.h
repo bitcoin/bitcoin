@@ -13,6 +13,7 @@
 
 #include <QApplication>
 #include <QEvent>
+#include <QFont>
 #include <QHeaderView>
 #include <QItemDelegate>
 #include <QLabel>
@@ -68,6 +69,8 @@ namespace GUIUtil
 
     // Return a monospace font
     QFont fixedPitchFont(bool use_embedded_font = false);
+
+    QString fontToCss(const QFont& font);
 
     // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);

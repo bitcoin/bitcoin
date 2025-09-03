@@ -66,6 +66,8 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
     {
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ReceiveCoinsDialog::updateDisplayUnit);
         updateDisplayUnit();
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &ReceiveCoinsDialog::updateFontForMoney);
+        updateFontForMoney();
 
         QTableView* tableView = ui->recentRequestsView;
 
@@ -146,6 +148,14 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     if(model && model->getOptionsModel())
     {
         ui->reqAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    }
+}
+
+void ReceiveCoinsDialog::updateFontForMoney()
+{
+    if(model && model->getOptionsModel())
+    {
+        ui->reqAmount->setFontForMoney(model->getOptionsModel()->getFontForMoney());
     }
 }
 
