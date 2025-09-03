@@ -269,6 +269,32 @@ static RPCHelpMan logging()
     };
 }
 
+static RPCHelpMan format()
+{
+    return RPCHelpMan{"format",
+        "\nFormat data we have about an RPC command in the format specified\n",
+        {
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "Command to query"},
+            {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "Output format. Accepted values: args_cli"},
+        },
+        RPCResult{RPCResult::Type::STR, "data", "Formated data about command"},
+        RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::string command = request.params[0].get_str();
+    JSONRPCRequest jreq(request);
+    jreq.mode = JSONRPCRequest::GET_HELP;
+
+    try {
+        tableRPC.execute(command, jreq);
+    } catch(const UniValue& e) {
+        return e["message"];
+    }
+    return NullUniValue;
+},
+    };
+}
+
 static RPCHelpMan echo(const std::string& name)
 {
     return RPCHelpMan{name,
@@ -408,6 +434,7 @@ void RegisterNodeRPCCommands(CRPCTable& t)
         {"util", &getindexinfo},
         {"hidden", &setmocktime},
         {"hidden", &mockscheduler},
+        {"hidden", &format},
         {"hidden", &echo},
         {"hidden", &echojson},
         {"hidden", &echoipc},
