@@ -137,6 +137,7 @@ public:
     struct SigNetOptions {
         std::optional<std::vector<uint8_t>> challenge{};
         std::optional<std::vector<std::string>> seeds{};
+        int64_t pow_target_spacing{10 * 60};
     };
 
     /**
