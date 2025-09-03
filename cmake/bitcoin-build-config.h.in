@@ -40,6 +40,8 @@
 /* Define if external signer support is enabled */
 #cmakedefine ENABLE_EXTERNAL_SIGNER 1
 
+#cmakedefine ENABLE_TOR_SUBPROCESS 1
+
 /* Define this symbol to build code that uses SSE4.1 intrinsics */
 #cmakedefine ENABLE_SSE41 1
 
