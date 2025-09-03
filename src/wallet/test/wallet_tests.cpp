@@ -72,6 +72,25 @@ static void AddKey(CWallet& wallet, const CKey& key)
     if (!wallet.AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
 }
 
+BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
+{
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        auto key{GenerateRandomKey()};
+        auto desc_str{"combo(" + EncodeSecret(key) + ")"};
+        FlatSigningProvider provider;
+        std::string error;
+        auto descs{Parse(desc_str, provider, error, /* require_checksum=*/ false)};
+        auto& desc{descs.at(0)};
+        WalletDescriptor w_desc{std::move(desc), 0, 0, 0, 0};
+        BOOST_CHECK(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+        // Wallet should update the non-range descriptor successfully
+        BOOST_CHECK(wallet.AddWalletDescriptor(w_desc, provider, "", false));
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 {
     // Cap last block file size, and mine new block in a new block file.

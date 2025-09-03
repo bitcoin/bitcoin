@@ -2851,6 +2851,11 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
         return false;
     }
 
+    if (!descriptor.descriptor->IsRange()) {
+        // Skip range check for non-range descriptors
+        return true;
+    }
+
     if (descriptor.range_start > m_wallet_descriptor.range_start ||
         descriptor.range_end < m_wallet_descriptor.range_end) {
         // Use inclusive range for error
