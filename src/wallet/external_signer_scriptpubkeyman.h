@@ -8,6 +8,7 @@
 #include <wallet/scriptpubkeyman.h>
 
 #include <memory>
+#include <util/result.h>
 
 struct bilingual_str;
 
@@ -28,6 +29,7 @@ class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
   bool SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor>desc);
 
   static ExternalSigner GetExternalSigner();
+  static util::Result<ExternalSigner> GetExternalSigner2();
 
   /**
   * Display address on the device and verify that the returned value matches.
