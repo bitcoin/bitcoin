@@ -64,6 +64,10 @@ executables, which are based on BerkeleyDB 4.8. Otherwise, you can build Berkele
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
+Optional port mapping library (see: `-DWITH_MINIUPNPC=ON`):
+
+    sudo apt install libminiupnpc-dev
+
 ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo apt-get install libzmq3-dev
@@ -75,9 +79,10 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 GUI dependencies:
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
-the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
+the necessary parts of Qt and some image processing tools, and pass `-DBUILD_GUI=ON` to cmake.
+Skip if you don't intend to use the GUI.
 
-    sudo apt-get install qtbase5-dev qttools5-dev qttools5-dev-tools
+    sudo apt-get install qtbase5-dev qttools5-dev qttools5-dev-tools librsvg2-bin imagemagick
 
 Additionally, to support Wayland protocol for modern desktop environments:
 
@@ -112,6 +117,10 @@ are based on Berkeley DB 4.8. Otherwise, you can build Berkeley DB [yourself](#b
 
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
+Optional port mapping library (see: `-DWITH_MINIUPNPC=ON`):
+
+    sudo dnf install miniupnpc-devel
+
 ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
     sudo dnf install zeromq-devel
@@ -123,9 +132,10 @@ User-Space, Statically Defined Tracing (USDT) dependencies:
 GUI dependencies:
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
-the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
+the necessary parts of Qt and some image processing tools, and pass `-DBUILD_GUI=ON` to cmake.
+Skip if you don't intend to use the GUI.
 
-    sudo dnf install qt5-qttools-devel qt5-qtbase-devel
+    sudo dnf install qt5-qttools-devel qt5-qtbase-devel librsvg2-tools ImageMagick
 
 Additionally, to support Wayland protocol for modern desktop environments:
 
@@ -149,7 +159,7 @@ The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
 recommended to use Berkeley DB 4.8. If you have to build it yourself, and don't
 want to use any other libraries built in depends, you can do:
 ```bash
-make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_ZMQ=1 NO_USDT=1
+make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
 ...
 to: /path/to/bitcoin/depends/x86_64-pc-linux-gnu
 ```
@@ -179,8 +189,8 @@ Setup and Build Example: Arch Linux
 -----------------------------------
 This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
-    pacman --sync --needed cmake boost gcc git libevent make python sqlite
-    git clone https://github.com/bitcoin/bitcoin.git
+    pacman --sync --needed cmake boost gcc git libevent make python sqlite librsvg imagemagick
+    git clone https://github.com/bitcoinknots/bitcoin.git
     cd bitcoin/
     cmake -B build
     cmake --build build

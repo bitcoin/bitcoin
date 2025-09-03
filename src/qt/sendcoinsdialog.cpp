@@ -38,6 +38,7 @@
 #include <QScrollBar>
 #include <QSettings>
 #include <QTextDocument>
+#include <QTextEdit>
 
 using common::PSBTError;
 using wallet::CCoinControl;
@@ -160,6 +161,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 
         connect(_model, &WalletModel::balanceChanged, this, &SendCoinsDialog::setBalance);
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsDialog::refreshBalance);
+        connect(_model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &SendCoinsDialog::refreshBalance);
         refreshBalance();
 
         // Coin Control
@@ -287,9 +289,12 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     coin_control.m_allow_other_inputs = !coin_control.HasSelected(); // future, could introduce a checkbox to customize this value.
     prepareStatus = model->prepareTransaction(*m_current_transaction, coin_control);
 
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), m_current_transaction->getTransactionFee()));
+        BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, m_current_transaction->getTransactionFee()));
 
     if(prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
@@ -301,7 +306,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     for (const SendCoinsRecipient &rcp : m_current_transaction->getRecipients())
     {
         // generate amount string with wallet name in case of multiwallet
-        QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        QString amount = BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, rcp.amount);
         if (model->isMultiwallet()) {
             amount = tr("%1 from wallet '%2'").arg(amount, GUIUtil::HtmlEscape(model->getWalletName()));
         }
@@ -358,7 +363,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
 
         // append transaction fee value
         question_string.append("<span style='color:#aa0000; font-weight:bold;'>");
-        question_string.append(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee));
+        question_string.append(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, txFee));
         question_string.append("</span><br />");
 
         // append RBF message according to transaction's signalling
@@ -377,17 +382,20 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     QStringList alternativeUnits;
     for (const BitcoinUnit u : BitcoinUnits::availableUnits()) {
         if(u != model->getOptionsModel()->getDisplayUnit())
-            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));
+        {
+            const QFont font_for_money_u = model->getOptionsModel()->getFontForMoney(u);
+            alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(font_for_money_u, u, totalAmount));
+        }
     }
     question_string.append(QString("<b>%1</b>: <b>%2</b>").arg(tr("Total Amount"))
-        .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount)));
+        .arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, totalAmount)));
     question_string.append(QString("<br /><span style='font-size:10pt; font-weight:normal;'>(=%1)</span>")
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
     if (formatted.size() > 1) {
         question_string = question_string.arg("");
         informative_text = tr("To review recipient list click \"Show Details…\"");
-        detailed_text = formatted.join("\n\n");
+        detailed_text = formatted.join("<br /><br />");
     } else {
         question_string = question_string.arg("<br /><br />" + formatted.at(0));
     }
@@ -483,11 +491,84 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     if (!PrepareSendText(question_string, informative_text, detailed_text)) return;
     assert(m_current_transaction);
 
+    bool have_warning = false;
+    for (int i = 0; i < ui->entries->count(); ++i) {
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        if (entry && entry->hasPaytoWarning()) {
+            have_warning = true;
+            break;
+        }
+    }
+    if (have_warning) {
+        auto recipients = m_current_transaction->getRecipients();
+        struct prior_usage_info_t {
+            CAmount total_amount{0};
+            int num_txs{0};
+            qint64 tx_time_oldest;
+            qint64 tx_time_newest;
+        };
+        QMap<QString, prior_usage_info_t> prior_usage_info;
+        {
+            QStringList addresses;
+            for (const auto& recipient : recipients) {
+                addresses.append(recipient.address);
+            }
+            model->findAddressUsage(addresses, [&prior_usage_info](const QString& address, const interfaces::WalletTx& wtx, uint32_t output_index){
+                auto& info = prior_usage_info[address];
+                info.total_amount += wtx.tx->vout[output_index].nValue;
+                ++info.num_txs;
+                if (info.num_txs == 1 || wtx.time < info.tx_time_oldest) {
+                    info.tx_time_oldest = wtx.time;
+                }
+                if (info.num_txs == 1 || wtx.time > info.tx_time_newest) {
+                    info.tx_time_newest = wtx.time;
+                }
+            });
+        }
+
+        QString reuse_question, reuse_details;
+        if (recipients.size() > 1) {
+            reuse_question = tr("You've already paid some of these addresses.");
+        } else {
+            reuse_question = tr("You've already paid this address.");
+        }
+
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        for (const auto& rcp : recipients) {
+            if (!prior_usage_info.contains(rcp.address)) continue;
+            if (!reuse_details.isEmpty()) reuse_details.append("<br /><br />");
+            const auto& rcp_prior_usage_info = prior_usage_info.value(rcp.address);
+            const QString label_and_address = rcp.label.isEmpty() ? rcp.address : (QString("'") + GUIUtil::HtmlEscape(rcp.label) + "' (" + rcp.address + ")");
+            if (rcp_prior_usage_info.num_txs == 1) {
+                //: %1 is an amount (eg, "1 BTC"); %2 is a Bitcoin address and its label; %3 is a date (eg, "2019-05-08")
+                reuse_details.append(tr("Sent %1 to %2 on %3").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, rcp_prior_usage_info.total_amount), label_and_address, GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
+            } else {
+                //: %1 is an amount (eg, "1 BTC"); %2 is a Bitcoin address and its label; %3 is the number of transactions; %4 and %5 are dates (eg, "2019-05-08"), earlier first
+                reuse_details.append(tr("Sent %1 to %2 across %3 transactions from %4 through %5").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, rcp_prior_usage_info.total_amount), label_and_address, QString::number(rcp_prior_usage_info.num_txs), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_oldest), GUIUtil::dateStr(rcp_prior_usage_info.tx_time_newest)));
+            }
+        }
+
+        reuse_question.append("<br /><br /><span style='font-size:10pt;'>");
+        reuse_question.append(tr("Bitcoin addresses are intended to only be used once, for a single payment. Sending to the same address again will harm the recipient's security, as well as the privacy of all Bitcoin users!"));
+        reuse_question.append("</span>");
+
+        SendConfirmationDialog confirmation_dialog(tr("Already paid"), reuse_question, "", reuse_details, ADDRESS_REUSE_OVERRIDE_DELAY, /*enable_send=*/true, /*always_show_unsigned=*/false, this);
+        confirmation_dialog.setIcon(QMessageBox::Warning);
+        confirmation_dialog.confirmButtonText = tr("Override");
+        confirmation_dialog.m_yes_button = QMessageBox::Ignore;
+        confirmation_dialog.m_cancel_button = QMessageBox::Ok;
+        if (static_cast<QMessageBox::StandardButton>(confirmation_dialog.exec()) == QMessageBox::Cancel) {
+            fNewRecipientAllowed = true;
+            return;
+        }
+    }
+
     const QString confirmation = tr("Confirm send coins");
     const bool enable_send{!model->wallet().privateKeysDisabled() || model->wallet().hasExternalSigner()};
     const bool always_show_unsigned{model->getOptionsModel()->getEnablePSBTControls()};
     auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, this);
-    confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
+    confirmationDialog->m_delete_on_close = true;
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
 
@@ -712,14 +793,20 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
             balance = balances.watch_only_balance;
             ui->labelBalanceName->setText(tr("Watch-only balance:"));
         }
-        ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), balance));
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        ui->labelBalance->setText(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, balance));
     }
 }
 
 void SendCoinsDialog::refreshBalance()
 {
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+    ui->customFee->setFontForMoney(font_for_money);
+    coinControlUpdateLabels();
     setBalance(model->getCachedBalance());
-    ui->customFee->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    ui->customFee->setDisplayUnit(display_unit);
     updateSmartFeeLabel();
 }
 
@@ -753,8 +840,12 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
     case WalletModel::AbsurdFee:
-        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getDefaultMaxTxFee()));
+    {
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, model->wallet().getDefaultMaxTxFee()));
         break;
+    }
     // included to prevent a compiler warning.
     case WalletModel::OK:
     default:
@@ -832,7 +923,9 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
     if (ui->radioSmartFee->isChecked())
         ui->labelFeeMinimized->setText(ui->labelSmartFee->text());
     else {
-        ui->labelFeeMinimized->setText(tr("%1/kvB").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), ui->customFee->value())));
+        const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+        const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+        ui->labelFeeMinimized->setText(tr("%1/kvB").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, ui->customFee->value())));
     }
 }
 
@@ -871,7 +964,9 @@ void SendCoinsDialog::updateSmartFeeLabel()
     FeeReason reason;
     CFeeRate feeRate = CFeeRate(model->wallet().getMinimumFee(1000, *m_coin_control, &returned_target, &reason));
 
-    ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())));
+    const BitcoinUnit display_unit = model->getOptionsModel()->getDisplayUnit();
+    const QFont font_for_money = model->getOptionsModel()->getFontForMoney(display_unit);
+    ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatHtmlWithUnit(font_for_money, display_unit, feeRate.GetFeePerK())));
 
     if (reason == FeeReason::FALLBACK) {
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
@@ -1060,30 +1155,65 @@ void SendCoinsDialog::coinControlUpdateLabels()
 }
 
 SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, bool enable_send, bool always_show_unsigned, QWidget* parent)
-    : QMessageBox(parent), secDelay(_secDelay), m_enable_send(enable_send)
+    : QMessageBox(parent), secDelay(_secDelay), m_enable_save(always_show_unsigned || !enable_send), m_enable_send(enable_send)
 {
     setIcon(QMessageBox::Question);
     setWindowTitle(title); // On macOS, the window title is ignored (as required by the macOS Guidelines).
     setText(text);
     setInformativeText(informative_text);
     setDetailedText(detailed_text);
-    setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-    if (always_show_unsigned || !enable_send) addButton(QMessageBox::Save);
-    setDefaultButton(QMessageBox::Cancel);
-    yesButton = button(QMessageBox::Yes);
+    auto detailed_text_widget = findChild<QTextEdit*>();
+    if (detailed_text_widget) {  // doesn't exist in test_bitcoin-qt
+        detailed_text_widget->setHtml(detailed_text);
+    }
+}
+
+int SendConfirmationDialog::exec()
+{
+    setStandardButtons(m_yes_button | m_cancel_button);
+
+    yesButton = button(m_yes_button);
+    QAbstractButton * const cancel_button_obj = button(m_cancel_button);
+
+    if (m_yes_button != QMessageBox::Yes || m_cancel_button != QMessageBox::Cancel) {
+        // We need to ensure the buttons have Yes/No roles, or they'll get ordered weird
+        // But only do it for customised yes/cancel buttons, so simple code can check results simply too
+        removeButton(cancel_button_obj);
+        addButton(cancel_button_obj, QMessageBox::NoRole);
+        setEscapeButton(cancel_button_obj);
+
+        removeButton(yesButton);
+        addButton(yesButton, QMessageBox::YesRole);
+    }
+
+    if (m_enable_save) addButton(QMessageBox::Save);
+
+    setDefaultButton(m_cancel_button);
+
     if (confirmButtonText.isEmpty()) {
         confirmButtonText = yesButton->text();
     }
     m_psbt_button = button(QMessageBox::Save);
     updateButtons();
-    connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
-}
 
-int SendConfirmationDialog::exec()
-{
-    updateButtons();
+    connect(&countDownTimer, &QTimer::timeout, this, &SendConfirmationDialog::countDown);
     countDownTimer.start(1s);
-    return QMessageBox::exec();
+
+    QMessageBox::exec();
+
+    int rv;
+    const auto clicked_button = clickedButton();
+    if (clicked_button == m_psbt_button) {
+        rv = QMessageBox::Save;
+    } else if (clicked_button == yesButton) {
+        rv = QMessageBox::Yes;
+    } else {
+        rv = QMessageBox::Cancel;
+    }
+
+    if (m_delete_on_close) delete this;
+
+    return rv;
 }
 
 void SendConfirmationDialog::countDown()

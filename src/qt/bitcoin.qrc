@@ -1,6 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
-        <file alias="bitcoin">res/icons/bitcoin.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="send">res/icons/send.png</file>
         <file alias="connect_0">res/icons/connect0.png</file>
@@ -84,6 +83,5 @@
         <file alias="spinner-035">res/animation/spinner-035.png</file>
     </qresource>
     <qresource prefix="/fonts">
-        <file alias="monospace">res/fonts/RobotoMono-Bold.ttf</file>
     </qresource>
 </RCC>

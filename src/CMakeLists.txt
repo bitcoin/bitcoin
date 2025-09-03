@@ -299,6 +299,9 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   rpc/txoutproof.cpp
   script/sigcache.cpp
   signet.cpp
+  stats/init.cpp
+  stats/rpc_stats.cpp
+  stats/stats.cpp
   torcontrol.cpp
   txdb.cpp
   txmempool.cpp
@@ -323,6 +326,7 @@ target_link_libraries(bitcoin_node
     $<TARGET_NAME_IF_EXISTS:libevent::core>
     $<TARGET_NAME_IF_EXISTS:libevent::extra>
     $<TARGET_NAME_IF_EXISTS:libevent::pthreads>
+    $<TARGET_NAME_IF_EXISTS:MiniUPnPc::MiniUPnPc>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
 

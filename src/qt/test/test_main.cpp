@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
     gArgs.ForceSetArg("-discover", "0");
     gArgs.ForceSetArg("-dnsseed", "0");
     gArgs.ForceSetArg("-fixedseeds", "0");
+    gArgs.ForceSetArg("-upnp", "0");
     gArgs.ForceSetArg("-natpmp", "0");
 
     std::string error;
