@@ -51,6 +51,9 @@ def filter_output_indices_by_value(vouts, value):
             yield vout['n']
 
 class RESTTest (BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-rest", "-blockfilterindex=1"], []]
@@ -472,6 +475,24 @@ class RESTTest (BitcoinTestFramework):
 
         resp = self.test_rest_request(f"/deploymentinfo/{INVALID_PARAM}", ret_type=RetType.OBJ, status=400)
         assert_equal(resp.read().decode('utf-8').rstrip(), f"Invalid hash: {INVALID_PARAM}")
+
+        if self.is_wallet_compiled():
+            self.import_deterministic_coinbase_privkeys()
+
+            # Random address so node1's balance doesn't increase
+            not_related_address = "2MxqoHEdNQTyYeX1mHcbrrpzgojbosTpCvJ"
+
+            # Prepare for Fee estimation
+            for i in range(18):
+                self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+                self.sync_all()
+                self.generatetoaddress(self.nodes[1], 1, not_related_address)
+            self.sync_all()
+
+            json_obj = self.test_rest_request("/fee/conservative/1")
+            assert_greater_than(float(json_obj["feerate"]), 0)
+            assert_greater_than(int(json_obj["blocks"]), 0)
+
 
 if __name__ == '__main__':
     RESTTest(__file__).main()
