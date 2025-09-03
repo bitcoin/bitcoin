@@ -1801,7 +1801,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // On first startup, warn on low block storage space
     if (!do_reindex && !do_reindex_chainstate && chain_active_height <= 1) {
-        uint64_t assumed_chain_bytes{chainparams.AssumedBlockchainSize() * 1024 * 1024 * 1024};
+        uint64_t assumed_chain_bytes{chainparams.AssumedBlockchainSize() * 1'000'000'000};
         uint64_t additional_bytes_needed{
             chainman.m_blockman.IsPruneMode() ?
                 std::min(chainman.m_blockman.GetPruneTarget(), assumed_chain_bytes) :
@@ -1813,7 +1813,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     "Approximately %u GB of data will be stored in this directory."
                 ),
                 fs::quoted(fs::PathToString(args.GetBlocksDirPath())),
-                chainparams.AssumedBlockchainSize()
+                additional_bytes_needed / 1'000'000'000
             ));
         }
     }
