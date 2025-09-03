@@ -33,8 +33,8 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         """Add a P2P connection to the node.
 
         Helper to connect and wait for version handshake."""
-        for _ in range(num_connections):
-            self.nodes[0].add_p2p_connection(P2PDataStore())
+        for i in range(num_connections):
+            self.nodes[0].add_outbound_p2p_connection(P2PDataStore(), p2p_idx=i)
 
     def reconnect_p2p(self, **kwargs):
         """Tear down and bootstrap the P2P connection to the node.
