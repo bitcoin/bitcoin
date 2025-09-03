@@ -211,7 +211,10 @@ void OverviewPage::setPrivacy(bool privacy)
         coinJoinStatus(true);
     }
 
+    // We can't hide the frame itself as it would disturb alignment, hide inner elements instead
     ui->listTransactions->setVisible(!m_privacy);
+    ui->label_4->setVisible(!m_privacy);
+    ui->labelTransactionsStatus->setVisible(!m_privacy && ui->labelWalletStatus->isVisible());
 
     const QString status_tip = m_privacy ? tr("Discreet mode activated for the Overview tab. To unmask the values, uncheck Settings->Discreet mode.") : "";
     setStatusTip(status_tip);
