@@ -35,6 +35,7 @@
 #include <util/string.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
+#include <univalue.h>
 #include <validation.h>
 
 #ifdef ENABLE_WALLET
@@ -593,10 +594,9 @@ int GuiMain(int argc, char* argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    bool did_show_intro = false;
-    int64_t prune_MiB = 0;  // Intro dialog prune configuration
+    std::unique_ptr<Intro> intro;
     // Gracefully exit if the user cancels
-    if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
+    if (!Intro::showIfNeeded(intro)) return EXIT_SUCCESS;
 
     /// 6-7. Parse bitcoin.conf, determine network, switch to network specific
     /// options, and create datadir and settings.json.
@@ -672,9 +672,10 @@ int GuiMain(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (did_show_intro) {
+    if (intro) {
         // Store intro dialog settings other than datadir (network specific)
-        app.InitPruneSetting(prune_MiB);
+        app.InitPruneSetting(intro->getPruneMiB());
+        gArgs.ForceSetArg("-assumevalid", intro->getAssumeValid().toStdString());
     }
 
     try
@@ -684,6 +685,13 @@ int GuiMain(int argc, char* argv[])
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
         if (app.baseInitialize()) {
+            if (intro) {
+                // Store intro dialog settings other than datadir (network specific)
+                common::SettingsValue intro_assumevalid = intro->getAssumeValid().toStdString();
+                app.node().context()->chain->overwriteRwSetting("assumevalid", intro_assumevalid);
+                // We can release the Intro widget now
+                intro.reset();
+            }
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(CLIENT_NAME), (HWND)app.getMainWinId());
