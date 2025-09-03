@@ -130,7 +130,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
             # 6. invalid parameters - supply txid and invalid boolean values
             for value in [True, False]:
-                assert_raises_rpc_error(-3, "only integer allowed", self.nodes[n].getrawtransaction, txId, value)
+                assert_raises_rpc_error(-3, "Boolean verbosity is deprecated", self.nodes[n].getrawtransaction, txId, value)
             for value in ["True", "False"]:
                 assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txid=txId, verbose=value)
                 assert_raises_rpc_error(-3, "not of expected type number", self.nodes[n].getrawtransaction, txid=txId, verbosity=value)
