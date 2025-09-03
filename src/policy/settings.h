@@ -7,5 +7,6 @@
 #define BITCOIN_POLICY_SETTINGS_H
 
 extern unsigned int nBytesPerSigOp;
+extern unsigned int nBytesPerSigOpStrict;
 
 #endif // BITCOIN_POLICY_SETTINGS_H
