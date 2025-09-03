@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/fonts">
+        <file alias="monospace">res/fonts/RobotoTonalMono-Bold.ttf</file>
+    </qresource>
+</RCC>
