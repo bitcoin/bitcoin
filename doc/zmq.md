@@ -60,8 +60,10 @@ Currently, the following notifications are supported:
 
     -zmqpubhashtx=address
     -zmqpubhashblock=address
+    -zmqpubhashwallettx=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubrawwallettx=address
     -zmqpubsequence=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
@@ -73,8 +75,10 @@ The option to set the PUB socket's outbound message high water mark
 
     -zmqpubhashtxhwm=n
     -zmqpubhashblockhwm=n
+    -zmqpubhashwallettxhwm=n
     -zmqpubrawblockhwm=n
     -zmqpubrawtxhwm=n
+    -zmqpubrawwallettxhwm=n
     -zmqpubsequencehwm=n
 
 The high water mark value must be an integer greater than or equal to 0.
@@ -91,6 +95,14 @@ Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
 terminator). These options can also be provided in bitcoin.conf.
+
+For wallet transaction notifications (both hashwallettx and rawwallettx), the
+topic also indicates if the transaction came from a block or mempool. If
+originated from mempool `-mempool` postfix will be added to the topic, for
+block `-block` postfix will be added. Because zeromq is using prefix matching
+for topics you can subscribe to `rawwallettx` (or `hashwallettx`) to get both
+notifications. If you only want one type of notification subscribe to either
+`rawwallettx-mempool` or `rawwallettx-block`.
 
 The topics are:
 
@@ -119,6 +131,15 @@ Where the 8-byte uints correspond to the mempool sequence number.
 `hashblock`: Notifies when the chain tip is updated. When assumeutxo is in use, this notification will not be issued for historical blocks connected to the background validation chainstate. Messages are ZMQ multipart messages with three parts. The first part is the topic (`hashblock`), the second part is the 32-byte block hash, and the last part is a sequence number (representing the message count to detect lost messages).
 
     | hashblock | <32-byte block hash in Little Endian> | <uint32 sequence number in Little Endian>
+
+
+`rawwallettx`: Identical to `rawtx`, except only when transactions are added (or updated) in an open wallet. Full topic is either `rawwallettx-block` for transactions in a block, or `rawwallettx-mempool` otherwise.
+
+    | rawwallettx-<"block" or "mempool"> | <serialized transaction> | <uint32 sequence number in Little Endian>
+
+`hashwallettx`: Identical to `hashtx`, except only when transactions are added (or updated) in an open wallet. Full topic is either `hashwallettx-block` for transactions in a block, or `hashwallettx-mempool` otherwise.
+
+    | hashwallettx-<"block" or "mempool"> | <32-byte transaction hash in Little Endian> | <uint32 sequence number in Little Endian>
 
 **_NOTE:_**  Note that the 32-byte hashes are in Little Endian and not in the Big Endian format that the RPC interface and block explorers use to display transaction and block hashes.
 
