@@ -63,12 +63,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="pruneSize"/>
+          <widget class="QSpinBox" name="pruneSizeMiB"/>
          </item>
          <item>
           <widget class="QLabel" name="pruneSizeUnitLabel">
            <property name="text">
-            <string>GB</string>
+            <string>MiB</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
@@ -225,6 +225,27 @@
           <string extracomment="An Options window setting to set subtracting the fee from a sending amount as default.">Subtract &amp;fee from amount by default</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout">
+         <item>
+          <widget class="QLabel">
+           <property name="text">
+            <string>Address type:</string>
+           </property>
+           <property name="buddy">
+            <cstring>addressType</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="addressType">
+           <property name="toolTip">
+            <string>Choose the default address type to select when receiving coins.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="QGroupBox" name="groupBox">
@@ -671,6 +692,66 @@
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_maxuploadtarget">
+         <item>
+          <widget class="QCheckBox" name="maxuploadtargetCheckbox">
+           <property name="text">
+            <string>Try to keep upload traffic under</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="maxuploadtarget"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="maxuploadtargetUnitLabel">
+           <property name="text">
+            <string>MiB per day</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>maxuploadtargetCheckbox</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_maxuploadtarget">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="peerbloomfilters">
+         <property name="toolTip">
+          <string>Support filtering of blocks and transaction with bloom filters</string>
+         </property>
+         <property name="text">
+          <string>Provide search services for light clients</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="peerblockfilters">
+         <property name="toolTip">
+          <string>Generate compact block filters and allow peers to download them</string>
+         </property>
+         <property name="text">
+          <string>Provide compact block filters for light clients</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_Network">

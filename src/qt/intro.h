@@ -77,7 +77,7 @@ private:
     //! Total required space (in GB) depending on user choice (prune or not prune).
     int64_t m_required_space_gb{0};
     uint64_t m_bytes_available{0};
-    int64_t m_prune_target_gb;
+    int64_t m_prune_target_mib;
 
     void startThread();
     void checkPath(const QString &dataDir);
