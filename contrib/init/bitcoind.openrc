@@ -9,9 +9,10 @@ else
 fi
 
 BITCOIND_CONFIGFILE=${BITCOIND_CONFIGFILE:-/etc/bitcoin/bitcoin.conf}
-BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/var/run/bitcoind}
+BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/run/bitcoind}
 BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/${SVCNAME}.pid}
 BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
+BITCOIND_LOGDIR=${BITCOIND_LOGDIR:-/var/log/bitcoind}
 BITCOIND_USER=${BITCOIND_USER:-${BITCOIN_USER:-bitcoin}}
 BITCOIND_GROUP=${BITCOIND_GROUP:-bitcoin}
 BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
@@ -51,6 +52,8 @@ start_pre() {
 	-m 0660 \
 	"${BITCOIND_CONFIGFILE}"
 
+	checkpath -d --mode 0755 --owner "${BITCOIND_USER}:${BITCOIND_GROUP}" "${BITCOIND_LOGDIR}"
+
 	checkconfig || return 1
 }
 
@@ -68,6 +71,8 @@ start() {
 		-conf="${BITCOIND_CONFIGFILE}" \
 		-datadir="${BITCOIND_DATADIR}" \
 		-daemonwait \
+		-debuglogfile="${BITCOIND_LOGDIR}/debug.log" \
+		-rpccookieperms=group \
 		${BITCOIND_OPTS}
 	then
 		IN_BACKGROUND=yes rc-service "${SVCNAME}" --quiet start
