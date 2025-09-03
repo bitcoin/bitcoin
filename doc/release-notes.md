@@ -1,6 +1,6 @@
-Bitcoin Core version 29.1rc2 is now available from:
+Bitcoin Core version 29.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-29.1/test.rc2/>
+  <https://bitcoincore.org/bin/bitcoin-core-29.1/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -113,6 +113,10 @@ function signature instead of just the function name. (#32604)
 - #32859 test: correctly detect nonstd TRUC tx vsize in feature_taproot
 - #33001 test: Do not pass tests on unhandled exceptions
 
+### Indexes
+
+- #33212 index: Don't commit state in BaseIndex::Rewind
+
 ### Util
 
 - #32248 Remove support for RNDR/RNDRRS for aarch64
@@ -162,10 +166,12 @@ function signature instead of just the function name. (#32604)
 - #33088 doc: move cmake -B build -LH up in Unix build docs
 - #33133 rpc: fix getpeerinfo ping duration unit docs
 - #33119 rpc: Fix 'getdescriptoractivity' RPCHelpMan, add test to verify fix
+- #33236 doc: Remove wrong and redundant doxygen tag
 
 ### CI
 
 - #32184 ci: Add workaround for vcpkg's libevent package
+- #33261 ci: return to using dash in CentOS job
 
 ### Misc
 
