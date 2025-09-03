@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <clientversion.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -990,6 +991,10 @@ static UniValue TemplateToJSON(const Consensus::Params& consensusParams, const C
     // Update nTime (and potentially nBits)
     UpdateTime(&block_header, consensusParams, pindexPrev);
     block_header.nNonce = 0;
+
+    if (IsThisSoftwareExpired(block_header.nTime)) {
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "node software has expired");
+    }
 
     arith_uint256 hashTarget = arith_uint256().SetCompact(block_header.nBits);
 

@@ -7,6 +7,7 @@
 #include <qt/bitcoin.h>
 
 #include <chainparams.h>
+#include <clientversion.h>
 #include <common/args.h>
 #include <common/init.h>
 #include <common/system.h>

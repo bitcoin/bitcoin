@@ -36,6 +36,7 @@
 #include <interfaces/node.h>
 #include <kernel/caches.h>
 #include <kernel/context.h>
+#include <kernel/warning.h>
 #include <key.h>
 #include <logging.h>
 #include <mapport.h>
@@ -533,6 +534,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC. Setting this to auto automatically reindexes the block database if it is corrupted.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-softwareexpiry", strprintf("Stop working after this POSIX timestamp (default: %s)", DEFAULT_SOFTWARE_EXPIRY), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
     argsman.AddArg("-startupnotify=<cmd>", "Execute command on startup.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-shutdownnotify=<cmd>", "Execute command immediately before beginning shutdown. The need for shutdown may be urgent, so be careful not to delay it long (if the command doesn't require interaction with the server, consider having it fork into the background).", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1177,6 +1179,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(args.GetIntArg("-mocktime", 0)); // SetMockTime(0) is a no-op
+
+    g_software_expiry = args.GetIntArg("-softwareexpiry", DEFAULT_SOFTWARE_EXPIRY);
+    if (IsThisSoftwareExpired(GetTime())) {
+        return InitError(_("This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration."));
+    }
 
     if (args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         g_local_services = ServiceFlags(g_local_services | NODE_BLOOM);
@@ -2345,6 +2352,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     SetRPCWarmupFinished();
 
     uiInterface.InitMessage(_("Done loading"));
+
+    if (g_software_expiry) {
+        scheduler.scheduleFromNow([&node] {
+            auto msg = strprintf(_("This software expires soon, and may fall out of consensus. Before %s, you must choose to upgrade or override this expiration."), FormatISO8601Date(g_software_expiry));
+            node.chainman->GetNotifications().warningSet(kernel::Warning::SOFTWARE_EXPIRY, msg);
+            // TODO: Make this a modal dialog (but DON'T block the scheduler thread!)
+            uiInterface.ThreadSafeMessageBox(msg, "Warning", CClientUIInterface::ICON_WARNING | CClientUIInterface::BTN_OK);
+        }, std::chrono::seconds{std::max<int64_t>(1, g_software_expiry - SOFTWARE_EXPIRY_WARN_PERIOD - GetTime())});
+
+        scheduler.scheduleFromNow([&node] {
+            auto msg = _("This software is expired, and may be out of consensus. You must choose to upgrade or override this expiration.");
+            node.chainman->GetNotifications().warningSet(kernel::Warning::SOFTWARE_EXPIRY, msg, /*update=*/ true);
+            uiInterface.ThreadSafeMessageBox(msg, "Error", CClientUIInterface::ICON_ERROR | CClientUIInterface::BTN_OK);
+        }, std::chrono::seconds{std::max<int64_t>(2, g_software_expiry - GetTime())});
+    }
 
     for (const auto& client : node.chain_clients) {
         client->start(scheduler);

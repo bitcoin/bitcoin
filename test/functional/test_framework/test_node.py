@@ -132,7 +132,10 @@ class TestNode():
                          "--error-exitcode=1", "--quiet"] + self.args
 
         if self.version is None:
-            self.args.append("-walletimplicitsegwit")
+            self.args += [
+                "-softwareexpiry=0",
+                "-walletimplicitsegwit",
+            ]
 
         if self.version_is_at_least(190000):
             self.args.append("-logthreadnames")
