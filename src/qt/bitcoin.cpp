@@ -88,6 +88,7 @@ static void RegisterMetaTypes()
     // Register typedefs (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType)
     // IMPORTANT: if CAmount is no longer a typedef use the normal variant above (see https://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1)
     qRegisterMetaType<CAmount>("CAmount");
+    qRegisterMetaType<CTransactionRef>("CTransactionRef");
     qRegisterMetaType<size_t>("size_t");
 
     qRegisterMetaType<std::function<void()>>("std::function<void()>");
