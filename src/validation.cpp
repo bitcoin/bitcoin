@@ -3604,6 +3604,11 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             m_chainman.MaybeRebalanceCaches();
         }
 
+        // Write changes periodically to disk, after relay.
+        if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
+            return false;
+        }
+
         if (WITH_LOCK(::cs_main, return m_disabled)) {
             // Background chainstate has reached the snapshot base block, so exit.
 
@@ -3627,11 +3632,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     } while (pindexNewTip != pindexMostWork);
 
     m_chainman.CheckBlockIndex();
-
-    // Write changes periodically to disk, after relay.
-    if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
-        return false;
-    }
 
     return true;
 }
