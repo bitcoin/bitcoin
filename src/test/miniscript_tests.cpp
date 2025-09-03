@@ -297,9 +297,14 @@ using miniscript::operator""_mst;
 using Node = miniscript::Node<CPubKey>;
 
 /** Compute all challenges (pubkeys, hashes, timelocks) that occur in a given Miniscript. */
-// NOLINTNEXTLINE(misc-no-recursion)
-std::set<Challenge> FindChallenges(const NodeRef& ref) {
+std::set<Challenge> FindChallenges(const NodeRef& root)
+{
     std::set<Challenge> chal;
+
+    for (std::vector stack{root.get()}; !stack.empty();) {
+        const Node* ref{stack.back()};
+        stack.pop_back();
+
     for (const auto& key : ref->keys) {
         chal.emplace(ChallengeType::PK, ChallengeNumber(key));
     }
@@ -317,8 +322,8 @@ std::set<Challenge> FindChallenges(const NodeRef& ref) {
         chal.emplace(ChallengeType::HASH160, ChallengeNumber(ref->data));
     }
     for (const auto& sub : ref->subs) {
-        auto sub_chal = FindChallenges(sub);
-        chal.insert(sub_chal.begin(), sub_chal.end());
+            stack.push_back(sub.get());
+        }
     }
     return chal;
 }
