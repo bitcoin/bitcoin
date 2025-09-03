@@ -137,6 +137,7 @@ add_executable(fuzz
 target_link_libraries(fuzz
   core_interface
   test_fuzz
+  $<TARGET_NAME_IF_EXISTS:bitcoinconsensus>
   bitcoin_cli
   bitcoin_common
   bitcoin_util
@@ -150,3 +151,12 @@ target_link_libraries(fuzz
 if(ENABLE_WALLET)
   add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test/fuzz wallet)
 endif()
+
+if(BUILD_BITCOINCONSENSUS_LIB)
+  target_sources(fuzz
+    PRIVATE
+      script_bitcoin_consensus.cpp
+  )
+endif()
+
+make_libbitcoinconsensus_dll_available(fuzz)

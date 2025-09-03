@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: @CLIENT_NAME@ consensus library
+Description: Library for the Bitcoin consensus protocol.
+Version: @CLIENT_VERSION_STRING@
+Libs: -L${libdir} -lbitcoinconsensus
+Libs.private: -L${libdir} @LIBS_PRIVATE@
+Cflags: -I${includedir} @MAYBE_DEFINE_STATIC_LIBBITCOINCONSENSUS@

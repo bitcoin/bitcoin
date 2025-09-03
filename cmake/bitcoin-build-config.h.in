@@ -49,6 +49,9 @@
    */
 #cmakedefine ENABLE_TRACING 1
 
+/* Define this symbol if the consensus lib has been built */
+#cmakedefine HAVE_CONSENSUS_LIB 1
+
 /* Define to 1 to enable wallet functions. */
 #cmakedefine ENABLE_WALLET 1
 
