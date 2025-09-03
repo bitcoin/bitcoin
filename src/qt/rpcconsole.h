@@ -18,6 +18,7 @@
 #include <QThread>
 #include <QWidget>
 
+class GuiNetWatch;
 class PlatformStyle;
 class RPCExecutor;
 class RPCTimerInterface;
@@ -164,6 +165,7 @@ private:
     interfaces::Node& m_node;
     Ui::RPCConsole* const ui;
     ClientModel *clientModel = nullptr;
+    GuiNetWatch *netwatch = nullptr;
     QStringList history;
     int historyPtr = 0;
     QString cmdBeforeBrowsing;
