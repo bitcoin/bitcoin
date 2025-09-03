@@ -364,7 +364,7 @@ QString TransactionTableModel::lookupAddress(const std::string &address, bool to
     {
         description += label;
     }
-    if(label.isEmpty() || tooltip)
+    if(label.isEmpty() || walletModel->getOptionsModel()->getDisplayAddresses() || tooltip)
     {
         description += QString(" (") + QString::fromStdString(address) + QString(")");
     }
