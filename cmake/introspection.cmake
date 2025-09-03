@@ -298,4 +298,29 @@ if(NOT MSVC)
     CXXFLAGS ${ARM_SHANI_CXXFLAGS}
   )
   set(ENABLE_ARM_SHANI ${HAVE_ARM_SHANI})
+
+  # Check for POWER8 vector intrinsics.
+  function(check_power8_vector VAR)
+    check_cxx_source_compiles_with_flags([[
+      #include <altivec.h>
+      #include <stdint.h>
+
+      int main()
+      {
+        unsigned char src[16];
+        __builtin_crypto_vshasigmaw((__vector uint32_t)vec_vsx_ld(0, src), 1, 0xf);
+        return 0;
+      }
+      ]] ${VAR}
+      CXXFLAGS ${POWER8_CXXFLAGS}
+    )
+  endfunction()
+  set(POWER8_CXXFLAGS -mpower8-vector)
+  check_power8_vector(HAVE_POWER8_VECTOR)
+  set(ENABLE_POWER8 ${HAVE_POWER8_VECTOR})
+  if(NOT HAVE_POWER8_VECTOR)
+    set(POWER8_CXXFLAGS -mcpu=power8)
+    check_power8_vector(HAVE_MCPU_POWER8_FOR_VECTOR)
+    set(ENABLE_POWER8 ${HAVE_MCPU_POWER8_FOR_VECTOR})
+  endif()
 endif()
