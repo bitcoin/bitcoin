@@ -1934,6 +1934,8 @@ RPCHelpMan descriptorprocesspsbt()
                              {"range", RPCArg::Type::RANGE, RPCArg::Default{1000}, "Up to what index HD chains should be explored (either end or [begin,end])"},
                         }},
                     }},
+                    {"options|sighashtype", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::STR}, RPCArg::Optional::OMITTED, "",
+                        {
                     {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
             "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
@@ -1941,9 +1943,14 @@ RPCHelpMan descriptorprocesspsbt()
             "       \"SINGLE\"\n"
             "       \"ALL|ANYONECANPAY\"\n"
             "       \"NONE|ANYONECANPAY\"\n"
-            "       \"SINGLE|ANYONECANPAY\""},
-                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
-                    {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    "       \"SINGLE|ANYONECANPAY\"",
+                                RPCArgOptions{.also_positional = true}},
+                            {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them", RPCArgOptions{.also_positional = true}},
+                            {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible", RPCArgOptions{.also_positional = true}},
+                        },
+                    RPCArgOptions{.oneline_description="options"}},
+                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", RPCArgOptions{.hidden=true}},
+                    {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", RPCArgOptions{.hidden=true}},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1967,9 +1974,39 @@ RPCHelpMan descriptorprocesspsbt()
         EvalDescriptorStringOrObject(descs[i], provider, /*expand_priv=*/true);
     }
 
-    int sighash_type = ParseSighashString(request.params[2]);
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
-    bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
+    // Get options
+    bool bip32derivs = true;
+    bool finalize = true;
+    int sighash_type = ParseSighashString(NullUniValue); // Use ParseSighashString default
+    if (request.params[2].isStr() || request.params[2].isNull()) {
+        // Old style positional parameters
+        sighash_type = ParseSighashString(request.params[2]);
+        bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+        finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
+    } else {
+        // New style options are in an object
+        UniValue options = request.params[2];
+        RPCTypeCheckObj(options,
+            {
+                {"bip32derivs", UniValueType(UniValue::VBOOL)},
+                {"finalize", UniValueType(UniValue::VBOOL)},
+                {"sighashtype", UniValueType(UniValue::VSTR)},
+            },
+            true, true);
+        if (options.exists("bip32derivs")) {
+            bip32derivs = options["bip32derivs"].get_bool();
+        }
+        if (options.exists("finalize")) {
+            finalize = options["finalize"].get_bool();
+        }
+        if (options.exists("sighashtype")) {
+            sighash_type = ParseSighashString(options["sighashtype"]);
+        }
+        if (request.params.size() > 3) {
+            // Same behaviour as too many args passed normally
+            throw std::runtime_error(self.ToString());
+        }
+    }
 
     const PartiallySignedTransaction& psbtx = ProcessPSBT(
         request.params[0].get_str(),
