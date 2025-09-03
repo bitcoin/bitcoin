@@ -855,6 +855,9 @@ private:
     /** Have we requested this block from an outbound peer */
     bool IsBlockRequestedFromOutbound(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
 
+    /** Have we requested this block from a specific peer */
+    bool IsBlockRequestedFromPeer(const uint256& hash, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     /** Remove this block from our tracked requested blocks. Called if:
      *  - the block has been received from a peer
      *  - the request for the block has timed out
@@ -1139,6 +1142,16 @@ bool PeerManagerImpl::IsBlockRequestedFromOutbound(const uint256& hash)
         auto [nodeid, block_it] = range.first->second;
         PeerRef peer{GetPeerRef(nodeid)};
         if (peer && !peer->m_is_inbound) return true;
+    }
+
+    return false;
+}
+
+bool PeerManagerImpl::IsBlockRequestedFromPeer(const uint256& hash, NodeId peer)
+{
+    for (auto range = mapBlocksInFlight.equal_range(hash); range.first != range.second; range.first++) {
+        auto [nodeid, block_it] = range.first->second;
+        if (nodeid == peer) return true;
     }
 
     return false;
@@ -1851,16 +1864,19 @@ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBl
     // Ignore pre-segwit peers
     if (!CanServeWitnesses(*peer)) return "Pre-SegWit peer";
 
+    const uint256& hash{block_index.GetBlockHash()};
+
     LOCK(cs_main);
 
+    if (IsBlockRequestedFromPeer(hash, peer_id)) return "Already requested from this peer";
+
     // Forget about all prior requests
-    RemoveBlockRequest(block_index.GetBlockHash(), std::nullopt);
+    RemoveBlockRequest(hash, std::nullopt);
 
     // Mark block as in-flight
-    if (!BlockRequested(peer_id, block_index)) return "Already requested from this peer";
+    Assume(BlockRequested(peer_id, block_index));
 
     // Construct message to request the block
-    const uint256& hash{block_index.GetBlockHash()};
     std::vector<CInv> invs{CInv(MSG_BLOCK | MSG_WITNESS_FLAG, hash)};
 
     // Send block request message to the peer
