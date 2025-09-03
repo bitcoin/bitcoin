@@ -256,7 +256,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Record current fee estimations. */
-    void FlushFeeEstimates()
+    bool FlushFeeEstimates() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Calculates the age of the file, since last modified */

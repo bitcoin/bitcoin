@@ -214,10 +214,36 @@ static RPCHelpMan estimaterawfee()
     };
 }
 
+static RPCHelpMan savefeeestimates()
+{
+    return RPCHelpMan{"savefeeestimates",
+                "\nDumps the fee estimates to disk. It will fail until the previous dump is fully loaded.\n",
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("savefeeestimates", "")
+            + HelpExampleRpc("savefeeestimates", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    static Mutex dump_mutex;
+    LOCK(dump_mutex);
+    CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+
+    if (!fee_estimator.FlushFeeEstimates()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Unable to dump fee estimates to disk");
+    }
+
+    return NullUniValue;
+},
+    };
+}
+
 void RegisterFeeRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
         {"util", &estimatesmartfee},
+        {"util", &savefeeestimates},
         {"hidden", &estimaterawfee},
     };
     for (const auto& c : commands) {
