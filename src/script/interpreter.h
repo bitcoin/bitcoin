@@ -301,6 +301,8 @@ public:
     bool CheckSchnorrSignature(Span<const unsigned char> sig, Span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+
+    bool m_require_sighash_all{false};
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;

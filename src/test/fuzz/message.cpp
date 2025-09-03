@@ -38,7 +38,7 @@ FUZZ_TARGET(message, .init = initialize_message)
         }
     }
     {
-        (void)MessageHash(random_message);
+        (void)MessageHash(random_message, MessageSignatureFormat::LEGACY);
         auto address = fuzzed_data_provider.ConsumeRandomLengthString(1024);
         auto signature = fuzzed_data_provider.ConsumeRandomLengthString(1024);
         (void)MessageVerify(address, signature, random_message);
