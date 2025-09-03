@@ -8,6 +8,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/util/random.h>
 
 #include <algorithm>
 #include <cassert>
@@ -17,6 +18,7 @@
 
 FUZZ_TARGET(node_eviction)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     std::vector<NodeEvictionCandidate> eviction_candidates;
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
@@ -40,7 +42,7 @@ FUZZ_TARGET(node_eviction)
     // Make a copy since eviction_candidates may be in some valid but otherwise
     // indeterminate state after the SelectNodeToEvict(&&) call.
     const std::vector<NodeEvictionCandidate> eviction_candidates_copy = eviction_candidates;
-    const std::optional<NodeId> node_to_evict = SelectNodeToEvict(std::move(eviction_candidates));
+    const std::optional<NodeId> node_to_evict = SelectNodeToEvict(std::move(eviction_candidates), /*force=*/fuzzed_data_provider.ConsumeBool());
     if (node_to_evict) {
         assert(std::any_of(eviction_candidates_copy.begin(), eviction_candidates_copy.end(), [&node_to_evict](const NodeEvictionCandidate& eviction_candidate) { return *node_to_evict == eviction_candidate.id; }));
     }
