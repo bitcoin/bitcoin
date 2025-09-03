@@ -843,6 +843,167 @@ std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& ch
     return CHECK_NONFATAL(first_unpruned.pprev)->nHeight;
 }
 
+static RPCHelpMan listprunelocks()
+{
+    return RPCHelpMan{"listprunelocks",
+        "\nReturns a list of pruning locks.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::ARR, "prune_locks", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "id", "A unique identifier for the lock"},
+                        {RPCResult::Type::STR, "desc", "A description of the lock's purpose"},
+                        {RPCResult::Type::ARR_FIXED, "height", "Range of blocks prevented from being pruned",
+                        {
+                            {RPCResult::Type::NUM, "height_first", "Height of first block that may not be pruned"},
+                            {RPCResult::Type::NUM, "height_last", "Height of last block that may not be pruned (omitted if unbounded)"},
+                        }},
+                        {RPCResult::Type::BOOL, "temporary", "Indicates the lock will not remain after a restart of the node"},
+                    }},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("listprunelocks", "")
+          + HelpExampleRpc("listprunelocks", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    Chainstate& active_chainstate = chainman.ActiveChainstate();
+
+    UniValue locks_uv(UniValue::VARR);
+    {
+        LOCK(::cs_main);
+        BlockManager * const blockman = &active_chainstate.m_blockman;
+        for (const auto& prune_lock : blockman->m_prune_locks) {
+            UniValue prune_lock_uv(UniValue::VOBJ);
+            const auto& lock_info = prune_lock.second;
+            prune_lock_uv.pushKV("id", prune_lock.first);
+            prune_lock_uv.pushKV("desc", lock_info.desc);
+            UniValue heights_uv(UniValue::VARR);
+            heights_uv.push_back(lock_info.height_first);
+            if (lock_info.height_last < std::numeric_limits<uint64_t>::max()) {
+                heights_uv.push_back(lock_info.height_last);
+            }
+            prune_lock_uv.pushKV("height", heights_uv);
+            prune_lock_uv.pushKV("temporary", lock_info.temporary);
+            locks_uv.push_back(prune_lock_uv);
+        }
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("prune_locks", locks_uv);
+    return result;
+},
+    };
+}
+
+static RPCHelpMan setprunelock()
+{
+    return RPCHelpMan{"setprunelock",
+        "\nManipulate pruning locks.\n",
+        {
+            {"id", RPCArg::Type::STR, RPCArg::Optional::NO, "The unique id of the manipulated prune lock (or \"*\" if deleting all)"},
+            {"lock_info", RPCArg::Type::OBJ, RPCArg::Optional::NO, "An object describing the desired lock",
+                {
+                    {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "Description of the lock"},
+                    {"height", RPCArg::Type::RANGE, RPCArg::DefaultHint("deletes the lock"), "The range of block heights to prevent pruning"},
+                    {"sync", RPCArg::Type::BOOL, RPCArg::Default(false), "If true, success indicates the lock change was stored to disk (if non-temporary). If false, it is possible for a subsequent node crash to lose the lock."},
+                    {"temporary", RPCArg::Type::BOOL, RPCArg::Default(false), "If true, the lock will not persist across node restart."},
+                },
+            },
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::BOOL, "success", "Whether the change was successful"},
+            }},
+        RPCExamples{
+            HelpExampleCli("setprunelock", "\"test\" \"{\\\"desc\\\": \\\"Just a test\\\", \\\"height\\\": [0,100]}\"")
+          + HelpExampleCli("setprunelock", "\"test-2\" \"{\\\"desc\\\": \\\"Second RPC-created prunelock test\\\", \\\"height\\\": [100]}\"")
+          + HelpExampleRpc("setprunelock", "\"test\", {\"desc\": \"Just a test\", \"height\": [0,100]}")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    Chainstate& active_chainstate = chainman.ActiveChainstate();
+
+    const auto& lock_info_json = request.params[1];
+    RPCTypeCheckObj(lock_info_json,
+        {
+            {"desc", UniValueType(UniValue::VSTR)},
+            {"height", UniValueType()}, // will be checked below
+            {"sync", UniValueType(UniValue::VBOOL)},
+            {"temporary", UniValueType(UniValue::VBOOL)},
+        },
+        /*fAllowNull=*/ true, /*fStrict=*/ true);
+
+    const auto& lockid = request.params[0].get_str();
+
+    node::PruneLockInfo lock_info;
+
+    auto height_param = lock_info_json["height"];
+    if (!height_param.isArray()) {
+        UniValue new_height_param(UniValue::VARR);
+        new_height_param.push_back(std::move(height_param));
+        height_param = std::move(new_height_param);
+    }
+    bool success;
+    if (height_param[0].isNull() && height_param[1].isNull()) {
+        // Delete
+        LOCK(::cs_main);
+        BlockManager * const blockman = &active_chainstate.m_blockman;
+        if (lockid == "*") {
+            // Delete all
+            success = true;
+            std::vector<std::string> all_ids;
+            all_ids.reserve(blockman->m_prune_locks.size());
+            for (const auto& prune_lock : blockman->m_prune_locks) {
+                all_ids.push_back(prune_lock.first);
+            }
+            for (auto& lockid : all_ids) {
+                success |= blockman->DeletePruneLock(lockid);
+            }
+        } else {
+            success = blockman->PruneLockExists(lockid) && blockman->DeletePruneLock(lockid);
+        }
+    } else {
+        if (lockid == "*") throw JSONRPCError(RPC_INVALID_PARAMETER, "id \"*\" only makes sense when deleting");
+        if (!height_param[0].isNum()) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid start height");
+        lock_info.height_first = height_param[0].getInt<uint64_t>();
+        if (!height_param[1].isNull()) {
+            if (!height_param[1].isNum()) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid end height");
+            lock_info.height_last = height_param[1].getInt<uint64_t>();
+        }
+        lock_info.desc = lock_info_json["desc"].get_str();
+        if (lock_info_json["temporary"].isNull()) {
+            lock_info.temporary = false;
+        } else {
+            lock_info.temporary = lock_info_json["temporary"].get_bool();
+        }
+        bool sync = false;
+        if (!lock_info_json["sync"].isNull()) {
+            sync = lock_info_json["sync"].get_bool();
+        }
+        LOCK(::cs_main);
+        BlockManager * const blockman = &active_chainstate.m_blockman;
+        success = blockman->UpdatePruneLock(lockid, lock_info, sync);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("success", success);
+    return result;
+},
+    };
+}
+
 static RPCHelpMan pruneblockchain()
 {
     return RPCHelpMan{"pruneblockchain",
@@ -3521,6 +3682,8 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getdeploymentinfo},
         {"blockchain", &gettxout},
         {"blockchain", &gettxoutsetinfo},
+        {"blockchain", &listprunelocks},
+        {"blockchain", &setprunelock},
         {"blockchain", &pruneblockchain},
         {"blockchain", &verifychain},
         {"blockchain", &preciousblock},
