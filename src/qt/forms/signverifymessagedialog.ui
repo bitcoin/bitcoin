@@ -10,6 +10,12 @@
     <height>380</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>700</width>
+    <height>380</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Signatures - Sign / Verify a Message</string>
   </property>
@@ -194,16 +200,25 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
-             <height>48</height>
+             <height>20</height>
             </size>
            </property>
           </spacer>
          </item>
          <item>
           <widget class="QLabel" name="statusLabel_SM">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="font">
             <font>
              <weight>75</weight>
@@ -223,10 +238,13 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
-             <height>48</height>
+             <height>20</height>
             </size>
            </property>
           </spacer>
@@ -351,16 +369,25 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
-             <height>48</height>
+             <height>20</height>
             </size>
            </property>
           </spacer>
          </item>
          <item>
           <widget class="QLabel" name="statusLabel_VM">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="font">
             <font>
              <weight>75</weight>
@@ -380,10 +407,13 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>40</width>
-             <height>48</height>
+             <height>20</height>
             </size>
            </property>
           </spacer>

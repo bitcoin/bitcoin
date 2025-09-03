@@ -6,8 +6,7 @@
 
 #include <qt/bitcoinaddressvalidator.h>
 #include <qt/guiconstants.h>
-
-#include <cmath>
+#include <qt/guiutil.h>
 
 #include <QColor>
 #include <QCoreApplication>
@@ -33,14 +32,6 @@ void QValidatedLineEdit::setText(const QString& text)
     checkValidity();
 }
 
-double ColourLuminosity(QColor c)
-{
-    const auto Lr = std::pow(c.redF(),   2.2) * .2126;
-    const auto Lg = std::pow(c.greenF(), 2.2) * .7152;
-    const auto Lb = std::pow(c.blueF(),  2.2) * .0722;
-    return Lr + Lg + Lb;
-}
-
 void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vector<int>&error_locations)
 {
     if(_valid && this->valid)
@@ -63,12 +54,14 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vec
     }
     else
     {
-        setStyleSheet("QValidatedLineEdit { " STYLE_INVALID "}");
+        // Use theme-aware red color for invalid state
+        const QColor bg_colour = palette().color(backgroundRole());
+        const bool dark_mode = GUIUtil::isDarkMode(bg_colour);
+        QColor error_colour = dark_mode ? QColor("#FF8080") : QColor("#FF0000");
+        setStyleSheet(QStringLiteral("QValidatedLineEdit { border: 3px solid %1; }").arg(error_colour.name()));
+
         if (!error_locations.empty()) {
             const QColor normal_text_colour = palette().color(foregroundRole());
-            const QColor bg_colour = palette().color(backgroundRole());
-            const bool dark_mode = ColourLuminosity(bg_colour) < .36;
-            QColor error_colour;
             if (normal_text_colour.red() > normal_text_colour.green() && normal_text_colour.red() > normal_text_colour.blue()) {
                 // red is dominant, avoid fg red
                 if (bg_colour.red() > bg_colour.blue() && bg_colour.green() > bg_colour.blue()) {
@@ -77,8 +70,6 @@ void QValidatedLineEdit::setValid(bool _valid, bool with_warning, const std::vec
                 } else {
                     error_colour = dark_mode ? Qt::yellow : Qt::darkYellow;
                 }
-            } else {
-                error_colour = dark_mode ? QColor(255, 159, 159) : Qt::red;
             }
 
             QTextCharFormat format;

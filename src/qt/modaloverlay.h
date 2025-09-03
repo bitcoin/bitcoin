@@ -16,13 +16,16 @@ namespace Ui {
     class ModalOverlay;
 }
 
+class PlatformStyle;
+class QEvent;
+
 /** Modal overlay to display information about the chain-sync state */
 class ModalOverlay : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ModalOverlay(bool enable_wallet, QWidget *parent);
+    explicit ModalOverlay(bool enable_wallet, const PlatformStyle& platform_style, QWidget *parent);
     ~ModalOverlay();
 
     void tipUpdate(int count, const QDateTime& blockDate, double nVerificationProgress);
@@ -42,6 +45,7 @@ Q_SIGNALS:
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override;
     bool event(QEvent* ev) override;
+    void changeEvent(QEvent* e) override;
 
 private:
     Ui::ModalOverlay *ui;
@@ -51,8 +55,10 @@ private:
     bool layerIsVisible{false};
     bool userClosed{false};
     QPropertyAnimation m_animation;
+    const PlatformStyle& m_platform_style;
     void UpdateHeaderSyncLabel();
     void UpdateHeaderPresyncLabel(int height, const QDateTime& blockDate);
+    void updateThemeStyles();
 };
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

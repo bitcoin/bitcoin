@@ -37,6 +37,7 @@
 #include <QAbstractItemView>
 #include <QApplication>
 #include <QClipboard>
+#include <QColor>
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDialog>
@@ -71,6 +72,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <exception>
 #include <fstream>
 #include <string>
@@ -1065,6 +1067,18 @@ QString formatBytesps(float val)
 
     //: "Gigabytes per second"
     return QObject::tr("%1 GB/s").arg(long(val / 1'000'000'000 + 0.5));
+}
+
+static double ColourLuminosity(const QColor& c)
+{
+    const auto Lr = std::pow(c.redF(),   2.2) * .2126;
+    const auto Lg = std::pow(c.greenF(), 2.2) * .7152;
+    const auto Lb = std::pow(c.blueF(),  2.2) * .0722;
+    return Lr + Lg + Lb;
+}
+
+bool isDarkMode(const QColor& color) {
+    return ColourLuminosity(color) < .36;
 }
 
 qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize, qreal font_size) {

@@ -9,17 +9,27 @@
 
 #include <chainparams.h>
 #include <qt/guiutil.h>
+#include <qt/platformstyle.h>
 
+#include <QColor>
 #include <QEasingCurve>
+#include <QPalette>
 #include <QPropertyAnimation>
 #include <QResizeEvent>
 
-ModalOverlay::ModalOverlay(bool enable_wallet, QWidget* parent)
+ModalOverlay::ModalOverlay(bool enable_wallet, const PlatformStyle& platform_style, QWidget* parent)
     : QWidget(parent),
       ui(new Ui::ModalOverlay),
-      bestHeaderDate(QDateTime())
+      bestHeaderDate(QDateTime()),
+      m_platform_style(platform_style)
 {
     ui->setupUi(this);
+
+    // Add ThemedLabel for warning icon
+    GUIUtil::ThemedLabel* warningIcon = new GUIUtil::ThemedLabel(&m_platform_style, this);
+    warningIcon->setThemedPixmap(QStringLiteral(":/icons/warning"), 48, 48);
+    ui->verticalLayoutIcon->insertWidget(0, warningIcon);
+
     connect(ui->closeButton, &QPushButton::clicked, this, &ModalOverlay::closeClicked);
     if (parent) {
         parent->installEventFilter(this);
@@ -38,6 +48,8 @@ ModalOverlay::ModalOverlay(bool enable_wallet, QWidget* parent)
     m_animation.setPropertyName("pos");
     m_animation.setDuration(300 /* ms */);
     m_animation.setEasingCurve(QEasingCurve::OutQuad);
+
+    updateThemeStyles();
 }
 
 ModalOverlay::~ModalOverlay()
@@ -203,4 +215,28 @@ void ModalOverlay::closeClicked()
 {
     showHide(true);
     userClosed = true;
+}
+
+void ModalOverlay::changeEvent(QEvent* e)
+{
+    if (e->type() == QEvent::PaletteChange) {
+        updateThemeStyles();
+    }
+    QWidget::changeEvent(e);
+}
+
+void ModalOverlay::updateThemeStyles()
+{
+    const QColor bg_colour = palette().color(backgroundRole());
+    const bool dark_mode = GUIUtil::isDarkMode(bg_colour);
+
+    // Overlay background - both light and dark mode use black but with different alpha
+    QColor overlayBg = dark_mode ? QColor(0, 0, 0, 240) : QColor(0, 0, 0, 220);
+    const QString bgStyle = QStringLiteral("#bgWidget { background: ") + overlayBg.name(QColor::HexArgb) + QStringLiteral("; }");
+    ui->bgWidget->setStyleSheet(bgStyle);
+
+    // Content widget with system window background, slightly transparent
+    QColor contentBg = QColor(bg_colour.red(), bg_colour.green(), bg_colour.blue(), 240);
+    const QString contentStyle = QStringLiteral("#contentWidget { background: ") + contentBg.name(QColor::HexArgb) + QStringLiteral("; border-radius: 6px; }");
+    ui->contentWidget->setStyleSheet(contentStyle);
 }
