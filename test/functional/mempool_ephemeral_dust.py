@@ -350,7 +350,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         # TRUC transactions restriction for ephemeral dust disallows further spends of ancestor chains
         child_tx = self.wallet.create_self_transfer_multi(utxos_to_spend=sweep_tx_2["new_utxos"], version=3)
-        assert_raises_rpc_error(-26, "TRUC-violation", self.nodes[0].sendrawtransaction, child_tx["hex"])
+        assert_raises_rpc_error(-26, "truc-ancestors-toomany", self.nodes[0].sendrawtransaction, child_tx["hex"])
 
         self.nodes[0].reconsiderblock(reconsider_block_res["hash"])
         assert_equal(self.nodes[0].getrawmempool(), [])

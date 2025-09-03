@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_set>
 
 class CCoinsViewCache;
 class CFeeRate;
@@ -138,6 +139,9 @@ static constexpr unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS{STANDARD_SCRIP
 /** Used as the flags parameter to sequence and nLocktime checks in non-consensus code. */
 static constexpr unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS{LOCKTIME_VERIFY_SEQUENCE};
 
+typedef std::unordered_set<std::string> ignore_rejects_type;
+static const ignore_rejects_type empty_ignore_rejects{};
+
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
 bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
@@ -156,13 +160,14 @@ static constexpr decltype(CTransaction::version) TX_MAX_STANDARD_VERSION{3};
 * Check for standard transaction types
 * @return True if all outputs (scriptPubKeys) use only standard transaction forms
 */
-bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
+bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_datacarrier_bytes, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& out_reason, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
 /**
 * Check for standard transaction types
 * @param[in] mapInputs       Map of previous transactions that have outputs we're spending
 * @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
+
 /**
 * Check if the transaction is over standard P2WSH resources limit:
 * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements
@@ -170,7 +175,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 *
 * Also enforce a maximum stack item size limit and no annexes for tapscript spends.
 */
-bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason, const ignore_rejects_type& ignore_rejects=empty_ignore_rejects);
 
 /** Compute the virtual transaction size (weight reinterpreted as bytes). */
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost, unsigned int bytes_per_sigop);

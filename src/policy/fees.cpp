@@ -616,7 +616,7 @@ void CBlockPolicyEstimator::processTransaction(const NewMempoolTransactionInfo& 
     // - the node is not behind
     // - the transaction is not dependent on any other transactions in the mempool
     // - it's not part of a package.
-    const bool validForFeeEstimation = !tx.m_mempool_limit_bypassed && !tx.m_submitted_in_package && tx.m_chainstate_is_current && tx.m_has_no_mempool_parents;
+    const bool validForFeeEstimation = tx.m_ignore_rejects.empty() && !tx.m_submitted_in_package && tx.m_chainstate_is_current && tx.m_has_no_mempool_parents;
 
     // Only want to be updating estimates when our blockchain is synced,
     // otherwise we'll miscalculate how many blocks its taking to get included.

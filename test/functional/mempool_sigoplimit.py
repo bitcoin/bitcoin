@@ -210,7 +210,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         nonstd_tx = CTransaction()
         nonstd_tx.vin = [CTxIn(op, CScript([b"", packed_redeem_script])) for op in outpoints]
         nonstd_tx.vout = [CTxOut(0, CScript([OP_RETURN, b""]))]
-        assert_raises_rpc_error(-26, "bad-txns-nonstandard-inputs", self.nodes[0].sendrawtransaction, nonstd_tx.serialize().hex())
+        assert_raises_rpc_error(-26, "bad-txns-input-sigops-toomany-overall", self.nodes[0].sendrawtransaction, nonstd_tx.serialize().hex())
 
         # Spending one less accounts for 2490 legacy sigops and is standard.
         std_tx = deepcopy(nonstd_tx)
