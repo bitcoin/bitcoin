@@ -300,7 +300,12 @@ void CreateWalletActivity::create()
     try {
         signers = node().listExternalSigners();
     } catch (const std::runtime_error& e) {
-        QMessageBox::critical(nullptr, tr("Can't list signers"), e.what());
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setWindowTitle(tr("Can't list signers"));
+        msgBox.setText(tr("Unable to execute external signer script. Please check that the script signer path is correct and that the script is functional."));
+        msgBox.setDetailedText(QString::fromStdString(e.what()));
+        msgBox.exec();
     }
     if (signers.size() > 1) {
         QMessageBox::critical(nullptr, tr("Too many external signers found"), QString::fromStdString("More than one external signer found. Please connect only one at a time."));
