@@ -725,6 +725,43 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
+/**
+ * Generate unique credentials for Tor stream isolation. Tor will create
+ * separate circuits for SOCKS5 proxy connections with different credentials, which
+ * makes it harder to correlate the connections.
+ */
+class TorStreamIsolationCredentialsGenerator
+{
+public:
+    TorStreamIsolationCredentialsGenerator():
+        m_prefix(GenerateUniquePrefix()) {
+    }
+
+    /** Return the next unique proxy credentials. */
+    ProxyCredentials Generate() {
+        ProxyCredentials auth;
+        auth.username = auth.password = strprintf("%s%i", m_prefix, m_counter);
+        ++m_counter;
+        return auth;
+    }
+
+    /** Size of session prefix in bytes. */
+    static constexpr size_t PREFIX_BYTE_LENGTH = 8;
+private:
+    const std::string m_prefix;
+    std::atomic<uint64_t> m_counter;
+
+    /** Generate a random prefix for each of the credentials returned by this generator.
+     * This makes sure that different launches of the application (either successively or in parallel)
+     * will not share the same circuits, as would be the case with a bare counter.
+     */
+    static std::string GenerateUniquePrefix() {
+        std::array<uint8_t, PREFIX_BYTE_LENGTH> prefix_bytes;
+        GetRandBytes(prefix_bytes);
+        return HexStr(prefix_bytes) + "-";
+    }
+};
+
 std::unique_ptr<Sock> ConnectThroughProxy(const Proxy& proxy,
                                           const std::string& dest,
                                           uint16_t port,
@@ -739,9 +776,8 @@ std::unique_ptr<Sock> ConnectThroughProxy(const Proxy& proxy,
 
     // do socks negotiation
     if (proxy.m_randomize_credentials) {
-        ProxyCredentials random_auth;
-        static std::atomic_int counter(0);
-        random_auth.username = random_auth.password = strprintf("%i", counter++);
+        static TorStreamIsolationCredentialsGenerator generator;
+        ProxyCredentials random_auth{generator.Generate()};
         if (!Socks5(dest, port, &random_auth, *sock)) {
             return {};
         }
