@@ -31,7 +31,7 @@ Bitcoin Core requires one of the following compilers.
 | [FreeType](../depends/packages/freetype.mk) (gui) | [link](https://freetype.org) | [2.11.0](https://github.com/bitcoin/bitcoin/commit/01544dd78ccc0b0474571da854e27adef97137fb) | 2.3.0 | Yes |
 | [MiniUPnPc](../depends/packages/miniupnpc.mk) (networking) | [link](https://miniupnp.tuxfamily.org/) | [2.2.7](https://github.com/bitcoin/bitcoin/pull/29707) | 2.1 | No |
 | [qrencode](../depends/packages/qrencode.mk) (gui) | [link](https://fukuchi.org/works/qrencode/) | [4.1.1](https://github.com/bitcoin/bitcoin/pull/27312) | N/A | No |
-| [Qt](../depends/packages/qt.mk) (gui) | [link](https://download.qt.io/official_releases/qt/) | [5.15.16](https://github.com/bitcoin/bitcoin/pull/30774) | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
+| [Qt](../depends/packages/qt.mk) (gui) | [link](https://download.qt.io/official_releases/qt/) | 5.15.17 | [5.11.3](https://github.com/bitcoin/bitcoin/pull/24132) | No |
 | [ZeroMQ](../depends/packages/zeromq.mk) (notifications) | [link](https://github.com/zeromq/libzmq/releases) | [4.3.4](https://github.com/bitcoin/bitcoin/pull/23956) | 4.0.0 | No |
 | [Berkeley DB](../depends/packages/bdb.mk) (legacy wallet) | [link](https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html) | 4.8.30 | 4.8.x | No |
 | [SQLite](../depends/packages/sqlite.mk) (wallet) | [link](https://sqlite.org) | [3.38.5](https://github.com/bitcoin/bitcoin/pull/25378) | [3.7.17](https://github.com/bitcoin/bitcoin/pull/19077) | No |
