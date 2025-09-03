@@ -719,6 +719,47 @@ RPCHelpMan dumpprivkey()
     };
 }
 
+RPCHelpMan dumpmasterprivkey()
+{
+    return RPCHelpMan{"dumpmasterprivkey",
+                "Reveals the current master private key.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::STR, "key", "The HD master private key"
+                },
+                RPCExamples{
+                    HelpExampleCli("dumpmasterprivkey", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    const CWallet* const pwallet = wallet.get();
+
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
+
+    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+
+    EnsureWalletIsUnlocked(*pwallet);
+
+    CKeyID seed_id = spk_man.GetHDChain().seed_id;
+    if (!spk_man.IsHDEnabled()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is not a HD wallet.");
+    }
+    CKey seed;
+    if (spk_man.GetKey(seed_id, seed)) {
+        CExtKey masterKey;
+        masterKey.SetSeed(seed);
+
+        return EncodeExtKey(masterKey);
+    } else {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Unable to retrieve HD master private key");
+        return NullUniValue;
+    }
+},
+    };
+}
+
 
 RPCHelpMan dumpwallet()
 {
