@@ -102,6 +102,35 @@ check_cxx_source_compiles("
   " HAVE_SOCKADDR_UN
 )
 
+# Check for close_range().
+# NOTE: At least FreeBSD supports the generic variant.
+check_cxx_source_compiles("
+  // same as in src/util/subprocess.cpp
+  #include <limits.h>
+  #include <unistd.h>
+
+  int main()
+  {
+    return close_range(3, UINT_MAX, 0);
+  }
+  " HAVE_CLOSE_RANGE_GENERIC
+)
+if(NOT HAVE_CLOSE_RANGE_GENERIC)
+  check_cxx_source_compiles("
+    // same as in src/util/subprocess.cpp
+    #define _GNU_SOURCE
+    #include <linux/close_range.h>
+    #include <limits.h>
+    #include <unistd.h>
+
+    int main()
+    {
+      return close_range(3, UINT_MAX, 0);
+    }
+    " HAVE_CLOSE_RANGE_LINUX
+  )
+endif()
+
 # Check for different ways of gathering OS randomness:
 # - Linux getrandom()
 check_cxx_source_compiles("
