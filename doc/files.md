@@ -108,6 +108,7 @@ Subdirectory | File                 | Description
 ## GUI settings
 
 `bitcoin-qt` uses [`QSettings`](https://doc.qt.io/qt-5/qsettings.html) class; this implies platform-specific [locations where application settings are stored](https://doc.qt.io/qt-5/qsettings.html#locations-where-application-settings-are-stored).
+You can change this with the `-guisettingsdir=<path>` option. It will use the cross-platform ini format then. `<path>` is where the `.ini` file is stored.
 
 ## Legacy subdirectories and files
 
