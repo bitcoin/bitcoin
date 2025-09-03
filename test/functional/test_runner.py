@@ -317,6 +317,7 @@ BASE_SCRIPTS = [
     'mempool_accept.py',
     'mempool_fee_histogram.py',
     'mempool_expiry.py',
+    'rpc_sort_multisig.py',
     'wallet_import_with_label.py --legacy-wallet',
     'wallet_importdescriptors.py --descriptors',
     'wallet_importseed.py --descriptors',
