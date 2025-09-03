@@ -491,4 +491,12 @@ private:
 #endif
 } // namespace common
 
+/**
+ * Checks if a deprecated RPC method is enabled via -deprecatedrpc flag
+ *
+ * @param method The deprecated method name to check (e.g., "boolverbose")
+ * @return true if the method is enabled, false otherwise
+ */
+bool IsDeprecatedRPCEnabled(const std::string& method);
+
 #endif // BITCOIN_COMMON_ARGS_H

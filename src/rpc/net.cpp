@@ -8,6 +8,7 @@
 #include <addrman_impl.h>
 #include <banman.h>
 #include <chainparams.h>
+#include <common/args.h>
 #include <clientversion.h>
 #include <core_io.h>
 #include <net_permissions.h>

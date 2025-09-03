@@ -900,3 +900,10 @@ std::pair<int, char**> WinCmdLineArgs::get()
 }
 #endif
 } // namespace common
+
+bool IsDeprecatedRPCEnabled(const std::string& method)
+{
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+
+    return std::find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
+}
