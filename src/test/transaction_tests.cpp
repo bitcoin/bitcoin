@@ -1034,6 +1034,11 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     for (int op = OP_1; op <= OP_16; op += 1) {
         t.vout[0].scriptPubKey = CScript() << (opcodetype)op << std::vector<unsigned char>(2, 0);
         t.vout[0].nValue = 240;
+
+        g_mempool_opts.acceptunknownwitness = false;
+        CheckIsNotStandard(t, "scriptpubkey-unknown-witnessversion");
+        g_mempool_opts.acceptunknownwitness = true;
+
         CheckIsStandard(t);
 
         t.vout[0].nValue = 239;
