@@ -145,12 +145,12 @@ static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
 }
 
 /** Compute at which vout of the block's coinbase transaction the witness commitment occurs, or -1 if not found */
-inline int GetWitnessCommitmentIndex(const CBlock& block)
+inline int GetWitnessCommitmentIndex(const CTransaction& gentx)
 {
     int commitpos = NO_WITNESS_COMMITMENT;
-    if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            const CTxOut& vout = block.vtx[0]->vout[o];
+    {
+        for (size_t o = 0; o < gentx.vout.size(); ++o) {
+            const CTxOut& vout = gentx.vout[o];
             if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
                 vout.scriptPubKey[0] == OP_RETURN &&
                 vout.scriptPubKey[1] == 0x24 &&
@@ -163,6 +163,14 @@ inline int GetWitnessCommitmentIndex(const CBlock& block)
         }
     }
     return commitpos;
+}
+
+inline int GetWitnessCommitmentIndex(const CBlock& block)
+{
+    if (block.vtx.empty()) {
+        return NO_WITNESS_COMMITMENT;
+    }
+    return GetWitnessCommitmentIndex(*block.vtx[0]);
 }
 
 #endif // BITCOIN_CONSENSUS_VALIDATION_H
