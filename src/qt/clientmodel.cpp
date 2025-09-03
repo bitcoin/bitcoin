@@ -265,6 +265,10 @@ void ClientModel::subscribeToCoreSignals()
         [this](bool network_active) {
             Q_EMIT networkActiveChanged(network_active);
         }));
+    m_event_handlers.emplace_back(m_node.handleNotifyNetworkLocalChanged(
+        [this]() {
+            Q_EMIT networkLocalChanged();
+        }));
     m_event_handlers.emplace_back(m_node.handleNotifyAlertChanged(
         [this]() {
             qDebug() << "ClientModel: NotifyAlertChanged";
@@ -300,6 +304,17 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
     if (m_node.getProxy((Network) 1, ipv4) && m_node.getProxy((Network) 2, ipv6)) {
       ip_port = ipv4.proxy.ToStringAddrPort();
       return true;
+    }
+    return false;
+}
+
+bool ClientModel::getTorInfo(QString& out_onion) const
+{
+    for (const auto& [addr, info] : m_node.getNetLocalAddresses()) {
+        if (addr.IsTor()) {
+            out_onion = QString::fromStdString(addr.ToStringAddr());
+            return true;
+        }
     }
     return false;
 }
