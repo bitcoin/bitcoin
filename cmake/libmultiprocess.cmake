@@ -3,6 +3,16 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 function(add_libmultiprocess subdir)
+  # Provide a more helpful message without pulling in CapnProtoConfig.cmake,
+  # which is included again by libmultiprocess. Skip the check when using the
+  # depends toolchain.
+  if(NOT (DEFINED CMAKE_TOOLCHAIN_FILE))
+    find_program(_CAPNP capnp)
+    if(NOT _CAPNP)
+      message(WARNING "Cap'n Proto (capnp) not found. Compile with -DENABLE_IPC=OFF if you do not need IPC functionality.")
+    endif()
+  endif()
+
   # Set BUILD_TESTING to match BUILD_TESTS. BUILD_TESTING is a standard cmake
   # option that controls whether enable_testing() is called, but in the bitcoin
   # build a BUILD_TESTS option is used instead.
