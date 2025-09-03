@@ -29,3 +29,27 @@ check_cxx_source_compiles([[
   }
   ]] HAVE_IOPRIO_SYSCALL
 )
+
+check_cxx_source_compiles([[
+  #define _WIN32_WINNT 0x0601
+  #include <windows.h>
+  #include <io.h>
+  #include <stddef.h>
+  #include <stdint.h>
+  #include <stdio.h>
+
+  int main()
+  {
+    FILE_IO_PRIORITY_HINT_INFO priorityHint = {
+        .PriorityHint = IoPriorityHintLow,
+    };
+    FILE * const F = fopen("test", "r");
+    intptr_t osfhandle = _get_osfhandle(_fileno(F));
+    if (osfhandle == (intptr_t)INVALID_HANDLE_VALUE) osfhandle = 0;
+    HANDLE hFile = (HANDLE)osfhandle;
+
+    bool rv = SetFileInformationByHandle(hFile, FileIoPriorityHintInfo, &priorityHint, sizeof(priorityHint));
+    return rv;
+  }
+  ]] HAVE_WINDOWS_IOPRIO
+)

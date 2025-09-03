@@ -1191,6 +1191,8 @@ bool BlockManager::ReadRawBlock(std::vector<uint8_t>& block, const FlatFilePos& 
         return false;
     }
 
+    if (lowprio) filein.SetIdlePriority();
+
     try {
         MessageStartChars blk_start;
         unsigned int blk_size;

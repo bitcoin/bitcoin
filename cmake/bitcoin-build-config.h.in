@@ -97,6 +97,8 @@
 
 #cmakedefine01 HAVE_IOPRIO_SYSCALL
 
+#cmakedefine01 HAVE_WINDOWS_IOPRIO
+
 /* Define this symbol if platform supports unix domain sockets */
 #cmakedefine HAVE_SOCKADDR_UN 1
 
