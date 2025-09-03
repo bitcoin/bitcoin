@@ -33,7 +33,9 @@ struct CoinsViewOptions {
     int simulate_crash_ratio = 0;
 };
 
-/** CCoinsView backed by the coin database (chainstate/) */
+/** CCoinsView backed by the coin database (chainstate/)
+ * Cursor requires FlushStateToDisk for consistency.
+ */
 class CCoinsViewDB final : public CCoinsView
 {
 protected:

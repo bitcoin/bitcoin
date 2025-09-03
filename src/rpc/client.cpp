@@ -101,6 +101,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getdescriptoractivity", 0, "blockhashes" },
     { "getdescriptoractivity", 1, "scanobjects" },
     { "getdescriptoractivity", 2, "include_mempool" },
+    { "sweepprivkeys", 0, "options" },
+    { "sweepprivkeys", 0, "privkeys" },
     { "scantxoutset", 1, "scanobjects" },
     { "dumptxoutset", 2, "format" },
     { "dumptxoutset", 2, "show_header" },
