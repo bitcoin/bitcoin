@@ -768,7 +768,7 @@ static RPCHelpMan importmempool()
             };
 
             if (!node::LoadMempool(mempool, load_path, chainstate, std::move(opts))) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Unable to import mempool file, see debug.log for details.");
+                throw JSONRPCError(RPC_MISC_ERROR, "Unable to import mempool file, see debug log for details.");
             }
 
             UniValue ret{UniValue::VOBJ};

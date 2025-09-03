@@ -1194,7 +1194,7 @@ static RPCHelpMan verifychain()
                     {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check."},
                 },
                 RPCResult{
-                    RPCResult::Type::BOOL, "", "Verification finished successfully. If false, check debug.log for reason."},
+                    RPCResult::Type::BOOL, "", "Verification finished successfully. If false, check debug log for reason."},
                 RPCExamples{
                     HelpExampleCli("verifychain", "")
             + HelpExampleRpc("verifychain", "")
