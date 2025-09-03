@@ -105,14 +105,23 @@ std::vector<unsigned char> ParseHexV(const UniValue& v, std::string_view name);
 std::vector<unsigned char> ParseHexO(const UniValue& o, std::string_view strKey);
 
 /**
+ * Checks if a deprecated RPC method is enabled via -deprecatedrpc flag
+ *
+ * @param method The deprecated method name to check (e.g., "boolverbose")
+ * @return true if the method is enabled, false otherwise
+ */
+bool IsDeprecatedRPCEnabled(const std::string& method);
+
+/**
  * Parses verbosity from provided UniValue.
  *
- * @param[in] arg The verbosity argument as an int (0, 1, 2,...)
+ * @param[in] arg The verbosity argument as an int (0, 1, 2,...) or boolean (deprecated)
  * @param[in] default_verbosity The value to return if verbosity argument is null
+ * @param[in] allow_bool Unused parameter (kept for API compatibility)
  * @returns An integer describing the verbosity level (e.g. 0, 1, 2, etc.)
- * @throws JSONRPCError if arg provided is boolean
+ * @throws JSONRPCError if arg provided is boolean and -deprecatedrpc=boolverbose is not enabled
  */
-int ParseVerbosity(const UniValue& arg, int default_verbosity);
+int ParseVerbosity(const UniValue& arg, int default_verbosity, bool allow_bool = false);
 
 /**
  * Validate and return a CAmount from a UniValue number or string.

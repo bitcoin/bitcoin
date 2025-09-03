@@ -12,6 +12,7 @@
 #include <consensus/amount.h>
 #include <core_io.h>
 #include <key_io.h>
+#include <logging.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <pow.h>
@@ -83,11 +84,22 @@ void RPCTypeCheckObj(const UniValue& o,
     }
 }
 
-int ParseVerbosity(const UniValue& arg, int default_verbosity)
+bool IsDeprecatedRPCEnabled(const std::string& method)
+{
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+
+    return std::find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
+}
+
+int ParseVerbosity(const UniValue& arg, int default_verbosity, bool allow_bool)
 {
     if (!arg.isNull()) {
         if (arg.isBool()) {
-            throw JSONRPCError(RPC_TYPE_ERROR, "Verbosity was boolean but only integer allowed");
+            if (!IsDeprecatedRPCEnabled("boolverbose")) {
+                throw JSONRPCError(RPC_TYPE_ERROR, "Boolean verbosity is deprecated. Use integer values (0=false, 1=true). To temporarily re-enable, use -deprecatedrpc=boolverbose");
+            }
+            LogDebug(BCLog::RPC, "WARNING: Boolean verbosity is deprecated and will be removed in a future release. Use integer values instead.\n");
+            return arg.get_bool(); // true = 1
         } else {
             return arg.getInt<int>();
         }
