@@ -15,6 +15,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_process_error,
     assert_raises_rpc_error,
+    assert_scale,
     get_auth_cookie,
     rpc_port,
 )
@@ -101,9 +102,8 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.generate(self.nodes[0], BLOCKS)
 
         self.log.info("Compare responses from getblockchaininfo RPC and `bitcoin-cli getblockchaininfo`")
-        cli_response = self.nodes[0].cli.getblockchaininfo()
-        rpc_response = self.nodes[0].getblockchaininfo()
-        assert_equal(cli_response, rpc_response)
+        blockchain_info = self.nodes[0].getblockchaininfo()
+        assert_equal(blockchain_info, self.nodes[0].cli.getblockchaininfo())
 
         self.log.info("Test named arguments")
         assert_equal(self.nodes[0].cli.echo(0, 1, arg3=3, arg5=5), ['0', '1', None, '3', None, '5'])
@@ -192,6 +192,22 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test -getinfo with invalid value for -color option")
         assert_raises_process_error(1, "Invalid value for -color option. Valid values: always, auto, never.", self.nodes[0].cli('-getinfo', '-color=foo').send_cli)
 
+        self.log.info("Test -getinfo command parsing")
+
+        self.log.debug("Test -getinfo=1 and -getinfo=-1 both succeed")
+        for cmd in ['-getinfo=1', '-getinfo=-1']:
+            assert_equal(str(blockchain_info['blocks']), cli_get_info_string_to_dict(self.nodes[0].cli(cmd).send_cli())['Blocks'])
+
+        self.log.debug("Test -getinfo=0 and -nogetinfo both raise 'too few parameters'")
+        err_msg = "error: too few parameters (need at least command)"
+        for cmd in ['-getinfo=0', '-nogetinfo']:
+            assert_raises_process_error(1, err_msg, self.nodes[0].cli(cmd).send_cli)
+
+        self.log.debug("Test -igetinfo and -getinfos both raise 'Invalid parameter'")
+        err_msg = "Error parsing command line arguments: Invalid parameter"
+        for cmd in ['-igetinfo', '-getinfos']:
+            assert_raises_process_error(1, "{} {}".format(err_msg, cmd), self.nodes[0].cli(cmd).send_cli)
+
         self.log.info("Test -getinfo returns expected network and blockchain info")
         if self.is_specified_wallet_compiled():
             self.import_deterministic_coinbase_privkeys()
@@ -200,7 +216,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
 
         network_info = self.nodes[0].getnetworkinfo()
-        blockchain_info = self.nodes[0].getblockchaininfo()
+        assert_equal(cli_get_info['Chain'], self.chain)
         assert_equal(int(cli_get_info['Version']), network_info['version'])
         assert_equal(cli_get_info['Verification progress'], "%.4f%%" % (blockchain_info['verificationprogress'] * 100))
         assert_equal(int(cli_get_info['Blocks']), blockchain_info['blocks'])
@@ -211,6 +227,10 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['Proxies'], network_info['networks'][0]['proxy'])
         assert_equal(Decimal(cli_get_info['Difficulty']), blockchain_info['difficulty'])
         assert_equal(cli_get_info['Chain'], blockchain_info['chain'])
+        for field in ['Blocks', 'Headers', 'Time offset (s)', 'Version']:
+            assert_scale(int(cli_get_info[field]), expected_scale=0)
+        for field in ('connections_in', 'connections_out', 'connections'):
+            assert_scale(network_info[field], expected_scale=0)
 
         self.log.info("Test -getinfo and bitcoin-cli return all proxies")
         self.restart_node(0, extra_args=["-proxy=127.0.0.1:9050", "-i2psam=127.0.0.1:7656"])
@@ -232,6 +252,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(Decimal(cli_get_info['Transaction fee rate (-paytxfee) (BTC/kvB)']), wallet_info['paytxfee'])
             assert_equal(Decimal(cli_get_info['Min tx relay fee rate (BTC/kvB)']), network_info['relayfee'])
             assert_equal(self.nodes[0].cli.getwalletinfo(), wallet_info)
+            for field in ['Keypool size', 'Time offset (s)', 'Unlocked until']:
+                assert_scale(cli_get_info[field], expected_scale=0)
+            for field in ['Balance', 'Transaction fee rate (-paytxfee) (BTC/kvB)', 'Min tx relay fee rate (BTC/kvB)']:
+                assert_scale(cli_get_info[field])
 
             # Setup to test -getinfo, -generate, and -rpcwallet= with multiple wallets.
             wallets = [self.default_wallet_name, 'Encrypted', 'secret']
@@ -258,6 +282,7 @@ class TestBitcoinCli(BitcoinTestFramework):
                 assert 'Balances' not in cli_get_info_string
                 assert_equal(cli_get_info["Wallet"], wallets[i])
                 assert_equal(Decimal(cli_get_info['Balance']), amounts[i])
+                assert_scale(Decimal(cli_get_info['Balance']))
 
             self.log.info("Test -getinfo with multiple wallets and -rpcwallet=non-existing-wallet returns no balances")
             cli_get_info_string = self.nodes[0].cli('-getinfo', '-rpcwallet=does-not-exist').send_cli()
@@ -271,6 +296,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert 'Balance' not in cli_get_info
             for k, v in zip(wallets, amounts):
                 assert_equal(Decimal(cli_get_info['Balances'][k]), v)
+                assert_scale(Decimal(cli_get_info['Balances'][k]))
 
             # Unload the default wallet and re-verify.
             self.nodes[0].unloadwallet(wallets[0])
@@ -291,6 +317,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert 'Balances' not in cli_get_info_string
             assert_equal(cli_get_info['Wallet'], wallets[1])
             assert_equal(Decimal(cli_get_info['Balance']), amounts[1])
+            assert_scale(Decimal(cli_get_info['Balance']))
 
             self.log.info("Test -getinfo -norpcwallet returns the same as -getinfo")
             # Previously there was a bug where -norpcwallet was treated like -rpcwallet=0
