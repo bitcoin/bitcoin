@@ -63,9 +63,11 @@ BOOST_AUTO_TEST_CASE(DescriptorScriptPubKeyManTests)
     BOOST_CHECK(signprov_keypath_nums_h == nullptr);
 }
 
-BOOST_AUTO_TEST_CASE(Legacy_IsKeyActive)
+static void legacy_IsKeyActive(const node::NodeContext& node, bool implicit_segwit)
 {
-    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    const bool save_g_implicit_segwit{g_implicit_segwit};
+    g_implicit_segwit = implicit_segwit;
+    CWallet wallet(node.chain.get(), "", CreateMockableWalletDatabase());
     {
         LOCK(wallet.cs_wallet);
         wallet.SetMinVersion(FEATURE_LATEST);
@@ -84,8 +86,9 @@ BOOST_AUTO_TEST_CASE(Legacy_IsKeyActive)
 
     // 4 scripts per keypool key (P2PK, P2PKH, P2WPKH, P2SH-P2WPKH)
     // Plus 4 scripts for the seed key
+    // (If !implicit_segwit, P2WPKH and P2SH-P2WPKH are not generated.)
     auto scripts1 = spkm.GetScriptPubKeys();
-    BOOST_CHECK_EQUAL(scripts1.size(), 84);
+    BOOST_CHECK_EQUAL(scripts1.size(), implicit_segwit ? 84 : 42);
 
     // All keys are active
     for (const CScript& script : scripts1) {
@@ -103,8 +106,9 @@ BOOST_AUTO_TEST_CASE(Legacy_IsKeyActive)
     BOOST_CHECK(spkm.IsKeyActive(script));
 
     // Key pool size did not change
+    // (If !implicit_segwit, the two segwit addresses are added back.)
     auto scripts2 = spkm.GetScriptPubKeys();
-    BOOST_CHECK_EQUAL(scripts2.size(), 84);
+    BOOST_CHECK_EQUAL(scripts2.size(), implicit_segwit ? 84 : 44);
 
     // Use key that is not the next key
     // (i.e. address gap in wallet recovery)
@@ -117,7 +121,7 @@ BOOST_AUTO_TEST_CASE(Legacy_IsKeyActive)
 
     // Key pool size did not change
     auto scripts3 = spkm.GetScriptPubKeys();
-    BOOST_CHECK_EQUAL(scripts3.size(), 84);
+    BOOST_CHECK_EQUAL(scripts3.size(), implicit_segwit ? 84 : 44);
 
     // All keys are still active
     for (const CScript& script : scripts3) {
@@ -134,12 +138,23 @@ BOOST_AUTO_TEST_CASE(Legacy_IsKeyActive)
 
     // 20 new keys were added
     auto scripts4 = spkm.GetScriptPubKeys();
-    BOOST_CHECK_EQUAL(scripts4.size(), 84 * 2);
+    BOOST_CHECK_EQUAL(scripts4.size(), (implicit_segwit ? 84 : 43) * 2);
 
     // All 10 original keys are now inactive
     for (const CScript& script : scripts3) {
         BOOST_CHECK(!spkm.IsKeyActive(script));
     }
+    g_implicit_segwit = save_g_implicit_segwit;
+}
+
+BOOST_AUTO_TEST_CASE(Legacy_IsKeyActive)
+{
+    legacy_IsKeyActive(m_node, /*implicit_segwit=*/true);
+}
+
+BOOST_AUTO_TEST_CASE(Legacy_IsKeyActive_no_implicit_segwit)
+{
+    legacy_IsKeyActive(m_node, /*implicit_segwit=*/false);
 }
 
 BOOST_AUTO_TEST_CASE(Descriptor_IsKeyActive)
