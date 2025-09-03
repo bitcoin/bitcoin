@@ -9,6 +9,7 @@ from decimal import Decimal
 from itertools import product
 from math import ceil
 from test_framework.address import address_to_scriptpubkey
+from test_framework.blocktools import COINBASE_MATURITY
 
 from test_framework.descriptors import descsum_create
 from test_framework.messages import (
@@ -141,6 +142,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_locked_wallet()
         self.test_many_inputs_fee()
         self.test_many_inputs_send()
+        self.test_witness_only()
         self.test_op_return()
         self.test_watchonly()
         self.test_all_watched_funds()
@@ -219,6 +221,52 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         assert len(dec_tx['vin']) > 0  #test that we have enough inputs
+
+    def check_witness_inputs(self, vins):
+        for vin in vins:
+            # check vin is a segwit input
+            utxo = self.nodes[2].gettxout(vin['txid'], vin['vout'])
+            info = self.nodes[2].getaddressinfo(utxo['scriptPubKey']['address'])
+            if not (info['iswitness'] or info['embedded']['iswitness']):
+                return False
+
+        return True
+
+    def test_witness_only(self):
+        self.log.info("Testing fundrawtxn with witness inputs only")
+
+        self.generate(self.nodes[0], COINBASE_MATURITY + 10)
+        self.nodes[2].sendall(recipients=[self.nodes[0].getnewaddress()])
+
+        output_types = ['legacy', 'p2sh-segwit', 'bech32']
+        if self.options.descriptors:
+            output_types.append('bech32m')
+        # Create coins
+        for _ in range(10):
+            for output_type in output_types:
+                self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(address_type=output_type), 1)
+
+        self.generate(self.nodes[0], 1)
+
+        inputs = [ ]
+        target_addr = self.nodes[2].getnewaddress()
+        segwit_balance = (len(output_types) - 1) * 10
+
+        # make sure legacy inputs are not accepted in witness only mode if no witness inputs are found
+        # trying to spend more than segwit total should fail
+        outputs = { target_addr : segwit_balance + Decimal('0.00000001') }
+        rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[2].fundrawtransaction, rawtx, {'segwit_inputs_only': True, 'subtractFeeFromOutputs': [0]})
+
+        # make sure all inputs are of type witness
+        outputs = { target_addr : segwit_balance }
+        rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawtxfund = self.nodes[2].fundrawtransaction(rawtx, {'segwit_inputs_only': True, 'subtractFeeFromOutputs': [0]})
+        dec_tx = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
+
+        assert len(dec_tx['vin']) > 0
+        assert(self.check_witness_inputs(dec_tx['vin']))
+
 
     def test_simple_two_coins(self):
         self.log.info("Test fundrawtxn with 2 coins")
