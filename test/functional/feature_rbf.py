@@ -28,10 +28,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.extra_args = [
             [
-                "-limitancestorcount=50",
-                "-limitancestorsize=101",
-                "-limitdescendantcount=200",
-                "-limitdescendantsize=101",
+                "-limitancestorcount=64",
+                "-limitdescendantcount=64",
             ],
             # second node has default mempool parameters
             [
@@ -145,7 +143,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         prevout = tx0_outpoint
         remaining_value = initial_nValue
         chain_txids = []
-        while remaining_value > 1 * COIN:
+        for _ in range(MAX_CLUSTER_LIMIT):
+            if remaining_value <= 1 * COIN:
+                break
             remaining_value -= int(0.1 * COIN)
             prevout = self.wallet.send_self_transfer(
                 from_node=self.nodes[0],
@@ -243,25 +243,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         for txid in tree_txs:
             assert txid not in mempool
-
-        # Try again, but with more total transactions than the "max txs
-        # double-spent at once" anti-DoS limit.
-        for n in (MAX_REPLACEMENT_LIMIT + 1, MAX_REPLACEMENT_LIMIT * 2):
-            fee = int(0.00001 * COIN)
-            tx0_outpoint = self.make_utxo(self.nodes[0], initial_nValue)
-            tree_txs = list(branch(tx0_outpoint, initial_nValue, n, fee=fee))
-            assert_equal(len(tree_txs), n)
-
-            dbl_tx_hex = self.wallet.create_self_transfer(
-                utxo_to_spend=tx0_outpoint,
-                sequence=0,
-                fee=2 * (Decimal(fee) / COIN) * n,
-            )["hex"]
-            # This will raise an exception
-            assert_raises_rpc_error(-26, "too many potential replacements", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
-
-            for txid in tree_txs:
-                self.nodes[0].getrawtransaction(txid)
 
     def test_replacement_feeperkb(self):
         """Replacement requires fee-per-KB to be higher"""
@@ -379,6 +360,8 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             num_outputs=MAX_REPLACEMENT_LIMIT + 1,
             amount_per_output=split_value,
         )["new_utxos"]
+
+        self.generate(self.nodes[0], 1)
 
         # Now spend each of those outputs individually
         for utxo in splitting_tx_utxos:
