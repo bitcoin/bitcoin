@@ -59,6 +59,8 @@ static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{100};
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 /** Default for -bytespersigopstrict */
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT{20};
+/** Default for -datacarriercost (multiplied by WITNESS_SCALE_FACTOR) */
+static constexpr unsigned int DEFAULT_WEIGHT_PER_DATA_BYTE{1};
 /** Default for -permitbarepubkey */
 static constexpr bool DEFAULT_PERMIT_BAREPUBKEY{true};
 /** Default for -permitbaremultisig */
@@ -212,5 +214,7 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
 std::pair<CScript, unsigned int> GetScriptForTransactionInput(CScript prevScript, const CTxIn&);
 
 size_t DatacarrierBytes(const CTransaction& tx, const CCoinsViewCache& view);
+
+int32_t CalculateExtraTxWeight(const CTransaction& tx, const CCoinsViewCache& view, const unsigned int weight_per_data_byte);
 
 #endif // BITCOIN_POLICY_POLICY_H
