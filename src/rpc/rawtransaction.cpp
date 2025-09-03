@@ -431,8 +431,8 @@ static RPCHelpMan createrawtransaction()
                 RPCExamples{
                     HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"address\\\":0.01}]\"")
             + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\" \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"address\\\":0.01}]\"")
-            + HelpExampleRpc("createrawtransaction", "\"[{\\\"txid\\\":\\\"myid\\\",\\\"vout\\\":0}]\", \"[{\\\"data\\\":\\\"00010203\\\"}]\"")
+            + HelpExampleRpc("createrawtransaction", "[{\"txid\":\"myid\",\"vout\":0}], [{\"address\":0.01}]")
+            + HelpExampleRpc("createrawtransaction", "[{\"txid\":\"myid\",\"vout\":0}], [{\"data\":\"00010203\"}]")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -772,7 +772,7 @@ static RPCHelpMan signrawtransactionwithkey()
                 },
                 RPCExamples{
                     HelpExampleCli("signrawtransactionwithkey", "\"myhex\" \"[\\\"key1\\\",\\\"key2\\\"]\"")
-            + HelpExampleRpc("signrawtransactionwithkey", "\"myhex\", \"[\\\"key1\\\",\\\"key2\\\"]\"")
+            + HelpExampleRpc("signrawtransactionwithkey", "\"myhex\", [\"key1\",\"key2\"]")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

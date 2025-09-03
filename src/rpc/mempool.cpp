@@ -613,7 +613,7 @@ static RPCHelpMan gettxspendingprevout()
         },
         RPCExamples{
             HelpExampleCli("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
-            + HelpExampleRpc("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
+            + HelpExampleRpc("gettxspendingprevout", "[{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\",\"vout\":3}]")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
