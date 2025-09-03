@@ -159,6 +159,9 @@
 /* Define if dbus support should be compiled in */
 #cmakedefine USE_DBUS 1
 
+/* Define if QWinTaskbarProgress support should be compiled in */
+#cmakedefine BITCOIN_QT_WIN_TASKBAR 1
+
 /* Define if QR support should be compiled in */
 #cmakedefine USE_QRCODE 1
 
