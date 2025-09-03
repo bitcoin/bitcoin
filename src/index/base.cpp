@@ -246,7 +246,6 @@ bool BaseIndex::Commit()
 
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
 {
-    assert(current_tip == m_best_block_index);
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
     if (!CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight})) {
