@@ -15,7 +15,8 @@ if(DEFINED BUILD_INFO_HEADER_PATH AND IS_ABSOLUTE "${BUILD_INFO_HEADER_PATH}")
     file(STRINGS ${BUILD_INFO_HEADER_PATH} INFO LIMIT_COUNT 1)
   endif()
 else()
-  fatal_error()
+  unset(INFO)
+  set(BUILD_INFO_HEADER_PATH "/dev/stdout")
 endif()
 
 if(DEFINED SOURCE_DIR)
@@ -120,7 +121,9 @@ if(GIT_TAG)
 elseif(GIT_COMMIT)
   set(NEWINFO "#define BUILD_GIT_COMMIT \"${GIT_COMMIT}\"")
 else()
-  set(NEWINFO "// No build information available")
+  # NOTE: The NEWINFO line below this comment gets replaced by a string-match in contrib/guix/libexec/make_release_tarball.sh
+  # If changing it, update the script too!
+  set(NEWINFO [[// No build information available]])
 endif()
 
 # Only update the header if necessary.
