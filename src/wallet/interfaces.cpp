@@ -8,6 +8,7 @@
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <key_io.h>
 #include <node/types.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
@@ -31,6 +32,7 @@
 #include <wallet/wallet.h>
 
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -50,6 +52,16 @@ using interfaces::WalletTx;
 using interfaces::WalletTxOut;
 using interfaces::WalletTxStatus;
 using interfaces::WalletValueMap;
+
+std::set<CScript> AddressesToKeys(std::vector<std::string> addresses)
+{
+    std::set<CScript> keys;
+    for (const auto& address : addresses) {
+        CScript scriptPubKey = GetScriptForDestination(DecodeDestination(address));
+        keys.insert(scriptPubKey);
+    }
+    return keys;
+}
 
 namespace wallet {
 // All members of the classes in this namespace are intentionally public, as the
@@ -254,6 +266,23 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->DisplayAddress(dest);
+    }
+    bool checkAddressForUsage(const std::vector<std::string>& addresses) const override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->FindScriptPubKeyUsed(AddressesToKeys(addresses));
+    }
+    bool findAddressUsage(const std::vector<std::string>& addresses, std::function<void(const std::string&, const WalletTx&, uint32_t)> callback) const override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->FindScriptPubKeyUsed(AddressesToKeys(addresses), [&callback, this](const CWalletTx& wtx, uint32_t output_index){
+            CTxDestination dest;
+            bool success = ExtractDestination(wtx.tx->vout[output_index].scriptPubKey, dest);
+            assert(success);  // It shouldn't be possible to end up here with anything unrecognised
+            std::string address = EncodeDestination(dest);
+            WalletTx interface_wtx = MakeWalletTx(*m_wallet, wtx);
+            callback(address, interface_wtx, output_index);
+        });
     }
     bool lockCoin(const COutPoint& output, const bool write_to_db) override
     {

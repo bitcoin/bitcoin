@@ -87,9 +87,19 @@ using namespace std::chrono_literals;
 
 namespace GUIUtil {
 
+QString dateStr(const QDate &date)
+{
+    return QLocale::system().toString(date, QLocale::ShortFormat);
+}
+
+QString dateStr(qint64 nTime)
+{
+    return dateStr(QDateTime::fromSecsSinceEpoch(nTime).date());
+}
+
 QString dateTimeStr(const QDateTime &date)
 {
-    return QLocale::system().toString(date.date(), QLocale::ShortFormat) + QString(" ") + date.toString("hh:mm");
+    return dateStr(date.date()) + QString(" ") + date.toString("hh:mm");
 }
 
 QString dateTimeStr(qint64 nTime)
