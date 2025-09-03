@@ -142,6 +142,7 @@ void PSBTOperationsDialog::saveTransaction() {
     DataStream ssTx{};
     ssTx << m_transaction_data;
 
+    const BitcoinUnits::Unit unit = m_client_model->getOptionsModel()->getDisplayUnit();
     QString selected_filter;
     QString filename_suggestion = "";
     bool first = true;
@@ -151,7 +152,8 @@ void PSBTOperationsDialog::saveTransaction() {
         }
         CTxDestination address;
         ExtractDestination(out.scriptPubKey, address);
-        QString amount = BitcoinUnits::format(m_client_model->getOptionsModel()->getDisplayUnit(), out.nValue);
+        QString amount = BitcoinUnits::format(unit, out.nValue, /*plussign=*/false, BitcoinUnits::SeparatorStyle::NEVER);
+        if (unit != BitcoinUnits::Unit::BTC) amount += BitcoinUnits::shortName(unit);  // NOTE: no space
         QString address_str = QString::fromStdString(EncodeDestination(address));
         filename_suggestion.append(address_str + "-" + amount);
         first = false;
