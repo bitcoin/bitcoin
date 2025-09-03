@@ -96,6 +96,8 @@ include(CMakeDependentOption)
 # When adding a new option, end the <help_text> with a full stop for consistency.
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
+set(WITH_QT_VERSION "5" CACHE STRING "Choose 5 or 6.")
+set_property(CACHE WITH_QT_VERSION PROPERTY STRINGS "5" "6")
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
 
 option(BUILD_TESTS "Build test_bitcoin executable." ON)
@@ -227,9 +229,15 @@ if(BUILD_GUI)
   if(BUILD_GUI_TESTS)
     list(APPEND qt_components Test)
   endif()
+  if("${WITH_QT_VERSION}" STREQUAL "6")
+    find_package(Qt 6.2 MODULE REQUIRED
+      COMPONENTS ${qt_components}
+    )
+  else()  # ! Qt 6
   find_package(Qt 5.11.3 MODULE REQUIRED
     COMPONENTS ${qt_components}
   )
+  endif()  # Qt 6
   unset(qt_components)
 endif()
 
@@ -688,7 +696,16 @@ else()
   set(bitcoin_daemon_status OFF)
 endif()
 message("  bitcoin-node (multiprocess) ......... ${bitcoin_daemon_status}")
-message("  bitcoin-qt (GUI) .................... ${BUILD_GUI}")
+if(BUILD_GUI)
+  if("${WITH_QT_VERSION}" STREQUAL "6")
+    set(bitcoin_qt_status "ON (Qt 6)")
+  else()
+    set(bitcoin_qt_status "ON (Qt 5)")
+  endif()
+else()
+  set(bitcoin_qt_status "OFF")
+endif()
+message("  bitcoin-qt (GUI) .................... ${bitcoin_qt_status}")
 if(BUILD_GUI AND WITH_MULTIPROCESS)
   set(bitcoin_gui_status ON)
 else()
