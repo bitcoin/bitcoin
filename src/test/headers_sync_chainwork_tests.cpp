@@ -26,12 +26,21 @@ struct HeadersGeneratorSetup : public RegTestingSetup {
     // to ensure the headers are different).
     const std::vector<CBlockHeader>& FirstChain()
     {
+        // Block header hash target is half of max uint256 (2**256 / 2), expressible
+        // roughly as the coefficient 0x7fffff with the exponent 0x20 (32 bytes).
+        // This implies around every 2nd hash attempt should succeed, which
+        // is why CHAIN_WORK == TARGET_BLOCKS * 2.
+        assert(genesis.nBits == 0x207fffff);
+
+        // Subtract 1 since the genesis block also contributes work so we reach
+        // the CHAIN_WORK target.
         static const auto first_chain{GenerateHeaders(/*count=*/TARGET_BLOCKS - 1, genesis.GetHash(),
                 genesis.nVersion, genesis.nTime, /*merkle_root=*/uint256::ZERO, genesis.nBits)};
         return first_chain;
     }
     const std::vector<CBlockHeader>& SecondChain()
     {
+        // Subtract 2 to keep total work below the target.
         static const auto second_chain{GenerateHeaders(/*count=*/TARGET_BLOCKS - 2, genesis.GetHash(),
                 genesis.nVersion, genesis.nTime, /*merkle_root=*/uint256::ONE, genesis.nBits)};
         return second_chain;
@@ -87,10 +96,12 @@ std::vector<CBlockHeader> HeadersGeneratorSetup::GenerateHeaders(
 // sufficient proof of work and one without.
 // 1. We deliver the first set of headers and verify that the headers sync state
 //    updates to the REDOWNLOAD phase successfully.
-// 2. Then we deliver the second set of headers and verify that they fail
+//    Then we deliver the second set of headers and verify that they fail
 //    processing (presumably due to commitments not matching).
-// 3. Finally, we verify that repeating with the first set of headers in both
-//    phases is successful.
+// 2. Verify that repeating with the first set of headers in both phases is
+//    successful.
+// 3. Repeat the second set of headers in both phases to demonstrate behavior
+//    when the chain a peer provides has too little work.
 BOOST_FIXTURE_TEST_SUITE(headers_sync_chainwork_tests, HeadersGeneratorSetup)
 
 BOOST_AUTO_TEST_CASE(sneaky_redownload)
@@ -101,17 +112,20 @@ BOOST_AUTO_TEST_CASE(sneaky_redownload)
     // Feed the first chain to HeadersSyncState, by delivering 1 header
     // initially and then the rest.
     HeadersSyncState hss{CreateState()};
+
+    // Just feed one header.
+    // Pretend the message is still "full", so we don't abort.
     (void)hss.ProcessNextHeaders({{first_chain.front()}}, true);
-    // Pretend the first header is still "full", so we don't abort.
+
     auto result{hss.ProcessNextHeaders(std::span{first_chain}.subspan(1), true)};
 
     // This chain should look valid, and we should have met the proof-of-work
-    // requirement.
+    // requirement during PRESYNC and transitioned to REDOWNLOAD.
     BOOST_CHECK(result.success);
     BOOST_CHECK(result.request_more);
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
 
-    // Try to sneakily feed back the second chain.
+    // Try to sneakily feed back the second chain during REDOWNLOAD.
     result = hss.ProcessNextHeaders(second_chain, true);
     BOOST_CHECK(!result.success); // foiled!
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
@@ -121,8 +135,10 @@ BOOST_AUTO_TEST_CASE(happy_path)
 {
     const auto& first_chain{FirstChain()};
 
-    // Now try again, this time feeding the first chain twice.
+    // This time we feed the first chain twice.
     HeadersSyncState hss{CreateState()};
+
+    // Sufficient work transitions us from PRESYNC to REDOWNLOAD:
     (void)hss.ProcessNextHeaders(first_chain, true);
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::REDOWNLOAD);
 
@@ -139,16 +155,17 @@ BOOST_AUTO_TEST_CASE(too_little_work)
 {
     const auto& second_chain{SecondChain()};
 
-    // Finally, verify that just trying to process the second chain would not
-    // succeed (too little work)
+    // Verify that just trying to process the second chain would not succeed
+    // (too little work).
     HeadersSyncState hss{CreateState()};
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
-     // Pretend just the first message is "full", so we don't abort.
+
+    // Pretend just the first message is "full", so we don't abort.
     (void)hss.ProcessNextHeaders({{second_chain.front()}}, true);
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::PRESYNC);
 
     // Tell the sync logic that the headers message was not full, implying no
-    // more headers can be requested. For a low-work-chain, this should causes
+    // more headers can be requested. For a low-work-chain, this should cause
     // the sync to end with no headers for acceptance.
     const auto result{hss.ProcessNextHeaders(std::span{second_chain}.subspan(1), false)};
     BOOST_CHECK(hss.GetState() == HeadersSyncState::State::FINAL);
