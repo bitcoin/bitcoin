@@ -80,6 +80,7 @@
         "ENABLE_WALLET": "ON",
         "WARN_INCOMPATIBLE_BDB": "OFF",
         "WITH_BDB": "ON",
+        "WITH_MINIUPNPC": "ON",
         "WITH_MULTIPROCESS": "ON",
         "WITH_QRENCODE": "ON",
         "WITH_SQLITE": "ON",
