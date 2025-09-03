@@ -1980,10 +1980,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return InitError(ResolveErrMsg("bind", bind_arg));
     }
 
+    NetPermissionFlags all_permission_flags{NetPermissionFlags::None};
+
     for (const std::string& strBind : args.GetArgs("-whitebind")) {
         NetWhitebindPermissions whitebind;
         bilingual_str error;
         if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(error);
+        NetPermissions::AddFlag(all_permission_flags, whitebind.m_flags);
         connOptions.vWhiteBinds.push_back(whitebind);
     }
 
@@ -2030,11 +2033,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         ConnectionDirection connection_direction;
         bilingual_str error;
         if (!NetWhitelistPermissions::TryParse(net, subnet, connection_direction, error)) return InitError(error);
+        NetPermissions::AddFlag(all_permission_flags, subnet.m_flags);
         if (connection_direction & ConnectionDirection::In) {
             connOptions.vWhitelistedRangeIncoming.push_back(subnet);
         }
         if (connection_direction & ConnectionDirection::Out) {
             connOptions.vWhitelistedRangeOutgoing.push_back(subnet);
+        }
+    }
+
+    if (NetPermissions::HasFlag(all_permission_flags, NetPermissionFlags::BlockFilters_Explicit)) {
+        if (g_enabled_filter_types.count(BlockFilterType::BASIC) != 1) {
+            return InitError(_("Cannot grant blockfilters permission without -blockfilterindex."));
         }
     }
 
