@@ -541,6 +541,30 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(utxo_info['height'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(utxo_info['bestblock'], snapshot_hash)
 
+        self.log.info("Check that getblockchaininfo returns information about the background validation process")
+        expected_keys = [
+            "snapshotheight",
+            "blocks",
+            "bestblockhash",
+            "mediantime",
+            "chainwork",
+            "verificationprogress"
+        ]
+        res = n1.getblockchaininfo()
+        assert "backgroundvalidation" in res.keys()
+        bv_res = res["backgroundvalidation"]
+        assert_equal(sorted(expected_keys), sorted(bv_res.keys()))
+        assert_equal(bv_res["snapshotheight"], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(bv_res["blocks"], START_HEIGHT)
+        assert_equal(bv_res["bestblockhash"], n1.getblockhash(START_HEIGHT))
+        block = n1.getblockheader(bv_res["bestblockhash"])
+        assert_equal(bv_res["mediantime"], block["mediantime"])
+        assert_equal(bv_res["chainwork"], block["chainwork"])
+        background_tx_count = n1.getchaintxstats(blockhash=bv_res["bestblockhash"])["txcount"]
+        snapshot_tx_count = n1.getchaintxstats(blockhash=snapshot_hash)["txcount"]
+        expected_verification_progress = background_tx_count / snapshot_tx_count
+        assert_approx(bv_res["verificationprogress"], expected_verification_progress, vspan=0.01)
+
         # find coinbase output at snapshot height on node0 and scan for it on node1,
         # where the block is not available, but the snapshot was loaded successfully
         coinbase_tx = n0.getblock(snapshot_hash, verbosity=2)['tx'][0]
