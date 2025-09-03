@@ -863,6 +863,17 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
 
+    // Test rejectparasites
+    t.vout[0].scriptPubKey = CScript() << OP_RETURN;
+    t.nLockTime = 21;
+    g_mempool_opts.reject_parasites = false;
+    CheckIsStandard(t);
+    g_mempool_opts.reject_parasites = true;
+    CheckIsNotStandard(t, "parasite-cat21");
+    t.nLockTime = 0;
+    CheckIsStandard(t);
+    g_mempool_opts.reject_parasites = false;
+
     // Test rejecttokens
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_13 << OP_FALSE;
     g_mempool_opts.reject_tokens = false;
