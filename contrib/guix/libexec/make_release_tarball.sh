@@ -16,6 +16,9 @@ DISTNAME="$2"
 
 git archive --prefix="${DISTNAME}/" HEAD |
  tar -xp \
+  --exclude .cirrus.yml \
+  --exclude '.git*' \
+  --exclude ci \
   --exclude '*minisketch*' \
  # end of tar options
 
