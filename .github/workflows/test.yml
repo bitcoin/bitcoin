@@ -1,0 +1,78 @@
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+name: CI
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci-matrix:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout-minutes }}
+
+    env:
+      CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
+      DANGER_CI_ON_HOST_FOLDERS: 1
+      FILE_ENV: ${{ matrix.file-env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 'fuzz'
+            runner: 'ubuntu-latest'
+            # To catch potential timeouts early, this task must replicate the config from https://github.com/bitcoin/bitcoin/blob/master/.github/workflows/ci.yml
+            timeout-minutes: 240
+            file-env: './ci/test/00_setup_env_native_fuzz.sh'
+          - name: 'fuzz (msan)'
+            runner: 'ubuntu-latest'
+            timeout-minutes: 360
+            file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
+          - name: 'fuzz (valgrind)'
+            runner: 'ubuntu-latest'
+            timeout-minutes: 360
+            file-env: './ci/test/00_setup_env_native_fuzz_with_valgrind.sh'
+
+    steps:
+      - name: Checkout Bitcoin Core
+        uses: actions/checkout@v5
+        with:
+          repository: bitcoin/bitcoin
+          fetch-depth: 1
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          path: qa-assets
+          fetch-depth: 1
+
+      - name: Configure environment
+        uses: bitcoin/bitcoin/.github/actions/configure-environment@master
+
+      - name: Restore caches
+        id: restore-cache
+        uses: bitcoin/bitcoin/.github/actions/restore-caches@master
+
+      - name: Configure Docker
+        uses: bitcoin/bitcoin/.github/actions/configure-docker@master
+        with:
+          use-cirrus: false
+
+      - name: CI script
+        run: |
+          mkdir -p ./ci/scratch/qa-assets
+          mv ./qa-assets/{.git,fuzz_corpora} ./ci/scratch/qa-assets/
+          ./ci/test_run_all.sh
+
+      - name: Save caches
+        uses: bitcoin/bitcoin/.github/actions/save-caches@master
+
+      - name: Set mmap_rnd_bits to prevent crashes due to high ASLR entropy
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
