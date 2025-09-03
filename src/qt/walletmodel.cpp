@@ -21,6 +21,7 @@
 #include <node/interface_ui.h>
 #include <node/types.h>
 #include <psbt.h>
+#include <util/rbf.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient
@@ -497,6 +498,8 @@ WalletModel::UnlockContext::~UnlockContext()
 
 bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
 {
+    const CTransactionRef old_tx = m_wallet->getTx(hash);
+
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
     std::vector<bilingual_str> errors;
@@ -532,6 +535,11 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
     if (getOptionsModel()->getCoinControlFeatures()) {
         questionString.append("<br><br>");
         questionString.append(tr("Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy."));
+    }
+
+    if (!SignalsOptInRBF(*old_tx)) {
+        questionString.append(QStringLiteral("<br><br>"));
+        questionString.append(tr("Warning: The old transaction did not enable BIP 125 replace-by-fee. You can still attempt to bump the fee, but it may encounter delays."));
     }
 
     const bool enable_send{!wallet().privateKeysDisabled() || wallet().hasExternalSigner()};
