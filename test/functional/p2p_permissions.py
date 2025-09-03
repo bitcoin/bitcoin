@@ -97,7 +97,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
                 "addr",
             ])
 
-        for flag, permissions in [(["-whitelist=noban,out@127.0.0.1"], ["noban", "download"]), (["-whitelist=noban@127.0.0.1"], [])]:
+        for flag, permissions in [(["-whitelist=noban,out@127.0.0.1"], ["bloomfilter", "noban", "download"]), (["-whitelist=noban@127.0.0.1"], ["bloomfilter"])]:
             self.restart_node(0, flag)
             self.connect_nodes(0, 1)
             peerinfo = self.nodes[0].getpeerinfo()[0]
@@ -154,7 +154,7 @@ class P2PPermissionsTests(BitcoinTestFramework):
         )
 
     def checkpermission(self, args, expectedPermissions):
-        self.restart_node(1, args)
+        self.restart_node(1, ['-peerbloomfilters=0'] + args)
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
         assert_equal(len(expectedPermissions), len(peerinfo['permissions']))
