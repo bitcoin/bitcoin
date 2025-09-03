@@ -122,7 +122,7 @@ public:
     virtual void resetSettings() = 0;
 
     //! Map port.
-    virtual void mapPort(bool enable) = 0;
+    virtual void mapPort(bool use_upnp, bool use_pcp) = 0;
 
     //! Get proxy.
     virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
