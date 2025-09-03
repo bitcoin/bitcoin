@@ -53,14 +53,20 @@ public:
      *        `id` is already active, false is returned and the new
      *        warning is ignored. If `id` does not yet exist, the
      *        warning is set, the UI is updated, and true is returned.
+     *        If `update` is true, already active warnings will be
+     *        updated with the new `message`, and this method will
+     *        return true unless there has been no change (only the
+     *        untranslated/original string is compared).
      *
      * @param[in]   id  Unique identifier of the warning.
      * @param[in]   message Warning message to be shown.
+     * @param[in]   update  Whether an existing warning should be
+     *              updated.
      *
      * @returns true if the warning was indeed set (i.e. there is no
      *          active warning with this `id`), otherwise false.
      */
-    bool Set(warning_type id, bilingual_str message) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    bool Set(warning_type id, bilingual_str message, bool update=false) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     /**
      * @brief Unset a warning message. If a warning with the specified
      *        `id` is active, it is unset, the UI is updated, and true

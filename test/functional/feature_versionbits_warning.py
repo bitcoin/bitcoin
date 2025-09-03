@@ -18,10 +18,20 @@ from test_framework.test_framework import BitcoinTestFramework
 VB_PERIOD = 144           # versionbits period length for regtest
 VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
-VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
+VB_UNKNOWN_BIT = 12       # Choose a bit unassigned to any deployment
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
+VB_BIP320_BIT = 13
+VB_BIP320_VERSION = VB_TOP_BITS | (1 << VB_BIP320_BIT)
+VB_BIP320_THRESHOLD = 76
+UNKNOWN_VERSION_SCHEMA = 0x60000000
+UNKNOWN_VERSION_SCHEMA_THRESHOLD = 51
 
+WARN_UNKNOWN_RULES_MINED = "Warning: Unrecognised block version (0x%08x) is being mined! Unknown rules may or may not be in effect" % (UNKNOWN_VERSION_SCHEMA,)
+WARN_UNKNOWN_BIT_MINED = f"Warning: Miners are attempting to activate unknown new rules (bit {VB_UNKNOWN_BIT})"
+# NOTE: WARN_BIP320_BIT_MINED includes VB_UNKNOWN_BIT because it persists from the earlier check
+WARN_BIP320_BIT_MINED = f"Warning: Miners are attempting to activate unknown new rules (bit {VB_UNKNOWN_BIT}, {VB_BIP320_BIT})"
 WARN_UNKNOWN_RULES_ACTIVE = f"Unknown new rules activated (versionbit {VB_UNKNOWN_BIT})"
+WARN_BIP320_BLOCK = "Miner violated version bit protocol"
 VB_PATTERN = re.compile("Unknown new rules activated.*versionbit")
 
 class VersionBitsWarningTest(BitcoinTestFramework):
@@ -76,9 +86,57 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         assert not VB_PATTERN.match(",".join(node.getmininginfo()["warnings"]))
         assert not VB_PATTERN.match(",".join(node.getnetworkinfo()["warnings"]))
 
+        self.log.info("Check that there is a warning if >50 blocks in the last 100 were an unknown version schema")
+        # Build UNKNOWN_VERSION_SCHEMA_THRESHOLD blocks signaling some unknown schema
+        self.send_blocks_with_version(peer, UNKNOWN_VERSION_SCHEMA_THRESHOLD, UNKNOWN_VERSION_SCHEMA)
+        # Check that get*info() shows the 51/100 unknown block version warning
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getnetworkinfo()["warnings"]))
+        # Close the period normally
+        self.generatetoaddress(node, VB_PERIOD - UNKNOWN_VERSION_SCHEMA_THRESHOLD, node_deterministic_address)
+        # Make sure the warning remains
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_RULES_MINED in ",".join(node.getnetworkinfo()["warnings"]))
+
+        # Stop-start the node, and make sure the warning is gone
+        self.restart_node(0)
+        assert(WARN_UNKNOWN_RULES_MINED not in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_RULES_MINED not in ",".join(node.getnetworkinfo()["warnings"]))
+        peer = node.add_p2p_connection(P2PInterface())
+
+        self.log.info("Check that there is a warning if >50 blocks in the last 100 were an unknown version")
         # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(peer, VB_THRESHOLD, VB_UNKNOWN_VERSION)
         self.generatetoaddress(node, VB_PERIOD - VB_THRESHOLD, node_deterministic_address)
+
+        # Check that get*info() shows the 51/100 unknown block version warning
+        assert(WARN_UNKNOWN_BIT_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_UNKNOWN_BIT_MINED in ",".join(node.getnetworkinfo()["warnings"]))
+
+        self.log.info("Check that there is a warning if BIP320 is used, and a second persistent warning if >75 blocks in the last 100 were a BIP320 version")
+        with node.busy_wait_for_debug_log([WARN_BIP320_BLOCK.encode('ascii')]):
+            self.send_blocks_with_version(peer, VB_BIP320_THRESHOLD - 1, VB_BIP320_VERSION)
+        # Check that get*info() doesn't shows the 76/100 unknown block version warning yet.
+        assert(WARN_BIP320_BIT_MINED not in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_BIP320_BIT_MINED not in ",".join(node.getnetworkinfo()["warnings"]))
+        # ...and it shouldn't show the BIP320-specific warning
+        assert(WARN_BIP320_BLOCK not in node.getmininginfo()["warnings"])
+        assert(WARN_BIP320_BLOCK not in node.getnetworkinfo()["warnings"])
+        with node.busy_wait_for_debug_log([WARN_BIP320_BLOCK.encode('ascii'), b'Enqueuing UpdatedBlockTip']):
+            self.send_blocks_with_version(peer, 1, VB_BIP320_VERSION)
+        # Check that get*info() shows the 76/100 unknown block version warning.
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getnetworkinfo()["warnings"]))
+        assert(WARN_BIP320_BLOCK not in node.getmininginfo()["warnings"])
+        assert(WARN_BIP320_BLOCK not in node.getnetworkinfo()["warnings"])
+        with node.busy_wait_for_debug_log([b'Enqueuing UpdatedBlockTip'], forbid_msgs=[WARN_BIP320_BLOCK.encode('ascii')]):
+            self.generatetoaddress(node, 1, node_deterministic_address)
+        # Only the 76/100 should persist
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getmininginfo()["warnings"]))
+        assert(WARN_BIP320_BIT_MINED in ",".join(node.getnetworkinfo()["warnings"]))
+        assert(WARN_BIP320_BLOCK not in node.getmininginfo()["warnings"])
+        assert(WARN_BIP320_BLOCK not in node.getnetworkinfo()["warnings"])
+        self.generatetoaddress(node, VB_PERIOD - VB_BIP320_THRESHOLD - 1, node_deterministic_address)
 
         self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
         # Mine a period worth of expected blocks so the generic block-version warning
