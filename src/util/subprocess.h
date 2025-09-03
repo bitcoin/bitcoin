@@ -67,13 +67,9 @@ Documentation for C++ subprocessing library.
 
 extern "C" {
 #ifdef __USING_WINDOWS__
-  #include <Windows.h>
+  #include <windows.h>
   #include <io.h>
   #include <cwchar>
-
-  #define close _close
-  #define open _open
-  #define fileno _fileno
 #else
   #include <sys/wait.h>
   #include <unistd.h>
@@ -82,6 +78,22 @@ extern "C" {
   #include <fcntl.h>
   #include <sys/types.h>
 }
+
+// The Microsoft C++ compiler issues deprecation warnings
+// for the standard POSIX function names.
+// Its preferred implementations have a leading underscore.
+// See: https://learn.microsoft.com/en-us/cpp/c-runtime-library/compatibility.
+#if (defined _MSC_VER)
+  #define subprocess_close _close
+  #define subprocess_fileno _fileno
+  #define subprocess_open _open
+  #define subprocess_write _write
+#else
+  #define subprocess_close close
+  #define subprocess_fileno fileno
+  #define subprocess_open open
+  #define subprocess_write write
+#endif
 
 /*!
  * Getting started with reading this source code.
@@ -161,6 +173,7 @@ public:
 //--------------------------------------------------------------------
 namespace util
 {
+#ifdef __USING_WINDOWS__
   inline void quote_argument(const std::wstring &argument, std::wstring &command_line,
                       bool force)
   {
@@ -171,7 +184,7 @@ namespace util
     //
 
     if (force == false && argument.empty() == false &&
-        argument.find_first_of(L" \t\n\v\"") == argument.npos) {
+        argument.find_first_of(L" \t\n\v") == argument.npos) {
       command_line.append(argument);
     }
     else {
@@ -221,7 +234,6 @@ namespace util
     }
   }
 
-#ifdef __USING_WINDOWS__
   inline std::string get_last_error(DWORD errorMessageID)
   {
     if (errorMessageID == 0)
@@ -266,7 +278,7 @@ namespace util
 
     FILE *fp = _fdopen(os_fhandle, mode);
     if (fp == 0) {
-      _close(os_fhandle);
+      subprocess_close(os_fhandle);
       throw OSError("_fdopen", 0);
     }
 
@@ -336,10 +348,14 @@ namespace util
   void set_clo_on_exec(int fd, bool set = true)
   {
     int flags = fcntl(fd, F_GETFD, 0);
+    if (flags == -1) {
+        throw OSError("fcntl F_GETFD failed", errno);
+    }
     if (set) flags |= FD_CLOEXEC;
     else flags &= ~FD_CLOEXEC;
-    //TODO: should check for errors
-    fcntl(fd, F_SETFD, flags);
+    if (fcntl(fd, F_SETFD, flags) == -1) {
+        throw OSError("fcntl F_SETFD failed", errno);
+    }
   }
 
 
@@ -385,7 +401,7 @@ namespace util
   {
     size_t nwritten = 0;
     while (nwritten < length) {
-      int written = write(fd, buf + nwritten, length - nwritten);
+      int written = subprocess_write(fd, buf + nwritten, length - nwritten);
       if (written == -1) return -1;
       nwritten += written;
     }
@@ -413,7 +429,7 @@ namespace util
 #ifdef __USING_WINDOWS__
     return (int)fread(buf, 1, read_upto, fp);
 #else
-    int fd = fileno(fp);
+    int fd = subprocess_fileno(fp);
     int rbytes = 0;
     int eintr_cnter = 0;
 
@@ -543,7 +559,7 @@ struct string_arg
 {
   string_arg(const char* arg): arg_value(arg) {}
   string_arg(std::string&& arg): arg_value(std::move(arg)) {}
-  string_arg(std::string arg): arg_value(std::move(arg)) {}
+  string_arg(const std::string& arg): arg_value(arg) {}
   std::string arg_value;
 };
 
@@ -589,10 +605,10 @@ struct input
   explicit input(int fd): rd_ch_(fd) {}
 
   // FILE pointer.
-  explicit input (FILE* fp):input(fileno(fp)) { assert(fp); }
+  explicit input (FILE* fp):input(subprocess_fileno(fp)) { assert(fp); }
 
   explicit input(const char* filename) {
-    int fd = open(filename, O_RDONLY);
+    int fd = subprocess_open(filename, O_RDONLY);
     if (fd == -1) throw OSError("File not found: ", errno);
     rd_ch_ = fd;
   }
@@ -622,10 +638,10 @@ struct output
 {
   explicit output(int fd): wr_ch_(fd) {}
 
-  explicit output (FILE* fp):output(fileno(fp)) { assert(fp); }
+  explicit output (FILE* fp):output(subprocess_fileno(fp)) { assert(fp); }
 
   explicit output(const char* filename) {
-    int fd = open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
+    int fd = subprocess_open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
     if (fd == -1) throw OSError("File not found: ", errno);
     wr_ch_ = fd;
   }
@@ -653,10 +669,10 @@ struct error
 {
   explicit error(int fd): wr_ch_(fd) {}
 
-  explicit error(FILE* fp):error(fileno(fp)) { assert(fp); }
+  explicit error(FILE* fp):error(subprocess_fileno(fp)) { assert(fp); }
 
   explicit error(const char* filename) {
-    int fd = open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
+    int fd = subprocess_open(filename, O_APPEND | O_CREAT | O_RDWR, 0640);
     if (fd == -1) throw OSError("File not found: ", errno);
     wr_ch_ = fd;
   }
@@ -775,7 +791,10 @@ class Communication
 public:
   Communication(Streams* stream): stream_(stream)
   {}
-  void operator=(const Communication&) = delete;
+  Communication(const Communication&) = delete;
+  Communication& operator=(const Communication&) = delete;
+  Communication(Communication&&) = default;
+  Communication& operator=(Communication&&) = default;
 public:
   int send(const char* msg, size_t length);
   int send(const std::vector<char>& msg);
@@ -812,7 +831,10 @@ class Streams
 {
 public:
   Streams():comm_(this) {}
-  void operator=(const Streams&) = delete;
+  Streams(const Streams&) = delete;
+  Streams& operator=(const Streams&) = delete;
+  Streams(Streams&&) = default;
+  Streams& operator=(Streams&&) = default;
 
 public:
   void setup_comm_channels();
@@ -820,28 +842,28 @@ public:
   void cleanup_fds()
   {
     if (write_to_child_ != -1 && read_from_parent_ != -1) {
-      close(write_to_child_);
+      subprocess_close(write_to_child_);
     }
     if (write_to_parent_ != -1 && read_from_child_ != -1) {
-      close(read_from_child_);
+      subprocess_close(read_from_child_);
     }
     if (err_write_ != -1 && err_read_ != -1) {
-      close(err_read_);
+      subprocess_close(err_read_);
     }
   }
 
   void close_parent_fds()
   {
-    if (write_to_child_ != -1)  close(write_to_child_);
-    if (read_from_child_ != -1) close(read_from_child_);
-    if (err_read_ != -1)        close(err_read_);
+    if (write_to_child_ != -1)  subprocess_close(write_to_child_);
+    if (read_from_child_ != -1) subprocess_close(read_from_child_);
+    if (err_read_ != -1)        subprocess_close(err_read_);
   }
 
   void close_child_fds()
   {
-    if (write_to_parent_ != -1)  close(write_to_parent_);
-    if (read_from_parent_ != -1) close(read_from_parent_);
-    if (err_write_ != -1)        close(err_write_);
+    if (write_to_parent_ != -1)  subprocess_close(write_to_parent_);
+    if (read_from_parent_ != -1) subprocess_close(read_from_parent_);
+    if (err_write_ != -1)        subprocess_close(err_write_);
   }
 
   FILE* input()  { return input_.get(); }
@@ -1062,7 +1084,19 @@ inline int Popen::wait() noexcept(false)
 #ifdef __USING_WINDOWS__
   int ret = WaitForSingleObject(process_handle_, INFINITE);
 
-  return 0;
+  // WaitForSingleObject with INFINITE should only return when process has signaled
+  if (ret != WAIT_OBJECT_0) {
+    throw OSError("Unexpected return code from WaitForSingleObject", 0);
+  }
+
+  DWORD dretcode_;
+
+  if (FALSE == GetExitCodeProcess(process_handle_, &dretcode_))
+      throw OSError("Failed during call to GetExitCodeProcess", 0);
+
+  CloseHandle(process_handle_);
+
+  return (int)dretcode_;
 #else
   int ret, status;
   std::tie(ret, status) = util::wait_for_child_exit(child_pid_);
@@ -1175,8 +1209,8 @@ inline void Popen::execute_process() noexcept(false)
   child_pid_ = fork();
 
   if (child_pid_ < 0) {
-    close(err_rd_pipe);
-    close(err_wr_pipe);
+    subprocess_close(err_rd_pipe);
+    subprocess_close(err_wr_pipe);
     throw OSError("fork failed", errno);
   }
 
@@ -1186,25 +1220,27 @@ inline void Popen::execute_process() noexcept(false)
     stream_.close_parent_fds();
 
     //Close the read end of the error pipe
-    close(err_rd_pipe);
+    subprocess_close(err_rd_pipe);
 
     detail::Child chld(this, err_wr_pipe);
     chld.execute_child();
   }
   else
   {
-    close (err_wr_pipe);// close child side of pipe, else get stuck in read below
+    subprocess_close(err_wr_pipe);// close child side of pipe, else get stuck in read below
 
     stream_.close_child_fds();
 
     try {
       char err_buf[SP_MAX_ERR_BUF_SIZ] = {0,};
 
-      int read_bytes = util::read_atmost_n(
-                                  fdopen(err_rd_pipe, "r"),
-                                  err_buf,
-                                  SP_MAX_ERR_BUF_SIZ);
-      close(err_rd_pipe);
+      FILE* err_fp = fdopen(err_rd_pipe, "r");
+      if (!err_fp) {
+          subprocess_close(err_rd_pipe);
+          throw OSError("fdopen failed", errno);
+      }
+      int read_bytes = util::read_atmost_n(err_fp, err_buf, SP_MAX_ERR_BUF_SIZ);
+      fclose(err_fp);
 
       if (read_bytes || strlen(err_buf)) {
         // Call waitpid to reap the child process
@@ -1298,13 +1334,13 @@ namespace detail {
 
       // Close the duped descriptors
       if (stream.read_from_parent_ != -1 && stream.read_from_parent_ > 2)
-        close(stream.read_from_parent_);
+        subprocess_close(stream.read_from_parent_);
 
       if (stream.write_to_parent_ != -1 && stream.write_to_parent_ > 2)
-        close(stream.write_to_parent_);
+        subprocess_close(stream.write_to_parent_);
 
       if (stream.err_write_ != -1 && stream.err_write_ > 2)
-        close(stream.err_write_);
+        subprocess_close(stream.err_write_);
 
       // Close all the inherited fd's except the error write pipe
       if (parent_->close_fds_) {
@@ -1336,15 +1372,15 @@ namespace detail {
 #ifdef __USING_WINDOWS__
     util::configure_pipe(&this->g_hChildStd_IN_Rd, &this->g_hChildStd_IN_Wr, &this->g_hChildStd_IN_Wr);
     this->input(util::file_from_handle(this->g_hChildStd_IN_Wr, "w"));
-    this->write_to_child_ = _fileno(this->input());
+    this->write_to_child_ = subprocess_fileno(this->input());
 
     util::configure_pipe(&this->g_hChildStd_OUT_Rd, &this->g_hChildStd_OUT_Wr, &this->g_hChildStd_OUT_Rd);
     this->output(util::file_from_handle(this->g_hChildStd_OUT_Rd, "r"));
-    this->read_from_child_ = _fileno(this->output());
+    this->read_from_child_ = subprocess_fileno(this->output());
 
     util::configure_pipe(&this->g_hChildStd_ERR_Rd, &this->g_hChildStd_ERR_Wr, &this->g_hChildStd_ERR_Rd);
     this->error(util::file_from_handle(this->g_hChildStd_ERR_Rd, "r"));
-    this->err_read_ = _fileno(this->error());
+    this->err_read_ = subprocess_fileno(this->error());
 #else
 
     if (write_to_child_ != -1)  input(fdopen(write_to_child_, "wb"));
