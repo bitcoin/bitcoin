@@ -1,0 +1,3 @@
+Checks: '
+-clang-analyzer-core.UndefinedBinaryOperatorResult,
+'
