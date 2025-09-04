@@ -11,6 +11,7 @@ export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"  # Check that https://pack
 export CI_IMAGE_PLATFORM="linux/amd64"
 export HOST=x86_64-w64-mingw32
 export PACKAGES="g++-mingw-w64-x86-64-posix nsis"
+export DEP_OPTS="NO_QT=1"
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="deploy"
