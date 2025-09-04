@@ -256,7 +256,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
         return false;
     }
 
-    batch.Write(DBHashKey(value.first), std::move(value.second));
+    batch.Write(DBHashKey(value.first), value.second);
     return true;
 }
 
