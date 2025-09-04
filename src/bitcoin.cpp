@@ -61,6 +61,11 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view a
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    common::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
+
     try {
         CommandLine cmd{ParseCommandLine(argc, argv)};
         if (cmd.show_version) {
