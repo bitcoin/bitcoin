@@ -20,7 +20,7 @@ sqlite_packages=sqlite
 
 zmq_packages=zeromq
 
-multiprocess_packages = capnp
+ipc_packages = capnp
 multiprocess_native_packages = native_libmultiprocess native_capnp
 
 usdt_linux_packages=systemtap

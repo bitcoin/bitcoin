@@ -116,7 +116,10 @@ rejected from the mempool when transaction volume is high and the mempool minimu
 Note: Package feerate cannot be used to meet the minimum relay feerate (`-minrelaytxfee`)
 requirement. For example, if the mempool minimum feerate is 5sat/vB and the minimum relay feerate is
 set to 5sat/vB, a 1sat/vB parent transaction with a high-feerate child will not be accepted, even if
-submitted as a package.
+submitted as a package. Note that this rule does not apply to
+[TRUC transactions](https://github.com/bitcoin/bips/blob/master/bip-0431.mediawiki) as an individual
+TRUC transaction is permitted to be below the mempool min relay feerate, assuming it is considered within
+a package that meets the mempool's feerate requirements.
 
 *Rationale*: Avoid situations in which the mempool contains non-bumped transactions below min relay
 feerate (which we consider to have pay 0 fees and thus receiving free relay). While package

@@ -65,6 +65,9 @@ std::optional<CNetAddr> FromSockAddr(const struct sockaddr* addr, std::optional<
 // will fail, so we skip that.
 #if defined(__linux__) || (defined(__FreeBSD__) && __FreeBSD_version >= 1400000)
 
+// Good for responses containing ~ 10,000-15,000 routes.
+static constexpr ssize_t NETLINK_MAX_RESPONSE_SIZE{1'048'576};
+
 std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
 {
     // Create a netlink socket.
@@ -113,40 +116,68 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
 
     // Receive response.
     char response[4096];
-    int64_t recv_result;
-    do {
-        recv_result = sock->Recv(response, sizeof(response), 0);
-    } while (recv_result < 0 && (errno == EINTR || errno == EAGAIN));
-    if (recv_result < 0) {
-        LogPrintLevel(BCLog::NET, BCLog::Level::Error, "recv() from netlink socket: %s\n", NetworkErrorString(errno));
-        return std::nullopt;
-    }
-
-    for (nlmsghdr* hdr = (nlmsghdr*)response; NLMSG_OK(hdr, recv_result); hdr = NLMSG_NEXT(hdr, recv_result)) {
-        rtmsg* r = (rtmsg*)NLMSG_DATA(hdr);
-        int remaining_len = RTM_PAYLOAD(hdr);
-
-        // Iterate over the attributes.
-        rtattr *rta_gateway = nullptr;
-        int scope_id = 0;
-        for (rtattr* attr = RTM_RTA(r); RTA_OK(attr, remaining_len); attr = RTA_NEXT(attr, remaining_len)) {
-            if (attr->rta_type == RTA_GATEWAY) {
-                rta_gateway = attr;
-            } else if (attr->rta_type == RTA_OIF && sizeof(int) == RTA_PAYLOAD(attr)) {
-                std::memcpy(&scope_id, RTA_DATA(attr), sizeof(scope_id));
-            }
+    ssize_t total_bytes_read{0};
+    bool done{false};
+    while (!done) {
+        int64_t recv_result;
+        do {
+            recv_result = sock->Recv(response, sizeof(response), 0);
+        } while (recv_result < 0 && (errno == EINTR || errno == EAGAIN));
+        if (recv_result < 0) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Error, "recv() from netlink socket: %s\n", NetworkErrorString(errno));
+            return std::nullopt;
         }
 
-        // Found gateway?
-        if (rta_gateway != nullptr) {
-            if (family == AF_INET && sizeof(in_addr) == RTA_PAYLOAD(rta_gateway)) {
-                in_addr gw;
-                std::memcpy(&gw, RTA_DATA(rta_gateway), sizeof(gw));
-                return CNetAddr(gw);
-            } else if (family == AF_INET6 && sizeof(in6_addr) == RTA_PAYLOAD(rta_gateway)) {
-                in6_addr gw;
-                std::memcpy(&gw, RTA_DATA(rta_gateway), sizeof(gw));
-                return CNetAddr(gw, scope_id);
+        total_bytes_read += recv_result;
+        if (total_bytes_read > NETLINK_MAX_RESPONSE_SIZE) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "Netlink response exceeded size limit (%zu bytes, family=%d)\n", NETLINK_MAX_RESPONSE_SIZE, family);
+            return std::nullopt;
+        }
+
+        for (nlmsghdr* hdr = (nlmsghdr*)response; NLMSG_OK(hdr, recv_result); hdr = NLMSG_NEXT(hdr, recv_result)) {
+            if (!(hdr->nlmsg_flags & NLM_F_MULTI)) {
+                done = true;
+            }
+
+            if (hdr->nlmsg_type == NLMSG_DONE) {
+                done = true;
+                break;
+            }
+
+            rtmsg* r = (rtmsg*)NLMSG_DATA(hdr);
+            int remaining_len = RTM_PAYLOAD(hdr);
+
+            if (hdr->nlmsg_type != RTM_NEWROUTE) {
+                continue; // Skip non-route messages
+            }
+
+            // Only consider default routes (destination prefix length of 0).
+            if (r->rtm_dst_len != 0) {
+                continue;
+            }
+
+            // Iterate over the attributes.
+            rtattr* rta_gateway = nullptr;
+            int scope_id = 0;
+            for (rtattr* attr = RTM_RTA(r); RTA_OK(attr, remaining_len); attr = RTA_NEXT(attr, remaining_len)) {
+                if (attr->rta_type == RTA_GATEWAY) {
+                    rta_gateway = attr;
+                } else if (attr->rta_type == RTA_OIF && sizeof(int) == RTA_PAYLOAD(attr)) {
+                    std::memcpy(&scope_id, RTA_DATA(attr), sizeof(scope_id));
+                }
+            }
+
+            // Found gateway?
+            if (rta_gateway != nullptr) {
+                if (family == AF_INET && sizeof(in_addr) == RTA_PAYLOAD(rta_gateway)) {
+                    in_addr gw;
+                    std::memcpy(&gw, RTA_DATA(rta_gateway), sizeof(gw));
+                    return CNetAddr(gw);
+                } else if (family == AF_INET6 && sizeof(in6_addr) == RTA_PAYLOAD(rta_gateway)) {
+                    in6_addr gw;
+                    std::memcpy(&gw, RTA_DATA(rta_gateway), sizeof(gw));
+                    return CNetAddr(gw, scope_id);
+                }
             }
         }
     }
