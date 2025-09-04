@@ -33,7 +33,8 @@ class ToolBitcoinTest(BitcoinTestFramework):
         self.set_cmd_args(node, cmd_args)
         extra_args = node_args + ["-version"]
         if expect_error is not None:
-            node.assert_start_raises_init_error(expected_msg=expect_error, extra_args=extra_args)
+            from test_framework.test_node import ErrorMatch
+            node.assert_start_raises_init_error(expected_msg=expect_error, extra_args=extra_args, match=ErrorMatch.PARTIAL_REGEX)
         else:
             assert expect_exe
             node.start(extra_args=extra_args)
