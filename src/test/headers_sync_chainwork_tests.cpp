@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <consensus/params.h>
 #include <headerssync.h>
+#include <net_processing.h>
 #include <pow.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
@@ -40,11 +41,14 @@ using State = HeadersSyncState::State;
         }                                                                                                \
     } while (false)
 
-constexpr size_t TARGET_BLOCKS{15'012};
+constexpr size_t TARGET_BLOCKS{15'000};
 constexpr arith_uint256 CHAIN_WORK{TARGET_BLOCKS * 2};
 
-// Copied from headerssync.cpp, will be redefined in next commit.
-constexpr size_t REDOWNLOAD_BUFFER_SIZE{15'009};
+// Subtract MAX_HEADERS_RESULTS (2000 headers/message) + an arbitrary smaller
+// value (123) so our redownload buffer is well below the number of blocks
+// required to reach the CHAIN_WORK threshold, to behave similarly to mainnet.
+constexpr size_t REDOWNLOAD_BUFFER_SIZE{TARGET_BLOCKS - (MAX_HEADERS_RESULTS + 123)};
+constexpr size_t COMMITMENT_PERIOD{600}; // Somewhat close to mainnet.
 
 struct HeadersGeneratorSetup : public RegTestingSetup {
     const CBlock& genesis{Params().GenesisBlock()};
@@ -78,6 +82,10 @@ struct HeadersGeneratorSetup : public RegTestingSetup {
     {
         return {/*id=*/0,
                 Params().GetConsensus(),
+                HeadersSyncParams{
+                    .commitment_period = COMMITMENT_PERIOD,
+                    .redownload_buffer_size = REDOWNLOAD_BUFFER_SIZE,
+                },
                 chain_start,
                 /*minimum_required_work=*/CHAIN_WORK};
     }
@@ -156,6 +164,11 @@ BOOST_AUTO_TEST_CASE(sneaky_redownload)
         /*exp_success*/true, /*exp_request_more=*/true,
         /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
         /*exp_locator_hash=*/genesis.GetHash());
+
+    // Below is the number of commitment bits that must randomly match between
+    // the two chains for this test to spuriously fail. 1 / 2^25 =
+    // 1 in 33'554'432 (somewhat less due to HeadersSyncState::m_commit_offset).
+    static_assert(TARGET_BLOCKS / COMMITMENT_PERIOD == 25);
 
     // Try to sneakily feed back the second chain during REDOWNLOAD.
     CHECK_RESULT(hss.ProcessNextHeaders(second_chain, true),
