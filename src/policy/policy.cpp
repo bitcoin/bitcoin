@@ -10,6 +10,7 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -165,35 +166,6 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
 }
 
 /**
- * Check the total number of non-witness sigops across the whole transaction, as per BIP54.
- */
-static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inputs)
-{
-    Assert(!tx.IsCoinBase());
-
-    unsigned int sigops{0};
-    for (const auto& txin: tx.vin) {
-        const auto& prev_txo{inputs.AccessCoin(txin.prevout).out};
-
-        // Unlike the existing block wide sigop limit which counts sigops present in the block
-        // itself (including the scriptPubKey which is not executed until spending later), BIP54
-        // counts sigops in the block where they are potentially executed (only).
-        // This means sigops in the spent scriptPubKey count toward the limit.
-        // `fAccurate` means correctly accounting sigops for CHECKMULTISIGs(VERIFY) with 16 pubkeys
-        // or fewer. This method of accounting was introduced by BIP16, and BIP54 reuses it.
-        // The GetSigOpCount call on the previous scriptPubKey counts both bare and P2SH sigops.
-        sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true);
-        sigops += prev_txo.scriptPubKey.GetSigOpCount(txin.scriptSig);
-
-        if (sigops > MAX_TX_BIP54_SIGOPS) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
  * Check transaction inputs.
  *
  * This does three things:
@@ -218,7 +190,7 @@ TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoin
         return state; // Coinbases don't use vin normally
     }
 
-    if (!CheckSigopsBIP54(tx, mapInputs)) {
+    if (!Consensus::CheckSigopsBIP54(tx, mapInputs)) {
         state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", "non-witness sigops exceed bip54 limit");
         return state;
     }
