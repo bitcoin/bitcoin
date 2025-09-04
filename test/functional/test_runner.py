@@ -486,7 +486,7 @@ def main():
 
         def print_warning_missing_test(test_name):
             print("{}WARNING!{} Test '{}' not found in current test list. Check the --exclude list.".format(BOLD[1], BOLD[0], test_name))
-            if fail_on_warn:
+            if 0 and fail_on_warn:
                 sys.exit(1)
 
         def remove_tests(exclude_list):

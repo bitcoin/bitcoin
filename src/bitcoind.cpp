@@ -134,6 +134,7 @@ static bool ParseArgs(NodeContext& node, int argc, char* argv[])
 
 static bool ProcessInitCommands(interfaces::Init& init, ArgsManager& args)
 {
+    std::cerr << "@@@@ bitcoind ProcessInitCommands\n";
     // Process help and version before taking care about datadir
     if (HelpRequested(args) || args.GetBoolArg("-version", false)) {
         std::string strUsage = CLIENT_NAME " daemon version " + FormatFullVersion();
@@ -260,6 +261,10 @@ static bool AppInit(NodeContext& node)
 
 MAIN_FUNCTION
 {
+    std::cerr << "@@@@ bitcoind main argc=" << argc << "\n";
+    for(int i = 0; i < argc; ++i) {
+       std::cerr << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
+    }
 #ifdef WIN32
     common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
