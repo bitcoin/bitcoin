@@ -30,7 +30,8 @@ class ToolBitcoinTest(BitcoinTestFramework):
 
     def test_args(self, cmd_args, node_args, expect_exe=None, expect_error=None):
         node = self.nodes[0]
-        self.set_cmd_args(node, cmd_args)
+        if cmd_args is not None:
+            self.set_cmd_args(node, cmd_args)
         extra_args = node_args + ["-version"]
         if expect_error is not None:
             from test_framework.test_node import ErrorMatch
@@ -47,6 +48,9 @@ class ToolBitcoinTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
+
+        self.log.info("Ensure bitcoind -version works")
+        self.test_args(None, [], expect_exe="bitcoind")
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")

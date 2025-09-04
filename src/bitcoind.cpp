@@ -158,6 +158,7 @@ static bool ProcessInitCommands(interfaces::Init& init, ArgsManager& args)
         }
 
         tfm::format(std::cout, "%s", strUsage);
+        tfm::format(std::cerr, "@@@@ USAGE %s", strUsage);
         return true;
     }
 
