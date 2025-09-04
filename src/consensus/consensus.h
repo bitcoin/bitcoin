@@ -34,4 +34,7 @@ static constexpr unsigned int LOCKTIME_VERIFY_SEQUENCE = (1 << 0);
  */
 static constexpr int64_t MAX_TIMEWARP = 600;
 
+/** The maximum number of potentially executed legacy signature operations in a single tx */
+static constexpr unsigned int MAX_TX_BIP54_SIGOPS{2'500};
+
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
