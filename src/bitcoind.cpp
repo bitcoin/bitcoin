@@ -271,10 +271,10 @@ MAIN_FUNCTION
         }
     }
 
-    *out << "@@@@ bitcoind main argc=" << argc << "\n";
+    if (out) *out << "@@@@ bitcoind main argc=" << argc << "\n";
     std::cerr << "@@@@ bitcoind main argc=" << argc << "\n";
     for(int i = 0; i < argc; ++i) {
-       *out << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
+       if (out) *out << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
        std::cerr << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
     }
     out.reset();
