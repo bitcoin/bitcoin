@@ -29,6 +29,7 @@
 #include <util/translation.h>
 
 #include <any>
+#include <fstream>
 #include <functional>
 #include <optional>
 
@@ -261,10 +262,31 @@ static bool AppInit(NodeContext& node)
 
 MAIN_FUNCTION
 {
+    std::optional<std::ofstream> out;
+    if (const char* path = std::getenv("DEBUG_FILE")) {
+        out.emplace(path, std::ios::app);
+        if (!*out) {
+            std::cerr << "Failed to open file: " << path << "\n";
+            out.reset();
+        }
+    }
+
+    *out << "@@@@ bitcoind main argc=" << argc << "\n";
     std::cerr << "@@@@ bitcoind main argc=" << argc << "\n";
     for(int i = 0; i < argc; ++i) {
+       *out << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
        std::cerr << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
     }
+    out.reset();
+
+    if (const char* ret = std::getenv("DEBUG_RET")) {
+        int result;
+        auto [ptr, ec] = std::from_chars(ret, ret + std::strlen(ret), result);
+        (void)ptr;
+        (void)ec;
+        return result;
+    }
+
 #ifdef WIN32
     common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();

@@ -38,8 +38,12 @@ class ToolBitcoinTest(BitcoinTestFramework):
             node.assert_start_raises_init_error(expected_msg=expect_error, extra_args=extra_args, match=ErrorMatch.PARTIAL_REGEX)
         else:
             assert expect_exe
+            import tempfile, pathlib, os
+            t = tempfile.mktemp()
+            os.environ["DEBUG_FILE"] = t
             node.start(extra_args=extra_args)
             ret, out, err = get_node_output(node)
+            print(f")) Start {t}\n{pathlib.Path(t).read_text()}\n)) End {t}")
             try:
                 assert_equal(get_exe_name(out), expect_exe.encode())
                 #assert_equal(err, b"")
@@ -53,6 +57,8 @@ class ToolBitcoinTest(BitcoinTestFramework):
         self.test_args(None, [], expect_exe="bitcoind")
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
+        import os
+        os.environ["DEBUG_RET"] = "12"
         self.test_args([], [], expect_exe="bitcoind")
 
         self.log.info("Ensure bitcoin -M invokes bitcoind")
