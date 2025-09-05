@@ -219,7 +219,7 @@ static bool AppInit(NodeContext& node)
                 if (token) { // Success
                     exit(EXIT_SUCCESS);
                 } else { // fRet = false or token read error (premature exit).
-                    tfm::format(std::cerr, "Error during initialization - check debug.log for details\n");
+                    tfm::format(std::cerr, "Error during initialization - check %s for details\n", fs::PathToString(LogInstance().m_file_path.filename()));
                     exit(EXIT_FAILURE);
                 }
             }
