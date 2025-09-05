@@ -4109,15 +4109,20 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
 
-    // Testnet4 and regtest only: Check timestamp against prev for difficulty-adjustment
-    // blocks to prevent timewarp attacks (see https://github.com/bitcoin/bitcoin/pull/15482).
-    if (consensusParams.enforce_BIP94) {
-        // Check timestamp for the first block of each difficulty adjustment
-        // interval, except the genesis block.
-        if (nHeight % consensusParams.DifficultyAdjustmentInterval() == 0) {
-            if (block.GetBlockTime() < pindexPrev->GetBlockTime() - MAX_TIMEWARP_TESTNET4) {
-                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-timewarp-attack", "block's timestamp is too early on diff adjustment block");
-            }
+    // If the block is the first of a difficulty adjustment interval, check its timestamp against the previous
+    // one to prevent timewarp attacks (see BIP 54).
+    const int dai{static_cast<int>(consensusParams.DifficultyAdjustmentInterval())};
+    const bool is_first_block{nHeight % dai == 0};
+    if (is_first_block) {
+        std::optional<int64_t> max_timewarp;
+        if (consensusParams.enforce_BIP94) {
+            static_assert(MAX_TIMEWARP_TESTNET4 <= MAX_TIMEWARP_BIP54);
+            max_timewarp = MAX_TIMEWARP_TESTNET4;
+        } else if (DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_CONSENSUSCLEANUP)) {
+            max_timewarp = MAX_TIMEWARP_BIP54;
+        }
+        if (max_timewarp && block.GetBlockTime() < pindexPrev->GetBlockTime() - *max_timewarp) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-timewarp-attack", "block's timestamp is too early on diff adjustment block");
         }
     }
 

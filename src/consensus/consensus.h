@@ -28,6 +28,12 @@ static const size_t MIN_SERIALIZABLE_TRANSACTION_WEIGHT = WITNESS_SCALE_FACTOR *
 static constexpr unsigned int LOCKTIME_VERIFY_SEQUENCE = (1 << 0);
 
 /**
+ * Under BIP54, the first block in a difficulty adjustment period must not be more than 2
+ * hours (7200 seconds) earlier than the last block of the previous period.
+ */
+static constexpr int64_t MAX_TIMEWARP_BIP54{2 * 60 * 60};
+
+/**
  * Maximum number of seconds that the timestamp of the first
  * block of a difficulty adjustment period is allowed to
  * be earlier than the last block of the previous period (BIP94).
