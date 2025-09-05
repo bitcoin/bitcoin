@@ -339,6 +339,7 @@ BASE_SCRIPTS = [
     'rpc_scantxoutset.py',
     'feature_unsupported_utxo_db.py',
     'feature_logging.py',
+    'interface_ipc.py',
     'feature_anchors.py',
     'mempool_datacarrier.py',
     'feature_coinstatsindex.py',
