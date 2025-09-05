@@ -187,9 +187,9 @@ EventLoop::EventLoop(const char* exe_name, LogFn log_fn, void* context)
     : m_exe_name(exe_name),
       m_io_context(kj::setupAsyncIo()),
       m_task_set(new kj::TaskSet(m_error_handler)),
-      m_log_fn(std::move(log_fn)),
       m_context(context)
 {
+    m_log_opts.log_fn = log_fn;
     int fds[2];
     KJ_SYSCALL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     m_wait_fd = fds[0];

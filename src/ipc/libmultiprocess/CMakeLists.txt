@@ -13,7 +13,20 @@ endif()
 include("cmake/compat_find.cmake")
 
 find_package(Threads REQUIRED)
-find_package(CapnProto 0.7 REQUIRED)
+find_package(CapnProto 0.7 QUIET NO_MODULE)
+ if(NOT CapnProto_FOUND)
+   message(FATAL_ERROR
+     "Cap'n Proto is required but was not found.\n"
+     "To resolve, choose one of the following:\n"
+     "  - Install Cap'n Proto (version 1.0+ recommended)\n"
+     "  - For Bitcoin Core compilation build with -DENABLE_IPC=OFF to disable multiprocess support\n"
+   )
+ endif()
+
+# Cap'n Proto compatibility checks
+set(CAPNPROTO_ISSUES "")
+set(CAPNPROTO_CVE_AFFECTED FALSE)
+set(CAPNPROTO_CLANG_INCOMPATIBLE FALSE)
 
 # Check for list-of-pointers memory access bug from Nov 2022
 # https://nvd.nist.gov/vuln/detail/CVE-2022-46149
@@ -29,11 +42,43 @@ if(CapnProto_VERSION STREQUAL "0.7.0"
    OR CapnProto_VERSION STREQUAL "0.10.0"
    OR CapnProto_VERSION STREQUAL "0.10.1"
    OR CapnProto_VERSION STREQUAL "0.10.2")
+  set(CAPNPROTO_CVE_AFFECTED TRUE)
+  string(APPEND CAPNPROTO_ISSUES "- CVE-2022-46149 security vulnerability (details: https://github.com/advisories/GHSA-qqff-4vw4-f6hx)\n")
+endif()
+
+# Check for Cap'n Proto / Clang / C++20 incompatibility
+# Cap'n Proto 0.9.x and 0.10.x are incompatible with Clang 16+ when using C++20
+# due to P2468R2 implementation. This was fixed in Cap'n Proto 1.0+.
+# See: https://github.com/bitcoin-core/libmultiprocess/issues/199
+if((CapnProto_VERSION VERSION_GREATER_EQUAL "0.9.0") AND
+   (CapnProto_VERSION VERSION_LESS "1.0.0") AND
+   (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") AND
+   (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "16") AND
+   (CMAKE_CXX_STANDARD EQUAL 20))
+  set(CAPNPROTO_CLANG_INCOMPATIBLE TRUE)
+  string(APPEND CAPNPROTO_ISSUES "- Incompatible with Clang ${CMAKE_CXX_COMPILER_VERSION} when using C++20\n")
+endif()
+
+if(CAPNPROTO_CVE_AFFECTED OR CAPNPROTO_CLANG_INCOMPATIBLE)
+  set(RESOLUTION_OPTIONS "")
+
+  # Fixes both issues
+  string(APPEND RESOLUTION_OPTIONS "  - Upgrade to Cap'n Proto version 1.0 or newer (recommended)\n")
+
+  if(CAPNPROTO_CVE_AFFECTED AND NOT CAPNPROTO_CLANG_INCOMPATIBLE)
+    string(APPEND RESOLUTION_OPTIONS "  - Upgrade to a patched minor version (0.7.1, 0.8.1, 0.9.2, 0.10.3, or later)\n")
+  elseif(CAPNPROTO_CLANG_INCOMPATIBLE AND NOT CAPNPROTO_CVE_AFFECTED)
+    string(APPEND RESOLUTION_OPTIONS "  - Use GCC instead of Clang\n")
+  endif()
+
+  string(APPEND RESOLUTION_OPTIONS "  - For Bitcoin Core compilation build with -DENABLE_IPC=OFF to disable multiprocess support\n")
+
   message(FATAL_ERROR
-    "Cap'n Proto ${CapnProto_VERSION} is affected by CVE-2022-46149.\n"
-    "Please install an updated package.\n"
-    "Details: https://github.com/advisories/GHSA-qqff-4vw4-f6hx
-  ")
+    "The version of Cap'n Proto detected: ${CapnProto_VERSION} has known compatibility issues:\n"
+    "${CAPNPROTO_ISSUES}"
+    "To resolve, choose one of the following:\n"
+    "${RESOLUTION_OPTIONS}"
+  )
 endif()
 
 set(MPGEN_EXECUTABLE "" CACHE FILEPATH "If specified, should be full path to an external mpgen binary to use rather than the one built internally.")
