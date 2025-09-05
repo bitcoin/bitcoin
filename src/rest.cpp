@@ -14,6 +14,7 @@
 #include <flatfile.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
+#include <index/locationsindex.h>
 #include <index/txindex.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -470,6 +471,109 @@ static bool rest_block_extended(const std::any& context, HTTPRequest* req, const
 static bool rest_block_notxdetails(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
     return rest_block(context, req, uri_part, TxVerbosity::SHOW_TXID);
+}
+
+
+static bool rest_tx_from_block(const std::any& context, HTTPRequest* req, const std::string& uri_part)
+{
+    if (!CheckWarmup(req)) return false;
+
+    std::string param;
+    const RESTResponseFormat rf = ParseDataFormat(param, uri_part);
+
+    // request is sent over URI scheme /rest/txfromblock/blockhash-index
+    std::vector<std::string_view> uri_parts{util::Split<std::string_view>(param, '-')};
+    if (uri_parts.size() != 2) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Invalid URI format: %s", param));
+    }
+
+    std::optional<uint256> block_hash{uint256::FromHex(uri_parts[0])};
+    if (!block_hash) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Invalid hash: %s", uri_parts[0]));
+    }
+
+    const std::optional<uint32_t> parsed_index{ToIntegral<uint32_t>(uri_parts[1])};
+    if (!parsed_index.has_value()) {
+        return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Transaction index is invalid: %s", uri_parts[1]));
+    }
+    const uint32_t index{*parsed_index};
+
+    CTransactionRef tx{};
+    std::vector<std::byte> tx_bytes{};
+    if (const LocationsIndex* locations_index = g_locations_index.get()) {
+        if (!locations_index->BlockUntilSyncedToCurrentChain()) {
+            return RESTERR(req, HTTP_SERVICE_UNAVAILABLE, "Locations index is still syncing");
+        }
+
+        tx_bytes = locations_index->ReadRawTransaction(*block_hash, index);
+    } else {
+        ChainstateManager* chainman = GetChainman(context, req);
+        if (!chainman) return false;
+
+        FlatFilePos block_pos{};
+        {
+            LOCK(cs_main);
+            const CBlockIndex* block{chainman->m_blockman.LookupBlockIndex(*block_hash)};
+            if (block == nullptr) {
+                return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not found", uri_parts[0]));
+            }
+            if (block->nHeight > 0 && !block->IsValid(BLOCK_VALID_SCRIPTS)) {
+                return RESTERR(req, HTTP_NOT_FOUND, strprintf("Block %s not validated", uri_parts[0]));
+            }
+            if (index >= block->nTx) {
+                return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Block %s has only %d transactions", uri_parts[0], block->nTx));
+            }
+            block_pos = block->GetBlockPos();
+        }
+
+        // Read full block and skip irrelevant transactions
+        tx = chainman->m_blockman.ReadTxFromBlock(block_pos, index);
+    }
+
+    if (!tx && tx_bytes.empty()) {
+        return RESTERR(req, HTTP_NOT_FOUND, strprintf("Failed to read transaction #%d from block %s", index, block_hash->ToString()));
+    }
+
+    DataStream serialized{};
+    switch (rf) {
+    case RESTResponseFormat::BINARY: {
+        req->WriteHeader("Content-Type", "application/octet-stream");
+        std::span<std::byte> result{tx_bytes};
+        if (tx) {
+            serialized << TX_WITH_WITNESS(tx);
+            result = serialized;
+        }
+        req->WriteReply(HTTP_OK, result);
+        return true;
+    }
+    case RESTResponseFormat::HEX: {
+        std::string str_hex{};
+        if (tx) {
+            serialized << TX_WITH_WITNESS(tx);
+            str_hex = HexStr(serialized);
+        } else {
+            str_hex = HexStr(tx_bytes);
+        }
+        str_hex.push_back('\n');
+        req->WriteHeader("Content-Type", "text/plain");
+        req->WriteReply(HTTP_OK, str_hex);
+        return true;
+    }
+    case RESTResponseFormat::JSON: {
+        if (!tx) {
+            DataStream{tx_bytes} >> TX_WITH_WITNESS(tx);
+        }
+        UniValue obj_tx(UniValue::VOBJ);
+        TxToUniv(*tx, /*block_hash=*/{}, /*entry=*/obj_tx);
+        std::string str_JSON = obj_tx.write() + '\n';
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(HTTP_OK, str_JSON);
+        return true;
+    }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
 }
 
 static bool rest_filter_header(const std::any& context, HTTPRequest* req, const std::string& uri_part)
@@ -1118,6 +1222,7 @@ static const struct {
     bool (*handler)(const std::any& context, HTTPRequest* req, const std::string& strReq);
 } uri_prefixes[] = {
       {"/rest/tx/", rest_tx},
+      {"/rest/txfromblock/", rest_tx_from_block},
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
       {"/rest/blockfilter/", rest_block_filter},
