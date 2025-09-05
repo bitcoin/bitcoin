@@ -94,21 +94,16 @@ struct TrimTxData
     uint64_t m_uf_size;
 };
 
+class Cluster;
+class GenericClusterImpl;
+
 /** A grouping of connected transactions inside a TxGraphImpl::ClusterSet. */
 class Cluster
 {
     friend class TxGraphImpl;
     using GraphIndex = TxGraph::GraphIndex;
-    using SetType = BitSet<MAX_CLUSTER_COUNT_LIMIT>;
-    /** The DepGraph for this cluster, holding all feerates, and ancestors/descendants. */
-    DepGraph<SetType> m_depgraph;
-    /** m_mapping[i] gives the GraphIndex for the position i transaction in m_depgraph. Values for
-     *  positions i that do not exist in m_depgraph shouldn't ever be accessed and thus don't
-     *  matter. m_mapping.size() equals m_depgraph.PositionRange(). */
-    std::vector<GraphIndex> m_mapping;
-    /** The current linearization of the cluster. m_linearization.size() equals
-     *  m_depgraph.TxCount(). This is always kept topological. */
-    std::vector<DepGraphIndex> m_linearization;
+
+protected:
     /** The quality level of m_linearization. */
     QualityLevel m_quality{QualityLevel::NONE};
     /** Which position this Cluster has in Graph::ClusterSet::m_clusters[m_quality]. */
@@ -117,34 +112,17 @@ class Cluster
         transactions in distinct clusters). */
     uint64_t m_sequence;
 
+    explicit Cluster(uint64_t sequence) noexcept : m_sequence(sequence) {}
+
 public:
-    Cluster() noexcept = delete;
-    /** Construct an empty Cluster. */
-    explicit Cluster(uint64_t sequence) noexcept;
-    /** Construct a singleton Cluster. */
-    explicit Cluster(uint64_t sequence, TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept;
+    // Provide virtual destructor, for safe polymorphic usage inside std::unique_ptr.
+    virtual ~Cluster() = default;
 
     // Cannot move or copy (would invalidate Cluster* in Locator and ClusterSet). */
     Cluster(const Cluster&) = delete;
     Cluster& operator=(const Cluster&) = delete;
     Cluster(Cluster&&) = delete;
     Cluster& operator=(Cluster&&) = delete;
-
-    // Generic helper functions.
-
-    /** Total memory usage currently for this Cluster, including all its dynamic memory, plus Cluster
-     *  structure itself, and ClusterSet::m_clusters entry. */
-    size_t TotalMemoryUsage() const noexcept
-    {
-        return // Dynamic memory allocated in this Cluster.
-               memusage::DynamicUsage(m_mapping) + memusage::DynamicUsage(m_linearization) +
-               // Dynamic memory usage inside m_depgraph.
-               m_depgraph.DynamicMemoryUsage() +
-               // Memory usage of the allocated Cluster itself.
-               memusage::MallocUsage(sizeof(Cluster)) +
-               // Memory usage of the ClusterSet::m_clusters entry.
-               sizeof(std::unique_ptr<Cluster>);
-    }
 
     /** Whether the linearization of this Cluster can be exposed. */
     bool IsAcceptable(bool after_split = false) const noexcept
@@ -167,75 +145,145 @@ public:
         return m_quality == QualityLevel::NEEDS_SPLIT ||
                m_quality == QualityLevel::NEEDS_SPLIT_ACCEPTABLE;
     }
+
+    // Generic helper functions
+
+    /** Total memory usage currently for this Cluster, including all its dynamic memory, plus Cluster
+     *  structure itself, and ClusterSet::m_clusters entry. */
+    virtual size_t TotalMemoryUsage() const noexcept = 0;
     /** Get the number of transactions in this Cluster. */
-    LinearizationIndex GetTxCount() const noexcept { return m_linearization.size(); }
+    virtual LinearizationIndex GetTxCount() const noexcept = 0;
     /** Get the total size of the transactions in this Cluster. */
-    uint64_t GetTotalTxSize() const noexcept;
+    virtual uint64_t GetTotalTxSize() const noexcept = 0;
     /** Given a DepGraphIndex into this Cluster, find the corresponding GraphIndex. */
-    GraphIndex GetClusterEntry(DepGraphIndex index) const noexcept { return m_mapping[index]; }
+    virtual GraphIndex GetClusterEntry(DepGraphIndex index) const noexcept = 0;
     /** Figure out what level this Cluster exists at in Graph::m_clustersets. In most cases this
      *  is known by the caller already (see all "int level" arguments below), but not always. */
-    int GetLevel(const TxGraphImpl& graph) const noexcept;
+    virtual int GetLevel(const TxGraphImpl& graph) const noexcept = 0;
     /** Only called by Graph::SwapIndexes. */
-    void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept { m_mapping[cluster_idx] = graph_idx; }
+    virtual void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept = 0;
     /** Push changes to Cluster and its linearization to the TxGraphImpl Entry objects. */
-    void Updated(TxGraphImpl& graph, int level) noexcept;
+    virtual void Updated(TxGraphImpl& graph, int level) noexcept = 0;
     /** Create a copy of this Cluster in staging, returning a pointer to it (used by PullIn). */
-    Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept;
+    virtual Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept = 0;
     /** Get the list of Clusters in main that conflict with this one (which is assumed to be in staging). */
-    void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept;
+    virtual void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept = 0;
     /** Mark all the Entry objects belonging to this staging Cluster as missing. The Cluster must be
      *  deleted immediately after. */
-    void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept;
+    virtual void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept = 0;
     /** Remove all transactions from a Cluster. */
-    void Clear(TxGraphImpl& graph, int level) noexcept;
+    virtual void Clear(TxGraphImpl& graph, int level) noexcept = 0;
     /** Change a Cluster's level from 1 (staging) to 0 (main). */
-    void MoveToMain(TxGraphImpl& graph) noexcept;
+    virtual void MoveToMain(TxGraphImpl& graph) noexcept = 0;
     /** Minimize this Cluster's memory usage. */
-    void Compact() noexcept;
+    virtual void Compact() noexcept = 0;
 
     // Functions that implement the Cluster-specific side of internal TxGraphImpl mutations.
 
     /** Apply all removals from the front of to_remove that apply to this Cluster, popping them
-     *  off. These must be at least one such entry. */
-    void ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>& to_remove) noexcept;
+     *  off. There must be at least one such entry. */
+    virtual void ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>& to_remove) noexcept = 0;
     /** Split this cluster (must have a NEEDS_SPLIT* quality). Returns whether to delete this
      *  Cluster afterwards. */
-    [[nodiscard]] bool Split(TxGraphImpl& graph, int level) noexcept;
+    [[nodiscard]] virtual bool Split(TxGraphImpl& graph, int level) noexcept = 0;
     /** Move all transactions from cluster to *this (as separate components). */
-    void Merge(TxGraphImpl& graph, int level, Cluster& cluster) noexcept;
+    virtual void Merge(TxGraphImpl& graph, int level, Cluster& cluster) noexcept = 0;
     /** Given a span of (parent, child) pairs that all belong to this Cluster, apply them. */
-    void ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept;
+    virtual void ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept = 0;
     /** Improve the linearization of this Cluster. Returns how much work was performed and whether
      *  the Cluster's QualityLevel improved as a result. */
-    std::pair<uint64_t, bool> Relinearize(TxGraphImpl& graph, int level, uint64_t max_iters) noexcept;
+    virtual std::pair<uint64_t, bool> Relinearize(TxGraphImpl& graph, int level, uint64_t max_iters) noexcept = 0;
     /** For every chunk in the cluster, append its FeeFrac to ret. */
-    void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept;
+    virtual void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept = 0;
     /** Add a TrimTxData entry (filling m_chunk_feerate, m_index, m_tx_size) for every
      *  transaction in the Cluster to ret. Implicit dependencies between consecutive transactions
      *  in the linearization are added to deps. Return the Cluster's total transaction size. */
-    uint64_t AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept;
+    virtual uint64_t AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept = 0;
 
     // Functions that implement the Cluster-specific side of public TxGraph functions.
 
     /** Process elements from the front of args that apply to this cluster, and append Refs for the
      *  union of their ancestors to output. */
-    void GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept;
+    virtual void GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept = 0;
     /** Process elements from the front of args that apply to this cluster, and append Refs for the
      *  union of their descendants to output. */
-    void GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept;
+    virtual void GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept = 0;
     /** Populate range with refs for the transactions in this Cluster's linearization, from
      *  position start_pos until start_pos+range.size()-1, inclusive. Returns whether that
      *  range includes the last transaction in the linearization. */
-    bool GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept;
+    virtual bool GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept = 0;
     /** Get the individual transaction feerate of a Cluster element. */
-    FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept;
+    virtual FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept = 0;
     /** Modify the fee of a Cluster element. */
-    void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept;
+    virtual void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept = 0;
 
     // Debugging functions.
 
-    void SanityCheck(const TxGraphImpl& graph, int level) const;
+    virtual void SanityCheck(const TxGraphImpl& graph, int level) const = 0;
+};
+
+/** An implementation of Cluster that uses a DepGraph and vectors, to support arbitrary numbers of
+ *  transactions up to MAX_CLUSTER_COUNT_LIMIT. */
+class GenericClusterImpl final : public Cluster
+{
+    friend class TxGraphImpl;
+    using GraphIndex = TxGraph::GraphIndex;
+    using SetType = BitSet<MAX_CLUSTER_COUNT_LIMIT>;
+    /** The DepGraph for this cluster, holding all feerates, and ancestors/descendants. */
+    DepGraph<SetType> m_depgraph;
+    /** m_mapping[i] gives the GraphIndex for the position i transaction in m_depgraph. Values for
+     *  positions i that do not exist in m_depgraph shouldn't ever be accessed and thus don't
+     *  matter. m_mapping.size() equals m_depgraph.PositionRange(). */
+    std::vector<GraphIndex> m_mapping;
+    /** The current linearization of the cluster. m_linearization.size() equals
+     *  m_depgraph.TxCount(). This is always kept topological. */
+    std::vector<DepGraphIndex> m_linearization;
+
+public:
+    GenericClusterImpl() noexcept = delete;
+    /** Construct an empty GenericClusterImpl. */
+    explicit GenericClusterImpl(uint64_t sequence) noexcept;
+    /** Construct a singleton GenericClusterImpl. */
+    explicit GenericClusterImpl(uint64_t sequence, TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept;
+
+
+    size_t TotalMemoryUsage() const noexcept final
+    {
+        return // Dynamic memory allocated in this GenericClusterImpl.
+               memusage::DynamicUsage(m_mapping) + memusage::DynamicUsage(m_linearization) +
+               // Dynamic memory usage inside m_depgraph.
+               m_depgraph.DynamicMemoryUsage() +
+               // Memory usage of the allocated GenericClusterImpl itself.
+               memusage::MallocUsage(sizeof(GenericClusterImpl)) +
+               // Memory usage of the ClusterSet::m_clusters entry.
+               sizeof(std::unique_ptr<Cluster>);
+    }
+
+    LinearizationIndex GetTxCount() const noexcept final { return m_linearization.size(); }
+    uint64_t GetTotalTxSize() const noexcept final;
+    GraphIndex GetClusterEntry(DepGraphIndex index) const noexcept final { return m_mapping[index]; }
+    int GetLevel(const TxGraphImpl& graph) const noexcept final;
+    void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept final { m_mapping[cluster_idx] = graph_idx; }
+    void Updated(TxGraphImpl& graph, int level) noexcept final;
+    Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept final;
+    void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept final;
+    void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept final;
+    void Clear(TxGraphImpl& graph, int level) noexcept final;
+    void MoveToMain(TxGraphImpl& graph) noexcept final;
+    void Compact() noexcept final;
+    void ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>& to_remove) noexcept final;
+    [[nodiscard]] bool Split(TxGraphImpl& graph, int level) noexcept final;
+    void Merge(TxGraphImpl& graph, int level, Cluster& cluster) noexcept final;
+    void ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept final;
+    std::pair<uint64_t, bool> Relinearize(TxGraphImpl& graph, int level, uint64_t max_iters) noexcept final;
+    void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept final;
+    uint64_t AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept final;
+    void GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept final;
+    void GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept final;
+    bool GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept final;
+    FeePerWeight GetIndividualFeerate(DepGraphIndex idx) noexcept final;
+    void SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept final;
+    void SanityCheck(const TxGraphImpl& graph, int level) const final;
 };
 
 
@@ -265,6 +313,7 @@ public:
 class TxGraphImpl final : public TxGraph
 {
     friend class Cluster;
+    friend class GenericClusterImpl;
     friend class BlockBuilderImpl;
 private:
     /** Internal RNG. */
@@ -721,7 +770,7 @@ void TxGraphImpl::CreateChunkData(GraphIndex idx, LinearizationIndex chunk_count
     }
 }
 
-uint64_t Cluster::GetTotalTxSize() const noexcept
+uint64_t GenericClusterImpl::GetTotalTxSize() const noexcept
 {
     uint64_t ret{0};
     for (auto i : m_linearization) {
@@ -730,7 +779,7 @@ uint64_t Cluster::GetTotalTxSize() const noexcept
     return ret;
 }
 
-int Cluster::GetLevel(const TxGraphImpl& graph) const noexcept
+int GenericClusterImpl::GetLevel(const TxGraphImpl& graph) const noexcept
 {
     // GetLevel() does not work for empty Clusters.
     Assume(!m_linearization.empty());
@@ -774,7 +823,7 @@ void TxGraphImpl::ClearLocator(int level, GraphIndex idx, bool oversized_tx) noe
     if (level == 0) ClearChunkData(entry);
 }
 
-void Cluster::Updated(TxGraphImpl& graph, int level) noexcept
+void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
 {
     // Update all the Locators for this Cluster's Entry objects.
     for (DepGraphIndex idx : m_linearization) {
@@ -822,7 +871,7 @@ void Cluster::Updated(TxGraphImpl& graph, int level) noexcept
     }
 }
 
-void Cluster::GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept
+void GenericClusterImpl::GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept
 {
     for (auto i : m_linearization) {
         auto& entry = graph.m_entries[m_mapping[i]];
@@ -853,16 +902,16 @@ std::vector<Cluster*> TxGraphImpl::GetConflicts() const noexcept
             cluster->GetConflicts(*this, ret);
         }
     }
-    // Deduplicate the result (the same Cluster may appear multiple times).
+    // Deduplicate the result (the same GenericClusterImpl may appear multiple times).
     std::sort(ret.begin(), ret.end(), [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
     ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
     return ret;
 }
 
-Cluster* Cluster::CopyToStaging(TxGraphImpl& graph) const noexcept
+Cluster* GenericClusterImpl::CopyToStaging(TxGraphImpl& graph) const noexcept
 {
     // Construct an empty Cluster.
-    auto ret = std::make_unique<Cluster>(graph.m_next_sequence_counter++);
+    auto ret = std::make_unique<GenericClusterImpl>(graph.m_next_sequence_counter++);
     auto ptr = ret.get();
     // Copy depgraph, mapping, and linearization/
     ptr->m_depgraph = m_depgraph;
@@ -877,7 +926,7 @@ Cluster* Cluster::CopyToStaging(TxGraphImpl& graph) const noexcept
     return ptr;
 }
 
-void Cluster::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>& to_remove) noexcept
+void GenericClusterImpl::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>& to_remove) noexcept
 {
     // Iterate over the prefix of to_remove that applies to this cluster.
     Assume(!to_remove.empty());
@@ -940,7 +989,7 @@ void Cluster::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>
     Updated(graph, level);
 }
 
-void Cluster::Clear(TxGraphImpl& graph, int level) noexcept
+void GenericClusterImpl::Clear(TxGraphImpl& graph, int level) noexcept
 {
     graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
     for (auto i : m_linearization) {
@@ -951,7 +1000,7 @@ void Cluster::Clear(TxGraphImpl& graph, int level) noexcept
     m_mapping.clear();
 }
 
-void Cluster::MoveToMain(TxGraphImpl& graph) noexcept
+void GenericClusterImpl::MoveToMain(TxGraphImpl& graph) noexcept
 {
     for (auto i : m_linearization) {
         GraphIndex idx = m_mapping[i];
@@ -966,21 +1015,21 @@ void Cluster::MoveToMain(TxGraphImpl& graph) noexcept
     Updated(graph, 0);
 }
 
-void Cluster::Compact() noexcept
+void GenericClusterImpl::Compact() noexcept
 {
     m_linearization.shrink_to_fit();
     m_mapping.shrink_to_fit();
     m_depgraph.Compact();
 }
 
-void Cluster::AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept
+void GenericClusterImpl::AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept
 {
     auto chunk_feerates = ChunkLinearization(m_depgraph, m_linearization);
     ret.reserve(ret.size() + chunk_feerates.size());
     ret.insert(ret.end(), chunk_feerates.begin(), chunk_feerates.end());
 }
 
-uint64_t Cluster::AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept
+uint64_t GenericClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept
 {
     const LinearizationChunking linchunking(m_depgraph, m_linearization);
     LinearizationIndex pos{0};
@@ -1011,7 +1060,7 @@ uint64_t Cluster::AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::
     return size;
 }
 
-bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
+bool GenericClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
 {
     // This function can only be called when the Cluster needs splitting.
     Assume(NeedsSplitting());
@@ -1051,7 +1100,7 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
         }
         first = false;
         // Construct a new Cluster to hold the found component.
-        auto new_cluster = std::make_unique<Cluster>(graph.m_next_sequence_counter++);
+        auto new_cluster = std::make_unique<GenericClusterImpl>(graph.m_next_sequence_counter++);
         new_clusters.push_back(new_cluster.get());
         // Remember that all the component's transactions go to this new Cluster. The positions
         // will be determined below, so use -1 for now.
@@ -1066,7 +1115,8 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
     // Redistribute the transactions.
     for (auto i : m_linearization) {
         /** The cluster which transaction originally in position i is moved to. */
-        Cluster* new_cluster = remap[i].first;
+        Cluster* new_abstract_cluster = remap[i].first;
+        GenericClusterImpl* new_cluster = static_cast<GenericClusterImpl*>(new_abstract_cluster);
         // Copy the transaction to the new cluster's depgraph, and remember the position.
         remap[i].second = new_cluster->m_depgraph.AddTransaction(m_depgraph.FeeRate(i));
         // Create new mapping entry.
@@ -1078,7 +1128,8 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
     // Redistribute the dependencies.
     for (auto i : m_linearization) {
         /** The cluster transaction in position i is moved to. */
-        Cluster* new_cluster = remap[i].first;
+        Cluster* new_abstract_cluster = remap[i].first;
+        GenericClusterImpl* new_cluster = static_cast<GenericClusterImpl*>(new_abstract_cluster);
         // Copy its parents, translating positions.
         SetType new_parents;
         for (auto par : m_depgraph.GetReducedParents(i)) new_parents.Set(remap[par].second);
@@ -1097,8 +1148,9 @@ bool Cluster::Split(TxGraphImpl& graph, int level) noexcept
     return true;
 }
 
-void Cluster::Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept
+void GenericClusterImpl::Merge(TxGraphImpl& graph, int level, Cluster& other_abstract) noexcept
 {
+    GenericClusterImpl& other = static_cast<GenericClusterImpl&>(other_abstract);
     /** Vector to store the positions in this Cluster for each position in other. */
     std::vector<DepGraphIndex> remap(other.m_depgraph.PositionRange());
     graph.GetClusterSet(level).m_cluster_usage -= TotalMemoryUsage();
@@ -1140,7 +1192,7 @@ void Cluster::Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept
     other.m_mapping.clear();
 }
 
-void Cluster::ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept
+void GenericClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept
 {
     // This function is invoked by TxGraphImpl::ApplyDependencies after merging groups of Clusters
     // between which dependencies are added, which simply concatenates their linearizations. Invoke
@@ -1717,7 +1769,7 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
     clusterset.m_group_data = GroupData{};
 }
 
-std::pair<uint64_t, bool> Cluster::Relinearize(TxGraphImpl& graph, int level, uint64_t max_iters) noexcept
+std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, int level, uint64_t max_iters) noexcept
 {
     // We can only relinearize Clusters that do not need splitting.
     Assume(!NeedsSplitting());
@@ -1764,10 +1816,10 @@ void TxGraphImpl::MakeAllAcceptable(int level) noexcept
     }
 }
 
-Cluster::Cluster(uint64_t sequence) noexcept : m_sequence{sequence} {}
+GenericClusterImpl::GenericClusterImpl(uint64_t sequence) noexcept : Cluster{sequence} {}
 
-Cluster::Cluster(uint64_t sequence, TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept :
-    m_sequence{sequence}
+GenericClusterImpl::GenericClusterImpl(uint64_t sequence, TxGraphImpl& graph, const FeePerWeight& feerate, GraphIndex graph_index) noexcept :
+    Cluster{sequence}
 {
     // Create a new transaction in the DepGraph, and remember its position in m_mapping.
     auto cluster_idx = m_depgraph.AddTransaction(feerate);
@@ -1791,7 +1843,7 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     GetRefIndex(ret) = idx;
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
     bool oversized = uint64_t(feerate.size) > m_max_cluster_size;
-    auto cluster = std::make_unique<Cluster>(m_next_sequence_counter++, *this, feerate, idx);
+    auto cluster = std::make_unique<GenericClusterImpl>(m_next_sequence_counter++, *this, feerate, idx);
     auto cluster_ptr = cluster.get();
     int level = GetTopLevel();
     auto& clusterset = GetClusterSet(level);
@@ -1863,7 +1915,7 @@ bool TxGraphImpl::Exists(const Ref& arg, Level level_select) noexcept
     return cluster != nullptr;
 }
 
-void Cluster::GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept
+void GenericClusterImpl::GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept
 {
     /** The union of all ancestors to be returned. */
     SetType ancestors_union;
@@ -1882,7 +1934,7 @@ void Cluster::GetAncestorRefs(const TxGraphImpl& graph, std::span<std::pair<Clus
     }
 }
 
-void Cluster::GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept
+void GenericClusterImpl::GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cluster*, DepGraphIndex>>& args, std::vector<TxGraph::Ref*>& output) noexcept
 {
     /** The union of all descendants to be returned. */
     SetType descendants_union;
@@ -1901,7 +1953,7 @@ void Cluster::GetDescendantRefs(const TxGraphImpl& graph, std::span<std::pair<Cl
     }
 }
 
-bool Cluster::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept
+bool GenericClusterImpl::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept
 {
     // Translate the transactions in the Cluster (in linearization order, starting at start_pos in
     // the linearization) to Refs, and fill them in range.
@@ -1915,12 +1967,12 @@ bool Cluster::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range,
     return start_pos == m_linearization.size();
 }
 
-FeePerWeight Cluster::GetIndividualFeerate(DepGraphIndex idx) noexcept
+FeePerWeight GenericClusterImpl::GetIndividualFeerate(DepGraphIndex idx) noexcept
 {
     return FeePerWeight::FromFeeFrac(m_depgraph.FeeRate(idx));
 }
 
-void Cluster::MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept
+void GenericClusterImpl::MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept
 {
     // Mark all transactions of a Cluster missing, needed when aborting staging, so that the
     // corresponding Locators don't retain references into aborted Clusters.
@@ -2219,7 +2271,7 @@ void TxGraphImpl::CommitStaging() noexcept
     Compact();
 }
 
-void Cluster::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept
+void GenericClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept
 {
     // Make sure the specified DepGraphIndex exists in this Cluster.
     Assume(m_depgraph.Positions()[idx]);
@@ -2328,7 +2380,7 @@ std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> TxGraphImpl::GetMainStagin
     return std::make_pair(std::move(main_feerates), std::move(staging_feerates));
 }
 
-void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
+void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
 {
     // There must be an m_mapping for each m_depgraph position (including holes).
     assert(m_depgraph.PositionRange() == m_mapping.size());
