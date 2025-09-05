@@ -164,7 +164,7 @@ inline bool StatsdClientImpl::_send(std::string_view key, T1 value, std::string_
 
     // Send it and report an error if we encounter one
     if (auto error_opt = Assert(m_sender)->Send(msg); error_opt.has_value()) {
-        LogPrintf("ERROR: %s.\n", error_opt.value());
+        LogPrintf("ERROR: %s.\n", error_opt->original);
         return false;
     }
 

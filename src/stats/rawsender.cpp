@@ -68,7 +68,7 @@ RawSender::~RawSender()
               m_host, m_port, m_successes, m_failures);
 }
 
-std::optional<std::string> RawSender::Send(const RawMessage& msg)
+std::optional<bilingual_str> RawSender::Send(const RawMessage& msg)
 {
     // If there is a thread, append to queue
     if (m_thread.joinable()) {
@@ -79,11 +79,11 @@ std::optional<std::string> RawSender::Send(const RawMessage& msg)
     return SendDirectly(msg);
 }
 
-std::optional<std::string> RawSender::SendDirectly(const RawMessage& msg)
+std::optional<bilingual_str> RawSender::SendDirectly(const RawMessage& msg)
 {
     if (!m_sock) {
         m_failures++;
-        return "Socket not initialized, cannot send message";
+        return _("Socket not initialized, cannot send message");
     }
 
     if (::sendto(m_sock->Get(), reinterpret_cast<const char*>(msg.data()),
@@ -94,7 +94,7 @@ std::optional<std::string> RawSender::SendDirectly(const RawMessage& msg)
 #endif // WIN32
                  /*flags=*/0, reinterpret_cast<struct sockaddr*>(&m_server.first), m_server.second) == SOCKET_ERROR) {
         m_failures++;
-        return strprintf("Unable to send message to %s (sendto() returned error %s)", this->ToStringHostPort(),
+        return strprintf(_("Unable to send message to %s (::sendto() returned error %s)"), this->ToStringHostPort(),
                          NetworkErrorString(WSAGetLastError()));
     }
 
