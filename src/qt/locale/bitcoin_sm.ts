@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Fou</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopi le tuatusi ua filifilia nei i le laulau fa'amaumau a le faiga</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopi</translation>
     </message>
@@ -765,14 +761,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">O le fesuia'iga o Upega i le taimi muamua (%1%)...</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Sese i le fatuina o le pusa tupe</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">E le mafai ona fatuina se 'wallet' fou, o le polokalame na fa'amaonia e aunoa ma le lagolago o sqlite (e manaʻomia mo 'descriptor wallets')</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Sese: %1</translation>
     </message>
@@ -926,7 +914,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Kopi &amp;fa'amaonia</translation>
+        <translation type="unfinished">Kopi &amp; fa'amaonia</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
@@ -1297,7 +1285,73 @@ O le fa'amaoniga o le malaga o le a fai se kopi o le 'aofa'i a'o le'i fa'aauau l
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">Fā'ailoga</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">E uiga i le %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Filifiliga o le laina pule</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">O %1 o lo'o tapuni…</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Aua le tapuni o le komepiuta seia o'o mai le fe'au lenei.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Afio mai</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Afio mai i %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">As this is the first time the program is launched, you can choose where %1 o le a teuina lona data.</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">Fa'aitiitia le teuina o le pusa u'amea i</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Faʻafouina lenei seti e manaʻomia ai le toe la'uina o le blockchain atoa. E vave le download i le auala atoa muamua ma toe fa'aitiitia i se taimi mulimuli. E tapeina nisi o vaega maualuga.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">O le fa'atasi muamua lenei e matua faigata, ma e ono fa'aalia ai ni fa'afitauli i masini fa'atekonolosi o lau komepiuta e le'i matauina muamua. O taimi uma e te fa'agaoioia ai le %1, o le a faʻaauau pea ona sii mai mai le mea na fa'amuta ai.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">A e kiliki i le OK, o le %1 o le a amata ona download ma fa'agasolo i le %4 blockchain atoa (%2 GB) amata mai i muamua o vadega i %3 i le taimi na fa'avae ai %4.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">Afai e te filifilia e faʻaititia le teuina o le blockchain (pruning), o le dati o le talafaʻasolopito e tatau ona downloadina ma faia, ae o le a aveʻese i le iʻuga ina ia tausia ai le faʻaaogaina o lau disk i lalo.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Utilize le faila o faʻamaoniga masani</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Use le fa'amaoniga fa'atekinolosi o fa'amaoniga:</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1358,72 +1412,6 @@ O le fa'amaoniga o le malaga o le a fai se kopi o le 'aofa'i a'o le'i fa'aauau l
     <message>
         <source>Error</source>
         <translation type="unfinished">Sese</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Afio mai</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Afio mai i %1.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">As this is the first time the program is launched, you can choose where %1 o le a teuina lona data.</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">Fa'aitiitia le teuina o le pusa u'amea i</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Faʻafouina lenei seti e manaʻomia ai le toe la'uina o le blockchain atoa. E vave le download i le auala atoa muamua ma toe fa'aitiitia i se taimi mulimuli. E tapeina nisi o vaega maualuga.</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">O le fa'atasi muamua lenei e matua faigata, ma e ono fa'aalia ai ni fa'afitauli i masini fa'atekonolosi o lau komepiuta e le'i matauina muamua. O taimi uma e te fa'agaoioia ai le %1, o le a faʻaauau pea ona sii mai mai le mea na fa'amuta ai.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">A e kiliki i le OK, o le %1 o le a amata ona download ma fa'agasolo i le %4 blockchain atoa (%2 GB) amata mai i muamua o vadega i %3 i le taimi na fa'avae ai %4.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Afai e te filifilia e faʻaititia le teuina o le blockchain (pruning), o le dati o le talafaʻasolopito e tatau ona downloadina ma faia, ae o le a aveʻese i le iʻuga ina ia tausia ai le faʻaaogaina o lau disk i lalo.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Utilize le faila o faʻamaoniga masani</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Use le fa'amaoniga fa'atekinolosi o fa'amaoniga:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">Fā'ailoga</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">E uiga i le %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Filifiliga o le laina pule</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">O %1 o lo'o tapuni…</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Aua le tapuni o le komepiuta seia o'o mai le fe'au lenei.</translation>
     </message>
 </context>
 <context>
@@ -1836,10 +1824,6 @@ O le fa'amaoniga o le malaga o le a fai se kopi o le 'aofa'i a'o le'i fa'aauau l
         <translation type="unfinished">O faʻamatalaga o loʻo faʻaalia atonu e le o toe faʻafouina. E otometi lava ona faʻatulagaina lau ʻato tupe i le upega Bitcoin pe a maeʻa ona fesoʻotaʻi, ae e leʻi maeʻa lenei faiga.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Matai va'ai naʻo:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">E avanoa:</translation>
     </message>
@@ -1876,20 +1860,8 @@ O le fa'amaoniga o le malaga o le a fai se kopi o le 'aofa'i a'o le'i fa'aauau l
         <translation type="unfinished">O lau totogi uma i le taimi nei</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">O lau paleni i le taimi nei i tuatusi na'o le mata'itu</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">fa'aaogaina:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">Fa'amaoniga talu ai</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Faʻamaoniga e leʻi faʻamaonia i taunuʻuga naʻo le mataʻituina</translation>
     </message>
     </context>
 <context>

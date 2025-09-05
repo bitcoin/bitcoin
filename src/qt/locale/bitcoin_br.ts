@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Nevez</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Eilañ an adres diuzet-mañ er golver</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Eilañ</translation>
     </message>
@@ -127,8 +123,20 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">Kadarnaat sifrañ an doug-moneiz</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation type="unfinished">Diwall: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
         <translation type="unfinished">Doug-moneiz sifret</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation type="unfinished">Doug-moneiz da sifrañ</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation type="unfinished">Sifret eo ho toug-moneiz bremañ. </translation>
     </message>
     </context>
 <context>
@@ -151,8 +159,8 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message numerus="yes">
         <source>%n second(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n second(s)</numerusform>
+            <numerusform>%n second(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -172,8 +180,8 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>%n day(s)</numerusform>
+            <numerusform>%n day(s)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -234,6 +242,14 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">Doug-moneiz:</translation>
     </message>
     <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation type="unfinished">Kas gwenneien d'un adres Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation type="unfinished">Ka&amp;s</translation>
+    </message>
+    <message>
         <source>&amp;Receive</source>
         <translation type="unfinished">&amp;Resev</translation>
     </message>
@@ -268,8 +284,8 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
+            <numerusform>Processed %n block(s) of transaction history.</numerusform>
         </translation>
     </message>
     <message>
@@ -302,8 +318,16 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">Anv doug-moneiz</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation type="unfinished">&amp;Prenestr</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation type="unfinished">Zoum</translation>
+    </message>
+    <message>
+        <source>&amp;Hide</source>
+        <translation type="unfinished">Koac&amp;h</translation>
     </message>
     <message>
         <source>S&amp;how</source>
@@ -326,6 +350,12 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">Diwall: %1</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation type="unfinished">Deiziad: %1
+</translation>
+    </message>
+    <message>
         <source>Amount: %1
 </source>
         <translation type="unfinished">Sammad: %1
@@ -341,6 +371,12 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <source>Type: %1
 </source>
         <translation type="unfinished">Seurt: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation type="unfinished">Adres: %1
 </translation>
     </message>
     </context>
@@ -367,16 +403,36 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">(di)diuzañ pep tra</translation>
     </message>
     <message>
+        <source>Tree mode</source>
+        <translation type="unfinished">Mod gwezennad</translation>
+    </message>
+    <message>
+        <source>List mode</source>
+        <translation type="unfinished">Mod listenn</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">Sammad</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">Deiziad</translation>
     </message>
     <message>
         <source>Confirmations</source>
         <translation type="unfinished">Kadarnadurioù</translation>
     </message>
     <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">Kadarnaet</translation>
+    </message>
+    <message>
         <source>Copy amount</source>
         <translation type="unfinished">Eilañ ar sammad</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Eilañ an adres</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
@@ -456,50 +512,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </message>
     </context>
 <context>
-    <name>Intro</name>
-    <message numerus="yes">
-        <source>%n GB of space available</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>(of %n GB needed)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>(%n GB needed for full chain)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-        </translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Fazi</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Donemat</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished"> Ge</translation>
-    </message>
-    </context>
-<context>
     <name>HelpMessageDialog</name>
     <message>
         <source>version</source>
@@ -510,6 +522,50 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">A-zivout %1</translation>
     </message>
     </context>
+<context>
+    <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Donemat</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished"> Ge</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform>(of %n GB needed)</numerusform>
+            <numerusform>(of %n GB needed)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform>(%n GB needed for full chain)</numerusform>
+            <numerusform>(%n GB needed for full chain)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+            <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Fazi</translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -642,6 +698,11 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">Kaset</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;Eilañ an adres</translation>
+    </message>
+    <message>
         <source>Yes</source>
         <translation type="unfinished">Ya</translation>
     </message>
@@ -665,6 +726,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">S&amp;ammad:</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Eilañ an adres</translation>
+    </message>
+    <message>
         <source>Copy &amp;label</source>
         <translation type="unfinished">Eilañ &amp;label</translation>
     </message>
@@ -686,6 +751,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">Deiziad</translation>
+    </message>
     <message>
         <source>(no label)</source>
         <translation type="unfinished">(label ebet)</translation>
@@ -732,8 +801,8 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
         </translation>
     </message>
     <message>
@@ -762,6 +831,10 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">Deiziad</translation>
+    </message>
+    <message>
         <source>From</source>
         <translation type="unfinished">Deus</translation>
     </message>
@@ -788,8 +861,16 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
 <context>
     <name>TransactionTableModel</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">Deiziad</translation>
+    </message>
+    <message>
         <source>Type</source>
         <translation type="unfinished">Seurt</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation type="unfinished">Minet</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -799,8 +880,20 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Today</source>
+        <translation type="unfinished">Hirie</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation type="unfinished">Minet</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation type="unfinished">Traoù all</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Eilañ an adres</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
@@ -809,6 +902,19 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Copy &amp;amount</source>
         <translation type="unfinished">Eilañ ar &amp;sammad</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Restr disrannet gant virgulennoù</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">Kadarnaet</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation type="unfinished">Deiziad</translation>
     </message>
     <message>
         <source>Type</source>
@@ -851,6 +957,18 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
 </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Fazi: Address book data in wallet cannot be identified to belong to migrated wallets</translation>
+    </message>
+    <message>
+        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
+        <translation type="unfinished">Fazi: Duplicate descriptors created during migration. Your wallet may be corrupted.</translation>
+    </message>
+    <message>
+        <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
+        <translation type="unfinished">Fazi: Transaction %s in wallet cannot be identified to belong to migrated wallets</translation>
+    </message>
     <message>
         <source>Error creating %s</source>
         <translation type="unfinished">Fazi en ur grouiñ %s</translation>

@@ -14,16 +14,12 @@
         <translation type="unfinished">&amp;Nova</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopii elektitan adreson al la tondejo</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopii</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">Caleb Payne Phd</translation>
+        <translation type="unfinished">&amp;Fermi</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -822,7 +818,45 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">versio</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">Pri %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Komandliniaj agordaĵoj</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Ne sistemfermu ĝis ĉi tiu fenestro malaperas.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Bonvenon</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Bonvenon al %1.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Uzi la defaŭltan dosierujon por datumoj</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Uzi alian dosierujon por datumoj:</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">Bitmono</translation>
@@ -859,44 +893,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">Eraro</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Bonvenon</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Bonvenon al %1.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Uzi la defaŭltan dosierujon por datumoj</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Uzi alian dosierujon por datumoj:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">versio</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">Pri %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Komandliniaj agordaĵoj</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Ne sistemfermu ĝis ĉi tiu fenestro malaperas.</translation>
     </message>
 </context>
 <context>
@@ -1111,10 +1107,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Your current total balance</source>
         <translation type="unfinished">via aktuala totala saldo</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">Elspezebla:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1666,10 +1658,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Subskribo</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Kopii la aktualan subskribon al la tondejo</translation>
-    </message>
-    <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
         <translation type="unfinished">Subskribi la mesaĝon por pravigi, ke vi estas la posedanto de tiu Bitmon-adreso</translation>
     </message>
@@ -2080,6 +2068,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">defaŭlta monujo</translation>
+    </message>
+    <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">Difektita blokdatumbazo trovita</translation>
     </message>
@@ -2090,10 +2082,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Eraro dum pravalorizado de blokdatumbazo</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Eraro dum pravalorizado de monuj-datumbaza ĉirkaŭaĵo %s!</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -2138,6 +2126,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation type="unfinished">Nekonata reto specifita en -onlynet: '%s'</translation>
+    </message>
+    <message>
+        <source>Error: Wallet does not exist</source>
+        <translation type="unfinished">Eraro: monujo ne ekzistas</translation>
     </message>
     </context>
 </TS>

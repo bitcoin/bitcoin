@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;አዲስ</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">አሁን የተመረጠውን አድራሻ ወደ ስርዓቱ ቅንጥብ ሰሌዳ ይቅዱ</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;ይቅዱ</translation>
     </message>
@@ -455,14 +451,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">ዋሌትዎን ለፍጠር ተሳስተዋል </translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">አዲስ ዋሌት መፍጠር አልተቻለም፣ ሶፍትዌሩ የተቀናበረው ያለ ስኩላይት ድጋፍ ነው (ለገላጭ ዋሌቶች ያስፈልጋል)</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">ስህተት፥ %1</translation>
     </message>
@@ -609,7 +597,26 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">ስሪት</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">ስለ እኛ %1</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">እንኳን ደህና መጣህ</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">እንኳን  ወድ %1 በደህና መጣህ።</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">ቢትኮይን</translation>
@@ -647,26 +654,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Error</source>
         <translation type="unfinished">ስህተት</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">እንኳን ደህና መጣህ</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">እንኳን  ወድ %1 በደህና መጣህ።</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">ስሪት</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">ስለ እኛ %1</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -680,6 +668,10 @@ The migration process will create a backup of the wallet before migrating. This 
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">ወደብን PCP ወይም NA&amp;T-PMP በመጠቀም አሰባጥር</translation>
+    </message>
     <message>
         <source>Font in the Overview tab: </source>
         <translation type="unfinished">በአጠቃላይ እይታ ትር ውስጥ ያለ ፊደል</translation>
@@ -932,6 +924,13 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">በዚህ ማውጫ ውስጥ ያለውን ውሂብ ወደ ፋይል አዛውረው ያስቀምጡ</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">መደበኛ ዋሌት</translation>
     </message>
     </context>
 </TS>

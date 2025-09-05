@@ -14,10 +14,6 @@
         <translation type="unfinished">Нов</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Копирай текущо избрания адрес към клипборда</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Копирай</translation>
     </message>
@@ -811,10 +807,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Предварителна синхронизация на хедъри (%1%)…</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Грешка при създаването на портфейл</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Грешка: %1</translation>
     </message>
@@ -1325,7 +1317,73 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">версия</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">Относно %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Списък с команди</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 изключва се...</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Не изключвайте компютъра докато този прозорец не изчезне.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Добре дошли</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Добре дошли в %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">Програмата се стартира за първи път вие може да изберете къде %1 ще се запаметят данните.</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">Ограничете блокчейнното съхранение</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Връщането на тази настройка изисква повторно изтегляне на цялата секторна верига. По-бързо е първо да изтеглите пълната верига и да я подрязвате по-късно. Деактивира някои разширени функции.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">ГБ</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Първоначалната синхронизация е изключително взискателна, и може да разкрие хардуерни проблеми с вашия компютър, които до сега са били незабелязани. Всеки път, когато включите %1,  свалянето ще започне от където е приключило.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">Ако сте избрали да ограничите съхранението на блокови вериги (подрязване), историческите данни все още трябва да бъдат изтеглени и обработени, но ще бъдат изтрити след това, за да поддържате използването на вашия диск.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Използване на директория по подразбиране</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Използване на директория ръчно</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">Биткоин</translation>
@@ -1386,72 +1444,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">грешка</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Добре дошли</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Добре дошли в %1.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Програмата се стартира за първи път вие може да изберете къде %1 ще се запаметят данните.</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">Ограничете блокчейнното съхранение</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Връщането на тази настройка изисква повторно изтегляне на цялата секторна верига. По-бързо е първо да изтеглите пълната верига и да я подрязвате по-късно. Деактивира някои разширени функции.</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">ГБ</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Първоначалната синхронизация е изключително взискателна, и може да разкрие хардуерни проблеми с вашия компютър, които до сега са били незабелязани. Всеки път, когато включите %1,  свалянето ще започне от където е приключило.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Ако сте избрали да ограничите съхранението на блокови вериги (подрязване), историческите данни все още трябва да бъдат изтеглени и обработени, но ще бъдат изтрити след това, за да поддържате използването на вашия диск.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Използване на директория по подразбиране</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Използване на директория ръчно</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">версия</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">Относно %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Списък с команди</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 изключва се...</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Не изключвайте компютъра докато този прозорец не изчезне.</translation>
     </message>
 </context>
 <context>
@@ -1815,10 +1807,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Гледайте само:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">На разположение:</translation>
     </message>
@@ -1853,10 +1841,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Your current total balance</source>
         <translation type="unfinished">Текущото Ви общо салдо</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">За харчене:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -2549,10 +2533,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Подпис</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Копиране на текущия подпис</translation>
-    </message>
-    <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
         <translation type="unfinished">Подпишете съобщение като доказателство, че притежавате определен адрес</translation>
     </message>
@@ -2668,10 +2648,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>own address</source>
         <translation type="unfinished">собствен адрес</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation type="unfinished">само гледане</translation>
     </message>
     <message>
         <source>label</source>
@@ -2807,10 +2783,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Емитирани</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">само гледане</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation type="unfinished">(без етикет)</translation>
     </message>
@@ -2901,10 +2873,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">Потвърдено</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">само гледане</translation>
     </message>
     <message>
         <source>Date</source>
@@ -3011,6 +2979,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">Портфейл по подразбиране</translation>
+    </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">Конфигурирай настройки за %s само когато са приложени на %s мрежа, когато са в [%s] секция.</translation>

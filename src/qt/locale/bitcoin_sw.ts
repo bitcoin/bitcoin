@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Mpya</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Nakili anwani iliyochaguliwa kwa sasa kwenye ubao wa kunakili wa mfumo</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;nakili</translation>
     </message>
@@ -736,14 +732,6 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Kusawazisha Vichwa vya awali (%1%)...</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Hitilafu unapounda pochi</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Haiwezi kuunda pochi mpya, programu iliundwa bila usaidizi wa sqlite (inahitajika kwa pochi za maelezo)</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Kosa: %1</translation>
     </message>
@@ -807,7 +795,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished">Wallet &lt;b&gt;imesimbwa kwa njia fiche&lt;/b&gt; na &lt;b&gt;imefunguliwa&lt;/b&gt; kwa sasa</translation>
+        <translation type="unfinished">Pochi &lt;b&gt;imesimbwa kwa njia fiche&lt;/b&gt; na &lt;b&gt;imefunguliwa&lt;/b&gt; kwa sasa</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
@@ -1063,7 +1051,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
-        <translation type="unfinished">Funga Pochi</translation>
+        <translation type="unfinished">Funga pochi</translation>
     </message>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
@@ -1177,6 +1165,10 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
 </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Karibu</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1210,11 +1202,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
         <source>Error</source>
         <translation type="unfinished">Onyo</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Karibu</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1235,7 +1223,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     <message>
         <source>Address</source>
         <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Anwani</translation>
+        <translation type="unfinished">Anuani</translation>
     </message>
     </context>
 <context>
@@ -1425,7 +1413,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(hamna chapa)</translation>
+        <translation type="unfinished">(hakuna lebo)</translation>
     </message>
     </context>
 <context>
@@ -1526,16 +1514,16 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
         <translation type="unfinished">Hitilafu: Data za kitabu cha anunai katika pochi haziwezi kutambulika kuwa ni ya pochi zilizohamia.</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">mkoba chaguo-msingi</translation>
+    </message>
+    <message>
         <source>Error: No %s addresses available.</source>
         <translation type="unfinished">Hitilafu: Hamna anuani zilizopo %s.</translation>
     </message>
     <message>
         <source>Error: Unable to remove watchonly address book data</source>
         <translation type="unfinished">Hitilafu: Imeshindwa kuondoa data katika kitabu cha anuani ya kutazama tu</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">Inaingizwa...</translation>
     </message>
     <message>
         <source>Invalid -i2psam address or hostname: '%s'</source>

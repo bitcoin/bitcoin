@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;新增</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">複製目前選擇的地址到系統剪貼簿</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;複製</translation>
     </message>
@@ -28,6 +24,10 @@
     <message>
         <source>Enter address or label to search</source>
         <translation type="unfinished">請輸入要搜尋的地址或標籤</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the clipboard</source>
+        <translation type="unfinished">复制当前选中的地址到剪贴板。</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -332,37 +332,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Inbound</source>
         <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
-        <translation type="unfinished">傳入</translation>
+        <translation type="unfinished">進來</translation>
     </message>
     <message>
         <source>Outbound</source>
         <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
-        <translation type="unfinished">傳出</translation>
-    </message>
-    <message>
-        <source>Full Relay</source>
-        <extracomment>Peer connection type that relays all network information.</extracomment>
-        <translation type="unfinished">完整转发</translation>
+        <translation type="unfinished">出去</translation>
     </message>
     <message>
         <source>Block Relay</source>
         <extracomment>Peer connection type that relays network information about blocks and not transactions or addresses.</extracomment>
-        <translation type="unfinished">區塊轉發</translation>
+        <translation type="unfinished">区块转发</translation>
     </message>
     <message>
         <source>Manual</source>
         <extracomment>Peer connection type established manually through one of several methods.</extracomment>
-        <translation type="unfinished">手冊</translation>
-    </message>
-    <message>
-        <source>Feeler</source>
-        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
-        <translation type="unfinished">触须</translation>
-    </message>
-    <message>
-        <source>Address Fetch</source>
-        <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
-        <translation type="unfinished">地址取回</translation>
+        <translation type="unfinished">手册</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -401,13 +386,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform>%n分鐘</numerusform>
+            <numerusform>%n分钟</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation type="unfinished">
-            <numerusform>%n 小時</numerusform>
+            <numerusform>%n 小时</numerusform>
         </translation>
     </message>
     <message numerus="yes">
@@ -419,7 +404,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform>%n 週</numerusform>
+            <numerusform>%n 周</numerusform>
         </translation>
     </message>
     <message>
@@ -812,14 +797,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">預先同步標頭(%1%)</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">創建錢包時出錯</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">無法建立新錢包，軟體編譯時未啟用SQLite支援（descriptor錢包需要它）</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">错误：%1</translation>
     </message>
@@ -1169,6 +1146,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">關閉錢包</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">您確定要關閉錢包 &lt;i&gt;%1&lt;/i&gt; 嗎？</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation type="unfinished">關上錢包太久的話且修剪模式又有開啟的話，可能會造成日後需要重新同步整個區塊鏈。</translation>
     </message>
@@ -1235,7 +1216,12 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Create</source>
         <translation type="unfinished">產生</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">軟體未編譯外接簽證功能所需的軟體庫(外接簽證必須有此功能)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1275,6 +1261,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">輸入的地址 %1 並不是有效的比特幣地址。</translation>
     </message>
     <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">地址 "%1" 已經存在帶有標籤 "%2" 的接收地址，因此無法添加為發送地址。</translation>
+    </message>
+    <message>
         <source>The entered address "%1" is already in the address book with label "%2".</source>
         <translation type="unfinished">輸入的地址 %1 已經在地址簿中了，標籤為 "%2"。</translation>
     </message>
@@ -1311,7 +1301,73 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">版本</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">關於 %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">命令列選項</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1正在關閉..</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">在這個視窗不見以前，請不要關掉電腦。</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">歡迎</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">歡迎使用 %1。</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">因為這是程式第一次啓動，你可以選擇 %1 儲存資料的地方。</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">將區塊鏈儲存限制為</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">還原此設置需要重新下載整個區塊鏈。首先下載完整的鏈，然後再修剪它是更快的。禁用某些高級功能。</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">一開始的同步作業非常的耗費資源，並且可能會暴露出之前沒被發現的電腦硬體問題。每次執行 %1 的時候都會繼續先前未完成的下載。</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">當你點擊「確認」，%1會開始下載，並從%3年最早的交易，處裡整個%4區塊鏈(大小:%2GB)</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">如果你選擇要限制區塊鏈儲存空間的大小(修剪模式)，還是需要下載和處理過去的歷史資料被，但是之後就會把它刪掉來節省磁碟使用量。</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">使用預設的資料目錄</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">使用自訂的資料目錄:</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1365,72 +1421,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Error</source>
         <translation type="unfinished">錯誤</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">歡迎</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">歡迎使用 %1。</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">因為這是程式第一次啓動，你可以選擇 %1 儲存資料的地方。</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">將區塊鏈儲存限制為</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">還原此設置需要重新下載整個區塊鏈。首先下載完整的鏈，然後再修剪它是更快的。禁用某些高級功能。</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">一開始的同步作業非常的耗費資源，並且可能會暴露出之前沒被發現的電腦硬體問題。每次執行 %1 的時候都會繼續先前未完成的下載。</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">當你點擊「確認」，%1會開始下載，並從%3年最早的交易，處裡整個%4區塊鏈(大小:%2GB)</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">如果你選擇要限制區塊鏈儲存空間的大小(修剪模式)，還是需要下載和處理過去的歷史資料被，但是之後就會把它刪掉來節省磁碟使用量。</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">使用預設的資料目錄</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">使用自訂的資料目錄:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">版本</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">關於 %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">命令列選項</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1正在關閉..</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">在這個視窗不見以前，請不要關掉電腦。</translation>
-    </message>
 </context>
 <context>
     <name>ModalOverlay</name>
@@ -1481,6 +1471,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Esc</source>
         <translation type="unfinished">離開鍵</translation>
+    </message>
+    <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation type="unfinished">%1 當前正在同步。它將從peers下載區塊頭和區塊，並對其進行驗證，直到到達區塊鏈的頂為止。</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
@@ -1859,10 +1853,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">顯示的資訊可能是過期的。跟 Bitcoin 網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">只能看:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">可用金額:</translation>
     </message>
@@ -1899,28 +1889,8 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">目前全部餘額</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">所有只能看的地址的當前餘額</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">可支配:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">最近的交易</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">所有只能看的地址還未確認的交易</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">所有只能看的地址還沒已熟成的挖出餘額</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">所有只能看的地址的當前總餘額</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
@@ -1947,15 +1917,23 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Save…</source>
-        <translation type="unfinished">儲存...</translation>
+        <translation type="unfinished">拯救...</translation>
     </message>
     <message>
         <source>Close</source>
         <translation type="unfinished">關閉</translation>
     </message>
     <message>
+        <source>Failed to load transaction: %1</source>
+        <translation type="unfinished">無法載入交易：%1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation type="unfinished">無法簽名交易：%1</translation>
+    </message>
+    <message>
         <source>Cannot sign inputs while wallet is locked.</source>
-        <translation type="unfinished">錢包已鎖定，無法簽署交易輸入項。</translation>
+        <translation type="unfinished">钱包已锁定，无法签名交易输入项。</translation>
     </message>
     <message>
         <source>Could not sign any more inputs.</source>
@@ -1970,6 +1948,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">處理交易有未知的錯誤</translation>
     </message>
     <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation type="unfinished">交易成功廣播！交易 ID：%1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation type="unfinished">交易廣播失敗：%1</translation>
+    </message>
+    <message>
         <source>PSBT copied to clipboard.</source>
         <translation type="unfinished">PSBT已復製到剪貼簿</translation>
     </message>
@@ -1980,7 +1966,7 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">部分簽名交易(二進位)</translation>
+        <translation type="unfinished">部分签名交易(二进制)</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
@@ -2061,9 +2047,9 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Cannot process payment request because BIP70 is not supported.
 Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.
 If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
-        <translation type="unfinished">因為不支援BIP70，無法處理付款請求。
-由於BIP70具有廣泛的安全缺陷，無論哪個商家指引要求更換錢包，強烈建議不要更換。
-如果您看到了這個錯誤，您應該要求商家提供與BIP21相容的URI。</translation>
+        <translation type="unfinished">因为不支持BIP70，无法处理付款请求。
+由于BIP70具有广泛的安全缺陷，无论哪个商家指引要求您更换钱包，我们都强烈建议您不要听信。
+如果您看到了这个错误，您应该要求商家提供兼容BIP21的URI。</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
@@ -2089,12 +2075,12 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
-        <translation type="unfinished">節點</translation>
+        <translation type="unfinished">同行</translation>
     </message>
     <message>
         <source>Age</source>
         <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
-        <translation type="unfinished">連接時間</translation>
+        <translation type="unfinished">连接时间</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -2129,12 +2115,12 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Inbound</source>
         <extracomment>An Inbound Connection from a Peer.</extracomment>
-        <translation type="unfinished">傳入</translation>
+        <translation type="unfinished">進來</translation>
     </message>
     <message>
         <source>Outbound</source>
         <extracomment>An Outbound Connection to a Peer.</extracomment>
-        <translation type="unfinished">傳出</translation>
+        <translation type="unfinished">出去</translation>
     </message>
 </context>
 <context>
@@ -2823,7 +2809,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>&amp;Save Image…</source>
-        <translation type="unfinished">儲存圖片(&amp;S)...</translation>
+        <translation type="unfinished">保存圖片(&amp;S)...</translation>
     </message>
     <message>
         <source>Payment information</source>
@@ -3172,10 +3158,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">確認付款金額</translation>
     </message>
     <message>
-        <source>Watch-only balance:</source>
-        <translation type="unfinished">只能看餘額:</translation>
-    </message>
-    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation type="unfinished">接受者地址無效。請再檢查看看。</translation>
     </message>
@@ -3331,8 +3313,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">簽章</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">複製目前的簽章到系統剪貼簿</translation>
+        <source>Copy the current signature to the clipboard</source>
+        <translation type="unfinished">复制当前签名至剪贴板</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -3518,10 +3500,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">自己的地址</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">只能看</translation>
-    </message>
-    <message>
         <source>label</source>
         <translation type="unfinished">標記</translation>
     </message>
@@ -3690,10 +3668,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">開採所得</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">只能看</translation>
-    </message>
-    <message>
         <source>(n/a)</source>
         <translation type="unfinished">(不適用)</translation>
     </message>
@@ -3712,10 +3686,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Type of transaction.</source>
         <translation type="unfinished">交易的種類。</translation>
-    </message>
-    <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished">此交易是否涉及監視地址。</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
@@ -3837,10 +3807,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">已確認</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">只能觀看的</translation>
     </message>
     <message>
         <source>Date</source>
@@ -4033,24 +3999,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">%s 開發人員</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s損壞。嘗試使用錢包工具bitcoin-wallet挽救或還原備份。</translation>
-    </message>
-    <message>
         <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
         <translation type="unfinished">%s 驗證 -assumeutxo 快照狀態失敗。 這顯示硬體可能有問題，也可能是軟體bug，或是軟體被不當修改、從而讓非法快照也能夠載入。 因此，將關閉節點並停止使用從這個快照建構出的任何狀態，並將鏈高度從 %d 重置到 %d 。下次啟動時，節點將會不使用快照資料從 %d 繼續同步。 請將這個事件回報給 %s 並在報告中包括您是如何獲得這份快照的。 無效的鏈狀態快照仍保存至磁碟上，以供診斷問題的原因。</translation>
     </message>
     <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
         <translation type="unfinished">%s請求監聽端口%u。此連接埠被認為是“壞的”，所以不太可能有其他節點會連接過來。 詳情以及完整的連接埠清單請參閱 doc/p2p-bad-ports.md 。</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
-        <translation type="unfinished">無法把皮夾版本從%i降級到%i。錢包版本未改變。</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
-        <translation type="unfinished">無法在不支援「分割前的金鑰池」（pre split keypool）的情況下把「非分割HD錢包」（non HD split wallet）從版本%i升级到%i。請使用版本號%i，或壓根不要指定版本號。</translation>
     </message>
     <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
@@ -4085,10 +4039,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">錯誤: 轉儲文件版本不支援。 這個版本的 bitcoin-wallet 只支援版本為 1 的轉儲檔案。 得到的轉儲文件版本是%s</translation>
     </message>
     <message>
-        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
-        <translation type="unfinished">錯誤: 舊式錢包只支援 "legacy", "p2sh-segwit", 和 "bech32" 這三種位址類型</translation>
-    </message>
-    <message>
         <source>Error: Unable to produce descriptors for this legacy wallet. Make sure to provide the wallet's passphrase if it is encrypted.</source>
         <translation type="unfinished">錯誤: 無法為該舊式錢包產生描述符。 如果錢包已加密，請確保提供的錢包加密密碼正確。</translation>
     </message>
@@ -4117,14 +4067,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">沒有提供轉儲文件。 要使用 dump ，必須提供 -dumpfile=&lt;filename&gt;。</translation>
     </message>
     <message>
-        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
-        <translation type="unfinished">沒有提供錢包格式。 要使用 createfromdump ，必須提供 -format=&lt;format&gt;</translation>
-    </message>
-    <message>
-        <source>Option '-upnp' is set but UPnP support was dropped in version 29.0. Consider using '-natpmp' instead.</source>
-        <translation type="unfinished">选项‘-upnp’已设置，但UPnP支持在29.0版本中已被移除。建议改用‘-natpmp’选项。</translation>
-    </message>
-    <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation type="unfinished">如果你覺得 %s 有用，可以幫助我們。關於這個軟體的更多資訊請見 %s。</translation>
     </message>
@@ -4134,19 +4076,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
-        <translation type="unfinished">修剪模式與 -reindex-chainstate 不相容。 請進行一次完整的 -reindex 。</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">修剪模式：錢包的最後同步狀態是在被修剪掉的區塊資料中。你需要用 -reindex 參數執行(會重新下載整個區塊鏈)</translation>
+        <translation type="unfinished">修剪模式与 -reindex-chainstate 不兼容。请进行一次完整的 -reindex 。</translation>
     </message>
     <message>
         <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
         <translation type="unfinished">重命名 '%s' -&gt; '%s' 失敗。 您需要手動移除或刪除無效的快照目錄 %s來解決這個問題，不然的話您就會在下一次啟動時遇到相同的錯誤。</translation>
-    </message>
-    <message>
-        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
-        <translation type="unfinished">SQLiteDatabase: SQLite錢包schema版本%d未知。 只支持%d版本</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4155,10 +4089,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">扣除手續費後的交易金額太少而不能傳送</translation>
-    </message>
-    <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">如果未完全關閉該錢包，並且最後一次使用具有較新版本的Berkeley DB的構建載入了此錢包，則可能會發生此錯誤。如果是這樣，請使用最後載入該錢包的軟體</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -4185,28 +4115,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">沒辦法重算區塊。你需要先用 -reindex-chainstate 參數來重建資料庫。</translation>
     </message>
     <message>
-        <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
-        <translation type="unfinished">提供了未知的錢包格式 "%s" 。請使用 "bdb" 或 "sqlite" 中的一種。</translation>
-    </message>
-    <message>
         <source>Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %3$s. Valid loglevels: %4$s.</source>
         <translation type="unfinished">不支援的類別限定日誌等級 %1$s=%2$s 。 预期参数 %1$s=&lt;category&gt;:&lt;loglevel&gt;。 有效的類別: %3$s 。有效的日誌等級: %4$s 。</translation>
     </message>
     <message>
         <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
         <translation type="unfinished">找到了不受支援的 chainstate 資料庫格式。 請使用 -reindex-chainstate 參數重新啟動。 這將會重建 chainstate 資料庫。</translation>
-    </message>
-    <message>
-        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
-        <translation type="unfinished">錢包創建成功。 舊式錢包已被棄用，未來將不再支援創建或打開舊式錢包。</translation>
-    </message>
-    <message>
-        <source>Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet.</source>
-        <translation type="unfinished">錢包加載成功。 舊式錢包已被棄用，未來將不再支援創建或打開舊式錢包。 可以使用 migratewallet 指令將舊式錢包遷移至輸出描述符錢包。</translation>
-    </message>
-    <message>
-        <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
-        <translation type="unfinished">警告: 轉儲文件的錢包格式 "%s" 與命令列指定的格式 "%s" 不符。</translation>
     </message>
     <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
@@ -4277,10 +4191,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">錯誤：錢包中的交易%s無法被辨識為屬於遷移後的錢包</translation>
     </message>
     <message>
-        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
-        <translation type="unfinished">計算追加手續費失敗，因為未確認UTXO依賴了大量未確認交易的簇集。</translation>
-    </message>
-    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">無法重新命名無效的 peers.dat 檔案。 請移動或刪除它，然後重試。</translation>
     </message>
@@ -4290,11 +4200,23 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
-        <translation type="unfinished">互不相容的選項：-dnsseed=1 已被明確指定，但 -onlynet 禁止了IPv4/IPv6 連接</translation>
+        <translation type="unfinished">互不兼容的选项：-dnsseed=1 已被显式指定，但 -onlynet 禁止了IPv4/IPv6 连接</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
-        <translation type="unfinished">%s=&lt;amount&gt;: '%s' 中指定了非法的金額 (手續費必須至少達到最小轉送費率(minrelay fee) %s 以避免交易卡著發不出去)</translation>
+        <translation type="unfinished">%s=&lt;amount&gt;: '%s' 中指定了非法的金额 (手续费必须至少达到最小转发费率(minrelay fee) %s 以避免交易卡着发不出去)</translation>
+    </message>
+    <message>
+        <source>Option '-checkpoints' is set but checkpoints were removed. This option has no effect.</source>
+        <translation type="unfinished">选项“-checkpoints”已设置，但检查点已被移除。该选项不再生效。 </translation>
+    </message>
+    <message>
+        <source>Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration.</source>
+        <translation type="unfinished">选项“-maxorphantx”已设置，但已不再生效（参见发行说明）。请从您的配置中移除该选项。 </translation>
+    </message>
+    <message>
+        <source>Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.</source>
+        <translation type="unfinished">选项“-datacarrier”或“-datacarriersize”已设置，但已标记为弃用。它们将在未来版本中移除。 </translation>
     </message>
     <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
@@ -4313,16 +4235,16 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">Outbound連線被限制為僅使用I2P (-onlynet=i2p) ，但卻未提供 -i2psam 參數。</translation>
     </message>
     <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)</source>
+        <translation type="unfinished">修剪：上次钱包同步超出了已修剪的数据范围。您需要执行“-reindex”（对于已修剪节点，需要重新下载整个区块链）。 </translation>
+    </message>
+    <message>
         <source>The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
         <translation type="unfinished">輸入大小超出了最大重量。 請嘗試減少發出的金額，或手動整合錢包UTXO</translation>
     </message>
     <message>
         <source>The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually</source>
         <translation type="unfinished">預先選擇的幣總金額不能覆蓋交易目標。 請允許自動選擇其他輸入，或手動加入更多的幣</translation>
-    </message>
-    <message>
-        <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
-        <translation type="unfinished">交易要求一個非零值目標，或是非零值手續費率，或是預先選取的輸入。</translation>
     </message>
     <message>
         <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>
@@ -4343,18 +4265,6 @@ The wallet might have been tampered with or created with malicious intent.
 </translation>
     </message>
     <message>
-        <source>Unrecognized descriptor found. Loading wallet %s
-
-The wallet might had been created on a newer version.
-Please try running the latest software version.
-</source>
-        <translation type="unfinished">找到無法辨識的輸出描述符。 加載錢包%s
-
-錢包可能由新版軟體創建，
-請嘗試執行最新的軟體版本。
-</translation>
-    </message>
-    <message>
         <source>
 Unable to cleanup failed migration</source>
         <translation type="unfinished">
@@ -4367,12 +4277,24 @@ Unable to restore backup of wallet.</source>
 無法還原錢包備份</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">默认钱包</translation>
+    </message>
+    <message>
+        <source>-paytxfee is deprecated and will be fully removed in v31.0.</source>
+        <translation type="unfinished">“-paytxfee”已弃用，并将在 v31.0 中完全移除。 </translation>
+    </message>
+    <message>
         <source>A fatal internal error occurred, see debug.log for details: </source>
         <translation type="unfinished">發生致命的內部錯誤，有關詳情請查看 debug.log：</translation>
     </message>
     <message>
         <source>Block verification was interrupted</source>
         <translation type="unfinished">區塊驗證已中斷</translation>
+    </message>
+    <message>
+        <source>Cannot add WalletDescriptor to a non-descriptor wallet</source>
+        <translation type="unfinished">无法将钱包描述符添加到非描述符钱包。</translation>
     </message>
     <message>
         <source>Cannot write to directory '%s'; check permissions.</source>
@@ -4395,8 +4317,16 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">找不到asmap 檔案 %s</translation>
     </message>
     <message>
+        <source>Could not generate scriptPubKeys (cache is empty)</source>
+        <translation type="unfinished">无法生成脚本公钥（缓存为空）</translation>
+    </message>
+    <message>
         <source>Could not parse asmap file %s</source>
         <translation type="unfinished">無法解析asmap文件%s</translation>
+    </message>
+    <message>
+        <source>Could not top up scriptPubKeys</source>
+        <translation type="unfinished">无法补充脚本公钥</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
@@ -4417,10 +4347,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">初始化區塊資料庫時發生錯誤</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">初始化錢包資料庫環境 %s 時發生錯誤！</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -4507,6 +4433,14 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">錯誤: 沒有可用的 %s 地址</translation>
     </message>
     <message>
+        <source>Error: Not all address book records were migrated</source>
+        <translation type="unfinished">错误：并非所有地址簿记录都已迁移</translation>
+    </message>
+    <message>
+        <source>Error: Not all transaction records were migrated</source>
+        <translation type="unfinished">错误：并非所有交易记录都已迁移</translation>
+    </message>
+    <message>
         <source>Error: This wallet already uses SQLite</source>
         <translation type="unfinished">錯誤：此錢包已經在使用SQLite</translation>
     </message>
@@ -4559,6 +4493,18 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">错误: 钱包%s的数据库事务无法被执行</translation>
     </message>
     <message>
+        <source>Failed to acquire rescan reserver during wallet initialization</source>
+        <translation type="unfinished">在钱包初始化期间未能获取重扫预留器</translation>
+    </message>
+    <message>
+        <source>Failed to close block undo file.</source>
+        <translation type="unfinished">关闭区块撤销文件失败。</translation>
+    </message>
+    <message>
+        <source>Failed to close file when writing block.</source>
+        <translation type="unfinished">写入区块时关闭文件失败。</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">在任意的通訊埠聽候失敗。如果你希望這樣的話，可以設定 -listen=0.</translation>
     </message>
@@ -4569,10 +4515,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation type="unfinished">初始化時重新掃描錢包失敗了</translation>
-    </message>
-    <message>
-        <source>Failed to start indexes, shutting down..</source>
-        <translation type="unfinished">無法啟動索引，關閉中...</translation>
     </message>
     <message>
         <source>Failed to verify database</source>
@@ -4593,10 +4535,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
         <translation type="unfinished">手續費費率(%s) 低於最低費率設置（%s)</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">匯入中...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -4653,10 +4591,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Invalid port specified in %s: '%s'</source>
         <translation type="unfinished">%s指定了無效的連接埠號: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid pre-selected input %s</source>
-        <translation type="unfinished">無效的預先選擇輸入%s</translation>
     </message>
     <message>
         <source>Listening for incoming connections failed (listen returned error %s)</source>
@@ -4835,14 +4769,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">無法為外部輸入找到UTXO</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">無法產生初始的密鑰</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">沒辦法產生密鑰</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">無法開啟%s來寫入</translation>
     </message>
@@ -4853,10 +4779,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">無法啟動 HTTP 伺服器。詳情請看除錯紀錄。</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">在遷移前無法卸載錢包</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
@@ -4895,6 +4817,34 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">不支援的紀錄類別 %s=%s。</translation>
     </message>
     <message>
+        <source>Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC).</source>
+        <translation type="unfinished">加载 %s时出错：钱包为传统钱包。请使用迁移工具（migratewallet RPC）迁移到描述符钱包。</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile specifies an unsupported database format (%s). Only sqlite database dumps are supported</source>
+        <translation type="unfinished">错误：转储文件指定了不受支持的数据库格式 %s。仅支持 sqlite 数据库转储。</translation>
+    </message>
+    <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">由于未确认的 UTXO 依赖于庞大的未确认交易集群，无法计算提高手续费。</translation>
+    </message>
+    <message>
+        <source>Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input</source>
+        <translation type="unfinished">交易需要至少满足以下之一：一个非零金额的收款地址、非零费率，或预先选择的输入。</translation>
+    </message>
+    <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might have been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">发现无法识别的描述符。正在加载钱包 %s 
+
+该钱包可能是在较新版本中创建的。 
+请尝试运行最新的软件版本。
+</translation>
+    </message>
+    <message>
         <source>Do you want to rebuild the databases now?</source>
         <translation type="unfinished">你想现在重建数据库吗？</translation>
     </message>
@@ -4915,8 +4865,20 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">错误：无法删除遗留钱包的记录。</translation>
     </message>
     <message>
+        <source>Failed to start indexes, shutting down…</source>
+        <translation type="unfinished">索引启动失败，正在关闭……</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname, ends with '=': '%s'</source>
+        <translation type="unfinished">无效的 -proxy 地址或主机名，以“=”结尾：“%s”。</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available. %d available, %d required.</source>
         <translation type="unfinished">没有足够的文件描述符可用。%d可用，%d需要。</translation>
+    </message>
+    <message>
+        <source>Unrecognized network in -proxy='%s': '%s'</source>
+        <translation type="unfinished">无法识别 -proxy=“%s” 中的网络：“%s”。</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

@@ -14,16 +14,12 @@
         <translation type="unfinished">නව</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">තෝරාගෙන ඇති ලිපිනය පද්ධතියේ පසුරු පුවරුවට පිටපත් කරන්න</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">පිටපතක්</translation>
+        <translation type="unfinished">&amp;පිටපත්</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">වසන්න</translation>
+        <translation type="unfinished">වස&amp;න්න</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -637,7 +633,7 @@
     <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
-        <translation type="unfinished">පසුම්බිය බලන්න</translation>
+        <translation type="unfinished">පසුම්බිය විවෘත කරන්න</translation>
     </message>
     </context>
 <context>
@@ -731,7 +727,34 @@
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">අනුවාදය</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">%1 පිළිබඳව</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">සාදරයෙන් පිළිගනිමු</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">%1 වෙත සාදරයෙන් පිළිගනිමු.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">ගි.බ.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">පෙරනිමි දත්ත නාමාවලිය භාවිතා කරන්න</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">බිට්කොයින්</translation>
@@ -769,34 +792,7 @@
         <source>Error</source>
         <translation type="unfinished">දෝෂයකි</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">සාදරයෙන් පිළිගනිමු</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">%1 වෙත සාදරයෙන් පිළිගනිමු.</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">ගි.බ.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">පෙරනිමි දත්ත නාමාවලිය භාවිතා කරන්න</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">අනුවාදය</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">%1 පිළිබඳව</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1236,7 +1232,7 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation type="unfinished">&amp;නිර්යාතය</translation>
+        <translation type="unfinished">නිර්යාතය</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -1271,6 +1267,10 @@
         <translation type="unfinished">%s සංවර්ධකයින්</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">පෙරනිමි පසුම්බිය</translation>
+    </message>
+    <message>
         <source>Error creating %s</source>
         <translation type="unfinished">%s සෑදීමේ දෝෂයකි</translation>
     </message>
@@ -1281,10 +1281,6 @@
     <message>
         <source>Error: Unable to make a backup of your wallet</source>
         <translation type="unfinished">දෝෂය: ඔබගේ පසුම්බිය ප්‍රතිස්ථාපනය කල නොහැකි විය.</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">ආයාත වෙමින්…</translation>
     </message>
     <message>
         <source>Loading wallet…</source>

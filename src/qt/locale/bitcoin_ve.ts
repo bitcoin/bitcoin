@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Tshiswa</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopa ḓiresi yo khethiwaho zwa zwino kha bodo ya u ṅwala ya sisiṱeme .</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopa</translation>
     </message>

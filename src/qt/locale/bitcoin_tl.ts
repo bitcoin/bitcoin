@@ -14,10 +14,6 @@
         <translation type="unfinished">Panibago</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Gayahin ang pinipiling ♦address♦ sa kasalakuyan sa ♦clipboard♦ ng sistem</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">Gayahin</translation>
     </message>
@@ -575,10 +571,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Pagpapadalhan na mga ♦address♦</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;Pagtatanggapan na mga ♦address♦</translation>
-    </message>
-    <message>
         <source>Open a bitcoin: URI</source>
         <translation type="unfinished">Buksan ang ♦bitcoin: URI♦</translation>
     </message>
@@ -1091,7 +1083,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">bersyon</translation>
+    </message>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Huwag Patayin ang inyong kompyuter hanggang mawala ang window na ito.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Maligayang Pagdating</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">♦Bitcoin♦</translation>
@@ -1132,24 +1142,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">Nagkamali</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Maligayang Pagdating</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">bersyon</translation>
-    </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Huwag Patayin ang inyong kompyuter hanggang mawala ang window na ito.</translation>
     </message>
 </context>
 <context>
@@ -1448,6 +1440,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">pitaka na ♦default♦</translation>
+    </message>
     <message>
         <source>Settings file could not be read</source>
         <translation type="unfinished">Ang mga ♦setting file♦ ay hindi mabasa</translation>

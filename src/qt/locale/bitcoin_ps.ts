@@ -14,10 +14,6 @@
         <translation type="unfinished">او نوی</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">اوسنی ټاکل شوی پته د سیسټم کليپ بورډ ته کاپي کړئ</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">او کاپي</translation>
     </message>
@@ -282,7 +278,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Internal error</source>
         <translation type="unfinished">داخلي تېروتنه</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">یو داخلي تېروتنه رامنځته شوه %1به هڅه وکړي چې په خوندي توګه دوام وکړي. دا یوه ناپېژندل شوې تېروتنه ده چې کولای شي د لاندې په توګه راپور شي."
+
+
+
+
+
+
+.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -753,14 +760,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">د سرلیکونو مخکینی همغږي (%1%)…</translation>
-    </message>
-    <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">د والېټ جوړولو تېروتنه</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">"نوی والېټ نشي جوړولی، ځکه چې سافټویر پرته له د SQLite ملاتړ (چې د ډیسکرېپټر والېټونو لپاره اړین دی) جوړ شوی دی.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1289,7 +1288,78 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">نسخه</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">د %1 په اړه</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">قوماندې کرښې اختیارونه</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 بندېږي…</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">مه هېروئ چې کمپیوټر بند نه کړئ تر څو دا کړکۍ له منځه ولاړه شي</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">ښه راغلاست.</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">%1ښه راغلاست</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">لکه څنګه چې دا د پروګرام لومړی ځل دی چې چلیږي، تاسو کولی شئ غوره کړئ چې %1 به خپل ډاټا چیرته ذخیره کړي.</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">د بلاکچین ذخیره محدود کړئ</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">د دې تنظیم بدلول د ټول بلاکچین بیا ډاونلوډ کولو ته اړتیا لري. لومړی د بشپړ زنځیر ډاونلوډ کول او وروسته یې پرې کول ګړندي دي. ځینې پرمختللې ځانګړتیاوې غیر فعالوي</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">په پښتو کې د "ګیګابایټ" په توګه ژباړل کېږي که چېرې دا د ذخیرې واحد وي. که تاسو د بل څه لپاره غواړئ، نو مهرباني وکړئ وضاحت وکړئ. </translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">"دا ابتدايي همغږي ډيره درانه ده، او ممکن ستاسو د کمپیوټر د هارډویر ستونزې ښکاره کړي چې مخکې نه وې معلومې شوې.هر ځل چې تاسو چلوي %1, دا به چیرته چې یې پرېښودل وو، ډاونلوډ کول دوام ورکړي</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">کله چې تاسو OK کلیک کړئ, %1 
+"به د بشپړ ډاونلوډ او پروسس پیل کړي.%4بلاک چین%2 GB) د لومړیو معاملو سره پیل کول %3 کله %4 په لومړي سر کې پیل شو</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">که تاسو د بلاک‌چېن ذخیرې محدودولو (پرونینګ) انتخاب کړی وي تاریخي معلومات لاهم باید ډاونلوډ او پروسس شي، مګر وروسته به حذفشي ترڅو ستاسو د ډیسک کارونې اندازه کمه وساتل شي.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">د ډیفالټ ډیټا ډایرکټري وکاروئ</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">یو دودیز د معلوماتو ډایرکټري وکاروئ</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">ٹ کوائن</translation>
@@ -1350,77 +1420,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Error</source>
         <translation type="unfinished">تېروتنه</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">ښه راغلاست.</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">%1ښه راغلاست</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">لکه څنګه چې دا د پروګرام لومړی ځل دی چې چلیږي، تاسو کولی شئ غوره کړئ چې %1 به خپل ډاټا چیرته ذخیره کړي.</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">د بلاکچین ذخیره محدود کړئ</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">د دې تنظیم بدلول د ټول بلاکچین بیا ډاونلوډ کولو ته اړتیا لري. لومړی د بشپړ زنځیر ډاونلوډ کول او وروسته یې پرې کول ګړندي دي. ځینې پرمختللې ځانګړتیاوې غیر فعالوي</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">په پښتو کې د "ګیګابایټ" په توګه ژباړل کېږي که چېرې دا د ذخیرې واحد وي. که تاسو د بل څه لپاره غواړئ، نو مهرباني وکړئ وضاحت وکړئ. </translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">"دا ابتدايي همغږي ډيره درانه ده، او ممکن ستاسو د کمپیوټر د هارډویر ستونزې ښکاره کړي چې مخکې نه وې معلومې شوې.هر ځل چې تاسو چلوي %1, دا به چیرته چې یې پرېښودل وو، ډاونلوډ کول دوام ورکړي</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">کله چې تاسو OK کلیک کړئ, %1 
-"به د بشپړ ډاونلوډ او پروسس پیل کړي.%4بلاک چین%2 GB) د لومړیو معاملو سره پیل کول %3 کله %4 په لومړي سر کې پیل شو</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">که تاسو د بلاک‌چېن ذخیرې محدودولو (پرونینګ) انتخاب کړی وي تاریخي معلومات لاهم باید ډاونلوډ او پروسس شي، مګر وروسته به حذفشي ترڅو ستاسو د ډیسک کارونې اندازه کمه وساتل شي.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">د ډیفالټ ډیټا ډایرکټري وکاروئ</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">یو دودیز د معلوماتو ډایرکټري وکاروئ</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">نسخه</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">د %1 په اړه</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">قوماندې کرښې اختیارونه</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 بندېږي…</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">مه هېروئ چې کمپیوټر بند نه کړئ تر څو دا کړکۍ له منځه ولاړه شي</translation>
     </message>
 </context>
 <context>

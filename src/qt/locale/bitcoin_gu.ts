@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp; નવું</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">હાલમાં પસંદ કરેલા સરનામાંને સિસ્ટમ ક્લિપબોર્ડ પર નકલ કરો</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp; નકલ કરો</translation>
     </message>
@@ -819,14 +815,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">પ્રી-સિંકિંગ હેડર્સ (%1%)…</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">વૉલેટ બનાવવામાં ભૂલ</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">નવું વૉલેટ બનાવી શકાતું નથી, સૉફ્ટવેર sqlite સપોર્ટ વિના સંકલિત કરવામાં આવ્યું હતું (વર્ણનકર્તા વૉલેટ માટે જરૂરી)</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">ભૂલ: %1</translation>
     </message>
@@ -1357,7 +1345,77 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">આવૃત્તિ</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">વિશે%1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">કમાન્ડ-લાઇન વિકલ્પો</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1બંધ થઈ રહ્યું છે…</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">આ વિન્ડો અદૃશ્ય થઈ જાય ત્યાં સુધી કમ્પ્યુટરને બંધ કરશો નહીં.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">સ્વાગત છે</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">સ્વાગત છે %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">આ પ્રથમ વખત પ્રોગ્રામ લોન્ચ થયો હોવાથી, , તમે પસંદ કરી શકો છો કે %1 તેનો ડેટા ક્યાં સંગ્રહિત કરશે</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">બ્લોક ચેઇન સ્ટોરેજ સુધી મર્યાદિત કરો</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">આ સેટિંગને પાછું ફેરવવા માટે સમગ્ર બ્લોકચેનને ફરીથી ડાઉનલોડ કરવાની જરૂર છે. પહેલા સંપૂર્ણ શૃંખલાને ડાઉનલોડ કરવી અને પછીથી તેને કાપવું વધુ ઝડપી છે. કેટલીક અદ્યતન સુવિધાઓને અક્ષમ કરે છે.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">જીબી (GB)</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">આ પ્રારંભિક સિંક્રનાઇઝેશન ખૂબ જ માગણી કરે છે, અને તમારા કમ્પ્યુટર સાથેની હાર્ડવેર સમસ્યાઓનો પર્દાફાશ કરી શકે છે જે અગાઉ કોઈનું ધ્યાન ગયું ન હતું. દરેક વખતે જ્યારે તમે ચાલુ કરો %1, ત્યારે તે ડાઉનલોડ કરવાનું ચાલુ રાખશે જ્યાંથી તેણે છોડ્યું હતું.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">જ્યારે તમે ઓકે ક્લિક કરો છો,%1સંપૂર્ણ ડાઉનલોડ અને પ્રક્રિયા કરવાનું શરૂ કરશે%4બ્લોક ચેન (સાંકળ) (%2GB) માં સૌથી પહેલાના વ્યવહારોથી શરૂ થાય છે%3જ્યારે%4શરૂઆતમાં લોન્ચ કર્યું.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">જો તમે બ્લોક ચેઈન સ્ટોરેજ (કાપણી)ને મર્યાદિત કરવાનું પસંદ કર્યું હોય, તો ઐતિહાસિક ડેટા હજુ પણ ડાઉનલોડ અને પ્રોસેસ થવો જોઈએ, પરંતુ તમારા ડિસ્ક વપરાશને ઓછો રાખવા માટે પછીથી કાઢી નાખવામાં આવશે.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">ડિફૉલ્ટ ડેટા ડિરેક્ટરીનો ઉપયોગ કરો</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">કસ્ટમ ડેટા ડિરેક્ટરીનો ઉપયોગ કરો:</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">બીટકોઈન </translation>
@@ -1418,76 +1476,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Error</source>
         <translation type="unfinished">ભૂલ</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">સ્વાગત છે</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">સ્વાગત છે %1.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">આ પ્રથમ વખત પ્રોગ્રામ લોન્ચ થયો હોવાથી, , તમે પસંદ કરી શકો છો કે %1 તેનો ડેટા ક્યાં સંગ્રહિત કરશે</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">બ્લોક ચેઇન સ્ટોરેજ સુધી મર્યાદિત કરો</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">આ સેટિંગને પાછું ફેરવવા માટે સમગ્ર બ્લોકચેનને ફરીથી ડાઉનલોડ કરવાની જરૂર છે. પહેલા સંપૂર્ણ શૃંખલાને ડાઉનલોડ કરવી અને પછીથી તેને કાપવું વધુ ઝડપી છે. કેટલીક અદ્યતન સુવિધાઓને અક્ષમ કરે છે.</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">જીબી (GB)</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">આ પ્રારંભિક સિંક્રનાઇઝેશન ખૂબ જ માગણી કરે છે, અને તમારા કમ્પ્યુટર સાથેની હાર્ડવેર સમસ્યાઓનો પર્દાફાશ કરી શકે છે જે અગાઉ કોઈનું ધ્યાન ગયું ન હતું. દરેક વખતે જ્યારે તમે ચાલુ કરો %1, ત્યારે તે ડાઉનલોડ કરવાનું ચાલુ રાખશે જ્યાંથી તેણે છોડ્યું હતું.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">જ્યારે તમે ઓકે ક્લિક કરો છો,%1સંપૂર્ણ ડાઉનલોડ અને પ્રક્રિયા કરવાનું શરૂ કરશે%4બ્લોક ચેન (સાંકળ) (%2GB) માં સૌથી પહેલાના વ્યવહારોથી શરૂ થાય છે%3જ્યારે%4શરૂઆતમાં લોન્ચ કર્યું.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">જો તમે બ્લોક ચેઈન સ્ટોરેજ (કાપણી)ને મર્યાદિત કરવાનું પસંદ કર્યું હોય, તો ઐતિહાસિક ડેટા હજુ પણ ડાઉનલોડ અને પ્રોસેસ થવો જોઈએ, પરંતુ તમારા ડિસ્ક વપરાશને ઓછો રાખવા માટે પછીથી કાઢી નાખવામાં આવશે.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">ડિફૉલ્ટ ડેટા ડિરેક્ટરીનો ઉપયોગ કરો</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">કસ્ટમ ડેટા ડિરેક્ટરીનો ઉપયોગ કરો:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">આવૃત્તિ</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">વિશે%1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">કમાન્ડ-લાઇન વિકલ્પો</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1બંધ થઈ રહ્યું છે…</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">આ વિન્ડો અદૃશ્ય થઈ જાય ત્યાં સુધી કમ્પ્યુટરને બંધ કરશો નહીં.</translation>
     </message>
 </context>
 <context>
@@ -1904,10 +1892,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">પ્રદર્શિત માહિતી જૂની હોઈ શકે છે. કનેક્શન સ્થાપિત થયા પછી તમારું વૉલેટ આપમેળે બિટકોઇન નેટવર્ક સાથે સિંક્રનાઇઝ થાય છે, પરંતુ આ પ્રક્રિયા હજી પૂર્ણ થઈ નથી.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">માત્ર જોવા માટે:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">ઉપલબ્ધ:</translation>
     </message>
@@ -1944,28 +1928,8 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">તમારું વર્તમાન કુલ બેલેન્સ</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">ફક્ત જોવા માટેના સરનામામાં તમારું વર્તમાન બેલેન્સ</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">ખર્ચપાત્ર:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">તાજેતરના વ્યવહારો</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">માત્ર જોવા માટેના સરનામાંઓ પર અપ્રમાણિત વ્યવહારો</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">માત્ર વોચ-ઓન્લી એડ્રેસમાં માઇન કરેલ બેલેન્સ કે જે હજુ પરિપક્વ નથી</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">માત્ર જોવા માટેના સરનામામાં વર્તમાન કુલ બેલેન્સ</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
@@ -3099,4 +3063,11 @@ For more information on using this console, type %6.
         <translation type="unfinished">રદ કરો</translation>
     </message>
 </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">મૂળભૂત વૉલેટ</translation>
+    </message>
+    </context>
 </TS>

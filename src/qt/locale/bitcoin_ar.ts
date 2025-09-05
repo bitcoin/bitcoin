@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished"> انقر بزر الماوس الأيمن لتعديل العنوان أو التسمية</translation>
+        <translation type="unfinished"> انقر زر الماوس الأيمن لتعديل العنوان أو المسمي</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -14,16 +14,29 @@
         <translation type="unfinished"> &amp;جديد</translation>
     </message>
     <message>
-        <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished"> احذف العنوان المحدد حاليًا من القائمة</translation>
+        <source>Enter address or label to search</source>
+        <translation type="unfinished">أدخل عنوانا أو مذكرة للبحث</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation type="unfinished"> أدخل العنوان أو التسمية للبحث</translation>
+        <source>Copy the currently selected address to the clipboard</source>
+        <translation type="unfinished">آدرس انتخاب شده فعلی را در کلیپ بورد کپی کنید</translation>
+    </message>
+    <message>
+        <source>&amp;Delete</source>
+        <translation type="unfinished">حذف</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation type="unfinished">هذه هي العناوين الخاصة بها بك. استخدم زر "إنشاء عنوان استقبال جديد" في علامة استلام البريد الإلكتروني عناوين جديدة.التوقيع ممكن فقط مع عناوين نوع "إرث" .</translation>
     </message>
     </context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">Active </translation>
+    </message>
     <message>
         <source>Back</source>
         <translation type="unfinished">رجوع</translation>
@@ -637,11 +650,11 @@
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">‫&amp;انسخ العنوان‬</translation>
+        <translation type="unfinished">‫&amp;نسخ العنوان‬</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">‫نسخ &amp;مذكرة‬</translation>
+        <translation type="unfinished">‫نسخ &amp;اضافة مذكرة‬</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
@@ -677,7 +690,7 @@
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">‫نسخ الفكة‬</translation>
+        <translation type="unfinished">نسخ التعديل</translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -726,12 +739,40 @@
     </message>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">افتح المحفظة</translation>
+    </message>
+    </context>
+<context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">اغلق المحفظة</translation>
+    </message>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation type="unfinished">هل أنت متأكد من رغبتك في إغلاق المحفظة &lt;i&gt;%1&lt;/i&gt;؟ </translation>
     </message>
     </context>
+<context>
+    <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation type="unfinished">إنشاء محفظة</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation type="unfinished">إسم المحفظة</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation type="unfinished">مجمعة بدون دعم توقيع خارجي (مطلوب للتوقيع الخارجي)</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message numerus="yes">
@@ -779,6 +820,17 @@
             <numerusform>(sufficient to restore backups %n day(s) old)</numerusform>
         </translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">خطأ</translation>
+    </message>
+</context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">نمودج</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -821,6 +873,62 @@
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation type="unfinished">‫العودة الى هذا الاعداد تتطلب إعادة تنزيل الطوابق المتتالية بالكامل.‬</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation type="unfinished">‫ميجابايت‬</translation>
+    </message>
+    <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation type="unfinished">‫(0 = تلقائي, &lt;0 = لترك أنوية حرة بقدر الرقم السالب)‬</translation>
+    </message>
+    <message>
+        <source>Enable R&amp;PC server</source>
+        <extracomment>An Options window setting to enable the RPC server.</extracomment>
+        <translation type="unfinished">‫تفعيل خادم نداء &amp;الاجراء البعيد (RPC)‬</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation type="unfinished">‫م&amp;حفظة‬</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">‫تعيين خيار خصم الرسوم من القيمة كخيار افتراضي أم لا.‬</translation>
+    </message>
+    <message>
+        <source>Subtract &amp;fee from amount by default</source>
+        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">‫اخصم &amp;الرسوم من القيمة بشكل افتراضي‬</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation type="unfinished">‫خبير‬</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation type="unfinished">‫تفعيل ميزة &amp;التحكم بوحدات البتكوين‬</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation type="unfinished">‫اذا قمت بتعطيل خيار الانفاق من الفكة الغير مؤكدة، لن يكون بمقدورك التحكم بتلك الفكة حتى تنْفُذ العملية وتحصل على تأكيد واحد على الأقل. هذا أيضا يؤثر على كيفية حساب رصيدك.‬</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation type="unfinished">‫&amp;دفع الفكة غير المؤكدة‬</translation>
+    </message>
+    <message>
+        <source>Enable &amp;PSBT controls</source>
+        <extracomment>An options window setting to enable PSBT controls.</extracomment>
+        <translation type="unfinished">‫تفعيل التحكم ب &amp;المعاملات الموقعة جزئيا‬</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">‫جهاز التوقيع الخارجي (مثل المحفظة الخارجية)‬</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation type="unfinished">&amp; مسار البرنامج النصي للموقّع الخارجي</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1012,10 +1120,6 @@
         <translation type="unfinished">قد تكون المعلومات المعروضة قديمة. تتزامن محفظتك تلقائيًا مع شبكة البتكوين بعد إنشاء الاتصال، ولكن هذه العملية لم تكتمل بعد.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">‫مراقبة فقط:‬</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">‫متاح:‬</translation>
     </message>
@@ -1052,28 +1156,8 @@
         <translation type="unfinished">رصيدك الكلي الحالي</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">‫رصيد عناوين المراقبة‬</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">قابل للصرف:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">العمليات الأخيرة</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">‫عمليات غير مؤكدة لعناوين المراقبة‬</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">‫الرصيد المعدّن في عناوين المراقبة الذي لم ينضج بعد‬</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">‫الرصيد الإجمالي الحالي في عناوين المراقبة‬</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
@@ -1084,11 +1168,11 @@
     <name>PSBTOperationsDialog</name>
     <message>
         <source>Sign Tx</source>
-        <translation type="unfinished">‫توقيع العملية‬</translation>
+        <translation type="unfinished">تسجيل Tx</translation>
     </message>
     <message>
         <source>Broadcast Tx</source>
-        <translation type="unfinished">‫بث العملية‬</translation>
+        <translation type="unfinished">بث TX</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
@@ -1096,7 +1180,7 @@
     </message>
     <message>
         <source>Save…</source>
-        <translation type="unfinished">‫حفظ…‬</translation>
+        <translation type="unfinished">حفظ ...</translation>
     </message>
     <message>
         <source>Close</source>
@@ -1104,15 +1188,11 @@
     </message>
     <message>
         <source>Failed to load transaction: %1</source>
-        <translation type="unfinished">‫فشل تحميل العملية: %1‬</translation>
+        <translation type="unfinished">فشل تحميل المعاملة: %1</translation>
     </message>
     <message>
         <source>Failed to sign transaction: %1</source>
         <translation type="unfinished">فشل توقيع المعاملة: %1</translation>
-    </message>
-    <message>
-        <source>Cannot sign inputs while wallet is locked.</source>
-        <translation type="unfinished">‫لا يمكن توقيع المدخلات والمحفظة مقفلة.‬</translation>
     </message>
     <message>
         <source>Could not sign any more inputs.</source>
@@ -1120,31 +1200,31 @@
     </message>
     <message>
         <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">‫تم توقيع %1 مدخلات، مطلوب توقيعات اضافية.‬</translation>
+        <translation type="unfinished">تم توقيع %1 إدخالات، ولكن لا تزال هناك حاجة إلى المزيد من التوقيعات.</translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation type="unfinished">‫تم توقيع المعاملة بنجاح. العملية جاهزة للبث.‬</translation>
+        <translation type="unfinished">تم توقيع المعاملة بنجاح. المعاملة جاهزة للبث.</translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
-        <translation type="unfinished">‫خطأ غير معروف في معالجة العملية.‬</translation>
+        <translation type="unfinished">خطأ غير معروف في معالجة المعاملة.</translation>
     </message>
     <message>
         <source>Transaction broadcast successfully! Transaction ID: %1</source>
-        <translation type="unfinished">‫تم بث العملية بنجاح! معرّف العملية: %1‬</translation>
+        <translation type="unfinished">تم بث المعاملة بنجاح! معرّف المعاملة: %1</translation>
     </message>
     <message>
         <source>Transaction broadcast failed: %1</source>
-        <translation type="unfinished">‫فشل بث العملية: %1‬</translation>
+        <translation type="unfinished">فشل بث المعاملة: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
-        <translation type="unfinished">‫نسخ المعاملة الموقعة جزئيا إلى الحافظة.‬</translation>
+        <translation type="unfinished">نسخ PSBT إلى الحافظة.</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">حفظ بيانات العملية</translation>
+        <translation type="unfinished">حفظ بيانات المعاملات</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (Binary)</source>
@@ -1153,7 +1233,7 @@
     </message>
     <message>
         <source>PSBT saved to disk.</source>
-        <translation type="unfinished">‫تم حفظ المعاملة الموقعة جزئيا على وحدة التخزين.‬</translation>
+        <translation type="unfinished">تم حفظ PSBT على القرص.</translation>
     </message>
     <message>
         <source>own address</source>
@@ -1276,11 +1356,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">النوع</translation>
     </message>
     <message>
-        <source>Network</source>
-        <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
-        <translation type="unfinished">الشبكة</translation>
-    </message>
-    <message>
         <source>Inbound</source>
         <extracomment>An Inbound Connection from a Peer.</extracomment>
         <translation type="unfinished">‫وارد‬</translation>
@@ -1359,7 +1434,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>Copy change</source>
-        <translation type="unfinished">‫نسخ الفكة‬</translation>
+        <translation type="unfinished">نسخ التعديل</translation>
     </message>
     <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -1398,6 +1473,13 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">(بدون وسم)</translation>
     </message>
 </context>
+<context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>Copy the current signature to the clipboard</source>
+        <translation type="unfinished">امضای فعلی را در کلیپ بورد کپی کنید</translation>
+    </message>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message>
@@ -1442,6 +1524,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">‫نسخ &amp;القيمة‬</translation>
     </message>
     <message>
+        <source>Confirmed</source>
+        <translation type="unfinished">‫نافذ‬</translation>
+    </message>
+    <message>
         <source>Type</source>
         <translation type="unfinished">النوع</translation>
     </message>
@@ -1459,10 +1545,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </context>
 <context>
     <name>WalletView</name>
-    <message>
-        <source>&amp;Export</source>
-        <translation type="unfinished">و إستخرج</translation>
-    </message>
     <message>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
@@ -1488,8 +1570,48 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">أكثر من عنوان مربوط بالonion مقدم. استخدام %s من أجل خدمة تور (Tor) المنشأة تلقائيا.</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">نمی‌توان قفلی روی دایرکتوری %s ایجاد کرد. احتمالاً %s از قبل در حال اجرا است</translation>
+    </message>
+    <message>
         <source>Maximum transaction weight is too low, can not accommodate change output</source>
         <translation type="unfinished">الحد الأقصى لوزن المعاملة منخفض جدًا، ولا يمكنه استيعاب مخرجات التغيير</translation>
+    </message>
+    <message>
+        <source>Option '-checkpoints' is set but checkpoints were removed. This option has no effect.</source>
+        <translation type="unfinished">گزینه «-checkpoints» تنظیم شده است اما Checkpointها حذف شده‌اند. این گزینه هیچ تاثیری ندارد.</translation>
+    </message>
+    <message>
+        <source>Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration.</source>
+        <translation type="unfinished">maxorphantx' گزینه تنظیم شده است اما دیگر هیچ تاثیری ندارد (به یادداشت‌های انتشار مراجعه کنید). لطفاً آن را از پیکربندی خود حذف کنید.</translation>
+    </message>
+    <message>
+        <source>Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.</source>
+        <translation type="unfinished">گزینه‌های '-datacarrier' یا '-datacarriersize' تنظیم شده‌اند اما به عنوان منسوخ علامت‌گذاری شده‌اند. آن‌ها در نسخه‌های آینده حذف خواهند شد.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)</source>
+        <translation type="unfinished">الو: آخرینکیف پولهمگام‌سازی فراتر از هر استداده‌هاتو باید -فهرست‌بندی مجدد(دانلودکلبلاکچیندوباره در هرس شدن)</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">‫محفظة افتراضية‬</translation>
+    </message>
+    <message>
+        <source>-paytxfee is deprecated and will be fully removed in v31.0.</source>
+        <translation type="unfinished">-paytxfee منسوخ شده و در نسخه 31.0 به طور کامل حذف خواهد شد.</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation type="unfinished">يتم تطبيق إعداد التكوين لـ%s فقط على شبكة %s في قسم [%s].</translation>
+    </message>
+    <message>
+        <source>Copyright (C) %i-%i</source>
+        <translation type="unfinished">حقوق الطبع والنشر (C) %i-%i</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation type="unfinished">‫تحذير: مساحة التخزين منخفضة!‬</translation>
     </message>
     <message>
         <source>Error loading databases</source>
@@ -1498,6 +1620,14 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Error opening coins database</source>
         <translation type="unfinished">خطأ فتح قاعدة بيانات العملات المعدنية</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation type="unfinished">‫خطأ في القراءة من قاعدة البيانات ، يجري التوقف.‬</translation>
+    </message>
+    <message>
+        <source>Error reading next record from wallet database</source>
+        <translation type="unfinished">خطأ قراءة السجل التالي من قاعدة بيانات المحفظة</translation>
     </message>
     <message>
         <source>The transactions removal process can only be executed within a db txn</source>

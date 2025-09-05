@@ -383,7 +383,37 @@
     </message>
     </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">Um %1</translation>
+    </message>
+    </context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 letur aftur...</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Vælkomin</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Vælkomin til %1.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Hendan innleiðandi stevjavningin er sera krevjandi, og kann avdúka trupulleikar, við tólbúnaðinum í teldu tíni, ið tú annars ikki hevur varnast. %1 heldur á fram at takað niður, hvørja ferð %1 verður koyrt.</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -421,37 +451,7 @@
         <source>Error</source>
         <translation type="unfinished">Villa</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Vælkomin</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Vælkomin til %1.</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">GB</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Hendan innleiðandi stevjavningin er sera krevjandi, og kann avdúka trupulleikar, við tólbúnaðinum í teldu tíni, ið tú annars ikki hevur varnast. %1 heldur á fram at takað niður, hvørja ferð %1 verður koyrt.</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">Um %1</translation>
-    </message>
-    </context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 letur aftur...</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>

@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Novo</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopiraj trenutno izbrani naslov v odložišče</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopiraj</translation>
     </message>
@@ -777,14 +773,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Predsinhronizacija zaglavij (%1 %)...</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Napaka pri ustvarjanju denarnice</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Ne morem ustvariti nove datoteke. Programska oprema je bila prevedena brez podpore za sqlite, ki je potrebna za denarnice z deskriptorji.</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Napaka: %1</translation>
     </message>
@@ -935,10 +923,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Potrjeno</translation>
     </message>
     <message>
-        <source>Copy amount</source>
-        <translation type="unfinished">Kopiraj znesek</translation>
-    </message>
-    <message>
         <source>&amp;Copy address</source>
         <translation type="unfinished">&amp;Kopiraj naslov</translation>
     </message>
@@ -981,10 +965,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Copy change</source>
         <translation type="unfinished">Kopiraj vračilo</translation>
-    </message>
-    <message>
-        <source>(%1 locked)</source>
-        <translation type="unfinished">(%1 zaklenjeno)</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -1295,7 +1275,73 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">različica</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">O %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Možnosti ukazne vrstice</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 se zaustavlja...</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Ne zaustavljajte računalnika, dokler to okno ne izgine.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Dobrodošli</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Dobrodošli v %1</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">Ker ste program zagnali prvič, lahko izberete, kje bo %1 shranil podatke.</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">Omeji velikost shrambe verige blokov na </translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Če spremenite to nastavitev, boste morali ponovno naložiti celotno verigo blokov. Hitreje je najprej prenesti celotno verigo in jo obrezati pozneje. Ta nastavitev onemogoči nekatere napredne funkcije.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Začetna sinhronizacija je zelo zahtevna in lahko odkrije probleme s strojno opremo v vašem računalniku, ki so prej bili neopaženi. Vsakič, ko zaženete %1, bo le-ta nadaljeval s prenosom, kjer je prejšnjič ostal.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Ko kliknete OK, bo %1 pričel prenašati in obdelovati celotno verigo blokov %4 (%2 GB), začenši s prvimi transakcijami iz %3, ko je bil %4 zagnan.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">Če ste se odločili omejiti shranjevanje blokovnih verig (obrezovanje), je treba zgodovinske podatke še vedno prenesti in obdelati, vendar bodo kasneje izbrisani, da bo poraba prostora nizka.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Uporabi privzeto podatkovno mapo</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Uporabi to podatkovno mapo:</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1360,72 +1406,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Error</source>
         <translation type="unfinished">Napaka</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Dobrodošli</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Dobrodošli v %1</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Ker ste program zagnali prvič, lahko izberete, kje bo %1 shranil podatke.</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">Omeji velikost shrambe verige blokov na </translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Če spremenite to nastavitev, boste morali ponovno naložiti celotno verigo blokov. Hitreje je najprej prenesti celotno verigo in jo obrezati pozneje. Ta nastavitev onemogoči nekatere napredne funkcije.</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Začetna sinhronizacija je zelo zahtevna in lahko odkrije probleme s strojno opremo v vašem računalniku, ki so prej bili neopaženi. Vsakič, ko zaženete %1, bo le-ta nadaljeval s prenosom, kjer je prejšnjič ostal.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">Ko kliknete OK, bo %1 pričel prenašati in obdelovati celotno verigo blokov %4 (%2 GB), začenši s prvimi transakcijami iz %3, ko je bil %4 zagnan.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Če ste se odločili omejiti shranjevanje blokovnih verig (obrezovanje), je treba zgodovinske podatke še vedno prenesti in obdelati, vendar bodo kasneje izbrisani, da bo poraba prostora nizka.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Uporabi privzeto podatkovno mapo</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Uporabi to podatkovno mapo:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">različica</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">O %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Možnosti ukazne vrstice</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 se zaustavlja...</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Ne zaustavljajte računalnika, dokler to okno ne izgine.</translation>
     </message>
 </context>
 <context>
@@ -1847,10 +1827,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Prikazani podatki so morda zastareli. Program ob vzpostavitvi povezave samodejno sinhronizira denarnico z omrežjem Bitcoin, a trenutno ta postopek še ni zaključen.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Opazovano:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">Na voljo:</translation>
     </message>
@@ -1887,28 +1863,8 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Trenutno skupno dobroimetje</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Trenutno dobroimetje sredstev na opazovanih naslovih</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">Na voljo za pošiljanje:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">Zadnje transakcije</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Nepotrjene transakcije na opazovanih naslovih</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Nedozorelo narudarjeno dobroimetje na opazovanih naslovih</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Trenutno skupno dobroimetje na opazovanih naslovih</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
@@ -3157,10 +3113,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Potrdi pošiljanje</translation>
     </message>
     <message>
-        <source>Watch-only balance:</source>
-        <translation type="unfinished">Opazovano dobroimetje:</translation>
-    </message>
-    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation type="unfinished">Naslov prejemnika je neveljaven. Prosimo, preverite.</translation>
     </message>
@@ -3317,10 +3269,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
     <message>
         <source>Signature</source>
         <translation type="unfinished">Podpis</translation>
-    </message>
-    <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Kopirj trenutni podpis v sistemsko odložišče.</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -3499,10 +3447,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">lasten naslov</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">opazovan</translation>
-    </message>
-    <message>
         <source>label</source>
         <translation type="unfinished">oznaka</translation>
     </message>
@@ -3670,10 +3614,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Narudarjeno</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">opazovan</translation>
-    </message>
-    <message>
         <source>(n/a)</source>
         <translation type="unfinished">(ni na voljo)</translation>
     </message>
@@ -3692,10 +3632,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
     <message>
         <source>Type of transaction.</source>
         <translation type="unfinished">Vrsta transakcije</translation>
-    </message>
-    <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished">Ali je v transakciji udeležen opazovan naslov.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
@@ -3817,10 +3753,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">Potrjeno</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">Opazovano</translation>
     </message>
     <message>
         <source>Date</source>
@@ -4013,18 +3945,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">Razvijalci %s</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s je okvarjena. Lahko jo poskusite popraviti z orodjem bitcoin-wallet ali pa jo obnovite iz varnostne kopije.</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
-        <translation type="unfinished">Različice denarnice ne morem znižati z %i na %i. Različica denarnice ostaja nespremenjena.</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
-        <translation type="unfinished">Ne morem nadgraditi nerazcepljene ne-HD denarnice z verzije %i na verzijo %i brez nadgradnje za podporo za ključe pred razcepitvijo. Prosim, uporabite verzijo %i ali pa ne izberite nobene verzije.</translation>
-    </message>
-    <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
         <translation type="unfinished">Prostor na disku za %s bo morda premajhen za datoteke z bloki. V tem direktoriju bo shranjenih približno %u GB podatkov.</translation>
     </message>
@@ -4047,10 +3967,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
     <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
         <translation type="unfinished">Napaka: verzija izvozne (dump) datoteke ni podprta. Ta verzija ukaza bitcoin-wallet podpira le izvozne datoteke verzije 1, ta datoteka pa ima verzijo %s.</translation>
-    </message>
-    <message>
-        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
-        <translation type="unfinished">Napaka: podedovane denarnice podpirajo le naslove vrst "legacy", "p2sh-segwit" in "bech32".</translation>
     </message>
     <message>
         <source>Error: Unable to produce descriptors for this legacy wallet. Make sure to provide the wallet's passphrase if it is encrypted.</source>
@@ -4077,10 +3993,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">Potrebno je določiti izvozno (dump) datoteko. Z ukazom dump morate uporabiti možnost -dumpfile=&lt;filename&gt;.</translation>
     </message>
     <message>
-        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
-        <translation type="unfinished">Potrebno je določiti obliko izvozne (dump) datoteke. Z ukazom createfromdump morate uporabiti možnost -format=&lt;format&gt;.</translation>
-    </message>
-    <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation type="unfinished">Prosimo, prispevajte, če se vam zdi %s uporaben. Za dodatne informacije o programski opremi obiščite %s.</translation>
     </message>
@@ -4093,10 +4005,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">Način obrezovanja ni združljiv z možnostjo -reindex-chainstate. Namesto tega uporabite polni -reindex.</translation>
     </message>
     <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Obrezovanje: zadnja sinhronizacija denarnice je izven obrezanih podatkov. Izvesti morate -reindex (v primeru obrezanega načina delovanja bo potrebno znova prenesti celotno verigo blokov).</translation>
-    </message>
-    <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation type="unfinished">Baza SQLite: Neznana verzija sheme SQLite denarnice %d. Podprta je le verzija %d.</translation>
     </message>
@@ -4107,10 +4015,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">Znesek transakcije po odbitku provizije je premajhen za pošiljanje.</translation>
-    </message>
-    <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">Ta napaka se lahko pojavi, če denarnica ni bila pravilno zaprta in je bila nazadnje naložena s programsko opremo z novejšo verzijo Berkely DB. Če je temu tako, prosimo uporabite programsko opremo, s katero je bila ta denarnica nazadnje naložena.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -4137,20 +4041,8 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">Ne morem ponovno obdelati blokov. Podatkovno bazo boste morali ponovno zgraditi z uporabo ukaza -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
-        <translation type="unfinished">Nastavljena je neznana oblika datoteke denarnice "%s". Prosimo, uporabite "bdb" ali "sqlite".</translation>
-    </message>
-    <message>
         <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
         <translation type="unfinished">Podatkovna baza stanja verige (chainstate) je v formatu, ki ni podprt. Prosimo, ponovno zaženite program z možnostjo -reindex-chainstate. S tem bo baza stanja verige zgrajena ponovno.</translation>
-    </message>
-    <message>
-        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
-        <translation type="unfinished">Denarnica uspešno ustvarjena. Podedovani tip denarnice je zastarel in v opuščanju. Podpora za tvorbo in odpiranje denarnic podedovanega tipa bo v prihodnosti odstranjena.</translation>
-    </message>
-    <message>
-        <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
-        <translation type="unfinished">Opozorilo: oblika izvozne (dump) datoteke "%s" ne ustreza obliki "%s", izbrani v ukazni vrstici.</translation>
     </message>
     <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
@@ -4229,6 +4121,10 @@ Unable to restore backup of wallet.</source>
 Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">privzeta denarnica</translation>
+    </message>
+    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">Konfiguracijske nastavitve za %s se na omrežju %s upoštevajo le, če so zapisane v odseku [%s].</translation>
     </message>
@@ -4269,10 +4165,6 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
         <translation type="unfinished">Napaka pri inicializaciji podatkovne baze blokov</translation>
     </message>
     <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Napaka pri inicializaciji okolja podatkovne baze denarnice %s!</translation>
-    </message>
-    <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Napaka pri nalaganju %s</translation>
     </message>
@@ -4298,7 +4190,7 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     </message>
     <message>
         <source>Error reading configuration file: %s</source>
-        <translation type="unfinished">Napaka pri branju nastavitvene datoteke: %s</translation>
+        <translation type="unfinished">Napaka pri branju nastavitvene datoteke: 1%s</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -4395,10 +4287,6 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     <message>
         <source>Ignoring duplicate -wallet %s.</source>
         <translation type="unfinished">Podvojen -wallet %s -- ne upoštevam.</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">Uvažam ...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -4613,14 +4501,6 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
         <translation type="unfinished">Ne najdem UTXO-ja za zunanji vhod</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Ne morem ustvariti začetnih ključev</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Ne morem ustvariti ključev</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">Ne morem odpreti %s za pisanje</translation>
     </message>
@@ -4631,10 +4511,6 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Zagon HTTP strežnika neuspešen. Poglejte razhroščevalni dnevnik za podrobnosti (debug.log).</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">Zapiranje denarnice pred migracijo ni uspelo</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
