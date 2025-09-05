@@ -119,6 +119,11 @@ static inline path operator+(path p1, const char* p2)
     p1 += p2;
     return p1;
 }
+static inline path operator+(path p1, std::string_view p2)
+{
+    p1 += p2;
+    return p1;
+}
 static inline path operator+(path p1, path::value_type p2)
 {
     p1 += p2;
