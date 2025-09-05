@@ -62,6 +62,7 @@ public:
     void Serialize(Stream& s) const
     {
         // Use vector serialization for convenient compact size prefix.
+        // Note that the `xor.dat` file uses array serialization instead.
         std::vector<std::byte> bytes{KEY_SIZE};
         std::memcpy(bytes.data(), &m_rotations[0], KEY_SIZE);
         s << bytes;
