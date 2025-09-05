@@ -199,7 +199,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # Make sure that the size of each group of transactions exceeds
         # MAX_BLOCK_WEIGHT // 4 -- otherwise the test needs to be revised to
         # create more transactions.
-        mempool = self.nodes[0].getrawmempool(True)
+        mempool = self.nodes[0].getrawmempool(verbose=True)
         sizes = [0, 0, 0]
         for i in range(3):
             for j in txids[i]:

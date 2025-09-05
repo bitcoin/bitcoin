@@ -597,7 +597,7 @@ def find_vout_for_address(node, txid, addr):
     Locate the vout index of the given transaction sending to the
     given address. Raises runtime error exception if not found.
     """
-    tx = node.getrawtransaction(txid, True)
+    tx = node.getrawtransaction(txid, 1)
     for i in range(len(tx["vout"])):
         if addr == tx["vout"][i]["scriptPubKey"]["address"]:
             return i

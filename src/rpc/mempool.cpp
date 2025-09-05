@@ -899,7 +899,7 @@ static RPCHelpMan getorphantxs()
             PeerManager& peerman = EnsurePeerman(node);
             std::vector<node::TxOrphanage::OrphanInfo> orphanage = peerman.GetOrphanTransactions();
 
-            int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0, /*allow_bool*/false)};
+            int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0)};
 
             UniValue ret(UniValue::VARR);
 

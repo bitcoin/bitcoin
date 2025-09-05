@@ -213,6 +213,7 @@ BASE_SCRIPTS = [
     'rpc_blockchain.py --v2transport',
     'mining_template_verification.py',
     'rpc_deprecated.py',
+    'rpc_boolverbose_deprecated.py',
     'wallet_disable.py',
     'wallet_change_address.py',
     'p2p_addr_relay.py',
