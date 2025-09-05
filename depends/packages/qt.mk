@@ -278,7 +278,7 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  cmake --install . --prefix $($(package)_staging_prefix_dir)
+  cmake --install . --prefix $($(package)_staging_prefix_dir) --strip
 endef
 
 define $(package)_postprocess_cmds
