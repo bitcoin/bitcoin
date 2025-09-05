@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;ניי</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">קאָפּיע די איצט אויסגעקליבענע אַדרעס צו די סיסטעם קליפּבאָרד</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;קאַפּי</translation>
     </message>
@@ -537,14 +533,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Unrecognized descriptor found. Loading wallet %s
-
-The wallet might had been created on a newer version.
-Please try running the latest software version.
-</source>
-        <translation type="unfinished">אונטערגעריפענע דעזקריפּטאָר געפונען. לאודינג וואָלעט 1%s דער וואָלעט קען געווען געמאכט אויף אַן נײַער ווערסיע. ביטע פּרוּוון אראפקומען דעם לעצטן סאָפטווער ווערסיע.</translation>
-    </message>
-    <message>
         <source>Your computer's date and time appear to be more than %d minutes out of sync with the network, this may lead to consensus failure. After you've confirmed your computer's clock, this message should no longer appear when you restart your node. Without a restart, it should stop showing automatically after you've connected to a sufficient number of new outbound peers, which may take some time. You can inspect the `timeoffset` field of the `getpeerinfo` and `getnetworkinfo` RPC methods to get more info.</source>
         <translation type="unfinished"> די דאט און צייט פון אייער קאמפיוטער זענען מסתבר מער ווי %d מינוט ארויס פון טעמפו מיטן נעצווערק, וואס קען פירן צו א פאל פון קאנצעסוס. נאך וואס איר האט באשטעטיקט די קלאק פון אייער קאמפיוטער, זאָל דער היינטיקער מעלדונג נישט מער אויסקומען ווען איר רעבוטן אייער נוד. אן א רעבוט, וועט עס אָפּשטיין אוטאָמאַטיש נאך וואס איר וועט זיך פאַרבינדן מיט גענוג ניי אאוטבאונד פיערס, וואס קען נעמען א ביסל צייט. איר קענען אָפּשאַצן דעם timeoffset פעלד פון די getpeerinfo און getnetworkinfo RPC מעטאדן פאר מער אינפֿאָרמאַציע.</translation>
     </message>
@@ -621,10 +609,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">אַראָר אין אריינשאַפֿן בלאָק דאַטאַבאַזע</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">עראר בײַ איניציאליזירן דעם וואַלט דאַטאַבאַסע אויסשטעלונג 1%s!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -771,10 +755,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">עס איז נישט gelungen צו צוריקסקאנן דעם וואָלאַט בעת איניציאַליזאַציע</translation>
     </message>
     <message>
-        <source>Failed to start indexes, shutting down..</source>
-        <translation type="unfinished">האָבן נישט געקענט אָפֿן אינדעקסן, דערפאר שטעלט זיך אַראָפּ..</translation>
-    </message>
-    <message>
         <source>Failed to verify database</source>
         <translation type="unfinished">פֿעלן צו פאַראַוואָרטן די דאַטאַבאַזע</translation>
     </message>
@@ -805,10 +785,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Ignoring duplicate -wallet %s.</source>
         <translation type="unfinished">ניט באַמערקן דופליקאַט -וואָלעט 1%s.</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">אימפּאָרטירן...</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -865,10 +841,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Invalid port specified in %s: '%s'</source>
         <translation type="unfinished">יערור פּאָרט פארמאַטער אין 1%s: '1%s'</translation>
-    </message>
-    <message>
-        <source>Invalid pre-selected input %s</source>
-        <translation type="unfinished">ניט געלטיק פּרע-געקליבן אַרײַן 1%s</translation>
     </message>
     <message>
         <source>Listening for incoming connections failed (listen returned error %s)</source>
@@ -1095,14 +1067,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">ניטאָ ביכולת צו געפֿינען UTXO פֿאַר אַן אַרויסווייַז אַריינשרייַבן.</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">ניט אפשריק צו générירן אָרײַנקע לאַרגעלע</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">נישט אפשר צו שאַפֿן שליסלען</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">קענט ניט עפענען 1%s פֿאַר געשריבן</translation>
     </message>
@@ -1113,10 +1077,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">קענט נישט אָנהייבן HTTP סערווער. זען דיבאג לאָג פֿאַר דעטאַילס.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">נישט אפשר צו אויסלאָדן דעם וואַלעט ווען קודם פּונקטירן</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

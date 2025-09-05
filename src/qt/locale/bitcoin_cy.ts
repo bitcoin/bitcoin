@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Newydd</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copio'r cyfeiriad sydd wedi'i ddewis i'r clipfwrdd system</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Copïo</translation>
     </message>
@@ -769,14 +765,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Cyn-syncronïo Penawdau (%1%)…</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Gwall wrth greu waled</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Ni all greu waled newydd, cafodd y meddalwedd ei gyfansoddi heb gefnogaeth sqlite (anghenion ar gyfer waledi disgrifiwr)</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished"> Gwall: %1</translation>
     </message>
@@ -1206,7 +1194,18 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Dewisiadau llinell orchymyn</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Croeso</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1275,17 +1274,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Error</source>
         <translation type="unfinished">Gwall</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Croeso</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Dewisiadau llinell orchymyn</translation>
     </message>
 </context>
 <context>
@@ -1880,14 +1868,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
         <translation type="unfinished">Methu dod o hyd i UTXO ar gyfer mewnbwn allanol</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Methu cynhyrchu allweddi cychwynnol</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Methu cynhyrchu allweddi</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">Methu agor%sar gyfer ysgrifennu</translation>
     </message>
@@ -1898,10 +1878,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Methu cychwyn gweinydd HTTP. Gweler y log dadfygio am fanylion.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">Methu dadlwytho'r waled cyn mudo</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

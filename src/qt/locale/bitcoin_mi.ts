@@ -15,10 +15,6 @@ Right-click to edit address or label</translation>
         <translation type="unfinished">&amp;Hou</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Whakakopi te whiriwhiri i te wāhitau kua whiriwhirihia ki te papatohu rorohiko</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kape</translation>
     </message>
@@ -492,10 +488,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">Kua whakapātaitia te pōti korewhiwhi i roto i %s: '%s'</translation>
     </message>
     <message>
-        <source>Invalid pre-selected input %s</source>
-        <translation type="unfinished">Kāore i te tika te kōwhiri i tātari i te urupare %s</translation>
-    </message>
-    <message>
         <source>Listening for incoming connections failed (listen returned error %s)</source>
         <translation type="unfinished">Whakararuraru ana te whakarongo i ngā hononga e haere mai ana (kua whakahokia te hapa %s)</translation>
     </message>
@@ -648,14 +640,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">Kāore i te kite i te UTXO mō te whakauru ā-waho</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Kāore e taea te whakaputa i ngā kī tīmatanga</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Kāore e taea te whakaputa i ngā kī</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">Kāore e taea te whakatuwhera i %s hei tuhi</translation>
     </message>
@@ -666,10 +650,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Kāore e taea te whakahohe i te tūmau HTTP. Tirohia te rārangi whakararuraru mō ngā whakamārama.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">Kāore e taea te whakakore i te whareparakore i mua i te whakawhiti.</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

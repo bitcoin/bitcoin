@@ -2,7 +2,6 @@ set(ts_files
   bitcoin_am.ts
   bitcoin_ar.ts
   bitcoin_ast_ES.ts
-  bitcoin_ay.ts
   bitcoin_az.ts
   bitcoin_az@latin.ts
   bitcoin_be.ts
@@ -29,11 +28,9 @@ set(ts_files
   bitcoin_fr.ts
   bitcoin_ga.ts
   bitcoin_ga_IE.ts
-  bitcoin_gd.ts
   bitcoin_gl.ts
   bitcoin_gl_ES.ts
   bitcoin_gu.ts
-  bitcoin_ha.ts
   bitcoin_hak.ts
   bitcoin_he.ts
   bitcoin_hi.ts
@@ -46,33 +43,23 @@ set(ts_files
   bitcoin_ka.ts
   bitcoin_kk.ts
   bitcoin_kk@latin.ts
-  bitcoin_kl.ts
   bitcoin_km.ts
   bitcoin_kn.ts
   bitcoin_ko.ts
   bitcoin_ku.ts
   bitcoin_ku_IQ.ts
-  bitcoin_ky.ts
-  bitcoin_la.ts
-  bitcoin_lb.ts
   bitcoin_lt.ts
   bitcoin_lv.ts
-  bitcoin_mg.ts
   bitcoin_mi.ts
   bitcoin_mk.ts
   bitcoin_ml.ts
   bitcoin_mn.ts
-  bitcoin_mr.ts
-  bitcoin_mr_IN.ts
   bitcoin_ms.ts
   bitcoin_mt.ts
-  bitcoin_my.ts
   bitcoin_nb.ts
   bitcoin_ne.ts
   bitcoin_nl.ts
   bitcoin_no.ts
-  bitcoin_or.ts
-  bitcoin_pa.ts
   bitcoin_pam.ts
   bitcoin_pl.ts
   bitcoin_ps.ts
@@ -80,15 +67,10 @@ set(ts_files
   bitcoin_pt_BR.ts
   bitcoin_ro.ts
   bitcoin_ru.ts
-  bitcoin_sa.ts
-  bitcoin_sc.ts
-  bitcoin_sd.ts
   bitcoin_si.ts
   bitcoin_sk.ts
   bitcoin_sl.ts
   bitcoin_sm.ts
-  bitcoin_sn.ts
-  bitcoin_so.ts
   bitcoin_sq.ts
   bitcoin_sr.ts
   bitcoin_sr@ijekavianlatin.ts
@@ -101,25 +83,18 @@ set(ts_files
   bitcoin_th.ts
   bitcoin_tk.ts
   bitcoin_tl.ts
-  bitcoin_tn.ts
   bitcoin_tr.ts
-  bitcoin_tt.ts
-  bitcoin_ug.ts
   bitcoin_uk.ts
   bitcoin_ur.ts
   bitcoin_uz.ts
   bitcoin_uz@Cyrl.ts
   bitcoin_uz@Latn.ts
   bitcoin_ve.ts
-  bitcoin_vi.ts
   bitcoin_yi.ts
-  bitcoin_yo.ts
   bitcoin_yue.ts
   bitcoin_zh-Hans.ts
   bitcoin_zh-Hant.ts
-  bitcoin_zh.ts
   bitcoin_zh_CN.ts
   bitcoin_zh_HK.ts
   bitcoin_zh_TW.ts
-  bitcoin_zu.ts
 )

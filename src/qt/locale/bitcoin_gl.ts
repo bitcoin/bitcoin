@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Novo</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copiar o enderezo seleccionado ao cartafol</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Copiar</translation>
     </message>
@@ -963,7 +959,34 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">versión</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Opcións da liña de comandos</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Benvido</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Benvido a %1.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Empregar o directorio de datos por defecto</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Empregar un directorio de datos personalizado</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -996,33 +1019,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     <message>
         <source>Error</source>
         <translation type="unfinished">Erro</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Benvido</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Benvido a %1.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Empregar o directorio de datos por defecto</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Empregar un directorio de datos personalizado</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">versión</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Opcións da liña de comandos</translation>
     </message>
 </context>
 <context>
@@ -1624,10 +1620,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <translation type="unfinished">Sinatura</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Copiar a sinatura actual ao portapapeis do sistema</translation>
-    </message>
-    <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
         <translation type="unfinished">Asina a mensaxe para probar que posúes este enderezo Bitcoin</translation>
     </message>
@@ -2058,6 +2050,10 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
         <translation type="unfinished">Precaución: Non parece que esteamos totalmente de acordo cos nosos pares! Pode que precises actualizar, ou outros nodos poden precisar actualizarse.</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">moedeiro por defecto</translation>
+    </message>
+    <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">Detectada base de datos de bloques corrupta.</translation>
     </message>
@@ -2068,10 +2064,6 @@ Firmar é posible unicamente con enderezos de tipo 'legacy'.</translation>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Erro inicializando a base de datos de bloques</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Erro inicializando entorno de base de datos de moedeiro %s!</translation>
     </message>
     <message>
         <source>Error loading block database</source>

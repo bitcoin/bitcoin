@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;క్రొత్త</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">ప్రస్తుతం ఎంచుకున్న చిరునామాను సిస్టం క్లిప్ బోర్డుకు కాపీ చేయండి</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;కాపి</translation>
     </message>
@@ -1228,7 +1224,61 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">సంస్కరణ</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">గురించి %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">కమాండ్ లైన్ ఎంపికలు</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 షట్ డౌన్ అవుతోంది…</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">ఈ విండో అదృశ్యమయ్యే వరకు కంప్యూటర్‌ను ఆపివేయవద్దు.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">స్వాగతం</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">%1 కు స్వాగతం</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">ప్రోగ్రామ్ ప్రారంభించబడటం ఇదే మొదటిసారి కాబట్టి, %1 దాని డేటాను ఎక్కడ నిల్వ చేయాలో మీరు ఎంచుకోవచ్చు.</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">బ్లాక్ చైన్ నిల్వను పరిమితం చేయండి</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">డిఫాల్ట్ డేటా డైరెక్టరీని ఉపయోగించండి</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">అనుకూల డేటా డైరెక్టరీని ఉపయోగించండి:</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">బిట్కోయిన్</translation>
@@ -1285,60 +1335,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">లోపం</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">స్వాగతం</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">%1 కు స్వాగతం</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">ప్రోగ్రామ్ ప్రారంభించబడటం ఇదే మొదటిసారి కాబట్టి, %1 దాని డేటాను ఎక్కడ నిల్వ చేయాలో మీరు ఎంచుకోవచ్చు.</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">బ్లాక్ చైన్ నిల్వను పరిమితం చేయండి</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">GB</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">డిఫాల్ట్ డేటా డైరెక్టరీని ఉపయోగించండి</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">అనుకూల డేటా డైరెక్టరీని ఉపయోగించండి:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">సంస్కరణ</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">గురించి %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">కమాండ్ లైన్ ఎంపికలు</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 షట్ డౌన్ అవుతోంది…</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">ఈ విండో అదృశ్యమయ్యే వరకు కంప్యూటర్‌ను ఆపివేయవద్దు.</translation>
     </message>
 </context>
 <context>
@@ -1698,10 +1694,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ప్రదర్శించబడిన సమాచారం పాతది కావచ్చు. కనెక్షన్ స్థాపించబడిన తర్వాత మీ వాలెట్ స్వయంచాలకంగా బిట్‌కాయిన్ నెట్‌వర్క్‌తో సమకాలీకరించబడుతుంది, కానీ ఈ ప్రక్రియ ఇంకా పూర్తి కాలేదు.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">చూడటానికి మాత్రమే:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">అందుబాటులో ఉంది:</translation>
     </message>
@@ -1738,28 +1730,8 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">మీ ప్రస్తుత మొత్తం బ్యాలెన్స్</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">వీక్షణ-మాత్రమే చిరునామాలలో మీ ప్రస్తుత బ్యాలెన్స్</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">ఖర్చు చేయదగినది:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">ఇటీవలి లావాదేవీలు</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">వీక్షణ-మాత్రమే చిరునామాలకు ధృవీకరించబడని లావాదేవీలు</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">ఇంకా మెచ్యూర్ కాని వాచ్-ఓన్లీ అడ్రస్‌లలో మైన్ చేయబడిన బ్యాలెన్స్</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">వీక్షణ-మాత్రమే చిరునామాలలో ప్రస్తుత మొత్తం బ్యాలెన్స్</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
@@ -2516,6 +2488,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">-blockfilterindex లేకుండా -peerblockfilters సెట్ చేయలేము.</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">డిఫాల్ట్ వాలెట్</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation type="unfinished">డేటాబేస్ నుండి చదవడంలో లోపం, షట్ డౌన్.</translation>
     </message>
@@ -2612,14 +2588,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">బాహ్య ఇన్‌పుట్ కోసం UTXOని కనుగొనడం సాధ్యం కాలేదు</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">ప్రారంభ కీలను రూపొందించడం సాధ్యం కాలేదు</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">కీలను రూపొందించడం సాధ్యం కాలేదు</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">వ్రాయుటకు %s తెరవుట కుదరలేదు</translation>
     </message>
@@ -2630,10 +2598,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">HTTP సర్వర్‌ని ప్రారంభించడం సాధ్యం కాలేదు. వివరాల కోసం డీబగ్ లాగ్ చూడండి.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">తరలించడానికి ముందు వాలెట్‌ని అన్‌లోడ్ చేయడం సాధ్యపడలేదు</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

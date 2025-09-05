@@ -14,20 +14,16 @@
         <translation type="unfinished">&amp;নতুন</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">বর্তমানে নির্বাচিত ঠিকানাটি সিস্টেম ক্লিপবোর্ডে কপি করুন</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
-        <translation type="unfinished">&amp;কপি করুন</translation>
+        <translation type="unfinished">&amp;কপি</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">&amp;বন্ধ করুন</translation>
+        <translation type="unfinished">বন্ধ করুন</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation type="unfinished">বাছাইকৃত ঠিকানাটি লিস্ট থেকে &amp;মুছুন</translation>
+        <translation type="unfinished">বাছাইকৃত ঠিকানাটি লিস্ট থেকে মুছুন</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -56,7 +52,8 @@
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">পেমেন্ট পাওয়ার জন্য এটি আপনার বিটকয়েন ঠিকানা। নতুন ঠিকানা তৈরী করতে "নতুন গ্রহণের ঠিকানা তৈরী করুন" বোতাম ব্যবহার করুন। সাইন ইন করা শুধুমাত্র "উত্তরাধিকার" ঠিকানার মাধ্যমেই সম্ভব।</translation>
+        <translation type="unfinished">পেমেন্ট পাওয়ার জন্য এটি আপনার বিটকয়েন ঠিকানা। নতুন ঠিকানা তৈরী করতে "নতুন গ্রহণের ঠিকানা তৈরী করুন" বোতাম ব্যবহার করুন।
+সাইন ইন করা শুধুমাত্র "উত্তরাধিকার" ঠিকানার মাধ্যমেই সম্ভব।</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -349,6 +346,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ক্লিপবোর্ড থেকে আংশিক স্বাক্ষরিত বিটকয়েন লেনদেন লোড করুন</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation type="unfinished">ওয়ালেট খুলুন </translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation type="unfinished">একটি ওয়ালেট খুলুন</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">ওয়ালেট বন্ধ করুন</translation>
+    </message>
+    <message>
         <source>Restore Wallet…</source>
         <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
         <translation type="unfinished">ওয়ালেট পুনরুদ্ধার করুন</translation>
@@ -364,6 +373,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">ওভারভিউ ট্যাবে মানগুলি আড়াল করুন</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation type="unfinished">zoom</translation>
     </message>
     <message>
         <source>&amp;Hide</source>
@@ -399,14 +412,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">শিরোনাম সিঙ্ক করা হচ্ছে (%1%)...</translation>
-    </message>
-    <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">ওয়ালেট তৈরিতে ত্রুটি৷</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">নতুন ওয়ালেট তৈরি করা যায় না, সফ্টওয়্যারটি স্কলাইট সমর্থন ছাড়াই সংকলিত হয়েছিল (ডেসক্রিপ্টর ওয়ালেটের জন্য প্রয়োজনীয়)</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -460,7 +465,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">কপি লেবেল</translation>
+        <translation type="unfinished">কপি &amp;লেবেল</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
@@ -527,7 +532,19 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     </context>
 <context>
+    <name>OpenWalletActivity</name>
+    <message>
+        <source>Open Wallet</source>
+        <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
+        <translation type="unfinished">ওয়ালেট খুলুন </translation>
+    </message>
+    </context>
+<context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation type="unfinished">ওয়ালেট বন্ধ করুন</translation>
+    </message>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
         <translation type="unfinished">আপনি কি নিশ্চিত যে আপনি ওয়ালেট বন্ধ করতে চান&lt;i&gt;%1&lt;/i&gt;?</translation>
@@ -548,20 +565,12 @@ The migration process will create a backup of the wallet before migrating. This 
 <context>
     <name>CreateWalletDialog</name>
     <message>
-        <source>Create Wallet</source>
-        <translation type="unfinished">ওয়ালেট তৈরী করুন...</translation>
-    </message>
-    <message>
         <source>You are one step away from creating your new wallet!</source>
         <translation type="unfinished">আপনি আপনার নতুন ওয়ালেট তৈরি থেকে এক ধাপ দূরে!</translation>
     </message>
     <message>
         <source>Please provide a name and, if desired, enable any advanced options</source>
         <translation type="unfinished">অনুগ্রহ করে একটি নাম প্রদান করুন এবং, যদি ইচ্ছা হয়, কোনো উন্নত বিকল্প সক্রিয় করুন৷</translation>
-    </message>
-    <message>
-        <source>Wallet Name</source>
-        <translation type="unfinished">ওয়ালেটের নাম</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -736,6 +745,10 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">ঠিকানা কপি করুন</translation>
     </message>
     <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">কপি &amp;লেবেল</translation>
+    </message>
+    <message>
         <source>Copy &amp;amount</source>
         <translation type="unfinished">কপি পরিমাণ</translation>
     </message>
@@ -748,7 +761,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">টিকেট</translation>
+        <translation type="unfinished">লেবেল</translation>
     </message>
     </context>
 <context>
@@ -764,6 +777,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Change:</source>
         <translation type="unfinished">পরিবর্তন</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation type="unfinished">সম্পূর্ণ ফর্মটি ক্লিয়ার করুন</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -786,6 +803,14 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Date</source>
         <translation type="unfinished">তারিখ</translation>
     </message>
+    <message>
+        <source>From</source>
+        <translation type="unfinished">থেকে</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation type="unfinished">উদ্দেশ্যে</translation>
+    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -806,7 +831,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">টিকেট</translation>
+        <translation type="unfinished">লেবেল</translation>
     </message>
     </context>
 <context>
@@ -817,7 +842,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">কপি লেবেল</translation>
+        <translation type="unfinished">কপি &amp;লেবেল</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
@@ -833,10 +858,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">নিশ্চিত করা হয়েছে</translation>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">শুধুমাত্র দেখার জন্য</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation type="unfinished">তারিখ</translation>
     </message>
@@ -846,7 +867,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">টিকেট</translation>
+        <translation type="unfinished">লেবেল</translation>
     </message>
     <message>
         <source>Address</source>

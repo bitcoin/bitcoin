@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Ġdid</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Ikkopja l-indirizz magħżul bħalissa fil-clipboard tas-sistema</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopja</translation>
     </message>
@@ -913,7 +909,7 @@ L-iffirmar huwa possibbli biss b'indirizzi tat-tip 'legacy'.</translation>
         <source>Error</source>
         <translation type="unfinished">Żball</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1066,6 +1062,13 @@ L-iffirmar huwa possibbli biss b'indirizzi tat-tip 'legacy'.</translation>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">Dejta tal-Kartiera</translation>
+    </message>
+    </context>
+<context>
+    <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">kartiera default</translation>
     </message>
     </context>
 </TS>
