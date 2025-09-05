@@ -31,8 +31,14 @@ class PeerManager;
 namespace Consensus {
 struct LLMQParams;
 } // namespace Consensus
+
 namespace instantsend {
 class InstantSendSigner;
+
+struct PendingState {
+    bool m_pending_work{false};
+    std::vector<std::pair<NodeId, MessageProcessingResult>> m_peer_activity{};
+};
 } // namespace instantsend
 
 namespace llmq {
@@ -95,14 +101,16 @@ public:
     void InterruptWorkerThread() { workInterrupt(); };
 
 private:
-    bool ProcessPendingInstantSendLocks(PeerManager& peerman)
+    instantsend::PendingState ProcessPendingInstantSendLocks()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(
-        const Consensus::LLMQParams& llmq_params, PeerManager& peerman, int signOffset,
-        const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban)
+        const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
+        const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend,
+        std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
-    void ProcessInstantSendLock(NodeId from, PeerManager& peerman, const uint256& hash, const instantsend::InstantSendLockPtr& islock)
+    MessageProcessingResult ProcessInstantSendLock(NodeId from, const uint256& hash,
+                                                   const instantsend::InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined)
