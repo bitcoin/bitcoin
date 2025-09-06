@@ -357,6 +357,7 @@ BASE_SCRIPTS = [
     'rpc_mempool_info.py',
     'rpc_help.py',
     'tool_rpcauth.py',
+    'feature_opcat.py',
     'p2p_handshake.py',
     'p2p_handshake.py --v2transport',
     'feature_dirsymlinks.py',
