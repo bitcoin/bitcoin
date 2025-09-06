@@ -204,6 +204,11 @@ public:
      *  graph must not be oversized. If the graph is empty, {{}, FeePerWeight{}} is returned. */
     virtual std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept = 0;
 
+    /** Get the approximate memory usage for this object, just counting the main graph. If a
+     *  staging graph is present, return a number corresponding to memory usage after
+     *  AbortStaging() would be called. Can always be called. */
+    virtual size_t GetMainMemoryUsage() noexcept = 0;
+
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
 
