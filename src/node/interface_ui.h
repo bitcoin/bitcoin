@@ -102,6 +102,9 @@ public:
      */
     ADD_SIGNALS_DECL_WRAPPER(ShowProgress, void, const std::string& title, int nProgress, bool resume_possible);
 
+    /** Snapshot load progress. */
+    ADD_SIGNALS_DECL_WRAPPER(SnapshotLoadProgress, void, double progress);
+
     /** New block has been accepted */
     ADD_SIGNALS_DECL_WRAPPER(NotifyBlockTip, void, SynchronizationState, const CBlockIndex& block, double verification_progress);
 
