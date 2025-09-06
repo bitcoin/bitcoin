@@ -300,6 +300,7 @@ public:
 
     UniValue operator()(const CNoDestination& dest) const { return UniValue(UniValue::VOBJ); }
     UniValue operator()(const PubKeyDestination& dest) const { return UniValue(UniValue::VOBJ); }
+    UniValue operator()(const V0SilentPaymentDestination& dest) const { return UniValue(UniValue::VOBJ); }
 
     UniValue operator()(const PKHash& pkhash) const
     {

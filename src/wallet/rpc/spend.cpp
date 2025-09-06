@@ -168,6 +168,14 @@ static void PreventOutdatedOptions(const UniValue& options)
     }
 }
 
+static void IsSilentPaymentsEnabled(const CWallet &pwallet)
+{
+    if (pwallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || pwallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) ) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Silent payments require access to private keys to build transactions.");
+    }
+    EnsureWalletIsUnlocked(pwallet);
+}
+
 UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);
@@ -326,6 +334,11 @@ RPCHelpMan sendtoaddress()
     }
 
     std::vector<CRecipient> recipients{CreateRecipients(ParseOutputs(address_amounts), sffo_set)};
+    auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r.dest); });
+    if (it != recipients.end()) {
+        IsSilentPaymentsEnabled(*pwallet);
+        coin_control.m_silent_payment = true;
+    }
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
@@ -420,6 +433,11 @@ RPCHelpMan sendmany()
             ParseOutputs(sendTo),
             InterpretSubtractFeeFromOutputInstructions(request.params[4], sendTo.getKeys())
     );
+    auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r.dest); });
+    if (it != recipients.end()) {
+        IsSilentPaymentsEnabled(*pwallet);
+        coin_control.m_silent_payment = true;
+    }
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
@@ -1309,6 +1327,7 @@ RPCHelpMan send()
             PreventOutdatedOptions(options);
 
 
+            CCoinControl coin_control;
             bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
             UniValue outputs(UniValue::VOBJ);
             outputs = NormalizeOutputs(request.params[0]);
@@ -1316,8 +1335,12 @@ RPCHelpMan send()
                     ParseOutputs(outputs),
                     InterpretSubtractFeeFromOutputInstructions(options["subtract_fee_from_outputs"], outputs.getKeys())
             );
-            CCoinControl coin_control;
             coin_control.m_version = self.Arg<uint32_t>("version");
+            auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r.dest); });
+            if (it != recipients.end()) {
+                IsSilentPaymentsEnabled(*pwallet);
+                coin_control.m_silent_payment = true;
+            }
             CMutableTransaction rawTx = ConstructTransaction(options["inputs"], request.params[0], options["locktime"], rbf, coin_control.m_version);
             // Automatically select coins, unless at least one is manually selected. Can
             // be overridden by options.add_inputs.
@@ -1803,6 +1826,11 @@ RPCHelpMan walletcreatefundedpsbt()
             ParseOutputs(outputs),
             InterpretSubtractFeeFromOutputInstructions(options["subtractFeeFromOutputs"], outputs.getKeys())
     );
+    auto it = std::find_if(recipients.begin(), recipients.end(), [](const auto& r) { return std::holds_alternative<V0SilentPaymentDestination>(r.dest); });
+    if (it != recipients.end()) {
+        IsSilentPaymentsEnabled(*pwallet);
+        coin_control.m_silent_payment = true;
+    }
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
