@@ -215,7 +215,7 @@ jobs:
           arch: x64
 
       - name: Get tool information
-        shell: pwsh
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
           cmake -version | Tee-Object -FilePath "cmake_version"
           Write-Output "---"
@@ -370,14 +370,14 @@ jobs:
         run: ./bin/bitcoind.exe -version
 
       - name: Find mt.exe tool
-        shell: pwsh
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
           $sdk_dir = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots' -Name KitsRoot10).KitsRoot10
           $sdk_latest = (Get-ChildItem "$sdk_dir\bin" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
           "MT_EXE=${sdk_dir}bin\${sdk_latest}\x64\mt.exe" >> $env:GITHUB_ENV
 
       - name: Get bitcoind manifest
-        shell: pwsh
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
           & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -out:bitcoind.manifest
           Get-Content bitcoind.manifest
@@ -397,7 +397,7 @@ jobs:
         run: ./bin/bench_bitcoin.exe -sanity-check
 
       - name: Adjust paths in test/config.ini
-        shell: pwsh
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
           (Get-Content "test/config.ini") -replace '(?<=^SRCDIR=).*', '${{ github.workspace }}' -replace '(?<=^BUILDDIR=).*', '${{ github.workspace }}' -replace '(?<=^RPCAUTH=).*', '${{ github.workspace }}/share/rpcauth/rpcauth.py' | Set-Content "test/config.ini"
           Get-Content "test/config.ini"
