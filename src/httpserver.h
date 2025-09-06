@@ -5,6 +5,7 @@
 #ifndef BITCOIN_HTTPSERVER_H
 #define BITCOIN_HTTPSERVER_H
 
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <span>
@@ -72,10 +73,11 @@ class HTTPRequest
 private:
     struct evhttp_request* req;
     const util::SignalInterrupt& m_interrupt;
+    const uint32_t m_id;
     bool replySent;
 
 public:
-    explicit HTTPRequest(struct evhttp_request* req, const util::SignalInterrupt& interrupt, bool replySent = false);
+    explicit HTTPRequest(struct evhttp_request* req, const util::SignalInterrupt& interrupt, uint32_t id, bool replySent);
     ~HTTPRequest();
 
     enum RequestMethod {
