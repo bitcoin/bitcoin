@@ -266,7 +266,13 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
             return search->second.m_flags;
         }
     }
-    return std::nullopt;
+    return m_default_flags;
+}
+
+void ArgsManager::SetDefaultFlags(std::optional<unsigned int> flags)
+{
+    LOCK(cs_args);
+    m_default_flags = flags;
 }
 
 fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
@@ -308,6 +314,7 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
 {
     LOCK(cs_args);
     fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
+    std::cerr << "@@@@ Cached path '" << fs::PathToString(path) << "'\n";
 
     // Used cached path if available
     if (!path.empty()) return path;
@@ -316,17 +323,20 @@ fs::path ArgsManager::GetDataDir(bool net_specific) const
     if (!datadir.empty()) {
         path = fs::absolute(datadir);
         if (!fs::is_directory(path)) {
+            std::cerr << "@@@@ Not directory path '" << fs::PathToString(path) << "'\n";
             path = "";
             return path;
         }
     } else {
         path = GetDefaultDataDir();
+        std::cerr << "@@@@ Default directory path '" << fs::PathToString(path) << "'\n";
     }
 
     if (net_specific && !BaseParams().DataDir().empty()) {
         path /= fs::PathFromString(BaseParams().DataDir());
     }
 
+    std::cerr << "@@@@ Datadir path net=" << net_specific << " '" << fs::PathToString(path) << "'\n";
     return path;
 }
 

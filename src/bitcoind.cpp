@@ -29,6 +29,7 @@
 #include <util/translation.h>
 
 #include <any>
+#include <fstream>
 #include <functional>
 #include <optional>
 
@@ -132,11 +133,17 @@ static bool ParseArgs(NodeContext& node, int argc, char* argv[])
     return true;
 }
 
-static bool ProcessInitCommands(ArgsManager& args)
+static bool ProcessInitCommands(interfaces::Init& init, ArgsManager& args)
 {
+    std::cerr << "@@@@ bitcoind ProcessInitCommands\n";
     // Process help and version before taking care about datadir
     if (HelpRequested(args) || args.GetBoolArg("-version", false)) {
-        std::string strUsage = CLIENT_NAME " daemon version " + FormatFullVersion() + "\n";
+        std::string strUsage = CLIENT_NAME " daemon version " + FormatFullVersion();
+        if (const char* exe_name{init.exeName()}) {
+            strUsage += " ";
+            strUsage += exe_name;
+        }
+        strUsage += "\n";
 
         if (args.GetBoolArg("-version", false)) {
             strUsage += FormatParagraph(LicenseInfo());
@@ -153,6 +160,7 @@ static bool ProcessInitCommands(ArgsManager& args)
         }
 
         tfm::format(std::cout, "%s", strUsage);
+        tfm::format(std::cerr, "@@@@ USAGE %s", strUsage);
         return true;
     }
 
@@ -254,6 +262,31 @@ static bool AppInit(NodeContext& node)
 
 MAIN_FUNCTION
 {
+    std::optional<std::ofstream> out;
+    if (const char* path = std::getenv("DEBUG_FILE")) {
+        out.emplace(path, std::ios::app);
+        if (!*out) {
+            std::cerr << "Failed to open file: " << path << "\n";
+            out.reset();
+        }
+    }
+
+    if (out) *out << "@@@@ bitcoind main argc=" << argc << "\n";
+    std::cerr << "@@@@ bitcoind main argc=" << argc << "\n";
+    for(int i = 0; i < argc; ++i) {
+       if (out) *out << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
+       std::cerr << "@@@@ bitcoind main arg " <<  i << " = '" << argv[i] << "'\n";
+    }
+    out.reset();
+
+    if (const char* ret = std::getenv("DEBUG_RET")) {
+        int result;
+        auto [ptr, ec] = std::from_chars(ret, ret + std::strlen(ret), result);
+        (void)ptr;
+        (void)ec;
+        return result;
+    }
+
 #ifdef WIN32
     common::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();
@@ -277,7 +310,7 @@ MAIN_FUNCTION
     ArgsManager& args = *Assert(node.args);
     if (!ParseArgs(node, argc, argv)) return EXIT_FAILURE;
     // Process early info return commands such as -help or -version
-    if (ProcessInitCommands(args)) return EXIT_SUCCESS;
+    if (ProcessInitCommands(*init, args)) return EXIT_SUCCESS;
 
     // Start application
     if (!AppInit(node) || !Assert(node.shutdown_signal)->wait()) {

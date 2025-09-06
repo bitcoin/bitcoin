@@ -48,7 +48,7 @@ jobs:
   test-each-commit:
     name: 'test each commit'
     runs-on: ubuntu-24.04
-    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    if: false
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes. Assuming a worst case time of 1 hour per commit, this leads to a --max-count=6 below.
     env:
       MAX_COUNT: 6
@@ -112,7 +112,7 @@ jobs:
     # one for the branch push and one for the pull request.
     # This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
     # in Github repository settings.
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
 
     timeout-minutes: 120
 
@@ -195,14 +195,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job-type: [standard, fuzz]
+        job-type: [standard]
         include:
           - job-type: standard
-            generate-options: '-DBUILD_GUI=ON -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
-            job-name: 'Windows native, VS 2022'
-          - job-type: fuzz
-            generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
-            job-name: 'Windows native, fuzz, VS 2022'
+            generate-options: '-DBUILD_GUI=OFF -DWITH_ZMQ=ON -DBUILD_BENCH=ON -DWERROR=ON'
 
     steps:
       - name: Checkout
@@ -270,7 +266,7 @@ jobs:
           mt.exe -nologo -inputresource:bin/Release/bitcoind.exe -validate_manifest
 
       - name: Run test suite
-        if: matrix.job-type == 'standard'
+        if: false
         working-directory: build
         env:
           QT_PLUGIN_PATH: '${{ github.workspace }}\build\vcpkg_installed\x64-windows\Qt6\plugins'
@@ -288,7 +284,7 @@ jobs:
           BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
           BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
+        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA} tool_bitcoin.py
 
       - name: Clone corpora
         if: matrix.job-type == 'fuzz'
@@ -384,6 +380,7 @@ jobs:
           & $env:MT_EXE -nologo -inputresource:bin\bitcoind.exe -validate_manifest
 
       - name: Run unit tests
+        if: false
         # Can't use ctest here like other jobs as we don't have a CMake build tree.
         run: |
           ./bin/test_bitcoin.exe -l test_suite  # Intentionally run sequentially here, to catch test case failures caused by dirty global state from prior test cases.
@@ -394,6 +391,7 @@ jobs:
           ./src/univalue/unitester.exe
 
       - name: Run benchmarks
+        if: false
         run: ./bin/bench_bitcoin.exe -sanity-check
 
       - name: Adjust paths in test/config.ini
@@ -416,13 +414,13 @@ jobs:
           # feature_unsupported_utxo_db.py fails on windows because of emojis in the test data directory
           EXCLUDE: '--exclude wallet_multiwallet.py,feature_unsupported_utxo_db.py'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
-        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA
+        run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --tmpdirprefix="$RUNNER_TEMP" --combinedlogslen=99999999 --timeout-factor=$TEST_RUNNER_TIMEOUT_FACTOR $EXCLUDE $TEST_RUNNER_EXTRA tool_bitcoin.py
 
   ci-matrix:
     name: ${{ matrix.name }}
     needs: runners
     runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && matrix.cirrus-runner || matrix.fallback-runner }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
     timeout-minutes: ${{ matrix.timeout-minutes }}
 
     env:
@@ -536,7 +534,7 @@ jobs:
     name: 'lint'
     needs: runners
     runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
     timeout-minutes: 20
     env:
       CONTAINER_NAME: "bitcoin-linter"

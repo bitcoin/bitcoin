@@ -335,6 +335,7 @@ BASE_SCRIPTS = [
     'p2p_tx_privacy.py',
     'rpc_getdescriptoractivity.py',
     'rpc_scanblocks.py',
+    'tool_bitcoin.py',
     'p2p_sendtxrcncl.py',
     'rpc_scantxoutset.py',
     'feature_unsupported_utxo_db.py',
@@ -486,7 +487,7 @@ def main():
 
         def print_warning_missing_test(test_name):
             print("{}WARNING!{} Test '{}' not found in current test list. Check the --exclude list.".format(BOLD[1], BOLD[0], test_name))
-            if fail_on_warn:
+            if 0 and fail_on_warn:
                 sys.exit(1)
 
         def remove_tests(exclude_list):
@@ -665,6 +666,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     if not os.getenv("CI_FAILFAST_TEST_LEAVE_DANGLING") and len(job_queue.jobs):
         os.killpg(os.getpgid(0), signal.SIGKILL)
 
+    print(f"@@@@ {all_passed=!r}")
     sys.exit(not all_passed)
 
 

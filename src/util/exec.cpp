@@ -20,8 +20,15 @@
 namespace util {
 int ExecVp(const char* file, char* const argv[])
 {
+    int i = 0;
+    std::cerr <<"@@@@ ExecVp\n";
+    for (char* const* arg_ptr{argv}; *arg_ptr; ++arg_ptr) {
+        std::cerr <<"@@@@ ExecVp arg " << i << " '" << *arg_ptr << "'\n";
+        ++i;
+    }
+    int ret;
 #ifndef WIN32
-    return execvp(file, argv);
+    ret = execvp(file, argv);
 #else
     std::vector<std::wstring> escaped_args;
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
@@ -33,8 +40,10 @@ int ExecVp(const char* file, char* const argv[])
     new_argv.reserve(escaped_args.size() + 1);
     for (const auto& s : escaped_args) new_argv.push_back(s.c_str());
     new_argv.push_back(nullptr);
-    return _wexecvp(converter.from_bytes(file).c_str(), new_argv.data());
+    ret = _wexecvp(converter.from_bytes(file).c_str(), new_argv.data());
 #endif
+    std::cerr <<"@@@@ ExecVp ret = " << i << "\n";
+    return ret;
 }
 
 fs::path GetExePath(std::string_view argv0)
