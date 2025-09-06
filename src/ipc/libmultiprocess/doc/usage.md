@@ -19,6 +19,9 @@ A simple interface description can be found at [test/mp/test/foo.capnp](../test/
 A more complete example can be found in [example](../example/) and run with:
 
 ```sh
-make -C build example
-build/example/mpexample
+mkdir build
+cd build
+cmake ..
+make mpexamples
+example/mpexample
 ```

@@ -203,7 +203,7 @@ std::string ThreadName(const char* exe_name);
 
 //! Escape binary string for use in log so it doesn't trigger unicode decode
 //! errors in python unit tests.
-std::string LogEscape(const kj::StringTree& string);
+std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
 //! Callback type used by SpawnProcess below.
 using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
