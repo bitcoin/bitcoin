@@ -284,6 +284,8 @@ public:
         ssKey2 << key_end;
         return EstimateSizeImpl(ssKey1, ssKey2);
     }
+
+    void CompactFull() const;
 };
 
 #endif // BITCOIN_DBWRAPPER_H
