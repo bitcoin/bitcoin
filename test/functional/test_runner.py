@@ -151,6 +151,7 @@ BASE_SCRIPTS = [
     'rpc_orphans.py',
     'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
+    'wallet_anchor.py',
     'feature_reindex.py',
     'feature_reindex_readonly.py',
     'wallet_labels.py',
