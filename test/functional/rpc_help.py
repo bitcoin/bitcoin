@@ -18,7 +18,7 @@ def parse_string(s):
     return s[1:-1]
 
 
-def process_mapping(fname):
+def process_mapping(fname, table_name):
     """Find and parse conversion table in implementation file `fname`."""
     cmds = []
     in_rpcs = False
@@ -26,7 +26,7 @@ def process_mapping(fname):
         for line in f:
             line = line.rstrip()
             if not in_rpcs:
-                if line == 'static const CRPCConvertParam vRPCConvertParams[] =':
+                if re.match(r'static const (?:CRPC\w+Param|RpcStringParam) %s\[] =' % table_name, line):
                     in_rpcs = True
             else:
                 if line.startswith('};'):
@@ -41,7 +41,6 @@ def process_mapping(fname):
     assert not in_rpcs and cmds
     return cmds
 
-
 class HelpRpcTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -49,6 +48,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_client_conversion_table()
+        self.test_client_string_conversion_table()
         self.test_categories()
         self.dump_help()
         if self.is_wallet_compiled():
@@ -56,7 +56,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
     def test_client_conversion_table(self):
         file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
-        mapping_client = process_mapping(file_conversion_table)
+        mapping_client = process_mapping(file_conversion_table, "vRPCConvertParams")
         # Ignore echojson in client table
         mapping_client = [m for m in mapping_client if m[0] != 'echojson']
 
@@ -84,6 +84,29 @@ class HelpRpcTest(BitcoinTestFramework):
             if all(convert) != any(convert):
                 # Only allow dummy and psbt to fail consistency check
                 assert argname in ['dummy', "psbt"], ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
+
+    def test_client_string_conversion_table(self):
+        file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
+        string_params_client = process_mapping(file_conversion_table, "RPC_STRING_PARAMS")
+        mapping_server = self.nodes[0].help("dump_all_command_conversions")
+        server_tuples = {tuple(m[:3]) for m in mapping_server}
+
+        # Filter string parameters based on wallet compilation status
+        if self.is_wallet_compiled():
+            # Check that every entry in vRPCStringParams exists on the server
+            stale_entries = [entry for entry in string_params_client if entry not in server_tuples]
+            if stale_entries:
+                raise AssertionError(f"RPC_STRING_PARAMS contains entries not present on the server: {stale_entries}")
+            filtered_string_params = string_params_client
+        else:
+            available_string_params = [entry for entry in string_params_client if entry in server_tuples]
+            filtered_string_params = available_string_params
+
+        # Validate that all entries are legitimate server parameters
+        server_method_param_tuples = {(m[0], m[1], m[2]) for m in mapping_server}
+        invalid_entries = [entry for entry in filtered_string_params if entry not in server_method_param_tuples]
+        if invalid_entries:
+            raise AssertionError(f"RPC_STRING_PARAMS contains invalid entries: {invalid_entries}")
 
     def test_categories(self):
         node = self.nodes[0]
@@ -127,7 +150,6 @@ class HelpRpcTest(BitcoinTestFramework):
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
         self.restart_node(0, extra_args=['-nowallet=1'])
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
-
 
 if __name__ == '__main__':
     HelpRpcTest(__file__).main()
