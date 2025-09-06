@@ -30,6 +30,8 @@
 #include <util/string.h>
 #include <util/vector.h>
 
+using script::FindNextChar;
+
 namespace miniscript {
 
 /** This type encapsulates the miniscript type system properties.
@@ -1743,8 +1745,6 @@ enum class ParseContext {
     /** CLOSE_BRACKET expects the next element to be ')' and fails if not. */
     CLOSE_BRACKET,
 };
-
-int FindNextChar(std::span<const char> in, const char m);
 
 /** Parse a key string ending at the end of the fragment's text representation. */
 template<typename Key, typename Ctx>
