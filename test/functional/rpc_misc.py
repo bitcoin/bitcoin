@@ -30,6 +30,13 @@ class RpcMiscTest(BitcoinTestFramework):
             lambda: node.echo(arg9='trigger_internal_bug'),
         )
 
+        self.log.info("test max arg size")
+        ARG_SZ_COMMON = 131071  # Common limit, used previously in the test framework, serves as a regression test
+        ARG_SZ_LARGE = 8 * 1024 * 1024  # A large size, which should be rare to hit in practice
+        for arg_sz in [0, 1, 100, ARG_SZ_COMMON, ARG_SZ_LARGE]:
+            arg_string = 'a' * arg_sz
+            assert_equal([arg_string, arg_string], node.echo(arg_string, arg_string))
+
         self.log.info("test getmemoryinfo")
         memory = node.getmemoryinfo()['locked']
         assert_greater_than(memory['used'], 0)
