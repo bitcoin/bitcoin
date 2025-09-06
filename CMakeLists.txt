@@ -100,6 +100,7 @@ option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
 
 option(BUILD_TESTS "Build test_bitcoin and other unit test executables." ON)
+option(BUILD_FUNCTIONAL_TESTS "Build functional tests." ON)
 option(BUILD_TX "Build bitcoin-tx executable." ${BUILD_TESTS})
 option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
 
@@ -591,11 +592,6 @@ set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
 set(Python3_FIND_UNVERSIONED_NAMES FIRST CACHE STRING "")
 mark_as_advanced(Python3_FIND_FRAMEWORK Python3_FIND_UNVERSIONED_NAMES)
 find_package(Python3 3.10 COMPONENTS Interpreter)
-if(NOT TARGET Python3::Interpreter)
-  list(APPEND configure_warnings
-    "Minimum required Python not found."
-  )
-endif()
 
 target_compile_definitions(core_interface INTERFACE ${DEPENDS_COMPILE_DEFINITIONS})
 target_compile_definitions(core_interface_relwithdebinfo INTERFACE ${DEPENDS_COMPILE_DEFINITIONS_RELWITHDEBINFO})
@@ -632,7 +628,9 @@ else()
   set(CMAKE_SKIP_BUILD_RPATH TRUE)
   set(CMAKE_SKIP_INSTALL_RPATH TRUE)
 endif()
-add_subdirectory(test)
+if (BUILD_FUNCTIONAL_TESTS)
+  add_subdirectory(test)
+endif()
 add_subdirectory(doc)
 
 add_subdirectory(src)
