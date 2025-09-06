@@ -44,8 +44,13 @@ function(add_secp256k1 subdir)
     deduplicate_flags(CMAKE_C_FLAGS)
   endif()
 
+if(NOT DEFINED PIE_REQUIRED)
+  message(FATAL_ERROR "PIE_REQUIRED is not defined. The call order is incorrect.")
+endif()
+
   add_subdirectory(${subdir})
   set_target_properties(secp256k1 PROPERTIES
     EXCLUDE_FROM_ALL TRUE
+    POSITION_INDEPENDENT_CODE ${PIE_REQUIRED}
   )
 endfunction()
