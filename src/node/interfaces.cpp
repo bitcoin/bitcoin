@@ -665,10 +665,7 @@ public:
     bool hasDescendantsInMempool(const Txid& txid) override
     {
         if (!m_node.mempool) return false;
-        LOCK(m_node.mempool->cs);
-        const auto entry{m_node.mempool->GetEntry(txid)};
-        if (entry == nullptr) return false;
-        return entry->GetCountWithDescendants() > 1;
+        return m_node.mempool->HasDescendants(txid);
     }
     bool broadcastTransaction(const CTransactionRef& tx,
         const CAmount& max_tx_fee,
@@ -681,11 +678,11 @@ public:
         // that Chain clients do not need to know about.
         return TransactionError::OK == err;
     }
-    void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize, CAmount* ancestorfees) override
+    void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& clustersize, size_t* ancestorsize, CAmount* ancestorfees) override
     {
-        ancestors = descendants = 0;
+        ancestors = clustersize = 0;
         if (!m_node.mempool) return;
-        m_node.mempool->GetTransactionAncestry(txid, ancestors, descendants, ancestorsize, ancestorfees);
+        m_node.mempool->GetTransactionAncestry(txid, ancestors, clustersize, ancestorsize, ancestorfees);
     }
 
     std::map<COutPoint, CAmount> calculateIndividualBumpFees(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) override
@@ -719,10 +716,13 @@ public:
     util::Result<void> checkChainLimits(const CTransactionRef& tx) override
     {
         if (!m_node.mempool) return {};
-        LockPoints lp;
-        CTxMemPoolEntry entry(tx, 0, 0, 0, 0, false, 0, lp);
         LOCK(m_node.mempool->cs);
-        return m_node.mempool->CheckPackageLimits({tx}, entry.GetTxSize());
+        auto changeset = m_node.mempool->GetChangeSet();
+        (void) changeset->StageAddition(tx, 0, 0, 0, 0, false, 0, LockPoints{});
+        if (!changeset->CheckMemPoolPolicyLimits()) {
+            return util::Error{Untranslated("too many unconfirmed transactions in cluster")};
+        }
+        return {};
     }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
     {

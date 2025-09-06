@@ -1012,6 +1012,15 @@ FUZZ_TARGET(txgraph)
                 }
                 assert(!top_sim.IsOversized());
                 break;
+            } else if (command-- == 0) {
+                // GetMainMemoryUsage().
+                real->GetMainMemoryUsage();
+                // There is nothing to test about this function, as it's very
+                // implementation-specific, and can go up (even when transactions are removed) and
+                // down (even when dependencies are added), as clusters can split and merge.
+                // Still include it here as it has (non-observable) effects on the real
+                // implementation.
+                break;
             }
         }
     }

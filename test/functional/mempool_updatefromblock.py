@@ -27,8 +27,7 @@ CUSTOM_DESCENDANT_COUNT = CUSTOM_ANCESTOR_COUNT
 class MempoolUpdateFromBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # Ancestor and descendant limits depend on transaction_graph_test requirements
-        self.extra_args = [['-limitdescendantsize=1000', '-limitancestorsize=1000', f'-limitancestorcount={CUSTOM_ANCESTOR_COUNT}', f'-limitdescendantcount={CUSTOM_DESCENDANT_COUNT}']]
+        self.extra_args = [['-limitclustersize=1000']]
 
     def create_empty_fork(self, fork_length):
         '''
@@ -198,11 +197,11 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         fork_blocks = self.create_empty_fork(fork_length=10)
 
         # Two higher than descendant count
-        chain = wallet.create_self_transfer_chain(chain_length=CUSTOM_DESCENDANT_COUNT + 2)
+        chain = wallet.create_self_transfer_chain(chain_length=64 + 2)
         for tx in chain[:-2]:
             self.nodes[0].sendrawtransaction(tx["hex"])
 
-        assert_raises_rpc_error(-26, "too-long-mempool-chain, too many unconfirmed ancestors [limit: 100]", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
+        assert_raises_rpc_error(-26, "too-large-cluster", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
 
         # Mine a block with all but last transaction, non-standardly long chain
         self.generateblock(self.nodes[0], output="raw(42)", transactions=[tx["hex"] for tx in chain[:-1]])
@@ -220,7 +219,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
 
     def run_test(self):
         # Mine in batches of 25 to test multi-block reorg under chain limits
-        self.transaction_graph_test(size=CUSTOM_ANCESTOR_COUNT, n_tx_to_mine=[25, 50, 75])
+        self.transaction_graph_test(size=64, n_tx_to_mine=[25, 50, 75])
 
         self.test_max_disconnect_pool_bytes()
 
