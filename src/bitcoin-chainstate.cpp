@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     class KernelNotifications : public kernel::Notifications
     {
     public:
-        kernel::InterruptResult blockTip(SynchronizationState, CBlockIndex&, double) override
+        kernel::InterruptResult blockTip(SynchronizationState, const CBlockIndex&, double) override
         {
             std::cout << "Block tip changed" << std::endl;
             return {};
