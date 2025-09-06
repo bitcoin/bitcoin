@@ -434,6 +434,7 @@ jobs:
       matrix:
         include:
           - name: '32 bit ARM, unit tests, no functional tests'
+            use-cirrus: 'false' # As we use GH runners here, manually opt-out of trying to use a cirrus-hosted docker cache.
             cirrus-runner: 'ubuntu-24.04-arm' # Cirrus' Arm runners are Apple (with virtual Linux aarch64), which doesn't support 32-bit mode
             fallback-runner: 'ubuntu-24.04-arm'
             timeout-minutes: 120
@@ -513,7 +514,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          use-cirrus: ${{ needs.runners.outputs.use-cirrus-runners }}
+          use-cirrus: ${{ matrix.use-cirrus || needs.runners.outputs.use-cirrus-runners }}
 
       - name: Enable bpfcc script
         if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
