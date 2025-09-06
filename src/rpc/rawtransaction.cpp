@@ -2091,8 +2091,9 @@ RPCHelpMan descriptorprocesspsbt()
 
     // Check whether or not all of the inputs are now signed
     bool complete = true;
-    for (const auto& input : psbtx.inputs) {
-        complete &= PSBTInputSigned(input);
+    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
+    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
+        complete &= PSBTInputSignedAndVerified(psbtx, i, &txdata);
     }
 
     DataStream ssTx{};
