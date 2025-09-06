@@ -26,7 +26,7 @@ MAX_SEEDS_PER_ASN = {
     'ipv6': 10,
 }
 
-MIN_BLOCKS = 868000
+MIN_BLOCKS = 910000
 
 PATTERN_IPV4 = re.compile(r"^(([0-2]?\d{1,2})\.([0-2]?\d{1,2})\.([0-2]?\d{1,2})\.([0-2]?\d{1,2})):(\d{1,5})$")
 PATTERN_IPV6 = re.compile(r"^\[([\da-f:]+)]:(\d{1,5})$", re.IGNORECASE)
@@ -48,7 +48,8 @@ PATTERN_AGENT = re.compile(
     r"|25\.(0|1|2|99)\.0"
     r"|26\.(0|1|2|99)\.0"
     r"|27\.(0|1|2|99)\.0"
-    r"|28\.(0|1|99)\.0"
+    r"|28\.(0|1|2|99)\.0"
+    r"|29\.(0|99)\.0"
     r")")
 
 def parseline(line: str) -> Union[dict, None]:

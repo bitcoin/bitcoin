@@ -1,219 +1,179 @@
 [fc10:efa7:ca6:1548:f8c:6bb9:1cc4:63ae]:18333
 [fc1f:22c3:95dc:a3af:4a93:8251:beb9:1858]:18333
-[fc2b:f62e:6a76:cdb5:dceb:2fdd:a0f8:3d88]:18333
-[fc32:2c16:d0d0:f1fb:3b27:c187:8cb5:9201]:18333
-[fccb:248:11a6:1042:bca:1218:f7ce:7d3d]:18333
 66lkz2cfzyrz3tde6gflrty63jqr4knyy6uv4dvldrsecpnfx4dq.b32.i2p:0
-hedmbfis4h4inqrwo2uzmku5xu6xaq74tg7sofnetqikdvndtvja.b32.i2p:0
-i7vrfdmgolc6dqfmsak5fvwgmn46y4ghtan44uhn2aw66cbk5nfa.b32.i2p:0
+ica24vnstxip7gkr3c6dlmqgw4opmfrvv3dppjds7a3uddurpmxa.b32.i2p:0
 nhla3xzibmhvav7meemluh2d2jxdrlwicq636a2sohwqhrfgqi4a.b32.i2p:0
-o6j3b33bv26vthoqzjy3h7a3qsuqbtbe3ulajmjzsl43vaqyieyq.b32.i2p:0
-ocqipbbxx4paopgkkbnj234ie7opzrtca5gtiwr6oda3h32rzgsa.b32.i2p:0
-xgctj4seo3ofstiymoyeuzq74bvddrbr6jtia6erodlf5va3cz5a.b32.i2p:0
 xy6ytjxel5ku4naqumj4f6hn4agrzh3w44gqcs6xkkzwm5s3jdgq.b32.i2p:0
 zklt7hncdrl2hupfwnlbt3qaayhjayjhvwvj2m3fok3z36tlnxhq.b32.i2p:0
 2.59.133.20:18333 # AS58212
-2.86.50.136:18333 # AS6799
-4.246.195.240:18333 # AS8075
-5.39.218.162:18333 # AS57043
-5.255.97.91:18333 # AS60404
+3.126.103.252:18333 # AS16509
 5.255.97.92:18333 # AS60404
-8.217.160.32:18333 # AS45102
-18.168.119.254:18333 # AS8987
-18.209.9.240:18333 # AS8987
+5.255.99.130:18333 # AS60404
+20.238.17.253:18333 # AS8075
 23.227.223.209:18333 # AS44486
-27.148.206.140:18333 # AS133774
-34.65.45.157:18333 # AS396982
-34.69.221.24:18333 # AS396982
-34.254.97.244:18333 # AS16509
-43.133.47.138:18333 # AS132203
-43.247.184.50:18333 # AS23724
-44.208.161.158:18333 # AS14618
+34.57.91.248:18333 # AS396982
+34.136.139.120:18333 # AS396982
+35.89.140.96:18333 # AS16509
 45.77.25.14:18333 # AS20473
-51.79.82.75:18333 # AS16276
-52.193.79.181:18333 # AS16509
-54.236.59.55:18333 # AS14618
-59.186.7.131:18333 # AS3786
+54.87.140.128:18333 # AS14618
+57.129.97.56:18333 # AS16276
 62.210.207.63:18333 # AS12876
-66.94.114.229:18333 # AS40021
+65.21.205.60:18333 # AS24940
 67.4.82.9:18333 # AS209
-69.61.32.242:18333 # AS141518
 69.197.185.106:18333 # AS32097
-70.114.196.140:18333 # AS11427
-72.211.1.222:18333 # AS22773
-73.22.9.231:18333 # AS33491
+72.48.253.168:18333 # AS7459
+74.48.195.218:18333 # AS35916
 74.118.136.46:18333 # AS20326
-85.203.53.149:18333 # AS39351
+75.119.158.18:18333 # AS51167
+77.163.221.171:18333 # AS1136
+82.121.197.91:18333 # AS3215
+82.181.221.241:18333 # AS16086
 85.208.69.12:18333 # AS42275
 85.208.69.13:18333 # AS42275
 89.58.9.219:18333 # AS197540
-89.155.238.72:18333 # AS2860
-90.79.184.226:18333 # AS3215
-91.109.204.214:18333 # AS199669
+89.169.131.69:18333 # AS200350
+90.38.214.224:18333 # AS3215
 91.123.182.164:18333 # AS51648
 92.115.99.159:18333 # AS8926
+95.141.35.117:18333 # AS31034
+104.243.38.96:18333 # AS23470
 122.208.117.197:18333 # AS17506
 124.236.16.91:18333 # AS134760
-129.153.149.46:18333 # AS31898
-129.213.114.91:18333 # AS31898
 129.226.198.211:18333 # AS132203
+132.145.129.60:18333 # AS31898
 134.195.89.130:18333 # AS63473
 135.180.99.74:18333 # AS1299
 137.184.2.124:18333 # AS14061
-141.98.219.199:18333 # AS20326
-147.182.251.92:18333 # AS14061
-148.51.196.40:18333 # AS12025
-148.251.4.19:18333 # AS24940
-149.202.79.199:18333 # AS16276
-161.97.119.128:18333 # AS51167
-162.55.243.11:18333 # AS24940
-169.155.171.252:18333 # AS44486
-176.108.193.97:18333 # AS47914
+142.234.33.228:18333 # AS7979
+148.113.218.157:18333 # AS16276
+152.67.82.60:18333 # AS31898
+157.90.95.170:18333 # AS24940
+160.80.11.66:18333 # AS137
+169.155.170.211:18333 # AS44486
+172.173.81.233:18333 # AS8075
+173.231.40.170:18333 # AS18450
+178.162.218.121:18333 # AS28753
 185.28.96.16:18333 # AS59845
-185.44.206.111:18333 # AS44051
 185.107.68.135:18333 # AS43350
-185.130.224.146:18333 # AS57043
 185.186.208.124:18333 # AS206428
 185.210.125.33:18333 # AS205671
+185.232.70.226:18333 # AS197540
 186.154.207.228:18333 # AS19429
-188.117.132.82:18333 # AS31242
+188.42.129.156:18333 # AS7979
+188.72.109.51:18333 # AS208677
 188.213.90.149:18333 # AS206238
-193.30.123.70:18333 # AS197540
-194.9.6.11:18333 # AS58212
 194.95.66.129:18333 # AS680
 194.110.169.133:18333 # AS203576
-195.154.241.13:18333 # AS12876
-200.143.224.99:18333 # AS1916
+194.145.201.243:18333 # AS29028
+195.66.213.33:18333 # AS43641
 203.132.94.196:18333 # AS38195
-205.209.120.167:18333 # AS19318
 206.204.104.7:18333 # AS212947
 208.68.4.71:18333 # AS397444
-213.199.42.73:18333 # AS51167
+208.91.104.61:18333 # AS20326
+209.38.135.43:18333 # AS14061
 216.219.91.82:18333 # AS19318
 219.117.221.162:18333 # AS2514
 [2001:41d0:303:146e::]:18333 # AS16276
-[2001:41d0:306:4505::]:18333 # AS16276
 [2001:41d0:306:a3a::]:18333 # AS16276
-[2001:41d0:700:544c::]:18333 # AS16276
+[2001:41d0:340:c000::]:18333 # AS16276
+[2001:41d0:72a:3100::]:18333 # AS16276
+[2001:41d0:72a:3800::]:18333 # AS16276
 [2001:41d0:800:1d55::]:18333 # AS16276
-[2001:41d0:800:3e7f::]:18333 # AS16276
 [2001:470:1f05:4e5::2020]:18333 # AS6939
-[2001:5a8:4164:7a00::506]:18333 # AS7065
+[2001:5a8:4164:7a00::1f8]:18333 # AS1299
+[2001:b07:6469:3491:56be:f7ff:fe26:21bb]:18333 # AS12874
 [2401:c080:1000:4cb2:3eec:efff:feb9:8604]:18333 # AS20473
 [2401:d002:3902:700:8708:37c4:e231:d3d8]:18333 # AS38195
-[2402:1f00:8101:713::]:18333 # AS16276
+[2402:1f00:800a:1800::]:18333 # AS16276
+[2402:1f00:800a:1c00::]:18333 # AS16276
 [2604:1380:4531:1700::5]:18333 # AS54825
-[2604:a00:50:58:216:3eff:fe2c:8371]:18333 # AS19318
-[2605:3380:422e:1::50]:18333 # AS397444
 [2605:4840:3:2c23::1]:18333 # AS63473
-[2605:a141:2239:7674::1]:18333 # AS51167
-[2607:5300:205:300::1b0]:18333 # AS16276
-[2607:5300:60:85a9::]:18333 # AS16276
-[2607:5300:60:8702::]:18333 # AS16276
-[2620:6e:a000:1:43:43:43:43]:18333 # AS397444
+[2607:5300:216:a600::]:18333 # AS16276
+[2607:5300:21b:9d00::]:18333 # AS16276
 [2620:6e:a0a0:1::71]:18333 # AS397444
 [2804:431:e038:cd01:aaa1:59ff:fe0d:44b8]:18333 # AS27699
-[2a01:4f8:121:4072::2]:18333 # AS24940
 [2a01:4f8:160:1083::2]:18333 # AS24940
 [2a01:4f8:173:1ed8::2]:18333 # AS24940
 [2a01:4f8:173:230a::2]:18333 # AS24940
 [2a01:4f8:190:4026::2]:18333 # AS24940
-[2a01:4f9:2a:309d::2]:18333 # AS24940
+[2a01:4f8:201:508f::2]:18333 # AS24940
+[2a01:4f9:2a:2510::2]:18333 # AS24940
 [2a01:4f9:3070:26e2::2]:18333 # AS24940
-[2a01:4f9:3071:2154::2]:18333 # AS24940
-[2a01:4f9:3071:219d::2]:18333 # AS24940
+[2a01:4f9:6a:13c3::2]:18333 # AS24940
+[2a01:4f9:6a:4891::2]:18333 # AS24940
 [2a01:4f9:6b:2768::2]:18333 # AS24940
-[2a02:c202:2238:2255::1]:18333 # AS51167
-[2a02:c206:2239:7671::1]:18333 # AS51167
-[2a02:c206:2240:1506::1]:18333 # AS51167
-[2a03:4000:2a:514::]:18333 # AS197540
+[2a01:e0a:98e:7450:be24:11ff:fe4a:7bc2]:18333 # AS12322
+[2a02:29e0:1:420::64]:18333 # AS49367
+[2a02:c206:2075:3352::1]:18333 # AS51167
 [2a04:52c0:102:2219::1]:18333 # AS60404
 [2a04:52c0:102:49af::1]:18333 # AS60404
 [2a04:52c0:104:160c::1]:18333 # AS60404
-2lsncqdflwk272dhydrxf7ikfy23ppnmm54dnynyxiym6lqf3wowrmqd.onion:18333
-2mvycpm7ni6ix2pr4lkkfkqlivgo77mt4jx3s3dmhdlg3ogq46s6qbyd.onion:18333
 36fwktckggarkclbpu2pumsdpck46ahe6cwpozd2gm6q7kgdqljclmad.onion:18333
 3dt6kgfrilc3nwliwy5wbmc6oa2b5y3t33nkxlrxrkunr2hoaj56kgyd.onion:18333
+3rfphqncnepbm7tvnaqjetkaqvauj566nw3ys27fert6zx3q75zetoid.onion:18333
 3vnbi5o3hyzk4cm3hhnyo3h7tclr6pybmhmqwkbyclslfhqtg72pq2id.onion:18333
-44sgcv5dvpplt32enlneddyl4gd4z3tbezl2scedwccndyzrrp6lcgyd.onion:18333
 4w3f2mxe4ftodocermsazs3qlpo37igkdgne6ka2p6wnnrgwpzqw65yd.onion:18333
 5axx4qyub7qtgssrvbbqudu6uqjbuknbvbld2wdscv5p6kh2hsfzjxqd.onion:18333
 5qdgulsryjejkjinocpvknazwtnbqtuf4f4pui2at4jpedwwpg427qyd.onion:18333
-67l6l2k7mqbl2btyvo5h5lki3kxcrgbunlk7brcloyaoaftbs5mnsuad.onion:18333
-6bhop3n32rreiynu35epznhc2exxkhuleromdhnida2hgmu2bhczgmqd.onion:18333
 6fdbuqf2kgeweeoeikmwfezauys657lzezzus4nxmekkumouptg5ezad.onion:18333
-6rnqpqqcpllqhjoa4gwrtq5yi6fdch6uqzapdee2gq67gxgsl73v4uqd.onion:18333
+6yuphwecg6apx3nrf6kyabqohh544l25xodxxowa74yr2tg5ulkzeead.onion:18333
 7ph7mrc24te57mvppajfkfj4mk7zuz4teukymt3wgpdpw6vpndeivtyd.onion:18333
-7poqajl6svz4vr3aqi7vdtar2t56crbrtj6yi75ydrt3ighyx7q6qvyd.onion:18333
 7zlqrihb5do5ebbmjwgspxigqfdmkfslkqtg2ngdc6ypsunzb4iootqd.onion:18333
 aesy6tfufadkut6flu2bsqgnw2422ur2ynjalguxlzuzuktg3zehttqd.onion:18333
-axaaplqtf4z22xfj2j2xn6fhtj6ksv74bs7vae6rfw67qofdnqoacbid.onion:18333
 ayx35r2mhwydczzoqu7b6dl3sup4oht74sgnlrjkxybzh2hmfnaix3qd.onion:18333
 bizdwmm7naqq5pehkbfggznqtena5eodz3kprvsbj4nkkax4fvxx53id.onion:18333
 bjqttlyt5kxcn7sitpiavf2cuhdf6rlwigericlh7um7gzkqyyefqnqd.onion:18333
 bkzo7mpxuar7rhsbiwdaxqcymixarcbdmb3sdaqtv6yb2svqttz2s6ad.onion:18333
-bzn63lsmsuvzlg4uqadyylxaggdcrzkb56muw2b43ft5qkynvzfopbyd.onion:18333
-c7zrq2yqt6rtn5dxkczp5bv62k2jncv3mscoo24c24rljbplr2dvhsid.onion:18333
+d63vf45ta4chrewnruyvypm7ybfxtut327crtq6qfyrvcwx434rli5qd.onion:18333
+devwork6shguhs6miygeq7qpyszu2lizeyop33sbrey7hk53jw26hnad.onion:18333
 dskf46hfkefyr6nio5gtqp7em7rh6aqwrugdegfooaoxcux5ym6bkuqd.onion:18333
-euvmh5f637qwqgktjs5zwauvayybfdkiopnflnh5yjt7ouqat3427pqd.onion:18333
+e7sseh62snwmipkyuv4mrhdbc5ew7ysyzv34fhjjgxuc6rdvj57vgnid.onion:18333
 f472j4pynbgltb63mr2lhyvhecfqdjdcfmr2s2id4rreemyn32xtjuid.onion:18333
-fbimesnyhzubbzqc3uaufzkbyfmnkxvypoxaveaub7rzpzh2foxrn2yd.onion:18333
 gggan3nuzxpd655lafnsunqfxgy56bvsxuuzucgmaowyvq3d7a7o7jad.onion:18333
-gsw6sn27quwf6u3swgra6o7lrp5qau6kt3ymuyoxgkth6wntzm2bjwyd.onion:18333
 guudgx24aokistytvm3hj7u5cbvdkr2b643r5t33pa536ekfn2lfykid.onion:18333
 gwtx5qluopwaxjhedlifnr6pptw2eihojzhq3stnv2gfbvqbgqdhi5qd.onion:18333
 gy6nih4pmp5esyvvnhlj6qvk7zkbjuoswkxffyiip3dbkvsfxwz5zcqd.onion:18333
-hj2txlxajdlh7jsfwqxtp3cltlptsr33ctjkbxhbzbyirkmcpfhsnyad.onion:18333
 hjwzovgwou3py6ncemgmzpvcihay5cuzuxvqdn74axndmll25p4mwjqd.onion:18333
-hqkdgpzzsv2qvafhdkdocszquj7o2ittxfmm5fc2arxqw7ikottozoid.onion:18333
 htkiqaqoql7pjstenmw6v4blm6l57d6hl6mewxkmfi3qumozflx3gzyd.onion:18333
 hvbmmzvqrpgps2x5u4ip4ksf3e5m2fneac754gtnhjn2rsevni6cz3ad.onion:18333
-hvtxymvdb55u7lhdw6775akqy46inunl3uup27gnsxm2bqmv55wbacqd.onion:18333
 i5fjp7ggx62zlfkibzn7s6glpjp3h2ypfom3lmqixig7qbdgej35wfyd.onion:18333
 i5gphw2d224tniqkjebxdwz5ygbbo5gcushoyevv7x7o454b6qlrzeid.onion:18333
-iysx2dl4tpojiclh32iyhel6z7h227c7o7buzk5wuqw6qhuytvsu66yd.onion:18333
 j53y5paeb7xcrptntut7epccjglduquldjlzjlho4lj2msabnygrljqd.onion:18333
-jsc4frvvnl2d3bhzyofsc72xpztgm23nl4fnb4dwkzsxr6fhij2q5iyd.onion:18333
+jqos4drrg27j553syd4dfunajednqgz3w7y3cq2morckhc6ht7jm7aad.onion:18333
 jtvqgaccxbtzshtulk5xlsb4wkoil3psmpn5avqyp2i5vm4hqh5cicyd.onion:18333
 jun6gdmbgasr57bhr4zs3dfhc6pzpaw27nqb4dadbai7yrbq55zskeid.onion:18333
-kamanho5clcpn5l3sc6ih3vb4skmfhgxw3h2mgs7e5idfezu5dw5oxyd.onion:18333
-kwjxlauwjtecjfsiwopbl5pvn5n6z5rz76uk6osmlurd3uyuymcw7aid.onion:18333
+lh3wfz2n7xe2muwdjrz5vgnjwjx7lc6iifojhr2rh53ojkwo5dr66uyd.onion:18333
 lka74booetkbmat2q64haawcytbwx7mnctvo63ww4jgi4yuqnl6p3kad.onion:18333
 lwfecq35ocqjfbdq4h2qmcwl3cfcyiyycxtvrz36ihdbuczehi3bmrad.onion:18333
 n23anw4zb7f3paroac626oc2sqy3yn5kjfpcqvb3lvdyx7dzzpovd3id.onion:18333
 n4e6fp6xoyo2glsafjwbaq3wirhldpjw4mskn5lzkm4o5lhh5n5k7uqd.onion:18333
-nmazvezejolohnbza4rmqrwvjcprhi7w22fqvlbxp5sw3c25xy3dunqd.onion:18333
 nyrekcbm2ici6wv2umogtmwg7o2ivu4vm7bpcge5fayos5l377zldlqd.onion:18333
+o3zwhskjvuzbti3su3kfspgmvwoiq5iqw4drgo6jv6ehv2zfoyyy5nqd.onion:18333
+o4fnldblck6fmycg55lh77owlw7wihb7qltjibantj45ijhow73otdad.onion:18333
 o4zdqfdoe4jfvn35twqtjkzmptmk3bsg45sp46wuxanceg3euqtwdjqd.onion:18333
-ohqcfz5kk6ufouxmhtq7nxyo2lyui4vjlhr2kftvra2ewgzxu3hsrxad.onion:18333
-oobwtn5csi4auevb2ns2b5rrjnxmhlzdmay4zxtzvkj7tayrgwfddiqd.onion:18333
+pcbipn5yyvhsedfjjywrcep4b5z43px7duemxvs7e6tvanxgw46ux7ad.onion:18333
+pj2rxq2sfbwtsqqcbnfnwkg36d72yce56qmp2sjjmb7hvzpzai3ndead.onion:18333
 ppe2pepzphox3swftj5lbyi7ckigspbih5qnyuhrb3r6bn3g7k7bp4qd.onion:18333
-pqkhkpkvqmjcql5jccyxg5nahow6vixnjrvtsc6clnk7dab4weknvpqd.onion:18333
 q5qox756id5nfdu6ht4dghc35jezls4bgjcdnrds3pwndvdx32zmwlad.onion:18333
 qiep4hvuovedbbc36hl7nwslwi6ah6uw4nnseyjdtc73cc5rfdauvnad.onion:18333
-qzx5f2ig2rk2ssrbopz2zlljq5mkeh3izhhx3t3cepse5qnhvpo2tzid.onion:18333
 rfi2hdpjhhknalltbwdvyuhskh5yjs66rqzpy6ley7xtu4kvbeob6fqd.onion:18333
 rw6reu6rdetz6rnpzoyn2hfy7sxpbja4v5ktmaicqqgszi2eata5lhqd.onion:18333
 s3bxrurro4bmvsmntw74qf4vw3xl25xtnvqegayvlwj3b6t7d76kkwid.onion:18333
-slpigm5ep4zan3a65bybne67phjiyesbuk5s3bodefuhnx2cfdtit6qd.onion:18333
 sxm6kwrdp6f2ggaozhrl47xuy3es3sgm3ivppmh4xm3hfmetvwbyrcad.onion:18333
+syzdz6dzc5grlcnhbsbhye27i7dllgozqm3ocpyr6g3ynfrcf4ngzdqd.onion:18333
 t6hfkkujktjyzpepmphskoaivflu6fieyuxrshxfzwriwvoa2uccvvqd.onion:18333
 ueyykmnyqk2bnmbgvmqrb4jfbjvpgeew6cuq4gaqe7v2oiyxaubkx4qd.onion:18333
 urhagmjceyqbzhjitpa7j7mygivxw3wlwqzkibw6zezrxeantkikgcyd.onion:18333
-vctlwaqgmu53eutz2hewuakcipfgtyljsd7czut4dd62xr3rp6fqezad.onion:18333
 vi3z4khdvopuiljdjdhpetnxztuzsct2aacuzcm5ba27h4j3cfwsvjad.onion:18333
 vqnkdmpmecc5kondj32jwbemmruhmd5gkmfngkscetibzozryp4elkad.onion:18333
 wgc4wp25gtnb54vd7x5h2xtetzrdoiizeyyh6fv3vxzp3bbalejbd3ad.onion:18333
 wpsahjbejxehpz772kzxonj777pejol2akcicduqov2r7ktm2b6l5pid.onion:18333
+wqx56diehvnwca6mndqw3omsufbiem3o6lwivauiilxfx5iqsv7emfad.onion:18333
 wui5m2y5b7cms36ai6shzyqsg6qteejwmxsf26nyms6vcykxbvmh4uad.onion:18333
-xafcyh6mxwebvcsgw4wcbuw7n4v7vbqhcznhwqcpqcu6dww2mjuw4nad.onion:18333
+xlx7k5qzawdld5xcfd5lhhasp5tiklc2z326lamcnkmoru56jv6os6ad.onion:18333
 y5h652jz6sgmb4bkcfnfxnj24gnczqf7lhd5lqbvdhf5mpll4gye5kid.onion:18333
 ya6s7ov7myixz3ql23u45hty7moxo3r4d26qainw55z656vtau676xid.onion:18333
-yda7kwpii33j2qpq32ftf6lp22znknswipjwaccvsqj7l337jvfesnid.onion:18333
-zcsn3j6aswnrf56xj2n5jn4tlwmyoq4benjn5ujcgz46co2y5tm642id.onion:18333
 zefnna2a3ga4ez2nutvypma7my35prw3ycinbqwva7v4pf3aurqhjcyd.onion:18333
 zhiju2obxifqpjbcm6xtlgjdbof7jhoctvw3x57vhiftstb5hi3gmsqd.onion:18333
-zkqddzui5pkrqvjj2zwsf5kln7stlbmw5pmn6ut46fobvzyv2sn2ryid.onion:18333
-zmvizz7fd5hdue6wt3lwqumd6qwt4ijymmmotfzh75curq3mzjm53hyd.onion:18333
 zmxlrzoxg4fmso6l2xuq5tdxmlyakdqellzujh3a23iuzg4zlatnogqd.onion:18333
 zsmxmusdzrcqusk5h6syfq6a3ph6lwx3wpiltun4dmkrt3pa2fp7qaid.onion:18333
