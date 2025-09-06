@@ -450,8 +450,7 @@ def main():
         print("Re-compile with the -DBUILD_DAEMON=ON build option")
         sys.exit(1)
 
-    # Build list of tests
-    test_list = []
+    test_queue = deque()
     if tests:
         # Individual tests have been specified. Run specified tests that exist
         # in the ALL_SCRIPTS list. Accept names with or without a .py extension.
@@ -470,15 +469,15 @@ def main():
             script = script + ".py" if ".py" not in script else script
             matching_scripts = [s for s in ALL_SCRIPTS if s.startswith(script)]
             if matching_scripts:
-                test_list.extend(matching_scripts)
+                test_queue += matching_scripts
             else:
                 print("{}WARNING!{} Test '{}' not found in full test list.".format(BOLD[1], BOLD[0], test))
     elif args.extended:
         # Include extended tests
-        test_list += ALL_SCRIPTS
+        test_queue += ALL_SCRIPTS
     else:
         # Run base tests only
-        test_list += BASE_SCRIPTS
+        test_queue += BASE_SCRIPTS
 
     # Remove the test cases that the user has explicitly asked to exclude.
     # The user can specify a test case with or without the .py extension.
@@ -493,21 +492,21 @@ def main():
             if not exclude_list:
                 print_warning_missing_test(exclude_test)
             for exclude_item in exclude_list:
-                test_list.remove(exclude_item)
+                test_queue.remove(exclude_item)
 
         exclude_tests = [test.strip() for test in args.exclude.split(",")]
         for exclude_test in exclude_tests:
             # A space in the name indicates it has arguments such as "rpc_bind.py --ipv4"
             if ' ' in exclude_test:
-                remove_tests([test for test in test_list if test.replace('.py', '') == exclude_test.replace('.py', '')])
+                remove_tests([test for test in test_queue if test.replace('.py', '') == exclude_test.replace('.py', '')])
             else:
                 # Exclude all variants of a test
-                remove_tests([test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]])
+                remove_tests([test for test in test_queue if test.split('.py')[0] == exclude_test.split('.py')[0]])
 
     if args.filter:
-        test_list = list(filter(re.compile(args.filter).search, test_list))
+        test_queue = deque(filter(re.compile(args.filter).search, test_queue))
 
-    if not test_list:
+    if not test_queue:
         print("No valid test scripts specified. Check that your test is in one "
               "of the test lists in test_runner.py, or run test_runner.py with no arguments to run all tests")
         sys.exit(1)
@@ -515,7 +514,7 @@ def main():
     if args.help:
         # Print help for test_runner.py, then print help of the first script (with args removed) and exit.
         parser.print_help()
-        subprocess.check_call([sys.executable, os.path.join(config["environment"]["SRCDIR"], 'test', 'functional', test_list[0].split()[0]), '-h'])
+        subprocess.check_call([sys.executable, os.path.join(config["environment"]["SRCDIR"], 'test', 'functional', test_queue[0].split()[0]), '-h'])
         sys.exit(0)
 
     # Warn if there is not enough space on tmpdir to run the tests with --nocleanup
@@ -532,7 +531,7 @@ def main():
         shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
 
     run_tests(
-        test_list=test_list,
+        test_queue=test_queue,
         build_dir=config["environment"]["BUILDDIR"],
         tmpdir=tmpdir,
         jobs=args.jobs,
@@ -544,7 +543,7 @@ def main():
         results_filepath=results_filepath,
     )
 
-def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, results_filepath=None):
+def run_tests(*, test_queue, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, results_filepath=None):
     args = args or []
 
     # Warn if bitcoind is already running
@@ -581,7 +580,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     else:
         coverage = None
 
-    if len(test_list) > 1 and jobs > 1:
+    if len(test_queue) > 1 and jobs > 1:
         # Populate cache
         try:
             subprocess.check_output([sys.executable, tests_dir + 'create_cache.py'] + flags + ["--tmpdir=%s/cache" % tmpdir])
@@ -594,15 +593,15 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
         num_tests_parallel=jobs,
         tests_dir=tests_dir,
         tmpdir=tmpdir,
-        test_list=test_list,
+        test_queue=test_queue,
         flags=flags,
         use_term_control=use_term_control,
     )
     start_time = time.time()
     test_results = []
 
-    max_len_name = len(max(test_list, key=len))
-    test_count = len(test_list)
+    max_len_name = len(max(test_queue, key=len))
+    test_count = len(test_queue)
     all_passed = True
     while not job_queue.done():
         if failfast and not all_passed:
@@ -706,24 +705,24 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
-    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, use_term_control):
+    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_queue, flags, use_term_control):
         assert num_tests_parallel >= 1
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
         self.tmpdir = tmpdir
-        self.test_list = test_list
+        self.test_queue = test_queue
         self.flags = flags
         self.jobs = []
         self.use_term_control = use_term_control
 
     def done(self):
-        return not (self.jobs or self.test_list)
+        return not (self.jobs or self.test_queue)
 
     def get_next(self):
-        while len(self.jobs) < self.num_jobs and self.test_list:
+        while len(self.jobs) < self.num_jobs and self.test_queue:
             # Add tests
-            test = self.test_list.pop(0)
-            portseed = len(self.test_list)
+            test = self.test_queue.popleft()
+            portseed = len(self.test_queue)
             portseed_arg = ["--portseed={}".format(portseed)]
             log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
             log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
@@ -740,10 +739,10 @@ class TestHandler:
                               log_stdout,
                               log_stderr))
         if not self.jobs:
-            raise IndexError('pop from empty list')
+            raise IndexError('pop from empty queue')
 
         # Print remaining running jobs when all jobs have been started.
-        if not self.test_list:
+        if not self.test_queue:
             print("Remaining jobs: [{}]".format(", ".join(j[0] for j in self.jobs)))
 
         dot_count = 0
