@@ -60,7 +60,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
     bilingual_str error;
     CTxMemPool pool{MemPoolOptionsForTest(g_setup->m_node), error};
     Assert(error.empty());
-    PartiallyDownloadedBlock pdb{&pool};
+    PartiallyDownloadedBlock pdb;
 
     // Set of available transactions (mempool or extra_txn)
     std::set<uint16_t> available;
@@ -86,7 +86,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
         }
     }
 
-    auto init_status{pdb.InitData(cmpctblock, extra_txn)};
+    auto init_status{pdb.InitData(cmpctblock, pool, extra_txn)};
 
     std::vector<CTransactionRef> missing;
     // Whether we skipped a transaction that should be included in `missing`.

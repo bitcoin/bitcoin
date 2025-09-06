@@ -8,6 +8,7 @@
 #include <primitives/block.h>
 
 #include <functional>
+#include <utility>
 
 class CTxMemPool;
 class BlockValidationState;
@@ -130,11 +131,39 @@ public:
     }
 };
 
+
+class ExtraTransactions {
+public:
+    using WitRef = std::pair<const Wtxid*, const CTransactionRef*>;
+    virtual ~ExtraTransactions() = default;
+    virtual WitRef next() = 0;
+};
+
+class VectorExtraTransactions : public ExtraTransactions
+{
+private:
+    const std::vector<std::pair<Wtxid, CTransactionRef>>& m_vec;
+    size_t m_idx{0};
+public:
+    // vec is a list of extra transactions to look at, in <witness hash, reference> form
+    VectorExtraTransactions(const std::vector<std::pair<Wtxid,CTransactionRef>>& vec) : m_vec{vec} { }
+
+    WitRef next() override
+    {
+        while (m_idx < m_vec.size()) {
+            auto& item = m_vec[m_idx++];
+            if (item.second != nullptr) {
+                return {&item.first, &item.second};
+            }
+        }
+        return {nullptr, nullptr};
+    }
+};
+
 class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
     size_t prefilled_count = 0, mempool_count = 0, extra_count = 0;
-    const CTxMemPool* pool;
 public:
     CBlockHeader header;
 
@@ -142,10 +171,15 @@ public:
     using IsBlockMutatedFn = std::function<bool(const CBlock&, bool)>;
     IsBlockMutatedFn m_check_block_mutated_mock{nullptr};
 
-    explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
+    explicit PartiallyDownloadedBlock() = default;
 
-    // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
-    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn);
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const CTxMemPool& pool, ExtraTransactions&& extra_txn);
+
+    ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const CTxMemPool& pool, const std::vector<std::pair<Wtxid,CTransactionRef>>& extra_txn)
+    {
+        return InitData(cmpctblock, pool, VectorExtraTransactions(extra_txn));
+    }
+
     bool IsTxAvailable(size_t index) const;
     // segwit_active enforces witness mutation checks just before reporting a healthy status
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active);
