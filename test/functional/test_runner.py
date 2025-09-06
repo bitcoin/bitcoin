@@ -162,6 +162,7 @@ BASE_SCRIPTS = [
     'wallet_fast_rescan.py',
     'wallet_gethdkeys.py',
     'wallet_createwalletdescriptor.py',
+    'wallet_exported_watchonly.py',
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
     'rpc_validateaddress.py',
