@@ -306,9 +306,12 @@ void* LockedPool::alloc(size_t size)
 void LockedPool::free(void *ptr)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    // TODO we can do better than this linear search by keeping a map of arena
-    // extents to arena, and looking up the address.
-    for (auto &arena: arenas) {
+    // Use map to find the arena containing this address in O(log n) time
+    // Cast to uintptr_t for well-defined ordering
+    auto it = arena_map.upper_bound(reinterpret_cast<std::uintptr_t>(ptr));
+    if (it != arena_map.begin()) {
+        --it;
+        auto& arena = *(it->second);
         if (arena.addressInArena(ptr)) {
             arena.free(ptr);
             return;
@@ -358,6 +361,8 @@ bool LockedPool::new_arena(size_t size, size_t align)
         }
     }
     arenas.emplace_back(allocator.get(), addr, size, align);
+    auto arena_it = std::prev(arenas.end());
+    arena_map[reinterpret_cast<std::uintptr_t>(addr)] = arena_it;
     return true;
 }
 

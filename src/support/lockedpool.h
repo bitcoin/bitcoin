@@ -6,6 +6,7 @@
 #define BITCOIN_SUPPORT_LOCKEDPOOL_H
 
 #include <cstddef>
+#include <cstdint>
 #include <list>
 #include <map>
 #include <memory>
@@ -197,6 +198,9 @@ private:
     bool new_arena(size_t size, size_t align);
 
     std::list<LockedPageArena> arenas;
+    /** Map from arena base addresses to arena iterator for O(log n) lookup.
+     * Uses uintptr_t to avoid implementation-defined ordering on void*. */
+    std::map<std::uintptr_t, std::list<LockedPageArena>::iterator> arena_map;
     LockingFailed_Callback lf_cb;
     size_t cumulative_bytes_locked{0};
     /** Mutex protects access to this pool's data structures, including arenas.
