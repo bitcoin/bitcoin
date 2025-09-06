@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2025-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,16 @@ import argparse
 import json
 import sys
 
-def enumerate(args):
-    sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"},
-        {"fingerprint": "00000002", "type": "trezor", "model": "trezor_one"}]))
+from test_framework.util import mock_signer_log
 
-parser = argparse.ArgumentParser(prog='./multi_signers.py', description='External multi-signer mock')
+def enumerate(args):
+    sys.stdout.write(json.dumps([]))
+
+
+log = mock_signer_log("no_external_signer")
+log.debug("Started")
+
+parser = argparse.ArgumentParser(prog='./no_signer.py', description='No external signer connected mock')
 
 subparsers = parser.add_subparsers(description='Commands', dest='command')
 subparsers.required = True
@@ -28,3 +33,5 @@ if not sys.stdin.isatty():
 args = parser.parse_args()
 
 args.func(args)
+
+log.debug("Finished")
