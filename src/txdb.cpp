@@ -7,6 +7,7 @@
 
 #include <coins.h>
 #include <dbwrapper.h>
+#include <consensus/amount.h>
 #include <logging.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -22,6 +23,7 @@
 static constexpr uint8_t DB_COIN{'C'};
 static constexpr uint8_t DB_BEST_BLOCK{'B'};
 static constexpr uint8_t DB_HEAD_BLOCKS{'H'};
+static constexpr uint8_t DB_DIVIDEND_POOL{'D'};
 // Keys used in previous version that might still be found in the DB:
 static constexpr uint8_t DB_COINS{'c'};
 
@@ -88,6 +90,18 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
         return std::vector<uint256>();
     }
     return vhashHeadBlocks;
+}
+
+CAmount CCoinsViewDB::GetDividendPool() const
+{
+    CAmount pool{0};
+    m_db->Read(DB_DIVIDEND_POOL, pool);
+    return pool;
+}
+
+bool CCoinsViewDB::WriteDividendPool(CAmount amount)
+{
+    return m_db->Write(DB_DIVIDEND_POOL, amount);
 }
 
 bool CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) {

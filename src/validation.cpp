@@ -2120,6 +2120,18 @@ void Chainstate::InitCoinsDB(
         CoinsViewOptions{});
 }
 
+void Chainstate::LoadDividendPool()
+{
+    m_dividend_pool = CoinsDB().GetDividendPool();
+}
+
+void Chainstate::AddToDividendPool(CAmount amount)
+{
+    m_dividend_pool += amount;
+    CoinsDB().WriteDividendPool(m_dividend_pool);
+    // TODO: Integrate quarterly payout distribution when available.
+}
+
 bool IsBlockMutated(const CBlock& block, bool check_witness_root)
 {
     bool mutated{false};

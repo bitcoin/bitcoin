@@ -472,6 +472,26 @@ static RPCHelpMan getdifficulty()
     };
 }
 
+static RPCHelpMan getdividendpool()
+{
+    return RPCHelpMan{
+        "getdividendpool",
+        "Returns the current dividend pool balance.\n",
+        {},
+        RPCResult{RPCResult::Type::NUM, "", "dividend pool balance in BTC"},
+        RPCExamples{
+            HelpExampleCli("getdividendpool", "") +
+            HelpExampleRpc("getdividendpool", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            ChainstateManager& chainman = EnsureAnyChainman(request.context);
+            LOCK(cs_main);
+            CAmount pool = chainman.ActiveChainstate().GetDividendPool();
+            return ValueFromAmount(pool);
+        }
+    };
+}
+
 static RPCHelpMan getblockfrompeer()
 {
     return RPCHelpMan{
@@ -3435,6 +3455,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblockheader},
         {"blockchain", &getchaintips},
         {"blockchain", &getdifficulty},
+        {"blockchain", &getdividendpool},
         {"blockchain", &getdeploymentinfo},
         {"blockchain", &gettxout},
         {"blockchain", &gettxoutsetinfo},
