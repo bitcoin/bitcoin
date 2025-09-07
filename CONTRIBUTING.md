@@ -28,6 +28,11 @@ Before you start contributing, familiarize yourself with the BitGold build
 system and tests. Refer to the documentation in the repository on how to build
 BitGold and how to run the unit tests, functional tests, and fuzz tests.
 
+Developers working on staking or other PoS features should review
+[doc/pos3.1-overview.md](doc/pos3.1-overview.md) to understand the current
+consensus rules and deployment details. Example configuration files live under
+`doc/examples/` and should be kept in sync with any behavior changes.
+
 There are many open issues of varying difficulty waiting to be fixed.
 If you're looking for somewhere to start contributing, check out the
 [good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
