@@ -2,6 +2,9 @@
 #define BITCOIN_POS_VALIDATOR_H
 
 #include <cstdint>
+#include <uint256.h>
+
+class CBlockIndex;
 
 namespace pos {
 
@@ -26,6 +29,11 @@ private:
 
 constexpr uint64_t MIN_STAKE = 1000;
 constexpr int64_t UNSTAKE_DELAY = 60 * 60 * 24 * 7; // one week
+
+// Compute the stake modifier for a new block using the previous block's
+// hash, height and timestamp. This follows the PoS v3.1 specification where
+// the modifier is independent of the staking input to prevent grinding.
+uint256 ComputeStakeModifier(const CBlockIndex& prev);
 
 } // namespace pos
 

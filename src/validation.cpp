@@ -2055,6 +2055,38 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
+unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast,
+                                 const CBlockHeader* pblock,
+                                 const Consensus::Params& params)
+{
+    assert(pindexLast);
+    arith_uint256 bnLimit = UintToArith256(params.powLimit);
+
+    if (params.fPowNoRetargeting) {
+        return pindexLast->nBits;
+    }
+
+    // PoS difficulty retargeting inspired by Peercoin's algorithm. It adjusts
+    // the target every block using the actual time between blocks compared to
+    // the desired spacing.
+    const int64_t target_spacing = params.nPowTargetSpacing;
+    const int64_t interval = params.DifficultyAdjustmentInterval();
+
+    int64_t actual_spacing = pblock->nTime - pindexLast->nTime;
+    if (actual_spacing < 0) actual_spacing = target_spacing;
+
+    arith_uint256 bnNew;
+    bnNew.SetCompact(pindexLast->nBits);
+    bnNew *= ((interval - 1) * target_spacing + 2 * actual_spacing);
+    bnNew /= ((interval + 1) * target_spacing);
+
+    if (bnNew <= 0 || bnNew > bnLimit) {
+        bnNew = bnLimit;
+    }
+
+    return bnNew.GetCompact();
+}
+
 /**
  * Iterate over the given headers and ensure each one satisfies the proof of
  * work or proof of stake target specified by its nBits field and matches any
