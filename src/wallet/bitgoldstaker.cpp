@@ -69,20 +69,7 @@ void BitGoldStaker::ThreadStaker()
             const std::chrono::seconds min_age =
                 chain_height < MIN_STAKE_DEPTH ? std::chrono::seconds{0} : MIN_COIN_AGE;
 
-            std::vector<COutput> candidates;
-            {
-                LOCK(m_wallet.cs_wallet);
-                for (const COutput& out : AvailableCoins(m_wallet).All()) {
-                    if (!out.spendable) continue;
-                    if (out.depth < min_depth) continue;
-                    if (out.txout.nValue < MIN_STAKE_AMOUNT) continue;
-                    if (min_age.count() > 0) {
-                        int64_t age = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()) - out.time;
-                        if (age < min_age.count()) continue;
-                    }
-                    candidates.push_back(out);
-                }
-            }
+            std::vector<COutput> candidates = m_wallet.GetStakeableCoins(min_depth, min_age, MIN_STAKE_AMOUNT);
 
             if (candidates.empty()) {
                 LogDebug(BCLog::STAKING, "BitGoldStaker: no eligible UTXOs\n");
