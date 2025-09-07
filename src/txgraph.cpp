@@ -593,6 +593,17 @@ public:
     void ClearChunkData(Entry& entry) noexcept;
     /** Give an Entry a ChunkData object. */
     void CreateChunkData(GraphIndex idx, LinearizationIndex chunk_count) noexcept;
+    /** Create an empty GenericClusterImpl object. */
+    std::unique_ptr<GenericClusterImpl> CreateEmptyGenericCluster() noexcept
+    {
+        return std::make_unique<GenericClusterImpl>(m_next_sequence_counter++);
+    }
+    /** Create an empty Cluster object of the appropriate size. */
+    std::unique_ptr<Cluster> CreateEmptyCluster(DepGraphIndex tx_count) noexcept
+    {
+        (void)tx_count;
+        return CreateEmptyGenericCluster();
+    }
 
     // Functions for handling Refs.
 
@@ -947,7 +958,7 @@ std::vector<Cluster*> TxGraphImpl::GetConflicts() const noexcept
 Cluster* GenericClusterImpl::CopyToStaging(TxGraphImpl& graph) const noexcept
 {
     // Construct an empty Cluster.
-    auto ret = std::make_unique<GenericClusterImpl>(graph.m_next_sequence_counter++);
+    auto ret = graph.CreateEmptyGenericCluster();
     auto ptr = ret.get();
     // Copy depgraph, mapping, and linearization/
     ptr->m_depgraph = m_depgraph;
@@ -1122,8 +1133,9 @@ bool GenericClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
     // Iterate over the connected components of this Cluster's m_depgraph.
     while (todo.Any()) {
         auto component = m_depgraph.FindConnectedComponent(todo);
+        auto component_size = component.Count();
         auto split_quality = component.Count() <= 2 ? QualityLevel::OPTIMAL : new_quality;
-        if (first && component == todo && SetType::Fill(component.Count()) == component) {
+        if (first && component == todo && SetType::Fill(component_size) == component) {
             // The existing Cluster is an entire component, without holes. Leave it be, but update
             // its quality. If there are holes, we continue, so that the Cluster is reconstructed
             // without holes, reducing memory usage.
@@ -1136,7 +1148,7 @@ bool GenericClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
         }
         first = false;
         // Construct a new Cluster to hold the found component.
-        auto new_cluster = std::make_unique<GenericClusterImpl>(graph.m_next_sequence_counter++);
+        auto new_cluster = graph.CreateEmptyCluster(component_size);
         new_clusters.push_back(new_cluster.get());
         // Remember that all the component's transactions go to this new Cluster. The positions
         // will be determined below, so use -1 for now.
@@ -1857,7 +1869,7 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     GetRefIndex(ret) = idx;
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
     bool oversized = uint64_t(feerate.size) > m_max_cluster_size;
-    auto cluster = std::make_unique<GenericClusterImpl>(m_next_sequence_counter++);
+    auto cluster = CreateEmptyCluster(1);
     cluster->AppendTransaction(idx, feerate);
     auto cluster_ptr = cluster.get();
     int level = GetTopLevel();
