@@ -607,6 +607,9 @@ public:
      */
     const std::optional<uint256> m_from_snapshot_blockhash;
 
+    //! Accumulated dividend fees awaiting distribution.
+    CAmount m_dividend_pool GUARDED_BY(::cs_main){0};
+
     /**
      * The base of the snapshot this chainstate was created from.
      *
@@ -637,6 +640,10 @@ public:
         AssertLockHeld(::cs_main);
         return Assert(m_coins_views)->m_dbview;
     }
+
+    void LoadDividendPool() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void AddToDividendPool(CAmount amount) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    CAmount GetDividendPool() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_dividend_pool; }
 
     //! @returns A pointer to the mempool.
     CTxMemPool* GetMempool()

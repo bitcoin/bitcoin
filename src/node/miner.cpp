@@ -168,7 +168,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
     CAmount validator_fee = nFees * 9 / 10;
     CAmount dividend_fee = nFees - validator_fee;
-    (void)dividend_fee; // TODO: distribute to dividend pool
+    m_chainstate.AddToDividendPool(dividend_fee);
     coinbaseTx.vout[0].nValue = validator_fee + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
     // Dividend portion is currently unassigned; reserved for future distribution.
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;

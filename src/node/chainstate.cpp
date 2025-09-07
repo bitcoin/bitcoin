@@ -116,6 +116,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         // The on-disk coinsdb is now in a good state, create the cache
         chainstate->InitCoinsCache(chainman.m_total_coinstip_cache * init_cache_fraction);
         assert(chainstate->CanFlushToDisk());
+        chainstate->LoadDividendPool();
 
         if (!is_coinsview_empty(chainstate)) {
             // LoadChainTip initializes the chain based on CoinsTip()'s best block

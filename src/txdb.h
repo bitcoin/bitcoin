@@ -8,6 +8,7 @@
 
 #include <coins.h>
 #include <dbwrapper.h>
+#include <consensus/amount.h>
 #include <kernel/cs_main.h>
 #include <sync.h>
 #include <util/fs.h>
@@ -59,6 +60,10 @@ public:
 
     //! @returns filesystem path to on-disk storage or std::nullopt if in memory.
     std::optional<fs::path> StoragePath() { return m_db->StoragePath(); }
+
+    //! Read or update the dividend pool balance.
+    CAmount GetDividendPool() const;
+    bool WriteDividendPool(CAmount amount);
 };
 
 #endif // BITCOIN_TXDB_H
