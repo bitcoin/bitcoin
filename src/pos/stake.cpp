@@ -25,7 +25,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
              "CheckStakeKernelHash: height=%d amount=%d nTimeTx=%u nTimeBlockFrom=%u",
              pindexPrev->nHeight, amount, nTimeTx, nTimeBlockFrom);
 
-    // Require timestamp to be masked to PoSV3 granularity
+    // Require timestamp to be masked to PoSV3.1 granularity
     if (nTimeTx & STAKE_TIMESTAMP_MASK) {
         LogDebug(BCLog::STAKING,
                  "CheckStakeKernelHash: timestamp %u not masked", nTimeTx);
@@ -40,24 +40,26 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
         return false;
     }
 
-    // Derive a stake modifier using the previous block hash and stake input
+    // Derive a stake modifier using previous block hash, height and time
     HashWriter ss_mod;
-    ss_mod << pindexPrev->GetBlockHash() << prevout.hash << prevout.n;
+    ss_mod << pindexPrev->GetBlockHash() << pindexPrev->nHeight << pindexPrev->nTime;
     const uint256 stake_modifier = ss_mod.GetHash();
 
-    // Mask transaction time before hashing to reduce kernel search space
+    // Mask times before hashing to reduce kernel search space
     const unsigned int nTimeTxMasked{nTimeTx & ~STAKE_TIMESTAMP_MASK};
+    const unsigned int nTimeBlockFromMasked{nTimeBlockFrom & ~STAKE_TIMESTAMP_MASK};
 
-    // Build the kernel hash using the PoSV3 scheme
+    // Build the kernel hash using the PoSV3.1 scheme
     HashWriter ss_kernel;
-    ss_kernel << stake_modifier << nTimeBlockFrom << prevout.hash << prevout.n
-              << nTimeTxMasked;
+    ss_kernel << stake_modifier << hashBlockFrom << nTimeBlockFromMasked
+              << prevout.hash << prevout.n << nTimeTxMasked;
     hashProofOfStake = ss_kernel.GetHash();
 
-    // Target is weighted by coin amount
+    // Target is weighted by coin amount and coin age (in slots)
     arith_uint256 bnTarget;
     bnTarget.SetCompact(nBits);
     bnTarget *= uint64_t(amount);
+    bnTarget *= uint64_t((nTimeTxMasked - nTimeBlockFromMasked) / STAKE_TARGET_SPACING);
     bnTarget /= COIN;
 
     LogTrace(BCLog::STAKING,
@@ -105,6 +107,19 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
         return false;
     }
 
+    // Enforce block time masking and slotting
+    if (block.nTime & STAKE_TIMESTAMP_MASK) {
+        LogDebug(BCLog::STAKING,
+                 "ContextualCheckProofOfStake: block time %u not masked", block.nTime);
+        return false;
+    }
+    if (block.nTime <= pindexPrev->nTime ||
+        (block.nTime - pindexPrev->nTime) % STAKE_TARGET_SPACING != 0) {
+        LogDebug(BCLog::STAKING,
+                 "ContextualCheckProofOfStake: invalid block time-slot %u", block.nTime);
+        return false;
+    }
+
     const int64_t min_stake_age =
         (pindexPrev->nHeight + 1 < COINBASE_MATURITY) ? 0 : MIN_STAKE_AGE;
 
@@ -127,14 +142,14 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
             return false;
         }
 
-        // Only the kernel input must satisfy age and amount requirements in PoSV3
+        if (block.nTime <= pindexFrom->nTime ||
+            block.nTime - pindexFrom->nTime < min_stake_age) {
+            LogDebug(BCLog::STAKING,
+                     "ContextualCheckProofOfStake: input %s too young", txin.prevout.ToString());
+            return false;
+        }
+
         if (i == 0) {
-            if (block.nTime <= pindexFrom->nTime ||
-                block.nTime - pindexFrom->nTime < min_stake_age) {
-                LogDebug(BCLog::STAKING,
-                         "ContextualCheckProofOfStake: input %s too young", txin.prevout.ToString());
-                return false;
-            }
             if (coin.out.nValue < MIN_STAKE_AMOUNT) {
                 LogDebug(BCLog::STAKING,
                          "ContextualCheckProofOfStake: input %s value too low %d",
