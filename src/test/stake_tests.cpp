@@ -4,8 +4,10 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <validation.h>
 #include <test/util/setup_common.h>
 #include <boost/test/unit_test.hpp>
+#include <memory>
 
 BOOST_FIXTURE_TEST_SUITE(stake_tests, BasicTestingSetup)
 
@@ -188,6 +190,42 @@ BOOST_AUTO_TEST_CASE(height1_allows_young_coinstake)
 
     Consensus::Params params;
     BOOST_CHECK(ContextualCheckProofOfStake(block, &prev_index, view, chain, params));
+}
+
+BOOST_FIXTURE_TEST_CASE(reject_pow_after_height1, ChainTestingSetup)
+{
+    g_chainman = m_node.chainman.get();
+
+    uint256 prev_hash{1};
+    auto prev_index = std::make_unique<CBlockIndex>();
+    prev_index->nHeight = 1;
+    prev_index->nBits = 0x207fffff;
+    prev_index->phashBlock = &prev_hash;
+    {
+        LOCK(cs_main);
+        g_chainman->BlockIndex().emplace(prev_hash, prev_index.get());
+    }
+
+    CBlock block;
+    block.hashPrevBlock = prev_hash;
+    block.nBits = prev_index->nBits;
+    block.nTime = 2;
+
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].prevout.SetNull();
+    coinbase.vout.resize(1);
+    block.vtx.emplace_back(MakeTransactionRef(std::move(coinbase)));
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+
+    BlockValidationState state;
+    BOOST_CHECK(!CheckBlock(block, state, Params().GetConsensus()));
+
+    {
+        LOCK(cs_main);
+        g_chainman->BlockIndex().erase(prev_hash);
+    }
+    g_chainman = nullptr;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
