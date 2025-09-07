@@ -607,3 +607,8 @@ CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
     // Fetch balance from the wallet, taking into account the selected coins
     return wallet().getAvailableBalance(*control);
 }
+
+wallet::StakingStats WalletModel::getStakingStats() const
+{
+    return m_wallet->getStakingStats();
+}

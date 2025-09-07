@@ -71,6 +71,7 @@
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
+#include <wallet/receive.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
@@ -3228,6 +3229,25 @@ void CWallet::postInitProcess()
 bool CWallet::IsStaking() const
 {
     return m_staker && m_staker->IsActive();
+}
+
+StakingStats CWallet::GetStakingStats() const
+{
+    LOCK(cs_wallet);
+    StakingStats stats = m_staking_stats;
+    // Basic tracking: treat trusted balance as staked for now
+    stats.staked_balance = GetBalance(*this).m_mine_trusted;
+    return stats;
+}
+
+void CWallet::SetStakingStats(const StakingStats& stats)
+{
+    {
+        LOCK(cs_wallet);
+        m_staking_stats = stats;
+    }
+    WalletBatch batch(GetDatabase());
+    batch.WriteStakingStats(m_staking_stats);
 }
 
 bool CWallet::BackupWallet(const std::string& strDest) const

@@ -156,6 +156,8 @@ public:
     // Otherwise, uses the wallet's cached available balance.
     CAmount getAvailableBalance(const wallet::CCoinControl* control);
 
+    wallet::StakingStats getStakingStats() const;
+
 private:
     std::unique_ptr<interfaces::Wallet> m_wallet;
     std::unique_ptr<interfaces::Handler> m_handler_unload;

@@ -199,6 +199,18 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     ui->labelImmatureText->setVisible(showImmature);
 }
 
+void OverviewPage::setStakingStats(const wallet::StakingStats& stats)
+{
+    BitcoinUnit unit = walletModel->getOptionsModel()->getDisplayUnit();
+    ui->labelStaked->setText(BitcoinUnits::formatWithPrivacy(unit, stats.staked_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+    ui->labelReward->setText(BitcoinUnits::formatWithPrivacy(unit, stats.current_reward, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
+    if (stats.next_reward_time > 0) {
+        ui->labelNextReward->setText(GUIUtil::dateTimeStr(stats.next_reward_time));
+    } else {
+        ui->labelNextReward->setText(QString("--"));
+    }
+}
+
 void OverviewPage::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
@@ -234,6 +246,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         LimitTransactionRows();
         // Keep up to date with wallet
         setBalance(model->getCachedBalance());
+        setStakingStats(model->getStakingStats());
         connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
 
         connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);

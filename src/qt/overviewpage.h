@@ -40,6 +40,7 @@ public:
 public Q_SLOTS:
     void setBalance(const interfaces::WalletBalances& balances);
     void setPrivacy(bool privacy);
+    void setStakingStats(const wallet::StakingStats& stats);
 
 Q_SIGNALS:
     void transactionClicked(const QModelIndex &index);

@@ -16,6 +16,7 @@
 #include <util/result.h>
 #include <util/transaction_identifier.h>
 #include <util/ui_change_type.h>
+#include <wallet/types.h>
 
 #include <cstdint>
 #include <functional>
@@ -158,6 +159,9 @@ public:
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const Txid& txid) = 0;
+
+    //! Retrieve staking statistics.
+    virtual wallet::StakingStats getStakingStats() = 0;
 
     //! Abandon transaction.
     virtual bool abandonTransaction(const Txid& txid) = 0;

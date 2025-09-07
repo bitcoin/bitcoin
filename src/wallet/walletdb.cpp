@@ -60,6 +60,7 @@ const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
+const std::string STAKING_STATS{"stakestats"};
 const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
 } // namespace DBKeys
 
@@ -1171,6 +1172,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
         // Load tx records
         result = std::max(LoadTxRecords(pwallet, *m_batch, any_unordered), result);
+
+        // Load staking statistics if present
+        ReadStakingStats(pwallet->m_staking_stats);
     } catch (std::runtime_error& e) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.
@@ -1275,6 +1279,16 @@ bool WalletBatch::EraseAddressData(const CTxDestination& dest)
 bool WalletBatch::WriteWalletFlags(const uint64_t flags)
 {
     return WriteIC(DBKeys::FLAGS, flags);
+}
+
+bool WalletBatch::WriteStakingStats(const StakingStats& stats)
+{
+    return WriteIC(DBKeys::STAKING_STATS, stats);
+}
+
+bool WalletBatch::ReadStakingStats(StakingStats& stats)
+{
+    return m_batch->Read(DBKeys::STAKING_STATS, stats);
 }
 
 bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)

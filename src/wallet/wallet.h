@@ -500,6 +500,12 @@ public:
     /** Return true if the staking thread is running. */
     bool IsStaking() const;
 
+    /** Return staking statistics. */
+    StakingStats GetStakingStats() const;
+
+    /** Update staking statistics and persist to disk. */
+    void SetStakingStats(const StakingStats& stats);
+
     /** Map from txid to CWalletTx for all transactions this wallet is
      * interested in, including received and sent transactions. */
     std::unordered_map<Txid, CWalletTx, SaltedTxidHasher> mapWallet GUARDED_BY(cs_wallet);
@@ -523,6 +529,9 @@ public:
 
     /** Proof-of-stake staker thread. */
     std::unique_ptr<BitGoldStaker> m_staker;
+
+    /** Cached staking statistics. */
+    StakingStats m_staking_stats GUARDED_BY(cs_wallet);
 
     /** Interface for accessing chain state. */
     interfaces::Chain& chain() const
