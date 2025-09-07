@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/wallet.h>
+#include <wallet/spend.h>
 
 #ifdef ENABLE_BULLETPROOFS
 #include <bulletproofs.h>
@@ -3226,9 +3227,43 @@ void CWallet::postInitProcess()
     }
 }
 
+void CWallet::StartStaking()
+{
+    if (!m_staker) {
+        m_staker = std::make_unique<BitGoldStaker>(*this);
+    }
+    if (!m_staker->IsActive()) {
+        m_staker->Start();
+    }
+}
+
+void CWallet::StopStaking()
+{
+    if (m_staker) {
+        m_staker->Stop();
+    }
+}
+
 bool CWallet::IsStaking() const
 {
     return m_staker && m_staker->IsActive();
+}
+
+std::vector<COutput> CWallet::GetStakeableCoins(int min_depth, std::chrono::seconds min_age, CAmount min_amount) const
+{
+    std::vector<COutput> candidates;
+    LOCK(cs_wallet);
+    for (const COutput& out : AvailableCoins(*this).All()) {
+        if (!out.spendable) continue;
+        if (out.depth < min_depth) continue;
+        if (out.txout.nValue < min_amount) continue;
+        if (min_age.count() > 0) {
+            int64_t age = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()) - out.time;
+            if (age < min_age.count()) continue;
+        }
+        candidates.push_back(out);
+    }
+    return candidates;
 }
 
 StakingStats CWallet::GetStakingStats() const

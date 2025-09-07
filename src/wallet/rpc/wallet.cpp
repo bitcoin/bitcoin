@@ -917,6 +917,57 @@ static RPCHelpMan getstakingstats()
         }};
 }
 
+static RPCHelpMan walletstaking()
+{
+    return RPCHelpMan{
+        "walletstaking",
+        "Enable or disable staking for this wallet.",
+        {
+            {"enabled", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to enable staking, false to disable"},
+        },
+        RPCResult{RPCResult::Type::BOOL, "", "true if staking is active after the call"},
+        RPCExamples{HelpExampleCli("walletstaking", "true") + HelpExampleCli("walletstaking", "false") +
+                    HelpExampleRpc("walletstaking", "true")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+
+            bool enable = request.params[0].get_bool();
+            if (enable) {
+                pwallet->StartStaking();
+            } else {
+                pwallet->StopStaking();
+            }
+            return UniValue(pwallet->IsStaking());
+        }};
+}
+
+static RPCHelpMan getstakestat()
+{
+    return RPCHelpMan{
+        "getstakestat",
+        "Returns staking statistics for this wallet.",
+        {},
+        RPCResult{RPCResult::Type::OBJ, "", "", {
+                                         {RPCResult::Type::NUM, "staked", "currently staked balance"},
+                                         {RPCResult::Type::NUM, "current_reward", "last staking reward"},
+                                         {RPCResult::Type::NUM, "next_reward_time", "estimated UNIX time of next reward"},
+                                     }},
+        RPCExamples{HelpExampleCli("getstakestat", "") + HelpExampleRpc("getstakestat", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+            wallet::StakingStats stats = pwallet->GetStakingStats();
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("staked", ValueFromAmount(stats.staked_balance));
+            obj.pushKV("current_reward", ValueFromAmount(stats.current_reward));
+            obj.pushKV("next_reward_time", stats.next_reward_time);
+            return obj;
+        }};
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -1045,6 +1096,8 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &stakerstatus},
         {"wallet", &getstakinginfo},
         {"wallet", &getstakingstats},
+        {"wallet", &walletstaking},
+        {"wallet", &getstakestat},
     };
     return commands;
 }

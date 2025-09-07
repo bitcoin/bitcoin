@@ -34,6 +34,7 @@
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
+#include <wallet/coinselection.h>
 #include <wallet/walletutil.h>
 
 #ifdef ENABLE_BULLETPROOFS
@@ -490,6 +491,9 @@ public:
         if (m_staker) m_staker->Stop();
     }
 
+    void StartStaking();
+    void StopStaking();
+
     bool IsCrypted() const;
     bool IsLocked() const override;
     bool Lock();
@@ -499,6 +503,9 @@ public:
 
     /** Return true if the staking thread is running. */
     bool IsStaking() const;
+
+    /** Return UTXOs eligible for staking. */
+    std::vector<COutput> GetStakeableCoins(int min_depth, std::chrono::seconds min_age, CAmount min_amount) const;
 
     /** Return staking statistics. */
     StakingStats GetStakingStats() const;
