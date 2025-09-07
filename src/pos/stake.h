@@ -10,10 +10,12 @@
 
 class CBlockIndex;
 
-// Timestamp granularity for staked blocks (64 seconds, PoSV3)
-static constexpr unsigned int STAKE_TIMESTAMP_MASK = 0x3F;
-// Minimum coin age for staking (8 hours, PoSV3)
-static constexpr int64_t MIN_STAKE_AGE = 60 * 60 * 8;
+// Timestamp granularity for staked blocks (16 seconds, PoSV3.1)
+static constexpr unsigned int STAKE_TIMESTAMP_MASK = 0xF;
+// Target spacing between staked blocks (16 seconds, PoSV3.1)
+static constexpr unsigned int STAKE_TARGET_SPACING = 16;
+// Minimum coin age for staking (1 hour, PoSV3.1)
+static constexpr int64_t MIN_STAKE_AGE = 60 * 60;
 
 /** Check that the kernel for a stake meets the required target */
 bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,

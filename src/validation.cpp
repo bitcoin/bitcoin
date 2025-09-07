@@ -147,6 +147,16 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         }
     }
 
+    // Reject legacy coinstake format (null prevout)
+    if (block.vtx.size() > 1) {
+        const CTransactionRef& coinstake{block.vtx[1]};
+        if (!IsProofOfStake(block) && !coinstake->vin.empty() &&
+            coinstake->vin[0].prevout.IsNull()) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                 "bad-legacy-coinstake", "legacy coinstake format");
+        }
+    }
+
     // Verify merkle root
     if (fCheckMerkleRoot) {
         if (block.hashMerkleRoot != BlockMerkleRoot(block)) {
@@ -171,7 +181,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         CCoinsView dummy_view;
         CCoinsViewCache view(&dummy_view);
         CChain chain;
-        chain.SetTip(const_cast<CBlockIndex*>(pindexPrev));
+        chain.SetTip(*const_cast<CBlockIndex*>(pindexPrev));
         if (!ContextualCheckProofOfStake(block, pindexPrev, view, chain, params)) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos", "proof of stake check failed");
         }
