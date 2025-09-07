@@ -220,6 +220,44 @@ BOOST_FIXTURE_TEST_CASE(reject_pow_after_height1, ChainTestingSetup)
 
     BlockValidationState state;
     BOOST_CHECK(!CheckBlock(block, state, Params().GetConsensus()));
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-pow");
+
+    {
+        LOCK(cs_main);
+        g_chainman->BlockIndex().erase(prev_hash);
+    }
+    g_chainman = nullptr;
+}
+
+BOOST_FIXTURE_TEST_CASE(process_new_block_rejects_pow_height2, ChainTestingSetup)
+{
+    g_chainman = m_node.chainman.get();
+
+    uint256 prev_hash{1};
+    auto prev_index = std::make_unique<CBlockIndex>();
+    prev_index->nHeight = 1;
+    prev_index->nBits = 0x207fffff;
+    prev_index->phashBlock = &prev_hash;
+    {
+        LOCK(cs_main);
+        g_chainman->BlockIndex().emplace(prev_hash, prev_index.get());
+    }
+
+    CBlock block;
+    block.hashPrevBlock = prev_hash;
+    block.nBits = prev_index->nBits;
+    block.nTime = 2;
+
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].prevout.SetNull();
+    coinbase.vout.resize(1);
+    block.vtx.emplace_back(MakeTransactionRef(std::move(coinbase)));
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+
+    bool new_block{false};
+    BOOST_CHECK(!g_chainman->ProcessNewBlock(std::make_shared<const CBlock>(block),
+                                             /*force_processing=*/true, /*min_pow_checked=*/true, &new_block));
 
     {
         LOCK(cs_main);
