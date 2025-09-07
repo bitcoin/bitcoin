@@ -5,6 +5,7 @@
 #include <txgraph.h>
 
 #include <cluster_linearize.h>
+#include <crypto/siphash.h>
 #include <random.h>
 #include <util/bitset.h>
 #include <util/check.h>
@@ -388,6 +389,8 @@ private:
     /** The number of linearization improvement steps needed per cluster to be considered
      *  acceptable. */
     const uint64_t m_acceptable_iters;
+    /** SipHash keys for randomizing implicit Cluster ordering. */
+    const uint64_t m_sequence_hash_k0, m_sequence_hash_k1;
 
     /** Information about one group of Clusters to be merged. */
     struct GroupEntry
@@ -460,15 +463,26 @@ private:
             m_graph_index{graph_index}, m_chunk_count{chunk_count} {}
     };
 
+    /** Compute the hash of a Cluster sequence number. This is used for randomizing the order of
+     *  equal-feerate transactions in distinct clusters, to avoid leaking insertion order. */
+    uint64_t ClusterSequenceHash(uint64_t sequence) const noexcept
+    {
+        return CSipHasher(m_sequence_hash_k0, m_sequence_hash_k1).Write(sequence).Finalize();
+    }
+
     /** Compare two Cluster* by their m_sequence value (while supporting nullptr). */
-    static std::strong_ordering CompareClusters(Cluster* a, Cluster* b) noexcept
+    std::strong_ordering CompareClusters(Cluster* a, Cluster* b) const noexcept
     {
         // The nullptr pointer compares before everything else.
         if (a == nullptr || b == nullptr) {
             return (a != nullptr) <=> (b != nullptr);
         }
-        // If neither pointer is nullptr, compare the Clusters' sequence numbers.
+        // If neither pointer is nullptr, compare the Clusters' sequence numbers' hashes.
         Assume(a == b || a->m_sequence != b->m_sequence);
+        auto hash_a = ClusterSequenceHash(a->m_sequence);
+        auto hash_b = ClusterSequenceHash(b->m_sequence);
+        if (hash_a != hash_b) return hash_a <=> hash_b;
+        // As a final tiebreak, compare the sequence numbers themselves.
         return a->m_sequence <=> b->m_sequence;
     }
 
@@ -596,6 +610,7 @@ public:
         m_max_cluster_count(max_cluster_count),
         m_max_cluster_size(max_cluster_size),
         m_acceptable_iters(acceptable_iters),
+        m_sequence_hash_k0(m_rng.rand64()), m_sequence_hash_k1(m_rng.rand64()),
         m_main_chunkindex(ChunkOrder(this))
     {
         Assume(max_cluster_count >= 1);
@@ -1109,7 +1124,7 @@ std::vector<Cluster*> TxGraphImpl::GetConflicts() const noexcept
         }
     }
     // Deduplicate the result (the same Cluster may appear multiple times).
-    std::sort(ret.begin(), ret.end(), [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
+    std::sort(ret.begin(), ret.end(), [this](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
     ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
     return ret;
 }
@@ -2414,7 +2429,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* c
         matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster_level].index);
     }
     // Group by Cluster.
-    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
+    std::sort(matches.begin(), matches.end(), [this](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
     // Dispatch to the Clusters.
     std::span match_span(matches);
     std::vector<TxGraph::Ref*> ret;
@@ -2447,7 +2462,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref*
         matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster_level].index);
     }
     // Group by Cluster.
-    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
+    std::sort(matches.begin(), matches.end(), [this](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
     // Dispatch to the Clusters.
     std::span match_span(matches);
     std::vector<TxGraph::Ref*> ret;
@@ -2719,7 +2734,7 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
         if (cluster != nullptr) clusters.push_back(cluster);
     }
     // Count the number of distinct elements in clusters.
-    std::sort(clusters.begin(), clusters.end(), [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
+    std::sort(clusters.begin(), clusters.end(), [this](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
     Cluster* last{nullptr};
     GraphIndex ret{0};
     for (Cluster* cluster : clusters) {
