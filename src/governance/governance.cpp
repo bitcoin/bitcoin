@@ -1005,19 +1005,6 @@ MessageProcessingResult CGovernanceManager::SyncObjects(CNode& peer, CConnman& c
             continue;
         }
 
-        if (peer.nVersion < GOVSCRIPT_PROTO_VERSION && govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
-            // We know this proposal is valid locally, otherwise we would not store it.
-            // But we don't want to relay it to pre-GOVSCRIPT_PROTO_VERSION peers if payment_address is p2sh
-            // because they won't accept it anyway and will simply ban us eventually.
-            CProposalValidator validator(govobj.GetDataAsHexString(), false /* no script */);
-            if (!validator.Validate(false /* ignore expiration */)) {
-                // The only way we could get here is when proposal is valid but payment_address is actually p2sh.
-                LogPrintf("CGovernanceManager::%s -- not syncing p2sh govobj to older node: %s, peer=%d\n", __func__,
-                    strHash, peer.GetId());
-                continue;
-            }
-        }
-
         // Push the inventory budget proposal message over to the other client
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- syncing govobj: %s, peer=%d\n", __func__, strHash, peer.GetId());
         ret.m_inventory.emplace_back(MSG_GOVERNANCE_OBJECT, nHash);
