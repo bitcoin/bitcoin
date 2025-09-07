@@ -112,14 +112,7 @@ TRACEPOINT_SEMAPHORE(validation, block_connected);
 TRACEPOINT_SEMAPHORE(utxocache, flush);
 TRACEPOINT_SEMAPHORE(mempool, replaced);
 TRACEPOINT_SEMAPHORE(mempool, rejected);
-
-static bool CheckProofOfWork(const uint256& hash, unsigned int nBits, const Consensus::Params& params)
-{
-    arith_uint256 bnTarget;
-    bnTarget.SetCompact(nBits);
-    if (bnTarget <= 0 || bnTarget > UintToArith256(params.powLimit)) return false;
-    return UintToArith256(hash) <= bnTarget;
-}
+ChainstateManager* g_chainman{nullptr};
 
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& params, bool fCheckPOW, bool fCheckMerkleRoot)
 {
@@ -157,18 +150,39 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         }
     }
 
+    // Look up previous block index
+    const CBlockIndex* pindexPrev{nullptr};
+    {
+        LOCK(cs_main);
+        if (g_chainman) {
+            pindexPrev = g_chainman->m_blockman.LookupBlockIndex(block.hashPrevBlock);
+        }
+    }
+    if (!pindexPrev) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-prevblk", "previous block not found");
+    }
+
     // Proof checks
     if (IsProofOfStake(block)) {
-        const CBlockIndex* pindexPrev{nullptr};
         CCoinsView dummy_view;
         CCoinsViewCache view(&dummy_view);
         CChain chain;
-        if (pindexPrev && !ContextualCheckProofOfStake(block, pindexPrev, view, chain, params)) {
+        chain.SetTip(const_cast<CBlockIndex*>(pindexPrev));
+        if (!ContextualCheckProofOfStake(block, pindexPrev, view, chain, params)) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos", "proof of stake check failed");
         }
-    } else if (fCheckPOW) {
-        if (!CheckProofOfWork(block.GetHash(), block.nBits, params)) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
+    } else {
+        // Disallow proof-of-work blocks beyond height 1
+        if (pindexPrev->nHeight >= 1) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pow", "proof of work block too high");
+        }
+        if (fCheckPOW) {
+            arith_uint256 bnTarget;
+            bnTarget.SetCompact(block.nBits);
+            if (bnTarget <= 0 || bnTarget > UintToArith256(params.powLimit) ||
+                UintToArith256(block.GetHash()) > bnTarget) {
+                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
+            }
         }
     }
 
