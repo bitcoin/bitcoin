@@ -7,6 +7,7 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <uint256.h>
+#include <util/time.h>
 
 class CBlockIndex;
 
@@ -23,7 +24,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
                           CAmount amount, const COutPoint& prevout,
                           unsigned int nTimeTx, uint256& hashProofOfStake,
                           bool fPrintProofOfStake,
-                          int64_t min_stake_age = MIN_STAKE_AGE);
+                          const Consensus::Params& params);
 
 /**
  * Validate the proof-of-stake for a block using contextual chain information.
@@ -37,5 +38,12 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
 
 /** Return true if the block appears to be proof-of-stake. */
 bool IsProofOfStake(const CBlock& block);
+
+inline bool CheckStakeTimestamp(const CBlockHeader& h, const Consensus::Params& p)
+{
+    if ((h.nTime & p.nStakeTimestampMask) != 0) return false;
+    if (h.nTime > GetAdjustedTime() + 15) return false;
+    return true;
+}
 
 #endif // BITCOIN_POS_STAKE_H

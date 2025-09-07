@@ -103,15 +103,13 @@ void BitGoldStaker::ThreadStaker()
 
                         unsigned int nTimeTx = std::max<int64_t>(pindexPrev->GetMedianTimePast() + 1,
                                                                  TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()));
-                        nTimeTx &= ~STAKE_TIMESTAMP_MASK;
+                        nTimeTx &= ~consensus.nStakeTimestampMask;
                         unsigned int nBits = pindexPrev->nBits;
                         uint256 hash_proof;
                         LogTrace(BCLog::STAKING, "BitGoldStaker: checking kernel for %s", stake_out.outpoint.ToString());
-                        const int64_t min_stake_age =
-                            (pindexPrev->nHeight + 1 < COINBASE_MATURITY) ? 0 : MIN_STAKE_AGE;
                         if (!CheckStakeKernelHash(pindexPrev, nBits, pindexFrom->GetBlockHash(), pindexFrom->nTime,
                                                   stake_out.txout.nValue, stake_out.outpoint, nTimeTx, hash_proof, true,
-                                                  min_stake_age)) {
+                                                  consensus)) {
                             LogDebug(BCLog::STAKING, "BitGoldStaker: kernel check failed\n");
                             continue;
                         }

@@ -29,9 +29,10 @@ BOOST_AUTO_TEST_CASE(valid_kernel)
     uint256 hash_proof;
     unsigned int nBits = 0x207fffff; // very low difficulty
     unsigned int nTimeTx = nTimeBlockFrom + MIN_STAKE_AGE; // exactly minimum age
+    Consensus::Params params;
 
     BOOST_CHECK(CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
-                                     amount, prevout, nTimeTx, hash_proof, false));
+                                     amount, prevout, nTimeTx, hash_proof, false, params));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_kernel_time)
@@ -50,9 +51,10 @@ BOOST_AUTO_TEST_CASE(invalid_kernel_time)
     uint256 hash_proof;
     unsigned int nBits = 0x207fffff;
     unsigned int nTimeTx = MIN_STAKE_AGE - 16; // not old enough and masked
+    Consensus::Params params;
 
     BOOST_CHECK(!CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
-                                      amount, prevout, nTimeTx, hash_proof, false));
+                                      amount, prevout, nTimeTx, hash_proof, false, params));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_kernel_target)
@@ -71,9 +73,10 @@ BOOST_AUTO_TEST_CASE(invalid_kernel_target)
     uint256 hash_proof;
     unsigned int nBits = 0x1;     // extremely high difficulty
     unsigned int nTimeTx = MIN_STAKE_AGE;    // minimal age
+    Consensus::Params params;
 
     BOOST_CHECK(!CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
-                                      amount, prevout, nTimeTx, hash_proof, false));
+                                      amount, prevout, nTimeTx, hash_proof, false, params));
 }
 
 BOOST_AUTO_TEST_CASE(kernel_hash_matches_expectation)
@@ -108,8 +111,9 @@ BOOST_AUTO_TEST_CASE(kernel_hash_matches_expectation)
     }
 
     uint256 hash_proof;
+    Consensus::Params params;
     BOOST_CHECK(CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
-                                     amount, prevout, nTimeTx, hash_proof, false));
+                                     amount, prevout, nTimeTx, hash_proof, false, params));
     BOOST_CHECK_EQUAL(hash_proof, expected_hash);
 }
 
@@ -130,11 +134,12 @@ BOOST_AUTO_TEST_CASE(stake_modifier_differs_per_input)
     COutPoint prevout2{Txid::FromUint256(uint256{4}), 1};
 
     uint256 proof1;
+    Consensus::Params params;
     BOOST_CHECK(CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
-                                     100 * COIN, prevout1, nTimeTx, proof1, false));
+                                     100 * COIN, prevout1, nTimeTx, proof1, false, params));
     uint256 proof2;
     BOOST_CHECK(CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
-                                     100 * COIN, prevout2, nTimeTx, proof2, false));
+                                     100 * COIN, prevout2, nTimeTx, proof2, false, params));
     BOOST_CHECK(proof1 != proof2);
 }
 

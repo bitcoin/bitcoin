@@ -125,6 +125,12 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     // Height at which proof-of-stake activates
     int posActivationHeight{1};
+    // Enable proof-of-stake validation when true
+    bool fEnablePoS{false};
+    // Required timestamp mask for staked blocks
+    uint32_t nStakeTimestampMask{0xF};
+    // Minimum coin age required for staking
+    int64_t nStakeMinAge{60 * 60};
     // Seconds between stake modifier recalculations
     int64_t nStakeModifierInterval{60 * 60};
     /** The best chain should have at least this much work */
