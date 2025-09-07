@@ -2032,10 +2032,20 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 
 /**
  * Iterate over the given headers and ensure each one satisfies the proof of
- * work or proof of stake target specified by its nBits field.
+ * work or proof of stake target specified by its nBits field and matches any
+ * defined checkpoints for its height.
+ *
+ * @param headers       Sequence of consecutive block headers.
+ * @param chainparams   Chain parameters providing consensus rules and
+ *                      checkpoint data.
+ * @param prev_height   Height of the block preceding \p headers. The first
+ *                      header is assumed to be at prev_height + 1.
  */
-bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consensus::Params& consensusParams)
+bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers,
+                         const CChainParams& chainparams,
+                         int prev_height)
 {
+    const auto& checkpoints{chainparams.Checkpoints().checkpoints};
     for (const CBlockHeader& header : headers) {
         bool fNegative{false};
         bool fOverflow{false};
@@ -2043,7 +2053,7 @@ bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consens
         bnTarget.SetCompact(header.nBits, &fNegative, &fOverflow);
 
         // Range checks
-        if (fNegative || fOverflow || bnTarget == 0 || bnTarget > UintToArith256(consensusParams.powLimit)) {
+        if (fNegative || fOverflow || bnTarget == 0 || bnTarget > UintToArith256(chainparams.GetConsensus().powLimit)) {
             return false;
         }
 
@@ -2051,6 +2061,13 @@ bool HasValidProofOfWork(const std::vector<CBlockHeader>& headers, const Consens
         // valid for both proof-of-work and proof-of-stake blocks as both must
         // have hashes below the target encoded in nBits.
         if (UintToArith256(header.GetHash()) > bnTarget) {
+            return false;
+        }
+
+        // Advance height for this header and verify checkpoint if one exists.
+        ++prev_height;
+        const auto it{checkpoints.find(prev_height)};
+        if (it != checkpoints.end() && header.GetHash() != it->second) {
             return false;
         }
     }
