@@ -37,20 +37,8 @@ public:
             pn[i] = 0;
     }
 
-    base_uint(const base_uint& b)
-    {
-        for (int i = 0; i < WIDTH; i++)
-            pn[i] = b.pn[i];
-    }
-
-    base_uint& operator=(const base_uint& b)
-    {
-        if (this != &b) {
-            for (int i = 0; i < WIDTH; i++)
-                pn[i] = b.pn[i];
-        }
-        return *this;
-    }
+    base_uint(const base_uint& b) = default;
+    base_uint& operator=(const base_uint& b) = default;
 
     base_uint(uint64_t b)
     {
@@ -271,6 +259,9 @@ public:
     friend uint256 ArithToUint256(const arith_uint256 &);
     friend arith_uint256 UintToArith256(const uint256 &);
 };
+
+// Keeping the trivially copyable property is beneficial for performance
+static_assert(std::is_trivially_copyable_v<arith_uint256>);
 
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
