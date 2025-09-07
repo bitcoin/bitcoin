@@ -60,6 +60,7 @@
 #include <util/time.h>
 #include <util/trace.h>
 #include <validation.h>
+#include <pos/stake.h>
 
 #include <algorithm>
 #include <array>
@@ -89,6 +90,13 @@ using namespace util::hex_literals;
 
 TRACEPOINT_SEMAPHORE(net, inbound_message);
 TRACEPOINT_SEMAPHORE(net, misbehaving_connection);
+
+/** Determine whether a transaction is a coinstake. */
+static bool IsCoinStakeTx(const CTransaction& tx)
+{
+    return !tx.vin.empty() && tx.vout.size() > 1 &&
+           !tx.vin[0].prevout.IsNull() && tx.vout[0].IsNull();
+}
 
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
@@ -4294,6 +4302,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const uint256& txid = ptx->GetHash();
         const uint256& wtxid = ptx->GetWitnessHash();
 
+        if (IsCoinStakeTx(tx)) {
+            LogDebug(BCLog::NET, "received coinstake tx %s peer=%d\n", tx.GetHash().ToString(), pfrom.GetId());
+        }
+
         const uint256& hash = peer->m_wtxid_relay ? wtxid : txid;
         AddKnownTx(*peer, hash);
 
@@ -4661,6 +4673,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         vRecv >> TX_WITH_WITNESS(*pblock);
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
+
+        if (IsProofOfStake(*pblock)) {
+            LogDebug(BCLog::NET, "block %s identified as PoS\n", pblock->GetHash().ToString());
+        }
 
         const CBlockIndex* prev_block{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
 
