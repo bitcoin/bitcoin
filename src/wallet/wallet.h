@@ -36,6 +36,10 @@
 #include <wallet/types.h>
 #include <wallet/walletutil.h>
 
+#ifdef ENABLE_BULLETPROOFS
+#include <bulletproofs.h>
+#endif
+
 #include <atomic>
 #include <cassert>
 #include <cstddef>
@@ -1166,6 +1170,11 @@ struct MigrationResult {
 [[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context);
 //! Requirement: The wallet provided to this function must be isolated, with no attachment to the node's context.
 [[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context);
+
+#ifdef ENABLE_BULLETPROOFS
+bool CreateBulletproofProof(CWallet& wallet, const CTransaction& tx, CBulletproof& proof);
+bool VerifyBulletproofProof(const CTransaction& tx, const CBulletproof& proof);
+#endif
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLET_H

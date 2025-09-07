@@ -46,3 +46,6 @@ target_link_libraries(bitcoin_wallet
     Boost::headers
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
+if(TARGET bulletproofs)
+  target_link_libraries(bitcoin_wallet PRIVATE bulletproofs)
+endif()
