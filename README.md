@@ -14,7 +14,10 @@ validate blocks and transactions. The protocol targets 8-minute block times and
 the block subsidy halves every 90 000 blocks. In addition to proof-of-work,
 BitGold implements proof-of-stake staking so holders can help secure the
 network. The software also includes a wallet and graphical user interface,
-which can be optionally built.
+which can be optionally built. The current release implements
+Proof-of-Stake 3.1, adding dynamic stake weighting and cold staking support.
+See [doc/pos3.1-overview.md](doc/pos3.1-overview.md) for an overview and
+deployment guidance.
 
 Further information about BitGold is available in the [doc folder](/doc).
 
@@ -38,7 +41,9 @@ Staking
 
 To participate in BitGold's proof-of-stake, run `bitgoldd` or `bitgold-qt` with
 `-staker`, or add `staker=1` to `bitgold.conf`. The staking status can be
-checked with `bitgold-cli stakerstatus`.
+checked with `bitgold-cli stakerstatus`. The staking engine uses the
+PoS 3.1 consensus rules described in
+[doc/pos3.1-overview.md](doc/pos3.1-overview.md).
 
 Testing
 -------
