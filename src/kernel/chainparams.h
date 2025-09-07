@@ -20,6 +20,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <utility>
 #include <vector>
 
@@ -59,6 +60,15 @@ struct ChainTxData {
     int64_t nTime;    //!< UNIX timestamp of last known number of transactions
     uint64_t tx_count; //!< total number of transactions between genesis and that timestamp
     double dTxRate;   //!< estimated number of transactions per second after that timestamp
+};
+
+/**
+ * Contains a set of block checkpoints mapping heights to block hashes.
+ * These checkpoints are used to guard against deep reorg attacks by
+ * asserting that a block at a given height must match the expected hash.
+ */
+struct CheckpointData {
+    std::map<int, uint256> checkpoints;
 };
 
 /**
@@ -106,6 +116,7 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::string& Bech32HRP() const { return bech32_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
+    const CheckpointData& Checkpoints() const { return checkpointData; }
 
     std::optional<AssumeutxoData> AssumeutxoForHeight(int height) const
     {
@@ -170,6 +181,7 @@ protected:
     bool m_is_mockable_chain;
     std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
+    CheckpointData checkpointData;
 };
 
 std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& pchMessageStart);

@@ -185,6 +185,11 @@ public:
             .tx_count = 1161875261,
             .dTxRate = 4.620728156243148,
         };
+
+        checkpointData = {{
+            {0, consensus.hashGenesisBlock},
+            {886157, uint256{"00000000000000000001b658dd1120e82e66d2790811f89ede9742ada3ed6d77"}},
+        }};
     }
 };
 
@@ -279,6 +284,11 @@ public:
             .tx_count = 475477615,
             .dTxRate = 17.15933950357594,
         };
+
+        checkpointData = {{
+            {0, consensus.hashGenesisBlock},
+            {3974606, uint256{"00000000000003fc7967410ba2d0a8a8d50daedc318d43e8baf1a9782c236a57"}},
+        }};
     }
 };
 
@@ -392,6 +402,17 @@ public:
 
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
+
+        if (!options.challenge) {
+            checkpointData = {{
+                {0, consensus.hashGenesisBlock},
+                {237722, uint256{"000000895a110f46e59eb82bbc5bfb67fa314656009c295509c21b4999f5180a"}},
+            }};
+        } else {
+            checkpointData = {{
+                {0, consensus.hashGenesisBlock},
+            }};
+        }
     }
 };
 
@@ -515,6 +536,10 @@ public:
             .tx_count = 0,
             .dTxRate = 0.001, // Set a non-zero rate to make it testable
         };
+
+        checkpointData = {{
+            {0, consensus.hashGenesisBlock},
+        }};
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 196);
