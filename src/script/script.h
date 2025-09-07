@@ -209,6 +209,9 @@ enum opcodetype
     // Opcode added by BIP 342 (Tapscript)
     OP_CHECKSIGADD = 0xba,
 
+    // Placeholder opcode to carry Bulletproof proofs
+    OP_BULLETPROOF = 0xbb,
+
     OP_INVALIDOPCODE = 0xff,
 };
 

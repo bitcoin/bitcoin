@@ -7,6 +7,22 @@ include(AddWindowsResources)
 configure_file(${PROJECT_SOURCE_DIR}/cmake/bitcoin-build-config.h.in bitcoin-build-config.h USE_SOURCE_PERMISSIONS @ONLY)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
+option(ENABLE_BULLETPROOFS "Enable Bulletproofs support" OFF)
+if(ENABLE_BULLETPROOFS)
+  find_package(PkgConfig)
+  if(PkgConfig_FOUND)
+    pkg_check_modules(SECP256K1_ZKP libsecp256k1_zkp)
+    if(SECP256K1_ZKP_FOUND)
+      add_library(bulletproofs INTERFACE)
+      target_include_directories(bulletproofs INTERFACE ${SECP256K1_ZKP_INCLUDE_DIRS})
+      target_link_libraries(bulletproofs INTERFACE ${SECP256K1_ZKP_LIBRARIES})
+      add_compile_definitions(ENABLE_BULLETPROOFS)
+    else()
+      message(WARNING "libsecp256k1_zkp not found, Bulletproofs disabled")
+    endif()
+  endif()
+endif()
+
 #=============================
 # Subprojects
 #=============================
@@ -332,6 +348,9 @@ target_link_libraries(bitcoin_node
     $<TARGET_NAME_IF_EXISTS:libevent::pthreads>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
+if(TARGET bulletproofs)
+  target_link_libraries(bitcoin_node PRIVATE bulletproofs)
+endif()
 
 # Bitcoin wrapper executable that can call other executables.
 if(BUILD_BITCOIN_BIN)

@@ -5,6 +5,10 @@
 
 #include <wallet/wallet.h>
 
+#ifdef ENABLE_BULLETPROOFS
+#include <bulletproofs.h>
+#endif
+
 #include <addresstype.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 #include <blockfilter.h>
@@ -4464,4 +4468,19 @@ std::optional<WalletTXO> CWallet::GetTXO(const COutPoint& outpoint) const
     }
     return it->second;
 }
+#ifdef ENABLE_BULLETPROOFS
+bool CreateBulletproofProof(CWallet& wallet, const CTransaction& tx, CBulletproof& proof)
+{
+    (void)wallet;
+    (void)tx;
+    proof.proof.clear();
+    return true;
+}
+
+bool VerifyBulletproofProof(const CTransaction& tx, const CBulletproof& proof)
+{
+    (void)tx;
+    return VerifyBulletproof(proof);
+}
+#endif
 } // namespace wallet
