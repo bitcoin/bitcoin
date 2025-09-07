@@ -177,7 +177,14 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     }
 
     // Proof checks
-    if (IsProofOfStake(block)) {
+    const int next_height{pindexPrev->nHeight + 1};
+    if (params.fEnablePoS && next_height >= params.posActivationHeight) {
+        if (!IsProofOfStake(block)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos", "expected proof-of-stake block");
+        }
+        if (!CheckStakeTimestamp(block, params)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos-time", "invalid proof-of-stake timestamp");
+        }
         CCoinsView dummy_view;
         CCoinsViewCache view(&dummy_view);
         CChain chain;
@@ -186,10 +193,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos", "proof of stake check failed");
         }
     } else {
-        // Disallow proof-of-work blocks beyond height 1
-        const int next_height{pindexPrev->nHeight + 1};
-        if (next_height > 1) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pow", "proof of work block too high");
+        if (IsProofOfStake(block)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos-prev", "proof of stake before activation");
         }
         if (fCheckPOW) {
             arith_uint256 bnTarget;

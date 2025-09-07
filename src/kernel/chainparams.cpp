@@ -103,6 +103,9 @@ public:
         consensus.nPowTargetTimespan = 1 * 24 * 60 * 60; // one day
         consensus.nPowTargetSpacing = 8 * 60;
         consensus.posActivationHeight = 2;
+        consensus.fEnablePoS = false;
+        consensus.nStakeTimestampMask = 0xF;
+        consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeModifierInterval = 60 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.enforce_BIP94 = false;
@@ -220,6 +223,9 @@ public:
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 8 * 60;
         consensus.posActivationHeight = 2;
+        consensus.fEnablePoS = false;
+        consensus.nStakeTimestampMask = 0xF;
+        consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeModifierInterval = 60 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.enforce_BIP94 = false;
@@ -355,6 +361,9 @@ public:
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 8 * 60;
         consensus.posActivationHeight = 2;
+        consensus.fEnablePoS = false;
+        consensus.nStakeTimestampMask = 0xF;
+        consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeModifierInterval = 60 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.enforce_BIP94 = false;
@@ -445,7 +454,10 @@ public:
         consensus.powLimit = uint256{"7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         consensus.nPowTargetTimespan = 24 * 60 * 60; // one day
         consensus.nPowTargetSpacing = 8 * 60;
-        consensus.posActivationHeight = 2;
+        consensus.posActivationHeight = opts.pos_activation_height;
+        consensus.fEnablePoS = true;
+        consensus.nStakeTimestampMask = 0xF;
+        consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeModifierInterval = 60 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.enforce_BIP94 = opts.enforce_bip94;
