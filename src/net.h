@@ -733,6 +733,9 @@ public:
     CountingSemaphoreGrant<> grantOutbound;
     std::atomic<int> nRefCount{0};
 
+    /** Whether this peer has signaled support for PoS inventory relay. */
+    std::atomic_bool m_pos_enabled{false};
+
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};

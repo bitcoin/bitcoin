@@ -69,6 +69,8 @@ std::string CInv::GetMessageType() const
     case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
+    case MSG_COINSTAKE:      return cmd.append(NetMsgType::COINSTAKE);
+    case MSG_STAKE_MODIFIER: return cmd.append(NetMsgType::STAKEMODIFIER);
     default:
         throw std::out_of_range(strprintf("CInv::GetMessageType(): type=%d unknown type", type));
     }
