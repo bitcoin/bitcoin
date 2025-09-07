@@ -892,6 +892,31 @@ static RPCHelpMan getstakinginfo()
         }};
 }
 
+static RPCHelpMan getstakingstats()
+{
+    return RPCHelpMan{
+        "getstakingstats",
+        "Returns staking statistics for this wallet.\n",
+        {},
+        RPCResult{RPCResult::Type::OBJ, "", "", {
+                                         {RPCResult::Type::NUM, "staked", "currently staked balance"},
+                                         {RPCResult::Type::NUM, "current_reward", "last staking reward"},
+                                         {RPCResult::Type::NUM, "next_reward_time", "estimated UNIX time of next reward"},
+                                     }},
+        RPCExamples{HelpExampleCli("getstakingstats", "") + HelpExampleRpc("getstakingstats", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+            wallet::StakingStats stats = pwallet->GetStakingStats();
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("staked", ValueFromAmount(stats.staked_balance));
+            obj.pushKV("current_reward", ValueFromAmount(stats.current_reward));
+            obj.pushKV("next_reward_time", stats.next_reward_time);
+            return obj;
+        }};
+}
+
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
@@ -1019,6 +1044,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &walletprocesspsbt},
         {"wallet", &stakerstatus},
         {"wallet", &getstakinginfo},
+        {"wallet", &getstakingstats},
     };
     return commands;
 }

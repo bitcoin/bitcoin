@@ -11,6 +11,7 @@
 #include <util/transaction_identifier.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
+#include <wallet/types.h>
 
 #include <cstdint>
 #include <string>
@@ -268,6 +269,8 @@ public:
     bool EraseRecords(const std::unordered_set<std::string>& types);
 
     bool WriteWalletFlags(const uint64_t flags);
+    bool WriteStakingStats(const StakingStats& stats);
+    bool ReadStakingStats(StakingStats& stats);
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction

@@ -292,6 +292,7 @@ public:
         m_wallet->CommitTransaction(std::move(tx), std::move(value_map), std::move(order_form));
     }
     bool transactionCanBeAbandoned(const Txid& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
+    wallet::StakingStats getStakingStats() override { return m_wallet->GetStakingStats(); }
     bool abandonTransaction(const Txid& txid) override
     {
         LOCK(m_wallet->cs_wallet);

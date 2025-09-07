@@ -14,6 +14,8 @@
 #ifndef BITCOIN_WALLET_TYPES_H
 #define BITCOIN_WALLET_TYPES_H
 
+#include <consensus/amount.h>
+#include <serialize.h>
 #include <type_traits>
 
 namespace wallet {
@@ -60,6 +62,18 @@ enum class AddressPurpose {
     RECEIVE,
     SEND,
     REFUND, //!< Never set in current code may be present in older wallet databases
+};
+
+struct StakingStats
+{
+    CAmount staked_balance{0};
+    CAmount current_reward{0};
+    int64_t next_reward_time{0};
+
+    SERIALIZE_METHODS(StakingStats, obj)
+    {
+        READWRITE(obj.staked_balance, obj.current_reward, obj.next_reward_time);
+    }
 };
 } // namespace wallet
 
