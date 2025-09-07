@@ -599,6 +599,9 @@ bool CreatePosBlock(wallet::CWallet& wallet)
     CBlockIndex* pindexPrev = chainstate.m_chain.Tip();
     if (!pindexPrev) return false;
     const int height = pindexPrev->nHeight + 1;
+    if (height < 2) {
+        return false; // wait until the PoW phase completes
+    }
     const Consensus::Params& consensus = chainman.GetParams().GetConsensus();
 
     // Select a staking output from the wallet

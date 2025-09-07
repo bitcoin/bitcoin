@@ -177,7 +177,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         }
     } else {
         // Disallow proof-of-work blocks beyond height 1
-        if (pindexPrev->nHeight >= 1) {
+        const int next_height{pindexPrev->nHeight + 1};
+        if (next_height > 1) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pow", "proof of work block too high");
         }
         if (fCheckPOW) {
