@@ -153,7 +153,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # nodes[0]
         # Send blocks to node0. Block 102 will be rejected.
         with self.nodes[0].assert_debug_log(expected_msgs=[
-            f"Enabling script verification at block #1 ({block_1_hash})",
+            f"Enabling script verification at block #1 ({block_1_hash}): assumevalid=0 (always verify).",
             "Block validation error: block-script-verify-flag-failed",
         ]):
             p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
@@ -169,7 +169,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # nodes[1]
         with self.nodes[1].assert_debug_log(expected_msgs=[
             f"Disabling script verification at block #1 ({self.blocks[0].hash_hex}).",
-            f"Enabling script verification at block #103 ({self.blocks[102].hash_hex}).",
+            f"Enabling script verification at block #103 ({self.blocks[102].hash_hex}): block not in assumevalid chain.",
         ]):
             p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
 
@@ -186,7 +186,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # nodes[2]
         # Send blocks to node2. Block 102 will be rejected.
         with self.nodes[2].assert_debug_log(expected_msgs=[
-            f"Enabling script verification at block #1 ({block_1_hash})",
+            f"Enabling script verification at block #1 ({block_1_hash}): block too recent relative to best header.",
             "Block validation error: block-script-verify-flag-failed",
         ]):
             p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
@@ -200,7 +200,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # nodes[3]
         with self.nodes[3].assert_debug_log(expected_msgs=[
-            f"Enabling script verification at block #1 ({block_1_hash})",
+            f"Enabling script verification at block #1 ({block_1_hash}): block not in best header chain.",
         ]):
             best_hash = self.nodes[3].getbestblockhash()
             tip_block = self.nodes[3].getblock(best_hash)
@@ -227,7 +227,7 @@ class AssumeValidTest(BitcoinTestFramework):
         alt1 = create_block(int(genesis_hash, 16), create_coinbase(1), genesis_time + 2)
         alt1.solve()
         with self.nodes[4].assert_debug_log(expected_msgs=[
-            f"Enabling script verification at block #1 ({alt1.hash_hex})",
+            f"Enabling script verification at block #1 ({alt1.hash_hex}): block not in assumevalid chain.",
         ]):
             p2p4 = self.nodes[4].add_p2p_connection(BaseNode())
             p2p4.send_header_for_blocks(self.blocks[0:103])
@@ -243,12 +243,12 @@ class AssumeValidTest(BitcoinTestFramework):
         p2p5.send_without_ping(msg_block(self.blocks[0]))
         self.wait_until(lambda: self.nodes[5].getblockcount() == 1)
         with self.nodes[5].assert_debug_log(expected_msgs=[
-            f"Enabling script verification at block #1 ({block_1_hash})",
+            f"Enabling script verification at block #1 ({block_1_hash}): assumevalid hash not in headers.",
         ]):
             self.restart_node(5, extra_args=["-reindex-chainstate", "-assumevalid=1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"])
             assert_equal(self.nodes[5].getblockcount(), 1)
         with self.nodes[5].assert_debug_log(expected_msgs=[
-            f"Enabling script verification at block #1 ({block_1_hash})",
+            f"Enabling script verification at block #1 ({block_1_hash}): best header chainwork below minimumchainwork.",
         ]):
             self.restart_node(5, extra_args=["-reindex-chainstate", f"-assumevalid={block102.hash_hex}", "-minimumchainwork=0xffff"])
             assert_equal(self.nodes[5].getblockcount(), 1)
