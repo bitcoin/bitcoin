@@ -2423,7 +2423,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
-    bool fScriptChecks = true;
+    const char* script_check_reason;
     if (!m_chainman.AssumedValidBlock().IsNull()) {
         constexpr int64_t TWO_WEEKS_IN_SECONDS{60 * 60 * 24 * 7 * 2};
         // We've been configured with the hash of a block which has been externally verified to have a valid history.
@@ -2433,15 +2433,15 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         //  effectively caching the result of part of the verification.
         BlockMap::const_iterator it{m_blockman.m_block_index.find(m_chainman.AssumedValidBlock())};
         if (it == m_blockman.m_block_index.end()) {
-            // TODO
+            script_check_reason = "assumevalid hash not in headers";
         } else if (it->second.GetAncestor(pindex->nHeight) != pindex) {
-            // TODO
+            script_check_reason = "block not part of assumevalid chain";
         } else if (m_chainman.m_best_header->GetAncestor(pindex->nHeight) != pindex) {
-            // TODO
+            script_check_reason = "block not on best header chain";
         } else if (m_chainman.m_best_header->nChainWork < m_chainman.MinimumChainWork()) {
-            // TODO
+            script_check_reason = "best header chainwork below minimumchainwork";
         } else if (GetBlockProofEquivalentTime(*m_chainman.m_best_header, *pindex, *m_chainman.m_best_header, params.GetConsensus()) <= TWO_WEEKS_IN_SECONDS) {
-            // TODO
+            script_check_reason = "too recent relative to best header";
         } else {
             // This block is a member of the assumed verified chain and an ancestor of the best header.
             // Script verification is skipped when connecting blocks under the
@@ -2457,8 +2457,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             //  artificially set the default assumed verified block further back.
             // The test against the minimum chain work prevents the skipping when denied access to any chain at
             //  least as good as the expected chain.
-            fScriptChecks = false;
+            script_check_reason = nullptr;
         }
+    } else {
+        script_check_reason = "assumevalid=0 (always verify)";
     }
 
     const auto time_1{SteadyClock::now()};
@@ -2570,15 +2572,15 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(m_chainman.time_forks),
              Ticks<MillisecondsDouble>(m_chainman.time_forks) / m_chainman.num_blocks_total);
 
-    if (fScriptChecks != m_prev_script_checks_logged && GetRole() == ChainstateRole::NORMAL) {
-        if (fScriptChecks) {
-            LogInfo("Enabling script verification at block #%d (%s).",
-                    pindex->nHeight, block_hash.ToString());
+    if (script_check_reason != m_last_script_check_reason_logged && GetRole() == ChainstateRole::NORMAL) {
+        if (script_check_reason) {
+            LogInfo("Enabling script verification at block #%d (%s): %s.",
+                    pindex->nHeight, block_hash.ToString(), script_check_reason);
         } else {
             LogInfo("Disabling script verification at block #%d (%s).",
                     pindex->nHeight, block_hash.ToString());
         }
-        m_prev_script_checks_logged = fScriptChecks;
+        m_last_script_check_reason_logged = script_check_reason;
     }
 
     CBlockUndo blockundo;
@@ -2589,7 +2591,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // doesn't invalidate pointers into the vector, and keep txsdata in scope
     // for as long as `control`.
     std::optional<CCheckQueueControl<CScriptCheck>> control;
-    if (auto& queue = m_chainman.GetCheckQueue(); queue.HasThreads() && fScriptChecks) control.emplace(queue);
+    if (auto& queue = m_chainman.GetCheckQueue(); queue.HasThreads() && script_check_reason) control.emplace(queue);
 
     std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
 
@@ -2648,7 +2650,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             break;
         }
 
-        if (!tx.IsCoinBase() && fScriptChecks)
+        if (!tx.IsCoinBase() && script_check_reason)
         {
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             bool tx_ok;
