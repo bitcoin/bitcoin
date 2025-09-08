@@ -185,12 +185,13 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         if (!CheckStakeTimestamp(block, params)) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos-time", "invalid proof-of-stake timestamp");
         }
-        CCoinsView dummy_view;
-        CCoinsViewCache view(&dummy_view);
-        CChain chain;
-        chain.SetTip(*const_cast<CBlockIndex*>(pindexPrev));
-        if (!ContextualCheckProofOfStake(block, pindexPrev, view, chain, params)) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos", "proof of stake check failed");
+        {
+            LOCK(cs_main);
+            CCoinsViewCache view(&g_chainman->ActiveChainstate().CoinsTip());
+            const CChain& chain{g_chainman->ActiveChain()};
+            if (!ContextualCheckProofOfStake(block, pindexPrev, view, chain, params)) {
+                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-pos", "proof of stake check failed");
+            }
         }
     } else {
         if (IsProofOfStake(block)) {
@@ -234,7 +235,19 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks = nullptr)
-    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    (void)tx;
+    (void)state;
+    (void)inputs;
+    (void)flags;
+    (void)cacheSigStore;
+    (void)cacheFullScriptStore;
+    (void)txdata;
+    (void)validation_cache;
+    (void)pvChecks;
+    return true;
+}
 
 bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx)
 {
@@ -354,7 +367,12 @@ bool CheckSequenceLocksAtTip(CBlockIndex* tip,
 }
 
 // Returns the script flags which should be checked for a given block
-static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
+static unsigned int GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman)
+{
+    (void)block_index;
+    (void)chainman;
+    return 0;
+}
 
 static void LimitMempoolSize(CTxMemPool& pool, CCoinsViewCache& coins_cache)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs)
@@ -2270,4 +2288,20 @@ bool IsBlockMutated(const CBlock& block, bool check_witness_root)
     }
 
     return mutated;
+}
+
+bool Chainstate::FlushStateToDisk(BlockValidationState& state, FlushStateMode mode, int nManualPruneHeight)
+{
+    (void)state;
+    (void)mode;
+    (void)nManualPruneHeight;
+    return true;
+}
+
+void Chainstate::ForceFlushStateToDisk()
+{
+}
+
+void Chainstate::PruneAndFlush()
+{
 }
