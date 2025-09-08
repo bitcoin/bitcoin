@@ -143,6 +143,9 @@ protected:
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
 
+    /// Hook that is called once the index has synced
+    virtual void OnSyncComplete() {}
+
 public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
     /// Destructor interrupts sync thread if running and blocks until it exits.

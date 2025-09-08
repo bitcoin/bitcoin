@@ -233,6 +233,7 @@ void BaseIndex::Sync()
                 pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
                 if (!pindex_next) {
                     m_synced = true;
+                    OnSyncComplete();
                     break;
                 }
             }

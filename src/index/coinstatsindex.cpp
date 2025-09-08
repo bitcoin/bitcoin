@@ -402,3 +402,11 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
 
     return true;
 }
+
+void CoinStatsIndex::OnSyncComplete() {
+    // Force compaction of the database upon finishing synce since LevelDB
+    // doesn't seem to be handling this well itself at the speed coinstats
+    // index is syncing.
+    m_db->CompactFull();
+    LogDebug(BCLog::LEVELDB, "Compacted coinstatsindex database after sync");
+}
