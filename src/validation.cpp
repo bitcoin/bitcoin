@@ -45,6 +45,7 @@
 #include <script/script.h>
 #include <script/sigcache.h>
 #include <signet.h>
+#include <stake/priority.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
