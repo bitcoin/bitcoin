@@ -9,6 +9,7 @@
 
 #include <common/pcp.h>
 #include <util/check.h>
+#include <util/threadinterrupt.h>
 
 using namespace std::literals;
 
@@ -43,7 +44,8 @@ FUZZ_TARGET(pcp_request_port_map, .init = port_map_target_init)
     const auto local_addr{ConsumeNetAddr(fuzzed_data_provider)};
     const auto port{fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
     const auto lifetime{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-    const auto res{PCPRequestPortMap(PCP_NONCE, gateway_addr, local_addr, port, lifetime, NUM_TRIES, TIMEOUT)};
+    CThreadInterrupt interrupt;
+    const auto res{PCPRequestPortMap(PCP_NONCE, gateway_addr, local_addr, port, lifetime, interrupt, NUM_TRIES, TIMEOUT)};
 
     // In case of success the mapping must be consistent with the request.
     if (const MappingResult* mapping = std::get_if<MappingResult>(&res)) {
@@ -69,7 +71,8 @@ FUZZ_TARGET(natpmp_request_port_map, .init = port_map_target_init)
     const auto gateway_addr{ConsumeNetAddr(fuzzed_data_provider)};
     const auto port{fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
     const auto lifetime{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-    const auto res{NATPMPRequestPortMap(gateway_addr, port, lifetime, NUM_TRIES, TIMEOUT)};
+    CThreadInterrupt interrupt;
+    const auto res{NATPMPRequestPortMap(gateway_addr, port, lifetime, interrupt, NUM_TRIES, TIMEOUT)};
 
     // In case of success the mapping must be consistent with the request.
     if (const MappingResult* mapping = std::get_if<MappingResult>(&res)) {
