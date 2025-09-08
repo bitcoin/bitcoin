@@ -47,7 +47,7 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
     if (HasTestOption(args, "bip94")) options.enforce_bip94 = true;
 
     if (auto value = args.GetIntArg("-posactivationheight")) {
-        options.pos_activation_height = int{*value};
+        options.pos_activation_height = static_cast<int>(*value);
     }
 
     for (const std::string& arg : args.GetArgs("-testactivationheight")) {
@@ -124,7 +124,11 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         return CChainParams::Main();
     case ChainType::TESTNET:
         return CChainParams::TestNet();
-    
+
+    case ChainType::TESTNET4:
+        // TODO: Replace with dedicated TestNet4 parameters once available.
+        return CChainParams::TestNet();
+
     case ChainType::SIGNET: {
         auto opts = CChainParams::SigNetOptions{};
         ReadSigNetArgs(args, opts);
