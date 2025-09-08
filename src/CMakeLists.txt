@@ -288,6 +288,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/miner.cpp
   node/mini_miner.cpp
   node/minisketchwrapper.cpp
+  node/compat_wrappers.cpp
   node/peerman_args.cpp
   node/psbt.cpp
   node/timeoffsets.cpp
