@@ -625,7 +625,7 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
         Transform = sha256_x86_shani::Transform;
         TransformD64 = TransformD64Wrapper<sha256_x86_shani::Transform>;
         TransformD64_2way = sha256d64_x86_shani::Transform_2way;
-        ret = "x86_shani(1way,2way)";
+        ret = "x86_shani(1way;2way)";
         have_sse4 = false; // Disable SSE4/AVX2;
         have_avx2 = false;
     }
@@ -639,14 +639,14 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
 #endif
 #if defined(ENABLE_SSE41)
         TransformD64_4way = sha256d64_sse41::Transform_4way;
-        ret += ",sse41(4way)";
+        ret += ";sse41(4way)";
 #endif
     }
 
 #if defined(ENABLE_AVX2)
     if (have_avx2 && have_avx && enabled_avx) {
         TransformD64_8way = sha256d64_avx2::Transform_8way;
-        ret += ",avx2(8way)";
+        ret += ";avx2(8way)";
     }
 #endif
 #endif // defined(HAVE_GETCPUID)
@@ -680,7 +680,7 @@ std::string SHA256AutoDetect(sha256_implementation::UseImplementation use_implem
         Transform = sha256_arm_shani::Transform;
         TransformD64 = TransformD64Wrapper<sha256_arm_shani::Transform>;
         TransformD64_2way = sha256d64_arm_shani::Transform_2way;
-        ret = "arm_shani(1way,2way)";
+        ret = "arm_shani(1way;2way)";
     }
 #endif
 #endif // DISABLE_OPTIMIZED_SHA256
