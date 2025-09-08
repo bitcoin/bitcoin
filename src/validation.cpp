@@ -1470,6 +1470,40 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     if (!ConsensusScriptChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
+#ifdef ENABLE_ECAI
+	// ---- ECAI (deterministic policy gate, off by default) ----
+	if (ecai::Enabled() && ecai::g_state.policy.loaded) {
+		// 1) Encode stable features and commitment
+		std::array<unsigned char,33> p_tx;
+		auto feats = ecai::EncodeTLVFeatures(*ptx, m_pool);
+		if (!ecai::HashToCurve(feats, p_tx)) {
+			return MempoolAcceptResult::Failure(TxValidationResult::TX_NOT_STANDARD, "ecai-internal");
+		}
+
+        // 2) Evaluate policy
+        auto v = ecai::Evaluate(ecai::g_state.policy.bytes, feats);
+
+        // 3) Emit proof (ZMQ) and enforce if reject/queue
+        ecai::Ctx ctx; ctx.height = m_active_chainstate.m_chain.Height();
+        ctx.mediantime = m_active_chainstate.m_chain.Tip() ? m_active_chainstate.m_chain.Tip()->GetMedianTimePast() : 0;
+        ecai::Proof p;
+        ecai::SignAndAssemble(ptx->GetHash(),
+                              ecai::g_state.policy.id,
+                              (unsigned char)(v==ecai::Verdict::ACCEPT?1:(v==ecai::Verdict::REJECT?2:3)),
+                              ecai::g_state.policy.c_pol,
+                              p_tx, ctx, p);
+        ecai::Publish(p);
+
+        if (v == ecai::Verdict::REJECT) {
+            return MempoolAcceptResult::Failure(TxValidationResult::TX_NOT_STANDARD, "ecai-reject");
+        } else if (v == ecai::Verdict::QUEUE) {
+            return MempoolAcceptResult::Failure(TxValidationResult::TX_NOT_STANDARD, "ecai-queue");
+        }
+        // else ACCEPT → continue to Core's standard policy/feerate/ancestor checks.
+    }
+    // ---- /ECAI ----
+#endif
+
     const CFeeRate effective_feerate{ws.m_modified_fees, static_cast<int32_t>(ws.m_vsize)};
     // Tx was accepted, but not added
     if (args.m_test_accept) {

@@ -81,6 +81,18 @@ target_link_libraries(bitcoin_consensus
 if(WITH_ZMQ)
   add_subdirectory(zmq)
 endif()
+if(WITH_ECAI)
+  target_sources(bitcoin_server PRIVATE
+    ecai/state.cpp
+    ecai/h2c.cpp
+    ecai/features.cpp
+    ecai/policy.cpp
+    ecai/proof.cpp
+  )
+  target_include_directories(bitcoin_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_compile_definitions(bitcoin_server PRIVATE ENABLE_ECAI=1)
+endif()
+
 
 # Home for common functionality shared by different executables and libraries.
 # Similar to `bitcoin_util` library, but higher-level.

@@ -125,6 +125,7 @@ option(WITH_ZMQ "Enable ZMQ notifications." OFF)
 if(WITH_ZMQ)
   find_package(ZeroMQ 4.0.0 MODULE REQUIRED)
 endif()
+option(WITH_ECAI "Enable ECAI mempool filtering module." OFF)
 
 option(WITH_USDT "Enable tracepoints for Userspace, Statically Defined Tracing." OFF)
 if(WITH_USDT)
