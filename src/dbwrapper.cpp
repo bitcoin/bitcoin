@@ -245,7 +245,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
 
     if (params.options.force_compact) {
         LogInfo("Starting database compaction of %s", fs::PathToString(params.path));
-        DBContext().pdb->CompactRange(nullptr, nullptr);
+        CompactFull();
         LogInfo("Finished database compaction of %s", fs::PathToString(params.path));
     }
 
@@ -345,6 +345,11 @@ bool CDBWrapper::IsEmpty()
     std::unique_ptr<CDBIterator> it(NewIterator());
     it->SeekToFirst();
     return !(it->Valid());
+}
+
+void CDBWrapper::CompactFull()
+{
+    DBContext().pdb->CompactRange(/*begin=*/nullptr, /*end=*/nullptr);
 }
 
 struct CDBIterator::IteratorImpl {
