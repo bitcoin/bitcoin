@@ -224,6 +224,14 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
     m_muhash.Finalize(out);
     value.second.muhash = out;
 
+    // Force compaction of the database from time to time since LevelDB doesn't
+    // seem to be handling this well itself at the speed coinstats index is
+    // syncing.
+    if (block.height % 10'000 == 0) {
+        LogDebug(BCLog::INDEX, "Compacting database of coinstatsindex");
+        m_db->CompactFull();
+    }
+
     // Intentionally do not update DB_MUHASH here so it stays in sync with
     // DB_BEST_BLOCK, and the index is not corrupted if there is an unclean shutdown.
     return m_db->Write(DBHeightKey(block.height), value);
