@@ -130,6 +130,16 @@ public:
     std::ostringstream m_buffer;
 };
 
+struct LogOptions {
+
+    //! External logging callback.
+    LogFn log_fn;
+
+    //! Maximum number of characters to use when representing
+    //! request and response structs as strings.
+    size_t max_chars{200};
+};
+
 std::string LongThreadName(const char* exe_name);
 
 //! Event loop implementation.
@@ -204,12 +214,12 @@ public:
 
     Logger log()
     {
-        Logger logger(false, m_log_fn);
+        Logger logger(false, m_log_opts.log_fn);
         logger << "{" << LongThreadName(m_exe_name) << "} ";
         return logger;
     }
-    Logger logPlain() { return {false, m_log_fn}; }
-    Logger raise() { return {true, m_log_fn}; }
+    Logger logPlain() { return {false, m_log_opts.log_fn}; }
+    Logger raise() { return {true, m_log_opts.log_fn}; }
 
     //! Process name included in thread names so combined debug output from
     //! multiple processes is easier to understand.
@@ -255,8 +265,8 @@ public:
     //! List of connections.
     std::list<Connection> m_incoming_connections;
 
-    //! External logging callback.
-    LogFn m_log_fn;
+    //! Logging options
+    LogOptions m_log_opts;
 
     //! External context pointer.
     void* m_context;
