@@ -42,7 +42,7 @@ bool IsProofOfStake(const CBlock& block);
 inline bool CheckStakeTimestamp(const CBlockHeader& h, const Consensus::Params& p)
 {
     if ((h.nTime & p.nStakeTimestampMask) != 0) return false;
-    if (h.nTime > GetAdjustedTime() + 15) return false;
+    if (h.nTime > GetTime() + 15) return false;
     return true;
 }
 

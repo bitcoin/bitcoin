@@ -1,6 +1,8 @@
 #include <pos/stake.h>
 #include <chain.h>
 #include <consensus/amount.h>
+#include <consensus/merkle.h>
+#include <chainparams.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <hash.h>
@@ -309,18 +311,20 @@ BOOST_FIXTURE_TEST_CASE(reject_pow_after_height1, ChainTestingSetup)
     g_chainman = m_node.chainman.get();
 
     uint256 prev_hash{1};
-    auto prev_index = std::make_unique<CBlockIndex>();
-    prev_index->nHeight = 1;
-    prev_index->nBits = 0x207fffff;
-    prev_index->phashBlock = &prev_hash;
     {
         LOCK(cs_main);
-        g_chainman->BlockIndex().emplace(prev_hash, prev_index.get());
+        auto& map = g_chainman->BlockIndex();
+        auto [it, inserted] = map.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(prev_hash),
+                                         std::forward_as_tuple());
+        it->second.nHeight = 1;
+        it->second.nBits = 0x207fffff;
+        it->second.phashBlock = &prev_hash;
     }
 
     CBlock block;
     block.hashPrevBlock = prev_hash;
-    block.nBits = prev_index->nBits;
+    block.nBits = 0x207fffff;
     block.nTime = 2;
 
     CMutableTransaction coinbase;
@@ -346,18 +350,20 @@ BOOST_FIXTURE_TEST_CASE(process_new_block_rejects_pow_height2, ChainTestingSetup
     g_chainman = m_node.chainman.get();
 
     uint256 prev_hash{1};
-    auto prev_index = std::make_unique<CBlockIndex>();
-    prev_index->nHeight = 1;
-    prev_index->nBits = 0x207fffff;
-    prev_index->phashBlock = &prev_hash;
     {
         LOCK(cs_main);
-        g_chainman->BlockIndex().emplace(prev_hash, prev_index.get());
+        auto& map = g_chainman->BlockIndex();
+        auto [it, inserted] = map.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(prev_hash),
+                                         std::forward_as_tuple());
+        it->second.nHeight = 1;
+        it->second.nBits = 0x207fffff;
+        it->second.phashBlock = &prev_hash;
     }
 
     CBlock block;
     block.hashPrevBlock = prev_hash;
-    block.nBits = prev_index->nBits;
+    block.nBits = 0x207fffff;
     block.nTime = 2;
 
     CMutableTransaction coinbase;

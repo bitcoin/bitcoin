@@ -27,3 +27,4 @@ int64_t CalculateStakeDurationPriority(int64_t nStakeDuration)
     }
     return 0;
 }
+
