@@ -440,10 +440,16 @@ CTxMemPool::CTxMemPool(CBlockPolicyEstimator* estimator, int check_ratio)
 void CTxMemPool::ConnectManagers(gsl::not_null<CDeterministicMNManager*> dmnman, gsl::not_null<llmq::CInstantSendManager*> isman)
 {
     // Do not allow double-initialization
-    assert(m_dmnman == nullptr);
-    m_dmnman = dmnman;
-    assert(m_isman == nullptr);
-    m_isman = isman;
+    assert(m_dmnman.load(std::memory_order_acquire) == nullptr);
+    m_dmnman.store(dmnman, std::memory_order_release);
+    assert(m_isman.load(std::memory_order_acquire) == nullptr);
+    m_isman.store(isman, std::memory_order_release);
+}
+
+void CTxMemPool::DisconnectManagers()
+{
+    m_dmnman.store(nullptr, std::memory_order_release);
+    m_isman.store(nullptr, std::memory_order_release);
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -516,8 +522,8 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Invalid ProTxes should never get this far because transactions should be
     // fully checked by AcceptToMemoryPool() at this point, so we just assume that
     // everything is fine here.
-    if (m_dmnman) {
-        addUncheckedProTx(newit, tx);
+    if (auto dmnman = m_dmnman.load(std::memory_order_acquire); dmnman) {
+        addUncheckedProTx(*dmnman, newit, tx);
     }
 }
 
@@ -641,10 +647,9 @@ void CTxMemPool::removeSpentIndex(const uint256 txhash)
     }
 }
 
-void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, const CTransaction& tx)
+void CTxMemPool::addUncheckedProTx(CDeterministicMNManager& dmnman, indexed_transaction_set::iterator& newit,
+                                   const CTransaction& tx)
 {
-    assert(m_dmnman);
-
     const uint256 tx_hash{tx.GetHash()};
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         auto proTx = *Assert(GetTxPayload<CProRegTx>(tx));
@@ -671,7 +676,7 @@ void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, con
         auto proTx = *Assert(GetTxPayload<CProUpRegTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx_hash);
         mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx_hash);
-        auto dmn = Assert(m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash));
+        auto dmn = Assert(dmnman.GetListAtChainTip().GetMN(proTx.proTxHash));
         newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
             newit->isKeyChangeProTx = true;
@@ -679,7 +684,7 @@ void CTxMemPool::addUncheckedProTx(indexed_transaction_set::iterator& newit, con
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         auto proTx = *Assert(GetTxPayload<CProUpRevTx>(tx));
         mapProTxRefs.emplace(proTx.proTxHash, tx_hash);
-        auto dmn = Assert(m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash));
+        auto dmn = Assert(dmnman.GetListAtChainTip().GetMN(proTx.proTxHash));
         newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
             newit->isKeyChangeProTx = true;
@@ -721,7 +726,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     } else
         vTxHashes.clear();
 
-    if (m_dmnman) {
+    if (m_dmnman.load(std::memory_order_acquire)) {
         removeUncheckedProTx(it->GetTx());
     }
 
@@ -926,7 +931,7 @@ void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const CO
 
 void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
 {
-    assert(m_dmnman);
+    auto dmnman = Assert(m_dmnman.load(std::memory_order_acquire));
 
     // Remove TXs that refer to a MN for which the collateral was spent
     auto removeSpentCollateralConflict = [&](const uint256& proTxHash) EXCLUSIVE_LOCKS_REQUIRED(cs) {
@@ -948,7 +953,7 @@ void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
             }
         }
     };
-    auto mnList = m_dmnman->GetListAtChainTip();
+    auto mnList = dmnman->GetListAtChainTip();
     for (const auto& in : tx.vin) {
         auto collateralIt = mapProTxCollaterals.find(in.prevout);
         if (collateralIt != mapProTxCollaterals.end()) {
@@ -1070,7 +1075,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
             RemoveStaged(stage, true, MemPoolRemovalReason::BLOCK);
         }
         removeConflicts(*tx);
-        if (m_dmnman) {
+        if (m_dmnman.load(std::memory_order_acquire)) {
             removeProTxConflicts(*tx);
         }
         ClearPrioritisation(tx->GetHash());
@@ -1328,7 +1333,7 @@ TxMempoolInfo CTxMemPool::info(const uint256& hash) const
 }
 
 bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
-    assert(m_dmnman);
+    auto dmnman = Assert(m_dmnman.load(std::memory_order_acquire));
 
     LOCK(cs);
 
@@ -1394,7 +1399,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         auto& proTx = *opt_proTx;
 
         // this method should only be called with validated ProTxs
-        auto dmn = m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash);
+        auto dmn = dmnman->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
@@ -1416,7 +1421,7 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         }
         auto& proTx = *opt_proTx;
         // this method should only be called with validated ProTxs
-        auto dmn = m_dmnman->GetListAtChainTip().GetMN(proTx.proTxHash);
+        auto dmn = dmnman->GetListAtChainTip().GetMN(proTx.proTxHash);
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
@@ -1566,12 +1571,12 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
 int CTxMemPool::Expire(std::chrono::seconds time)
 {
     AssertLockHeld(cs);
-    assert(m_isman);
+    auto isman = Assert(m_isman.load(std::memory_order_acquire));
     indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         // locked txes do not expire until mined and have sufficient confirmations
-        if (m_isman->IsLocked(it->GetTx().GetHash())) {
+        if (isman->IsLocked(it->GetTx().GetHash())) {
             it++;
             continue;
         }

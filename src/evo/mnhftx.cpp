@@ -201,11 +201,12 @@ static bool extractSignals(const ChainstateManager& chainman, const llmq::CQuoru
 
 std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& block, const CBlockIndex* const pindex, bool fJustCheck, BlockValidationState& state)
 {
-    assert(m_chainman && m_qman);
+    auto chainman = Assert(m_chainman.load(std::memory_order_acquire));
+    auto qman = Assert(m_qman.load(std::memory_order_acquire));
 
     try {
         std::vector<uint8_t> new_signals;
-        if (!extractSignals(*m_chainman, *m_qman, block, pindex, new_signals, state)) {
+        if (!extractSignals(*chainman, *qman, block, pindex, new_signals, state)) {
             // state is set inside extractSignals
             return std::nullopt;
         }
@@ -252,11 +253,12 @@ std::optional<CMNHFManager::Signals> CMNHFManager::ProcessBlock(const CBlock& bl
 
 bool CMNHFManager::UndoBlock(const CBlock& block, const CBlockIndex* const pindex)
 {
-    assert(m_chainman && m_qman);
+    auto chainman = Assert(m_chainman.load(std::memory_order_acquire));
+    auto qman = Assert(m_qman.load(std::memory_order_acquire));
 
     std::vector<uint8_t> excluded_signals;
     BlockValidationState state;
-    if (!extractSignals(*m_chainman, *m_qman, block, pindex, excluded_signals, state)) {
+    if (!extractSignals(*chainman, *qman, block, pindex, excluded_signals, state)) {
         LogPrintf("CMNHFManager::%s: failed to extract signals\n", __func__);
         return false;
     }
@@ -372,19 +374,28 @@ void CMNHFManager::AddSignal(const CBlockIndex* const pindex, int bit)
 void CMNHFManager::ConnectManagers(gsl::not_null<ChainstateManager*> chainman, gsl::not_null<llmq::CQuorumManager*> qman)
 {
     // Do not allow double-initialization
-    assert(m_chainman == nullptr && m_qman == nullptr);
-    m_chainman = chainman;
-    m_qman = qman;
+    assert(m_chainman.load(std::memory_order_acquire) == nullptr);
+    m_chainman.store(chainman, std::memory_order_release);
+    assert(m_qman.load(std::memory_order_acquire) == nullptr);
+    m_qman.store(qman, std::memory_order_release);
+}
+
+void CMNHFManager::DisconnectManagers()
+{
+    m_chainman.store(nullptr, std::memory_order_release);
+    m_qman.store(nullptr, std::memory_order_release);
 }
 
 bool CMNHFManager::ForceSignalDBUpdate()
 {
+    auto chainman = Assert(m_chainman.load(std::memory_order_acquire));
+
     // force ehf signals db update
     auto dbTx = m_evoDb.BeginTransaction();
 
     const bool last_legacy = bls::bls_legacy_scheme.load();
     bls::bls_legacy_scheme.store(false);
-    GetSignalsStage(m_chainman->ActiveChainstate().m_chain.Tip());
+    GetSignalsStage(chainman->ActiveChainstate().m_chain.Tip());
     bls::bls_legacy_scheme.store(last_legacy);
 
     dbTx->Commit();
