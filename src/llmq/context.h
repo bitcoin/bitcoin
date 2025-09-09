@@ -24,7 +24,6 @@ namespace llmq {
 class CChainLocksHandler;
 class CDKGDebugManager;
 class CDKGSessionManager;
-class CEHFSignalsHandler;
 class CInstantSendManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
@@ -70,7 +69,6 @@ public:
     const std::unique_ptr<llmq::CSigSharesManager> shareman;
     const std::unique_ptr<llmq::CChainLocksHandler> clhandler;
     const std::unique_ptr<llmq::CInstantSendManager> isman;
-    const std::unique_ptr<llmq::CEHFSignalsHandler> ehfSignalsHandler;
 };
 
 #endif // BITCOIN_LLMQ_CONTEXT_H

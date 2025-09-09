@@ -8,13 +8,14 @@
 #include <validationinterface.h>
 
 class CActiveMasternodeManager;
+struct ActiveContext;
 
 class ActiveNotificationInterface final : public CValidationInterface
 {
 public:
     ActiveNotificationInterface() = delete;
     ActiveNotificationInterface(const ActiveNotificationInterface&) = delete;
-    explicit ActiveNotificationInterface(CActiveMasternodeManager& mn_activeman);
+    explicit ActiveNotificationInterface(ActiveContext& active_ctx, CActiveMasternodeManager& mn_activeman);
     virtual ~ActiveNotificationInterface() = default;
 
 protected:
@@ -22,6 +23,7 @@ protected:
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
 private:
+    ActiveContext& m_active_ctx;
     CActiveMasternodeManager& m_mn_activeman;
 };
 

@@ -15,6 +15,7 @@ class CDeterministicMNManager;
 class CDSTXManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
+class CMNHFManager;
 class CSporkManager;
 class CTxMemPool;
 class PeerManager;
@@ -25,6 +26,9 @@ class ChainLockSigner;
 namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
+namespace llmq {
+class CEHFSignalsHandler;
+} // namespace llmq
 
 struct ActiveContext {
 private:
@@ -41,9 +45,10 @@ private:
 public:
     ActiveContext() = delete;
     ActiveContext(const ActiveContext&) = delete;
-    ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman, CDSTXManager& dstxman,
-                  CMasternodeMetaMan& mn_metaman, LLMQContext& llmq_ctx, CSporkManager& sporkman, CTxMemPool& mempool,
-                  PeerManager& peerman, const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync);
+    ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
+                  CDSTXManager& dstxman, CMasternodeMetaMan& mn_metaman, CMNHFManager& mnhfman, LLMQContext& llmq_ctx,
+                  CSporkManager& sporkman, CTxMemPool& mempool, PeerManager& peerman,
+                  const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync);
     ~ActiveContext();
 
     /*
@@ -52,6 +57,7 @@ public:
      * TODO: Move CActiveMasternodeManager here when dependents have been migrated
      */
     const std::unique_ptr<CCoinJoinServer> cj_server;
+    const std::unique_ptr<llmq::CEHFSignalsHandler> ehf_sighandler;
 };
 
 #endif // BITCOIN_MASTERNODE_ACTIVE_CONTEXT_H

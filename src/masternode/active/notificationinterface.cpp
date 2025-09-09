@@ -4,9 +4,12 @@
 
 #include <masternode/active/notificationinterface.h>
 
+#include <llmq/ehf_signals.h>
+#include <masternode/active/context.h>
 #include <masternode/node.h>
 
-ActiveNotificationInterface::ActiveNotificationInterface(CActiveMasternodeManager& mn_activeman) :
+ActiveNotificationInterface::ActiveNotificationInterface(ActiveContext& active_ctx, CActiveMasternodeManager& mn_activeman) :
+    m_active_ctx{active_ctx},
     m_mn_activeman{mn_activeman}
 {
 }
@@ -18,6 +21,7 @@ void ActiveNotificationInterface::UpdatedBlockTip(const CBlockIndex* pindexNew, 
         return;
 
     m_mn_activeman.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
+    m_active_ctx.ehf_sighandler->UpdatedBlockTip(pindexNew);
 }
 
 std::unique_ptr<ActiveNotificationInterface> g_active_notification_interface;

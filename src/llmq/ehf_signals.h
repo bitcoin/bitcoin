@@ -43,7 +43,7 @@ public:
     /**
      * Since Tip is updated it could be a time to generate EHF Signal
      */
-    void UpdatedBlockTip(const CBlockIndex* const pindexNew, bool is_masternode) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void UpdatedBlockTip(const CBlockIndex* const pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
