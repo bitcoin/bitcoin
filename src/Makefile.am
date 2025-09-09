@@ -263,6 +263,7 @@ BITCOIN_CORE_H = \
   logging/timer.h \
   mapport.h \
   masternode/active/context.h \
+  masternode/active/notificationinterface.h \
   masternode/node.h \
   masternode/meta.h \
   masternode/payments.h \
@@ -522,6 +523,7 @@ libbitcoin_node_a_SOURCES = \
   llmq/utils.cpp \
   mapport.cpp \
   masternode/active/context.cpp \
+  masternode/active/notificationinterface.cpp \
   masternode/node.cpp \
   masternode/meta.cpp \
   masternode/payments.cpp \
