@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INDEX_COINSTATSINDEX_H
 #define BITCOIN_INDEX_COINSTATSINDEX_H
 
+#include <arith_uint256.h>
 #include <crypto/muhash.h>
 #include <index/base.h>
 
@@ -29,16 +30,17 @@ private:
     uint64_t m_bogo_size{0};
     CAmount m_total_amount{0};
     CAmount m_total_subsidy{0};
-    CAmount m_total_unspendable_amount{0};
-    CAmount m_total_prevout_spent_amount{0};
-    CAmount m_total_new_outputs_ex_coinbase_amount{0};
-    CAmount m_total_coinbase_amount{0};
+    arith_uint256 m_total_prevout_spent_amount{0};
+    arith_uint256 m_total_new_outputs_ex_coinbase_amount{0};
+    arith_uint256 m_total_coinbase_amount{0};
     CAmount m_total_unspendables_genesis_block{0};
     CAmount m_total_unspendables_bip30{0};
     CAmount m_total_unspendables_scripts{0};
     CAmount m_total_unspendables_unclaimed_rewards{0};
 
-    [[nodiscard]] bool ReverseBlock(const interfaces::BlockInfo& block);
+    uint256 m_current_block_hash{};
+
+    [[nodiscard]] bool RevertBlock(const interfaces::BlockInfo& block);
 
     bool AllowPrune() const override { return true; }
 

@@ -343,6 +343,7 @@ BASE_SCRIPTS = [
     'feature_anchors.py',
     'mempool_datacarrier.py',
     'feature_coinstatsindex.py',
+    'feature_coinstatsindex_compatibility.py',
     'wallet_orphanedreward.py',
     'wallet_timelock.py',
     'p2p_permissions.py',
