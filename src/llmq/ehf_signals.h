@@ -13,8 +13,7 @@ class CBlockIndex;
 class ChainstateManager;
 class CMNHFManager;
 
-namespace llmq
-{
+namespace llmq {
 class CQuorumManager;
 class CSigSharesManager;
 class CSigningManager;
@@ -39,7 +38,6 @@ public:
 
     ~CEHFSignalsHandler();
 
-
     /**
      * Since Tip is updated it could be a time to generate EHF Signal
      */
@@ -50,9 +48,7 @@ public:
 
 private:
     void trySignEHFSignal(int bit, const CBlockIndex* const pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-
 };
-
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_EHF_SIGNALS_H

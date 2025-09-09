@@ -15,8 +15,6 @@
 #include <validation.h>
 
 namespace llmq {
-
-
 CEHFSignalsHandler::CEHFSignalsHandler(ChainstateManager& chainman, CMNHFManager& mnhfman, CSigningManager& sigman,
                                        CSigSharesManager& shareman, const CQuorumManager& qman) :
     m_chainman(chainman),
@@ -27,7 +25,6 @@ CEHFSignalsHandler::CEHFSignalsHandler(ChainstateManager& chainman, CMNHFManager
 {
     sigman.RegisterRecoveredSigsListener(this);
 }
-
 
 CEHFSignalsHandler::~CEHFSignalsHandler()
 {
