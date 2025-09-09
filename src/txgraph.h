@@ -60,6 +60,11 @@ public:
      */
     class Ref;
 
+    enum class Level {
+        TOP, //!< Refers to staging if it exists, main otherwise.
+        MAIN //!< Always refers to the main graph, whether staging is present or not.
+    };
+
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
     /** Construct a new transaction with the specified feerate, and return a Ref to it.
@@ -112,16 +117,14 @@ public:
     virtual bool HaveStaging() const noexcept = 0;
 
     /** Determine whether the graph is oversized (contains a connected component of more than the
-     *  configured maximum cluster count). If main_only is false and a staging graph exists, it is
-     *  queried; otherwise the main graph is queried. Some of the functions below are not available
+     *  configured maximum cluster count). Some of the functions below are not available
      *  for oversized graphs. The mutators above are always available. Removing a transaction by
      *  destroying its Ref while staging exists will not clear main's oversizedness until staging
      *  is aborted or committed. */
-    virtual bool IsOversized(bool main_only = false) noexcept = 0;
-    /** Determine whether arg exists in the graph (i.e., was not removed). If main_only is false
-     *  and a staging graph exists, it is queried; otherwise the main graph is queried. This is
+    virtual bool IsOversized(Level level) noexcept = 0;
+    /** Determine whether arg exists in the graph (i.e., was not removed). This is
      *  available even for oversized graphs. */
-    virtual bool Exists(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual bool Exists(const Ref& arg, Level level) noexcept = 0;
     /** Get the individual transaction feerate of transaction arg. Returns the empty FeePerWeight
      *  if arg does not exist in either main or staging. This is available even for oversized
      *  graphs. */
@@ -131,40 +134,35 @@ public:
      *  oversized. */
     virtual FeePerWeight GetMainChunkFeerate(const Ref& arg) noexcept = 0;
     /** Get pointers to all transactions in the cluster which arg is in. The transactions are
-     *  returned in graph order. If main_only is false and a staging graph exists, it is queried;
-     *  otherwise the main graph is queried. The queried graph must not be oversized. Returns {} if
+     *  returned in graph order. The queried graph must not be oversized. Returns {} if
      *  arg does not exist in the queried graph. */
-    virtual std::vector<Ref*> GetCluster(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetCluster(const Ref& arg, Level level) noexcept = 0;
     /** Get pointers to all ancestors of the specified transaction (including the transaction
-     *  itself), in unspecified order. If main_only is false and a staging graph exists, it is
-     *  queried; otherwise the main graph is queried. The queried graph must not be oversized.
+     *  itself), in unspecified order. The queried graph must not be oversized.
      *  Returns {} if arg does not exist in the graph. */
-    virtual std::vector<Ref*> GetAncestors(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetAncestors(const Ref& arg, Level level) noexcept = 0;
     /** Get pointers to all descendants of the specified transaction (including the transaction
-     *  itself), in unspecified order. If main_only is false and a staging graph exists, it is
-     *  queried; otherwise the main graph is queried. The queried graph must not be oversized.
+     *  itself), in unspecified order. The queried graph must not be oversized.
      *  Returns {} if arg does not exist in the graph. */
-    virtual std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetDescendants(const Ref& arg, Level level) noexcept = 0;
     /** Like GetAncestors, but return the Refs for all transactions in the union of the provided
      *  arguments' ancestors (each transaction is only reported once). Refs that do not exist in
      *  the queried graph are ignored. Null refs are not allowed. */
-    virtual std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, Level level) noexcept = 0;
     /** Like GetDescendants, but return the Refs for all transactions in the union of the provided
      *  arguments' descendants (each transaction is only reported once). Refs that do not exist in
      *  the queried graph are ignored. Null refs are not allowed. */
-    virtual std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
-    /** Get the total number of transactions in the graph. If main_only is false and a staging
-     *  graph exists, it is queried; otherwise the main graph is queried. This is available even
+    virtual std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, Level level) noexcept = 0;
+    /** Get the total number of transactions in the graph. This is available even
      *  for oversized graphs. */
-    virtual GraphIndex GetTransactionCount(bool main_only = false) noexcept = 0;
+    virtual GraphIndex GetTransactionCount(Level level) noexcept = 0;
     /** Compare two transactions according to their order in the main graph. Both transactions must
      *  be in the main graph. The main graph must not be oversized. */
     virtual std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept = 0;
-    /** Count the number of distinct clusters that the specified transactions belong to. If
-     *  main_only is false and a staging graph exists, staging clusters are counted. Otherwise,
-     *  main clusters are counted. Refs that do not exist in the queried graph are ignored. Refs
-     *  can not be null. The queried graph must not be oversized. */
-    virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
+    /** Count the number of distinct clusters that the specified transactions belong to. Refs that
+     *  do not exist in the queried graph are ignored. Refs can not be null. The queried graph must
+     *  not be oversized. */
+    virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, Level level) noexcept = 0;
     /** For both main and staging (which must both exist and not be oversized), return the combined
      *  respective feerate diagrams, including chunks from all clusters, but excluding clusters
      *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is

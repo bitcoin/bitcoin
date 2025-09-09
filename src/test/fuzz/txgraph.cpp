@@ -383,14 +383,14 @@ FUZZ_TARGET(txgraph)
 
     /** Function to construct the correct fee-size diagram a real graph has based on its graph
      *  order (as reported by GetCluster(), so it works for both main and staging). */
-    auto get_diagram_fn = [&](bool main_only) -> std::vector<FeeFrac> {
-        int level = main_only ? 0 : sims.size() - 1;
+    auto get_diagram_fn = [&](TxGraph::Level level_select) -> std::vector<FeeFrac> {
+        int level = level_select == TxGraph::Level::MAIN ? 0 : sims.size() - 1;
         auto& sim = sims[level];
         // For every transaction in the graph, request its cluster, and throw them into a set.
         std::set<std::vector<TxGraph::Ref*>> clusters;
         for (auto i : sim.graph.Positions()) {
             auto ref = sim.GetRef(i);
-            clusters.insert(real->GetCluster(*ref, main_only));
+            clusters.insert(real->GetCluster(*ref, level_select));
         }
         // Compute the chunkings of each (deduplicated) cluster.
         size_t num_tx{0};
@@ -423,19 +423,19 @@ FUZZ_TARGET(txgraph)
         // operations), and the second-lowest bit as a way of selecting main vs. staging, and leave
         // the rest of the bits in command.
         bool alt = command & 1;
-        bool use_main = command & 2;
+        TxGraph::Level level_select = (command & 2) ? TxGraph::Level::MAIN : TxGraph::Level::TOP;
         command >>= 2;
 
         /** Use the bottom 2 bits of command to select an entry in the block_builders vector (if
-         *  any). These use the same bits as alt/use_main, so don't use those in actions below
+         *  any). These use the same bits as alt/level_select, so don't use those in actions below
          *  where builder_idx is used as well. */
         int builder_idx = block_builders.empty() ? -1 : int((orig_command & 3) % block_builders.size());
 
         // Provide convenient aliases for the top simulated graph (main, or staging if it exists),
-        // one for the simulated graph selected based on use_main (for operations that can operate
+        // one for the simulated graph selected based on level_select (for operations that can operate
         // on both graphs), and one that always refers to the main graph.
         auto& top_sim = sims.back();
-        auto& sel_sim = use_main ? sims[0] : top_sim;
+        auto& sel_sim = level_select == TxGraph::Level::MAIN ? sims[0] : top_sim;
         auto& main_sim = sims[0];
 
         // Keep decrementing command for each applicable operation, until one is hit. Multiple
@@ -546,18 +546,18 @@ FUZZ_TARGET(txgraph)
                 break;
             } else if (command-- == 0) {
                 // GetTransactionCount.
-                assert(real->GetTransactionCount(use_main) == sel_sim.GetTransactionCount());
+                assert(real->GetTransactionCount(level_select) == sel_sim.GetTransactionCount());
                 break;
             } else if (command-- == 0) {
                 // Exists.
                 auto ref = pick_fn();
-                bool exists = real->Exists(*ref, use_main);
+                bool exists = real->Exists(*ref, level_select);
                 bool should_exist = sel_sim.Find(ref) != SimTxGraph::MISSING;
                 assert(exists == should_exist);
                 break;
             } else if (command-- == 0) {
                 // IsOversized.
-                assert(sel_sim.IsOversized() == real->IsOversized(use_main));
+                assert(sel_sim.IsOversized() == real->IsOversized(level_select));
                 break;
             } else if (command-- == 0) {
                 // GetIndividualFeerate.
@@ -590,8 +590,8 @@ FUZZ_TARGET(txgraph)
             } else if (!sel_sim.IsOversized() && command-- == 0) {
                 // GetAncestors/GetDescendants.
                 auto ref = pick_fn();
-                auto result = alt ? real->GetDescendants(*ref, use_main)
-                                  : real->GetAncestors(*ref, use_main);
+                auto result = alt ? real->GetDescendants(*ref, level_select)
+                                  : real->GetAncestors(*ref, level_select);
                 assert(result.size() <= max_cluster_count);
                 auto result_set = sel_sim.MakeSet(result);
                 assert(result.size() == result_set.Count());
@@ -610,8 +610,8 @@ FUZZ_TARGET(txgraph)
                 // Their order should not matter, shuffle them.
                 std::shuffle(refs.begin(), refs.end(), rng);
                 // Invoke the real function, and convert to SimPos set.
-                auto result = alt ? real->GetDescendantsUnion(refs, use_main)
-                                  : real->GetAncestorsUnion(refs, use_main);
+                auto result = alt ? real->GetDescendantsUnion(refs, level_select)
+                                  : real->GetAncestorsUnion(refs, level_select);
                 auto result_set = sel_sim.MakeSet(result);
                 assert(result.size() == result_set.Count());
                 // Compute the expected result.
@@ -623,7 +623,7 @@ FUZZ_TARGET(txgraph)
             } else if (!sel_sim.IsOversized() && command-- == 0) {
                 // GetCluster.
                 auto ref = pick_fn();
-                auto result = real->GetCluster(*ref, use_main);
+                auto result = real->GetCluster(*ref, level_select);
                 // Check cluster count limit.
                 assert(result.size() <= max_cluster_count);
                 // Require the result to be topologically valid and not contain duplicates.
@@ -712,7 +712,7 @@ FUZZ_TARGET(txgraph)
                 // Their order should not matter, shuffle them.
                 std::shuffle(refs.begin(), refs.end(), rng);
                 // Invoke the real function.
-                auto result = real->CountDistinctClusters(refs, use_main);
+                auto result = real->CountDistinctClusters(refs, level_select);
                 // Build a set with representatives of the clusters the Refs occur in in the
                 // simulated graph. For each, remember the lowest-index transaction SimPos in the
                 // cluster.
@@ -905,7 +905,7 @@ FUZZ_TARGET(txgraph)
 
                 // First, we need to have dependencies applied and linearizations fixed to avoid
                 // circular dependencies in implied graph; trigger it via whatever means.
-                real->CountDistinctClusters({}, false);
+                real->CountDistinctClusters({}, TxGraph::Level::TOP);
 
                 // Gather the current clusters.
                 auto clusters = top_sim.GetComponents();
@@ -1110,7 +1110,7 @@ FUZZ_TARGET(txgraph)
 
         // Check that the implied ordering gives rise to a combined diagram that matches the
         // diagram constructed from the individual cluster linearization chunkings.
-        auto main_real_diagram = get_diagram_fn(/*main_only=*/true);
+        auto main_real_diagram = get_diagram_fn(TxGraph::Level::MAIN);
         auto main_implied_diagram = ChunkLinearization(sims[0].graph, vec1);
         assert(CompareChunks(main_real_diagram, main_implied_diagram) == 0);
 
@@ -1141,7 +1141,7 @@ FUZZ_TARGET(txgraph)
                                 std::greater{});
             assert(main_cmp_diagram.size() + missing_main_cmp.size() == main_real_diagram.size());
             // Do the same for chunks in stage_diagram missing from stage_cmp_diagram.
-            auto stage_real_diagram = get_diagram_fn(/*main_only=*/false);
+            auto stage_real_diagram = get_diagram_fn(TxGraph::Level::TOP);
             std::vector<FeeFrac> missing_stage_cmp;
             std::set_difference(stage_real_diagram.begin(), stage_real_diagram.end(),
                                 stage_cmp_diagram.begin(), stage_cmp_diagram.end(),
@@ -1167,13 +1167,13 @@ FUZZ_TARGET(txgraph)
 
     assert(real->HaveStaging() == (sims.size() > 1));
 
-    // Try to run a full comparison, for both main_only=false and main_only=true in TxGraph
-    // inspector functions that support both.
-    for (int main_only = 0; main_only < 2; ++main_only) {
-        auto& sim = main_only ? sims[0] : sims.back();
+    // Try to run a full comparison, for both TxGraph::Level::MAIN and TxGraph::Level::TOP in
+    // TxGraph inspector functions that support both.
+    for (auto level : {TxGraph::Level::TOP, TxGraph::Level::MAIN}) {
+        auto& sim = level == TxGraph::Level::TOP ? sims.back() : sims.front();
         // Compare simple properties of the graph with the simulation.
-        assert(real->IsOversized(main_only) == sim.IsOversized());
-        assert(real->GetTransactionCount(main_only) == sim.GetTransactionCount());
+        assert(real->IsOversized(level) == sim.IsOversized());
+        assert(real->GetTransactionCount(level) == sim.GetTransactionCount());
         // If the graph (and the simulation) are not oversized, perform a full comparison.
         if (!sim.IsOversized()) {
             auto todo = sim.graph.Positions();
@@ -1188,16 +1188,16 @@ FUZZ_TARGET(txgraph)
                     assert(sim.graph.FeeRate(i) == real->GetIndividualFeerate(*sim.GetRef(i)));
                     // Check its ancestors against simulation.
                     auto expect_anc = sim.graph.Ancestors(i);
-                    auto anc = sim.MakeSet(real->GetAncestors(*sim.GetRef(i), main_only));
+                    auto anc = sim.MakeSet(real->GetAncestors(*sim.GetRef(i), level));
                     assert(anc.Count() <= max_cluster_count);
                     assert(anc == expect_anc);
                     // Check its descendants against simulation.
                     auto expect_desc = sim.graph.Descendants(i);
-                    auto desc = sim.MakeSet(real->GetDescendants(*sim.GetRef(i), main_only));
+                    auto desc = sim.MakeSet(real->GetDescendants(*sim.GetRef(i), level));
                     assert(desc.Count() <= max_cluster_count);
                     assert(desc == expect_desc);
                     // Check the cluster the transaction is part of.
-                    auto cluster = real->GetCluster(*sim.GetRef(i), main_only);
+                    auto cluster = real->GetCluster(*sim.GetRef(i), level);
                     assert(cluster.size() <= max_cluster_count);
                     assert(sim.MakeSet(cluster) == component);
                     // Check that the cluster is reported in a valid topological order (its
@@ -1217,7 +1217,7 @@ FUZZ_TARGET(txgraph)
                     assert(total_size <= max_cluster_size);
                     // Construct a chunking object for the simulated graph, using the reported cluster
                     // linearization as ordering, and compare it against the reported chunk feerates.
-                    if (sims.size() == 1 || main_only) {
+                    if (sims.size() == 1 || level == TxGraph::Level::MAIN) {
                         cluster_linearize::LinearizationChunking simlinchunk(sim.graph, simlin);
                         DepGraphIndex idx{0};
                         for (unsigned chunknum = 0; chunknum < simlinchunk.NumChunksLeft(); ++chunknum) {
