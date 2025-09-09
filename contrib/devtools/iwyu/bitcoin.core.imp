@@ -8,4 +8,9 @@
   # libc symbols.
   { "symbol": ["AT_HWCAP", "private", "<sys/auxv.h>", "public"] },
   { "symbol": ["AT_HWCAP2", "private", "<sys/auxv.h>", "public"] },
+
+  # Fixed in https://github.com/include-what-you-use/include-what-you-use/pull/1706.
+  { "symbol": ["SEEK_CUR", "private", "<cstdio>", "public"] },
+  { "symbol": ["SEEK_END", "private", "<cstdio>", "public"] },
+  { "symbol": ["SEEK_SET", "private", "<cstdio>", "public"] },
 ]

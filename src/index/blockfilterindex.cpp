@@ -2,18 +2,38 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <map>
+#include <index/blockfilterindex.h>
 
-#include <clientversion.h>
+#include <blockfilter.h>
+#include <chain.h>
 #include <common/args.h>
 #include <dbwrapper.h>
+#include <flatfile.h>
 #include <hash.h>
-#include <index/blockfilterindex.h>
+#include <index/base.h>
+#include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <logging.h>
-#include <node/blockstorage.h>
-#include <undo.h>
-#include <util/fs_helpers.h>
+#include <serialize.h>
+#include <streams.h>
+#include <sync.h>
+#include <uint256.h>
+#include <util/check.h>
+#include <util/fs.h>
+#include <util/hasher.h>
 #include <util/syserror.h>
+
+#include <cerrno>
+#include <exception>
+#include <ios>
+#include <map>
+#include <optional>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by

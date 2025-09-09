@@ -2,10 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <chainparams.h>
-#include <common/args.h>
 #include <index/base.h>
+
+#include <chain.h>
+#include <common/args.h>
+#include <dbwrapper.h>
 #include <interfaces/chain.h>
+#include <interfaces/types.h>
 #include <kernel/chain.h>
 #include <logging.h>
 #include <node/abort.h>
@@ -13,20 +16,31 @@
 #include <node/context.h>
 #include <node/database_args.h>
 #include <node/interface_ui.h>
+#include <primitives/block.h>
+#include <sync.h>
 #include <tinyformat.h>
+#include <uint256.h>
 #include <undo.h>
+#include <util/fs.h>
 #include <util/string.h>
 #include <util/thread.h>
+#include <util/threadinterrupt.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <validationinterface.h>
 
-#include <chrono>
+#include <cassert>
+#include <compare>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
 
