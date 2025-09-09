@@ -37,11 +37,22 @@ unsupported systems.
 Notable changes
 ===============
 
+### P2P
+
+- #32646 p2p: Add witness mutation check inside FillBlock
+- #33296 net: check for empty header before calling FillBlock
+
 ### CI
 
 - #32999 ci: Use APT_LLVM_V in msan task
 - #33099 ci: allow for any libc++ intrumentation & use it for TSAN
 - #33258 ci: use LLVM 21
+- #33364 ci: always use tag for LLVM checkout
+
+### Misc
+
+- #33310 trace: Workaround GCC bug compiling with old systemtap
+- #33340 Fix benchmark CSV output
 
 Credits
 =======
@@ -49,6 +60,7 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - fanquake
+- Hennadii Stepanov
 - MarcoFalke
 
 As well as to everyone that helped with translations on
