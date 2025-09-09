@@ -7,6 +7,9 @@ Test that -discover does not add all interfaces' addresses if we listen on only 
 """
 
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_node import (
+    FailedToStartError,
+)
 from test_framework.util import (
     assert_equal,
     assert_not_equal,
@@ -15,24 +18,20 @@ from test_framework.util import (
 )
 
 # We need to bind to a routable address for this test to exercise the relevant code
-# and also must have another routable address on another interface which must not
-# be named "lo" or "lo0".
+# and also must have another routable address. Those addresses must be on an interface
+# that is UP and is not a loopback interface (IFF_LOOPBACK).
 # To set these routable addresses on the machine, use:
 # Linux:
 # First find your interfaces: ip addr show
 # Then use your actual interface names (replace INTERFACE_NAME with yours):
-# ip addr add 1.1.1.1/32 dev INTERFACE_NAME && ip addr add 2.2.2.2/32 dev INTERFACE_NAME  # to set up
-# ip addr del 1.1.1.1/32 dev INTERFACE_NAME && ip addr del 2.2.2.2/32 dev INTERFACE_NAME  # to remove it
+# ip addr add 1.1.1.5/32 dev INTERFACE_NAME && ip addr add 1111:1111::5/128 dev INTERFACE_NAME  # to set up
+# ip addr del 1.1.1.5/32 dev INTERFACE_NAME && ip addr del 1111:1111::5/128 dev INTERFACE_NAME  # to remove it
 #
-# macOS:
-# ifconfig en0 alias 1.1.1.1 && ifconfig en0 alias 2.2.2.2  # to set up
-# ifconfig en0 1.1.1.1 -alias && ifconfig en0 2.2.2.2 -alias  # to remove it, after the test
-#
-# FreeBSD:
-# ifconfig em0 1.1.1.1/32 alias && ifconfig wlan0 2.2.2.2/32 alias  # to set up
-# ifconfig em0 1.1.1.1 -alias && ifconfig wlan0 2.2.2.2 -alias  # to remove it, after the test
-ADDR1 = '1.1.1.1'
-ADDR2 = '2.2.2.2'
+# FreeBSD and MacOS:
+# ifconfig INTERFACE_NAME 1.1.1.5/32 alias && ifconfig INTERFACE_NAME 1111:1111::5/128 alias  # to set up
+# ifconfig INTERFACE_NAME 1.1.1.5 -alias && ifconfig INTERFACE_NAME 1111:1111::5 -alias       # to remove it, after the test
+ADDR1 = '1.1.1.5'
+ADDR2 = '1111:1111::5'
 
 class BindPortDiscoverTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -70,19 +69,28 @@ class BindPortDiscoverTest(BitcoinTestFramework):
         # False. We do not want any -bind= thus set has_explicit_bind to True.
         for node in self.nodes:
             node.has_explicit_bind = True
-        self.start_nodes()
 
-    def add_options(self, parser):
-        parser.add_argument(
-            "--ihave1111and2222", action='store_true', dest="ihave1111and2222",
-            help=f"Run the test, assuming {ADDR1} and {ADDR2} are configured on the machine",
-            default=False)
-
-    def skip_test_if_missing_module(self):
-        if not self.options.ihave1111and2222:
-            raise SkipTest(
-                f"To run this test make sure that {ADDR1} and {ADDR2} (routable addresses) are "
-                "assigned to the interfaces on this machine and rerun with --ihave1111and2222")
+        try:
+            self.start_nodes()
+        except FailedToStartError as e:
+            for node in self.nodes:
+                if node.running:
+                    if node.rpc_connected:
+                        node.stop_node(wait=node.rpc_timeout)
+                    else:
+                        node.process.kill()
+                        node.process.wait(timeout=node.rpc_timeout)
+                        node.process = None
+                        node.stdout.close()
+                        node.stderr.close()
+                        node.running = False
+            if 'Unable to bind to ' in str(e):
+                raise SkipTest(
+                    f'To run this test make sure that {ADDR1} and {ADDR2} '
+                    '(routable addresses) are assigned to non-loopback '
+                    'interfaces on this machine')
+            else:
+                raise e
 
     def run_test(self):
         self.log.info(
