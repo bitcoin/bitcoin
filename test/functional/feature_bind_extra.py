@@ -3,10 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
-Test starting bitcoind with -bind and/or -bind=...=onion and confirm
-that bind happens on the expected ports.
+Test starting bitcoind with -bind and/or -bind=...=onion, confirm that
+it binds to the expected ports, and verify that duplicate or conflicting
+-bind/-whitebind configurations are rejected with a descriptive error.
 """
 
+from itertools import combinations_with_replacement
 from test_framework.netutil import (
     addr_to_hex,
     get_bind_addrs,
@@ -14,12 +16,12 @@ from test_framework.netutil import (
 from test_framework.test_framework import (
     BitcoinTestFramework,
 )
+from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
     p2p_port,
     rpc_port,
 )
-
 
 class BindExtraTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -86,6 +88,15 @@ class BindExtraTest(BitcoinTestFramework):
             # Remove RPC ports. They are not relevant for this test.
             binds = set(filter(lambda e: e[1] != rpc_port(i), binds))
             assert_equal(binds, set(expected_services))
+
+        self.stop_node(0)
+
+        addr = "127.0.0.1:11012"
+        for opt1, opt2 in combinations_with_replacement([f"-bind={addr}", f"-bind={addr}=onion", f"-whitebind=noban@{addr}"], 2):
+            self.nodes[0].assert_start_raises_init_error(
+                        [opt1, opt2],
+                        "Error: Duplicate binding configuration",
+                        match=ErrorMatch.PARTIAL_REGEX)
 
 if __name__ == '__main__':
     BindExtraTest(__file__).main()
