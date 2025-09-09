@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">დააჭირეთ მარჯვენა ღილაკს მისამართის ან ლეიბლის ჩასასწორებლად</translation>
+        <translation type="unfinished">დააჭირეთ მარჯვენა ღილაკს მისამართის ან ნიშნულის ჩასასწორებლად</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -12,10 +12,6 @@
     <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;ახალი</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">მონიშნული მისამართის კოპირება სისტემის მეხსიერების ბუფერში</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -59,7 +55,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">ეს არის თქვენი ბიტკოინ-მისამართები გადარიცხვებისათვის. აუცილებლად შეამოწმეთ მითითებული თანხა და მიმღები მისამართი კოინების გადარიცხვამდე.</translation>
+        <translation type="unfinished">ეს არის თქვენი ბიტკოინ-მისამართები გადარიცხვებისათვის. კოინების გადარიცხვამდე აუცილებლად შეამოწმეთ მითითებული თანხა და მიმღები მისამართი.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
@@ -670,6 +666,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ყველა საფულის დახურვა</translation>
     </message>
     <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation type="unfinished">აჩვენეთ %1 დახმარების წერილი, რომ მიიღოთ სია Bitcoin– ის ბრძანების შესაძლო ვარიანტებთან ერთად</translation>
+    </message>
+    <message>
         <source>No wallets available</source>
         <translation type="unfinished">არ არის ჩატვირთული საფულე.</translation>
     </message>
@@ -741,10 +741,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ქსელის აქტივობის ჩართვა</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">საფულის შექმნისას დაფიქსირდა შეცდომა</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">შეცდომა: %1</translation>
     </message>
@@ -807,6 +803,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Original message:</source>
         <translation type="unfinished">თავდაპირველი/ორიგინალი გზავნილი:</translation>
+    </message>
+</context>
+<context>
+    <name>UnitDisplayStatusBarControl</name>
+    <message>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation type="unfinished">ერთეული რაოდენობათა საჩვენებლად. ერთეულის შესაცვლელად დააჭირეთ.</translation>
     </message>
 </context>
 <context>
@@ -1094,7 +1097,57 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">ვერსია</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">%1-ის შესახებ</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">კომანდების ზოლის ოპციები</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished"> დახურულია %1...</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">არ გამორთოთ კომპიუტერი ამ ფანჯრის გაქრობამდე.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">მოგესალმებით</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">კეთილი იყოს თქვენი მობრძანება %1-ში.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">რადგან ეს პროგრამა პირველად იხსნება, შეგიძლიათ აირჩიოთ თუ  სად შეინახოს %1 მონაცემები.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">ნაგულისხმევი კატალოგის გამოყენება</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">მითითებული კატალოგის გამოყენება:</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1147,56 +1200,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">შეცდომა</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">მოგესალმებით</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">კეთილი იყოს თქვენი მობრძანება %1-ში.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">რადგან ეს პროგრამა პირველად იხსნება, შეგიძლიათ აირჩიოთ თუ  სად შეინახოს %1 მონაცემები.</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">GB</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">ნაგულისხმევი კატალოგის გამოყენება</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">მითითებული კატალოგის გამოყენება:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">ვერსია</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">%1-ის შესახებ</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">კომანდების ზოლის ოპციები</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished"> დახურულია %1...</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">არ გამორთოთ კომპიუტერი ამ ფანჯრის გაქრობამდე.</translation>
     </message>
 </context>
 <context>
@@ -1411,10 +1414,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ნაჩვენები ინფორმაცია შეიძლება მოძველებული იყოს. თქვენი საფულე ავტომატურად სინქრონიზდება Bitcoin-ის ქსელთან კავშირის დამყარების შემდეგ, ეს პროცესი ჯერ არ არის დასრულებული.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">მხოლოდ საყურებლად:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">ხელმისაწვდომია:</translation>
     </message>
@@ -1449,14 +1448,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Your current total balance</source>
         <translation type="unfinished">თქვენი სრული მიმდინარე ბალანსი</translation>
-    </message>
-    <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">თქვენი მიმდინარე ბალანსი მხოლოდ საყურებელ მისამართებში</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">ხარჯვადი:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -2330,10 +2321,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ხელმოწერა</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">მიმდინარე ხელმოწერის კოპირება კლიპბორდში</translation>
-    </message>
-    <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
         <translation type="unfinished">მოაწერეთ ხელი იმის დასადასტურებლად, რომ ეს მისამართი თქვენია</translation>
     </message>
@@ -2760,10 +2747,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">დადასტურებულია</translation>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">მხოლოდ საყურებელი</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation type="unfinished">თარიღი</translation>
     </message>
@@ -2881,6 +2864,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">-maxmempool უნდა იყოს მინიმუმ %d MB</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">ნაგულისხმევი საფულე</translation>
+    </message>
+    <message>
         <source>Corrupted block database detected</source>
         <translation type="unfinished">შენიშნულია ბლოკთა ბაზის დაზიანება</translation>
     </message>
@@ -2899,10 +2886,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">ვერ ინიციალიზდება ბლოკების ბაზა</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">ვერ ინიციალიზდება საფულის ბაზის გარემო %s!</translation>
     </message>
     <message>
         <source>Error loading %s</source>

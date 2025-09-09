@@ -10,10 +10,6 @@
         <translation type="unfinished">نیا ایڈریس بنائیں</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">موجودہ چنے ہوئے پتے کو نقل کریں سسٹم کلپ بورڈ پر</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">نقل</translation>
     </message>
@@ -738,14 +734,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">نیٹ ورک کی سرگرمی کو فعال کریں۔</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">والیٹ بنانے میں خرابی</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">نیا والیٹ نہیں بنایا جا سکتا، اس سافٹ ویئر کو sqlite سپورٹ کے بغیر کمپائل کیا گیا ہے (ڈسکرپٹر والیٹ کے لیے درکار)۔</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished">خرابی:%1</translation>
     </message>
@@ -1193,7 +1181,57 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">ورژن</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">تقریبآ %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">کمانڈ لائن کے اختیارات</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">جب تک یہ ونڈو غائب نہ ہوجائے کمپیوٹر کو بند نہ کریں۔</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">خوش آمدید</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">بلاک چین اسٹوریج کو محدود کریں۔</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">اس ترتیب کو واپس کرنے کے لیے پورے بلاکچین کو دوبارہ ڈاؤن لوڈ کرنے کی ضرورت ہے۔ پہلے پوری چین کو ڈاؤن لوڈ کرنا اور بعد میں اسے کاٹنا تیز تر ہے۔ کچھ جدید خصوصیات کو غیر فعال کرتا ہے۔</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">جی بی</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">اگر آپ نے بلاک چین اسٹوریج کو محدود کرنے کا انتخاب کیا ہے (کاٹنا)، تو تاریخی ڈیٹا کو ابھی بھی ڈاؤن لوڈ اور پروسیس کیا جانا چاہیے، لیکن آپ کے ڈسک کے استعمال کو کم رکھنے کے لیے اسے بعد میں حذف کر دیا جائے گا۔</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">پہلے سے طے شدہ ڈیٹا ڈائرکٹری استعمال کریں۔</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">اپنی مرضی کے مطابق ڈیٹا ڈائرکٹری کا استعمال کریں:</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">بٹ کوائن</translation>
@@ -1234,56 +1272,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Error</source>
         <translation type="unfinished">نقص</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">خوش آمدید</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">بلاک چین اسٹوریج کو محدود کریں۔</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">اس ترتیب کو واپس کرنے کے لیے پورے بلاکچین کو دوبارہ ڈاؤن لوڈ کرنے کی ضرورت ہے۔ پہلے پوری چین کو ڈاؤن لوڈ کرنا اور بعد میں اسے کاٹنا تیز تر ہے۔ کچھ جدید خصوصیات کو غیر فعال کرتا ہے۔</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">جی بی</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">اگر آپ نے بلاک چین اسٹوریج کو محدود کرنے کا انتخاب کیا ہے (کاٹنا)، تو تاریخی ڈیٹا کو ابھی بھی ڈاؤن لوڈ اور پروسیس کیا جانا چاہیے، لیکن آپ کے ڈسک کے استعمال کو کم رکھنے کے لیے اسے بعد میں حذف کر دیا جائے گا۔</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">پہلے سے طے شدہ ڈیٹا ڈائرکٹری استعمال کریں۔</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">اپنی مرضی کے مطابق ڈیٹا ڈائرکٹری کا استعمال کریں:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">ورژن</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">تقریبآ %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">کمانڈ لائن کے اختیارات</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">جب تک یہ ونڈو غائب نہ ہوجائے کمپیوٹر کو بند نہ کریں۔</translation>
     </message>
 </context>
 <context>
@@ -1488,10 +1476,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">ظاہر کی گئی معلومات پرانی ہو سکتی ہے۔ کنکشن قائم ہونے کے بعد آپ کا والیٹ خود بخود بٹ کوائن نیٹ ورک کے ساتھ ہم آہنگ ہوجاتا ہے، لیکن یہ عمل ابھی مکمل نہیں ہوا ہے۔</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">صرف دیکھنے کے لیے:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">دستیاب:</translation>
     </message>
@@ -1528,24 +1512,8 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">آپ کا کل موجودہ بیلنس</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">صرف دیکھنے والے ایڈریسز میں آپ کا موجودہ بیلنس</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">قابل خرچ:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">حالیہ لین دین</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">صرف دیکھنے والے پتوں پر غیر تصدیق شدہ لین دین</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">صرف دیکھنے کے پتوں میں کل موجودہ بیلنس</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
@@ -2435,6 +2403,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">پہلے سے طے شدہ والیٹ</translation>
+    </message>
     <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">ناکافی فنڈز</translation>

@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Berria</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopiatu hautatutako helbidea sistemaren arbelean</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopiatu</translation>
     </message>
@@ -687,6 +683,16 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Erakutxi kideen fitxa</translation>
     </message>
     <message>
+        <source>Disable network activity</source>
+        <extracomment>A context menu item.</extracomment>
+        <translation type="unfinished">Sareko jarduera desaktibatu</translation>
+    </message>
+    <message>
+        <source>Enable network activity</source>
+        <extracomment>A context menu item. The network activity was disabled previously.</extracomment>
+        <translation type="unfinished">Sareko jarduera aktibatu</translation>
+    </message>
+    <message>
         <source>Error: %1</source>
         <translation type="unfinished">Akatsa: %1</translation>
     </message>
@@ -828,6 +834,10 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Copy amount</source>
         <translation type="unfinished">zenbatekoaren kopia</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Helbidea kopiatu</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
@@ -1034,7 +1044,49 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">bertsioa</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">%1 inguru</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Komando lerroaren aukerak</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1Itzaltzen ari da...</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Ongietorri</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Ongietorri %1-ra</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Erabili datu direktorio lehenetsia</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Erabili datu direktorio pertsonalizatu bat:</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1068,49 +1120,7 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <source>Error</source>
         <translation type="unfinished">Akatsa</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Ongietorri</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Ongietorri %1-ra</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">GB</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Erabili datu direktorio lehenetsia</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Erabili datu direktorio pertsonalizatu bat:</translation>
-    </message>
 </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">bertsioa</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">%1 inguru</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Komando lerroaren aukerak</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1Itzaltzen ari da...</translation>
-    </message>
-    </context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1291,10 +1301,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Inprimakia</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Ikusi-bakarrik:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">Eskuragarri:</translation>
     </message>
@@ -1317,10 +1323,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Your current total balance</source>
         <translation type="unfinished">Zure oraingo erabateko saldoa</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">Gastagarria:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
@@ -1530,6 +1532,11 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Garbitu kontsola</translation>
     </message>
     <message>
+        <source>&amp;Copy address</source>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
+        <translation type="unfinished">&amp;Helbidea kopiatu</translation>
+    </message>
+    <message>
         <source>&amp;Disconnect</source>
         <translation type="unfinished">&amp;Deskonektatu</translation>
     </message>
@@ -1596,6 +1603,10 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Copy &amp;URI</source>
         <translation type="unfinished">Kopiatu &amp;URI</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Helbidea kopiatu</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
@@ -1888,10 +1899,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Sinadura</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Kopiatu oraingo sinadura sistemaren arbelera</translation>
-    </message>
-    <message>
         <source>Sign &amp;Message</source>
         <translation type="unfinished">Sinatu &amp;Mezua</translation>
     </message>
@@ -1972,10 +1979,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>own address</source>
         <translation type="unfinished">zure helbidea</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation type="unfinished">ikusi bakarrik</translation>
     </message>
     <message>
         <source>label</source>
@@ -2075,10 +2078,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
         <translation type="unfinished">Meatua</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">ikusi bakarrik</translation>
-    </message>
-    <message>
         <source>(no label)</source>
         <translation type="unfinished">(izendapenik ez)</translation>
     </message>
@@ -2144,6 +2143,10 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Min amount</source>
         <translation type="unfinished">Kopuru minimoa</translation>
+    </message>
+    <message>
+        <source>&amp;Copy address</source>
+        <translation type="unfinished">&amp;Helbidea kopiatu</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
@@ -2223,12 +2226,12 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Done loading</source>
-        <translation type="unfinished">Zamaketa amaitua</translation>
+        <source>default wallet</source>
+        <translation type="unfinished">Diruzorro lehenetsia</translation>
     </message>
     <message>
-        <source>Importing…</source>
-        <translation type="unfinished">Inportatzen...</translation>
+        <source>Done loading</source>
+        <translation type="unfinished">Zamaketa amaitua</translation>
     </message>
     <message>
         <source>Loading wallet…</source>
@@ -2273,14 +2276,6 @@ Sinatzea 'legacy' motako helbideekin soilik da posible</translation>
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Transakzio luzeegia</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">hasierako giltzak sortzeko ezgai</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Giltzak sortzeko ezgai</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>

@@ -3,19 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">ವಿಳಾಸ ಅಥವಾ ಲೇಬಲ್ ಅನ್ನು ಸಂಪಾದಿಸಲು ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ</translation>
+        <translation type="unfinished">ವಿಳಾಸ ಅಥವಾ ಲೇಬಲ್ ಅನ್ನು ಪರಿಷ್ಕರಿಸಲು ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">ಹೊಸ ವಿಳಾಸವನ್ನು ರಚಿಸಿ</translation>
+        <translation type="unfinished">ಹೊಸ ವಿಳಾಸವನ್ನು ಸೃಷ್ಟಿ ಮಾಡಿ</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;ಹೊಸದು</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">ಪ್ರಸ್ತುತ ಆಯ್ಕೆಮಾಡಿದ ವಿಳಾಸವನ್ನು ಸಿಸ್ಟಮ್ ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಿ</translation>
+        <translation type="unfinished">&amp;ಹೊಸ</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -23,7 +19,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">ನಕಲು&amp;ಕಳೆದುಕೊಳ್ಳುತ್ತಾರೆ</translation>
+        <translation type="unfinished">ಮುಚ್ಚು</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -293,6 +289,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">ದೋಷ: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 ಇನ್ನೂ ಸುರಕ್ಷಿತವಾಗಿ ನಿರ್ಗಮಿಸಿಲ್ಲ...</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
@@ -689,20 +689,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ಬ್ಲಾಕ್ ಡೇಟಾಬೇಸ್ ಭವಿಷ್ಯದಿಂದ ಬಂದಿರುವ ಬ್ಲಾಕ್ ಹೊಂದಿದೆ ಎಂದು ತೋರುತ್ತದೆ. ಇದು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ನ ದಿನಾಂಕ ಮತ್ತು ಸಮಯವು ತಪ್ಪಾಗಿರಬಹುದು. ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ನ ದಿನಾಂಕ ಮತ್ತು ಸಮಯ ಸರಿಯಾಗಿದ್ದರೆ, ಬ್ಲಾಕ್ ಡೇಟಾಬೇಸ್ ಮಾತ್ರವೇ ಪುನಃ ನಿರ್ಮಿಸಬೇಕು.</translation>
     </message>
     <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">ಈ ದೋಷ ಕ್ರಿಯೆಗೆ ಕೊನೆಯಾಗಿದ್ದ ಬರ್ಕ್ಲಿ ಡಿಬಿಯುಂಟುವಿನ ಹೊಸ ಸಂಸ್ಕರಣವನ್ನು ಬಳಸಿದ್ದ ಬದಲಾವಣೆಯ ಸಂಗಡ ಈ ವಾಲೆಟ್ ಕ್ರಿಯೆಯನ್ನು ಶುಚಿಗೊಳಿಸಲು ಕೊನೆಗೆ ಆಯ್ಕೆಮಾಡಿದೆಯೇ ಎಂದಾದರೆ, ದಯವಿಟ್ಟು ಈ ವಾಲೆಟ್ ಸೋಫ್ಟ್‌ವೇರ್ ಬಳಸಿದ ಅಂತಿಮ ಬರ್ಷನ್ ಅನ್ನು ಬಳಸಿ.</translation>
-    </message>
-    <message>
         <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
         <translation type="unfinished">ನೀವು ಸಾಮಾನ್ಯ ಫೀ ಬಗ್ಗೆ ಹೆಚ್ಚಿನ ಲಾಗಿನ ಸಂದರ್ಶನಕ್ಕಿಂತ ಪಾಂಡ್ರಹಿಸುವುದಕ್ಕಿಂತ ಭಾಗಶಃ ಖರೀದಿ ಟ್ರಾನ್ಸ್ಯಾಕ್ಷನ್ ಆಯ್ಕೆಯನ್ನು ಆಯ್ಕೆಮಾಡುವುದರ ಮೇಲೆ ಪ್ರಾಥಮಿಕತೆಯನ್ನು ಕೊಡುವುದಕ್ಕಾಗಿ ನೀವು ಅಧಿಕವಾದ ಟ್ರಾನ್ಸ್ಯಾಕ್ಷನ್ ಫೀ ಪಾವತಿಸುತ್ತೀರಿ.</translation>
     </message>
     <message>
         <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
         <translation type="unfinished">ಬೆಂಬಲಿಗೆಯ ತರಬೇತಿ ಡೇಟಾಬೇಸ್ ಸ್ವರೂಪ ಅಸಮರ್ಥಿತವಾಗಿದೆ. ದಯವಿಟ್ಟು -reindex-chainstate ನೊಂದಿಗೆ ಮರುಪ್ರಾರಂಭಿಸಿ. ಇದು ಬೆಂಬಲಿಗೆಯ ತರಬೇತಿ ಡೇಟಾಬೇಸ್ ಪೂರ್ತಿಯಾಗಿ ಮರುಸ್ಥಾಪಿಸುತ್ತದೆ.</translation>
-    </message>
-    <message>
-        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
-        <translation type="unfinished">ವಾಲೆಟ್ ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ. ಲೆಗೆಸಿ ವಾಲೆಟ್ ಪ್ರಕಾರ ಅಳಿಸಲ್ಪಡುತ್ತಿದೆ ಮತ್ತು ಭವಿಷ್ಯದಲ್ಲಿ ಲೆಗೆಸಿ ವಾಲೆಟ್ಗಳನ್ನು ರಚಿಸಲೂ, ತೆರೆಯಲೂ ಬೆಂಬಲ ನೀಡಲಾಗುವುದಿಲ್ಲ.</translation>
     </message>
     <message>
         <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
