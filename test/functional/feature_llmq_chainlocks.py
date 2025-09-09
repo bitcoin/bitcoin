@@ -23,8 +23,8 @@ class LLMQChainLocksTest(DashTestFramework):
         self.set_dash_test_params(5, 4)
         self.delay_v20_and_mn_rr(height=200)
 
-    def sleep_and_assert_no_cl(self, block_hash):
-        time.sleep(5)
+    def sleep_and_assert_no_cl(self, block_hash, sleep_time=5):
+        time.sleep(sleep_time)
 
         for node in self.nodes:
             self.log.info(f"Expecting no ChainLock for {block_hash}")
