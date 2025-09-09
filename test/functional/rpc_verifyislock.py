@@ -58,7 +58,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         assert node.verifyislock(request_id, txid, rec_sig, node.getblockcount() + 100)
 
         # Mine one more cycle of rotated quorums
-        self.mine_cycle_quorum(is_first=False)
+        self.mine_cycle_quorum()
         # Create an ISLOCK using an active quorum which will be replaced when a new cycle happens
         request_id = None
         utxos = node.listunspent()
@@ -81,7 +81,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         # Create the ISDLOCK, then mine a cycle quorum to move renew active set
         isdlock = self.create_isdlock(rawtx)
         # Mine one block to trigger the "signHeight + dkgInterval" verification for the ISDLOCK
-        self.mine_cycle_quorum(is_first=False)
+        self.mine_cycle_quorum()
         # Verify the ISLOCK for a transaction that is not yet known by the node
         rawtx_txid = node.decoderawtransaction(rawtx)["txid"]
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx_txid)

@@ -135,6 +135,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.log.info("Cycle H+2C height:" + str(self.nodes[0].getblockcount()))
         self.log.info("Wait for chainlock")
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+        self.cycle_quorum_is_ready = True
 
         b_0 = self.nodes[0].getbestblockhash()
 
@@ -150,8 +151,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
             self.generate(self.nodes[0], 1, sync_fun=lambda: self.sync_blocks(nodes))
             self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
-
-        (quorum_info_0_0, quorum_info_0_1) = self.mine_cycle_quorum(is_first=False)
+        (quorum_info_0_0, quorum_info_0_1) = self.mine_cycle_quorum()
         assert(self.test_quorum_listextended(quorum_info_0_0, llmq_type_name))
         assert(self.test_quorum_listextended(quorum_info_0_1, llmq_type_name))
         quorum_members_0_0 = extract_quorum_members(quorum_info_0_0)
@@ -173,7 +173,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.log.info("Wait for chainlock")
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
-        (quorum_info_1_0, quorum_info_1_1) = self.mine_cycle_quorum(is_first=False)
+        (quorum_info_1_0, quorum_info_1_1) = self.mine_cycle_quorum()
         assert(self.test_quorum_listextended(quorum_info_1_0, llmq_type_name))
         assert(self.test_quorum_listextended(quorum_info_1_1, llmq_type_name))
         quorum_members_1_0 = extract_quorum_members(quorum_info_1_0)
@@ -207,7 +207,7 @@ class LLMQQuorumRotationTest(DashTestFramework):
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.log.info("Mine a quorum to invalidate")
-        (quorum_info_3_0, quorum_info_3_1) = self.mine_cycle_quorum(is_first=False)
+        (quorum_info_3_0, quorum_info_3_1) = self.mine_cycle_quorum()
 
         new_quorum_list = self.nodes[0].quorum("list", llmq_type)
         assert_equal(len(new_quorum_list[llmq_type_name]), len(quorum_list[llmq_type_name]) + 2)
