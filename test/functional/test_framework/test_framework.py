@@ -535,6 +535,27 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Wait for nodes to stop
             node.wait_until_stopped()
 
+    def cleanup_partially_started_nodes(self):
+        """Tear down nodes left running after a failed start_nodes().
+
+        After start_nodes() raises (e.g. FailedToStartError), some nodes may be
+        RPC-connected, some may have a live process without RPC, and some may
+        already have exited. Stop the connected ones cleanly and force-kill the
+        rest so the framework's teardown can proceed.
+        """
+        for node in self.nodes:
+            if not node.running:
+                continue
+            if node.rpc_connected:
+                node.stop_node(wait=node.rpc_timeout)
+            else:
+                node.process.kill()
+                node.process.wait(timeout=node.rpc_timeout)
+                node.process = None
+                node.stdout.close()
+                node.stderr.close()
+                node.running = False
+
     def restart_node(self, i, extra_args=None, clear_addrman=False, *, expected_stderr=''):
         """Stop and start a test node"""
         self.stop_node(i, expected_stderr=expected_stderr)
