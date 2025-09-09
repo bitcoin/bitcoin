@@ -7,13 +7,11 @@
 #ifdef ENABLE_WALLET
 #include <coinjoin/client.h>
 #endif // ENABLE_WALLET
-#include <coinjoin/server.h>
+#include <coinjoin/coinjoin.h>
 
-CJContext::CJContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-                     CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool,
-                     const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
-                     const llmq::CInstantSendManager& isman, std::unique_ptr<PeerManager>& peerman, bool relay_txes) :
-    dstxman{std::make_unique<CDSTXManager>()},
+CJContext::CJContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+                     CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
+                     const CMasternodeSync& mn_sync, const llmq::CInstantSendManager& isman, bool relay_txes) :
 #ifdef ENABLE_WALLET
     walletman{std::make_unique<CoinJoinWalletManager>(chainman, dmnman, mn_metaman, mempool, mn_sync, isman, queueman,
                                                       /*is_masternode=*/mn_activeman != nullptr)},
@@ -21,8 +19,7 @@ CJContext::CJContext(ChainstateManager& chainman, CConnman& connman, CDeterminis
                                                                         /*is_masternode=*/mn_activeman != nullptr)
                         : nullptr},
 #endif // ENABLE_WALLET
-    server{std::make_unique<CCoinJoinServer>(chainman, connman, dmnman, *dstxman, mn_metaman, mempool, mn_activeman,
-                                             mn_sync, isman, peerman)}
+    dstxman{std::make_unique<CDSTXManager>()}
 {}
 
 CJContext::~CJContext() {}

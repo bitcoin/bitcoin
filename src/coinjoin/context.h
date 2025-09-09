@@ -12,16 +12,12 @@
 #include <memory>
 
 class CActiveMasternodeManager;
-class CBlockPolicyEstimator;
-class CCoinJoinServer;
-class CConnman;
 class CDeterministicMNManager;
 class CDSTXManager;
 class ChainstateManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
 class CTxMemPool;
-class PeerManager;
 namespace llmq {
 class CInstantSendManager;
 };
@@ -34,19 +30,17 @@ class CoinJoinWalletManager;
 struct CJContext {
     CJContext() = delete;
     CJContext(const CJContext&) = delete;
-    CJContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
-              CMasternodeMetaMan& mn_metaman, CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman,
-              const CMasternodeSync& mn_sync, const llmq::CInstantSendManager& isman,
-              std::unique_ptr<PeerManager>& peerman, bool relay_txes);
+    CJContext(ChainstateManager& chainman, CDeterministicMNManager& dmnman, CMasternodeMetaMan& mn_metaman,
+              CTxMemPool& mempool, const CActiveMasternodeManager* const mn_activeman, const CMasternodeSync& mn_sync,
+              const llmq::CInstantSendManager& isman, bool relay_txes);
     ~CJContext();
 
-    const std::unique_ptr<CDSTXManager> dstxman;
 #ifdef ENABLE_WALLET
     // The main object for accessing mixing
     const std::unique_ptr<CoinJoinWalletManager> walletman;
     const std::unique_ptr<CCoinJoinClientQueueManager> queueman;
 #endif // ENABLE_WALLET
-    const std::unique_ptr<CCoinJoinServer> server;
+    const std::unique_ptr<CDSTXManager> dstxman;
 };
 
 #endif // BITCOIN_COINJOIN_CONTEXT_H

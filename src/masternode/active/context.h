@@ -7,10 +7,17 @@
 
 #include <memory>
 
-class CChainState;
+class CActiveMasternodeManager;
+class ChainstateManager;
+class CCoinJoinServer;
+class CConnman;
+class CDeterministicMNManager;
+class CDSTXManager;
+class CMasternodeMetaMan;
 class CMasternodeSync;
 class CSporkManager;
 class CTxMemPool;
+class PeerManager;
 struct LLMQContext;
 namespace chainlock {
 class ChainLockSigner;
@@ -21,6 +28,7 @@ class InstantSendSigner;
 
 struct ActiveContext {
 private:
+    // TODO: Switch to references to members when migration is finished
     LLMQContext& m_llmq_ctx;
 
     /*
@@ -33,9 +41,18 @@ private:
 public:
     ActiveContext() = delete;
     ActiveContext(const ActiveContext&) = delete;
-    ActiveContext(CChainState& chainstate, LLMQContext& llmq_ctx, CSporkManager& sporkman, CTxMemPool& mempool,
-                  const CMasternodeSync& mn_sync);
+    ActiveContext(ChainstateManager& chainman, CConnman& connman, CDeterministicMNManager& dmnman,
+                  CDSTXManager& dstxman, CMasternodeMetaMan& mn_metaman, LLMQContext& llmq_ctx, CSporkManager& sporkman,
+                  CTxMemPool& mempool, const CActiveMasternodeManager& mn_activeman, const CMasternodeSync& mn_sync,
+                  std::unique_ptr<PeerManager>& peerman);
     ~ActiveContext();
+
+    /*
+     * Entities that are only utilized when masternode mode is enabled
+     * and are accessible in their own right
+     * TODO: Move CActiveMasternodeManager here when dependents have been migrated
+     */
+    const std::unique_ptr<CCoinJoinServer> cj_server;
 };
 
 #endif // BITCOIN_MASTERNODE_ACTIVE_CONTEXT_H

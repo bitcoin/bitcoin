@@ -59,6 +59,7 @@
 #include <flat-database.h>
 #include <governance/governance.h>
 #include <llmq/context.h>
+#include <masternode/active/context.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <netfulfilledman.h>
@@ -333,8 +334,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman, m_node.banman.get(),
                                        *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                       *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, m_node.dmnman,
-                                       m_node.cj_ctx, m_node.llmq_ctx, /* ignore_incoming_txs = */ false);
+                                       *m_node.govman, *m_node.sporkman, /*mn_activeman=*/nullptr, m_node.dmnman,
+                                       /*active_ctx=*/nullptr, m_node.cj_ctx, m_node.llmq_ctx, /*ignore_incoming_txs=*/false);
     {
         CConnman::Options options;
         options.m_msgproc = m_node.peerman.get();
@@ -342,8 +343,8 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
         m_node.connman->Init(options);
     }
 
-    m_node.cj_ctx = std::make_unique<CJContext>(*m_node.chainman, *m_node.connman, *m_node.dmnman, *m_node.mn_metaman, *m_node.mempool,
-                                                /*mn_activeman=*/nullptr, *m_node.mn_sync, *m_node.llmq_ctx->isman, m_node.peerman,
+    m_node.cj_ctx = std::make_unique<CJContext>(*m_node.chainman, *m_node.dmnman, *m_node.mn_metaman, *m_node.mempool,
+                                                /*mn_activeman=*/nullptr, *m_node.mn_sync, *m_node.llmq_ctx->isman,
                                                 /*relay_txes=*/true);
 
 #ifdef ENABLE_WALLET
