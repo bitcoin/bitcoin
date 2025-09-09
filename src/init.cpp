@@ -91,6 +91,7 @@
 #include <llmq/dkgsessionmgr.h>
 #include <llmq/options.h>
 #include <llmq/signing.h>
+#include <masternode/active/context.h>
 #include <masternode/meta.h>
 #include <masternode/node.h>
 #include <masternode/sync.h>
@@ -321,6 +322,7 @@ void PrepareShutdown(NodeContext& node)
 
     // After all scheduled tasks have been flushed, destroy pointers
     // and reset all to nullptr.
+    node.active_ctx.reset();
     node.mn_sync.reset();
     node.sporkman.reset();
     node.govman.reset();
@@ -2159,7 +2161,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               node.mn_activeman.get(), *node.mn_sync, *node.llmq_ctx->isman, node.peerman,
                                               !ignores_incoming_txs);
 
-    // ********************************************************* Step 7d: Setup other Dash services
+    // ********************************************************* Step 7d: Setup masternode mode
+    assert(!node.active_ctx);
+    if (node.mn_activeman) {
+        node.active_ctx = std::make_unique<ActiveContext>(chainman.ActiveChainstate(), *node.llmq_ctx, *node.sporkman, *node.mempool, *node.mn_sync);
+    }
+
+    // ********************************************************* Step 7e: Setup other Dash services
 
     bool fLoadCacheFiles = !(fReindex || fReindexChainState) && (chainman.ActiveChain().Tip() != nullptr);
 

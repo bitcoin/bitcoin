@@ -50,9 +50,8 @@ std::unordered_set<uint256, StaticSaltedHasher> GetIdsFromLockable(const std::ve
 } // anonymous namespace
 
 CInstantSendManager::CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CQuorumManager& _qman,
-                                         CSigningManager& _sigman, CSigSharesManager& _shareman,
-                                         CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync,
-                                         bool is_masternode, bool unitTests, bool fWipe) :
+                                         CSigningManager& _sigman, CSporkManager& sporkman, CTxMemPool& _mempool,
+                                         const CMasternodeSync& mn_sync, bool unitTests, bool fWipe) :
     db{unitTests, fWipe},
     clhandler{_clhandler},
     m_chainstate{chainstate},
@@ -60,10 +59,7 @@ CInstantSendManager::CInstantSendManager(CChainLocksHandler& _clhandler, CChainS
     sigman{_sigman},
     spork_manager{sporkman},
     mempool{_mempool},
-    m_mn_sync{mn_sync},
-    m_signer{is_masternode ? std::make_unique<instantsend::InstantSendSigner>(chainstate, _clhandler, *this, _sigman,
-                                                                              _shareman, _qman, sporkman, _mempool, mn_sync)
-                           : nullptr}
+    m_mn_sync{mn_sync}
 {
     workInterrupt.reset();
 }

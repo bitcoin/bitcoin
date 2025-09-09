@@ -31,6 +31,7 @@ class CTxMemPool;
 class CMNHFManager;
 class NetGroupManager;
 class PeerManager;
+struct ActiveContext;
 struct CJContext;
 struct LLMQContext;
 
@@ -76,19 +77,21 @@ struct NodeContext {
     std::unique_ptr<interfaces::CoinJoin::Loader> coinjoin_loader{nullptr};
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
-    //! Dash
+    //! Dash managers
     std::unique_ptr<CActiveMasternodeManager> mn_activeman;
     std::unique_ptr<CCreditPoolManager> cpoolman;
     std::unique_ptr<CEvoDB> evodb;
     std::unique_ptr<CChainstateHelper> chain_helper;
     std::unique_ptr<CDeterministicMNManager> dmnman;
     std::unique_ptr<CGovernanceManager> govman;
-    std::unique_ptr<CJContext> cj_ctx;
     std::unique_ptr<CMasternodeMetaMan> mn_metaman;
     std::unique_ptr<CMasternodeSync> mn_sync;
     std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
+    //! Dash contexts
+    std::unique_ptr<ActiveContext> active_ctx;
+    std::unique_ptr<CJContext> cj_ctx;
     std::unique_ptr<LLMQContext> llmq_ctx;
 
     //! Declare default constructor and destructor that are not inline, so code
