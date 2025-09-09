@@ -8,8 +8,10 @@
 #include <memory>
 
 namespace llmq {
+class CFinalCommitment;
 class CQuorum;
 
+using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 using CQuorumPtr = std::shared_ptr<CQuorum>;
 using CQuorumCPtr = std::shared_ptr<const CQuorum>;
 } // namespace llmq

@@ -7,6 +7,8 @@
 
 #include <bls/bls.h>
 #include <llmq/params.h>
+#include <llmq/types.h>
+
 #include <primitives/transaction.h>
 #include <util/irange.h>
 #include <util/strencodings.h>
@@ -156,7 +158,6 @@ private:
         return HexStr(vBytes);
     }
 };
-using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
 
 class CFinalCommitmentTxPayload
 {

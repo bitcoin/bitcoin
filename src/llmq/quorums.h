@@ -171,10 +171,6 @@ public:
  * the public key shares of individual members, which are needed to verify signature shares of these members.
  */
 
-class CFinalCommitment;
-using CFinalCommitmentPtr = std::unique_ptr<CFinalCommitment>;
-
-
 class CQuorum
 {
     friend class CQuorumManager;
