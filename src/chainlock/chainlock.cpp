@@ -64,17 +64,18 @@ CChainLocksHandler::~CChainLocksHandler()
 
 void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
 {
-    if (m_signer) {
-        m_signer->Start();
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->Start();
     }
     scheduler->scheduleEvery(
         [&]() {
+            auto signer = m_signer.load(std::memory_order_acquire);
             CheckActiveState();
             EnforceBestChainLock();
             Cleanup();
             // regularly retry signing the current chaintip as it might have failed before due to missing islocks
-            if (m_signer) {
-                m_signer->TrySignChainTip(isman);
+            if (signer) {
+                signer->TrySignChainTip(isman);
             }
         },
         std::chrono::seconds{5});
@@ -83,8 +84,8 @@ void CChainLocksHandler::Start(const llmq::CInstantSendManager& isman)
 void CChainLocksHandler::Stop()
 {
     scheduler->stop();
-    if (m_signer) {
-        m_signer->Stop();
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->Stop();
     }
 }
 
@@ -218,11 +219,12 @@ void CChainLocksHandler::UpdatedBlockTip(const llmq::CInstantSendManager& isman)
     if (bool expected = false; tryLockChainTipScheduled.compare_exchange_strong(expected, true)) {
         scheduler->scheduleFromNow(
             [&]() {
+                auto signer = m_signer.load(std::memory_order_acquire);
                 CheckActiveState();
                 EnforceBestChainLock();
                 Cleanup();
-                if (m_signer) {
-                    m_signer->TrySignChainTip(isman);
+                if (signer) {
+                    signer->TrySignChainTip(isman);
                 }
                 tryLockChainTipScheduled = false;
             },
@@ -274,16 +276,16 @@ void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pbl
     }
 
     // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are safe.
-    if (m_signer) {
-        m_signer->UpdateBlockHashTxidMap(pindex->GetBlockHash(), pblock->vtx);
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->UpdateBlockHashTxidMap(pindex->GetBlockHash(), pblock->vtx);
     }
 }
 
 void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock,
                                            gsl::not_null<const CBlockIndex*> pindexDisconnected)
 {
-    if (m_signer) {
-        m_signer->EraseFromBlockHashTxidMap(pindexDisconnected->GetBlockHash());
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->EraseFromBlockHashTxidMap(pindexDisconnected->GetBlockHash());
     }
 }
 
@@ -451,8 +453,8 @@ void CChainLocksHandler::Cleanup()
         }
     }
 
-    if (m_signer) {
-        const auto cleanup_txes{m_signer->Cleanup()};
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        const auto cleanup_txes{signer->Cleanup()};
         LOCK(cs);
         for (const auto& tx : cleanup_txes) {
             for (const auto& txid : *tx) {
