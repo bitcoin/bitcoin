@@ -16,8 +16,6 @@
 
 class ArgsManager;
 
-/** Default port used to connect to a Statsd server */
-static constexpr uint16_t DEFAULT_STATSD_PORT{8125};
 /** Default host assumed to be running a Statsd server */
 static const std::string DEFAULT_STATSD_HOST{""};
 /** Default prefix prepended to Statsd message keys */

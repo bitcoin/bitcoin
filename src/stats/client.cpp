@@ -11,6 +11,7 @@
 #include <stats/rawsender.h>
 #include <sync.h>
 #include <util/check.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
 
@@ -22,6 +23,11 @@
 namespace {
 /** Threshold below which a value is considered effectively zero */
 static constexpr float EPSILON{0.0001f};
+/** Delimiter segmenting scheme from the rest of the URL */
+static constexpr std::string_view URL_SCHEME_DELIMITER{"://"};
+
+/** Default port used to connect to a Statsd server */
+static constexpr uint16_t DEFAULT_STATSD_PORT{8125};
 
 /** Delimiter segmenting two fully formed Statsd messages */
 static constexpr char STATSD_MSG_DELIMITER{'\n'};
@@ -81,7 +87,7 @@ std::unique_ptr<StatsdClient> g_stats_client;
 
 util::Result<std::unique_ptr<StatsdClient>> StatsdClient::make(const ArgsManager& args)
 {
-    const auto host = args.GetArg("-statshost", DEFAULT_STATSD_HOST);
+    auto host = args.GetArg("-statshost", DEFAULT_STATSD_HOST);
     if (host.empty()) {
         LogPrintf("Transmitting stats are disabled, will not init Statsd client\n");
         return std::make_unique<StatsdClient>();
@@ -97,10 +103,54 @@ util::Result<std::unique_ptr<StatsdClient>> StatsdClient::make(const ArgsManager
         return util::Error{_("-statsduration cannot be configured with a negative value.")};
     }
 
-    const int64_t port = args.GetIntArg("-statsport", DEFAULT_STATSD_PORT);
-    if (port < 1 || port > std::numeric_limits<uint16_t>::max()) {
-        return util::Error{strprintf(_("Port must be between %d and %d, supplied %d"), 1,
-                                       std::numeric_limits<uint16_t>::max(), port)};
+    auto port_arg = args.GetIntArg("-statsport", DEFAULT_STATSD_PORT);
+    if (args.IsArgSet("-statsport")) {
+        // Port range validation if -statsport is specified.
+        if (port_arg < 1 || port_arg > std::numeric_limits<uint16_t>::max()) {
+            return util::Error{strprintf(_("Port must be between %d and %d, supplied %d"), 1,
+                                         std::numeric_limits<uint16_t>::max(), port_arg)};
+        }
+    }
+    uint16_t port = static_cast<uint16_t>(port_arg);
+
+    // Could be a URL, try to parse it.
+    const size_t scheme_idx{host.find(URL_SCHEME_DELIMITER)};
+    if (scheme_idx != std::string::npos) {
+        // Parse the scheme and trim it out of the URL if we succeed
+        if (scheme_idx == 0) {
+            return util::Error{_("No text before the scheme delimiter, malformed URL")};
+        }
+        std::string scheme{ToLower(host.substr(/*pos=*/0, scheme_idx))};
+        if (scheme != "udp") {
+            return util::Error{_("Unsupported URL scheme, must begin with udp://")};
+        }
+        host = host.substr(scheme_idx + URL_SCHEME_DELIMITER.length());
+
+        // Strip trailing slashes and parse the port
+        const size_t colon_idx{host.rfind(':')};
+        if (colon_idx != std::string::npos) {
+            // Remove all forward slashes found after the port delimiter (colon)
+            host = std::string(
+                host.begin(), host.end() - [&colon_idx, &host]() {
+                    const size_t slash_idx{host.find('/', /*pos=*/colon_idx + 1)};
+                    return slash_idx != std::string::npos ? host.length() - slash_idx : 0;
+                }());
+            uint16_t port_url{0};
+            SplitHostPort(host, port_url, host);
+            if (port_url != 0) {
+                if (args.IsArgSet("-statsport")) {
+                    LogPrintf("%s: Supplied URL with port, ignoring -statsport\n", __func__);
+                }
+                port = port_url;
+            }
+        } else {
+            // There was no port specified, remove everything after the first forward slash
+            host = host.substr(/*pos=*/0, host.find("/"));
+        }
+
+        if (host.empty()) {
+            return util::Error{_("No host specified, malformed URL")};
+        }
     }
 
     auto sanitize_string = [](std::string string) {
