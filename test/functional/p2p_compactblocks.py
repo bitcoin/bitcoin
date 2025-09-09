@@ -558,6 +558,42 @@ class CompactBlocksTest(BitcoinTestFramework):
         test_node.send_and_ping(msg_block(block))
         assert_equal(node.getbestblockhash(), block.hash_hex)
 
+    # Multiple blocktxn responses will cause a node to get disconnected.
+    def test_multiple_blocktxn_response(self, test_node):
+        node = self.nodes[0]
+        utxo = self.utxos[0]
+
+        block = self.build_block_with_transactions(node, utxo, 2)
+
+        # Send compact block
+        comp_block = HeaderAndShortIDs()
+        comp_block.initialize_from_block(block, prefill_list=[0], use_witness=True)
+        test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
+        absolute_indexes = []
+        with p2p_lock:
+            assert "getblocktxn" in test_node.last_message
+            absolute_indexes = test_node.last_message["getblocktxn"].block_txn_request.to_absolute()
+        assert_equal(absolute_indexes, [1, 2])
+
+        # Send a blocktxn that does not succeed in reconstruction, triggering
+        # getdata fallback.
+        msg = msg_blocktxn()
+        msg.block_transactions = BlockTransactions(block.hash_int, [block.vtx[2]] + [block.vtx[1]])
+        test_node.send_and_ping(msg)
+
+        # Tip should not have updated
+        assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
+
+        # We should receive a getdata request
+        test_node.wait_for_getdata([block.hash_int], timeout=10)
+        assert test_node.last_message["getdata"].inv[0].type == MSG_BLOCK or \
+               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG
+
+        # Send the same blocktxn and assert the sender gets disconnected.
+        with node.assert_debug_log(['previous compact block reconstruction attempt failed']):
+            test_node.send_without_ping(msg)
+        test_node.wait_for_disconnect()
+
     def test_getblocktxn_handler(self, test_node):
         node = self.nodes[0]
         # bitcoind will not send blocktxn responses for blocks whose height is
@@ -973,6 +1009,12 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing handling of invalid compact blocks...")
         self.test_invalid_tx_in_compactblock(self.segwit_node)
+
+        # The previous test will lead to a disconnection. Reconnect before continuing.
+        self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+
+        self.log.info("Testing handling of multiple blocktxn responses...")
+        self.test_multiple_blocktxn_response(self.segwit_node)
 
         # The previous test will lead to a disconnection. Reconnect before continuing.
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn())
