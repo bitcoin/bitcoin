@@ -18,6 +18,8 @@
 #include <tinyformat.h>
 #include <version.h>
 
+#include <masternode/active/context.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -85,8 +87,8 @@ BOOST_AUTO_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection)
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
     auto peerman = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
                                      *m_node.chainman, *m_node.mempool, *m_node.mn_metaman, *m_node.mn_sync,
-                                     *m_node.govman, *m_node.sporkman, /* mn_activeman = */ nullptr, m_node.dmnman,
-                                     m_node.cj_ctx, m_node.llmq_ctx, /* ignore_incoming_txs = */ false);
+                                     *m_node.govman, *m_node.sporkman, /*mn_activeman=*/nullptr, m_node.dmnman,
+                                     /*active_ctx=*/nullptr, m_node.cj_ctx, m_node.llmq_ctx, /*ignore_incoming_txs=*/false);
     NodeId id{0};
     std::vector<CNode*> nodes;
 

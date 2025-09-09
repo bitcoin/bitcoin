@@ -1194,6 +1194,7 @@ public:
         std::vector<std::string> m_added_nodes;
         SocketEventsMode socketEventsMode = SocketEventsMode::Select;
         bool m_i2p_accept_incoming;
+        bool m_active_masternode = false;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1231,6 +1232,7 @@ public:
         }
         socketEventsMode = connOptions.socketEventsMode;
         m_onion_binds = connOptions.onion_binds;
+        m_active_masternode = connOptions.m_active_masternode;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1, AddrMan& addrman, const NetGroupManager& netgroupman,
@@ -1255,6 +1257,7 @@ public:
     void SetNetworkActive(bool active, CMasternodeSync* const mn_sync);
     bool GetMasternodeThreadActive() const { return m_masternode_thread_active; };
     void SetMasternodeThreadActive(bool active) { m_masternode_thread_active = active; };
+    bool IsActiveMasternode() const { return m_active_masternode; }
     SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
 
     enum class MasternodeConn {
@@ -1839,6 +1842,9 @@ private:
      * address.
      */
     std::unique_ptr<i2p::sam::Session> m_i2p_sam_session;
+
+    /** Flag for activating masternode mode */
+    bool m_active_masternode{false};
 
     SocketEventsMode socketEventsMode;
     std::unique_ptr<EdgeTriggeredEvents> m_edge_trig_events{nullptr};

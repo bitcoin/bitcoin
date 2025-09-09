@@ -4,6 +4,7 @@
 
 #include <coinjoin/context.h>
 #include <coinjoin/server.h>
+#include <masternode/active/context.h>
 #include <node/context.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -466,7 +467,7 @@ static RPCHelpMan getcoinjoininfo()
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (node.mn_activeman) {
-        node.cj_ctx->server->GetJsonInfo(obj);
+        node.active_ctx->cj_server->GetJsonInfo(obj);
         return obj;
     }
 

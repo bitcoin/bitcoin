@@ -1801,7 +1801,7 @@ bool CConnman::AttemptToEvictConnection()
             if (node->fDisconnect)
                 continue;
 
-            if (fMasternodeMode) {
+            if (m_active_masternode) {
                 // This handles eviction protected nodes. Nodes are always protected for a short time after the connection
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
                 // follow when the incoming connection is from another masternode. When a message other than MNAUTH
@@ -1971,7 +1971,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     }
 
     // don't accept incoming connections until blockchain is synced
-    if (fMasternodeMode && !mn_sync.IsBlockchainSynced()) {
+    if (m_active_masternode && !mn_sync.IsBlockchainSynced()) {
         LogPrint(BCLog::NET_NETCONN, "AcceptConnection -- blockchain is not synced yet, skipping inbound connection attempt\n");
         return;
     }

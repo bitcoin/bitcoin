@@ -15,8 +15,6 @@
 #include <validation.h>
 
 namespace llmq {
-
-
 CEHFSignalsHandler::CEHFSignalsHandler(ChainstateManager& chainman, CMNHFManager& mnhfman, CSigningManager& sigman,
                                        CSigSharesManager& shareman, const CQuorumManager& qman) :
     m_chainman(chainman),
@@ -28,19 +26,14 @@ CEHFSignalsHandler::CEHFSignalsHandler(ChainstateManager& chainman, CMNHFManager
     sigman.RegisterRecoveredSigsListener(this);
 }
 
-
 CEHFSignalsHandler::~CEHFSignalsHandler()
 {
     sigman.UnregisterRecoveredSigsListener(this);
 }
 
-void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew, bool is_masternode)
+void CEHFSignalsHandler::UpdatedBlockTip(const CBlockIndex* const pindexNew)
 {
     if (!DeploymentActiveAfter(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_V20)) return;
-
-    if (!is_masternode) {
-        return;
-    }
 
     const auto ehfSignals = mnhfman.GetSignalsStage(pindexNew);
     for (const auto& deployment : Params().GetConsensus().vDeployments) {

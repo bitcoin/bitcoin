@@ -13,7 +13,6 @@
 
 #include <coinjoin/common.h>
 #include <coinjoin/options.h>
-#include <evo/dmn_types.h>
 
 namespace wallet {
 void CWallet::InitCJSaltFromDb()
@@ -181,7 +180,6 @@ std::vector<CompactTallyItem> CWallet::SelectCoinsGroupedByAddresses(bool fSkipD
             if (fAnonymizable) {
                 // ignore collaterals
                 if (CoinJoin::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
-                if (fMasternodeMode && dmn_types::IsCollateralAmount(wtx.tx->vout[i].nValue)) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
                 if (wtx.tx->vout[i].nValue <= nSmallestDenom / 10) continue;

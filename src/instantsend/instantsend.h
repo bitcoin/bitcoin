@@ -45,7 +45,6 @@ namespace llmq {
 class CChainLocksHandler;
 class CQuorumManager;
 class CSigningManager;
-class CSigSharesManager;
 
 class CInstantSendManager final : public instantsend::InstantSendSignerParent
 {
@@ -60,7 +59,7 @@ private:
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
 
-    std::unique_ptr<instantsend::InstantSendSigner> m_signer{nullptr};
+    instantsend::InstantSendSigner* m_signer{nullptr};
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;
@@ -91,10 +90,17 @@ private:
 
 public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CQuorumManager& _qman,
-                                 CSigningManager& _sigman, CSigSharesManager& _shareman, CSporkManager& sporkman,
-                                 CTxMemPool& _mempool, const CMasternodeSync& mn_sync, bool is_masternode,
-                                 bool unitTests, bool fWipe);
+                                 CSigningManager& _sigman, CSporkManager& sporkman, CTxMemPool& _mempool,
+                                 const CMasternodeSync& mn_sync, bool unitTests, bool fWipe);
     ~CInstantSendManager();
+
+    void ConnectSigner(gsl::not_null<instantsend::InstantSendSigner*> signer)
+    {
+        // Prohibit double initialization
+        assert(m_signer == nullptr);
+        m_signer = signer;
+    }
+    void DisconnectSigner() { m_signer = nullptr; }
 
     void Start(PeerManager& peerman);
     void Stop();

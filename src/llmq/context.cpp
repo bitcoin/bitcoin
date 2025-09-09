@@ -10,7 +10,6 @@
 #include <llmq/blockprocessor.h>
 #include <llmq/debug.h>
 #include <llmq/dkgsessionmgr.h>
-#include <llmq/ehf_signals.h>
 #include <llmq/quorums.h>
 #include <llmq/signing.h>
 #include <llmq/signing_shares.h>
@@ -35,11 +34,10 @@ LLMQContext::LLMQContext(ChainstateManager& chainman, CDeterministicMNManager& d
                                                 unit_tests, wipe)},
     sigman{std::make_unique<llmq::CSigningManager>(mn_activeman, chainman.ActiveChainstate(), *qman, unit_tests, wipe)},
     shareman{std::make_unique<llmq::CSigSharesManager>(*sigman, mn_activeman, *qman, sporkman)},
-    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, *sigman, *shareman,
-                                                         sporkman, mempool, mn_sync, is_masternode)},
-    isman{std::make_unique<llmq::CInstantSendManager>(*clhandler, chainman.ActiveChainstate(), *qman, *sigman, *shareman,
-                                                      sporkman, mempool, mn_sync, is_masternode, unit_tests, wipe)},
-    ehfSignalsHandler{std::make_unique<llmq::CEHFSignalsHandler>(chainman, mnhfman, *sigman, *shareman, *qman)}
+    clhandler{std::make_unique<llmq::CChainLocksHandler>(chainman.ActiveChainstate(), *qman, *sigman, sporkman, mempool,
+                                                         mn_sync)},
+    isman{std::make_unique<llmq::CInstantSendManager>(*clhandler, chainman.ActiveChainstate(), *qman, *sigman, sporkman,
+                                                      mempool, mn_sync, unit_tests, wipe)}
 {
     // Have to start it early to let VerifyDB check ChainLock signatures in coinbase
     bls_worker->Start();

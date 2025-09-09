@@ -51,6 +51,7 @@
 
 #include <spork.h>
 #include <governance/governance.h>
+#include <masternode/active/context.h>
 #include <masternode/sync.h>
 #include <masternode/meta.h>
 #ifdef ENABLE_WALLET
@@ -595,6 +596,7 @@ public:
                     CGovernanceManager& govman, CSporkManager& sporkman,
                     const CActiveMasternodeManager* const mn_activeman,
                     const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                    const std::unique_ptr<ActiveContext>& active_ctx,
                     const std::unique_ptr<CJContext>& cj_ctx,
                     const std::unique_ptr<LLMQContext>& llmq_ctx,
                     bool ignore_incoming_txs);
@@ -787,6 +789,7 @@ private:
     CTxMemPool& m_mempool;
     std::unique_ptr<TxReconciliationTracker> m_txreconciliation;
     const std::unique_ptr<CDeterministicMNManager>& m_dmnman;
+    const std::unique_ptr<ActiveContext>& m_active_ctx;
     const std::unique_ptr<CJContext>& m_cj_ctx;
     const std::unique_ptr<LLMQContext>& m_llmq_ctx;
     CMasternodeMetaMan& m_mn_metaman;
@@ -1959,10 +1962,11 @@ std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, 
                                                CGovernanceManager& govman, CSporkManager& sporkman,
                                                const CActiveMasternodeManager* const mn_activeman,
                                                const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                               const std::unique_ptr<ActiveContext>& active_ctx,
                                                const std::unique_ptr<CJContext>& cj_ctx,
                                                const std::unique_ptr<LLMQContext>& llmq_ctx, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, mn_activeman, dmnman, cj_ctx, llmq_ctx, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, chainman, pool, mn_metaman, mn_sync, govman, sporkman, mn_activeman, dmnman, active_ctx, cj_ctx, llmq_ctx, ignore_incoming_txs);
 }
 
 PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman, BanMan* banman,
@@ -1971,6 +1975,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
                                  CGovernanceManager& govman, CSporkManager& sporkman,
                                  const CActiveMasternodeManager* const mn_activeman,
                                  const std::unique_ptr<CDeterministicMNManager>& dmnman,
+                                 const std::unique_ptr<ActiveContext>& active_ctx,
                                  const std::unique_ptr<CJContext>& cj_ctx,
                                  const std::unique_ptr<LLMQContext>& llmq_ctx,
                                  bool ignore_incoming_txs)
@@ -1981,6 +1986,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_chainman(chainman),
       m_mempool(pool),
       m_dmnman(dmnman),
+      m_active_ctx(active_ctx),
       m_cj_ctx(cj_ctx),
       m_llmq_ctx(llmq_ctx),
       m_mn_metaman(mn_metaman),
@@ -2271,9 +2277,9 @@ bool PeerManagerImpl::AlreadyHave(const CInv& inv)
         return m_llmq_ctx->isman->AlreadyHave(inv);
     case MSG_DSQ:
 #ifdef ENABLE_WALLET
-        return m_cj_ctx->server->HasQueue(inv.hash) || m_cj_ctx->queueman->HasQueue(inv.hash);
+        return m_cj_ctx->queueman->HasQueue(inv.hash) || (m_active_ctx && m_active_ctx->cj_server->HasQueue(inv.hash));
 #else
-        return m_cj_ctx->server->HasQueue(inv.hash);
+        return m_active_ctx && m_active_ctx->cj_server->HasQueue(inv.hash);
 #endif
     }
 
@@ -2877,7 +2883,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
             }
         }
         if (!push && inv.type == MSG_DSQ) {
-            auto opt_dsq = m_cj_ctx->server->GetQueueFromHash(inv.hash);
+            auto opt_dsq = m_active_ctx ? m_active_ctx->cj_server->GetQueueFromHash(inv.hash) : std::nullopt;
 #ifdef ENABLE_WALLET
             if (!opt_dsq.has_value()) {
                 opt_dsq = m_cj_ctx->queueman->GetQueueFromHash(inv.hash);
@@ -5272,7 +5278,9 @@ void PeerManagerImpl::ProcessMessage(
             clientman->ProcessMessage(pfrom, m_chainman.ActiveChainstate(), m_connman, m_mempool, msg_type, vRecv);
         });
 #endif // ENABLE_WALLET
-        PostProcessMessage(m_cj_ctx->server->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
+        if (m_active_ctx) {
+            PostProcessMessage(m_active_ctx->cj_server->ProcessMessage(pfrom, msg_type, vRecv), pfrom.GetId());
+        }
         PostProcessMessage(m_sporkman.ProcessMessage(pfrom, m_connman, msg_type, vRecv), pfrom.GetId());
         m_mn_sync.ProcessMessage(pfrom, msg_type, vRecv);
         PostProcessMessage(m_govman.ProcessMessage(pfrom, m_connman, *this, msg_type, vRecv), pfrom.GetId());

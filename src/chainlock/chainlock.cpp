@@ -44,8 +44,7 @@ bool AreChainLocksEnabled(const CSporkManager& sporkman)
 }
 
 CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CQuorumManager& _qman, CSigningManager& _sigman,
-                                       CSigSharesManager& _shareman, CSporkManager& sporkman, CTxMemPool& _mempool,
-                                       const CMasternodeSync& mn_sync, bool is_masternode) :
+                                       CSporkManager& sporkman, CTxMemPool& _mempool, const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
     qman{_qman},
     spork_manager{sporkman},
@@ -53,10 +52,7 @@ CChainLocksHandler::CChainLocksHandler(CChainState& chainstate, CQuorumManager& 
     m_mn_sync{mn_sync},
     scheduler{std::make_unique<CScheduler>()},
     scheduler_thread{
-        std::make_unique<std::thread>(std::thread(util::TraceThread, "cl-schdlr", [&] { scheduler->serviceQueue(); }))},
-    m_signer{is_masternode
-                 ? std::make_unique<chainlock::ChainLockSigner>(chainstate, *this, _sigman, _shareman, sporkman, mn_sync)
-                 : nullptr}
+        std::make_unique<std::thread>(std::thread(util::TraceThread, "cl-schdlr", [&] { scheduler->serviceQueue(); }))}
 {
 }
 

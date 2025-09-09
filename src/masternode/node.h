@@ -27,7 +27,7 @@ struct CActiveMasternodeInfo {
         blsKeyOperator(blsKeyOperator), blsPubKeyOperator(blsPubKeyOperator) {};
 };
 
-class CActiveMasternodeManager final : public CValidationInterface
+class CActiveMasternodeManager
 {
 public:
     enum class MasternodeState {
@@ -52,7 +52,7 @@ private:
 public:
     explicit CActiveMasternodeManager(const CBLSSecretKey& sk, CConnman& connman, const std::unique_ptr<CDeterministicMNManager>& dmnman);
 
-    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void Init(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs) { LOCK(cs); InitInternal(pindex); };
