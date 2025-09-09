@@ -474,7 +474,9 @@ static RPCHelpMan getcoinjoininfo()
 #ifdef ENABLE_WALLET
     CCoinJoinClientOptions::GetJsonInfo(obj);
 
-    obj.pushKV("queue_size", node.cj_ctx->queueman->GetQueueSize());
+    if (node.cj_ctx->queueman) {
+        obj.pushKV("queue_size", node.cj_ctx->queueman->GetQueueSize());
+    }
 
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) {
