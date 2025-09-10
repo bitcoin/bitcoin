@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(valid_height1_coinstake)
     block.vtx.emplace_back(MakeTransactionRef(coinbase));
 
     CMutableTransaction coinstake;
-    coinstake.nLockTime = 1;
+    coinstake.nLockTime = block.nTime;
     coinstake.vin.emplace_back(prevout);
     coinstake.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     coinstake.vout.resize(2);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(reject_low_stake_amount)
     block.vtx.emplace_back(MakeTransactionRef(coinbase));
 
     CMutableTransaction coinstake;
-    coinstake.nLockTime = 1;
+    coinstake.nLockTime = block.nTime;
     coinstake.vin.emplace_back(prevout);
     coinstake.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     coinstake.vout.resize(2);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(height1_allows_young_coinstake)
     block.vtx.emplace_back(MakeTransactionRef(coinbase));
 
     CMutableTransaction coinstake;
-    coinstake.nLockTime = 1;
+    coinstake.nLockTime = block.nTime;
     coinstake.vin.emplace_back(prevout);
     coinstake.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
     coinstake.vout.resize(2);

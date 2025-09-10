@@ -97,6 +97,12 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
              "ContextualCheckProofOfStake: height=%d time=%u txs=%u",
              pindexPrev->nHeight, block.nTime, block.vtx.size());
 
+    if (!CheckStakeTimestamp(block, params)) {
+        LogDebug(BCLog::STAKING,
+                 "ContextualCheckProofOfStake: invalid block time %u", block.nTime);
+        return false;
+    }
+
     if (block.vtx.size() < 2) {
         LogDebug(BCLog::STAKING,
                  "ContextualCheckProofOfStake: block missing coinstake tx");
@@ -108,13 +114,14 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
                  "ContextualCheckProofOfStake: invalid coinstake structure");
         return false;
     }
-
-    // Enforce block time masking and slotting
-    if (block.nTime & params.nStakeTimestampMask) {
+    if (tx->nLockTime != block.nTime) {
         LogDebug(BCLog::STAKING,
-                 "ContextualCheckProofOfStake: block time %u not masked", block.nTime);
+                 "ContextualCheckProofOfStake: coinstake locktime %u does not match block time %u",
+                 tx->nLockTime, block.nTime);
         return false;
     }
+
+    // Enforce block time slotting relative to previous block
     if (block.nTime <= pindexPrev->nTime ||
         (block.nTime - pindexPrev->nTime) % params.nStakeTargetSpacing != 0) {
         LogDebug(BCLog::STAKING,

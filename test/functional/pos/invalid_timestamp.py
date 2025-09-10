@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stake a single block using a wallet UTXO."""
+"""Ensure invalid PoS blocks are rejected for timestamp and coinstake rules."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import create_block, create_coinbase
@@ -44,7 +44,7 @@ def check_kernel(prev_hash, prev_height, prev_time, nbits, stake_hash, stake_tim
     return int.from_bytes(proof[::-1], "big") <= target
 
 
-class PosBlockStakingTest(BitcoinTestFramework):
+class PosInvalidTimestampTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -83,28 +83,80 @@ class PosBlockStakingTest(BitcoinTestFramework):
             ntime += 16
 
         script = CScript(bytes.fromhex(unspent["scriptPubKey"]))
-        coinstake = CTransaction()
-        coinstake.nLockTime = ntime
-        coinstake.vin.append(CTxIn(COutPoint(int(txid, 16), vout)))
-        coinstake.vout.append(CTxOut(0, CScript()))
-        reward = 50 * COIN
-        coinstake.vout.append(CTxOut(amount + reward, script))
-        signed_hex = node.signrawtransactionwithwallet(coinstake.serialize().hex())["hex"]
-        coinstake = CTransaction()
-        coinstake.deserialize(bytes.fromhex(signed_hex))
+
+        def make_coinstake(locktime):
+            cs = CTransaction()
+            cs.nLockTime = locktime
+            cs.vin.append(CTxIn(COutPoint(int(txid, 16), vout)))
+            cs.vout.append(CTxOut(0, CScript()))
+            reward = 50 * COIN
+            cs.vout.append(CTxOut(amount + reward, script))
+            signed_hex = node.signrawtransactionwithwallet(cs.serialize().hex())["hex"]
+            cs = CTransaction()
+            cs.deserialize(bytes.fromhex(signed_hex))
+            return cs
 
         coinbase = create_coinbase(prev_height + 1, nValue=0)
+
+        # Case 1: coinstake first output non-empty
+        bad_cs = make_coinstake(ntime)
+        bad_cs.vout[0] = CTxOut(1, script)
+        bad_hex = node.signrawtransactionwithwallet(bad_cs.serialize().hex())["hex"]
+        bad_cs = CTransaction()
+        bad_cs.deserialize(bytes.fromhex(bad_hex))
         block = create_block(
             int(prev_hash, 16),
             coinbase,
             ntime,
             tmpl={"bits": prev_block["bits"], "height": prev_height + 1},
-            txlist=[coinstake],
+            txlist=[bad_cs],
         )
         block.hashMerkleRoot = block.calc_merkle_root()
-        node.submitblock(block.serialize().hex())
-        assert_equal(node.getblockcount(), prev_height + 1)
+        assert node.submitblock(block.serialize().hex()) is not None
+        assert_equal(node.getblockcount(), prev_height)
+
+        # Case 2: coinstake timestamp mismatch
+        bad_cs = make_coinstake(ntime + 16)
+        block = create_block(
+            int(prev_hash, 16),
+            coinbase,
+            ntime,
+            tmpl={"bits": prev_block["bits"], "height": prev_height + 1},
+            txlist=[bad_cs],
+        )
+        block.hashMerkleRoot = block.calc_merkle_root()
+        assert node.submitblock(block.serialize().hex()) is not None
+        assert_equal(node.getblockcount(), prev_height)
+
+        # Case 3: block timestamp not multiple of 16 seconds
+        bad_cs = make_coinstake(ntime + 1)
+        block = create_block(
+            int(prev_hash, 16),
+            coinbase,
+            ntime + 1,
+            tmpl={"bits": prev_block["bits"], "height": prev_height + 1},
+            txlist=[bad_cs],
+        )
+        block.hashMerkleRoot = block.calc_merkle_root()
+        assert node.submitblock(block.serialize().hex()) is not None
+        assert_equal(node.getblockcount(), prev_height)
+
+        # Case 4: block timestamp too far in the future
+        node.setmocktime(prev_time - 100)
+        bad_cs = make_coinstake(ntime)
+        block = create_block(
+            int(prev_hash, 16),
+            coinbase,
+            ntime,
+            tmpl={"bits": prev_block["bits"], "height": prev_height + 1},
+            txlist=[bad_cs],
+        )
+        block.hashMerkleRoot = block.calc_merkle_root()
+        assert node.submitblock(block.serialize().hex()) is not None
+        assert_equal(node.getblockcount(), prev_height)
+        node.setmocktime(0)
 
 
 if __name__ == "__main__":
-    PosBlockStakingTest(__file__).main()
+    PosInvalidTimestampTest(__file__).main()
+

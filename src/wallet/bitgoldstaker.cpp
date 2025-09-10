@@ -122,7 +122,7 @@ void BitGoldStaker::ThreadStakeMiner()
                         }
 
                         CMutableTransaction coinstake;
-                        coinstake.nLockTime = pindexPrev->nHeight + 1;
+                        coinstake.nLockTime = nTimeTx;
                         coinstake.vin.emplace_back(stake_out.outpoint);
                         coinstake.vin[0].nSequence = CTxIn::SEQUENCE_FINAL;
                         coinstake.vout.resize(2);
