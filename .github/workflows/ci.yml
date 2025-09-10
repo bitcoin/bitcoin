@@ -33,15 +33,15 @@ jobs:
     name: 'determine runners'
     runs-on: ubuntu-latest
     outputs:
-      use-cirrus-runners: ${{ steps.runners.outputs.use-cirrus-runners }}
+      provider: ${{ steps.runners.outputs.provider }}
     steps:
       - id: runners
         run: |
           if [[ "${REPO_USE_CIRRUS_RUNNERS}" == "${{ github.repository }}" ]]; then
-            echo "use-cirrus-runners=true" >> "$GITHUB_OUTPUT"
+            echo "provider=cirrus" >> "$GITHUB_OUTPUT"
             echo "::notice title=Runner Selection::Using Cirrus Runners"
           else
-            echo "use-cirrus-runners=false" >> "$GITHUB_OUTPUT"
+            echo "provider=gha" >> "$GITHUB_OUTPUT"
             echo "::notice title=Runner Selection::Using GitHub-hosted runners"
           fi
 
@@ -312,7 +312,7 @@ jobs:
   windows-cross:
     name: 'Linux->Windows cross, no tests'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
+    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     env:
@@ -332,7 +332,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          use-cirrus: ${{ needs.runners.outputs.use-cirrus-runners }}
+          cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
@@ -422,7 +422,7 @@ jobs:
   ci-matrix:
     name: ${{ matrix.name }}
     needs: runners
-    runs-on: ${{ needs.runners.outputs.use-cirrus-runners == 'true' && matrix.cirrus-runner || matrix.fallback-runner }}
+    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && matrix.cirrus-runner || matrix.fallback-runner }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: ${{ matrix.timeout-minutes }}
 
@@ -513,7 +513,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          use-cirrus: ${{ needs.runners.outputs.use-cirrus-runners }}
+          cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: Enable bpfcc script
         if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
@@ -550,7 +550,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          use-cirrus: ${{ needs.runners.outputs.use-cirrus-runners }}
+          cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
         run: |
