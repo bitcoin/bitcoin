@@ -76,7 +76,7 @@ class PosV3Test(BitcoinTestFramework):
         script = CScript(bytes.fromhex(unspent['scriptPubKey']))
 
         coinstake = CTransaction()
-        coinstake.nLockTime = prev_height + 1
+        coinstake.nLockTime = ntime
         coinstake.vin.append(CTxIn(COutPoint(int(txid, 16), vout)))
         coinstake.vout.append(CTxOut(0, CScript()))
         reward = 50 * COIN
