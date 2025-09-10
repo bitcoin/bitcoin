@@ -58,7 +58,6 @@ SHA256_SUMS = {
     #
     "57b7b9a7939a726afc133229dbecc4f46394bf57d32bf3e936403ade2b2a8519":  "dashcore-0.17.0.3-aarch64-linux-gnu.tar.gz",
     "024fa38c48925a684bac217c0915451a3f9d15a1048035ef41ca0c9ffa8c6801":  "dashcore-0.17.0.3-arm-linux-gnueabihf.tar.gz",
-    "c5c3d1f6dbe9934ac10ef43da733fa9e01689f7e42d363edbfcfa0c4c64269c5":  "dashcore-0.17.0.3-i686-pc-linux-gnu.tar.gz",
     "349c65fb6c0d2d509d338b5bd8ca25b069b84c6d57b49a9d1bc830744e09926b":  "dashcore-0.17.0.3-osx64.tar.gz",
     "5b6ce9f43fc07f5e73c0de6890929adcda31e29479f06605b4f7434e04348041":  "dashcore-0.17.0.3-osx.dmg",
     "baf1e0e24c7d2a699898a33b10f4b9c2fb6059286a6c336fd4921a58a4e8eb80":  "dashcore-0.17.0.3.tar.gz",
@@ -70,7 +69,6 @@ SHA256_SUMS = {
     #
     "b0fd7b1344701f6b96f6b6978fbce7fd5d3e0310a2993e17858573d80e2941c0":  "dashcore-0.16.1.1-aarch64-linux-gnu.tar.gz",
     "6d829fb8a419db93d99f03a12d0a426292cfba916fa7173107f7a760e4d1cd56":  "dashcore-0.16.1.1-arm-linux-gnueabihf.tar.gz",
-    "7e3737967bb28532c985858dc23af01cbd5ec239a083a91a351313b95105c6cc":  "dashcore-0.16.1.1-i686-pc-linux-gnu.tar.gz",
     "3f26d7da7b3ea5ce1fabf34b4086a978324d5806481dc8470b15294a0807100d":  "dashcore-0.16.1.1-osx64.tar.gz",
     "49a5ca7364b62f9908239e12da8181c9bbe8b7ca6508bc569f05907800af084c":  "dashcore-0.16.1.1-osx.dmg",
     "8cd15db027b1745a9205c2067a2e5113772696535ec521a7fc9f6d7b2583e0ea":  "dashcore-0.16.1.1.tar.gz",
@@ -82,7 +80,6 @@ SHA256_SUMS = {
     #
     "e2c7f2566e26420a54c8d08e1f8a8d5595bb22fba46d3a84ab931f5cd0efc7f9":  "dashcore-0.15.0.0-aarch64-linux-gnu.tar.gz",
     "be3a2054eb39826bd416252ab3c9a233e90a27b545739b15fb4c9c399b0fbe68":  "dashcore-0.15.0.0-arm-linux-gnueabihf.tar.gz",
-    "457c4c934669223beb29ceface62f700999bd1a0c913bd89d45de5f8e6e916b7":  "dashcore-0.15.0.0-i686-pc-linux-gnu.tar.gz",
     "f5e5d25df3d84a9e5dceef43d0bcf54fa697ea73f3e29ec39a8f9952ace8792c":  "dashcore-0.15.0.0-osx64.tar.gz",
     "09f76396217eef6e5a7ba464d9b1f5abd78925b314f663bb709fdb02013899df":  "dashcore-0.15.0.0-osx.dmg",
     "8a1088477198b3cd549017246ecbd4d03ddafae772a0344c92a0c4d9478d90b6":  "dashcore-0.15.0.0.tar.gz",
@@ -126,9 +123,7 @@ def download_binary(tag, args) -> int:
         bin_path = 'releases/download/test.{}'.format(
             match.group(1), match.group(2))
     platform = args.platform
-    if platform in ["i686-w64-mingw32"]:
-        platform = "win32"
-    elif platform in ["x86_64-w64-mingw32"]:
+    if platform in ["x86_64-w64-mingw32"]:
         platform = "win64"
     elif tag < "v0.12.3":
         if platform in ["arm-linux-gnueabihf"]:
@@ -136,8 +131,6 @@ def download_binary(tag, args) -> int:
         elif platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
             print(f"Binaries not available for {tag} on {platform}")
             return 1
-        elif platform in ["i686-pc-linux-gnu"]:
-            platform = "linux32"
         elif platform in ["x86_64-linux-gnu"]:
             platform = "linux64"
     elif tag < "v20" and platform in ["x86_64-apple-darwin", "arm64-apple-darwin"]:
