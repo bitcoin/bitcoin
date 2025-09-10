@@ -12,11 +12,15 @@
 #include <rpc/util.h>
 #include <univalue.h>
 #include <util/translation.h>
+#include <script/script.h>
+#include <util/strencodings.h>
+#include <addresstype.h>
 #include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
 #include <optional>
@@ -851,6 +855,81 @@ static RPCHelpMan createwalletdescriptor()
                       }};
 }
 
+static CScript CreateDelegatedStakeScript(const CKeyID& owner, const CKeyID& staker)
+{
+    CScript script;
+    script << OP_DUP << OP_HASH160 << ToByteVector(owner) << OP_EQUALVERIFY << OP_CHECKSIGVERIFY
+           << OP_DUP << OP_HASH160 << ToByteVector(staker) << OP_EQUALVERIFY << OP_CHECKSIG;
+    return script;
+}
+
+static RPCHelpMan delegatestakeaddress()
+{
+    return RPCHelpMan{
+        "delegatestakeaddress",
+        "Create a delegated cold-stake address.\n",
+        {
+            {"owner", RPCArg::Type::STR, RPCArg::Optional::NO, "Spending address"},
+            {"staker", RPCArg::Type::STR, RPCArg::Optional::NO, "Staking address"},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "", {
+            {RPCResult::Type::STR, "address", "Cold stake P2SH address"},
+            {RPCResult::Type::STR, "script", "Redeem script in hex"},
+        }},
+        RPCExamples{HelpExampleCli("delegatestakeaddress", "\"owner\" \"staker\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            const CTxDestination owner_dest = DecodeDestination(request.params[0].get_str());
+            const CTxDestination staker_dest = DecodeDestination(request.params[1].get_str());
+            if (!IsValidDestination(owner_dest) || !IsValidDestination(staker_dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            }
+            const PKHash* owner_key = std::get_if<PKHash>(&owner_dest);
+            const PKHash* staker_key = std::get_if<PKHash>(&staker_dest);
+            if (!owner_key || !staker_key) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Addresses must be P2PKH");
+            }
+            CScript redeem = CreateDelegatedStakeScript(ToKeyID(*owner_key), ToKeyID(*staker_key));
+            CTxDestination p2sh_dest = ScriptHash(redeem);
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("address", EncodeDestination(p2sh_dest));
+            ret.pushKV("script", HexStr(redeem));
+            return ret;
+        }
+    };
+}
+
+static RPCHelpMan registercoldstakeaddress()
+{
+    return RPCHelpMan{
+        "registercoldstakeaddress",
+        "Register a cold-stake address for staking.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Cold stake P2SH address"},
+            {"script", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Redeem script in hex"},
+        },
+        RPCResult{RPCResult::Type::BOOL, "", "success"},
+        RPCExamples{HelpExampleCli("registercoldstakeaddress", "\"address\" \"script\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+            CTxDestination dest = DecodeDestination(request.params[0].get_str());
+            if (!IsValidDestination(dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            }
+            std::vector<unsigned char> rs_data = ParseHex(request.params[1].get_str());
+            CScript redeem(rs_data.begin(), rs_data.end());
+            LegacyDataSPKM* spkm = pwallet->GetOrCreateLegacyDataSPKM();
+            spkm->LoadCScript(redeem);
+            CScript script_pub = GetScriptForDestination(ScriptHash(redeem));
+            spkm->LoadWatchOnly(script_pub);
+            WalletBatch batch(pwallet->GetDatabase());
+            batch.WriteWatchOnly(script_pub, CKeyMetadata{});
+            return UniValue(true);
+        }
+    };
+}
+
 static RPCHelpMan stakerstatus()
 {
     return RPCHelpMan{
@@ -1093,6 +1172,8 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &walletpassphrase},
         {"wallet", &walletpassphrasechange},
         {"wallet", &walletprocesspsbt},
+        {"wallet", &delegatestakeaddress},
+        {"wallet", &registercoldstakeaddress},
         {"wallet", &stakerstatus},
         {"wallet", &getstakinginfo},
         {"wallet", &getstakingstats},

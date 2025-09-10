@@ -54,3 +54,29 @@ The helper script `contrib/stake_monitor.py` automates this check:
 ```
 $ python3 contrib/stake_monitor.py
 ```
+
+## Cold staking
+
+BitGold supports delegating staking rights to an online node while keeping the
+spending key offline. To create a cold‑stake address:
+
+1. Generate an owner (spending) address in the offline wallet and a staking
+   address on the online node.
+2. On either system, call:
+
+   ```
+   bitcoin-cli delegatestakeaddress "OWNER_ADDR" "STAKER_ADDR"
+   ```
+
+   This returns a P2SH address and redeem script. Send coins to the returned
+   address.
+3. On the staking node, register the address:
+
+   ```
+   bitcoin-cli registercoldstakeaddress "DELEGATE_ADDR" "REDEEM_SCRIPT"
+   ```
+
+   The staking thread will now include the delegated coins when attempting to
+   create blocks.
+4. To spend the staked rewards, use the owner wallet with the original private
+   key.
