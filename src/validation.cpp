@@ -6,6 +6,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <pos/stake.h>
+#include <pos/difficulty.h>
 #include <validation.h>
 
 #include <arith_uint256.h>
@@ -2094,15 +2095,18 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast,
                                  const Consensus::Params& params)
 {
     assert(pindexLast);
+
+    if (params.fEnablePoS && pindexLast->nHeight + 1 >= params.posActivationHeight) {
+        return GetPoSNextTargetRequired(pindexLast, pblock, params);
+    }
+
     arith_uint256 bnLimit = UintToArith256(params.powLimit);
 
     if (params.fPowNoRetargeting) {
         return pindexLast->nBits;
     }
 
-    // PoS difficulty retargeting inspired by Peercoin's algorithm. It adjusts
-    // the target every block using the actual time between blocks compared to
-    // the desired spacing.
+    // Difficulty retargeting inspired by Bitcoin's Digishield implementation.
     const int64_t target_spacing = params.nPowTargetSpacing;
     const int64_t interval = params.DifficultyAdjustmentInterval();
 

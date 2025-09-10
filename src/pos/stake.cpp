@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <logging.h>
 #include <pos/stakemodifier.h>
+#include <pos/stakemodifier_manager.h>
 #include <pos/stake.h>
 #include <serialize.h>
 #include <validation.h>
@@ -42,7 +43,9 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
     }
 
     // Derive a stake modifier using the shared modifier manager
-    const uint256 stake_modifier = GetStakeModifier(pindexPrev, nTimeTx, params);
+    StakeModifierManager& manager = GetStakeModifierManager();
+    manager.ComputeNextModifier(pindexPrev, nTimeTx, params);
+    const uint256 stake_modifier = manager.GetModifier();
 
     // Mask times before hashing to reduce kernel search space
     const unsigned int nTimeTxMasked{nTimeTx & ~params.nStakeTimestampMask};
@@ -58,7 +61,7 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
     arith_uint256 bnTarget;
     bnTarget.SetCompact(nBits);
     bnTarget *= uint64_t(amount);
-    bnTarget *= uint64_t((nTimeTxMasked - nTimeBlockFromMasked) / STAKE_TARGET_SPACING);
+    bnTarget *= uint64_t((nTimeTxMasked - nTimeBlockFromMasked) / params.nStakeTargetSpacing);
     bnTarget /= COIN;
 
     LogTrace(BCLog::STAKING,
@@ -113,7 +116,7 @@ bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexP
         return false;
     }
     if (block.nTime <= pindexPrev->nTime ||
-        (block.nTime - pindexPrev->nTime) % STAKE_TARGET_SPACING != 0) {
+        (block.nTime - pindexPrev->nTime) % params.nStakeTargetSpacing != 0) {
         LogDebug(BCLog::STAKING,
                  "ContextualCheckProofOfStake: invalid block time-slot %u", block.nTime);
         return false;
