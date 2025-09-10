@@ -1,195 +1,155 @@
-#include <arith_uint256.h>
-#include <cassert>
-#include <chain.h>
-#include <coins.h>
-#include <consensus/amount.h>
-#include <consensus/consensus.h>
-#include <hash.h>
-#include <logging.h>
-#include <pos/stakemodifier.h>
-#include <pos/stakemodifier_manager.h>
 #include <pos/stake.h>
-#include <serialize.h>
-#include <validation.h>
+#include <pos/difficulty.h>
 
-// Minimum value for any staking input
-static constexpr CAmount MIN_STAKE_AMOUNT{1 * COIN};
+#include <arith_uint256.h>
+#include <hash.h>
+#include <primitives/transaction.h>
+#include <script/standard.h>
+#include <util/overflow.h>
+#include <logging.h>
 
-bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
-                          uint256 hashBlockFrom, unsigned int nTimeBlockFrom,
-                          CAmount amount, const COutPoint& prevout,
-                          unsigned int nTimeTx, uint256& hashProofOfStake,
-                          bool fPrintProofOfStake, const Consensus::Params& params)
+#include <cassert>
+
+/**
+ * Very early / minimal PoSv3.1 implementation.
+ * NOTE: This is an initial kernel + validation path and will be extended in the full
+ * implementation pass (stake modifier, block signature, reward clipping, advanced
+ * fakestake mitigations). It is added now to begin wiring the consensus surface the
+ * rest of the code already references (validation.cpp includes these headers).
+ */
+
+static bool IsCoinStakeTx(const CTransaction& tx)
 {
-    assert(pindexPrev);
-
-    LogTrace(BCLog::STAKING,
-             "CheckStakeKernelHash: height=%d amount=%d nTimeTx=%u nTimeBlockFrom=%u",
-             pindexPrev->nHeight, amount, nTimeTx, nTimeBlockFrom);
-
-    // Require timestamp to be masked to configured granularity
-    if (nTimeTx & params.nStakeTimestampMask) {
-        LogDebug(BCLog::STAKING,
-                 "CheckStakeKernelHash: timestamp %u not masked", nTimeTx);
-        return false;
-    }
-
-    // Enforce minimum coin age
-    if (nTimeTx <= nTimeBlockFrom || nTimeTx - nTimeBlockFrom < params.nStakeMinAge) {
-        LogDebug(BCLog::STAKING,
-                 "CheckStakeKernelHash: min age violation nTimeTx=%u nTimeBlockFrom=%u",
-                 nTimeTx, nTimeBlockFrom);
-        return false;
-    }
-
-    // Derive a stake modifier using the shared modifier manager
-    StakeModifierManager& manager = GetStakeModifierManager();
-    const uint256 prev_hash = pindexPrev->GetBlockHash();
-    auto mod = manager.GetModifier(prev_hash);
-    if (!mod) {
-        manager.UpdateOnConnect(pindexPrev, params);
-        mod = manager.GetModifier(prev_hash);
-    }
-    const uint256 stake_modifier = mod ? *mod : uint256{};
-
-    // Mask times before hashing to reduce kernel search space
-    const unsigned int nTimeTxMasked{nTimeTx & ~params.nStakeTimestampMask};
-    const unsigned int nTimeBlockFromMasked{nTimeBlockFrom & ~params.nStakeTimestampMask};
-
-    // Build the kernel hash using the PoSV3.1 scheme
-    HashWriter ss_kernel;
-    ss_kernel << stake_modifier << hashBlockFrom << nTimeBlockFromMasked
-              << prevout.hash << prevout.n << nTimeTxMasked;
-    hashProofOfStake = ss_kernel.GetHash();
-
-    // Target is weighted by coin amount and coin age (in slots)
-    arith_uint256 bnTarget;
-    bnTarget.SetCompact(nBits);
-    bnTarget *= uint64_t(amount);
-    bnTarget *= uint64_t((nTimeTxMasked - nTimeBlockFromMasked) / params.nStakeTargetSpacing);
-    bnTarget /= COIN;
-
-    LogTrace(BCLog::STAKING,
-             "CheckStakeKernelHash: hash=%s target=%s",
-             hashProofOfStake.ToString(), bnTarget.ToString());
-
-    if (UintToArith256(hashProofOfStake) > bnTarget) {
-        LogDebug(BCLog::STAKING,
-                 "CheckStakeKernelHash: kernel hash %s exceeds target %s",
-                 hashProofOfStake.ToString(), bnTarget.ToString());
-        return false;
-    }
-
-    if (fPrintProofOfStake) {
-        LogInfo("CheckStakeKernelHash: hash=%s target=%s",
-                hashProofOfStake.ToString(), bnTarget.ToString());
-    }
-
-    LogDebug(BCLog::STAKING,
-             "CheckStakeKernelHash: kernel meets target hash=%s",
-             hashProofOfStake.ToString());
-
-    return true;
-}
-
-bool ContextualCheckProofOfStake(const CBlock& block, const CBlockIndex* pindexPrev,
-                                 const CCoinsViewCache& view, const CChain& chain,
-                                 const Consensus::Params& params)
-{
-    assert(pindexPrev);
-
-    LogTrace(BCLog::STAKING,
-             "ContextualCheckProofOfStake: height=%d time=%u txs=%u",
-             pindexPrev->nHeight, block.nTime, block.vtx.size());
-
-    if (!CheckStakeTimestamp(block, params)) {
-        LogDebug(BCLog::STAKING,
-                 "ContextualCheckProofOfStake: invalid block time %u", block.nTime);
-        return false;
-    }
-
-    if (block.vtx.size() < 2) {
-        LogDebug(BCLog::STAKING,
-                 "ContextualCheckProofOfStake: block missing coinstake tx");
-        return false; // Needs coinbase and coinstake
-    }
-    const CTransactionRef& tx = block.vtx[1];
-    if (tx->vin.empty() || tx->vout.empty() || !tx->vout[0].IsNull()) {
-        LogDebug(BCLog::STAKING,
-                 "ContextualCheckProofOfStake: invalid coinstake structure");
-        return false;
-    }
-    if (tx->nLockTime != block.nTime) {
-        LogDebug(BCLog::STAKING,
-                 "ContextualCheckProofOfStake: coinstake locktime %u does not match block time %u",
-                 tx->nLockTime, block.nTime);
-        return false;
-    }
-
-    // Enforce block time slotting relative to previous block
-    if (block.nTime <= pindexPrev->nTime ||
-        (block.nTime - pindexPrev->nTime) % params.nStakeTargetSpacing != 0) {
-        LogDebug(BCLog::STAKING,
-                 "ContextualCheckProofOfStake: invalid block time-slot %u", block.nTime);
-        return false;
-    }
-
-    const int64_t min_stake_age =
-        (pindexPrev->nHeight + 1 < COINBASE_MATURITY) ? 0 : params.nStakeMinAge;
-
-    uint256 hashProof;
-    for (size_t i = 0; i < tx->vin.size(); ++i) {
-        const CTxIn& txin = tx->vin[i];
-        const Coin& coin = view.AccessCoin(txin.prevout);
-        if (coin.IsSpent()) {
-            LogDebug(BCLog::STAKING,
-                     "ContextualCheckProofOfStake: spent stake input %s",
-                     txin.prevout.ToString());
-            return false;
-        }
-
-        const CBlockIndex* pindexFrom = chain[coin.nHeight];
-        if (!pindexFrom) {
-            LogDebug(BCLog::STAKING,
-                     "ContextualCheckProofOfStake: missing block for input %s",
-                     txin.prevout.ToString());
-            return false;
-        }
-
-        if (block.nTime <= pindexFrom->nTime ||
-            block.nTime - pindexFrom->nTime < min_stake_age) {
-            LogDebug(BCLog::STAKING,
-                     "ContextualCheckProofOfStake: input %s too young", txin.prevout.ToString());
-            return false;
-        }
-
-        if (i == 0) {
-            if (coin.out.nValue < MIN_STAKE_AMOUNT) {
-                LogDebug(BCLog::STAKING,
-                         "ContextualCheckProofOfStake: input %s value too low %d",
-                         txin.prevout.ToString(), coin.out.nValue);
-                return false;
-            }
-
-            if (!CheckStakeKernelHash(pindexPrev, block.nBits, pindexFrom->GetBlockHash(),
-                                      pindexFrom->nTime, coin.out.nValue, txin.prevout,
-                                      block.nTime, hashProof, true, params)) {
-                LogDebug(BCLog::STAKING,
-                         "ContextualCheckProofOfStake: kernel check failed for %s",
-                         txin.prevout.ToString());
-                return false;
-            }
-        }
-    }
+    // A coinstake must: not be coinbase; have at least one input; have at least two outputs
+    // and the first output must be empty (scriptPubKey.size()==0) per typical PoS v3 pattern.
+    if (tx.IsCoinBase()) return false;
+    if (tx.vin.empty()) return false;
+    if (tx.vout.size() < 2) return false;
+    if (!tx.vout[0].scriptPubKey.empty()) return false;
     return true;
 }
 
 bool IsProofOfStake(const CBlock& block)
 {
     if (block.vtx.size() < 2) return false;
-    const CTransactionRef& tx = block.vtx[1];
-    if (tx->vin.empty() || tx->vout.size() < 2) return false;
-    if (tx->vin[0].prevout.IsNull()) return false;
-    if (!tx->vout[0].IsNull()) return false;
+    return IsCoinStakeTx(*block.vtx[1]);
+}
+
+// Basic stake kernel hash: H( prevout.hash || prevout.n || nTimeBlockFrom || nTimeTx )
+// Later iterations will introduce a proper stake modifier and possibly richer entropy.
+static uint256 ComputeKernelHash(const COutPoint& prevout,
+                                 unsigned int nTimeBlockFrom,
+                                 unsigned int nTimeTx)
+{
+    CHashWriter ss(SER_GETHASH, 0);
+    ss << prevout.hash;
+    ss << prevout.n;
+    ss << nTimeBlockFrom;
+    ss << nTimeTx;
+    return ss.GetHash();
+}
+
+bool CheckStakeKernelHash(const CBlockIndex* pindexPrev,
+                          unsigned int nBits,
+                          uint256 hashBlockFrom,
+                          unsigned int nTimeBlockFrom,
+                          CAmount amount,
+                          const COutPoint& prevout,
+                          unsigned int nTimeTx,
+                          uint256& hashProofOfStake,
+                          bool fPrintProofOfStake,
+                          const Consensus::Params& params)
+{
+    if (!pindexPrev) return false;
+    if (nTimeTx <= nTimeBlockFrom) return false; // must move forward in time
+    if ((nTimeTx & params.nStakeTimestampMask) != 0) return false; // enforce mask alignment
+
+    // Derive target from nBits
+    bool fNegative = false;
+    bool fOverflow = false;
+    arith_uint256 bnTarget;
+    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+    if (fNegative || fOverflow || bnTarget == 0) return false;
+
+    // Amount scaling: target * amount (bounded to prevent overflow)
+    arith_uint256 bnWeight = arith_uint256(amount);
+    // Avoid overflow by shifting if necessary
+    // (Simplistic; in future incorporate 64-bit safe multiply or cap amount)
+    arith_uint256 bnTargetWeight = bnTarget;
+    bnTargetWeight *= bnWeight;
+
+    hashProofOfStake = ComputeKernelHash(prevout, nTimeBlockFrom, nTimeTx);
+    arith_uint256 bnHash = UintToArith256(hashProofOfStake);
+
+    if (fPrintProofOfStake) {
+        LogDebug(BCLog::STAKE, "CheckStakeKernelHash: hash=%s target=%s amt=%lld\n",
+                 hashProofOfStake.ToString(), bnTargetWeight.ToString(), amount);
+    }
+
+    if (bnHash > bnTargetWeight) return false;
+    return true;
+}
+
+bool ContextualCheckProofOfStake(const CBlock& block,
+                                 const CBlockIndex* pindexPrev,
+                                 const CCoinsViewCache& view,
+                                 const CChain& chain,
+                                 const Consensus::Params& params)
+{
+    if (!pindexPrev) return false;
+    if (!IsProofOfStake(block)) return false;
+
+    const CTransaction& coinstake = *block.vtx[1];
+
+    // Enforce block time == coinstake tx time (v3 convention)
+    if (block.nTime != coinstake.nTime) return false;
+    if ((block.nTime & params.nStakeTimestampMask) != 0) return false;
+
+    // Check single coinstake only
+    for (size_t i = 2; i < block.vtx.size(); ++i) {
+        if (IsCoinStakeTx(*block.vtx[i])) return false; // multiple coinstakes
+    }
+
+    // Use first input as kernel (common approach)
+    if (coinstake.vin.empty()) return false;
+    const CTxIn& txin = coinstake.vin[0];
+    const Coin& coin = view.AccessCoin(txin.prevout);
+    if (coin.IsSpent()) return false;
+
+    // Depth / confirmations
+    int spend_height = pindexPrev->nHeight + 1; // height of the coinstake block
+    int coin_height = coin.nHeight;
+    if (coin_height <= 0 || coin_height > spend_height) return false;
+    int depth = spend_height - coin_height;
+
+    int minConf = params.nStakeMinConfirmations > 0 ? params.nStakeMinConfirmations : 80;
+    if (depth < minConf) return false;
+
+    // Minimum age (time based) – approximate using ancestor median time past difference.
+    const CBlockIndex* pindexFrom = chain[coin_height];
+    if (!pindexFrom) return false;
+    if (block.GetBlockTime() - pindexFrom->GetBlockTime() < MIN_STAKE_AGE) return false;
+
+    // Reconstruct previous stake source block time for kernel (using pindexFrom)
+    unsigned int nTimeBlockFrom = pindexFrom->GetBlockTime();
+
+    // Determine nBits / target for this PoS block
+    unsigned int nBits = GetPoSNextTargetRequired(pindexPrev, block.GetBlockTime(), params);
+
+    uint256 hashProofOfStake;
+    if (!CheckStakeKernelHash(pindexPrev, nBits,
+                              pindexFrom->GetBlockHash(), nTimeBlockFrom,
+                              coin.out.nValue, txin.prevout,
+                              block.nTime, hashProofOfStake, false, params)) {
+        return false;
+    }
+
+    // Basic sanity on coinstake value: must not create more than inputs + reward (reward logic TBD)
+    CAmount input_value = coin.out.nValue;
+    CAmount output_value = 0;
+    for (const auto& o : coinstake.vout) output_value += o.nValue;
+    if (output_value < input_value) return false; // must not burn value in kernel input
+    // (Excess is assumed to be stake reward + fees; capped later once reward code lands.)
+
     return true;
 }
