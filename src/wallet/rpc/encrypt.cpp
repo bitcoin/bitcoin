@@ -22,6 +22,7 @@ RPCHelpMan walletpassphrase()
                 {
                     {"passphrase", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet passphrase"},
                     {"timeout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The time to keep the decryption key in seconds; capped at 100000000 (~3 years)."},
+                    {"stakingonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "Unlock wallet only for staking"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
@@ -30,7 +31,7 @@ RPCHelpMan walletpassphrase()
             "\nLock the wallet again (before 60 seconds)\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
+            + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60, true")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -83,6 +84,10 @@ RPCHelpMan walletpassphrase()
                                                                     "passphrase to avoid this issue in the future.");
             }
         }
+
+        bool staking_only = false;
+        if (request.params.size() > 2) staking_only = request.params[2].get_bool();
+        pwallet->SetStakingOnly(staking_only);
 
         pwallet->TopUpKeyPool();
 

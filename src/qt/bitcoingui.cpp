@@ -57,6 +57,7 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QLabel>
 #include <QProgressDialog>
 #include <QScreen>
 #include <QSettings>
@@ -176,6 +177,8 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         labelWalletEncryptionIcon->hide();
         frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
         labelWalletHDStatusIcon->hide();
+        labelStakingText = new QLabel(tr("Staking: Inactive"));
+        frameBlocksLayout->addWidget(labelStakingText);
     }
     frameBlocksLayout->addWidget(labelProxyIcon);
     frameBlocksLayout->addStretch();
@@ -1465,6 +1468,19 @@ void BitcoinGUI::updateWalletStatus()
     WalletModel * const walletModel = walletView->getWalletModel();
     setEncryptionStatus(walletModel->getEncryptionStatus());
     setHDStatus(walletModel->wallet().privateKeysDisabled(), walletModel->wallet().hdEnabled());
+    updateStakingStatus();
+}
+
+void BitcoinGUI::updateStakingStatus()
+{
+#ifdef ENABLE_WALLET
+    if (!enableWallet || !walletFrame || !labelStakingText) return;
+    WalletView* walletView = walletFrame->currentWalletView();
+    if (!walletView) return;
+    WalletModel* walletModel = walletView->getWalletModel();
+    bool staking = walletModel->wallet().IsStaking();
+    labelStakingText->setText(staking ? tr("Staking: Active") : tr("Staking: Inactive"));
+#endif
 }
 #endif // ENABLE_WALLET
 
