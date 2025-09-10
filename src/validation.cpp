@@ -2097,7 +2097,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast,
     assert(pindexLast);
 
     if (params.fEnablePoS && pindexLast->nHeight + 1 >= params.posActivationHeight) {
-        return GetPoSNextTargetRequired(pindexLast, pblock, params);
+        return GetPoSNextTargetRequired(pindexLast, pblock->GetBlockTime(), params);
     }
 
     arith_uint256 bnLimit = UintToArith256(params.powLimit);
