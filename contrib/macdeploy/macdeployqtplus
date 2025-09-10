@@ -466,18 +466,18 @@ if config.translations_dir:
         sys.stderr.write(f"Error: Could not find translation dir \"{config.translations_dir[0]}\"\n")
         sys.exit(1)
 
-print("+ Adding Qt translations +")
+    print("+ Adding Qt translations +")
 
-translations = Path(config.translations_dir[0])
+    translations = Path(config.translations_dir[0])
 
-regex = re.compile('qt_[a-z]*(.qm|_[A-Z]*.qm)')
+    regex = re.compile('qt_[a-z]*(.qm|_[A-Z]*.qm)')
 
-lang_files = [x for x in translations.iterdir() if regex.match(x.name)]
+    lang_files = [x for x in translations.iterdir() if regex.match(x.name)]
 
-for file in lang_files:
-    if verbose:
-        print(file.as_posix(), "->", os.path.join(applicationBundle.resourcesPath, file.name))
-    shutil.copy2(file.as_posix(), os.path.join(applicationBundle.resourcesPath, file.name))
+    for file in lang_files:
+        if verbose:
+            print(file.as_posix(), "->", os.path.join(applicationBundle.resourcesPath, file.name))
+        shutil.copy2(file.as_posix(), os.path.join(applicationBundle.resourcesPath, file.name))
 
 # ------------------------------------------------
 
