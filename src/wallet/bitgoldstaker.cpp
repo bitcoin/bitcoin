@@ -71,6 +71,13 @@ void BitGoldStaker::ThreadStakeMiner()
 
             std::vector<COutput> candidates = m_wallet.GetStakeableCoins(min_depth, min_age, MIN_STAKE_AMOUNT);
 
+            CAmount total_value{0};
+            for (const COutput& o : candidates) total_value += o.txout.nValue;
+            if (total_value <= m_wallet.GetReserveBalance()) {
+                LogDebug(BCLog::STAKING, "ThreadStakeMiner: balance below reserve\n");
+                candidates.clear();
+            }
+
             if (candidates.empty()) {
                 LogDebug(BCLog::STAKING, "ThreadStakeMiner: no eligible UTXOs\n");
             } else {

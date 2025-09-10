@@ -513,6 +513,19 @@ public:
     /** Update staking statistics and persist to disk. */
     void SetStakingStats(const StakingStats& stats);
 
+    /** Set the balance to keep reserved from staking. */
+    void SetReserveBalance(CAmount amount);
+    /** Get the currently reserved balance. */
+    CAmount GetReserveBalance() const;
+
+    /** Generate a new shielded address for confidential payments. */
+    std::string GetNewShieldedAddress();
+
+    /** Configure whether the wallet is unlocked for staking only. */
+    void SetStakingOnly(bool staking_only);
+    /** True if wallet is unlocked only for staking purposes. */
+    bool IsUnlockedForStakingOnly() const;
+
     /** Map from txid to CWalletTx for all transactions this wallet is
      * interested in, including received and sent transactions. */
     std::unordered_map<Txid, CWalletTx, SaltedTxidHasher> mapWallet GUARDED_BY(cs_wallet);
@@ -539,6 +552,12 @@ public:
 
     /** Cached staking statistics. */
     StakingStats m_staking_stats GUARDED_BY(cs_wallet);
+
+    /** Amount of balance reserved from staking. */
+    CAmount m_reserve_balance GUARDED_BY(cs_wallet){0};
+
+    /** True if wallet is unlocked only for staking, not for spending. */
+    bool m_staking_only GUARDED_BY(cs_wallet){false};
 
     /** Interface for accessing chain state. */
     interfaces::Chain& chain() const

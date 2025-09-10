@@ -126,6 +126,7 @@ private:
     GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* connectionsControl = nullptr;
     GUIUtil::ClickableLabel* labelBlocksIcon = nullptr;
+    QLabel* labelStakingText = nullptr;
     QLabel* progressBarLabel = nullptr;
     GUIUtil::ClickableProgressBar* progressBar = nullptr;
     QProgressDialog* progressDialog = nullptr;
@@ -209,6 +210,9 @@ private:
 
     void updateHeadersSyncProgressLabel();
     void updateHeadersPresyncProgressLabel(int64_t height, const QDateTime& blockDate);
+
+    /** Update staking status label. */
+    void updateStakingStatus();
 
     /** Open the OptionsDialog on the specified tab index */
     void openOptionsDialogWithTab(OptionsDialog::Tab tab);

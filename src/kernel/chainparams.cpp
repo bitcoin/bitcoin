@@ -103,7 +103,7 @@ public:
         consensus.nPowTargetTimespan = 1 * 24 * 60 * 60; // one day
         consensus.nPowTargetSpacing = 8 * 60;
         consensus.posActivationHeight = 2;
-        consensus.fEnablePoS = false;
+        consensus.fEnablePoS = true; // Enable PoS from genesis except premine block
         consensus.nStakeTimestampMask = 0xF;
         consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeModifierInterval = 60 * 60;
@@ -211,7 +211,7 @@ public:
         m_chain_type = ChainType::TESTNET;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 90000;
         consensus.script_flag_exceptions.emplace( // BIP16 exception
             uint256{"00000000dd30457c001f4095d208cc1296b0eed002427aa599874af7a432b105"}, SCRIPT_VERIFY_NONE);
         consensus.BIP34Height = 21111;
@@ -225,7 +225,7 @@ public:
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 8 * 60;
         consensus.posActivationHeight = 2;
-        consensus.fEnablePoS = false;
+        consensus.fEnablePoS = true; // Enable PoS in testnet
         consensus.nStakeTimestampMask = 0xF;
         consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeModifierInterval = 60 * 60;
@@ -277,7 +277,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x02, 0x41, 0xC6, 0x5A}; // bgpub
         base58Prefixes[EXT_SECRET_KEY] = {0x02, 0x41, 0xB2, 0x1B}; // bgprv
 
-        bech32_hrp = "tb";
+        bech32_hrp = "tbg";
 
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
 
@@ -355,7 +355,7 @@ public:
         m_chain_type = ChainType::SIGNET;
         consensus.signet_blocks = true;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
-        consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nSubsidyHalvingInterval = 90000;
         consensus.BIP34Height = 1;
         consensus.BIP34Hash = uint256{};
         consensus.BIP65Height = 1;
@@ -365,7 +365,7 @@ public:
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 8 * 60;
         consensus.posActivationHeight = 2;
-        consensus.fEnablePoS = false;
+        consensus.fEnablePoS = true; // Enable PoS on signet
         consensus.nStakeTimestampMask = 0xF;
         consensus.nStakeMinAge = 60 * 60;
         consensus.nStakeModifierInterval = 60 * 60;
@@ -419,7 +419,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x02, 0x41, 0xC6, 0x5A}; // bgpub
         base58Prefixes[EXT_SECRET_KEY] = {0x02, 0x41, 0xB2, 0x1B}; // bgprv
 
-        bech32_hrp = "tb";
+        bech32_hrp = "tbg";
 
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;

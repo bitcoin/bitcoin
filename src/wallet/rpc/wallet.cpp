@@ -1022,6 +1022,93 @@ static RPCHelpMan walletstaking()
         }};
 }
 
+static RPCHelpMan startstaking()
+{
+    return RPCHelpMan{
+        "startstaking",
+        "Start the staking thread for this wallet.",
+        {},
+        RPCResult{RPCResult::Type::BOOL, "", "true if staking is active"},
+        RPCExamples{HelpExampleCli("startstaking", "") + HelpExampleRpc("startstaking", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+            pwallet->StartStakeMiner();
+            return UniValue(pwallet->IsStaking());
+        }};
+}
+
+static RPCHelpMan stopstaking()
+{
+    return RPCHelpMan{
+        "stopstaking",
+        "Stop the staking thread for this wallet.",
+        {},
+        RPCResult{RPCResult::Type::BOOL, "", "false if staking stopped"},
+        RPCExamples{HelpExampleCli("stopstaking", "") + HelpExampleRpc("stopstaking", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+            pwallet->StopStakeMiner();
+            return UniValue(pwallet->IsStaking());
+        }};
+}
+
+static RPCHelpMan reservebalance()
+{
+    return RPCHelpMan{
+        "reservebalance",
+        "Set or get the reserve balance that will not be used for staking.",
+        {
+            {"reserve", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "true to reserve balance, false to disable reserve"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "amount in BGD to reserve"},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "", {{RPCResult::Type::NUM, "reserved", "current reserved amount"}}},
+        RPCExamples{HelpExampleCli("reservebalance", "true 100") + HelpExampleCli("reservebalance", "") + HelpExampleRpc("reservebalance", "false")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+            if (request.params.empty()) {
+                UniValue ret(UniValue::VOBJ);
+                ret.pushKV("reserved", ValueFromAmount(pwallet->GetReserveBalance()));
+                return ret;
+            }
+            bool reserve = request.params[0].get_bool();
+            if (!reserve) {
+                pwallet->SetReserveBalance(0);
+            } else {
+                if (request.params.size() < 2) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "amount required");
+                }
+                CAmount amount = AmountFromValue(request.params[1]);
+                pwallet->SetReserveBalance(amount);
+            }
+            UniValue ret(UniValue::VOBJ);
+            ret.pushKV("reserved", ValueFromAmount(pwallet->GetReserveBalance()));
+            return ret;
+        }};
+}
+
+static RPCHelpMan getnewshieldedaddress()
+{
+    return RPCHelpMan{
+        "getnewshieldedaddress",
+        "Returns a new shielded address for receiving confidential payments.",
+        {},
+        RPCResult{RPCResult::Type::STR, "address", "new shielded address"},
+        RPCExamples{HelpExampleCli("getnewshieldedaddress", "") + HelpExampleRpc("getnewshieldedaddress", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+            if (!pwallet) return UniValue::VNULL;
+            pwallet->BlockUntilSyncedToCurrentChain();
+            EnsureWalletIsUnlocked(*pwallet);
+            return UniValue(pwallet->GetNewShieldedAddress());
+        }};
+}
+
 static RPCHelpMan getstakestat()
 {
     return RPCHelpMan{
@@ -1050,6 +1137,7 @@ static RPCHelpMan getstakestat()
 // addresses
 RPCHelpMan getaddressinfo();
 RPCHelpMan getnewaddress();
+RPCHelpMan getnewshieldedaddress();
 RPCHelpMan getrawchangeaddress();
 RPCHelpMan setlabel();
 RPCHelpMan listaddressgroupings();
@@ -1127,6 +1215,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &getbalance},
         {"wallet", &gethdkeys},
         {"wallet", &getnewaddress},
+        {"wallet", &getnewshieldedaddress},
         {"wallet", &getrawchangeaddress},
         {"wallet", &getreceivedbyaddress},
         {"wallet", &getreceivedbylabel},
@@ -1178,6 +1267,9 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &getstakinginfo},
         {"wallet", &getstakingstats},
         {"wallet", &walletstaking},
+        {"wallet", &startstaking},
+        {"wallet", &stopstaking},
+        {"wallet", &reservebalance},
         {"wallet", &getstakestat},
     };
     return commands;

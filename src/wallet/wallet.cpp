@@ -32,6 +32,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <logging.h>
+#include <random.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -3286,6 +3287,37 @@ void CWallet::SetStakingStats(const StakingStats& stats)
     batch.WriteStakingStats(m_staking_stats);
 }
 
+void CWallet::SetReserveBalance(CAmount amount)
+{
+    LOCK(cs_wallet);
+    m_reserve_balance = amount;
+}
+
+CAmount CWallet::GetReserveBalance() const
+{
+    LOCK(cs_wallet);
+    return m_reserve_balance;
+}
+
+std::string CWallet::GetNewShieldedAddress()
+{
+    LOCK(cs_wallet);
+    // Placeholder shielded address generation using random hash with "sb" prefix
+    return std::string("sb") + GetRandHash().ToString();
+}
+
+void CWallet::SetStakingOnly(bool staking_only)
+{
+    LOCK(cs_wallet);
+    m_staking_only = staking_only;
+}
+
+bool CWallet::IsUnlockedForStakingOnly() const
+{
+    LOCK(cs_wallet);
+    return m_staking_only;
+}
+
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
     WITH_LOCK(cs_wallet, WriteBestBlock());
@@ -3337,7 +3369,7 @@ bool CWallet::IsLocked() const
         return false;
     }
     LOCK(cs_wallet);
-    return vMasterKey.empty();
+    return vMasterKey.empty() || m_staking_only;
 }
 
 bool CWallet::Lock()
@@ -3351,6 +3383,7 @@ bool CWallet::Lock()
             memory_cleanse(vMasterKey.data(), vMasterKey.size() * sizeof(decltype(vMasterKey)::value_type));
             vMasterKey.clear();
         }
+        m_staking_only = false;
     }
 
     NotifyStatusChanged(this);

@@ -647,7 +647,7 @@ public:
     }
 
     void LoadDividendPool() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void AddToDividendPool(CAmount amount) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void AddToDividendPool(CAmount amount, int height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     CAmount GetDividendPool() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_dividend_pool; }
 
     //! @returns A pointer to the mempool.

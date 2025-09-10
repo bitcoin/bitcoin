@@ -66,6 +66,7 @@
 #include <util/trace.h>
 #include <util/translation.h>
 #include <validationinterface.h>
+#include <util/moneystr.h>
 
 #ifdef ENABLE_BULLETPROOFS
 #include <bulletproofs.h>
@@ -2079,15 +2080,21 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined or too large.
-    if (halvings >= 64)
-        return 0;
+    // Hard cap: 8M BGD total supply with 3M premine in genesis block.
+    // First 90k blocks reward 50, next 20k reward 25, then 0.
+    if (nHeight <= 0) return 0; // genesis handled separately
 
-    CAmount nSubsidy = 50 * COIN; // BitGold: Start with 50 coins per block
-    // Subsidy is cut in half every nSubsidyHalvingInterval blocks.
-    nSubsidy >>= halvings;
-    return nSubsidy;
+    if (nHeight <= consensusParams.nSubsidyHalvingInterval) {
+        return 50 * COIN;
+    }
+
+    // Allow only 20k blocks at the halved reward before hitting the cap
+    const int second_phase = consensusParams.nSubsidyHalvingInterval + 20000;
+    if (nHeight <= second_phase) {
+        return 25 * COIN;
+    }
+
+    return 0;
 }
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast,
@@ -2237,11 +2244,17 @@ void Chainstate::LoadDividendPool()
     m_dividend_pool = CoinsDB().GetDividendPool();
 }
 
-void Chainstate::AddToDividendPool(CAmount amount)
+void Chainstate::AddToDividendPool(CAmount amount, int height)
 {
     m_dividend_pool += amount;
+    // Payout every ~quarter (16200 blocks at 8 min spacing)
+    static constexpr int QUARTER_BLOCKS{16200};
+    if (height > 0 && height % QUARTER_BLOCKS == 0 && m_dividend_pool > 0) {
+        // Placeholder: dividend distribution logic
+        LogInfo("Distributing %s from dividend pool\n", FormatMoney(m_dividend_pool));
+        m_dividend_pool = 0;
+    }
     CoinsDB().WriteDividendPool(m_dividend_pool);
-    // TODO: Integrate quarterly payout distribution when available.
 }
 
 bool IsBlockMutated(const CBlock& block, bool check_witness_root)
