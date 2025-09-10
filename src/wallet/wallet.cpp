@@ -3221,7 +3221,7 @@ void CWallet::postInitProcess()
     WITH_LOCK(cs_wallet, chain().requestMempoolTransactions(*this));
 
     // Start staking thread if enabled
-    if (gArgs.GetBoolArg("-staker", false)) {
+    if (gArgs.GetBoolArg("-staker", false) || gArgs.GetBoolArg("-staking", false)) {
         StartStakeMiner();
     }
 }

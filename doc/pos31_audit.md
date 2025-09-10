@@ -25,7 +25,7 @@ Despite the extensive PoS code, the audit reveals gaps relative to a complete BP
 * The code base lacks a clearly separated stake modifier manager or helper resembling Blackcoin's `CheckKernel`/`GetKernelStakeModifier` semantics.
 * No `ThreadStakeMiner` or equivalent top‑level miner thread name is present; existing logic lives in `BitGoldStaker` but may require review against upstream behaviour.
 * PoS difficulty/target retargeting integration with `GetNextWorkRequired` is not obvious; further investigation is required to confirm parity with Blackcoin's rules.
-* Additional gating parameters (e.g. `-staking` CLI flag, optional feature gates beyond PoSV3.1) are not yet implemented or fully documented.
+* A `-staking` CLI flag (alias of `-staker`) now gates staking, though additional optional feature gates beyond PoSV3.1 may still require implementation and documentation.
 
 This audit serves as the baseline for upcoming commits that will add missing consensus parameters, activation logic, stake modifier handling, full PoS validation rules, wallet integration and functional tests to achieve an exact PoS v3.1 implementation.
 

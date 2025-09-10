@@ -40,8 +40,8 @@ Staking
 -------
 
 To participate in BitGold's proof-of-stake, run `bitgoldd` or `bitgold-qt` with
-`-staker`, or add `staker=1` to `bitgold.conf`. The staking status can be
-checked with `bitgold-cli stakerstatus`. The staking engine uses the
+`-staking` (alias `-staker`), or add `staking=1` to `bitgold.conf`. The staking
+status can be checked with `bitgold-cli stakerstatus`. The staking engine uses the
 PoS 3.1 consensus rules described in
 [doc/pos3.1-overview.md](doc/pos3.1-overview.md).
 

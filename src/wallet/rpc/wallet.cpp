@@ -859,7 +859,7 @@ static RPCHelpMan stakerstatus()
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
-                                              {RPCResult::Type::BOOL, "enabled", "true if staking is enabled via -staker"},
+                                              {RPCResult::Type::BOOL, "enabled", "true if staking is enabled via -staking/-staker"},
                                               {RPCResult::Type::BOOL, "staking", "true if the staking thread is running"},
                                           }},
         RPCExamples{HelpExampleCli("stakerstatus", "") + HelpExampleRpc("stakerstatus", "")},
@@ -869,7 +869,7 @@ static RPCHelpMan stakerstatus()
             pwallet->BlockUntilSyncedToCurrentChain();
 
             UniValue obj(UniValue::VOBJ);
-            obj.pushKV("enabled", gArgs.GetBoolArg("-staker", false));
+            obj.pushKV("enabled", gArgs.GetBoolArg("-staker", false) || gArgs.GetBoolArg("-staking", false));
             obj.pushKV("staking", pwallet->IsStaking());
             return obj;
         }};
@@ -883,7 +883,7 @@ static RPCHelpMan getstakinginfo()
         {},
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
-                                              {RPCResult::Type::BOOL, "enabled", "true if staking is enabled via -staker"},
+                                              {RPCResult::Type::BOOL, "enabled", "true if staking is enabled via -staking/-staker"},
                                               {RPCResult::Type::BOOL, "staking", "true if the staking thread is running"},
                                           }},
         RPCExamples{HelpExampleCli("getstakinginfo", "") + HelpExampleRpc("getstakinginfo", "")},

@@ -76,6 +76,7 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-walletrbf", strprintf("Send transactions with full-RBF opt-in enabled (RPC only, default: %u)", DEFAULT_WALLET_RBF), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 
     argsman.AddArg("-staker", "Enable the BitGold staking thread (default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+    argsman.AddArg("-staking", "Enable the BitGold staking thread (alias of -staker, default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 
     argsman.AddArg("-unsafesqlitesync", "Set SQLite synchronous=OFF to disable waiting for the database to sync to disk. This is unsafe and can cause data loss and corruption. This option is only used by tests to improve their performance (default: false)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
 
