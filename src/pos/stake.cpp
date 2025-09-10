@@ -6,6 +6,7 @@
 #include <consensus/consensus.h>
 #include <hash.h>
 #include <logging.h>
+#include <pos/stakemodifier.h>
 #include <pos/stake.h>
 #include <serialize.h>
 #include <validation.h>
@@ -40,10 +41,8 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
         return false;
     }
 
-    // Derive a stake modifier using previous block hash, height and time
-    HashWriter ss_mod;
-    ss_mod << pindexPrev->GetBlockHash() << pindexPrev->nHeight << pindexPrev->nTime;
-    const uint256 stake_modifier = ss_mod.GetHash();
+    // Derive a stake modifier using the shared modifier manager
+    const uint256 stake_modifier = GetStakeModifier(pindexPrev, nTimeTx, params);
 
     // Mask times before hashing to reduce kernel search space
     const unsigned int nTimeTxMasked{nTimeTx & ~params.nStakeTimestampMask};

@@ -81,6 +81,7 @@ add_library(bitcoinkernel
   ../validationinterface.cpp
   ../versionbits.cpp
   ../pos/stake.cpp
+  ../pos/stakemodifier.cpp
 )
 target_link_libraries(bitcoinkernel
   PRIVATE
