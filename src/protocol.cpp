@@ -12,7 +12,8 @@ CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const
 {
     // Copy the message type name
     size_t i = 0;
-    for (; i < MESSAGE_TYPE_SIZE && msg_type[i] != 0; ++i) m_msg_type[i] = msg_type[i];
+    for (; i < MESSAGE_TYPE_SIZE && msg_type[i] != 0; ++i)
+        m_msg_type[i] = msg_type[i];
     assert(msg_type[i] == 0); // Assert that the message type name passed in is not longer than MESSAGE_TYPE_SIZE
 
     nMessageSize = nMessageSizeIn;
@@ -61,15 +62,14 @@ std::string CInv::GetMessageType() const
     if (type & MSG_WITNESS_FLAG)
         cmd.append("witness-");
     int masked = type & MSG_TYPE_MASK;
-    switch (masked)
-    {
-    case MSG_TX:             return cmd.append(NetMsgType::TX);
+    switch (masked) {
+    case MSG_TX: return cmd.append(NetMsgType::TX);
     // WTX is not a message type, just an inv type
-    case MSG_WTX:            return cmd.append("wtx");
-    case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
+    case MSG_WTX: return cmd.append("wtx");
+    case MSG_BLOCK: return cmd.append(NetMsgType::BLOCK);
     case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
-    case MSG_CMPCT_BLOCK:    return cmd.append(NetMsgType::CMPCTBLOCK);
-    case MSG_COINSTAKE:      return cmd.append(NetMsgType::COINSTAKE);
+    case MSG_CMPCT_BLOCK: return cmd.append(NetMsgType::CMPCTBLOCK);
+    case MSG_COINSTAKE: return cmd.append(NetMsgType::COINSTAKE);
     case MSG_STAKE_MODIFIER: return cmd.append(NetMsgType::STAKEMODIFIER);
     default:
         throw std::out_of_range(strprintf("CInv::GetMessageType(): type=%d unknown type", type));
@@ -80,7 +80,7 @@ std::string CInv::ToString() const
 {
     try {
         return strprintf("%s %s", GetMessageType(), hash.ToString());
-    } catch(const std::out_of_range &) {
+    } catch (const std::out_of_range&) {
         return strprintf("0x%08x %s", type, hash.ToString());
     }
 }
@@ -94,14 +94,16 @@ static std::string serviceFlagToStr(size_t bit)
 {
     const uint64_t service_flag = 1ULL << bit;
     switch ((ServiceFlags)service_flag) {
-    case NODE_NONE: abort();  // impossible
-    case NODE_NETWORK:         return "NETWORK";
-    case NODE_BLOOM:           return "BLOOM";
-    case NODE_WITNESS:         return "WITNESS";
+    case NODE_NONE: abort(); // impossible
+    case NODE_NETWORK: return "NETWORK";
+    case NODE_BLOOM: return "BLOOM";
+    case NODE_WITNESS: return "WITNESS";
+    case NODE_POS: return "POS";
     case NODE_COMPACT_FILTERS: return "COMPACT_FILTERS";
     case NODE_NETWORK_LIMITED: return "NETWORK_LIMITED";
-    case NODE_P2P_V2:          return "P2P_V2";
-    // Not using default, so we get warned when a case is missing
+    case NODE_P2P_V2:
+        return "P2P_V2";
+        // Not using default, so we get warned when a case is missing
     }
 
     return strprintf("UNKNOWN[2^%u]", bit);

@@ -333,6 +333,8 @@ enum ServiceFlags : uint64_t {
     // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
     // witness data.
     NODE_WITNESS = (1 << 3),
+    // NODE_POS means the node supports proof-of-stake related messages.
+    NODE_POS = (1 << 5),
     // NODE_COMPACT_FILTERS means the node will service basic block filter requests.
     // See BIP157 and BIP158 for details on how this is implemented.
     NODE_COMPACT_FILTERS = (1 << 6),
@@ -493,7 +495,7 @@ enum GetDataMsg : uint32_t {
     UNDEFINED = 0,
     MSG_TX = 1,
     MSG_BLOCK = 2,
-    MSG_WTX = 5,                                      //!< Defined in BIP 339
+    MSG_WTX = 5, //!< Defined in BIP 339
     MSG_COINSTAKE = 6,
     MSG_STAKE_MODIFIER = 7,
     // The following can only occur in getdata. Invs always use TX/WTX or BLOCK.
