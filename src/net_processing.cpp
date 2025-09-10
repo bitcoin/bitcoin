@@ -3366,7 +3366,10 @@ void PeerManagerImpl::ProcessStakeMod(CNode& node, Peer& peer, DataStream& vRecv
     uint256 block_hash;
     uint256 modifier;
     vRecv >> block_hash >> modifier;
-    m_stake_modman.ProcessStakeModifier(block_hash, modifier);
+    if (!m_stake_modman.ProcessStakeModifier(block_hash, modifier)) {
+        Misbehaving(peer, "invalid-stakemod");
+        node.fDisconnect = true;
+    }
 }
 
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
