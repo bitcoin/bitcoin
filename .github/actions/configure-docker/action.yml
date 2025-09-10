@@ -1,9 +1,12 @@
 name: 'Configure Docker'
 description: 'Set up Docker build driver and configure build cache args'
 inputs:
-  use-cirrus:
-    description: 'Use cirrus cache'
+  cache-provider:
+    description: 'gha or cirrus cache provider'
     required: true
+    options:
+    - gh
+    - cirrus
 runs:
   using: 'composite'
   steps:
@@ -32,7 +35,7 @@ runs:
         # which are set automatically when running on GitHub infra: https://docs.docker.com/build/cache/backends/gha/#synopsis
 
         # Use cirrus cache host
-        if [[ ${{ inputs.use-cirrus }} == 'true' ]]; then
+        if [[ ${{ inputs.cache-provider }} == 'cirrus' ]]; then
           url_args="url=${CIRRUS_CACHE_HOST},url_v2=${CIRRUS_CACHE_HOST}"
         else
           url_args=""
