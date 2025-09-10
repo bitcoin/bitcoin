@@ -3,7 +3,7 @@
 #include <chain.h>
 
 unsigned int GetPoSNextTargetRequired(const CBlockIndex* pindexLast,
-                                      const CBlockHeader* pblock,
+                                      int64_t nBlockTime,
                                       const Consensus::Params& params)
 {
     arith_uint256 bnLimit = UintToArith256(params.posLimit);
@@ -11,7 +11,7 @@ unsigned int GetPoSNextTargetRequired(const CBlockIndex* pindexLast,
     int64_t target_spacing = params.nStakeTargetSpacing;
     int64_t interval = params.DifficultyAdjustmentInterval();
 
-    int64_t actual_spacing = pblock->nTime - pindexLast->nTime;
+    int64_t actual_spacing = nBlockTime - pindexLast->GetMedianTimePast();
     if (actual_spacing < 0) actual_spacing = target_spacing;
 
     arith_uint256 bnNew;

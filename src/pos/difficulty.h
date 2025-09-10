@@ -3,13 +3,13 @@
 
 #include <arith_uint256.h>
 #include <consensus/params.h>
+#include <cstdint>
 
 class CBlockIndex;
-class CBlockHeader;
 
 /** Compute the next PoS target required based on previous block spacing. */
 unsigned int GetPoSNextTargetRequired(const CBlockIndex* pindexLast,
-                                      const CBlockHeader* pblock,
+                                      int64_t nBlockTime,
                                       const Consensus::Params& params);
 
 #endif // BITCOIN_POS_DIFFICULTY_H
