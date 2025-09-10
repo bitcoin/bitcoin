@@ -44,8 +44,13 @@ bool CheckStakeKernelHash(const CBlockIndex* pindexPrev, unsigned int nBits,
 
     // Derive a stake modifier using the shared modifier manager
     StakeModifierManager& manager = GetStakeModifierManager();
-    manager.ComputeNextModifier(pindexPrev, nTimeTx, params);
-    const uint256 stake_modifier = manager.GetModifier();
+    const uint256 prev_hash = pindexPrev->GetBlockHash();
+    auto mod = manager.GetModifier(prev_hash);
+    if (!mod) {
+        manager.UpdateOnConnect(pindexPrev, params);
+        mod = manager.GetModifier(prev_hash);
+    }
+    const uint256 stake_modifier = mod ? *mod : uint256{};
 
     // Mask times before hashing to reduce kernel search space
     const unsigned int nTimeTxMasked{nTimeTx & ~params.nStakeTimestampMask};
