@@ -653,6 +653,15 @@ public:
         }
         return false;
     }
+    bool isBlockInFlushedChain(const uint256& block_hash, int height) override
+    {
+        LOCK(::cs_main);
+        const CBlockIndex* last_flushed = chainman().ValidatedChainstate().GetLastFlushedBlock();
+        if (!last_flushed) return false;
+        if (last_flushed->nHeight < height) return false;
+        const CBlockIndex* ancestor = last_flushed->GetAncestor(height);
+        return ancestor && ancestor->GetBlockHash() == block_hash;
+    }
     RBFTransactionState isRBFOptIn(const CTransaction& tx) override
     {
         if (!m_node.mempool) return IsRBFOptInEmptyMempool(tx);
