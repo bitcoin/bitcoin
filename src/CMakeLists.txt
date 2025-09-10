@@ -292,6 +292,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/peerman_args.cpp
   node/psbt.cpp
   node/timeoffsets.cpp
+  node/stake_modifier_manager.cpp
   node/transaction.cpp
   node/txdownloadman_impl.cpp
   node/txorphanage.cpp

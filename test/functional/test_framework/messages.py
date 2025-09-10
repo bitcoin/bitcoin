@@ -53,6 +53,7 @@ NODE_NONE = 0
 NODE_NETWORK = (1 << 0)
 NODE_BLOOM = (1 << 2)
 NODE_WITNESS = (1 << 3)
+NODE_POS = (1 << 5)
 NODE_COMPACT_FILTERS = (1 << 6)
 NODE_NETWORK_LIMITED = (1 << 10)
 NODE_P2P_V2 = (1 << 11)
@@ -1902,6 +1903,40 @@ class msg_sendtxrcncl:
     def __repr__(self):
         return "msg_sendtxrcncl(version=%lu, salt=%lu)" %\
             (self.version, self.salt)
+
+class msg_getstakemod:
+    __slots__ = ("block_hash",)
+    msgtype = b"getstakemod"
+
+    def __init__(self, block_hash=0):
+        self.block_hash = block_hash
+
+    def deserialize(self, f):
+        self.block_hash = deser_uint256(f)
+
+    def serialize(self):
+        return ser_uint256(self.block_hash)
+
+    def __repr__(self):
+        return f"msg_getstakemod(block_hash={self.block_hash:064x})"
+
+class msg_stakemod:
+    __slots__ = ("block_hash", "modifier")
+    msgtype = b"stakemod"
+
+    def __init__(self, block_hash=0, modifier=0):
+        self.block_hash = block_hash
+        self.modifier = modifier
+
+    def deserialize(self, f):
+        self.block_hash = deser_uint256(f)
+        self.modifier = deser_uint256(f)
+
+    def serialize(self):
+        return ser_uint256(self.block_hash) + ser_uint256(self.modifier)
+
+    def __repr__(self):
+        return f"msg_stakemod(block_hash={self.block_hash:064x}, modifier={self.modifier:064x})"
 
 class TestFrameworkScript(unittest.TestCase):
     def test_addrv2_encode_decode(self):
