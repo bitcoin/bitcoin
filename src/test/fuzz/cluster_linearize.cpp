@@ -1010,16 +1010,6 @@ FUZZ_TARGET(clusterlin_linearize)
         // chunking is claimed to be optimal, which implies minimal chunks).
         if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
-        // Redo with a different RNG seed, to verify determinism of the optimal chunk order.
-        auto [lin2, opt2, cost2] = Linearize(depgraph, MaxOptimalLinearizationIters(depgraph.TxCount()), rng_seed ^ 1, old_linearization);
-        assert(opt2);
-        LinearizationChunking linchunk1(depgraph, linearization);
-        LinearizationChunking linchunk2(depgraph, lin2);
-        assert(linchunk1.NumChunksLeft() == linchunk2.NumChunksLeft());
-        for (size_t i = 0; i < linchunk1.NumChunksLeft(); ++i) {
-            assert(linchunk1.GetChunk(i) == linchunk2.GetChunk(i));
-        }
-
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
         auto read_chunking = ChunkLinearization(depgraph, read);

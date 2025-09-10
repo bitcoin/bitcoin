@@ -1233,13 +1233,13 @@ public:
     }
 
     /** Construct a topologically-valid linearization from the current forest state. */
-    std::vector<DepGraphIndex> GetLinearization() const noexcept
+    std::vector<DepGraphIndex> GetLinearization() noexcept
     {
         /** The output linearization. */
         std::vector<DepGraphIndex> ret;
         /** A heap with all chunks (by representative) that can currently be included, sorted by
          *  chunk feerate. */
-        std::vector<TxIdx> heap_chunks;
+        std::vector<std::pair<TxIdx, uint64_t>> heap_chunks;
         /** Information about chunks. Only used for chunk representatives, and counts the number
          *  of unmet dependencies this chunk has on other chunks (not including dependencies within
          *  the chunk itself). */
@@ -1258,27 +1258,27 @@ public:
         }
         // Construct a heap with all chunks that have no out-of-chunk dependencies.
         /** Comparison function for the heap. */
-        auto chunk_cmp_fn = [&](TxIdx a, TxIdx b) noexcept {
-            auto& chunk_a = m_tx_data[a];
-            auto& chunk_b = m_tx_data[b];
-            Assume(chunk_a.chunk_rep == a);
-            Assume(chunk_b.chunk_rep == b);
+        auto chunk_cmp_fn = [&](const std::pair<TxIdx, uint64_t>& a, const std::pair<TxIdx, uint64_t>& b) noexcept {
+            auto& chunk_a = m_tx_data[a.first];
+            auto& chunk_b = m_tx_data[b.first];
+            Assume(chunk_a.chunk_rep == a.first);
+            Assume(chunk_b.chunk_rep == b.first);
+            // First sort by chunk feerate.
             if (chunk_a.chunk_setinfo.feerate != chunk_b.chunk_setinfo.feerate) {
                 return chunk_a.chunk_setinfo.feerate < chunk_b.chunk_setinfo.feerate;
             }
-            // Compare the chunks' transaction sets lexicographically as tiebreaker.
-            auto a_first = chunk_a.chunk_setinfo.transactions.First();
-            auto b_first = chunk_b.chunk_setinfo.transactions.First();
-            Assume((a == b) == (a_first == b_first));
-            return a_first < b_first;
+            // Tie-break randomly.
+            if (a.second != b.second) return a.second < b.second;
+            // Lastly, tie-break by chunk representative.
+            return a.first < b.first;
         };
         for (TxIdx chunk_rep : chunk_reps) {
-            if (chunk_deps[chunk_rep] == 0) heap_chunks.push_back(chunk_rep);
+            if (chunk_deps[chunk_rep] == 0) heap_chunks.emplace_back(chunk_rep, m_rng.rand64());
         }
         std::make_heap(heap_chunks.begin(), heap_chunks.end(), chunk_cmp_fn);
         // Pop chunks off the heap, highest-feerate ones first.
         while (!heap_chunks.empty()) {
-            auto chunk_rep = heap_chunks.front();
+            auto [chunk_rep, _rnd] = heap_chunks.front();
             std::pop_heap(heap_chunks.begin(), heap_chunks.end(), chunk_cmp_fn);
             heap_chunks.pop_back();
             Assume(m_tx_data[chunk_rep].chunk_rep == chunk_rep);
@@ -1297,7 +1297,7 @@ public:
                         Assume(chunk_deps[chl_data.chunk_rep] > 0);
                         if (--chunk_deps[chl_data.chunk_rep] == 0) {
                             // Child chunk has no dependencies left. Add it to the heap.
-                            heap_chunks.push_back(chl_data.chunk_rep);
+                            heap_chunks.emplace_back(chl_data.chunk_rep, m_rng.rand64());
                             std::push_heap(heap_chunks.begin(), heap_chunks.end(), chunk_cmp_fn);
                         }
                     }
