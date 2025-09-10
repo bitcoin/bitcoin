@@ -25,11 +25,11 @@ public:
     bool IsActive() const;
 
 private:
-    /** Main thread loop. Gathers eligible UTXOs, checks stake kernels, builds
-     *  coinstake transactions and blocks, and broadcasts them with basic
-     *  back-off handling.
+    /** Main staking thread loop. Gathers eligible UTXOs, checks stake kernels,
+     *  builds coinstake transactions and blocks, and broadcasts them with
+     *  basic back-off handling.
      */
-    void ThreadStaker();
+    void ThreadStakeMiner();
 
     CWallet& m_wallet;
     std::thread m_thread;

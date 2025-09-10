@@ -935,9 +935,9 @@ static RPCHelpMan walletstaking()
 
             bool enable = request.params[0].get_bool();
             if (enable) {
-                pwallet->StartStaking();
+                pwallet->StartStakeMiner();
             } else {
-                pwallet->StopStaking();
+                pwallet->StopStakeMiner();
             }
             return UniValue(pwallet->IsStaking());
         }};

@@ -491,8 +491,8 @@ public:
         if (m_staker) m_staker->Stop();
     }
 
-    void StartStaking();
-    void StopStaking();
+    void StartStakeMiner();
+    void StopStakeMiner();
 
     bool IsCrypted() const;
     bool IsLocked() const override;
