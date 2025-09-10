@@ -66,8 +66,8 @@ Codesigning archives are special packages used in the release process. These arc
 
 ### Windows
 - `.zip` - Compressed archive containing the executable files
-- `-setup.exe` - Installer for Windows (signed version includes code signature)
-- `-debug.zip` - Debug symbols for Windows builds
+- `*-setup.exe` - Installer for Windows (signed version includes code signature)
+- `*-debug.zip` - Debug symbols for Windows builds
 
 ### macOS
 - `.dmg` - Disk image for macOS (signed version is notarized by Apple)
@@ -75,7 +75,7 @@ Codesigning archives are special packages used in the release process. These arc
 
 ### Linux
 - `.tar.gz` - Compressed archive for Linux distributions
-- `-debug.tar.gz` - Debug symbols for Linux builds
+- `*-debug.tar.gz` - Debug symbols for Linux builds
 
 ## Verification
 
