@@ -133,6 +133,10 @@ struct Params {
     int64_t nStakeMinAge{60 * 60};
     // Seconds between stake modifier recalculations
     int64_t nStakeModifierInterval{60 * 60};
+    // Target limit for proof-of-stake difficulty
+    uint256 posLimit;
+    // Target spacing between staked blocks
+    int64_t nStakeTargetSpacing{16};
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */
