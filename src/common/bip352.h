@@ -11,6 +11,7 @@
 #include <uint256.h>
 #include <addresstype.h>
 #include <coins.h>
+#include <serialize.h>
 
 #include <vector>
 #include <variant>
@@ -58,6 +59,8 @@ struct SilentPaymentOutput {
     XOnlyPubKey output;
     uint256 tweak;
     std::optional<CPubKey> label;
+
+    SERIALIZE_METHODS(SilentPaymentOutput, obj) { READWRITE(obj.tweak, obj.output); }
 };
 
 /**
