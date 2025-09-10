@@ -3252,8 +3252,10 @@ std::vector<COutput> CWallet::GetStakeableCoins(int min_depth, std::chrono::seco
 {
     std::vector<COutput> candidates;
     LOCK(cs_wallet);
-    for (const COutput& out : AvailableCoins(*this).All()) {
-        if (!out.spendable) continue;
+    CoinFilterParams params;
+    params.only_spendable = false;
+    for (const COutput& out : AvailableCoins(*this, /*coinControl=*/nullptr, /*feerate=*/std::nullopt, params).All()) {
+        if (!out.spendable && !out.solvable) continue;
         if (out.depth < min_depth) continue;
         if (out.txout.nValue < min_amount) continue;
         if (min_age.count() > 0) {
