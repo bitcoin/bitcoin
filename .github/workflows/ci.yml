@@ -439,6 +439,7 @@ jobs:
             fallback-runner: 'ubuntu-24.04-arm'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_arm.sh'
+            provider: 'gha'
 
           - name: 'ASan + LSan + UBSan + integer, no depends, USDT'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
@@ -513,7 +514,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          cache-provider: ${{ needs.runners.outputs.provider }}
+          cache-provider: ${{ matrix.provider || needs.runners.outputs.provider }}
 
       - name: Enable bpfcc script
         if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
