@@ -14,6 +14,7 @@ For a description of arguments recognized by test scripts, see
 
 import argparse
 from collections import deque
+from concurrent import futures
 import configparser
 import csv
 import datetime
@@ -706,15 +707,15 @@ class TestHandler:
     """
     Trigger the test scripts passed in via the list.
     """
-
     def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, use_term_control):
         assert num_tests_parallel >= 1
+        self.executor = futures.ThreadPoolExecutor(max_workers=num_tests_parallel)
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
         self.tmpdir = tmpdir
         self.test_list = test_list
         self.flags = flags
-        self.jobs = []
+        self.jobs = {}
         self.use_term_control = use_term_control
 
     def done(self):
@@ -731,47 +732,59 @@ class TestHandler:
             test_argv = test.split()
             testdir = "{}/{}_{}".format(self.tmpdir, re.sub(".py$", "", test_argv[0]), portseed)
             tmpdir_arg = ["--tmpdir={}".format(testdir)]
-            self.jobs.append((test,
-                              time.time(),
-                              subprocess.Popen([sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
-                                               text=True,
-                                               stdout=log_stdout,
-                                               stderr=log_stderr),
-                              testdir,
-                              log_stdout,
-                              log_stderr))
+
+            def proc_wait(task):
+                task[2].wait()
+                return task
+
+            task = [
+                test,
+                time.time(),
+                subprocess.Popen(
+                    [sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
+                    text=True,
+                    stdout=log_stdout,
+                    stderr=log_stderr,
+                ),
+                testdir,
+                log_stdout,
+                log_stderr,
+            ]
+            fut = self.executor.submit(proc_wait, task)
+            self.jobs[fut] = test
         if not self.jobs:
             raise IndexError('pop from empty list')
 
         # Print remaining running jobs when all jobs have been started.
         if not self.test_list:
-            print("Remaining jobs: [{}]".format(", ".join(j[0] for j in self.jobs)))
+            print("Remaining jobs: [{}]".format(", ".join(sorted(self.jobs.values()))))
 
         dot_count = 0
         while True:
             # Return all procs that have finished, if any. Otherwise sleep until there is one.
-            time.sleep(.5)
+            procs = futures.wait(self.jobs.keys(), timeout=.5, return_when=futures.FIRST_COMPLETED)
+            self.jobs = {fut: self.jobs[fut] for fut in procs.not_done}
             ret = []
-            for job in self.jobs:
-                (name, start_time, proc, testdir, log_out, log_err) = job
-                if proc.poll() is not None:
-                    log_out.seek(0), log_err.seek(0)
-                    [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
-                    log_out.close(), log_err.close()
-                    skip_reason = None
-                    if proc.returncode == TEST_EXIT_PASSED and stderr == "":
-                        status = "Passed"
-                    elif proc.returncode == TEST_EXIT_SKIPPED:
-                        status = "Skipped"
-                        skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1)
-                    else:
-                        status = "Failed"
-                    self.jobs.remove(job)
-                    if self.use_term_control:
-                        clearline = '\r' + (' ' * dot_count) + '\r'
-                        print(clearline, end='', flush=True)
-                    dot_count = 0
-                    ret.append((TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr, skip_reason))
+            for job in procs.done:
+                (name, start_time, proc, testdir, log_out, log_err) = job.result()
+
+                log_out.seek(0), log_err.seek(0)
+                [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
+                log_out.close(), log_err.close()
+                skip_reason = None
+                if proc.returncode == TEST_EXIT_PASSED and stderr == "":
+                    status = "Passed"
+                elif proc.returncode == TEST_EXIT_SKIPPED:
+                    status = "Skipped"
+                    skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1)
+                else:
+                    status = "Failed"
+
+                if self.use_term_control:
+                    clearline = '\r' + (' ' * dot_count) + '\r'
+                    print(clearline, end='', flush=True)
+                dot_count = 0
+                ret.append((TestResult(name, status, int(time.time() - start_time)), testdir, stdout, stderr, skip_reason))
             if ret:
                 return ret
             if self.use_term_control:
