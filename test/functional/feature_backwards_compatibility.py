@@ -162,10 +162,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         # Unload wallets and copy to older nodes:
         node_master_wallets_dir = os.path.join(node_master.datadir, "regtest/wallets")
-        node_v20_wallets_dir = os.path.join(node_v20.datadir, "regtest/wallets")
         node_v19_wallets_dir = os.path.join(node_v19.datadir, "regtest/wallets")
         node_v17_wallets_dir = os.path.join(node_v17.datadir, "regtest/wallets")
-        node_v16_wallets_dir = os.path.join(node_v16.datadir, "regtest")
         node_master.unloadwallet("w1")
         node_master.unloadwallet("w2")
         node_master.unloadwallet("w3")
@@ -207,8 +205,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         else:
             for node in legacy_nodes:
                 # Descriptor wallets appear to be corrupted wallets to old software
-                # and loadwallet is introduced in v0.17.0
-                #if node.version >= 170000 and node.version < 210000:
                 if node.version < 210000:
                     for wallet_name in ["w1", "w2", "w3"]:
                         assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node.loadwallet, wallet_name)
@@ -231,14 +227,6 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             wallet = node_v16.get_wallet_rpc("w2")
             info = wallet.getwalletinfo()
             assert info['keypoolsize'] == 1
-
-        # Create upgrade wallet in v0.16
-        self.restart_node(node_v16.index, extra_args=["-wallet=u1_v16"])
-        wallet = node_v16.get_wallet_rpc("u1_v16")
-        v16_addr = wallet.getnewaddress('')
-        v16_info = wallet.validateaddress(v16_addr)
-        v16_pubkey = v16_info['pubkey']
-        self.stop_node(node_v16.index)
 
         self.log.info("Test wallet upgrade path...")
         # Bitcoin creates hd wallets by default since v16, but Dash Core v17 does not.
