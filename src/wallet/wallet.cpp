@@ -3221,6 +3221,15 @@ void CWallet::postInitProcess()
     // Update wallet transactions with current mempool transactions.
     WITH_LOCK(cs_wallet, chain().requestMempoolTransactions(*this));
 
+    if (gArgs.IsArgSet("-reservebalance")) {
+        CAmount amount{0};
+        if (ParseMoney(gArgs.GetArg("-reservebalance", "0"), amount)) {
+            SetReserveBalance(amount);
+        } else {
+            LogPrintf("Invalid -reservebalance amount, ignoring\n");
+        }
+    }
+
     // Start staking thread if enabled
     if (gArgs.GetBoolArg("-staker", false) || gArgs.GetBoolArg("-staking", false)) {
         StartStakeMiner();
@@ -3230,7 +3239,7 @@ void CWallet::postInitProcess()
 void CWallet::StartStakeMiner()
 {
     if (!m_staker) {
-        m_staker = std::make_unique<BitGoldStaker>(*this);
+        m_staker = std::make_unique<Stake>(*this);
     }
     if (!m_staker->IsActive()) {
         m_staker->Start();

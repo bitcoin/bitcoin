@@ -28,7 +28,7 @@
 #include <util/time.h>
 #include <util/transaction_identifier.h>
 #include <util/ui_change_type.h>
-#include <wallet/bitgoldstaker.h>
+#include <wallet/stake.h>
 #include <wallet/crypter.h>
 #include <wallet/db.h>
 #include <wallet/scriptpubkeyman.h>
@@ -90,7 +90,6 @@ struct bilingual_str;
 
 namespace wallet {
 struct WalletContext;
-class BitGoldStaker;
 
 //! Explicitly delete the wallet.
 //! Blocks the current thread until the wallet is destructed.
@@ -548,7 +547,7 @@ public:
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 
     /** Proof-of-stake staker thread. */
-    std::unique_ptr<BitGoldStaker> m_staker;
+    std::unique_ptr<Stake> m_staker;
 
     /** Cached staking statistics. */
     StakingStats m_staking_stats GUARDED_BY(cs_wallet);

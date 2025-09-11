@@ -78,6 +78,10 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-staker", "Enable the BitGold staking thread (default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-staking", "Enable the BitGold staking thread (alias of -staker, default: false)", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 
+    argsman.AddArg("-reservebalance=<amt>",
+                   strprintf("Keep the specified amount (in %s) reserved and not used for staking (default: 0)", CURRENCY_UNIT),
+                   ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+
     argsman.AddArg("-unsafesqlitesync", "Set SQLite synchronous=OFF to disable waiting for the database to sync to disk. This is unsafe and can cause data loss and corruption. This option is only used by tests to improve their performance (default: false)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
 
     argsman.AddArg("-walletrejectlongchains", strprintf("Wallet will not create transactions that violate mempool chain limits (default: %u)", DEFAULT_WALLET_REJECT_LONG_CHAINS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::WALLET_DEBUG_TEST);
