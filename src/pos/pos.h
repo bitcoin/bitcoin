@@ -7,6 +7,10 @@
 #include <cstdint>
 #include <vector>
 
+// Note: uint256 is used in the Bitcoin codebase; include the project's
+// appropriate header when integrating (this file leaves it as-is to match style).
+// #include "uint256.h"  // add when integrating
+
 namespace pos {
 
 struct StakeInput {
