@@ -1,4 +1,5 @@
 #include <pos/stake.h>
+#include <pos/stakemodifier.h>
 #include <chain.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
@@ -143,6 +144,70 @@ BOOST_AUTO_TEST_CASE(stake_modifier_differs_per_input)
     BOOST_CHECK(CheckStakeKernelHash(&prev_index, nBits, hash_block_from, nTimeBlockFrom,
                                      100 * COIN, prevout2, nTimeTx, proof2, false, params));
     BOOST_CHECK(proof1 != proof2);
+}
+
+BOOST_AUTO_TEST_CASE(stake_modifier_refresh)
+{
+    uint256 prev_hash{1};
+    CBlockIndex prev_index;
+    prev_index.nHeight = 10;
+    prev_index.nTime = 1000;
+    prev_index.phashBlock = &prev_hash;
+
+    Consensus::Params params;
+    params.nStakeModifierInterval = 60; // short interval for test
+
+    // First retrieval computes from null modifier
+    uint256 mod1 = GetStakeModifier(&prev_index, 1000, params);
+    uint256 exp1 = ComputeStakeModifier(&prev_index, uint256{});
+    BOOST_CHECK_EQUAL(mod1, exp1);
+
+    // Within interval, modifier should not update even if previous block changes
+    CBlockIndex next_index = prev_index;
+    next_index.nHeight = 11;
+    next_index.nTime = 1016;
+    uint256 mod2 = GetStakeModifier(&next_index, 1030, params);
+    BOOST_CHECK_EQUAL(mod1, mod2);
+
+    // After interval passes, modifier updates using previous value
+    uint256 mod3 = GetStakeModifier(&next_index, 1061, params);
+    uint256 exp3 = ComputeStakeModifier(&next_index, mod1);
+    BOOST_CHECK_EQUAL(mod3, exp3);
+    BOOST_CHECK(mod3 != mod1);
+}
+
+BOOST_AUTO_TEST_CASE(coinstake_structure)
+{
+    // Valid coinstake transaction in second position
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].prevout.SetNull();
+    coinbase.vout.resize(1);
+
+    CMutableTransaction coinstake;
+    coinstake.vin.resize(1);
+    coinstake.vout.resize(2);
+    coinstake.vout[0].SetNull();
+
+    CBlock block;
+    block.vtx.emplace_back(MakeTransactionRef(coinbase));
+    block.vtx.emplace_back(MakeTransactionRef(coinstake));
+    BOOST_CHECK(IsProofOfStake(block));
+
+    // Missing coinstake
+    CBlock block_no;
+    block_no.vtx.emplace_back(MakeTransactionRef(coinbase));
+    BOOST_CHECK(!IsProofOfStake(block_no));
+
+    // Bad coinstake first output not empty
+    CMutableTransaction bad;
+    bad.vin.resize(1);
+    bad.vout.resize(2);
+    bad.vout[0].nValue = 1; // non-null output breaks coinstake rules
+    CBlock block_bad;
+    block_bad.vtx.emplace_back(MakeTransactionRef(coinbase));
+    block_bad.vtx.emplace_back(MakeTransactionRef(bad));
+    BOOST_CHECK(!IsProofOfStake(block_bad));
 }
 
 BOOST_AUTO_TEST_CASE(height1_requires_coinstake)
