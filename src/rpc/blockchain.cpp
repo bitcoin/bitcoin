@@ -38,6 +38,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <serialize.h>
+#include <pos/stake.h>
 #include <streams.h>
 #include <sync.h>
 #include <txdb.h>
@@ -185,6 +186,7 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
     result.pushKV("strippedsize", (int)::GetSerializeSize(TX_NO_WITNESS(block)));
     result.pushKV("size", (int)::GetSerializeSize(TX_WITH_WITNESS(block)));
     result.pushKV("weight", (int)::GetBlockWeight(block));
+    result.pushKV("pos", IsProofOfStake(block));
     UniValue txs(UniValue::VARR);
 
     switch (verbosity) {
@@ -767,6 +769,7 @@ static RPCHelpMan getblock()
                     {RPCResult::Type::NUM, "size", "The block size"},
                     {RPCResult::Type::NUM, "strippedsize", "The block size excluding witness data"},
                     {RPCResult::Type::NUM, "weight", "The block weight as defined in BIP 141"},
+                    {RPCResult::Type::BOOL, "pos", "true if this is a proof-of-stake block"},
                     {RPCResult::Type::NUM, "height", "The block height or index"},
                     {RPCResult::Type::NUM, "version", "The block version"},
                     {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
@@ -1338,6 +1341,10 @@ RPCHelpMan getblockchaininfo()
                 {RPCResult::Type::STR_HEX, "bits", "nBits: compact representation of the block difficulty target"},
                 {RPCResult::Type::STR_HEX, "target", "The difficulty target"},
                 {RPCResult::Type::NUM, "difficulty", "the current difficulty"},
+                {RPCResult::Type::BOOL, "pos", "true if proof-of-stake validation is enabled"},
+                {RPCResult::Type::NUM, "pos_activation_height", "height at which proof-of-stake activates"},
+                {RPCResult::Type::NUM, "pos_target_spacing", "target spacing between staked blocks in seconds"},
+                {RPCResult::Type::STR_HEX, "pos_limit", "proof-of-stake difficulty limit"},
                 {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
@@ -1378,6 +1385,11 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("difficulty", GetDifficulty(tip));
+    const Consensus::Params& consensus = chainman.GetConsensus();
+    obj.pushKV("pos", consensus.fEnablePoS);
+    obj.pushKV("pos_activation_height", consensus.posActivationHeight);
+    obj.pushKV("pos_target_spacing", consensus.nStakeTargetSpacing);
+    obj.pushKV("pos_limit", consensus.posLimit.GetHex());
     obj.pushKV("time", tip.GetBlockTime());
     obj.pushKV("mediantime", tip.GetMedianTimePast());
     obj.pushKV("verificationprogress", chainman.GuessVerificationProgress(&tip));
