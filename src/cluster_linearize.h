@@ -613,34 +613,29 @@ public:
  * In addition, this allows refining the algorithm flow into:
  *
  * - Construct an initial topological spanning forest for the graph:
- *   - Start with an empty graph.
- *   - Iterate over the transactions X of the cluster in a topological order:
- *     - Add X to the graph, becoming a new singleton chunk.
- *     - Add all dependencies of X to the graph, initially all inactive.
- *     - Make the forest topological by running an upward merging sequence on X.
+ *   - Start with graph with all dependencies inactive (i.e., each transaction is a singleton
+ *     chunk).
+ *   - Make the graph topological by randomly picking chunks, and merging them (with their
+ *     lowest-feerate dependency, or highest-feerate dependee) when possible, until no such chunks
+ *     remain.
  * - Loop until optimal or time runs out:
  *   - Pick a dependency D to deactivate among those whose would-be top chunk has strictly higher
  *     feerate than its would-be bottom chunk.
  *   - Deactivate D, causing the chunk it is in to split into top T and bottom B.
- *   - Make the forest topological by running an upward merging sequence on T, and a downward
- *     merging sequence on B.
+ *   - Merge T with its lowest-feerate dependency, if any. Repeat the same with the merged result.
+ *   - Merge B with its highest-feerate dependee, if any. Repeat the same with the merged result.
  * - Output the chunks from high to low feerate, each internally sorted topologically.
  *
- * Where an upward merging sequence on a transaction X is defined as:
- * - Loop:
- *   - Find the chunk C which X is in.
- *   - Iterate over all other chunks which C has a dependency on, and remember O, the
- *     lowest-feerate one among them.
- *   - If O has higher feerate than C, stop.
- *   - Activate a dependency from C to O.
+ * Instead of starting with an empty graph and making it topological directly, it is possible to
+ * bootstrap from an existing linearization:
+ * - Start with an empty graph.
+ * - For each transaction t in the existing linearization:
+ *   - Add the transaction as a singleton chunk to the graph.
+ *   - Merge the newly created chunk with its lowest-feerate dependency, if any. Repeat with the
+ *     merged result.
  *
- * Analogously, a downward merging sequence on a transaction X is defined as:
- * - Loop:
- *   - Find the chunk C which X is in.
- *   - Iterate over all other chunks which have a dependency on C, and remember O, the
- *     highest-feerate one among them.
- *   - If O has lower feerate than C, stop.
- *   - Activate a dependency from O to C.
+ * This guarantees an initial, topological, state whose output linearization is at least as good
+ * (in the convexified feerate diagram sense) as the input existing linearization bootstrapped from.
  *
  * What remains to be specified are two heuristics:
  *
@@ -1019,19 +1014,6 @@ private:
         }
     }
 
-    void MarkChunksSuboptimal() noexcept
-    {
-        for (auto tx : m_transactions) {
-            auto& tx_data = m_tx_data[tx];
-            if (tx_data.chunk_rep == tx && !tx_data.suboptimal) {
-                tx_data.suboptimal = true;
-                m_suboptimal_chunks.push_back(tx);
-            } else if (tx_data.chunk_rep != tx) {
-                Assume(!tx_data.suboptimal);
-            }
-        }
-    }
-
 public:
     /** Construct a spanning forest for the given DepGraph, with every transaction in its own chunk
      *  (not topological). */
@@ -1068,20 +1050,25 @@ public:
             }
         }
         // Account for the cost of producing linearization.
-        m_cost += 2 * m_dep_data.size() + 27 * num_transactions;
+        m_cost += 2 * m_dep_data.size() + 30 * num_transactions;
     }
 
-    /** Load an existing linearization. Must be called immediately after constructor. The result is topological. */
+    /** Load an existing linearization. Must be called immediately after constructor. The result is
+     *  topological if the linearization is valid. Otherwise, MakeTopological still needs to be
+     *  called. */
     void LoadLinearization(std::span<const DepGraphIndex> old_linearization) noexcept
     {
         // Add transactions one by one, in order of existing linearization.
         for (DepGraphIndex tx : old_linearization) {
-            // Start a merge sequence on the new transaction to make the graph topological up to there.
-            MergeSequence<false>(tx);
+            auto chunk_rep = m_tx_data[tx].chunk_rep;
+            while (true) {
+                chunk_rep = MergeStep<false>(chunk_rep);
+                if (chunk_rep == TxIdx(-1)) break;
+            }
         }
     }
 
-    /** Make state topological. */
+    /** Make state topological. Can be called after constructing, or after LoadLinearization. */
     void MakeTopological() noexcept
     {
         std::vector<TxIdx> candidate_chunks;
@@ -1125,16 +1112,25 @@ public:
                 tx_data.suboptimal = 0;
             }
         }
-        MarkChunksSuboptimal();
     }
 
+    /** Initialize the data structure for optimization. It must be topological already. */
     void StartOptimizing() noexcept
     {
-        // Randomize the initial order of suboptimal chunks in the queue.
-        for (TxIdx i = 0; i < m_suboptimal_chunks.size(); ++i) {
-            TxIdx j = i + m_rng.randrange<TxIdx>(m_suboptimal_chunks.size() - i);
-            if (i != j) std::swap(m_suboptimal_chunks[i], m_suboptimal_chunks[j]);
-            m_cost += 3;
+        // Mark chunks suboptimal.
+        for (auto tx : m_transactions) {
+            auto& tx_data = m_tx_data[tx];
+            Assume(!tx_data.suboptimal);
+            if (tx_data.chunk_rep == tx) {
+                tx_data.suboptimal = true;
+                m_suboptimal_chunks.push_back(tx);
+                // Randomize the initial order of suboptimal chunks in the queue.
+                TxIdx j = m_rng.randrange<TxIdx>(m_suboptimal_chunks.size());
+                if (j != m_suboptimal_chunks.size() - 1) {
+                    std::swap(m_suboptimal_chunks.back(), m_suboptimal_chunks[j]);
+                }
+                m_cost += 3;
+            }
         }
     }
 
@@ -1286,6 +1282,7 @@ public:
         auto new_top_rep = m_tx_data[candidate_dep_data.parent].chunk_rep;
         auto new_bottom_rep = m_tx_data[candidate_dep_data.child].chunk_rep;
         auto new_rep = MergeChunks(new_bottom_rep, new_top_rep);
+        m_cost += 2;
         if (new_rep == TxIdx(-1)) {
             // No new dependency was activated, and thus we have found a way to split the
             // chunk. Add the created smaller chunks to the queue in random order.
@@ -1301,7 +1298,8 @@ public:
         return true;
     }
 
-    /** Construct a topologically-valid linearization from the current forest state. */
+    /** Construct a topologically-valid linearization from the current forest state. Must be
+     *  topological. */
     std::vector<DepGraphIndex> GetLinearization() noexcept
     {
         /** The output linearization. */
