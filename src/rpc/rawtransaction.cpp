@@ -659,6 +659,43 @@ static RPCHelpMan combinerawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Missing transactions");
     }
 
+    // Check that all transactions are the same (have the same inputs and outputs)
+    // to ensure we're not silently ignoring unrelated transactions
+    for (unsigned int idx = 1; idx < txVariants.size(); idx++) {
+        const CMutableTransaction& tx = txVariants[idx];
+        const CMutableTransaction& first_tx = txVariants[0];
+        
+        // Check that the number of inputs and outputs match
+        if (tx.vin.size() != first_tx.vin.size() || tx.vout.size() != first_tx.vout.size()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, 
+                strprintf("Transaction %d is unrelated to the first transaction (different number of inputs/outputs)", idx));
+        }
+        
+        // Check that all inputs refer to the same outpoints
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            if (tx.vin[i].prevout != first_tx.vin[i].prevout || 
+                tx.vin[i].nSequence != first_tx.vin[i].nSequence) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, 
+                    strprintf("Transaction %d has different inputs than the first transaction", idx));
+            }
+        }
+        
+        // Check that all outputs are the same
+        for (unsigned int i = 0; i < tx.vout.size(); i++) {
+            if (tx.vout[i].nValue != first_tx.vout[i].nValue || 
+                tx.vout[i].scriptPubKey != first_tx.vout[i].scriptPubKey) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, 
+                    strprintf("Transaction %d has different outputs than the first transaction", idx));
+            }
+        }
+        
+        // Check version and locktime
+        if (tx.version != first_tx.version || tx.nLockTime != first_tx.nLockTime) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, 
+                strprintf("Transaction %d has different version or locktime than the first transaction", idx));
+        }
+    }
+
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
     CMutableTransaction mergedTx(txVariants[0]);

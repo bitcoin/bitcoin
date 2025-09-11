@@ -91,6 +91,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.decoderawtransaction_tests()
         self.transaction_version_number_tests()
         self.getrawtransaction_verbosity_tests()
+        self.combinerawtransaction_tests()
 
     def getrawtransaction_tests(self):
         tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
@@ -496,6 +497,51 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = tx.serialize().hex()
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0xffffffff)
+
+    def combinerawtransaction_tests(self):
+        self.log.info("Test combinerawtransaction RPC")
+        
+        # Create two completely unrelated transactions
+        # Transaction 1: send to an address
+        addr1 = self.nodes[0].getnewaddress()
+        inputs1 = []
+        # Find an unspent output
+        unspent = self.nodes[0].listunspent()
+        if len(unspent) > 0:
+            inputs1 = [{'txid': unspent[0]['txid'], 'vout': unspent[0]['vout']}]
+        else:
+            # Fund the wallet if needed
+            self.generatetoaddress(self.nodes[0], 101, self.nodes[0].getnewaddress())
+            unspent = self.nodes[0].listunspent()
+            inputs1 = [{'txid': unspent[0]['txid'], 'vout': unspent[0]['vout']}]
+        
+        outputs1 = {addr1: unspent[0]['amount'] - Decimal('0.001')}
+        rawtx1 = self.nodes[0].createrawtransaction(inputs1, outputs1)
+        
+        # Transaction 2: completely different inputs and outputs
+        addr2 = self.nodes[0].getnewaddress()
+        inputs2 = [{'txid': unspent[1]['txid'], 'vout': unspent[1]['vout']}] if len(unspent) > 1 else [{'txid': unspent[0]['txid'], 'vout': unspent[0]['vout'] + 1}]
+        outputs2 = {addr2: Decimal('0.5')}
+        rawtx2 = self.nodes[0].createrawtransaction(inputs2, outputs2)
+        
+        # Test: combining unrelated transactions should fail with appropriate error
+        self.log.info("Test that combining unrelated transactions throws an error")
+        assert_raises_rpc_error(-3, "unrelated", 
+                                self.nodes[0].combinerawtransaction, [rawtx1, rawtx2])
+        
+        # Create two partially signed versions of the same transaction for valid test
+        # This tests that valid combinations still work
+        self.log.info("Test that combining related transactions still works")
+        addr3 = self.nodes[0].getnewaddress()
+        inputs3 = [{'txid': unspent[0]['txid'], 'vout': unspent[0]['vout']}]
+        outputs3 = {addr3: unspent[0]['amount'] - Decimal('0.001')}
+        rawtx3 = self.nodes[0].createrawtransaction(inputs3, outputs3)
+        
+        # For a valid test, we'd normally sign with different keys here, but
+        # for this test we just verify that identical transactions can be combined
+        # without error (even if it doesn't add new signatures)
+        combined = self.nodes[0].combinerawtransaction([rawtx3, rawtx3])
+        assert_equal(combined, rawtx3)  # Should return the same transaction
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()
