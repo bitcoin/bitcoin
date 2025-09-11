@@ -10,6 +10,7 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/time.h>
+#include <vector>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -70,6 +71,7 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransactionRef> vtx;
+    std::vector<unsigned char> vchBlockSig;
 
     // Memory-only flags for caching expensive checks
     mutable bool fChecked;                            // CheckBlock()
@@ -90,12 +92,22 @@ public:
     SERIALIZE_METHODS(CBlock, obj)
     {
         READWRITE(AsBase<CBlockHeader>(obj), obj.vtx);
+        try {
+            READWRITE(obj.vchBlockSig);
+        } catch (const std::ios_base::failure&) {
+            if (ser_action.ForRead()) {
+                const_cast<std::vector<unsigned char>&>(obj.vchBlockSig).clear();
+            } else {
+                throw;
+            }
+        }
     }
 
     void SetNull()
     {
         CBlockHeader::SetNull();
         vtx.clear();
+        vchBlockSig.clear();
         fChecked = false;
         m_checked_witness_commitment = false;
         m_checked_merkle_root = false;

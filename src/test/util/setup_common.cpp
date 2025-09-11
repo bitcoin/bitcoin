@@ -400,6 +400,7 @@ CBlock TestChain100Setup::CreateBlock(
     RegenerateCommitments(block, *Assert(m_node.chainman));
 
     block.nNonce = 0;
+    block.vchBlockSig.clear();
 
     return block;
 }
