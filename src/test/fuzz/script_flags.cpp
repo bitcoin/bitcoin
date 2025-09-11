@@ -20,6 +20,7 @@ static DataStream& operator>>(DataStream& ds, script_verify_flags& f)
     script_verify_flags::value_type n{0};
     ds >> n;
     f = script_verify_flags::from_int(n);
+    assert(n == f.as_int());
     return ds;
 }
 
@@ -32,6 +33,8 @@ FUZZ_TARGET(script_flags)
 
         script_verify_flags verify_flags;
         ds >> verify_flags;
+
+        assert(verify_flags == script_verify_flags::from_int(verify_flags.as_int()));
 
         if (!IsValidFlagCombination(verify_flags)) return;
 
