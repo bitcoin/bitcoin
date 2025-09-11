@@ -477,6 +477,7 @@ jobs:
             file-env: './ci/test/00_setup_env_native_previous_releases.sh'
 
           - name: 'CentOS, depends, gui'
+            if: ${{ needs.runners.outputs.use-cirrus-runners == 'true' }} # Skip this on non-Cirrus runners as it runs out of space
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
