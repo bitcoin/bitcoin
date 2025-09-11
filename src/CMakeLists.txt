@@ -325,6 +325,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   rpc/server_util.cpp
   rpc/signmessage.cpp
   rpc/txoutproof.cpp
+  $<$<TARGET_EXISTS:bitcoin_wallet>:rpc/staking.cpp>
   script/sigcache.cpp
   signet.cpp
   stake/priority.cpp
