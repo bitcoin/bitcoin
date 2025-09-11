@@ -33,11 +33,12 @@ from test_framework.util import (
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 7
+        self.num_nodes = 8
         # Add new version after each release:
         self.extra_args = [
             ["-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks
             ["-nowallet", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-whitelist=noban@127.0.0.1"], # v21.1.1 - supports descriptor wallets
             ["-nowallet", "-whitelist=noban@127.0.0.1"], # v20.1.1 - last legacy-only version, no descriptor wallets
             ["-nowallet", "-whitelist=noban@127.0.0.1"], # v19.3.0
             ["-nowallet", "-whitelist=noban@127.0.0.1"], # v18.2.2
@@ -54,6 +55,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
+            21010100,
             20010100,
             19030000,
             18020200,
@@ -78,7 +80,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v17 = self.nodes[self.num_nodes - 2]
         node_v16 = self.nodes[self.num_nodes - 1]
 
-        legacy_nodes = self.nodes[2:]
+        legacy_nodes = self.nodes[3:]
 
         self.generatetoaddress(node_miner, COINBASE_MATURITY + 1, node_miner.getnewaddress())
 

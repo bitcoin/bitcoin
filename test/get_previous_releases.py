@@ -20,6 +20,18 @@ import sys
 import hashlib
 
 SHA256_SUMS = {
+    "df54756e801d85d2e37ea76ff001692e897dd39b3479a5c7c4a6530da04ea4a5":  "dashcore-21.1.1-aarch64-linux-gnu.tar.gz",
+    "6f22cef0e4bc9411fbd134878efba5c53a946d5bf49aa322668c6c51191905fd":  "dashcore-21.1.1-arm-linux-gnueabihf.tar.gz",
+    "cd6543c015a6b811ae2efe33036516155940df836e871f9608b3e8869077dc71":  "dashcore-21.1.1-arm64-apple-darwin.dmg",
+    "389d7dc821b20151b7b1d48d254ece787f8d1a47f5e8e5b6c2219966c77cc88c":  "dashcore-21.1.1-arm64-apple-darwin.tar.gz",
+    "84f14a1029d663a93b025d2a048be48369179d68c2345475c4334366fbbc429c":  "dashcore-21.1.1-riscv64-linux-gnu.tar.gz",
+    "4f021df967029d154480df390f1c5d2d8252a6c3855df27bc0d63fb17ff8f1de":  "dashcore-21.1.1-win64-setup.exe",
+    "47b815bac18676b0640ee3347aee8220402d0b60d39446704e9b4d4b1e0fc117":  "dashcore-21.1.1-win64.zip",
+    "f232337045b54474769162c8c1ec6897eb5cefa4dfc084f92533febf92db867d":  "dashcore-21.1.1-x86_64-apple-darwin.dmg",
+    "0766aa341354e5e098975f1a530e9d15c4558b46c02dc356f02247c83165a0ef":  "dashcore-21.1.1-x86_64-apple-darwin.tar.gz",
+    "c3157d4a82a3cb7c904a68e827bd1e629854fefcc0dcaf1de4343a810a190bf5":  "dashcore-21.1.1-x86_64-linux-gnu.tar.gz",
+    "49ab5a9b71dd3e16afaf6b9ad0ccdedef23098b0cf9ab822336a7fbc033cc3e8":  "dashcore-21.1.1.tar.gz",
+    #
     "96e363f8042cd50f27c908d46fa8bf0b4ab928c6320df60fb4e16077fa95654f":  "dashcore-20.1.1-aarch64-linux-gnu.tar.gz",
     "159fe58921a9ce731b0529c86dae14f8d2b5ea0522c5a605ce4e80c105b15b73":  "dashcore-20.1.1-arm-linux-gnueabihf.tar.gz",
     "d6d87100363bf91c234fd010ef309c8d1240e2cf79caabebfe3ae3926772befb":  "dashcore-20.1.1-arm64-apple-darwin.dmg",
