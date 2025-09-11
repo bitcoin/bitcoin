@@ -20,17 +20,17 @@ import sys
 import hashlib
 
 SHA256_SUMS = {
-    "d1f7121a7d7bdd4077709284076860389d6a0f4481a934ad9acb85cae3d7b83e":  "dashcore-20.0.1-aarch64-linux-gnu.tar.gz",
-    "37375229e5ab18d7050b729fb016df24acdd72d60bc3fa074270d89030a27827":  "dashcore-20.0.1-arm-linux-gnueabihf.tar.gz",
-    "ab530f72d2bfbfcd7fca0644e3ea5c5b279e2204fe50ff7bd9cc452a0d413c65":  "dashcore-20.0.1-arm64-apple-darwin.dmg",
-    "8f4b55e4a3d6bb38a0c1f51ece14f387fd4dcffa000aeecfbbd1f751da8b4446":  "dashcore-20.0.1-arm64-apple-darwin.tar.gz",
-    "1d9cdb00d93e8babe9f54d0ecb04c55f2cd6fd6cfaa85466aa7f95a6976d040d":  "dashcore-20.0.1-riscv64-linux-gnu.tar.gz",
-    "f722954c38d5b18f8290e41ca9dd833929258dcf68c9396cbbc81d241285947b":  "dashcore-20.0.1-win64-setup.exe",
-    "bb6d59a3eadac316e86e073a9f7ca4d28f3a2e8a59b7109d509a7368675a6f5f":  "dashcore-20.0.1-win64.zip",
-    "5373a84f49e4f76bd04987806f5fcde0b537fa1408e1f98370680f3f5134970f":  "dashcore-20.0.1-x86_64-apple-darwin.dmg",
-    "0c9344961ae5800f54ffc90af63826cdbf61acc5c442f3fab6527d528f2d9323":  "dashcore-20.0.1-x86_64-apple-darwin.tar.gz",
-    "7c82bdbd1c2de515d6c7245886d8c0b0044a4a9b6f74166b8d58c82cd4ae3270":  "dashcore-20.0.1-x86_64-linux-gnu.tar.gz",
-    "bb898a8e4c54fd5989f114673e1fee5116bf6ffa257c63397993035c390de806":  "dashcore-20.0.1.tar.gz",
+    "96e363f8042cd50f27c908d46fa8bf0b4ab928c6320df60fb4e16077fa95654f":  "dashcore-20.1.1-aarch64-linux-gnu.tar.gz",
+    "159fe58921a9ce731b0529c86dae14f8d2b5ea0522c5a605ce4e80c105b15b73":  "dashcore-20.1.1-arm-linux-gnueabihf.tar.gz",
+    "d6d87100363bf91c234fd010ef309c8d1240e2cf79caabebfe3ae3926772befb":  "dashcore-20.1.1-arm64-apple-darwin.dmg",
+    "62596a2537b74c1e17cb5c89ab45a662014a909f1dfd157c3a5c7cd85df69d6c":  "dashcore-20.1.1-arm64-apple-darwin.tar.gz",
+    "143b87ddcaa45e58c9fbd97d29d41cab3f2eb519a4fc89759857db1bc2fb3f19":  "dashcore-20.1.1-riscv64-linux-gnu.tar.gz",
+    "e66b83266e2361db6562501d9984c97cbcf249a5531c82228f5d7004178ec39e":  "dashcore-20.1.1-win64-setup.exe",
+    "e42c0273dd23652306b9b9c78040fe3dc9231680fb6aea2d7d88cc2794a534b1":  "dashcore-20.1.1-win64.zip",
+    "f8ce10ea2ba353260cf2b02ca308e7f0756525ae4966e7444d04096ccfbde886":  "dashcore-20.1.1-x86_64-apple-darwin.dmg",
+    "2ca3b24ad0008c789ee752eaae67105208ab2448c3bf1cc57b3ee84bf787bb27":  "dashcore-20.1.1-x86_64-apple-darwin.tar.gz",
+    "825e902373f2eb84301111b16899fbfe1b099f16dd6bbb460b51af2bab301872":  "dashcore-20.1.1-x86_64-linux-gnu.tar.gz",
+    "7cf315093a1d79a79837926e5eccd17c8d40b3ee124ad700484811a38e22fe78":  "dashcore-20.1.1.tar.gz",
     #
     "a4b555b47f5f9a5a01fc5d3b543731088bd10a65dd7fa81fb552818146e424b5":  "dashcore-19.3.0-aarch64-linux-gnu.tar.gz",
     "531bb188c1aea808ef6f3533d71182a51958136f6e43d9fcadaef1a5fcdd0468":  "dashcore-19.3.0-osx.dmg",

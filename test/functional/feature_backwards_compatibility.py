@@ -38,7 +38,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.extra_args = [
             ["-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks
             ["-nowallet", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
-            ["-nowallet", "-whitelist=noban@127.0.0.1"], # v20.0.1 - last legacy-only version, no descriptor wallets
+            ["-nowallet", "-whitelist=noban@127.0.0.1"], # v20.1.1 - last legacy-only version, no descriptor wallets
             ["-nowallet", "-whitelist=noban@127.0.0.1"], # v19.3.0
             ["-nowallet", "-whitelist=noban@127.0.0.1"], # v18.2.2
             ["-nowallet", "-whitelist=127.0.0.1"], # v0.17.0.3
@@ -54,7 +54,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
-            20000100,
+            20010100,
             19030000,
             18020200,
             170003,
@@ -195,7 +195,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         assert_equal(len(txs), 1)
                     elif wallet_name == "w2":
                         assert(info['private_keys_enabled'] == False)
-                        if node.version > 20000100:
+                        if node.version > 20999999:
                             assert info['keypoolsize'] > 0
                     elif wallet_name == "w3":
                         assert(info['private_keys_enabled'] == True)
