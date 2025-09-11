@@ -123,20 +123,26 @@ struct Params {
         return std::chrono::seconds{nPowTargetSpacing};
     }
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
-    // Height at which proof-of-stake activates
+    // Block height at which proof-of-stake activates (blocks)
     int posActivationHeight{1};
     // Enable proof-of-stake validation when true
     bool fEnablePoS{false};
-    // Required timestamp mask for staked blocks
+    // Timestamp mask for staked blocks (seconds)
     uint32_t nStakeTimestampMask{0xF};
-    // Minimum coin age required for staking
+    // Minimum coin age required for staking (seconds)
     int64_t nStakeMinAge{60 * 60};
-    // Seconds between stake modifier recalculations
+    // Interval between stake modifier recalculations (seconds)
     int64_t nStakeModifierInterval{60 * 60};
-    // Target limit for proof-of-stake difficulty
+    // Minimum confirmations required for staking (blocks)
+    int nStakeMinConfirmations{80};
+    // Upper target limit for proof-of-stake difficulty
     uint256 posLimit;
-    // Target spacing between staked blocks
-    int64_t nStakeTargetSpacing{16};
+    // Lower target limit for proof-of-stake difficulty
+    uint256 posLimitLower;
+    // Target spacing between staked blocks (seconds)
+    int64_t nStakeTargetSpacing{8 * 60};
+    // Maximum allowed coin supply (satoshis)
+    uint64_t nMaximumSupply{0};
     /** The best chain should have at least this much work */
     uint256 nMinimumChainWork;
     /** By default assume that the signatures in ancestors of this block are valid */
