@@ -496,8 +496,8 @@ public:
     void SetClusterQuality(int level, QualityLevel old_quality, ClusterSetIndex old_index, QualityLevel new_quality) noexcept;
     /** Get the index of the top level ClusterSet (staging if it exists, main otherwise). */
     int GetTopLevel() const noexcept { return m_staging_clusterset.has_value(); }
-    /** Get the specified level (staging if it exists and main_only is not specified, main otherwise). */
-    int GetSpecifiedLevel(bool main_only) const noexcept { return m_staging_clusterset.has_value() && !main_only; }
+    /** Get the specified level (staging if it exists and level is TOP, main otherwise). */
+    int GetSpecifiedLevel(Level level) const noexcept { return level == Level::TOP && m_staging_clusterset.has_value(); }
     /** Get a reference to the ClusterSet at the specified level (which must exist). */
     ClusterSet& GetClusterSet(int level) noexcept;
     const ClusterSet& GetClusterSet(int level) const noexcept;
@@ -600,18 +600,18 @@ public:
     void AbortStaging() noexcept final;
     bool HaveStaging() const noexcept final { return m_staging_clusterset.has_value(); }
 
-    bool Exists(const Ref& arg, bool main_only = false) noexcept final;
+    bool Exists(const Ref& arg, Level level) noexcept final;
     FeePerWeight GetMainChunkFeerate(const Ref& arg) noexcept final;
     FeePerWeight GetIndividualFeerate(const Ref& arg) noexcept final;
-    std::vector<Ref*> GetCluster(const Ref& arg, bool main_only = false) noexcept final;
-    std::vector<Ref*> GetAncestors(const Ref& arg, bool main_only = false) noexcept final;
-    std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept final;
-    std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept final;
-    std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept final;
-    GraphIndex GetTransactionCount(bool main_only = false) noexcept final;
-    bool IsOversized(bool main_only = false) noexcept final;
+    std::vector<Ref*> GetCluster(const Ref& arg, Level level) noexcept final;
+    std::vector<Ref*> GetAncestors(const Ref& arg, Level level) noexcept final;
+    std::vector<Ref*> GetDescendants(const Ref& arg, Level level) noexcept final;
+    std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, Level level) noexcept final;
+    std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, Level level) noexcept final;
+    GraphIndex GetTransactionCount(Level level) noexcept final;
+    bool IsOversized(Level level) noexcept final;
     std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept final;
-    GraphIndex CountDistinctClusters(std::span<const Ref* const> refs, bool main_only = false) noexcept final;
+    GraphIndex CountDistinctClusters(std::span<const Ref* const> refs, Level level) noexcept final;
     std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept final;
     std::vector<Ref*> Trim() noexcept final;
 
@@ -1790,11 +1790,11 @@ void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
     if (clusterset.m_oversized == false) clusterset.m_oversized = std::nullopt;
 }
 
-bool TxGraphImpl::Exists(const Ref& arg, bool main_only) noexcept
+bool TxGraphImpl::Exists(const Ref& arg, Level level_select) noexcept
 {
     if (GetRefGraph(arg) == nullptr) return false;
     Assume(GetRefGraph(arg) == this);
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     // Make sure the transaction isn't scheduled for removal.
     ApplyRemovals(level);
     auto cluster = FindCluster(GetRefIndex(arg), level);
@@ -1870,13 +1870,13 @@ void Cluster::MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept
     }
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestors(const Ref& arg, bool main_only) noexcept
+std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestors(const Ref& arg, Level level_select) noexcept
 {
     // Return the empty vector if the Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
     // Ancestry cannot be known if unapplied dependencies remain.
     Assume(GetClusterSet(level).m_deps_to_add.empty());
@@ -1891,13 +1891,13 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestors(const Ref& arg, bool main_o
     return ret;
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, bool main_only) noexcept
+std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, Level level_select) noexcept
 {
     // Return the empty vector if the Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
     // Ancestry cannot be known if unapplied dependencies remain.
     Assume(GetClusterSet(level).m_deps_to_add.empty());
@@ -1912,10 +1912,10 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, bool main
     return ret;
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* const> args, bool main_only) noexcept
+std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* const> args, Level level_select) noexcept
 {
     // Apply all dependencies, as the result might be incorrect otherwise.
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
     // Ancestry cannot be known if unapplied dependencies remain.
     Assume(GetClusterSet(level).m_deps_to_add.empty());
@@ -1945,10 +1945,10 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* c
     return ret;
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref* const> args, bool main_only) noexcept
+std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref* const> args, Level level_select) noexcept
 {
     // Apply all dependencies, as the result might be incorrect otherwise.
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
     // Ancestry cannot be known if unapplied dependencies remain.
     Assume(GetClusterSet(level).m_deps_to_add.empty());
@@ -1978,14 +1978,14 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref*
     return ret;
 }
 
-std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, bool main_only) noexcept
+std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, Level level_select) noexcept
 {
     // Return the empty vector if the Ref is empty (which may be indicative of the transaction
     // having been removed already.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
     // Cluster linearization cannot be known if unapplied dependencies remain.
     Assume(GetClusterSet(level).m_deps_to_add.empty());
@@ -1999,9 +1999,9 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, bool main_onl
     return ret;
 }
 
-TxGraph::GraphIndex TxGraphImpl::GetTransactionCount(bool main_only) noexcept
+TxGraph::GraphIndex TxGraphImpl::GetTransactionCount(Level level_select) noexcept
 {
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     ApplyRemovals(level);
     return GetClusterSet(level).m_txcount;
 }
@@ -2047,9 +2047,9 @@ FeePerWeight TxGraphImpl::GetMainChunkFeerate(const Ref& arg) noexcept
     return entry.m_main_chunk_feerate;
 }
 
-bool TxGraphImpl::IsOversized(bool main_only) noexcept
+bool TxGraphImpl::IsOversized(Level level_select) noexcept
 {
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     auto& clusterset = GetClusterSet(level);
     if (clusterset.m_oversized.has_value()) {
         // Return cached value if known.
@@ -2213,9 +2213,9 @@ std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) n
     return CompareMainTransactions(GetRefIndex(a), GetRefIndex(b));
 }
 
-TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* const> refs, bool main_only) noexcept
+TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* const> refs, Level level_select) noexcept
 {
-    size_t level = GetSpecifiedLevel(main_only);
+    size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
     auto& clusterset = GetClusterSet(level);
     Assume(clusterset.m_deps_to_add.empty());
