@@ -24,6 +24,7 @@ static CBlock CreateTestBlock()
     DataStream stream{benchmark::data::block413567};
     CBlock block;
     stream >> TX_WITH_WITNESS(block);
+    block.vchBlockSig.clear();
     return block;
 }
 
