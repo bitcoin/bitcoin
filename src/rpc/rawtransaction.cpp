@@ -239,8 +239,8 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // We only actually care about those if our signing provider doesn't hide private
         // information, as is the case with `descriptorprocesspsbt`
         // Only error for mismatching sighash types as it is critical that the sighash to sign with matches the PSBT's
-        if (SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, sighash_type, /*out_sigdata=*/nullptr, finalize) == common::PSBTError::SIGHASH_MISMATCH) {
-            throw JSONRPCPSBTError(common::PSBTError::SIGHASH_MISMATCH);
+        if (SignPSBTInput(provider, psbtx, /*index=*/i, &txdata, sighash_type, /*out_sigdata=*/nullptr, finalize) == common::PSBTResult::SIGHASH_MISMATCH) {
+            throw JSONRPCPSBTError(common::PSBTResult::SIGHASH_MISMATCH);
         }
     }
 
