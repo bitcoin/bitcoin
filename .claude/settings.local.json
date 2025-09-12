@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(rg:*)"
+    ],
+    "deny": []
+  },
+  "enableAllProjectMcpServers": false
+}
