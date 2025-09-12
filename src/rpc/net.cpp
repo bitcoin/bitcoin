@@ -1192,6 +1192,47 @@ static RPCHelpMan getrawaddrman()
     };
 }
 
+static RPCHelpMan gettemplateinfo()
+{
+    return RPCHelpMan{
+        "gettemplateinfo",
+        "EXPERIMENTAL warning: this call may be changed in future releases.\n\n"
+        "Returns an object containing various state info regarding P2P networking.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::NUM, "transactions", "number of transactions shared amongst templates"},
+                {RPCResult::Type::NUM, "templates", "number of templates currently in memory"},
+                {RPCResult::Type::NUM, "max_templates", "target number of templates"},
+                {RPCResult::Type::NUM, "latest_template_weight", "weight of latest template"},
+                {RPCResult::Type::NUM, "latest_template_tx", "number of transactions in latest template"},
+                {RPCResult::Type::NUM, "next_update", "the next update expressed in UNIX epoch time"},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("getnetworkinfo", "")
+            + HelpExampleRpc("getnetworkinfo", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            LOCK(cs_main);
+            UniValue obj(UniValue::VOBJ);
+            NodeContext& node = EnsureAnyNodeContext(request.context);
+            TemplateStats stats;
+            if (node.peerman) {
+                stats = node.peerman->GetTemplateStats();
+            }
+            obj.pushKV("transactions", stats.num_transactions);
+            obj.pushKV("templates", stats.num_templates);
+            obj.pushKV("max_templates", stats.max_templates);
+            obj.pushKV("latest_template_weight", stats.latest_template_weight);
+            obj.pushKV("latest_template_tx", stats.latest_template_tx);
+            obj.pushKV("next_update", TicksSinceEpoch<std::chrono::seconds>(stats.next_update));
+            return obj;
+        },
+    };
+}
+
 void RegisterNetRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -1213,6 +1254,7 @@ void RegisterNetRPCCommands(CRPCTable& t)
         {"hidden", &addpeeraddress},
         {"hidden", &sendmsgtopeer},
         {"hidden", &getrawaddrman},
+        {"hidden", &gettemplateinfo},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);
