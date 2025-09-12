@@ -7,6 +7,8 @@ Bitcoin Core is the original Bitcoin client and it builds the backbone of the ne
 
 To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/download/).
 
+For information about the different types of binaries available for download (unsigned, signed, debug), see [Binary Types](build-types.md).
+
 Running
 ---------------------
 The following are some helpful notes on how to run Bitcoin Core on your native platform.
