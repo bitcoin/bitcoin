@@ -551,7 +551,7 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
     int set = 1;
     // Set the no-sigpipe option on the socket for BSD systems, other UNIXes
     // should use the MSG_NOSIGNAL flag for every send.
-    if (sock->SetSockOpt(SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int)) == SOCKET_ERROR) {
+    if (sock->SetSockOpt(SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(int)) == SOCKET_ERROR) {
         LogPrintf("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway\n",
                   NetworkErrorString(WSAGetLastError()));
     }
@@ -620,7 +620,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             // sockerr here.
             int sockerr;
             socklen_t sockerr_len = sizeof(sockerr);
-            if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&sockerr, &sockerr_len) ==
+            if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, &sockerr, &sockerr_len) ==
                 SOCKET_ERROR) {
                 LogPrintf("getsockopt() for %s failed: %s\n", dest_str, NetworkErrorString(WSAGetLastError()));
                 return false;

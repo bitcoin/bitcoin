@@ -24,7 +24,7 @@ static bool SocketIsClosed(const SOCKET& s)
     // wrongly pretend that the socket is not closed.
     int type;
     socklen_t len = sizeof(type);
-    return getsockopt(s, SOL_SOCKET, SO_TYPE, (sockopt_arg_type)&type, &len) == SOCKET_ERROR;
+    return getsockopt(s, SOL_SOCKET, SO_TYPE, reinterpret_cast<char*>(&type), &len) == SOCKET_ERROR;
 }
 
 static SOCKET CreateSocket()
