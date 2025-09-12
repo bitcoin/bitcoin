@@ -1,0 +1,264 @@
+
+
+
+
+
+2025-09-12T04:38:23Z Ignoring unknown configuration value regtest.upnp
+2025-09-12T04:38:23Z Ignoring unknown configuration value regtest.gen
+2025-09-12T04:38:23Z Ignoring unknown configuration value regtest.genproclimit
+2025-09-12T04:38:23Z Bitcoin Core version v29.99.0-602efcad7713-dirty (release build)
+2025-09-12T04:38:23Z Using the 'arm_shani(1way,2way)' SHA256 implementation
+2025-09-12T04:38:24Z Default data directory /Users/georgealbadr/Library/Application Support/Bitcoin
+2025-09-12T04:38:24Z Using data directory /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest
+2025-09-12T04:38:24Z Config file: /Users/georgealbadr/Github/bitcoin/garcoin2_data/bitcoin.conf
+2025-09-12T04:38:24Z Config file arg: regtest="1"
+2025-09-12T04:38:24Z Config file arg: server="1"
+2025-09-12T04:38:24Z Config file arg: [regtest] dnsseed="0"
+2025-09-12T04:38:24Z Config file arg: [regtest] natpmp="0"
+2025-09-12T04:38:24Z Config file arg: [regtest] port="9004"
+2025-09-12T04:38:24Z Config file arg: [regtest] rpcallowip="127.0.0.1"
+2025-09-12T04:38:24Z Config file arg: [regtest] rpcbind="127.0.0.1"
+2025-09-12T04:38:24Z Config file arg: [regtest] rpcpassword=****
+2025-09-12T04:38:24Z Config file arg: [regtest] rpcport="9104"
+2025-09-12T04:38:24Z Config file arg: [regtest] rpcuser=****
+2025-09-12T04:38:24Z Command-line arg: daemon=""
+2025-09-12T04:38:24Z Command-line arg: datadir="./garcoin2_data"
+2025-09-12T04:38:24Z Using at most 125 automatic connections (1024 file descriptors available)
+2025-09-12T04:38:24Z Warning: relative datadir option './garcoin2_data' specified, which will be interpreted relative to the current working directory '/Users/georgealbadr/Github/bitcoin'. This is fragile, because if bitcoin is started in the future from a different location, it will be unable to locate the current data files. There could also be data loss if bitcoin is started while in a temporary directory.
+2025-09-12T04:38:24Z scheduler thread start
+2025-09-12T04:38:24Z Binding RPC on address 127.0.0.1 port 9104
+2025-09-12T04:38:24Z Using rpcuser/rpcpassword authentication.
+2025-09-12T04:38:24Z [warning] The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.
+2025-09-12T04:38:24Z Starting HTTP server with 16 worker threads
+2025-09-12T04:38:24Z Using wallet directory /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/wallets
+2025-09-12T04:38:24Z init message: Verifying wallet(s)…
+2025-09-12T04:38:24Z Using /16 prefix for IP bucketing
+2025-09-12T04:38:24Z init message: Loading P2P addresses…
+2025-09-12T04:38:24Z Creating peers.dat because the file was not found ("/Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/peers.dat")
+2025-09-12T04:38:24Z init message: Loading banlist…
+2025-09-12T04:38:24Z Recreating the banlist database
+2025-09-12T04:38:24Z SetNetworkActive: true
+2025-09-12T04:38:24Z /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/fee_estimates.dat is not found. Continue anyway.
+2025-09-12T04:38:24Z Cache configuration:
+2025-09-12T04:38:24Z * Using 2.0 MiB for block index database
+2025-09-12T04:38:24Z * Using 8.0 MiB for chain state database
+2025-09-12T04:38:24Z * Using 440.0 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-09-12T04:38:24Z Script verification uses 7 additional threads
+2025-09-12T04:38:24Z Using obfuscation key for blocksdir *.dat files (/Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/blocks): 'b5e5b958220b399c'
+2025-09-12T04:38:24Z Opening LevelDB in /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/blocks/index
+2025-09-12T04:38:24Z Opened LevelDB successfully
+2025-09-12T04:38:24Z Using obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/blocks/index: 0000000000000000
+2025-09-12T04:38:24Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-09-12T04:38:24Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-09-12T04:38:24Z init message: Loading block index…
+2025-09-12T04:38:24Z Validating signatures for all blocks.
+2025-09-12T04:38:24Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-09-12T04:38:24Z Loading block index db: last block file = 0
+2025-09-12T04:38:24Z Loading block index db: last block file info: CBlockFileInfo(blocks=0, size=0, heights=0...0, time=1970-01-01...1970-01-01)
+2025-09-12T04:38:24Z Checking all blk files are present...
+2025-09-12T04:38:24Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-09-12T04:38:24Z Opening LevelDB in /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/chainstate
+2025-09-12T04:38:24Z Opened LevelDB successfully
+2025-09-12T04:38:24Z Wrote new obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/chainstate: b542294b8c54d10b
+2025-09-12T04:38:24Z Using obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/chainstate: b542294b8c54d10b
+2025-09-12T04:38:24Z init message: Verifying blocks…
+2025-09-12T04:38:24Z Block index and chainstate loaded
+2025-09-12T04:38:24Z Setting NODE_NETWORK on non-prune mode
+2025-09-12T04:38:24Z initload thread start
+2025-09-12T04:38:24Z UpdateTip: new best=1b16a30981ecc50c0a7ccb009f30d38bc9aa514845d0c624f0e31ba14dba57f7 height=0 version=0x00000001 log2_work=1.000000 tx=1 date='2011-02-02T23:16:42Z' progress=0.000002 cache=0.3MiB(0txo)
+2025-09-12T04:38:24Z block tree size = 1
+2025-09-12T04:38:24Z nBestHeight = 0
+2025-09-12T04:38:24Z Failed to open mempool file. Continuing anyway.
+2025-09-12T04:38:24Z initload thread exit
+2025-09-12T04:38:24Z torcontrol thread start
+2025-09-12T04:38:24Z AddLocal([2800:98:1124:1502:149d:374b:ea8d:a944]:9004,1)
+2025-09-12T04:38:24Z Discover: 2800:98:1124:1502:149d:374b:ea8d:a944
+2025-09-12T04:38:24Z AddLocal([2800:98:1124:1502:74da:b09a:533c:fccb]:9004,1)
+2025-09-12T04:38:24Z Discover: 2800:98:1124:1502:74da:b09a:533c:fccb
+2025-09-12T04:38:24Z AddLocal([2800:98:1124:1502::b]:9004,1)
+2025-09-12T04:38:24Z Discover: 2800:98:1124:1502::b
+2025-09-12T04:38:24Z Bound to 127.0.0.1:9005
+2025-09-12T04:38:24Z Bound to [::]:9004
+2025-09-12T04:38:24Z Bound to 0.0.0.0:9004
+2025-09-12T04:38:24Z 0 block-relay-only anchors will be tried for connections.
+2025-09-12T04:38:24Z init message: Starting network threads…
+2025-09-12T04:38:24Z DNS seeding disabled
+2025-09-12T04:38:24Z net thread start
+2025-09-12T04:38:24Z init message: Done loading
+2025-09-12T04:38:24Z msghand thread start
+2025-09-12T04:38:24Z addcon thread start
+2025-09-12T04:38:24Z opencon thread start
+2025-09-12T04:38:24Z Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided
+2025-09-12T04:38:24Z Added 0 fixed seeds from reachable networks.
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z Leaving InitialBlockDownload (latching to false)
+2025-09-12T04:38:48Z UpdateTip: new best=29fac1594f634cacbdac666ed9a04c611ba6555162736e0974f8c8e850660c71 height=1 version=0x20000000 log2_work=2.000000 tx=2 date='2025-09-12T04:38:48Z' progress=1.000000 cache=0.3MiB(1txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=5fd64817531d5df04a941baa5b0b9c381fb32b55369abc1f28b92dc2c9c19c7c height=2 version=0x20000000 log2_work=2.584963 tx=3 date='2025-09-12T04:38:49Z' progress=1.000000 cache=0.3MiB(2txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=3fa04a8eb185aaa2bdc0672108427bdbeca0fb5f38d8a690e9f4f5b26fcf1929 height=3 version=0x20000000 log2_work=3.000000 tx=4 date='2025-09-12T04:38:49Z' progress=1.000000 cache=0.3MiB(3txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=7438f087e09604a9eb7307096d2c4305d0fb83d64f14f5356fb63f40944cbf99 height=4 version=0x20000000 log2_work=3.321928 tx=5 date='2025-09-12T04:38:50Z' progress=1.000000 cache=0.3MiB(4txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=44c0a93d0583153aa961f9dffcac9897b421129c405e8b94e1332bd49198fa9f height=5 version=0x20000000 log2_work=3.584963 tx=6 date='2025-09-12T04:38:50Z' progress=1.000000 cache=0.3MiB(5txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=1be3c9d3d71958e2813313479ff6e59c2aea72045fca7886d63b11ed6c5263e5 height=6 version=0x20000000 log2_work=3.807355 tx=7 date='2025-09-12T04:38:50Z' progress=1.000000 cache=0.3MiB(6txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=0ad6f59e38f698fe33fb7c6a1f967c15277302ed03e128d85f431be50e0b648b height=7 version=0x20000000 log2_work=4.000000 tx=8 date='2025-09-12T04:38:50Z' progress=1.000000 cache=0.3MiB(7txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=5841d64e9ca117fde6c4b9be540e61d6db4925d8eb1591473b679aea2dc52bf3 height=8 version=0x20000000 log2_work=4.169925 tx=9 date='2025-09-12T04:38:51Z' progress=1.000000 cache=0.3MiB(8txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=3ce460774a713dcd10efe27af78f950de7160a29a7af72cecf3f430a62778dbc height=9 version=0x20000000 log2_work=4.321928 tx=10 date='2025-09-12T04:38:51Z' progress=1.000000 cache=0.3MiB(9txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=7d2dd2cd1d5f1a55cbc2274611665d9c3c16464f335d3fd6bf9a8a464f69fe56 height=10 version=0x20000000 log2_work=4.459432 tx=11 date='2025-09-12T04:38:51Z' progress=1.000000 cache=0.3MiB(10txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=6458a015b06919a8c54d07fafafd8c4d192c870b1b860d8755fa853bb8edf749 height=11 version=0x20000000 log2_work=4.584963 tx=12 date='2025-09-12T04:38:51Z' progress=1.000000 cache=0.3MiB(11txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=010164908d21642eb27b1d740dca58450da19b1606f59a713880f9cb1578dc69 height=12 version=0x20000000 log2_work=4.700440 tx=13 date='2025-09-12T04:38:51Z' progress=1.000000 cache=0.3MiB(12txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=70a256e8b15b91dd93b79fb8486787ae38c709b23a9304dda466f727bd9050a7 height=13 version=0x20000000 log2_work=4.807355 tx=14 date='2025-09-12T04:38:51Z' progress=1.000000 cache=0.3MiB(13txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=4003fee9215d7d56bdd354e3de85ec32fe4573dbd3c7a4bf919b392d4176a541 height=14 version=0x20000000 log2_work=4.906891 tx=15 date='2025-09-12T04:38:52Z' progress=1.000000 cache=0.3MiB(14txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=433ce3bd5f4ebdd56a245f412a2a850049bea8a9a72a1591d73fbc47ebc14357 height=15 version=0x20000000 log2_work=5.000000 tx=16 date='2025-09-12T04:38:52Z' progress=1.000000 cache=0.3MiB(15txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 800 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=4179a61973caf1df312ff43ff23398867524f3888d7815d9c4f574351fbccce7 height=16 version=0x20000000 log2_work=5.087463 tx=17 date='2025-09-12T04:38:52Z' progress=1.000000 cache=0.3MiB(16txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 804 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=37f5e441ad24b79aadb6ac422dadce49d3f1e82743f560a25ce508a4332cbfbd height=17 version=0x20000000 log2_work=5.169925 tx=18 date='2025-09-12T04:38:52Z' progress=1.000000 cache=0.3MiB(17txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 804 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=3a73bcc65666e341db340c0c7c271b3a11ab38114a4dd443a35edebd65db92fe height=18 version=0x20000000 log2_work=5.247928 tx=19 date='2025-09-12T04:38:52Z' progress=1.000000 cache=0.3MiB(18txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 804 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=143abc1af96bc3cb1f0480efde61a97b190b46ec91d22bf1f3496b91469a750b height=19 version=0x20000000 log2_work=5.321928 tx=20 date='2025-09-12T04:38:52Z' progress=1.000000 cache=0.3MiB(19txo)
+2025-09-12T04:38:48Z CreateNewBlock(): block weight: 804 txs: 0 fees: 0 sigops 400
+2025-09-12T04:38:48Z UpdateTip: new best=54610147c378244b2182dba33981fdea0928b7628e2a7e5e8471e1340bd9383d height=20 version=0x20000000 log2_work=5.392317 tx=21 date='2025-09-12T04:38:53Z' progress=1.000000 cache=0.3MiB(20txo)
+2025-09-12T04:40:41Z tor: Thread interrupt
+2025-09-12T04:40:41Z torcontrol thread exit
+2025-09-12T04:40:41Z Shutdown in progress...
+2025-09-12T04:40:41Z opencon thread exit
+2025-09-12T04:40:41Z addcon thread exit
+2025-09-12T04:40:41Z net thread exit
+2025-09-12T04:40:41Z msghand thread exit
+2025-09-12T04:40:41Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat started
+2025-09-12T04:40:41Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat completed (0.00s)
+2025-09-12T04:40:41Z scheduler thread exit
+2025-09-12T04:40:41Z Writing 0 mempool transactions to file...
+2025-09-12T04:40:41Z Writing 0 unbroadcast transactions to file.
+2025-09-12T04:40:41Z Dumped mempool: 0.000s to copy, 0.005s to dump, 27 bytes dumped to file
+2025-09-12T04:40:41Z Flushed fee estimates to fee_estimates.dat.
+2025-09-12T04:40:41Z Shutdown done
+
+
+
+
+
+2025-09-12T04:42:51Z Ignoring unknown configuration value regtest.upnp
+2025-09-12T04:42:51Z Ignoring unknown configuration value regtest.gen
+2025-09-12T04:42:51Z Ignoring unknown configuration value regtest.genproclimit
+2025-09-12T04:42:51Z Bitcoin Core version v29.99.0-602efcad7713-dirty (release build)
+2025-09-12T04:42:51Z Using the 'arm_shani(1way,2way)' SHA256 implementation
+2025-09-12T04:42:52Z Default data directory /Users/georgealbadr/Library/Application Support/Bitcoin
+2025-09-12T04:42:52Z Using data directory /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest
+2025-09-12T04:42:52Z Config file: /Users/georgealbadr/Github/bitcoin/garcoin2_data/bitcoin.conf
+2025-09-12T04:42:52Z Config file arg: regtest="1"
+2025-09-12T04:42:52Z Config file arg: server="1"
+2025-09-12T04:42:52Z Config file arg: [regtest] dnsseed="0"
+2025-09-12T04:42:52Z Config file arg: [regtest] natpmp="0"
+2025-09-12T04:42:52Z Config file arg: [regtest] port="9004"
+2025-09-12T04:42:52Z Config file arg: [regtest] rpcallowip="127.0.0.1"
+2025-09-12T04:42:52Z Config file arg: [regtest] rpcbind="127.0.0.1"
+2025-09-12T04:42:52Z Config file arg: [regtest] rpcpassword=****
+2025-09-12T04:42:52Z Config file arg: [regtest] rpcport="9104"
+2025-09-12T04:42:52Z Config file arg: [regtest] rpcuser=****
+2025-09-12T04:42:52Z Command-line arg: daemon=""
+2025-09-12T04:42:52Z Command-line arg: datadir="./garcoin2_data"
+2025-09-12T04:42:52Z Using at most 125 automatic connections (1024 file descriptors available)
+2025-09-12T04:42:52Z Warning: relative datadir option './garcoin2_data' specified, which will be interpreted relative to the current working directory '/Users/georgealbadr/Github/bitcoin'. This is fragile, because if bitcoin is started in the future from a different location, it will be unable to locate the current data files. There could also be data loss if bitcoin is started while in a temporary directory.
+2025-09-12T04:42:52Z scheduler thread start
+2025-09-12T04:42:52Z Binding RPC on address 127.0.0.1 port 9104
+2025-09-12T04:42:52Z Using rpcuser/rpcpassword authentication.
+2025-09-12T04:42:52Z [warning] The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.
+2025-09-12T04:42:52Z Starting HTTP server with 16 worker threads
+2025-09-12T04:42:52Z Using wallet directory /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/wallets
+2025-09-12T04:42:52Z init message: Verifying wallet(s)…
+2025-09-12T04:42:52Z Using /16 prefix for IP bucketing
+2025-09-12T04:42:52Z init message: Loading P2P addresses…
+2025-09-12T04:42:52Z Loaded 0 addresses from peers.dat  0ms
+2025-09-12T04:42:52Z init message: Loading banlist…
+2025-09-12T04:42:52Z SetNetworkActive: true
+2025-09-12T04:42:52Z Cache configuration:
+2025-09-12T04:42:52Z * Using 2.0 MiB for block index database
+2025-09-12T04:42:52Z * Using 8.0 MiB for chain state database
+2025-09-12T04:42:52Z * Using 440.0 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-09-12T04:42:52Z Script verification uses 7 additional threads
+2025-09-12T04:42:52Z Using obfuscation key for blocksdir *.dat files (/Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/blocks): 'b5e5b958220b399c'
+2025-09-12T04:42:52Z Opening LevelDB in /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/blocks/index
+2025-09-12T04:42:52Z Opened LevelDB successfully
+2025-09-12T04:42:52Z Using obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/blocks/index: 0000000000000000
+2025-09-12T04:42:52Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-09-12T04:42:52Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-09-12T04:42:52Z init message: Loading block index…
+2025-09-12T04:42:52Z Validating signatures for all blocks.
+2025-09-12T04:42:52Z Setting nMinimumChainWork=0000000000000000000000000000000000000000000000000000000000000000
+2025-09-12T04:42:52Z Loading block index db: last block file = 0
+2025-09-12T04:42:52Z Loading block index db: last block file info: CBlockFileInfo(blocks=21, size=4994, heights=0...20, time=2011-02-02...2025-09-12)
+2025-09-12T04:42:52Z Checking all blk files are present...
+2025-09-12T04:42:52Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-09-12T04:42:52Z Opening LevelDB in /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/chainstate
+2025-09-12T04:42:52Z Opened LevelDB successfully
+2025-09-12T04:42:52Z Using obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/regtest/chainstate: b542294b8c54d10b
+2025-09-12T04:42:52Z Loaded best chain: hashBestChain=54610147c378244b2182dba33981fdea0928b7628e2a7e5e8471e1340bd9383d height=20 date=2025-09-12T04:38:53Z progress=1.000000
+2025-09-12T04:42:52Z init message: Verifying blocks…
+2025-09-12T04:42:52Z Verifying last 6 blocks at level 3
+2025-09-12T04:42:52Z Verification progress: 0%
+2025-09-12T04:42:52Z Verification progress: 16%
+2025-09-12T04:42:52Z Verification progress: 33%
+2025-09-12T04:42:52Z Verification progress: 50%
+2025-09-12T04:42:52Z Verification progress: 66%
+2025-09-12T04:42:52Z Verification progress: 83%
+2025-09-12T04:42:52Z Verification progress: 99%
+2025-09-12T04:42:52Z Verification: No coin database inconsistencies in last 6 blocks (6 transactions)
+2025-09-12T04:42:52Z Block index and chainstate loaded
+2025-09-12T04:42:52Z Setting NODE_NETWORK on non-prune mode
+2025-09-12T04:42:52Z block tree size = 21
+2025-09-12T04:42:52Z nBestHeight = 20
+2025-09-12T04:42:52Z initload thread start
+2025-09-12T04:42:52Z torcontrol thread start
+2025-09-12T04:42:52Z Loading 0 mempool transactions from file...
+2025-09-12T04:42:52Z Imported mempool transactions from file: 0 succeeded, 0 failed, 0 expired, 0 already there, 0 waiting for initial broadcast
+2025-09-12T04:42:52Z AddLocal([2800:98:1124:1502:149d:374b:ea8d:a944]:9004,1)
+2025-09-12T04:42:52Z Discover: 2800:98:1124:1502:149d:374b:ea8d:a944
+2025-09-12T04:42:52Z initload thread exit
+2025-09-12T04:42:52Z AddLocal([2800:98:1124:1502:74da:b09a:533c:fccb]:9004,1)
+2025-09-12T04:42:52Z Discover: 2800:98:1124:1502:74da:b09a:533c:fccb
+2025-09-12T04:42:52Z AddLocal([2800:98:1124:1502::b]:9004,1)
+2025-09-12T04:42:52Z Discover: 2800:98:1124:1502::b
+2025-09-12T04:42:52Z Bound to 127.0.0.1:9005
+2025-09-12T04:42:52Z Bound to [::]:9004
+2025-09-12T04:42:52Z Bound to 0.0.0.0:9004
+2025-09-12T04:42:52Z Loaded 0 addresses from "anchors.dat"
+2025-09-12T04:42:52Z 0 block-relay-only anchors will be tried for connections.
+2025-09-12T04:42:52Z init message: Starting network threads…
+2025-09-12T04:42:52Z DNS seeding disabled
+2025-09-12T04:42:52Z net thread start
+2025-09-12T04:42:52Z init message: Done loading
+2025-09-12T04:42:52Z addcon thread start
+2025-09-12T04:42:52Z opencon thread start
+2025-09-12T04:42:52Z msghand thread start
+2025-09-12T04:42:52Z Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided
+2025-09-12T04:42:52Z Added 0 fixed seeds from reachable networks.
+2025-09-12T04:43:13Z Leaving InitialBlockDownload (latching to false)
+2025-09-12T04:43:34Z tor: Thread interrupt
+2025-09-12T04:43:34Z Shutdown in progress...
+2025-09-12T04:43:34Z addcon thread exit
+2025-09-12T04:43:34Z torcontrol thread exit
+2025-09-12T04:43:34Z opencon thread exit
+2025-09-12T04:43:34Z net thread exit
+2025-09-12T04:43:34Z msghand thread exit
+2025-09-12T04:43:34Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat started
+2025-09-12T04:43:34Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat completed (0.00s)
+2025-09-12T04:43:34Z scheduler thread exit
+2025-09-12T04:43:34Z Writing 0 mempool transactions to file...
+2025-09-12T04:43:34Z Writing 0 unbroadcast transactions to file.
+2025-09-12T04:43:34Z Dumped mempool: 0.000s to copy, 0.003s to dump, 27 bytes dumped to file
+2025-09-12T04:43:34Z Flushed fee estimates to fee_estimates.dat.
+2025-09-12T04:43:34Z Shutdown done

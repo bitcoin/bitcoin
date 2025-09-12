@@ -1,0 +1,117 @@
+
+
+
+
+
+2025-09-10T23:13:16Z Bitcoin Core version v29.99.0-602efcad7713 (release build)
+2025-09-10T23:13:16Z Using the 'arm_shani(1way,2way)' SHA256 implementation
+2025-09-10T23:13:16Z Default data directory /Users/georgealbadr/Library/Application Support/Bitcoin
+2025-09-10T23:13:16Z Using data directory /Users/georgealbadr/Github/bitcoin/garcoin2_data
+2025-09-10T23:13:16Z Config file: /Users/georgealbadr/Github/bitcoin/garcoin2_data/bitcoin.conf
+2025-09-10T23:13:16Z Config file arg: addnode="10.20.102.5:9002"
+2025-09-10T23:13:16Z Config file arg: addnode="10.20.102.97:9003"
+2025-09-10T23:13:16Z Config file arg: discover="1"
+2025-09-10T23:13:16Z Config file arg: listen="1"
+2025-09-10T23:13:16Z Config file arg: port="9004"
+2025-09-10T23:13:16Z Config file arg: rpcpassword=****
+2025-09-10T23:13:16Z Config file arg: rpcport="9104"
+2025-09-10T23:13:16Z Config file arg: rpcuser=****
+2025-09-10T23:13:16Z Config file arg: server="1"
+2025-09-10T23:13:16Z Command-line arg: conf="bitcoin.conf"
+2025-09-10T23:13:16Z Command-line arg: daemon=""
+2025-09-10T23:13:16Z Command-line arg: datadir="./garcoin2_data"
+2025-09-10T23:13:16Z Using at most 125 automatic connections (1024 file descriptors available)
+2025-09-10T23:13:16Z Warning: relative datadir option './garcoin2_data' specified, which will be interpreted relative to the current working directory '/Users/georgealbadr/Github/bitcoin'. This is fragile, because if bitcoin is started in the future from a different location, it will be unable to locate the current data files. There could also be data loss if bitcoin is started while in a temporary directory.
+2025-09-10T23:13:16Z scheduler thread start
+2025-09-10T23:13:16Z Binding RPC on address ::1 port 9104
+2025-09-10T23:13:16Z Binding RPC on address 127.0.0.1 port 9104
+2025-09-10T23:13:16Z Using rpcuser/rpcpassword authentication.
+2025-09-10T23:13:16Z [warning] The use of rpcuser/rpcpassword is less secure, because credentials are configured in plain text. It is recommended that locally-run instances switch to cookie-based auth, or otherwise to use hashed rpcauth credentials. See share/rpcauth in the source directory for more information.
+2025-09-10T23:13:16Z Starting HTTP server with 16 worker threads
+2025-09-10T23:13:16Z Using wallet directory /Users/georgealbadr/Github/bitcoin/garcoin2_data
+2025-09-10T23:13:16Z init message: Verifying wallet(s)…
+2025-09-10T23:13:16Z Using /16 prefix for IP bucketing
+2025-09-10T23:13:16Z init message: Loading P2P addresses…
+2025-09-10T23:13:16Z Creating peers.dat because the file was not found ("/Users/georgealbadr/Github/bitcoin/garcoin2_data/peers.dat")
+2025-09-10T23:13:16Z init message: Loading banlist…
+2025-09-10T23:13:16Z Recreating the banlist database
+2025-09-10T23:13:16Z SetNetworkActive: true
+2025-09-10T23:13:16Z /Users/georgealbadr/Github/bitcoin/garcoin2_data/fee_estimates.dat is not found. Continue anyway.
+2025-09-10T23:13:16Z Cache configuration:
+2025-09-10T23:13:16Z * Using 2.0 MiB for block index database
+2025-09-10T23:13:16Z * Using 8.0 MiB for chain state database
+2025-09-10T23:13:16Z * Using 440.0 MiB for in-memory UTXO set (plus up to 286.1 MiB of unused mempool space)
+2025-09-10T23:13:16Z Script verification uses 7 additional threads
+2025-09-10T23:13:16Z Using obfuscation key for blocksdir *.dat files (/Users/georgealbadr/Github/bitcoin/garcoin2_data/blocks): '8bb302f8ee890798'
+2025-09-10T23:13:16Z Opening LevelDB in /Users/georgealbadr/Github/bitcoin/garcoin2_data/blocks/index
+2025-09-10T23:13:16Z Opened LevelDB successfully
+2025-09-10T23:13:16Z Using obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/blocks/index: 0000000000000000
+2025-09-10T23:13:16Z Using 16 MiB out of 16 MiB requested for signature cache, able to store 524288 elements
+2025-09-10T23:13:16Z Using 16 MiB out of 16 MiB requested for script execution cache, able to store 524288 elements
+2025-09-10T23:13:16Z init message: Loading block index…
+2025-09-10T23:13:16Z Assuming ancestors of block 00000000000000000000611fd22f2df7c8fbd0688745c3a6c3bb5109cc2a12cb have valid signatures.
+2025-09-10T23:13:16Z Setting nMinimumChainWork=0000000000000000000000000000000000000000dee8e2a309ad8a9820433c68
+2025-09-10T23:13:16Z Loading block index db: last block file = 0
+2025-09-10T23:13:16Z Loading block index db: last block file info: CBlockFileInfo(blocks=0, size=0, heights=0...0, time=1970-01-01...1970-01-01)
+2025-09-10T23:13:16Z Checking all blk files are present...
+2025-09-10T23:13:16Z Initializing chainstate Chainstate [ibd] @ height -1 (null)
+2025-09-10T23:13:16Z Opening LevelDB in /Users/georgealbadr/Github/bitcoin/garcoin2_data/chainstate
+2025-09-10T23:13:16Z Opened LevelDB successfully
+2025-09-10T23:13:16Z Wrote new obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/chainstate: 044465f911c27afb
+2025-09-10T23:13:16Z Using obfuscation key for /Users/georgealbadr/Github/bitcoin/garcoin2_data/chainstate: 044465f911c27afb
+2025-09-10T23:13:16Z init message: Verifying blocks…
+2025-09-10T23:13:16Z Block index and chainstate loaded
+2025-09-10T23:13:16Z Setting NODE_NETWORK on non-prune mode
+2025-09-10T23:13:16Z [warning] Disk space for "/Users/georgealbadr/Github/bitcoin/garcoin2_data/blocks" may not accommodate the block files. Approximately 810 GB of data will be stored in this directory.
+2025-09-10T23:13:16Z initload thread start
+2025-09-10T23:13:16Z UpdateTip: new best=000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f height=0 version=0x00000001 log2_work=32.000022 tx=1 date='2009-01-03T18:15:05Z' progress=0.000000 cache=0.3MiB(0txo)
+2025-09-10T23:13:16Z block tree size = 1
+2025-09-10T23:13:16Z nBestHeight = 0
+2025-09-10T23:13:16Z Failed to open mempool file. Continuing anyway.
+2025-09-10T23:13:16Z mapport thread start
+2025-09-10T23:13:16Z torcontrol thread start
+2025-09-10T23:13:16Z initload thread exit
+2025-09-10T23:13:16Z AddLocal([2800:98:1124:1502:ee:44f6:ef70:c1d6]:9004,1)
+2025-09-10T23:13:16Z Discover: 2800:98:1124:1502:ee:44f6:ef70:c1d6
+2025-09-10T23:13:16Z AddLocal([2800:98:1124:1502:1c09:1970:16da:a9a8]:9004,1)
+2025-09-10T23:13:16Z Discover: 2800:98:1124:1502:1c09:1970:16da:a9a8
+2025-09-10T23:13:16Z AddLocal([2800:98:1124:1502::5]:9004,1)
+2025-09-10T23:13:16Z Discover: 2800:98:1124:1502::5
+2025-09-10T23:13:16Z Bound to 127.0.0.1:9005
+2025-09-10T23:13:16Z Bound to [::]:9004
+2025-09-10T23:13:16Z Bound to 0.0.0.0:9004
+2025-09-10T23:13:16Z 0 block-relay-only anchors will be tried for connections.
+2025-09-10T23:13:16Z init message: Starting network threads…
+2025-09-10T23:13:16Z init message: Done loading
+2025-09-10T23:13:16Z net thread start
+2025-09-10T23:13:16Z dnsseed thread start
+2025-09-10T23:13:16Z addcon thread start
+2025-09-10T23:13:16Z opencon thread start
+2025-09-10T23:13:16Z msghand thread start
+2025-09-10T23:13:16Z Loading addresses from DNS seed dnsseed.emzy.de.
+2025-09-10T23:13:17Z Loading addresses from DNS seed seed.bitcoin.jonasschnelli.ch.
+2025-09-10T23:13:17Z Loading addresses from DNS seed dnsseed.bitcoin.dashjr-list-of-p2p-nodes.us.
+2025-09-10T23:13:18Z Loading addresses from DNS seed dnsseed.bluematt.me.
+2025-09-10T23:13:18Z Loading addresses from DNS seed seed.bitcoin.sprovoost.nl.
+2025-09-10T23:13:19Z Loading addresses from DNS seed seed.bitcoin.wiz.biz.
+2025-09-10T23:13:19Z Loading addresses from DNS seed seed.bitcoin.sipa.be.
+2025-09-10T23:13:20Z Loading addresses from DNS seed seed.mainnet.achownodes.xyz.
+2025-09-10T23:13:20Z Loading addresses from DNS seed seed.btc.petertodd.net.
+2025-09-10T23:13:21Z 276 addresses found from DNS seeds
+2025-09-10T23:13:21Z dnsseed thread exit
+2025-09-10T23:21:44Z tor: Thread interrupt
+2025-09-10T23:21:44Z Shutdown in progress...
+2025-09-10T23:21:44Z mapport thread exit
+2025-09-10T23:21:44Z torcontrol thread exit
+2025-09-10T23:21:44Z net thread exit
+2025-09-10T23:21:44Z msghand thread exit
+2025-09-10T23:21:44Z addcon thread exit
+2025-09-10T23:21:44Z opencon thread exit
+2025-09-10T23:21:44Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat started
+2025-09-10T23:21:44Z DumpAnchors: Flush 0 outbound block-relay-only peer addresses to anchors.dat completed (0.00s)
+2025-09-10T23:21:44Z scheduler thread exit
+2025-09-10T23:21:44Z Writing 0 mempool transactions to file...
+2025-09-10T23:21:44Z Writing 0 unbroadcast transactions to file.
+2025-09-10T23:21:44Z Dumped mempool: 0.000s to copy, 0.005s to dump, 27 bytes dumped to file
+2025-09-10T23:21:44Z Flushed fee estimates to fee_estimates.dat.
+2025-09-10T23:21:44Z Shutdown done
