@@ -104,6 +104,7 @@ BASE_SCRIPTS = [
     'p2p_segwit.py',
     'feature_maxuploadtarget.py',
     'feature_assumeutxo.py',
+    'feature_reindex.py',
     'mempool_updatefromblock.py',
     'mempool_persist.py',
     # vv Tests less than 60s vv
@@ -152,7 +153,6 @@ BASE_SCRIPTS = [
     'rpc_orphans.py',
     'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
-    'feature_reindex.py',
     'feature_reindex_readonly.py',
     'wallet_labels.py',
     'p2p_compactblocks.py',
