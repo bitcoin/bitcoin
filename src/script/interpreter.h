@@ -143,6 +143,9 @@ enum : uint32_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE = (1U << 20),
 
+    // Making Unsigned Annexes non-standard
+    SCRIPT_VERIFY_DISCOURAGE_UNSIGNED_ANNEX = (1U << 21),
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -207,7 +210,7 @@ struct ScriptExecutionData
     //! Opcode position of the last executed OP_CODESEPARATOR (or 0xFFFFFFFF if none executed).
     uint32_t m_codeseparator_pos;
 
-    //! Whether m_annex_present and (when needed) m_annex_hash are initialized.
+    //! Whether m_annex_present is initialized and (only when needed) whether m_annex_hash is initialized.
     bool m_annex_init = false;
     //! Whether an annex is present.
     bool m_annex_present;
