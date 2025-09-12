@@ -186,14 +186,14 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
         if (!it->second.IsDirty()) {
             continue;
         }
-        CCoinsMap::iterator itUs = cacheCoins.find(it->first);
-        if (itUs == cacheCoins.end()) {
+
+        auto [itUs, inserted] = cacheCoins.try_emplace(it->first);
+        if (inserted) {
             // The parent cache does not have an entry, while the child cache does.
             // We can ignore it if it's both spent and FRESH in the child
             if (!(it->second.IsFresh() && it->second.coin.IsSpent())) {
                 // Create the coin in the parent cache, move the data up
                 // and mark it as dirty.
-                itUs = cacheCoins.try_emplace(it->first).first;
                 CCoinsCacheEntry& entry{itUs->second};
                 if (cursor.WillErase(*it)) {
                     // Since this entry will be erased,
@@ -208,6 +208,8 @@ bool CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &ha
                 // Otherwise it might have just been flushed from the parent's cache
                 // and already exist in the grandparent
                 if (it->second.IsFresh()) CCoinsCacheEntry::SetFresh(*itUs, m_sentinel);
+            } else {
+                cacheCoins.erase(itUs);
             }
         } else {
             // Found the entry in the parent cache
