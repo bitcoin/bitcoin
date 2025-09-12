@@ -880,6 +880,7 @@ Coin MakeCoin()
 {
     Coin coin;
     coin.out.nValue = m_rng.rand32();
+    coin.out.scriptPubKey.assign(m_rng.randbits(6), 0);
     coin.nHeight = m_rng.randrange(4096);
     coin.fCoinBase = 0;
     return coin;
@@ -970,12 +971,6 @@ void TestFlushBehavior(
         BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::CLEAN));
     }
 
-    // Can't overwrite an entry without specifying that an overwrite is
-    // expected.
-    BOOST_CHECK_THROW(
-        view->AddCoin(outp, Coin(coin), /*possible_overwrite=*/ false),
-        std::logic_error);
-
     // --- 6. Spend the coin.
     //
     BOOST_CHECK(view->SpendCoin(outp));
@@ -1058,6 +1053,22 @@ BOOST_FIXTURE_TEST_CASE(ccoins_flush_behavior, FlushTest)
         TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/false);
         TestFlushBehavior(view.get(), base, caches, /*do_erasing_flush=*/true);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(ccoins_overwrite_logic_error, FlushTest)
+{
+    CCoinsViewDB base{{.path = "test", .cache_bytes = 1 << 23, .memory_only = true}, {}};
+    CCoinsViewCacheTest view {&base};
+
+    // Can't overwrite an entry without specifying that an overwrite is
+    // expected.
+    auto coin = MakeCoin();
+    auto txid = Txid::FromUint256(m_rng.rand256());
+    auto outp = COutPoint(txid, 0);
+    view.AddCoin(outp, Coin(coin), /*possible_overwrite=*/ false);
+    BOOST_CHECK_THROW(
+        view.AddCoin(outp, Coin(coin), /*possible_overwrite=*/ false),
+        std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(coins_resource_is_used)
