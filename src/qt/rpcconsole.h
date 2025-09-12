@@ -15,6 +15,9 @@
 
 #include <QByteArray>
 #include <QCompleter>
+#include <QMimeData>
+#include <QTextDocumentFragment>
+#include <QTextEdit>
 #include <QThread>
 #include <QWidget>
 
@@ -189,6 +192,22 @@ private:
 
 private Q_SLOTS:
     void updateAlerts(const QString& warnings);
+};
+
+/**
+ * A version of QTextEdit that only populates plaintext mime data from a
+ * selection, this avoids some bad behavior in QT's HTML->Markdown conversion.
+ */
+class PlainCopyTextEdit : public QTextEdit {
+    Q_OBJECT
+public:
+    using QTextEdit::QTextEdit;
+protected:
+    QMimeData* createMimeDataFromSelection() const override {
+        auto md = new QMimeData();
+        md->setText(textCursor().selection().toPlainText());
+        return md;
+    }
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H

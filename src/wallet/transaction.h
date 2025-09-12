@@ -232,6 +232,8 @@ public:
      * CWallet::ComputeTimeSmart().
      */
     unsigned int nTimeSmart;
+    // Cached value for whether the transaction spends any inputs known to the wallet
+    mutable std::optional<bool> m_cached_from_me{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -339,6 +341,7 @@ public:
         m_amounts[CREDIT].Reset();
         fChangeCached = false;
         m_is_cache_empty = true;
+        m_cached_from_me = std::nullopt;
     }
 
     /** True if only scriptSigs are different */
