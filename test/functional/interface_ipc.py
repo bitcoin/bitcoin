@@ -7,7 +7,7 @@ import asyncio
 from io import BytesIO
 from pathlib import Path
 import shutil
-from test_framework.messages import (CBlock, CTransaction, ser_uint256)
+from test_framework.messages import (CBlock, CTransaction, ser_uint256, COIN)
 from test_framework.test_framework import (BitcoinTestFramework, assert_equal)
 from test_framework.wallet import MiniWallet
 
@@ -72,6 +72,12 @@ class IPCInterfaceTest(BitcoinTestFramework):
         block = CBlock()
         block.deserialize(block_data)
         return block
+
+    async def parse_and_deserialize_coinbase_tx(self, block_template, ctx):
+        coinbase_data = BytesIO((await block_template.result.getCoinbaseTx(ctx)).result)
+        tx = CTransaction()
+        tx.deserialize(coinbase_data)
+        return tx
 
     def run_echo_test(self):
         self.log.info("Running echo test")
@@ -170,6 +176,41 @@ class IPCInterfaceTest(BitcoinTestFramework):
             self.log.debug("Wait for another, but time out, since the fee threshold is set now")
             template7 = await template6.result.waitNext(ctx, waitoptions)
             assert_equal(template7.to_dict(), {})
+
+            current_block_height = self.nodes[0].getchaintips()[0]["height"]
+            check_opts = self.capnp_modules['mining'].BlockCheckOptions()
+            template = await mining.result.createNewBlock(opts)
+            block = await self.parse_and_deserialize_block(template, ctx)
+            coinbase = await self.parse_and_deserialize_coinbase_tx(template, ctx)
+            balance = miniwallet.get_balance()
+            coinbase.vout[0].scriptPubKey = miniwallet.get_output_script()
+            coinbase.vout[0].nValue = COIN
+            block.vtx[0] = coinbase
+            block.hashMerkleRoot = block.calc_merkle_root()
+            original_version = block.nVersion
+            self.log.debug("Submit a block with a bad version")
+            block.nVersion = 0
+            block.solve()
+            res = await mining.result.checkBlock(block.serialize(), check_opts)
+            assert_equal(res.result, False)
+            assert_equal(res.reason, "bad-version(0x00000000)")
+            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+            assert_equal(res.result, False)
+            self.log.debug("Submit a valid block")
+            block.nVersion = original_version
+            block.solve()
+            res = await mining.result.checkBlock(block.serialize(), check_opts)
+            assert_equal(res.result, True)
+            res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+            assert_equal(res.result, True)
+            assert_equal(self.nodes[0].getchaintips()[0]["height"], current_block_height + 1)
+            miniwallet.rescan_utxos()
+            assert_equal(miniwallet.get_balance(), balance + 1)
+            self.log.debug("Check block should fail now, since it is a duplicate")
+            res = await mining.result.checkBlock(block.serialize(), check_opts)
+            assert_equal(res.result, False)
+            assert_equal(res.reason, "inconclusive-not-best-prevblk")
+
             self.log.debug("Destroy template objects")
             template.result.destroy(ctx)
             template2.result.destroy(ctx)
