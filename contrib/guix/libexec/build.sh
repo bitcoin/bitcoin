@@ -248,11 +248,6 @@ mkdir -p "$DISTSRC"
     # Build Bitcoin Core
     cmake --build build -j "$JOBS" ${V:+--verbose}
 
-    # Perform basic security checks on a series of executables.
-    cmake --build build -j 1 --target check-security ${V:+--verbose}
-    # Check that executables only contain allowed version symbols.
-    cmake --build build -j 1 --target check-symbols ${V:+--verbose}
-
     mkdir -p "$OUTDIR"
 
     # Make the os-specific installers
@@ -281,6 +276,14 @@ mkdir -p "$DISTSRC"
             cmake --install build --prefix "${INSTALLPATH}" ${V:+--verbose}
             ;;
     esac
+
+    # Perform basic security checks on INSTALLED executables.
+    # These checks now happen after installation, so RPATHs point to final locations.
+    echo "Checking binary security on installed executables..."
+    python3 "${DISTSRC}/contrib/guix/security-check.py" "${INSTALLPATH}/bin/"*
+    # Check that executables only contain allowed version symbols.
+    echo "Running symbol and dynamic library checks on installed executables..."
+    python3 "${DISTSRC}/contrib/guix/symbol-check.py" "${INSTALLPATH}/bin/"*
 
     (
         cd installed
