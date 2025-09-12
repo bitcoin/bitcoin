@@ -92,12 +92,14 @@ Run the tests:
 
 To create a report, `gcovr` is recommended, as it includes branch coverage reporting:
 
-    $ gcovr --exclude 'src/bench*' --print-summary
+    $ gcovr --gcov-ignore-parse-errors=all --merge-mode-functions=separate --exclude 'src/bench*' --exclude 'src/modules/.*/bench_impl.h' --print-summary
 
 To create a HTML report with coloured and annotated source code:
 
     $ mkdir -p coverage
-    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage/coverage.html
+    $ gcovr --gcov-ignore-parse-errors=all --merge-mode-functions=separate --exclude 'src/bench*' --exclude 'src/modules/.*/bench_impl.h' --html --html-details -o coverage/coverage.html
+
+On `gcovr` >=8.3, `--gcov-ignore-parse-errors=all` can be replaced with `--gcov-suspicious-hits-threshold=140737488355330`.
 
 #### Exhaustive tests
 
