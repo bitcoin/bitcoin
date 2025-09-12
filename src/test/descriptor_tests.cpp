@@ -52,7 +52,7 @@ constexpr int XONLY_KEYS = 1 << 6; // X-only pubkeys are in use (and thus inferr
 constexpr int MISSING_PRIVKEYS = 1 << 7; // Not all private keys are available, so ToPrivateString will fail.
 constexpr int SIGNABLE_FAILS = 1 << 8; // We can sign with this descriptor, but actually trying to sign will fail
 constexpr int MUSIG = 1 << 9; // This is a MuSig so key counts will have an extra key
-constexpr int MUSIG_DERIVATION = 1 << 10; // MuSig with derivation from the aggregate key
+constexpr int MUSIG_DERIVATION = 1 << 10; // MuSig with BIP 328 derivation from the aggregate key
 constexpr int MIXED_MUSIG = 1 << 11; // Both MuSig and normal key expressions are present
 constexpr int UNIQUE_XPUBS = 1 << 12; // Whether the xpub count should be of unique xpubs
 
@@ -315,6 +315,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
             size_t num_xpubs = CountXpubs(pub1);
             size_t num_unique_xpubs = CountUniqueXpubs(pub1);
             if (flags & MUSIG_DERIVATION) {
+                // Deriving from the aggregate will include the synthetic xpub of the aggregate in the caches and SigningProviders.
                 num_xpubs++;
                 num_unique_xpubs++;
             }
