@@ -146,8 +146,9 @@ class AssumeValidTest(BitcoinTestFramework):
         p2p0.send_header_for_blocks(self.blocks[2000:])
 
         # Send blocks to node0. Block 102 will be rejected.
-        self.send_blocks_until_disconnected(p2p0)
-        self.wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
+        with self.nodes[0].assert_debug_log(expected_msgs=['Enabling signature validations at block #1']):
+            self.send_blocks_until_disconnected(p2p0)
+            self.wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
         assert_equal(self.nodes[0].getblockcount(), COINBASE_MATURITY + 1)
 
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
