@@ -98,6 +98,7 @@ add_executable(test_bitcoin
   sigopcount_tests.cpp
   skiplist_tests.cpp
   sock_tests.cpp
+  sockman_tests.cpp
   span_tests.cpp
   streams_tests.cpp
   sync_tests.cpp
