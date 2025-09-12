@@ -880,6 +880,7 @@ Coin MakeCoin()
 {
     Coin coin;
     coin.out.nValue = m_rng.rand32();
+    coin.out.scriptPubKey.assign(m_rng.randbits(6), 0);
     coin.nHeight = m_rng.randrange(4096);
     coin.fCoinBase = 0;
     return coin;
@@ -970,12 +971,6 @@ void TestFlushBehavior(
         BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::CLEAN));
     }
 
-    // Can't overwrite an entry without specifying that an overwrite is
-    // expected.
-    BOOST_CHECK_THROW(
-        view->AddCoin(outp, Coin(coin), /*possible_overwrite=*/ false),
-        std::logic_error);
-
     // --- 6. Spend the coin.
     //
     BOOST_CHECK(view->SpendCoin(outp));
@@ -1043,6 +1038,14 @@ void TestFlushBehavior(
     BOOST_CHECK(!GetCoinsMapEntry(all_caches[0]->map(), outp));
     BOOST_CHECK(!all_caches[0]->HaveCoinInCache(outp));
     BOOST_CHECK(!base.HaveCoin(outp));
+
+    // Can't overwrite an entry without specifying that an overwrite is
+    // expected.
+    coin = MakeCoin();
+    view->AddCoin(outp, Coin(coin), false);
+    BOOST_CHECK_THROW(
+        view->AddCoin(outp, Coin(coin), /*possible_overwrite=*/ false),
+        std::logic_error);
 }
 }; // struct FlushTest
 
