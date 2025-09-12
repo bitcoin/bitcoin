@@ -95,6 +95,29 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
   rm -rf /llvm-project
 fi
 
+if [[ ${BARE_METAL_RISCV} == "true" ]]; then
+    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/riscv-collab/riscv-gnu-toolchain -b 2024.11.22 /riscv/gcc
+    ( cd /riscv/gcc;
+      ./configure --prefix=/opt/riscv-ilp32 --with-arch=rv32gc --with-abi=ilp32;
+      make -j "$MAKEJOBS";
+      make install; )
+    rm -rf /riscv/gcc
+
+    ${CI_RETRY_EXE} git clone --depth=1 https://sourceware.org/git/newlib-cygwin.git -b topic/3.6 /riscv/newlib
+    ( cd /riscv/newlib;
+      mkdir build && cd build;
+      ../configure \
+          --target=riscv32-unknown-elf --with-arch=rv32gc --with-abi=ilp32 --disable-shared --disable-multilib\
+          --prefix=/opt/newlib \
+          CC_FOR_TARGET=/opt/riscv-ilp32/bin/riscv32-unknown-elf-gcc \
+          CXX_FOR_TARGET=/opt/riscv-ilp32/bin/riscv32-unknown-elf-g++ \
+          AR_FOR_TARGET=/opt/riscv-ilp32/bin/riscv32-unknown-elf-ar \
+          RANLIB_FOR_TARGET=/opt/riscv-ilp32/bin/riscv32-unknown-elf-ranlib
+      make -j "$MAKEJOBS";
+      make install; )
+    rm -rf /riscv/newlib
+fi
+
 if [[ "${RUN_TIDY}" == "true" ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${TIDY_LLVM_V}" /include-what-you-use
   cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${TIDY_LLVM_V}" -S /include-what-you-use
