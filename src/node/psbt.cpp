@@ -8,6 +8,8 @@
 #include <node/psbt.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
+#include <script/sign.h>
+#include <script/signingprovider.h>
 #include <tinyformat.h>
 
 #include <numeric>
@@ -61,6 +63,38 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         // Check if it is final
         if (!PSBTInputSignedAndVerified(psbtx, i, &txdata)) {
             input_analysis.is_final = false;
+
+            // Check for invalid taproot key path signature
+            if (!input.m_tap_key_sig.empty() && input_analysis.has_utxo) {
+                // Taproot signature is present - check if it's valid
+                int wit_ver;
+                std::vector<unsigned char> wit_prog;
+                if (utxo.scriptPubKey.IsWitnessProgram(wit_ver, wit_prog) && wit_ver == 1) {
+                    // This is a taproot output
+                    // Schnorr signatures must be either 64 or 65 bytes (with sighash flag)
+                    if (input.m_tap_key_sig.size() != 64 && input.m_tap_key_sig.size() != 65) {
+                        result.SetInvalid(strprintf("PSBT is not valid. Input %u has invalid taproot key path signature length (%u bytes)", i, input.m_tap_key_sig.size()));
+                        return result;
+                    }
+                    
+                    // Check if we have finalized witness data for taproot
+                    // If we have a taproot signature but the input couldn't be verified,
+                    // and there's no final_script_witness, it likely means the signature is invalid
+                    if (input.final_script_witness.IsNull()) {
+                        // Try to finalize with the existing signature to see if it's valid
+                        SignatureData test_sigdata;
+                        input.FillSignatureData(test_sigdata);
+                        
+                        // If we have a taproot key path signature but ProduceSignature doesn't complete,
+                        // it might be because the signature is invalid
+                        bool test_complete = ProduceSignature(DUMMY_SIGNING_PROVIDER, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, test_sigdata);
+                        if (!test_complete && !test_sigdata.taproot_key_path_sig.empty()) {
+                            result.SetInvalid(strprintf("PSBT is not valid. Input %u has an invalid taproot key path signature", i));
+                            return result;
+                        }
+                    }
+                }
+            }
 
             // Figure out what is missing
             SignatureData outdata;
