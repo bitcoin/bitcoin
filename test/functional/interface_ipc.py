@@ -8,7 +8,8 @@ from io import BytesIO
 from pathlib import Path
 import shutil
 from test_framework.messages import (CBlock, CTransaction, ser_uint256, COIN)
-from test_framework.test_framework import (BitcoinTestFramework, assert_equal)
+from test_framework.test_framework import (BitcoinTestFramework)
+from test_framework.util import assert_equal, assert_not_equal
 from test_framework.wallet import MiniWallet
 
 # Test may be skipped and not have capnp installed
@@ -199,8 +200,10 @@ class IPCInterfaceTest(BitcoinTestFramework):
             self.log.debug("Submit a valid block")
             block.nVersion = original_version
             block.solve()
+            self.log.debug("First call checkBlock()")
             res = await mining.result.checkBlock(block.serialize(), check_opts)
             assert_equal(res.result, True)
+            self.log.debug("Submit the block")
             res = await template.result.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
             assert_equal(res.result, True)
             assert_equal(self.nodes[0].getchaintips()[0]["height"], current_block_height + 1)
@@ -210,6 +213,14 @@ class IPCInterfaceTest(BitcoinTestFramework):
             res = await mining.result.checkBlock(block.serialize(), check_opts)
             assert_equal(res.result, False)
             assert_equal(res.reason, "inconclusive-not-best-prevblk")
+
+            self.log.debug("Fetch block from the template")
+            res = await template.result.applySolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
+            assert_equal(block.serialize().hex(), res.result.hex())
+
+            self.log.debug("Coinbase must include witness")
+            res = await template.result.applySolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
+            assert_not_equal(block.serialize().hex(), res.result.hex())
 
             self.log.debug("Destroy template objects")
             template.result.destroy(ctx)

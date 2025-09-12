@@ -61,6 +61,11 @@ public:
     virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
 
     /**
+     * Re-construct and return the block. Does not validate or submit.
+     */
+    virtual CBlock applySolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
+
+    /**
      * Waits for fees in the next block to rise, a new tip or the timeout.
      *
      * @param[in] options   Control the timeout (default forever) and by how much total fees

@@ -758,7 +758,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         if (current_height % 2 == 0) {
             BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
         } else {
-            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase)));
+            const CTransactionRef coinbase{MakeTransactionRef(txCoinbase)};
+            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, coinbase));
+            // Check that we can reconstruct the block:
+            const CBlock reconstructed_block{block_template->applySolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase))};
+            DataStream ss_expected_block{};
+            ss_expected_block << TX_WITH_WITNESS(block);
+            DataStream ss_reconstructed_block{};
+            ss_reconstructed_block << TX_WITH_WITNESS(reconstructed_block);
+            BOOST_REQUIRE_EQUAL(HexStr(ss_expected_block), HexStr(ss_reconstructed_block));
         }
         {
             LOCK(cs_main);
