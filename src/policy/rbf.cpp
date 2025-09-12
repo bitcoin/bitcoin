@@ -103,7 +103,7 @@ std::optional<std::string> HasNoNewUnconfirmed(const CTransaction& tx,
         // Note that if you relax this to make RBF a little more useful, this may break the
         // CalculateMempoolAncestors RBF relaxation which subtracts the conflict count/size from the
         // descendant limit.
-        if (!parents_of_conflicts.count(tx.vin[j].prevout.hash)) {
+        if (!parents_of_conflicts.contains(tx.vin[j].prevout.hash)) {
             // Rather than check the UTXO set - potentially expensive - it's cheaper to just check
             // if the new input refers to a tx that's in the mempool.
             if (pool.exists(tx.vin[j].prevout.hash)) {
@@ -121,7 +121,7 @@ std::optional<std::string> EntriesAndTxidsDisjoint(const CTxMemPool::setEntries&
 {
     for (CTxMemPool::txiter ancestorIt : ancestors) {
         const Txid& hashAncestor = ancestorIt->GetTx().GetHash();
-        if (direct_conflicts.count(hashAncestor)) {
+        if (direct_conflicts.contains(hashAncestor)) {
             return strprintf("%s spends conflicting transaction %s",
                              txid.ToString(),
                              hashAncestor.ToString());
