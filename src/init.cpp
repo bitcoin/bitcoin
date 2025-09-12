@@ -1768,6 +1768,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // cache size calculations
     const auto [index_cache_sizes, kernel_cache_sizes] = CalculateCacheSizes(args, g_enabled_filter_types.size());
+    if (auto total_ram{GetTotalRAM()}) {
+        size_t cap{(*total_ram < 2048_MiB) ? DEFAULT_KERNEL_CACHE : (*total_ram / 100) * 75};
+        if (kernel_cache_sizes.coins > cap) {
+            LogWarning("A %zu MiB dbcache may be too large for a system memory of only %zu MiB.", kernel_cache_sizes.coins >> 20, *total_ram >> 20);
+        }
+    }
 
     LogInfo("Cache configuration:");
     LogInfo("* Using %.1f MiB for block index database", kernel_cache_sizes.block_tree_db * (1.0 / 1024 / 1024));
