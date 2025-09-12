@@ -913,7 +913,16 @@ public:
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return chainman().ProcessNewBlock(std::make_shared<const CBlock>(m_block_template->block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
+        bool res{chainman().ProcessNewBlock(std::make_shared<const CBlock>(m_block_template->block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr)};
+        if (!res) {
+            // In addition to the validation error logged by ProcessNewBlock,
+            // log the reconstructed block because the caller may not have the
+            // complete template data to do this themselves.
+            DataStream ss_block{};
+            ss_block << TX_WITH_WITNESS(m_block_template->block);
+            LogInfo("%s", HexStr(ss_block));
+        }
+        return res;
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
