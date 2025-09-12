@@ -8,14 +8,11 @@ import sys
 import argparse
 import json
 
-def perform_pre_checks():
-    mock_result_path = os.path.join(os.getcwd(), "mock_result")
-    if os.path.isfile(mock_result_path):
-        with open(mock_result_path, "r", encoding="utf8") as f:
-            mock_result = f.read()
-        if mock_result[0]:
-            sys.stdout.write(mock_result[2:])
-            sys.exit(int(mock_result[0]))
+from test_framework.util import (
+    mock_signer_perform_pre_checks,
+    mock_signer_psbt_path,
+    mock_signer_log,
+)
 
 def enumerate(args):
     sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}]))
@@ -60,7 +57,7 @@ def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
-    with open(os.path.join(os.getcwd(), "mock_psbt"), "r", encoding="utf8") as f:
+    with open(mock_signer_psbt_path(os.getcwd()), "r", encoding="utf8") as f:
         mock_psbt = f.read()
 
     if args.fingerprint == "00000001" :
@@ -70,6 +67,10 @@ def signtx(args):
         }))
     else:
         sys.stdout.write(json.dumps({"psbt": args.psbt}))
+
+
+log = mock_signer_log("external_signer")
+log.debug("Started")
 
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 parser.add_argument('--fingerprint')
@@ -102,6 +103,8 @@ if not sys.stdin.isatty():
 
 args = parser.parse_args()
 
-perform_pre_checks()
+mock_signer_perform_pre_checks()
 
 args.func(args)
+
+log.debug("Finished")
