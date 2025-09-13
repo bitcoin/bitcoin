@@ -620,7 +620,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             // sockerr here.
             int sockerr;
             socklen_t sockerr_len = sizeof(sockerr);
-            if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&sockerr, &sockerr_len) ==
+            if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, &sockerr, &sockerr_len) ==
                 SOCKET_ERROR) {
                 LogPrintf("getsockopt() for %s failed: %s\n", dest_str, NetworkErrorString(WSAGetLastError()));
                 return false;
