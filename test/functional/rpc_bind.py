@@ -84,7 +84,10 @@ class RPCBindTest(BitcoinTestFramework):
         if not self.options.run_nonloopback:
             self._run_loopback_tests()
         if not self.options.run_ipv4 and not self.options.run_ipv6:
-            self._run_nonloopback_tests()
+            if self.non_loopback_ip:
+                self._run_nonloopback_tests()
+            else:
+                self.log.info('Non-loopback IP address not found, skipping non-loopback tests')
 
     def _run_loopback_tests(self):
         if self.options.run_ipv4:
