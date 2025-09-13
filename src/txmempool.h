@@ -878,8 +878,6 @@ public:
         void Apply() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     private:
-        // Calculate the parents of a given transaction, looking in the mempool and in the change set.
-        std::vector<const TxGraph::Ref *> CalculateParentsOf(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(m_pool->cs);
         void ProcessDependencies();
 
         CTxMemPool* m_pool;

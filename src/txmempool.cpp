@@ -1438,36 +1438,22 @@ void CTxMemPool::ChangeSet::Apply()
     m_ancestors.clear();
 }
 
-std::vector<const TxGraph::Ref*> CTxMemPool::ChangeSet::CalculateParentsOf(const CTransactionRef& tx)
-{
-    std::vector<const TxGraph::Ref*> ret;
-    std::set<Txid> inputs;
-    for (const CTxIn &txin : tx->vin) {
-        inputs.insert(txin.prevout.hash);
-    }
-    for (const auto &hash : inputs) {
-        std::optional<txiter> piter = m_pool->GetIter(hash);
-        if (piter) {
-            ret.emplace_back(&(**piter));
-        } else {
-            // Check the change set for parents.
-            auto it = m_to_add.find(hash);
-            if (it != m_to_add.end()) {
-                ret.emplace_back(&(*it));
-            }
-        }
-    }
-    return ret;
-}
-
 void CTxMemPool::ChangeSet::ProcessDependencies()
 {
     LOCK(m_pool->cs);
     Assume(!m_dependencies_processed); // should only call this once.
     for (const auto& entryptr : m_entry_vec) {
-        auto parents = CalculateParentsOf(entryptr->GetSharedTx());
-        for (auto p : parents) {
-            m_pool->m_txgraph->AddDependency(*p, *entryptr);
+        for (const auto &txin : entryptr->GetSharedTx()->vin) {
+            std::optional<txiter> piter = m_pool->GetIter(txin.prevout.hash);
+            if (!piter) {
+                auto it = m_to_add.find(txin.prevout.hash);
+                if (it != m_to_add.end()) {
+                    piter = std::make_optional(it);
+                }
+            }
+            if (piter) {
+                m_pool->m_txgraph->AddDependency(**piter, *entryptr);
+            }
         }
     }
     m_dependencies_processed = true;
