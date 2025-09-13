@@ -413,7 +413,7 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
     : m_opts{Flatten(std::move(opts), error)}
 {
-    m_txgraph = MakeTxGraph(64, 101'000, 10'000);
+    m_txgraph = MakeTxGraph(64, 101'000, ACCEPTABLE_ITERS);
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
