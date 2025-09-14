@@ -200,7 +200,7 @@ public:
     virtual bool HasEntries(NetInfoPurpose purpose) const = 0;
     virtual bool IsEmpty() const = 0;
     virtual NetInfoStatus Validate() const = 0;
-    virtual UniValue ToJson() const = 0;
+    virtual UniValue ToJson(std::optional<NetInfoPurpose> purpose_opt = std::nullopt) const = 0;
     virtual std::string ToString() const = 0;
 
     virtual void Clear() = 0;
@@ -258,7 +258,7 @@ public:
     bool IsEmpty() const override { return m_addr.IsEmpty(); }
     bool CanStorePlatform() const override { return false; }
     NetInfoStatus Validate() const override;
-    UniValue ToJson() const override;
+    UniValue ToJson(std::optional<NetInfoPurpose> purpose_opt = std::nullopt) const override;
     std::string ToString() const override;
 
     void Clear() override { m_addr.Clear(); }
@@ -346,7 +346,7 @@ public:
     bool IsEmpty() const override { return m_version == CURRENT_VERSION && m_data.empty(); }
     bool CanStorePlatform() const override { return true; }
     NetInfoStatus Validate() const override;
-    UniValue ToJson() const override;
+    UniValue ToJson(std::optional<NetInfoPurpose> purpose_opt = std::nullopt) const override;
     std::string ToString() const override;
 
     void Clear() override

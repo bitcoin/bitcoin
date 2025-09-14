@@ -245,8 +245,16 @@ NetInfoStatus MnNetInfo::Validate() const
     return ValidateService(GetPrimary());
 }
 
-UniValue MnNetInfo::ToJson() const
+UniValue MnNetInfo::ToJson(std::optional<NetInfoPurpose> purpose_opt) const
 {
+    if (purpose_opt) {
+        UniValue arr(UniValue::VARR);
+        for (const auto& entry : GetEntries(purpose_opt)) {
+            arr.push_back(entry.ToStringAddrPort());
+        }
+        return arr;
+    }
+
     UniValue ret{UniValue::VOBJ};
     if (!IsEmpty()) {
         ret.pushKV(PurposeToString(NetInfoPurpose::CORE_P2P).data(), ArrFromService(GetPrimary()));
@@ -443,8 +451,17 @@ NetInfoStatus ExtNetInfo::Validate() const
     return NetInfoStatus::Success;
 }
 
-UniValue ExtNetInfo::ToJson() const
+UniValue ExtNetInfo::ToJson(std::optional<NetInfoPurpose> purpose_opt) const
 {
+    // Report only a subset of all addresses if supplied a purpose code
+    if (purpose_opt) {
+        UniValue arr(UniValue::VARR);
+        for (const auto& entry : GetEntries(purpose_opt)) {
+            arr.push_back(entry.ToStringAddrPort());
+        }
+        return arr;
+    }
+
     UniValue ret(UniValue::VOBJ);
     for (const auto& [purpose, entries] : m_data) {
         UniValue arr(UniValue::VARR);

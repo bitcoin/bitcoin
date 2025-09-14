@@ -1876,7 +1876,7 @@ void CCoinJoinClientSession::GetJsonInfo(UniValue& obj) const
         if (m_wallet->chain().rpcEnableDeprecated("service")) {
             obj.pushKV("service", mixingMasternode->pdmnState->netInfo->GetPrimary().ToStringAddrPort());
         }
-        obj.pushKV("addresses", GetNetInfoWithLegacyFields(*mixingMasternode->pdmnState, mixingMasternode->nType));
+        obj.pushKV("addrs_core_p2p", mixingMasternode->pdmnState->netInfo->ToJson(NetInfoPurpose::CORE_P2P));
     }
     obj.pushKV("denomination", ValueFromAmount(CoinJoin::DenominationToAmount(nSessionDenom)));
     obj.pushKV("state", GetStateString());
