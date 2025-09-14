@@ -218,15 +218,15 @@ NetInfoStatus MnNetInfo::AddEntry(const NetInfoPurpose purpose, const std::strin
     return NetInfoStatus::BadInput;
 }
 
-NetInfoList MnNetInfo::GetEntries() const
+NetInfoList MnNetInfo::GetEntries(std::optional<NetInfoPurpose> purpose_opt) const
 {
-    if (!IsEmpty()) {
+    if (!IsEmpty() && (!purpose_opt || *purpose_opt == NetInfoPurpose::CORE_P2P)) {
         ASSERT_IF_DEBUG(m_addr.GetAddrPort().has_value());
         return {m_addr};
     }
-    // If MnNetInfo is empty, we probably don't expect any entries to show up, so
-    // we return a blank set instead.
-    return {};
+    // If MnNetInfo is empty or we are given an unexpected purpose code, we don't
+    // expect any entries to show up, so we return a blank set instead.
+    return NetInfoList{};
 }
 
 CService MnNetInfo::GetPrimary() const
@@ -370,11 +370,17 @@ NetInfoStatus ExtNetInfo::AddEntry(const NetInfoPurpose purpose, const std::stri
     return NetInfoStatus::BadInput; /* Lookup() failed */
 }
 
-NetInfoList ExtNetInfo::GetEntries() const
+NetInfoList ExtNetInfo::GetEntries(std::optional<NetInfoPurpose> purpose_opt) const
 {
-    // ExtNetInfo is an append-only structure, we can avoid re-calculating
-    // a list of all entries by maintaining a small cache.
-    return m_all_entries;
+    if (!purpose_opt) {
+        // Without a purpose code specified, we're being requested for a flattened list of all
+        // entries. ExtNetInfo is an append-only structure, so we can avoid re-calculating a
+        // list of all entries by maintaining a small cache.
+        return m_all_entries;
+    }
+    if (!IsValidPurpose(*purpose_opt)) return NetInfoList{};
+    const auto& it{m_data.find(*purpose_opt)};
+    return it != m_data.end() ? it->second : NetInfoList{};
 }
 
 CService ExtNetInfo::GetPrimary() const

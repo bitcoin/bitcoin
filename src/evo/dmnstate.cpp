@@ -51,8 +51,8 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     if (nType == MnType::Evo) {
         obj.pushKV("platformNodeID", platformNodeID.ToString());
-        obj.pushKV("platformP2PPort", platformP2PPort);
-        obj.pushKV("platformHTTPPort", platformHTTPPort);
+        obj.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
+        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
     }
 
     CTxDestination dest;

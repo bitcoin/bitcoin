@@ -6,16 +6,16 @@
 #include <evo/assetlocktx.h>
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
-#include <index/txindex.h>
-#include <node/blockstorage.h>
-#include <node/context.h>
 #include <governance/governance.h>
+#include <index/txindex.h>
 #include <masternode/node.h>
 #include <masternode/payments.h>
 #include <net.h>
 #include <netbase.h>
-#include <rpc/server.h>
+#include <node/blockstorage.h>
+#include <node/context.h>
 #include <rpc/evo_util.h>
+#include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <univalue.h>
@@ -623,8 +623,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
             objMN.pushKV("type", std::string(GetMnType(dmn.nType).description));
             if (dmn.nType == MnType::Evo) {
                 objMN.pushKV("platformNodeID", dmn.pdmnState->platformNodeID.ToString());
-                objMN.pushKV("platformP2PPort", dmn.pdmnState->platformP2PPort);
-                objMN.pushKV("platformHTTPPort", dmn.pdmnState->platformHTTPPort);
+                objMN.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*dmn.pdmnState));
+                objMN.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*dmn.pdmnState));
             }
             objMN.pushKV("pospenaltyscore", dmn.pdmnState->nPoSePenalty);
             objMN.pushKV("consecutivePayments", dmn.pdmnState->nConsecutivePayments);

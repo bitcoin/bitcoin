@@ -85,8 +85,8 @@
     ret.pushKV("operatorReward", (double)nOperatorReward / 100);
     if (nType == MnType::Evo) {
         ret.pushKV("platformNodeID", platformNodeID.ToString());
-        ret.pushKV("platformP2PPort", platformP2PPort);
-        ret.pushKV("platformHTTPPort", platformHTTPPort);
+        ret.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
+        ret.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
     }
     ret.pushKV("inputsHash", inputsHash.ToString());
     return ret;
@@ -131,8 +131,8 @@
     }
     if (nType == MnType::Evo) {
         ret.pushKV("platformNodeID", platformNodeID.ToString());
-        ret.pushKV("platformP2PPort", platformP2PPort);
-        ret.pushKV("platformHTTPPort", platformHTTPPort);
+        ret.pushKV("platformP2PPort", GetPlatformPort</*is_p2p=*/true>(*this));
+        ret.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
     }
     ret.pushKV("inputsHash", inputsHash.ToString());
     return ret;
@@ -170,7 +170,7 @@
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
     if (nType == MnType::Evo) {
-        obj.pushKV("platformHTTPPort", platformHTTPPort);
+        obj.pushKV("platformHTTPPort", GetPlatformPort</*is_p2p=*/false>(*this));
         obj.pushKV("platformNodeID", platformNodeID.ToString());
     }
 
