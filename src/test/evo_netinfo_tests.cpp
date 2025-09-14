@@ -126,6 +126,16 @@ BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
         BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.5:9998"), NetInfoStatus::MaxLimit);
         ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/MAX_ENTRIES_EXTNETINFO);
     }
+
+    {
+        // ExtNetInfo does not allow storing duplicates
+        ExtNetInfo netInfo;
+        BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1:9998"), NetInfoStatus::Success);
+        // Exact duplicates are prohibited
+        BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1:9998"), NetInfoStatus::Duplicate);
+        // Partial duplicates (same address, different port) are also prohibited
+        BOOST_CHECK_EQUAL(netInfo.AddEntry("1.1.1.1:9997"), NetInfoStatus::Duplicate);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(netinfo_ser)

@@ -910,6 +910,7 @@ static bool CheckService(const ProTx& proTx, TxValidationState& state)
         return true;
     // Shouldn't be possible during self-checks
     case NetInfoStatus::BadInput:
+    case NetInfoStatus::Duplicate:
     case NetInfoStatus::MaxLimit:
         assert(false);
     } // no default case, so the compiler can warn about missing cases

@@ -259,12 +259,34 @@ std::string MnNetInfo::ToString() const
     return IsEmpty() ? "MnNetInfo()" : strprintf("MnNetInfo([%s])", m_addr.ToString());
 }
 
+bool ExtNetInfo::HasDuplicates() const
+{
+    std::unordered_set<std::string> known{};
+    for (const NetInfoEntry& entry : m_data) {
+        if (auto [_, inserted] = known.insert(entry.ToStringAddr()); !inserted) {
+            return true;
+        }
+    }
+    ASSERT_IF_DEBUG(known.size() == m_data.size());
+    return false;
+}
+
+bool ExtNetInfo::IsDuplicateCandidate(const NetInfoEntry& candidate) const
+{
+    const std::string& candidate_str{candidate.ToStringAddr()};
+    return std::any_of(m_data.begin(), m_data.end(),
+                       [&candidate_str](const auto& entry) { return candidate_str == entry.ToStringAddr(); });
+}
+
 NetInfoStatus ExtNetInfo::ProcessCandidate(const NetInfoEntry& candidate)
 {
     assert(candidate.IsTriviallyValid());
 
     if (m_data.size() >= MAX_ENTRIES_EXTNETINFO) {
         return NetInfoStatus::MaxLimit;
+    }
+    if (IsDuplicateCandidate(candidate)) {
+        return NetInfoStatus::Duplicate;
     }
     m_data.push_back(candidate);
 
@@ -330,6 +352,9 @@ NetInfoStatus ExtNetInfo::Validate() const
 {
     if (m_version == 0 || m_version > CURRENT_VERSION || m_data.empty()) {
         return NetInfoStatus::Malformed;
+    }
+    if (HasDuplicates()) {
+        return NetInfoStatus::Duplicate;
     }
     for (const auto& entry : m_data) {
         if (!entry.IsTriviallyValid()) {
