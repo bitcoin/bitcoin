@@ -4,12 +4,9 @@
 
 #include <rpc/evo_util.h>
 
-#include <evo/netinfo.h>
 #include <evo/providertx.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
-#include <rpc/util.h>
-#include <util/check.h>
 
 #include <univalue.h>
 

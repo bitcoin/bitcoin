@@ -6,6 +6,8 @@
 
 #include <script/standard.h>
 
+#include <rpc/evo_util.h>
+
 #include <univalue.h>
 
 std::string CDeterministicMNState::ToString() const
@@ -36,7 +38,7 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
     if (IsServiceDeprecatedRPCEnabled()) {
         obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    obj.pushKV("addresses", netInfo->ToJson());
+    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     obj.pushKV("registeredHeight", nRegisteredHeight);
     obj.pushKV("lastPaidHeight", nLastPaidHeight);
     obj.pushKV("consecutivePayments", nConsecutivePayments);

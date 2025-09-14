@@ -103,6 +103,9 @@ bool IsNodeOnMainnet();
 /** Identical to IsDeprecatedRPCEnabled("service"). For use outside of RPC code */
 bool IsServiceDeprecatedRPCEnabled();
 
+/** Creates a one-element array using CService::ToStringPortAddr() output */
+UniValue ArrFromService(const CService& addr);
+
 /** Equivalent to Params() if node is running on mainnet */
 const CChainParams& MainParams();
 

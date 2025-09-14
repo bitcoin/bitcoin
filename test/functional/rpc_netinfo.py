@@ -19,6 +19,7 @@ from test_framework.test_node import TestNode
 
 from _decimal import Decimal
 from random import randint
+from typing import Optional
 
 # See CMainParams in src/chainparams.cpp
 DEFAULT_PORT_MAINNET_CORE_P2P = 9999
@@ -153,8 +154,12 @@ class NetInfoTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def check_netinfo_fields(self, val, core_p2p_port: int):
+    def check_netinfo_fields(self, val, core_p2p_port: int, plat_https_port: Optional[int], plat_p2p_port: Optional[int]):
         assert_equal(val['core_p2p'][0], f"127.0.0.1:{core_p2p_port}")
+        if plat_https_port:
+            assert_equal(val['platform_https'][0], f"127.0.0.1:{plat_https_port}")
+        if plat_p2p_port:
+            assert_equal(val['platform_p2p'][0], f"127.0.0.1:{plat_p2p_port}")
 
     def run_test(self):
         self.node_evo: Node = Node(self.nodes[0], True)
@@ -259,11 +264,13 @@ class NetInfoTest(BitcoinTestFramework):
         assert "addresses" in protx_listdiff_rpc['updatedMNs'][0][proregtx_hash].keys()
 
         self.log.info("Test 'addresses' report correctly")
-        self.check_netinfo_fields(proregtx_rpc['proRegTx']['addresses'], self.node_evo.mn.nodePort)
-        self.check_netinfo_fields(masternode_status['dmnState']['addresses'], self.node_evo.mn.nodePort)
-        self.check_netinfo_fields(proupservtx_rpc['proUpServTx']['addresses'], self.node_evo.mn.nodePort)
-        self.check_netinfo_fields(protx_diff_rpc['mnList'][0]['addresses'], self.node_evo.mn.nodePort)
-        self.check_netinfo_fields(protx_listdiff_rpc['updatedMNs'][0][proregtx_hash]['addresses'], self.node_evo.mn.nodePort)
+        self.check_netinfo_fields(proregtx_rpc['proRegTx']['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, DEFAULT_PORT_PLATFORM_P2P)
+        self.check_netinfo_fields(masternode_status['dmnState']['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, DEFAULT_PORT_PLATFORM_P2P)
+        self.check_netinfo_fields(proupservtx_rpc['proUpServTx']['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, DEFAULT_PORT_PLATFORM_P2P)
+        # CSimplifiedMNListEntry doesn't store platform P2P network information before extended addresses
+        self.check_netinfo_fields(protx_diff_rpc['mnList'][0]['addresses'], self.node_evo.mn.nodePort, DEFAULT_PORT_PLATFORM_HTTP, None)
+        # TODO: Fix reporting for CDeterministicMNStateDiff
+        self.check_netinfo_fields(protx_listdiff_rpc['updatedMNs'][0][proregtx_hash]['addresses'], self.node_evo.mn.nodePort, None, None)
 
         self.log.info("Test RPCs by default no longer return a 'service' field")
         assert "service" not in proregtx_rpc['proRegTx'].keys()

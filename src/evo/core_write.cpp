@@ -13,6 +13,7 @@
 #include <evo/simplifiedmns.h>
 #include <evo/smldiff.h>
 #include <llmq/commitment.h>
+#include <rpc/evo_util.h>
 
 #include <univalue.h>
 
@@ -74,7 +75,7 @@
     if (IsServiceDeprecatedRPCEnabled()) {
         ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    ret.pushKV("addresses", netInfo->ToJson());
+    ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     ret.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     ret.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
@@ -124,7 +125,7 @@
     if (IsServiceDeprecatedRPCEnabled()) {
         ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    ret.pushKV("addresses", netInfo->ToJson());
+    ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
         ret.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }
@@ -164,7 +165,7 @@
     if (IsServiceDeprecatedRPCEnabled()) {
         obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
     }
-    obj.pushKV("addresses", netInfo->ToJson());
+    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
     obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
