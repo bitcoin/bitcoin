@@ -63,7 +63,7 @@ template void ProcessNetInfoCore(CProRegTx& ptx, const UniValue& input, const bo
 template void ProcessNetInfoCore(CProUpServTx& ptx, const UniValue& input, const bool optional);
 
 template <typename ProTx>
-void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValue& input_http)
+void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValue& input_http, const bool optional)
 {
     CHECK_NONFATAL(ptx.netInfo);
 
@@ -75,7 +75,23 @@ void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValu
         }
 
         const auto& input_str{input.getValStr()};
-        if (!IsNumeric(input_str)) {
+        if (input_str.empty()) {
+            if (!optional) {
+                // Mandatory field, cannot specify blank value
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid param for %s, cannot be empty", field_name));
+            }
+            if (!ptx.netInfo->CanStorePlatform()) {
+                // We can tolerate blank values if netInfo can store platform fields, if it cannot, we are relying
+                // on platform{HTTP,P2P}Port, where it is mandatory even if their netInfo counterpart is optional.
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   strprintf("Invalid param for %s, ProTx version only supports ports", field_name));
+            }
+            if (!ptx.netInfo->IsEmpty()) {
+                // Blank values are tolerable so long as no other field has been populated.
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   strprintf("Invalid param for %s, cannot be empty if other fields populated", field_name));
+            }
+        } else if (!IsNumeric(input_str)) {
             // Cannot be parsed as a number (port) so must be an addr:port string
             if (!ptx.netInfo->CanStorePlatform()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER,

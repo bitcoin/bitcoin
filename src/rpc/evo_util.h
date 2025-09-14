@@ -13,6 +13,6 @@ void ProcessNetInfoCore(ProTx& ptx, const UniValue& input, const bool optional);
 
 /** Process setting (legacy) Platform network information fields based on ProTx version */
 template <typename ProTx>
-void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValue& input_http);
+void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValue& input_http, const bool optional);
 
 #endif // BITCOIN_RPC_EVO_UTIL_H
