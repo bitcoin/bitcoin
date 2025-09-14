@@ -64,6 +64,9 @@ constexpr std::string_view NISToString(const NetInfoStatus code)
 enum class NetInfoPurpose : uint8_t {
     // Mandatory for masternodes
     CORE_P2P = 0,
+    // Mandatory for EvoNodes
+    PLATFORM_P2P = 1,
+    PLATFORM_HTTPS = 2,
 };
 
 template<> struct is_serializable_enum<NetInfoPurpose> : std::true_type {};
@@ -72,6 +75,8 @@ constexpr bool IsValidPurpose(const NetInfoPurpose purpose)
 {
     switch (purpose) {
     case NetInfoPurpose::CORE_P2P:
+    case NetInfoPurpose::PLATFORM_P2P:
+    case NetInfoPurpose::PLATFORM_HTTPS:
         return true;
     } // no default case, so the compiler can warn about missing cases
     return false;
@@ -83,6 +88,10 @@ constexpr std::string_view PurposeToString(const NetInfoPurpose purpose)
     switch (purpose) {
     case NetInfoPurpose::CORE_P2P:
         return "core_p2p";
+    case NetInfoPurpose::PLATFORM_P2P:
+        return "platform_p2p";
+    case NetInfoPurpose::PLATFORM_HTTPS:
+        return "platform_https";
     } // no default case, so the compiler can warn about missing cases
     return "";
 }
@@ -325,12 +334,7 @@ public:
     CService GetPrimary() const override;
     bool HasEntries(NetInfoPurpose purpose) const override;
     bool IsEmpty() const override { return m_version == CURRENT_VERSION && m_data.empty(); }
-    bool CanStorePlatform() const override
-    {
-        // TODO: Store Platform fields, reporting as true as used to differentiate
-        //       with legacy implementation
-        return true;
-    }
+    bool CanStorePlatform() const override { return true; }
     NetInfoStatus Validate() const override;
     UniValue ToJson() const override;
     std::string ToString() const override;

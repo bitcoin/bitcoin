@@ -47,6 +47,9 @@ static const std::vector<TestEntry> vals_main{
     {{NetInfoPurpose::CORE_P2P, ":9999"}, NetInfoStatus::BadInput, NetInfoStatus::BadInput},
     // Bad purpose code
     {{static_cast<NetInfoPurpose>(64), "1.1.1.1:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::MaxLimit},
+    // - MnNetInfo doesn't allow storing anything except a Core P2P address
+    // - ExtNetInfo allows storing Platform P2P addresses
+    {{NetInfoPurpose::PLATFORM_P2P, "1.1.1.1:9999"}, NetInfoStatus::MaxLimit, NetInfoStatus::Success},
 };
 
 void ValidateGetEntries(const NetInfoList& entries, const size_t expected_size)
@@ -107,6 +110,16 @@ BOOST_AUTO_TEST_CASE(mnnetinfo_rules_main)
         BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::CORE_P2P));
         ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/1);
     }
+
+    {
+        // MnNetInfo only allows storing a Core P2P address
+        MnNetInfo netInfo;
+        for (const auto purpose : {NetInfoPurpose::PLATFORM_HTTPS, NetInfoPurpose::PLATFORM_P2P}) {
+            BOOST_CHECK_EQUAL(netInfo.AddEntry(purpose, "1.1.1.1:9999"), NetInfoStatus::MaxLimit);
+            BOOST_CHECK(!netInfo.HasEntries(purpose));
+        }
+        BOOST_CHECK(netInfo.GetEntries().empty());
+    }
 }
 
 BOOST_AUTO_TEST_CASE(extnetinfo_rules_main) { TestExtNetInfo(vals_main); }
@@ -138,17 +151,35 @@ BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
         }
         BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.5:9998"), NetInfoStatus::MaxLimit);
         BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::CORE_P2P));
-        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/MAX_ENTRIES_EXTNETINFO);
+        // The limit applies *per purpose code* and therefore wouldn't error if the address was for a different purpose
+        BOOST_CHECK(!netInfo.HasEntries(NetInfoPurpose::PLATFORM_P2P));
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_P2P, "1.1.1.5:9998"), NetInfoStatus::Success);
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::PLATFORM_P2P));
+        BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Success);
+        // GetEntries() is a tally of all entries across all purpose codes
+        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/MAX_ENTRIES_EXTNETINFO + 1);
     }
 
     {
-        // ExtNetInfo does not allow storing duplicates
+        // ExtNetInfo has restrictions on duplicates
         ExtNetInfo netInfo;
         BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9998"), NetInfoStatus::Success);
-        // Exact duplicates are prohibited
+
+        // Exact (i.e. addr:port) duplicates are prohibited *within* a list
         BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9998"), NetInfoStatus::Duplicate);
-        // Partial duplicates (same address, different port) are also prohibited
+        // Partial (i.e. different port) duplicates are prohibited *within* a list
         BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, "1.1.1.1:9997"), NetInfoStatus::Duplicate);
+
+        // Exact (i.e. addr:port) duplicates are prohibited *across* lists
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_P2P, "1.1.1.1:9998"), NetInfoStatus::Duplicate);
+        // Partial (i.e. different port) duplicates are allowed *across* a list
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::PLATFORM_P2P, "1.1.1.1:9997"), NetInfoStatus::Success);
+
+        BOOST_CHECK_EQUAL(netInfo.Validate(), NetInfoStatus::Success);
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::CORE_P2P));
+        BOOST_CHECK(netInfo.HasEntries(NetInfoPurpose::PLATFORM_P2P));
+        BOOST_CHECK(!netInfo.HasEntries(NetInfoPurpose::PLATFORM_HTTPS));
+        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/2);
     }
 }
 

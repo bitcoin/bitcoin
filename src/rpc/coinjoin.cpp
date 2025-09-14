@@ -441,6 +441,16 @@ static RPCHelpMan getcoinjoininfo()
                                                 {RPCResult::Type::STR, "address", ""},
                                             }
                                         },
+                                        {RPCResult::Type::ARR, "platform_p2p", /*optional=*/true, "Addresses used for Platform P2P (EvoNodes only)",
+                                            {
+                                                {RPCResult::Type::STR, "address", ""},
+                                            }
+                                        },
+                                        {RPCResult::Type::ARR, "platform_https", /*optional=*/true, "Addresses used for Platform HTTPS API (EvoNodes only)",
+                                            {
+                                                {RPCResult::Type::STR, "address", ""},
+                                            }
+                                        },
                                     }},
                                     {RPCResult::Type::NUM, "denomination", "The denomination of the mixing session in " + CURRENCY_UNIT + ""},
                                     {RPCResult::Type::STR_HEX, "state", "Current state of the mixing session"},
