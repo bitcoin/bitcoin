@@ -184,24 +184,36 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "Platform P2P node ID, derived from P2P public key."}
         },
         {"platformP2PPort",
-            {"platformP2PPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "Address in the form \"ADDR:PORT\" used by Platform for peer-to-peer connection.\n"
-                "Must be unique on the network. Can be set to an empty string, which will require a ProUpServTx afterwards."}
+            {"platformP2PPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\" used by Platform for peer-to-peer connection.\n"
+                "Must be unique on the network. Can be set to an empty string, which will require a ProUpServTx afterwards.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
         {"platformP2PPort_update",
-            {"platformP2PPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "Address in the form \"ADDR:PORT\" used by Platform for peer-to-peer connection.\n"
-                "Must be unique on the network."}
+            {"platformP2PPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\" used by Platform for peer-to-peer connection.\n"
+                "Must be unique on the network.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
         {"platformHTTPPort",
-            {"platformHTTPPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "Address in the form \"ADDR:PORT\" used by Platform for their HTTPS API.\n"
-                "Must be unique on the network. Can be set to an empty string, which will require a ProUpServTx afterwards."}
+            {"platformHTTPPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\" used by Platform for their HTTPS API.\n"
+                "Must be unique on the network. Can be set to an empty string, which will require a ProUpServTx afterwards.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
         {"platformHTTPPort_update",
-            {"platformHTTPPort", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "Address in the form \"ADDR:PORT\" used by Platform for their HTTPS API.\n"
-                "Must be unique on the network."}
+            {"platformHTTPPort", RPCArg::Type::ARR, RPCArg::Optional::NO,
+                "Array of addresses in the form \"ADDR:PORT\" used by Platform for their HTTPS API.\n"
+                "Must be unique on the network.",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, ""},
+                }}
         },
     };
 

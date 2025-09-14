@@ -206,11 +206,11 @@ class NetInfoTest(BitcoinTestFramework):
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}", DEFAULT_PORT_PLATFORM_HTTP,
                                   -8, "Invalid param for platformP2PPort, ProTx version only supports ports")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", [f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}"], DEFAULT_PORT_PLATFORM_HTTP,
-                                  -8, "Invalid param for platformP2PPort, must be number")
+                                  -8, "Invalid param for platformP2PPort, ProTx version only supports ports")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, f"127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}",
                                   -8, "Invalid param for platformHTTPPort, ProTx version only supports ports")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, [f"127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}"],
-                                  -8, "Invalid param for platformHTTPPort, must be number")
+                                  -8, "Invalid param for platformHTTPPort, ProTx version only supports ports")
 
     def test_deprecation(self):
         # netInfo is represented with JSON in CProRegTx, CProUpServTx, CDeterministicMNState and CSimplifiedMNListEntry,

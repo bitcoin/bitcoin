@@ -69,37 +69,52 @@ void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValu
 
     auto process_field = [&](uint16_t& maybe_target, const UniValue& input, const NetInfoPurpose purpose,
                              std::string_view field_name) {
-        if (!input.isNum() && !input.isStr()) {
+        if (!input.isArray() && !input.isNum() && !input.isStr()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER,
-                               strprintf("Invalid param for %s, must be number or string", field_name));
+                               strprintf("Invalid param for %s, must be array, number or string", field_name));
         }
 
-        const auto& input_str{input.getValStr()};
-        if (input_str.empty()) {
-            if (!optional) {
-                // Mandatory field, cannot specify blank value
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid param for %s, cannot be empty", field_name));
+        bool is_empty{input.isArray() ? input.get_array().empty() : input.getValStr().empty()};
+        bool is_nonnumeric_str{input.isStr() && !IsNumeric(input.getValStr())};
+        if (is_empty || is_nonnumeric_str || input.isArray()) {
+            if (is_empty) {
+                if (!optional) {
+                    // Mandatory field, cannot specify blank value
+                    throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                       strprintf("Invalid param for %s, cannot be empty", field_name));
+                }
+                if (!ptx.netInfo->IsEmpty()) {
+                    // Blank values are tolerable so long as no other field has been populated.
+                    throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                       strprintf("Invalid param for %s, cannot be empty if other fields populated",
+                                                 field_name));
+                }
             }
             if (!ptx.netInfo->CanStorePlatform()) {
-                // We can tolerate blank values if netInfo can store platform fields, if it cannot, we are relying
-                // on platform{HTTP,P2P}Port, where it is mandatory even if their netInfo counterpart is optional.
+                //      Arrays: Expected to be address strings, if relying on platform{HTTP,P2P}Port, bail out.
+                // Empty Input: We can tolerate blank values if netInfo can store platform fields, if it cannot, we are relying
+                //              on platform{HTTP,P2P}Port, where it is mandatory even if their netInfo counterpart is optional.
+                //      String: If not parsable as port and relying on platform{HTTP,P2P}Port, bail out.
                 throw JSONRPCError(RPC_INVALID_PARAMETER,
                                    strprintf("Invalid param for %s, ProTx version only supports ports", field_name));
             }
-            if (!ptx.netInfo->IsEmpty()) {
-                // Blank values are tolerable so long as no other field has been populated.
-                throw JSONRPCError(RPC_INVALID_PARAMETER,
-                                   strprintf("Invalid param for %s, cannot be empty if other fields populated", field_name));
+            if (input.isArray()) {
+                const UniValue& entries = input.get_array();
+                for (size_t idx{0}; idx < entries.size(); idx++) {
+                    const UniValue& entry{entries[idx]};
+                    if (!entry.isStr() || IsNumeric(entry.get_str())) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                           strprintf("Invalid param for %s[%zu], must be string", field_name, idx));
+                    }
+                    ParseInput(ptx, field_name, entry.get_str(), purpose, idx, /*optional=*/false);
+                }
+            } else {
+                CHECK_NONFATAL(is_empty || is_nonnumeric_str);
+                ParseInput(ptx, field_name, input.get_str(), purpose, /*idx=*/0, /*optional=*/true);
             }
-        } else if (!IsNumeric(input_str)) {
-            // Cannot be parsed as a number (port) so must be an addr:port string
-            if (!ptx.netInfo->CanStorePlatform()) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER,
-                                   strprintf("Invalid param for %s, ProTx version only supports ports", field_name));
-            }
-            ParseInput(ptx, field_name, input.get_str(), purpose, /*idx=*/0, /*optional=*/false);
         } else {
-            if (int32_t port{0}; ParseInt32(input_str, &port) && port >= 1 && port <= std::numeric_limits<uint16_t>::max()) {
+            if (int32_t port{0};
+                ParseInt32(input.getValStr(), &port) && port >= 1 && port <= std::numeric_limits<uint16_t>::max()) {
                 // Valid port
                 if (!ptx.netInfo->CanStorePlatform()) {
                     maybe_target = static_cast<uint16_t>(port);
@@ -122,5 +137,5 @@ void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValu
     process_field(ptx.platformP2PPort, input_p2p, NetInfoPurpose::PLATFORM_P2P, "platformP2PPort");
     process_field(ptx.platformHTTPPort, input_http, NetInfoPurpose::PLATFORM_HTTPS, "platformHTTPPort");
 }
-template void ProcessNetInfoPlatform(CProRegTx& ptx, const UniValue& input_p2p, const UniValue& input_http);
-template void ProcessNetInfoPlatform(CProUpServTx& ptx, const UniValue& input_p2p, const UniValue& input_http);
+template void ProcessNetInfoPlatform(CProRegTx& ptx, const UniValue& input_p2p, const UniValue& input_http, const bool optional);
+template void ProcessNetInfoPlatform(CProUpServTx& ptx, const UniValue& input_p2p, const UniValue& input_http, const bool optional);
