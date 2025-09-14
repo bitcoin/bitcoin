@@ -9,6 +9,7 @@
 #include <netbase.h>
 #include <span.h>
 #include <util/check.h>
+#include <util/string.h>
 #include <util/system.h>
 
 #include <univalue.h>
@@ -18,6 +19,7 @@ static std::unique_ptr<const CChainParams> g_main_params{nullptr};
 static std::once_flag g_main_params_flag;
 
 static constexpr std::string_view SAFE_CHARS_IPV4{"1234567890."};
+static constexpr std::string_view SAFE_CHARS_IPV4_6{"abcdefABCDEF1234567890.:[]"};
 
 bool IsNodeOnMainnet() { return Params().NetworkIDString() == CBaseChainParams::MAIN; }
 const CChainParams& MainParams()
@@ -164,7 +166,10 @@ std::string NetInfoEntry::ToStringAddrPort() const
 
 std::shared_ptr<NetInfoInterface> NetInfoInterface::MakeNetInfo(const uint16_t nVersion)
 {
-    assert(nVersion > 0 && nVersion < ProTxVersion::ExtAddr);
+    assert(nVersion > 0);
+    if (nVersion >= ProTxVersion::ExtAddr) {
+        return std::make_shared<ExtNetInfo>();
+    }
     return std::make_shared<MnNetInfo>();
 }
 
@@ -251,10 +256,111 @@ UniValue MnNetInfo::ToJson() const
 
 std::string MnNetInfo::ToString() const
 {
-    std::string ret{"MnNetInfo()\n"};
-    if (!IsEmpty()) {
-        // Extra padding to account for padding done by the calling function.
-        ret += strprintf("    %s\n", m_addr.ToString());
+    return IsEmpty() ? "MnNetInfo()" : strprintf("MnNetInfo([%s])", m_addr.ToString());
+}
+
+NetInfoStatus ExtNetInfo::ProcessCandidate(const NetInfoEntry& candidate)
+{
+    assert(candidate.IsTriviallyValid());
+
+    if (m_data.size() >= MAX_ENTRIES_EXTNETINFO) {
+        return NetInfoStatus::MaxLimit;
+    }
+    m_data.push_back(candidate);
+
+    return NetInfoStatus::Success;
+}
+
+NetInfoStatus ExtNetInfo::ValidateService(const CService& service)
+{
+    if (!service.IsValid()) {
+        return NetInfoStatus::BadAddress;
+    }
+    if (!service.IsIPv4() && !service.IsIPv6()) {
+        return NetInfoStatus::BadType;
+    }
+    if (Params().RequireRoutableExternalIP() && !service.IsRoutable()) {
+        return NetInfoStatus::NotRoutable;
+    }
+    if (IsBadPort(service.GetPort()) || service.GetPort() == 0) {
+        return NetInfoStatus::BadPort;
+    }
+
+    return NetInfoStatus::Success;
+}
+
+NetInfoStatus ExtNetInfo::AddEntry(const std::string& input)
+{
+    // We don't allow assuming ports, so we set the default value to 0 so that if no port is specified
+    // it uses a fallback value of 0, which will return a NetInfoStatus::BadPort
+    std::string addr;
+    uint16_t port{0};
+    SplitHostPort(input, port, addr);
+    // Contains invalid characters, unlikely to pass Lookup(), fast-fail
+    if (!MatchCharsFilter(addr, SAFE_CHARS_IPV4_6)) {
+        return NetInfoStatus::BadInput;
+    }
+
+    if (auto service_opt{Lookup(addr, /*portDefault=*/port, /*fAllowLookup=*/false)}) {
+        const auto ret{ValidateService(*service_opt)};
+        if (ret == NetInfoStatus::Success) {
+            return ProcessCandidate(NetInfoEntry{*service_opt});
+        }
+        return ret; /* ValidateService() failed */
+    }
+    return NetInfoStatus::BadInput; /* Lookup() failed */
+}
+
+NetInfoList ExtNetInfo::GetEntries() const
+{
+    return m_data;
+}
+
+CService ExtNetInfo::GetPrimary() const
+{
+    if (m_data.size() >= 1) {
+        if (const auto& service_opt{m_data[0].GetAddrPort()}) {
+            return *service_opt;
+        }
+    }
+    return CService{};
+}
+
+NetInfoStatus ExtNetInfo::Validate() const
+{
+    if (m_data.empty()) {
+        return NetInfoStatus::Malformed;
+    }
+    for (const auto& entry : m_data) {
+        if (!entry.IsTriviallyValid()) {
+            // Trivially invalid NetInfoEntry, no point checking against consensus rules
+            return NetInfoStatus::Malformed;
+        }
+        if (const auto& service_opt{entry.GetAddrPort()}) {
+            if (auto ret{ValidateService(*service_opt)}; ret != NetInfoStatus::Success) {
+                // Stores CService underneath but doesn't pass validation rules
+                return ret;
+            }
+        } else {
+            // Doesn't store valid type underneath
+            return NetInfoStatus::Malformed;
+        }
+    }
+    return NetInfoStatus::Success;
+}
+
+UniValue ExtNetInfo::ToJson() const
+{
+    UniValue ret(UniValue::VARR);
+    for (const auto& entry : m_data) {
+        ret.push_back(entry.ToStringAddrPort());
     }
     return ret;
+}
+
+std::string ExtNetInfo::ToString() const
+{
+    return IsEmpty()
+               ? "ExtNetInfo()"
+               : strprintf("ExtNetInfo([%s])", Join(m_data, ", ", [](const auto& entry) { return entry.ToString(); }));
 }

@@ -22,12 +22,11 @@ std::string CDeterministicMNState::ToString() const
 
     return strprintf("CDeterministicMNState(nVersion=%d, nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, "
                      "nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, payoutAddress=%s, "
-                     "operatorPayoutAddress=%s)\n"
-                     "  %s",
+                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, netInfo=%s, payoutAddress=%s, "
+                     "operatorPayoutAddress=%s)\n",
                      nVersion, nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight,
                      nRevocationReason, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
-                     EncodeDestination(PKHash(keyIDVoting)), payoutAddress, operatorPayoutAddress, netInfo->ToString());
+                     EncodeDestination(PKHash(keyIDVoting)), netInfo->ToString(), payoutAddress, operatorPayoutAddress);
 }
 
 UniValue CDeterministicMNState::ToJson(MnType nType) const

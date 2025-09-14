@@ -115,14 +115,13 @@ std::string CProRegTx::ToString() const
         payee = EncodeDestination(dest);
     }
 
-    return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, nOperatorReward=%f, "
+    return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, netInfo=%s, nOperatorReward=%f, "
                      "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, "
-                     "platformP2PPort=%d, platformHTTPPort=%d)\n"
-                     "  %s",
-                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), (double)nOperatorReward / 100,
-                     EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
+                     "platformP2PPort=%d, platformHTTPPort=%d)\n",
+                     nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), netInfo->ToString(),
+                     (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
                      EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort,
-                     platformHTTPPort, netInfo->ToString());
+                     platformHTTPPort);
 }
 
 bool CProUpServTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const
@@ -156,11 +155,10 @@ std::string CProUpServTx::ToString() const
         payee = EncodeDestination(dest);
     }
 
-    return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, operatorPayoutAddress=%s, "
-                     "platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)\n"
-                     "  %s",
-                     nVersion, ToUnderlying(nType), proTxHash.ToString(), payee, platformNodeID.ToString(),
-                     platformP2PPort, platformHTTPPort, netInfo->ToString());
+    return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, netInfo=%s, operatorPayoutAddress=%s, "
+                     "platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)\n",
+                     nVersion, ToUnderlying(nType), proTxHash.ToString(), netInfo->ToString(), payee,
+                     platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
 }
 
 bool CProUpRegTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const
