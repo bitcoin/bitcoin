@@ -176,20 +176,20 @@ class NetInfoTest(BitcoinTestFramework):
                                   -8, "Invalid param for coreP2PAddrs[0], must be string")
         self.node_evo.register_mn(self, False, [f"127.0.0.1:{self.node_evo.mn.nodePort}", ""],
                                   DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
-                                  -8, "Invalid param for coreP2PAddrs[1], cannot be empty string")
+                                  -8, "Invalid param for coreP2PAddrs[1], cannot be empty")
         self.node_evo.register_mn(self, False, [f"127.0.0.1:{self.node_evo.mn.nodePort}", self.node_evo.mn.nodePort],
                                   DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
                                   -8, "Invalid param for coreP2PAddrs[1], must be string")
 
         # platformP2PPort and platformHTTPPort must be within acceptable range (i.e. a valid port number)
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", "0", DEFAULT_PORT_PLATFORM_HTTP,
-                                  -8, "platformP2PPort must be a valid port [1-65535]")
+                                  -8, "Invalid param for platformP2PPort, must be a valid port [1-65535]")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", "65536", DEFAULT_PORT_PLATFORM_HTTP,
-                                  -8, "platformP2PPort must be a valid port [1-65535]")
+                                  -8, "Invalid param for platformP2PPort, must be a valid port [1-65535]")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, "0",
-                                  -8, "platformHTTPPort must be a valid port [1-65535]")
+                                  -8, "Invalid param for platformHTTPPort, must be a valid port [1-65535]")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, "65536",
-                                  -8, "platformHTTPPort must be a valid port [1-65535]")
+                                  -8, "Invalid param for platformHTTPPort, must be a valid port [1-65535]")
 
     def test_validation_legacy(self):
         # Using mainnet P2P port gets refused

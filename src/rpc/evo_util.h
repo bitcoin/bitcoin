@@ -7,10 +7,12 @@
 
 class UniValue;
 
-template <typename T1>
-void ProcessNetInfoCore(T1& ptx, const UniValue& input, const bool optional);
+/** Process setting (legacy) Core network information field based on ProTx version */
+template <typename ProTx>
+void ProcessNetInfoCore(ProTx& ptx, const UniValue& input, const bool optional);
 
-template <typename T1>
-void ProcessNetInfoPlatform(T1& ptx, const UniValue& input_p2p, const UniValue& input_http);
+/** Process setting (legacy) Platform network information fields based on ProTx version */
+template <typename ProTx>
+void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValue& input_http);
 
 #endif // BITCOIN_RPC_EVO_UTIL_H
