@@ -31,6 +31,9 @@ DEFAULT_PORT_PLATFORM_P2P = 22200
 DEFAULT_PORT_PLATFORM_HTTP = 22201
 # See CDeterministicMNStateDiff::ToJson() in src/evo/dmnstate.h
 DMNSTATE_DIFF_DUMMY_ADDR = "255.255.255.255"
+# See ProTxVersion in src/evo/providertx.h
+PROTXVER_BASIC = 2
+PROTXVER_EXTADDR = 3
 
 class EvoNode:
     mn: MasternodeInfo
@@ -187,6 +190,8 @@ class NetInfoTest(BitcoinTestFramework):
         self.log.info("Test input validation for masternode address fields (post-fork)")
         self.test_validation_common()
         self.test_validation_extended()
+        self.log.info("Test masternode address fields for ProRegTx without addresses")
+        self.test_empty_fields()
         self.log.info("Test output masternode address fields for consistency (post-fork)")
         self.test_shims()
 
@@ -456,6 +461,48 @@ class NetInfoTest(BitcoinTestFramework):
         assert "service" in proupservtx_rpc['proUpServTx'].keys()
         assert "service" in protx_diff_rpc['mnList'][0].keys()
         assert "service" in protx_listdiff_rpc.keys()
+
+    def test_empty_fields(self):
+        def empty_common(grt_dict):
+            # Even if '[::]:0' is reported by 'service', 'addresses' should always be blank if we have nothing to report
+            assert_equal(len(grt_dict['addresses']), 0)
+            # 'service' will never be empty. Legacy addresses stored an empty CService, which evaluates to
+            # '[::]:0' when printed in string form. This behavior has been preserved for continuity.
+            assert_equal(grt_dict['service'], "[::]:0")
+
+        # Validate that our masternode was registered before the fork
+        grt_proregtx = self.node_simple.getrawtransaction(self.node_two.mn.proTxHash, True)['proRegTx']
+        assert_equal(grt_proregtx['version'], PROTXVER_BASIC)
+
+        # Test reporting on legacy address (i.e. basic BLS and earlier) nodes
+        empty_common(grt_proregtx)
+
+        # platform{P2P,HTTP}Port are non-optional fields for legacy addresses and will be populated
+        assert_equal(grt_proregtx['platformP2PPort'], DEFAULT_PORT_PLATFORM_P2P)
+        assert_equal(grt_proregtx['platformHTTPPort'], DEFAULT_PORT_PLATFORM_HTTP)
+
+        # Destroy and re-register node as blank
+        self.node_two.destroy_mn(self)
+        self.reconnect_nodes()
+        self.node_two.register_mn(self, True, "", "", "")
+
+        # Validate that masternode uses extended addresses
+        grt_proregtx = self.node_simple.getrawtransaction(self.node_two.mn.proTxHash, True)['proRegTx']
+        assert_equal(grt_proregtx['version'], PROTXVER_EXTADDR)
+
+        # Test reporting for extended addresses
+        empty_common(grt_proregtx)
+
+        # Extended addresses store addr:port pairs for platform{P2P,HTTPS}Addrs but ProRegTx allows blank
+        # address declarations (for later update with a ProUpServTx), this means that *unlike* legacy
+        # addresses, ProRegTxes that opt to omit addresses cannot report platform{P2P,HTTP}Port, which
+        # is signified with -1.
+        assert_equal(grt_proregtx['platformP2PPort'], -1)
+        assert_equal(grt_proregtx['platformHTTPPort'], -1)
+
+        # Destroy masternode
+        self.node_evo.destroy_mn(self)
+        self.reconnect_nodes()
 
     def test_shims(self):
         # There are two shims there to help with migrating between legacy and extended addresses, one reads from legacy platform
