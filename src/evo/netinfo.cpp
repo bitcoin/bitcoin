@@ -21,20 +21,19 @@ static std::once_flag g_main_params_flag;
 static constexpr std::string_view SAFE_CHARS_IPV4{"1234567890."};
 static constexpr std::string_view SAFE_CHARS_IPV4_6{"abcdefABCDEF1234567890.:[]"};
 
-bool IsNodeOnMainnet() { return Params().NetworkIDString() == CBaseChainParams::MAIN; }
-const CChainParams& MainParams()
-{
-    // TODO: use real args here
-    std::call_once(g_main_params_flag,
-                   [&]() { g_main_params = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN); });
-    return *Assert(g_main_params);
-}
-
 bool MatchCharsFilter(std::string_view input, std::string_view filter)
 {
     return std::all_of(input.begin(), input.end(), [&filter](char c) { return filter.find(c) != std::string_view::npos; });
 }
 } // anonymous namespace
+
+bool IsNodeOnMainnet() { return Params().NetworkIDString() == CBaseChainParams::MAIN; }
+
+const CChainParams& MainParams()
+{
+    std::call_once(g_main_params_flag, [&]() { g_main_params = CreateChainParams(::gArgs, CBaseChainParams::MAIN); });
+    return *Assert(g_main_params);
+}
 
 UniValue ArrFromService(const CService& addr)
 {

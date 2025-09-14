@@ -323,8 +323,10 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             newState->scriptOperatorPayout = opt_proTx->scriptOperatorPayout;
             if (opt_proTx->nType == MnType::Evo) {
                 newState->platformNodeID = opt_proTx->platformNodeID;
-                newState->platformP2PPort = opt_proTx->platformP2PPort;
-                newState->platformHTTPPort = opt_proTx->platformHTTPPort;
+                if (opt_proTx->nVersion < ProTxVersion::ExtAddr) {
+                    newState->platformP2PPort = opt_proTx->platformP2PPort;
+                    newState->platformHTTPPort = opt_proTx->platformHTTPPort;
+                }
             }
             if (newState->IsBanned()) {
                 // only revive when all keys are set

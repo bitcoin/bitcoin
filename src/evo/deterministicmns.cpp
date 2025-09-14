@@ -918,39 +918,41 @@ static bool CheckService(const ProTx& proTx, TxValidationState& state)
 }
 
 template <typename ProTx>
-static bool CheckPlatformFields(const ProTx& proTx, TxValidationState& state)
+static bool CheckPlatformFields(const ProTx& proTx, bool is_extended_addr, TxValidationState& state)
 {
     if (proTx.platformNodeID.IsNull()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-nodeid");
     }
 
-    // TODO: use real args here
-    static int mainnetPlatformP2PPort = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN)->GetDefaultPlatformP2PPort();
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (proTx.platformP2PPort != mainnetPlatformP2PPort) {
+    if (is_extended_addr) {
+        // platformHTTPPort and platformP2PPort have been subsumed by netInfo. They should always be zero.
+        if (proTx.platformP2PPort != 0) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-p2p-port");
         }
+        if (proTx.platformHTTPPort != 0) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-http-port");
+        }
+        return true;
     }
 
-    // TODO: use real args here
-    static int mainnetPlatformHTTPPort = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN)->GetDefaultPlatformHTTPPort();
-    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (proTx.platformHTTPPort != mainnetPlatformHTTPPort) {
+    if (::IsNodeOnMainnet()) {
+        if (proTx.platformP2PPort != ::MainParams().GetDefaultPlatformP2PPort()) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-p2p-port");
+        }
+        if (proTx.platformHTTPPort != ::MainParams().GetDefaultPlatformHTTPPort()) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-http-port");
         }
     }
-
-    // TODO: use real args here
-    static int mainnetDefaultP2PPort = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN)->GetDefaultPort();
-    if (proTx.platformP2PPort == mainnetDefaultP2PPort) {
+    if (proTx.platformP2PPort == ::MainParams().GetDefaultPort()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-p2p-port");
     }
-    if (proTx.platformHTTPPort == mainnetDefaultP2PPort) {
+    if (proTx.platformHTTPPort == ::MainParams().GetDefaultPort()) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-http-port");
     }
 
-    if (proTx.platformP2PPort == proTx.platformHTTPPort || proTx.platformP2PPort == proTx.netInfo->GetPrimary().GetPort() ||
-        proTx.platformHTTPPort == proTx.netInfo->GetPrimary().GetPort()) {
+    const uint16_t core_port{proTx.netInfo->GetPrimary().GetPort()};
+    if (proTx.platformP2PPort == proTx.platformHTTPPort || proTx.platformP2PPort == core_port ||
+        proTx.platformHTTPPort == core_port) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-platform-dup-ports");
     }
 
@@ -1062,7 +1064,7 @@ bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl:
     }
 
     if (opt_ptx->nType == MnType::Evo) {
-        if (!CheckPlatformFields(*opt_ptx, state)) {
+        if (!CheckPlatformFields(*opt_ptx, opt_ptx->nVersion >= ProTxVersion::ExtAddr, state)) {
             return false;
         }
     }
@@ -1181,7 +1183,7 @@ bool CheckProUpServTx(CDeterministicMNManager& dmnman, const CTransaction& tx, g
     }
 
     if (opt_ptx->nType == MnType::Evo) {
-        if (!CheckPlatformFields(*opt_ptx, state)) {
+        if (!CheckPlatformFields(*opt_ptx, opt_ptx->nVersion >= ProTxVersion::ExtAddr, state)) {
             return false;
         }
     }

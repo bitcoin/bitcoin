@@ -11,6 +11,7 @@
 
 #include <variant>
 
+class CChainParams;
 class CService;
 
 class UniValue;
@@ -96,8 +97,14 @@ constexpr std::string_view PurposeToString(const NetInfoPurpose purpose)
     return "";
 }
 
-/* Identical to IsDeprecatedRPCEnabled("service"). For use outside of RPC code. */
+/** Will return true if node is running on mainnet */
+bool IsNodeOnMainnet();
+
+/** Identical to IsDeprecatedRPCEnabled("service"). For use outside of RPC code */
 bool IsServiceDeprecatedRPCEnabled();
+
+/** Equivalent to Params() if node is running on mainnet */
+const CChainParams& MainParams();
 
 class NetInfoEntry
 {

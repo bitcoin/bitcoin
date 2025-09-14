@@ -144,12 +144,13 @@ std::string CProRegTx::ToString() const
     }
 
     return strprintf("CProRegTx(nVersion=%d, nType=%d, collateralOutpoint=%s, netInfo=%s, nOperatorReward=%f, "
-                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s, "
-                     "platformP2PPort=%d, platformHTTPPort=%d)\n",
+                     "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, scriptPayout=%s, platformNodeID=%s%s)\n",
                      nVersion, ToUnderlying(nType), collateralOutpoint.ToStringShort(), netInfo->ToString(),
                      (double)nOperatorReward / 100, EncodeDestination(PKHash(keyIDOwner)), pubKeyOperator.ToString(),
-                     EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(), platformP2PPort,
-                     platformHTTPPort);
+                     EncodeDestination(PKHash(keyIDVoting)), payee, platformNodeID.ToString(),
+                     (nVersion >= ProTxVersion::ExtAddr
+                          ? ""
+                          : strprintf(", platformP2PPort=%d, platformHTTPPort=%d", platformP2PPort, platformHTTPPort)));
 }
 
 bool CProUpServTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const
@@ -188,9 +189,12 @@ std::string CProUpServTx::ToString() const
     }
 
     return strprintf("CProUpServTx(nVersion=%d, nType=%d, proTxHash=%s, netInfo=%s, operatorPayoutAddress=%s, "
-                     "platformNodeID=%s, platformP2PPort=%d, platformHTTPPort=%d)\n",
+                     "platformNodeID=%s%s)\n",
                      nVersion, ToUnderlying(nType), proTxHash.ToString(), netInfo->ToString(), payee,
-                     platformNodeID.ToString(), platformP2PPort, platformHTTPPort);
+                     platformNodeID.ToString(),
+                     (nVersion >= ProTxVersion::ExtAddr
+                          ? ""
+                          : strprintf(", platformP2PPort=%d, platformHTTPPort=%d", platformP2PPort, platformHTTPPort)));
 }
 
 bool CProUpRegTx::IsTriviallyValid(gsl::not_null<const CBlockIndex*> pindexPrev, TxValidationState& state) const
