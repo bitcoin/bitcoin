@@ -14,6 +14,8 @@
 #include <univalue.h>
 
 namespace {
+bool IsNumeric(std::string_view input) { return input.find_first_not_of("0123456789") == std::string::npos; }
+
 template <typename ProTx>
 void ParseInput(ProTx& ptx, std::string_view field_name, const std::string& input_str, NetInfoPurpose purpose,
                 size_t idx, bool optional)
@@ -65,19 +67,44 @@ void ProcessNetInfoPlatform(ProTx& ptx, const UniValue& input_p2p, const UniValu
 {
     CHECK_NONFATAL(ptx.netInfo);
 
-    auto process_field = [](uint16_t& target, const UniValue& input, const std::string& field_name) {
+    auto process_field = [&](uint16_t& maybe_target, const UniValue& input, const NetInfoPurpose purpose,
+                             std::string_view field_name) {
         if (!input.isNum() && !input.isStr()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid param for %s, must be number", field_name));
-        }
-        if (int32_t port{ParseInt32V(input, field_name)}; port >= 1 && port <= std::numeric_limits<uint16_t>::max()) {
-            target = static_cast<uint16_t>(port);
-        } else {
             throw JSONRPCError(RPC_INVALID_PARAMETER,
-                               strprintf("Invalid param for %s, must be a valid port [1-65535]", field_name));
+                               strprintf("Invalid param for %s, must be number or string", field_name));
+        }
+
+        const auto& input_str{input.getValStr()};
+        if (!IsNumeric(input_str)) {
+            // Cannot be parsed as a number (port) so must be an addr:port string
+            if (!ptx.netInfo->CanStorePlatform()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   strprintf("Invalid param for %s, ProTx version only supports ports", field_name));
+            }
+            ParseInput(ptx, field_name, input.get_str(), purpose, /*idx=*/0, /*optional=*/false);
+        } else {
+            if (int32_t port{0}; ParseInt32(input_str, &port) && port >= 1 && port <= std::numeric_limits<uint16_t>::max()) {
+                // Valid port
+                if (!ptx.netInfo->CanStorePlatform()) {
+                    maybe_target = static_cast<uint16_t>(port);
+                    return; // Parsing complete
+                }
+                // We cannot store *only* a port number in netInfo so we need to associate it with the primary service of CORE_P2P manually
+                if (!ptx.netInfo->HasEntries(NetInfoPurpose::CORE_P2P)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                       strprintf("Cannot set param for %s, must specify coreP2PAddrs first", field_name));
+                }
+                const CService service{CNetAddr{ptx.netInfo->GetPrimary()}, static_cast<uint16_t>(port)};
+                CHECK_NONFATAL(service.IsValid());
+                ParseInput(ptx, field_name, service.ToStringAddrPort(), purpose, /*idx=*/0, /*optional=*/false);
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   strprintf("Invalid param for %s, must be a valid port [1-65535]", field_name));
+            }
         }
     };
-    process_field(ptx.platformP2PPort, input_p2p, "platformP2PPort");
-    process_field(ptx.platformHTTPPort, input_http, "platformHTTPPort");
+    process_field(ptx.platformP2PPort, input_p2p, NetInfoPurpose::PLATFORM_P2P, "platformP2PPort");
+    process_field(ptx.platformHTTPPort, input_http, NetInfoPurpose::PLATFORM_HTTPS, "platformHTTPPort");
 }
 template void ProcessNetInfoPlatform(CProRegTx& ptx, const UniValue& input_p2p, const UniValue& input_http);
 template void ProcessNetInfoPlatform(CProUpServTx& ptx, const UniValue& input_p2p, const UniValue& input_http);

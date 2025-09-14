@@ -204,11 +204,11 @@ class NetInfoTest(BitcoinTestFramework):
 
         # platformP2PPort and platformHTTPPort doesn't accept non-numeric inputs
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}", DEFAULT_PORT_PLATFORM_HTTP,
-                                  -8, f"platformP2PPort must be a 32bit integer (not '127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}')")
+                                  -8, "Invalid param for platformP2PPort, ProTx version only supports ports")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", [f"127.0.0.1:{DEFAULT_PORT_PLATFORM_P2P}"], DEFAULT_PORT_PLATFORM_HTTP,
                                   -8, "Invalid param for platformP2PPort, must be number")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, f"127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}",
-                                  -8, f"platformHTTPPort must be a 32bit integer (not '127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}')")
+                                  -8, "Invalid param for platformHTTPPort, ProTx version only supports ports")
         self.node_evo.register_mn(self, False, f"127.0.0.1:{self.node_evo.mn.nodePort}", DEFAULT_PORT_PLATFORM_P2P, [f"127.0.0.1:{DEFAULT_PORT_PLATFORM_HTTP}"],
                                   -8, "Invalid param for platformHTTPPort, must be number")
 

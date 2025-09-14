@@ -184,12 +184,14 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "Platform P2P node ID, derived from P2P public key."}
         },
         {"platformP2PPort",
-            {"platformP2PPort", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                "TCP port of Dash Platform peer-to-peer communication between nodes (network byte order)."}
+            {"platformP2PPort", RPCArg::Type::STR, RPCArg::Optional::NO,
+                "Address in the form \"ADDR:PORT\" used by Platform for peer-to-peer connection.\n"
+                "Must be unique on the network."}
         },
         {"platformHTTPPort",
-            {"platformHTTPPort", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                "TCP port of Platform HTTP/API interface (network byte order)."}
+            {"platformHTTPPort", RPCArg::Type::STR, RPCArg::Optional::NO,
+                "Address in the form \"ADDR:PORT\" used by Platform for their HTTPS API.\n"
+                "Must be unique on the network."}
         },
     };
 
