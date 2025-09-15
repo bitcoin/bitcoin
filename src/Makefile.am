@@ -744,7 +744,7 @@ crypto_libbitcoin_crypto_sph_la_SOURCES = \
   crypto/x11/jh.c \
   crypto/x11/keccak.c \
   crypto/x11/luffa.c \
-  crypto/x11/shavite.c \
+  crypto/x11/shavite.cpp \
   crypto/x11/simd.c \
   crypto/x11/skein.c \
   crypto/x11/sph_blake.h \
