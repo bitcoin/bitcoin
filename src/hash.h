@@ -88,8 +88,8 @@ inline uint256 Hash(const T1& in1, const T2& in2) {
 }
 
 /** Compute the 160-bit hash an object. */
-template<typename T1>
-inline uint160 Hash160(const T1& in1)
+template<typename T>
+inline uint160 Hash160(const T& in1)
 {
     uint160 result;
     CHash160().Write(MakeUCharSpan(in1)).Finalize(result);

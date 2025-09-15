@@ -108,7 +108,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
     // First process all leaves into 'inner' values.
     while (count < leaves.size()) {
         uint256 h = leaves[count];
-        bool matchh = count == leaf_pos;
+        bool match = count == leaf_pos;
         count++;
         int level;
         // For each of the lower bits in count that are 0, do 1 step. Each
@@ -116,11 +116,11 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // current leaf, and each needs a hash to combine it.
         for (level = 0; !(count & ((uint32_t{1}) << level)); level++) {
             if (path) {
-                if (matchh) {
+                if (match) {
                     path->push_back(inner[level]);
                 } else if (matchlevel == level) {
                     path->push_back(h);
-                    matchh = true;
+                    match = true;
                 }
             }
             mutated |= (inner[level] == h);
@@ -128,7 +128,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         }
         // Store the resulting hash at inner position level.
         inner[level] = h;
-        if (matchh) {
+        if (match) {
             matchlevel = level;
         }
     }
@@ -142,12 +142,12 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         level++;
     }
     uint256 h = inner[level];
-    bool matchh = matchlevel == level;
+    bool match = matchlevel == level;
     while (count != ((uint32_t{1}) << level)) {
         // If we reach this point, h is an inner value that is not the top.
         // We combine it with itself (Bitcoin's special rule for odd levels in
         // the tree) to produce a higher level one.
-        if (path && matchh) {
+        if (path && match) {
             path->push_back(h);
         }
         h = Hash(h, h);
@@ -158,11 +158,11 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // And propagate the result upwards accordingly.
         while (!(count & ((uint32_t{1}) << level))) {
             if (path) {
-                if (matchh) {
+                if (match) {
                     path->push_back(inner[level]);
                 } else if (matchlevel == level) {
                     path->push_back(h);
-                    matchh = true;
+                    match = true;
                 }
             }
             h = Hash(inner[level], h);
