@@ -206,7 +206,7 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
     newList.DecreaseScores();
 
     const bool isMNRewardReallocation{DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_MN_RR)};
-    const bool is_v23_deployed{DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_V23)};
+    const bool is_v24_deployed{DeploymentActiveAfter(pindexPrev, m_consensus_params, Consensus::DEPLOYMENT_V24)};
 
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
@@ -315,8 +315,8 @@ bool CSpecialTxProcessor::BuildNewListFromBlock(const CBlock& block, gsl::not_nu
             }
 
             auto newState = std::make_shared<CDeterministicMNState>(*dmn->pdmnState);
-            if (is_v23_deployed) {
-                // Extended addresses support in v23 means that the version can be updated
+            if (is_v24_deployed) {
+                // Extended addresses support in v24 means that the version can be updated
                 newState->nVersion = opt_proTx->nVersion;
             }
             newState->netInfo = opt_proTx->netInfo;

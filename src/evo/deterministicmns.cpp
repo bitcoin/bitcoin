@@ -1026,18 +1026,18 @@ static std::optional<ProTx> GetValidatedPayload(const CTransaction& tx, gsl::not
 
 /**
  * Validates potential changes to masternode state version by ProTx transaction version
- * @param[in]  pindexPrev    Previous block index to validate DEPLOYMENT_V23 activation
+ * @param[in]  pindexPrev    Previous block index to validate DEPLOYMENT_V24 activation
  * @param[in]  tx_type       Special transaction type
  * @param[in]  state_version Current masternode state version
  * @param[in]  tx_version    Proposed transaction version
  * @param[out] state         This may be set to an Error state if any error occurred processing them
- * @returns                  true if version change is valid or DEPLOYMENT_V23 is not active
+ * @returns                  true if version change is valid or DEPLOYMENT_V24 is not active
  */
 bool IsVersionChangeValid(gsl::not_null<const CBlockIndex*> pindexPrev, const uint16_t tx_type,
                           const uint16_t state_version, const uint16_t tx_version, TxValidationState& state)
 {
-    if (!DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V23)) {
-        // New restrictions only apply after v23 deployment
+    if (!DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V24)) {
+        // New restrictions only apply after v24 deployment
         return true;
     }
 
@@ -1067,10 +1067,10 @@ bool CheckProRegTx(CDeterministicMNManager& dmnman, const CTransaction& tx, gsl:
         return false;
     }
 
-    const bool is_v23_active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V23)};
+    const bool is_v24_active{DeploymentActiveAfter(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_V24)};
 
     // No longer allow legacy scheme masternode registration
-    if (is_v23_active && opt_ptx->nVersion < ProTxVersion::BasicBLS) {
+    if (is_v24_active && opt_ptx->nVersion < ProTxVersion::BasicBLS) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-disallowed");
     }
 

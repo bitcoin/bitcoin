@@ -12,7 +12,7 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.gbt_force =*/ true,
     },
     {
-        /*.name =*/"v23",
+        /*.name =*/"v24",
         /*.gbt_force =*/true,
     },
 };
