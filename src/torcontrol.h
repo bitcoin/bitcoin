@@ -138,7 +138,7 @@ public:
     /** Callback for GETINFO net/listeners/socks result */
     void get_socks_cb(TorControlConnection& conn, const TorControlReply& reply);
     /** Callback for ADD_ONION result */
-    void add_onion_cb(TorControlConnection& conn, const TorControlReply& reply);
+    void add_onion_cb(TorControlConnection& conn, const TorControlReply& reply, bool pow_was_enabled);
     /** Callback for AUTHENTICATE result */
     void auth_cb(TorControlConnection& conn, const TorControlReply& reply);
     /** Callback for AUTHCHALLENGE result */
