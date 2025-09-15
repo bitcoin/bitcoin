@@ -2,6 +2,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+enable_language(C)
+
 function(add_secp256k1 subdir)
   message("")
   message("Configuring secp256k1 subtree...")
@@ -30,7 +32,6 @@ function(add_secp256k1 subdir)
   string(STRIP "${SECP256K1_APPEND_LDFLAGS} ${APPEND_LDFLAGS}" SECP256K1_APPEND_LDFLAGS)
   set(SECP256K1_APPEND_LDFLAGS ${SECP256K1_APPEND_LDFLAGS} CACHE STRING "" FORCE)
   # We want to build libsecp256k1 with the most tested RelWithDebInfo configuration.
-  enable_language(C)
   foreach(config IN LISTS CMAKE_BUILD_TYPE CMAKE_CONFIGURATION_TYPES)
     if(config STREQUAL "")
       continue()
