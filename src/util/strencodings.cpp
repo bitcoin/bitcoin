@@ -30,8 +30,16 @@ static const std::string SAFE_CHARS[] =
 std::string SanitizeString(std::string_view str, int rule)
 {
     std::string result;
+    // Validate rule index defensively and avoid out-of-bounds access.
+    const size_t safe_chars_count = sizeof(SAFE_CHARS) / sizeof(SAFE_CHARS[0]);
+    if (rule < 0 || static_cast<size_t>(rule) >= safe_chars_count) {
+        return result;
+    }
+
+    result.reserve(str.size());
+    const std::string& allowed = SAFE_CHARS[rule];
     for (char c : str) {
-        if (SAFE_CHARS[rule].find(c) != std::string::npos) {
+        if (allowed.find(c) != std::string::npos) {
             result.push_back(c);
         }
     }
