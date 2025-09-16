@@ -58,8 +58,6 @@
  *   - clusterlin_postlinearize
  *   - clusterlin_postlinearize_tree
  *   - clusterlin_postlinearize_moved_leaf
- * - FixLinearization tests:
- *   - clusterlin_fix_linearization
  * - MakeConnected tests (a test-only function):
  *   - clusterlin_make_connected
  */
@@ -1201,46 +1199,4 @@ FUZZ_TARGET(clusterlin_postlinearize_moved_leaf)
     auto new_chunking = ChunkLinearization(depgraph, lin_moved);
     auto cmp = CompareChunks(new_chunking, old_chunking);
     assert(cmp >= 0);
-}
-
-FUZZ_TARGET(clusterlin_fix_linearization)
-{
-    // Verify expected properties of FixLinearization() on arbitrary linearizations.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Construct an arbitrary linearization (not necessarily topological for depgraph).
-    std::vector<DepGraphIndex> linearization = ReadLinearization(depgraph, reader, /*topological=*/false);
-    assert(linearization.size() == depgraph.TxCount());
-
-    // Determine what prefix of linearization is topological, i.e., the position of the first entry
-    // in linearization which corresponds to a transaction that is not preceded by all its
-    // ancestors.
-    size_t topo_prefix = 0;
-    auto todo = depgraph.Positions();
-    while (topo_prefix < linearization.size()) {
-        DepGraphIndex idx = linearization[topo_prefix];
-        todo.Reset(idx);
-        if (todo.Overlaps(depgraph.Ancestors(idx))) break;
-        ++topo_prefix;
-    }
-
-    // Then make a fixed copy of linearization.
-    auto linearization_fixed = linearization;
-    FixLinearization(depgraph, linearization_fixed);
-    // Sanity check it (which includes testing whether it is topological).
-    SanityCheck(depgraph, linearization_fixed);
-
-    // If linearization was entirely topological, FixLinearization cannot worsen it.
-    if (topo_prefix == linearization.size()) {
-        auto chunking = ChunkLinearization(depgraph, linearization);
-        auto chunking_fixed = ChunkLinearization(depgraph, linearization_fixed);
-        auto cmp = CompareChunks(chunking_fixed, chunking);
-        assert(cmp >= 0);
-    }
 }
