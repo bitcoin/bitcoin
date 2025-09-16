@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_SOCK_H
 
 #include <compat/compat.h>
+#include <logging.h>
 #include <util/time.h>
 
 #include <cstdint>
@@ -113,6 +114,26 @@ public:
                                          int opt_name,
                                          void* opt_val,
                                          socklen_t* opt_len) const;
+
+#if defined(WIN32)
+    /**
+     * WSAIoctl wrapper
+     * https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsaioctl
+     */
+    [[nodiscard]] int WSAIoctl(DWORD                                dwIoControlCode,
+                               LPVOID                               lpvInBuffer,
+                               DWORD                                cbInBuffer,
+                               LPVOID                               lpvOutBuffer,
+                               DWORD                                cbOutBuffer,
+                               LPDWORD                              lpcbBytesReturned,
+                               LPWSAOVERLAPPED                      lpOverlapped,
+                               LPWSAOVERLAPPED_COMPLETION_ROUTINE   lpCompletionRoutine)
+    {
+        return ::WSAIoctl(m_socket, dwIoControlCode, lpvInBuffer, cbInBuffer,
+                          lpvOutBuffer, cbOutBuffer, lpcbBytesReturned,
+                          lpOverlapped, lpCompletionRoutine);
+    }
+#endif
 
     /**
      * setsockopt(2) wrapper. Equivalent to
@@ -291,5 +312,55 @@ private:
 
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);
+
+/**
+ * Wrap platform specific data structures that contain information about TCP
+ * connections, tcp_info on /Linux|e.BSD/, tcp_connection_info on macos, and
+ * TCP_INFO_V0 on Windows.
+ */
+class TCPInfo
+{
+public:
+    bool m_valid{true};
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    struct tcp_info m_tcp_info;
+    socklen_t m_tcp_info_len{sizeof(m_tcp_info)};
+#elif defined(__APPLE__)
+    struct tcp_connection_info m_tcp_info;
+    socklen_t m_tcp_info_len{sizeof(m_tcp_info)};
+#elif defined(WIN32_TCPINFO_SUPPORTED)
+    TCP_INFO_v0 m_tcp_info;
+    DWORD m_tcp_info_len{sizeof(m_tcp_info)};
+#endif
+
+    TCPInfo(Sock &s) {
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+        m_valid = !s.GetSockOpt(IPPROTO_TCP, TCP_INFO, &m_tcp_info, &m_tcp_info_len);
+#elif defined(__APPLE__)
+        m_valid = !s.GetSockOpt(IPPROTO_TCP, TCP_CONNECTION_INFO, &m_tcp_info, &m_tcp_info_len);
+#elif defined(WIN32_TCPINFO_SUPPORTED)
+        DWORD version{0};
+
+        // Windows 10 1703 is required for SIO_TCP_INFO, but this
+        // will fail at runtime with WSAEOPNOTSUPP if the runtime
+        // platform is too old.
+        m_valid = !s.WSAIoctl(/*dwIoControlCode=*/SIO_TCP_INFO,
+                              /*lpvInBuffer=*/&version,
+                              /*cbInBuffer=*/sizeof(version),
+                              /*lpvOutBuffer=*/&m_tcp_info,
+                              /*cbOutBuffer=*/sizeof(m_tcp_info),
+                              /*lpcpBytesReturned=*/&m_tcp_info_len,
+                              /*lpvOverlapped=*/nullptr,
+                              /*lpCompletionRoutine=*/nullptr);
+#else
+        m_valid = false;
+        LogWarning("Error getting TCP Info, platform not supported!");
+        return;
+#endif
+        if (!m_valid) {
+            LogError("Error getting TCP Info: %s", NetworkErrorString(WSAGetLastError()));
+        }
+    }
+};
 
 #endif // BITCOIN_UTIL_SOCK_H

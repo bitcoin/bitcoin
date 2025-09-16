@@ -115,4 +115,14 @@ typedef SSIZE_T ssize_t;
 #define MSG_DONTWAIT 0
 #endif
 
+// Windows 10 1703 is required for SIO_TCP_INFO, which we need at build time to
+// support TCP_INFO_v0 fetching.
+// https://learn.microsoft.com/en-us/windows/win32/api/mstcpip/ns-mstcpip-tcp_info_v0#requirements
+#if defined(WIN32)
+#include <mstcpip.h>    // IWYU pragma: export
+#if defined(SIO_TCP_INFO)
+#define WIN32_TCPINFO_SUPPORTED
+#endif
+#endif
+
 #endif // BITCOIN_COMPAT_COMPAT_H
