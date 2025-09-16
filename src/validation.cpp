@@ -2564,7 +2564,13 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<MillisecondsDouble>(m_chainman.time_forks) / m_chainman.num_blocks_total);
 
     if (fScriptChecks != m_prev_script_checks_logged && GetRole() == ChainstateRole::NORMAL) {
-        LogInfo("%s signature validations at block #%d (%s).", fScriptChecks ? "Enabling" : "Disabling", pindex->nHeight, block_hash.ToString());
+        if (fScriptChecks) {
+            LogInfo("Enabling script verification at block #%d (%s).",
+                    pindex->nHeight, block_hash.ToString());
+        } else {
+            LogInfo("Disabling script verification at block #%d (%s).",
+                    pindex->nHeight, block_hash.ToString());
+        }
         m_prev_script_checks_logged = fScriptChecks;
     }
 

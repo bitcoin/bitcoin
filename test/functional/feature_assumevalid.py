@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test logic for skipping signature validation on old blocks.
@@ -7,8 +7,7 @@
 Test logic for skipping signature validation on blocks which we've assumed
 valid (https://github.com/bitcoin/bitcoin/pull/9484)
 
-We build a chain that includes and invalid signature for one of the
-transactions:
+We build a chain that includes an invalid signature for one of the transactions:
 
     0:        genesis block
     1:        block 1 with coinbase transaction output.
@@ -153,7 +152,10 @@ class AssumeValidTest(BitcoinTestFramework):
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
         p2p1.send_header_for_blocks(self.blocks[0:2000])
         p2p1.send_header_for_blocks(self.blocks[2000:])
-        with self.nodes[1].assert_debug_log(expected_msgs=['Disabling signature validations at block #1', 'Enabling signature validations at block #103']):
+        with self.nodes[1].assert_debug_log(expected_msgs=[
+            "Disabling script verification at block #1",
+            "Enabling script verification at block #103",
+        ]):
             # Send all blocks to node1. All blocks will be accepted.
             for i in range(2202):
                 p2p1.send_without_ping(msg_block(self.blocks[i]))
