@@ -1681,48 +1681,6 @@ void PostLinearize(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> l
     }
 }
 
-/** Merge two linearizations for the same cluster into one that is as good as both.
- *
- * Complexity: O(N^2) where N=depgraph.TxCount(); O(N) if both inputs are identical.
- */
-template<typename SetType>
-std::vector<DepGraphIndex> MergeLinearizations(const DepGraph<SetType>& depgraph, std::span<const DepGraphIndex> lin1, std::span<const DepGraphIndex> lin2)
-{
-    Assume(lin1.size() == depgraph.TxCount());
-    Assume(lin2.size() == depgraph.TxCount());
-
-    /** Chunkings of what remains of both input linearizations. */
-    LinearizationChunking chunking1(depgraph, lin1), chunking2(depgraph, lin2);
-    /** Output linearization. */
-    std::vector<DepGraphIndex> ret;
-    if (depgraph.TxCount() == 0) return ret;
-    ret.reserve(depgraph.TxCount());
-
-    while (true) {
-        // As long as we are not done, both linearizations must have chunks left.
-        Assume(chunking1.NumChunksLeft() > 0);
-        Assume(chunking2.NumChunksLeft() > 0);
-        // Find the set to output by taking the best remaining chunk, and then intersecting it with
-        // prefixes of remaining chunks of the other linearization.
-        SetInfo<SetType> best;
-        const auto& lin1_firstchunk = chunking1.GetChunk(0);
-        const auto& lin2_firstchunk = chunking2.GetChunk(0);
-        if (lin2_firstchunk.feerate >> lin1_firstchunk.feerate) {
-            best = chunking1.IntersectPrefixes(lin2_firstchunk);
-        } else {
-            best = chunking2.IntersectPrefixes(lin1_firstchunk);
-        }
-        // Append the result to the output and mark it as done.
-        depgraph.AppendTopo(ret, best.transactions);
-        chunking1.MarkDone(best.transactions);
-        if (chunking1.NumChunksLeft() == 0) break;
-        chunking2.MarkDone(best.transactions);
-    }
-
-    Assume(ret.size() == depgraph.TxCount());
-    return ret;
-}
-
 /** Make linearization topological, retaining its ordering where possible. */
 template<typename SetType>
 void FixLinearization(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> linearization) noexcept

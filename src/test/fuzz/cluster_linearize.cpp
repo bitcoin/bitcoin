@@ -59,8 +59,6 @@
  *   - clusterlin_postlinearize
  *   - clusterlin_postlinearize_tree
  *   - clusterlin_postlinearize_moved_leaf
- * - MergeLinearization tests:
- *   - clusterlin_merge
  * - FixLinearization tests:
  *   - clusterlin_fix_linearization
  * - MakeConnected tests (a test-only function):
@@ -1306,32 +1304,6 @@ FUZZ_TARGET(clusterlin_postlinearize_moved_leaf)
     auto new_chunking = ChunkLinearization(depgraph, lin_moved);
     auto cmp = CompareChunks(new_chunking, old_chunking);
     assert(cmp >= 0);
-}
-
-FUZZ_TARGET(clusterlin_merge)
-{
-    // Construct an arbitrary graph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Retrieve two linearizations from the fuzz input.
-    auto lin1 = ReadLinearization(depgraph, reader);
-    auto lin2 = ReadLinearization(depgraph, reader);
-
-    // Merge the two.
-    auto lin_merged = MergeLinearizations(depgraph, lin1, lin2);
-
-    // Compute chunkings and compare.
-    auto chunking1 = ChunkLinearization(depgraph, lin1);
-    auto chunking2 = ChunkLinearization(depgraph, lin2);
-    auto chunking_merged = ChunkLinearization(depgraph, lin_merged);
-    auto cmp1 = CompareChunks(chunking_merged, chunking1);
-    assert(cmp1 >= 0);
-    auto cmp2 = CompareChunks(chunking_merged, chunking2);
-    assert(cmp2 >= 0);
 }
 
 FUZZ_TARGET(clusterlin_fix_linearization)
