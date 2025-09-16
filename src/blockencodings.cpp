@@ -18,14 +18,22 @@
 #include <unordered_map>
 
 CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs(const CBlock& block, const uint64_t nonce) :
-        nonce(nonce),
-        shorttxids(block.vtx.size() - 1), prefilledtxn(1), header(block) {
+        nonce(nonce), header(block)
+{
+    const bool prefill_cb = block.vtx.size() != 0 && block.vtx[0]->IsCoinBase();
+
     FillShortTxIDSelector();
+    shorttxids.resize(block.vtx.size() - (size_t)prefill_cb);
+
     //TODO: Use our mempool prior to block acceptance to predictively fill more than just the coinbase
-    prefilledtxn[0] = {0, block.vtx[0]};
-    for (size_t i = 1; i < block.vtx.size(); i++) {
+    prefilledtxn.resize((size_t)prefill_cb);
+    if (prefill_cb) {
+        prefilledtxn[0] = {0, block.vtx[0]};
+    }
+
+    for (size_t i = prefill_cb; i < block.vtx.size(); i++) {
         const CTransaction& tx = *block.vtx[i];
-        shorttxids[i - 1] = GetShortID(tx.GetWitnessHash());
+        shorttxids[i - (size_t)prefill_cb] = GetShortID(tx.GetWitnessHash());
     }
 }
 
