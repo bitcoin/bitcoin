@@ -61,8 +61,6 @@
  *   - clusterlin_postlinearize_moved_leaf
  * - MergeLinearization tests:
  *   - clusterlin_merge
- * - FixLinearization tests:
- *   - clusterlin_fix_linearization
  * - MakeConnected tests (a test-only function):
  *   - clusterlin_make_connected
  */
@@ -1234,65 +1232,4 @@ FUZZ_TARGET(clusterlin_merge)
     assert(cmp1 >= 0);
     auto cmp2 = CompareChunks(chunking_merged, chunking2);
     assert(cmp2 >= 0);
-}
-
-FUZZ_TARGET(clusterlin_fix_linearization)
-{
-    // Verify expected properties of FixLinearization() on arbitrary linearizations.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Construct an arbitrary linearization (not necessarily topological for depgraph).
-    std::vector<DepGraphIndex> linearization;
-    /** Which transactions of depgraph are yet to be included in linearization. */
-    TestBitSet todo = depgraph.Positions();
-    while (todo.Any()) {
-        // Read a number from the fuzz input in range [0, todo.Count()).
-        uint64_t val{0};
-        try {
-            reader >> VARINT(val);
-        } catch (const std::ios_base::failure&) {}
-        val %= todo.Count();
-        // Find the val'th element in todo, remove it from todo, and append it to linearization.
-        for (auto idx : todo) {
-            if (val == 0) {
-                linearization.push_back(idx);
-                todo.Reset(idx);
-                break;
-            }
-            --val;
-        }
-    }
-    assert(linearization.size() == depgraph.TxCount());
-
-    // Determine what prefix of linearization is topological, i.e., the position of the first entry
-    // in linearization which corresponds to a transaction that is not preceded by all its
-    // ancestors.
-    size_t topo_prefix = 0;
-    todo = depgraph.Positions();
-    while (topo_prefix < linearization.size()) {
-        DepGraphIndex idx = linearization[topo_prefix];
-        todo.Reset(idx);
-        if (todo.Overlaps(depgraph.Ancestors(idx))) break;
-        ++topo_prefix;
-    }
-
-    // Then make a fixed copy of linearization.
-    auto linearization_fixed = linearization;
-    FixLinearization(depgraph, linearization_fixed);
-    // Sanity check it (which includes testing whether it is topological).
-    SanityCheck(depgraph, linearization_fixed);
-
-    // If linearization was entirely topological, FixLinearization cannot worsen it.
-    if (topo_prefix == linearization.size()) {
-        auto chunking = ChunkLinearization(depgraph, linearization);
-        auto chunking_fixed = ChunkLinearization(depgraph, linearization_fixed);
-        auto cmp = CompareChunks(chunking_fixed, chunking);
-        assert(cmp >= 0);
-    }
 }
