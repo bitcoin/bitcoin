@@ -1575,16 +1575,6 @@ void PostLinearize(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> l
     }
 }
 
-/** Make linearization topological, reusing information from the old linearization where possible. */
-template<typename SetType>
-void FixLinearization(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> linearization) noexcept
-{
-    // TODO: update call sites to use Linearize directly.
-    auto [new_lin, _opt, _steps] = Linearize(depgraph, /*max_iterations=*/0, /*rng_seed=*/0, linearization, /*is_topological=*/false);
-    Assume(new_lin.size() == linearization.size());
-    std::copy(new_lin.begin(), new_lin.end(), linearization.begin());
-}
-
 } // namespace cluster_linearize
 
 #endif // BITCOIN_CLUSTER_LINEARIZE_H
