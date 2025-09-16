@@ -44,27 +44,6 @@ void BenchPostLinearizeWorstCase(DepGraphIndex ntx, benchmark::Bench& bench)
     });
 }
 
-template<typename SetType>
-void BenchMergeLinearizationsWorstCase(DepGraphIndex ntx, benchmark::Bench& bench)
-{
-    DepGraph<SetType> depgraph;
-    for (DepGraphIndex i = 0; i < ntx; ++i) {
-        depgraph.AddTransaction({i, 1});
-        if (i) depgraph.AddDependencies(SetType::Singleton(0), i);
-    }
-    std::vector<DepGraphIndex> lin1;
-    std::vector<DepGraphIndex> lin2;
-    lin1.push_back(0);
-    lin2.push_back(0);
-    for (DepGraphIndex i = 1; i < ntx; ++i) {
-        lin1.push_back(i);
-        lin2.push_back(ntx - i);
-    }
-    bench.run([&] {
-        MergeLinearizations(depgraph, lin1, lin2);
-    });
-}
-
 void BenchLinearizeOptimally(benchmark::Bench& bench, const std::vector<uint8_t>& serialized)
 {
     // Determine how many transactions the serialized cluster has.
@@ -133,13 +112,6 @@ static void PostLinearize64TxWorstCase(benchmark::Bench& bench) { BenchPostLinea
 static void PostLinearize75TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<75>>(75, bench); }
 static void PostLinearize99TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<99>>(99, bench); }
 
-static void MergeLinearizations16TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<16>>(16, bench); }
-static void MergeLinearizations32TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<32>>(32, bench); }
-static void MergeLinearizations48TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<48>>(48, bench); }
-static void MergeLinearizations64TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<64>>(64, bench); }
-static void MergeLinearizations75TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<75>>(75, bench); }
-static void MergeLinearizations99TxWorstCase(benchmark::Bench& bench) { BenchMergeLinearizationsWorstCase<BitSet<99>>(99, bench); }
-
 // The first 10 examples below were constructed by replaying historical mempool activity, and
 // selecting for clusters that are slow to linearize from scratch, with increasing number of
 // transactions (from 9 to 63). The second 10 examples use randomly generated clusters, with
@@ -186,13 +158,6 @@ BENCHMARK(PostLinearize48TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(PostLinearize64TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(PostLinearize75TxWorstCase, benchmark::PriorityLevel::HIGH);
 BENCHMARK(PostLinearize99TxWorstCase, benchmark::PriorityLevel::HIGH);
-
-BENCHMARK(MergeLinearizations16TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MergeLinearizations32TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MergeLinearizations48TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MergeLinearizations64TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MergeLinearizations75TxWorstCase, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MergeLinearizations99TxWorstCase, benchmark::PriorityLevel::HIGH);
 
 BENCHMARK(LinearizeOptimallyExample00, benchmark::PriorityLevel::HIGH);
 BENCHMARK(LinearizeOptimallyExample01, benchmark::PriorityLevel::HIGH);
