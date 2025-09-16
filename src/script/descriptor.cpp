@@ -641,13 +641,7 @@ public:
             // Make our pubkey provider
             if (IsRangedDerivation() || !m_path.empty()) {
                 // Make the synthetic xpub and construct the BIP32PubkeyProvider
-                CExtPubKey extpub;
-                extpub.nDepth = 0;
-                std::memset(extpub.vchFingerprint, 0, 4);
-                extpub.nChild = 0;
-                extpub.chaincode = MUSIG_CHAINCODE;
-                extpub.pubkey = m_aggregate_pubkey.value();
-
+                CExtPubKey extpub = CreateMuSig2SyntheticXpub(m_aggregate_pubkey.value());
                 m_aggregate_provider = std::make_unique<BIP32PubkeyProvider>(m_expr_index, extpub, m_path, m_derive, /*apostrophe=*/false);
             } else {
                 m_aggregate_provider = std::make_unique<ConstPubkeyProvider>(m_expr_index, m_aggregate_pubkey.value(), /*xonly=*/false);

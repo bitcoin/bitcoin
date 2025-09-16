@@ -23,4 +23,7 @@ std::optional<CPubKey> GetCPubKeyFromMuSig2KeyAggCache(secp256k1_musig_keyagg_ca
 //! Compute the full aggregate pubkey from the given participant pubkeys in their current order
 std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkeys);
 
+//! Construct the BIP 328 synthetic xpub for a pubkey
+CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey);
+
 #endif // BITCOIN_MUSIG_H
