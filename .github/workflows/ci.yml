@@ -354,6 +354,12 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_arm.sh'
 
+          - name: 'Win64, unit tests, no gui tests, no functional tests'
+            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            fallback-runner: 'ubuntu-24.04'
+            timeout-minutes: 120
+            file-env: './ci/test/00_setup_env_win64.sh'
+
           - name: 'ASan + LSan + UBSan + integer, no depends, USDT'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
             fallback-runner: 'ubuntu-24.04'
