@@ -45,7 +45,7 @@
 #define T32   SPH_T32
 #define C64   SPH_C64
 
-#include "aes_helper.c"
+#include "aes_helper.hpp"
 
 #define DECL_STATE_BIG   \
 	sph_u64 W[16][2];

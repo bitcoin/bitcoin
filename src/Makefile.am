@@ -735,7 +735,7 @@ crypto_libbitcoin_crypto_sph_la_CPPFLAGS += \
   -DSPH_SMALL_FOOTPRINT_CUBEHASH=1 \
   -DSPH_SMALL_FOOTPRINT_JH=1
 crypto_libbitcoin_crypto_sph_la_SOURCES = \
-  crypto/x11/aes_helper.c \
+  crypto/x11/aes_helper.hpp \
   crypto/x11/blake.c \
   crypto/x11/bmw.c \
   crypto/x11/cubehash.c \

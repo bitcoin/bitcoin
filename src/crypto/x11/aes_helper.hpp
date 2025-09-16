@@ -43,13 +43,16 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
+#ifndef SPH_AES_HELPER_HPP__
+#define SPH_AES_HELPER_HPP__
+
+#include <attributes.h>
+
 #include "sph_types.h"
-#ifdef __cplusplus
-extern "C"{
-#endif
 
 #define AESx(x)   SPH_C32(x)
 
+namespace impl {
 /*
  * The AES*[] tables allow us to perform a fast evaluation of an AES
  * round; table AESi[] combines SubBytes for a byte at row i, and
@@ -323,29 +326,35 @@ static const sph_u32 AES3[256] = {
 	AESx(0x82C34141), AESx(0x29B09999), AESx(0x5A772D2D), AESx(0x1E110F0F),
 	AESx(0x7BCBB0B0), AESx(0xA8FC5454), AESx(0x6DD6BBBB), AESx(0x2C3A1616)
 };
+} // namespace impl
 
-#define AES_ROUND_LE(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3)   do { \
-		(Y0) = AES0[(X0) & 0xFF] \
-			^ AES1[((X1) >> 8) & 0xFF] \
-			^ AES2[((X2) >> 16) & 0xFF] \
-			^ AES3[((X3) >> 24) & 0xFF] ^ (K0); \
-		(Y1) = AES0[(X1) & 0xFF] \
-			^ AES1[((X2) >> 8) & 0xFF] \
-			^ AES2[((X3) >> 16) & 0xFF] \
-			^ AES3[((X0) >> 24) & 0xFF] ^ (K1); \
-		(Y2) = AES0[(X2) & 0xFF] \
-			^ AES1[((X3) >> 8) & 0xFF] \
-			^ AES2[((X0) >> 16) & 0xFF] \
-			^ AES3[((X1) >> 24) & 0xFF] ^ (K2); \
-		(Y3) = AES0[(X3) & 0xFF] \
-			^ AES1[((X0) >> 8) & 0xFF] \
-			^ AES2[((X1) >> 16) & 0xFF] \
-			^ AES3[((X2) >> 24) & 0xFF] ^ (K3); \
-	} while (0)
-
-#define AES_ROUND_NOKEY_LE(X0, X1, X2, X3, Y0, Y1, Y2, Y3) \
-	AES_ROUND_LE(X0, X1, X2, X3, 0, 0, 0, 0, Y0, Y1, Y2, Y3)
-
-#ifdef __cplusplus
+void ALWAYS_INLINE AES_ROUND_LE(sph_u32 x0, sph_u32 x1, sph_u32 x2, sph_u32 x3,
+								sph_u32 k0, sph_u32 k1, sph_u32 k2, sph_u32 k3,
+								sph_u32& y0, sph_u32& y1, sph_u32& y2, sph_u32& y3)
+{
+	using namespace impl;
+	(y0) = AES0[(x0) & 0xFF]
+		^ AES1[((x1) >> 8) & 0xFF]
+		^ AES2[((x2) >> 16) & 0xFF]
+		^ AES3[((x3) >> 24) & 0xFF] ^ (k0);
+	(y1) = AES0[(x1) & 0xFF]
+		^ AES1[((x2) >> 8) & 0xFF]
+		^ AES2[((x3) >> 16) & 0xFF]
+		^ AES3[((x0) >> 24) & 0xFF] ^ (k1);
+	(y2) = AES0[(x2) & 0xFF]
+		^ AES1[((x3) >> 8) & 0xFF]
+		^ AES2[((x0) >> 16) & 0xFF]
+		^ AES3[((x1) >> 24) & 0xFF] ^ (k2);
+	(y3) = AES0[(x3) & 0xFF]
+		^ AES1[((x0) >> 8) & 0xFF]
+		^ AES2[((x1) >> 16) & 0xFF]
+		^ AES3[((x2) >> 24) & 0xFF] ^ (k3);
 }
-#endif
+
+void ALWAYS_INLINE AES_ROUND_NOKEY_LE(sph_u32 x0, sph_u32 x1, sph_u32 x2, sph_u32 x3,
+									  sph_u32& y0, sph_u32& y1, sph_u32& y2, sph_u32& y3)
+{
+	AES_ROUND_LE(x0, x1, x2, x3, /*k0=*/0, /*k1=*/0, /*k2=*/0, /*k3=*/0, y0, y1, y2, y3);
+}
+
+#endif // SPH_AES_HELPER_HPP__
