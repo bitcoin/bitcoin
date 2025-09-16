@@ -56,12 +56,22 @@ public:
     /**
      * Construct and broadcast the block.
      *
+     * @param[in] version version block header field
+     * @param[in] timestamp time block header field (unix timestamp)
+     * @param[in] nonce nonce block header field
+     * @param[in] coinbase complete coinbase transaction (including witness)
+     *
+     * @note unlike the submitsolution RPC, this method and applySolution do
+     *       NOT add the coinbase witness automatically.
+     *
      * @returns if the block was processed, independent of block validity
      */
     virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
 
     /**
      * Re-construct and return the block. Does not validate or submit.
+     *
+     * See submitSolution() for expected params.
      */
     virtual CBlock applySolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
 
