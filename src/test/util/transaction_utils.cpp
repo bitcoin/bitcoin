@@ -91,6 +91,20 @@ void BulkTransaction(CMutableTransaction& tx, int32_t target_weight)
     assert(GetTransactionWeight(CTransaction(tx)) <= target_weight + 3);
 }
 
+bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn,
+                   const CAmount& amount, std::vector<CTxOut>&& spent_outputs, int nHashType, SignatureData& sig_data)
+{
+    assert(nIn < txTo.vin.size());
+
+    PrecomputedTransactionData txdata;
+    txdata.Init(txTo, std::forward<std::vector<CTxOut>>(spent_outputs), /*force=*/true);
+    MutableTransactionSignatureCreator creator(txTo, nIn, amount, &txdata, {.sighash_type = nHashType});
+
+    bool ret = ProduceSignature(provider, creator, fromPubKey, sig_data);
+    UpdateInput(txTo.vin.at(nIn), sig_data);
+    return ret;
+}
+
 bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, CMutableTransaction& txTo, unsigned int nIn, const CAmount& amount, int nHashType, SignatureData& sig_data)
 {
     assert(nIn < txTo.vin.size());
