@@ -1,6 +1,6 @@
-Bitcoin Core version 28.x is now available from:
+Bitcoin Core version 28.3rc1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-28.x/test.rc1/>
+  <https://bitcoincore.org/bin/bitcoin-core-28.3/test.rc1/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -37,6 +37,10 @@ unsupported systems.
 Notable changes
 ===============
 
+### P2P
+
+- #33395 net: do not apply whitelist permissions to onion inbounds
+
 ### Test
 
 - #32765 test: Fix list index out of range error in feature_bip68_sequence.py
@@ -54,6 +58,11 @@ Notable changes
 - #32777 doc: fix Transifex 404s
 - #33070 doc/zmq: fix unix socket path example
 - #33133 rpc: fix getpeerinfo ping duration unit docs
+- #33236 doc: Remove wrong and redundant doxygen tag
+
+### Misc
+
+- #33340 Fix benchmark CSV output
 
 Credits
 =======
@@ -63,8 +72,11 @@ Thanks to everyone who directly contributed to this release:
 - fanquake
 - Hennadii Stepanov
 - MarcoFalke
+- Martin Zumsande
 - romanz
 - Sjors Provoost
+- theStack
+- Vasil Dimov
 - willcl-ark
 - zaidmstrr
 
