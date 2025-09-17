@@ -617,7 +617,7 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
     const char* disconnected = nullptr;
     proxy_client.m_context.loop->sync([&]() {
         if (!proxy_client.m_context.connection) {
-            const std::unique_lock<std::mutex> lock(thread_context.waiter->m_mutex);
+            const Lock lock(thread_context.waiter->m_mutex);
             done = true;
             disconnected = "IPC client method called after disconnect.";
             thread_context.waiter->m_cv.notify_all();
@@ -644,7 +644,7 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
                 } catch (...) {
                     exception = std::current_exception();
                 }
-                const std::unique_lock<std::mutex> lock(thread_context.waiter->m_mutex);
+                const Lock lock(thread_context.waiter->m_mutex);
                 done = true;
                 thread_context.waiter->m_cv.notify_all();
             },
@@ -656,13 +656,13 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
                     proxy_client.m_context.loop->logPlain()
                         << "{" << thread_context.thread_name << "} IPC client exception " << kj_exception;
                 }
-                const std::unique_lock<std::mutex> lock(thread_context.waiter->m_mutex);
+                const Lock lock(thread_context.waiter->m_mutex);
                 done = true;
                 thread_context.waiter->m_cv.notify_all();
             }));
     });
 
-    std::unique_lock<std::mutex> lock(thread_context.waiter->m_mutex);
+    Lock lock(thread_context.waiter->m_mutex);
     thread_context.waiter->wait(lock, [&done]() { return done; });
     if (exception) std::rethrow_exception(exception);
     if (!kj_exception.empty()) proxy_client.m_context.loop->raise() << kj_exception;
