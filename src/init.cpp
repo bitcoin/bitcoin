@@ -12,6 +12,7 @@
 #include <addrman.h>
 #include <banman.h>
 #include <blockfilter.h>
+#include <blocktemplatecache.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -1827,6 +1828,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
     auto& kernel_notifications{*Assert(node.notifications)};
+
+    node.block_template_cache = MakeBlockTemplateCache(node.mempool.get(), chainman);
+    validation_signals.RegisterSharedValidationInterface(node.block_template_cache);
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
