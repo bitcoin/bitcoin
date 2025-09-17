@@ -51,8 +51,11 @@ CSipHasher& CSipHasher::Write(std::span<const unsigned char> data)
     uint64_t t = tmp;
     uint8_t c = count;
 
-    while (data.size() > 0) {
-        t |= uint64_t{data.front()} << (8 * (c % 8));
+    const unsigned char* ptr = data.data();
+    size_t size = data.size();
+
+    while (size > 0) {
+        t |= uint64_t{*ptr} << (8 * (c % 8));
         c++;
         if ((c & 7) == 0) {
             v3 ^= t;
@@ -61,7 +64,8 @@ CSipHasher& CSipHasher::Write(std::span<const unsigned char> data)
             v0 ^= t;
             t = 0;
         }
-        data = data.subspan(1);
+        ptr++;
+        size--;
     }
 
     v[0] = v0;
