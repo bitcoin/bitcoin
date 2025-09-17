@@ -5,9 +5,12 @@
 """Test the listtransactions API."""
 
 from decimal import Decimal
+import time
 import os
 import shutil
 
+from test_framework.blocktools import MAX_FUTURE_BLOCK_TIME
+from test_framework.descriptors import descsum_create
 from test_framework.messages import (
     COIN,
     tx_from_hex,
@@ -18,7 +21,9 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     assert_raises_rpc_error,
+    find_vout_for_address,
 )
+from test_framework.wallet_util import get_generate_key
 
 
 class ListTransactionsTest(BitcoinTestFramework):
@@ -97,6 +102,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.run_coinjoin_test()
         self.run_invalid_parameters_test()
         self.test_op_return()
+        self.test_from_me_status_change()
 
     def run_rbf_opt_in_test(self):
         """Test the opt-in-rbf flag for sent and received transactions."""
@@ -311,6 +317,49 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         assert 'address' not in op_ret_tx
 
+    def test_from_me_status_change(self):
+        self.log.info("Test gettransaction after changing a transaction's 'from me' status")
+        self.nodes[0].createwallet("fromme")
+        default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        wallet = self.nodes[0].get_wallet_rpc("fromme")
+
+        # The 'fee' field of gettransaction is only added when the transaction is 'from me'
+        # Run twice, once for a transaction in the mempool, again when it confirms
+        for confirm in [False, True]:
+            key = get_generate_key()
+            descriptor = descsum_create(f"wpkh({key.privkey})")
+            default_wallet.importdescriptors([{"desc": descriptor, "timestamp": "now"}])
+
+            send_res = default_wallet.send(outputs=[{key.p2wpkh_addr: 1}, {wallet.getnewaddress(): 1}])
+            assert_equal(send_res["complete"], True)
+            vout = find_vout_for_address(self.nodes[0], send_res["txid"], key.p2wpkh_addr)
+            utxos = [{"txid": send_res["txid"], "vout": vout}]
+            self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
+            # Send to the test wallet, ensuring that one input is for the descriptor we will import,
+            # and that there are other inputs belonging to only the sending wallet
+            send_res = default_wallet.send(outputs=[{wallet.getnewaddress(): 1.5}], inputs=utxos, add_inputs=True)
+            assert_equal(send_res["complete"], True)
+            txid = send_res["txid"]
+            self.nodes[0].syncwithvalidationinterfacequeue()
+            tx_info = wallet.gettransaction(txid)
+            assert "fee" not in tx_info
+            assert_equal(any(detail["category"] == "send" for detail in tx_info["details"]), False)
+
+            if confirm:
+                self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+                # Mock time forward and generate blocks so that the import does not rescan the transaction
+                self.nodes[0].setmocktime(int(time.time()) + MAX_FUTURE_BLOCK_TIME + 1)
+                self.generate(self.nodes[0], 10, sync_fun=self.no_op)
+
+            import_res = wallet.importdescriptors([{"desc": descriptor, "timestamp": "now"}])
+            assert_equal(import_res[0]["success"], True)
+            # TODO: We should check that the fee matches, but since the transaction spends inputs
+            # not known to the wallet, it is incorrectly calculating the fee.
+            # assert_equal(wallet.gettransaction(txid)["fee"], fee)
+            tx_info = wallet.gettransaction(txid)
+            assert "fee" in tx_info
+            assert_equal(any(detail["category"] == "send" for detail in tx_info["details"]), True)
 
 if __name__ == '__main__':
     ListTransactionsTest(__file__).main()
