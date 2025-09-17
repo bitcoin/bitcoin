@@ -425,11 +425,20 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(&active_coins_tip));
 
+    std::optional<Wtxid> last_wtxid = std::nullopt;
+
     for (const auto& it : GetSortedScoreWithTopology()) {
         checkTotal += it->GetTxSize();
         check_total_fee += it->GetFee();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
+
+        // CompareMiningScoreWithTopology should agree with GetSortedScoreWithTopology()
+        if (last_wtxid) {
+            assert(CompareMiningScoreWithTopology(*last_wtxid, tx.GetWitnessHash()));
+        }
+        last_wtxid = tx.GetWitnessHash();
+
         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setParentCheck;
         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setParentsStored;
         for (const CTxIn &txin : tx.vin) {
