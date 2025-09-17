@@ -95,6 +95,10 @@ struct CBlockIndexHeightOnlyComparator {
     bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
 };
 
+struct CBlockIndexBlockHashComparator {
+    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+};
+
 struct PruneLockInfo {
     int height_first{std::numeric_limits<int>::max()}; //! Height of earliest block that should be kept and not pruned
 };
@@ -238,7 +242,7 @@ private:
     const Obfuscation m_obfuscation;
 
     /** Dirty block index entries. */
-    std::set<CBlockIndex*> m_dirty_blockindex;
+    std::set<CBlockIndex*, CBlockIndexBlockHashComparator> m_dirty_blockindex;
 
     /** Dirty block file entries. */
     std::set<int> m_dirty_fileinfo;
