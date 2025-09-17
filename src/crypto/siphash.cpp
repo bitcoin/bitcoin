@@ -54,8 +54,28 @@ CSipHasher& CSipHasher::Write(std::span<const unsigned char> data)
     const unsigned char* ptr = data.data();
     size_t size = data.size();
 
+    // Handle initial unaligned bytes to reach 8-byte boundary
+    uint8_t initial_bytes = std::min(size, size_t(8 - (c & 7)) & 7);
+    const bool had_leftover_bytes = (initial_bytes > 0);
+
+    size -= initial_bytes;
+    while (initial_bytes > 0) {
+        t |= uint64_t{*ptr} << (8 * (c & 7));
+        ptr++;
+        c++;
+        initial_bytes--;
+    }
+
+    if (had_leftover_bytes && (c & 7) == 0) {
+        v3 ^= t;
+        SIPROUND;
+        SIPROUND;
+        v0 ^= t;
+        t = 0;
+    }
+
     while (size > 0) {
-        t |= uint64_t{*ptr} << (8 * (c % 8));
+        t |= uint64_t{*ptr} << (8 * (c & 7));
         c++;
         if ((c & 7) == 0) {
             v3 ^= t;
