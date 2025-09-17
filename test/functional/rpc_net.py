@@ -167,6 +167,7 @@ class NetTest(BitcoinTestFramework):
                 "presynced_headers": -1,
                 "relaytxes": False,
                 "inv_to_send": 0,
+                "last_inv_sequence": 0,
                 "services": "0000000000000000",
                 "servicesnames": [],
                 "session_id": "" if not self.options.v2transport else no_version_peer.v2_state.peer['session_id'].hex(),
