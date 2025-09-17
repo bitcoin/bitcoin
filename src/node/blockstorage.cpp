@@ -179,6 +179,11 @@ bool CBlockIndexHeightOnlyComparator::operator()(const CBlockIndex* pa, const CB
     return pa->nHeight < pb->nHeight;
 }
 
+bool CBlockIndexBlockHashComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
+{
+    return UintToArith256(pa->GetBlockHash()) < UintToArith256(pb->GetBlockHash());
+}
+
 std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
 {
     AssertLockHeld(cs_main);
@@ -487,7 +492,7 @@ bool BlockManager::WriteBlockIndexDB()
     }
     std::vector<const CBlockIndex*> vBlocks;
     vBlocks.reserve(m_dirty_blockindex.size());
-    for (std::set<CBlockIndex*>::iterator it = m_dirty_blockindex.begin(); it != m_dirty_blockindex.end();) {
+    for (std::set<CBlockIndex*, CBlockIndexBlockHashComparator>::iterator it = m_dirty_blockindex.begin(); it != m_dirty_blockindex.end();) {
         vBlocks.push_back(*it);
         m_dirty_blockindex.erase(it++);
     }
