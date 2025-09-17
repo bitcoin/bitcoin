@@ -94,7 +94,7 @@ static void ApplyHash(T& hash_obj, const uint256& hash, const std::map<uint32_t,
 {
     for (auto it = outputs.begin(); it != outputs.end(); ++it) {
         COutPoint outpoint = COutPoint(hash, it->first);
-        Coin coin = it->second;
+        const Coin& coin = it->second;
         ApplyCoinHash(hash_obj, outpoint, coin);
     }
 }
