@@ -288,12 +288,14 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
         m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
     };
     m_make_chainman();
+    m_node.block_template_cache = node::MakeBlockTemplateCache(m_node.mempool.get(), *m_node.chainman);
 }
 
 ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
+    m_node.block_template_cache.reset();
     m_node.connman.reset();
     m_node.banman.reset();
     m_node.addrman.reset();

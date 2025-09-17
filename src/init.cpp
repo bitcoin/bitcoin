@@ -399,6 +399,7 @@ void Shutdown(NodeContext& node)
     }
     node.mempool.reset();
     node.fee_estimator.reset();
+    node.block_template_cache.reset();
     node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
@@ -1828,6 +1829,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
     auto& kernel_notifications{*Assert(node.notifications)};
+
+    node.block_template_cache = node::MakeBlockTemplateCache(node.mempool.get(), chainman);
+    validation_signals.RegisterSharedValidationInterface(node.block_template_cache);
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
