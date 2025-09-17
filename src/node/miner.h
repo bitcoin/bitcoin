@@ -12,10 +12,13 @@
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
+#include <validationinterface.h>
 
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <utility>
+#include <vector>
 
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
@@ -24,6 +27,7 @@
 #include <boost/multi_index_container.hpp>
 
 class ArgsManager;
+class BlockTemplateCache;
 class CBlockIndex;
 class CChainParams;
 class CScript;
@@ -38,6 +42,8 @@ namespace node {
 class KernelNotifications;
 
 static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
+static constexpr size_t DEFAULT_CACHE_SIZE{10};
+
 
 struct CBlockTemplate
 {
@@ -226,6 +232,49 @@ private:
 };
 
 /**
+ * BlockTemplateCache provides a thread-safe interface for creating and reusing
+ * block templates with configurable cache size.
+ *
+ * The cache stores templates with their respective config options.
+ * When a block template is requested:
+ * - If a template with matching options exists and the interval
+ *   has not elapsed, the cached template is returned.
+ * - If no template exists or the interval has elapsed, a new template is generated,
+ *   stored in the cache, and returned.
+ * - After insertion, we evict the oldest template if the cache overflows.
+ *
+ * The cache inherits from CValidationInterface to receive notifications
+ * about connected blocks, which triggers cache invalidation,
+ * ensuring stale templates are not returned.
+ */
+class BlockTemplateCache : public CValidationInterface
+{
+public:
+    virtual ~BlockTemplateCache() = default;
+
+    /**
+     * If a cached template exists with identical options and its age does not
+     * exceed the specified interval, the cached template is returned.
+     * Otherwise, a new template is created and stored in the cache.
+     *
+     * @param options The block assembly options to use.
+     * @param interval Maximum age of a cached template to be considered fresh.
+     * @return std::shared_ptr<CBlockTemplate> Shared pointer to the block template.
+     */
+    virtual std::pair<std::shared_ptr<CBlockTemplate>, NodeClock::time_point> GetBlockTemplate(
+        const BlockAssembler::Options& options,
+        std::chrono::seconds interval
+    ) = 0;
+};
+
+std::shared_ptr<BlockTemplateCache> MakeBlockTemplateCache(
+    CTxMemPool* mempool,
+    ChainstateManager& chainman,
+    size_t cache_size = DEFAULT_CACHE_SIZE
+);
+
+
+/**
  * Get the minimum time a miner should use in the next block. This always
  * accounts for the BIP94 timewarp rule, so does not necessarily reflect the
  * consensus limit.
@@ -247,9 +296,9 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
  * Return a new block template when fees rise to a certain threshold or after a
  * new tip; return nullopt if timeout is reached.
  */
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                                      ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
                                                       const BlockWaitOptions& options,
                                                       const BlockAssembler::Options& assemble_options);
