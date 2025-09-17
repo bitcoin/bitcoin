@@ -574,9 +574,9 @@ void CNode::CloseSocketDisconnect()
     m_i2p_sam_session.reset();
 }
 
-void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr, const std::vector<NetWhitelistPermissions>& ranges) const {
+void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, std::optional<CNetAddr> addr, const std::vector<NetWhitelistPermissions>& ranges) const {
     for (const auto& subnet : ranges) {
-        if (subnet.m_subnet.Match(addr)) {
+        if (addr.has_value() && subnet.m_subnet.Match(addr.value())) {
             NetPermissions::AddFlag(flags, subnet.m_flags);
         }
     }
@@ -1768,7 +1768,11 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 {
     int nInbound = 0;
 
-    AddWhitelistPermissionFlags(permission_flags, addr, vWhitelistedRangeIncoming);
+    const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+
+    // Tor inbound connections do not reveal the peer's actual network address.
+    // Therefore do not apply address-based whitelist permissions to them.
+    AddWhitelistPermissionFlags(permission_flags, inbound_onion ? std::optional<CNetAddr>{} : addr, vWhitelistedRangeIncoming);
 
     {
         LOCK(m_nodes_mutex);
@@ -1823,7 +1827,6 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
 
-    const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
     // The V2Transport transparently falls back to V1 behavior when an incoming V1 connection is
     // detected, so use it whenever we signal NODE_P2P_V2.
     ServiceFlags local_services = GetLocalServices();
