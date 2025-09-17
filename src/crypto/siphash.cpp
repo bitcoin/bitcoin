@@ -74,17 +74,29 @@ CSipHasher& CSipHasher::Write(std::span<const unsigned char> data)
         t = 0;
     }
 
+    // Process aligned 8-byte chunks directly
+    while (size >= 8) {
+        uint64_t chunk;
+        std::memcpy(&chunk, ptr, 8);
+        if constexpr (std::endian::native == std::endian::big) {
+            chunk = internal_bswap_64(chunk);
+        }
+
+        v3 ^= chunk;
+        SIPROUND;
+        SIPROUND;
+        v0 ^= chunk;
+
+        ptr += 8;
+        size -= 8;
+        c += 8;
+    }
+
+    //Handle remaining unaligned bytes
     while (size > 0) {
         t |= uint64_t{*ptr} << (8 * (c & 7));
-        c++;
-        if ((c & 7) == 0) {
-            v3 ^= t;
-            SIPROUND;
-            SIPROUND;
-            v0 ^= t;
-            t = 0;
-        }
         ptr++;
+        c++;
         size--;
     }
 
