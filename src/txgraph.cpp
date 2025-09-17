@@ -2286,19 +2286,6 @@ void Cluster::SanityCheck(const TxGraphImpl& graph, int level) const
     assert(m_depgraph.PositionRange() == m_mapping.size());
     // The linearization for this Cluster must contain every transaction once.
     assert(m_depgraph.TxCount() == m_linearization.size());
-    // The number of transactions in a Cluster cannot exceed m_max_cluster_count.
-    assert(m_linearization.size() <= graph.m_max_cluster_count);
-    // The level must match the Cluster's own idea of its level (but GetLevel can only be called
-    // for non-empty Clusters).
-    assert(GetTxCount() == 0 || level == GetLevel(graph));
-    // The sum of their sizes cannot exceed m_max_cluster_size, unless it is an individually
-    // oversized transaction singleton. Note that groups of to-be-merged clusters which would
-    // exceed this limit are marked oversized, which means they are never applied.
-    assert(m_quality == QualityLevel::OVERSIZED_SINGLETON || GetTotalTxSize() <= graph.m_max_cluster_size);
-    // m_quality and m_setindex are checked in TxGraphImpl::SanityCheck.
-
-    // OVERSIZED clusters are singletons.
-    assert(m_quality != QualityLevel::OVERSIZED_SINGLETON || m_linearization.size() == 1);
 
     // Compute the chunking of m_linearization.
     LinearizationChunking linchunking(m_depgraph, m_linearization);
@@ -2416,6 +2403,19 @@ void TxGraphImpl::SanityCheck() const
             // ... for all clusters in them ...
             for (ClusterSetIndex setindex = 0; setindex < quality_clusters.size(); ++setindex) {
                 const auto& cluster = *quality_clusters[setindex];
+                // The number of transactions in a Cluster cannot exceed m_max_cluster_count.
+                assert(cluster.GetTxCount() <= m_max_cluster_count);
+                // The level must match the Cluster's own idea of what level it is in (but GetLevel
+                // can only be called for non-empty Clusters).
+                assert(cluster.GetTxCount() == 0 || level == cluster.GetLevel(*this));
+                // The sum of their sizes cannot exceed m_max_cluster_size, unless it is an
+                // individually oversized transaction singleton. Note that groups of to-be-merged
+                // clusters which would exceed this limit are marked oversized, which means they
+                // are never applied.
+                assert(cluster.IsOversized() || cluster.GetTotalTxSize() <= m_max_cluster_size);
+                // OVERSIZED clusters are singletons.
+                assert(!cluster.IsOversized() || cluster.GetTxCount() == 1);
+
                 // Check the sequence number.
                 assert(cluster.m_sequence < m_next_sequence_counter);
                 assert(sequences.count(cluster.m_sequence) == 0);
