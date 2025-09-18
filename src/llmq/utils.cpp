@@ -732,14 +732,14 @@ uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256
     return proTxHash2;
 }
 
-std::unordered_set<uint256, StaticSaltedHasher> GetQuorumConnections(
+Uint256HashSet GetQuorumConnections(
     const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
     const CSporkManager& sporkman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
     bool onlyOutbound)
 {
     if (IsAllMembersConnectedEnabled(llmqParams.type, sporkman)) {
         auto mns = GetAllQuorumMembers(llmqParams.type, dmnman, qsnapman, pQuorumBaseBlockIndex);
-        std::unordered_set<uint256, StaticSaltedHasher> result;
+        Uint256HashSet result;
 
         for (const auto& dmn : mns) {
             if (dmn->proTxHash == forMember) {
@@ -758,18 +758,18 @@ std::unordered_set<uint256, StaticSaltedHasher> GetQuorumConnections(
     return GetQuorumRelayMembers(llmqParams, dmnman, qsnapman, pQuorumBaseBlockIndex, forMember, onlyOutbound);
 }
 
-std::unordered_set<uint256, StaticSaltedHasher> GetQuorumRelayMembers(
+Uint256HashSet GetQuorumRelayMembers(
     const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
     gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound)
 {
     auto mns = GetAllQuorumMembers(llmqParams.type, dmnman, qsnapman, pQuorumBaseBlockIndex);
-    std::unordered_set<uint256, StaticSaltedHasher> result;
+    Uint256HashSet result;
 
     auto calcOutbound = [&](size_t i, const uint256& proTxHash) {
         // Relay to nodes at indexes (i+2^k)%n, where
         //   k: 0..max(1, floor(log2(n-1))-1)
         //   n: size of the quorum/ring
-        std::unordered_set<uint256, StaticSaltedHasher> r{};
+        Uint256HashSet r{};
         if (mns.size() == 1) {
             // No outbound connections are needed when there is one MN only.
             // Also note that trying to calculate results via the algorithm below
@@ -859,8 +859,8 @@ bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& 
     LogPrint(BCLog::NET_NETCONN, "%s -- isMember=%d for quorum %s:\n",
             __func__, isMember, pQuorumBaseBlockIndex->GetBlockHash().ToString());
 
-    std::unordered_set<uint256, StaticSaltedHasher> connections;
-    std::unordered_set<uint256, StaticSaltedHasher> relayMembers;
+    Uint256HashSet connections;
+    Uint256HashSet relayMembers;
     if (isMember) {
         connections = GetQuorumConnections(llmqParams, dmnman, qsnapman, sporkman, pQuorumBaseBlockIndex, myProTxHash,
                                            true);

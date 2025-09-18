@@ -113,7 +113,7 @@ chainlock::ChainLockSig CChainLocksHandler::GetBestChainLock() const
     return bestChainLock;
 }
 
-void CChainLocksHandler::UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time)
+void CChainLocksHandler::UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time)
 {
     AssertLockNotHeld(cs);
     LOCK(cs);

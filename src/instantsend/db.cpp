@@ -359,7 +359,7 @@ std::vector<uint256> CInstantSendDb::RemoveChainedInstantSendLocks(const uint256
     std::vector<uint256> result;
 
     std::vector<uint256> stack;
-    std::unordered_set<uint256, StaticSaltedHasher> added;
+    Uint256HashSet added;
     stack.emplace_back(txid);
 
     CDBBatch batch(*db);

@@ -564,7 +564,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(PeerManager& peerman)
 
     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), recSigsByNode.size());
 
-    std::unordered_set<uint256, StaticSaltedHasher> processed;
+    Uint256HashSet processed;
     for (const auto& p : recSigsByNode) {
         NodeId nodeId = p.first;
         const auto& v = p.second;

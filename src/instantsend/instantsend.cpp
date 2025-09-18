@@ -37,9 +37,9 @@ namespace llmq {
 namespace {
 template <typename T>
     requires std::same_as<T, CTxIn> || std::same_as<T, COutPoint>
-std::unordered_set<uint256, StaticSaltedHasher> GetIdsFromLockable(const std::vector<T>& vec)
+Uint256HashSet GetIdsFromLockable(const std::vector<T>& vec)
 {
-    std::unordered_set<uint256, StaticSaltedHasher> ret{};
+    Uint256HashSet ret{};
     if (vec.empty()) return ret;
     ret.reserve(vec.size());
     for (const auto& in : vec) {
@@ -230,7 +230,7 @@ instantsend::PendingState CInstantSendManager::ProcessPendingInstantSendLocks()
     return ret;
 }
 
-std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPendingInstantSendLocks(
+Uint256HashSet CInstantSendManager::ProcessPendingInstantSendLocks(
     const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
     const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend,
     std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
@@ -302,7 +302,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- verified locks. count=%d, alreadyVerified=%d, vt=%d, nodes=%d\n", __func__,
             verifyCount, alreadyVerified, verifyTimer.count(), batchVerifier.GetUniqueSourceCount());
 
-    std::unordered_set<uint256, StaticSaltedHasher> badISLocks;
+    Uint256HashSet badISLocks;
 
     if (ban && !batchVerifier.badSources.empty()) {
         LOCK(::cs_main);

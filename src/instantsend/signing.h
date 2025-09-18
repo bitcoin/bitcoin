@@ -57,7 +57,7 @@ private:
      * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
      * in-progress input lock.
      */
-    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds GUARDED_BY(cs_input_requests);
+    Uint256HashSet inputRequestIds GUARDED_BY(cs_input_requests);
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
@@ -78,7 +78,7 @@ public:
     void Start();
     void Stop();
 
-    void ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
+    void ClearInputsFromQueue(const Uint256HashSet& ids)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
 
     void ClearLockFromQueue(const InstantSendLockPtr& islock)

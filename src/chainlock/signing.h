@@ -34,7 +34,7 @@ public:
     virtual bool IsEnabled() const = 0;
     virtual bool IsTxSafeForMining(const uint256& txid) const = 0;
     [[nodiscard]] virtual MessageProcessingResult ProcessNewChainLock(NodeId from, const ChainLockSig& clsig, const uint256& hash) = 0;
-    virtual void UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time) = 0;
+    virtual void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) = 0;
 };
 
 class ChainLockSigner final : public llmq::CRecoveredSigsListener
@@ -52,7 +52,7 @@ private:
     struct BlockHasher {
         size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
     };
-    using BlockTxs = std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>, BlockHasher>;
+    using BlockTxs = std::unordered_map<uint256, std::shared_ptr<Uint256HashSet>, BlockHasher>;
 
 private:
     mutable Mutex cs_signer;
@@ -80,7 +80,7 @@ public:
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
-    [[nodiscard]] std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> Cleanup()
+    [[nodiscard]] std::vector<std::shared_ptr<Uint256HashSet>> Cleanup()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
 private:

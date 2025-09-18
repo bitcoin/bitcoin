@@ -298,7 +298,7 @@ private:
 private:
     std::vector<std::unique_ptr<CDKGMember>> members;
     std::map<uint256, size_t> membersMap;
-    std::unordered_set<uint256, StaticSaltedHasher> relayMembers;
+    Uint256HashSet relayMembers;
     BLSVerificationVectorPtr vvecContribution;
     std::vector<CBLSSecretKey> m_sk_contributions;
 
@@ -390,7 +390,7 @@ public:
 
 public:
     [[nodiscard]] CDKGMember* GetMember(const uint256& proTxHash) const;
-    [[nodiscard]] const std::unordered_set<uint256, StaticSaltedHasher>& RelayMembers() const { return relayMembers; }
+    [[nodiscard]] const Uint256HashSet& RelayMembers() const { return relayMembers; }
     [[nodiscard]] const CBlockIndex* BlockIndex() const { return m_quorum_base_block_index; }
     [[nodiscard]] const uint256& ProTx() const { return myProTxHash; }
     [[nodiscard]] const Consensus::LLMQParams GetParams() const { return params; }

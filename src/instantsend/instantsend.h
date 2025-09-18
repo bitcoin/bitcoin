@@ -75,7 +75,7 @@ private:
     struct NonLockedTxInfo {
         const CBlockIndex* pindexMined;
         CTransactionRef tx;
-        std::unordered_set<uint256, StaticSaltedHasher> children;
+        Uint256HashSet children;
     };
 
     mutable Mutex cs_nonLocked;
@@ -83,7 +83,7 @@ private:
     std::unordered_map<COutPoint, uint256, SaltedOutpointHasher> nonLockedTxsByOutpoints GUARDED_BY(cs_nonLocked);
 
     mutable Mutex cs_pendingRetry;
-    std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
+    Uint256HashSet pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
     mutable Mutex cs_timingsTxSeen;
     std::unordered_map<uint256, int64_t, StaticSaltedHasher> timingsTxSeen GUARDED_BY(cs_timingsTxSeen);
@@ -110,7 +110,7 @@ private:
     instantsend::PendingState ProcessPendingInstantSendLocks()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
-    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(
+    Uint256HashSet ProcessPendingInstantSendLocks(
         const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
         const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend,
         std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
