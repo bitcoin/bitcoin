@@ -8,6 +8,8 @@
 #include <common/run_command.h>
 #include <univalue.h>
 
+#include <common/system.h>
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 #include <util/subprocess.h>
 #endif // ENABLE_EXTERNAL_SIGNER
@@ -15,6 +17,17 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(total_ram)
+{
+    BOOST_CHECK_GE(GetTotalRAM(), 1000_MiB);
+
+    if constexpr (SIZE_MAX == UINT64_MAX) {
+        // Upper bound check only on 64-bit: 32-bit systems can reasonably have max memory,
+        // but extremely large values on 64-bit likely indicate detection errors
+        BOOST_CHECK_LT(GetTotalRAM(), 10'000'000_MiB); // >10 TiB memory is unlikely
+    }
+}
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 
