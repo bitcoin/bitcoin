@@ -75,14 +75,6 @@ typedef unsigned int SOCKET;
 typedef SSIZE_T ssize_t;
 #endif
 
-// The type of the option value passed to getsockopt & setsockopt
-// differs between Windows and non-Windows.
-#ifndef WIN32
-typedef void* sockopt_arg_type;
-#else
-typedef char* sockopt_arg_type;
-#endif
-
 #ifdef WIN32
 // Export main() and ensure working ASLR when using mingw-w64.
 // Exporting a symbol will prevent the linker from stripping
