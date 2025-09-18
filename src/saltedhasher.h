@@ -9,6 +9,9 @@
 #include <uint256.h>
 #include <crypto/siphash.h>
 
+#include <unordered_map>
+#include <unordered_set>
+
 /** Helper classes for std::unordered_map and std::unordered_set hashing */
 
 template<typename T> struct SaltedHasherImpl;
@@ -72,5 +75,17 @@ struct StaticSaltedHasher
         return SaltedHasherImpl<T>::CalcHash(v, s.k0, s.k1);
     }
 };
+
+
+template <typename T>
+using Uint256HashMap = std::unordered_map<uint256, T, StaticSaltedHasher>;
+
+using Uint256HashSet = std::unordered_set<uint256, StaticSaltedHasher>;
+
+
+template<typename Key, typename Value, typename Hasher, size_t MaxSize, size_t TruncateThreshold>
+class unordered_lru_cache;
+template <typename T, size_t MaxSize = 0ul, size_t TruncateThreshold = 0ul>
+using Uint256LruHashMap = unordered_lru_cache<uint256, T, StaticSaltedHasher, MaxSize, TruncateThreshold>;
 
 #endif // BITCOIN_SALTEDHASHER_H
