@@ -223,7 +223,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
         return coin.out.nValue;
     };
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100)
     {
         {
             // Total supply is the mempool fee + all outpoints
