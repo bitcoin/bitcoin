@@ -627,8 +627,8 @@ private:
 
     CEvoDB& m_evoDb;
 
-    std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache GUARDED_BY(cs);
-    std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache GUARDED_BY(cs);
+    Uint256HashMap<CDeterministicMNList> mnListsCache GUARDED_BY(cs);
+    Uint256HashMap<CDeterministicMNListDiff> mnListDiffsCache GUARDED_BY(cs);
     const CBlockIndex* tipIndex GUARDED_BY(cs) {nullptr};
     const CBlockIndex* m_initial_snapshot_index GUARDED_BY(cs) {nullptr};
 

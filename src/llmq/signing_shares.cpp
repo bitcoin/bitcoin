@@ -857,7 +857,7 @@ CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPt
     return v[attempt % v.size()].second;
 }
 
-void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToRequest)
+void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToRequest)
 {
     AssertLockHeld(cs);
 
@@ -954,7 +954,7 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
     }
 }
 
-void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>>& sigSharesToSend)
+void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, Uint256HashMap<CBatchedSigShares>>& sigSharesToSend)
 {
     AssertLockHeld(cs);
 
@@ -1051,7 +1051,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
 
 void CSigSharesManager::CollectSigSharesToAnnounce(
     const CConnman& connman,
-    std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToAnnounce)
+    std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToAnnounce)
 {
     AssertLockHeld(cs);
 
@@ -1110,10 +1110,10 @@ void CSigSharesManager::CollectSigSharesToAnnounce(
 
 bool CSigSharesManager::SendMessages(CConnman& connman)
 {
-    std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToRequest;
-    std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>> sigShareBatchesToSend;
+    std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>> sigSharesToRequest;
+    std::unordered_map<NodeId, Uint256HashMap<CBatchedSigShares>> sigShareBatchesToSend;
     std::unordered_map<NodeId, std::vector<CSigShare>> sigSharesToSend;
-    std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToAnnounce;
+    std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>> sigSharesToAnnounce;
     std::unordered_map<NodeId, std::vector<CSigSesAnn>> sigSessionAnnouncements;
 
     auto addSigSesAnnIfNeeded = [&](NodeId nodeId, const uint256& signHash) EXCLUSIVE_LOCKS_REQUIRED(cs) {

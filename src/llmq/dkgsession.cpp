@@ -469,7 +469,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions(CConnman& connman) const
 
     CDKGLogger logger(*this, __func__, __LINE__);
 
-    std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
+    Uint256HashMap<int> protoMap;
     connman.ForEachNode([&](const CNode* pnode) {
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {

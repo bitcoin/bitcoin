@@ -79,7 +79,7 @@ private:
     };
 
     mutable Mutex cs_nonLocked;
-    std::unordered_map<uint256, NonLockedTxInfo, StaticSaltedHasher> nonLockedTxs GUARDED_BY(cs_nonLocked);
+    Uint256HashMap<NonLockedTxInfo> nonLockedTxs GUARDED_BY(cs_nonLocked);
     std::unordered_map<COutPoint, uint256, SaltedOutpointHasher> nonLockedTxsByOutpoints GUARDED_BY(cs_nonLocked);
 
     mutable Mutex cs_pendingRetry;

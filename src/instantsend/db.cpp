@@ -116,7 +116,7 @@ void CInstantSendDb::WriteInstantSendLockArchived(CDBBatch& batch, const uint256
     batch.Write(std::make_tuple(DB_ARCHIVED_BY_HASH, hash), true);
 }
 
-std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
+Uint256HashMap<InstantSendLockPtr> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
 {
     LOCK(cs_db);
     if (nUntilHeight <= best_confirmed_height) {
@@ -133,7 +133,7 @@ std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> CInstantSend
     it->Seek(firstKey);
 
     CDBBatch batch(*db);
-    std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> ret;
+    Uint256HashMap<InstantSendLockPtr> ret;
     while (it->Valid()) {
         decltype(firstKey) curKey;
         if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_MINED_BY_HEIGHT_AND_HASH) {

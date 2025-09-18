@@ -330,7 +330,7 @@ public:
         CSigSharesInv knows;
     };
     // TODO limit number of sessions per node
-    std::unordered_map<uint256, Session, StaticSaltedHasher> sessions;
+    Uint256HashMap<Session> sessions;
 
     std::unordered_map<uint32_t, Session*> sessionByRecvId;
 
@@ -381,7 +381,7 @@ private:
     CThreadInterrupt workInterrupt;
 
     SigShareMap<CSigShare> sigShares GUARDED_BY(cs);
-    std::unordered_map<uint256, CSignedSession, StaticSaltedHasher> signedSessions GUARDED_BY(cs);
+    Uint256HashMap<CSignedSession> signedSessions GUARDED_BY(cs);
 
     // stores time of last receivedSigShare. Used to detect timeouts
     std::unordered_map<uint256, int64_t, StaticSaltedHasher> timeSeenForSessions GUARDED_BY(cs);
@@ -477,12 +477,12 @@ private:
     void BanNode(NodeId nodeId, PeerManager& peerman);
 
     bool SendMessages(CConnman& connman);
-    void CollectSigSharesToRequest(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToRequest) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    void CollectSigSharesToSend(std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>>& sigSharesToSend) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void CollectSigSharesToRequest(std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToRequest) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void CollectSigSharesToSend(std::unordered_map<NodeId, Uint256HashMap<CBatchedSigShares>>& sigSharesToSend) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void CollectSigSharesToAnnounce(
         const CConnman& connman,
-        std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToAnnounce)
+        std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToAnnounce)
         EXCLUSIVE_LOCKS_REQUIRED(cs);
     void SignPendingSigShares(const CConnman& connman, PeerManager& peerman);
     void WorkThreadMain(CConnman& connman, PeerManager& peerman);

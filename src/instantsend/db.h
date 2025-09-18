@@ -101,7 +101,7 @@ public:
      * @param nUntilHeight Removes all IS Locks confirmed up until nUntilHeight
      * @return returns an unordered_map of the hash of the IS Locks and a pointer object to the IS Locks for all IS Locks which were removed
      */
-    std::unordered_map<uint256, InstantSendLockPtr, StaticSaltedHasher> RemoveConfirmedInstantSendLocks(int nUntilHeight) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
+    Uint256HashMap<InstantSendLockPtr> RemoveConfirmedInstantSendLocks(int nUntilHeight) EXCLUSIVE_LOCKS_REQUIRED(!cs_db);
     /**
      * Removes IS Locks from the archive if the tx was confirmed 100 blocks before nUntilHeight
      * @param nUntilHeight the height from which to base the remove of archive IS Locks

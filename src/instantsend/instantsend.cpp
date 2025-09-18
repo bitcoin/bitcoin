@@ -236,7 +236,7 @@ Uint256HashSet CInstantSendManager::ProcessPendingInstantSendLocks(
     std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
 {
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
-    std::unordered_map<uint256, CRecoveredSig, StaticSaltedHasher> recSigs;
+    Uint256HashMap<CRecoveredSig> recSigs;
 
     size_t verifyCount = 0;
     size_t alreadyVerified = 0;
@@ -689,7 +689,7 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const instantsend::InstantSendLock& islock)
 {
-    std::unordered_map<uint256, CTransactionRef, StaticSaltedHasher> toDelete;
+    Uint256HashMap<CTransactionRef> toDelete;
 
     {
         LOCK(mempool.cs);
@@ -720,7 +720,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
 void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const instantsend::InstantSendLock& islock)
 {
     // Lets first collect all non-locked TXs which conflict with the given ISLOCK
-    std::unordered_map<const CBlockIndex*, std::unordered_map<uint256, CTransactionRef, StaticSaltedHasher>> conflicts;
+    std::unordered_map<const CBlockIndex*, Uint256HashMap<CTransactionRef>> conflicts;
     {
         LOCK(cs_nonLocked);
         for (const auto& in : islock.inputs) {
