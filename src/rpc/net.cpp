@@ -1000,26 +1000,28 @@ static RPCHelpMan addpeeraddress()
 
     UniValue obj(UniValue::VOBJ);
     std::optional<CNetAddr> net_addr{LookupHost(addr_string, false)};
+    if (!net_addr.has_value()) {
+        throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Invalid IP address");
+    }
+
     bool success{false};
 
-    if (net_addr.has_value()) {
-        CService service{net_addr.value(), port};
-        CAddress address{MaybeFlipIPv6toCJDNS(service), ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
-        address.nTime = Now<NodeSeconds>();
-        // The source address is set equal to the address. This is equivalent to the peer
-        // announcing itself.
-        if (addrman.Add({address}, address)) {
-            success = true;
-            if (tried) {
-                // Attempt to move the address to the tried addresses table.
-                if (!addrman.Good(address)) {
-                    success = false;
-                    obj.pushKV("error", "failed-adding-to-tried");
-                }
+    CService service{net_addr.value(), port};
+    CAddress address{MaybeFlipIPv6toCJDNS(service), ServiceFlags{NODE_NETWORK | NODE_WITNESS}};
+    address.nTime = Now<NodeSeconds>();
+    // The source address is set equal to the address. This is equivalent to the peer
+    // announcing itself.
+    if (addrman.Add({address}, address)) {
+        success = true;
+        if (tried) {
+            // Attempt to move the address to the tried addresses table.
+            if (!addrman.Good(address)) {
+                success = false;
+                obj.pushKV("error", "failed-adding-to-tried");
             }
-        } else {
-            obj.pushKV("error", "failed-adding-to-new");
         }
+    } else {
+        obj.pushKV("error", "failed-adding-to-new");
     }
 
     obj.pushKV("success", success);
