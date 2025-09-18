@@ -263,13 +263,23 @@ class RPCPackagesTest(BitcoinTestFramework):
         ])
 
         submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        expected = {
+            tx1["wtxid"]: {"txid": tx1["txid"], "error": "package-not-validated"},
+            tx2["wtxid"]: {"txid": tx2["txid"], "error": "package-not-validated"},
+            tx_child["wtxid"]: {"txid": tx_child["txid"], "error": "package-not-validated"},
+        }
+        assert_equal(submitres, {"package_msg": "conflict-in-package", "tx-results": expected,"replaced-transactions": []})
 
         # Submit tx1 to mempool, then try the same package again
         node.sendrawtransaction(tx1["hex"])
 
         submitres = node.submitpackage([tx1["hex"], tx2["hex"], tx_child["hex"]])
-        assert_equal(submitres, {'package_msg': 'conflict-in-package', 'tx-results': {}, 'replaced-transactions': []})
+        expected = {
+            tx1["wtxid"]: {"txid": tx1["txid"], "error": "package-not-validated"},
+            tx2["wtxid"]: {"txid": tx2["txid"], "error": "package-not-validated"},
+            tx_child["wtxid"]: {"txid": tx_child["txid"], "error": "package-not-validated"},
+        }
+        assert_equal(submitres, {"package_msg": "conflict-in-package", "tx-results": expected,"replaced-transactions": []})
         assert tx_child["txid"] not in node.getrawmempool()
 
         # without the in-mempool ancestor tx1 included in the call, tx2 can be submitted, but
