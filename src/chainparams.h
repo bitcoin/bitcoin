@@ -28,4 +28,26 @@ const CChainParams &Params();
  */
 void SelectParams(const ChainType chain);
 
+/**
+ * Extracts signet params and signet challenge from wrapped signet challenge.
+ * Format of wrapped signet challenge is:
+ * If the challenge is in the form "OP_RETURN PUSHDATA<params> PUSHDATA<actual challenge>",
+ * If the input challenge does not start with OP_RETURN,
+ * sets outParams="" and outChallenge=input.
+ * If the input challenge starts with OP_RETURN, but does not satisfy the format,
+ * throws an exception.
+ */
+void ParseWrappedSignetChallenge(const std::vector<uint8_t>& wrappedChallenge, std::vector<uint8_t>& outParams, std::vector<uint8_t>& outChallenge);
+
+/**
+ * Parses signet options.
+ * The format currently supports only setting pow_target_spacing, but
+ * can be extended in the future.
+ * Possible values:
+ *  - Empty (then do nothing)
+ *  - 0x01 (pow_target_spacing as int64_t little endian) => set pow_target_spacing.
+ * If the format is wrong, throws an exception.
+ */
+void ParseSignetParams(const std::vector<uint8_t>& params, CChainParams::SigNetOptions& options);
+
 #endif // BITCOIN_CHAINPARAMS_H

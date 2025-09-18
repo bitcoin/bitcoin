@@ -248,12 +248,10 @@ def trivial_challenge(spkhex):
     return False
 
 class Generate:
-    INTERVAL = 600.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
-
 
     def __init__(self, multiminer=None, ultimate_target=None, poisson=False, max_interval=1800,
                  standby_delay=0, backup_delay=0, set_block_time=None,
-                 poolid=None):
+                 poolid=None, target_spacing=600):
         if multiminer is None:
             multiminer = (0, 1, 1)
         (self.multi_low, self.multi_high, self.multi_period) = multiminer
@@ -264,6 +262,10 @@ class Generate:
         self.backup_delay = backup_delay
         self.set_block_time = set_block_time
         self.poolid = poolid
+
+        # Set INTERVAL. If target_spacing=600 (the default), it is 10 minutes,
+        # adjusted for the off-by-one bug.
+        self.INTERVAL = target_spacing * 2016 / 2015
 
     def next_block_delta(self, last_nbits, last_hash):
         # strategy:
@@ -410,8 +412,9 @@ def do_generate(args):
             return 1
         my_blocks = (start-1, stop, total)
 
-    if args.max_interval < 960:
-        logging.error("--max-interval must be at least 960 (16 minutes)")
+    max_interval_limit = args.target_spacing * 16 / 10
+    if args.max_interval < max_interval_limit:
+        logging.error("--max-interval must be at least %d (%f minutes)" % (max_interval_limit, max_interval_limit/60))
         return 1
 
     poolid = get_poolid(args)
@@ -419,7 +422,7 @@ def do_generate(args):
     ultimate_target = nbits_to_target(int(args.nbits,16))
 
     gen = Generate(multiminer=my_blocks, ultimate_target=ultimate_target, poisson=args.poisson, max_interval=args.max_interval,
-                   standby_delay=args.standby_delay, backup_delay=args.backup_delay, set_block_time=args.set_block_time, poolid=poolid)
+                   standby_delay=args.standby_delay, backup_delay=args.backup_delay, set_block_time=args.set_block_time, poolid=poolid, target_spacing=args.target_spacing)
 
     mined_blocks = 0
     bestheader = {"hash": None}
@@ -562,6 +565,7 @@ def main():
     generate.add_argument("--backup-delay", default=300, type=int, help="Seconds to delay before mining blocks reserved for other miners (default=300)")
     generate.add_argument("--standby-delay", default=0, type=int, help="Seconds to delay before mining blocks (default=0)")
     generate.add_argument("--max-interval", default=1800, type=int, help="Maximum interblock interval (seconds)")
+    generate.add_argument("--target-spacing", default=600, type=int, help="Target interval between blocks (seconds), property of the network (default 600)")
 
     calibrate = cmds.add_parser("calibrate", help="Calibrate difficulty")
     calibrate.set_defaults(fn=do_calibrate)
