@@ -169,7 +169,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # nodes[1]
         with self.nodes[1].assert_debug_log(expected_msgs=[
             f"Disabling script verification at block #1 ({self.blocks[0].hash_hex}).",
-            f"Enabling script verification at block #103 ({self.blocks[102].hash_hex}): block not in assumevalid chain.",
+            f"Enabling script verification at block #103 ({self.blocks[102].hash_hex}): block height above assumevalid height.",
         ]):
             p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
 

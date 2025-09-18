@@ -2437,7 +2437,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         if (it == m_blockman.m_block_index.end()) {
             script_check_reason = "assumevalid hash not in headers";
         } else if (it->second.GetAncestor(pindex->nHeight) != pindex) {
-            script_check_reason = "block not in assumevalid chain";
+            script_check_reason = (pindex->nHeight > it->second.nHeight) ? "block height above assumevalid height" : "block not in assumevalid chain";
         } else if (m_chainman.m_best_header->GetAncestor(pindex->nHeight) != pindex) {
             script_check_reason = "block not in best header chain";
         } else if (m_chainman.m_best_header->nChainWork < m_chainman.MinimumChainWork()) {
