@@ -67,6 +67,15 @@ struct CNodeStateStats {
     std::chrono::seconds time_offset{0};
 };
 
+struct TemplateStats {
+    int num_templates{0};
+    int max_templates{0};
+    int num_transactions{0};
+    int latest_template_tx{0};
+    int latest_template_weight{0};
+    NodeClock::time_point next_update{NodeClock::time_point::max()};
+};
+
 struct PeerManagerInfo {
     std::chrono::seconds median_outbound_time_offset{0s};
     bool ignores_incoming_txs{false};
@@ -116,6 +125,9 @@ public:
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 
     virtual std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() = 0;
+
+    /** Get statistics/info about templates */
+    virtual TemplateStats GetTemplateStats() const = 0;
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
