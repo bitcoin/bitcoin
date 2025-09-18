@@ -27,6 +27,9 @@ public:
 
     explicit DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
 
+    DebugLogHelper(const DebugLogHelper&) = delete;
+    DebugLogHelper& operator=(const DebugLogHelper&) = delete;
+
     ~DebugLogHelper();
 
 private:
