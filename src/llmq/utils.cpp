@@ -204,7 +204,8 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
                                                       bool reset_cache)
 {
     static RecursiveMutex cs_members;
-    static std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CDeterministicMNCPtr>>> mapQuorumMembers GUARDED_BY(cs_members);
+    static std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CDeterministicMNCPtr>>> mapQuorumMembers GUARDED_BY(
+        cs_members);
     static RecursiveMutex cs_indexed_members;
     static std::map<Consensus::LLMQType, unordered_lru_cache<std::pair<uint256, int>, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapIndexedQuorumMembers GUARDED_BY(cs_indexed_members);
     if (!IsQuorumTypeEnabled(llmqType, pQuorumBaseBlockIndex->pprev)) {
@@ -732,10 +733,10 @@ uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256
     return proTxHash2;
 }
 
-Uint256HashSet GetQuorumConnections(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-    const CSporkManager& sporkman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
-    bool onlyOutbound)
+Uint256HashSet GetQuorumConnections(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
+                                    CQuorumSnapshotManager& qsnapman, const CSporkManager& sporkman,
+                                    gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
+                                    bool onlyOutbound)
 {
     if (IsAllMembersConnectedEnabled(llmqParams.type, sporkman)) {
         auto mns = GetAllQuorumMembers(llmqParams.type, dmnman, qsnapman, pQuorumBaseBlockIndex);
@@ -758,9 +759,10 @@ Uint256HashSet GetQuorumConnections(
     return GetQuorumRelayMembers(llmqParams, dmnman, qsnapman, pQuorumBaseBlockIndex, forMember, onlyOutbound);
 }
 
-Uint256HashSet GetQuorumRelayMembers(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-    gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound)
+Uint256HashSet GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
+                                     CQuorumSnapshotManager& qsnapman,
+                                     gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
+                                     bool onlyOutbound)
 {
     auto mns = GetAllQuorumMembers(llmqParams.type, dmnman, qsnapman, pQuorumBaseBlockIndex);
     Uint256HashSet result;
@@ -968,14 +970,21 @@ void InitQuorumsCache(CacheType& cache, bool limit_by_connections)
                       std::forward_as_tuple(limit_by_connections ? llmq.keepOldConnections : llmq.keepOldKeys));
     }
 }
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<bool>>>(std::map<Consensus::LLMQType, Uint256LruHashMap<bool>>& cache, bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>>>(std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>>& cache, bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>>>>>(std::map<Consensus::LLMQType, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>>>>&cache, bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<int>>>(std::map<Consensus::LLMQType, Uint256LruHashMap<int>>& cache, bool limit_by_connections);
-template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>>>(std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>>& cache, bool limit_by_connections);
-template void
-InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<std::pair<uint256, int>>>>(
-    std::map<Consensus::LLMQType, Uint256LruHashMap<std::pair<uint256, int>>>& cache,
+template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<bool>>>(
+    std::map<Consensus::LLMQType, Uint256LruHashMap<bool>>& cache, bool limit_by_connections);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>>>(
+    std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>>& cache, bool limit_by_connections);
+template void InitQuorumsCache<
+    std::map<Consensus::LLMQType, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>, std::less<Consensus::LLMQType>,
+             std::allocator<std::pair<Consensus::LLMQType const, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>>>>>(
+    std::map<Consensus::LLMQType, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>, std::less<Consensus::LLMQType>,
+             std::allocator<std::pair<Consensus::LLMQType const, Uint256LruHashMap<std::shared_ptr<llmq::CQuorum>>>>>& cache,
     bool limit_by_connections);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<int>>>(
+    std::map<Consensus::LLMQType, Uint256LruHashMap<int>>& cache, bool limit_by_connections);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>>>(
+    std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>>& cache, bool limit_by_connections);
+template void InitQuorumsCache<std::map<Consensus::LLMQType, Uint256LruHashMap<std::pair<uint256, int>>>>(
+    std::map<Consensus::LLMQType, Uint256LruHashMap<std::pair<uint256, int>>>& cache, bool limit_by_connections);
 } // namespace utils
 } // namespace llmq

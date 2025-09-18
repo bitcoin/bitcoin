@@ -38,13 +38,14 @@ std::vector<CDeterministicMNCPtr> GetAllQuorumMembers(Consensus::LLMQType llmqTy
                                                       bool reset_cache = false);
 
 uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
-Uint256HashSet GetQuorumConnections(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-    const CSporkManager& sporkman, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
-    bool onlyOutbound);
-Uint256HashSet GetQuorumRelayMembers(
-    const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman, CQuorumSnapshotManager& qsnapman,
-    gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember, bool onlyOutbound);
+Uint256HashSet GetQuorumConnections(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
+                                    CQuorumSnapshotManager& qsnapman, const CSporkManager& sporkman,
+                                    gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
+                                    bool onlyOutbound);
+Uint256HashSet GetQuorumRelayMembers(const Consensus::LLMQParams& llmqParams, CDeterministicMNManager& dmnman,
+                                     CQuorumSnapshotManager& qsnapman,
+                                     gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, const uint256& forMember,
+                                     bool onlyOutbound);
 std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pQuorumBaseBlockIndex, size_t memberCount, size_t connectionCount);
 
 bool EnsureQuorumConnections(const Consensus::LLMQParams& llmqParams, CConnman& connman,

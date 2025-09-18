@@ -80,8 +80,7 @@ public:
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
-    [[nodiscard]] std::vector<std::shared_ptr<Uint256HashSet>> Cleanup()
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+    [[nodiscard]] std::vector<std::shared_ptr<Uint256HashSet>> Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
 private:
     [[nodiscard]] BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash)

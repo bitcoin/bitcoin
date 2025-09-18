@@ -250,7 +250,8 @@ private:
     mutable Mutex cs_map_quorums;
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<CQuorumPtr>> mapQuorumsCache GUARDED_BY(cs_map_quorums);
     mutable Mutex cs_scan_quorums;
-    mutable std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>> scanQuorumsCache GUARDED_BY(cs_scan_quorums);
+    mutable std::map<Consensus::LLMQType, Uint256LruHashMap<std::vector<CQuorumCPtr>>> scanQuorumsCache
+        GUARDED_BY(cs_scan_quorums);
     mutable Mutex cs_cleanup;
     mutable std::map<Consensus::LLMQType, Uint256LruHashMap<uint256>> cleanupQuorumsCache GUARDED_BY(cs_cleanup);
 

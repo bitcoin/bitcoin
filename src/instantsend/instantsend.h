@@ -110,10 +110,9 @@ private:
     instantsend::PendingState ProcessPendingInstantSendLocks()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
-    Uint256HashSet ProcessPendingInstantSendLocks(
-        const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
-        const Uint256HashMap<std::pair<NodeId, instantsend::InstantSendLockPtr>>& pend,
-        std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
+    Uint256HashSet ProcessPendingInstantSendLocks(const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
+                                                  const Uint256HashMap<std::pair<NodeId, instantsend::InstantSendLockPtr>>& pend,
+                                                  std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
     MessageProcessingResult ProcessInstantSendLock(NodeId from, const uint256& hash,
                                                    const instantsend::InstantSendLockPtr& islock)

@@ -1049,9 +1049,8 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
     }
 }
 
-void CSigSharesManager::CollectSigSharesToAnnounce(
-    const CConnman& connman,
-    std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToAnnounce)
+void CSigSharesManager::CollectSigSharesToAnnounce(const CConnman& connman,
+                                                   std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToAnnounce)
 {
     AssertLockHeld(cs);
 

@@ -78,8 +78,7 @@ public:
     void Start();
     void Stop();
 
-    void ClearInputsFromQueue(const Uint256HashSet& ids)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
+    void ClearInputsFromQueue(const Uint256HashSet& ids) EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
 
     void ClearLockFromQueue(const InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);
