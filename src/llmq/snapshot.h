@@ -216,7 +216,7 @@ private:
 
     CEvoDB& m_evoDb;
 
-    unordered_lru_cache<uint256, CQuorumSnapshot, StaticSaltedHasher> quorumSnapshotCache GUARDED_BY(snapshotCacheCs);
+    Uint256LruHashMap<CQuorumSnapshot> quorumSnapshotCache GUARDED_BY(snapshotCacheCs);
 
 public:
     explicit CQuorumSnapshotManager(CEvoDB& evoDb) :

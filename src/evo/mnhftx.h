@@ -97,7 +97,7 @@ private:
     static constexpr size_t MNHFCacheSize = 1000;
     Mutex cs_cache;
     // versionBit <-> height
-    unordered_lru_cache<uint256, Signals, StaticSaltedHasher> mnhfCache GUARDED_BY(cs_cache) {MNHFCacheSize};
+    Uint256LruHashMap<Signals> mnhfCache GUARDED_BY(cs_cache) {MNHFCacheSize};
 
 public:
     explicit CMNHFManager(CEvoDB& evoDb);
