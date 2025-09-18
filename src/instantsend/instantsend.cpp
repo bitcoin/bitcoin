@@ -232,7 +232,7 @@ instantsend::PendingState CInstantSendManager::ProcessPendingInstantSendLocks()
 
 Uint256HashSet CInstantSendManager::ProcessPendingInstantSendLocks(
     const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
-    const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend,
+    const Uint256HashMap<std::pair<NodeId, instantsend::InstantSendLockPtr>>& pend,
     std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
 {
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);

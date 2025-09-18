@@ -157,7 +157,7 @@ template<typename T>
 class SigShareMap
 {
 private:
-    std::unordered_map<uint256, std::unordered_map<uint16_t, T>, StaticSaltedHasher> internalMap;
+    Uint256HashMap<std::unordered_map<uint16_t, T>> internalMap;
 
 public:
     bool Add(const SigShareKey& k, const T& v)
@@ -384,7 +384,7 @@ private:
     Uint256HashMap<CSignedSession> signedSessions GUARDED_BY(cs);
 
     // stores time of last receivedSigShare. Used to detect timeouts
-    std::unordered_map<uint256, int64_t, StaticSaltedHasher> timeSeenForSessions GUARDED_BY(cs);
+    Uint256HashMap<int64_t> timeSeenForSessions GUARDED_BY(cs);
 
     std::unordered_map<NodeId, CSigSharesNodeState> nodeStates GUARDED_BY(cs);
     SigShareMap<std::pair<NodeId, int64_t>> sigSharesRequested GUARDED_BY(cs);

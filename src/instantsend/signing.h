@@ -66,7 +66,7 @@ private:
      */
     Uint256HashMap<InstantSendLock> creatingInstantSendLocks GUARDED_BY(cs_creating);
     // maps from txid to the in-progress islock
-    std::unordered_map<uint256, InstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks GUARDED_BY(cs_creating);
+    Uint256HashMap<InstantSendLock*> txToCreatingInstantSendLocks GUARDED_BY(cs_creating);
 
 public:
     explicit InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,

@@ -36,8 +36,8 @@ private:
     int best_confirmed_height GUARDED_BY(cs_db){0};
 
     std::unique_ptr<CDBWrapper> db GUARDED_BY(cs_db){nullptr};
-    mutable unordered_lru_cache<uint256, InstantSendLockPtr, StaticSaltedHasher, 10000> islockCache GUARDED_BY(cs_db);
-    mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache GUARDED_BY(cs_db);
+    mutable Uint256LruHashMap<InstantSendLockPtr, 10000> islockCache GUARDED_BY(cs_db);
+    mutable Uint256LruHashMap<uint256, 10000> txidCache GUARDED_BY(cs_db);
 
     mutable unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache GUARDED_BY(cs_db);
     void WriteInstantSendLockMined(CDBBatch& batch, const uint256& hash, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(cs_db);
