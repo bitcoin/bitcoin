@@ -249,6 +249,22 @@ typedef struct btck_Coin btck_Coin;
  */
 typedef struct btck_BlockHash btck_BlockHash;
 
+/**
+ * Opaque data structure for holding a transaction input.
+ *
+ * Holds information on the @ref btck_TransactionOutPoint held within.
+ */
+typedef struct btck_TransactionInput btck_TransactionInput;
+
+/**
+ * Opaque data structure for holding a transaction out point.
+ *
+ * Holds the txid and output index it is pointing to.
+ */
+typedef struct btck_TransactionOutPoint btck_TransactionOutPoint;
+
+typedef struct btck_Txid btck_Txid;
+
 /** Current sync state passed to tip changed callbacks. */
 typedef uint8_t btck_SynchronizationState;
 #define btck_SynchronizationState_INIT_REINDEX ((btck_SynchronizationState)(0))
@@ -499,12 +515,34 @@ BITCOINKERNEL_API const btck_TransactionOutput* BITCOINKERNEL_WARN_UNUSED_RESULT
     const btck_Transaction* transaction, size_t output_index) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get the transaction input at the provided index. The returned
+ * transaction input is not owned and depends on the lifetime of the
+ * transaction.
+ *
+ * @param[in] transaction Non-null.
+ * @param[in] input_index The index of the transaction input to be retrieved.
+ * @return                 The transaction input
+ */
+BITCOINKERNEL_API const btck_TransactionInput* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_get_input_at(
+    const btck_Transaction* transaction, size_t input_index) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Get the number of inputs of a transaction.
  *
  * @param[in] transaction Non-null.
  * @return                The number of inputs.
  */
 BITCOINKERNEL_API size_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_count_inputs(
+    const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the txid of a transaction. The returned txid is not owned and
+ * depends on the lifetime of the transaction.
+ *
+ * @param[in] transaction Non-null.
+ * @return                The txid.
+ */
+BITCOINKERNEL_API const btck_Txid* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_get_txid(
     const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
@@ -1313,6 +1351,119 @@ BITCOINKERNEL_API void btck_transaction_spent_outputs_destroy(btck_TransactionSp
 
 ///@}
 
+/** @name Transaction Input
+ * Functions for working with transaction inputs.
+ */
+///@{
+
+/**
+ * @brief Copy a transaction input.
+ *
+ * @param[in] transaction_input Non-null.
+ * @return                      The copied transaction input.
+ */
+BITCOINKERNEL_API btck_TransactionInput* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_input_copy(
+    const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the transaction out point. The returned transaction out point is
+ * not owned and depends on the lifetime of the transaction.
+ *
+ * @param[in] transaction_input Non-null.
+ * @return                      The transaction out point.
+ */
+BITCOINKERNEL_API const btck_TransactionOutPoint* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_input_get_out_point(
+    const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the transaction input.
+ */
+BITCOINKERNEL_API void btck_transaction_input_destroy(btck_TransactionInput* transaction_input);
+
+///@}
+
+/** @name Transaction Out Point
+ * Functions for working with transaction out points.
+ */
+///@{
+
+/**
+ * @brief Copy a transaction out point.
+ *
+ * @param[in] transaction_out_point Non-null.
+ * @return                          The copied transaction out point.
+ */
+BITCOINKERNEL_API btck_TransactionOutPoint* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_out_point_copy(
+    const btck_TransactionOutPoint* transaction_out_point) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the output position from the transaction out point.
+ *
+ * @param[in] transaction_out_point Non-null.
+ * @return                          The output index.
+ */
+BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_out_point_get_index(
+    const btck_TransactionOutPoint* transaction_out_point) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the txid from the transaction out point. The returned txid is
+ * not owned and depends on the lifetime of the transaction out point.
+ *
+ * @param[in] transaction_out_point Non-null.
+ * @return                          The txid.
+ */
+BITCOINKERNEL_API const btck_Txid* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_out_point_get_txid(
+    const btck_TransactionOutPoint* transaction_out_point) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * Destroy the transaction out point.
+ */
+BITCOINKERNEL_API void btck_transaction_out_point_destroy(btck_TransactionOutPoint* transaction_out_point);
+
+///@}
+
+/** @name Txid
+ * Functions for working with txids.
+ */
+///@{
+
+/**
+ * @brief Copy a txid.
+ *
+ * @param[in] txid Non-null.
+ * @return         The copied txid.
+ */
+BITCOINKERNEL_API btck_Txid* BITCOINKERNEL_WARN_UNUSED_RESULT btck_txid_copy(
+    const btck_Txid* txid) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Check if two txids are equal.
+ *
+ * @param[in] txid1 Non-null.
+ * @param[in] txid2 Non-null.
+ * @return          0 if the txid is not equal.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_txid_equals(
+    const btck_Txid* txid1, const btck_Txid* txid2) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Serializes the txid to bytes.
+ *
+ * @param[in] txid    Non-null.
+ * @param[out] output The serialized txid.
+ */
+BITCOINKERNEL_API void btck_txid_to_bytes(
+    const btck_Txid* txid, unsigned char output[32]) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * Destroy the txid.
+ */
+BITCOINKERNEL_API void btck_txid_destroy(btck_Txid* txid);
+
+///@}
+
+///@}
+
 /** @name Coin
  * Functions for working with coins.
  */
@@ -1328,7 +1479,8 @@ BITCOINKERNEL_API btck_Coin* BITCOINKERNEL_WARN_UNUSED_RESULT btck_coin_copy(
     const btck_Coin* coin) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Returns the height of the block that contains the coin's prevout.
+ * @brief Returns the block height where the transaction that
+ * created this coin was included in.
  *
  * @param[in] coin Non-null.
  * @return         The block height of the coin.

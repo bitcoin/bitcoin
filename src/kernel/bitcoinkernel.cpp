@@ -491,6 +491,9 @@ struct btck_BlockSpentOutputs : Handle<btck_BlockSpentOutputs, std::shared_ptr<C
 struct btck_TransactionSpentOutputs : Handle<btck_TransactionSpentOutputs, CTxUndo> {};
 struct btck_Coin : Handle<btck_Coin, Coin> {};
 struct btck_BlockHash : Handle<btck_BlockHash, uint256> {};
+struct btck_TransactionInput : Handle<btck_TransactionInput, CTxIn> {};
+struct btck_TransactionOutPoint: Handle<btck_TransactionOutPoint, COutPoint> {};
+struct btck_Txid: Handle<btck_Txid, Txid> {};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -517,6 +520,17 @@ const btck_TransactionOutput* btck_transaction_get_output_at(const btck_Transact
 size_t btck_transaction_count_inputs(const btck_Transaction* transaction)
 {
     return btck_Transaction::get(transaction)->vin.size();
+}
+
+const btck_TransactionInput* btck_transaction_get_input_at(const btck_Transaction* transaction, size_t input_index)
+{
+    assert(input_index < btck_Transaction::get(transaction)->vin.size());
+    return btck_TransactionInput::ref(&btck_Transaction::get(transaction)->vin[input_index]);
+}
+
+const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
+{
+    return btck_Txid::ref(&btck_Transaction::get(transaction)->GetHash());
 }
 
 btck_Transaction* btck_transaction_copy(const btck_Transaction* transaction)
@@ -637,6 +651,60 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     return result ? 1 : 0;
 }
 
+btck_TransactionInput* btck_transaction_input_copy(const btck_TransactionInput* input)
+{
+    return btck_TransactionInput::copy(input);
+}
+
+const btck_TransactionOutPoint* btck_transaction_input_get_out_point(const btck_TransactionInput* input)
+{
+    return btck_TransactionOutPoint::ref(&btck_TransactionInput::get(input).prevout);
+}
+
+void btck_transaction_input_destroy(btck_TransactionInput* input)
+{
+    delete input;
+}
+
+btck_TransactionOutPoint* btck_transaction_out_point_copy(const btck_TransactionOutPoint* out_point)
+{
+    return btck_TransactionOutPoint::copy(out_point);
+}
+
+uint32_t btck_transaction_out_point_get_index(const btck_TransactionOutPoint* out_point)
+{
+    return btck_TransactionOutPoint::get(out_point).n;
+}
+
+const btck_Txid* btck_transaction_out_point_get_txid(const btck_TransactionOutPoint* out_point)
+{
+    return btck_Txid::ref(&btck_TransactionOutPoint::get(out_point).hash);
+}
+
+void btck_transaction_out_point_destroy(btck_TransactionOutPoint* out_point)
+{
+    delete out_point;
+}
+
+btck_Txid* btck_txid_copy(const btck_Txid* txid)
+{
+    return btck_Txid::copy(txid);
+}
+
+void btck_txid_to_bytes(const btck_Txid* txid, unsigned char output[32])
+{
+    std::memcpy(output, btck_Txid::get(txid).begin(), 32);
+}
+
+int btck_txid_equals(const btck_Txid* txid1, const btck_Txid* txid2)
+{
+    return btck_Txid::get(txid1) == btck_Txid::get(txid2);
+}
+
+void btck_txid_destroy(btck_Txid* txid)
+{
+    delete txid;
+}
 
 void btck_logging_set_options(const btck_LoggingOptions options)
 {

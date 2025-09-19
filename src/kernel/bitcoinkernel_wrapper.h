@@ -452,6 +452,119 @@ public:
 };
 
 template <typename Derived>
+class TxidApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    TxidApi() = default;
+
+public:
+    bool operator==(const TxidApi& other) const
+    {
+        return btck_txid_equals(impl(), other.impl()) != 0;
+    }
+
+    bool operator!=(const TxidApi& other) const
+    {
+        return btck_txid_equals(impl(), other.impl()) == 0;
+    }
+
+    std::array<std::byte, 32> ToBytes() const
+    {
+        std::array<std::byte, 32> hash;
+        btck_txid_to_bytes(impl(), reinterpret_cast<unsigned char*>(hash.data()));
+        return hash;
+    }
+};
+
+class TxidView : public View<btck_Txid>, public TxidApi<TxidView>
+{
+public:
+    explicit TxidView(const btck_Txid* ptr) : View{ptr} {}
+};
+
+class Txid : public Handle<btck_Txid, btck_txid_copy, btck_txid_destroy>, public TxidApi<Txid>
+{
+public:
+    Txid(const TxidView& view)
+        : Handle(view) {}
+};
+
+template <typename Derived>
+class OutPointApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    OutPointApi() = default;
+
+public:
+    uint32_t index() const
+    {
+        return btck_transaction_out_point_get_index(impl());
+    }
+
+    TxidView Txid() const
+    {
+        return TxidView{btck_transaction_out_point_get_txid(impl())};
+    }
+};
+
+class OutPointView : public View<btck_TransactionOutPoint>, public OutPointApi<OutPointView>
+{
+public:
+    explicit OutPointView(const btck_TransactionOutPoint* ptr) : View{ptr} {}
+};
+
+class OutPoint : public Handle<btck_TransactionOutPoint, btck_transaction_out_point_copy, btck_transaction_out_point_destroy>, public OutPointApi<OutPoint>
+{
+public:
+    OutPoint(const OutPointView& view)
+        : Handle(view) {}
+};
+
+template <typename Derived>
+class TransactionInputApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    TransactionInputApi() = default;
+
+public:
+    OutPointView OutPoint() const
+    {
+        return OutPointView{btck_transaction_input_get_out_point(impl())};
+    }
+};
+
+class TransactionInputView : public View<btck_TransactionInput>, public TransactionInputApi<TransactionInputView>
+{
+public:
+    explicit TransactionInputView(const btck_TransactionInput* ptr) : View{ptr} {}
+};
+
+class TransactionInput : public Handle<btck_TransactionInput, btck_transaction_input_copy, btck_transaction_input_destroy>, public TransactionInputApi<TransactionInput>
+{
+public:
+    TransactionInput(const TransactionInputView& view)
+        : Handle(view) {}
+};
+
+template <typename Derived>
 class TransactionApi
 {
 private:
@@ -476,7 +589,19 @@ public:
         return TransactionOutputView{btck_transaction_get_output_at(impl(), index)};
     }
 
+    TransactionInputView GetInput(size_t index) const
+    {
+        return TransactionInputView{btck_transaction_get_input_at(impl(), index)};
+    }
+
+    TxidView Txid() const
+    {
+        return TxidView{btck_transaction_get_txid(impl())};
+    }
+
     MAKE_RANGE_METHOD(Outputs, Derived, &TransactionApi<Derived>::CountOutputs, &TransactionApi<Derived>::GetOutput, *static_cast<const Derived*>(this))
+
+    MAKE_RANGE_METHOD(Inputs, Derived, &TransactionApi<Derived>::CountInputs, &TransactionApi<Derived>::GetInput, *static_cast<const Derived*>(this))
 
     std::vector<std::byte> ToBytes() const
     {
