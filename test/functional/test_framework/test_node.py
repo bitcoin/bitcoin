@@ -550,6 +550,9 @@ class TestNode():
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
 
+        def join_log(log):
+            return " - " + "\n - ".join(log.splitlines())
+
         yield
 
         while True:
@@ -557,10 +560,10 @@ class TestNode():
             with open(self.debug_log_path, encoding="utf-8", errors="replace") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
-            print_log = " - " + "\n - ".join(log.splitlines())
             for unexpected_msg in unexpected_msgs:
                 if unexpected_msg in log:
-                    self._raise_assertion_error('Unexpected message "{}" partially matches log:\n\n{}\n\n'.format(unexpected_msg, print_log))
+                    self._raise_assertion_error(f'Unexpected message "{unexpected_msg}" '
+                                                f'found in log:\n\n{join_log(log)}\n\n')
             for expected_msg in expected_msgs:
                 if expected_msg not in log:
                     found = False
@@ -569,7 +572,8 @@ class TestNode():
             if time.time() >= time_end:
                 break
             time.sleep(0.05)
-        self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
+        self._raise_assertion_error(f'Expected message(s) {expected_msgs!s} '
+                                    f'not found in log:\n\n{join_log(log)}\n\n')
 
     @contextlib.contextmanager
     def busy_wait_for_debug_log(self, expected_msgs, timeout=60):
@@ -601,9 +605,8 @@ class TestNode():
             # No sleep here because we want to detect the message fragment as fast as
             # possible.
 
-        self._raise_assertion_error(
-            'Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(
-                str(expected_msgs), print_log))
+        self._raise_assertion_error(f'Expected message(s) {expected_msgs!s} '
+                                    f'not found in log:\n\n{print_log}\n\n')
 
     @contextlib.contextmanager
     def wait_for_new_peer(self, timeout=5):
