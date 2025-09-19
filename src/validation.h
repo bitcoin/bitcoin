@@ -950,8 +950,10 @@ public:
      * Every received block is assigned a unique and increasing identifier, so we
      * know which one to give priority in case of a fork.
      */
-    /** Blocks loaded from disk are assigned id 0, so start the counter at 1. */
-    int32_t nBlockSequenceId GUARDED_BY(::cs_main) = 1;
+    /** Blocks loaded from disk are assigned id SEQ_ID_INIT_FROM_DISK{1}
+     * (SEQ_ID_BEST_CHAIN_FROM_DISK{0} if they belong to the best chain loaded from disk),
+     * so start the counter after that. **/
+    int32_t nBlockSequenceId GUARDED_BY(::cs_main) = SEQ_ID_INIT_FROM_DISK + 1;
     /** Decreasing counter (used by subsequent preciousblock calls). */
     int32_t nBlockReverseSequenceId = -1;
     /** chainwork for the last block that preciousblock has been applied to. */
@@ -962,7 +964,7 @@ public:
     void ResetBlockSequenceCounters() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         AssertLockHeld(::cs_main);
-        nBlockSequenceId = 1;
+        nBlockSequenceId = SEQ_ID_INIT_FROM_DISK + 1;
         nBlockReverseSequenceId = -1;
     }
 
