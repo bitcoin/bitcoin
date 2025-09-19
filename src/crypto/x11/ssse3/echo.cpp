@@ -25,12 +25,12 @@ __m128i ALWAYS_INLINE gf8_mul2(const __m128i& x)
     return util::Xor(lhs, rhs);
 }
 
-void ALWAYS_INLINE MixColumn(uint64_t W[16][2], int ia, int ib, int ic, int id)
+void ALWAYS_INLINE MixColumn(__m128i& Wa, __m128i& Wb, __m128i& Wc, __m128i& Wd)
 {
-    const __m128i a = _mm_load_si128((const __m128i*)&W[ia][0]);
-    const __m128i b = _mm_load_si128((const __m128i*)&W[ib][0]);
-    const __m128i c = _mm_load_si128((const __m128i*)&W[ic][0]);
-    const __m128i d = _mm_load_si128((const __m128i*)&W[id][0]);
+    const __m128i a = Wa;
+    const __m128i b = Wb;
+    const __m128i c = Wc;
+    const __m128i d = Wd;
 
     const __m128i ab = util::Xor(a, b);
     const __m128i bc = util::Xor(b, c);
@@ -40,14 +40,14 @@ void ALWAYS_INLINE MixColumn(uint64_t W[16][2], int ia, int ib, int ic, int id)
     const __m128i bcx = gf8_mul2(bc);
     const __m128i cdx = gf8_mul2(cd);
 
-    // W[ia] = abx ^ bc ^ d
-    _mm_store_si128((__m128i*)&W[ia][0], util::Xor(util::Xor(abx, bc), d));
-    // W[ib] = bcx ^ a ^ cd
-    _mm_store_si128((__m128i*)&W[ib][0], util::Xor(util::Xor(bcx, a), cd));
-    // W[ic] = cdx ^ ab ^ d
-    _mm_store_si128((__m128i*)&W[ic][0], util::Xor(util::Xor(cdx, ab), d));
-    // W[id] = abx ^ bcx ^ cdx ^ ab ^ c
-    _mm_store_si128((__m128i*)&W[id][0], util::Xor(util::Xor(util::Xor(util::Xor(abx, bcx), cdx), ab), c));
+    // Wa = abx ^ bc ^ d
+    Wa = util::Xor(util::Xor(abx, bc), d);
+    // Wb = bcx ^ a ^ cd
+    Wb = util::Xor(util::Xor(bcx, a), cd);
+    // Wc = cdx ^ ab ^ d
+    Wc = util::Xor(util::Xor(cdx, ab), d);
+    // Wd = abx ^ bcx ^ cdx ^ ab ^ c
+    Wd = util::Xor(util::Xor(util::Xor(util::Xor(abx, bcx), cdx), ab), c);
 }
 
 void ALWAYS_INLINE ShiftRow1(__m128i& Wa, __m128i& Wb, __m128i& Wc, __m128i& Wd)
@@ -104,6 +104,11 @@ void ShiftAndMix(uint64_t W[16][2])
     ShiftRow2(w[2], w[6], w[10], w[14]);
     ShiftRow3(w[3], w[7], w[11], w[15]);
 
+    MixColumn(w[0], w[1], w[2], w[3]);
+    MixColumn(w[4], w[5], w[6], w[7]);
+    MixColumn(w[8], w[9], w[10], w[11]);
+    MixColumn(w[12], w[13], w[14], w[15]);
+
     _mm_store_si128((__m128i*)&W[0][0], w[0]);
     _mm_store_si128((__m128i*)&W[1][0], w[1]);
     _mm_store_si128((__m128i*)&W[2][0], w[2]);
@@ -120,11 +125,6 @@ void ShiftAndMix(uint64_t W[16][2])
     _mm_store_si128((__m128i*)&W[13][0], w[13]);
     _mm_store_si128((__m128i*)&W[14][0], w[14]);
     _mm_store_si128((__m128i*)&W[15][0], w[15]);
-
-    MixColumn(W, 0, 1, 2, 3);
-    MixColumn(W, 4, 5, 6, 7);
-    MixColumn(W, 8, 9, 10, 11);
-    MixColumn(W, 12, 13, 14, 15);
 }
 } // namespace ssse3_echo
 } // namespace sapphire
