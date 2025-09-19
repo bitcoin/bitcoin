@@ -75,41 +75,8 @@ void ALWAYS_INLINE MixColumn(sph_u64 W[16][2], int ia, int ib, int ic, int id)
 		W[id][n] = abx ^ bcx ^ cdx ^ ab ^ c;
 	}
 }
-} // anonymous namespace
 
-void FullStateRound(sph_u64 W[16][2], sph_u32& K0, sph_u32& K1, sph_u32& K2, sph_u32& K3)
-{
-	for (int n = 0; n < 16; n ++) {
-		sph_u64 Wl = W[n][0];
-		sph_u64 Wh = W[n][1];
-		sph_u32 X0 = (sph_u32)Wl;
-		sph_u32 X1 = (sph_u32)(Wl >> 32);
-		sph_u32 X2 = (sph_u32)Wh;
-		sph_u32 X3 = (sph_u32)(Wh >> 32);
-		sph_u32 Y0, Y1, Y2, Y3;
-		soft_aes::Round(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
-		soft_aes::RoundKeyless(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
-		W[n][0] = (sph_u64)X0 | ((sph_u64)X1 << 32);
-		W[n][1] = (sph_u64)X2 | ((sph_u64)X3 << 32);
-		if ((K0 = T32(K0 + 1)) == 0) {
-			if ((K1 = T32(K1 + 1)) == 0) {
-				if ((K2 = T32(K2 + 1)) == 0) {
-					K3 = T32(K3 + 1);
-				}
-			}
-		}
-	}
-}
-
-void MixColumns(uint64_t W[16][2])
-{
-	MixColumn(W, 0, 1, 2, 3);
-	MixColumn(W, 4, 5, 6, 7);
-	MixColumn(W, 8, 9, 10, 11);
-	MixColumn(W, 12, 13, 14, 15);
-}
-
-void ShiftRows(uint64_t W[16][2])
+void ALWAYS_INLINE ShiftRows(uint64_t W[16][2])
 {
 #define SHIFT_ROW1(a, b, c, d)   do { \
 		sph_u64 tmp; \
@@ -151,12 +118,45 @@ void ShiftRows(uint64_t W[16][2])
 #undef SHIFT_ROW2
 #undef SHIFT_ROW3
 }
+} // anonymous namespace
+
+void FullStateRound(sph_u64 W[16][2], sph_u32& K0, sph_u32& K1, sph_u32& K2, sph_u32& K3)
+{
+	for (int n = 0; n < 16; n ++) {
+		sph_u64 Wl = W[n][0];
+		sph_u64 Wh = W[n][1];
+		sph_u32 X0 = (sph_u32)Wl;
+		sph_u32 X1 = (sph_u32)(Wl >> 32);
+		sph_u32 X2 = (sph_u32)Wh;
+		sph_u32 X3 = (sph_u32)(Wh >> 32);
+		sph_u32 Y0, Y1, Y2, Y3;
+		soft_aes::Round(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
+		soft_aes::RoundKeyless(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
+		W[n][0] = (sph_u64)X0 | ((sph_u64)X1 << 32);
+		W[n][1] = (sph_u64)X2 | ((sph_u64)X3 << 32);
+		if ((K0 = T32(K0 + 1)) == 0) {
+			if ((K1 = T32(K1 + 1)) == 0) {
+				if ((K2 = T32(K2 + 1)) == 0) {
+					K3 = T32(K3 + 1);
+				}
+			}
+		}
+	}
+}
+
+void ShiftAndMix(uint64_t W[16][2])
+{
+	ShiftRows(W);
+	MixColumn(W, 0, 1, 2, 3);
+	MixColumn(W, 4, 5, 6, 7);
+	MixColumn(W, 8, 9, 10, 11);
+	MixColumn(W, 12, 13, 14, 15);
+}
 } // namespace soft_echo
 } // namespace sapphire
 
-sapphire::dispatch::EchoMixCols echo_mix_columns = sapphire::soft_echo::MixColumns;
 sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound;
-sapphire::dispatch::EchoShiftRows echo_shift_rows = sapphire::soft_echo::ShiftRows;
+sapphire::dispatch::EchoShiftMix echo_shift_mix = sapphire::soft_echo::ShiftAndMix;
 
 #define DECL_STATE_BIG   \
 	alignas(16) sph_u64 W[16][2];
@@ -174,8 +174,7 @@ sapphire::dispatch::EchoShiftRows echo_shift_rows = sapphire::soft_echo::ShiftRo
 
 #define BIG_ROUND   do { \
 		echo_round(W, K0, K1, K2, K3); \
-		echo_shift_rows(W); \
-		echo_mix_columns(W); \
+		echo_shift_mix(W); \
 	} while (0)
 
 #define FINAL_BIG   do { \

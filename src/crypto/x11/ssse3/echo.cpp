@@ -80,15 +80,7 @@ void ALWAYS_INLINE ShiftRow3(__m128i& Wa, __m128i& Wb, __m128i& Wc, __m128i& Wd)
 } // anonymous namespace
 
 namespace ssse3_echo {
-void MixColumns(uint64_t W[16][2])
-{
-    MixColumn(W, 0, 1, 2, 3);
-    MixColumn(W, 4, 5, 6, 7);
-    MixColumn(W, 8, 9, 10, 11);
-    MixColumn(W, 12, 13, 14, 15);
-}
-
-void ShiftRows(uint64_t W[16][2])
+void ShiftAndMix(uint64_t W[16][2])
 {
     alignas(16) __m128i w[16];
     w[0] = _mm_load_si128((const __m128i*)&W[0][0]);
@@ -128,6 +120,11 @@ void ShiftRows(uint64_t W[16][2])
     _mm_store_si128((__m128i*)&W[13][0], w[13]);
     _mm_store_si128((__m128i*)&W[14][0], w[14]);
     _mm_store_si128((__m128i*)&W[15][0], w[15]);
+
+    MixColumn(W, 0, 1, 2, 3);
+    MixColumn(W, 4, 5, 6, 7);
+    MixColumn(W, 8, 9, 10, 11);
+    MixColumn(W, 12, 13, 14, 15);
 }
 } // namespace ssse3_echo
 } // namespace sapphire
