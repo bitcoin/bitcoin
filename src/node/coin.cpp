@@ -46,7 +46,7 @@ void FindCoinsByScript(const NodeContext& node, std::set<CScript>& output_script
         COutPoint key;
         Coin coin;
         if (cursor->GetKey(key) && cursor->GetValue(coin)) {
-            if (output_scripts.count(coin.out.scriptPubKey)) {
+            if (output_scripts.contains(coin.out.scriptPubKey)) {
                 coins.emplace(key, coin);
             }
         }
