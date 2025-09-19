@@ -514,6 +514,7 @@ jobs:
         uses: ./.github/actions/configure-docker
         with:
           use-cirrus: ${{ needs.runners.outputs.use-cirrus-runners }}
+          use-qemu: ${{ matrix.use-qemu }}
 
       - name: Enable bpfcc script
         if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
