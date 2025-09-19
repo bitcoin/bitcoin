@@ -25,7 +25,7 @@ void CustomBuildField(TypeList<>,
     // Also store the Thread::Client reference in the callback_threads map so
     // future calls over this connection can reuse it.
     auto [callback_thread, _]{SetThread(
-        thread_context.callback_threads, thread_context.waiter->m_mutex, &connection,
+        GuardedRef{thread_context.waiter->m_mutex, thread_context.callback_threads}, &connection,
         [&] { return connection.m_threads.add(kj::heap<ProxyServer<Thread>>(thread_context, std::thread{})); })};
 
     // Call remote ThreadMap.makeThread function so server will create a
@@ -43,12 +43,12 @@ void CustomBuildField(TypeList<>,
         return request.send().getResult(); // Nonblocking due to capnp request pipelining.
     }};
     auto [request_thread, _1]{SetThread(
-        thread_context.request_threads, thread_context.waiter->m_mutex,
+        GuardedRef{thread_context.waiter->m_mutex, thread_context.request_threads},
         &connection, make_request_thread)};
 
     auto context = output.init();
-    context.setThread(request_thread->second.m_client);
-    context.setCallbackThread(callback_thread->second.m_client);
+    context.setThread(request_thread->second->m_client);
+    context.setCallbackThread(callback_thread->second->m_client);
 }
 
 //! PassField override for mp.Context arguments. Return asynchronously and call
@@ -89,29 +89,39 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
                     // need to update the map.
                     auto& thread_context = g_thread_context;
                     auto& request_threads = thread_context.request_threads;
-                    auto [request_thread, inserted]{SetThread(
-                        request_threads, thread_context.waiter->m_mutex,
-                        server.m_context.connection,
-                        [&] { return context_arg.getCallbackThread(); })};
+                    ConnThread request_thread;
+                    bool inserted;
+                    server.m_context.loop->sync([&] {
+                        std::tie(request_thread, inserted) = SetThread(
+                            GuardedRef{thread_context.waiter->m_mutex, request_threads}, server.m_context.connection,
+                            [&] { return context_arg.getCallbackThread(); });
+                    });
 
-                    // If an entry was inserted into the requests_threads map,
+                    // If an entry was inserted into the request_threads map,
                     // remove it after calling fn.invoke. If an entry was not
                     // inserted, one already existed, meaning this must be a
                     // recursive call (IPC call calling back to the caller which
                     // makes another IPC call), so avoid modifying the map.
                     const bool erase_thread{inserted};
                     KJ_DEFER(if (erase_thread) {
-                        std::unique_lock<std::mutex> lock(thread_context.waiter->m_mutex);
-                        // Call erase here with a Connection* argument instead
-                        // of an iterator argument, because the `request_thread`
-                        // iterator may be invalid if the connection is closed
-                        // during this function call. More specifically, the
-                        // iterator may be invalid because SetThread adds a
-                        // cleanup callback to the Connection destructor that
-                        // erases the thread from the map, and also because the
-                        // ProxyServer<Thread> destructor calls
-                        // request_threads.clear().
-                        request_threads.erase(server.m_context.connection);
+                        // Erase the request_threads entry on the event loop
+                        // thread with loop->sync(), so if the connection is
+                        // broken there is not a race between this thread and
+                        // the disconnect handler trying to destroy the thread
+                        // client object.
+                        server.m_context.loop->sync([&] {
+                            // Look up the thread again without using existing
+                            // iterator since entry may no longer be there after
+                            // a disconnect. Destroy node after releasing
+                            // Waiter::m_mutex, so the ProxyClient<Thread>
+                            // destructor is able to use EventLoop::mutex
+                            // without violating lock order.
+                            ConnThreads::node_type removed;
+                            {
+                                Lock lock(thread_context.waiter->m_mutex);
+                                removed = request_threads.extract(server.m_context.connection);
+                            }
+                        });
                     });
                     fn.invoke(server_context, args...);
                 }
