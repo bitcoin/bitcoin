@@ -331,6 +331,7 @@ RPCHelpMan importdescriptors()
                             },
                         },
                         RPCArgOptions{.oneline_description="requests"}},
+                        {"verify_balance", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, scans the UTXO set balance and compare with wallet balance and triggers incremental rescan if discrepancy is found."}
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
@@ -346,13 +347,21 @@ RPCHelpMan importdescriptors()
                             {
                                 {RPCResult::Type::ELISION, "", "JSONRPC error"},
                             }},
+                            {RPCResult::Type::OBJ, "info", /*optional=*/true, "Optional informational fields. When present, this object will contain details about incremental rescans (examples below).",
+                            {
+                                {RPCResult::Type::BOOL, "utxo_check", /*optional=*/true, "Status of the UTXO check. Example values: 'matched' (wallet DB matches UTXO set)."},
+                                {RPCResult::Type::NUM, "scanned_chunks", "If incremental rescans were performed, the number of chunks scanned before a match was found."},
+                                {RPCResult::Type::NUM, "scanned_blocks", "If incremental rescans were performed, the approximate number of blocks scanned (scanned_chunks * chunk_size)."},
+                            }},
                         }},
                     }
                 },
                 RPCExamples{
                     HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"internal\": true }, "
                                           "{ \"desc\": \"<my descriptor 2>\", \"label\": \"example 2\", \"timestamp\": 1455191480 }]'") +
-                    HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, \"range\": [0,100], \"label\": \"<my bech32 wallet>\" }]'")
+                    HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, \"range\": [0,100], \"label\": \"<my bech32 wallet>\" }]'") +
+                    HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, " "\"range\": [0,100], \"label\": \"<my bech32 wallet>\", \"verify_balance\": true }]'") +
+                    HelpExampleRpc("importdescriptors", "[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, " "\"range\": [0,100], \"label\": \"<my bech32 wallet>\", \"verify_balance\": true }]")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& main_request) -> UniValue
 {
@@ -360,7 +369,6 @@ RPCHelpMan importdescriptors()
     if (!pwallet) return UniValue::VNULL;
     CWallet& wallet{*pwallet};
 
-    // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
