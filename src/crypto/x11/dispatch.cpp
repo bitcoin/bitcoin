@@ -19,6 +19,7 @@ namespace sapphire {
 #if defined(ENABLE_SSSE3)
 namespace ssse3_echo {
 void MixColumns(uint64_t W[16][2]);
+void ShiftRows(uint64_t W[16][2]);
 } // namespace ssse3_echo
 #endif // ENABLE_SSSE3
 
@@ -46,6 +47,7 @@ void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 namespace soft_echo {
 void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
 void MixColumns(uint64_t W[16][2]);
+void ShiftRows(uint64_t W[16][2]);
 } // namespace soft_echo
 } // namespace sapphire
 
@@ -53,6 +55,7 @@ extern sapphire::dispatch::AESRoundFn aes_round;
 extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 extern sapphire::dispatch::EchoMixCols echo_mix_columns;
 extern sapphire::dispatch::EchoRoundFn echo_round;
+extern sapphire::dispatch::EchoShiftRows echo_shift_rows;
 
 void SapphireAutoDetect()
 {
@@ -60,6 +63,7 @@ void SapphireAutoDetect()
     aes_round_nk = sapphire::soft_aes::RoundKeyless;
     echo_round = sapphire::soft_echo::FullStateRound;
     echo_mix_columns = sapphire::soft_echo::MixColumns;
+    echo_shift_rows = sapphire::soft_echo::ShiftRows;
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #if defined(HAVE_GETCPUID)
@@ -78,6 +82,7 @@ void SapphireAutoDetect()
     const bool use_ssse3 = ((ecx >> 9) & 1);
     if (use_ssse3) {
         echo_mix_columns = sapphire::ssse3_echo::MixColumns;
+        echo_shift_rows = sapphire::ssse3_echo::ShiftRows;
     }
 #endif // ENABLE_SSSE3
 #endif // HAVE_GETCPUID

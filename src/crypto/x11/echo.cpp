@@ -108,26 +108,9 @@ void MixColumns(uint64_t W[16][2])
 	MixColumn(W, 8, 9, 10, 11);
 	MixColumn(W, 12, 13, 14, 15);
 }
-} // namespace soft_echo
-} // namespace sapphire
 
-sapphire::dispatch::EchoMixCols echo_mix_columns = sapphire::soft_echo::MixColumns;
-sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound;
-
-#define DECL_STATE_BIG   \
-	alignas(16) sph_u64 W[16][2];
-
-#define INPUT_BLOCK_BIG(sc)   do { \
-		unsigned u; \
-		memcpy(W, sc->u.Vb, 16 * sizeof(sph_u64)); \
-		for (u = 0; u < 8; u ++) { \
-			W[u + 8][0] = sph_dec64le_aligned( \
-				sc->buf + 16 * u); \
-			W[u + 8][1] = sph_dec64le_aligned( \
-				sc->buf + 16 * u + 8); \
-		} \
-	} while (0)
-
+void ShiftRows(uint64_t W[16][2])
+{
 #define SHIFT_ROW1(a, b, c, d)   do { \
 		sph_u64 tmp; \
 		tmp = W[a][0]; \
@@ -160,15 +143,38 @@ sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound
 
 #define SHIFT_ROW3(a, b, c, d)   SHIFT_ROW1(d, c, b, a)
 
-#define BIG_SHIFT_ROWS   do { \
-		SHIFT_ROW1(1, 5, 9, 13); \
-		SHIFT_ROW2(2, 6, 10, 14); \
-		SHIFT_ROW3(3, 7, 11, 15); \
+	SHIFT_ROW1(1, 5, 9, 13);
+	SHIFT_ROW2(2, 6, 10, 14);
+	SHIFT_ROW3(3, 7, 11, 15);
+
+#undef SHIFT_ROW1
+#undef SHIFT_ROW2
+#undef SHIFT_ROW3
+}
+} // namespace soft_echo
+} // namespace sapphire
+
+sapphire::dispatch::EchoMixCols echo_mix_columns = sapphire::soft_echo::MixColumns;
+sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound;
+sapphire::dispatch::EchoShiftRows echo_shift_rows = sapphire::soft_echo::ShiftRows;
+
+#define DECL_STATE_BIG   \
+	alignas(16) sph_u64 W[16][2];
+
+#define INPUT_BLOCK_BIG(sc)   do { \
+		unsigned u; \
+		memcpy(W, sc->u.Vb, 16 * sizeof(sph_u64)); \
+		for (u = 0; u < 8; u ++) { \
+			W[u + 8][0] = sph_dec64le_aligned( \
+				sc->buf + 16 * u); \
+			W[u + 8][1] = sph_dec64le_aligned( \
+				sc->buf + 16 * u + 8); \
+		} \
 	} while (0)
 
 #define BIG_ROUND   do { \
 		echo_round(W, K0, K1, K2, K3); \
-		BIG_SHIFT_ROWS; \
+		echo_shift_rows(W); \
 		echo_mix_columns(W); \
 	} while (0)
 
