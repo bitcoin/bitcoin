@@ -4889,35 +4889,47 @@ bool Chainstate::ReplayBlocks()
     }
 
     // Rollback along the old branch.
-    while (pindexOld != pindexFork) {
-        if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
-            CBlock block;
-            if (!m_blockman.ReadBlock(block, *pindexOld)) {
-                LogError("RollbackBlock(): ReadBlock() failed at %d, hash=%s\n", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
-                return false;
+    const int nForkHeight{pindexFork ? pindexFork->nHeight : 0};
+    if (pindexOld != pindexFork) {
+        LogInfo("Rolling back from %s (%i to %i)", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight, nForkHeight);
+        while (pindexOld != pindexFork) {
+            if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
+                CBlock block;
+                if (!m_blockman.ReadBlock(block, *pindexOld)) {
+                    LogError("RollbackBlock(): ReadBlock() failed at %d, hash=%s\n", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
+                    return false;
+                }
+                if (pindexOld->nHeight % 10'000 == 0) {
+                    LogInfo("Rolling back %s (%i)", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
+                }
+                DisconnectResult res = DisconnectBlock(block, pindexOld, cache);
+                if (res == DISCONNECT_FAILED) {
+                    LogError("RollbackBlock(): DisconnectBlock failed at %d, hash=%s\n", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
+                    return false;
+                }
+                // If DISCONNECT_UNCLEAN is returned, it means a non-existing UTXO was deleted, or an existing UTXO was
+                // overwritten. It corresponds to cases where the block-to-be-disconnect never had all its operations
+                // applied to the UTXO set. However, as both writing a UTXO and deleting a UTXO are idempotent operations,
+                // the result is still a version of the UTXO set with the effects of that block undone.
             }
-            LogInfo("Rolling back %s (%i)", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
-            DisconnectResult res = DisconnectBlock(block, pindexOld, cache);
-            if (res == DISCONNECT_FAILED) {
-                LogError("RollbackBlock(): DisconnectBlock failed at %d, hash=%s\n", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
-                return false;
-            }
-            // If DISCONNECT_UNCLEAN is returned, it means a non-existing UTXO was deleted, or an existing UTXO was
-            // overwritten. It corresponds to cases where the block-to-be-disconnect never had all its operations
-            // applied to the UTXO set. However, as both writing a UTXO and deleting a UTXO are idempotent operations,
-            // the result is still a version of the UTXO set with the effects of that block undone.
+            pindexOld = pindexOld->pprev;
         }
-        pindexOld = pindexOld->pprev;
+        LogInfo("Rolled back to %s", pindexFork->GetBlockHash().ToString());
     }
 
     // Roll forward from the forking point to the new tip.
-    int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
-    for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
-        const CBlockIndex& pindex{*Assert(pindexNew->GetAncestor(nHeight))};
+    if (nForkHeight < pindexNew->nHeight) {
+        LogInfo("Rolling forward to %s (%i to %i)", pindexNew->GetBlockHash().ToString(), nForkHeight, pindexNew->nHeight);
+        for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
+            const CBlockIndex& pindex{*Assert(pindexNew->GetAncestor(nHeight))};
 
-        LogInfo("Rolling forward %s (%i)", pindex.GetBlockHash().ToString(), nHeight);
-        m_chainman.GetNotifications().progress(_("Replaying blocks…"), (int)((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)), false);
-        if (!RollforwardBlock(&pindex, cache)) return false;
+            if (nHeight % 10'000 == 0) {
+                LogInfo("Rolling forward %s (%i)", pindex.GetBlockHash().ToString(), nHeight);
+            }
+            m_chainman.GetNotifications().progress(_("Replaying blocks…"), (int)((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)), false);
+            if (!RollforwardBlock(&pindex, cache)) return false;
+        }
+        LogInfo("Rolled forward to %s", pindexNew->GetBlockHash().ToString());
     }
 
     cache.SetBestBlock(pindexNew->GetBlockHash());
