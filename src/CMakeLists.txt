@@ -238,8 +238,8 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/warnings.cpp
   noui.cpp
   policy/ephemeral_policy.cpp
-  policy/fees.cpp
-  policy/fees_args.cpp
+  policy/fees/block_policy_estimator.cpp
+  policy/fees/block_policy_estimator_args.cpp
   policy/packages.cpp
   policy/rbf.cpp
   policy/settings.cpp
