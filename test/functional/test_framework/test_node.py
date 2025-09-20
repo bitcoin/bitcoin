@@ -559,10 +559,10 @@ class TestNode():
                 log = dl.read()
             print_log = " - " + "\n - ".join(log.splitlines())
             for unexpected_msg in unexpected_msgs:
-                if re.search(re.escape(unexpected_msg), log, flags=re.MULTILINE):
+                if unexpected_msg in log:
                     self._raise_assertion_error('Unexpected message "{}" partially matches log:\n\n{}\n\n'.format(unexpected_msg, print_log))
             for expected_msg in expected_msgs:
-                if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
+                if expected_msg not in log:
                     found = False
             if found:
                 return
