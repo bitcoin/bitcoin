@@ -529,6 +529,9 @@ class MinOutputGroupComparator
 public:
     int operator() (const OutputGroup& group1, const OutputGroup& group2) const
     {
+        if (group1.GetSelectionAmount() == group2.GetSelectionAmount()) {
+            return group1.m_weight < group2.m_weight;
+        }
         return group1.GetSelectionAmount() > group2.GetSelectionAmount();
     }
 };
