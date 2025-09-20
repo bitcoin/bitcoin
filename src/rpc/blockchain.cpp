@@ -3001,13 +3001,64 @@ class TemporaryRollback
 {
     ChainstateManager& m_chainman;
     const CBlockIndex& m_invalidate_index;
+    std::vector<uint256> m_invalidated_fork_blocks;
+
 public:
     TemporaryRollback(ChainstateManager& chainman, const CBlockIndex& index) : m_chainman(chainman), m_invalidate_index(index) {
+        // First, invalidate any competing fork blocks to prevent reorg during main chain invalidation
+        InvalidateCompetingForks();
+        
+        // Then invalidate the main chain block for rollback
         InvalidateBlock(m_chainman, m_invalidate_index.GetBlockHash());
     };
+    
     ~TemporaryRollback() {
+        // Restore main chain block first
         ReconsiderBlock(m_chainman, m_invalidate_index.GetBlockHash());
+        
+        // Then restore all fork blocks
+        for (const uint256& fork_hash : m_invalidated_fork_blocks) {
+            ReconsiderBlock(m_chainman, fork_hash);
+        }
     };
+
+private:
+    void InvalidateCompetingForks() {
+        LOCK(m_chainman.GetMutex());
+        
+        // Find the target height (the height we want to roll back to)
+        const CBlockIndex* target_index = m_invalidate_index.pprev;
+        if (!target_index) return; // Genesis block case
+        
+        const int target_height = target_index->nHeight;
+        
+        // Iterate through all known block indices to find competing forks
+        for (const auto& [hash, block_index] : m_chainman.m_blockman.m_block_index) {
+            // Skip if this block is on the active chain
+            if (m_chainman.ActiveChain().Contains(&block_index)) continue;
+            
+            // Skip if this block is at or below the target height
+            if (block_index.nHeight <= target_height) continue;
+            
+            // Skip if this block doesn't have valid data
+            if (!(block_index.nStatus & BLOCK_HAVE_DATA)) continue;
+            
+            // Check if this fork block could interfere with rollback
+            // by tracing back to see if it forks at or after the target height
+            const CBlockIndex* fork_ancestor = &block_index;
+            while (fork_ancestor && fork_ancestor->nHeight > target_height) {
+                fork_ancestor = fork_ancestor->pprev;
+            }
+            
+            // If we can trace this fork back to the target height or below,
+            // and it's not on the active chain, it's a competing fork
+            if (fork_ancestor && fork_ancestor->nHeight <= target_height) {
+                // Invalidate this fork block to prevent reorg
+                InvalidateBlock(m_chainman, hash);
+                m_invalidated_fork_blocks.push_back(hash);
+            }
+        }
+    }
 };
 
 /**

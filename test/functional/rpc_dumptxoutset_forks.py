@@ -74,21 +74,21 @@ class DumptxoutsetForksTest(BitcoinTestFramework):
         assert_equal(active_tip['height'], 18)
         return active_tip, fork_tips
 
-    def test_rollback_with_forks(self, target_height):
-        """Test that dumptxoutset rollback fails when competing forks are present."""
+    def test_rollback_with_forks(self, target_height, target_hash):
+        """Test that dumptxoutset rollback works correctly even when competing forks are present."""
         self.log.info("Testing dumptxoutset rollback with competing forks present")
         
         original_tip = self.nodes[0].getbestblockhash()
         original_height = self.nodes[0].getblockcount()
         
-        assert_raises_rpc_error(
-            -1, 
-            "Could not roll back to requested height", 
-            self.nodes[0].dumptxoutset, 
-            "fork_test_utxo.dat", 
-            rollback=target_height
-        )
+        # This should now work correctly with our fix
+        result = self.nodes[0].dumptxoutset("fork_test_utxo.dat", rollback=target_height)
         
+        # Verify the snapshot was created from the correct block on the main chain
+        assert_equal(result['base_height'], target_height)
+        assert_equal(result['base_hash'], target_hash)
+        
+        # Verify node state is restored after successful rollback
         current_tip = self.nodes[0].getbestblockhash()
         current_height = self.nodes[0].getblockcount()
         assert_equal(current_tip, original_tip)
@@ -108,7 +108,7 @@ class DumptxoutsetForksTest(BitcoinTestFramework):
         self.verify_fork_visibility()
 
         # Test the main functionality
-        self.test_rollback_with_forks(target_height)
+        self.test_rollback_with_forks(target_height, target_hash)
 
 
 if __name__ == '__main__':
