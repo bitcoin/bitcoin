@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <kernel/mempool_entry.h>
 #include <logging.h>
+#include <node/mini_miner.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -37,6 +38,62 @@
 constexpr int CURRENT_FEES_FILE_VERSION{149900};
 
 static constexpr double INF_FEERATE = 1e99;
+
+TxAncestorsAndDescendants GetTxAncestorsAndDescendants(const std::vector<RemovedMempoolTransactionInfo>& transactions)
+{
+    TxAncestorsAndDescendants visited_txs;
+    for (const auto& tx_info : transactions) {
+        const auto& txid = tx_info.info.m_tx->GetHash();
+        visited_txs.emplace(txid, std::make_pair(std::set<Txid>{txid}, std::set<Txid>{txid}));
+        for (const auto& input : tx_info.info.m_tx->vin) {
+            // If a parent has been visited add all the parent ancestors to the set of transaction ancestor
+            // Also add the transaction into each ancestor descendant set.
+            auto parent = input.prevout.hash;
+            if (visited_txs.find(parent) != visited_txs.end()) {
+                auto& parent_ancestors = visited_txs[parent].first;
+                auto& tx_ancestors = visited_txs[txid].first;
+                for (auto& ancestor : parent_ancestors) {
+                    tx_ancestors.insert(ancestor);
+                    auto& ancestor_descendants = visited_txs[ancestor].second;
+                    ancestor_descendants.insert(txid);
+                }
+            }
+        }
+    }
+    return visited_txs;
+}
+
+MiniMinerInput GetMiniMinerInput(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block)
+{
+    // Cache all the transactions for efficient lookup
+    std::map<Txid, TransactionInfo> tx_caches;
+    for (const auto& tx : txs_removed_for_block) {
+        tx_caches.emplace(tx.info.m_tx->GetHash(), TransactionInfo(tx.info.m_tx, tx.info.m_fee, tx.info.m_virtual_transaction_size, tx.info.txHeight));
+    }
+
+    const auto& txAncestorsAndDescendants = GetTxAncestorsAndDescendants(txs_removed_for_block);
+    std::vector<node::MiniMinerMempoolEntry> transactions;
+    std::map<Txid, std::set<Txid>> descendant_caches;
+    transactions.reserve(txAncestorsAndDescendants.size());
+    for (const auto& transaction : txAncestorsAndDescendants) {
+        const auto& txid = transaction.first;
+        const auto& [ancestors, descendants] = transaction.second;
+        int64_t vsize_ancestor = 0;
+        CAmount fee_with_ancestors = 0;
+        // TODO: Do not loop through each ancestor instead last processed
+        // ancestor fee and size with the current txs fees and size
+        // to get the transaction ancestor fees and size.
+        for (auto& ancestor_id : ancestors) {
+            const auto& ancestor = tx_caches.find(ancestor_id)->second;
+            vsize_ancestor += ancestor.m_virtual_transaction_size;
+            fee_with_ancestors += ancestor.m_fee;
+        }
+        descendant_caches.emplace(txid, descendants);
+        auto tx_info = tx_caches.find(txid)->second;
+        transactions.emplace_back(tx_info.m_tx, tx_info.m_virtual_transaction_size, vsize_ancestor, tx_info.m_fee, fee_with_ancestors);
+    }
+    return std::make_pair(transactions, descendant_caches);
+}
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
 {
@@ -666,6 +723,19 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const Remo
     return true;
 }
 
+void CBlockPolicyEstimator::removeCPFPdParentTxs(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block)
+{
+    const auto mini_miner_input = GetMiniMinerInput(txs_removed_for_block);
+    const auto linearizedTransactions = node::MiniMiner(mini_miner_input.first, mini_miner_input.second).Linearize();
+    for (const auto& tx : txs_removed_for_block) {
+        const auto tx_inclusion_order = linearizedTransactions.inclusion_order.find(tx.info.m_tx->GetHash())->second;
+        const auto mining_score = linearizedTransactions.packages[tx_inclusion_order];
+        if (mining_score != CFeeRate(tx.info.m_fee, static_cast<int32_t>(tx.info.m_virtual_transaction_size))) {
+            // Ignore all transactions whose mining score is not the same with it's fee rate
+            _removeTx(tx.info.m_tx->GetHash(), /*inBlock=*/true);
+        }
+    }
+}
 void CBlockPolicyEstimator::processBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block,
                                          unsigned int nBlockHeight)
 {
@@ -693,6 +763,12 @@ void CBlockPolicyEstimator::processBlock(const std::vector<RemovedMempoolTransac
     feeStats->UpdateMovingAverages();
     shortStats->UpdateMovingAverages();
     longStats->UpdateMovingAverages();
+
+    // We only consider parent transactions that are mined
+    // solely by their own fee rate. All transactions that are
+    // CPFP'd by some child should be ignored. Child transactions
+    // are not tracked upon entry into the mempool.
+    removeCPFPdParentTxs(txs_removed_for_block);
 
     unsigned int countedTxs = 0;
     // Update averages with data points from current block
