@@ -937,6 +937,15 @@ class PSBTTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].walletprocesspsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
 
+        self.log.info("PSBT with invalid taproot key path signature should have error message")
+        # Create a PSBT spending a taproot output with an invalid signature length (too short)
+        # This PSBT has a taproot signature field but with invalid length (32 bytes instead of 64 or 65)
+        invalid_taproot_psbt = "cHNidP8BAFUCAAAAAWvGFLIHodsN90wZ5usMbI4r2dT3irIXNi8Mfxu7MgfaAAAAAAD/////AUBCDwAAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEBK0BCDwAAAAAAIlEgcmFY1CO7Jo6+1ke6uEa5Kx8oNi5lJp4r3BMlPYcDrVsBFCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA"
+        analysis = self.nodes[0].analyzepsbt(invalid_taproot_psbt)
+        assert_equal(analysis['next'], 'creator')
+        assert 'error' in analysis
+        assert 'invalid taproot key path signature' in analysis['error'].lower()
+
         self.log.info("Test that we can fund psbts with external inputs specified")
 
         privkey, _ = generate_keypair(wif=True)
