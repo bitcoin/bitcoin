@@ -116,9 +116,6 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
 {
     {
         LOCK(g_sqlite_mutex);
-        LogInfo("Using SQLite Version %s", SQLiteDatabaseVersion());
-        LogInfo("Using wallet %s", fs::PathToString(m_dir_path));
-
         if (++g_sqlite_count == 1) {
             // Setup logging
             int ret = sqlite3_config(SQLITE_CONFIG_LOG, ErrorLogCallback, nullptr);
@@ -134,6 +131,9 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
         int ret = sqlite3_initialize(); // This is a no-op if sqlite3 is already initialized
         if (ret != SQLITE_OK) {
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to initialize SQLite: %s\n", sqlite3_errstr(ret)));
+        }
+        if (g_sqlite_count == 1) {
+            LogInfo("Using SQLite Version %s", SQLiteDatabaseVersion());
         }
     }
 
