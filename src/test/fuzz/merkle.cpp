@@ -42,13 +42,11 @@ FUZZ_TARGET(merkle)
     if (!block){
         return;
     }
-    const size_t num_txs = block->vtx.size();
-    std::vector<uint256> tx_hashes;
-    tx_hashes.reserve(num_txs);
 
-    for (size_t i = 0; i < num_txs; ++i) {
-        tx_hashes.push_back(block->vtx[i]->GetHash().ToUint256());
-    }
+    const std::size_t num_txs{block->vtx.size()};
+    auto tx_hashes{ToMerkleLeaves(block->vtx, [&](bool, const auto& tx) {
+        return tx->GetHash().ToUint256();
+    })};
 
     // Test ComputeMerkleRoot
     bool mutated = fuzzed_data_provider.ConsumeBool();
