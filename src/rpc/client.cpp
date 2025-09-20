@@ -243,6 +243,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "importmempool", 1, "use_current_time" },
     { "importmempool", 1, "apply_unbroadcast_set" },
     { "importdescriptors", 0, "requests" },
+    { "importdescriptors", 1, "scan_utxoset" },
     { "listdescriptors", 0, "private" },
     { "verifychain", 0, "checklevel" },
     { "verifychain", 1, "nblocks" },
