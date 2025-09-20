@@ -3395,8 +3395,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
         if (!fNetworkActive || !m_masternode_thread_active || !mn_sync.IsBlockchainSynced()) continue;
 
         std::unordered_set<CService, CServiceHash> connectedNodes;
-        // it maps protx hashes to fInboud flags
-        Uint256HashMap<bool> connectedProRegTxHashes;
+        Uint256HashMap</*fInbound=*/bool> connectedProRegTxHashes;
         ForEachNode([&](const CNode* pnode) {
             connectedNodes.emplace(pnode->addr);
             if (auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash(); !verifiedProRegTxHash.IsNull()) {
