@@ -40,6 +40,10 @@
 #include "../include/secp256k1_ellswift.h"
 #endif
 
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+#include "../include/secp256k1_silentpayments.h"
+#endif
+
 static void run_tests(secp256k1_context *ctx, unsigned char *key);
 
 int main(void) {
@@ -93,6 +97,27 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
 #ifdef ENABLE_MODULE_ELLSWIFT
     unsigned char ellswift[64];
     static const unsigned char prefix[64] = {'t', 'e', 's', 't'};
+#endif
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+    secp256k1_xonly_pubkey generated_output;
+    secp256k1_xonly_pubkey *generated_outputs[1];
+    secp256k1_silentpayments_recipient recipient;
+    const secp256k1_silentpayments_recipient *recipients[1];
+    unsigned char outpoint_smallest[36] = { 0 };
+    secp256k1_keypair taproot_seckey;
+    const secp256k1_keypair *taproot_seckeys[1];
+    const unsigned char *plain_seckeys[1];
+    secp256k1_silentpayments_found_output *found_outputs[1];
+    size_t n_found_outputs;
+    const secp256k1_xonly_pubkey *tx_outputs[1];
+    secp256k1_silentpayments_recipient_prevouts_summary prevouts_summary;
+    unsigned char label_tweak[32] = { 0 };
+    secp256k1_xonly_pubkey xonly_pubkey;
+    const secp256k1_xonly_pubkey *xonly_pubkeys[1];
+    secp256k1_pubkey plain_pubkey;
+    const secp256k1_pubkey *plain_pubkeys[1];
+    unsigned char prevouts_summary_ser[33] = { 0 };
+    unsigned char shared_secret[33] = { 0 };
 #endif
 
     for (i = 0; i < 32; i++) {
@@ -262,6 +287,66 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
         SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
         CHECK(ret == 1);
     }
+
+#endif
+
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+    SECP256K1_CHECKMEM_DEFINE(key, 32);
+
+    generated_outputs[0] = &generated_output;
+
+    /* Initialize recipient */
+    CHECK(secp256k1_ec_pubkey_create(ctx, &recipient.scan_pubkey, key));
+    key[31] ^= 1;
+    CHECK(secp256k1_ec_pubkey_create(ctx, &recipient.spend_pubkey, key));
+    key[31] ^= (1 << 1);
+    recipient.index = 0;
+    recipients[0] = &recipient;
+
+    /* Set up secret keys */
+    SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+    ret = secp256k1_keypair_create(ctx, &taproot_seckey, key);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret);
+    key[31] ^= (1 << 2);
+    taproot_seckeys[0] = &taproot_seckey;
+    plain_seckeys[0] = key;
+
+    ret = secp256k1_silentpayments_sender_create_outputs(ctx, generated_outputs, recipients, 1, outpoint_smallest, taproot_seckeys, 1, plain_seckeys, 1);
+    CHECK(ret == 1);
+
+    ret = secp256k1_silentpayments_recipient_create_label(ctx, &recipient.spend_pubkey, label_tweak, key, 0);
+    key[31] ^= (1 << 3);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+
+    CHECK(secp256k1_keypair_xonly_pub(ctx, &xonly_pubkey, NULL, &taproot_seckey));
+    SECP256K1_CHECKMEM_DEFINE(&xonly_pubkey, sizeof(xonly_pubkey));
+    xonly_pubkeys[0] = &xonly_pubkey;
+    ret = secp256k1_ec_pubkey_create(ctx, &plain_pubkey, plain_seckeys[0]);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+    SECP256K1_CHECKMEM_DEFINE(&plain_pubkey, sizeof(plain_pubkey));
+    plain_pubkeys[0] = &plain_pubkey;
+
+    ret = secp256k1_silentpayments_recipient_prevouts_summary_create(ctx, &prevouts_summary, outpoint_smallest, xonly_pubkeys, 1, plain_pubkeys, 1);
+    CHECK(ret == 1);
+
+    tx_outputs[0] = generated_outputs[0];
+    n_found_outputs = 1;
+    SECP256K1_CHECKMEM_DEFINE(&recipient.spend_pubkey, sizeof(recipient.spend_pubkey));
+    /* It is sufficient to check _recipient_scan_outputs without a label lookup function, since the shared secret is created once (which is where the constant timeness matters)
+     * and then reused for the rest of the scanning logic.
+     */
+    CHECK(secp256k1_silentpayments_recipient_scan_outputs(ctx, found_outputs, &n_found_outputs, tx_outputs, 1, key, &prevouts_summary, &recipient.spend_pubkey, NULL, NULL));
+    /* Serialise and then deserialise the public data object before using in _recipient_create_shared_secret.
+     * This is necessary since _recipent_created_shared_secret expects a public data object that was deserialised from
+     * its serialised format, i.e., a compressed public key.
+     */
+    CHECK(secp256k1_silentpayments_recipient_prevouts_summary_serialize(ctx, prevouts_summary_ser, &prevouts_summary));
+    CHECK(secp256k1_silentpayments_recipient_prevouts_summary_parse(ctx, &prevouts_summary, prevouts_summary_ser));
+    CHECK(secp256k1_silentpayments_recipient_create_shared_secret(ctx, shared_secret, key, &prevouts_summary));
+    CHECK(secp256k1_silentpayments_recipient_create_output_pubkey(ctx, &xonly_pubkey, shared_secret, &recipient.spend_pubkey, 0));
 
 #endif
 }
