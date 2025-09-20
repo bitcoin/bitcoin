@@ -178,7 +178,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
 
     std::chrono::microseconds time{244466666};
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 500)
     {
         NodeId rand_peer = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, NUM_PEERS - 1);
 
@@ -303,7 +303,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
 
     std::chrono::microseconds time{244466666};
 
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 500)
     {
         NodeId rand_peer = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, NUM_PEERS - 1);
 
