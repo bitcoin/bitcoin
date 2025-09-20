@@ -792,7 +792,8 @@ crypto_libbitcoin_crypto_x86_aesni_la_CXXFLAGS += $(X86_AESNI_CXXFLAGS)
 crypto_libbitcoin_crypto_x86_aesni_la_CPPFLAGS += -DENABLE_SSE41 -DENABLE_X86_AESNI
 crypto_libbitcoin_crypto_x86_aesni_la_SOURCES = \
   crypto/x11/x86_aesni/aes.cpp \
-  crypto/x11/x86_aesni/echo.cpp
+  crypto/x11/x86_aesni/echo.cpp \
+  crypto/x11/x86_aesni/shavite.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above

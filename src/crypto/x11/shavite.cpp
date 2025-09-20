@@ -30,6 +30,7 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
+#include <crypto/x11/aes.h>
 #include <crypto/x11/dispatch.h>
 
 #include <cstddef>
@@ -44,6 +45,41 @@ extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 #endif
 
 #define C32   SPH_C32
+
+namespace sapphire {
+namespace soft_shavite {
+void CompressElement(uint32_t& l0, uint32_t& l1, uint32_t& l2, uint32_t& l3,
+				 	 uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, const uint32_t* rk)
+{
+	uint32_t x0{r0 ^ rk[0]};
+	uint32_t x1{r1 ^ rk[1]};
+	uint32_t x2{r2 ^ rk[2]};
+	uint32_t x3{r3 ^ rk[3]};
+	soft_aes::RoundKeyless(x0, x1, x2, x3, x0, x1, x2, x3);
+	x0 ^= rk[4];
+	x1 ^= rk[5];
+	x2 ^= rk[6];
+	x3 ^= rk[7];
+	soft_aes::RoundKeyless(x0, x1, x2, x3, x0, x1, x2, x3);
+	x0 ^= rk[8];
+	x1 ^= rk[9];
+	x2 ^= rk[10];
+	x3 ^= rk[11];
+	soft_aes::RoundKeyless(x0, x1, x2, x3, x0, x1, x2, x3);
+	x0 ^= rk[12];
+	x1 ^= rk[13];
+	x2 ^= rk[14];
+	x3 ^= rk[15];
+	soft_aes::RoundKeyless(x0, x1, x2, x3, x0, x1, x2, x3);
+	l0 ^= x0;
+	l1 ^= x1;
+	l2 ^= x2;
+	l3 ^= x3;
+}
+} // namespace shavite_soft
+} // namespace sapphire
+
+sapphire::dispatch::ShaviteCompressFn shavite_c512e = sapphire::soft_shavite::CompressElement;
 
 /*
  * As of round 2 of the SHA-3 competition, the published reference
@@ -76,7 +112,7 @@ c512(sph_shavite_big_context *sc, const void *msg)
 {
 	sph_u32 p0, p1, p2, p3, p4, p5, p6, p7;
 	sph_u32 p8, p9, pA, pB, pC, pD, pE, pF;
-	sph_u32 rk[448];
+	alignas(16) sph_u32 rk[448];
 	size_t u;
 	int r, s;
 
@@ -173,31 +209,8 @@ c512(sph_shavite_big_context *sc, const void *msg)
 	u = 0;
 	for (r = 0; r < 14; r ++) {
 #define C512_ELT(l0, l1, l2, l3, r0, r1, r2, r3)   do { \
-		sph_u32 x0, x1, x2, x3; \
-		x0 = r0 ^ rk[u ++]; \
-		x1 = r1 ^ rk[u ++]; \
-		x2 = r2 ^ rk[u ++]; \
-		x3 = r3 ^ rk[u ++]; \
-		AES_ROUND_NOKEY(x0, x1, x2, x3); \
-		x0 ^= rk[u ++]; \
-		x1 ^= rk[u ++]; \
-		x2 ^= rk[u ++]; \
-		x3 ^= rk[u ++]; \
-		AES_ROUND_NOKEY(x0, x1, x2, x3); \
-		x0 ^= rk[u ++]; \
-		x1 ^= rk[u ++]; \
-		x2 ^= rk[u ++]; \
-		x3 ^= rk[u ++]; \
-		AES_ROUND_NOKEY(x0, x1, x2, x3); \
-		x0 ^= rk[u ++]; \
-		x1 ^= rk[u ++]; \
-		x2 ^= rk[u ++]; \
-		x3 ^= rk[u ++]; \
-		AES_ROUND_NOKEY(x0, x1, x2, x3); \
-		l0 ^= x0; \
-		l1 ^= x1; \
-		l2 ^= x2; \
-		l3 ^= x3; \
+		shavite_c512e(l0, l1, l2, l3, r0, r1, r2, r3, &rk[u]); \
+		u += 16; \
 	} while (0)
 
 #define WROT(a, b, c, d)   do { \
