@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,8 +12,11 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    wallet_importprivkey,
 )
+from test_framework.wallet import MiniWallet
+from test_framework.script import OP_RETURN, CScript
+from test_framework.messages import CTxOut, COIN
+from test_framework.address import address_to_scriptpubkey
 import json
 import os
 
@@ -36,34 +39,64 @@ class GetblockstatsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        self.uses_wallet = True
 
     def get_stats(self):
         return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]
 
     def generate_test_data(self, filename):
-        mocktime = 1525107225
-        self.nodes[0].setmocktime(mocktime)
-        self.nodes[0].createwallet(wallet_name='test')
-        privkey = self.nodes[0].get_deterministic_priv_key().key
-        wallet_importprivkey(self.nodes[0], privkey, 0)
+        MOCKTIME = 1525107225
 
-        self.generate(self.nodes[0], COINBASE_MATURITY + 1)
+        TRANSACTIONS = [
+            (10, "Send 10 BTC"),
+            (10, "Send 10 BTC"),
+            (10, "Send 10 BTC"),
+            (1, "Send 1 BTC"),
+        ]
 
-        address = self.nodes[0].get_deterministic_priv_key().address
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.generate(self.nodes[0], 1)
+        self.nodes[0].setmocktime(MOCKTIME)
+        wallet = MiniWallet(self.nodes[0])
 
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
-        self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=False)
-        self.nodes[0].settxfee(amount=0.003)
-        self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True)
-        # Send to OP_RETURN output to test its exclusion from statistics
-        self.nodes[0].send(outputs={"data": "21"})
+        self.generate(wallet, COINBASE_MATURITY + 1)
+
+        external_address = self.nodes[0].get_deterministic_priv_key().address
+        external_script = address_to_scriptpubkey(external_address)
+
+        for i, (amount_btc, _) in enumerate(TRANSACTIONS):
+            amount_satoshis = int(amount_btc * COIN)
+            wallet.send_to(
+                from_node=self.nodes[0],
+                scriptPubKey=external_script,
+                amount=amount_satoshis,
+            )
+            if i == 0:
+                self.generate(wallet, 1)
+
+        self._create_op_return_transaction(wallet)
+
         self.sync_all()
-        self.generate(self.nodes[0], 1)
+        self.generate(wallet, 1)
 
         self.expected_stats = self.get_stats()
+        blocks = self._get_all_blocks()
 
+        to_dump = {
+            'blocks': blocks,
+            'mocktime': int(MOCKTIME),
+            'stats': self.expected_stats,
+        }
+        with open(filename, 'w', encoding="utf8") as f:
+            json.dump(to_dump, f, sort_keys=True, indent=2)
+
+    def _create_op_return_transaction(self, wallet):
+        """Create a transaction with OP_RETURN output to test statistics exclusion."""
+        tx = wallet.create_self_transfer()
+        op_return_data = b'\x21'
+        tx["tx"].vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN, op_return_data])))
+        wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx["tx"].serialize().hex())
+
+    def _get_all_blocks(self):
+        """Get all blocks from genesis to current tip."""
         blocks = []
         tip = self.nodes[0].getbestblockhash()
         blockhash = None
@@ -72,14 +105,7 @@ class GetblockstatsTest(BitcoinTestFramework):
             blockhash = self.nodes[0].getblockhash(height)
             blocks.append(self.nodes[0].getblock(blockhash, 0))
             height += 1
-
-        to_dump = {
-            'blocks': blocks,
-            'mocktime': int(mocktime),
-            'stats': self.expected_stats,
-        }
-        with open(filename, 'w', encoding="utf8") as f:
-            json.dump(to_dump, f, sort_keys=True, indent=2)
+        return blocks
 
     def load_test_data(self, filename):
         with open(filename, 'r', encoding="utf8") as f:
@@ -177,10 +203,11 @@ class GetblockstatsTest(BitcoinTestFramework):
 
         self.log.info('Test tip including OP_RETURN')
         tip_stats = self.nodes[0].getblockstats(tip)
-        assert_equal(tip_stats["utxo_increase"], 6)
-        assert_equal(tip_stats["utxo_size_inc"], 441)
-        assert_equal(tip_stats["utxo_increase_actual"], 4)
-        assert_equal(tip_stats["utxo_size_inc_actual"], 300)
+        expected_tip_stats = self.expected_stats[self.max_stat_pos]
+        assert_equal(tip_stats["utxo_increase"], expected_tip_stats["utxo_increase"])
+        assert_equal(tip_stats["utxo_size_inc"], expected_tip_stats["utxo_size_inc"])
+        assert_equal(tip_stats["utxo_increase_actual"], expected_tip_stats["utxo_increase_actual"])
+        assert_equal(tip_stats["utxo_size_inc_actual"], expected_tip_stats["utxo_size_inc_actual"])
 
         self.log.info("Test when only header is known")
         block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
