@@ -4,9 +4,16 @@ inputs:
   use-cirrus:
     description: 'Use cirrus cache'
     required: true
+  use-qemu:
+    description: 'Use qemu'
+    default: false
 runs:
   using: 'composite'
   steps:
+    - name: Set up QEMU
+      if: ${{ inputs.use-qemu }}
+      uses: docker/setup-qemu-action@v3
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
