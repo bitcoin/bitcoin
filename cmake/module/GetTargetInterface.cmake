@@ -32,7 +32,18 @@ endfunction()
 function(get_target_interface var config target property)
   get_target_property(result ${target} INTERFACE_${property})
   if(result)
-    evaluate_generator_expressions(result "${config}")
+    # On systems where pthread functionality is not provided by
+    # the C library implementation, the CMake FindThreads module
+    # sets the Threads::Threads target's compile options to
+    # generator expressions that evaluate to `-pthread` in this
+    # project.
+    # To improve the readability of the configuration summary,
+    # we skip these generator expressions.
+    if(${target} STREQUAL "Threads::Threads" AND ${property} STREQUAL "COMPILE_OPTIONS")
+      set(result -pthread)
+    else()
+      evaluate_generator_expressions(result "${config}")
+    endif()
     list(JOIN result " " result)
   else()
     set(result)
