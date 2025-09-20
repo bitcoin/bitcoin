@@ -18,6 +18,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
+#include <interfaces/snapshot.h>
 #include <interfaces/types.h>
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
@@ -38,6 +39,7 @@
 #include <node/kernel_notifications.h>
 #include <node/transaction.h>
 #include <node/types.h>
+#include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -80,6 +82,7 @@ using interfaces::Handler;
 using interfaces::MakeSignalHandler;
 using interfaces::Mining;
 using interfaces::Node;
+using interfaces::Snapshot;
 using interfaces::WalletLoader;
 using node::BlockAssembler;
 using node::BlockWaitOptions;
@@ -89,6 +92,73 @@ namespace node {
 // All members of the classes in this namespace are intentionally public, as the
 // classes themselves are private.
 namespace {
+class SnapshotImpl : public interfaces::Snapshot
+{
+public:
+    SnapshotImpl(ChainstateManager& chainman, const fs::path& path, bool in_memory)
+        : m_chainman(chainman), m_path(path), m_in_memory(in_memory), m_metadata(chainman.GetParams().MessageStart()) {}
+
+    bool activate() override
+    {
+        m_last_error.clear();
+
+        if (!fs::exists(m_path)) {
+            m_last_error = "Snapshot file does not exist";
+            return false;
+        }
+
+        FILE* snapshot_file{fsbridge::fopen(m_path, "rb")};
+        AutoFile afile{snapshot_file};
+        if (afile.IsNull()) {
+            m_last_error = "Unable to open snapshot file for reading";
+            return false;
+        }
+
+        try {
+            afile >> m_metadata;
+        } catch (const std::ios_base::failure& e) {
+            m_last_error = strprintf("Unable to parse metadata: %s", e.what());
+            return false;
+        }
+
+        auto result = m_chainman.ActivateSnapshot(afile, m_metadata, m_in_memory);
+        if (result.has_value()) {
+            m_activation_result = result.value();
+            return true;
+        } else {
+            m_activation_result = std::nullopt;
+            m_last_error = util::ErrorString(result).original;
+            return false;
+        }
+    }
+
+    const node::SnapshotMetadata& getMetadata() const override
+    {
+        return m_metadata;
+    }
+
+    std::optional<const CBlockIndex*> getActivationResult() const override
+    {
+        if (m_activation_result.has_value()) {
+            return m_activation_result;
+        }
+        return std::nullopt;
+    }
+
+    std::string getLastError() const override
+    {
+        return m_last_error;
+    }
+
+private:
+    ChainstateManager& m_chainman;
+    fs::path m_path;
+    bool m_in_memory;
+    node::SnapshotMetadata m_metadata;
+    std::optional<const CBlockIndex*> m_activation_result;
+    std::string m_last_error;
+};
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 class ExternalSignerImpl : public interfaces::ExternalSigner
 {
@@ -356,6 +426,10 @@ public:
         return ::tableRPC.execute(req);
     }
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
+    std::unique_ptr<interfaces::Snapshot> snapshot(const fs::path& path) override
+    {
+        return std::make_unique<SnapshotImpl>(chainman(), path, /*in_memory=*/ false);
+    }
     std::optional<Coin> getUnspentOutput(const COutPoint& output) override
     {
         LOCK(::cs_main);
@@ -384,6 +458,10 @@ public:
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeSignalHandler(::uiInterface.ShowProgress_connect(fn));
+    }
+    std::unique_ptr<Handler> handleSnapshotLoadProgress(SnapshotLoadProgressFn fn) override
+    {
+        return MakeSignalHandler(::uiInterface.SnapshotLoadProgress_connect(fn));
     }
     std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
     {
