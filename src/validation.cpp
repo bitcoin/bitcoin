@@ -4913,6 +4913,7 @@ bool Chainstate::ReplayBlocks()
     // Roll forward from the forking point to the new tip.
     int nForkHeight = pindexFork ? pindexFork->nHeight : 0;
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
+        if (m_blockman.m_interrupt) return false;
         const CBlockIndex& pindex{*Assert(pindexNew->GetAncestor(nHeight))};
 
         LogInfo("Rolling forward %s (%i)", pindex.GetBlockHash().ToString(), nHeight);
