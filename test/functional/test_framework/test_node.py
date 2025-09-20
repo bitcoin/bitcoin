@@ -550,26 +550,32 @@ class TestNode():
         time_end = time.time() + timeout * self.timeout_factor
         prev_size = self.debug_log_size(encoding="utf-8")  # Must use same encoding that is used to read() below
 
+        def print_log(log):
+            return " - " + "\n - ".join(log.splitlines())
+
         yield
 
         while True:
-            found = True
+            found = []
             with open(self.debug_log_path, encoding="utf-8", errors="replace") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
-            print_log = " - " + "\n - ".join(log.splitlines())
             for unexpected_msg in unexpected_msgs:
                 if re.search(re.escape(unexpected_msg), log, flags=re.MULTILINE):
-                    self._raise_assertion_error('Unexpected message "{}" partially matches log:\n\n{}\n\n'.format(unexpected_msg, print_log))
-            for expected_msg in expected_msgs:
-                if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
-                    found = False
-            if found:
+                    self._raise_assertion_error(f'Unexpected message "{unexpected_msg}" found in log:\n\n{print_log(log)}\n\n')
+            for i, expected_msg in enumerate(expected_msgs):
+                if re.search(re.escape(expected_msg), log, flags=re.MULTILINE):
+                    found.append(i)
+            # We found remaining expected messages before encountering unexpected messages.
+            if len(found) == len(expected_msgs):
                 return
+            # Remove the ones we found so far, so we only complain about remaining ones when timing out.
+            for f in reversed(found):
+                expected_msgs.pop(f)
             if time.time() >= time_end:
                 break
             time.sleep(0.05)
-        self._raise_assertion_error('Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(str(expected_msgs), print_log))
+        self._raise_assertion_error(f'Expected message(s) {expected_msgs!s} not found in log:\n\n{print_log(log)}\n\n')
 
     @contextlib.contextmanager
     def busy_wait_for_debug_log(self, expected_msgs, timeout=60):
@@ -584,17 +590,20 @@ class TestNode():
         yield
 
         while True:
-            found = True
+            found = []
             with open(self.debug_log_path, "rb") as dl:
                 dl.seek(prev_size)
                 log = dl.read()
 
-            for expected_msg in expected_msgs:
-                if expected_msg not in log:
-                    found = False
+            for i, expected_msg in enumerate(expected_msgs):
+                if expected_msg in log:
+                    found.append(i)
 
-            if found:
+            if len(found) == len(expected_msgs):
                 return
+
+            for f in reversed(found):
+                expected_msgs.pop(f)
 
             if time.time() >= time_end:
                 print_log = " - " + "\n - ".join(log.decode("utf8", errors="replace").splitlines())
@@ -604,8 +613,7 @@ class TestNode():
             # possible.
 
         self._raise_assertion_error(
-            'Expected messages "{}" does not partially match log:\n\n{}\n\n'.format(
-                str(expected_msgs), print_log))
+            f'Expected message(s) {expected_msgs!s} not found in log:\n\n{print_log}\n\n')
 
     @contextlib.contextmanager
     def wait_for_new_peer(self, timeout=5):
