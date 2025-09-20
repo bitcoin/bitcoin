@@ -108,5 +108,17 @@ class MiningMainnetTest(BitcoinTestFramework):
         height = 2016
         prev_hash = self.mine(height, prev_hash, blocks, node)
         assert_equal(node.getblockcount(), height)
+
+        mining_info = node.getmininginfo()
+        assert_equal(mining_info['difficulty'], 4)
+
+        self.log.info("getblock RPC should show historical target")
+        block_info = node.getblock(node.getblockhash(1))
+
+        assert_equal(block_info['difficulty'], 1)
+        assert_equal(block_info['bits'], nbits_str(DIFF_1_N_BITS))
+        assert_equal(block_info['target'], target_str(DIFF_1_TARGET))
+
+
 if __name__ == '__main__':
     MiningMainnetTest(__file__).main()
