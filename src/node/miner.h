@@ -24,6 +24,7 @@
 #include <boost/multi_index_container.hpp>
 
 class ArgsManager;
+class BlockTemplateCache;
 class CBlockIndex;
 class CChainParams;
 class CScript;
@@ -168,6 +169,8 @@ private:
     const CTxMemPool* const m_mempool;
     Chainstate& m_chainstate;
 
+    struct AllowOversizedBlocks_tag { explicit AllowOversizedBlocks_tag() = default; };
+
 public:
     struct Options : BlockCreateOptions {
         // Configuration parameters for the block size
@@ -179,6 +182,9 @@ public:
     };
 
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
+
+    static constexpr AllowOversizedBlocks_tag ALLOW_OVERSIZED_BLOCKS{};
+    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options, AllowOversizedBlocks_tag);
 
     /** Construct a new block template */
     std::unique_ptr<CBlockTemplate> CreateNewBlock();
@@ -242,9 +248,9 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
  * Return a new block template when fees rise to a certain threshold or after a
  * new tip; return nullopt if timeout is reached.
  */
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                                      ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
                                                       const BlockWaitOptions& options,
                                                       const BlockAssembler::Options& assemble_options);

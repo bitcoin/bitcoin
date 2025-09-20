@@ -5,6 +5,7 @@
 
 #include <node/miner.h>
 
+#include <blocktemplatecache.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -90,6 +91,14 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
       m_options{ClampOptions(options)}
+{
+}
+
+BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options, AllowOversizedBlocks_tag)
+    : chainparams{chainstate.m_chainman.GetParams()},
+      m_mempool{options.use_mempool ? mempool : nullptr},
+      m_chainstate{chainstate},
+      m_options{options}
 {
 }
 
@@ -453,9 +462,9 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
+std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                                      ChainstateManager& chainman,
                                                       KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
                                                       const BlockWaitOptions& options,
                                                       const BlockAssembler::Options& assemble_options)
@@ -511,14 +520,9 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          * We'll also create a new template if the tip changed during this iteration.
          */
         if (options.fee_threshold < MAX_MONEY || tip_changed) {
-            auto new_tmpl{BlockAssembler{
-                chainman.ActiveChainstate(),
-                mempool,
-                assemble_options}
-                              .CreateNewBlock()};
-
+            auto new_tmpl{block_template_cache->GetBlockTemplate(assemble_options, std::chrono::seconds{0})};
             // If the tip changed, return the new template regardless of its fees.
-            if (tip_changed) return new_tmpl;
+            if (tip_changed) return std::make_unique<CBlockTemplate>(*new_tmpl);
 
             // Calculate the original template total fees if we haven't already
             if (current_fees == -1) {
@@ -532,7 +536,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
             for (CAmount fee : new_tmpl->vTxFees) {
                 new_fees += fee;
                 Assume(options.fee_threshold != MAX_MONEY);
-                if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
+                if (new_fees >= current_fees + options.fee_threshold) return std::make_unique<CBlockTemplate>(*new_tmpl);;
             }
         }
 

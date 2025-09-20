@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
+#include <blocktemplatecache.h>
 #include <coins.h>
 #include <common/system.h>
 #include <consensus/consensus.h>
@@ -57,6 +58,7 @@ struct MinerTestingSetup : public TestingSetup {
         m_node.mempool.reset();
         bilingual_str error;
         m_node.mempool = std::make_unique<CTxMemPool>(MemPoolOptionsForTest(m_node), error);
+        m_node.block_template_cache = MakeBlockTemplateCache(m_node.mempool.get(), *m_node.chainman);
         Assert(error.empty());
         return *m_node.mempool;
     }
