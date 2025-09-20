@@ -28,6 +28,7 @@
 #include <util/time.h>
 #include <util/vector.h>
 
+#include <string_view>
 #include <utility>
 
 using node::DumpMempool;
@@ -768,7 +769,7 @@ static RPCHelpMan importmempool()
                 throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Can only import the mempool after the block download and sync is done.");
             }
 
-            const fs::path load_path{fs::u8path(request.params[0].get_str())};
+            const fs::path load_path{fs::u8path(self.Arg<std::string_view>("filepath"))};
             const UniValue& use_current_time{request.params[1]["use_current_time"]};
             const UniValue& apply_fee_delta{request.params[1]["apply_fee_delta_priority"]};
             const UniValue& apply_unbroadcast{request.params[1]["apply_unbroadcast_set"]};
