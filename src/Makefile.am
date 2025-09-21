@@ -786,7 +786,8 @@ crypto_libbitcoin_crypto_arm_aes_la_CXXFLAGS += $(ARM_AES_CXXFLAGS)
 crypto_libbitcoin_crypto_arm_aes_la_CPPFLAGS += -DENABLE_ARM_AES
 crypto_libbitcoin_crypto_arm_aes_la_SOURCES = \
   crypto/x11/arm_crypto/aes.cpp \
-  crypto/x11/arm_crypto/echo.cpp
+  crypto/x11/arm_crypto/echo.cpp \
+  crypto/x11/arm_crypto/shavite.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above

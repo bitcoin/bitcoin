@@ -49,6 +49,10 @@ void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 namespace arm_crypto_echo {
 void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
 } // namespace arm_crypto_echo
+namespace arm_crypto_shavite {
+void CompressElement(uint32_t& l0, uint32_t& l1, uint32_t& l2, uint32_t& l3,
+                     uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, const uint32_t* rk);
+} // namespace arm_crypto_shavite
 #endif // ENABLE_ARM_AES
 
 #if defined(ENABLE_SSSE3)
@@ -165,6 +169,7 @@ void SapphireAutoDetect()
         aes_round = sapphire::arm_crypto_aes::Round;
         aes_round_nk = sapphire::arm_crypto_aes::RoundKeyless;
         echo_round = sapphire::arm_crypto_echo::FullStateRound;
+        shavite_c512e = sapphire::arm_crypto_shavite::CompressElement;
     }
 #endif // ENABLE_ARM_AES
 #endif // !DISABLE_OPTIMIZED_SHA256
