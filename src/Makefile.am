@@ -95,6 +95,10 @@ if ENABLE_AVX2
 LIBBITCOIN_CRYPTO_AVX2 = crypto/libbitcoin_crypto_avx2.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_AVX2)
 endif
+if ENABLE_ARM_AES
+LIBBITCOIN_CRYPTO_ARM_AES = crypto/libbitcoin_crypto_arm_aes.la
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_AES)
+endif
 if ENABLE_ARM_SHANI
 LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libbitcoin_crypto_arm_shani.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
@@ -772,6 +776,16 @@ crypto_libbitcoin_crypto_sph_la_SOURCES = \
   crypto/x11/sph_types.h \
   crypto/x11/util/consts_aes.hpp \
   crypto/x11/util/util.hpp
+
+# See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libbitcoin_crypto_arm_aes_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libbitcoin_crypto_arm_aes_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libbitcoin_crypto_arm_aes_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_arm_aes_la_CXXFLAGS += $(ARM_AES_CXXFLAGS)
+crypto_libbitcoin_crypto_arm_aes_la_CPPFLAGS += -DENABLE_ARM_AES
+crypto_libbitcoin_crypto_arm_aes_la_SOURCES = \
+  crypto/x11/arm_crypto/aes.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above

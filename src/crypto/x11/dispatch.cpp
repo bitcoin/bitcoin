@@ -10,12 +10,39 @@
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #include <compat/cpuid.h>
+
+#if defined(ENABLE_ARM_AES)
+#if defined(__APPLE__)
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#endif // __APPLE__
+
+#if defined(__linux__)
+#include <asm/hwcap.h>
+#include <sys/auxv.h>
+#endif // __linux__
+
+#if defined(_WIN32)
+#include <processthreadsapi.h>
+#include <winnt.h>
+#endif // _WIN32
+#endif // ENABLE_ARM_AES
 #endif // !DISABLE_OPTIMIZED_SHA256
 
-#include <cstdint>
+#include <cstddef>
 
 namespace sapphire {
 #if !defined(DISABLE_OPTIMIZED_SHA256)
+#if defined(ENABLE_ARM_AES)
+namespace arm_crypto_aes {
+void Round(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+           uint32_t k0, uint32_t k1, uint32_t k2, uint32_t k3,
+           uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
+void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
+                  uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
+} // namespace arm_crypto_aes
+#endif // ENABLE_ARM_AES
+
 #if defined(ENABLE_SSSE3)
 namespace ssse3_echo {
 void ShiftAndMix(uint64_t W[16][2]);
@@ -92,5 +119,34 @@ void SapphireAutoDetect()
     }
 #endif // ENABLE_SSSE3
 #endif // HAVE_GETCPUID
+
+#if defined(ENABLE_ARM_AES)
+    bool have_arm_aes = false;
+#if defined(__APPLE__)
+    int val = 0;
+    size_t len = sizeof(val);
+    if (::sysctlbyname("hw.optional.arm.FEAT_AES", &val, &len, nullptr, 0) == 0) {
+        have_arm_aes = val != 0;
+    }
+#endif // __APPLE__
+
+#if defined(__linux__)
+#if defined(__arm__)
+    have_arm_aes = (::getauxval(AT_HWCAP2) & HWCAP2_AES);
+#endif // __arm__
+#if defined(__aarch64__)
+    have_arm_aes = (::getauxval(AT_HWCAP) & HWCAP_AES);
+#endif // __aarch64__
+#endif // __linux__
+
+#if defined(_WIN32)
+    have_arm_aes = ::IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE);
+#endif // _WIN32
+
+    if (have_arm_aes) {
+        aes_round = sapphire::arm_crypto_aes::Round;
+        aes_round_nk = sapphire::arm_crypto_aes::RoundKeyless;
+    }
+#endif // ENABLE_ARM_AES
 #endif // !DISABLE_OPTIMIZED_SHA256
 }

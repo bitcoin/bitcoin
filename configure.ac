@@ -535,6 +535,7 @@ dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111843. To work around that, se
 dnl -fstack-reuse=none for all gcc builds. (Only gcc understands this flag)
 AX_CHECK_COMPILE_FLAG([-fstack-reuse=none], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fstack-reuse=none"])
 
+enable_arm_aes=no
 enable_arm_crc=no
 enable_arm_shani=no
 enable_ssse3=no
@@ -677,7 +678,22 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 # ARM
 AX_CHECK_COMPILE_FLAG([-march=armv8-a+crc+crypto], [ARM_CRC_CXXFLAGS="-march=armv8-a+crc+crypto"], [], [$CXXFLAG_WERROR])
-AX_CHECK_COMPILE_FLAG([-march=armv8-a+crypto], [ARM_SHANI_CXXFLAGS="-march=armv8-a+crypto"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-march=armv8-a+crypto], [ARM_AES_CXXFLAGS="-march=armv8-a+crypto"; ARM_SHANI_CXXFLAGS="-march=armv8-a+crypto"], [], [$CXXFLAG_WERROR])
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$ARM_AES_CXXFLAGS $CXXFLAGS"
+AC_MSG_CHECKING([for ARMv8 AES intrinsics])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <arm_neon.h>
+  ]],[[
+    uint8x16_t a, b;
+    vaesmcq_u8(vaeseq_u8(a, b));
+    return 0;
+  ]])],
+ [ AC_MSG_RESULT([yes]); enable_arm_aes=yes; AC_DEFINE([ENABLE_ARM_AES], [1], [Define this symbol to build code that uses ARMv8 AES intrinsics]) ],
+ [ AC_MSG_RESULT([no])]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$ARM_CRC_CXXFLAGS $CXXFLAGS"
@@ -1861,6 +1877,7 @@ AM_CONDITIONAL([ENABLE_SSE41], [test "$enable_sse41" = "yes"])
 AM_CONDITIONAL([ENABLE_AVX2], [test "$enable_avx2" = "yes"])
 AM_CONDITIONAL([ENABLE_X86_AESNI], [test "$enable_x86_aesni" = "yes"])
 AM_CONDITIONAL([ENABLE_X86_SHANI], [test "$enable_x86_shani" = "yes"])
+AM_CONDITIONAL([ENABLE_ARM_AES], [test "$enable_arm_aes" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_CRC], [test "$enable_arm_crc" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_SHANI], [test "$enable_arm_shani" = "yes"])
 AM_CONDITIONAL([WORDS_BIGENDIAN], [test "$ac_cv_c_bigendian" = "yes"])
@@ -1922,6 +1939,7 @@ AC_SUBST(CLMUL_CXXFLAGS)
 AC_SUBST(AVX2_CXXFLAGS)
 AC_SUBST(X86_AESNI_CXXFLAGS)
 AC_SUBST(X86_SHANI_CXXFLAGS)
+AC_SUBST(ARM_AES_CXXFLAGS)
 AC_SUBST(ARM_CRC_CXXFLAGS)
 AC_SUBST(ARM_SHANI_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
