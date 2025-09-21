@@ -24,6 +24,9 @@ void Round(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
                   uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
 } // namespace x86_aesni_aes
+namespace x86_aesni_echo {
+void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
+} // namespace x86_aesni_echo
 #endif // ENABLE_SSE41 && ENABLE_X86_AESNI
 #endif // !DISABLE_OPTIMIZED_SHA256
 
@@ -34,6 +37,9 @@ void Round(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
                   uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
 } // namespace soft_aes
+namespace soft_echo {
+void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
+} // namespace soft_echo
 } // namespace sapphire
 
 namespace {
@@ -51,17 +57,20 @@ namespace {
 
 extern sapphire::dispatch::AESRoundFn aes_round;
 extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
+extern sapphire::dispatch::EchoRoundFn echo_round;
 
 void SapphireAutoDetect()
 {
     aes_round = sapphire::soft_aes::Round;
     aes_round_nk = sapphire::soft_aes::RoundKeyless;
+    echo_round = sapphire::soft_echo::FullStateRound;
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #if defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI)
     if (use_aes_ni) {
         aes_round = sapphire::x86_aesni_aes::Round;
         aes_round_nk = sapphire::x86_aesni_aes::RoundKeyless;
+        echo_round = sapphire::x86_aesni_echo::FullStateRound;
     }
 #endif // ENABLE_SSE41 && ENABLE_X86_AESNI
 #endif // !DISABLE_OPTIMIZED_SHA256

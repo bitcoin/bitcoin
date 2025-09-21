@@ -740,6 +740,7 @@ crypto_libbitcoin_crypto_sph_la_CPPFLAGS += \
   -DSPH_SMALL_FOOTPRINT_JH=1
 crypto_libbitcoin_crypto_sph_la_SOURCES = \
   crypto/x11/aes.cpp \
+  crypto/x11/aes.h \
   crypto/x11/blake.c \
   crypto/x11/bmw.c \
   crypto/x11/cubehash.c \
@@ -775,7 +776,9 @@ crypto_libbitcoin_crypto_x86_aesni_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -st
 crypto_libbitcoin_crypto_x86_aesni_la_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libbitcoin_crypto_x86_aesni_la_CXXFLAGS += $(X86_AESNI_CXXFLAGS)
 crypto_libbitcoin_crypto_x86_aesni_la_CPPFLAGS += -DENABLE_SSE41 -DENABLE_X86_AESNI
-crypto_libbitcoin_crypto_x86_aesni_la_SOURCES = crypto/x11/x86_aesni/aes.cpp
+crypto_libbitcoin_crypto_x86_aesni_la_SOURCES = \
+  crypto/x11/x86_aesni/aes.cpp \
+  crypto/x11/x86_aesni/echo.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above

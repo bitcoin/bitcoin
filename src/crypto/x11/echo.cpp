@@ -30,15 +30,13 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
+#include <crypto/x11/aes.h>
 #include <crypto/x11/dispatch.h>
 
 #include <cstddef>
 #include <cstring>
 
 #include "sph_echo.h"
-
-extern sapphire::dispatch::AESRoundFn aes_round;
-extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 
 /*
  * We can use a 64-bit implementation only if a 64-bit type is available.
@@ -50,8 +48,38 @@ extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 #define T32   SPH_T32
 #define C64   SPH_C64
 
+namespace sapphire {
+namespace soft_echo {
+void FullStateRound(sph_u64 W[16][2], sph_u32& K0, sph_u32& K1, sph_u32& K2, sph_u32& K3)
+{
+	for (int n = 0; n < 16; n ++) {
+		sph_u64 Wl = W[n][0];
+		sph_u64 Wh = W[n][1];
+		sph_u32 X0 = (sph_u32)Wl;
+		sph_u32 X1 = (sph_u32)(Wl >> 32);
+		sph_u32 X2 = (sph_u32)Wh;
+		sph_u32 X3 = (sph_u32)(Wh >> 32);
+		sph_u32 Y0, Y1, Y2, Y3;
+		soft_aes::Round(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
+		soft_aes::RoundKeyless(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
+		W[n][0] = (sph_u64)X0 | ((sph_u64)X1 << 32);
+		W[n][1] = (sph_u64)X2 | ((sph_u64)X3 << 32);
+		if ((K0 = T32(K0 + 1)) == 0) {
+			if ((K1 = T32(K1 + 1)) == 0) {
+				if ((K2 = T32(K2 + 1)) == 0) {
+					K3 = T32(K3 + 1);
+				}
+			}
+		}
+	}
+}
+} // namespace soft_echo
+} // namespace sapphire
+
+sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound;
+
 #define DECL_STATE_BIG   \
-	sph_u64 W[16][2];
+	alignas(16) sph_u64 W[16][2];
 
 #define INPUT_BLOCK_BIG(sc)   do { \
 		unsigned u; \
@@ -62,44 +90,6 @@ extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 			W[u + 8][1] = sph_dec64le_aligned( \
 				sc->buf + 16 * u + 8); \
 		} \
-	} while (0)
-
-static void
-aes_2rounds_all(sph_u64 W[16][2],
-	sph_u32 *pK0, sph_u32 *pK1, sph_u32 *pK2, sph_u32 *pK3)
-{
-	int n;
-	sph_u32 K0 = *pK0;
-	sph_u32 K1 = *pK1;
-	sph_u32 K2 = *pK2;
-	sph_u32 K3 = *pK3;
-
-	for (n = 0; n < 16; n ++) {
-		sph_u64 Wl = W[n][0];
-		sph_u64 Wh = W[n][1];
-		sph_u32 X0 = (sph_u32)Wl;
-		sph_u32 X1 = (sph_u32)(Wl >> 32);
-		sph_u32 X2 = (sph_u32)Wh;
-		sph_u32 X3 = (sph_u32)(Wh >> 32);
-		sph_u32 Y0, Y1, Y2, Y3; \
-		aes_round(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
-		aes_round_nk(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
-		W[n][0] = (sph_u64)X0 | ((sph_u64)X1 << 32);
-		W[n][1] = (sph_u64)X2 | ((sph_u64)X3 << 32);
-		if ((K0 = T32(K0 + 1)) == 0) {
-			if ((K1 = T32(K1 + 1)) == 0)
-				if ((K2 = T32(K2 + 1)) == 0)
-					K3 = T32(K3 + 1);
-		}
-	}
-	*pK0 = K0;
-	*pK1 = K1;
-	*pK2 = K2;
-	*pK3 = K3;
-}
-
-#define BIG_SUB_WORDS   do { \
-		aes_2rounds_all(W, &K0, &K1, &K2, &K3); \
 	} while (0)
 
 #define SHIFT_ROW1(a, b, c, d)   do { \
@@ -176,7 +166,7 @@ mix_column(sph_u64 W[16][2], int ia, int ib, int ic, int id)
 	} while (0)
 
 #define BIG_ROUND   do { \
-		BIG_SUB_WORDS; \
+		echo_round(W, K0, K1, K2, K3); \
 		BIG_SHIFT_ROWS; \
 		BIG_MIX_COLUMNS; \
 	} while (0)
