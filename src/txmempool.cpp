@@ -358,9 +358,16 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 // Calculates descendants of given entry and adds to setDescendants.
 void CTxMemPool::CalculateDescendants(txiter entryit, setEntries& setDescendants) const
 {
-    for (auto tx : m_txgraph->GetDescendants(*entryit, TxGraph::Level::MAIN)) {
+    (void)CalculateDescendants(*entryit, setDescendants);
+    return;
+}
+
+CTxMemPool::txiter CTxMemPool::CalculateDescendants(const CTxMemPoolEntry& entry, setEntries& setDescendants) const
+{
+    for (auto tx : m_txgraph->GetDescendants(entry, TxGraph::Level::MAIN)) {
         setDescendants.insert(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*tx)));
     }
+    return mapTx.iterator_to(entry);
 }
 
 void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReason reason)
