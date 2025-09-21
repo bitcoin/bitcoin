@@ -120,7 +120,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished">Změna hesla</translation>
+        <translation type="unfinished">Dialog pro zadání hesla</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
@@ -132,7 +132,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished">Totéž heslo ještě jednou</translation>
+        <translation type="unfinished">Zopakujte nové heslo</translation>
     </message>
     <message>
         <source>Show passphrase</source>
@@ -332,7 +332,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Inbound</source>
         <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
-        <translation type="unfinished">Sem</translation>
+        <translation type="unfinished">Příchozí</translation>
     </message>
     <message>
         <source>Outbound</source>
@@ -582,7 +582,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished">Nápověd&amp;a</translation>
+        <translation type="unfinished">&amp;Nápověda</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -686,11 +686,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
-        <translation type="unfinished">Odesílací adresy</translation>
+        <translation type="unfinished">&amp;Odesílací adresy</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">Přijímací adresy</translation>
+        <translation type="unfinished">&amp;Přijímací adresy</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
@@ -784,11 +784,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Hide</source>
-        <translation type="unfinished">Skryj</translation>
+        <translation type="unfinished">&amp;Skryj</translation>
     </message>
     <message>
         <source>S&amp;how</source>
-        <translation type="unfinished">Zobraz</translation>
+        <translation type="unfinished">&amp;Zobraz</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -1011,7 +1011,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Kopíruj čistou částku</translation>
+        <translation type="unfinished">Zkopírovat částku po odečtení poplatku</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -1100,11 +1100,11 @@ If this wallet contains any watchonly scripts, a new wallet will be created whic
 If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
 
 The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
-        <translation type="unfinished">Migrace peněženky povede k její přeměně na jednu nebo více deskriptorových peněženek. Bude třeba vytvořit novou zálohu peněženky.
-Pokud peněženka obsahuje jakékoliv skripty, které lze pouze sledovat, bude vytvořena nová peněženka pouze pro tyto skripty.
-Pokud tato peněženka obsahuje jakékoliv řešitelné skripty, které nejdou sledovat, bude vytvořena nová jiná peněženka, která bude obsahovat tyto skripty.
+        <translation type="unfinished">Migrace peněženky ji převede na jednu nebo více deskriptorových peněženek. Bude třeba vytvořit novou zálohu peněženky.
+Pokud tato peněženka obsahuje jakékoli skripty určené pouze ke sledování, bude vytvořena nová peněženka, která bude tyto skripty obsahovat.
+Pokud tato peněženka obsahuje jakékoli řešitelné, ale nesledované skripty, bude vytvořena další nová peněženka, která bude tyto skripty obsahovat.
 
-Proces migrace vytvoří zálohu peněženky přes samotnou migrací. Soubor se zálohou se bude nazývat &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak a bude umístěn v adresáři s touto peněženkou. V případě nepovedené migrace je možné provést obnovu prostřednitvím funkce "Obnovit peněženku".</translation>
+Proces migrace vytvoří zálohu peněženky před samotnou migrací. Tento záložní soubor se bude jmenovat &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak a bude umístěn v adresáři této peněženky. V případě chybné migrace lze zálohu obnovit pomocí funkce "Obnovit peněženku".</translation>
     </message>
     <message>
         <source>Migrate Wallet</source>
@@ -1499,7 +1499,7 @@ Proces migrace vytvoří zálohu peněženky přes samotnou migrací. Soubor se 
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Utrácení bitcoinů, které už utratily zatím nezobrazené transakce, nebude bitcoinovou sítí umožněno.</translation>
+        <translation type="unfinished">Pokus o utracení bitcoinů, které jsou ovlivněny dosud nezobrazenými transakcemi, nebude sítí akceptován.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1623,7 +1623,7 @@ Proces migrace vytvoří zálohu peněženky přes samotnou migrací. Soubor se 
     </message>
     <message>
         <source>Font in the Overview tab: </source>
-        <translation type="unfinished">Písmo s pevnou šířkou v panelu Přehled:</translation>
+        <translation type="unfinished">Písmo na kartě Přehled:</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line:</source>
@@ -1770,7 +1770,7 @@ Proces migrace vytvoří zálohu peněženky přes samotnou migrací. Soubor se 
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation type="unfinished">&amp;Minimalizovávat do ikony v panelu</translation>
+        <translation type="unfinished">&amp;Minimalizovat do oznamovací oblasti místo na hlavní panel</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -1815,10 +1815,6 @@ Proces migrace vytvoří zálohu peněženky přes samotnou migrací. Soubor se 
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
         <translation type="unfinished">Použít samostatnou SOCKS&amp;5 proxy ke spojení s protějšky přes skryté služby v Toru:</translation>
-    </message>
-    <message>
-        <source>&amp;OK</source>
-        <translation type="unfinished">&amp;Budiž</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -2022,7 +2018,7 @@ Proces migrace vytvoří zálohu peněženky přes samotnou migrací. Soubor se 
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">Zachovaj procesní data</translation>
+        <translation type="unfinished">Uložit transakční data</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (Binary)</source>
@@ -2079,7 +2075,7 @@ Proces migrace vytvoří zálohu peněženky přes samotnou migrací. Soubor se 
     </message>
     <message>
         <source>(But this wallet does not have the right keys.)</source>
-        <translation type="unfinished">Ale tenhle vstup nemá správné klíče</translation>
+        <translation type="unfinished">(Ale tato peněženka nemá správné klíče.)</translation>
     </message>
     <message>
         <source>Transaction is fully signed and ready for broadcast.</source>
@@ -2180,7 +2176,7 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
     <message>
         <source>Inbound</source>
         <extracomment>An Inbound Connection from a Peer.</extracomment>
-        <translation type="unfinished">Sem</translation>
+        <translation type="unfinished">Příchozí</translation>
     </message>
     <message>
         <source>Outbound</source>
@@ -2248,7 +2244,7 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
     </message>
     <message>
         <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
-        <translation type="unfinished">Pro specifikaci neklasické lokace pro data použij možnost '%1'</translation>
+        <translation type="unfinished">Pro zadání jiného umístění adresáře s bloky použijte volbu '%1'.</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -2360,7 +2356,7 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
     </message>
     <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
-        <translation type="unfinished">Mapovaný nezávislý - Autonomní Systém používaný pro rozšírení vzájemného výběru protějsků.</translation>
+        <translation type="unfinished">Mapovaný autonomní systém používaný ke zpestření výběru peerů.</translation>
     </message>
     <message>
         <source>Mapped AS</source>
@@ -2394,7 +2390,7 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
     <message>
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
-        <translation type="unfinished">Adresy s omezením počtu přijatých adres</translation>
+        <translation type="unfinished">Adresy omezené rychlostí</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2406,7 +2402,7 @@ Pokud vidíte tuto chybu, měli byste požádat, aby obchodník poskytl adresu k
     </message>
     <message>
         <source>Current block height</source>
-        <translation type="unfinished">Velikost aktuálního bloku</translation>
+        <translation type="unfinished">Aktuální výška bloku</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2684,7 +2680,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Ban for</source>
-        <translation type="unfinished">Uval klatbu na</translation>
+        <translation type="unfinished">Zákaz na</translation>
     </message>
     <message>
         <source>Never</source>
@@ -2715,7 +2711,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished">Volitelné označení, které se má přiřadit k nové adrese.</translation>
+        <translation type="unfinished">Volitelný štítek, který se má přiřadit k nové přijímající adrese.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2727,7 +2723,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
-        <translation type="unfinished">Volitelný popis který sa přidá k téjo nové přijímací adrese (pro jednoduchší identifikaci). Tenhle popis bude také přidán do výzvy k platbě.</translation>
+        <translation type="unfinished">Volitelný štítek k přiřazení nové přijímací adrese (použijete jej k identifikaci faktury). Je také připojen k platební žádosti.</translation>
     </message>
     <message>
         <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
@@ -2759,7 +2755,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation type="unfinished">Smaž zvolené požadavky ze seznamu</translation>
+        <translation type="unfinished">Odstranit vybrané položky ze seznamu</translation>
     </message>
     <message>
         <source>Remove</source>
@@ -3000,7 +2996,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <source>Hide transaction fee settings</source>
-        <translation type="unfinished">Schovat nastavení poplatků transakce - transaction fee</translation>
+        <translation type="unfinished">Skrýt nastavení poplatků za transakci</translation>
     </message>
     <message>
         <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
@@ -3012,7 +3008,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation type="unfinished">Když je zde měně transakcí než místa na bloky, mineři stejně tak relay-e mohou nasadit minimální poplatky. Zaplacením pouze minimálního poplatku je v pohodě, ale mějte na paměti že toto může mít za následek nikdy neověřenou transakci pokud zde bude více bitcoinových transakcí než může síť zvládnout.</translation>
+        <translation type="unfinished">Když je menší objem transakcí než je místa v blocích, mohou těžaři i uzly, které transakce předávají, vyžadovat minimální poplatek. Zaplatit pouze tento minimální poplatek je v pořádku, ale mějte na paměti, že to může vést k tomu, že vaše transakce nikdy nebude potvrzena, pokud bude větší poptávka po bitcoinových transakcích, než kolik síť zvládne zpracovat.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
@@ -3036,7 +3032,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation type="unfinished">Všechno &amp;smaž</translation>
+        <translation type="unfinished">Smazat &amp;vše</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -3064,7 +3060,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Kopíruj čistou částku</translation>
+        <translation type="unfinished">Zkopírovat částku po odečtení poplatku</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -3094,7 +3090,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Cr&amp;eate Unsigned</source>
-        <translation type="unfinished">Vytvořit bez podpisu</translation>
+        <translation type="unfinished">Vytvořit &amp;bez podpisu</translation>
     </message>
     <message>
         <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -3128,7 +3124,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">Zachovej procesní data</translation>
+        <translation type="unfinished">Uložit údaje o transakci</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (Binary)</source>
@@ -3315,7 +3311,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished">Zadej označení této adresy; obojí se ti pak uloží do adresáře</translation>
+        <translation type="unfinished">Zadej popisek pro tuto adresu, aby byla přidána do seznamu použitých adres</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
@@ -3369,7 +3365,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Copy the current signature to the clipboard</source>
-        <translation type="unfinished">Zkopírovat právě vybraný podpis do schránky</translation>
+        <translation type="unfinished">Zkopírovat aktuální podpis do schránky</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -3381,11 +3377,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation type="unfinished">Vymaž všechna pole formuláře pro podepsání zrávy</translation>
+        <translation type="unfinished">Resetuj všechna pole formuláře pro podepsání zprávy</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation type="unfinished">Všechno &amp;smaž</translation>
+        <translation type="unfinished">Smazat &amp;vše</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
@@ -3417,7 +3413,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation type="unfinished">Vymaž všechna pole formuláře pro ověření zrávy</translation>
+        <translation type="unfinished">Resetovat všechna pole formuláře pro ověření zprávy</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
@@ -3429,7 +3425,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished">Zkontroluj ji prosím a zkus to pak znovu.</translation>
+        <translation type="unfinished">Zkontrolujte prosím adresu a zkuste to znovu.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.</source>
@@ -3938,7 +3934,7 @@ Přejděte do Soubor &gt; Otevřít peněženku pro načtení peněženky.
     </message>
     <message>
         <source>Increasing transaction fee failed</source>
-        <translation type="unfinished">Nepodařilo se navýšeit poplatek</translation>
+        <translation type="unfinished">Nepodařilo se navýšit poplatek</translation>
     </message>
     <message>
         <source>Do you want to increase the fee?</source>
@@ -3979,7 +3975,7 @@ Přejděte do Soubor &gt; Otevřít peněženku pro načtení peněženky.
     </message>
     <message>
         <source>Could not commit transaction</source>
-        <translation type="unfinished">Nemohl jsem uložit transakci do peněženky</translation>
+        <translation type="unfinished">Nelze potvrdit transakci</translation>
     </message>
     <message>
         <source>Signer error</source>
@@ -4038,7 +4034,7 @@ Přejděte do Soubor &gt; Otevřít peněženku pro načtení peněženky.
     </message>
     <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation type="unfinished"> %s Žádost o poslech na portu 2 %u . Tento port je považován za "špatný", a proto je nepravděpodobné, že by se k němu připojil nějaký peer. Viz doc/p2p-bad-ports.md pro podrobnosti a úplný seznam.</translation>
+        <translation type="unfinished"> %s Žádost o poslech na portu %u . Tento port je považován za "špatný", a proto je nepravděpodobné, že by se k němu připojil nějaký peer. Viz doc/p2p-bad-ports.md pro podrobnosti a úplný seznam.</translation>
     </message>
     <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
@@ -4131,7 +4127,7 @@ Ověřuji peněženku.</translation>
     </message>
     <message>
         <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
-        <translation type="unfinished">Jedná se o maximální poplatek, který zaplatíte (navíc k běžnému poplatku), aby se upřednostnila útrata z dosud nepoužitých adres oproti těm už jednou použitých.</translation>
+        <translation type="unfinished">Jedná se o maximální poplatek, který zaplatíte (navíc k běžnému poplatku), abyste upřednostnili vyhýbání se částečnému utrácení před běžným výběrem mincí.</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -4273,11 +4269,11 @@ Ověřuji peněženku.</translation>
     </message>
     <message>
         <source>Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.</source>
-        <translation type="unfinished">Možnosti '-datacarrier' a '-datacarriersize' jsou nastaveny, ale jsou označené za zastaralé. V budoucí verzi budou odstraněny.</translation>
+        <translation type="unfinished">Možnosti '-datacarrier' nebo '-datacarriersize' jsou nastaveny, ale jsou označeny jako zastaralé. V některé z budoucích verzí budou odstraněny.</translation>
     </message>
     <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
-        <translation type="unfinished">Odchozí připojení omezená na CJDNS (-onlynet=cjdns), ale -cjdnsreachable nejsou k dispozici</translation>
+        <translation type="unfinished">Odchozí připojení jsou omezena na CJDNS (-onlynet=cjdns), ale -cjdnsreachable není zadán</translation>
     </message>
     <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
@@ -4293,7 +4289,7 @@ Ověřuji peněženku.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)</source>
-        <translation type="unfinished">Prořezávání: poslední synchronizace peněženky proběhla před už prořezanými daty. Je třeba provést -reindex (tedy v případě režimu prořezávání stáhnout celý blockchain znovu)</translation>
+        <translation type="unfinished">Prořezávání: poslední synchronizace peněženky spadá do již prořezaných dat. Je třeba provést -reindex (v případě prořezávaného uzlu se znovu stáhne celý blockchain).</translation>
     </message>
     <message>
         <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
@@ -4367,7 +4363,7 @@ Nelze obnovit zálohu peněženky.</translation>
     </message>
     <message>
         <source>-paytxfee is deprecated and will be fully removed in v31.0.</source>
-        <translation type="unfinished">Možnost -paytxfee je zastaralá a bude v příští verzi v31.0 plně odstraněna</translation>
+        <translation type="unfinished"> Volba -paytxfee je zastaralá a bude ve verzi 31.0 úplně odstraněna.</translation>
     </message>
     <message>
         <source>A fatal internal error occurred, see debug.log for details: </source>
@@ -4575,7 +4571,7 @@ Nelze obnovit zálohu peněženky.</translation>
     </message>
     <message>
         <source>Error: Unable to write data to disk for wallet %s</source>
-        <translation type="unfinished">Chyba: Nepodařilo se zapsat data peněženky %sna disk</translation>
+        <translation type="unfinished">Chyba: Nepodařilo se zapsat data na disk pro peněženku %s</translation>
     </message>
     <message>
         <source>Error: Unable to write record to new wallet</source>
@@ -4695,7 +4691,7 @@ Nelze obnovit zálohu peněženky.</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Neplatná částka %s=&lt;amount&gt;:'%s' (musí být alespoň%s)</translation>
+        <translation type="unfinished">Neplatná částka %s=&lt;amount&gt;:'%s' (musí být alespoň %s)</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
@@ -4999,7 +4995,7 @@ Nelze obnovit zálohu peněženky.</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC).</source>
-        <translation type="unfinished">Chyba při načítání %s: Zastaralý typ peněženky. Převeďte ji prosím na deskriptorovou pomocí převodného nástroje (migratewallet RPC)</translation>
+        <translation type="unfinished">Chyba při načítání %s: Zastaralý typ peněženky. Převeďte ji prosím na deskriptorovou peněženku pomocí migračního nástroje (migratewallet RPC).</translation>
     </message>
     <message>
         <source>Error: Dumpfile specifies an unsupported database format (%s). Only sqlite database dumps are supported</source>
@@ -5011,7 +5007,7 @@ Nelze obnovit zálohu peněženky.</translation>
     </message>
     <message>
         <source>Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input</source>
-        <translation type="unfinished">Transakce vyžaduje jeden cíl nenulové hodnoty, nenulový poplatek nebo předvybraný vstup</translation>
+        <translation type="unfinished">Transakce vyžaduje jeden cíl s nenulovou hodnotou, nenulovou sazbu poplatku nebo předem vybraný vstup</translation>
     </message>
     <message>
         <source>Unrecognized descriptor found. Loading wallet %s
@@ -5031,7 +5027,7 @@ Zkuste prosím spustit nejnovější verzi softwaru.
     </message>
     <message>
         <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
-        <translation type="unfinished">Chyba: Nelze přidat pouze-sledovací tx %s do peněženky pro čtení</translation>
+        <translation type="unfinished">Chyba: Nelze přidat transakci pouze pro sledování %s do peněženky pouze pro sledování</translation>
     </message>
     <message>
         <source>Error: Could not delete watchonly transactions. </source>
@@ -5055,11 +5051,11 @@ Zkuste prosím spustit nejnovější verzi softwaru.
     </message>
     <message>
         <source>Not enough file descriptors available. %d available, %d required.</source>
-        <translation type="unfinished">Nedostatek volných file deskriptorů. %dvolných, %dvyžadovaných</translation>
+        <translation type="unfinished">Nedostatek volných souborových deskriptorů. %dvolných, %dvyžadovaných.</translation>
     </message>
     <message>
         <source>Unrecognized network in -proxy='%s': '%s'</source>
-        <translation type="unfinished">Nerozeznaná síť v -proxy='%s': '%s'</translation>
+        <translation type="unfinished">Nerozpoznaná síť v -proxy='%s': '%s'</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
