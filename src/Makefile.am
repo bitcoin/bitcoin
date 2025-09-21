@@ -789,7 +789,6 @@ crypto_libbitcoin_crypto_arm_aes_la_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libbitcoin_crypto_arm_aes_la_CXXFLAGS += $(ARM_AES_CXXFLAGS)
 crypto_libbitcoin_crypto_arm_aes_la_CPPFLAGS += -DENABLE_ARM_AES
 crypto_libbitcoin_crypto_arm_aes_la_SOURCES = \
-  crypto/x11/arm_crypto/aes.cpp \
   crypto/x11/arm_crypto/echo.cpp \
   crypto/x11/arm_crypto/shavite.cpp
 
@@ -821,7 +820,6 @@ crypto_libbitcoin_crypto_x86_aesni_la_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libbitcoin_crypto_x86_aesni_la_CXXFLAGS += $(X86_AESNI_CXXFLAGS)
 crypto_libbitcoin_crypto_x86_aesni_la_CPPFLAGS += -DENABLE_SSE41 -DENABLE_X86_AESNI
 crypto_libbitcoin_crypto_x86_aesni_la_SOURCES = \
-  crypto/x11/x86_aesni/aes.cpp \
   crypto/x11/x86_aesni/echo.cpp \
   crypto/x11/x86_aesni/shavite.cpp
 

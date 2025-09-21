@@ -39,13 +39,6 @@
 namespace sapphire {
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #if defined(ENABLE_ARM_AES)
-namespace arm_crypto_aes {
-void Round(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
-           uint32_t k0, uint32_t k1, uint32_t k2, uint32_t k3,
-           uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
-void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
-                  uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
-} // namespace arm_crypto_aes
 namespace arm_crypto_echo {
 void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
 } // namespace arm_crypto_echo
@@ -67,13 +60,6 @@ void ShiftAndMix(uint64_t W[16][2]);
 #endif // ENABLE_SSSE3
 
 #if defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI)
-namespace x86_aesni_aes {
-void Round(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
-           uint32_t k0, uint32_t k1, uint32_t k2, uint32_t k3,
-           uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
-void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
-                  uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
-} // namespace x86_aesni_aes
 namespace x86_aesni_echo {
 void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
 } // namespace x86_aesni_echo
@@ -83,13 +69,6 @@ void Compress(sph_shavite_big_context *sc, const void *msg);
 #endif // ENABLE_SSE41 && ENABLE_X86_AESNI
 #endif // !DISABLE_OPTIMIZED_SHA256
 
-namespace soft_aes {
-void Round(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
-           uint32_t k0, uint32_t k1, uint32_t k2, uint32_t k3,
-           uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
-void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
-                  uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
-} // namespace soft_aes
 namespace soft_echo {
 void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
 void ShiftAndMix(uint64_t W[16][2]);
@@ -114,16 +93,12 @@ bool IsSysCtlNonZero(const char* name)
 #endif // !DISABLE_OPTIMIZED_SHA256
 } // anonymous namespace
 
-extern sapphire::dispatch::AESRoundFn aes_round;
-extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 extern sapphire::dispatch::EchoShiftMix echo_shift_mix;
 extern sapphire::dispatch::EchoRoundFn echo_round;
 extern sapphire::dispatch::ShaviteCompressFn shavite_c512;
 
 void SapphireAutoDetect()
 {
-    aes_round = sapphire::soft_aes::Round;
-    aes_round_nk = sapphire::soft_aes::RoundKeyless;
     echo_round = sapphire::soft_echo::FullStateRound;
     echo_shift_mix = sapphire::soft_echo::ShiftAndMix;
     shavite_c512 = sapphire::soft_shavite::Compress;
@@ -136,8 +111,6 @@ void SapphireAutoDetect()
     const bool use_sse_4_1 = ((ecx >> 19) & 1);
     const bool use_aes_ni = ((ecx >> 25) & 1);
     if (use_sse_4_1 && use_aes_ni) {
-        aes_round = sapphire::x86_aesni_aes::Round;
-        aes_round_nk = sapphire::x86_aesni_aes::RoundKeyless;
         echo_round = sapphire::x86_aesni_echo::FullStateRound;
         shavite_c512 = sapphire::x86_aesni_shavite::Compress;
     }
@@ -192,8 +165,6 @@ void SapphireAutoDetect()
 
 #if defined(ENABLE_ARM_AES)
     if (have_arm_aes) {
-        aes_round = sapphire::arm_crypto_aes::Round;
-        aes_round_nk = sapphire::arm_crypto_aes::RoundKeyless;
         echo_round = sapphire::arm_crypto_echo::FullStateRound;
         shavite_c512 = sapphire::arm_crypto_shavite::Compress;
     }

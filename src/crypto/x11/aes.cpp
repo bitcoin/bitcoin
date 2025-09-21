@@ -27,6 +27,3 @@ void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 }
 } // namespace soft_aes
 } // namespace sapphire
-
-sapphire::dispatch::AESRoundFn aes_round = sapphire::soft_aes::Round;
-sapphire::dispatch::AESRoundFnNk aes_round_nk = sapphire::soft_aes::RoundKeyless;
