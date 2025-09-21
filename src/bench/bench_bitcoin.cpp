@@ -6,6 +6,7 @@
 
 #include <clientversion.h>
 #include <crypto/sha256.h>
+#include <crypto/x11/dispatch.h>
 #include <fs.h>
 #include <util/strencodings.h>
 #include <util/system.h>
@@ -61,6 +62,7 @@ int main(int argc, char** argv)
 {
     ArgsManager argsman;
     SetupBenchArgs(argsman);
+    SapphireAutoDetect();
     SHA256AutoDetect();
     std::string error;
     if (!argsman.ParseParameters(argc, argv, error)) {

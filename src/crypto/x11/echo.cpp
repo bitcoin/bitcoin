@@ -30,10 +30,15 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#include <stddef.h>
-#include <string.h>
+#include <crypto/x11/dispatch.h>
+
+#include <cstddef>
+#include <cstring>
 
 #include "sph_echo.h"
+
+extern sapphire::dispatch::AESRoundFn aes_round;
+extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 
 /*
  * We can use a 64-bit implementation only if a 64-bit type is available.
@@ -44,8 +49,6 @@
 
 #define T32   SPH_T32
 #define C64   SPH_C64
-
-#include "aes_helper.hpp"
 
 #define DECL_STATE_BIG   \
 	sph_u64 W[16][2];
@@ -79,8 +82,8 @@ aes_2rounds_all(sph_u64 W[16][2],
 		sph_u32 X2 = (sph_u32)Wh;
 		sph_u32 X3 = (sph_u32)(Wh >> 32);
 		sph_u32 Y0, Y1, Y2, Y3; \
-		AES_ROUND_LE(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
-		AES_ROUND_NOKEY_LE(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
+		aes_round(X0, X1, X2, X3, K0, K1, K2, K3, Y0, Y1, Y2, Y3);
+		aes_round_nk(Y0, Y1, Y2, Y3, X0, X1, X2, X3);
 		W[n][0] = (sph_u64)X0 | ((sph_u64)X1 << 32);
 		W[n][1] = (sph_u64)X2 | ((sph_u64)X3 << 32);
 		if ((K0 = T32(K0 + 1)) == 0) {

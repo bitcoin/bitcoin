@@ -30,10 +30,14 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
-#include <stddef.h>
-#include <string.h>
+#include <crypto/x11/dispatch.h>
+
+#include <cstddef>
+#include <cstring>
 
 #include "sph_shavite.h"
+
+extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 
 #ifdef _MSC_VER
 #pragma warning (disable: 4146)
@@ -53,8 +57,6 @@
  * is commented out afterwards.
  */
 
-#include "aes_helper.hpp"
-
 static const sph_u32 IV512[] = {
 	C32(0x72FCCDD8), C32(0x79CA4727), C32(0x128A077B), C32(0x40D55AEC),
 	C32(0xD1901A06), C32(0x430AE307), C32(0xB29F5CD1), C32(0xDF07FBFC),
@@ -63,7 +65,7 @@ static const sph_u32 IV512[] = {
 };
 
 #define AES_ROUND_NOKEY(x0, x1, x2, x3)   do { \
-		AES_ROUND_NOKEY_LE(x0, x1, x2, x3, x0, x1, x2, x3); \
+		aes_round_nk(x0, x1, x2, x3, x0, x1, x2, x3); \
 	} while (0)
 
 /*

@@ -735,10 +735,12 @@ crypto_libbitcoin_crypto_sph_la_CPPFLAGS += \
   -DSPH_SMALL_FOOTPRINT_CUBEHASH=1 \
   -DSPH_SMALL_FOOTPRINT_JH=1
 crypto_libbitcoin_crypto_sph_la_SOURCES = \
-  crypto/x11/aes_helper.hpp \
+  crypto/x11/aes.cpp \
   crypto/x11/blake.c \
   crypto/x11/bmw.c \
   crypto/x11/cubehash.c \
+  crypto/x11/dispatch.cpp \
+  crypto/x11/dispatch.h \
   crypto/x11/echo.cpp \
   crypto/x11/groestl.c \
   crypto/x11/jh.c \
@@ -758,7 +760,9 @@ crypto_libbitcoin_crypto_sph_la_SOURCES = \
   crypto/x11/sph_shavite.h \
   crypto/x11/sph_simd.h \
   crypto/x11/sph_skein.h \
-  crypto/x11/sph_types.h
+  crypto/x11/sph_types.h \
+  crypto/x11/util/consts_aes.hpp \
+  crypto/x11/util/util.hpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above
