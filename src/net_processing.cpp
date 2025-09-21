@@ -168,12 +168,10 @@ static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL{2s};
 /** Maximum rate of inventory items to send per second.
  *  Limits the impact of low-fee transaction floods. */
 static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND{14};
+/** Average time that inventory items stay in the queue under high load. */
+static constexpr std::chrono::duration<double> INVENTORY_AVG_TIME_IN_QUEUE{60.0s};
 /** Target number of tx inventory items to send per transmission. */
 static constexpr unsigned int INVENTORY_BROADCAST_TARGET = INVENTORY_BROADCAST_PER_SECOND * count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL);
-/** Maximum number of inventory items to send per transmission. */
-static constexpr unsigned int INVENTORY_BROADCAST_MAX = 1000;
-static_assert(INVENTORY_BROADCAST_MAX >= INVENTORY_BROADCAST_TARGET, "INVENTORY_BROADCAST_MAX too low");
-static_assert(INVENTORY_BROADCAST_MAX <= node::MAX_PEER_TX_ANNOUNCEMENTS, "INVENTORY_BROADCAST_MAX too high");
 /** Average delay between feefilter broadcasts in seconds. */
 static constexpr auto AVG_FEEFILTER_BROADCAST_INTERVAL{10min};
 /** Maximum feefilter broadcast delay after significant change. */
@@ -310,6 +308,13 @@ struct Peer {
         /** The next time after which we will send an `inv` message containing
          *  transaction announcements to this peer. */
         std::chrono::microseconds m_next_inv_send_time GUARDED_BY(m_tx_inventory_mutex){0};
+        /** This is the timestamp of the last trickle INV sent, adjusted to account for the fact
+         *  that we cannot send a fractional amount of inventories:
+         *  - Whenever the transaction INV queue drains, it is set to the current time.
+         *  - Whenever an incomplete transaction INV send happens, it is set to the time at which
+         *    the actual (integral) number of sent inventories would have matched the formula for
+         *    how much to send. */
+        NodeClock::time_point m_last_virtual_send_time GUARDED_BY(m_tx_inventory_mutex);
         /** The mempool sequence num at which we sent the last `inv` message to this peer.
          *  Can relay txs with lower sequence numbers than this (see CTxMempool::info_for_relay). */
         uint64_t m_last_inv_sequence GUARDED_BY(NetEventsInterface::g_msgproc_mutex){1};
@@ -324,6 +329,8 @@ struct Peer {
         LOCK(m_tx_relay_mutex);
         Assume(!m_tx_relay);
         m_tx_relay = std::make_unique<Peer::TxRelay>();
+        LOCK(m_tx_relay->m_tx_inventory_mutex);
+        m_tx_relay->m_last_virtual_send_time = NodeClock::now();
         return m_tx_relay.get();
     };
 
@@ -5475,7 +5482,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     if (!pto->fSuccessfullyConnected || pto->fDisconnect)
         return true;
 
-    const auto current_time{GetTime<std::chrono::microseconds>()};
+    const auto current_timestamp = NodeClock::now();
+    const auto current_time = std::chrono::duration_cast<std::chrono::microseconds>(current_timestamp.time_since_epoch());
 
     if (pto->IsAddrFetchConn() && current_time - pto->m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
         LogDebug(BCLog::NET, "addrfetch connection timeout, %s\n", pto->DisconnectMsg(fLogIPs));
@@ -5691,7 +5699,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         std::vector<CInv> vInv;
         {
             LOCK(peer->m_block_inv_mutex);
-            vInv.reserve(std::max<size_t>(peer->m_blocks_for_inv_relay.size(), INVENTORY_BROADCAST_TARGET));
+            vInv.reserve(peer->m_blocks_for_inv_relay.size());
 
             // Add blocks
             for (const uint256& hash : peer->m_blocks_for_inv_relay) {
@@ -5772,14 +5780,33 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // especially since we have many peers and some will draw much shorter delays.
                     unsigned int nRelayedTransactions = 0;
                     LOCK(tx_relay->m_bloom_filter_mutex);
-                    size_t broadcast_max{INVENTORY_BROADCAST_TARGET + (tx_relay->m_tx_inventory_to_send.size()/1000)*5};
-                    broadcast_max = std::min<size_t>(INVENTORY_BROADCAST_MAX, broadcast_max);
-                    while (!vInvTx.empty() && nRelayedTransactions < broadcast_max) {
+                    /** The size of the queue which we're going to send a subset of. This is
+                     *  initially equal to the size of the actual queue, but if during processing
+                     *  below we discover transactions that don't need to be sent (already known,
+                     *  feefilter, not in mempool anymore, ...), we reduce this number to account
+                     *  for that. However, transactions that are actually sent are not subtracted
+                     *  from this. */
+                    size_t queue_size = tx_relay->m_tx_inventory_to_send.size();
+                    /** The time since the last virtual trickle send. */
+                    const std::chrono::duration<double> time_in_queue(current_timestamp - tx_relay->m_last_virtual_send_time);
+                    /** On every trickle, we send up to
+                     *
+                     *  INVENTORY_BROADCAST_TARGET + queue_size * (1 - exp(-time_in_queue / INVENTORY_AVG_TIME_IN_QUEUE))
+                     *
+                     * inventories. The second term corresponds to an exponentially-decaying queue
+                     * size with time constant INVENTORY_AVG_TIME_IN_QUEUE. Its half-life is ln(2),
+                     * or 0.693 times INVENTORY_AVG_TIME_IN_QUEUE. */
+                    const double queue_fraction = std::max(0.0, -expm1(-time_in_queue / INVENTORY_AVG_TIME_IN_QUEUE));
+                    vInv.reserve(std::min<size_t>(MAX_INV_SZ, vInv.size() + std::min<size_t>(vInvTx.size(), INVENTORY_BROADCAST_TARGET + queue_size * queue_fraction)));
+                    // Loop as long as there are transactions to send, and adding one more would
+                    // not cause the formula above to be exceeded.
+                    while (!vInvTx.empty() && INVENTORY_BROADCAST_TARGET + queue_size * queue_fraction >= nRelayedTransactions + 1.0) {
                         // Fetch the top element from the heap
                         std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                         std::set<Wtxid>::iterator it = vInvTx.back();
                         vInvTx.pop_back();
                         auto wtxid = *it;
+                        --queue_size;
                         // Remove it from the to-be-sent set
                         tx_relay->m_tx_inventory_to_send.erase(it);
                         // Not in the mempool anymore? don't bother sending it.
@@ -5804,6 +5831,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                         // Send
                         vInv.push_back(inv);
+                        ++queue_size;
                         nRelayedTransactions++;
                         if (vInv.size() == MAX_INV_SZ) {
                             MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
@@ -5812,6 +5840,22 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
                     }
 
+                    if (vInvTx.empty()) {
+                        // If the queue drained, set the virtual send time to now.
+                        tx_relay->m_last_virtual_send_time = current_timestamp;
+                    } else if (nRelayedTransactions > INVENTORY_BROADCAST_TARGET) {
+                        // If an incomplete send happened, compute what time_in_queue should have
+                        // been such that the formula above would exactly match what was actually
+                        // sent. This will generally be slightly less than time_in_queue, as it
+                        // accounts for the fact that only
+                        // INVENTORY_BROADCAST_TARGET + floor(queue_size * queue_fraction) can be
+                        // sent.
+                        auto virt_time_in_queue = -log1p(-double(nRelayedTransactions - INVENTORY_BROADCAST_TARGET) / queue_size) * INVENTORY_AVG_TIME_IN_QUEUE;
+                        // And pretend only this much time passed. This compensates for the
+                        // rounding down to an integral number of inventories, by making the
+                        // time_in_queue on the next trickle slightly larger.
+                        tx_relay->m_last_virtual_send_time += std::chrono::duration_cast<NodeClock::duration>(virt_time_in_queue);
+                    }
                     // Ensure we'll respond to GETDATA requests for anything we've just announced
                     LOCK(m_mempool.cs);
                     tx_relay->m_last_inv_sequence = m_mempool.GetSequence();
