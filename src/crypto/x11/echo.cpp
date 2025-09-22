@@ -33,6 +33,8 @@
 #include <crypto/x11/aes.h>
 #include <crypto/x11/dispatch.h>
 
+#include <attributes.h>
+
 #include <cstddef>
 #include <cstring>
 
@@ -50,6 +52,31 @@
 
 namespace sapphire {
 namespace soft_echo {
+namespace {
+void ALWAYS_INLINE MixColumn(sph_u64 W[16][2], int ia, int ib, int ic, int id)
+{
+	for (int n = 0; n < 2; n ++) {
+		sph_u64 a = W[ia][n];
+		sph_u64 b = W[ib][n];
+		sph_u64 c = W[ic][n];
+		sph_u64 d = W[id][n];
+		sph_u64 ab = a ^ b;
+		sph_u64 bc = b ^ c;
+		sph_u64 cd = c ^ d;
+		sph_u64 abx = ((ab & C64(0x8080808080808080)) >> 7) * 27U
+			^ ((ab & C64(0x7F7F7F7F7F7F7F7F)) << 1);
+		sph_u64 bcx = ((bc & C64(0x8080808080808080)) >> 7) * 27U
+			^ ((bc & C64(0x7F7F7F7F7F7F7F7F)) << 1);
+		sph_u64 cdx = ((cd & C64(0x8080808080808080)) >> 7) * 27U
+			^ ((cd & C64(0x7F7F7F7F7F7F7F7F)) << 1);
+		W[ia][n] = abx ^ bc ^ d;
+		W[ib][n] = bcx ^ a ^ cd;
+		W[ic][n] = cdx ^ ab ^ d;
+		W[id][n] = abx ^ bcx ^ cdx ^ ab ^ c;
+	}
+}
+} // anonymous namespace
+
 void FullStateRound(sph_u64 W[16][2], sph_u32& K0, sph_u32& K1, sph_u32& K2, sph_u32& K3)
 {
 	for (int n = 0; n < 16; n ++) {
@@ -73,9 +100,18 @@ void FullStateRound(sph_u64 W[16][2], sph_u32& K0, sph_u32& K1, sph_u32& K2, sph
 		}
 	}
 }
+
+void MixColumns(uint64_t W[16][2])
+{
+	MixColumn(W, 0, 1, 2, 3);
+	MixColumn(W, 4, 5, 6, 7);
+	MixColumn(W, 8, 9, 10, 11);
+	MixColumn(W, 12, 13, 14, 15);
+}
 } // namespace soft_echo
 } // namespace sapphire
 
+sapphire::dispatch::EchoMixCols echo_mix_columns = sapphire::soft_echo::MixColumns;
 sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound;
 
 #define DECL_STATE_BIG   \
@@ -130,45 +166,10 @@ sapphire::dispatch::EchoRoundFn echo_round = sapphire::soft_echo::FullStateRound
 		SHIFT_ROW3(3, 7, 11, 15); \
 	} while (0)
 
-static void
-mix_column(sph_u64 W[16][2], int ia, int ib, int ic, int id)
-{
-	int n;
-
-	for (n = 0; n < 2; n ++) {
-		sph_u64 a = W[ia][n];
-		sph_u64 b = W[ib][n];
-		sph_u64 c = W[ic][n];
-		sph_u64 d = W[id][n];
-		sph_u64 ab = a ^ b;
-		sph_u64 bc = b ^ c;
-		sph_u64 cd = c ^ d;
-		sph_u64 abx = ((ab & C64(0x8080808080808080)) >> 7) * 27U
-			^ ((ab & C64(0x7F7F7F7F7F7F7F7F)) << 1);
-		sph_u64 bcx = ((bc & C64(0x8080808080808080)) >> 7) * 27U
-			^ ((bc & C64(0x7F7F7F7F7F7F7F7F)) << 1);
-		sph_u64 cdx = ((cd & C64(0x8080808080808080)) >> 7) * 27U
-			^ ((cd & C64(0x7F7F7F7F7F7F7F7F)) << 1);
-		W[ia][n] = abx ^ bc ^ d;
-		W[ib][n] = bcx ^ a ^ cd;
-		W[ic][n] = cdx ^ ab ^ d;
-		W[id][n] = abx ^ bcx ^ cdx ^ ab ^ c;
-	}
-}
-
-#define MIX_COLUMN(a, b, c, d)   mix_column(W, a, b, c, d)
-
-#define BIG_MIX_COLUMNS   do { \
-		MIX_COLUMN(0, 1, 2, 3); \
-		MIX_COLUMN(4, 5, 6, 7); \
-		MIX_COLUMN(8, 9, 10, 11); \
-		MIX_COLUMN(12, 13, 14, 15); \
-	} while (0)
-
 #define BIG_ROUND   do { \
 		echo_round(W, K0, K1, K2, K3); \
 		BIG_SHIFT_ROWS; \
-		BIG_MIX_COLUMNS; \
+		echo_mix_columns(W); \
 	} while (0)
 
 #define FINAL_BIG   do { \

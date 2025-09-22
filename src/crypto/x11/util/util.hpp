@@ -10,9 +10,9 @@
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #include <attributes.h>
 
-#if defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI)
+#if defined(ENABLE_SSSE3) || (defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI))
 #include <immintrin.h>
-#endif // ENABLE_SSE41 && ENABLE_X86_AESNI
+#endif // ENABLE_SSSE3 || (ENABLE_SSE41 && ENABLE_X86_AESNI)
 #endif // !DISABLE_OPTIMIZED_SHA256
 
 namespace sapphire {
@@ -26,6 +26,9 @@ constexpr inline uint32_t pack_le(uint8_t b3, uint8_t b2, uint8_t b1, uint8_t b0
 }
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
+#if defined(ENABLE_SSSE3) || (defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI))
+__m128i ALWAYS_INLINE Xor(const __m128i& x, const __m128i& y) { return _mm_xor_si128(x, y); }
+
 #if defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI)
 __m128i ALWAYS_INLINE aes_round(const __m128i& input, const __m128i& key) { return _mm_aesenc_si128(input, key); }
 
@@ -42,6 +45,7 @@ void ALWAYS_INLINE unpack_le(const __m128i& i, uint32_t& w0, uint32_t& w1, uint3
     w3 = _mm_extract_epi32(i, 3);
 }
 #endif // ENABLE_SSE41 && ENABLE_X86_AESNI
+#endif // ENABLE_SSSE3 || (ENABLE_SSE41 && ENABLE_X86_AESNI)
 #endif // !DISABLE_OPTIMIZED_SHA256
 } // namespace util
 } // namespace sapphire

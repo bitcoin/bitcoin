@@ -537,6 +537,7 @@ AX_CHECK_COMPILE_FLAG([-fstack-reuse=none], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fsta
 
 enable_arm_crc=no
 enable_arm_shani=no
+enable_ssse3=no
 enable_sse42=no
 enable_sse41=no
 enable_avx2=no
@@ -548,6 +549,7 @@ dnl be compiled with them, rather that specific objects/libs may use them after 
 dnl compatibility.
 
 dnl x86
+AX_CHECK_COMPILE_FLAG([-mssse3], [SSSE3_CXXFLAGS="-mssse3"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-msse4.2], [SSE42_CXXFLAGS="-msse4.2"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-msse4.1], [SSE41_CXXFLAGS="-msse4.1"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-mavx -mavx2], [AVX2_CXXFLAGS="-mavx -mavx2"], [], [$CXXFLAG_WERROR])
@@ -571,6 +573,20 @@ if test "$enable_clmul" = "yes"; then
   CLMUL_CXXFLAGS="-mpclmul"
   AC_DEFINE([HAVE_CLMUL], [1], [Define this symbol if clmul instructions can be used])
 fi
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$SSSE3_CXXFLAGS $CXXFLAGS"
+AC_MSG_CHECKING([for SSSE3 intrinsics])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <tmmintrin.h>
+  ]],[[
+    __m64 x = _mm_abs_pi32(_m_from_int(0));
+    return 0;
+  ]])],
+ [ AC_MSG_RESULT([yes]); enable_ssse3=yes; AC_DEFINE([ENABLE_SSSE3], [1], [Define this symbol to build code that uses SSSE3 intrinsics]) ],
+ [ AC_MSG_RESULT([no])]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$SSE42_CXXFLAGS $CXXFLAGS"
@@ -1839,6 +1855,7 @@ AM_CONDITIONAL([USE_QRCODE], [test "$use_qr" = "yes"])
 AM_CONDITIONAL([USE_LCOV], [test "$use_lcov" = "yes"])
 AM_CONDITIONAL([USE_LIBEVENT], [test "$use_libevent" = "yes"])
 AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
+AM_CONDITIONAL([ENABLE_SSSE3], [test "$enable_ssse3" = "yes"])
 AM_CONDITIONAL([ENABLE_SSE42], [test "$enable_sse42" = "yes"])
 AM_CONDITIONAL([ENABLE_SSE41], [test "$enable_sse41" = "yes"])
 AM_CONDITIONAL([ENABLE_AVX2], [test "$enable_avx2" = "yes"])
@@ -1898,6 +1915,7 @@ AC_SUBST(PIE_FLAGS)
 AC_SUBST(SANITIZER_CXXFLAGS)
 AC_SUBST(SANITIZER_LDFLAGS)
 AC_SUBST(SPHLIB_FLAGS)
+AC_SUBST(SSSE3_CXXFLAGS)
 AC_SUBST(SSE42_CXXFLAGS)
 AC_SUBST(SSE41_CXXFLAGS)
 AC_SUBST(CLMUL_CXXFLAGS)

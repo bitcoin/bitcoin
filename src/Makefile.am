@@ -75,6 +75,10 @@ endif
 LIBBITCOIN_CRYPTO = $(LIBBITCOIN_CRYPTO_BASE)
 LIBBITCOIN_CRYPTO_SPH = crypto/libbitcoin_crypto_sph.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SPH)
+if ENABLE_SSSE3
+LIBBITCOIN_CRYPTO_SSSE3 = crypto/libbitcoin_crypto_ssse3.la
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSSE3)
+endif
 if ENABLE_SSE41
 LIBBITCOIN_CRYPTO_SSE41 = crypto/libbitcoin_crypto_sse41.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_SSE41)
@@ -768,6 +772,16 @@ crypto_libbitcoin_crypto_sph_la_SOURCES = \
   crypto/x11/sph_types.h \
   crypto/x11/util/consts_aes.hpp \
   crypto/x11/util/util.hpp
+
+# See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libbitcoin_crypto_ssse3_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libbitcoin_crypto_ssse3_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libbitcoin_crypto_ssse3_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_ssse3_la_CXXFLAGS += $(SSSE3_CXXFLAGS)
+crypto_libbitcoin_crypto_ssse3_la_CPPFLAGS += -DENABLE_SSSE3
+crypto_libbitcoin_crypto_ssse3_la_SOURCES = \
+  crypto/x11/ssse3/echo.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above

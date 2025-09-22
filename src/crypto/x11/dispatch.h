@@ -15,6 +15,7 @@ typedef void (*AESRoundFn)(uint32_t, uint32_t, uint32_t, uint32_t,
 typedef void (*AESRoundFnNk)(uint32_t, uint32_t, uint32_t, uint32_t,
                              uint32_t&, uint32_t&, uint32_t&, uint32_t&);
 
+typedef void (*EchoMixCols)(uint64_t[16][2]);
 typedef void (*EchoRoundFn)(uint64_t[16][2], uint32_t&, uint32_t&, uint32_t&, uint32_t&);
 } // namespace dispatch
 } // namespace sapphire
