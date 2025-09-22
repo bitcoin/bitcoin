@@ -5,25 +5,25 @@
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 
-function(install_binary_component component)
+function(install_binary_component target)
   cmake_parse_arguments(PARSE_ARGV 1
     IC                          # prefix
     "HAS_MANPAGE;INTERNAL"      # options
     ""                          # one_value_keywords
     ""                          # multi_value_keywords
   )
-  set(target_name ${component})
+  string(MAKE_C_IDENTIFIER ${target} component)
   if(IC_INTERNAL)
     set(runtime_dest ${CMAKE_INSTALL_LIBEXECDIR})
   else()
     set(runtime_dest ${CMAKE_INSTALL_BINDIR})
   endif()
-  install(TARGETS ${target_name}
+  install(TARGETS ${target}
     RUNTIME DESTINATION ${runtime_dest}
     COMPONENT ${component}
   )
   if(INSTALL_MAN AND IC_HAS_MANPAGE)
-    install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${target_name}.1
+    install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${target}.1
       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
       COMPONENT ${component}
     )
