@@ -27,6 +27,9 @@ class CWallet;
 class CWalletTx;
 struct WalletContext;
 
+// Logs information about the database, including available engines, features, and other capabilities
+void LogDBInfo();
+
 /**
  * Overview of wallet database classes:
  *

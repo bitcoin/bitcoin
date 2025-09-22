@@ -63,6 +63,12 @@ const std::string WATCHS{"watchs"};
 const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
 } // namespace DBKeys
 
+void LogDBInfo()
+{
+    // Add useful DB information here. This will be printed during startup.
+    LogInfo("Using SQLite Version %s", SQLiteDatabaseVersion());
+}
+
 //
 // WalletBatch
 //
