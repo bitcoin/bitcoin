@@ -327,6 +327,19 @@ typedef int_fast64_t sph_s64;
 #error SPH_UPTR defined, but endianness is not known.
 #endif
 
+#if defined(__clang__)
+#define SPH_NO_SANITIZE(...) __attribute__((no_sanitize(__VA_ARGS__)))
+#else
+#define SPH_NO_SANITIZE(...)
+#endif // __clang__
+
+// Suppress unaligned memory access warnings if supported by hardware
+#if defined(SPH_UPTR) && SPH_UNALIGNED
+#define SPH_UNALIGNED_ATTRIBS SPH_NO_SANITIZE("alignment")
+#else
+#define SPH_UNALIGNED_ATTRIBS
+#endif // SPH_UPTR && SPH_UNALIGNED
+
 #if SPH_I386_GCC && !SPH_NO_ASM
 
 /*
@@ -469,6 +482,7 @@ sph_dec16le(const void *src)
  * @param val   the 32-bit value to encode
  */
 static SPH_INLINE void
+SPH_UNALIGNED_ATTRIBS
 sph_enc32be(void *dst, sph_u32 val)
 {
 #if defined SPH_UPTR
@@ -527,6 +541,7 @@ sph_enc32be_aligned(void *dst, sph_u32 val)
  * @return  the decoded value
  */
 static SPH_INLINE sph_u32
+SPH_UNALIGNED_ATTRIBS
 sph_dec32be(const void *src)
 {
 #if defined SPH_UPTR
@@ -587,6 +602,7 @@ sph_dec32be_aligned(const void *src)
  * @param val   the 32-bit value to encode
  */
 static SPH_INLINE void
+SPH_UNALIGNED_ATTRIBS
 sph_enc32le(void *dst, sph_u32 val)
 {
 #if defined SPH_UPTR
@@ -645,6 +661,7 @@ sph_enc32le_aligned(void *dst, sph_u32 val)
  * @return  the decoded value
  */
 static SPH_INLINE sph_u32
+SPH_UNALIGNED_ATTRIBS
 sph_dec32le(const void *src)
 {
 #if defined SPH_UPTR
@@ -726,6 +743,7 @@ sph_dec32le_aligned(const void *src)
  * @param val   the 64-bit value to encode
  */
 static SPH_INLINE void
+SPH_UNALIGNED_ATTRIBS
 sph_enc64be(void *dst, sph_u64 val)
 {
 #if defined SPH_UPTR
@@ -796,6 +814,7 @@ sph_enc64be_aligned(void *dst, sph_u64 val)
  * @return  the decoded value
  */
 static SPH_INLINE sph_u64
+SPH_UNALIGNED_ATTRIBS
 sph_dec64be(const void *src)
 {
 #if defined SPH_UPTR
@@ -868,6 +887,7 @@ sph_dec64be_aligned(const void *src)
  * @param val   the 64-bit value to encode
  */
 static SPH_INLINE void
+SPH_UNALIGNED_ATTRIBS
 sph_enc64le(void *dst, sph_u64 val)
 {
 #if defined SPH_UPTR
@@ -938,6 +958,7 @@ sph_enc64le_aligned(void *dst, sph_u64 val)
  * @return  the decoded value
  */
 static SPH_INLINE sph_u64
+SPH_UNALIGNED_ATTRIBS
 sph_dec64le(const void *src)
 {
 #if defined SPH_UPTR
