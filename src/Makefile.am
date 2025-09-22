@@ -728,9 +728,9 @@ crypto_libbitcoin_crypto_avx2_la_SOURCES = crypto/sha256_avx2.cpp
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above
 crypto_libbitcoin_crypto_sph_la_LDFLAGS = $(AM_LDFLAGS) -static
-crypto_libbitcoin_crypto_sph_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libbitcoin_crypto_sph_la_CXXFLAGS = $(AM_CXXFLAGS) $(SPHLIB_FLAGS) $(PIE_FLAGS) -static
 crypto_libbitcoin_crypto_sph_la_CPPFLAGS = $(AM_CPPFLAGS)
-crypto_libbitcoin_crypto_sph_la_CFLAGS = $(SPHLIB_CFLAGS)
+crypto_libbitcoin_crypto_sph_la_CFLAGS = $(SPHLIB_FLAGS)
 crypto_libbitcoin_crypto_sph_la_CPPFLAGS += \
   -DSPH_SMALL_FOOTPRINT_CUBEHASH=1 \
   -DSPH_SMALL_FOOTPRINT_JH=1
@@ -739,7 +739,7 @@ crypto_libbitcoin_crypto_sph_la_SOURCES = \
   crypto/x11/blake.c \
   crypto/x11/bmw.c \
   crypto/x11/cubehash.c \
-  crypto/x11/echo.c \
+  crypto/x11/echo.cpp \
   crypto/x11/groestl.c \
   crypto/x11/jh.c \
   crypto/x11/keccak.c \
