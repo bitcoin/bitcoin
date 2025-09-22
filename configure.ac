@@ -537,6 +537,7 @@ AX_CHECK_COMPILE_FLAG([-fstack-reuse=none], [CORE_CXXFLAGS="$CORE_CXXFLAGS -fsta
 
 enable_arm_aes=no
 enable_arm_crc=no
+enable_arm_neon=no
 enable_arm_shani=no
 enable_ssse3=no
 enable_sse42=no
@@ -712,6 +713,27 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
  [ AC_MSG_RESULT([yes]); enable_arm_crc=yes; ],
  [ AC_MSG_RESULT([no])]
 )
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+ARM_NEON_CXXFLAGS=""
+TEMP_CXXFLAGS="$CXXFLAGS"
+for flag in "-march=armv8-a" "-march=armv7-a -mfpu=neon"; do
+  AX_CHECK_COMPILE_FLAG([$flag], [
+    CXXFLAGS="$CXXFLAGS $flag"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+      #include <arm_neon.h>
+    ]], [[
+      float32x4_t f = vdupq_n_f32(0.0);
+      return 0;
+    ]])], [
+      ARM_NEON_CXXFLAGS="$flag"
+      enable_arm_neon=yes
+      AC_DEFINE([ENABLE_ARM_NEON], [1], [Define this symbol to build code that uses ARM NEON intrinsics])
+      break
+    ])
+    CXXFLAGS="$TEMP_CXXFLAGS"
+  ])
+done
 CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
@@ -1879,6 +1901,7 @@ AM_CONDITIONAL([ENABLE_X86_AESNI], [test "$enable_x86_aesni" = "yes"])
 AM_CONDITIONAL([ENABLE_X86_SHANI], [test "$enable_x86_shani" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_AES], [test "$enable_arm_aes" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_CRC], [test "$enable_arm_crc" = "yes"])
+AM_CONDITIONAL([ENABLE_ARM_NEON], [test "$enable_arm_neon" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_SHANI], [test "$enable_arm_shani" = "yes"])
 AM_CONDITIONAL([WORDS_BIGENDIAN], [test "$ac_cv_c_bigendian" = "yes"])
 AM_CONDITIONAL([USE_NATPMP], [test "$use_natpmp" = "yes"])
@@ -1941,6 +1964,7 @@ AC_SUBST(X86_AESNI_CXXFLAGS)
 AC_SUBST(X86_SHANI_CXXFLAGS)
 AC_SUBST(ARM_AES_CXXFLAGS)
 AC_SUBST(ARM_CRC_CXXFLAGS)
+AC_SUBST(ARM_NEON_CXXFLAGS)
 AC_SUBST(ARM_SHANI_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_SQLITE)

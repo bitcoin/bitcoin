@@ -99,6 +99,10 @@ if ENABLE_ARM_AES
 LIBBITCOIN_CRYPTO_ARM_AES = crypto/libbitcoin_crypto_arm_aes.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_AES)
 endif
+if ENABLE_ARM_NEON
+LIBBITCOIN_CRYPTO_ARM_NEON = crypto/libbitcoin_crypto_arm_neon.la
+LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_NEON)
+endif
 if ENABLE_ARM_SHANI
 LIBBITCOIN_CRYPTO_ARM_SHANI = crypto/libbitcoin_crypto_arm_shani.la
 LIBBITCOIN_CRYPTO += $(LIBBITCOIN_CRYPTO_ARM_SHANI)
@@ -788,6 +792,16 @@ crypto_libbitcoin_crypto_arm_aes_la_SOURCES = \
   crypto/x11/arm_crypto/aes.cpp \
   crypto/x11/arm_crypto/echo.cpp \
   crypto/x11/arm_crypto/shavite.cpp
+
+# See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
+# CXXFLAGS above
+crypto_libbitcoin_crypto_arm_neon_la_LDFLAGS = $(AM_LDFLAGS) -static
+crypto_libbitcoin_crypto_arm_neon_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -static
+crypto_libbitcoin_crypto_arm_neon_la_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_arm_neon_la_CXXFLAGS += $(ARM_NEON_CXXFLAGS)
+crypto_libbitcoin_crypto_arm_neon_la_CPPFLAGS += -DENABLE_ARM_NEON
+crypto_libbitcoin_crypto_arm_neon_la_SOURCES = \
+  crypto/x11/arm_neon/echo.cpp
 
 # See explanation for -static in crypto_libbitcoin_crypto_base_la's LDFLAGS and
 # CXXFLAGS above

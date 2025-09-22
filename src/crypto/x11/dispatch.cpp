@@ -11,7 +11,7 @@
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #include <compat/cpuid.h>
 
-#if defined(ENABLE_ARM_AES)
+#if defined(ENABLE_ARM_AES) || defined(ENABLE_ARM_NEON)
 #if defined(__APPLE__)
 #include <sys/sysctl.h>
 #include <sys/types.h>
@@ -31,7 +31,7 @@
 #include <processthreadsapi.h>
 #include <winnt.h>
 #endif // _WIN32
-#endif // ENABLE_ARM_AES
+#endif // ENABLE_ARM_AES || ENABLE_ARM_NEON
 #endif // !DISABLE_OPTIMIZED_SHA256
 
 #include <cstddef>
@@ -54,6 +54,12 @@ void CompressElement(uint32_t& l0, uint32_t& l1, uint32_t& l2, uint32_t& l3,
                      uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, const uint32_t* rk);
 } // namespace arm_crypto_shavite
 #endif // ENABLE_ARM_AES
+
+#if defined(ENABLE_ARM_NEON)
+namespace arm_neon_echo {
+void ShiftAndMix(uint64_t W[16][2]);
+} // namespace arm_neon_echo
+#endif // ENABLE_ARM_NEON
 
 #if defined(ENABLE_SSSE3)
 namespace ssse3_echo {
@@ -96,6 +102,21 @@ void CompressElement(uint32_t& l0, uint32_t& l1, uint32_t& l2, uint32_t& l3,
 } // namespace soft_shavite
 } // namespace sapphire
 
+namespace {
+#if !defined(DISABLE_OPTIMIZED_SHA256)
+#if defined(ENABLE_ARM_AES) || defined(ENABLE_ARM_NEON)
+#if defined(__APPLE__)
+bool IsSysCtlNonZero(const char* name)
+{
+    int val = 0;
+    size_t len = sizeof(val);
+    return ::sysctlbyname(name, &val, &len, nullptr, 0) == 0 && val != 0;
+}
+#endif // __APPLE__
+#endif // ENABLE_ARM_AES || ENABLE_ARM_NEON
+#endif // !DISABLE_OPTIMIZED_SHA256
+} // anonymous namespace
+
 extern sapphire::dispatch::AESRoundFn aes_round;
 extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
 extern sapphire::dispatch::EchoShiftMix echo_shift_mix;
@@ -132,39 +153,47 @@ void SapphireAutoDetect()
 #endif // ENABLE_SSSE3
 #endif // HAVE_GETCPUID
 
-#if defined(ENABLE_ARM_AES)
-    bool have_arm_aes = false;
+#if defined(ENABLE_ARM_AES) || defined(ENABLE_ARM_NEON)
+    [[maybe_unused]] bool have_arm_aes = false;
+    [[maybe_unused]] bool have_arm_neon = false;
+
 #if defined(__APPLE__)
-    int val = 0;
-    size_t len = sizeof(val);
-    if (::sysctlbyname("hw.optional.arm.FEAT_AES", &val, &len, nullptr, 0) == 0) {
-        have_arm_aes = val != 0;
-    }
+    have_arm_aes = IsSysCtlNonZero("hw.optional.arm.FEAT_AES");
+    have_arm_neon = IsSysCtlNonZero("hw.optional.neon") || IsSysCtlNonZero("hw.optional.AdvSIMD") ||
+                    IsSysCtlNonZero("hw.optional.arm.AdvSIMD"); // See https://github.com/google/cpu_features/issues/390
 #endif // __APPLE__
 
 #if defined(__linux__)
 #if defined(__arm__)
     have_arm_aes = (::getauxval(AT_HWCAP2) & HWCAP2_AES);
+    have_arm_neon = (::getauxval(AT_HWCAP) & HWCAP_NEON);
 #endif // __arm__
 #if defined(__aarch64__)
     have_arm_aes = (::getauxval(AT_HWCAP) & HWCAP_AES);
+    have_arm_neon = (::getauxval(AT_HWCAP) & HWCAP_ASIMD);
 #endif // __aarch64__
 #endif // __linux__
 
 #if defined(__FreeBSD__)
-    [[maybe_unused]] unsigned long hwcap{0};
+    [[maybe_unused]] unsigned long hwcap{0}, hwcap2{0};
 #if defined(__arm__)
-    have_arm_aes = ((::elf_aux_info(AT_HWCAP2, &hwcap, sizeof(hwcap)) == 0) && ((hwcap & HWCAP2_AES) != 0));
+    have_arm_aes = ((::elf_aux_info(AT_HWCAP2, &hwcap2, sizeof(hwcap2)) == 0) && ((hwcap2 & HWCAP2_AES) != 0));
+    have_arm_neon = ((::elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap)) == 0) && ((hwcap & HWCAP_NEON) != 0));
 #endif // __arm__
 #if defined(__aarch64__)
-    have_arm_aes = ((::elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap)) == 0) && ((hwcap & HWCAP_AES) != 0));
+    if (::elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap)) == 0) {
+        have_arm_aes = ((hwcap & HWCAP_AES) != 0);
+        have_arm_neon = ((hwcap & HWCAP_ASIMD) != 0);
+    }
 #endif // __aarch64__
 #endif // __FreeBSD__
 
 #if defined(_WIN32)
     have_arm_aes = ::IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE);
+    have_arm_neon = ::IsProcessorFeaturePresent(PF_ARM_NEON_INSTRUCTIONS_AVAILABLE);
 #endif // _WIN32
 
+#if defined(ENABLE_ARM_AES)
     if (have_arm_aes) {
         aes_round = sapphire::arm_crypto_aes::Round;
         aes_round_nk = sapphire::arm_crypto_aes::RoundKeyless;
@@ -172,5 +201,12 @@ void SapphireAutoDetect()
         shavite_c512e = sapphire::arm_crypto_shavite::CompressElement;
     }
 #endif // ENABLE_ARM_AES
+
+#if defined (ENABLE_ARM_NEON)
+    if (have_arm_neon) {
+        echo_shift_mix = sapphire::arm_neon_echo::ShiftAndMix;
+    }
+#endif // ENABLE_ARM_NEON
+#endif // ENABLE_ARM_AES || ENABLE_ARM_NEON
 #endif // !DISABLE_OPTIMIZED_SHA256
 }

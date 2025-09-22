@@ -10,9 +10,9 @@
 #if !defined(DISABLE_OPTIMIZED_SHA256)
 #include <attributes.h>
 
-#if defined(ENABLE_ARM_AES)
+#if defined(ENABLE_ARM_AES) || defined(ENABLE_ARM_NEON)
 #include <arm_neon.h>
-#endif // ENABLE_ARM_AES
+#endif // ENABLE_ARM_AES || ENABLE_ARM_NEON
 
 #if defined(ENABLE_SSSE3) || (defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI))
 #include <immintrin.h>
@@ -30,7 +30,7 @@ constexpr inline uint32_t pack_le(uint8_t b3, uint8_t b2, uint8_t b1, uint8_t b0
 }
 
 #if !defined(DISABLE_OPTIMIZED_SHA256)
-#if defined(ENABLE_ARM_AES)
+#if defined(ENABLE_ARM_AES) || defined(ENABLE_ARM_NEON)
 uint8x16_t ALWAYS_INLINE Xor(const uint8x16_t& x, const uint8x16_t& y) { return veorq_u8(x, y); }
 
 uint8x16_t ALWAYS_INLINE pack_le(const uint32_t& w0, const uint32_t& w1, const uint32_t& w2, const uint32_t& w3)
@@ -47,6 +47,7 @@ void ALWAYS_INLINE unpack_le(const uint8x16_t& i, uint32_t& w0, uint32_t& w1, ui
     w3 = vgetq_lane_u32(r, 3);
 }
 
+#if defined(ENABLE_ARM_AES)
 uint8x16_t ALWAYS_INLINE aes_round(const uint8x16_t& input, const uint8x16_t& key)
 {
     // See "Emulating x86 AES Intrinsics on ARMv8-A" by Michael Brase for _mm_aesenc_si128
@@ -60,6 +61,7 @@ uint8x16_t ALWAYS_INLINE aes_round_nk(const uint8x16_t& input)
     return vaesmcq_u8(vaeseq_u8(input, vmovq_n_u8(0)));
 }
 #endif // ENABLE_ARM_AES
+#endif // ENABLE_ARM_AES || ENABLE_ARM_NEON
 
 #if defined(ENABLE_SSSE3) || (defined(ENABLE_SSE41) && defined(ENABLE_X86_AESNI))
 __m128i ALWAYS_INLINE Xor(const __m128i& x, const __m128i& y) { return _mm_xor_si128(x, y); }
