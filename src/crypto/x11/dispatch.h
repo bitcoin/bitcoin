@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CRYPTO_X11_DISPATCH_H
 #define BITCOIN_CRYPTO_X11_DISPATCH_H
 
+#include <crypto/x11/sph_shavite.h>
+
 #include <cstdint>
 
 namespace sapphire {
@@ -18,8 +20,7 @@ typedef void (*AESRoundFnNk)(uint32_t, uint32_t, uint32_t, uint32_t,
 typedef void (*EchoRoundFn)(uint64_t[16][2], uint32_t&, uint32_t&, uint32_t&, uint32_t&);
 typedef void (*EchoShiftMix)(uint64_t[16][2]);
 
-typedef void (*ShaviteCompressFn)(uint32_t&, uint32_t&, uint32_t&, uint32_t&,
-                                  uint32_t, uint32_t, uint32_t, uint32_t, const uint32_t*);
+typedef void (*ShaviteCompressFn)(sph_shavite_big_context*, const void *);
 } // namespace dispatch
 } // namespace sapphire
 

@@ -38,16 +38,37 @@
 
 #include "sph_shavite.h"
 
-extern sapphire::dispatch::AESRoundFnNk aes_round_nk;
-
 #ifdef _MSC_VER
 #pragma warning (disable: 4146)
 #endif
 
 #define C32   SPH_C32
 
+/*
+ * As of round 2 of the SHA-3 competition, the published reference
+ * implementation and test vectors are wrong, because they use
+ * big-endian AES tables while the internal decoding uses little-endian.
+ * The code below follows the specification. To turn it into a code
+ * which follows the reference implementation (the one called "BugFix"
+ * on the SHAvite-3 web site, published on Nov 23rd, 2009), comment out
+ * the code below (from the '#define AES_BIG_ENDIAN...' to the definition
+ * of the AES_ROUND_NOKEY macro) and replace it with the version which
+ * is commented out afterwards.
+ */
+
+static const sph_u32 IV512[] = {
+	C32(0x72FCCDD8), C32(0x79CA4727), C32(0x128A077B), C32(0x40D55AEC),
+	C32(0xD1901A06), C32(0x430AE307), C32(0xB29F5CD1), C32(0xDF07FBFC),
+	C32(0x8E45D73D), C32(0x681AB538), C32(0xBDE86578), C32(0xDD577E47),
+	C32(0xE275EADE), C32(0x502D9FCD), C32(0xB9357178), C32(0x022A4B9A)
+};
+
+#define AES_ROUND_NOKEY(x0, x1, x2, x3)   do { \
+		sapphire::soft_aes::RoundKeyless(x0, x1, x2, x3, x0, x1, x2, x3); \
+	} while (0)
+
 namespace sapphire {
-namespace soft_shavite {
+namespace {
 void CompressElement(uint32_t& l0, uint32_t& l1, uint32_t& l2, uint32_t& l3,
 				 	 uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3, const uint32_t* rk)
 {
@@ -76,39 +97,13 @@ void CompressElement(uint32_t& l0, uint32_t& l1, uint32_t& l2, uint32_t& l3,
 	l2 ^= x2;
 	l3 ^= x3;
 }
-} // namespace shavite_soft
-} // namespace sapphire
+} // anonymous namespace
 
-sapphire::dispatch::ShaviteCompressFn shavite_c512e = sapphire::soft_shavite::CompressElement;
-
-/*
- * As of round 2 of the SHA-3 competition, the published reference
- * implementation and test vectors are wrong, because they use
- * big-endian AES tables while the internal decoding uses little-endian.
- * The code below follows the specification. To turn it into a code
- * which follows the reference implementation (the one called "BugFix"
- * on the SHAvite-3 web site, published on Nov 23rd, 2009), comment out
- * the code below (from the '#define AES_BIG_ENDIAN...' to the definition
- * of the AES_ROUND_NOKEY macro) and replace it with the version which
- * is commented out afterwards.
- */
-
-static const sph_u32 IV512[] = {
-	C32(0x72FCCDD8), C32(0x79CA4727), C32(0x128A077B), C32(0x40D55AEC),
-	C32(0xD1901A06), C32(0x430AE307), C32(0xB29F5CD1), C32(0xDF07FBFC),
-	C32(0x8E45D73D), C32(0x681AB538), C32(0xBDE86578), C32(0xDD577E47),
-	C32(0xE275EADE), C32(0x502D9FCD), C32(0xB9357178), C32(0x022A4B9A)
-};
-
-#define AES_ROUND_NOKEY(x0, x1, x2, x3)   do { \
-		aes_round_nk(x0, x1, x2, x3, x0, x1, x2, x3); \
-	} while (0)
-
+namespace soft_shavite {
 /*
  * This function assumes that "msg" is aligned for 32-bit access.
  */
-static void
-c512(sph_shavite_big_context *sc, const void *msg)
+void Compress(sph_shavite_big_context *sc, const void *msg)
 {
 	sph_u32 p0, p1, p2, p3, p4, p5, p6, p7;
 	sph_u32 p8, p9, pA, pB, pC, pD, pE, pF;
@@ -209,7 +204,7 @@ c512(sph_shavite_big_context *sc, const void *msg)
 	u = 0;
 	for (r = 0; r < 14; r ++) {
 #define C512_ELT(l0, l1, l2, l3, r0, r1, r2, r3)   do { \
-		shavite_c512e(l0, l1, l2, l3, r0, r1, r2, r3, &rk[u]); \
+		CompressElement(l0, l1, l2, l3, r0, r1, r2, r3, &rk[u]); \
 		u += 16; \
 	} while (0)
 
@@ -249,6 +244,10 @@ c512(sph_shavite_big_context *sc, const void *msg)
 	sc->h[0xE] ^= pE;
 	sc->h[0xF] ^= pF;
 }
+} // namespace shavite_soft
+} // namespace sapphire
+
+sapphire::dispatch::ShaviteCompressFn shavite_c512 = sapphire::soft_shavite::Compress;
 
 static void
 shavite_big_init(sph_shavite_big_context *sc, const sph_u32 *iv)
@@ -290,7 +289,7 @@ shavite_big_core(sph_shavite_big_context *sc, const void *data, size_t len)
 					}
 				}
 			}
-			c512(sc, buf);
+			shavite_c512(sc, buf);
 			ptr = 0;
 		}
 	}
@@ -324,7 +323,7 @@ shavite_big_close(sph_shavite_big_context *sc,
 	} else {
 		buf[ptr ++] = z;
 		memset(buf + ptr, 0, 128 - ptr);
-		c512(sc, buf);
+		shavite_c512(sc, buf);
 		memset(buf, 0, 110);
 		sc->count0 = sc->count1 = sc->count2 = sc->count3 = 0;
 	}
@@ -334,7 +333,7 @@ shavite_big_close(sph_shavite_big_context *sc,
 	sph_enc32le(buf + 122, count3);
 	buf[126] = out_size_w32 << 5;
 	buf[127] = out_size_w32 >> 3;
-	c512(sc, buf);
+	shavite_c512(sc, buf);
 	for (u = 0; u < out_size_w32; u ++)
 		sph_enc32le((unsigned char *)dst + (u << 2), sc->h[u]);
 }
