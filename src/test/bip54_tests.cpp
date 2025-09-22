@@ -5,14 +5,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include <addresstype.h>
+#include <chainparams.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key.h>
+#include <node/miner.h>
 #include <policy/policy.h>
+#include <pow.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
@@ -1434,6 +1440,170 @@ BOOST_AUTO_TEST_CASE(bip54_coinbase)
             }
         }
     }
+}
+
+static void MineRegtestBlock(CBlock& block, const Consensus::Params& params)
+{
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, params)) {
+        Assert(++block.nNonce);
+    }
+}
+
+/** A test case for the BIP54 rule on 64-byte transactions. */
+struct TestVectorTxSize {
+    //! The transaction to check against BIP54.
+    const CTransaction tx;
+    //! Whether this transaction is valid according to BIP54.
+    bool valid;
+    //! Description of this test case.
+    std::string comment;
+
+    explicit TestVectorTxSize(CTransaction t, bool val, std::string com)
+        : tx{std::move(t)}, valid{val}, comment{std::move(com)} {}
+
+    UniValue GetJson() const
+    {
+        UniValue json{UniValue::VOBJ};
+        json.pushKV("comment", comment);
+        json.pushKV("tx", EncodeHexTx(tx));
+        json.pushKV("valid", valid);
+        return json;
+    }
+};
+
+static void RecordTestCase(std::vector<TestVectorTxSize>& test_vectors, CTransaction t, bool valid, std::string com)
+{
+    test_vectors.emplace_back(std::move(t), valid, std::move(com));
+}
+
+/**
+ * Unit tests for the BIP54 rule on 64-byte transactions. Used to generate the BIP's test vectors. This checks
+ * the bounds of the check with different transaction types (legacy / Segwit) as well as historical violations.
+ */
+BOOST_AUTO_TEST_CASE(bip54_txsize)
+{
+    std::vector<TestVectorTxSize> test_vectors;
+
+    // Use this dummy transaction to craft a number of test cases exercising the bounds of the 64-byte check.
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{*Txid::FromHex("83c8e0289fecf93b5a284705396f5a652d9886cbd26236b0d647655ad8a37d82"), 21});
+    tx.vout.emplace_back(0, CScript{});
+
+    // A 63-byte transaction is valid.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vout.back().scriptPubKey << OP_0 << OP_1 << OP_2;
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE - 1);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/true, "A 63-byte legacy transaction.");
+    }
+
+    // A less-than-64-byte transaction is valid even with a witness.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vin.back().scriptWitness.stack.resize(1);
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE - 4);
+        Assert(GetSerializeSize(TX_WITH_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/true, "A 61-byte legacy transaction with a witness.");
+    }
+
+    // A 64-byte transaction is invalid.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vout.back().scriptPubKey << OP_0 << OP_1 << OP_2 << OP_4;
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/false, "A 64-byte legacy transaction (4 bytes in spk).");
+    }
+
+    // A 64-byte transaction is invalid even if constructed differently.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vout.back().nValue = MAX_MONEY;
+        tx_copy.vin.back().scriptSig << std::vector<uint8_t>{0x42, 0x42, 0x42};
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/false, "A 64-byte legacy transaction (4 bytes in scriptsig).");
+    }
+
+    // A 65-byte transaction is valid.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vout.back().scriptPubKey << OP_0 << OP_1 << OP_2 << OP_4 << OP_8;
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE + 1);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/true, "A 65-byte legacy transaction.");
+    }
+
+    // A 64-byte transaction is invalid even if it has a witness.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vout.back().scriptPubKey << OP_0 << OP_1 << OP_2 << OP_4;
+        tx_copy.vin.back().scriptWitness.stack.push_back({0x21, 0x32, 0x45, 0x57, 0x62, 0x81, 0x94, 0x12});
+        Assert(GetSerializeSize(TX_WITH_WITNESS(tx_copy)) > INVALID_TX_NONWITNESS_SIZE);
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/false, "A 64-byte Segwit transaction.");
+    }
+
+    // A semi-realistic 64-byte transaction: 1 native Segwit input, 1 anchor output.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vout.back().scriptPubKey = GetScriptForDestination(PayToAnchor());
+        auto sig{"5a78b5a14a2527feb02c08b8124e74c3b9bcc1bd3dba1fbfa87f1c930f28a46fea2bf375105dfd835e212c9127aad4976c46ef86be02edbb681e6f38f9a9e06f01"_hex_v_u8};
+        tx_copy.vin.back().scriptWitness.stack.emplace_back(std::move(sig));
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/false, "A 64-byte Segwit transaction (1 p2tr input, 1 p2a output).");
+    }
+
+    // A semi-realistic 64-byte transaction: 1 Taproot input with an annex, 1 OP_RETURN output.
+    {
+        CMutableTransaction tx_copy{tx};
+        tx_copy.vout.back().scriptPubKey << OP_RETURN << "ab01"_hex_v;
+        auto sig{"5a78b5a14a2527feb02c08b8124e74c3b9bcc1bd3dba1fbfa87f1c930f28a46fea2bf375105dfd835e212c9127aad4976c46ef86be02edbb681e6f38f9a9e06f01"_hex_v_u8};
+        tx_copy.vin.back().scriptWitness.stack.emplace_back(std::move(sig));
+        auto annex{"4242ffab2121"_hex_v_u8};
+        tx_copy.vin.back().scriptWitness.stack.emplace_back(std::move(annex));
+        Assert(GetSerializeSize(TX_NO_WITNESS(tx_copy)) == INVALID_TX_NONWITNESS_SIZE);
+        RecordTestCase(test_vectors, CTransaction{tx_copy}, /*valid=*/false, "A 64-byte Segwit transaction (1 p2tr input with annex, 1 OP_RETURN output).");
+    }
+
+    // Historical 64-byte transactions. Taken from Chris Stewart's BIP53.
+    constexpr std::string_view historical_txs_hex[]{
+        "0200000001deb98691723fa71260ffca6ea0a7bc0a63b0a8a366e1b585caad47fb269a2ce401000000030251b201000000010000000000000000016a00000000",
+        "01000000010d0afe3d74062ee60c0ec55579d691d8c8af5c04eb97b777157a21a8c5fb143d00000000035101b100000000010000000000000000016a01000000",
+        "02000000011658a33df410379bb512206659910c9fbd0e50bfb732f7be9936558ff036919401000000035101b201000000010000000000000000016a00000000",
+        "02000000011a7a4cf262fb7e53e2e6e0b2ef8b763f6ee97d8681ca968d1938418d56e6c38700000000035101b201000000010000000000000000016a00000000",
+        "01000000019222bbb054bb9f94571dfe769af5866835f2a97e883959fa757de4064bed8bca01000000035101b100000000010000000000000000016a01000000",
+    };
+    for (const auto tx_hex: historical_txs_hex) {
+        CMutableTransaction hist_tx;
+        Assert(DecodeHexTx(hist_tx, std::string{tx_hex}));
+        std::string comment{"Historical 64-byte transaction "};
+        RecordTestCase(test_vectors, CTransaction(hist_tx), /*valid=*/false, comment + hist_tx.GetHash().ToString());
+    }
+
+    // Go through every recorded transaction and make sure ContextualCheckBlock() return value is
+    // as expected by calling AcceptBlock().
+    RegTestingSetup test_setup{};
+    auto& chainman{*test_setup.m_node.chainman};
+    const auto& params{chainman.GetConsensus()};
+    LOCK(chainman.GetMutex());
+    for (const auto& test_case: test_vectors) {
+        // Craft a block containing this transaction.
+        auto block{node::BlockAssembler{chainman.ActiveChainstate(), /*mempool=*/nullptr, {}}.CreateNewBlock()->block};
+        block.vtx.push_back(MakeTransactionRef(test_case.tx));
+        node::RegenerateCommitments(block, chainman);
+        MineRegtestBlock(block, params);
+        const auto pblock{std::make_shared<CBlock>(std::move(block))};
+        // Preliminary checks performed on the block before storing it will detect any 64-byte
+        // transaction.
+        BlockValidationState state;
+        const bool res{chainman.AcceptBlock(pblock, state, /*ppindex=*/nullptr, /*fRequested=*/true, /*dbp=*/nullptr, /*fNewBlock=*/nullptr, /*min_pow_checked=*/true)};
+        BOOST_CHECK_MESSAGE(res == test_case.valid, test_case.comment);
+        if (!test_case.valid) {
+            BOOST_CHECK_MESSAGE(state.GetRejectReason() == "bad-txns-size", test_case.comment);
+        }
+    }
+
+#ifdef UPDATE_JSON_TESTS
+    WriteJSONTestVectors(test_vectors, "bip54_txsize.json.gen");
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()
