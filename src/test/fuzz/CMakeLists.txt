@@ -134,6 +134,9 @@ add_executable(fuzz
   vecdeque.cpp
   versionbits.cpp
 )
+
+add_windows_application_manifest(fuzz)
+
 target_link_libraries(fuzz
   core_interface
   fuzzer_interface
