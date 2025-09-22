@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(tx_oversized)
     auto createTransaction =[](size_t payloadSize) {
         CMutableTransaction tx;
         tx.vin.resize(1);
-        tx.vout.emplace_back(1, CScript() << OP_RETURN << std::vector<unsigned char>(payloadSize));
+        tx.vout.emplace_back(1, CScript() << OP_SPAM << std::vector<unsigned char>(payloadSize));
         return CTransaction(tx);
     };
     const auto maxTransactionSize = MAX_BLOCK_WEIGHT / WITNESS_SCALE_FACTOR;
@@ -798,12 +798,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CKey key = GenerateRandomKey();
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-    constexpr auto CheckIsStandard = [](const auto& t, const unsigned int max_op_return_relay = MAX_OP_RETURN_RELAY) {
+    constexpr auto CheckIsStandard = [](const auto& t, const unsigned int max_op_return_relay = MAX_OP_SPAM_RELAY) {
         std::string reason;
         BOOST_CHECK(IsStandardTx(CTransaction{t}, max_op_return_relay, g_bare_multi, g_dust, reason));
         BOOST_CHECK(reason.empty());
     };
-    constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in, const unsigned int max_op_return_relay = MAX_OP_RETURN_RELAY) {
+    constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in, const unsigned int max_op_return_relay = MAX_OP_SPAM_RELAY) {
         std::string reason;
         BOOST_CHECK(!IsStandardTx(CTransaction{t}, max_op_return_relay, g_bare_multi, g_dust, reason));
         BOOST_CHECK_EQUAL(reason_in, reason);
@@ -860,7 +860,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsNotStandard(t, "scriptpubkey");
 
     // Custom 83-byte TxoutType::NULL_DATA (standard with max_op_return_relay of 83)
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     BOOST_CHECK_EQUAL(83, t.vout[0].scriptPubKey.size());
     CheckIsStandard(t, /*max_op_return_relay=*/83);
 
@@ -868,43 +868,43 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsNotStandard(t, "datacarrier", /*max_op_return_relay=*/82);
 
     // Data payload can be encoded in any way...
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << ""_hex;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << ""_hex;
     CheckIsStandard(t);
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "00"_hex << "01"_hex;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << "00"_hex << "01"_hex;
     CheckIsStandard(t);
     // OP_RESERVED *is* considered to be a PUSHDATA type opcode by IsPushOnly()!
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RESERVED << -1 << 0 << "01"_hex << 2 << 3 << 4 << 5 << 6 << 7 << 8 << 9 << 10 << 11 << 12 << 13 << 14 << 15 << 16;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << OP_RESERVED << -1 << 0 << "01"_hex << 2 << 3 << 4 << 5 << 6 << 7 << 8 << 9 << 10 << 11 << 12 << 13 << 14 << 15 << 16;
     CheckIsStandard(t);
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << 0 << "01"_hex << 2 << "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"_hex;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << 0 << "01"_hex << 2 << "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"_hex;
     CheckIsStandard(t);
 
     // ...so long as it only contains PUSHDATA's
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << OP_RETURN;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << OP_SPAM;
     CheckIsNotStandard(t, "scriptpubkey");
 
     // TxoutType::NULL_DATA w/o PUSHDATA
     t.vout.resize(1);
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM;
     CheckIsStandard(t);
 
     // Multiple TxoutType::NULL_DATA are permitted
     t.vout.resize(2);
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[0].nValue = 0;
-    t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[1].scriptPubKey = CScript() << OP_SPAM << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[1].nValue = 0;
     CheckIsStandard(t);
 
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    t.vout[1].scriptPubKey = CScript() << OP_RETURN;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[1].scriptPubKey = CScript() << OP_SPAM;
     CheckIsStandard(t);
 
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN;
-    t.vout[1].scriptPubKey = CScript() << OP_RETURN;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM;
+    t.vout[1].scriptPubKey = CScript() << OP_SPAM;
     CheckIsStandard(t);
 
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
+    t.vout[1].scriptPubKey = CScript() << OP_SPAM << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     const auto datacarrier_size = t.vout[0].scriptPubKey.size() + t.vout[1].scriptPubKey.size();
     CheckIsStandard(t); // Default max relay should never trigger
     CheckIsStandard(t, /*max_op_return_relay=*/datacarrier_size);
@@ -957,7 +957,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // Check tx-size (non-standard if transaction weight is > MAX_STANDARD_TX_WEIGHT)
     t.vin.clear();
     t.vin.resize(2438); // size per input (empty scriptSig): 41 bytes
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(19, 0); // output size: 30 bytes
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << std::vector<unsigned char>(19, 0); // output size: 30 bytes
     // tx header:                12 bytes =>     48 weight units
     // 2438 inputs: 2438*41 = 99958 bytes => 399832 weight units
     //    1 output:              30 bytes =>    120 weight units
@@ -967,7 +967,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsStandard(t);
 
     // increase output size by one byte, so we end up with 400004 weight units
-    t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(20, 0); // output size: 31 bytes
+    t.vout[0].scriptPubKey = CScript() << OP_SPAM << std::vector<unsigned char>(20, 0); // output size: 31 bytes
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400004);
     CheckIsNotStandard(t, "tx-size");
 

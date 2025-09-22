@@ -175,13 +175,13 @@ https://www.torproject.org/docs/tor-manual.html.en
 
 This allows running bitcoind without having to do any manual configuration.
 
-Relay: Any sequence of pushdatas in OP_RETURN outputs now allowed
+Relay: Any sequence of pushdatas in OP_SPAM outputs now allowed
 -----------------------------------------------------------------
 
-Previously OP_RETURN outputs with a payload were only relayed and mined if they
+Previously OP_SPAM outputs with a payload were only relayed and mined if they
 had a single pushdata. This restriction has been lifted to allow any
 combination of data pushes and numeric constant opcodes (OP_1 to OP_16) after
-the OP_RETURN. The limit on OP_RETURN output size is now applied to the entire
+the OP_SPAM. The limit on OP_SPAM output size is now applied to the entire
 serialized scriptPubKey, 83 bytes by default. (the previous 80 byte default plus
 three bytes overhead)
 
@@ -494,7 +494,7 @@ git merge commit are mentioned.
 - #6457 `3c923e8` Include pruned state in chaininfo.json (Simon Males)
 - #6456 `bfd807f` rpc: Avoid unnecessary parsing roundtrip in number formatting, fix locale issue (Wladimir J. van der Laan)
 - #6380 `240b30e` rpc: Accept strings in AmountFromValue (Wladimir J. van der Laan)
-- #6346 `6bb2805` Add OP_RETURN support in createrawtransaction RPC call, add tests. (paveljanik)
+- #6346 `6bb2805` Add OP_SPAM support in createrawtransaction RPC call, add tests. (paveljanik)
 - #6013 `6feeec1` [REST] Add memory pool API (paveljanik)
 - #6576 `da9beb2` Stop parsing JSON after first finished construct. (Daniel Kraft)
 - #5677 `9aa9099` libevent-based http server (Wladimir J. van der Laan)

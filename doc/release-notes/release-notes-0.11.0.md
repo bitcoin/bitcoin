@@ -260,7 +260,7 @@ git merge commit are mentioned.
 - #5564 `a89b837` clarify obscure uses of EvalScript()
 - #5521 `8e4578a` Reject non-final txs even in testnet/regtest
 - #5707 `6af674e` Change hardcoded character constants to descriptive named constants for db keys
-- #5286 `fcf646c` Change the default maximum OP_RETURN size to 80 bytes
+- #5286 `fcf646c` Change the default maximum OP_SPAM size to 80 bytes
 - #5710 `175d86e` Add more information to errors in ReadBlockFromDisk
 - #5948 `b36f1ce` Use GetAncestor to compute new target
 - #5959 `a0bfc69` Add additional block index consistency checks

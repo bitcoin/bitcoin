@@ -55,7 +55,7 @@ struct CCoinsStats {
     CAmount total_unspendables_genesis_block{0};
     //! The two unspendable coinbase outputs total amount caused by BIP30
     CAmount total_unspendables_bip30{0};
-    //! Total cumulative amount of outputs sent to unspendable scripts (OP_RETURN for example) up to and including this block
+    //! Total cumulative amount of outputs sent to unspendable scripts (OP_SPAM for example) up to and including this block
     CAmount total_unspendables_scripts{0};
     //! Total cumulative amount of coins lost due to unclaimed miner rewards up to and including this block
     CAmount total_unspendables_unclaimed_rewards{0};

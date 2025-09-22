@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
 
     CTxOut witness;
     witness.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-    witness.scriptPubKey[0] = OP_RETURN;
+    witness.scriptPubKey[0] = OP_SPAM;
     witness.scriptPubKey[1] = 0x24;
     witness.scriptPubKey[2] = 0xaa;
     witness.scriptPubKey[3] = 0x21;

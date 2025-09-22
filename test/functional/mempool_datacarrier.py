@@ -5,11 +5,11 @@
 """Test datacarrier functionality"""
 from test_framework.messages import (
     CTxOut,
-    MAX_OP_RETURN_RELAY,
+    MAX_OP_SPAM_RELAY,
 )
 from test_framework.script import (
     CScript,
-    OP_RETURN,
+    OP_SPAM,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import TestNode
@@ -37,7 +37,7 @@ class DataCarrierTest(BitcoinTestFramework):
     def test_null_data_transaction(self, node: TestNode, data, success: bool) -> None:
         tx = self.wallet.create_self_transfer(fee_rate=0)["tx"]
         data = [] if data is None else [data]
-        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN] + data)))
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_SPAM] + data)))
         tx.vout[0].nValue -= tx.get_vsize()  # simply pay 1sat/vbyte fee
 
         tx_hex = tx.serialize().hex()
@@ -54,7 +54,7 @@ class DataCarrierTest(BitcoinTestFramework):
         # Test that bare multisig is allowed by default. Do it here rather than create a new test for it.
         assert_equal(self.nodes[0].getmempoolinfo()["permitbaremultisig"], True)
 
-        assert_equal(self.nodes[0].getmempoolinfo()["maxdatacarriersize"], MAX_OP_RETURN_RELAY)
+        assert_equal(self.nodes[0].getmempoolinfo()["maxdatacarriersize"], MAX_OP_SPAM_RELAY)
         assert_equal(self.nodes[1].getmempoolinfo()["maxdatacarriersize"], 0)
         assert_equal(self.nodes[2].getmempoolinfo()["maxdatacarriersize"], CUSTOM_DATACARRIER_ARG)
         assert_equal(self.nodes[3].getmempoolinfo()["maxdatacarriersize"], 2)
@@ -62,10 +62,10 @@ class DataCarrierTest(BitcoinTestFramework):
         # By default, any size is allowed.
 
         # If it is custom set to 83, the historical value,
-        # only 80 bytes are used for data (+1 for OP_RETURN, +2 for the pushdata opcodes).
+        # only 80 bytes are used for data (+1 for OP_SPAM, +2 for the pushdata opcodes).
         custom_size_data = randbytes(CUSTOM_DATACARRIER_ARG - 3)
         too_long_data = randbytes(CUSTOM_DATACARRIER_ARG - 2)
-        extremely_long_data = randbytes(MAX_OP_RETURN_RELAY - 200)
+        extremely_long_data = randbytes(MAX_OP_SPAM_RELAY - 200)
         one_byte = randbytes(1)
         zero_bytes = randbytes(0)
 

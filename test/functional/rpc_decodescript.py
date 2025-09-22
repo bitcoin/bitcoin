@@ -111,10 +111,10 @@ class DecodeScriptTest(BitcoinTestFramework):
         # this matters if/when signature sighash decoding comes along.
         # would want to make sure that no such decoding takes place in this case.
         signature_imposter = '48304502207fa7a6d1e0ee81132a269ad84e68d695483745cde8b541e3bf630749894e342a022100c1f7ab20e13e22fb95281a870f3dcf38d782e53023ee313d741ad0cfbc0c509001'
-        # OP_RETURN <data>
+        # OP_SPAM <data>
         rpc_result = self.nodes[0].decodescript('6a' + signature_imposter)
         assert_equal('nulldata', rpc_result['type'])
-        assert_equal('OP_RETURN ' + signature_imposter[2:], rpc_result['asm'])
+        assert_equal('OP_SPAM ' + signature_imposter[2:], rpc_result['asm'])
 
         self.log.info("- CLTV redeem script")
         # redeem scripts are in-effect scriptPubKey scripts, so adding a test here.
@@ -224,7 +224,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         # make sure that a specifically crafted op_return value will not pass all the IsDERSignature checks and then get decoded as a sighash type
         tx = '01000000015ded05872fdbda629c7d3d02b194763ce3b9b1535ea884e3c8e765d42e316724020000006b48304502204c10d4064885c42638cbff3585915b322de33762598321145ba033fc796971e2022100bb153ad3baa8b757e30a2175bd32852d2e1cb9080f84d7e32fcdfd667934ef1b012103163c0ff73511ea1743fb5b98384a2ff09dd06949488028fd819f4d83f56264efffffffff0200000000000000000b6a0930060201000201000180380100000000001976a9141cabd296e753837c086da7a45a6c2fe0d49d7b7b88ac00000000'
         rpc_result = self.nodes[0].decoderawtransaction(tx)
-        assert_equal('OP_RETURN 300602010002010001', rpc_result['vout'][0]['scriptPubKey']['asm'])
+        assert_equal('OP_SPAM 300602010002010001', rpc_result['vout'][0]['scriptPubKey']['asm'])
 
         self.log.info("- tx passing DER signature checks")
         # verify that we have not altered scriptPubKey processing even of a specially crafted P2PKH pubkeyhash and P2SH redeem script hash that is made to pass the der signature checks
@@ -260,10 +260,10 @@ class DecodeScriptTest(BitcoinTestFramework):
         assert_equal('0 ' + signature_sighash_decoded + ' ' + signature_2_sighash_decoded, rpc_result['vin'][0]['scriptSig']['asm'])
 
         self.log.info("- scriptSig that contains more than push operations")
-        # in fact, it contains an OP_RETURN with data specially crafted to cause improper decode if the code does not catch it.
+        # in fact, it contains an OP_SPAM with data specially crafted to cause improper decode if the code does not catch it.
         txSave.vin[0].scriptSig = bytes.fromhex('6a143011020701010101010101020601010101010101')
         rpc_result = self.nodes[0].decoderawtransaction(txSave.serialize().hex())
-        assert_equal('OP_RETURN 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
+        assert_equal('OP_SPAM 3011020701010101010101020601010101010101', rpc_result['vin'][0]['scriptSig']['asm'])
 
     def decodescript_datadriven_tests(self):
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_decodescript.json'), encoding='utf-8') as f:

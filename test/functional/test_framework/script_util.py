@@ -31,7 +31,7 @@ from test_framework.script import (
     OP_EQUALVERIFY,
     OP_HASH160,
     OP_IF,
-    OP_RETURN,
+    OP_SPAM,
     OP_TRUE,
     hash160,
 )
@@ -62,8 +62,8 @@ assert MIN_PADDING == 5
 
 # This script cannot be spent, allowing dust output values under
 # standardness checks
-DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
-assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
+DUMMY_MIN_OP_SPAM_SCRIPT = CScript([OP_SPAM] + ([OP_0] * (MIN_PADDING - 1)))
+assert len(DUMMY_MIN_OP_SPAM_SCRIPT) == MIN_PADDING
 
 PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
 ANCHOR_ADDRESS = "bcrt1pfeesnyr2tx"
@@ -140,7 +140,7 @@ def bulk_vout(tx, target_vsize):
     # compensate for the increase of the compact-size encoded script length
     # (note that the length encoding of the unpadded output script needs one byte)
     dummy_vbytes -= len(ser_compact_size(dummy_vbytes)) - 1
-    tx.vout[-1].scriptPubKey = CScript([OP_RETURN] + [OP_1] * dummy_vbytes)
+    tx.vout[-1].scriptPubKey = CScript([OP_SPAM] + [OP_1] * dummy_vbytes)
     assert_equal(tx.get_vsize(), target_vsize)
 
 def output_key_to_p2tr_script(key):

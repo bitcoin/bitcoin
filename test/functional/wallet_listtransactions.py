@@ -307,7 +307,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Negative from", self.nodes[0].listtransactions, skip=-1)
 
     def test_op_return(self):
-        """Test if OP_RETURN outputs will be displayed correctly."""
+        """Test if OP_SPAM outputs will be displayed correctly."""
         raw_tx = self.nodes[0].createrawtransaction([], [{'data': 'aa'}])
         funded_tx = self.nodes[0].fundrawtransaction(raw_tx)
         signed_tx = self.nodes[0].signrawtransactionwithwallet(funded_tx['hex'])

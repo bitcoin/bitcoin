@@ -37,7 +37,7 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_NOP,
-    OP_RETURN,
+    OP_SPAM,
     OP_TRUE,
     sign_input_legacy,
     taproot_construct,
@@ -120,7 +120,7 @@ class MiniWallet:
         """Pad a transaction with extra outputs until it reaches a target vsize.
         returns the tx
         """
-        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_RETURN])))
+        tx.vout.append(CTxOut(nValue=0, scriptPubKey=CScript([OP_SPAM])))
         bulk_vout(tx, target_vsize)
 
 

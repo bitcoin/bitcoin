@@ -39,7 +39,7 @@
     [
         "6a00",
         {
-            "asm": "OP_RETURN 0",
+            "asm": "OP_SPAM 0",
             "desc": "raw(6a00)#ncfmkl43",
             "type": "nulldata"
         }
@@ -47,7 +47,7 @@
     [
         "6aee",
         {
-            "asm": "OP_RETURN OP_UNKNOWN",
+            "asm": "OP_SPAM OP_UNKNOWN",
             "desc": "raw(6aee)#vsyzgqdt",
             "type": "nonstandard"
         }
@@ -55,7 +55,7 @@
     [
         "6a02ee",
         {
-            "asm": "OP_RETURN [error]",
+            "asm": "OP_SPAM [error]",
             "desc": "raw(6a02ee)#gvdwnlzl",
             "type": "nonstandard"
         }

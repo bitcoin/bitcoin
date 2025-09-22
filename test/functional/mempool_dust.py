@@ -11,7 +11,7 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     CScript,
-    OP_RETURN,
+    OP_SPAM,
     OP_TRUE,
 )
 from test_framework.script_util import (
@@ -45,7 +45,7 @@ class DustRelayFeeTest(BitcoinTestFramework):
     def test_dust_output(self, node: TestNode, dust_relay_fee: Decimal,
                          output_script: CScript, type_desc: str) -> None:
         # determine dust threshold (see `GetDustThreshold`)
-        if output_script[0] == OP_RETURN:
+        if output_script[0] == OP_SPAM:
             dust_threshold = 0
         else:
             tx_size = len(CTxOut(nValue=0, scriptPubKey=output_script).serialize())
@@ -121,7 +121,7 @@ class DustRelayFeeTest(BitcoinTestFramework):
             (program_to_witness_script(16, b'\x77' * 40),      "P2?? (future witness version 16)"),
             # largest possible output script considered standard
             (keys_to_multisig_script([uncompressed_pubkey]*3), "bare multisig (m-of-3)"),
-            (CScript([OP_RETURN, b'superimportanthash']),      "null data (OP_RETURN)"),
+            (CScript([OP_SPAM, b'superimportanthash']),      "null data (OP_SPAM)"),
         )
 
         # test default (no parameter), disabled (=0) and a bunch of arbitrary dust fee rates [sat/kvB]

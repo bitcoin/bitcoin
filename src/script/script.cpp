@@ -53,7 +53,7 @@ std::string GetOpName(opcodetype opcode)
     case OP_ELSE                   : return "OP_ELSE";
     case OP_ENDIF                  : return "OP_ENDIF";
     case OP_VERIFY                 : return "OP_VERIFY";
-    case OP_RETURN                 : return "OP_RETURN";
+    case OP_SPAM                 : return "OP_SPAM";
 
     // stack ops
     case OP_TOALTSTACK             : return "OP_TOALTSTACK";

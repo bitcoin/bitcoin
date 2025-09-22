@@ -53,7 +53,7 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_OK, "OK"},
     {SCRIPT_ERR_UNKNOWN_ERROR, "UNKNOWN_ERROR"},
     {SCRIPT_ERR_EVAL_FALSE, "EVAL_FALSE"},
-    {SCRIPT_ERR_OP_RETURN, "OP_RETURN"},
+    {SCRIPT_ERR_OP_SPAM, "OP_SPAM"},
     {SCRIPT_ERR_SCRIPT_SIZE, "SCRIPT_SIZE"},
     {SCRIPT_ERR_PUSH_SIZE, "PUSH_SIZE"},
     {SCRIPT_ERR_OP_COUNT, "OP_COUNT"},
@@ -1184,9 +1184,9 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
     dummy_key.MakeNewKey(/*fCompressed=*/true);
     const CPubKey dummy_pubkey{dummy_key.GetPubKey()};
 
-    // Small OP_RETURN has direct allocation
+    // Small OP_SPAM has direct allocation
     {
-        const auto script{CScript() << OP_RETURN << std::vector<uint8_t>(10, 0xaa)};
+        const auto script{CScript() << OP_SPAM << std::vector<uint8_t>(10, 0xaa)};
         BOOST_CHECK_EQUAL(GetTxoutType(script), TxoutType::NULL_DATA);
         CHECK_SCRIPT_STATIC_SIZE(script, 12);
     }

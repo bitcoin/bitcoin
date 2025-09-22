@@ -84,7 +84,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
             },
             [&] {
                 CScript script;
-                script << OP_RETURN;
+                script << OP_SPAM;
                 destination = CNoDestination{script};
             },
             [&] {

@@ -36,7 +36,7 @@ from .script import (
     CScriptNum,
     CScriptOp,
     OP_0,
-    OP_RETURN,
+    OP_SPAM,
     OP_TRUE,
 )
 from .script_util import (
@@ -116,7 +116,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce))
     output_data = WITNESS_COMMITMENT_HEADER + witness_commitment
-    return CScript([OP_RETURN, output_data])
+    return CScript([OP_SPAM, output_data])
 
 def add_witness_commitment(block, nonce=0):
     """Add a witness commitment to the block's coinbase transaction.
@@ -131,7 +131,7 @@ def add_witness_commitment(block, nonce=0):
     block.vtx[0].wit.vtxinwit = [CTxInWitness()]
     block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
 
-    # witness commitment is the last OP_RETURN output in coinbase
+    # witness commitment is the last OP_SPAM output in coinbase
     block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce)))
     block.hashMerkleRoot = block.calc_merkle_root()
 

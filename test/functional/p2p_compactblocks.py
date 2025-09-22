@@ -54,7 +54,7 @@ from test_framework.script import (
     CScript,
     OP_DROP,
     OP_TRUE,
-    OP_RETURN,
+    OP_SPAM,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -765,7 +765,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # Re-establish a proper witness commitment with the coinbase witness, but
         # invalidate the last tx in the block.
-        block.vtx[4].vin[0].scriptSig = CScript([OP_RETURN])
+        block.vtx[4].vin[0].scriptSig = CScript([OP_SPAM])
         block.hashMerkleRoot = block.calc_merkle_root()
         add_witness_commitment(block)
         block.solve()

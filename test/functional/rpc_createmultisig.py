@@ -130,7 +130,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         node2.signrawtransactionwithkey(rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         # redeemScript mismatch to witnessScript
-        prevtx_err["redeemScript"] = "6a" # OP_RETURN
+        prevtx_err["redeemScript"] = "6a" # OP_SPAM
         assert_raises_rpc_error(-8, "redeemScript does not correspond to witnessScript", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         # redeemScript does not match scriptPubKey

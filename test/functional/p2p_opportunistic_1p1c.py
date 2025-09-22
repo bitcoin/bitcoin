@@ -38,7 +38,7 @@ from test_framework.p2p import (
 from test_framework.script import (
     CScript,
     OP_NOP,
-    OP_RETURN,
+    OP_SPAM,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -421,7 +421,7 @@ class PackageRelayTest(BitcoinTestFramework):
         tx.vin = [CTxIn(COutPoint(random.randrange(1 << 256), random.randrange(1, 100)))]
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_NOP] * 5)]
-        tx.vout = [CTxOut(100, CScript([OP_RETURN, b'a' * 3]))]
+        tx.vout = [CTxOut(100, CScript([OP_SPAM, b'a' * 3]))]
         return tx
 
     @cleanup

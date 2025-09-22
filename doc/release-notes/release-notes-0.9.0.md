@@ -66,12 +66,12 @@ To reduce confusion between Bitcoin-the-network and Bitcoin-the-software we
 have renamed the reference client to Bitcoin Core.
 
 
-OP_RETURN and data in the block chain
+OP_SPAM and data in the block chain
 -------------------------------------
-On OP_RETURN:  There was been some confusion and misunderstanding in
-the community, regarding the OP_RETURN feature in 0.9 and data in the
+On OP_SPAM:  There was been some confusion and misunderstanding in
+the community, regarding the OP_SPAM feature in 0.9 and data in the
 blockchain.  This change is not an endorsement of storing data in the
-blockchain.  The OP_RETURN change creates a provably-prunable output,
+blockchain.  The OP_SPAM change creates a provably-prunable output,
 to avoid data storage schemes -- some of which were already deployed --
 that were storing arbitrary data such as images as forever-unspendable
 TX outputs, bloating bitcoin's UTXO database.
@@ -244,7 +244,7 @@ Protocol and network:
 - New 'reject' P2P message (BIP 0061, see
   https://gist.github.com/gavinandresen/7079034 for draft)
 - Dump addresses every 15 minutes instead of 10 seconds
-- Relay OP_RETURN data TxOut as standard transaction type
+- Relay OP_SPAM data TxOut as standard transaction type
 - Remove CENT-output free transaction rule when relaying
 - Lower maximum size for free transaction creation
 - Send multiple inv messages if mempool.size > MAX_INV_SZ

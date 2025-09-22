@@ -4099,7 +4099,7 @@ std::vector<unsigned char> ChainstateManager::GenerateCoinbaseCommitment(CBlock&
         CTxOut out;
         out.nValue = 0;
         out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
-        out.scriptPubKey[0] = OP_RETURN;
+        out.scriptPubKey[0] = OP_SPAM;
         out.scriptPubKey[1] = 0x24;
         out.scriptPubKey[2] = 0xaa;
         out.scriptPubKey[3] = 0x21;

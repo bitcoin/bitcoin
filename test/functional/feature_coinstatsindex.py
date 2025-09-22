@@ -23,7 +23,7 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_FALSE,
-    OP_RETURN,
+    OP_SPAM,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -158,10 +158,10 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Find the right position of the 21 BTC output
         tx1_out_21 = self.wallet.get_utxo(txid=tx1["txid"], vout=tx1["sent_vout"])
 
-        # Generate and send another tx with an OP_RETURN output (which is unspendable)
+        # Generate and send another tx with an OP_SPAM output (which is unspendable)
         tx2 = self.wallet.create_self_transfer(utxo_to_spend=tx1_out_21)['tx']
         tx2_val = '20.99'
-        tx2.vout = [CTxOut(int(Decimal(tx2_val) * COIN), CScript([OP_RETURN] + [OP_FALSE] * 30))]
+        tx2.vout = [CTxOut(int(Decimal(tx2_val) * COIN), CScript([OP_SPAM] + [OP_FALSE] * 30))]
         tx2_hex = tx2.serialize().hex()
         self.nodes[0].sendrawtransaction(tx2_hex, 0, tx2_val)
 

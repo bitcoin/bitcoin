@@ -999,7 +999,7 @@ static std::vector<RPCArg> OutputsDoc()
         },
         {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
             {
-                {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data that becomes a part of an OP_RETURN output"},
+                {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data that becomes a part of an OP_SPAM output"},
             },
         },
     };

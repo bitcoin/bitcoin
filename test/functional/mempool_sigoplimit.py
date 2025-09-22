@@ -26,7 +26,7 @@ from test_framework.script import (
     OP_FALSE,
     OP_IF,
     OP_NOT,
-    OP_RETURN,
+    OP_SPAM,
     OP_TRUE,
 )
 from test_framework.script_util import (
@@ -88,12 +88,12 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # use a 256-byte data-push as lower bound in the output script, in order
         # to avoid having to compensate for tx size changes caused by varying
         # length serialization sizes (both for scriptPubKey and data-push lengths)
-        tx = self.create_p2wsh_spending_tx(witness_script, CScript([OP_RETURN, b'X'*256]))
+        tx = self.create_p2wsh_spending_tx(witness_script, CScript([OP_SPAM, b'X'*256]))
 
         # bump the tx to reach the sigop-limit equivalent size by padding the datacarrier output
         assert_greater_than_or_equal(sigop_equivalent_vsize, tx.get_vsize())
         vsize_to_pad = sigop_equivalent_vsize - tx.get_vsize()
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad)])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, b'X'*(256+vsize_to_pad)])
         assert_equal(sigop_equivalent_vsize, tx.get_vsize())
 
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
@@ -102,7 +102,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
         # increase the tx's vsize to be right above the sigop-limit equivalent size
         # => tx's vsize in mempool should also grow accordingly
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad+1)])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, b'X'*(256+vsize_to_pad+1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
         assert_equal(res['vsize'], sigop_equivalent_vsize+1)
@@ -111,7 +111,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # => tx's vsize in mempool should stick at the sigop-limit equivalent
         # bytes level, as it is higher than the tx's serialized vsize
         # (the maximum of both is taken)
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad-1)])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, b'X'*(256+vsize_to_pad-1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
         assert_equal(res['allowed'], True)
         assert_equal(res['vsize'], sigop_equivalent_vsize)
@@ -121,7 +121,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # (to keep it simple, we only test the case here where the sigop vsize
         # is much larger than the serialized vsize, i.e. we create a small child
         # tx by getting rid of the large padding output)
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'test123'])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, b'test123'])
         assert_greater_than(sigop_equivalent_vsize, tx.get_vsize())
         self.nodes[0].sendrawtransaction(hexstring=tx.serialize().hex(), maxburnamount='1.0')
 
@@ -207,7 +207,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # Spending all these outputs at once accounts for 2505 legacy sigops and is non-standard.
         nonstd_tx = CTransaction()
         nonstd_tx.vin = [CTxIn(op, CScript([b"", packed_redeem_script])) for op in outpoints]
-        nonstd_tx.vout = [CTxOut(0, CScript([OP_RETURN, b""]))]
+        nonstd_tx.vout = [CTxOut(0, CScript([OP_SPAM, b""]))]
         assert_raises_rpc_error(-26, "bad-txns-nonstandard-inputs", self.nodes[0].sendrawtransaction, nonstd_tx.serialize().hex())
 
         # Spending one less accounts for 2490 legacy sigops and is standard.

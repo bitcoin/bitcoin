@@ -151,7 +151,7 @@ inline int GetWitnessCommitmentIndex(const CBlock& block)
         for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
             const CTxOut& vout = block.vtx[0]->vout[o];
             if (vout.scriptPubKey.size() >= MINIMUM_WITNESS_COMMITMENT &&
-                vout.scriptPubKey[0] == OP_RETURN &&
+                vout.scriptPubKey[0] == OP_SPAM &&
                 vout.scriptPubKey[1] == 0x24 &&
                 vout.scriptPubKey[2] == 0xaa &&
                 vout.scriptPubKey[3] == 0x21 &&

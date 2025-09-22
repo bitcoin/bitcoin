@@ -111,7 +111,7 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
             }
             has_data = true;
             std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
-            CTxDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
+            CTxDestination destination{CNoDestination{CScript() << OP_SPAM << data}};
             CAmount amount{0};
             parsed_outputs.emplace_back(destination, amount);
         } else {

@@ -662,7 +662,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-datacarriersize",
                    strprintf("(DEPRECATED) Relay and mine transactions whose data-carrying raw scriptPubKeys in aggregate "
                              "are of this size or less, allowing multiple outputs (default: %u)",
-                             MAX_OP_RETURN_RELAY),
+                             MAX_OP_SPAM_RELAY),
                    ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-permitbaremultisig", strprintf("Relay transactions creating non-P2SH multisig outputs (default: %u)", DEFAULT_PERMIT_BAREMULTISIG), ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);

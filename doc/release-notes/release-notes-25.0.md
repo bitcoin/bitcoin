@@ -84,7 +84,7 @@ bitcoin-cli -named createwallet mywallet load_on_startup=1
 - `sendrawtransaction` has a new, optional argument, `maxburnamount` with a default value of `0`.
   Any transaction containing an unspendable output with a value greater than `maxburnamount` will
   not be submitted. At present, the outputs deemed unspendable are those with scripts that begin
-  with an `OP_RETURN` code (known as 'datacarriers'), scripts that exceed the maximum script size,
+  with an `OP_SPAM` code (known as 'datacarriers'), scripts that exceed the maximum script size,
   and scripts that contain invalid opcodes.
 
 - The `testmempoolaccept` RPC now returns 2 additional results within the "fees" result:

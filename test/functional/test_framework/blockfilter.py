@@ -34,7 +34,7 @@ def bip158_relevant_scriptpubkeys(node, block_hash):
     'A basic filter MUST contain exactly the following items for each transaction in a block:
        - The previous output script (the script being spent) for each input, except for
          the coinbase transaction.
-       - The scriptPubKey of each output, aside from all OP_RETURN output scripts.'
+       - The scriptPubKey of each output, aside from all OP_SPAM output scripts.'
     """
     spks = set()
     for tx in node.getblock(blockhash=block_hash, verbosity=3)['tx']:

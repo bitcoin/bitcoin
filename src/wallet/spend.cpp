@@ -1171,7 +1171,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.m_subtract_fee_outputs ? 0 : coin_selection_params.tx_noinputs_size);
     CAmount selection_target = recipients_sum + not_input_fees;
 
-    // This can only happen if feerate is 0, and requested destinations are value of 0 (e.g. OP_RETURN)
+    // This can only happen if feerate is 0, and requested destinations are value of 0 (e.g. OP_SPAM)
     // and no pre-selected inputs. This will result in 0-input transaction, which is consensus-invalid anyways
     if (selection_target == 0 && !coin_control.HasSelected()) {
         return util::Error{_("Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input")};

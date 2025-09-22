@@ -151,7 +151,7 @@ OP_VERNOTIF = CScriptOp(0x66)
 OP_ELSE = CScriptOp(0x67)
 OP_ENDIF = CScriptOp(0x68)
 OP_VERIFY = CScriptOp(0x69)
-OP_RETURN = CScriptOp(0x6a)
+OP_SPAM = CScriptOp(0x6a)
 
 # stack ops
 OP_TOALTSTACK = CScriptOp(0x6b)
@@ -284,7 +284,7 @@ OPCODE_NAMES.update({
     OP_ELSE: 'OP_ELSE',
     OP_ENDIF: 'OP_ENDIF',
     OP_VERIFY: 'OP_VERIFY',
-    OP_RETURN: 'OP_RETURN',
+    OP_SPAM: 'OP_SPAM',
     OP_TOALTSTACK: 'OP_TOALTSTACK',
     OP_FROMALTSTACK: 'OP_FROMALTSTACK',
     OP_2DROP: 'OP_2DROP',

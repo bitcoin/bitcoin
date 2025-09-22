@@ -76,7 +76,7 @@ FUZZ_TARGET(utxo_total_supply)
         const uint32_t i = tx.vout.size() - 1;
         // store it
         txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.vout.at(i));
-        if (current_block->vtx.size() == 1 && tx.vout.at(i).scriptPubKey[0] == OP_RETURN) {
+        if (current_block->vtx.size() == 1 && tx.vout.at(i).scriptPubKey[0] == OP_SPAM) {
             // also store coinbase
             const uint32_t i = tx.vout.size() - 2;
             txos.emplace_back(COutPoint{tx.GetHash(), i}, tx.vout.at(i));

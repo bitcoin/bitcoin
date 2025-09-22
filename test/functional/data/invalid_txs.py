@@ -50,7 +50,7 @@ from test_framework.script import (
     OP_MOD,
     OP_MUL,
     OP_OR,
-    OP_RETURN,
+    OP_SPAM,
     OP_RIGHT,
     OP_RSHIFT,
     OP_SUBSTR,
@@ -119,7 +119,7 @@ class SizeTooSmall(BadTxTemplate):
     def get_tx(self):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
-        tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
+        tx.vout.append(CTxOut(0, CScript([OP_SPAM] + ([OP_0] * (MIN_PADDING - 2)))))
         assert len(tx.serialize_without_witness()) == 64
         assert MIN_STANDARD_TX_NONWITNESS_SIZE - 1 == 64
         return tx
@@ -260,7 +260,7 @@ def getDisabledOpcodeTemplate(opcode):
 class NonStandardAndInvalid(BadTxTemplate):
     """A non-standard transaction which is also consensus-invalid should return the first error."""
     reject_reason = "mempool-script-verify-flag-failed (Using OP_CODESEPARATOR in non-witness script)"
-    block_reject_reason = "block-script-verify-flag-failed (OP_RETURN was encountered)"
+    block_reject_reason = "block-script-verify-flag-failed (OP_SPAM was encountered)"
     valid_in_block = False
 
     def get_tx(self):

@@ -185,7 +185,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
 
                 // Infrequently test adding unspendable coins.
                 if (m_rng.randrange(16) == 0 && coin.IsSpent()) {
-                    newcoin.out.scriptPubKey.assign(1 + m_rng.randbits(6), OP_RETURN);
+                    newcoin.out.scriptPubKey.assign(1 + m_rng.randbits(6), OP_SPAM);
                     BOOST_CHECK(newcoin.out.scriptPubKey.IsUnspendable());
                     added_an_unspendable_entry = true;
                 } else {

@@ -42,7 +42,7 @@ from test_framework.script import (
     OP_FALSE,
     OP_IF,
     OP_INVALIDOPCODE,
-    OP_RETURN,
+    OP_SPAM,
     OP_TRUE,
     sign_input_legacy,
 )
@@ -1227,26 +1227,26 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b83], True)
         self.save_spendable_output()
 
-        # Reorg on/off blocks that have OP_RETURN in them (and try to spend them)
+        # Reorg on/off blocks that have OP_SPAM in them (and try to spend them)
         #
         #  -> b81 (26) -> b82 (27) -> b83 (28) -> b84 (29) -> b87 (30) -> b88 (31)
         #                                    \-> b85 (29) -> b86 (30)            \-> b89a (32)
         #
-        self.log.info("Test re-orging blocks with OP_RETURN in them")
+        self.log.info("Test re-orging blocks with OP_SPAM in them")
         self.next_block(84)
-        tx1 = self.create_tx(out[29], 0, 0, CScript([OP_RETURN]))
+        tx1 = self.create_tx(out[29], 0, 0, CScript([OP_SPAM]))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx1.vout.append(CTxOut(0, CScript([OP_TRUE])))
         self.sign_tx(tx1, out[29])
-        tx2 = self.create_tx(tx1, 1, 0, CScript([OP_RETURN]))
-        tx2.vout.append(CTxOut(0, CScript([OP_RETURN])))
-        tx3 = self.create_tx(tx1, 2, 0, CScript([OP_RETURN]))
+        tx2 = self.create_tx(tx1, 1, 0, CScript([OP_SPAM]))
+        tx2.vout.append(CTxOut(0, CScript([OP_SPAM])))
+        tx3 = self.create_tx(tx1, 2, 0, CScript([OP_SPAM]))
         tx3.vout.append(CTxOut(0, CScript([OP_TRUE])))
         tx4 = self.create_tx(tx1, 3, 0, CScript([OP_TRUE]))
-        tx4.vout.append(CTxOut(0, CScript([OP_RETURN])))
-        tx5 = self.create_tx(tx1, 4, 0, CScript([OP_RETURN]))
+        tx4.vout.append(CTxOut(0, CScript([OP_SPAM])))
+        tx5 = self.create_tx(tx1, 4, 0, CScript([OP_SPAM]))
 
         b84 = self.update_block(84, [tx1, tx2, tx3, tx4, tx5])
         self.send_blocks([b84], True)
@@ -1268,7 +1268,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b88], True)
         self.save_spendable_output()
 
-        # trying to spend the OP_RETURN output is rejected
+        # trying to spend the OP_SPAM output is rejected
         self.next_block("89a", spend=out[32])
         tx = self.create_tx(tx1, 0, 0, CScript([OP_TRUE]))
         b89a = self.update_block("89a", [tx])

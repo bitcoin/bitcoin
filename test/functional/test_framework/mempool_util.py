@@ -17,7 +17,7 @@ from .messages import (
 )
 from .script import (
     CScript,
-    OP_RETURN,
+    OP_SPAM,
 )
 from .util import (
     assert_equal,
@@ -127,5 +127,5 @@ def create_large_orphan():
     tx.vin = [CTxIn(COutPoint(random.randrange(1 << 256), random.randrange(1, 100)))]
     tx.wit.vtxinwit = [CTxInWitness()]
     tx.wit.vtxinwit[0].scriptWitness.stack = [CScript(b'X' * 390000)]
-    tx.vout = [CTxOut(100, CScript([OP_RETURN, b'a' * 20]))]
+    tx.vout = [CTxOut(100, CScript([OP_SPAM, b'a' * 20]))]
     return tx

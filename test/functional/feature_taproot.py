@@ -70,7 +70,7 @@ from test_framework.script import (
     OP_NOT,
     OP_NOTIF,
     OP_PUSHDATA1,
-    OP_RETURN,
+    OP_SPAM,
     OP_SWAP,
     OP_TUCK,
     OP_VERIFY,
@@ -624,7 +624,7 @@ def byte_popper(expr):
 ERR_SCHNORR_SIG_SIZE = {"err_msg": "Invalid Schnorr signature size"}
 ERR_SCHNORR_SIG_HASHTYPE = {"err_msg": "Invalid Schnorr signature hash type"}
 ERR_SCHNORR_SIG = {"err_msg": "Invalid Schnorr signature"}
-ERR_OP_RETURN = {"err_msg": "OP_RETURN was encountered"}
+ERR_OP_SPAM = {"err_msg": "OP_SPAM was encountered"}
 ERR_TAPROOT_WRONG_CONTROL_SIZE = {"err_msg": "Invalid Taproot control block size"}
 ERR_WITNESS_PROGRAM_MISMATCH = {"err_msg": "Witness program hash mismatch"}
 ERR_PUSH_SIZE = {"err_msg": "Push value size limit exceeded"}
@@ -853,11 +853,11 @@ def spenders_taproot_active():
                     elif witlen > 32:
                         prog += bytes([0 for _ in range(witlen - 32)])
                     return CScript([CScriptOp.encode_op_n(witver), prog])
-                scripts = [("s0", CScript([pubs[0], OP_CHECKSIG])), ("dummy", CScript([OP_RETURN]))]
+                scripts = [("s0", CScript([pubs[0], OP_CHECKSIG])), ("dummy", CScript([OP_SPAM]))]
                 tap = taproot_construct(pubs[1], scripts)
                 if not p2sh and witver == 1 and witlen == 32:
                     add_spender(spenders, "applic/keypath", p2sh=p2sh, spk_mutate_pre_p2sh=mutate, tap=tap, key=secs[1], **SIGHASH_BITFLIP, **ERR_SCHNORR_SIG)
-                    add_spender(spenders, "applic/scriptpath", p2sh=p2sh, leaf="s0", spk_mutate_pre_p2sh=mutate, tap=tap, key=secs[0], **SINGLE_SIG, failure={"leaf": "dummy"}, **ERR_OP_RETURN)
+                    add_spender(spenders, "applic/scriptpath", p2sh=p2sh, leaf="s0", spk_mutate_pre_p2sh=mutate, tap=tap, key=secs[0], **SINGLE_SIG, failure={"leaf": "dummy"}, **ERR_OP_SPAM)
                 else:
                     add_spender(spenders, "applic/keypath", p2sh=p2sh, spk_mutate_pre_p2sh=mutate, tap=tap, key=secs[1], standard=False)
                     add_spender(spenders, "applic/scriptpath", p2sh=p2sh, leaf="s0", spk_mutate_pre_p2sh=mutate, tap=tap, key=secs[0], **SINGLE_SIG, standard=False)
@@ -958,9 +958,9 @@ def spenders_taproot_active():
         # 4) Hypothetical OP_CHECKMULTISIGVERIFY script that takes a single sig as input
         ("t4", CScript([OP_0, OP_SWAP, OP_1, pubs[1], OP_1, OP_CHECKMULTISIGVERIFY, OP_1])),
         # 5) OP_IF script that needs a true input
-        ("t5", CScript([OP_IF, pubs[1], OP_CHECKSIG, OP_ELSE, OP_RETURN, OP_ENDIF])),
+        ("t5", CScript([OP_IF, pubs[1], OP_CHECKSIG, OP_ELSE, OP_SPAM, OP_ENDIF])),
         # 6) OP_NOTIF script that needs a true input
-        ("t6", CScript([OP_NOTIF, OP_RETURN, OP_ELSE, pubs[1], OP_CHECKSIG, OP_ENDIF])),
+        ("t6", CScript([OP_NOTIF, OP_SPAM, OP_ELSE, pubs[1], OP_CHECKSIG, OP_ENDIF])),
         # 7) OP_CHECKSIG with an empty key
         ("t7", CScript([OP_0, OP_CHECKSIG])),
         # 8) OP_CHECKSIGVERIFY with an empty key
@@ -1024,7 +1024,7 @@ def spenders_taproot_active():
     ]
     # Add many dummies to test huge trees
     for j in range(100000):
-        scripts.append((None, CScript([OP_RETURN, random.randrange(100000)])))
+        scripts.append((None, CScript([OP_SPAM, random.randrange(100000)])))
     random.shuffle(scripts)
     tap = taproot_construct(pubs[0], scripts)
     common = {
@@ -1147,8 +1147,8 @@ def spenders_taproot_active():
         scripts = [
             ("bare_c0", CScript([OP_NOP])),
             ("bare_unkver", CScript([OP_NOP]), leafver),
-            ("return_c0", CScript([OP_RETURN])),
-            ("return_unkver", CScript([OP_RETURN]), leafver),
+            ("return_c0", CScript([OP_SPAM])),
+            ("return_unkver", CScript([OP_SPAM]), leafver),
             ("undecodable_c0", CScript([OP_PUSHDATA1])),
             ("undecodable_unkver", CScript([OP_PUSHDATA1]), leafver),
             ("bigpush_c0", CScript([random.randbytes(MAX_SCRIPT_ELEMENT_SIZE+1), OP_DROP])),
@@ -1159,7 +1159,7 @@ def spenders_taproot_active():
         random.shuffle(scripts)
         tap = taproot_construct(pubs[0], scripts)
         add_spender(spenders, "unkver/bare", standard=False, tap=tap, leaf="bare_unkver", failure={"leaf": "bare_c0"}, **ERR_CLEANSTACK)
-        add_spender(spenders, "unkver/return", standard=False, tap=tap, leaf="return_unkver", failure={"leaf": "return_c0"}, **ERR_OP_RETURN)
+        add_spender(spenders, "unkver/return", standard=False, tap=tap, leaf="return_unkver", failure={"leaf": "return_c0"}, **ERR_OP_SPAM)
         add_spender(spenders, "unkver/undecodable", standard=False, tap=tap, leaf="undecodable_unkver", failure={"leaf": "undecodable_c0"}, **ERR_BAD_OPCODE)
         add_spender(spenders, "unkver/bigpush", standard=False, tap=tap, leaf="bigpush_unkver", failure={"leaf": "bigpush_c0"}, **ERR_PUSH_SIZE)
         add_spender(spenders, "unkver/1001push", standard=False, tap=tap, leaf="1001push_unkver", failure={"leaf": "1001push_c0"}, **ERR_STACK_SIZE)
@@ -1176,8 +1176,8 @@ def spenders_taproot_active():
             ("bare_nop", CScript([OP_NOP])),
             ("unexecif_success", CScript([OP_0, OP_IF, opcode, OP_ENDIF])),
             ("unexecif_nop", CScript([OP_0, OP_IF, OP_NOP, OP_ENDIF])),
-            ("return_success", CScript([OP_RETURN, opcode])),
-            ("return_nop", CScript([OP_RETURN, OP_NOP])),
+            ("return_success", CScript([OP_SPAM, opcode])),
+            ("return_nop", CScript([OP_SPAM, OP_NOP])),
             ("undecodable_success", CScript([opcode, OP_PUSHDATA1])),
             ("undecodable_nop", CScript([OP_NOP, OP_PUSHDATA1])),
             ("undecodable_bypassed_success", CScript([OP_PUSHDATA1, OP_2, opcode])),
@@ -1190,7 +1190,7 @@ def spenders_taproot_active():
         tap = taproot_construct(pubs[0], scripts)
         add_spender(spenders, "opsuccess/bare", standard=False, tap=tap, leaf="bare_success", failure={"leaf": "bare_nop"}, **ERR_CLEANSTACK)
         add_spender(spenders, "opsuccess/unexecif", standard=False, tap=tap, leaf="unexecif_success", failure={"leaf": "unexecif_nop"}, **ERR_CLEANSTACK)
-        add_spender(spenders, "opsuccess/return", standard=False, tap=tap, leaf="return_success", failure={"leaf": "return_nop"}, **ERR_OP_RETURN)
+        add_spender(spenders, "opsuccess/return", standard=False, tap=tap, leaf="return_success", failure={"leaf": "return_nop"}, **ERR_OP_SPAM)
         add_spender(spenders, "opsuccess/undecodable", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_nop"}, **ERR_BAD_OPCODE)
         add_spender(spenders, "opsuccess/undecodable_bypass", standard=False, tap=tap, leaf="undecodable_success", failure={"leaf": "undecodable_bypassed_success"}, **ERR_BAD_OPCODE)
         add_spender(spenders, "opsuccess/bigpush", standard=False, tap=tap, leaf="bigpush_success", failure={"leaf": "bigpush_nop"}, **ERR_PUSH_SIZE)
@@ -1203,8 +1203,8 @@ def spenders_taproot_active():
         if is_op_success(opcode):
             continue
         scripts = [
-            ("normal", CScript([OP_RETURN, opcode] + [OP_NOP] * 75)),
-            ("op_success", CScript([OP_RETURN, CScriptOp(0x50)]))
+            ("normal", CScript([OP_SPAM, opcode] + [OP_NOP] * 75)),
+            ("op_success", CScript([OP_SPAM, CScriptOp(0x50)]))
         ]
         tap = taproot_construct(pubs[0], scripts)
         add_spender(spenders, "alwaysvalid/notsuccessx", tap=tap, leaf="op_success", inputs=[], standard=False, failure={"leaf": "normal"}) # err_msg differs based on opcode

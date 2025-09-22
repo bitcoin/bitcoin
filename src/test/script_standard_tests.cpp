@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 
     // TxoutType::NULL_DATA
     s.clear();
-    s << OP_RETURN <<
+    s << OP_SPAM <<
         std::vector<unsigned char>({0}) <<
         std::vector<unsigned char>({75}) <<
         std::vector<unsigned char>({255});
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 
     // TxoutType::NULL_DATA with other opcodes
     s.clear();
-    s << OP_RETURN << std::vector<unsigned char>({75}) << OP_ADD;
+    s << OP_SPAM << std::vector<unsigned char>({75}) << OP_ADD;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::NONSTANDARD);
 
     // TxoutType::WITNESS_V0_{KEY,SCRIPT}HASH with incorrect program size (-> consensus-invalid, i.e. non-standard)
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
 
     // TxoutType::NULL_DATA
     s.clear();
-    s << OP_RETURN << std::vector<unsigned char>({75});
+    s << OP_SPAM << std::vector<unsigned char>({75});
     BOOST_CHECK(!ExtractDestination(s, address));
 
     // TxoutType::WITNESS_V0_KEYHASH

@@ -32,13 +32,13 @@ from test_framework.script import (
     CScript,
     OP_0,
     OP_HASH160,
-    OP_RETURN,
+    OP_SPAM,
     OP_TRUE,
     SIGHASH_ALL,
     sign_input_legacy,
 )
 from test_framework.script_util import (
-    DUMMY_MIN_OP_RETURN_SCRIPT,
+    DUMMY_MIN_OP_SPAM_SCRIPT,
     keys_to_multisig_script,
     MIN_PADDING,
     MIN_STANDARD_TX_NONWITNESS_SIZE,
@@ -339,19 +339,19 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             rawtxs=[tx.serialize().hex()],
         )
 
-        # OP_RETURN followed by non-push
+        # OP_SPAM followed by non-push
         tx = tx_from_hex(raw_tx_reference)
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, OP_HASH160])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, OP_HASH160])
         self.check_mempool_result(
             result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'scriptpubkey'}],
             rawtxs=[tx.serialize().hex()],
         )
 
-        # Multiple OP_RETURN and more than 83 bytes, even if over MAX_SCRIPT_ELEMENT_SIZE
+        # Multiple OP_SPAM and more than 83 bytes, even if over MAX_SCRIPT_ELEMENT_SIZE
         # are standard since v30
         tx = tx_from_hex(raw_tx_reference)
-        tx.vout.append(CTxOut(0, CScript([OP_RETURN, b'\xff'])))
-        tx.vout.append(CTxOut(0, CScript([OP_RETURN, b'\xff' * 50000])))
+        tx.vout.append(CTxOut(0, CScript([OP_SPAM, b'\xff'])))
+        tx.vout.append(CTxOut(0, CScript([OP_SPAM, b'\xff' * 50000])))
 
         self.check_mempool_result(
             result_expected=[{'txid': tx.txid_hex, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': {'base': Decimal('0.05')}}],
@@ -359,28 +359,28 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
             maxfeerate=0
         )
 
-        self.log.info("A transaction with several OP_RETURN outputs.")
+        self.log.info("A transaction with several OP_SPAM outputs.")
         tx = tx_from_hex(raw_tx_reference)
         op_return_count = 42
         tx.vout[0].nValue = int(tx.vout[0].nValue / op_return_count)
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'\xff'])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, b'\xff'])
         tx.vout = [tx.vout[0]] * op_return_count
         self.check_mempool_result(
             result_expected=[{"txid": tx.txid_hex, "allowed": True, "vsize": tx.get_vsize(), "fees": {"base": Decimal("0.05000026")}}],
             rawtxs=[tx.serialize().hex()],
         )
 
-        self.log.info("A transaction with an OP_RETURN output that bumps into the max standardness tx size.")
+        self.log.info("A transaction with an OP_SPAM output that bumps into the max standardness tx size.")
         tx = tx_from_hex(raw_tx_reference)
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM])
         data_len = int(MAX_STANDARD_TX_WEIGHT / 4) - tx.get_vsize() - 5 - 4  # -5 for PUSHDATA4 and -4 for script size
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b"\xff" * (data_len)])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, b"\xff" * (data_len)])
         assert_equal(tx.get_vsize(), int(MAX_STANDARD_TX_WEIGHT / 4))
         self.check_mempool_result(
             result_expected=[{"txid": tx.txid_hex, "allowed": True, "vsize": tx.get_vsize(), "fees": {"base": Decimal("0.1") - Decimal("0.05")}}],
             rawtxs=[tx.serialize().hex()],
         )
-        tx.vout[0].scriptPubKey = CScript([OP_RETURN, b"\xff" * (data_len + 1)])
+        tx.vout[0].scriptPubKey = CScript([OP_SPAM, b"\xff" * (data_len + 1)])
         assert_greater_than(tx.get_vsize(), int(MAX_STANDARD_TX_WEIGHT / 4))
         self.check_mempool_result(
             result_expected=[{"txid": tx.txid_hex, "allowed": False, "reject-reason": "tx-size"}],
@@ -414,7 +414,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(int(seed_tx["txid"], 16), seed_tx["sent_vout"]), b"", SEQUENCE_FINAL))
         tx.wit.vtxinwit = [CTxInWitness()]
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
-        tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
+        tx.vout.append(CTxOut(0, CScript([OP_SPAM] + ([OP_0] * (MIN_PADDING - 2)))))
         # Note it's only non-witness size that matters!
         assert_equal(len(tx.serialize_without_witness()), 64)
         assert_equal(MIN_STANDARD_TX_NONWITNESS_SIZE - 1, 64)
@@ -427,7 +427,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         )
 
         self.log.info('Minimally-small transaction(in non-witness bytes) that is allowed')
-        tx.vout[0] = CTxOut(COIN - 1000, DUMMY_MIN_OP_RETURN_SCRIPT)
+        tx.vout[0] = CTxOut(COIN - 1000, DUMMY_MIN_OP_SPAM_SCRIPT)
         assert_equal(len(tx.serialize_without_witness()), MIN_STANDARD_TX_NONWITNESS_SIZE)
         self.check_mempool_result(
             result_expected=[{'txid': tx.txid_hex, 'allowed': True, 'vsize': tx.get_vsize(), 'fees': { 'base': Decimal('0.00001000')}}],

@@ -282,7 +282,7 @@ FUZZ_TARGET(txorphan_protected, .init = initialize_orphanage)
             for (uint32_t i = 0; i < num_out; i++) {
                 const auto payload_size = fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(0, 100000);
                 if (payload_size) {
-                    tx_mut.vout.emplace_back(0, CScript() << OP_RETURN << std::vector<unsigned char>(payload_size));
+                    tx_mut.vout.emplace_back(0, CScript() << OP_SPAM << std::vector<unsigned char>(payload_size));
                 } else {
                     tx_mut.vout.emplace_back(0, CScript{});
                 }

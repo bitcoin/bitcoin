@@ -301,7 +301,7 @@ their next block before expending work on it, reducing risks of accidental
 hardforks or mining invalid blocks.
 
 Two new options to control mining policy:
-- `-datacarrier=0/1` : Relay and mine "data carrier" (OP_RETURN) transactions
+- `-datacarrier=0/1` : Relay and mine "data carrier" (OP_SPAM) transactions
 if this is 1.
 - `-datacarriersize=n` : Maximum size, in bytes, we consider acceptable for
 "data carrier" outputs.

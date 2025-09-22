@@ -69,15 +69,15 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     included_scripts[3] << OP_0 << std::vector<unsigned char>(32, 3);
     included_scripts[4] << OP_4 << OP_ADD << OP_8 << OP_EQUAL;
 
-    // OP_RETURN output is an output on the second transaction.
-    excluded_scripts[0] << OP_RETURN << std::vector<unsigned char>(40, 4);
+    // OP_SPAM output is an output on the second transaction.
+    excluded_scripts[0] << OP_SPAM << std::vector<unsigned char>(40, 4);
 
     // This script is not related to the block at all.
     excluded_scripts[1] << std::vector<unsigned char>(33, 5) << OP_CHECKSIG;
 
-    // OP_RETURN is non-standard since it's not followed by a data push, but is still excluded from
+    // OP_SPAM is non-standard since it's not followed by a data push, but is still excluded from
     // filter.
-    excluded_scripts[2] << OP_RETURN << OP_4 << OP_ADD << OP_8 << OP_EQUAL;
+    excluded_scripts[2] << OP_SPAM << OP_4 << OP_ADD << OP_8 << OP_EQUAL;
 
     CMutableTransaction tx_1;
     tx_1.vout.emplace_back(100, included_scripts[0]);

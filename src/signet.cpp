@@ -78,7 +78,7 @@ std::optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& c
     tx_spending.version = 0;
     tx_spending.nLockTime = 0;
     tx_spending.vin.emplace_back(COutPoint(), CScript(), 0);
-    tx_spending.vout.emplace_back(0, CScript(OP_RETURN));
+    tx_spending.vout.emplace_back(0, CScript(OP_SPAM));
 
     // can't fill any other fields before extracting signet
     // responses from block coinbase tx

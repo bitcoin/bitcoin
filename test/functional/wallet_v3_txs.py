@@ -14,7 +14,7 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     CScript,
-    OP_RETURN
+    OP_SPAM
 )
 
 from test_framework.script_util import bulk_vout
@@ -77,7 +77,7 @@ class WalletV3Test(BitcoinTestFramework):
         return txid
 
     def bulk_tx(self, tx, amount, target_vsize):
-        tx.vout.append(CTxOut(nValue=(amount * COIN), scriptPubKey=CScript([OP_RETURN])))
+        tx.vout.append(CTxOut(nValue=(amount * COIN), scriptPubKey=CScript([OP_SPAM])))
         bulk_vout(tx, target_vsize)
 
     def run_test_with_swapped_versions(self, test_func):

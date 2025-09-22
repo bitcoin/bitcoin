@@ -190,7 +190,7 @@ static GCSFilter::ElementSet BasicFilterElements(const CBlock& block,
     for (const CTransactionRef& tx : block.vtx) {
         for (const CTxOut& txout : tx->vout) {
             const CScript& script = txout.scriptPubKey;
-            if (script.empty() || script[0] == OP_RETURN) continue;
+            if (script.empty() || script[0] == OP_SPAM) continue;
             elements.emplace(script.begin(), script.end());
         }
     }

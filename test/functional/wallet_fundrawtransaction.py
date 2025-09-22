@@ -727,7 +727,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
 
     def test_op_return(self):
-        self.log.info("Test fundrawtxn with OP_RETURN and no vin")
+        self.log.info("Test fundrawtxn with OP_SPAM and no vin")
 
         rawtx   = "0100000000010000000000000000066a047465737400000000"
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)

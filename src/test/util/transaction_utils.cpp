@@ -73,7 +73,7 @@ std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keyst
 
 void BulkTransaction(CMutableTransaction& tx, int32_t target_weight)
 {
-    tx.vout.emplace_back(0, CScript() << OP_RETURN);
+    tx.vout.emplace_back(0, CScript() << OP_SPAM);
     auto unpadded_weight{GetTransactionWeight(CTransaction(tx))};
     assert(target_weight >= unpadded_weight);
 
