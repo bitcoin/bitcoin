@@ -738,6 +738,10 @@ public:
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
 
+    /** Network key used to prevent fingerprinting our node across networks.
+     *  Influenced by the network and the bind address (+ bind port for inbounds) */
+    const uint64_t m_network_key;
+
     const ConnectionType m_conn_type;
 
     /** Move all messages from the received queue to the processing queue. */
@@ -889,6 +893,7 @@ public:
           const std::string& addrNameIn,
           ConnectionType conn_type_in,
           bool inbound_onion,
+          uint64_t network_key,
           CNodeOptions&& node_opts = {});
     CNode(const CNode&) = delete;
     CNode& operator=(const CNode&) = delete;
