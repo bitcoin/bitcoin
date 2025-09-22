@@ -3554,6 +3554,17 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
         // in terms of the freshness of the response.
         cache_entry.m_cache_entry_expiration = current_time +
             21h + FastRandomContext().randrange<std::chrono::microseconds>(6h);
+
+        const auto now{Now<NodeSeconds>()};
+        const auto new_timestamp = now - std::chrono::minutes(8 * 60 * 24 + FastRandomContext().randrange(5 * 60 * 24));
+        for (CAddress& addr : cache_entry.m_addrs_response_cache) {
+            addr.nTime = new_timestamp;
+            // An attacker can correlate two separate cache entries
+            // belonging to the same dual-homed node (e.g., IPv4 and Tor) by using address timestamps.
+            // Having separate caches doesn’t stop this since the addresses come from the same AddrMan.
+            // To mitigate this, we set the timestamps for each cache to a fixed time in the past (10.5±2.5 days).
+            // Using 10.5±2.5 days strikes a balance: the addresses aren’t too old, but the correlation is avoided.
+        }
     }
     return cache_entry.m_addrs_response_cache;
 }
