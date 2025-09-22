@@ -540,6 +540,7 @@ enable_arm_shani=no
 enable_sse42=no
 enable_sse41=no
 enable_avx2=no
+enable_x86_aesni=no
 enable_x86_shani=no
 
 dnl Check for optional instruction set support. Enabling these does _not_ imply that all code will
@@ -550,6 +551,7 @@ dnl x86
 AX_CHECK_COMPILE_FLAG([-msse4.2], [SSE42_CXXFLAGS="-msse4.2"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-msse4.1], [SSE41_CXXFLAGS="-msse4.1"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-mavx -mavx2], [AVX2_CXXFLAGS="-mavx -mavx2"], [], [$CXXFLAG_WERROR])
+AX_CHECK_COMPILE_FLAG([-msse4.1 -maes], [X86_AESNI_CXXFLAGS="-msse4.1 -maes"], [], [$CXXFLAG_WERROR])
 AX_CHECK_COMPILE_FLAG([-msse4 -msha], [X86_SHANI_CXXFLAGS="-msse4 -msha"], [], [$CXXFLAG_WERROR])
 
 enable_clmul=
@@ -636,6 +638,23 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     return _mm_extract_epi32(_mm_sha256rnds2_epu32(i, i, k), 0);
   ]])],
  [ AC_MSG_RESULT([yes]); enable_x86_shani=yes; AC_DEFINE([ENABLE_X86_SHANI], [1], [Define this symbol to build code that uses x86 SHA-NI intrinsics]) ],
+ [ AC_MSG_RESULT([no])]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$X86_AESNI_CXXFLAGS $CXXFLAGS"
+AC_MSG_CHECKING([for x86 AES-NI intrinsics])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdint.h>
+    #include <immintrin.h>
+    #include <wmmintrin.h>
+  ]],[[
+    __m128i x = _mm_setzero_si128();
+    x = _mm_aesenc_si128(x, _mm_setzero_si128());
+    return _mm_extract_epi32(x, 0);
+  ]])],
+ [ AC_MSG_RESULT([yes]); enable_x86_aesni=yes; AC_DEFINE([ENABLE_X86_AESNI], [1], [Define this symbol to build code that uses x86 AES-NI intrinsics]) ],
  [ AC_MSG_RESULT([no])]
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
@@ -1823,6 +1842,7 @@ AM_CONDITIONAL([HARDEN], [test "$use_hardening" = "yes"])
 AM_CONDITIONAL([ENABLE_SSE42], [test "$enable_sse42" = "yes"])
 AM_CONDITIONAL([ENABLE_SSE41], [test "$enable_sse41" = "yes"])
 AM_CONDITIONAL([ENABLE_AVX2], [test "$enable_avx2" = "yes"])
+AM_CONDITIONAL([ENABLE_X86_AESNI], [test "$enable_x86_aesni" = "yes"])
 AM_CONDITIONAL([ENABLE_X86_SHANI], [test "$enable_x86_shani" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_CRC], [test "$enable_arm_crc" = "yes"])
 AM_CONDITIONAL([ENABLE_ARM_SHANI], [test "$enable_arm_shani" = "yes"])
@@ -1882,6 +1902,7 @@ AC_SUBST(SSE42_CXXFLAGS)
 AC_SUBST(SSE41_CXXFLAGS)
 AC_SUBST(CLMUL_CXXFLAGS)
 AC_SUBST(AVX2_CXXFLAGS)
+AC_SUBST(X86_AESNI_CXXFLAGS)
 AC_SUBST(X86_SHANI_CXXFLAGS)
 AC_SUBST(ARM_CRC_CXXFLAGS)
 AC_SUBST(ARM_SHANI_CXXFLAGS)
