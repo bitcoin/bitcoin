@@ -2099,7 +2099,7 @@ bool DescriptorScriptPubKeyMan::SetupDescriptorGeneration(const CExtKey& master_
     std::string xpub = EncodeExtPubKey(master_key.Neuter());
 
     // Build descriptor string
-    std::string desc_prefix = strprintf("pkh(%s/%d'/%d'", xpub, internal == InternalKey::CoinJoin ? 9 : 44, Params().ExtCoinType());
+    std::string desc_prefix = strprintf("pkh(%s/%d'/%d'", xpub, internal == InternalKey::CoinJoin ? BIP32_PURPOSE_FEATURE : BIP32_PURPOSE_STANDARD, Params().ExtCoinType());
     std::string desc_suffix = "/*)";
 
     std::string internal_path = (internal == InternalKey::Internal) ? "/1" : "/0";
