@@ -22,6 +22,11 @@
 #include <sys/auxv.h>
 #endif // __linux__
 
+#if defined(__FreeBSD__)
+#include <machine/elf.h>
+#include <sys/auxv.h>
+#endif // __FreeBSD__
+
 #if defined(_WIN32)
 #include <processthreadsapi.h>
 #include <winnt.h>
@@ -41,6 +46,9 @@ void Round(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
 void RoundKeyless(uint32_t x0, uint32_t x1, uint32_t x2, uint32_t x3,
                   uint32_t& y0, uint32_t& y1, uint32_t& y2, uint32_t& y3);
 } // namespace arm_crypto_aes
+namespace arm_crypto_echo {
+void FullStateRound(uint64_t W[16][2], uint32_t& k0, uint32_t& k1, uint32_t& k2, uint32_t& k3);
+} // namespace arm_crypto_echo
 #endif // ENABLE_ARM_AES
 
 #if defined(ENABLE_SSSE3)
@@ -139,6 +147,16 @@ void SapphireAutoDetect()
 #endif // __aarch64__
 #endif // __linux__
 
+#if defined(__FreeBSD__)
+    [[maybe_unused]] unsigned long hwcap{0};
+#if defined(__arm__)
+    have_arm_aes = ((::elf_aux_info(AT_HWCAP2, &hwcap, sizeof(hwcap)) == 0) && ((hwcap & HWCAP2_AES) != 0));
+#endif // __arm__
+#if defined(__aarch64__)
+    have_arm_aes = ((::elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap)) == 0) && ((hwcap & HWCAP_AES) != 0));
+#endif // __aarch64__
+#endif // __FreeBSD__
+
 #if defined(_WIN32)
     have_arm_aes = ::IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE);
 #endif // _WIN32
@@ -146,6 +164,7 @@ void SapphireAutoDetect()
     if (have_arm_aes) {
         aes_round = sapphire::arm_crypto_aes::Round;
         aes_round_nk = sapphire::arm_crypto_aes::RoundKeyless;
+        echo_round = sapphire::arm_crypto_echo::FullStateRound;
     }
 #endif // ENABLE_ARM_AES
 #endif // !DISABLE_OPTIMIZED_SHA256
