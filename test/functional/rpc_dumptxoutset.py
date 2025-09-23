@@ -19,6 +19,30 @@ class DumptxoutsetTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
+    def test_dumptxoutset_with_fork(self):
+        node = self.nodes[0]
+        tip = node.getbestblockhash()
+        target_height = node.getblockcount() - 10
+        target_hash = node.getblockhash(target_height)
+
+        # Create a fork of two blocks at the target height
+        invalid_block = node.getblockhash(target_height + 1)
+        node.invalidateblock(invalid_block)
+        # Reset mocktime to not regenerate the same blockhash
+        node.setmocktime(0)
+        self.generate(node, 2)
+
+        # Move back on to actual main chain
+        node.reconsiderblock(invalid_block)
+        self.wait_until(lambda: node.getbestblockhash() == tip)
+
+        # Use dumptxoutset at the forked height
+        out = node.dumptxoutset("txoutset_fork.dat", "rollback", {"rollback": target_height})
+
+        # Verify the snapshot was created at the target height and not the fork tip
+        assert_equal(out['base_height'], target_height)
+        assert_equal(out['base_hash'], target_hash)
+
     def run_test(self):
         """Test a trivial usage of the dumptxoutset RPC command."""
         node = self.nodes[0]
@@ -59,6 +83,9 @@ class DumptxoutsetTest(BitcoinTestFramework):
         self.log.info("Test that dumptxoutset with unknown dump type fails")
         assert_raises_rpc_error(
             -8, 'Invalid snapshot type "bogus" specified. Please specify "rollback" or "latest"', node.dumptxoutset, 'utxos.dat', "bogus")
+
+        self.log.info("Testing dumptxoutset with chain fork at target height")
+        self.test_dumptxoutset_with_fork()
 
 
 if __name__ == '__main__':
