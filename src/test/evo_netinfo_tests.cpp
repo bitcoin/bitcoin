@@ -141,6 +141,14 @@ static const std::vector<TestEntry> addr_vals_reg{
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:22"}, NetInfoStatus::Success, NetInfoStatus::BadPort},
 };
 
+enum class ExpectedType : uint8_t {
+    CJDNS,
+};
+
+static const std::vector<std::tuple</*type=*/ExpectedType, /*input=*/std::string, /*expected_ret=*/NetInfoStatus>> privacy_addr_vals{
+    {ExpectedType::CJDNS, "[fc00:3344:5566:7788:9900:aabb:ccdd:eeff]:9998", NetInfoStatus::Success},
+};
+
 BOOST_FIXTURE_TEST_CASE(mnnetinfo_rules_reg, RegTestingSetup) { TestMnNetInfo(addr_vals_reg); }
 
 BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
@@ -200,6 +208,25 @@ BOOST_FIXTURE_TEST_CASE(extnetinfo_rules_reg, RegTestingSetup)
             {{NetInfoPurpose::PLATFORM_HTTPS, "somebodys-macbook-pro.local:9998"}, NetInfoStatus::MaxLimit, NetInfoStatus::BadInput},
         };
         TestExtNetInfo(domain_vals);
+    }
+
+    // Privacy network entry checks
+    for (const auto& [type, input, expected_ret] : privacy_addr_vals) {
+        const bool expected_success{expected_ret == NetInfoStatus::Success};
+
+        ExtNetInfo netInfo{};
+        BOOST_CHECK_EQUAL(netInfo.AddEntry(NetInfoPurpose::CORE_P2P, input), expected_ret);
+        ValidateGetEntries(netInfo.GetEntries(), /*expected_size=*/expected_success ? 1 : 0);
+        if (!expected_success) continue;
+
+        // Type registration check
+        const CService service{netInfo.GetEntries().at(0).GetAddrPort().value()};
+        BOOST_CHECK(service.IsValid());
+        switch (type) {
+        case ExpectedType::CJDNS:
+            BOOST_CHECK(service.IsCJDNS());
+            break;
+        } // no default case, so the compiler can warn about missing cases
     }
 }
 
