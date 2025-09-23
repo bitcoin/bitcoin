@@ -7,6 +7,7 @@
 #include <qt/governancelist.h>
 #include <qt/proposalwizard.h>
 
+#include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <evo/deterministicmns.h>
@@ -360,16 +361,10 @@ GovernanceList::~GovernanceList() = default;
 void GovernanceList::setClientModel(ClientModel* model)
 {
     this->clientModel = model;
-    updateProposalList();
     if (model != nullptr) {
         connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
 
-        // Update voting capability if we now have both client and wallet models
-        if (walletModel) {
-            updateVotingCapability();
-            // Update voting capability when masternode list changes
-            connect(clientModel, &ClientModel::masternodeListChanged, this, &GovernanceList::updateVotingCapability);
-        }
+        updateProposalList();
     }
 }
 
@@ -410,6 +405,11 @@ void GovernanceList::updateProposalList()
             newProposals.emplace_back(new Proposal(this->clientModel, govObj, proposalModel));
         }
         proposalModel->reconcile(newProposals);
+        // Update voting capability if we now have both client and wallet models
+
+        if (walletModel) {
+            updateVotingCapability();
+        }
     }
 
     // Schedule next update.
@@ -489,11 +489,11 @@ void GovernanceList::updateVotingCapability()
 {
     if (!walletModel || !clientModel) return;
 
-    votableMasternodes.clear();
-    auto [mnList, pindex] = clientModel->getMasternodeList();
+    auto [mn_list, pindex] = clientModel->getMasternodeList();
     if (!pindex) return;
 
-    mnList.ForEachMN(true, [&](const auto& dmn) {
+    votableMasternodes.clear();
+    mn_list.ForEachMN(true, [&](const auto& dmn) {
         // Check if wallet owns the voting key using the same logic as RPC
         const CScript script = GetScriptForDestination(PKHash(dmn.pdmnState->keyIDVoting));
         if (walletModel->wallet().isSpendable(script)) {

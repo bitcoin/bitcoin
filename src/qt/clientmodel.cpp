@@ -50,7 +50,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     m_peer_table_sort_proxy->setSourceModel(peerTableModel);
 
     banTableModel = new BanTableModel(m_node, this);
-    mnListCached = std::make_shared<CDeterministicMNList>();
+    mnListCached = std::make_unique<CDeterministicMNList>();
 
     QTimer* timer = new QTimer;
     timer->setInterval(MODEL_UPDATE_DELAY);
@@ -101,18 +101,18 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 void ClientModel::setMasternodeList(const CDeterministicMNList& mnList, const CBlockIndex* tip)
 {
-    LOCK(cs_mnlinst);
+    LOCK(cs_mnlist);
     if (mnListCached->GetBlockHash() == mnList.GetBlockHash()) {
         return;
     }
-    mnListCached = std::make_shared<CDeterministicMNList>(mnList);
+    mnListCached = std::make_unique<CDeterministicMNList>(mnList);
     mnListTip = tip;
     Q_EMIT masternodeListChanged();
 }
 
 std::pair<CDeterministicMNList, const CBlockIndex*> ClientModel::getMasternodeList() const
 {
-    LOCK(cs_mnlinst);
+    LOCK(cs_mnlist);
     return {*mnListCached, mnListTip};
 }
 
@@ -120,7 +120,7 @@ void ClientModel::refreshMasternodeList()
 {
     auto [mnList, tip] = m_node.evo().getListAtChainTip();
 
-    LOCK(cs_mnlinst);
+    LOCK(cs_mnlist);
     setMasternodeList(mnList, tip);
 }
 
