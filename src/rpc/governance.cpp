@@ -114,7 +114,7 @@ static RPCHelpMan gobject_check()
     if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
         CProposalValidator validator(strDataHex);
         if (!validator.Validate())  {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages: " + validator.GetErrorMessages());
         }
     } else {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid object type, only proposals can be validated");
@@ -185,7 +185,7 @@ static RPCHelpMan gobject_prepare()
     if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
         CProposalValidator validator(strDataHex);
         if (!validator.Validate()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages: " + validator.GetErrorMessages());
         }
     }
 
@@ -362,7 +362,7 @@ static RPCHelpMan gobject_submit()
     if (govobj.GetObjectType() == GovernanceObject::PROPOSAL) {
         CProposalValidator validator(strDataHex);
         if (!validator.Validate()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages: " + validator.GetErrorMessages());
         }
     }
 
@@ -510,7 +510,7 @@ static RPCHelpMan gobject_vote_many()
     vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
     if (eVoteSignal == VOTE_SIGNAL_NONE) {
         throw JSONRPCError(RPC_INVALID_PARAMETER,
-                           "Invalid vote signal. Please using one of the following: "
+                           "Invalid vote signal. Please use one of the following: "
                            "(funding|valid|delete|endorsed)");
     }
 
@@ -563,7 +563,7 @@ static RPCHelpMan gobject_vote_alias()
     vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
     if (eVoteSignal == VOTE_SIGNAL_NONE) {
         throw JSONRPCError(RPC_INVALID_PARAMETER,
-                           "Invalid vote signal. Please using one of the following: "
+                           "Invalid vote signal. Please use one of the following: "
                            "(funding|valid|delete|endorsed)");
     }
 
@@ -914,7 +914,7 @@ static RPCHelpMan voteraw()
     vote_signal_enum_t eVoteSignal = CGovernanceVoting::ConvertVoteSignal(strVoteSignal);
     if (eVoteSignal == VOTE_SIGNAL_NONE)  {
         throw JSONRPCError(RPC_INVALID_PARAMETER,
-                           "Invalid vote signal. Please using one of the following: "
+                           "Invalid vote signal. Please use one of the following: "
                            "(funding|valid|delete|endorsed)");
     }
 
