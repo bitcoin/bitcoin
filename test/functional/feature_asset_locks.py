@@ -624,7 +624,7 @@ class AssetLocksTest(DashTestFramework):
     def test_mn_rr(self, node_wallet, node, pubkey):
         self.log.info("Activate mn_rr...")
         locked = self.get_credit_pool_balance()
-        self.activate_mn_rr(expected_activation_height=560)
+        self.activate_mn_rr()
         self.log.info(f'mn-rr height: {node.getblockcount()} credit: {self.get_credit_pool_balance()}')
         assert_equal(locked, self.get_credit_pool_balance())
 

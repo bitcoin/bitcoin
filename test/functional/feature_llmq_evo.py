@@ -49,9 +49,9 @@ class TestP2PConn(P2PInterface):
 
 class LLMQEvoNodesTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(5, 4, evo_count=5)
-        self.set_dash_llmq_test_params(4, 4)
-        self.mn_rr_height = 400
+        # we just need a couple of regular nodes to be ensured that they are not included in platform quorum, 2 is enough
+        self.set_dash_test_params(3, 2, evo_count=4)
+        self.mn_rr_height = 320
 
     def run_test(self):
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -62,18 +62,12 @@ class LLMQEvoNodesTest(DashTestFramework):
         null_hash = format(0, "064x")
 
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 1)
-        self.wait_for_sporks_same()
 
         expectedUpdated = [mn.proTxHash for mn in self.mninfo]
         b_0 = self.nodes[0].getbestblockhash()
         self.test_getmnlistdiff(null_hash, b_0, {}, [], expectedUpdated)
 
-        self.test_masternode_count(expected_mns_count=4, expected_evo_count=0)
-
-        self.nodes[0].sporkupdate("SPORK_2_INSTANTSEND_ENABLED", 0)
-        self.wait_for_sporks_same()
-
+        self.test_masternode_count(expected_mns_count=2, expected_evo_count=0)
         evo_protxhash_list = list()
         for i in range(self.evo_count):
             evo_info: MasternodeInfo = self.dynamically_add_masternode(evo=True)
@@ -84,7 +78,7 @@ class LLMQEvoNodesTest(DashTestFramework):
             b_i = self.nodes[0].getbestblockhash()
             self.test_getmnlistdiff(null_hash, b_i, {}, [], expectedUpdated)
 
-            self.test_masternode_count(expected_mns_count=4, expected_evo_count=i+1)
+            self.test_masternode_count(expected_mns_count=2, expected_evo_count=i+1)
             self.dynamically_evo_update_service(evo_info)
 
         self.log.info("Test llmq_platform are formed only with EvoNodes")
@@ -100,7 +94,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.test_masternode_winners()
 
         self.activate_mn_rr()
-        self.log.info("Activated MN RewardReallocation, current height:" + str(self.nodes[0].getblockcount()))
+        self.log.info(f"Activated MN RewardReallocation, current height: {self.nodes[0].getblockcount()}")
 
         # Generate a few blocks to make EvoNode/MN analysis on a pure MN RewardReallocation window
         self.bump_mocktime(1)
@@ -109,10 +103,6 @@ class LLMQEvoNodesTest(DashTestFramework):
         self.log.info("Test that EvoNodes are paid 1 block in a row after MN RewardReallocation activation")
         self.test_evo_payments(window_analysis=48, mnrr_active=True)
         self.test_masternode_winners(mn_rr_active=True)
-
-        self.log.info(self.nodes[0].masternodelist())
-
-        return
 
     def test_evo_payments(self, window_analysis, mnrr_active):
         current_evo: MasternodeInfo = None
@@ -183,13 +173,21 @@ class LLMQEvoNodesTest(DashTestFramework):
 
     def test_evo_protx_are_in_mnlist(self, evo_protx_list):
         mn_list = self.nodes[0].masternodelist()
+        mn_list_evo = self.nodes[0].masternodelist(mode="evo")
         for evo_protx in evo_protx_list:
-            found = False
-            for mn in mn_list:
-                if mn_list.get(mn)['proTxHash'] == evo_protx:
-                    found = True
-                    assert_equal(mn_list.get(mn)['type'], "Evo")
-            assert_equal(found, True)
+            found_in_mns = False
+            for _, mn in mn_list.items():
+                if mn['proTxHash'] == evo_protx:
+                    found_in_mns = True
+                    assert_equal(mn['type'], "Evo")
+            assert_equal(found_in_mns, True)
+
+            found_in_evos = False
+            for _, mn in mn_list_evo.items():
+                assert_equal(mn['type'], "Evo")
+                if mn['proTxHash'] == evo_protx:
+                    found_in_evos = True
+            assert_equal(found_in_evos, True)
 
     def test_masternode_count(self, expected_mns_count, expected_evo_count):
         mn_count = self.nodes[0].masternode('count')
