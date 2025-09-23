@@ -81,7 +81,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     AddrMan addrman{netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
     auto peerman = PeerManager::make(connman, addrman,
                                      /*banman=*/nullptr, chainman,
-                                     *g_setup->m_node.mempool, warnings,
+                                     g_setup->m_node.mempool.get(), warnings,
                                      PeerManager::Options{
                                          .reconcile_txs = true,
                                          .deterministic_rng = true,
