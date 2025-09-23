@@ -5,16 +5,19 @@
 #ifndef BITCOIN_EVO_MNHFTX_H
 #define BITCOIN_EVO_MNHFTX_H
 
-#include <bls/bls.h>
-#include <gsl/pointers.h>
+#include <saltedhasher.h>
 #include <sync.h>
 #include <threadsafety.h>
+#include <versionbits.h>
+
+#include <bls/bls.h>
+#include <unordered_lru_cache.h>
+
+#include <gsl/pointers.h>
 #include <univalue.h>
 
+#include <atomic>
 #include <optional>
-#include <saltedhasher.h>
-#include <unordered_lru_cache.h>
-#include <versionbits.h>
 
 class BlockValidationState;
 class CBlock;
@@ -91,8 +94,8 @@ class CMNHFManager : public AbstractEHFManager
 {
 private:
     CEvoDB& m_evoDb;
-    ChainstateManager* m_chainman{nullptr};
-    llmq::CQuorumManager* m_qman{nullptr};
+    std::atomic<ChainstateManager*> m_chainman{nullptr};
+    std::atomic<llmq::CQuorumManager*> m_qman{nullptr};
 
     static constexpr size_t MNHFCacheSize = 1000;
     Mutex cs_cache;
@@ -144,7 +147,7 @@ public:
      *
      * @pre Must be called before LLMQContext (containing llmq::CQuorumManager) is destroyed.
      */
-    void DisconnectManagers() { m_chainman = nullptr; m_qman = nullptr; };
+    void DisconnectManagers();
 
     bool ForceSignalDBUpdate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 

@@ -59,7 +59,7 @@ private:
     CTxMemPool& mempool;
     const CMasternodeSync& m_mn_sync;
 
-    instantsend::InstantSendSigner* m_signer{nullptr};
+    std::atomic<instantsend::InstantSendSigner*> m_signer{nullptr};
 
     std::thread workThread;
     CThreadInterrupt workInterrupt;
@@ -97,10 +97,10 @@ public:
     void ConnectSigner(gsl::not_null<instantsend::InstantSendSigner*> signer)
     {
         // Prohibit double initialization
-        assert(m_signer == nullptr);
-        m_signer = signer;
+        assert(m_signer.load(std::memory_order_acquire) == nullptr);
+        m_signer.store(signer, std::memory_order_release);
     }
-    void DisconnectSigner() { m_signer = nullptr; }
+    void DisconnectSigner() { m_signer.store(nullptr, std::memory_order_release); }
 
     void Start(PeerManager& peerman);
     void Stop();

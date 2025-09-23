@@ -435,8 +435,8 @@ protected:
     const int m_check_ratio; //!< Value n means that 1 times in n we check.
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* const minerPolicyEstimator;
-    CDeterministicMNManager* m_dmnman{nullptr};
-    llmq::CInstantSendManager* m_isman{nullptr};
+    std::atomic<CDeterministicMNManager*> m_dmnman{nullptr};
+    std::atomic<llmq::CInstantSendManager*> m_isman{nullptr};
 
     uint64_t totalTxSize GUARDED_BY(cs);      //!< sum of all mempool tx' byte sizes
     CAmount m_total_fee GUARDED_BY(cs);       //!< sum of all mempool tx's fees (NOT modified fee)
@@ -590,7 +590,7 @@ public:
      *
      * @pre Must be called before CDeterministicMNManager and CInstantSendManager are destroyed.
      */
-    void DisconnectManagers() { m_dmnman = nullptr; m_isman = nullptr; }
+    void DisconnectManagers();
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -886,9 +886,9 @@ private:
 
     /**
      * addUnchecked extension for Dash-specific transactions (ProTx).
-     * Depends on CDeterministicMNManager.
      */
-    void addUncheckedProTx(indexed_transaction_set::iterator& newit, const CTransaction& tx);
+    void addUncheckedProTx(CDeterministicMNManager& dmnman, indexed_transaction_set::iterator& newit,
+                           const CTransaction& tx);
 
     /** Before calling removeUnchecked for a given transaction,
      *  UpdateForRemoveFromMempool must be called on the entire (dependent) set

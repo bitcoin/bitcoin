@@ -75,15 +75,15 @@ void CInstantSendManager::Start(PeerManager& peerman)
 
     workThread = std::thread(&util::TraceThread, "isman", [this, &peerman] { WorkThreadMain(peerman); });
 
-    if (m_signer) {
-        m_signer->Start();
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->Start();
     }
 }
 
 void CInstantSendManager::Stop()
 {
-    if (m_signer) {
-        m_signer->Stop();
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->Stop();
     }
 
     // make sure to call InterruptWorkerThread() first
@@ -348,8 +348,8 @@ MessageProcessingResult CInstantSendManager::ProcessInstantSendLock(NodeId from,
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: processing islock, peer=%d\n",
              __func__, islock->txid.ToString(), hash.ToString(), from);
 
-    if (m_signer) {
-        m_signer->ClearLockFromQueue(islock);
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->ClearLockFromQueue(islock);
     }
     if (db.KnownInstantSendLock(hash)) {
         return {};
@@ -449,8 +449,8 @@ void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
     }
 
     if (islock == nullptr) {
-        if (m_signer) {
-            m_signer->ProcessTx(*tx, false, Params().GetConsensus());
+        if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+            signer->ProcessTx(*tx, false, Params().GetConsensus());
         }
         // TX is not locked, so make sure it is tracked
         AddNonLockedTx(tx, nullptr);
@@ -491,8 +491,8 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
             }
 
             if (!IsLocked(tx->GetHash()) && !has_chainlock) {
-                if (m_signer) {
-                    m_signer->ProcessTx(*tx, true, Params().GetConsensus());
+                if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+                    signer->ProcessTx(*tx, true, Params().GetConsensus());
                 }
                 // TX is not locked, so make sure it is tracked
                 AddNonLockedTx(tx, pindex);
@@ -597,16 +597,16 @@ void CInstantSendManager::RemoveNonLockedTx(const uint256& txid, bool retryChild
 void CInstantSendManager::RemoveConflictedTx(const CTransaction& tx)
 {
     RemoveNonLockedTx(tx.GetHash(), false);
-    if (m_signer) {
-        m_signer->ClearInputsFromQueue(GetIdsFromLockable(tx.vin));
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->ClearInputsFromQueue(GetIdsFromLockable(tx.vin));
     }
 }
 
 void CInstantSendManager::TruncateRecoveredSigsForInputs(const instantsend::InstantSendLock& islock)
 {
     auto ids = GetIdsFromLockable(islock.inputs);
-    if (m_signer) {
-        m_signer->ClearInputsFromQueue(ids);
+    if (auto signer = m_signer.load(std::memory_order_acquire); signer) {
+        signer->ClearInputsFromQueue(ids);
     }
     for (const auto& id : ids) {
         sigman.TruncateRecoveredSig(Params().GetConsensus().llmqTypeDIP0024InstantSend, id);
@@ -925,7 +925,8 @@ void CInstantSendManager::WorkThreadMain(PeerManager& peerman)
             for (auto& [node_id, mpr] : peer_activity) {
                 peerman.PostProcessMessage(std::move(mpr), node_id);
             }
-            if (!m_signer) return more_work;
+            auto signer = m_signer.load(std::memory_order_acquire);
+            if (!signer) return more_work;
             // Construct set of non-locked transactions that are pending to retry
             std::vector<CTransactionRef> txns{};
             {
@@ -942,7 +943,7 @@ void CInstantSendManager::WorkThreadMain(PeerManager& peerman)
                 }
             }
             // Retry processing them
-            m_signer->ProcessPendingRetryLockTxs(txns);
+            signer->ProcessPendingRetryLockTxs(txns);
             return more_work;
         }();
 

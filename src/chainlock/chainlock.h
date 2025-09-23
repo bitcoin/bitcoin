@@ -46,7 +46,7 @@ private:
     std::unique_ptr<CScheduler> scheduler;
     std::unique_ptr<std::thread> scheduler_thread;
 
-    chainlock::ChainLockSigner* m_signer{nullptr};
+    std::atomic<chainlock::ChainLockSigner*> m_signer{nullptr};
 
     mutable Mutex cs;
     std::atomic<bool> tryLockChainTipScheduled{false};
@@ -73,10 +73,10 @@ public:
     void ConnectSigner(gsl::not_null<chainlock::ChainLockSigner*> signer)
     {
         // Prohibit double initialization
-        assert(m_signer == nullptr);
-        m_signer = signer;
+        assert(m_signer.load(std::memory_order_acquire) == nullptr);
+        m_signer.store(signer, std::memory_order_release);
     }
-    void DisconnectSigner() { m_signer = nullptr; }
+    void DisconnectSigner() { m_signer.store(nullptr, std::memory_order_release); }
 
     void Start(const llmq::CInstantSendManager& isman);
     void Stop();
