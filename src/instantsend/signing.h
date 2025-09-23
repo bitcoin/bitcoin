@@ -57,16 +57,16 @@ private:
      * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
      * in-progress input lock.
      */
-    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds GUARDED_BY(cs_input_requests);
+    Uint256HashSet inputRequestIds GUARDED_BY(cs_input_requests);
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
      * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the
      * islock. When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
      */
-    std::unordered_map<uint256, InstantSendLock, StaticSaltedHasher> creatingInstantSendLocks GUARDED_BY(cs_creating);
+    Uint256HashMap<InstantSendLock> creatingInstantSendLocks GUARDED_BY(cs_creating);
     // maps from txid to the in-progress islock
-    std::unordered_map<uint256, InstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks GUARDED_BY(cs_creating);
+    Uint256HashMap<InstantSendLock*> txToCreatingInstantSendLocks GUARDED_BY(cs_creating);
 
 public:
     explicit InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
@@ -78,8 +78,7 @@ public:
     void Start();
     void Stop();
 
-    void ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
+    void ClearInputsFromQueue(const Uint256HashSet& ids) EXCLUSIVE_LOCKS_REQUIRED(!cs_input_requests);
 
     void ClearLockFromQueue(const InstantSendLockPtr& islock)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_creating);

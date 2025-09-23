@@ -38,9 +38,9 @@ namespace llmq {
 namespace {
 template <typename T>
     requires std::same_as<T, CTxIn> || std::same_as<T, COutPoint>
-std::unordered_set<uint256, StaticSaltedHasher> GetIdsFromLockable(const std::vector<T>& vec)
+Uint256HashSet GetIdsFromLockable(const std::vector<T>& vec)
 {
-    std::unordered_set<uint256, StaticSaltedHasher> ret{};
+    Uint256HashSet ret{};
     if (vec.empty()) return ret;
     ret.reserve(vec.size());
     for (const auto& in : vec) {
@@ -231,13 +231,13 @@ instantsend::PendingState CInstantSendManager::ProcessPendingInstantSendLocks()
     return ret;
 }
 
-std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPendingInstantSendLocks(
+Uint256HashSet CInstantSendManager::ProcessPendingInstantSendLocks(
     const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
-    const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend,
+    const Uint256HashMap<std::pair<NodeId, instantsend::InstantSendLockPtr>>& pend,
     std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
 {
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
-    std::unordered_map<uint256, CRecoveredSig, StaticSaltedHasher> recSigs;
+    Uint256HashMap<CRecoveredSig> recSigs;
 
     size_t verifyCount = 0;
     size_t alreadyVerified = 0;
@@ -303,7 +303,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- verified locks. count=%d, alreadyVerified=%d, vt=%d, nodes=%d\n", __func__,
             verifyCount, alreadyVerified, verifyTimer.count(), batchVerifier.GetUniqueSourceCount());
 
-    std::unordered_set<uint256, StaticSaltedHasher> badISLocks;
+    Uint256HashSet badISLocks;
 
     if (ban && !batchVerifier.badSources.empty()) {
         LOCK(::cs_main);
@@ -690,7 +690,7 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const instantsend::InstantSendLock& islock)
 {
-    std::unordered_map<uint256, CTransactionRef, StaticSaltedHasher> toDelete;
+    Uint256HashMap<CTransactionRef> toDelete;
 
     {
         LOCK(mempool.cs);
@@ -721,7 +721,7 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
 void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const instantsend::InstantSendLock& islock)
 {
     // Lets first collect all non-locked TXs which conflict with the given ISLOCK
-    std::unordered_map<const CBlockIndex*, std::unordered_map<uint256, CTransactionRef, StaticSaltedHasher>> conflicts;
+    std::unordered_map<const CBlockIndex*, Uint256HashMap<CTransactionRef>> conflicts;
     {
         LOCK(cs_nonLocked);
         for (const auto& in : islock.inputs) {

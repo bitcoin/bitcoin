@@ -58,8 +58,7 @@ auto CachedGetQcHashesQcIndexedHashes(const CBlockIndex* pindexPrev, const llmq:
 
     static Mutex cs_cache;
     static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorums_cached GUARDED_BY(cs_cache);
-    static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::pair<uint256, int>, StaticSaltedHasher>> qc_hashes_cached
-        GUARDED_BY(cs_cache);
+    static std::map<Consensus::LLMQType, Uint256LruHashMap<std::pair<uint256, int>>> qc_hashes_cached GUARDED_BY(cs_cache);
     static QcHashMap qcHashes_cached GUARDED_BY(cs_cache);
     static QcIndexedHashMap qcIndexedHashes_cached GUARDED_BY(cs_cache);
 

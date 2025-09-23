@@ -858,7 +858,7 @@ CDeterministicMNCPtr CSigSharesManager::SelectMemberForRecovery(const CQuorumCPt
     return v[attempt % v.size()].second;
 }
 
-void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToRequest)
+void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToRequest)
 {
     AssertLockHeld(cs);
 
@@ -955,7 +955,7 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
     }
 }
 
-void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>>& sigSharesToSend)
+void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, Uint256HashMap<CBatchedSigShares>>& sigSharesToSend)
 {
     AssertLockHeld(cs);
 
@@ -1009,7 +1009,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
 {
     AssertLockHeld(cs);
 
-    std::unordered_map<uint256, CNode*, StaticSaltedHasher> proTxToNode;
+    Uint256HashMap<CNode*> proTxToNode;
     for (const auto& pnode : vNodes) {
         auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash();
         if (verifiedProRegTxHash.IsNull()) {
@@ -1050,9 +1050,8 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
     }
 }
 
-void CSigSharesManager::CollectSigSharesToAnnounce(
-    const CConnman& connman,
-    std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>>& sigSharesToAnnounce)
+void CSigSharesManager::CollectSigSharesToAnnounce(const CConnman& connman,
+                                                   std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>>& sigSharesToAnnounce)
 {
     AssertLockHeld(cs);
 
@@ -1111,10 +1110,10 @@ void CSigSharesManager::CollectSigSharesToAnnounce(
 
 bool CSigSharesManager::SendMessages(CConnman& connman)
 {
-    std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToRequest;
-    std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>> sigShareBatchesToSend;
+    std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>> sigSharesToRequest;
+    std::unordered_map<NodeId, Uint256HashMap<CBatchedSigShares>> sigShareBatchesToSend;
     std::unordered_map<NodeId, std::vector<CSigShare>> sigSharesToSend;
-    std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToAnnounce;
+    std::unordered_map<NodeId, Uint256HashMap<CSigSharesInv>> sigSharesToAnnounce;
     std::unordered_map<NodeId, std::vector<CSigSesAnn>> sigSessionAnnouncements;
 
     auto addSigSesAnnIfNeeded = [&](NodeId nodeId, const uint256& signHash) EXCLUSIVE_LOCKS_REQUIRED(cs) {
@@ -1320,7 +1319,7 @@ void CSigSharesManager::Cleanup(const CConnman& connman)
     {
         // Now delete sessions which are for inactive quorums
         LOCK(cs);
-        std::unordered_set<uint256, StaticSaltedHasher> inactiveQuorumSessions;
+        Uint256HashSet inactiveQuorumSessions;
         sigShares.ForEach([&quorums, &inactiveQuorumSessions](const SigShareKey&, const CSigShare& sigShare) {
             if (quorums.count(std::make_pair(sigShare.getLlmqType(), sigShare.getQuorumHash())) == 0) {
                 inactiveQuorumSessions.emplace(sigShare.GetSignHash());
@@ -1335,7 +1334,7 @@ void CSigSharesManager::Cleanup(const CConnman& connman)
         LOCK(cs);
 
         // Remove sessions which were successfully recovered
-        std::unordered_set<uint256, StaticSaltedHasher> doneSessions;
+        Uint256HashSet doneSessions;
         sigShares.ForEach([&doneSessions, this](const SigShareKey&, const CSigShare& sigShare) {
             if (doneSessions.count(sigShare.GetSignHash()) != 0) {
                 return;
@@ -1349,7 +1348,7 @@ void CSigSharesManager::Cleanup(const CConnman& connman)
         }
 
         // Remove sessions which timed out
-        std::unordered_set<uint256, StaticSaltedHasher> timeoutSessions;
+        Uint256HashSet timeoutSessions;
         for (const auto& [signHash, lastSeenTime] : timeSeenForSessions) {
             if (now - lastSeenTime >= SESSION_NEW_SHARES_TIMEOUT) {
                 timeoutSessions.emplace(signHash);

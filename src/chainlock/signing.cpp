@@ -158,7 +158,7 @@ void ChainLockSigner::UpdateBlockHashTxidMap(const uint256& hash, const std::vec
     if (it == blockTxs.end()) {
         // We must create this entry even if there are no lockable transactions in the block, so that TrySignChainTip
         // later knows about this block
-        it = blockTxs.emplace(hash, std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>()).first;
+        it = blockTxs.emplace(hash, std::make_shared<Uint256HashSet>()).first;
     }
     auto& txids = *it->second;
     for (const auto& tx : vtx) {
@@ -200,7 +200,7 @@ ChainLockSigner::BlockTxs::mapped_type ChainLockSigner::GetBlockTxs(const uint25
                 return nullptr;
             }
 
-            ret = std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>();
+            ret = std::make_shared<Uint256HashSet>();
             for (const auto& tx : block.vtx) {
                 if (tx->IsCoinBase() || tx->vin.empty()) {
                     continue;
@@ -243,10 +243,10 @@ MessageProcessingResult ChainLockSigner::HandleNewRecoveredSig(const llmq::CReco
     return m_clhandler.ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
 }
 
-std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> ChainLockSigner::Cleanup()
+std::vector<std::shared_ptr<Uint256HashSet>> ChainLockSigner::Cleanup()
 {
     AssertLockNotHeld(cs_signer);
-    std::vector<std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> removed;
+    std::vector<std::shared_ptr<Uint256HashSet>> removed;
     LOCK2(::cs_main, cs_signer);
     for (auto it = blockTxs.begin(); it != blockTxs.end();) {
         const auto* pindex = m_chainstate.m_blockman.LookupBlockIndex(it->first);

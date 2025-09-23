@@ -66,27 +66,27 @@ private:
 
     mutable Mutex cs_pendingLocks;
     // Incoming and not verified yet
-    std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks GUARDED_BY(cs_pendingLocks);
+    Uint256HashMap<std::pair<NodeId, instantsend::InstantSendLockPtr>> pendingInstantSendLocks GUARDED_BY(cs_pendingLocks);
     // Tried to verify but there is no tx yet
-    std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher> pendingNoTxInstantSendLocks GUARDED_BY(cs_pendingLocks);
+    Uint256HashMap<std::pair<NodeId, instantsend::InstantSendLockPtr>> pendingNoTxInstantSendLocks GUARDED_BY(cs_pendingLocks);
 
     // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS
     // locking of child TXs
     struct NonLockedTxInfo {
         const CBlockIndex* pindexMined;
         CTransactionRef tx;
-        std::unordered_set<uint256, StaticSaltedHasher> children;
+        Uint256HashSet children;
     };
 
     mutable Mutex cs_nonLocked;
-    std::unordered_map<uint256, NonLockedTxInfo, StaticSaltedHasher> nonLockedTxs GUARDED_BY(cs_nonLocked);
+    Uint256HashMap<NonLockedTxInfo> nonLockedTxs GUARDED_BY(cs_nonLocked);
     std::unordered_map<COutPoint, uint256, SaltedOutpointHasher> nonLockedTxsByOutpoints GUARDED_BY(cs_nonLocked);
 
     mutable Mutex cs_pendingRetry;
-    std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs_pendingRetry);
+    Uint256HashSet pendingRetryTxs GUARDED_BY(cs_pendingRetry);
 
     mutable Mutex cs_timingsTxSeen;
-    std::unordered_map<uint256, int64_t, StaticSaltedHasher> timingsTxSeen GUARDED_BY(cs_timingsTxSeen);
+    Uint256HashMap<int64_t> timingsTxSeen GUARDED_BY(cs_timingsTxSeen);
 
 public:
     explicit CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate, CQuorumManager& _qman,
@@ -110,10 +110,9 @@ private:
     instantsend::PendingState ProcessPendingInstantSendLocks()
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
 
-    std::unordered_set<uint256, StaticSaltedHasher> ProcessPendingInstantSendLocks(
-        const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
-        const std::unordered_map<uint256, std::pair<NodeId, instantsend::InstantSendLockPtr>, StaticSaltedHasher>& pend,
-        std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
+    Uint256HashSet ProcessPendingInstantSendLocks(const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
+                                                  const Uint256HashMap<std::pair<NodeId, instantsend::InstantSendLockPtr>>& pend,
+                                                  std::vector<std::pair<NodeId, MessageProcessingResult>>& peer_activity)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry);
     MessageProcessingResult ProcessInstantSendLock(NodeId from, const uint256& hash,
                                                    const instantsend::InstantSendLockPtr& islock)

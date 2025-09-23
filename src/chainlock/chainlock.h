@@ -59,7 +59,7 @@ private:
     const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs){nullptr};
     const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs){nullptr};
 
-    std::unordered_map<uint256, std::chrono::seconds, StaticSaltedHasher> txFirstSeenTime GUARDED_BY(cs);
+    Uint256HashMap<std::chrono::seconds> txFirstSeenTime GUARDED_BY(cs);
 
     std::map<uint256, std::chrono::seconds> seenChainLocks GUARDED_BY(cs);
 
@@ -87,8 +87,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
     chainlock::ChainLockSig GetBestChainLock() const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    void UpdateTxFirstSeenMap(const std::unordered_set<uint256, StaticSaltedHasher>& tx, const int64_t& time) override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void UpdateTxFirstSeenMap(const Uint256HashSet& tx, const int64_t& time) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     [[nodiscard]] MessageProcessingResult ProcessNewChainLock(NodeId from, const chainlock::ChainLockSig& clsig,
                                                               const uint256& hash) override

@@ -165,7 +165,7 @@ protected:
 
     mutable Mutex cs;
 
-    std::unordered_map<uint256, CSporkMessage, StaticSaltedHasher> mapSporksByHash GUARDED_BY(cs);
+    Uint256HashMap<CSporkMessage> mapSporksByHash GUARDED_BY(cs);
     std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive GUARDED_BY(cs);
 
 public:

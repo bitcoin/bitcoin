@@ -111,7 +111,7 @@ class CCreditPoolManager
 private:
     static constexpr size_t CreditPoolCacheSize = 1000;
     Mutex cache_mutex;
-    unordered_lru_cache<uint256, CCreditPool, StaticSaltedHasher> creditPoolCache GUARDED_BY(cache_mutex) {CreditPoolCacheSize};
+    Uint256LruHashMap<CCreditPool> creditPoolCache GUARDED_BY(cache_mutex){CreditPoolCacheSize};
 
     CEvoDB& evoDb;
 

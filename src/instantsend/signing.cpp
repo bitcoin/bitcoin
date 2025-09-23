@@ -55,7 +55,7 @@ void InstantSendSigner::Stop()
     m_sigman.UnregisterRecoveredSigsListener(this);
 }
 
-void InstantSendSigner::ClearInputsFromQueue(const std::unordered_set<uint256, StaticSaltedHasher>& ids)
+void InstantSendSigner::ClearInputsFromQueue(const Uint256HashSet& ids)
 {
     LOCK(cs_input_requests);
     for (const auto& id : ids) {

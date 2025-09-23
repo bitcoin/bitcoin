@@ -3395,7 +3395,7 @@ void CConnman::ThreadOpenMasternodeConnections(CDeterministicMNManager& dmnman, 
         if (!fNetworkActive || !m_masternode_thread_active || !mn_sync.IsBlockchainSynced()) continue;
 
         std::unordered_set<CService, CServiceHash> connectedNodes;
-        std::unordered_map<uint256 /*proTxHash*/, bool /*fInbound*/, StaticSaltedHasher> connectedProRegTxHashes;
+        Uint256HashMap</*fInbound=*/bool> connectedProRegTxHashes;
         ForEachNode([&](const CNode* pnode) {
             connectedNodes.emplace(pnode->addr);
             if (auto verifiedProRegTxHash = pnode->GetVerifiedProRegTxHash(); !verifiedProRegTxHash.IsNull()) {
@@ -4295,7 +4295,7 @@ bool CConnman::AddPendingMasternode(const uint256& proTxHash)
     return true;
 }
 
-void CConnman::SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::unordered_set<uint256, StaticSaltedHasher>& proTxHashes)
+void CConnman::SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const Uint256HashSet& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
     auto it = masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
@@ -4304,7 +4304,7 @@ void CConnman::SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint
     }
 }
 
-void CConnman::SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::unordered_set<uint256, StaticSaltedHasher>& proTxHashes)
+void CConnman::SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const Uint256HashSet& proTxHashes)
 {
     {
         LOCK(cs_vPendingMasternodes);
@@ -4335,10 +4335,10 @@ bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint
     return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
 }
 
-std::unordered_set<uint256, StaticSaltedHasher> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType) const
+Uint256HashSet CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType) const
 {
     LOCK(cs_vPendingMasternodes);
-    std::unordered_set<uint256, StaticSaltedHasher> result;
+    Uint256HashSet result;
     for (const auto& p : masternodeQuorumNodes) {
         if (p.first.first != llmqType) {
             continue;

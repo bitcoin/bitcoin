@@ -1480,10 +1480,10 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex, !mutexMsgProc);
 
     bool AddPendingMasternode(const uint256& proTxHash);
-    void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::unordered_set<uint256, StaticSaltedHasher>& proTxHashes);
-    void SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::unordered_set<uint256, StaticSaltedHasher>& proTxHashes);
+    void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const Uint256HashSet& proTxHashes);
+    void SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const Uint256HashSet& proTxHashes);
     bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
-    std::unordered_set<uint256, StaticSaltedHasher> GetMasternodeQuorums(Consensus::LLMQType llmqType) const;
+    Uint256HashSet GetMasternodeQuorums(Consensus::LLMQType llmqType) const;
     // also returns QWATCH nodes
     std::unordered_set<NodeId> GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     void RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
@@ -1743,8 +1743,8 @@ private:
 
     std::vector<uint256> vPendingMasternodes;
     mutable RecursiveMutex cs_vPendingMasternodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::unordered_set<uint256, StaticSaltedHasher>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::unordered_set<uint256, StaticSaltedHasher>> masternodeQuorumRelayMembers GUARDED_BY(cs_vPendingMasternodes);
+    std::map<std::pair<Consensus::LLMQType, uint256>, Uint256HashSet> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
+    std::map<std::pair<Consensus::LLMQType, uint256>, Uint256HashSet> masternodeQuorumRelayMembers GUARDED_BY(cs_vPendingMasternodes);
     std::set<uint256> masternodePendingProbes GUARDED_BY(cs_vPendingMasternodes);
 
     mutable Mutex cs_mapSocketToNode;
