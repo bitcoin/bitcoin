@@ -18,11 +18,12 @@ from test_framework.address import (
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.messages import COIN, CTransaction, CTxOut
+from test_framework.messages import COIN, CTransaction, CTxOut, ser_string
 from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
     find_vout_for_address,
     sha256sum_file,
@@ -140,7 +141,8 @@ class WalletMigrationTest(BitcoinTestFramework):
         # (in which case the wallet name would be suffixed by the 'watchonly' term)
         migrated_wallet_name = migrate_info['wallet_name']
         wallet = self.master_node.get_wallet_rpc(migrated_wallet_name)
-        assert_equal(wallet.getwalletinfo()["descriptors"], True)
+        wallet_info = wallet.getwalletinfo()
+        assert_equal(wallet_info["descriptors"], True)
         self.assert_is_sqlite(migrated_wallet_name)
         # Always verify the backup path exist after migration
         assert os.path.exists(migrate_info['backup_path'])
@@ -153,6 +155,25 @@ class WalletMigrationTest(BitcoinTestFramework):
         expected_backup_path = self.master_node.wallets_path / backup_filename
         assert_equal(str(expected_backup_path), migrate_info['backup_path'])
         assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
+
+        # Open the wallet with sqlite and verify that the wallet has the last hardened cache flag
+        # set and the last hardened cache entries
+        def check_last_hardened(conn):
+            flags_rec = conn.execute(f"SELECT value FROM main WHERE key = x'{ser_string(b'flags').hex()}'").fetchone()
+            flags = int.from_bytes(flags_rec[0], byteorder="little")
+
+            # All wallets should have the upgrade flag set
+            assert_equal(bool(flags & (1 << 2)), True)
+
+            # Fetch all records with the walletdescriptorlhcache prefix
+            # if the wallet has private keys and is not blank
+            if wallet_info["private_keys_enabled"] and not wallet_info["blank"]:
+                lh_cache_recs = conn.execute(f"SELECT value FROM main where key >= x'{ser_string(b'walletdescriptorlhcache').hex()}' AND key < x'{ser_string(b'walletdescriptorlhcachf').hex()}'").fetchall()
+                assert_greater_than(len(lh_cache_recs), 0)
+
+        inspect_path = os.path.join(self.options.tmpdir, os.path.basename(f"{migrated_wallet_name}_inspect.dat"))
+        wallet.backupwallet(inspect_path)
+        self.inspect_sqlite_db(inspect_path, check_last_hardened)
 
         return migrate_info, wallet
 
